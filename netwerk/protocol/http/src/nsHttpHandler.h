@@ -86,6 +86,7 @@ public:
     const char   *UserAgent();
     nsHttpVersion DefaultVersion()     { return mHttpVersion; }
     PRUint8       ReferrerLevel()      { return mReferrerLevel; }
+    PRUint8       RedirectionLimit()   { return mRedirectionLimit; }
     PRUint16      IdleTimeout()        { return mIdleTimeout; }
     PRUint16      MaxRequestAttempts() { return mMaxRequestAttempts; }
     nsIIDNService *IDNConverter()      { return mIDNConverter; }
@@ -228,6 +229,8 @@ private:
     PRUint8  mMaxConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerProxy;
+
+    PRUint8  mRedirectionLimit;
 
     nsCString mAccept;
     nsCString mAcceptLanguages;

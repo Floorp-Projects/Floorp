@@ -163,6 +163,9 @@ private:
     nsXPIDLString                     mProxyUser;
     nsXPIDLString                     mProxyPass;
 
+    // redirection specific data.
+    PRUint8                           mRedirectionLimit;
+
     PRPackedBool                      mIsPending;
     PRPackedBool                      mApplyConversion;
     PRPackedBool                      mFromCacheOnly;

@@ -62,6 +62,7 @@ nsHttpChannel::nsHttpChannel()
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
+    , mRedirectionLimit(nsHttpHandler::get()->RedirectionLimit())
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
     , mFromCacheOnly(PR_FALSE)
@@ -351,8 +352,18 @@ nsHttpChannel::HandleAsyncRedirect()
     // in processing the redirect.
     if (NS_SUCCEEDED(mStatus)) {
         rv = ProcessRedirection(mResponseHead->Status());
-        if (NS_FAILED(rv))
+        if (NS_FAILED(rv)) {
+            // If ProcessRedirection fails, then we have to send out the
+            // OnStart/OnStop notifications.
+            LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             mStatus = rv;
+            if (mListener) {
+                mListener->OnStartRequest(this, mListenerContext);
+                mListener->OnStopRequest(this, mListenerContext, mStatus);
+                mListener = 0;
+                mListenerContext = 0;
+            }
+        }
     }
 
     // close the cache entry... blow it away if we couldn't process
@@ -463,7 +474,7 @@ nsHttpChannel::ApplyContentConversions()
 nsresult
 nsHttpChannel::ProcessResponse()
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
     PRUint32 httpStatus = mResponseHead->Status();
 
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
@@ -478,6 +489,7 @@ nsHttpChannel::ProcessResponse()
     case 200:
     case 203:
     case 206:
+        // these can normally be cached
         rv = ProcessNormal();
         break;
     case 300:
@@ -485,19 +497,9 @@ nsHttpChannel::ProcessResponse()
     case 302:
     case 307:
         // these redirects can be cached (don't store the response body)
-        if (mCacheEntry) {
-            rv = InitCacheEntry();
-            if (NS_SUCCEEDED(rv) && mCacheEntry) {
-                // XXX we must open an output stream to force the cache service to
-                // select a cache device for our entry -- bad cache service!!
-                rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
-                if (NS_SUCCEEDED(rv)) {
-                    nsCOMPtr<nsIOutputStream> out;
-                    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
-                }
-            }
-            CloseCacheEntry(rv);
-        }
+        if (mCacheEntry)
+            CloseCacheEntry(InitCacheEntry());
+
         rv = ProcessRedirection(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
@@ -508,6 +510,7 @@ nsHttpChannel::ProcessResponse()
     case 305:
         // these redirects cannot be cached
         CloseCacheEntry(NS_ERROR_ABORT);
+
         rv = ProcessRedirection(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
@@ -951,6 +954,7 @@ nsHttpChannel::ReadFromCache()
         // server to validate at this time, so just mark the cache entry as
         // valid in order to allow others access to this cache entry.
         mCacheEntry->MarkValid();
+        mCacheAccess = nsICache::ACCESS_READ;
     }
 
     // if this is a cached redirect, we must process the redirect asynchronously
@@ -1140,7 +1144,15 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (!location)
         return NS_ERROR_FAILURE;
 
-    LOG(("redirecting to: %s\n", location));
+    if (mRedirectionLimit == 0) {
+        LOG(("redirection limit reached!\n"));
+        // this error code is fatal, and should be conveyed to our listener.
+        Cancel(NS_ERROR_REDIRECT_LOOP);
+        return NS_ERROR_REDIRECT_LOOP;
+    }
+
+    LOG(("redirecting to: %s [redirection-limit=%u]\n",
+        location, PRUint32(mRedirectionLimit)));
 
     nsresult rv;
     nsCOMPtr<nsIChannel> newChannel;
@@ -1210,6 +1222,8 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
             httpChannel->SetReferrer(mReferrer, mReferrerType);
         // convey the mApplyConversion flag (bug 91862)
         httpChannel->SetApplyConversion(mApplyConversion);
+        // convey the new redirection limit
+        httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
     }
 
     // call out to the event sink to notify it of this redirection.
@@ -1694,16 +1708,16 @@ nsHttpChannel::GetCurrentPath(char **path)
 //-----------------------------------------------------------------------------
 
 NS_IMPL_THREADSAFE_ISUPPORTS10(nsHttpChannel,
-                              nsIRequest,
-                              nsIChannel,
-                              nsIRequestObserver,
-                              nsIStreamListener,
-                              nsIHttpChannel,
-                              nsIInterfaceRequestor,
-                              nsIProgressEventSink,
-                              nsICachingChannel,
-                              nsIUploadChannel,
-                              nsICacheListener)
+                               nsIRequest,
+                               nsIChannel,
+                               nsIRequestObserver,
+                               nsIStreamListener,
+                               nsIHttpChannel,
+                               nsIInterfaceRequestor,
+                               nsIProgressEventSink,
+                               nsICachingChannel,
+                               nsIUploadChannel,
+                               nsICacheListener)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequest
@@ -2276,6 +2290,21 @@ nsHttpChannel::SetApplyConversion(PRBool value)
 {
     LOG(("nsHttpChannel::SetApplyConversion [this=%x value=%d]\n", this, value));
     mApplyConversion = value;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRedirectionLimit(PRUint32 *value)
+{
+    NS_ENSURE_ARG_POINTER(value);
+    *value = PRUint32(mRedirectionLimit);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetRedirectionLimit(PRUint32 value)
+{
+    mRedirectionLimit = CLAMP(value, 0, 0xff);
     return NS_OK;
 }
 
