@@ -115,16 +115,6 @@ editor/txmgr/tests/Makefile
 editor/txtsvc/Makefile
 editor/txtsvc/public/Makefile
 editor/txtsvc/src/Makefile
-editor/ui/Makefile
-editor/ui/composer/Makefile
-editor/ui/composer/content/Makefile
-editor/ui/composer/content/images/Makefile
-editor/ui/composer/locale/Makefile
-editor/ui/composer/locale/en-US/Makefile
-editor/ui/dialogs/Makefile
-editor/ui/dialogs/content/Makefile
-editor/ui/dialogs/locale/Makefile
-editor/ui/dialogs/locale/en-US/Makefile
 "
 
 MAKEFILES_expat="
