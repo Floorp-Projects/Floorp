@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Patrick Thompson (sailfish@unforgettable.com)
  */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -219,4 +220,68 @@
 
 #spellingButton[disabled="true"] {
   -moz-image-region: rect(122px 46px 143px 23px) !important;
+}
+
+#cutButton {
+  -moz-image-region: rect(227px 16px 243px 0);
+}
+
+#cutButton:hover {
+  -moz-image-region: rect(227px 32px 243px 16px);
+}
+
+#cutButton:hover:active {
+  -moz-image-region: rect(227px 48px 243px 32px);
+}
+
+#cutButton[disabled="true"] {
+  -moz-image-region: rect(227px 64px 243px 48px) !important;
+}
+
+#copyButton {
+  -moz-image-region: rect(243px 16px 259px 0);
+}
+
+#copyButton:hover {
+  -moz-image-region: rect(243px 32px 259px 16px);
+}
+
+#copyButton:hover:active {
+  -moz-image-region: rect(243px 48px 259px 32px);
+}
+
+#copyButton[disabled="true"] {
+  -moz-image-region: rect(243px 64px 259px 48px) !important;
+}
+
+#pasteButton {
+  -moz-image-region: rect(259px 16px 275px 0);
+}
+
+#pasteButton:hover {
+  -moz-image-region: rect(259px 32px 275px 16px);
+}
+
+#pasteButton:hover:active {
+  -moz-image-region: rect(259px 48px 275px 32px);
+}
+
+#pasteButton[disabled="true"] {
+  -moz-image-region: rect(259px 64px 275px 48px) !important;
+}
+
+#findButton {
+  -moz-image-region: rect(276px 16px 292px 0);
+}
+
+#findButton:hover {
+  -moz-image-region: rect(276px 32px 292px 16px);
+}
+
+#findButton:hover:active {
+  -moz-image-region: rect(276px 48px 292px 32px);
+}
+
+#findButton[disabled="true"] {
+  -moz-image-region: rect(276px 64px 292px 48px) !important;
 }
