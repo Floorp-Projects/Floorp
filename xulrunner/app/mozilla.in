@@ -1,0 +1,266 @@
+#!/bin/sh
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+## $Id: mozilla.in,v 1.1 2004/08/05 21:38:22 darin%meer.net Exp $
+## 
+## Usage:
+##
+## $ mozilla [args]
+##
+## This script is meant to run the mozilla-bin binary from either 
+## mozilla/xpfe/bootstrap or mozilla/dist/bin.
+##
+## The script will setup all the environment voodoo needed to make
+## the mozilla-bin binary to work.
+##
+
+moz_pis_startstop_scripts()
+{
+  MOZ_USER_DIR="%MOZ_USER_DIR%"
+  # MOZ_PIS_ is the name space for "Mozilla Plugable Init Scripts"
+  # These variables and there meaning are specified in
+  # mozilla/xpfe/bootstrap/init.d/README
+  MOZ_PIS_API=2
+  MOZ_PIS_MOZBINDIR="${dist_bin}"
+  MOZ_PIS_SESSION_PID="$$"
+  MOZ_PIS_USER_DIR="${MOZ_USER_DIR}"
+  export MOZ_PIS_API MOZ_PIS_MOZBINDIR MOZ_PIS_SESSION_PID MOZ_PIS_USER_DIR
+  
+  case "${1}" in
+    "start")
+      for curr_pis in "${dist_bin}/init.d"/S* "${HOME}/${MOZ_USER_DIR}/init.d"/S* ; do
+        if [ -x "${curr_pis}" ] ; then
+          case "${curr_pis}" in
+            *.sh) .  "${curr_pis}"         ;;
+            *)       "${curr_pis}" "start" ;;
+          esac
+        fi
+      done
+      ;;
+    "stop")
+      for curr_pis in "${HOME}/${MOZ_USER_DIR}/init.d"/K* "${dist_bin}/init.d"/K* ; do
+        if [ -x "${curr_pis}" ] ; then
+          case "${curr_pis}" in
+            *.sh) . "${curr_pis}"        ;;
+            *)      "${curr_pis}" "stop" ;;
+          esac
+        fi
+      done
+      ;;
+    *)
+      echo 1>&2 "$0: Internal error in moz_pis_startstop_scripts."
+      exit 1
+      ;;
+  esac
+}
+
+#uncomment for debugging
+#set -x
+
+moz_libdir=%MOZAPPDIR%
+MRE_HOME=%MREDIR%
+
+# Use run-mozilla.sh in the current dir if it exists
+# If not, then start resolving symlinks until we find run-mozilla.sh
+found=0
+progname="$0"
+curdir=`dirname "$progname"`
+progbase=`basename "$progname"`
+profile=""
+run_moz="$curdir/run-mozilla.sh"
+if test -x "$run_moz"; then
+  dist_bin="$curdir"
+  found=1
+else
+  here=`/bin/pwd`
+  while [ -h "$progname" ]; do
+    bn=`basename "$progname"`
+    cd `dirname "$progname"`
+    progname=`/bin/ls -l "$bn" | sed -e 's/^.* -> //' `
+    if [ ! -x "$progname" ]; then
+      break
+    fi
+    curdir=`dirname "$progname"`
+    run_moz="$curdir/run-mozilla.sh"
+    if [ -x "$run_moz" ]; then
+      cd "$curdir"
+      dist_bin=`pwd`
+      found=1
+      break
+    fi
+  done
+  cd "$here"
+fi
+if [ $found = 0 ]; then
+  # Check default compile-time libdir
+  if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+    dist_bin="$moz_libdir"
+  else 
+    echo "Cannot find mozilla runtime directory. Exiting."
+    exit 1
+  fi
+fi
+
+script_args=""
+moreargs=""
+debugging=0
+MOZILLA_BIN="${progbase}-bin"
+MOZ_CLIENT_PROGRAM="$dist_bin/mozilla-xremote-client"
+
+run_xremote_client() {
+  if [ -n "${profile}" ]; then
+    "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" -p "${profile}" "$1"
+  else
+    "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "$1"
+  fi
+}
+
+# The following is to check for a currently running instance.
+# This is taken almost verbatim from the Mozilla RPM package's launch script.
+check_running() {
+    run_xremote_client 'ping()' 2>/dev/null >/dev/null
+    RETURN_VAL=$?
+    if [ $RETURN_VAL -eq 0 ]; then
+        echo 1
+        return 1
+    else
+        echo 0
+        return 0
+    fi
+}
+
+if [ "$OSTYPE" = "beos" ]; then
+  mimeset -F "$MOZILLA_BIN"
+fi
+
+################################################################ Parse Arguments
+# If there's a command line argument but it doesn't begin with a -
+# it's probably a url.  Try to send it to a running instance.
+_USE_EXIST=0
+_NEW_WINDOW=
+_optOne="$1"
+case "${_optOne}" in
+	-*) 
+		;;
+	*)
+		_USE_EXIST=1
+		;;
+esac
+
+_optOthers=
+_optLast=
+for i in "$@"; do 
+	_optLast="${i}"
+done #last arg
+
+for i in "$@"; do
+	[ "$i" = "${_optLast}" ] && break
+	_optOthers="${_optOthers} ${i}"
+done #others arg
+
+#???: needs check if othersopt begin with -* ?
+if [ `expr "${_optLast}" : '.*:/.*'` -eq 0 -a \( -f "${_optLast}" -o -d "${_optLast}" \) ]; then
+	# Last argument seems to be a local file/directory
+	# Check, if it is absolutely specified (ie. /home/foo/file vs. ./file)
+	# If it is just "relatively" (./file) specified, make it absolutely
+	[ `expr "${_optLast}" : '/.*'` -eq 0 ] && _optLast="file://`pwd`/${_optLast}"
+elif [ `expr "${_optLast}" : '.*:/.*'` -gt 0 -o -n "${_optOthers}" ]; then #???? like before...
+	_NEW_WINDOW=1
+fi
+
+# check for -P argument used to select a user profile
+_expectProfileName=0
+for i in "$@"; do
+  if [ "$i" = "-P" ]; then
+    _expectProfileName=1
+    profile=""
+  elif [ ${_expectProfileName} = 1 ]; then
+    _expectProfileName=0
+    profile="$i"
+  fi
+done
+
+################################################################ Parse Arguments
+
+########################################################################### Main
+ALREADY_RUNNING=`check_running`
+
+if [ $ALREADY_RUNNING -eq 1 ]; then
+	# There's an instance already running. Use it.
+	# Any command line args passed in?
+	if [ $# -gt 0 ]; then
+		# There were "some" command line args.
+		if [ ${_USE_EXIST} -eq 1 ]; then
+			# We should use an existing instance, as _USE_EXIST=$_USE_EXIST=-1
+			_open_type="window"
+			#_open_type="tab"
+			_remote_cmd="openURL(${_optLast} , new-${_open_type})"
+      run_xremote_client "${_remote_cmd}"
+			unset _remote_cmd _open_type
+			exit $?
+		fi
+	else
+		# No command line args. Open new window/tab
+    run_xremote_client "xfeDoCommand(openBrowser)"
+		exit $?
+	fi
+fi
+# Default action - no running instance or _USE_EXIST (${_USE_EXIST}) ! -eq 1
+########################################################################### Main
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+    -p | --pure | -pure)
+      MOZILLA_BIN="${MOZILLA_BIN}.pure"
+      shift
+      ;;
+    -g | --debug)
+      script_args="$script_args -g"
+      debugging=1
+      shift
+      ;;
+    -d | --debugger)
+      script_args="$script_args -d $2"
+      shift 2
+      ;;
+    *)
+      moreargs="$moreargs \"$1\""
+      shift 1
+      ;;
+  esac
+done
+
+export MRE_HOME
+eval "set -- $moreargs"
+
+## Start addon scripts
+moz_pis_startstop_scripts "start"
+
+if [ $debugging = 1 ]
+then
+  echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+fi
+"$dist_bin/run-mozilla.sh" $script_args "$dist_bin/$MOZILLA_BIN" "$@"
+exitcode=$?
+
+## Stop addon scripts
+moz_pis_startstop_scripts "stop"
+
+exit $exitcode
+# EOF.
