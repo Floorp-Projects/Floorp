@@ -254,6 +254,9 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
   {
     mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(aDocShell));
     aDocShell->SetParentURIContentListener(this);
+	// be sure to set the application flag on the root docshell
+	// so it knows we are a mail application.
+	aDocShell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
   }
   return NS_OK;
 }
@@ -309,13 +312,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
       docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
 
       nsCOMPtr<nsIDocShell> rootAsShell(do_QueryInterface(rootAsItem));
-      if(rootAsShell)
-         rootAsShell->SetParentURIContentListener(this);
-
-      nsAutoString childName; childName.AssignWithConversion("messagepane");
-      nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
-      docShell = do_QueryInterface(rootAsItem);
-      mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell));
+      SetRootDocShell(rootAsShell);
 
       // force ourselves to figure out the message pane
       nsCOMPtr<nsIDocShell> messageWindowDocShell; 
@@ -323,7 +320,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
       SetStatusFeedback(mStatusFeedback);
    }
 
-	//Get nsIMsgWindowCommands object
+	//Get nsIMsgWindowCommands object 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
    if (piDOMWindow)

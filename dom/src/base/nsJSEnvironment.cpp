@@ -446,7 +446,7 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
   nsCOMPtr<nsIScriptSecurityManager> securityManager;
   rv = GetSecurityManager(getter_AddRefs(securityManager));
   if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(principal, &ok);
+    rv = securityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -562,7 +562,7 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
   nsCOMPtr<nsIScriptSecurityManager> securityManager;
   rv = GetSecurityManager(getter_AddRefs(securityManager));
   if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(principal, &ok);
+    rv = securityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -665,7 +665,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   nsCOMPtr<nsIScriptSecurityManager> securityManager;
   rv = GetSecurityManager(getter_AddRefs(securityManager));
   if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(aPrincipal, &ok);
+    rv = securityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;

@@ -337,14 +337,22 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (NS_FAILED(secMan->CheckLoadURIFromScript(nsnull, uri)))
     return NS_ERROR_FAILURE;
 
-  // Set a principal for this document
-  NS_IF_RELEASE(mPrincipal);
-  rv = secMan->GetCodebasePrincipal(uri, &mPrincipal);
-  if (!mPrincipal) return rv;
-
   // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);
   if (NS_FAILED(rv)) return rv;
+
+  // Set a principal for this document
+  NS_IF_RELEASE(mPrincipal);
+  nsCOMPtr<nsISupports> channelOwner;
+  rv = channel->GetOwner(getter_AddRefs(channelOwner));
+  if (NS_SUCCEEDED(rv) && channelOwner)
+      rv = channelOwner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+
+  if (NS_FAILED(rv) || !channelOwner)
+  {
+    rv = secMan->GetCodebasePrincipal(uri, &mPrincipal);
+    if (!mPrincipal) return rv;
+  }
 
   // Prepare for loading the XML document "into oneself"
   nsCOMPtr<nsIStreamListener> listener;

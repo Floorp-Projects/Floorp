@@ -36,8 +36,9 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsISecurityPref.h"
-
 #include "nsIJSContextStack.h"
+
+class nsIDocShell;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -96,6 +97,9 @@ public:
 
     JSContext * GetCurrentContextQuick();
 private:
+
+	nsresult
+	GetRootDocShell(JSContext *cx, nsIDocShell **result);
 
     NS_IMETHOD
     CheckScriptAccessInternal(JSContext *cx, 
