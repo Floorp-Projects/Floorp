@@ -137,6 +137,9 @@ ifeq ($(OS_RELEASE),10.0)
 OS_ARCH		:= Rhapsody
 endif
 endif
+ifeq ($(OS_ARCH),BeOS)
+BEOS_ADDON_WORKAROUND	= 1
+endif
 
 #
 # Strip off the excessively long version numbers on these platforms,
