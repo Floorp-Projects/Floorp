@@ -537,16 +537,18 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	QAOutput("\n");
 	QAOutput("##### BEGIN: nsIRequestObserver::OnStartRequest() #####");
 
+	if (!ctxt)
+		QAOutput("We did NOT get the context object.\n");
+
 	RequestName(request, stringMsg, 1);
 
 	// these are for nsIChannel tests found in nsichanneltests.cpp (post AsyncOpen() tests)
-	// they will only be run if a nsISupports context was passed to AsyncOpen()
 	nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 	nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
 	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
 	CnsIChannelTests  *channelTests = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
 	CnsIHttpChannelTests *httpChannelTests = new CnsIHttpChannelTests(mWebBrowser, aBrowserImpl);
-	if (channelTests && ctxt && channel) {
+	if (channelTests && channel) {
 		QAOutput("\n  Start nsIChannel PostAsyncOpenTests tests:");
 		channelTests->PostAsyncOpenTests(channel, 1);
 	}

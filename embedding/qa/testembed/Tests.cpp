@@ -623,16 +623,10 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 		}
 
 		QAOutput("AynchOpen() test:", 2);
-		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-		nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
-		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
-		if (!listener)
-			QAOutput("listener object is null for AsyncOpen().", 1);
 
 		// this calls nsIStreamListener::OnDataAvailable()
-		rv = theChannel->AsyncOpen(listener, nsnull);
-		RvTestResult(rv, "AsyncOpen()", 2);
+		CnsIChannelTests  *channelTests = new CnsIChannelTests(qaWebBrowser, qaBrowserImpl);
+		channelTests->AsyncOpenTest(theChannel, 2);;
 	}
 }
 
@@ -680,6 +674,7 @@ void CTests::OnTestsProtocolHandlerNewURI()
 		nsCAutoString theStr, retStr;
 		nsCOMPtr<nsIURI> theOriginalURI;
 		nsIURI *theReturnURI = nsnull;
+		nsIChannel *theReturnChannel = nsnull;
 		const char *theProtocol;
 
 		nsCOMPtr<nsIProtocolHandler> protocolHandler;
@@ -709,6 +704,41 @@ void CTests::OnTestsProtocolHandlerNewURI()
 		   QAOutput("The in/out URIs MATCH.", 1);
 	    else
 		   QAOutput("The in/out URIs don't MATCH.", 1);
+
+		// other protocol handler tests:
+
+		// GetScheme() test
+		nsCAutoString theScheme;
+		rv = protocolHandler->GetScheme(theScheme);
+		RvTestResult(rv, "protocolHandler->GetScheme() test", 1);
+		FormatAndPrintOutput("GetScheme() = ", theScheme, 1);
+
+		// GetDefaultPort() test
+		PRInt32 theDefaultPort;
+		rv = protocolHandler->GetDefaultPort(&theDefaultPort);
+		RvTestResult(rv, "protocolHandler->GetDefaultPort() test", 1);
+		FormatAndPrintOutput("GetDefaultPort() = ", theDefaultPort, 1);
+
+		// GetProtocolFlags() test
+		PRUint32 theProtocolFlags;
+		rv = protocolHandler->GetProtocolFlags(&theProtocolFlags);
+		RvTestResult(rv, "protocolHandler->GetDefaultPort() test", 1);
+		FormatAndPrintOutput("GetProtocolFlags() = ", theProtocolFlags, 1);
+
+		// NewChannel() test
+		rv = protocolHandler->NewChannel(theReturnURI, &theReturnChannel);
+		RvTestResult(rv, "protocolHandler->NewChannel() test", 1);
+		if (!theReturnChannel)
+			QAOutput("We didn't get the returned nsIChannel object.", 1);
+
+
+		// AllowPort() test
+		PRBool retPort;
+		rv = protocolHandler->AllowPort(theDefaultPort, "http", &retPort);
+		RvTestResult(rv, "protocolHandler->AllowPort() test", 1);
+		FormatAndPrintOutput("AllowPort() boolean = ", retPort, 1);
+
+		
 	}
 }
 
