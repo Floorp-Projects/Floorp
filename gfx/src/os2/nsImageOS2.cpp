@@ -401,3 +401,19 @@ nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   return NS_OK;
 }
 
+PRBool 
+nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                              nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                              nscoord aWidth, nscoord aHeight)
+{
+  PRInt32 x,y;
+
+  // OS2TODO - use the old way... slow, but will always work.
+  for(y=aY0;y<aY1;y+=aHeight){
+    for(x=aX0;x<aX1;x+=aWidth){
+      this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
+    }
+  } 
+  return(PR_TRUE);
+}
+
