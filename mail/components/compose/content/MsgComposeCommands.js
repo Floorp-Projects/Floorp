@@ -2461,6 +2461,10 @@ function LoadIdentity(startup)
         var idKey = identityElement.value;
         gCurrentIdentity = gAccountManager.getIdentity(idKey);
 
+        // set the  account name on the menu list value.
+        var accountName = identityElement.selectedItem.getAttribute('accountname');
+        identityElement.setAttribute('accountname', accountName);
+
         if (!startup && prevIdentity && idKey != prevIdentity.key)
         {
           var prefstring = "mail.identity." + prevIdentity.key;
