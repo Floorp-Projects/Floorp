@@ -1356,11 +1356,13 @@ public class Context {
      * @since 1.3
      */
     public void setTargetClassFileName(String classFileName) {
-        if (nameHelper != null)
-              if (classFileName != null)
-                nameHelper.setClassRepository(new FileClassRepository(classFileName));
-                else
-                    nameHelper.setClassName(null);
+        if (nameHelper != null) {
+            if (classFileName != null)
+                nameHelper.setClassRepository(
+                    new FileClassRepository(classFileName));
+            else
+                nameHelper.setClassName(null);
+        }
     }
 
     /**
@@ -2209,7 +2211,8 @@ public class Context {
         String getTargetClassFileName(String className) {
             StringBuffer sb = new StringBuffer();
             if (generatingDirectory != null) {
-            sb.append(generatingDirectory);            sb.append(File.separator);
+                sb.append(generatingDirectory);            
+                sb.append(File.separator);
             }
             sb.append(className);
             sb.append(".class");
