@@ -308,18 +308,18 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
   eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
   eCSSKeyword_menu,               NS_STYLE_DISPLAY_MENU,
-  eCSSKeyword__moz_xul_box,           NS_STYLE_DISPLAY_BOX,
-  eCSSKeyword__moz_xul_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
-  eCSSKeyword__moz_xul_grid,          NS_STYLE_DISPLAY_GRID,
-  eCSSKeyword__moz_xul_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
-  eCSSKeyword__moz_xul_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
-  eCSSKeyword__moz_xul_grid_line,     NS_STYLE_DISPLAY_GRID_LINE,
-  eCSSKeyword__moz_xul_stack,         NS_STYLE_DISPLAY_STACK,
-  eCSSKeyword__moz_xul_inline_stack,  NS_STYLE_DISPLAY_INLINE_STACK,
-  eCSSKeyword__moz_xul_deck,          NS_STYLE_DISPLAY_DECK,
-  eCSSKeyword__moz_xul_bulletinboard, NS_STYLE_DISPLAY_BULLETINBOARD,
-  eCSSKeyword__moz_xul_popup,         NS_STYLE_DISPLAY_POPUP,
-  eCSSKeyword__moz_xul_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
+  eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
+  eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
+  eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
+  eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
+  eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
+  eCSSKeyword__moz_grid_line,     NS_STYLE_DISPLAY_GRID_LINE,
+  eCSSKeyword__moz_stack,         NS_STYLE_DISPLAY_STACK,
+  eCSSKeyword__moz_inline_stack,  NS_STYLE_DISPLAY_INLINE_STACK,
+  eCSSKeyword__moz_deck,          NS_STYLE_DISPLAY_DECK,
+  eCSSKeyword__moz_bulletinboard, NS_STYLE_DISPLAY_BULLETINBOARD,
+  eCSSKeyword__moz_popup,         NS_STYLE_DISPLAY_POPUP,
+  eCSSKeyword__moz_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
   -1,-1
 };
 
@@ -689,11 +689,34 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
 
 #ifdef INCLUDE_XUL
 // Specific keyword tables for XUL.properties
+const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
+  eCSSKeyword_stretch,  NS_STYLE_BOX_ALIGN_STRETCH,
+  eCSSKeyword_start,   NS_STYLE_BOX_ALIGN_START,
+  eCSSKeyword_center, NS_STYLE_BOX_ALIGN_CENTER,
+  eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE, 
+  eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END, 
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBoxDirectionKTable[] = {
+  eCSSKeyword_normal,  NS_STYLE_BOX_DIRECTION_NORMAL,
+  eCSSKeyword_reverse,   NS_STYLE_BOX_DIRECTION_REVERSE,
+  -1,-1
+};
+
 const PRInt32 nsCSSProps::kBoxOrientKTable[] = {
   eCSSKeyword_horizontal,  NS_STYLE_BOX_ORIENT_HORIZONTAL,
   eCSSKeyword_vertical,   NS_STYLE_BOX_ORIENT_VERTICAL,
   eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL,
   eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL, 
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBoxPackKTable[] = {
+  eCSSKeyword_start,  NS_STYLE_BOX_PACK_START,
+  eCSSKeyword_center,   NS_STYLE_BOX_PACK_CENTER,
+  eCSSKeyword_end, NS_STYLE_BOX_PACK_END,
+  eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY, 
   -1,-1
 };
 #endif
@@ -785,8 +808,14 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kBorderCollapseKTable);
 
 #ifdef INCLUDE_XUL
+  case eCSSProperty_box_align:
+    return SearchKeywordTable(aValue, kBoxAlignKTable);
+  case eCSSProperty_box_direction:
+    return SearchKeywordTable(aValue, kBoxDirectionKTable);
   case eCSSProperty_box_orient:
     return SearchKeywordTable(aValue, kBoxOrientKTable);
+  case eCSSProperty_box_pack:
+    return SearchKeywordTable(aValue, kBoxPackKTable);
 #endif
 
   case eCSSProperty_box_sizing:

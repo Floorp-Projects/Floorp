@@ -39,7 +39,7 @@
            <xul:spring class="button-mid-btm" inherits="default,disabled"/>
         </xul:box>
 
-        <xul:box class="button-text-box" autostretch="never">
+        <xul:box class="button-text-box" align="center">
          <xul:image class="button-icon-mid" inherits="src"/>
          <xul:text class="button-text-mid" inherits="default,value=label,crop,accesskey"/>
          <children/>
@@ -89,7 +89,7 @@
            <xul:spring class="menulist-mid-btm" inherits="disabled"/>
         </xul:box>
 
-        <xul:box class="menulist-text-box" autostretch="never">
+        <xul:box class="menulist-text-box" align="center">
          <xul:image class="menulist-icon-mid" inherits="src"/>
          <xul:text class="menulist-text-mid" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
        </xul:box>
@@ -102,7 +102,7 @@
             <xul:spring class="menulist-right-mid" inherits="disabled" flex="1"/>
             <xul:spring class="menulist-right-btm" inherits="disabled"/>
           </xul:box>
-          <xul:box class="menulist-dropmarker-box" autostretch="never">
+          <xul:box class="menulist-dropmarker-box" align="center">
             <xul:image class="menulist-dropmarker" inherits="disabled"/>
           </xul:box>
         </xul:stack>
@@ -116,7 +116,7 @@
       <xul:box flex="1" class="menulist-editable-box">
         <xul:image class="menu-icon" inherits="src"/>
         <html:input type="text" class="menulist-editable-text" flex="1" inherits="value=label,disabled"/>
-        <xul:box class="menu-dropmarker-box" autostretch="never">
+        <xul:box class="menu-dropmarker-box" align="center">
           <xul:image class="menu-dropmarker"/>
         </xul:box>
       </xul:box>
@@ -126,7 +126,7 @@
 
   <binding id="menulist-compact" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content flex="1">
-      <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
+      <xul:box class="menulist-compact-internal-box" flex="1" align="center">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
         <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>

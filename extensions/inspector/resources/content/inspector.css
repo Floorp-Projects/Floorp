@@ -32,12 +32,12 @@
 
 domi|panelset {
   -moz-binding: url("chrome://inspector/content/inspector.xml#panelset");
-  display: -moz-xul-box;
+  display: -moz-box;
 }
 
 domi|panel {
   -moz-binding: url("chrome://inspector/content/inspector.xml#panel");
-  display: -moz-xul-box;
+  display: -moz-box;
 }
 
 #ppsViewerPopupset {

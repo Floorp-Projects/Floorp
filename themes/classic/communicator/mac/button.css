@@ -36,14 +36,12 @@
     {
       border              : 1px solid transparent;
       padding             : 1px 3px;
-      vertical-align      : middle;
     }
 
   .button-toolbar-1 > .button-internal-box,
   .button-toolbar-2 > .button-internal-box
     {
       padding             : 2px 6px 2px 5px;
-      vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
     }    
@@ -52,7 +50,6 @@
     {
       border              : 1px solid transparent;
       padding			  : 0px 1px;
-      vertical-align      : middle;
       text-align          : center;
     }
   

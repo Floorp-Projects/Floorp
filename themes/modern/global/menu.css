@@ -34,7 +34,7 @@ menuitem {
   list-style-image: none;
   color: #000000;
   font: menu;
-  vertical-align: middle;
+  -moz-box-align: center;
 }
 
 menuitem[default="true"] {

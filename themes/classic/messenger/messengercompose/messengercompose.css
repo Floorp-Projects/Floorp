@@ -60,7 +60,6 @@
 
 .treecell-addressingWidget
   {
-  	vertical-align        : middle;
     border-bottom         : 1px solid #CACAFF;
     padding               : 0px !important;
   }
@@ -313,7 +312,7 @@
 }
 
 #askImageBox {
-        vertical-align: top;
+ -moz-box-align: start;
 }
 
 #convertYes {

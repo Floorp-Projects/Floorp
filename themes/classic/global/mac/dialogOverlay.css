@@ -30,7 +30,6 @@
 .box-smallheader > .toolbar-primary 
   {
     border                : 1px solid #000000;
-    vertical-align        : middle;
     padding-top           : 3px;
   }
 
@@ -48,11 +47,6 @@
     min-height            : 34px;
   }
 
-.box-header-text-box 
-  {
-    vertical-align        : middle;
-  }
-
 .box-header-text 
   {
     color                 : white;
@@ -61,11 +55,6 @@
     text-decoration       : underline;
   }
 
-.box-header-icon-box  
-  {
-    vertical-align        : middle;
-  }
-  
 .box-header-circle 
   {
 	  background-image      : url("chrome://global/skin/button28-bg.gif");

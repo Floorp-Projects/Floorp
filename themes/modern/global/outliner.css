@@ -103,7 +103,6 @@ outlinerbody:-moz-outliner-line(selected, focus) {
   border-top: 1px solid #C7D0D9;
   border-right: 1px solid #A5ABB0;
   border-bottom: 1px solid #A5ABB0;
-  vertical-align: middle;
 }  
 
 .outlinercol-box {

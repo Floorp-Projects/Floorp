@@ -3548,6 +3548,33 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
 
   PRBool inherited = aInherited;
 
+  // box-align: enum, inherit
+  if (eCSSUnit_Enumerated == xulData.mBoxAlign.GetUnit()) {
+    xul->mBoxAlign = xulData.mBoxAlign.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == xulData.mBoxAlign.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mBoxAlign = parentXUL->mBoxAlign;
+  }
+
+  // box-direction: enum, inherit
+  if (eCSSUnit_Enumerated == xulData.mBoxDirection.GetUnit()) {
+    xul->mBoxDirection = xulData.mBoxDirection.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == xulData.mBoxDirection.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mBoxDirection = parentXUL->mBoxDirection;
+  }
+
+  // box-flex: factor, inherit
+  if (eCSSUnit_Number == xulData.mBoxFlex.GetUnit()) {
+    xul->mBoxFlex = xulData.mBoxFlex.GetFloatValue();
+  }
+  else if (eCSSUnit_Inherit == xulData.mBoxOrient.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mBoxFlex = parentXUL->mBoxFlex;
+  }
+
   // box-orient: enum, inherit
   if (eCSSUnit_Enumerated == xulData.mBoxOrient.GetUnit()) {
     xul->mBoxOrient = xulData.mBoxOrient.GetIntValue();
@@ -3555,6 +3582,15 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
   else if (eCSSUnit_Inherit == xulData.mBoxOrient.GetUnit()) {
     inherited = PR_TRUE;
     xul->mBoxOrient = parentXUL->mBoxOrient;
+  }
+
+  // box-pack: enum, inherit
+  if (eCSSUnit_Enumerated == xulData.mBoxPack.GetUnit()) {
+    xul->mBoxPack = xulData.mBoxPack.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == xulData.mBoxPack.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mBoxPack = parentXUL->mBoxPack;
   }
 
   if (inherited)
@@ -4431,13 +4467,37 @@ nsRuleNode::CheckUIResetProperties(const nsCSSUserInterface& aData)
 inline nsRuleNode::RuleDetail 
 nsRuleNode::CheckXULProperties(const nsCSSXUL& aXULData)
 {
-  const PRUint32 numXULProps = 1;
+  const PRUint32 numXULProps = 5;
   PRUint32 totalCount=0;
   PRUint32 inheritCount=0;
+
+  if (eCSSUnit_Null != aXULData.mBoxAlign.GetUnit()) {
+    totalCount++;
+    if (eCSSUnit_Inherit == aXULData.mBoxAlign.GetUnit())
+      inheritCount++;
+  }
+
+  if (eCSSUnit_Null != aXULData.mBoxDirection.GetUnit()) {
+    totalCount++;
+    if (eCSSUnit_Inherit == aXULData.mBoxDirection.GetUnit())
+      inheritCount++;
+  }
+
+  if (eCSSUnit_Null != aXULData.mBoxFlex.GetUnit()) {
+    totalCount++;
+    if (eCSSUnit_Inherit == aXULData.mBoxFlex.GetUnit())
+      inheritCount++;
+  }
 
   if (eCSSUnit_Null != aXULData.mBoxOrient.GetUnit()) {
     totalCount++;
     if (eCSSUnit_Inherit == aXULData.mBoxOrient.GetUnit())
+      inheritCount++;
+  }
+
+  if (eCSSUnit_Null != aXULData.mBoxPack.GetUnit()) {
+    totalCount++;
+    if (eCSSUnit_Inherit == aXULData.mBoxPack.GetUnit())
       inheritCount++;
   }
 

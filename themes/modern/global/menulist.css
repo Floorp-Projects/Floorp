@@ -46,7 +46,6 @@ menulist {
 .menulist-text-box {
   padding: 3px 2px 3px 2px;
   text-align: left;
-  vertical-align: middle;
 }
 
 .menulist-icon-mid {
@@ -94,13 +93,11 @@ menulist:focus {
 .menulist-mid-top {
   background: url("chrome://global/skin/menulist/mlist-mid-top.gif") repeat-x;
   height: 9px;
-  vertical-align: top;
 }
 
 .menulist-mid-btm {
   background: url("chrome://global/skin/menulist/mlist-mid-btm.gif") repeat-x;
   height: 8px;
-  vertical-align: bottom;
 }
 
 .menulist-box-right {
@@ -123,7 +120,6 @@ menulist:focus {
 
 .menulist-dropmarker-box {
   text-align: center;
-  vertical-align: middle;
 }
 
 /* ..... active state ..... */

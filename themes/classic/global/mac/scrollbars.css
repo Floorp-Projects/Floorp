@@ -91,7 +91,7 @@ scrollbarbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  vertical-align: bottom;
+  -moz-box-align: end;
 }
 
 scrollbarbutton:hover:active {

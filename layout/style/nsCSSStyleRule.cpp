@@ -1673,9 +1673,25 @@ MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL)
   if (!ourXUL)
     return NS_OK; // We don't have any rules for XUL.
 
+  // box-align: enum, inherit
+  if (aXUL.mBoxAlign.GetUnit() == eCSSUnit_Null && ourXUL->mBoxAlign.GetUnit() != eCSSUnit_Null)
+    aXUL.mBoxAlign = ourXUL->mBoxAlign;
+
+  // box-direction: enum, inherit
+  if (aXUL.mBoxDirection.GetUnit() == eCSSUnit_Null && ourXUL->mBoxDirection.GetUnit() != eCSSUnit_Null)
+    aXUL.mBoxDirection = ourXUL->mBoxDirection;
+
+  // box-flex: enum, inherit
+  if (aXUL.mBoxFlex.GetUnit() == eCSSUnit_Null && ourXUL->mBoxFlex.GetUnit() != eCSSUnit_Null)
+    aXUL.mBoxFlex = ourXUL->mBoxFlex;
+
   // box-orient: enum, inherit
   if (aXUL.mBoxOrient.GetUnit() == eCSSUnit_Null && ourXUL->mBoxOrient.GetUnit() != eCSSUnit_Null)
     aXUL.mBoxOrient = ourXUL->mBoxOrient;
+
+  // box-pack: enum, inherit
+  if (aXUL.mBoxPack.GetUnit() == eCSSUnit_Null && ourXUL->mBoxPack.GetUnit() != eCSSUnit_Null)
+    aXUL.mBoxPack = ourXUL->mBoxPack;
 
   return NS_OK;
 }

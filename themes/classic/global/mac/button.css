@@ -132,7 +132,6 @@ button {
 
 .button-text-box {
 	text-align          : center;
-    vertical-align      : middle;
     padding				: 0px 3px;
 }
 
@@ -196,8 +195,7 @@ button:hover:active {
   }
 
   .button-text-box {
-    vertical-align    : middle;
-  	text-align        : center;
+    text-align        : center;
     padding           : 1px 0px 1px 0px;
   }
 

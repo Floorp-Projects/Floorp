@@ -258,7 +258,6 @@
     {
       border                  : 1px solid transparent;
       padding                 : 1px 3px 1px 3px;
-      vertical-align          : middle;
     }
 
   menubutton.button-toolbar > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-icon
@@ -326,7 +325,6 @@ menubutton.button-toolbar-2 > .menubutton-internal-box
   {
     border                  : 1px solid transparent;
     padding                 : 2px 2px 2px 4px;    
-    vertical-align          : middle;
   }  
 
 menubutton.button-toolbar-2 > .menubutton-internal-box > .menubutton-single-icon

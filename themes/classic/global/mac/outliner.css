@@ -39,7 +39,6 @@ outlinerbody:-moz-outliner-cell
 {
   padding: 0px 0px 1px 2px;
   white-space: nowrap;
-  vertical-align: middle;
 }
 
 outlinerbody:-moz-outliner-cell(selected)

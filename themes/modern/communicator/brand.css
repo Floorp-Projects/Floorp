@@ -46,6 +46,6 @@
 
 #throbber-box,
 .throbber-internal-box {
-  vertical-align: top !important;
+  -moz-box-align: start !important;
 }  
 

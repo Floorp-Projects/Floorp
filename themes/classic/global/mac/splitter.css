@@ -4,7 +4,6 @@ splitter
   {
     cursor                : e-resize;
     background-color      : #DDDDDD;
-    vertical-align		  : middle;
     text-align			  : center;
     border-right          : 1px solid #000000;
   }

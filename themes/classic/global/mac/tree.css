@@ -48,7 +48,6 @@ treeitem[dd-dropon="true"] > treerow {
 
 treecell { 
   white-space: nowrap;
-  vertical-align: middle;
   padding: 1px 0px 1px 2px;
 } 
 
@@ -60,7 +59,6 @@ treecell {
   border-bottom: 1px solid #333333 !important;
   color: black;
   padding: 0px;
-  vertical-align: middle;
 } 
 
 .treecell-header > .treecell-header-box,

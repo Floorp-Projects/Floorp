@@ -41,10 +41,6 @@
   font: message-box;
 }
  
-.button-internal-box {
-  vertical-align: middle;
-}
-    
 .button-toolbar > .button-internal-box > .button-icon {
   margin: 0px;
   padding: 0px 2px 0px 0px;
@@ -213,7 +209,6 @@ menubutton.button-toolbar-4 {
 
 .button-text-container {
   text-align: center;
-  vertical-align: middle;
 }
 
 .button-text {

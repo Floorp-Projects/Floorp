@@ -35,7 +35,6 @@ splitter {
   border-left: 1px solid #000000;
   min-width: 1px;
   background-color: #C7D0D9;
-  vertical-align: middle;
 }
 
 .splitter-internal-box {

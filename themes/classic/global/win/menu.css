@@ -2,7 +2,6 @@ menu, menuitem
   {
     font                  : menu;
     color                 : MenuText;
-    vertical-align        : middle;
     list-style-image      : none;
   }
 

@@ -82,7 +82,6 @@ treecell {
   border-top: 1px solid transparent;
   border-bottom: 1px solid transparent;
   padding: 0px 0px 1px 2px;
-  vertical-align: middle;
   white-space: nowrap;
 } 
  
@@ -128,7 +127,6 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
   border-top: 1px solid #C7D0D9;
   border-right: 1px solid #A5ABB0;
   border-bottom: 1px solid #A5ABB0;
-  vertical-align: middle;
 }  
   
 .treecell-header-box {

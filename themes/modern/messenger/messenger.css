@@ -369,7 +369,7 @@ searchoperator {
 }
 
 searchvalue {
-  display: -moz-xul-deck;
+  display: -moz-deck;
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchvalue");
 }
 

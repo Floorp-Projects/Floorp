@@ -40,7 +40,7 @@
     border-right        : 1px outset ThreeDFace;
     padding             : 5px;
     background-color    : -moz-Dialog;
-    vertical-align      : top !important;
+    -moz-box-align      : start;
   }
 
 .console-icon 

@@ -15,7 +15,6 @@ autorepeatbutton {
   padding: 1px;
   height: 1em;  
   text-align: left;
-  vertical-align: middle;
 }
 
 autorepeatbutton:hover {

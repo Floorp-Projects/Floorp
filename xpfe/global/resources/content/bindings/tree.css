@@ -1,7 +1,7 @@
 
 tree {
   -moz-user-focus: normal;
-  display: -moz-xul-grid;
+  display: -moz-grid;
   min-width: 0px;
   min-height: 0px;
   width: 200px;
@@ -13,11 +13,11 @@ tree[rows] {
 }
 
 treehead, treerows, treechildren, treeitem, treecolgroup {
-  display: -moz-xul-grid-group;
+  display: -moz-grid-group;
 }
 
 treehead, treerows, treechildren, treeitem {
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
 }
 
 treechildren, treehead, treerows {
@@ -25,22 +25,22 @@ treechildren, treehead, treerows {
 }
 
 treecol, treerow {
-  display: -moz-xul-grid-line;
+  display: -moz-grid-line;
 }
 
 treecol {
   min-width: 16px;
   width: 16px;
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
 }
 
 treecol[hidden="true"] {
-  display: -moz-xul-grid-line;
+  display: -moz-grid-line;
   visibility: collapse;
 }
 
 treechildren {
-  display: -moz-xul-grid-group;
+  display: -moz-grid-group;
 }
 
 tree > treechildren {
@@ -53,15 +53,15 @@ treeitem > treechildren {
 }
 
 treeitem[open="true"] > treechildren {
-  display: -moz-xul-grid-group;
+  display: -moz-grid-group;
 }
 
 treecell { 
-  vertical-align: middle;
+  -moz-box-align: center;
 } 
 
 treecell[hidden="true"] {
-  display: -moz-xul-box;
+  display: -moz-box;
   visibility: collapse;
 }
 

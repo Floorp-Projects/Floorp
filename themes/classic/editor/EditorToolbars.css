@@ -32,7 +32,7 @@
 #EditModeToolbar 
   {
     padding               : 0px;
-    vertical-align: top;
+    -moz-box-align        : start;
     border-bottom         : 1px solid darkgray;
     margin-bottom         : 0px;
     min-width             : 1px;

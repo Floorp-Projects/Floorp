@@ -24,7 +24,6 @@
   .button-toolbar-2 > .button-internal-box
     {
       padding             : 2px 7px 2px 6px;
-      vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
       color               : inherit;
@@ -197,7 +196,6 @@
       color               : inherit;
       padding             : 0px;
       border              : 1px solid transparent;
-      vertical-align      : middle;
       text-align          : center;
     }
   

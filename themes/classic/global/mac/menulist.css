@@ -68,7 +68,6 @@
   .menulist-mid-top {
   	background			: url("chrome://global/skin/menulist-mid-top.gif") repeat-x;
   	height          : 3px;
-    vertical-align  : top;
   }
 
   .menulist-mid-mid {
@@ -78,11 +77,9 @@
   .menulist-mid-btm {
     background			  : url("chrome://global/skin/menulist-mid-btm.gif") repeat-x;
     height            : 3px;
-    vertical-align    : bottom;
   }
 
   .menulist-text-box {
-    vertical-align    : middle;
   	text-align        : left;
     padding           : 1px 0px 2px 0px;
   }
@@ -102,7 +99,6 @@
     padding-top     : 3px;
     /**  padding-bottom  : 1px; **/
     text-align      : center;
-    vertical-align  : middle;
   }
 
   .menulist-right-btm {

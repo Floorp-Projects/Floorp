@@ -967,11 +967,11 @@ struct nsStyleXUL : public nsStyleStruct {
 
   PRInt32 CalcDifference(const nsStyleXUL& aOther) const;
   
-  // There will be seven more properties coming,
-  // which is why we warrant our own struct.
-  // box-align, box-direction, box-flex, box-flex-group, box-pack,
-  // stack-stretch, stack-policy
+  PRUint8       mBoxAlign;              // [reset] see nsStyleConsts.h
+  PRUint8       mBoxDirection;          // [reset] see nsStyleConsts.h
+  float         mBoxFlex;               // [reset] see nsStyleConsts.h
   PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
+  PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
 };
 #endif
 

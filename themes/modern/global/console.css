@@ -43,7 +43,7 @@
   border-right: 1px outset #C7D0D9;
   padding: 5px;
   background-color: #C7D0D9;
-  vertical-align: top !important;
+  -moz-box-align: start !important;
 }
 
 .console-icon {

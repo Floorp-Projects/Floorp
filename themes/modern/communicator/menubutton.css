@@ -42,7 +42,6 @@ menubutton.button-toolbar {
   border: none;
   padding: 1px 3px 1px 3px;
   background-color: transparent;
-  vertical-align: middle;
 }
 
 .button-toolbar > .menubutton-internal-box > .menubutton-single-icon {

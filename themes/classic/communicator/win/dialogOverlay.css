@@ -33,7 +33,6 @@
 .box-smallheader > .toolbar-primary 
   {
     border                : 1px solid ThreeDDarkShadow;
-    vertical-align        : middle;
     padding-top           : 3px;
   }
 

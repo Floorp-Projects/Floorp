@@ -196,7 +196,6 @@
 .treecell-addressingWidget {
   border-bottom: 1px solid #C4CADC;
   padding: 0px;
-  vertical-align: middle;
 }
 
 .treecell-addressingWidget:first-child {
@@ -238,7 +237,7 @@ statusbarpanel,
 }
 
 #askImageBox {
-  vertical-align: top;
+  -moz-box-align: start;
 }
 
 #convertYes {

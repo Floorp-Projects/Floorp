@@ -147,10 +147,6 @@ mail-emailaddress {
 
 /* ::::: collapsed view styles ::::: */
 
-.collapsedToggleHdrBox {
-  vertical-align: middle;
-}
-
 #collapsedAttachmentBox {
   text-align: center;
 }

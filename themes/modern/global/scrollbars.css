@@ -145,7 +145,7 @@ thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
 scrollbarbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
   cursor: default;
-  vertical-align: bottom;
+  -moz-box-align: end;
 }
 
 /* ..... increment .... */
