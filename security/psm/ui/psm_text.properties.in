@@ -730,10 +730,14 @@ set_password_success="Successfully set your new personal security password!"
 set_password_failure="Could not set your personal security password!"
 new_passwd="New password:"
 new_passwd_again="New password (again):"
-new_passwd_warning="Important: If you forget your password, you will no longer be able to use your certificates on the {curr_slot_name} security device.  Please record your password in a safe location."
+new_passwd_warning="Important: If you forget your Personal Security Password, you will not longer be able to use the sensitive information it protects.  Please record your password in a safe location."
 require_passwd="Require password:"
-first_time_cert_requested="First time my security certificate is requested."
-every_time_cert_requested="Every time my security certificate is requested."
+first_time_cert_requested:
+First time sensitive information (such as your certificate) is requested.
+:first_time_cert_requested
+every_time_cert_requested:
+Every time sensitive information (such as your certificate) is requested.
+:every_time_cert_requested
 passwd_timeout_entry:
 After <input type="text" name="passwordwillexpire" value="%4$d" size="3"> minutes of inactivity on an encrypted site.
 :passwd_timeout_entry
@@ -741,11 +745,11 @@ please_select_token=Please select token:
 select_slot_password_single=Setting password for %1$s.
 select_slot_password_bad=Token %1$s is not available!
 choose_password_to_prevent_access:
-You should choose a personal security password to prevent an 
-unauthorized person from using your security certificates stored on %1$s 
-security device.
+You should choose a Personal Security Password to protect sensitive information (such
+as your security certificates) stored on the %1$s security
+device.
 :choose_password_to_prevent_access
-change_passwd=Change personal security password for %1$s security device.
+change_passwd=Change Personal Security Password for the %1$s security device.
 old_passwd=Old password:
 supply_current_password=You need to supply current password!
 invalid_new_password=You did not enter your new password correctly. Please try again.
