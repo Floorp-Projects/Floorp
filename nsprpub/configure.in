@@ -813,7 +813,7 @@ case "$target" in
         PR_MD_ASFILES=os_BSD_OS_386_2.s
         ;;
 
-    bsdi4.*)
+    bsdi4.* | bsdi5.*)
         AC_DEFINE(_PR_SELECT_CONST_TIMEVAL)
         AC_DEFINE(_PR_BSDI_JMPBUF_IS_STRUCT)
         AC_DEFINE(HAVE_DLL)
@@ -824,7 +824,7 @@ case "$target" in
         DSO_LDOPTS='-shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
         STRIP="$STRIP -d"
         case "$target_os" in
-        bsdi4.2*)
+        bsdi4.2* | bsdi4.3* | bsdi5.*)
             AC_DEFINE(_PR_HAVE_GETPROTO_R)
             AC_DEFINE(_PR_HAVE_GETPROTO_R_POINTER)
             ;;

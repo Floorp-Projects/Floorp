@@ -39,6 +39,8 @@
  * Internal configuration macros
  */
 
+#include <sys/param.h>	/* for _BSDI_VERSION */
+
 #define PR_LINKER_ARCH	"bsdi"
 #define _PR_SI_SYSNAME "BSDI"
 #if defined(__i386__)
@@ -60,6 +62,14 @@
 #define _PR_NO_LARGE_FILES
 
 #define USE_SETJMP
+
+/* BSD/OS 4.3 and newer all have IPv6 support */
+#if _BSDI_VERSION >= 200105
+#define _PR_INET6
+#define _PR_HAVE_GETIPNODEBYNAME
+#define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_INET6_PROBE
+#endif
 
 #ifndef _PR_PTHREADS
 

@@ -3174,7 +3174,7 @@ EOF
         PR_MD_ASFILES=os_BSD_OS_386_2.s
         ;;
 
-    bsdi4.*)
+    bsdi4.* | bsdi5.*)
         cat >> confdefs.h <<\EOF
 #define _PR_SELECT_CONST_TIMEVAL 1
 EOF
@@ -3200,7 +3200,7 @@ EOF
         DSO_LDOPTS='-shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
         STRIP="$STRIP -d"
         case "$target_os" in
-        bsdi4.2*)
+        bsdi4.2* | bsdi4.3* | bsdi5.*)
             cat >> confdefs.h <<\EOF
 #define _PR_HAVE_GETPROTO_R 1
 EOF
