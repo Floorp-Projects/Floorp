@@ -160,15 +160,11 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
 	return TRUE;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+/*
+  Return the URL of the privacy tutorial
+*/
+PUBLIC char *
+PRVCY_TutorialURL()
+{
+  return "http://people.netscape.com/morse/privacy/index.html";
+}
