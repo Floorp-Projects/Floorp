@@ -2401,7 +2401,7 @@ dnl to resolve ambiguity. The next two tests determine how well the |using|
 dnl keyword is supported.
 dnl
 dnl Check to see if we can change access with |using|.
-AC_CACHE_CHECK(to determine if the C++ \"using\" keyword can change access,
+AC_CACHE_CHECK(whether the C++ \"using\" keyword can change access,
                ac_cv_cpp_using_can_change_access,
                [AC_TRY_COMPILE(class X { public: int go(const X&) {return 3;} };
                                class Y : public X {
@@ -2416,7 +2416,7 @@ if test "$ac_cv_cpp_using_can_change_access" = yes ; then
 fi
 
 dnl Check to see if we can resolve ambiguity with |using|.
-AC_CACHE_CHECK(to determine if the C++ \"using\" keyword resolves ambiguity,
+AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                ac_cv_cpp_using_resolves_ambiguity,
                [AC_TRY_COMPILE(class X { 
                                  public: int go(const X&) {return 3;}
@@ -2452,7 +2452,7 @@ dnl Older compilers are overly ambitious with respect to using the standard
 dnl template library's |operator!=()| when |operator==()| is defined. In
 dnl which case, defining |operator!=()| in addition to |operator==()| causes
 dnl ambiguity at compile-time. This test checks for that case.
-AC_CACHE_CHECK(for unambiguous standard template operator!=(),
+AC_CACHE_CHECK(whether standard template operator!=() is ambiguous,
                ac_cv_cpp_unambiguous_std_notequal,
                [AC_TRY_COMPILE([#include <algorithm>
                                 struct T1 {};
