@@ -16,7 +16,14 @@
  * Reserved.
  */
 
+#include "nscore.h"
+
+#ifdef NS_WIN32
+#include "windows.h"
+#endif
+
 #include "NSApplicationManager.h"
+#include "nsString.h"
 
 nsHashtable * NSApplicationManager::applications = NULL;
 PRMonitor *NSApplicationManager::monitor = NULL;
@@ -158,3 +165,35 @@ nsresult NSApplicationManager::DeleteShellAssociation(nsIApplicationShell * aApp
   return res;
 }
 
+nsresult NSApplicationManager::ModalMessage(const nsString &aMessage, 
+                                            const nsString &aTitle, 
+                                            nsModalMessageType aModalMessageType)
+{
+
+  nsresult res = NS_OK ;
+
+#ifdef NS_WIN32
+
+  PRInt32 msgtype ;
+
+  switch (aModalMessageType)
+  {
+    case eModalMessage_ok:
+      msgtype = MB_OK ;
+    break ;
+
+    case eModalMessage_ok_cancel:
+      msgtype = MB_OK ;
+    break ;
+
+    default:
+      msgtype = MB_OK ;
+    break ;
+
+  }
+  ::MessageBox(NULL, (const char *)aMessage.GetUnicode(), (const char *)aTitle.GetUnicode(), msgtype);
+
+#endif
+
+  return res ;
+}

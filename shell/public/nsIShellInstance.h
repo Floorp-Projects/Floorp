@@ -21,7 +21,8 @@
 
 #include "nsISupports.h"
 #include "nsIApplicationShell.h"
-#include "nsweb.h"
+#include "nsIWidget.h"
+#include "nsshell.h"
 #include "nscore.h"
 
 // bf88e640-df99-11d1-9244-00805f8a7ab6
@@ -42,6 +43,15 @@ public:
 
   NS_IMETHOD_(nsIApplicationShell *) GetApplicationShell() = 0; 
   NS_IMETHOD_(void)   SetApplicationShell(nsIApplicationShell * aApplicationShell) = 0;
+
+  NS_IMETHOD_(nsIWidget *) CreateApplicationWindow(const nsRect &aRect,
+                                                   EVENT_CALLBACK aHandleEventFunction) = 0 ;
+
+  NS_IMETHOD ShowApplicationWindow(PRBool show) = 0 ;
+
+  NS_IMETHOD_(void *) GetApplicationWindowNativeInstance() = 0; 
+
+  NS_IMETHOD ExitApplication() = 0 ;
 
 };
 

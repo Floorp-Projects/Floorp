@@ -43,18 +43,27 @@ public:
 
   NS_IMETHOD Run();
 
-  NS_METHOD RegisterFactories();
+  NS_IMETHOD RegisterFactories();
 
-  NS_METHOD_(void *) GetNativeInstance(); 
-  NS_METHOD_(void)   SetNativeInstance(void * aNativeInstance);
+  NS_IMETHOD_(void *) GetNativeInstance(); 
+  NS_IMETHOD_(void)   SetNativeInstance(void * aNativeInstance);
 
-  NS_METHOD_(nsIApplicationShell *) GetApplicationShell(); 
-  NS_METHOD_(void)   SetApplicationShell(nsIApplicationShell * aApplicationShell);
+  NS_IMETHOD_(nsIApplicationShell *) GetApplicationShell(); 
+  NS_IMETHOD_(void)   SetApplicationShell(nsIApplicationShell * aApplicationShell);
 
+  NS_IMETHOD_(nsIWidget *) CreateApplicationWindow(const nsRect &aRect,
+                                                   EVENT_CALLBACK aHandleEventFunction) ;
+
+  NS_IMETHOD ShowApplicationWindow(PRBool show) ;
+
+  NS_IMETHOD_(void *) GetApplicationWindowNativeInstance() ; 
+
+  NS_IMETHOD ExitApplication() ;
 
 private:
   nsNativeApplicationInstance mNativeInstance ;
   nsIApplicationShell * mApplicationShell ;
+  nsIWidget *           mApplicationWindow ;
 };
 
 

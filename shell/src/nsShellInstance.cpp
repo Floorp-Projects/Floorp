@@ -50,6 +50,7 @@ public:
 
 nsShellInstance::nsShellInstance()
 {
+  mApplicationWindow = NULL;
 }
 
 nsShellInstance::~nsShellInstance()
@@ -161,6 +162,48 @@ nsresult nsShellInstance::RegisterFactories()
   
 
   return NS_OK;
+}
+
+nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
+                                                     EVENT_CALLBACK aHandleEventFunction)
+{
+
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+
+  NSRepository::CreateInstance(kCWindowCID, 
+                               nsnull, 
+                               kIWidgetIID, 
+                               (LPVOID*)&(mApplicationWindow));
+
+  mApplicationWindow->Create((nsIWidget*)NULL, 
+                  aRect, 
+                  aHandleEventFunction, 
+                  NULL);
+
+  return (mApplicationWindow);
+}
+
+
+nsresult nsShellInstance::ShowApplicationWindow(PRBool show)
+{
+  mApplicationWindow->Show(show);
+
+  return NS_OK;
+}
+
+nsresult nsShellInstance::ExitApplication()
+{
+
+#ifdef NS_WIN32
+  PostQuitMessage(0);
+#endif
+  return NS_OK;
+}
+
+void * nsShellInstance::GetApplicationWindowNativeInstance()
+{
+  return (mApplicationWindow->GetNativeData(NS_NATIVE_WINDOW));
 }
 
 nsShellInstanceFactory::nsShellInstanceFactory()
