@@ -22,6 +22,6 @@
 DEPTH=..\..\..
 
 
-DIRS=vcard smimestub signstub resources
+DIRS=vcard smimestub resources
 
 include <$(DEPTH)\config\rules.mak>
