@@ -119,7 +119,9 @@ static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 #endif /* USE_NSREG */
 
 
+extern PRBool gShuttingDown;
 nsresult
+
 nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 	{
 		nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
@@ -1156,6 +1158,17 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        const nsIID &aIID,
                                        void **aResult)
 {
+    // test this first, since there's no point in creating a component during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+#ifdef DEBUG_dp
+        NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
+#endif /* DEBUG_dp */
+        return NS_ERROR_UNEXPECTED;
+    }
+
     if (aResult == NULL)
     {
         return NS_ERROR_NULL_POINTER;
