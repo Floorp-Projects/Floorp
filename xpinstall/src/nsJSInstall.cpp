@@ -2273,6 +2273,76 @@ InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+
+//
+// Native method InstallAlert
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc == 1)
+  {
+    //  public int InstallAlert (String aComment);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    nativeThis->Alert(b0);
+  }
+  else
+  {
+    JS_ReportError(cx, "Function LogComment requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+//
+// Native method InstallConfirm
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsAutoString b0;
+  PRInt32 nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc == 1)
+  {
+    //  public int InstallConfirm (String aComment);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    nativeThis->Confirm(b0, &nativeRet);
+  
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "Function LogComment requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 /***********************************************************************/
 //
 // class for Install
@@ -2398,6 +2468,8 @@ static JSFunctionSpec InstallMethods[] =
   {"FileMacAliasCreate",        InstallFileOpFileMacAliasCreate,       2},
   {"FileUnixLinkCreate",        InstallFileOpFileUnixLinkCreate,       2},
   {"LogComment",                InstallLogComment,                     1},
+  {"Alert",                     InstallAlert,                          1},
+  {"Confirm",                   InstallConfirm,                        2},
   {0}
 };
 
