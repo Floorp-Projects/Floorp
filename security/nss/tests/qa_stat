@@ -26,13 +26,12 @@
 
 O_OPTIONS=ON
 
-TBX_EXIT=10          # in case we are running on a tinderbox build, any
+TBX_EXIT=49          # in case we are running on a tinderbox build, any
                           # early exit needs to return an error
 if [ -z "$O_TBX" -o "$O_TBX" = "OFF" ] ; then
     . `dirname $0`/header
 fi
-TBX_EXIT=0           # reset the error here and add to it later...
-
+TBX_EXIT=48
 EARLY_EXIT=TRUE
 
 DOCDIR=/u/sonmi/doc
@@ -324,6 +323,13 @@ html_line()
   echo '<td>'$SYSNAME'</td>'
   #echo '<td>'$SYSNAME $TESTNUMBER $TESTDATE'</td>'
   echo ''
+  # hopefully we never run more different tests on a tinderbox build...
+  # on win some shells can not handle exit codes greater then 52 (64???)
+  # so for very early exits the codes are set 50-45, for failures later
+  # in the process the higher the number, the more failures
+  if [ "$O_TBX" = "ON" -a "$TBX_EXIT" -gt 45 ] ; then
+      TBX_EXIT=0
+  fi
   if [ "$1" = "failed" ]
   then
       TBX_EXIT=`expr $TBX_EXIT + 1`
@@ -650,7 +656,7 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
 ########################################################################
 tbx_main()
 {
-    TBX_EXIT=0
+    TBX_EXIT=47
     qa_stat_get_sysinfo # find out the OS we are running and all required tests
                         # on this OS
     
