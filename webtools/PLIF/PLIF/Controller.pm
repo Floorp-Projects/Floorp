@@ -254,15 +254,15 @@ sub dispatchMethod {
             $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
 }
 
-sub DESTROY {
-    my $self = shift;
-    $self->dump(10, 'At controller shutdown, there were ' .
-                # I assume there will always be > 1 and so haven't bothered to special case the singular grammar
-                scalar(@{$self->{services}}) . 
-                ' services registered, of which ' .
-                scalar(keys(%{$self->{servicesHash}})) .
-                ' had been placed in the services hash.');
-}
+# sub DESTROY {
+#     my $self = shift;
+#     $self->dump(10, 'At controller shutdown, there were ' .
+#                 #  I assume there will always be > 1 and so haven't bothered to special case the singular grammar
+#                 scalar(@{$self->{services}}) . 
+#                 ' services registered, of which ' .
+#                 scalar(keys(%{$self->{servicesHash}})) .
+#                 ' had been placed in the services hash.');
+# }
 
 
 # Implementation Specific Methods
