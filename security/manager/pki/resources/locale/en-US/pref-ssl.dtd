@@ -29,11 +29,11 @@
 <!ENTITY enable.ssl3 "Enable SSL version 3">
 <!ENTITY enable.tls "Enable TLS">
 
-<!ENTITY edit.sslciphers "Edit SSL Ciphers...">
+<!ENTITY edit.sslciphers "Edit Ciphers...">
 
 <!ENTITY warn.description "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
 <!ENTITY warn.enteringsecure "Entering a site that supports encryption">
-<!ENTITY warn.enteringweak "Entering a site that uses weak encryption">
+<!ENTITY warn.enteringweak "Entering a site that uses low-grade encryption">
 <!ENTITY warn.insecurepost
  "Sending form data from an insecure page to an insecure page">
 <!ENTITY warn.secureredirect "Redirection from one secure site to another">
@@ -44,3 +44,28 @@
 <!ENTITY certselect.description "Decide how &brandShortName; selects a security certificate to present to web sites that require one:">
 <!ENTITY certselect.auto "Select Automatically">
 <!ENTITY certselect.ask "Ask Every Time">
+
+<!-- Cipher pref window -->
+<!ENTITY cipher.title "SSL: Edit Ciphers">
+<!ENTITY cipher.ssl2.label "SSL2 Ciphersuites">
+<!ENTITY cipher.ssl3.label "SSL3/TLS Ciphersuites">
+
+<!-- SSL2 Ciphers -->
+<!ENTITY cipher.ssl2.rc4_128 "RC4 encryption with a 128-bit key">
+<!ENTITY cipher.ssl2.rc2_128 "RC2 encryption with a 128-bit key">
+<!ENTITY cipher.ssl2.des_ede3_192 "Triple DES encryption with a 168-bit key">
+<!ENTITY cipher.ssl2.des_64 "DES encryption with a 56-bit key">
+<!ENTITY cipher.ssl2.rc4_40 "RC4 encryption with a 40-bit key">
+<!ENTITY cipher.ssl2.rc2_40 "RC2 encryption with a 40-bit key">
+
+<!-- SSL3 ciphers -->
+<!ENTITY cipher.ssl3.rsa_rc4_128_md5 "RC4 encryption with a 128-bit key and an MD5 MAC">
+<!ENTITY cipher.ssl3.rsa_fips_des_ede3_sha "FIPS 140-1 compliant triple DES encryption and SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_des_ede3_sha "Triple DES encryption with a 168-bit key and a SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_fips_des_sha "FIPS 140-1 compliant DES encryption and SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_des_sha "DES encryption with a 56-bit key and a SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_1024_rc4_56_sha "RC4 encryption with a 56-bit key and a SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_1024_des_cbc_sha "DES encryption in CBC mode with a 56-bit key and a SHA-1 MAC">
+<!ENTITY cipher.ssl3.rsa_rc4_40_md5 "RC4 encryption with a 40-bit key and an MD5 MAC">
+<!ENTITY cipher.ssl3.rsa_rc2_40_md5 "RC2 encryption with a 40-bit key and an MD5 MAC">
+<!ENTITY cipher.ssl3.rsa_null_md5 "No encryption with an MD5 MAC">
