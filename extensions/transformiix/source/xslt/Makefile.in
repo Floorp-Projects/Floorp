@@ -30,7 +30,7 @@ DIRS            = functions util
 
 ifdef MOZ_XSL
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget necko
+REQUIRES = string xpcom dom layout widget necko xsl_doc
 endif
 
 CPPSRCS = Names.cpp \
