@@ -44,13 +44,19 @@ MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet
 PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(shell $(topsrcdir)/build/autoconf/config.guess)
 PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
 
+TAR_DEREF_FLAG = -h
+
+ifeq ($(OS_ARCH),BSD_OS)
+TAR_DEREF_FLAG = -L
+endif
+
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
-MAKE_PACKAGE 	= tar -cvhf - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+MAKE_PACKAGE 	= tar -cv $(TAR_DEREF_FLAG) -f - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
-MAKE_PACKAGE 	= tar -cvhf - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
+MAKE_PACKAGE 	= tar -cv $(TAR_DEREF_FLAG) -f - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
