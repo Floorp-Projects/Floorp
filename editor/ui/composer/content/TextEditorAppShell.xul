@@ -86,12 +86,7 @@
       <menuseparator/>
       <menuitem id="viewSourceMenuitem"/>
       <menuseparator />
-      <menu id="charsetMenu"/>
-      <menu id="charsetMenu1"/>
-      <menu id="charsetMenu2"/>
-      <menu id="charsetMenu3"/>
-      <menu id="charsetMenu4"/>
-      <menu id="charsetMenu5"/>
+      <menu id = "composerCharsetMenu" />
     </menupopup>
     </menu>
  
@@ -122,8 +117,8 @@
       <button id="spellingButton"/>
 
       <spring flex="1"/>
-    </toolbar>    
-    </toolbox>
+  </toolbar>    
+</toolbox>
 
     <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
