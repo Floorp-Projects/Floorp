@@ -686,3 +686,19 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
 }
 
+nsresult
+NS_NewStreamConv(nsStreamConverterService** aStreamConv)
+{
+    NS_PRECONDITION(aStreamConv != nsnull, "null ptr");
+    if (! aStreamConv)
+        return NS_ERROR_NULL_POINTER;
+
+    *aStreamConv = new nsStreamConverterService();
+    if (! *aStreamConv)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aStreamConv);
+    (*aStreamConv)->Init();
+
+    return NS_OK;
+}

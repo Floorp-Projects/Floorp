@@ -107,30 +107,4 @@ public:
                                         // one channel per part.
 };
 
-//////////////////////////////////////////////////
-// FACTORY
-class MultiMixedFactory : public nsIFactory
-{
-public:
-    MultiMixedFactory(const nsCID &aClass, const char* className, const char* progID);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~MultiMixedFactory();
-
-protected:
-    nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
-};
-
 #endif /* __nsmultimixedconv__h__ */

@@ -368,68 +368,17 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
     return rv;    
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// Factory
-////////////////////////////////////////////////////////////////////////
-MultiMixedFactory::MultiMixedFactory(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+nsresult
+NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
 {
-    NS_INIT_ISUPPORTS();
-}
-
-MultiMixedFactory::~MultiMixedFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS(MultiMixedFactory, NS_GET_IID(nsIFactory));
-
-NS_IMETHODIMP
-MultiMixedFactory::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
-{
-    if (! aResult)
+    NS_PRECONDITION(aMultiMixedConv != nsnull, "null ptr");
+    if (! aMultiMixedConv)
         return NS_ERROR_NULL_POINTER;
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv = NS_OK;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kMultiMixedConverterCID)) {
-        nsMultiMixedConv *conv = new nsMultiMixedConv();
-        if (!conv) return NS_ERROR_OUT_OF_MEMORY;
-        rv = conv->Init();
-        if (NS_FAILED(rv)) return rv;
-
-        rv = conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!inst)
+    *aMultiMixedConv = new nsMultiMixedConv();
+    if (! *aMultiMixedConv)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(inst);
-    *aResult = inst;
-    NS_RELEASE(inst);
-    return rv;
+
+    NS_ADDREF(*aMultiMixedConv);
+    return (*aMultiMixedConv)->Init();
 }
-
-nsresult
-MultiMixedFactory::LockFactory(PRBool aLock){
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-// Factory END
-////////////////////////////////////////////////////////////////////////
-
