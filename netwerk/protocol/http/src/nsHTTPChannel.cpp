@@ -53,6 +53,8 @@
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
 #include "nsIPrompt.h"
+#include "nsIThread.h"
+
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
 #include "nsIPref.h"
@@ -248,20 +250,20 @@ nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
                                   getter_AddRefs(mBufOutputStream),
                                   getter_AddRefs(listener));
 
-    mResponseDataListener = new nsHTTPFinalListener (this, listener, nsnull);
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (NS_FAILED(rv)) return rv;
+    nsSyncHelper *helper = new nsSyncHelper ();
+    if (!helper)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    mBufOutputStream = 0;
-    rv = Open();
-    if (NS_FAILED(rv)) return rv;
+    rv = helper -> Init (NS_STATIC_CAST (nsIChannel*, this), listener);
+    if (NS_FAILED(rv))
+        return rv;
 
-    // If the cached data hasn't expired, it's unnecessary to contact
-    // the server.  Just hand out the data in the cache.
-    if (mCachedContentIsValid)
-        rv = ReadFromCache();
-
-    return rv;
+    // spin up a new helper thread.
+    nsCOMPtr<nsIThread> helperThread;
+    return NS_NewThread (getter_AddRefs(helperThread), NS_STATIC_CAST(nsIRunnable*, helper));
 }
 
 NS_IMETHODIMP
@@ -2468,3 +2470,98 @@ nsHTTPChannel::RemoveObserver(nsIStreamAsFileObserver *aObserver)
 	return NS_OK;
 }
 
+
+static NS_DEFINE_CID(kEventQServiceCID, NS_EVENTQUEUESERVICE_CID);
+// nsISupports implementation
+NS_IMPL_THREADSAFE_ISUPPORTS3 (nsSyncHelper, nsIRunnable, nsIStreamListener, nsIStreamObserver);
+
+
+// nsIRunnable implementation
+NS_IMETHODIMP
+nsSyncHelper::Run()
+{
+    nsresult rv = NS_OK;
+    if (!mChannel || !mListener) return NS_ERROR_NOT_INITIALIZED;
+
+    // create an event queue for this thread.
+    
+    nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = service->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIEventQueue> currentThreadQ;
+    rv = service->GetThreadEventQueue(NS_CURRENT_THREAD, 
+                                  getter_AddRefs(currentThreadQ));
+    if (NS_FAILED(rv)) return rv;
+        
+    // initiate the AsyncRead from this thread so events are
+    // sent here for processing.
+    rv = mChannel->AsyncRead(this, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    // process events until we're finished.
+    PLEvent *event;
+    while (mProcessing) {
+        rv = currentThreadQ->WaitForEvent(&event);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = currentThreadQ->HandleEvent(event);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = service->DestroyThreadEventQueue();
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX make sure cleanup happens on the calling thread.
+    return NS_OK;
+}
+
+// nsIStreamListener implementation
+NS_IMETHODIMP
+nsSyncHelper::OnDataAvailable(nsIChannel *aChannel,
+                              nsISupports *aContext,
+                              nsIInputStream *aInStream,
+                              PRUint32 aOffset, PRUint32 aCount)
+{    
+    return mListener->OnDataAvailable(aChannel, aContext, aInStream,
+                                      aOffset, aCount);
+}
+
+
+// nsIStreamObserver implementation
+NS_IMETHODIMP
+nsSyncHelper::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
+{
+    return mListener->OnStartRequest(aChannel, aContext);
+}
+
+NS_IMETHODIMP
+nsSyncHelper::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
+                            nsresult aStatus, const PRUnichar *aMsg)
+{
+    mProcessing = PR_FALSE;
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
+}
+
+
+// nsSyncHelper implementation
+nsSyncHelper::nsSyncHelper()
+{
+    NS_INIT_REFCNT();
+    mProcessing = PR_TRUE;
+}
+
+nsresult
+nsSyncHelper::Init (nsIChannel *aChannel,
+                   nsIStreamListener* aListener) 
+{
+    if (!aChannel || !aListener) 
+        return NS_ERROR_FAILURE;
+
+    mChannel  = aChannel;
+    mListener = aListener;
+    //mCallerEventQ = aEventQ;
+    return NS_OK;
+}

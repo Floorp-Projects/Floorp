@@ -194,4 +194,26 @@ protected:
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
 };
 
+#include "nsIRunnable.h"
+
+class nsSyncHelper : public nsIRunnable,
+                     public nsIStreamListener
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMOBSERVER
+
+    nsSyncHelper();
+    virtual ~nsSyncHelper() {};
+
+    nsresult Init (nsIChannel *aChannel, nsIStreamListener *aListener);
+
+protected:
+    nsCOMPtr<nsIChannel>        mChannel;
+    nsCOMPtr<nsIStreamListener> mListener;
+    PRBool                      mProcessing;
+};
+
 #endif /* _nsHTTPChannel_h_ */
