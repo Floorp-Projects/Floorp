@@ -1652,11 +1652,15 @@ sub BuildViewerProjects()
     
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
+
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::options{carbon} ? "Carbon" : "";
+
     my($dist_dir) = GetBinDirectory();
 
     StartBuildModule("viewer");
 
-    BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$D",  0, 0, 0);
+    BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$C$D",  0, 0, 0);
 
     EndBuildModule("viewer");
 }
