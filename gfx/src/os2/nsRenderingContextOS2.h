@@ -193,7 +193,6 @@ public:
 
   NS_IMETHOD CreateDrawingSurface(HPS aPS, nsDrawingSurface &aSurface, nsIWidget *aWidget);
 
-#if 0 // OS2TODO
 #ifdef MOZ_MATHML
   NS_IMETHOD
   GetBoundingMetrics(const char*        aString,
@@ -205,7 +204,6 @@ public:
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics,
                      PRInt32*           aFontID);
-#endif
 #endif
 
 private:

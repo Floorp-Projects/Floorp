@@ -2317,6 +2317,158 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
   return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
+#ifdef MOZ_MATHML
+NS_IMETHODIMP 
+nsRenderingContextOS2::GetBoundingMetrics(const char*        aString,
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics)
+{
+#if 0
+  NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
+
+  aBoundingMetrics.Clear();
+  if (!mFontMetrics) return NS_ERROR_FAILURE;
+
+  SetupFontAndColor();
+
+  // set glyph transform matrix to identity
+  MAT2 mat2;
+  FIXED zero, one;
+  zero.fract = 0; one.fract = 0;
+  zero.value = 0; one.value = 1; 
+  mat2.eM12 = mat2.eM21 = zero; 
+  mat2.eM11 = mat2.eM22 = one; 
+
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;
+  DWORD len = GetGlyphOutline(mDC, aString[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
+  if (GDI_ERROR == len) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    PRUint32 i;
+    for (i = 1; i < aLength; i++) {
+      len = GetGlyphOutline(mDC, aString[i], GGO_METRICS, &gm, 0, nsnull, &mat2);
+      if (GDI_ERROR == len) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent > descent)
+        aBoundingMetrics.descent = descent;
+    }
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPoint32(mDC, aString, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+  }
+
+  // convert to app units
+  aBoundingMetrics.leftBearing = NSToCoordRound(float(aBoundingMetrics.leftBearing) * mP2T);
+  aBoundingMetrics.rightBearing = NSToCoordRound(float(aBoundingMetrics.rightBearing) * mP2T);
+  aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
+  aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
+  aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+
+  return NS_OK;
+#endif
+  return NS_ERROR_FAILURE;
+}
+
+#if 0
+struct GetBoundingMetricsData {
+  HDC                mDC;              // IN
+  HFONT              mFont;            // IN/OUT (running)
+  nsBoundingMetrics* mBoundingMetrics; // IN/OUT (running)
+  PRBool             mFirstTime;       // IN/OUT (set once)
+  nsresult           mStatus;          // OUT
+};
+
+static PRBool PR_CALLBACK
+do_GetBoundingMetrics(const nsFontSwitch* aFontSwitch,
+                      const PRUnichar*    aSubstring,
+                      PRUint32            aSubstringLength,
+                      void*               aData)
+{
+  nsFontWin* fontWin = aFontSwitch->mFontWin;
+
+  GetBoundingMetricsData* data = (GetBoundingMetricsData*)aData;
+  if (data->mFont != fontWin->mFont) {
+    data->mFont = fontWin->mFont;
+    ::SelectObject(data->mDC, data->mFont);
+  }
+
+  nsBoundingMetrics rawbm;
+  data->mStatus = fontWin->GetBoundingMetrics(data->mDC, aSubstring, aSubstringLength, rawbm);
+  if (NS_FAILED(data->mStatus)) {
+    return PR_FALSE; // stop now
+  }
+
+  if (data->mFirstTime) {
+    data->mFirstTime = PR_FALSE;
+    *data->mBoundingMetrics = rawbm;
+  }
+  else {
+    *data->mBoundingMetrics += rawbm;
+  }
+
+  return PR_TRUE; // don't stop till the end
+}
+#endif
+
+NS_IMETHODIMP
+nsRenderingContextOS2::GetBoundingMetrics(const PRUnichar*   aString,
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics,
+                                          PRInt32*           aFontID)
+{
+#if 0
+  aBoundingMetrics.Clear();
+  if (!mFontMetrics) return NS_ERROR_FAILURE;
+
+  SetupFontAndColor();
+
+  nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
+  GetBoundingMetricsData data = {mDC, mCurrFont, &aBoundingMetrics, PR_TRUE, NS_OK};
+
+  nsresult rv = metrics->ResolveForwards(mDC, aString, aLength, do_GetBoundingMetrics, &data);
+  if (NS_SUCCEEDED(rv)) {
+    rv = data.mStatus;
+  }
+
+  // convert to app units
+  aBoundingMetrics.leftBearing = NSToCoordRound(float(aBoundingMetrics.leftBearing) * mP2T);
+  aBoundingMetrics.rightBearing = NSToCoordRound(float(aBoundingMetrics.rightBearing) * mP2T);
+  aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
+  aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
+  aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+
+  if (mCurrFont != data.mFont) {
+    // If the font was changed along the way, restore our font
+    ::SelectObject(mDC, mCurrFont);
+  }
+
+  if (aFontID) *aFontID = 0;
+
+  return rv;
+#endif
+  return NS_ERROR_FAILURE;
+}
+#endif // MOZ_MATHML
+
 // Image drawing: just proxy on to the image object, so no worries yet.
 NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY)
 {
