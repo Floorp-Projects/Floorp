@@ -28,7 +28,7 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: primitives.h,v 1.3 2000/02/18 00:11:24 kvisco%ziplink.net Exp $
+ * $Id: primitives.h,v 1.4 2000/04/06 22:36:39 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -124,7 +124,7 @@ public:
      * The result into the destination String.
      * @return the given dest string
     **/
-    static String& Double::toString(double value, String& dest);
+    static String& toString(double value, String& dest);
 
 
 private:
@@ -158,7 +158,7 @@ public:
     /**
      * Creates a new Integer based on the value of the given String
     **/
-    Integer::Integer(const String& str);
+    Integer(const String& str);
 
     /**
      * Returns the int value of this Integer
