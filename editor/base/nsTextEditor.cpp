@@ -106,7 +106,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -2025,7 +2025,7 @@ NS_IMETHODIMP nsTextEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aSta
               if (NS_SUCCEEDED(result))
               { // move all the intermediate nodes into the new parent node
                 nsCOMPtr<nsIDOMNode>nextSibling;
-                while (intermediateNode.get() != endNode)
+                while (intermediateNode.get() != endNode.get())
                 {
                   if (!intermediateNode)
                     result = NS_ERROR_NULL_POINTER;
