@@ -109,10 +109,10 @@ else
    $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
 }
 print "The display version is: $versionMain\n";
-$ENV{WIZ_nameCompany}          = "Mozilla";
+$ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "MfcEmbed";
 $ENV{WIZ_nameProductNoVersion} = "MfcEmbed";
-$ENV{WIZ_fileMainExe}          = "none.exe";
+$ENV{WIZ_fileMainExe}          = "mfcembed.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # The following variables are for displaying version info in the 

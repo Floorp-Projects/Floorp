@@ -35,6 +35,7 @@ function registerKeys()
 
   createRootRegKey(winreg);
   registerMainKeys(winreg);
+  registerMozillaKeys(winreg);
 }
 
 function createRootRegKey(winreg)
@@ -73,8 +74,6 @@ function createRootRegKey(winreg)
 function registerMainKeys(winreg)
 {
   var subkey;  //the name of the subkey you are poking around in
-  var valname; //the name of the value you want to look at
-  var value;   //the data in the value you want to look at.
   var err;
 
   err     = winreg.setValueString(regRootKey, "CurrentVersion", "$UserAgent$");
@@ -91,6 +90,26 @@ function registerMainKeys(winreg)
   err     = winreg.setValueString(subkey, "Description", "$ProductName$ ($UserAgentShort$)");
 }
 
+function registerMozillaKeys(winreg)
+{
+  var regKey;
+  var subkey;  //the name of the subkey you are poking around in
+  var err;
+
+  regKey = "Software\\Mozilla";
+  winreg.createKey(regKey, "");
+  winreg.createKey(regKey + "\\MfcEmbed $UserAgent$", "");
+
+  subkey = regKey + "\\MfcEmbed $UserAgent$\\bin";
+  winreg.createKey(subkey, "");
+  err   = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
+
+  subkey = regKey + "\\MfcEmbed $UserAgent$\\Extensions";
+  winreg.createKey(subkey, "");
+  err   = winreg.setValueString(subkey, "Components", fProgram + "\\Components");
+  err   = winreg.setValueString(subkey, "Plugins",    fProgram + "\\Plugins");
+}
+
 // main
 var srDest;
 var err;
@@ -104,8 +123,7 @@ var restrictedAccess;
 var fileToRegister;
 var regRootKey;
 
-// So far the only argument passed in is the root path into the Windows registry.
-regRootKey = new String("Software\\Mozilla\\MFCEmbed");
+regRootKey = new String("Software\\$CompanyName$\\MFCEmbed");
 
 srDest = $SpaceRequired$:bin;
 err    = initInstall("$ProductName$", "MFCEmbed", "$Version$"); 
