@@ -1144,7 +1144,7 @@ nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetImageMap(const nsString& aMapName,
+nsHTMLDocument::GetImageMap(const nsAString& aMapName,
                             nsIDOMHTMLMapElement** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");

@@ -109,7 +109,7 @@ public:
 
   NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap);
 
-  NS_IMETHOD GetImageMap(const nsString& aMapName,
+  NS_IMETHOD GetImageMap(const nsAString& aMapName,
                          nsIDOMHTMLMapElement** aResult);
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
