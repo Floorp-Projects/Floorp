@@ -427,6 +427,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
                                          const nsRect&        aDirtyRect,
                                          nsFramePaintLayer    aWhichLayer)
 {
+  // XXX This trap handles an odd bogus 1 pixel invalidation that we keep getting 
+  // when scrolling.
+  if (aDirtyRect.width == 1)
+    return NS_OK;
+
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
   if (!disp->IsVisibleOrCollapsed())
