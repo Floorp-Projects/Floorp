@@ -113,6 +113,7 @@ enum EscapeMask {
   esc_Query          = PR_BIT(8),
   esc_Ref            = PR_BIT(9),
   /** special flags **/
+  esc_Minimal        = esc_Scheme | esc_Username | esc_Password | esc_Host | esc_FilePath | esc_Param | esc_Query | esc_Ref, 
   esc_Forced         = PR_BIT(10), /* forces escaping of existing escape sequences */
   esc_OnlyASCII      = PR_BIT(11), /* causes non-ascii octets to be skipped */
   esc_OnlyNonASCII   = PR_BIT(12), /* causes ascii octets to be skipped */

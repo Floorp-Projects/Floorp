@@ -351,10 +351,14 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         if (offset) {
             result.fe_fnlen = offset - result.fe_fname;
         }
-        aString.Append(NS_LITERAL_CSTRING("\"") +
-                       Substring(result.fe_fname, result.fe_fname+result.fe_fnlen) +
-                       NS_LITERAL_CSTRING("\" "));
 
+        nsCAutoString buf;
+        aString.Append(NS_LITERAL_CSTRING("\"") + 
+                       NS_EscapeURL(Substring(result.fe_fname, 
+                                              result.fe_fname+result.fe_fnlen),
+                                    esc_Minimal|esc_OnlyASCII|esc_Forced,buf)
+                       + NS_LITERAL_CSTRING("\" "));
+ 
         // CONTENT LENGTH
         
         if (type != 'd') 
