@@ -150,7 +150,7 @@ PRIVATE void net_Trace(char *msg) {
 }
 
 /* #define'd in mktrace.h to TRACEMSG */
-void _MK_TraceMsg(char *fmt, ...) {
+void ns_MK_TraceMsg(char *fmt, ...) {
 	va_list ap;
 	char buf[512];
 
