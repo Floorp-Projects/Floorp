@@ -219,10 +219,11 @@ sub load_buildlog {
             if( $mailtime > 0 
 		&& ($form{noignore} || !($t->{ignore_builds}->{$buildname} != 0)) 
                 ){
-                unshift @{$build_list}, $buildrec;
+                push @{$build_list}, $buildrec;
             }
         }
     }
+    @{$build_list} = reverse @{$build_list};
 }
 
 sub load_who {
