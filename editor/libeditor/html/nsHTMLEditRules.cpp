@@ -6526,6 +6526,23 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       if (bIsEmptyNode) 
       {
+        nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aListItem);
+        if (nodeAtom == nsEditProperty::dd || nodeAtom == nsEditProperty::dt)
+        {
+          nsCOMPtr<nsIDOMNode> list;
+          PRInt32 itemOffset;
+          res = nsEditor::GetNodeLocation(aListItem, address_of(list), &itemOffset);
+          if (NS_FAILED(res)) return res;
+
+          nsAutoString listTag((nodeAtom == nsEditProperty::dt) ? NS_LITERAL_STRING("dd") : NS_LITERAL_STRING("dt"));
+          nsCOMPtr<nsIDOMNode> newListItem;
+          res = mHTMLEditor->CreateNode(listTag, list, itemOffset+1, getter_AddRefs(newListItem));
+          if (NS_FAILED(res)) return res;
+          res = mEditor->DeleteNode(aListItem);
+          if (NS_FAILED(res)) return res;
+          return aSelection->Collapse(newListItem, 0);
+        }
+
         nsCOMPtr<nsIDOMNode> brNode;
         res = mHTMLEditor->CopyLastEditableChildStyles(prevItem, aListItem, getter_AddRefs(brNode));
         if (NS_FAILED(res)) return res;
