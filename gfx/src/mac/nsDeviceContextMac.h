@@ -46,7 +46,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontEnumerator.h"
 #include <Types.h>
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"

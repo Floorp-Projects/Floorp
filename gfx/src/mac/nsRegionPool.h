@@ -40,7 +40,7 @@
 #define nsRegionPool_h___
 
 #include "nscore.h"
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 
 class NS_EXPORT nsNativeRegionPool

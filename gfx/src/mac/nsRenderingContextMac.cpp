@@ -58,7 +58,7 @@
 
 #include <FixMath.h>
 #include <Gestalt.h>
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 #include "nsRegionPool.h"
 #include "nsFontUtils.h"
