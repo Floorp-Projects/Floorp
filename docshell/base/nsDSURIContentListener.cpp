@@ -161,6 +161,7 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
        || nsCRT::strcasecmp(aContentType, "image/gif") == 0
        || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
        || nsCRT::strcasecmp(aContentType, "image/png") == 0
+       || nsCRT::strcasecmp(aContentType, "text/plain") == 0
        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
        *aCanHandleContent = PR_TRUE;
