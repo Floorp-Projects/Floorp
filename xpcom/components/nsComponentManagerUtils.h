@@ -171,4 +171,10 @@ public:
 
 };
 
+/* keys for registry use */
+extern const char xpcomBaseName[];
+extern const char xpcomKeyName[];
+extern const char lastModValueName[];
+extern const char fileSizeValueName[];
+
 #endif /* nsComponentManagerUtils_h__ */
