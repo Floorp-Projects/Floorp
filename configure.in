@@ -3027,26 +3027,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         fi
     fi
 
-if test "$no_x" != "yes"; then
-    dnl ========================================================
-    dnl = Gtk support hackery                                  =
-    dnl ========================================================
-	MOZ_ARG_ENABLE_BOOL(toolkit-gtk,
-	[  --enable-toolkit-gtk    Enable GTK+ toolkit support ],
-        MOZ_ENABLE_GTK=1,
-        MOZ_ENABLE_GTK= )
-
-
-    dnl ========================================================
-    dnl = Xlib support hackery                                 =
-    dnl ========================================================
-	MOZ_ARG_ENABLE_BOOL(toolkit-xlib,
-	[  --enable-toolkit-xlib   Enable xlib toolkit support ],
-        MOZ_ENABLE_XLIB=1,
-        MOZ_ENABLE_XLIB= )
-
-fi # !no_x
-
 AC_DEFINE_UNQUOTED(MOZ_DEFAULT_TOOLKIT,"$MOZ_WIDGET_TOOLKIT")
 
 dnl ========================================================

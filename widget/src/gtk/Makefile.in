@@ -90,11 +90,6 @@ EXTRA_DSO_LDOPTS = \
 
 EXTRA_DSO_LDOPTS +=  -L$(DIST)/lib -lgtksuperwin $(MOZ_GTK_LDFLAGS)
 
-# If not primary toolkit, install in secondary path
-ifneq (gtk,$(MOZ_WIDGET_TOOLKIT))
-INACTIVE_COMPONENT = 1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
