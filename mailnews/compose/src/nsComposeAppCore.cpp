@@ -323,9 +323,7 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
 
 		// mMsgCompFields->SetBody(msgBody.ToNewCString(), NULL);
 		// SetBody() strdup()'s cmsgBody.
-		char* cmsgBody = msgBody.ToNewCString();
-		mMsgCompFields->SetBody(cmsgBody, NULL);
-		delete[] cmsgBody;
+		mMsgCompFields->SetBody(nsAutoCString(msgBody), NULL);
         PR_Free(buffer);
     }
 }
@@ -619,14 +617,10 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                 {
                     bString += "Re: ";
                     bString += aString;
-					char* cSubject = bString.ToNewCString();
-					mMsgCompFields->SetSubject(cSubject, NULL);
-					delete[] cSubject;
+					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
                     
 					message->GetAuthor(aString);		
-					char * cTo = aString.ToNewCString();
-					mMsgCompFields->SetTo(cTo, NULL);
-					delete[] cTo;
+					mMsgCompFields->SetTo(nsAutoCString(aString), NULL);
 
                     if (messageType == 1)
                     {
@@ -636,9 +630,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                         if (cString.Length() > 0 && dString.Length() > 0)
                             cString = cString + ", ";
                         cString = cString + dString;
-						char* cCc = cString.ToNewCString();
-						mMsgCompFields->SetCc(cCc, NULL);
-						delete[] cCc;
+						mMsgCompFields->SetCc(nsAutoCString(cString), NULL);
                     }
                     HackToGetBody(1);
                     break;
@@ -651,9 +643,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += aString;
                     bString += "]";
 
-					char* cSubject = bString.ToNewCString();
-					mMsgCompFields->SetSubject(cSubject, NULL);
-					delete[] cSubject;
+					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
 
                     /* We need to get more information out from the message. */
                     nsCOMPtr<nsIRDFResource> rdfResource;
@@ -731,11 +721,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			PR_Free(outCString);
 		}
 		else 
-		{
-			char* cAddrTo = aAddrTo.ToNewCString();
-			mMsgCompFields->SetTo(cAddrTo, NULL);
-			delete[] cAddrTo;
-		}
+			mMsgCompFields->SetTo(nsAutoCString(aAddrTo), NULL);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrCc, &outCString))) 
 		{
@@ -743,11 +729,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			PR_Free(outCString);
 		}
 		else 
-		{
-			char* cAddrCc = aAddrCc.ToNewCString();
-			mMsgCompFields->SetCc(cAddrCc, NULL);
-			delete[] cAddrCc;
-		}
+			mMsgCompFields->SetCc(nsAutoCString(aAddrCc), NULL);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrBcc, &outCString))) 
 		{
@@ -755,11 +737,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			PR_Free(outCString);
 		}
 		else 
-		{
-			char* cAddrBcc = aAddrBcc.ToNewCString();
-			mMsgCompFields->SetBcc(cAddrBcc, NULL);
-			delete[] cAddrBcc;
-		}
+			mMsgCompFields->SetBcc(nsAutoCString(aAddrBcc), NULL);
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aSubject, &outCString))) 
 		{
@@ -767,11 +745,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			PR_Free(outCString);
 		}
 		else 
-		{
-			char* cSubject = aSubject.ToNewCString();
-			mMsgCompFields->SetSubject(cSubject, NULL);
-			delete[] cSubject;
-		}
+			mMsgCompFields->SetSubject(nsAutoCString(aSubject), NULL);
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 		char *mail_charset;
@@ -783,11 +757,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			PR_Free(outCString);
 		}
 		else 
-		{
-			char* cMsg = aMsg.ToNewCString();
-			mMsgCompFields->SetBody(cMsg, NULL);
-			delete[] cMsg;
-		}
+			mMsgCompFields->SetBody(nsAutoCString(aMsg), NULL);
 
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
