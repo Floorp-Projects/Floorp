@@ -809,14 +809,19 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     }
 
     len = PORT_Strlen(tagName);
+    if (len+1 > sizeof(tmpBuf)) {
+	if (unknownTag) PR_smprintf_free(unknownTag);
+	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+	return SECFailure;
+    }
     PORT_Memcpy(tmpBuf, tagName, len);
+    if (unknownTag) PR_smprintf_free(unknownTag);
     tmpBuf[len++] = '=';
     
     /* escape and quote as necessary */
     rv = CERT_RFC1485_EscapeAndQuote(tmpBuf+len, sizeof(tmpBuf)-len, 
 		    		     (char *)avaValue->data, avaValue->len);
     SECITEM_FreeItem(avaValue, PR_TRUE);
-    if (unknownTag) PR_smprintf_free(unknownTag);
     if (rv) return SECFailure;
     
     rv = AppendStr(bufp, tmpBuf);
