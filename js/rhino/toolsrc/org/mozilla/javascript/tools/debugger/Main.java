@@ -1850,9 +1850,9 @@ class Menubar extends JMenuBar implements ActionListener {
             if (source == breakOnExceptions) {
                 db.setBreakOnExceptions(breakOnExceptions.isSelected());
             }else if (source == breakOnEnter) {
-                db.breakOnEnter = breakOnEnter.isSelected();
+                db.setBreakOnEnter(breakOnEnter.isSelected());
             }else if (source == breakOnReturn) {
-                db.breakOnReturn = breakOnReturn.isSelected();
+                db.setBreakOnReturn(breakOnReturn.isSelected());
             }else {
                 db.actionPerformed(e);
             }
@@ -3502,11 +3502,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         }
     }
 
-    void setBreakOnExceptions(boolean value) {
-        this.breakOnExceptions = value;
-    }
-
-
     //
     // public interface
     //
@@ -3514,6 +3509,27 @@ public class Main extends JFrame implements Debugger, ContextListener {
     public Main(String title) {
         super(title);
         init();
+    }
+
+   /**
+    *  Toggle Break-on-Exception behavior
+    */
+    public void setBreakOnExceptions(boolean value) {
+        this.breakOnExceptions = value;
+    }
+
+   /**
+    *  Toggle Break-on-Enter behavior
+    */
+    public void setBreakOnEnter(boolean value) {
+        this.breakOnEnter = value;
+    }
+
+   /**
+    *  Toggle Break-on-Return behavior
+    */
+    public void setBreakOnReturn(boolean value) {
+        this.breakOnReturn = value;
     }
 
     /**
@@ -3525,6 +3541,18 @@ public class Main extends JFrame implements Debugger, ContextListener {
         while (e.hasMoreElements()) {
             SourceInfo si = (SourceInfo)e.nextElement();
             si.removeAllBreakpoints();
+        }
+    }
+
+   /**
+    *  Resume Execution
+    */
+    public void go()
+    {
+        returnValue = GO;
+        synchronized (monitor) {
+            this.returnValue = returnValue;
+            monitor.notifyAll();
         }
     }
 
