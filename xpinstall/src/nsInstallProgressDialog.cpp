@@ -99,13 +99,13 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 NS_IMETHODIMP 
 nsInstallProgressDialog::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
-    return Open();
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsInstallProgressDialog::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
-    return Close();
+    return NS_OK;
 }
 
 NS_IMETHODIMP 

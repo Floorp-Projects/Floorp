@@ -107,6 +107,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
   else if (aIID.Equals(nsIProgressEventSink::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
+  else if (aIID.Equals(nsIEventSinkGetter::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIEventSinkGetter*,this);
   else if (aIID.Equals(kISupportsIID))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
@@ -202,7 +204,18 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
                                       getter_AddRefs(mDlg) );
             if (NS_SUCCEEDED(rv))
             {
-                rv = mDlg->Open();
+                NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+                if (NS_SUCCEEDED(rv))
+                {
+                    rv = pmgr->GetProxyObject( 0, nsIXPIProgressDlg::GetIID(),
+                            mDlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
+
+                }
+                
+                if (NS_SUCCEEDED(rv))
+                {        
+                    rv = mDlg->Open();
+                }
             }
         }
         else
@@ -284,15 +297,20 @@ nsresult nsXPInstallManager::DownloadNext()
             rv = NS_NewFileSpecWithSpec( temp, getter_AddRefs(mItem->mFile) );
             if (NS_SUCCEEDED(rv))
             {
-                // --- start the download
-                nsIURI  *pURL;
-                rv = NS_NewURI(&pURL, mItem->mURL);
+                 // --- start the download
+                nsCOMPtr<nsIURI> pURL;
+                rv = NS_NewURI(getter_AddRefs(pURL), mItem->mURL);
                 
                 if (NS_SUCCEEDED(rv)) 
                 {
-                    // XXX: Should there be a LoadGroup?
-                    rv = NS_OpenURI( this, nsnull, pURL, nsnull );
-                    NS_RELEASE(pURL);
+                    nsCOMPtr<nsIChannel> channel;
+                
+                    rv = NS_OpenURI(getter_AddRefs(channel), pURL, nsnull, this);
+                
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        rv = channel->AsyncRead(0, -1, nsnull, this);
+                    }
                 }
             }
 
@@ -475,17 +493,6 @@ nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
 
     mFinalizing = PR_FALSE;
 
-    if ( !mProxy )
-    {
-        NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = pmgr->GetProxyObject( 0, nsIXPIProgressDlg::GetIID(),
-                    mDlg, PROXY_SYNC, getter_AddRefs(mProxy) );
-
-        }
-    }
-
     return rv;
 }
 
@@ -502,6 +509,7 @@ nsXPInstallManager::AfterJavascriptEvaluation(const PRUnichar *URL)
 NS_IMETHODIMP 
 nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
+    mProxy->SetActionText(nsnull);
     return mProxy->SetHeading( nsString(UIPackageName).GetUnicode() );
 }
 
