@@ -15,6 +15,29 @@
 
 #include "xp_core.h"
 
+#ifdef XP_OS2
+/*
+ * On OS/2, the system will have defined RGB_* so we #undef 'em to avoid warnings
+ * from jmorecfg.h.
+ */
+#ifdef RGB_RED
+	#undef RGB_RED
+#endif
+#ifdef RGB_GREEN
+	#undef RGB_GREEN
+#endif
+#ifdef RGB_BLUE
+	#undef RGB_BLUE
+#endif
+/*
+ * Tweak for jconfig for OS/2 (rather than replicate all the rest of it in jos2fig.h).
+ */
+#ifdef XP_OS2_VACPP
+#undef INLINE
+#define INLINE
+#endif
+#endif
+
 /*
  * First we include the configuration files that record how this
  * installation of the JPEG library is set up.  jconfig.h can be
