@@ -69,6 +69,8 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define cookie_behaviorPref "network.cookie.cookieBehavior"
 #define cookie_warningPref "network.cookie.warnAboutCookies"
 #define cookie_strictDomainsPref "network.cookie.strictDomains"
+#define cookie_lifetimePref "network.cookie.lifetimeOption"
+#define cookie_lifetimeValue "network.cookie.lifetimeLimit"
 #define cookie_localization "chrome://wallet/locale/cookie.properties"
 #define COOKIE_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
@@ -123,6 +125,13 @@ typedef struct _cookie_DeferStruct {
 #include "prthread.h"
 #include "prmon.h"
 
+typedef enum {
+  COOKIE_Normal,
+  COOKIE_Discard,
+  COOKIE_Trim,
+  COOKIE_Ask
+} COOKIE_LifetimeEnum;
+
 PRBool cookie_SetCookieStringInUse = PR_FALSE;
 PRIVATE PRBool cookie_cookiesChanged = PR_FALSE;
 PRIVATE PRBool cookie_permissionsChanged = PR_FALSE;
@@ -132,6 +141,8 @@ PRIVATE COOKIE_BehaviorEnum cookie_behavior = COOKIE_Accept;
 PRIVATE PRBool cookie_warning = PR_FALSE;
 PRIVATE COOKIE_BehaviorEnum image_behavior = COOKIE_Accept;
 PRIVATE PRBool image_warning = PR_FALSE;
+PRIVATE COOKIE_LifetimeEnum cookie_lifetimeOpt = COOKIE_Normal;
+PRIVATE time_t cookie_lifetimeLimit = 90*24*60*60;
 
 PRIVATE nsVoidArray * cookie_cookieList=0;
 PRIVATE nsVoidArray * cookie_permissionList=0;
@@ -867,6 +878,17 @@ cookie_SetWarningPref(PRBool x) {
   cookie_warning = x;
 }
 
+PRIVATE void
+cookie_SetLifetimePref(COOKIE_LifetimeEnum x) {
+  cookie_lifetimeOpt = x;
+}
+
+PRIVATE void
+cookie_SetLifetimeLimit(PRInt32 x) {
+  // save limit as seconds instead of days
+  cookie_lifetimeLimit = x*24*60*60;
+}
+
 PUBLIC COOKIE_BehaviorEnum
 COOKIE_GetBehaviorPref() {
   return cookie_behavior;
@@ -877,16 +899,49 @@ cookie_GetWarningPref() {
   return cookie_warning;
 }
 
+PRIVATE COOKIE_LifetimeEnum
+cookie_GetLifetimePref() {
+  return cookie_lifetimeOpt;
+}
+
+PRIVATE time_t
+cookie_GetLifetimeTime() {
+  // return time after which lifetime is excessive
+  return get_current_time() + cookie_lifetimeLimit;
+}
+
+PRIVATE PRBool
+cookie_GetLifetimeAsk(time_t expireTime) {
+  // return true if we should ask about this cookie
+  return (cookie_GetLifetimePref() == COOKIE_Ask)
+    && (cookie_GetLifetimeTime() < expireTime);
+}
+
+PRIVATE time_t
+cookie_TrimLifetime(time_t expires) {
+  // return potentially-trimmed lifetime
+  if (cookie_GetLifetimePref() == COOKIE_Trim) {
+    // a limit of zero means expire cookies at end of session
+    if (cookie_lifetimeLimit == 0) {
+      return 0;
+    }
+    time_t limit = cookie_GetLifetimeTime();
+    if ((unsigned)expires > (unsigned)limit) {
+      return limit;
+    }
+  }
+  return expires;
+}
+
 MODULE_PRIVATE int PR_CALLBACK
 cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
-    cookie_SetBehaviorPref(COOKIE_Accept);
-  } else {
-    cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
+    n = COOKIE_Accept;
   }
+  cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   return PREF_NOERROR;
 }
 
@@ -945,6 +1000,29 @@ image_WarningPrefChanged(const char * newpref, void * data) {
     x = PR_FALSE;
   }
   image_SetWarningPref(x);
+  return PREF_NOERROR;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
+    n = COOKIE_Normal;
+  }
+  cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
+  return PREF_NOERROR;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_LifetimeLimitPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
+    cookie_SetLifetimeLimit(n);
+  }
   return PREF_NOERROR;
 }
 
@@ -1025,23 +1103,23 @@ permission_SetRememberChecked(PRInt32 type, PRBool value) {
 nsresult
 permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save);
 
-void
-permission_Check
-    (char * hostname,
-     PRBool &permission,
+PRBool
+permission_Check(
+     char * hostname,
      PRInt32 type,
      PRBool warningPref,
-     PRUnichar * message) {
+     PRUnichar * message)
+{
+  PRBool permission;
 
   /* try to make decision based on saved permissions */
   if (NS_SUCCEEDED(permission_CheckFromList(hostname, permission, type))) {
-    return;
+    return permission;
   }
 
   /* see if we need to prompt */
   if(!warningPref) {
-    permission = PR_TRUE;
-    return;
+    return PR_TRUE;
   }
 
   /* we need to prompt */
@@ -1066,6 +1144,7 @@ permission_Check
     cookie_permissionsChanged = PR_TRUE;
     permission_Save();
   }
+  return permission;
 }
 
 PRIVATE int
@@ -1097,8 +1176,8 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   /* use common routine to make decision */
   PRUnichar * message = cookie_Localize("PermissionToAcceptImage");
   PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
-  permission_Check
-    (hostname, permission, IMAGEPERMISSION, image_GetWarningPref(), new_string);
+  permission = permission_Check(hostname, IMAGEPERMISSION,
+                                image_GetWarningPref(), new_string);
   PR_FREEIF(new_string);
   Recycle(message);
   return NS_OK;
@@ -1114,13 +1193,14 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
 
+  // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
-    cookie_SetBehaviorPref(COOKIE_Accept);
-  } else {
-    cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
+    n = COOKIE_Accept;
   }
+  cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
 
+  // Initialize for cookie_warningPref
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
@@ -1128,10 +1208,9 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
 
   if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
-    image_SetBehaviorPref(COOKIE_Accept);
-  } else {
-    image_SetBehaviorPref((COOKIE_BehaviorEnum)n);
+    n = COOKIE_Accept;
   }
+  image_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   prefs->RegisterCallback(image_behaviorPref, image_BehaviorPrefChanged, NULL);
 
   if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
@@ -1140,6 +1219,18 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   image_SetWarningPref(x);
   prefs->RegisterCallback(image_warningPref, image_WarningPrefChanged, NULL);
 
+  // Initialize for cookie_lifetimePref
+  if (NS_FAILED(prefs->GetIntPref(cookie_lifetimePref, &n))) {
+    n = COOKIE_Normal;
+  }
+  cookie_SetLifetimePref((COOKIE_LifetimeEnum)n);
+  prefs->RegisterCallback(cookie_lifetimePref, cookie_LifetimeOptPrefChanged, NULL);
+
+  // Initialize for cookie_lifetimeValue
+  if (!NS_FAILED(prefs->GetIntPref(cookie_lifetimeValue, &n))) {
+    cookie_SetLifetimeLimit(n);
+  }
+  prefs->RegisterCallback(cookie_lifetimeValue, cookie_LifetimeLimitPrefChanged, NULL);
 }
 
 PRBool
@@ -1594,7 +1685,6 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=NULL, *host_from_header=NULL;
   char *name_from_header=NULL, *cookie_from_header=NULL;
-  time_t expires=0;
   char *cur_path = cookie_ParseURL(curURL, GET_PATH_PART);
   char *cur_host = cookie_ParseURL(curURL, GET_HOST_PART);
   char *semi_colon, *ptr, *equal;
@@ -1617,6 +1707,15 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     PR_Free(cur_path);
     PR_Free(cur_host);
     return;
+  }
+
+//printf("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
+  if(cookie_GetLifetimePref() == COOKIE_Discard) {
+    if(cookie_GetLifetimeTime() < timeToExpire) {
+      PR_Free(cur_path);
+      PR_Free(cur_host);
+      return;
+    }
   }
 
   /* Don't enter this routine if it is already in use by another
@@ -1795,12 +1894,10 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
           break;
         }
       }
-      if(timeToExpire) {
-        expires = timeToExpire;
-      } else {
-        expires = cookie_ParseDate(date);
+      if(timeToExpire == 0) {
+        timeToExpire = cookie_ParseDate(date);
       }
-      // TRACEMSG(("Have expires date: %ld", expires));
+      // TRACEMSG(("Have expires date: %ld", timeToExpire));
     }
   }
   if(!path_from_header) {
@@ -1859,10 +1956,17 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   }
   Recycle(message);
 
+  //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
+  //          cookie_from_header, host_from_header, path_from_header));
+
   /* use common code to determine if we can set the cookie */
-  PRBool permission;
-  permission_Check
-    (host_from_header, permission, COOKIEPERMISSION, cookie_GetWarningPref(), new_string);
+  PRBool permission = permission_Check(host_from_header, COOKIEPERMISSION,
+// I believe this is the right place to eventually add the logic to ask
+// about cookies that have excessive lifetimes, but it shouldn't be done
+// until generalized per-site preferences are available.
+                                       //cookie_GetLifetimeAsk(timeToExpire) ||
+                                       cookie_GetWarningPref(),
+                                       new_string);
   PR_FREEIF(new_string);
   if (!permission) {
     PR_FREEIF(path_from_header);
@@ -1890,7 +1994,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   }
   prev_cookie = cookie_CheckForPrevCookie (path_from_header, host_from_header, name_from_header);
   if(prev_cookie) {
-    prev_cookie->expires = expires;
+    prev_cookie->expires = cookie_TrimLifetime(timeToExpire);
     PR_FREEIF(prev_cookie->cookie);
     PR_FREEIF(prev_cookie->path);
     PR_FREEIF(prev_cookie->host);
@@ -1924,7 +2028,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie->name = name_from_header;
     prev_cookie->path = path_from_header;
     prev_cookie->host = host_from_header;
-    prev_cookie->expires = expires;
+    prev_cookie->expires = cookie_TrimLifetime(timeToExpire);
     prev_cookie->xxx = xxx;
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = get_current_time();
@@ -2555,7 +2659,6 @@ NextCookieAfter(cookie_CookieStruct * cookie, int * cookieNum) {
   cookie_CookieStruct *cookie_ptr;
   cookie_CookieStruct *lowestCookie = NULL;
   int localCookieNum = 0;
-  int lowestCookieNum;
 
   if (cookie_cookieList == nsnull) 
     return NULL;
@@ -2566,14 +2669,13 @@ NextCookieAfter(cookie_CookieStruct * cookie, int * cookieNum) {
       if (!cookie || (CookieCompare(cookie_ptr, cookie) > 0)) {
         if (!lowestCookie || (CookieCompare(cookie_ptr, lowestCookie) < 0)) {
           lowestCookie = cookie_ptr;
-          lowestCookieNum = localCookieNum;
+          *cookieNum = localCookieNum;
         }
       }
       localCookieNum++;
     }
   }
 
-  *cookieNum = lowestCookieNum;
   return lowestCookie;
 }
 
