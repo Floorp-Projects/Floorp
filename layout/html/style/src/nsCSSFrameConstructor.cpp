@@ -7808,8 +7808,9 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsPresContext* aPresContext,
 {
   NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
   
-  // Starting with aFrame, look for a frame that is a real block frame,
-  // or a floated inline or absolutely positioned inline frame
+  // Starting with aFrame, look for a frame that is a real block frame
+  // XXXbz some frames are float containing blocks but not "real block frames".
+  // Perhaps we need to make more use of GetContentInsertionFrame() somewhere?
   nsIFrame* containingBlock = aFrame;
   while (nsnull != containingBlock) {
     const nsStyleDisplay* display = containingBlock->GetStyleDisplay();
@@ -7817,20 +7818,6 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsPresContext* aPresContext,
         (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay)) {
       break;
     }
-    else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-      if ((NS_STYLE_FLOAT_NONE != display->mFloats) ||
-          (display->IsAbsolutelyPositioned())) {
-        if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-          if (nsLayoutAtoms::letterFrame != containingBlock->GetType()) {
-            break;
-          }
-        }
-        else {
-          break;
-        }
-      }
-    }
-
     // Continue walking up the hierarchy
     containingBlock = containingBlock->GetParent();
   }
