@@ -20,23 +20,10 @@
 #include "nsUnicodeToMUTF7.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static PRUint16 g_ufMappingTable[] = {
-#include "8859-1.uf"
-};
-
-static PRInt16 g_ufShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-//----------------------------------------------------------------------
 // Class nsUnicodeToMUTF7 [implementation]
 
 nsUnicodeToMUTF7::nsUnicodeToMUTF7() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable)
+: nsBasicUTF7Encoder(',', '&')
 {
 }
 
@@ -44,15 +31,4 @@ nsresult nsUnicodeToMUTF7::CreateInstance(nsISupports ** aResult)
 {
   *aResult = new nsUnicodeToMUTF7();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToMUTF7::GetMaxLength(const PRUnichar * aSrc, 
-                                             PRInt32 aSrcLength,
-                                             PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
 }

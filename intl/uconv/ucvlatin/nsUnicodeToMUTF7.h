@@ -20,18 +20,18 @@
 #ifndef nsUnicodeToMUTF7_h___
 #define nsUnicodeToMUTF7_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUnicodeToUTF7.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMUTF7 [declaration]
 
 /**
- * A character set converter from Unicode to MUTF7.
+ * A character set converter from Unicode to Modified UTF-7.
  *
  * @created         18/May/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToMUTF7 : public nsTableEncoderSupport
+class nsUnicodeToMUTF7 : public nsBasicUTF7Encoder
 {
 public:
 
@@ -44,14 +44,6 @@ public:
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMUTF7_h___ */

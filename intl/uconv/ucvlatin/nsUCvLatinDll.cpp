@@ -62,6 +62,7 @@
 #include "nsVISCIIToUnicode.h"
 #include "nsVPSToUnicode.h"
 #include "nsUTF8ToUnicode.h"
+#include "nsUTF7ToUnicode.h"
 #include "nsMUTF7ToUnicode.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
@@ -98,6 +99,7 @@
 #include "nsUnicodeToVISCII.h"
 #include "nsUnicodeToVPS.h"
 #include "nsUnicodeToUTF8.h"
+#include "nsUnicodeToUTF7.h"
 #include "nsUnicodeToMUTF7.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
@@ -341,9 +343,15 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kUTF7ToUnicodeCID,
+    nsUTF7ToUnicode::CreateInstance,
+    "UTF-7",
+    "Unicode"
+  },
+  {
     &kMUTF7ToUnicodeCID,
     nsMUTF7ToUnicode::CreateInstance,
-    "MUTF-7",
+    "x-imap4-modified-utf7",
     "Unicode"
   },
   {
@@ -557,10 +565,16 @@ FactoryData g_FactoryData[] =
     "UTF-8"
   },
   {
+    &kUnicodeToUTF7CID,
+    nsUnicodeToUTF7::CreateInstance,
+    "Unicode",
+    "UTF-7"
+  },
+  {
     &kUnicodeToMUTF7CID,
     nsUnicodeToMUTF7::CreateInstance,
     "Unicode",
-    "MUTF-7"
+    "x-imap4-modified-utf7"
   }
 };
 
