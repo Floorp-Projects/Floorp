@@ -49,6 +49,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 #define NC_RDF_PAGETITLE_SERVER   NC_NAMESPACE_URI "PageTitleServer"
 #define NC_RDF_PAGETITLE_COPIES   NC_NAMESPACE_URI "PageTitleCopies"
 #define NC_RDF_PAGETITLE_ADVANCED NC_NAMESPACE_URI "PageTitleAdvanced"
+#define NC_RDF_PAGETITLE_SMTP     NC_NAMESPACE_URI "PageTitleSMTP"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
 
 #define NC_RDF_ACCOUNTROOT "msgaccounts:/"
@@ -97,6 +98,7 @@ protected:
   static nsIRDFResource* kNC_PageTitleServer;
   static nsIRDFResource* kNC_PageTitleCopies;
   static nsIRDFResource* kNC_PageTitleAdvanced;
+  static nsIRDFResource* kNC_PageTitleSMTP;
   
 
 private:
@@ -131,6 +133,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleMain=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleServer=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 
 // RDF to match
 #define NC_RDF_ACCOUNT NC_NAMESPACE_URI "Account"
@@ -191,6 +194,7 @@ nsMsgAccountManagerDataSource::Init()
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
       
       getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
       
@@ -229,6 +233,9 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     else if (source == kNC_PageTitleAdvanced)
       str = "Advanced";
 
+    else if (source == kNC_PageTitleSMTP)
+      str = "Outgoing (SMTP) Server";
+    
     else {
       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
       if (NS_SUCCEEDED(rv)) {
@@ -253,21 +260,14 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "am-copies.xul";
     else if (source == kNC_PageTitleAdvanced)
       str = "am-advanced.xul";
+    else if (source == kNC_PageTitleSMTP) 
+      str = "am-smtp.xul";
     else
       str = "am-main.xul";
   }
 
   // handle sorting of servers
   else if (property == kNC_NameSort) {
-#ifdef DEBUG_alecf
-  nsXPIDLCString srcval;
-  rv = source->GetValue(getter_Copies(srcval));
-  nsXPIDLCString propval;
-  rv = property->GetValue(getter_Copies(propval));
-
-  printf("[sort]GetTarget(%s on arc %s, ..)\n",
-         (const char*)srcval, (const char*)propval);
-#endif
     // make sure we're handling a root folder that is a server
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source,&rv);
     if (NS_FAILED(rv))
@@ -288,9 +288,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     
     accountNum += 1000;
     str.Append(accountNum);
-#ifdef DEBUG_alecf
-    printf("[sort] returning %s\n", str.ToNewCString());
-#endif
   }
   
   if (str!="")
@@ -357,9 +354,16 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
       serverCreationParams params = { nodes, getRDFService() };
       servers->EnumerateForwards(createServerResources, (void*)&params);
 #ifdef DEBUG_amds
-      printf("GetTargets(): added the servers on %s\n",
+        PRUint32 nodecount;
+        nodes->Count(&nodecount);
+      printf("GetTargets(): added %d servers on %s\n", nodecount,
              (const char*)property_arc);
 #endif
+
+      // for the "settings" arc, we also want to do an SMTP tag
+      if (property == kNC_Settings) {
+        nodes->AppendElement(kNC_PageTitleSMTP);
+      }
     }
 #ifdef DEBUG_amds
     else {
@@ -375,21 +379,17 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
       // all the Settings - main, server, copies, advanced, etc
       if (property == kNC_Settings) {
         
-        nsIRDFResource* res;
-        rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &res);
-        if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
-        rv = getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &res);
-        if (NS_SUCCEEDED(rv)) nodes->AppendElement(res);
+        if (NS_SUCCEEDED(rv)) nodes->AppendElement(kNC_PageTitleServer);
+        if (NS_SUCCEEDED(rv)) nodes->AppendElement(kNC_PageTitleCopies);
         
-        PRUint32 nodecount;
-        nodes->Count(&nodecount);
-#ifdef DEBUG_amds
-        printf("GetTargets(): Added %d settings resources on %s\n",
-               nodecount, (const char*)property_arc);
-#endif
+      }
+    } else if (source == kNC_PageTitleSMTP) {
+      if (property == kNC_Settings) {
+        nodes->AppendElement(kNC_PageTitleAdvanced);
       }
     }
     
+        
 #ifdef DEBUG_amds
     else {
       printf("GetTargets(): Unknown source %s\n", (const char*)source_value);
