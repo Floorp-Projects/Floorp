@@ -70,8 +70,13 @@ ifeq ($(OS_TEST),sparc64)
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = sparc
 else
+ifeq (,$(filter-out arm% sa110,$(OS_TEST)))
+	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH        = arm
+else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
+endif
 endif
 endif
 endif
