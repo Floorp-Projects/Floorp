@@ -94,6 +94,8 @@ protected:
     nsIFrame* mNextRCFrame;
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
+    PRBool mSetParentPointer;  // when reflowing child frame first set its
+                               // parent frame pointer
   };
 
   nsInlineFrame();
@@ -119,8 +121,6 @@ protected:
   virtual void PushFrames(nsIPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling);
-
-  virtual void DrainOverflow(nsIPresContext* aPresContext);
 };
 
 //----------------------------------------------------------------------
@@ -152,8 +152,6 @@ protected:
   virtual nsIFrame* PullOneFrame(nsIPresContext* aPresContext,
                                  InlineReflowState& rs,
                                  PRBool* aIsComplete);
-
-  virtual void DrainOverflow(nsIPresContext* aPresContext);
 };
 
 //----------------------------------------------------------------------
