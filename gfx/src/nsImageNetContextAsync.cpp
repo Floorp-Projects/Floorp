@@ -338,6 +338,13 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
   err = channel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(err)) {
       err = uri->GetSpec(&uriStr);
+      if (NS_FAILED(err)){
+          /* if we can't get a file spec, it is bad, very bad.*/
+          mStatus = MK_INTERRUPTED;
+          reader->StreamAbort(mStatus);
+          NS_RELEASE(reader);
+          return NS_ERROR_ABORT;
+      }
   }
 
   do {
@@ -388,6 +395,8 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
       if (NS_FAILED(err)) {
         mStatus = MK_IMAGE_LOSSAGE;
         mInterrupted = PR_TRUE;
+        if(uriStr)
+	        nsCRT::free(uriStr);
 	    NS_RELEASE(reader);
         return NS_ERROR_ABORT;
       }
@@ -397,6 +406,8 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
     if(NS_FAILED(err)){
       mStatus = MK_IMAGE_LOSSAGE;
       mInterrupted = PR_TRUE;
+      if(uriStr)
+	      nsCRT::free(uriStr);
 	  NS_RELEASE(reader);
       return NS_ERROR_ABORT;
     }
