@@ -122,7 +122,6 @@ nsRenderingContextPh :: nsRenderingContextPh()
 {
   NS_INIT_REFCNT();
   
-//  mholdGC = nsnull;
   mGC = nsnull;
   mTMatrix = new nsTransform2D();
   mRegion = new nsRegionPh();
@@ -152,6 +151,8 @@ nsRenderingContextPh :: nsRenderingContextPh()
   
   if( mPtGC == nsnull )
     mPtGC = PgGetGC();
+
+  PushState();
 }
 
 
@@ -314,6 +315,7 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 //  PgSetRegion( mPtGC->rid );
 
   mSurface = new nsDrawingSurfacePh();
+//printf ("create1: %p\n",mSurface);
   mSurface->Init(mGC);
 //  mSurface->Init(mGC,640,480,0);
 //  mSurface->Select();
@@ -395,17 +397,21 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
 //  printf ("kedl2: select pixmap %p\n", ((nsDrawingSurfacePh *)mSurface)->mPixmap);
   mSurface->Select();
 
+// to clear the buffer to black to clean up transient rips during redraw....
   PgSetClipping( 0, NULL );
+  PgSetMultiClip( 0, NULL );
   PgSetFillColor(Pg_BLACK);
-  PgDrawIRect( 0, 0, 640,480, Pg_DRAW_FILL_STROKE );
+  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE );
 
-  ApplyClipping(mSurface->GetGC()->rid);
+//1  ApplyClipping(mSurface->GetGC()->rid);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface(nsDrawingSurface *aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetDrawingSurface  - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetDrawingSurface\n"));
+//  printf ("get drawing surface! %p\n",mSurface);
+  *aSurface = (void *)mSurface;
   return NS_OK;
 }
 
@@ -534,6 +540,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   nsresult   res = NS_ERROR_FAILURE;
   nsRect     trect = aRect;
   PhRect_t  *rgn;
+//  int hack=0;
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect  (%ld,%ld,%ld,%ld)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
 
@@ -551,16 +558,31 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
         break;
       case nsClipCombine_kSubtract:
         mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+//	hack=1;
         break;
       case nsClipCombine_kReplace:
         mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
         break;
       default:
-		PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Unknown Combine type\n"));
-  	    break;
+   	PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Unknown Combine type\n"));
+        break;
      }
 
+//	printf ("check is empty\n");
      aClipEmpty = mRegion->IsEmpty();
+/*
+     if (aClipEmpty==PR_FALSE)
+     {
+	printf ("not empty\n");
+     }
+     else
+     {
+	printf ("is empty\n");
+     }
+*/
+//hack!
+//if (hack) aClipEmpty = PR_FALSE;
+
      ApplyClipping(mGC->rid);
 
 // kirk    mRegion->GetNativeRegion((void*&)rgn);
@@ -571,6 +593,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   }
   else
   {
+    printf ("no region....\n");
     PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Invalid pointers!\n"));
   }
   																			
@@ -582,6 +605,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRect(nsRect &aRect, PRBool &aClipVa
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetClipRect  - Not Implemented\n"));
   PRInt32 x, y, w, h;
+printf ("getcliprect\n");
 
   if (!mRegion->IsEmpty())
   {
@@ -814,13 +838,14 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface\n"));
 
  nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
+//printf ("create2: %p %d\n",surf,aSurfFlags);
 
  if (surf)
  {
    NS_ADDREF(surf);
    surf->Init(mSurface->GetGC(), aBounds->width, aBounds->height, aSurfFlags);
 //   surf->Init(mGC, aBounds->width, aBounds->height, aSurfFlags);
-   ApplyClipping(mSurface->GetGC()->rid);
+//2   ApplyClipping(mSurface->GetGC()->rid);
  }
 
  aSurface = (nsDrawingSurface)surf;
@@ -1418,7 +1443,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   h = NSToCoordRound( mP2T * aImage->GetHeight());
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-
   res = aImage->Draw( *this, mSurface, x, y, w, h );
 
   return res;
@@ -1441,7 +1465,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
   res = aImage->Draw( *this, mSurface, x, y, w, h );
-
   return res;
 }
 
@@ -1489,52 +1512,84 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits.\n"));
   PhArea_t    area;
+  PRInt32               srcX = aSrcX;
+  PRInt32               srcY = aSrcY;
+  nsRect                drect = aDestBounds;
+  nsDrawingSurfacePh  *destsurf;
 
-  area.pos.x=aDestBounds.x;
-  area.pos.y=aDestBounds.y;
-  area.size.w=aDestBounds.width;
-  area.size.h=aDestBounds.height;
-//  printf ("location: %p (%d %d) %d %d %d %d\n",mOffscreenSurface,aSrcX,aSrcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
+#if 0
+  printf("nsRenderingContextPh::CopyOffScreenBits() flags=\n");
+
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+    printf("NS_COPYBITS_USE_SOURCE_CLIP_REGION\n");
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    printf("NS_COPYBITS_XFORM_SOURCE_VALUES\n");
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    printf("NS_COPYBITS_XFORM_DEST_VALUES\n");
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+    printf("NS_COPYBITS_TO_BACK_BUFFER\n");
+
+  printf("\n");
+#endif
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
+    destsurf = mSurface;
+  }
+  else
+    destsurf = mOffscreenSurface;
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    mTMatrix->TransformCoord(&srcX, &srcY);
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
+  area.pos.x=drect.x;
+  area.pos.y=drect.y;
+  area.size.w=drect.width;
+  area.size.h=drect.height;
+//  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
   ((nsDrawingSurfacePh *)aSrcSurf)->Stop();
-
-/*
-  PgSetGC( mGC );
-  PgSetRegion( mGC->rid );
-  ApplyClipping( mGC->rid );
-*/
-
   PhImage_t *image;
   image = ((nsDrawingSurfacePh *)aSrcSurf)->mPixmap;
-//printf ("kedl2: copy bits: %p\n",image);
-  mOffscreenSurface->Select();
-  ApplyClipping( mOffscreenSurface->GetGC()->rid );
+  destsurf->Select();
+  ApplyClipping( destsurf->GetGC()->rid );
 
-  nscoord X0 = aSrcX;
-  nscoord Y0 = aSrcY;
-
-//  mTMatrix->TransformCoord(&X0,&Y0);
-  PhPoint_t pos = { X0, Y0 };
-  PhDim_t size = { area.size.w,area.size.h };
-
-pos.x=0; pos.y=0;
-
-//  PgDrawImagemx( image->image, image->type , &pos, &image->size, image->bpl, 0); 
-  PgDrawImagemx( image->image, image->type , &pos, &size, image->bpl, 0); 
-//sleep(1);
-if (0)
+if (aSrcSurf==destsurf)
 {
-FILE *f;
-char buf[100];
-sprintf (buf,"image.%02d",count++);
-printf ("saving: %s %d\n",buf,image->size.h * image->bpl); fflush(stdout);
-f = fopen(buf,"w");
-fwrite(image->image,1,image->size.h * image->bpl,f);
-fclose(f);
+  if (image==0)
+  {
+	printf ("fubar: onscreen to onscreen copy!!\n");
+  }
+  else
+  {
+    PhPoint_t pos = { area.pos.x,area.pos.y };
+    PhDim_t size = { area.size.w,area.size.h };
+    unsigned char *ptr;
+    ptr = image->image;
+    ptr += image->bpl * srcY + srcX*3 ;
+    PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
+  }
 }
+  else
+  {
+//  PhPoint_t pos = { area.pos.x,area.pos.y };
+  PhPoint_t pos = { 0,0 };
+  PhDim_t size = { area.size.w,area.size.h };
+  unsigned char *ptr;
+  ptr = image->image;
+//  ptr += image->bpl * srcY + srcX*3 ;
+  PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
 
-  PgSetGC( mPtGC );
-  PgSetRegion( mPtGC->rid );
+    PgSetGC( mPtGC );
+    PgSetRegion( mPtGC->rid );
+  }
 
   return NS_OK;
 }
@@ -1590,11 +1645,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( PhGC_t *aGC, nsDrawi
 
 void nsRenderingContextPh::ApplyClipping( int rid )
 {
-PtArg_t arg;
-PhPoint_t *pos;
-
-//  PgSetClipping( 0, NULL );
-//return;
+//PtArg_t arg;
+//PhPoint_t *pos;
 
   if (mRegion)
   {
@@ -1607,31 +1659,14 @@ PhPoint_t *pos;
     PhRect_t *rects;
     int rect_count;
 
-      err = PhRegionQuery(rid, &my_region, &rect, NULL, 0);
+     err = PhRegionQuery(rid, &my_region, &rect, NULL, 0);
 	   
-//    err=PhRegionQuery(mGC->rid, &my_region, &rect, NULL, 0);
-//    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetGC err=<%d> rect=(%d,%d)-(%d,%d)\n",err, rect.ul.x, rect.ul.y, rect.lr.x, rect.lr.y));
-//    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetGC Origin of region is (%d,%d)\n", my_region.origin.x, my_region.origin.y));
-
-PtSetArg(&arg,Pt_ARG_POS,&pos,0);
-PtGetResources(mWidget,1,&arg);
+//PtSetArg(&arg,Pt_ARG_POS,&pos,0);
+//PtGetResources(mWidget,1,&arg);
 //printf ("clip widget: %p %d %d\n",mWidget,pos->x,pos->y);
 
-    if ((err == 0) && ( (my_region.origin.x!=0) || (my_region.origin.y!=0)))
-    {
-      offset_x = my_region.origin.x * -1;
-      offset_y = my_region.origin.y * -1;
-
-//printf ("jerry offset %d %d %d, %d %d %d %d\n",rid,offset_x,offset_y,rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y);
-      tmp_region.SetTo(*mRegion);
-//      tmp_region.Offset(offset_x, offset_y);
-      tmp_region.GetNativeRegion((void*&)tiles);
-    }
-    else
-    {
-      /* no offset needed use the normal tile list */
-      mRegion->GetNativeRegion((void*&)tiles);
-    }
+     /* no offset needed use the normal tile list */
+     mRegion->GetNativeRegion((void*&)tiles);
 
     if (tiles != nsnull)
     {
@@ -1640,9 +1675,12 @@ PtGetResources(mWidget,1,&arg);
       PgSetMultiClip(rect_count,rects);
       free(rects);
     }
+    else
+    {
+//	printf ("hmmm, no tiles!\n");
+//	PgSetMultiClip( 0, NULL );
+    }
   }
-//  PgSetFillColor(Pg_GREEN);
-//  PgDrawIRect( pos->x, pos->y, pos->x + 150 - 1, pos->y + 150 - 1, Pg_DRAW_FILL_STROKE );
+//  PgSetMultiClip( 0, NULL );
 }
-
 

@@ -36,14 +36,14 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 static void DumpTiles(PhTile_t *t)
 {
-#if 1
+#if 0
   return;
 #else
   int count=1;
   
   while(t)
   {
-//  printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
+    printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry));
     t = t->next;
 	count++;
@@ -154,7 +154,7 @@ void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
   mRegion = myIntersectTilings(mRegion, tile, NULL);
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with rect intersected_tiles=<%d>\n", intersected_tiles));
- ::DumpTiles(mRegion);
+// ::DumpTiles(mRegion);
 }
 
 void nsRegionPh :: Union(const nsIRegion &aRegion)
@@ -222,12 +222,17 @@ PRBool nsRegionPh :: IsEmpty(void)
   mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
   PhTile_t *t = mRegion;
 
+//  DumpTiles(t);
+
+//  if (t==NULL) return PR_FALSE;		// hack
+
   while(t)
   {
     /* if width is positive then it is not empty */
     if (tlrx - tulx)
     {
 	  result = PR_FALSE;
+//	printf ("should be false! (not empty)\n");
 	  break;
 	}
 	
@@ -433,3 +438,4 @@ void nsRegionPh :: SetRegionEmpty(void)
   mRegion = NULL;
   mRegionType = eRegionComplexity_empty;
 }
+

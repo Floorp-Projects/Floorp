@@ -311,6 +311,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 (%p) (%ld,%ld,%ld,%ld)\n", this, aX, aY, aWidth, aHeight ));
 
+//printf ("kedl: draw2\n");
   // REVISIT - this is a brute-force implementation. We currently have no h/w blit
   // capabilities.
 

@@ -50,6 +50,7 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh()
 {
   NS_INIT_REFCNT();
 
+  mIsOffscreen=0;
   mPixmap = nsnull;
   mGC = nsnull;
   mWidth = mHeight = 0;
@@ -237,13 +238,13 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 
   if (mIsOffscreen)
   {
-//printf ("going offscreen\n");
+//printf ("going offscreen\n"); fflush(stdout);
     PmMemStart( (PmMemoryContext_t *) mGC);
     PgSetRegion(mGC->rid);
   }
   else
   {
-//printf ("going onscreen\n");
+//printf ("going onscreen\n"); fflush(stdout);
 	PgSetGC(mGC);
 	PgSetRegion(mGC->rid);
   }
@@ -253,8 +254,12 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 
 void nsDrawingSurfacePh::Stop(void)
 {
-  PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
-  PmMemStop( (PmMemoryContext_t *) mGC );
+//  printf ("offscreen: %d\n",mIsOffscreen);
+  if (mIsOffscreen)
+  {
+    PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+    PmMemStop( (PmMemoryContext_t *) mGC );
+  }
 }
 
 PhGC_t *nsDrawingSurfacePh::GetGC(void)
