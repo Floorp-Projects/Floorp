@@ -106,7 +106,7 @@ nsContextMenu.prototype = {
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput ) && !( this.onLink && this.onImage ) );
+        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink ));
 
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
@@ -128,8 +128,6 @@ nsContextMenu.prototype = {
         var isWin = navigator.appVersion.indexOf("Windows") != -1;
         this.showItem( "context-setWallpaper", isWin && this.onImage );
 
-        this.showItem( "context-sep-image", this.onImage );
-
         if( isWin && this.onImage )
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
@@ -144,7 +142,7 @@ nsContextMenu.prototype = {
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
-        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput ) );
+        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onLink ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
         this.showItem( "context-searchselect", this.isTextSelected );
         this.showItem( "frame", this.inFrame );
@@ -179,7 +177,7 @@ nsContextMenu.prototype = {
 
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
-        this.showItem( "context-sep-copylink", this.onLink );
+        this.showItem( "context-sep-copylink", this.onLink && this.onImage);
 
         // Copy image location depends on whether we're on an image.
         this.showItem( "context-copyimage", this.onImage );

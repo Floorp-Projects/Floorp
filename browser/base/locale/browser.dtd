@@ -206,8 +206,8 @@
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "F">
-<!ENTITY saveLinkCmd.label            "Save Link Target As...">
-<!ENTITY saveLinkCmd.accesskey        "r">
+<!ENTITY saveLinkCmd.label            "Save Link As...">
+<!ENTITY saveLinkCmd.accesskey        "k">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "v">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">

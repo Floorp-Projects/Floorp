@@ -60,6 +60,7 @@
       window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
                         "chrome,resizable=yes", "cookieManager");
     }
+
     function clearCacheOfType(aType)
     {
         var classID = Components.classes["@mozilla.org/network/cache-service;1"];
