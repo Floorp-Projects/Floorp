@@ -1022,18 +1022,19 @@ nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
 
 
 NS_IMETHODIMP
-nsHTTPIndex::GetURI(char * *aURI)
+nsHTTPIndex::GetURI(char * *uri)
 {
-	nsresult	rv = NS_ERROR_UNEXPECTED;
+	NS_PRECONDITION(uri != nsnull, "null ptr");
+	if (! uri)
+		return(NS_ERROR_NULL_POINTER);
 
-	*aURI = nsnull;
+	if ((*uri = nsXPIDLCString::Copy("rdf:httpindex")) == nsnull)
+		return(NS_ERROR_OUT_OF_MEMORY);
 
-	if (mInner)
-	{
-		rv = mInner->GetURI(aURI);
-	}
-	return(rv);
+	return(NS_OK);
 }
+
+
 
 NS_IMETHODIMP
 nsHTTPIndex::GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue,
