@@ -26,6 +26,10 @@
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 #define DEFAULT_IMAGE_SIZE          16
+
+// helper function for parsing out attributes like size, and contentType
+// from the icon url.
+void extractAttributeValue(const char * searchString, const char * attributeName, char ** result);
  
 ////////////////////////////////////////////////////////////////////////////////
  
@@ -48,10 +52,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 nsresult
 nsMozIconURI::FormatSpec(char* *result)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsXPIDLCString fileIconSpec;
-  rv = mFileIcon->GetSpec(getter_Copies(fileIconSpec));
-  if (NS_FAILED(rv)) return rv;
+  if (mFileIcon)
+  {
+    rv = mFileIcon->GetSpec(getter_Copies(fileIconSpec));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCString spec(NS_MOZICON_SCHEME);
   spec += fileIconSpec;
@@ -75,6 +82,39 @@ NS_IMETHODIMP
 nsMozIconURI::GetSpec(char* *aSpec)
 {
   return FormatSpec(aSpec);
+}
+
+// takes a string like ?size=32&contentType=text/html and returns a new string 
+// containing just the attribute value. i.e you could pass in this string with
+// an attribute name of size, this will return 32
+// Assumption: attribute pairs in the string are separated by '&'.
+void extractAttributeValue(const char * searchString, const char * attributeName, char ** result)
+{
+  //NS_ENSURE_ARG_POINTER(extractAttributeValue);
+
+	char * attributeValue = nsnull;
+	if (searchString && attributeName)
+	{
+		// search the string for attributeName
+		PRUint32 attributeNameSize = PL_strlen(attributeName);
+		char * startOfAttribute = PL_strcasestr(searchString, attributeName);
+		if (startOfAttribute)
+		{
+			startOfAttribute += attributeNameSize; // skip over the attributeName
+			if (startOfAttribute) // is there something after the attribute name
+			{
+				char * endofAttribute = startOfAttribute ? PL_strchr(startOfAttribute, '&') : nsnull;
+				if (startOfAttribute && endofAttribute) // is there text after attribute value
+					attributeValue = PL_strndup(startOfAttribute, endofAttribute - startOfAttribute);
+				else // there is nothing left so eat up rest of line.
+					attributeValue = PL_strdup(startOfAttribute);
+			} // if we have a attribute value
+
+		} // if we have a attribute name
+	} // if we got non-null search string and attribute name values
+
+  *result = attributeValue; // passing ownership of attributeValue into result...no need to 
+	return;
 }
 
 NS_IMETHODIMP
@@ -101,9 +141,21 @@ nsMozIconURI::SetSpec(const char * aSpec)
   }
   else
   {
-    mozIconPath.Mid(filePath, endPos, pos);
+    mozIconPath.Mid(filePath, endPos, pos - endPos);
     // fill in any size and content type values...
+    nsXPIDLCString sizeString;
+    nsXPIDLCString contentTypeString;
+    extractAttributeValue(mozIconPath.get() + pos, "size=", getter_Copies(sizeString));
+    extractAttributeValue(mozIconPath.get() + pos, "contentType=", getter_Copies(contentTypeString));
+    mContentType = contentTypeString;
 
+    if (sizeString.get())
+    {
+      PRInt32 sizeValue = atoi(sizeString);
+      // if the size value we got back is > 0 then use it
+      if (sizeValue)
+        mSize = sizeValue;
+    }
   }
 
   rv = ioService->NewURI(filePath, nsnull, getter_AddRefs(mFileIcon));
