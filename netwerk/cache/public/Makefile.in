@@ -24,7 +24,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= nkcache
+MODULE		= necko_cache
 
 include $(DEPTH)/config/autoconf.mk
 
