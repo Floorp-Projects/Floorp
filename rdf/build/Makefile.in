@@ -81,27 +81,8 @@ else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
 
-XPTYPELIBS=\
-	nsIRDFCompositeDataSource.xpt	\
-	nsIRDFContainer.xpt		\
-	nsIRDFContainerUtils.xpt	\
-	nsIRDFDataSource.xpt		\
-	nsIRDFLiteral.xpt		\
-	nsIRDFNode.xpt			\
-	nsIRDFObserver.xpt		\
-	nsIRDFPurgeableDataSource.xpt	\
-	nsIRDFResource.xpt		\
-	nsIRDFService.xpt		\
-	nsIRDFXMLDataSource.xpt		\
-	nsIRDFXMLSource.xpt		\
-	nsISimpleEnumerator.xpt		\
-	$(NULL)
-
-XPTYPELIBS := $(addprefix $(srcdir)/, $(XPTYPELIBS))
-
 install:: $(TARGETS)
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/nsISupports.xpt   $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpccomponents.xpt $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpcjsid.xpt       $(DIST)/bin/components
 	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpctest.xpt       $(DIST)/bin/components
-	$(INSTALL) $(XPTYPELIBS) $(DIST)/bin/components
