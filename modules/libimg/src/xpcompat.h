@@ -124,16 +124,13 @@ extern char *XP_GetString(int i);
 
 /* 
  * I don't know if qsort will ever be in NSPR, so this might have
- * to stay here indefinitely.
+ * to stay here indefinitely.  Mac is completely broken and should use
+ * mozilla/include/xp_qsort.h, mozilla/lib/xp/xp_qsort.c.
  */
-#if defined(SOLARIS) || defined(XP_MAC)
+#if defined(XP_MAC)
 extern void XP_QSORT(void *, size_t, size_t,
                      int (*)(const void *, const void *));
-#elif defined(XP_OS2)
-#define XP_QSORT(base, nel, width, compar) qsort((base),(nel),(width),(int(_Optlink*)(const void*,const void*))(compar))
-#else
-#define XP_QSORT(base, nel, width, compar) qsort((base),(nel),(width),(compar))
-#endif
+#endif /* XP_MAC */
 
 #define BlockAllocCopy(dest, src, src_length) NET_BACopy((char**)&(dest), src, src_length)
 #define BlockAllocCat(dest, dest_length, src, src_length)  NET_BACat(&(dest), dest_length, src, src_length)
