@@ -2541,41 +2541,6 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP    
-nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
-{
-  NS_ENSURE_ARG_POINTER(aPlugins);
-  *aPlugins = nsnull;
-
-  // XXX Could also get this through mScriptGlobalObject
-  NS_ENSURE_TRUE(mPresShells.Count() != 0, NS_OK);
-  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
-                                       mPresShells.ElementAt(0));
-  NS_ENSURE_TRUE(shell, NS_OK);
-
-  nsCOMPtr<nsIPresContext> ctx;
-  nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
-
-  nsCOMPtr<nsISupports> container;
-  rv = ctx->GetContainer(getter_AddRefs(container));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
-
-  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
-  NS_ENSURE_TRUE(ifrq, NS_OK);
-
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
-  NS_ENSURE_TRUE(window, NS_OK);
-
-  nsCOMPtr<nsIDOMNavigator> navigator;
-  window->GetNavigator(getter_AddRefs(navigator));
-  NS_ENSURE_TRUE(navigator, NS_OK);
-
-  return navigator->GetPlugins(aPlugins);
-}
-
 NS_IMETHODIMP
 nsDocument::GetLocation(nsIDOMLocation **_retval)
 {

@@ -56,6 +56,7 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   DOMString                 getSelection();
 
+  // Scriptable versions of open(), write(), writeln().
   nsIDOMDocument            open();
   void                      write();
   void                      writeln();
@@ -65,5 +66,10 @@ interface nsIDOMNSHTMLDocument : nsISupports
   void                      releaseEvents(in long eventFlags);
   void                      routeEvent(in nsIDOMEvent evt);
 
+  // returns "BackCompat" if we're in quirks mode,
+  // or "CSS1Compat" if we're in strict mode
   readonly attribute DOMString            compatMode;
+
+  // mapped to attribute embeds for NS4 compat
+  readonly attribute nsIDOMHTMLCollection plugins;
 };
