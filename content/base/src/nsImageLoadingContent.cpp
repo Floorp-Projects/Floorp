@@ -615,16 +615,17 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
  */
 MOZ_DECL_CTOR_COUNTER(ImageEvent)
 
-struct ImageEvent : PLEvent
+class ImageEvent : public PLEvent,
+                   public nsDummyLayoutRequest
 {
+public:
   ImageEvent(nsIPresContext* aPresContext, nsIContent* aContent,
-             const nsAString& aMessage, nsILoadGroup *aLoadGroup,
-             nsIRequest *aRequest)
-    : mPresContext(aPresContext),
+             const nsAString& aMessage, nsILoadGroup *aLoadGroup)
+    : nsDummyLayoutRequest(nsnull),
+      mPresContext(aPresContext),
       mContent(aContent),
       mMessage(aMessage),
-      mLoadGroup(aLoadGroup),
-      mDummyRequest(aRequest)
+      mLoadGroup(aLoadGroup)
   {
     MOZ_COUNT_CTOR(ImageEvent);
   }
@@ -637,7 +638,6 @@ struct ImageEvent : PLEvent
   nsCOMPtr<nsIContent> mContent;
   nsString mMessage;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  nsCOMPtr<nsIRequest> mDummyRequest;
 };
 
 PR_STATIC_CALLBACK(void*)
@@ -657,8 +657,8 @@ HandleImagePLEvent(PLEvent* aEvent)
   evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &estatus);
 
-  evt->mLoadGroup->RemoveRequest(evt->mDummyRequest, nsnull, NS_OK);
-  
+  evt->mLoadGroup->RemoveRequest(evt, nsnull, NS_OK);
+
   return nsnull;
 }
 
@@ -666,7 +666,12 @@ PR_STATIC_CALLBACK(void)
 DestroyImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
-  delete evt;
+
+  // We're reference counted, and we hold a strong reference to
+  // ourselves while we're a 'live' PLEvent. Now that the PLEvent is
+  // destroyed, release ourselves.
+
+  NS_RELEASE(evt);
 }
 
 nsresult
@@ -696,10 +701,6 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsCOMPtr<nsILoadGroup> loadGroup;
   document->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-  nsCOMPtr<nsIRequest> dummyRequest;
-  rv = nsDummyLayoutRequest::Create(getter_AddRefs(dummyRequest), nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPresShell> shell;
   document->GetShellAt(0, getter_AddRefs(shell));
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
@@ -711,18 +712,23 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsCOMPtr<nsIContent> ourContent = do_QueryInterface(this);
   
   ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType,
-                                   loadGroup, dummyRequest);
+                                   loadGroup);
 
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
   PL_InitEvent(evt, this, ::HandleImagePLEvent, ::DestroyImagePLEvent);
 
+  // The event will own itself while it's in the event queue, once
+  // removed, it will release itself, and if there are no other
+  // references, it will be deleted.
+  NS_ADDREF(evt);
+
   rv = eventQ->PostEvent(evt);
 
   if (rv == PR_SUCCESS) {
-    // Add the dummy request to the load group only after all the early
-    // returns here!
-    loadGroup->AddRequest(dummyRequest, nsnull);
+    // Add the dummy request (the ImageEvent) to the load group only
+    // after all the early returns here!
+    loadGroup->AddRequest(evt, nsnull);
   } else {
     PL_DestroyEvent(evt);
   }
