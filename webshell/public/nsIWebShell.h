@@ -59,24 +59,40 @@ typedef enum {
 class nsIWebShellContainer : public nsISupports {
 public:
   // History control
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason) = 0;
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL) = 0;
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+                         const PRUnichar* aURL,
+                         nsLoadType aReason) = 0;
+
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL) = 0;
 
   // XXX not yet implemented; should we?
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax) = 0;
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus) = 0;
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
+                             const PRUnichar* aURL,
+                             PRInt32 aProgress,
+                             PRInt32 aProgressMax) = 0;
+
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
+                        const PRUnichar* aURL,
+                        PRInt32 aStatus) = 0;
 
   //instances
-  NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell) = 0;
+
+  // XXX kipp sez: I don't think that this method should be a part of
+  // this interface.
+  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
+                         PRBool aVisible,
+                         nsIWebShell *&aNewWebShell) = 0;
+
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult) = 0;
 
   
   /**
-   * Notify the WebShellContainer that a contained webshell is offering focus (for
-   * example if it finshed tabbing through its contents).  The container can choose
-   * to set focus to themselves or ignore the message and let the contained keep
-   * focus
+   * Notify the WebShellContainer that a contained webshell is
+   * offering focus (for example if it finshed tabbing through its
+   * contents).  The container can choose to set focus to themselves
+   * or ignore the message and let the contained keep focus
    */
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell) = 0;
 
