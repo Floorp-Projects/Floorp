@@ -48,6 +48,8 @@ private:
 public:
  
 	nsDll(const char *libFullPath);
+	nsDll(const char *libFullPath, PRTime lastModTime, PRUint64 fileSize);
+
 	~nsDll(void);
 
 	// Status checking on operations completed
