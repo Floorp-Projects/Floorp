@@ -1,9 +1,6 @@
-
 # This file specifies the build flags for Firefox.  You can use it by adding:
 #  . $topsrcdir/browser/config/mozconfig
 # to the top of your mozconfig file.
 
 mk_add_options MOZ_CO_PROJECT=browser
 ac_add_options --enable-application=browser
-ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,webservices,inspector,gnomevfs,negotiateauth
-ac_add_options --enable-crypto
