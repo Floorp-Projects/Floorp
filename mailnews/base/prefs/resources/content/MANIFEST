@@ -24,7 +24,6 @@ am-server.xul
 am-server-top.xul
 am-server-pop3.xul
 am-copies.xul
-am-test.xul
 am-advanced.xul
 pref-mailnews.html
 pref-identity.html
