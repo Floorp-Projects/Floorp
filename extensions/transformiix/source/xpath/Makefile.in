@@ -80,7 +80,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base -I$(srcdir)/../xml \
-        -I$(srcdir)/../xml/dom -I$(srcdir)/../xml/util \
+        -I$(srcdir)/../xml/dom \
         -I$(srcdir)/../xslt -I$(srcdir)/../xslt/util \
         -I$(srcdir)/../xslt/functions
 ifndef TX_EXE

@@ -111,7 +111,6 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\XPathProcessor.obj \
 	..\source\xml\$(OBJDIR)\XMLUtils.obj \
 	..\source\xml\$(OBJDIR)\XMLDOMUtils.obj \
-	..\source\xml\util\$(OBJDIR)\DOMHelper.obj \
 	..\source\xml\parser\$(OBJDIR)\nsSyncLoader.obj \
 	..\source\xml\parser\$(OBJDIR)\XMLParser.obj \
 	..\source\xslt\$(OBJDIR)\OutputFormat.obj \
@@ -140,7 +139,7 @@ LCFLAGS = \
         $(NULL)
 
 LINCS= -I$(PUBLIC)\xpcom -I..\source\xslt\functions \
-      -I..\source\xml\dom -I..\source\xml\dom\mozImpl -I..\source\xml\util \
+      -I..\source\xml\dom -I..\source\xml\dom\mozImpl \
       -I..\source\xpath -I..\source\xslt\util -I..\source\xml -I..\source\xslt \
       -I..\source\base -I..\source\net -I..\source\xml\parser
 

@@ -51,7 +51,7 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net \
   -I$(srcdir)/../../xpath -I$(srcdir)/../../xml \
   -I$(srcdir)/../../xml/parser -I$(srcdir)/../../xml/parser/xmlparse \
-  -I$(srcdir)/../../xml/util -I$(srcdir)/../../xml/dom \
+  -I$(srcdir)/../../xml/dom \
   -I$(srcdir)/.. -I$(srcdir)/../util
 
 install:: $(OBJS)

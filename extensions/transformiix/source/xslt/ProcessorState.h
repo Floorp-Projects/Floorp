@@ -28,7 +28,6 @@
 #ifndef TRANSFRMX_PROCESSORSTATE_H
 #define TRANSFRMX_PROCESSORSTATE_H
 
-#include "DOMHelper.h"
 #include "NodeSet.h"
 #include "NodeStack.h"
 #include "Stack.h"
@@ -401,11 +400,6 @@ private:
     };
 
     NodeStack currentNodeStack;
-
-    /**
-     * Allows us to overcome some DOM deficiencies
-    **/
-    DOMHelper domHelper;
 
     /**
      * The list of ErrorObservers registered with this ProcessorState

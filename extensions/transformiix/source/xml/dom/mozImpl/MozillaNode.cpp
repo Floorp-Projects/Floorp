@@ -45,6 +45,7 @@ Node::Node(nsIDOMNode* aNode, Document* aOwner) :
 {
     MOZ_COUNT_CTOR(Node);
     namespaceID=0;
+    mOrderInfo = 0;
 }
 
 /*
@@ -53,6 +54,7 @@ Node::Node(nsIDOMNode* aNode, Document* aOwner) :
 Node::~Node()
 {
     MOZ_COUNT_DTOR(Node);
+    delete mOrderInfo;
 }
 
 /*
@@ -503,4 +505,160 @@ String Node::getBaseURI()
         nsDOM3Node->GetBaseURI(url.getNSString());
 
     return url;
+}
+
+/*
+ * Compares document position of this node relative to another node
+ */
+PRInt32 Node::compareDocumentPosition(Node* aOther)
+{
+  OrderInfo* myOrder = getOrderInfo();
+  OrderInfo* otherOrder = aOther->getOrderInfo();
+  if (!myOrder || !otherOrder)
+      return -1;
+
+  if (myOrder->mRoot == otherOrder->mRoot) {
+    int c = 0;
+    while (c < myOrder->mSize && c < otherOrder->mSize) {
+      if (myOrder->mOrder[c] < otherOrder->mOrder[c])
+        return -1;
+      if (myOrder->mOrder[c] > otherOrder->mOrder[c])
+        return 1;
+      ++c;
+    }
+    if (c < myOrder->mSize)
+      return 1;
+    if (c < otherOrder->mSize)
+      return -1;
+    return 0;
+  }
+
+  if (myOrder->mRoot < otherOrder->mRoot)
+    return -1;
+
+  return 1;
+}
+
+/*
+ * Get order information for node
+ */
+Node::OrderInfo* Node::getOrderInfo()
+{
+    if (mOrderInfo)
+        return mOrderInfo;
+
+    mOrderInfo = new OrderInfo;
+    if (!mOrderInfo)
+        return 0;
+
+    Node* parent = getXPathParent();
+    if (!parent) {
+        mOrderInfo->mOrder = 0;
+        mOrderInfo->mSize = 0;
+        mOrderInfo->mRoot = this;
+        return mOrderInfo;
+    }
+
+    OrderInfo* parentOrder = parent->getOrderInfo();
+    mOrderInfo->mSize = parentOrder->mSize + 1;
+    mOrderInfo->mRoot = parentOrder->mRoot;
+    mOrderInfo->mOrder = new PRUint32[mOrderInfo->mSize];
+    if (!mOrderInfo->mOrder) {
+        delete mOrderInfo;
+        mOrderInfo = 0;
+        return 0;
+    }
+    memcpy(mOrderInfo->mOrder,
+           parentOrder->mOrder,
+           parentOrder->mSize * sizeof(PRUint32*));
+
+    int lastElem = parentOrder->mSize;
+    switch(getNodeType()) {
+        case Node::ATTRIBUTE_NODE:
+        {
+            nsCOMPtr<nsIAtom> thisName;
+            getLocalName(getter_AddRefs(thisName));
+            PRInt32 thisNS = getNamespaceID();
+
+            // find this attribute in parents attrlist
+            PRInt32 count, i;
+            nsCOMPtr<nsIContent> owner = do_QueryInterface(parent->getNSObj());
+            owner->GetAttrCount(count);
+            for (i = 0; i < count; ++i) {
+                nsCOMPtr<nsIAtom> attName;
+                nsCOMPtr<nsIAtom> attPrefix;
+                PRInt32 attNS;
+                owner->GetAttrNameAt(i,
+                                     attNS,
+                                     *getter_AddRefs(attName),
+                                     *getter_AddRefs(attPrefix));
+
+                if (attName == thisName && attNS == thisNS) {
+                    mOrderInfo->mOrder[lastElem] = i + kTxAttrIndexOffset;
+                    return mOrderInfo;
+                }
+            }
+            break;
+        }
+        // XXX Namespace: need to handle namespace nodes here
+        default:
+        {
+            nsCOMPtr<nsIContent> cont(do_QueryInterface(nsObject));
+
+            nsISupports* parentObj = parent->getNSObj();
+
+            nsCOMPtr<nsIContent> parentCont(do_QueryInterface(parentObj));
+            // Is parent an nsIContent
+            if (parentCont) {
+                PRInt32 index;
+                parentCont->IndexOf(cont, index);
+                mOrderInfo->mOrder[lastElem] = index + kTxChildIndexOffset;
+                return mOrderInfo;
+            }
+
+            nsCOMPtr<nsIDocument> parentDoc(do_QueryInterface(parentObj));
+            // Is parent an nsIDocument
+            if (parentDoc) {
+                PRInt32 index;
+                parentDoc->IndexOf(cont, index);
+                mOrderInfo->mOrder[lastElem] = index + kTxChildIndexOffset;
+                return mOrderInfo;
+            }
+
+            // Parent is something else, probably an attribute
+            // This will happen next to never, only for expressions like
+            // foo/@bar/text()
+            PRUint32 i, len;
+            nsCOMPtr<nsIDOMNodeList> childNodes;
+
+            nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentObj);
+            nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(getNSObj());
+            parentNode->GetChildNodes(getter_AddRefs(childNodes));
+            NS_ENSURE_TRUE(childNodes, 0);
+
+            childNodes->GetLength(&len);
+            for (i = 0; i < len; ++i) {
+                nsCOMPtr<nsIDOMNode> node;
+                childNodes->Item(i, getter_AddRefs(node));
+
+                if (node == thisNode) {
+                    mOrderInfo->mOrder[lastElem] = i + kTxChildIndexOffset;
+                    return mOrderInfo;
+                }
+            }
+            break;
+        }
+    }
+
+    NS_ERROR("unable to get childindex for node");
+    mOrderInfo->mOrder[lastElem] = 0;
+    return mOrderInfo;
+}
+
+/*
+ * OrderInfo destructor
+ */
+Node::OrderInfo::~OrderInfo()
+{
+    delete [] mOrder;
 }
