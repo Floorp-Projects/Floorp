@@ -89,6 +89,10 @@ endif
 #  work;  replace first instance with one forward slash
 TOPSRCDIR := $(shell echo "$(TOPSRCDIR)" | sed -e 's%//%/%')
 
+ifndef TOPSRCDIR_MOZ
+TOPSRCDIR_MOZ=$(TOPSRCDIR)
+endif
+
 # if ROOTDIR equals only drive letter (i.e. "C:"), set to "/"
 DIRNAME := $(shell echo "$(ROOTDIR)" | sed -e 's/^.://')
 ifeq ($(DIRNAME),)
