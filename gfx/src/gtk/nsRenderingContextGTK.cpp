@@ -401,18 +401,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
   mContext->GetMetricsFor(aFont, mFontMetrics);
-  if (mFontMetrics)
-  {
-    nsFontHandle  fontHandle;
-    mFontMetrics->GetFontHandle(fontHandle);
-    mCurrentFont = (GdkFont *)fontHandle;
-
-    gdk_gc_set_font(mRenderingSurface->gc,
-                    mCurrentFont);
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
+  return SetFont(mFontMetrics);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
@@ -444,10 +433,8 @@ NS_IMETHODIMP nsRenderingContextGTK::GetLineStyle(nsLineStyle &aLineStyle)
 
 NS_IMETHODIMP nsRenderingContextGTK::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-  if (mFontMetrics)
-    aFontMetrics = mFontMetrics;
-  else
-    aFontMetrics = nsnull;
+  NS_IF_ADDREF(mFontMetrics);
+  aFontMetrics = mFontMetrics;
   return NS_OK;
 }
 
@@ -820,7 +807,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
     {
       nscoord ascent,descent;
 
-	  mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxAscent(ascent);
       mFontMetrics->GetMaxDescent(descent);
 
       DrawLine(aX, aY + ascent + (descent >> 1),
