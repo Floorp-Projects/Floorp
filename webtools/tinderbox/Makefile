@@ -29,7 +29,9 @@
 #PREFIX = /home/httpd/html/tinderbox
 #UUDECODE = /usr/bin/uudecode
 
-FILES = addimage.cgi	\
+FILES = \
+Backwards.pm
+addimage.cgi	\
 addnote.cgi	\
 admintree.cgi	\
 buildwho.pl	\
@@ -50,6 +52,8 @@ tbglobals.pl	\
 Empty.html	\
 faq.html	\
 index.html	\
+examples/build-moz-smoke.pl \
+examples/buildit.config \
 examples/mozilla-unix.pl \
 examples/mozilla-windows.pl
 
@@ -60,6 +64,7 @@ star.gif
 
 install:
 	mkdir -p $(PREFIX) && \
+	mkdir -p $(PREFIX)/examples &&
 	for I in $(FILES); do \
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
