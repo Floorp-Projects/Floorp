@@ -70,11 +70,9 @@ DIRS +=				\
   widget			\
   layout			\
   rdf				\
-  webshell
+  webshell			\
+  editor
 
-ifdef MOZ_EDITOR
-DIRS += editor
-endif
 
 DIRS += xpfe
 
