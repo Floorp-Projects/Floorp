@@ -126,7 +126,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
@@ -141,10 +142,11 @@ protected:
   static nsresult GetCallerSourceURL(nsIURI** sourceURL);
 
   nsresult GetImageFrame(nsIImageFrame** aImageFrame);
+  nsresult GetXY(PRInt32* aX, PRInt32* aY);
+  nsresult GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight);
 
   // Only used if this is a script constructed image
   nsIDocument* mOwnerDocument;
-
 
   nsCOMPtr<imgIRequest> mRequest;
 };
@@ -270,53 +272,36 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
   NS_ENSURE_ARG_POINTER(aImageFrame);
   *aImageFrame = nsnull;
 
-  nsresult result;
-  nsCOMPtr<nsIPresContext> context;
+  if (!mDocument) {
+    return NS_OK;
+  }
+
+  // Make sure the presentation is up-to-date
+  nsresult rv = mDocument->FlushPendingNotifications();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<nsIPresShell> shell;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
 
-  if (mDocument) {
-    // Make sure the presentation is up-to-date
-    result = mDocument->FlushPendingNotifications();
-    if (NS_FAILED(result)) {
-      return result;
-    }
+  if (!shell) {
+    return NS_OK;
   }
 
-  result = GetPresContext(this, getter_AddRefs(context));
-  if (NS_FAILED(result)) {
-    return result;
+  nsCOMPtr<nsIPresContext> context;
+  rv = shell->GetPresContext(getter_AddRefs(context));
+  if (!context) {
+    return NS_OK;
   }
 
-  result = context->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result)) {
-    return result;
+  nsIFrame* frame = nsnull;
+  rv = shell->GetPrimaryFrameFor(this, &frame);
+  if (!frame || NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsIFrame* frame;
-  result = shell->GetPrimaryFrameFor(this, &frame);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  if (frame) {
-    nsCOMPtr<nsIAtom> type;
-
-    frame->GetFrameType(getter_AddRefs(type));
-
-    if (type.get() == nsLayoutAtoms::imageFrame) {
-      nsIImageFrame* imageFrame;
-      result = frame->QueryInterface(NS_GET_IID(nsIImageFrame),
-                                     (void**)&imageFrame);
-      if (NS_FAILED(result)) {
-        NS_WARNING("Should not happen - frame is not image frame even though "
-                   "type is nsLayoutAtoms::imageFrame");
-        return result;
-      }
-      *aImageFrame = imageFrame;
-
-      return NS_OK;
-    }
-  }
+  CallQueryInterface(frame, aImageFrame);
 
   return NS_OK;
 }
@@ -342,31 +327,143 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
   return NS_OK;
 }
 
+nsresult
+nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
+{
+  if (aX) {
+    *aX = 0;
+  }
+
+  if (aY) {
+    *aY = 0;
+  }
+
+  if (!mDocument) {
+    return NS_OK;
+  }
+
+  // Get Presentation shell 0
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+
+  if (!presShell) {
+    return NS_OK;
+  }
+
+  // Get the Presentation Context from the Shell
+  nsCOMPtr<nsIPresContext> context;
+  presShell->GetPresContext(getter_AddRefs(context));
+
+  if (!context) {
+    return NS_OK;
+  }
+
+  // Flush all pending notifications so that our frames are uptodate
+  mDocument->FlushPendingNotifications();
+
+  // Get the Frame for this image
+  nsIFrame* frame = nsnull;
+  presShell->GetPrimaryFrameFor(this, &frame);
+
+  if (!frame) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> docElement;
+  mDocument->GetRootContent(getter_AddRefs(docElement));
+
+  nsPoint origin(0, 0);
+
+  while (frame) {
+    // Add the parent's origin to our own to get to the right
+    // coordinate system
+
+    nsPoint frameOrigin;
+    frame->GetOrigin(frameOrigin);
+    origin += frameOrigin;
+
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+
+    if (content) {
+      // If we've hit the document element, break here
+      if (content == docElement) {
+        break;
+      }
+
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+
+      if (tag == nsHTMLAtoms::body) {
+        break;
+      }
+    }
+
+    frame->GetParent(&frame);
+  }
+
+  if (frame) {
+    // For the origin subtract out the border for the parent
+    const nsStyleBorder* border = nsnull;
+    nsStyleCoord coord;
+
+    frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+    if (border) {
+      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
+      }
+      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
+      }
+    }
+  }
+
+  // Get the scale from that Presentation Context
+  float scale;
+  context->GetTwipsToPixels(&scale);
+
+  // Convert to pixels using that scale
+  if (aX) {
+    *aX = NSTwipsToIntPixels(origin.x, scale);
+  }
+
+  if (aY) {
+    *aY = NSTwipsToIntPixels(origin.y, scale);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLImageElement::GetX(PRInt32* aX)
 {
-  return GetOffsetLeft(aX);
+  return GetXY(aX, nsnull);
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetY(PRInt32* aY)
 {
-  return GetOffsetTop(aY);
+  return GetXY(nsnull, aY);
 }
 
-NS_IMETHODIMP
-nsHTMLImageElement::GetHeight(PRInt32* aHeight)
+nsresult
+nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
 {
-  NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
+  if (aHeight) {
+    *aHeight = 0;
+  }
+
+  if (aWidth) {
+    *aWidth = 0;
+  }
 
   nsIImageFrame* imageFrame = nsnull;
-
-  nsresult rv = GetImageFrame(&imageFrame);
+  GetImageFrame(&imageFrame);
 
   nsIFrame* frame = nsnull;
+
   if (imageFrame) {
-    imageFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
+    CallQueryInterface(imageFrame, &frame);
     NS_WARN_IF_FALSE(frame,"Should not happen - image frame is not frame");
   }
 
@@ -378,26 +475,50 @@ nsHTMLImageElement::GetHeight(PRInt32* aHeight)
     frame->CalcBorderPadding(margin);
 
     size.height -= margin.top + margin.bottom;
+    size.width -= margin.left + margin.right;
 
     nsCOMPtr<nsIPresContext> context;
-    rv = GetPresContext(this, getter_AddRefs(context));
+    GetPresContext(this, getter_AddRefs(context));
 
-    if (NS_SUCCEEDED(rv) && context) {
+    if (context) {
       float t2p;
       context->GetTwipsToPixels(&t2p);
 
-      *aHeight = NSTwipsToIntPixels(size.height, t2p);
+      if (aWidth) {
+        *aWidth = NSTwipsToIntPixels(size.width, t2p);
+      }
+
+      if (aHeight) {
+        *aHeight = NSTwipsToIntPixels(size.height, t2p);
+      }
     }
   } else {
     nsHTMLValue value;
-    rv = GetHTMLAttribute(nsHTMLAtoms::height, value);
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      *aHeight = value.GetPixelValue();
+    if (aWidth) {
+      nsresult rv = GetHTMLAttribute(nsHTMLAtoms::width, value);
+
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        *aWidth = value.GetPixelValue();
+      }
+    }
+
+    if (aHeight) {
+      nsresult rv = GetHTMLAttribute(nsHTMLAtoms::height, value);
+
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        *aHeight = value.GetPixelValue();
+      }
     }
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetHeight(PRInt32* aHeight)
+{
+  return GetWidthHeight(nsnull, aHeight);
 }
 
 NS_IMETHODIMP
@@ -415,47 +536,7 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
 NS_IMETHODIMP
 nsHTMLImageElement::GetWidth(PRInt32* aWidth)
 {
-  NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
-
-  nsIImageFrame* imageFrame;
-
-  nsresult rv = GetImageFrame(&imageFrame);
-
-  nsIFrame* frame = nsnull;
-  if (imageFrame) {
-    imageFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
-    NS_WARN_IF_FALSE(frame,"Should not happen - image frame is not frame");
-  }
-
-  if (NS_SUCCEEDED(rv) && frame) {
-    nsSize size;
-    frame->GetSize(size);
-
-    nsMargin margin;
-    frame->CalcBorderPadding(margin);
-
-    size.width -= margin.left + margin.right;
-
-    nsCOMPtr<nsIPresContext> context;
-    rv = GetPresContext(this, getter_AddRefs(context));
-
-    if (NS_SUCCEEDED(rv) && context) {
-      float t2p;
-      context->GetTwipsToPixels(&t2p);
-
-      *aWidth = NSTwipsToIntPixels(size.width, t2p);
-    }
-  } else {
-    nsHTMLValue value;
-    rv = GetHTMLAttribute(nsHTMLAtoms::width, value);
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      *aWidth = value.GetPixelValue();
-    }
-  }
-
-  return NS_OK;
+  return GetWidthHeight(aWidth, nsnull);
 }
 
 NS_IMETHODIMP
@@ -529,7 +610,8 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32 aModType,
                                              PRInt32& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::usemap) ||
@@ -615,22 +697,19 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
 
   nsCOMPtr<nsIScriptGlobalObject> global;
   nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
-  if (global) {
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
 
-    if (window) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
+  nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
 
-      result = window->GetDocument(getter_AddRefs(domDoc));
-      if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
 
-        if (doc) {
-          result = doc->GetBaseURL(*sourceURL);
-          if (!*sourceURL) {
-            doc->GetDocumentURL(sourceURL);
-          }
-        }
+    result = window->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+
+    if (doc) {
+      result = doc->GetBaseURL(*sourceURL);
+      if (!*sourceURL) {
+        doc->GetDocumentURL(sourceURL);
       }
     }
   }
@@ -639,10 +718,8 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::Initialize(JSContext* aContext,
-                               JSObject *aObj,
-                               PRUint32 argc,
-                               jsval *argv)
+nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
+                               PRUint32 argc, jsval *argv)
 {
   nsresult result = NS_OK;
 
@@ -656,17 +733,15 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   nsContentUtils::GetStaticScriptGlobal(aContext, aObj,
                                         getter_AddRefs(globalObject));;
-  if (globalObject) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(globalObject));
 
-    if (domWindow) {
-      nsCOMPtr<nsIDOMDocument> domDocument;
-      result = domWindow->GetDocument(getter_AddRefs(domDocument));
-      if (NS_SUCCEEDED(result)) {
-        // Maintain the reference
-        result = domDocument->QueryInterface(NS_GET_IID(nsIDocument),
-                                             (void**)&mOwnerDocument);
-      }
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(globalObject));
+
+  if (domWindow) {
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    result = domWindow->GetDocument(getter_AddRefs(domDocument));
+    if (NS_SUCCEEDED(result)) {
+      // Maintain the reference
+      result = CallQueryInterface(domDocument, &mOwnerDocument);
     }
   }
 
@@ -767,15 +842,11 @@ nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupports *cx,
 
   nsAutoString tmpStr;
   tmpStr.AppendInt(size.width);
-  NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_None,
-                                              nsHTMLAtoms::width,
-                                              tmpStr, PR_FALSE);
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, tmpStr, PR_FALSE);
 
   tmpStr.Truncate();
   tmpStr.AppendInt(size.height);
-  NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_None,
-                                              nsHTMLAtoms::height,
-                                              tmpStr, PR_FALSE);
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, tmpStr, PR_FALSE);
 
   return NS_OK;
 }
@@ -829,8 +900,7 @@ nsHTMLImageElement::OnStopDecode(imgIRequest *request, nsISupports *cx,
   else
     event.message = NS_IMAGE_ERROR;
 
-  this->HandleDOMEvent(pc, &event, nsnull, NS_EVENT_FLAG_INIT,
-                      &estatus);
+  HandleDOMEvent(pc, &event, nsnull, NS_EVENT_FLAG_INIT, &estatus);
 
   return NS_OK;
 }
@@ -844,11 +914,8 @@ nsresult
 nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
                                 const nsAReadableString& aSrc)
 {
-  nsresult result = NS_OK;
-
-  result = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::src, aSrc,
-                                             PR_TRUE);
+  nsresult result = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc,
+                            PR_TRUE);
 
   if (NS_SUCCEEDED(result) && mOwnerDocument) {
     nsCOMPtr<nsIPresShell> shell;
@@ -914,18 +981,20 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 
         PRBool shouldLoad = PR_TRUE;
         result = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                       uri,
-                                       NS_STATIC_CAST(nsISupports *,
-                                                      (nsIDOMHTMLImageElement*)this),
-                                       domWin, &shouldLoad);
-        if (NS_SUCCEEDED(result) && !shouldLoad)
-            return NS_OK;
+                                           uri,
+                                           NS_STATIC_CAST(nsIDOMHTMLImageElement *,
+                                                          this),
+                                           domWin, &shouldLoad);
+        if (NS_SUCCEEDED(result) && !shouldLoad) {
+          return NS_OK;
+        }
 
         // If we have a loader we're in the middle of loading a image,
         // we'll cancel that load and start a new one.
-        if (mRequest) {
-          // mRequest->Cancel() ?? cancel the load?
-        }
+
+        // if (mRequest) {
+        //   mRequest->Cancel() ?? cancel the load?
+        // }
 
         nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
         if (!il) {
@@ -941,7 +1010,8 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
           doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
         }
 
-        il->LoadImage(uri, loadGroup, this, sup, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mRequest));
+        il->LoadImage(uri, loadGroup, this, sup, nsIRequest::LOAD_NORMAL,
+                      nsnull, nsnull, getter_AddRefs(mRequest));
       }
     }
 
