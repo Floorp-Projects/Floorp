@@ -63,6 +63,7 @@ class nsDrawingSurfaceMac : public nsIDrawingSurface,
 {
 public:
   nsDrawingSurfaceMac();
+  ~nsDrawingSurfaceMac();
 
   NS_DECL_ISUPPORTS
 
@@ -87,8 +88,6 @@ public:
 	GraphicState*	GetGS(void) {return mGS;}
 
 private:
-  ~nsDrawingSurfaceMac();
-
 	GrafPtr					mPort;						// the onscreen or offscreen GrafPtr;	
 	
   PRUint32      	mWidth;
