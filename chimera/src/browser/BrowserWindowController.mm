@@ -779,8 +779,10 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                   withTabIcon:[NSImage imageNamed:@"bookicon"]];
     CHIconTabViewItem   *histItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"historyicon"]];
+#if USE_SEARCH_ITEM
     CHIconTabViewItem *searchItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"searchicon"]];
+#endif
 #if USE_PANELS_ITEM
     CHIconTabViewItem *panelsItem = [[CHIconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
                                   withTabIcon:[NSImage imageNamed:@"panel_icon"]];
@@ -788,7 +790,9 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     
     [bookItem   setView:[[mSidebarSourceTabView tabViewItemAtIndex:0] view]];
     [histItem   setView:[[mSidebarSourceTabView tabViewItemAtIndex:1] view]];
+#if USE_SEARCH_ITEM
     [searchItem setView:[[mSidebarSourceTabView tabViewItemAtIndex:2] view]];
+#endif
 #if USE_PANELS_ITEM
     [panelsItem setView:[[mSidebarSourceTabView tabViewItemAtIndex:3] view]];
 #endif
@@ -797,7 +801,9 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
     
     [mSidebarTabView insertTabViewItem:bookItem   atIndex:0];
     [mSidebarTabView insertTabViewItem:histItem   atIndex:1];
+#if USE_SEARCH_ITEM
     [mSidebarTabView insertTabViewItem:searchItem atIndex:2];
+#endif
 #if USE_PANELS_ITEM
     [mSidebarTabView insertTabViewItem:panelsItem atIndex:3];
 #endif
