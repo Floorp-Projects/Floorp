@@ -59,7 +59,7 @@ function onDblClick()
 function updateOK()
 {
   var selection = gBookmarkTree._selection;
-  gOK.disabled = !selection.length != 1 || 
+  gOK.disabled = selection.length != 1 || 
                 (selection.type[0] != "Bookmark" && selection.type[0] != "")
 }
 
