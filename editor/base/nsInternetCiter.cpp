@@ -126,39 +126,34 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAReadableString& aInString,
     *aCiteLevel = 0;
 
   aOutString.SetLength(0);
-
-  nsString tString(aInString);//CRAPCRAP
-  PRInt32 length = tString.Length();
+  nsReadingIterator <PRUnichar> beginIter,endIter;
+  aInString.BeginReading(beginIter);
+  aInString.EndReading(endIter);
+  PRInt32 length = aInString.Length();
   PRInt32 i = 0;
-  while (i < length)  // loop over lines
+  while (beginIter!= endIter)  // loop over lines
   {
     // Clear out cites first, at the beginning of the line:
     PRInt32 thisLineCiteLevel = 0;
-    while (tString[i] == gt || nsCRT::IsAsciiSpace(tString[i]))
+    while (beginIter!= endIter && (*beginIter == gt || nsCRT::IsAsciiSpace(*beginIter)))
     {
-      if (tString[i] == gt) ++thisLineCiteLevel;
-      ++i;
+      if (*beginIter == gt) ++thisLineCiteLevel;
+      ++beginIter;
     }
 
     // Now copy characters until line end:
-    PRInt32 nextNewline = tString.FindCharInSet("\r\n", i);
-    if (nextNewline > i)
+    while (beginIter != endIter && (*beginIter != '\r' && *beginIter != '\n'))
     {
-      while (i < nextNewline)
-        aOutString.Append(tString[i++]);
-      if (aLinebreaksToo)
-        aOutString.Append(PRUnichar(' '));
-      else
-        aOutString.Append(PRUnichar('\n'));    // DOM linebreaks, not NS_LINEBREAK
+      aOutString.Append(*beginIter);
+      ++beginIter;
+    }
+    if (aLinebreaksToo)
+      aOutString.Append(PRUnichar(' '));
+    else
+      aOutString.Append(PRUnichar('\n'));    // DOM linebreaks, not NS_LINEBREAK
       // Skip over any more consecutive linebreak-like characters:
-      while (i < length && (tString[i] == '\r' || tString[i] == '\n'))
-        ++i;
-    }
-    else    // no more newlines
-    {
-      while (i < length)
-        aOutString.Append(tString[i++]);
-    }
+    while (beginIter != endIter && (*beginIter == '\r' || *beginIter == '\n'))
+      ++beginIter;
 
     // Done with this line -- update cite level
     if (aCiteLevel && (thisLineCiteLevel > *aCiteLevel))

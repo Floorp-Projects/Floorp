@@ -2226,8 +2226,8 @@ nsHTMLEditor::RemoveList(const nsAReadableString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveList);
-  nsString tString(aListType);//MJUDGE SCC NEED HELP
-  if (tString.EqualsWithConversion("ol")) ruleInfo.bOrdered = PR_TRUE;
+  if (!Compare(aListType,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()))
+    ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
@@ -2349,8 +2349,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kIndent;
   PRInt32 opID = kOpIndent;
-  nsString tString(aIndent);//MJUDGE SCC NEED HELP
-  if (tString.EqualsWithConversion("outdent"))
+  if (!Compare(aIndent,NS_LITERAL_STRING("outdent"),nsCaseInsensitiveStringComparator()))
   {
     theAction = nsTextEditRules::kOutdent;
     opID = kOpOutdent;
@@ -3536,26 +3535,20 @@ PRBool
 nsHTMLEditor::TagCanContainTag(const nsAReadableString& aParentTag, const nsAReadableString& aChildTag)  
 {
   // COtherDTD gives some unwanted results.  We override them here.
-  nsAutoString olStr, ulStr, liStr;
-  olStr = NS_LITERAL_STRING("ol");
-  ulStr = NS_LITERAL_STRING("ul");
-  liStr = NS_LITERAL_STRING("li");
-  nsString tParent(aParentTag);//MJUDGE SCC NEED HELP
-  nsString tChild(aChildTag);//MJUDGE SCC NEED HELP
-  if ( tParent.EqualsIgnoreCase(olStr) ||
-       tParent.EqualsIgnoreCase(ulStr) )
+  if (!Compare(aParentTag,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
+    !Compare(aParentTag,NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
   {
     // if parent is a list and tag is also a list, say "yes".
     // This is because the editor does sublists illegally for now. 
-    if (tChild.EqualsIgnoreCase(olStr) ||
-        tChild.EqualsIgnoreCase(ulStr) ) 
+      if (!Compare(aChildTag,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
+        !Compare(aChildTag,NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
       return PR_TRUE;
   }
 
-  if ( tParent.EqualsIgnoreCase(liStr) )
+  if (!Compare(aParentTag,NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
   {
     // list items cant contain list items
-    if (tChild.EqualsIgnoreCase(liStr) ) 
+    if (!Compare(aChildTag,NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
       return PR_FALSE;
   }
 

@@ -24,6 +24,7 @@
 #include "nsAOLCiter.h"
 
 #include "nsWrapUtils.h"
+#include "nsReadableUtils.h"
 
 /** Mail citations using the AOL style >> This is a citation <<
   */
@@ -86,17 +87,19 @@ NS_IMETHODIMP
 nsAOLCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aOutString)
 {
   // Remove the beginning cites, if any:
-  nsAutoString tInputString(aInString);//MJUDGE SCC NEED HELP
   nsAutoString tOutputString;
-  if (tInputString.EqualsWithConversion(">>", PR_FALSE, 2))
+  nsReadingIterator <PRUnichar> iter,enditer;
+  aInString.BeginReading(iter);
+  aInString.EndReading(enditer);
+  if (!Compare(Substring(aInString,0,2),NS_LITERAL_STRING(">>")))
   {
-    PRInt32 i = 3;
-    while (nsCRT::IsAsciiSpace(tInputString[i]))
-      ++i;
-    tOutputString.Append(tInputString.GetUnicode(), i);
+    iter.advance(2);
+    while (nsCRT::IsAsciiSpace(*iter))
+      ++iter;
+    AppendUnicodeTo(iter,enditer,tOutputString);
   }
   else
-    tOutputString = tInputString;
+    CopyUnicodeTo(iter,enditer,tOutputString);
 
   // Remove the end cites, if any:
   tOutputString.Trim("<", PR_FALSE, PR_TRUE, PR_FALSE);
