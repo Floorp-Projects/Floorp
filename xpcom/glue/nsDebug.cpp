@@ -18,15 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM
- * described herein are Copyright (c) International Business Machines Corporation, 2000.
- * Modifications to Mozilla code or documentation identified per MPL Section 3.3
- *
- * Date        Modified by     Description of modification
- * 04/10/2000  IBM Corp.       Added DebugBreak() definitions for OS/2
- * 06/19/2000  IBM Corp.       Fix DebugBreak() messagebox defaults for OS/2 
- * 06/19/2000  Henry Sobotka Fix DebugBreak() for OS/2 on retail build.
+ *   IBM Corp.
+ *   Henry Sobotka
  */
 
 #include "nsDebug.h"
@@ -64,28 +57,25 @@
 #endif
 
 #if defined(XP_OS2)
-/* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
- * the int3 on purpose for Visual Age so that a developer can step over the
- * instruction if so desired.  Not always possible if trapping due to exception
- * handling IBM-AKR
- */
-#define INCL_WINDIALOGS  // need for WinMessageBox
-#include <os2.h>
-
-#if defined(DEBUG)
-#if defined(XP_OS2_VACPP)
-   #include <builtin.h>
-   #define DebugBreak() { _interrupt(3); }
-#elif defined(XP_OS2_EMX)
-   /* Force a trap */
-   #define DebugBreak() { int *pTrap=NULL; *pTrap = 1; }
-#else
-   #define DebugBreak()
-#endif
-
-#else
-   #define DebugBreak()
-#endif /* DEBUG */
+  /* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
+   * the int3 on purpose for Visual Age so that a developer can step over the
+   * instruction if so desired.  Not always possible if trapping due to exception
+   * handling IBM-AKR
+   */
+  #define INCL_WINDIALOGS  // need for WinMessageBox
+  #include <os2.h>
+  #include <string.h>
+  
+  #if defined(DEBUG)
+   #if defined(XP_OS2_VACPP)
+    #include <builtin.h>
+    #define DebugBreak() { _interrupt(3); }
+   #else
+    #define DebugBreak() { asm("int $3"); }
+   #endif
+  #else
+    #define DebugBreak()
+  #endif /* DEBUG */
 #endif /* XP_OS2 */
 
 #if defined(_WIN32)
