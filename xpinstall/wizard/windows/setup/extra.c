@@ -40,6 +40,7 @@
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
 
+#define DEFAULT_ICON_SIZE   32
 #define INDEX_STR_LEN       10
 #define PN_PROCESS          TEXT("Process")
 #define PN_THREAD           TEXT("Thread")
@@ -2498,6 +2499,7 @@ HRESULT InitSetupGeneral()
 {
   char szBuf[MAX_BUF];
 
+  gSystemInfo.bRefreshIcons      = FALSE; 
   sgProduct.dwMode               = NORMAL;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
@@ -5513,6 +5515,58 @@ int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return(0);
 }
 
+void RefreshIcons()
+{
+  char subKey[MAX_BUF];
+  char iconConstraint[MAX_BUF];
+  BYTE iconConstraintNew[MAX_BUF];
+  HKEY hkResult;
+  DWORD dwValueType;
+  long iconConstraintSize;
+  long rv;
+
+  // Get the size of the icon from the windows registry.
+  // When this registry value is changed, the OS can flush the
+  // icon cache and thus update the icons.
+  iconConstraintSize = sizeof(iconConstraint);
+  strcpy(subKey, "Control Panel\\Desktop\\WindowMetrics");
+  RegOpenKeyEx(HKEY_CURRENT_USER, subKey, 0, KEY_ALL_ACCESS, &hkResult);
+  rv = RegQueryValueEx(hkResult, "Shell Icon Size", 0, &dwValueType, iconConstraint, &iconConstraintSize);
+  if(rv != ERROR_SUCCESS || iconConstraintSize == 0)
+  {
+    // Key not found or value not found, so use default OS value.
+    int iIconSize = GetSystemMetrics(SM_CXICON);
+    if(iIconSize == 0)
+      // Getting default OS value failed, use hard coded value
+      iIconSize = DEFAULT_ICON_SIZE;
+
+    sprintf(iconConstraint, "%d", iIconSize);
+  }
+
+  // decrease the size of the icon by 1
+  // and tell the system to refresh the icons
+  sprintf(iconConstraintNew, "%d", atoi(iconConstraint) - 1);
+  iconConstraintSize = lstrlen(iconConstraintNew);
+  RegSetValueEx(hkResult, "Shell Icon Size", 0, dwValueType, iconConstraintNew, iconConstraintSize);
+  SendMessageTimeout(HWND_BROADCAST,
+                     WM_SETTINGCHANGE,
+                     SPI_SETNONCLIENTMETRICS,
+                     (LPARAM)"WindowMetrics",
+                     SMTO_NORMAL|SMTO_ABORTIFHUNG, 
+                     10000, NULL); 
+
+  // reset the original size of the icon
+  // and tell the system to refresh the icons
+  iconConstraintSize = lstrlen(iconConstraint);
+  RegSetValueEx(hkResult, "Shell Icon Size", 0, dwValueType, iconConstraint, iconConstraintSize);
+  SendMessageTimeout(HWND_BROADCAST,
+                     WM_SETTINGCHANGE,
+                     SPI_SETNONCLIENTMETRICS,
+                     (LPARAM)"WindowMetrics",
+                     SMTO_NORMAL|SMTO_ABORTIFHUNG, 
+                     10000, NULL); 
+}
+
 int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchiveListSize, BOOL bIncludeTempPath)
 {
   DWORD dwIndex0;
@@ -5828,6 +5882,10 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get main program folder name */
   GetPrivateProfileString("General", "Program Folder Name", "", szBuf, sizeof(szBuf), szFileIniConfig);
   DecryptString(sgProduct.szProgramFolderName, szBuf);
+
+  GetPrivateProfileString("General", "Refresh Icons", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    gSystemInfo.bRefreshIcons = TRUE;
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);

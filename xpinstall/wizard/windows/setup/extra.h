@@ -213,6 +213,7 @@ BOOL              DeleteWGetLog(void);
 DWORD             ParseOSType(char *szOSType);
 BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
+void              RefreshIcons();
 
 #endif /* _EXTRA_H_ */
 

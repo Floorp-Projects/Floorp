@@ -546,6 +546,7 @@ struct sSysInfo
   DWORD dwScreenX;
   DWORD dwScreenY;
   BOOL  bScreenReader;
+  BOOL  bRefreshIcons;
 };
 
 typedef struct diskSpaceNode dsN;
