@@ -52,6 +52,7 @@ public:
 	
 	void recordURL(URL_Struct *url);  // add the url to the drop down.
 	void setURLString(URL_Struct *url); // set the text's value to the url.
+    static void clearAll();
 	
 	static const char *navigateToURL;  // callback invoked when the user 
 	// selects (or types) a new url
@@ -98,6 +99,7 @@ private:
 
 	XP_Bool readUserHistory();
 	XP_Bool saveUserHistory();
+	static XP_Bool eraseUserHistory();
 	
 	void frob_label(XP_Bool edited_p, XP_Bool netsite_p);
 	
@@ -125,6 +127,9 @@ private:
 
 	static void	frameTitleChangedCB			(Widget, XtPointer, XtPointer);
 	void		handleFrameTitleChanged		(String title);
+
+    XFE_CALLBACK_DECL(_recordURL) // add the url to the drop down.
+    XFE_CALLBACK_DECL(_clearAll) // clear all urls from the drop down.
 };
 
 #endif /* _xfe_urlbar_h */

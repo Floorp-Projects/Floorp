@@ -66,6 +66,8 @@ public:
   static const char *defaultFontChanged; 
   static const char *refreshMsgWindow; 
   static const char *personalToolbarFolderChanged; 
+  static const char *addURLtoURLBarHistory;
+  static const char *clearURLBarHistory;
 
   // called when a registered frame is being destroyed.
   XFE_CALLBACK_DECL(frameUnregistering)

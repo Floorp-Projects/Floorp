@@ -25,6 +25,7 @@
 #include "fonts.h"
 #include "xpassert.h"
 #include "MozillaApp.h"
+#include "URLBar.h"  // for interface to clear URLBar
 #include "View.h"
 #include "xfe.h"
 #include "e_kit.h"
@@ -638,6 +639,7 @@ void XFE_PrefsPageBrowser::cb_expireNow(Widget    /* widget */,
 	if (XFE_Confirm(fep->context, fe_globalData.expire_now_message)) {
 		GH_ClearGlobalHistory();
 		fe_RefreshAllAnchors();
+        XFE_URLBar::clearAll();
 	}
 }
 

@@ -452,6 +452,16 @@ XFE_URLBar::createUrlComboBox(Widget parent,History_entry * first_entry)
 				  XmNactivateCallback,
 				  url_text_cb,
 				  (XtPointer) this);
+
+
+    XFE_MozillaApp::theApp()->registerInterest(
+            XFE_MozillaApp::addURLtoURLBarHistory,
+            this,
+            (XFE_FunctionNotification)_recordURL_cb);
+    XFE_MozillaApp::theApp()->registerInterest(
+            XFE_MozillaApp::clearURLBarHistory,
+            this,
+            (XFE_FunctionNotification)_clearAll_cb);
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_URLBar::~XFE_URLBar()
@@ -477,6 +487,14 @@ XFE_URLBar::~XFE_URLBar()
 
 		m_bookmarkDropSite = NULL;
 	}
+    XFE_MozillaApp::theApp()->unregisterInterest(
+			XFE_MozillaApp::addURLtoURLBarHistory,
+			this,
+			(XFE_FunctionNotification)_recordURL_cb);
+    XFE_MozillaApp::theApp()->unregisterInterest(
+			XFE_MozillaApp::clearURLBarHistory,
+			this,
+			(XFE_FunctionNotification)_clearAll_cb);
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
@@ -506,6 +524,17 @@ XFE_URLBar::getFormWidget()
 void
 XFE_URLBar::recordURL(URL_Struct *url)
 {
+  if ( !url->address ) return;
+  
+  // Notify all frames to add this URL
+  XFE_MozillaApp::theApp()->notifyInterested(XFE_MozillaApp::addURLtoURLBarHistory,(void*)url);
+
+  /* Save to history */
+  saveUserHistory();
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_URLBar, _recordURL)(XFE_NotificationCenter*, void*, void* callData)
+{
   XmString str;
   int itemCount = 0;
   Widget list;
@@ -513,7 +542,8 @@ XFE_URLBar::recordURL(URL_Struct *url)
   int poscnt;
   Boolean found = False;
 
-  if ( !url->address ) return;
+  URL_Struct *url = (URL_Struct*)callData;
+
   str = XmStringCreateLtoR(url->address, XmSTRING_DEFAULT_CHARSET);
   XtVaGetValues(m_urlComboBox, XmNlist, &list, 0);
 
@@ -533,11 +563,8 @@ XFE_URLBar::recordURL(URL_Struct *url)
 	XmListSelectPos(list, 1, False);
         XmListSetPos(list, 1); /* Scroll to top */
   }
-  
-  /* Save to history */
-  saveUserHistory();
-}
-
+} 
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_URLBar::setURLString(URL_Struct *url)
 {
@@ -602,8 +629,41 @@ XFE_URLBar::setURLString(URL_Struct *url)
   fe_store_url_prop(context, url);
 #endif /* notyet */
 }
+//////////////////////////////////////////////////////////////////////////
+/*static*/
+void
+XFE_URLBar::clearAll()
+{
+  // Notify all frames to clear the URLBar (handled by _clearAll below)
+  XFE_MozillaApp::theApp()->notifyInterested(XFE_MozillaApp::clearURLBarHistory, NULL);
 
+  eraseUserHistory();
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_URLBar, _clearAll)(XFE_NotificationCenter*, void*, void*)
+{
+    XP_ASSERT(m_urlComboBox);
 
+    Widget text_field;
+    char * text;
+
+    // Toss out the combo list,
+    //   but save the text in the textfield
+
+    XtVaGetValues (m_urlComboBox, XmNtextField, &text_field, 0);
+
+    XP_ASSERT(text_field);
+
+    text = fe_GetTextField(text_field); /* return via XtMalloc */
+
+    DtComboBoxDeleteAllItems(m_urlComboBox);
+
+    if (text) {
+        fe_SetTextField(text_field, text);
+        XtFree(text);
+    }
+}
+//////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_URLBar::readUserHistory()
 {
@@ -631,7 +691,7 @@ XFE_URLBar::readUserHistory()
  fclose(fp);
  return TRUE;
 }
-
+//////////////////////////////////////////////////////////////////////////
 /* For saving out the user typed in url history list to a file*/
 XP_Bool
 XFE_URLBar::saveUserHistory()
@@ -659,7 +719,28 @@ XFE_URLBar::saveUserHistory()
  fclose(fp);
  return TRUE;
 }
+//////////////////////////////////////////////////////////////////////////
+/*static*/
+XP_Bool
+XFE_URLBar::eraseUserHistory()
+{
+ // Write an empty history file
 
+ char *filename = fe_globalPrefs.user_history_file;
+ FILE *fp = fopen(filename,"w");
+
+ if ( !fp )
+    return FALSE;
+
+ fprintf (fp,
+		  XP_GetString(XFE_URLBAR_FILE_HEADER),
+		  fe_version);
+
+ fclose(fp);
+
+ return TRUE;
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_URLBar::frob_label(XP_Bool edited_p,
 					   XP_Bool netsite_p)

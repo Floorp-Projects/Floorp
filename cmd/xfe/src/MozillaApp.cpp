@@ -75,6 +75,8 @@ const char *XFE_MozillaApp::defaultColorsChanged = "XFE_MozillaApp::defaultColor
 const char *XFE_MozillaApp::defaultFontChanged = "XFE_MozillaApp::defaultFontChanged";
 const char *XFE_MozillaApp::refreshMsgWindow = "XFE_MozillaApp::refreshMsgWindow";
 const char *XFE_MozillaApp::personalToolbarFolderChanged = "XFE_MozillaApp::personalToolbarFolderChanged";
+const char *XFE_MozillaApp::addURLtoURLBarHistory = "XFE_MozillaApp::addURLtoURLBarHistory";
+const char *XFE_MozillaApp::clearURLBarHistory = "XFE_MozillaApp::clearURLBarHistory";
 
 static void xfeDoCommandAction(Widget w, XEvent *, String *, Cardinal *);
 static void xfeDoTextAction(Widget w, XEvent *, String *, Cardinal *);
