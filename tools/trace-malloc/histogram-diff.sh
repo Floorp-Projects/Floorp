@@ -24,6 +24,27 @@
 # `histogram.pl' and prints the delta, sorted such that the objects
 # that increased the most in raw memory usage are displayed at the
 # top.
+#
+# Usage:
+#
+#   histogram-diff.sh [-c <count>] <base> <incr>
+#
+# Compute incremental memory growth from histogram in file <base> to
+# histogram in file <incr>, displaying at most <count> rows.
+
+# How many rows are we gonna show?
+COUNT=20
+
+# Read arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -c) COUNT=$2
+        shift 2
+        ;;
+    *)  break
+        ;;
+    esac
+done
 
 BASE=$1
 INCR=$2
@@ -52,10 +73,10 @@ BEGIN {
 \$1 == "TOTAL" {
   tbytes = \$7;
   }
-NR <= 20 {
+NR <= $COUNT {
   printf "%-22s %6d %8d  %6d %8d  %6d %8d %6.2lf\n", \$1, \$2, \$3, \$4, \$5, \$6, \$7, 100.0 * \$7 / tbytes;
   }
-NR > 20 {
+NR > $COUNT {
   oobjs1 += \$2;  obytes1 += \$3;
   oobjs2 += \$4;  obytes2 += \$5;
   odobjs += \$6;  odbytes += \$7;
