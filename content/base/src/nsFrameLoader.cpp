@@ -587,10 +587,7 @@ nsFrameLoader::GetURL(nsAString& aURI)
 {
   aURI.Truncate();
 
-  nsCOMPtr<nsIAtom> type;
-  mOwnerContent->GetTag(getter_AddRefs(type));
-
-  if (type == nsHTMLAtoms::object) {
+  if (mOwnerContent->Tag() == nsHTMLAtoms::object) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aURI);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aURI);

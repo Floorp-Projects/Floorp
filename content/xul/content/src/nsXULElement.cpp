@@ -2068,7 +2068,6 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
     // the possibility exists that some of the items in the removed subtree
     // are selected (and therefore need to be deselected). We need to account for this.
-    nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsIDOMXULMultiSelectControlElement> controlElement;
     nsCOMPtr<nsIListBoxObject> listBox;
     PRBool fireSelectionHandler = PR_FALSE;
@@ -2077,8 +2076,8 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     // anything else = index to re-set as current
     PRInt32 newCurrentIndex = -1;
 
-    oldKid->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::listitem) {
+    nsINodeInfo *ni = oldKid->GetNodeInfo();
+    if (ni && ni->Equals(nsXULAtoms::listitem, kNameSpaceID_XUL)) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
@@ -2186,12 +2185,10 @@ nsXULElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetTag(nsIAtom** aResult) const
+nsIAtom *
+nsXULElement::Tag() const
 {
-    NS_ADDREF(*aResult = NodeInfo()->NameAtom());
-
-    return NS_OK;
+    return NodeInfo()->NameAtom();
 }
 
 NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
@@ -2237,17 +2234,14 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
             PRBool validElement = PR_TRUE;
 
             // find out what type of content node this is
-            nsCOMPtr<nsIAtom> atom;
-            nsresult rv = GetTag(getter_AddRefs(atom));
-            if (NS_SUCCEEDED(rv) && atom) {
-                if (atom == nsXULAtoms::label) {
-                    // XXXjag a side-effect is that we filter out anonymous <label>s
-                    // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
-                    // |accesskey| and would otherwise register themselves, overwriting
-                    // the content we really meant to be registered.
-                    if (!HasAttr(kNameSpaceID_None, nsXULAtoms::control))
-                        validElement = PR_FALSE;
-                }
+            if (NodeInfo()->Equals(nsXULAtoms::label)) {
+                // XXXjag a side-effect is that we filter out
+                // anonymous <label>s in e.g. <menu>, <menuitem>,
+                // <button>. These <label>s inherit |accesskey| and
+                // would otherwise register themselves, overwriting
+                // the content we really meant to be registered.
+                if (!HasAttr(kNameSpaceID_None, nsXULAtoms::control))
+                    validElement = PR_FALSE;
             }
 
             if (validElement) {
@@ -2323,10 +2317,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         Attributes()->UpdateStyleRule(baseURL, aValue);
     }
 
-    nsCOMPtr<nsIAtom> tag;
-    GetTag(getter_AddRefs(tag));
-
-    if (tag == nsXULAtoms::window &&
+    if (NodeInfo()->Equals(nsXULAtoms::window) &&
         aNodeInfo->Equals(nsXULAtoms::hidechrome)) {
       nsAutoString val(aValue);
       HideWindowChrome(val.Equals(NS_LITERAL_STRING("true")));
@@ -2600,10 +2591,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
         }
     }
 
-    nsCOMPtr<nsIAtom> tag;
-    GetTag(getter_AddRefs(tag));
-
-    if (tag == nsXULAtoms::window &&
+    if (NodeInfo()->Equals(nsXULAtoms::window) &&
         aName == nsXULAtoms::hidechrome)
       HideWindowChrome(PR_FALSE);
 
@@ -3188,11 +3176,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP
-nsXULElement::GetContentID(PRUint32* aID)
+PRUint32
+nsXULElement::ContentID() const
 {
-    *aID = 0;
-    return NS_OK;
+    return 0;
 }
 
 NS_IMETHODIMP
@@ -3230,12 +3217,11 @@ nsXULElement::RangeRemove(nsIDOMRange* aRange)
 }
 
 
-NS_IMETHODIMP
-nsXULElement::GetRangeList(nsVoidArray** aResult) const
+const nsVoidArray *
+nsXULElement::GetRangeList() const
 {
     // XUL content does not yet support DOM ranges
-    *aResult = nsnull;
-    return NS_OK;
+    return nsnull;
 }
 
 
@@ -3568,17 +3554,20 @@ nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_NONE;
 
     if (aAttribute == nsXULAtoms::value &&
-        (aModType == nsIDOMMutationEvent::REMOVAL || aModType == nsIDOMMutationEvent::ADDITION)) {
-      nsCOMPtr<nsIAtom> tag;
-      GetTag(getter_AddRefs(tag));
+        (aModType == nsIDOMMutationEvent::REMOVAL ||
+         aModType == nsIDOMMutationEvent::ADDITION)) {
+      nsIAtom *tag = Tag();
       if (tag == nsXULAtoms::label || tag == nsXULAtoms::description)
-        // Label and description dynamically morph between a normal block and a cropping single-line
-        // XUL text frame.  If the value attribute is being added or removed, then we need to return
-        // a hint of frame change.  (See bugzilla bug 95475 for details.)
+        // Label and description dynamically morph between a normal
+        // block and a cropping single-line XUL text frame.  If the
+        // value attribute is being added or removed, then we need to
+        // return a hint of frame change.  (See bugzilla bug 95475 for
+        // details.)
         aHint = NS_STYLE_HINT_FRAMECHANGE;
     } else {
-        // if left or top changes we reflow. This will happen in xul containers that
-        // manage positioned children such as a bulletinboard.
+        // if left or top changes we reflow. This will happen in xul
+        // containers that manage positioned children such as a
+        // bulletinboard.
         if (nsXULAtoms::left == aAttribute || nsXULAtoms::top == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;
     }
@@ -4115,17 +4104,19 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 NS_IMETHODIMP
 nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 {
-  for (nsIContent* current = GetParent(); current; current = current->GetParent()) {
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::listbox) {
-      CallQueryInterface(current, aTreeElement);
-      // XXX returning NS_OK because that's what the code used to do;
-      // is that the right thing, though?
-      return NS_OK;
+    for (nsIContent* current = GetParent(); current;
+         current = current->GetParent()) {
+        if (current->GetNodeInfo()->Equals(nsXULAtoms::listbox,
+                                           kNameSpaceID_XUL)) {
+            CallQueryInterface(current, aTreeElement);
+            // XXX returning NS_OK because that's what the code used to do;
+            // is that the right thing, though?
+
+            return NS_OK;
+        }
     }
-  }
-  return NS_OK;
+
+    return NS_OK;
 }
 
 PRBool

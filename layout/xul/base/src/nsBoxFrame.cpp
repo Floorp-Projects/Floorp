@@ -1207,8 +1207,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
   // <window>.
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = mContent->Tag();
   if ((tag == nsXULAtoms::window ||
        tag == nsXULAtoms::page ||
        tag == nsXULAtoms::dialog ||
@@ -2578,10 +2577,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
     return NS_ERROR_FAILURE;
 
   // find out what type of element this is
-  nsCOMPtr<nsIAtom> atom;
-  nsresult rv = mContent->GetTag(getter_AddRefs(atom));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIAtom *atom = mContent->Tag();
 
   // only support accesskeys for the following elements
   if (atom != nsXULAtoms::button &&
@@ -2590,7 +2586,6 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
       atom != nsXULAtoms::textbox &&
       atom != nsXULAtoms::tab &&
       atom != nsXULAtoms::radio) {
-
     return NS_OK;
   }
 
@@ -2605,7 +2600,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
   nsCOMPtr<nsIEventStateManager> esm;
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
 
   if (esm) {
     PRUint32 key = accessKey.First();

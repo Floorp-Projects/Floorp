@@ -122,6 +122,9 @@ NS_IMETHODIMP
 mozSanitizingHTMLSerializer::Init(PRUint32 aFlags, PRUint32 dummy,
                                   const char* aCharSet, PRBool aIsCopying)
 {
+  NS_ENSURE_TRUE(nsContentUtils::GetParserServiceWeakRef(),
+                 NS_ERROR_UNEXPECTED);
+
   return NS_OK;
 }
 
@@ -202,31 +205,21 @@ mozSanitizingHTMLSerializer::IsContainer(PRInt32 aId)
    so that at least these methods that none of us understand only have to be
    written once?" */
 
-nsresult
-mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent,
-                                             PRInt32* aID)
+// static
+PRInt32
+mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent)
 {
-  nsCOMPtr<nsIHTMLContent> htmlcontent = do_QueryInterface(aContent);
-  if (!htmlcontent) {
-    *aID = eHTMLTag_unknown;
-    return NS_OK;
+  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+    return eHTMLTag_unknown;
   }
 
-  nsCOMPtr<nsIAtom> tagname;
-  mContent->GetTag(getter_AddRefs(tagname));
-  if (!tagname)
-    return NS_ERROR_FAILURE;
-  
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
-  if (!parserService)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-  rv = parserService->HTMLAtomTagToId(tagname, aID);
-  if (NS_FAILED(rv))
-    return rv;
+  PRInt32 id;
+  nsresult rv = parserService->HTMLAtomTagToId(aContent->Tag(), &id);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't map HTML tag to id!");
 
-  return NS_OK;
+  return id;
 }
 
 NS_IMETHODIMP 
@@ -253,23 +246,20 @@ mozSanitizingHTMLSerializer::AppendElementStart(nsIDOMElement *aElement,
   NS_ENSURE_ARG(aElement);
 
   mContent = do_QueryInterface(aElement);
-  if (!mContent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
 
   mOutputString = &aStr;
 
-  nsresult rv;
-  PRInt32 id;
-  rv = GetIdForContent(mContent, &id);
-  if (NS_FAILED(rv)) return rv;
+  PRInt32 id = GetIdForContent(mContent);
 
   PRBool isContainer = IsContainer(id);
 
+  nsresult rv;
   if (isContainer) {
     rv = DoOpenContainer(id);
   }
   else {
-    nsAutoString empty;
-    rv = DoAddLeaf(id, empty);
+    rv = DoAddLeaf(id, nsString());
   }
 
   mContent = 0;
@@ -285,14 +275,12 @@ mozSanitizingHTMLSerializer::AppendElementEnd(nsIDOMElement *aElement,
   NS_ENSURE_ARG(aElement);
 
   mContent = do_QueryInterface(aElement);
-  if (!mContent) return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
 
   mOutputString = &aStr;
 
-  nsresult rv;
-  PRInt32 id;
-  rv = GetIdForContent(mContent, &id);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_OK;
+  PRInt32 id = GetIdForContent(mContent);
 
   PRBool isContainer = IsContainer(id);
 

@@ -781,14 +781,11 @@ nsMenuBarFrame::RemoveKeyboardNavigator()
 PRBool 
 nsMenuBarFrame::IsValidItem(nsIContent* aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  if (tag && (tag.get() == nsXULAtoms::menu ||
-              tag.get() == nsXULAtoms::menuitem) &&
-      !IsDisabled(aContent))
-      return PR_TRUE;
+  nsIAtom *tag = aContent->Tag();
 
-  return PR_FALSE;
+  return ((tag == nsXULAtoms::menu ||
+           tag == nsXULAtoms::menuitem) &&
+          !IsDisabled(aContent));
 }
 
 PRBool 

@@ -1430,17 +1430,17 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 
     if (mStack[mStackPos].mNumFlushed < content->GetChildCount()) {
 #ifdef NS_DEBUG
-      // Tracing code
-      nsCOMPtr<nsIAtom> tag;
-      mStack[mStackPos].mContent->GetTag(getter_AddRefs(tag));
-      const char *tagStr;
-      tag->GetUTF8String(&tagStr);
+      {
+        // Tracing code
+        const char *tagStr;
+        mStack[mStackPos].mContent->Tag()->GetUTF8String(&tagStr);
 
-      SINK_TRACE(SINK_TRACE_REFLOW,
-                 ("SinkContext::CloseContainer: reflow on notifyImmediate "
-                  "tag=%s newIndex=%d stackPos=%d",
-                  tagStr,
-                  mStack[mStackPos].mNumFlushed, mStackPos));
+        SINK_TRACE(SINK_TRACE_REFLOW,
+                   ("SinkContext::CloseContainer: reflow on notifyImmediate "
+                    "tag=%s newIndex=%d stackPos=%d",
+                    tagStr,
+                    mStack[mStackPos].mNumFlushed, mStackPos));
+      }
 #endif
       mSink->NotifyAppend(content, mStack[mStackPos].mNumFlushed);
     }
@@ -1846,16 +1846,16 @@ SinkContext::FlushTags(PRBool aNotify)
 
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
-        // Tracing code
-        nsCOMPtr<nsIAtom> tag;
-        mStack[stackPos].mContent->GetTag(getter_AddRefs(tag));
-        const char* tagStr;
-        tag->GetUTF8String(&tagStr);
+        {
+          // Tracing code
+          const char* tagStr;
+          mStack[stackPos].mContent->Tag()->GetUTF8String(&tagStr);
 
-        SINK_TRACE(SINK_TRACE_REFLOW,
-                   ("SinkContext::FlushTags: tag=%s from newindex=%d at "
-                    "stackPos=%d", tagStr,
-                    mStack[stackPos].mNumFlushed, stackPos));
+          SINK_TRACE(SINK_TRACE_REFLOW,
+                     ("SinkContext::FlushTags: tag=%s from newindex=%d at "
+                      "stackPos=%d", tagStr,
+                      mStack[stackPos].mNumFlushed, stackPos));
+        }
 #endif
         if ((mStack[stackPos].mInsertionPoint != -1) &&
             (mStackPos > (stackPos + 1))) {

@@ -938,10 +938,8 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 PRBool
 nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
   PRBool sizeToPopup;
-  if (tag == nsHTMLAtoms::select)
+  if (aContent->Tag() == nsHTMLAtoms::select)
     sizeToPopup = PR_TRUE;
   else {
     nsAutoString sizedToPopup;
@@ -1729,9 +1727,8 @@ nsMenuFrame::OnCreate()
     PRUint32 count = child->GetChildCount();
     for (PRUint32 i = 0; i < count; i++) {
       nsIContent *grandChild = child->GetChildAt(i);
-      nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(getter_AddRefs(tag));
-      if (tag == nsXULAtoms::menuitem) {
+
+      if (grandChild->Tag() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
         grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
@@ -1913,7 +1910,6 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
-  nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
   nsIMenuParent *menuPar;
@@ -1943,7 +1939,6 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
   if (!aFrameList)
     return NS_OK;
 
-  nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
   nsIMenuParent *menuPar;

@@ -164,7 +164,10 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                  "Can't do formatted and preformatted output at the same time!");
   }
 #endif
-  
+
+  NS_ENSURE_TRUE(nsContentUtils::GetParserServiceWeakRef(),
+                 NS_ERROR_UNEXPECTED);
+
   nsresult rv;
   
   mFlags = aFlags;
@@ -388,9 +391,7 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
   if (!mContent) return NS_ERROR_FAILURE;
 
   nsresult rv;
-  PRInt32 id;
-  rv = GetIdForContent(mContent, &id);
-  if (NS_FAILED(rv)) return rv;
+  PRInt32 id = GetIdForContent(mContent);
 
   PRBool isContainer = IsContainer(id);
 
@@ -423,9 +424,7 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
   if (!mContent) return NS_ERROR_FAILURE;
 
   nsresult rv;
-  PRInt32 id;
-  rv = GetIdForContent(mContent, &id);
-  if (NS_FAILED(rv)) return rv;
+  PRInt32 id = GetIdForContent(mContent);
 
   PRBool isContainer = IsContainer(id);
 
@@ -1849,26 +1848,21 @@ nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 }
 
 
-nsresult
-nsPlainTextSerializer::GetIdForContent(nsIContent* aContent,
-                                       PRInt32* aID)
+// static
+PRInt32
+nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 {
-  nsCOMPtr<nsIHTMLContent> htmlcontent = do_QueryInterface(aContent);
-  if (!htmlcontent) {
-    *aID = eHTMLTag_unknown;
-    return NS_OK;
+  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+    return eHTMLTag_unknown;
   }
 
-  nsCOMPtr<nsIAtom> tagname;
-  mContent->GetTag(getter_AddRefs(tagname));
-  if (!tagname) return NS_ERROR_FAILURE;
-  
-  nsIParserService* parserService =
-    nsContentUtils::GetParserServiceWeakRef();
-  if (!parserService)
-    return NS_ERROR_FAILURE;
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
-  return parserService->HTMLAtomTagToId(tagname, aID);
+  PRInt32 id;
+  nsresult rv = parserService->HTMLAtomTagToId(aContent->Tag(), &id);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Can't map HTML tag to id!");
+
+  return id;
 }
 
 /**

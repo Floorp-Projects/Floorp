@@ -621,10 +621,10 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
         if (index > 0)  // no use looking if it's the first child
         {
           nsIContent *prevSibling;
-          nsCOMPtr<nsIAtom> tag;
+          nsIAtom *tag;
           do {
             prevSibling = parent->GetChildAt(--index);
-            prevSibling->GetTag(getter_AddRefs(tag));
+            tag = prevSibling->Tag();
           } while (index &&
                    (tag == nsLayoutAtoms::textTagName ||
                     tag == nsLayoutAtoms::commentTagName ||

@@ -82,9 +82,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
   nsAutoVoidArray subScriptFrames;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsCOMPtr<nsIAtom> childTag;
-    childFrame->GetContent()->GetTag(getter_AddRefs(childTag));
-    if (childTag.get() == nsMathMLAtoms::mprescripts_) {
+    if (childFrame->GetContent()->Tag() == nsMathMLAtoms::mprescripts_) {
       // mprescripts frame
     }
     else if (0 == count) {
@@ -258,10 +256,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsCOMPtr<nsIAtom> childTag;
-    childFrame->GetContent()->GetTag(getter_AddRefs(childTag));
-
-    if (childTag.get() == nsMathMLAtoms::mprescripts_) {
+    if (childFrame->GetContent()->Tag() == nsMathMLAtoms::mprescripts_) {
       if (mprescriptsFrame) {
         // duplicate <mprescripts/> found
         // report an error, encourage people to get their markups in order

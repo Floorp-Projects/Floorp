@@ -879,31 +879,24 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
     if (mAccessKeys->Exists(&key)) {
       nsCOMPtr<nsIContent> content = dont_AddRef(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
 
-      PRBool isXUL = content->IsContentOfType(nsIContent::eXUL);
-
       // if it's a XUL element...
-      if (isXUL) {
-
+      if (content->IsContentOfType(nsIContent::eXUL)) {
         // find out what type of content node this is
-        nsCOMPtr<nsIAtom> atom;
-        nsresult rv = content->GetTag(getter_AddRefs(atom));
-        if (NS_SUCCEEDED(rv) && atom) {
-          if (atom == nsXULAtoms::label) {
-            // If anything fails, this will be null ...
-            nsCOMPtr<nsIDOMElement> element;
+        if (content->Tag() == nsXULAtoms::label) {
+          // If anything fails, this will be null ...
+          nsCOMPtr<nsIDOMElement> element;
 
-            nsAutoString control;
-            content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
-            if (!control.IsEmpty()) {
-              nsCOMPtr<nsIDOMDocument> domDocument =
-                do_QueryInterface(content->GetDocument());
-              if (domDocument)
-                domDocument->GetElementById(control, getter_AddRefs(element));
-            }
-            // ... that here we'll either change |content| to the element
-            // referenced by |element|, or clear it.
-            content = do_QueryInterface(element);
+          nsAutoString control;
+          content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
+          if (!control.IsEmpty()) {
+            nsCOMPtr<nsIDOMDocument> domDocument =
+              do_QueryInterface(content->GetDocument());
+            if (domDocument)
+              domDocument->GetElementById(control, getter_AddRefs(element));
           }
+          // ... that here we'll either change |content| to the element
+          // referenced by |element|, or clear it.
+          content = do_QueryInterface(element);
         }
 
         if (!content)
@@ -929,22 +922,19 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
             element) {
 
             // find out what type of content node this is
-            nsCOMPtr<nsIAtom> atom;
-            nsresult rv = content->GetTag(getter_AddRefs(atom));
+            nsIAtom *atom = content->Tag();
 
-            if (NS_SUCCEEDED(rv) && atom) {
-              // define behavior for each type of XUL element:
-              if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
-                // if it's a text box or menulist, give it focus
-                element->Focus();
-              } else if (atom == nsXULAtoms::toolbarbutton) {
-                // if it's a toolbar button, just click
-                element->Click();
-              } else {
-                // otherwise, focus and click in it
-                element->Focus();
-                element->Click();
-              }
+            // define behavior for each type of XUL element:
+            if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
+              // if it's a text box or menulist, give it focus
+              element->Focus();
+            } else if (atom == nsXULAtoms::toolbarbutton) {
+              // if it's a toolbar button, just click
+              element->Click();
+            } else {
+              // otherwise, focus and click in it
+              element->Focus();
+              element->Click();
             }
           }
         }
@@ -1078,36 +1068,36 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 // a drag.
 //
 void
-nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsGUIEvent* inMouseDownEvent )
+nsEventStateManager::CreateClickHoldTimer(nsIPresContext* inPresContext,
+                                          nsGUIEvent* inMouseDownEvent)
 {
   // just to be anal (er, safe)
-  if ( mClickHoldTimer ) {
+  if (mClickHoldTimer) {
     mClickHoldTimer->Cancel();
     mClickHoldTimer = nsnull;
   }
-    
+
   // if content clicked on has a popup, don't even start the timer
   // since we'll end up conflicting and both will show.
-  if ( mGestureDownFrame ) {
+  if (mGestureDownFrame) {
     nsIContent* clickedContent = mGestureDownFrame->GetContent();
-    if ( clickedContent ) {
+    if (clickedContent) {
       // check for the |popup| attribute
       nsAutoString popup;
       clickedContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popup, popup);
-      if ( popup != NS_LITERAL_STRING("") )
+      if (popup != NS_LITERAL_STRING(""))
         return;
       
       // check for a <menubutton> like bookmarks
-      nsCOMPtr<nsIAtom> tag;
-      clickedContent->GetTag ( getter_AddRefs(tag) );
-      if ( tag == nsXULAtoms::menubutton )
+      if (clickedContent->Tag() == nsXULAtoms::menubutton)
         return;
     }
   }
 
   mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mClickHoldTimer )
-    mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this, kClickHoldDelay, 
+    mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this,
+                                          kClickHoldDelay, 
                                           nsITimer::TYPE_ONE_SHOT);
 
   mEventPoint = inMouseDownEvent->point;
@@ -1125,9 +1115,9 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
 // Stop the timer that would show the context menu dead in its tracks
 //
 void
-nsEventStateManager :: KillClickHoldTimer ( )
+nsEventStateManager::KillClickHoldTimer()
 {
-  if ( mClickHoldTimer ) {
+  if (mClickHoldTimer) {
     mClickHoldTimer->Cancel();
     mClickHoldTimer = nsnull;
   }
@@ -1144,7 +1134,7 @@ nsEventStateManager :: KillClickHoldTimer ( )
 // This fires after the mouse has been down for a certain length of time. 
 //
 void
-nsEventStateManager :: sClickHoldCallback ( nsITimer *aTimer, void* aESM )
+nsEventStateManager::sClickHoldCallback(nsITimer *aTimer, void* aESM)
 {
   nsEventStateManager* self = NS_STATIC_CAST(nsEventStateManager*, aESM);
   if ( self )
@@ -1170,7 +1160,7 @@ nsEventStateManager :: sClickHoldCallback ( nsITimer *aTimer, void* aESM )
 // _not_ what we want.
 //
 void
-nsEventStateManager :: FireContextClick ( )
+nsEventStateManager::FireContextClick()
 {
   if ( !mEventDownWidget || !mEventPresContext )
     return;
@@ -1205,47 +1195,54 @@ nsEventStateManager :: FireContextClick ( )
   mCurrentTarget = mGestureDownFrame;
   if ( mGestureDownFrame ) {
     nsIContent* lastContent = mGestureDownFrame->GetContent();
-    
+
     if ( lastContent ) {
-      // before dispatching, check that we're not on something that doesn't get a context menu
+      // before dispatching, check that we're not on something that
+      // doesn't get a context menu
+      nsIAtom *tag = lastContent->Tag();
       PRBool allowedToDispatch = PR_TRUE;
 
-      nsCOMPtr<nsIAtom> tag;
-      lastContent->GetTag ( getter_AddRefs(tag) );
-      nsCOMPtr<nsIDOMHTMLInputElement> inputElm ( do_QueryInterface(lastContent) );
-      PRBool isFormControl =
-        lastContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
-      if ( inputElm ) {
-        // of all input elements, only ones dealing with text are allowed to have context menus
-        if ( tag == nsHTMLAtoms::input ) {
-          nsAutoString type;
-          lastContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-          if ( type != NS_LITERAL_STRING("") && type != NS_LITERAL_STRING("text") &&
-                type != NS_LITERAL_STRING("password") && type != NS_LITERAL_STRING("file") )
+      if (lastContent->IsContentOfType(nsIContent::eXUL)) {
+        if (tag == nsXULAtoms::scrollbar ||
+            tag == nsXULAtoms::scrollbarbutton ||
+            tag == nsXULAtoms::button)
+          allowedToDispatch = PR_FALSE;
+        else if (tag == nsXULAtoms::toolbarbutton) {
+          // a <toolbarbutton> that has the container attribute set
+          // will already have its own dropdown.
+          nsAutoString container;
+          lastContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container,
+                               container);
+          if (!container.IsEmpty())
             allowedToDispatch = PR_FALSE;
         }
       }
-      else if ( isFormControl && tag != nsHTMLAtoms::textarea )
-        // catches combo-boxes, <object>
-        allowedToDispatch = PR_FALSE;
-      else if ( tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollbarbutton || tag == nsXULAtoms::button )
-        allowedToDispatch = PR_FALSE;
-      else if ( tag == nsHTMLAtoms::applet || tag == nsHTMLAtoms::embed )
-        allowedToDispatch = PR_FALSE;
-      else if ( tag == nsXULAtoms::toolbarbutton ) {
-        // a <toolbarbutton> that has the container attribute set will already have its
-        // own dropdown. 
-        nsAutoString container;
-        lastContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-        if ( container.Length() )
+      else if (lastContent->IsContentOfType(eHTML)) {
+        nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(lastContent));
+
+        if (formCtrl) {
+          // of all form controls, only ones dealing with text are
+          // allowed to have context menus
+          PRInt32 formCtrlType = formCtrl->GetType();
+
+          allowedToDispatch = (type == NS_FORM_INPUT_TEXT ||
+                               type == NS_FORM_INPUT_PASSWORD ||
+                               type == NS_FORM_INPUT_FILE ||
+                               type == NS_FORM_TEXTAREA);
+        }
+        else if (tag == nsHTMLAtoms::applet ||
+                 tag == nsHTMLAtoms::embed  ||
+                 tag == nsHTMLAtoms::object) {
           allowedToDispatch = PR_FALSE;
+        }
       }
-    
-      if ( allowedToDispatch ) {
+
+      if (allowedToDispatch) {
         // stop selection tracking, we're in control now
         nsCOMPtr<nsIFrameSelection> frameSel;
-        GetSelection ( mGestureDownFrame, mEventPresContext, getter_AddRefs(frameSel) );
-        if ( frameSel ) {
+        GetSelection(mGestureDownFrame, mEventPresContext,
+                     getter_AddRefs(frameSel));
+        if (frameSel) {
           PRBool mouseDownState = PR_TRUE;
           frameSel->GetMouseDownState(&mouseDownState);
           if (mouseDownState)
@@ -1253,14 +1250,15 @@ nsEventStateManager :: FireContextClick ( )
         }
         
         // dispatch to DOM
-        lastContent->HandleDOMEvent(mEventPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-        
+        lastContent->HandleDOMEvent(mEventPresContext, &event, nsnull,
+                                    NS_EVENT_FLAG_INIT, &status);
+
         // Firing the DOM event could have caused mGestureDownFrame to
         // be destroyed.  So, null-check it again.
 
         if (mGestureDownFrame) {
           // dispatch to the frame
-          mGestureDownFrame->HandleEvent(mEventPresContext, &event, &status);   
+          mGestureDownFrame->HandleEvent(mEventPresContext, &event, &status);
         }
       }
     }
@@ -1290,7 +1288,9 @@ nsEventStateManager :: FireContextClick ( )
 // want to cancel the drag gesture if the context-click event is handled.
 //
 void
-nsEventStateManager :: BeginTrackingDragGesture ( nsIPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame )
+nsEventStateManager::BeginTrackingDragGesture(nsIPresContext* aPresContext,
+                                              nsGUIEvent* inDownEvent,
+                                              nsIFrame* inDownFrame)
 {
   mIsTrackingDragGesture = PR_TRUE;
   mGestureDownPoint = inDownEvent->point;
@@ -1312,7 +1312,7 @@ nsEventStateManager :: BeginTrackingDragGesture ( nsIPresContext* aPresContext, 
 // state of d&d gesture tracker and return to the START state.
 //
 void
-nsEventStateManager :: StopTrackingDragGesture ( )
+nsEventStateManager::StopTrackingDragGesture()
 {
   mIsTrackingDragGesture = PR_FALSE;
   mGestureDownPoint = nsPoint(0,0);
@@ -1327,7 +1327,9 @@ nsEventStateManager :: StopTrackingDragGesture ( )
 // Helper routine to get an nsIFrameSelection from the given frame
 //
 void
-nsEventStateManager :: GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection )
+nsEventStateManager::GetSelection(nsIFrame* inFrame,
+                                  nsIPresContext* inPresContext,
+                                  nsIFrameSelection** outSelection)
 {
   *outSelection = nsnull;
   
@@ -1371,7 +1373,8 @@ nsEventStateManager :: GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresC
 // Do we need to do anything about this? Let's wait and see.
 //
 void
-nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent )
+nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
+                                         nsGUIEvent *aEvent)
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
@@ -2276,13 +2279,15 @@ nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 PRBool
 nsEventStateManager::CheckDisabled(nsIContent* aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
+  nsIAtom *tag = aContent->Tag();
 
-  if (tag == nsHTMLAtoms::input    ||
-      tag == nsHTMLAtoms::select   ||
-      tag == nsHTMLAtoms::textarea ||
-      tag == nsHTMLAtoms::button) {
+  if (((tag == nsHTMLAtoms::input    ||
+        tag == nsHTMLAtoms::select   ||
+        tag == nsHTMLAtoms::textarea ||
+        tag == nsHTMLAtoms::button) &&
+       (aContent->IsContentOfType(nsIContent::eHTML))) ||
+      (tag == nsHTMLAtoms::button &&
+       aContent->IsContentOfType(nsIContent::eXUL))) {
     return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
   }
   
@@ -2519,9 +2524,7 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
   if (parentDoc) {
     nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
     if (docContent) {
-      nsCOMPtr<nsIAtom> tag;
-      docContent->GetTag(getter_AddRefs(tag));
-      if (tag == nsHTMLAtoms::iframe) {
+      if (docContent->Tag() == nsHTMLAtoms::iframe) {
         // We're an IFRAME.  Send an event to our IFRAME tag.
         nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         if (parentShell) {
@@ -2548,7 +2551,8 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
 
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
+nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext,
+                                            nsGUIEvent* aEvent)
 {
   // Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -2664,7 +2668,8 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
 }
 
 void
-nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
+nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext,
+                                               nsGUIEvent* aEvent)
 {
   //Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -2943,7 +2948,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, PRInt32 aFocusedWith)
+nsEventStateManager::ChangeFocus(nsIContent* aFocusContent,
+                                 PRInt32 aFocusedWith)
 {
   aFocusContent->SetFocus(mPresContext);
   if (aFocusedWith != eEventFocusedByMouse) {
@@ -3310,13 +3316,19 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   return NS_OK;
 }
 
-void nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
+void
+nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 {
   if (aFrom->IsContentOfType(nsIContent::eHTML)) {
-    nsCOMPtr<nsIAtom> tag;
-    aFrom->GetTag(getter_AddRefs(tag));
-    if (nsHTMLAtoms::a != tag && nsHTMLAtoms::area != tag && nsHTMLAtoms::button != tag && 
-      nsHTMLAtoms::input != tag && nsHTMLAtoms::object != tag && nsHTMLAtoms::select != tag && nsHTMLAtoms::textarea != tag)
+    nsIAtom *tag = aFrom->Tag();
+
+    if (tag != nsHTMLAtoms::a &&
+        tag != nsHTMLAtoms::area &&
+        tag != nsHTMLAtoms::button &&
+        tag != nsHTMLAtoms::input &&
+        tag != nsHTMLAtoms::object &&
+        tag != nsHTMLAtoms::select &&
+        tag != nsHTMLAtoms::textarea)
       return;
   }
 
@@ -3366,9 +3378,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
   //Need to do special check in case we're in an imagemap which has multiple content per frame
   if (mCurrentFocus) {
-    nsCOMPtr<nsIAtom> tag;
-    mCurrentFocus->GetTag(getter_AddRefs(tag));
-    if (nsHTMLAtoms::area==tag) {
+    if (mCurrentFocus->Tag() == nsHTMLAtoms::area &&
+        mCurrentFocus->IsContentOfType(nsIContent::eHTML)) {
       //Focus is in an imagemap area
       if (aFrame == mCurrentFocusFrame) {
         //The current focus map area is in the current frame, don't skip over it.
@@ -3413,7 +3424,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         (vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
-      nsCOMPtr<nsIAtom> tag;
       PRInt32 tabIndex = -1;
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
@@ -3428,9 +3438,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         mPrefBranch->GetIntPref("accessibility.tabfocus", &tabFocusModel);
       }
 
-      child->GetTag(getter_AddRefs(tag));
+      nsIAtom *tag = child->Tag();
       if (child->IsContentOfType(nsIContent::eHTML)) {
-        if (nsHTMLAtoms::input==tag) {
+        if (tag == nsHTMLAtoms::input) {
           nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
           if (nextInput) {
             nextInput->GetDisabled(&disabled);
@@ -3457,7 +3467,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::select==tag) {
+        else if (tag == nsHTMLAtoms::select) {
           // Select counts as form but not as text
           disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
@@ -3468,7 +3478,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::textarea==tag) {
+        else if (tag == nsHTMLAtoms::textarea) {
           // it's a textarea
           disabled = PR_FALSE;
           if (!disabled) {
@@ -3479,7 +3489,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::a==tag) {
+        else if (tag == nsHTMLAtoms::a) {
           // it's a link
           disabled = !(tabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
@@ -3495,7 +3505,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::button==tag) {
+        else if (tag == nsHTMLAtoms::button) {
           // Button counts as a form element but not as text
           disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
@@ -3506,7 +3516,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::img==tag) {
+        else if (tag == nsHTMLAtoms::img) {
           // Don't need to set disabled here, because if we
           // match an imagemap, we'll return from there.
           if (tabFocusModel & eTabFocus_linksMask) {
@@ -3564,7 +3574,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
         }
-        else if (nsHTMLAtoms::object==tag) {
+        else if (tag == nsHTMLAtoms::object) {
           // OBJECT is treated as a form element.
           disabled = !(tabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
@@ -3574,7 +3584,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             disabled = PR_FALSE;
           }
         }
-        else if (nsHTMLAtoms::iframe==tag || nsHTMLAtoms::frame==tag) {
+        else if (tag == nsHTMLAtoms::iframe || tag == nsHTMLAtoms::frame) {
           disabled = PR_TRUE;
           if (child) {
             nsCOMPtr<nsIDocument> doc = child->GetDocument();
@@ -3620,7 +3630,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           else
             disabled = PR_FALSE;
         }
-
       }
       
       //TabIndex not set (-1) treated at same level as set to 0
@@ -3741,7 +3750,8 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
+nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
+                                           nsIContent** aContent)
 {
   if (aEvent &&
       (aEvent->message == NS_FOCUS_CONTENT ||
@@ -4071,7 +4081,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 }
 
 nsresult
-nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus)
+nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
+                                   nsIContent *aContent,
+                                   PRBool aEnsureWindowHasFocus)
 {
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
@@ -4428,7 +4440,8 @@ nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
   return NS_OK;
 }
 
-void nsEventStateManager::ForceViewUpdate(nsIView* aView)
+void
+nsEventStateManager::ForceViewUpdate(nsIView* aView)
 {
   // force the update to happen now, otherwise multiple scrolls can
   // occur before the update is processed. (bug #7354)
@@ -4505,7 +4518,9 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
   return ret;
 }
 
-void nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext) {
+void
+nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext)
+{
   if (!mDocument) {
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
@@ -4513,12 +4528,16 @@ void nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext) {
   }
 }
 
-void nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell) {
+void
+nsEventStateManager::EnsureDocument(nsIPresShell* aPresShell)
+{
   if (!mDocument && aPresShell)
     aPresShell->GetDocument(getter_AddRefs(mDocument));
 }
 
-void nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext) {
+void
+nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext)
+{
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -4677,7 +4696,8 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   return rv;
 }
 
-void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
+void
+nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
 {
   // Focus an element in the current document, but don't switch document/window focus!
 
@@ -4726,7 +4746,9 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
 
 }
 
-NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus)
+NS_IMETHODIMP
+nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
+                                      PRBool *aIsSelectionWithFocus)
 {
   // mBrowseWithCaret equals the pref accessibility.browsewithcaret
   // When it's true, the user can arrow around the browser as if it's a
@@ -4754,7 +4776,6 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
   // We could end the loop earlier, such as when we're no longer
   // in the same frame, by comparing getPrimaryFrameFor(selectionContent)
   // with a variable holding the starting selectionContent
-  nsCOMPtr<nsIAtom> tag;
   while (testContent) {
     // Keep testing while selectionContent is equal to something,
     // eventually we'll run out of ancestors
@@ -4764,10 +4785,11 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
       return NS_OK;  // already focused on this node, this whole thing's moot
     }
 
-    testContent->GetTag(getter_AddRefs(tag));
+    nsIAtom *tag = testContent->Tag();
 
     // Add better focusable test here later if necessary ... 
-    if (nsHTMLAtoms::a == tag.get()) {
+    if (tag == nsHTMLAtoms::a &&
+        testContent->IsContentOfType(nsIContent::eHTML)) {
       *aIsSelectionWithFocus = PR_TRUE;
     }
     else {
@@ -4812,8 +4834,8 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
     // Right now we only look for elements with the <a> tag.
     // Add better focusable test here later if necessary ... 
     if (testContent) {
-      testContent->GetTag(getter_AddRefs(tag));
-      if (nsHTMLAtoms::a == tag.get()) {
+      if (testContent->Tag() == nsHTMLAtoms::a &&
+          testContent->IsContentOfType(nsIContent::eHTML)) {
         *aIsSelectionWithFocus = PR_TRUE;
         FocusElementButNotDocument(testContent);
         return NS_OK;
@@ -4856,7 +4878,8 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
 
 
 
-NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
+NS_IMETHODIMP
+nsEventStateManager::MoveCaretToFocus()
 {
   // If in HTML content and the pref accessibility.browsewithcaret is TRUE,
   // then always move the caret to beginning of a new focus
@@ -4936,7 +4959,8 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
   return NS_OK;
 }
 
-nsresult nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
+nsresult
+nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
 {
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
@@ -4959,8 +4983,11 @@ nsresult nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool a
   return NS_OK;
 }
 
-nsresult nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell, nsIContent *aFocusedContent, PRBool aVisible)
-{ 
+nsresult
+nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
+                                            nsIContent *aFocusedContent,
+                                            PRBool aVisible)
+{
   // When browsing with caret, make sure caret is visible after new focus
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
@@ -5127,10 +5154,8 @@ nsEventStateManager::IsIFrameDoc(nsIDocShell* aDocShell)
 
   if (!docContent)
     return PR_FALSE;
-  
-  nsCOMPtr<nsIAtom> tag;
-  docContent->GetTag(getter_AddRefs(tag));
-  return (tag == nsHTMLAtoms::iframe);
+
+  return docContent->Tag() == nsHTMLAtoms::iframe;
 }
 
 //-------------------------------------------------------

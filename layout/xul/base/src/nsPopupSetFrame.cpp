@@ -407,11 +407,10 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     ActivatePopup(entry, PR_FALSE);
 
   if (entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
-    // If we are a context menu, and if we are attached to a menupopup, then hiding us
-    // should also hide the parent menu popup.
-    nsCOMPtr<nsIAtom> tag;
-    entry->mElementContent->GetTag(getter_AddRefs(tag));
-    if (tag && tag.get() == nsXULAtoms::menupopup) {
+    // If we are a context menu, and if we are attached to a
+    // menupopup, then hiding us should also hide the parent menu
+    // popup.
+    if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
       nsIFrame* popupFrame = nsnull;
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
@@ -440,11 +439,10 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
     entry->mPopupType.SetLength(0);
   
     if (aDestroyEntireChain && entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
-      // If we are a context menu, and if we are attached to a menupopup, then destroying us
-      // should also dismiss the parent menu popup.
-      nsCOMPtr<nsIAtom> tag;
-      entry->mElementContent->GetTag(getter_AddRefs(tag));
-      if (tag && tag.get() == nsXULAtoms::menupopup) {
+      // If we are a context menu, and if we are attached to a
+      // menupopup, then destroying us should also dismiss the parent
+      // menu popup.
+      if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
         nsIFrame* popupFrame = nsnull;
         nsCOMPtr<nsIPresShell> presShell;
         mPresContext->GetShell(getter_AddRefs(presShell));
@@ -611,9 +609,8 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
     PRUint32 count = aPopupContent->GetChildCount();
     for (PRUint32 i = 0; i < count; i++) {
       nsIContent *grandChild = aPopupContent->GetChildAt(i);
-      nsCOMPtr<nsIAtom> tag;
-      grandChild->GetTag(getter_AddRefs(tag));
-      if (tag == nsXULAtoms::menuitem) {
+
+      if (grandChild->Tag() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
         grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);

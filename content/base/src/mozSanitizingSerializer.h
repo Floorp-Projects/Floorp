@@ -146,7 +146,7 @@ protected:
                              nsString& value /*inout*/);
   nsresult SanitizeTextNode(nsString& value /*inout*/);
   PRBool IsContainer(PRInt32 aId);
-  nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
+  static PRInt32 GetIdForContent(nsIContent* aContent);
   nsresult GetParserService(nsIParserService** aParserService);
   nsresult DoOpenContainer(PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);

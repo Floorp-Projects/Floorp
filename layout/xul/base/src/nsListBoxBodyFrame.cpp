@@ -581,15 +581,12 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   for (PRUint32 childIndex = 0; childIndex < childCount; childIndex++) {
     nsIContent *child = listbox->GetChildAt(childIndex);
 
-    nsCOMPtr<nsIAtom> childTag;
-    child->GetTag(getter_AddRefs(childTag));
-
     // we hit a treerow, count it
-    if (childTag == nsXULAtoms::listitem) {
+    if (child->Tag() == nsXULAtoms::listitem) {
       // is this it?
       if (child == itemContent)
         return NS_OK;
-      
+
       ++(*_retval);
     }
   }
@@ -612,17 +609,11 @@ nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
   for (PRUint32 childIndex = 0; childIndex < childCount; childIndex++) {
     nsIContent *child = listbox->GetChildAt(childIndex);
 
-    nsCOMPtr<nsIAtom> childTag;
-    child->GetTag(getter_AddRefs(childTag));
-
     // we hit a treerow, count it
-    if (childTag == nsXULAtoms::listitem) {
+    if (child->Tag() == nsXULAtoms::listitem) {
       // is this it?
       if (itemCount == aIndex) {
-        nsCOMPtr<nsIDOMElement> result(do_QueryInterface(child));
-        *_retval = result;
-        NS_IF_ADDREF(*_retval);
-        return NS_OK;
+        return CallQueryInterface(child, _retval);
       }
       ++itemCount;
     }
@@ -746,9 +737,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     for (PRUint32 i = 0; i < childCount && i < 100; ++i) {
       nsIContent *child = listbox->GetChildAt(i);
 
-      nsCOMPtr<nsIAtom> tag;
-      child->GetTag(getter_AddRefs(tag));
-      if (tag == nsXULAtoms::listitem) {
+      if (child->Tag() == nsXULAtoms::listitem) {
         nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
         nsIRenderingContext* rendContext = aBoxLayoutState.GetReflowState()->rendContext;
         if (rendContext) {
@@ -792,10 +781,7 @@ nsListBoxBodyFrame::ComputeTotalRowCount()
 
   mRowCount = 0;
   for (PRUint32 i = 0; i < childCount; i++) {
-    nsIContent *childContent = listbox->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    childContent->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::listitem)
+    if (listbox->GetChildAt(i)->Tag() == nsXULAtoms::listitem)
       ++mRowCount;
   }
 }
@@ -1390,9 +1376,8 @@ nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
   PRInt32 itemsFound = 0;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsIContent *kid = listboxContent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    kid->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::listitem) {
+
+    if (kid->Tag() == nsXULAtoms::listitem) {
       ++itemsFound;
       if (itemsFound-1 == aIndex) {
         *aContent = kid;
@@ -1415,9 +1400,8 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
   nsIContent *prevKid = nsnull;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nsIContent *kid = listboxContent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    kid->GetTag(getter_AddRefs(tag));
-    if (tag == nsXULAtoms::listitem) {
+
+    if (kid->Tag() == nsXULAtoms::listitem) {
       ++aSiblingIndex;
       if (prevKid == aListItem) {
         *aContent = kid;

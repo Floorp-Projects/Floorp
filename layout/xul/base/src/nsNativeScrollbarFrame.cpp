@@ -144,7 +144,8 @@ nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 // is watching for attribute changes.
 //
 nsresult
-nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame, nsIContent** outContent)
+nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame,
+                                      nsIContent** outContent)
 {
   *outContent = nsnull;
   *outFrame = nsnull;
@@ -155,8 +156,7 @@ nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame, nsIC
       // get the content node
       nsIContent* currContent = start->GetContent();
 
-      nsCOMPtr<nsIAtom> atom;
-      if (currContent && currContent->GetTag(getter_AddRefs(atom)) == NS_OK && atom.get() == nsXULAtoms::scrollbar) {
+      if (currContent && currContent->Tag() == nsXULAtoms::scrollbar) {
         *outContent = currContent;
         *outFrame = start;
         NS_IF_ADDREF(*outContent);

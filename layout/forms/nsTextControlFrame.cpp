@@ -793,9 +793,8 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
     if (offset > 0)
     {
       nsIContent *child = parentDIV->GetChildAt(offset - 1);
-      nsCOMPtr<nsIAtom> tagName;
-      child->GetTag(getter_AddRefs(tagName));
-      if (tagName == nsHTMLAtoms::br)
+
+      if (child->Tag() == nsHTMLAtoms::br)
       {
         --offset;
         hint = HINTRIGHT; // for Bug 106855
@@ -1329,16 +1328,7 @@ PRBool nsTextControlFrame::IsSingleLineTextControl() const
 
 PRBool nsTextControlFrame::IsTextArea() const
 {
-  if (!mContent)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
-
-  if (nsHTMLAtoms::textarea == tag)
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return mContent && mContent->Tag() == nsHTMLAtoms::textarea;
 }
 
 // XXX: wouldn't it be nice to get this from the style context!
@@ -2297,9 +2287,7 @@ nsTextControlFrame::SelectAllContents()
     // br under the root node!
     nsIContent *child = rootContent->GetChildAt(numChildren - 1);
     if (child) {
-      nsCOMPtr<nsIAtom> tagName;
-      child->GetTag(getter_AddRefs(tagName));
-      if (tagName == nsHTMLAtoms::br)
+      if (child->Tag() == nsHTMLAtoms::br)
         --numChildren;
     }
   }

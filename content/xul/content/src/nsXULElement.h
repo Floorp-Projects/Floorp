@@ -432,7 +432,7 @@ public:
                              PRBool aDeepSetDocument);
     NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpeceID) const;
-    NS_IMETHOD GetTag(nsIAtom** aResult) const;
+    virtual nsIAtom *Tag() const;
     NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
     NS_IMETHOD_(nsIAtom *) GetIDAttributeName() const;
     NS_IMETHOD_(nsIAtom *) GetClassAttributeName() const;
@@ -457,12 +457,12 @@ public:
                               nsEventStatus* aEventStatus);
     NS_IMETHOD DoneCreatingElement();
 
-    NS_IMETHOD GetContentID(PRUint32* aID);
+    virtual PRUint32 ContentID() const;
     NS_IMETHOD SetContentID(PRUint32 aID);
 
     NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
     NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-    NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
+    virtual const nsVoidArray *GetRangeList() const;
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 

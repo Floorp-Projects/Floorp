@@ -287,9 +287,7 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
 #ifdef MOZ_XUL
   // if the target is an treechildren, we may have some special
   // case handling to do
-  nsCOMPtr<nsIAtom> tag;
-  mSourceNode->GetTag(getter_AddRefs(tag));
-  mIsSourceTree = tag == nsXULAtoms::treechildren;
+  mIsSourceTree = mSourceNode->Tag() == nsXULAtoms::treechildren;
 #endif
 
   static PRBool prefChangeRegistered = PR_FALSE;
@@ -538,10 +536,10 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
   PRUint32 childCount = aContent->GetChildCount();
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = aContent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    child->GetTag(getter_AddRefs(tag));
-    if (aTag == tag.get()) {
+
+    if (child->Tag() == aTag) {
       *aResult = child;
+      NS_ADDREF(*aResult);
       return;
     }
   }
@@ -586,8 +584,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
 
           // if tooltip == _child, look for first <tooltip> child
           if (tooltipId.Equals(NS_LITERAL_STRING("_child"))) {
-            GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip); // this addrefs
-            NS_IF_ADDREF(*aTooltip);
+            GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip);
             return NS_OK;
           } else {
             if (!tooltipId.IsEmpty()) {

@@ -470,9 +470,8 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
   for ( PRUint32 i = 0; i < count; ++i ) { 
     nsIContent *menu = mMenuBarContent->GetChildAt(i);
     if ( menu ) {
-      nsCOMPtr<nsIAtom> tag;
-      menu->GetTag ( getter_AddRefs(tag) );
-      if (tag == nsWidgetAtoms::menu) {
+      if (menu->Tag() == nsWidgetAtoms::menu &&
+          menu->IsContentOfType(nsIContent::eXUL)) {
         nsAutoString menuName;
         nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
         menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);

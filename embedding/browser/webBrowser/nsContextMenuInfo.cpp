@@ -52,7 +52,8 @@ nsContextMenuInfo::~nsContextMenuInfo()
 }
 
 /* readonly attribute nsIDOMEvent mouseEvent; */
-NS_IMETHODIMP nsContextMenuInfo::GetMouseEvent(nsIDOMEvent **aEvent)
+NS_IMETHODIMP
+nsContextMenuInfo::GetMouseEvent(nsIDOMEvent **aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
   NS_IF_ADDREF(*aEvent = mMouseEvent);
@@ -60,7 +61,8 @@ NS_IMETHODIMP nsContextMenuInfo::GetMouseEvent(nsIDOMEvent **aEvent)
 }
 
 /* readonly attribute nsIDOMNode targetNode; */
-NS_IMETHODIMP nsContextMenuInfo::GetTargetNode(nsIDOMNode **aNode)
+NS_IMETHODIMP
+nsContextMenuInfo::GetTargetNode(nsIDOMNode **aNode)
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_IF_ADDREF(*aNode = mDOMNode);
@@ -135,7 +137,8 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
 }
 
 /* readonly attribute imgIContainer imageContainer; */
-NS_IMETHODIMP nsContextMenuInfo::GetImageContainer(imgIContainer **aImageContainer)
+NS_IMETHODIMP
+nsContextMenuInfo::GetImageContainer(imgIContainer **aImageContainer)
 {
   NS_ENSURE_ARG_POINTER(aImageContainer);
   NS_ENSURE_STATE(mDOMNode);
@@ -149,7 +152,8 @@ NS_IMETHODIMP nsContextMenuInfo::GetImageContainer(imgIContainer **aImageContain
 }
 
 /* readonly attribute nsIURI imageSrc; */
-NS_IMETHODIMP nsContextMenuInfo::GetImageSrc(nsIURI **aURI)
+NS_IMETHODIMP
+nsContextMenuInfo::GetImageSrc(nsIURI **aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_STATE(mDOMNode);
@@ -336,7 +340,10 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 // The check is a bit expensive, however until the canvas frame is somehow cached on the 
 // body frame, or the root element, we need to walk the frames up until we find the canvas
 //
-nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame)
+nsresult
+nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,
+                                               nsIFrame *aFrame,
+                                               nsIFrame **aBGFrame)
 {
   NS_ASSERTION(aFrame && aBGFrame, "illegal null parameter");
 
@@ -348,13 +355,13 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
     nsIContent* pContent = aFrame->GetContent();
     if (pContent) {
        // make sure that this is the HTML or BODY element
-      nsCOMPtr<nsIAtom> tag;
-      pContent->GetTag(getter_AddRefs(tag));
-      nsCOMPtr<nsIAtom> mTag_html = do_GetAtom("html");
-      nsCOMPtr<nsIAtom> mTag_body = do_GetAtom("body");
-      if (tag && 
-          tag.get() == mTag_html ||
-          tag.get() == mTag_body) {
+      nsIAtom *tag = pContent->Tag();
+
+      nsCOMPtr<nsIAtom> tag_html = do_GetAtom("html");
+      nsCOMPtr<nsIAtom> tag_body = do_GetAtom("body");
+      if (tag &&
+          tag == tag_html ||
+          tag == tag_body) {
         // the frame is the body frame, so we provide the canvas frame
         nsIFrame *pCanvasFrame = aFrame->GetParent();
         while (pCanvasFrame) {

@@ -58,8 +58,6 @@ public:
   static nsIBox* GetChildAt(nsIPresContext* aPresContext, nsIBox* parent, PRInt32 index);
   static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* child);
   static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIBox* aFrame);
-  static void GetTag(nsIBox* frame, nsCOMPtr<nsIAtom>& aAtom);
-
 }; 
 
 

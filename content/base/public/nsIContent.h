@@ -88,7 +88,8 @@ public:
    * @param aCompileEventHandlers whether to initialize the event handlers in
    *        the document (used by nsXULElement)
    */
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers)
   {
     mDocument = aDocument;
     return NS_OK;
@@ -135,10 +136,10 @@ public:
   NS_IMETHOD GetNameSpaceID(PRInt32* aResult) const = 0;
 
   /**
-   * Get the tag for this element
-   * @param aResult the tag [OUT]
+   * Get the tag for this element. This will always return a non-null
+   * atom pointer (as implied by the naming of the method).
    */
-  NS_IMETHOD GetTag(nsIAtom** aResult) const = 0;
+  virtual nsIAtom *Tag() const = 0;
 
   /**
    * Get the NodeInfo for this element
@@ -305,7 +306,6 @@ public:
    * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
    *         non-empty value (==NS_OK)
    */
-
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      nsIAtom** aPrefix, nsAString& aResult) const = 0;
 
@@ -316,7 +316,6 @@ public:
    * @param aAttr the attribute name
    * @return whether an attribute exists
    */
-
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
 
   /**
@@ -348,7 +347,7 @@ public:
   /**
    * Get the number of all specified attributes.
    *
-   * @param aCountResult the number of attributes [OUT]
+   * @returns the number of attributes
    */
   NS_IMETHOD_(PRUint32) GetAttrCount() const = 0;
 
@@ -371,11 +370,14 @@ public:
    */
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange) = 0;
   /**
-   * Get the list of ranges that have either endpoint in this content item
-   * @param aResult the list of ranges owned partially by this content [OUT]
+   * Get the list of ranges that have either endpoint in this content
+   * item.
+   * @returns the list of ranges owned partially by this content. The
+   * nsVoidArray is owned by the content object and its lifetime is
+   * controlled completely by the content object.
    */
-  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const = 0;
-  
+  virtual const nsVoidArray *GetRangeList() const = 0;
+
   /**
    * Handle a DOM event for this piece of content.  This method is responsible
    * for handling and controlling all three stages of events, capture, local
@@ -423,12 +425,10 @@ public:
    * An opaque pointer to this dictionary is passed to the session
    * history as a handle associated with the current document's state
    *
-   * @param aID the unique ID for this content [OUT]
-   *
    * These methods are DEPRECATED, DON'T USE THEM!!!
    *
    */
-  NS_IMETHOD GetContentID(PRUint32 *aId) = 0;
+  virtual PRUint32 ContentID() const = 0;
   /**
    * Set the unique content ID for this content.
    * @param aID the ID to set

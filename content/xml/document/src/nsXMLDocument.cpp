@@ -607,7 +607,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
     aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
   }
-  
+
   if (nsCRT::strcmp(aCommand, kLoadAsData) == 0) {
     mLoadedAsData = PR_TRUE;
   }

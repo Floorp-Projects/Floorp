@@ -492,13 +492,11 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
   PRBool haveType = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (!type.IsEmpty());
   if (!haveType) 
   {
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
     nsAutoString data;
 
     // If this is an OBJECT tag, we should look for a DATA attribute.
     // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (tag == nsHTMLAtoms::object)
+    if (aContent->Tag() == nsHTMLAtoms::object)
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
     else
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
@@ -635,19 +633,17 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIAtom> tag;
-    aContent->GetTag(getter_AddRefs(tag));
     nsAutoString data;
-    
+
     // If this is an OBJECT tag, we should look for a DATA attribute.
     // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (tag == nsHTMLAtoms::object)
+    if (aContent->Tag() == nsHTMLAtoms::object)
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
     else
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-    
+
     imageLoader->ImageURIChanged(data);
-    
+
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
@@ -671,9 +667,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
   
   // only do the following for the object tag
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  if (tag.get() != nsHTMLAtoms::object) return rv;
+  if (aContent->Tag() != nsHTMLAtoms::object)
+    return rv;
 
   // for now, we should try to do the same for "document" types and create
   // and IFrame-like sub-frame
@@ -915,8 +910,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aMetrics.height = aReflowState.mComputedHeight;
 
   // for EMBED and APPLET, default to 240x200 for compatibility
-  nsCOMPtr<nsIAtom> atom;
-  mContent->GetTag(getter_AddRefs(atom));
+  nsIAtom *atom = mContent->Tag();
   if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -1116,9 +1110,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
       mInstanceOwner->SetPluginHost(pluginHost);
 
-      nsCOMPtr<nsIAtom> tag;
-      mContent->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsHTMLAtoms::applet) {
+      nsIAtom *tag = mContent->Tag();
+      if (tag == nsHTMLAtoms::applet) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
@@ -1409,25 +1402,29 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
       return PR_TRUE;    
   }
 
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
-
   // only <embed> tags support the HIDDEN attribute
-  if (tag.get() == nsHTMLAtoms::embed) {
+  if (mContent->Tag() == nsHTMLAtoms::embed) {
     nsAutoString hidden;
     nsresult result = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
-      // these |NS_ConvertASCIItoUCS2|s can't be |NS_LITERAL_STRING|s until |EqualsIgnoreCase| get's fixed
-    // HIDDEN w/ no attributes gets translated as we are hidden for compatibility
-    // w/ 4.x and IE so we don't create a non-painting widget in layout. See bug 188959.
+
+    // these |NS_ConvertASCIItoUCS2|s can't be |NS_LITERAL_STRING|s
+    // until |EqualsIgnoreCase| get's fixed
+
+    // HIDDEN w/ no attributes gets translated as we are hidden for
+    // compatibility w/ 4.x and IE so we don't create a non-painting
+    // widget in layout. See bug 188959.
     if (NS_CONTENT_ATTR_NOT_THERE != result &&
        (hidden.IsEmpty() ||
-        !hidden.Equals(NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator()) &&
-        !hidden.Equals(NS_LITERAL_STRING("no"), nsCaseInsensitiveStringComparator()) &&
-        !hidden.Equals(NS_LITERAL_STRING("off"), nsCaseInsensitiveStringComparator()))) {
+        !hidden.Equals(NS_LITERAL_STRING("false"),
+                       nsCaseInsensitiveStringComparator()) &&
+        !hidden.Equals(NS_LITERAL_STRING("no"),
+                       nsCaseInsensitiveStringComparator()) &&
+        !hidden.Equals(NS_LITERAL_STRING("off"),
+                       nsCaseInsensitiveStringComparator()))) {
       return PR_TRUE;
     }
   }
@@ -2520,20 +2517,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
     nsIContent* cont = mOwner->GetContent();
     if (cont)
     {
-      nsCOMPtr<nsIAtom> atom;
-      cont->GetTag(getter_AddRefs(atom));
+      nsIAtom *atom = cont->Tag();
 
-      if (atom)
-      {
-        if (atom == nsHTMLAtoms::applet)
-          *result = nsPluginTagType_Applet;
-        else if (atom == nsHTMLAtoms::embed)
-          *result = nsPluginTagType_Embed;
-        else if (atom == nsHTMLAtoms::object)
-          *result = nsPluginTagType_Object;
+      if (atom == nsHTMLAtoms::applet)
+        *result = nsPluginTagType_Applet;
+      else if (atom == nsHTMLAtoms::embed)
+        *result = nsPluginTagType_Embed;
+      else if (atom == nsHTMLAtoms::object)
+        *result = nsPluginTagType_Object;
 
-        rv = NS_OK;
-      }
+      rv = NS_OK;
     }
   }
 
@@ -3030,9 +3023,8 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // to the bottom of the array if there isn't already a "src" specified.
   PRInt16 numRealAttrs = mNumCachedAttrs;
   nsAutoString data;
-  nsCOMPtr<nsIAtom> tag;
-  content->GetTag(getter_AddRefs(tag));
-  if (nsHTMLAtoms::object == tag.get() 
+  nsIAtom *tag = content->Tag();
+  if (nsHTMLAtoms::object == tag
     && !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
     && NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
       mNumCachedAttrs++;

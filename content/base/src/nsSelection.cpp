@@ -148,7 +148,7 @@ struct nsScrollSelectionIntoViewEvent;
 PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent);
 PRBool  IsValidSelectionPoint(nsSelection *aFrameSel, nsIDOMNode *aDomNode);
 
-static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
+static nsIAtom *GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
 static nsIDOMNode *GetCellParent(nsIDOMNode *aDomNode);
 
@@ -1330,21 +1330,17 @@ void printRange(nsIDOMRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
-nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
+static
+nsIAtom *GetTag(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIAtom> atom;
-  
-  if (!aNode) 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  if (!content) 
   {
-    NS_NOTREACHED("null node passed to GetTag()");
-    return atom;
+    NS_NOTREACHED("bad node passed to GetTag()");
+    return nsnull;
   }
   
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (content)
-    content->GetTag(getter_AddRefs(atom));
-
-  return atom;
+  return content->Tag();
 }
 
 nsresult
@@ -1376,7 +1372,7 @@ GetCellParent(nsIDOMNode *aDomNode)
     nsCOMPtr<nsIDOMNode> parent(aDomNode);
     nsCOMPtr<nsIDOMNode> current(aDomNode);
     PRInt32 childOffset;
-    nsCOMPtr<nsIAtom> tag;
+    nsIAtom *tag;
     // Start with current node and look for a table cell
     while(current)
     {
@@ -3289,9 +3285,8 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
 
 static PRBool IsCell(nsIContent *aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(getter_AddRefs(tag));
-  return (tag == nsHTMLAtoms::td);
+  return (aContent->Tag() == nsHTMLAtoms::td &&
+          aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 nsITableCellLayout* 
@@ -4057,11 +4052,10 @@ nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIAtom> tag;
   for (nsIContent* parent = aCell->GetParent(); parent;
        parent = parent->GetParent()) {
-    parent->GetTag(getter_AddRefs(tag));
-    if (tag == nsHTMLAtoms::table) {
+    if (parent->Tag() == nsHTMLAtoms::table &&
+        parent->IsContentOfType(nsIContent::eHTML)) {
       *aTable = parent;
       NS_ADDREF(*aTable);
 
@@ -4259,11 +4253,13 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   if ((endOffset - startOffset) != 1)
     return NS_OK;
 
-  nsCOMPtr<nsIAtom> atom;
-  content->GetTag(getter_AddRefs(atom));
-  if (!atom) return NS_ERROR_FAILURE;
+  if (!content->IsContentOfType(nsIContent::eHTML)) {
+    return NS_OK;
+  }
 
-  if (atom == nsHTMLAtoms::tr)
+  nsIAtom *tag = content->Tag();
+
+  if (tag == nsHTMLAtoms::tr)
   {
     *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
   }
@@ -4273,13 +4269,14 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
     if (!child)
       return NS_ERROR_FAILURE;
 
-    child->GetTag(getter_AddRefs(atom));
+    tag = child->Tag();
 
-    if (atom == nsHTMLAtoms::table)
+    if (tag == nsHTMLAtoms::table)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
-    else if (atom == nsHTMLAtoms::tr)
+    else if (tag == nsHTMLAtoms::tr)
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
   }
+
   return result;
 }
 
@@ -5945,16 +5942,10 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content = do_QueryInterface(aParentNode);
     if (!content)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIAtom> tag;
-    content->GetTag(getter_AddRefs(tag));
-    if (tag)
-    {
-      nsAutoString tagString;
-      tag->ToString(tagString);
-      char * tagCString = ToNewCString(tagString);
-      printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
-      delete [] tagCString;
-    }
+
+    const char *tagString;
+    content->Tag()->GetUTF8String(&tagString);
+    printf ("Sel. Collapse to %p %s %d\n", content, tagString, aOffset);
   }
   else {
     printf ("Sel. Collapse set to null parent.\n");
@@ -6135,8 +6126,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
     return NS_ERROR_FAILURE;
 
   // if end node is a tbody then all bets are off we cannot select "rows"
-  nsCOMPtr<nsIAtom> atom;
-  atom = GetTag(endNode);
+  nsIAtom *atom = GetTag(endNode);
   if (atom == nsHTMLAtoms::tbody)
     return NS_ERROR_FAILURE; //cannot select INTO row node ony cells
 
@@ -6719,7 +6709,6 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = CopyRangeToAnchorFocus(range);
     if (NS_FAILED(res))
       return res;
-
   }
 
   DEBUG_OUT_RANGE(range);
@@ -6735,16 +6724,10 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   {
     nsCOMPtr<nsIContent>content;
     content = do_QueryInterface(aParentNode);
-    nsCOMPtr<nsIAtom> tag;
-    content->GetTag(getter_AddRefs(tag));
-    if (tag)
-    {
-      nsAutoString tagString;
-      tag->ToString(tagString);
-      char * tagCString = ToNewCString(tagString);
-      printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
-      delete [] tagCString;
-    }
+
+    const char *tagString;
+    content->Tag()->GetUTF8String(&tagString);
+    printf ("Sel. Extend to %p %s %d\n", content, tagString, aOffset);
   }
   else {
     printf ("Sel. Extend set to null parent.\n");

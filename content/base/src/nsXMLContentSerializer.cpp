@@ -580,9 +580,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       PRInt32 elementNsID;
       content->GetNameSpaceID(&elementNsID);
       if (elementNsID == kNameSpaceID_XHTML) {
-        nsCOMPtr<nsIAtom> elementName;
-        content->GetTag(getter_AddRefs(elementName));
-        if (IsShorthandAttr(attrName, elementName) &&
+        if (IsShorthandAttr(attrName, content->Tag()) &&
             valueStr.IsEmpty()) {
           valueStr = nameStr;
         }

@@ -46,7 +46,7 @@
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      const nsAString& aName,
+                      nsIAtom *aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
                       const nsAString& aPublicId,
@@ -54,6 +54,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       const nsAString& aInternalSubset)
 {
   NS_ENSURE_ARG_POINTER(aDocType);
+  NS_ENSURE_ARG_POINTER(aName);
 
   *aDocType = new nsDOMDocumentType(aName, aEntities, aNotations, aPublicId,
                                     aSystemId, aInternalSubset);
@@ -66,29 +67,23 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   return NS_OK;
 }
 
-nsDOMDocumentType::nsDOMDocumentType(const nsAString& aName,
+nsDOMDocumentType::nsDOMDocumentType(nsIAtom *aName,
                                      nsIDOMNamedNodeMap *aEntities,
                                      nsIDOMNamedNodeMap *aNotations,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
   mName(aName),
+  mEntities(aEntities),
+  mNotations(aNotations),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
-
-  mEntities = aEntities;
-  mNotations = aNotations;
-
-  NS_IF_ADDREF(mEntities);
-  NS_IF_ADDREF(mNotations);
 }
 
 nsDOMDocumentType::~nsDOMDocumentType()
 {
-  NS_IF_RELEASE(mEntities);
-  NS_IF_RELEASE(mNotations);
 }
 
 
@@ -110,9 +105,7 @@ NS_IMPL_RELEASE(nsDOMDocumentType)
 NS_IMETHODIMP    
 nsDOMDocumentType::GetName(nsAString& aName)
 {
-  aName=mName;
-
-  return NS_OK;
+  return mName->ToString(aName);
 }
 
 NS_IMETHODIMP    
@@ -164,20 +157,16 @@ nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDOMDocumentType::GetTag(nsIAtom** aResult) const
+nsIAtom *
+nsDOMDocumentType::Tag() const
 {
-  *aResult = NS_NewAtom(mName);
-
-  return NS_OK;
+  return mName;
 }
 
 NS_IMETHODIMP
 nsDOMDocumentType::GetNodeName(nsAString& aNodeName)
 {
-  aNodeName=mName;
-
-  return NS_OK;
+  return mName->ToString(aNodeName);
 }
 
 NS_IMETHODIMP

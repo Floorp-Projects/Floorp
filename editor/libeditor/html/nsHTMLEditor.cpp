@@ -576,7 +576,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> tagAtom = nsEditor::GetTag(aNode);
+  nsIAtom *tagAtom = GetTag(aNode);
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
   if (!sParserService) {
@@ -886,10 +886,8 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
       nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
       if (currentNode)
       {
-        nsCOMPtr<nsIAtom> currentContentTag;
-        currentContent->GetTag(getter_AddRefs(currentContentTag));
         // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
-        if (nsEditProperty::br==currentContentTag)
+        if (currentContent->Tag() == nsEditProperty::br)
         {
           lastRange = nsnull;
         }
@@ -4591,15 +4589,14 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content)
     {
-      nsCOMPtr<nsIAtom> atom;
-      content->GetTag(getter_AddRefs(atom));
-      if (atom.get() == nsEditProperty::table ||
-          atom.get() == nsEditProperty::tbody ||
-          atom.get() == nsEditProperty::thead ||
-          atom.get() == nsEditProperty::tfoot ||
-          atom.get() == nsEditProperty::caption ||
-          atom.get() == nsEditProperty::tr ||
-          atom.get() == nsEditProperty::td )
+      nsIAtom *atom = content->Tag();
+      if (atom == nsEditProperty::table ||
+          atom == nsEditProperty::tbody ||
+          atom == nsEditProperty::thead ||
+          atom == nsEditProperty::tfoot ||
+          atom == nsEditProperty::caption ||
+          atom == nsEditProperty::tr ||
+          atom == nsEditProperty::td )
       {
         nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
         nsCOMPtr<nsIDOMNode> parent;
@@ -4795,7 +4792,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
     nsCOMPtr<nsIDOMNode>          node = do_QueryInterface(content);
     if (text && node && IsEditable(node))
     {
-      textNodes.AppendElement((void*)(node.get()));
+      textNodes.AppendElement(node.get());
     }
     iter->Next();
     iter->CurrentNode(getter_AddRefs(content));
@@ -4858,9 +4855,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
     if (NS_FAILED(res)) return res;
     if (!nextNode) break;
 
-    nsCOMPtr<nsIAtom> atom = GetTag(currentNode);
-
-    if (tagAtom == atom)
+    if (GetTag(currentNode) == tagAtom)
     {
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(currentNode);
       if (!element) return NS_ERROR_NULL_POINTER;
@@ -5902,11 +5897,10 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
   PRBool useCSS;
   GetIsCSSEnabled(&useCSS);
 
-  nsCOMPtr<nsIAtom> atom1 = GetTag(aNode1);
-  nsCOMPtr<nsIAtom> atom2 = GetTag(aNode2);
-  
-  if (atom1.get() == atom2.get()) {
-    if (useCSS && atom1 == nsEditProperty::span) {
+  nsIAtom *tag1 = GetTag(aNode1);
+
+  if (tag1 == GetTag(aNode2)) {
+    if (useCSS && tag1 == nsEditProperty::span) {
       if (mHTMLCSSUtils->ElementsSameStyle(aNode1, aNode2)) {
         return PR_TRUE;
       }

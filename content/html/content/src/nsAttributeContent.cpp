@@ -48,7 +48,6 @@
 #include "nsISelection.h"
 #include "nsIEnumerator.h"
 
-
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
@@ -58,19 +57,18 @@
 #include "prprf.h"
 #include "nsCOMPtr.h"
 
-
 #include "nsIContent.h"
 #include "nsTextFragment.h"
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
 #include "nsIURI.h"
+#include "nsLayoutAtoms.h"
 // XXX share all id's in this dir
 
 
-
-
-class nsAttributeContent : public nsITextContent, public nsIAttributeContent {
+class nsAttributeContent : public nsITextContent, public nsIAttributeContent
+{
 public:
   friend nsresult NS_NewAttributeContent(nsAttributeContent** aNewFrame);
 
@@ -92,10 +90,9 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetTag(nsIAtom** aResult) const
+  nsIAtom *Tag() const
   {
-    *aResult = nsnull;
-    return NS_OK;
+    return nsLayoutAtoms::textTagName;
   }
 
   NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const
@@ -171,9 +168,9 @@ public:
                           PRUint32 aFlags,
                           nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetContentID(PRUint32* aID) {
-    *aID = 0;
-    return NS_ERROR_NOT_IMPLEMENTED;
+  virtual PRUint32 ContentID() const {
+    NS_ERROR("nsAttributeContent::ContentID() not implemented!");
+    return 0;
   }
 
   NS_IMETHOD SetContentID(PRUint32 aID) {
@@ -182,7 +179,7 @@ public:
 
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
-  NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;
+  const nsVoidArray * GetRangeList() const;
 
   // Implementation for nsIContent
   NS_IMETHOD_(PRBool) CanContainChildren() const { return PR_FALSE; }
@@ -237,8 +234,7 @@ public:
 
   nsTextFragment mText;
   PRInt32        mNameSpaceID;
-  nsIAtom*       mAttrName;
-
+  nsCOMPtr<nsIAtom> mAttrName;
 };
 
 
@@ -247,7 +243,7 @@ NS_NewAttributeContent(nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
 
-  nsAttributeContent* it = new nsAttributeContent;
+  nsAttributeContent* it = new nsAttributeContent();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -261,27 +257,24 @@ nsAttributeContent::nsAttributeContent()
   : mText()
 {
   mContent  = nsnull;
-  mAttrName = nsnull;
 }
 
 //----------------------------------------------------------------------
 nsAttributeContent::~nsAttributeContent()
 {
-  NS_IF_RELEASE(mAttrName);
-  //NS_IF_RELEASE(mDocument);
 }
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttrName)
+nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID,
+                         nsIAtom* aAttrName)
 {
-  NS_ASSERTION((nsnull == mContent) && (nsnull != aContent), "null ptr");
+  NS_ENSURE_TRUE(aAttrName && aContent, NS_ERROR_NULL_POINTER);
+
   mContent = aContent;
 
-  NS_IF_RELEASE(mAttrName);
   mNameSpaceID = aNameSpaceID;
   mAttrName    = aAttrName;
-  NS_ADDREF(mAttrName);
   return NS_OK;
 }
 
@@ -292,7 +285,7 @@ nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aA
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
  * 
-*/
+ */
 
 NS_INTERFACE_MAP_BEGIN(nsAttributeContent)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
@@ -343,10 +336,10 @@ nsAttributeContent::RangeRemove(nsIDOMRange* aRange)
 }
 
 
-nsresult 
-nsAttributeContent::GetRangeList(nsVoidArray** aResult) const
+const nsVoidArray *
+nsAttributeContent::GetRangeList() const
 {
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 NS_IMETHODIMP

@@ -3662,15 +3662,11 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
   aParentFrame->FirstChild(aPresContext, nsnull, &child);
   while (child) {
     nsIContent* content = child->GetContent();
-    if (content) {
-      nsCOMPtr<nsIAtom> type;
-      content->GetTag(getter_AddRefs(type));
-      if (type.get() == aType) {
-        nsRect r = child->GetRect();
-        aChildRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
-        aRect -= aParentFrame->GetPosition();
-        return child;
-      }
+    if (content && content->Tag() == aType) {
+      nsRect r = child->GetRect();
+      aChildRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
+      aRect -= aParentFrame->GetPosition();
+      return child;
     }
     nsIFrame * fndFrame = FindFrameByType(aPresContext, child, aType, aRect, aChildRect);
     if (fndFrame != nsnull) {

@@ -882,10 +882,10 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
   // Broken image accessibles are created here, because layout
   // replaces the image or image control frame with an inline frame
   *aAccessible = nsnull;
-  nsCOMPtr<nsIAtom> tagAtom;
-  mContent->GetTag(getter_AddRefs(tagAtom));
-  if (tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || 
-     tagAtom == nsHTMLAtoms::label || tagAtom == nsHTMLAtoms::hr) {
+  nsIAtom *tagAtom = mContent->Tag();
+  if ((tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || 
+       tagAtom == nsHTMLAtoms::label || tagAtom == nsHTMLAtoms::hr) &&
+      mContent->IsContentOfType(nsIContent::eHTML)) {
     // Only get accessibility service if we're going to use it
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     if (!accService)

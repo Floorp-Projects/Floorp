@@ -283,19 +283,24 @@ nsresult
 XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot,
                                           nsIContent **aContainer)
 {
+  *aContainer = nsnull;
+
   nsresult rv;
 
-  nsCOMPtr<nsIAtom> tag;
-  if (NS_FAILED(rv = aRoot->GetTag(getter_AddRefs(tag))))  return rv;
+  nsIAtom *tag = aRoot->Tag();
 
-  if (tag == nsXULAtoms::templateAtom) // ignore content within templates
-    return NS_OK;    
+  if (aRoot->IsContentOfType(nsIContent::eXUL)) {
+    if (tag == nsXULAtoms::templateAtom) // ignore content within templates
+      return NS_OK;    
 
-  if (tag == nsXULAtoms::listbox || tag == nsXULAtoms::treechildren || tag == nsXULAtoms::menupopup)
-  {
-    *aContainer = aRoot;
-    NS_ADDREF(*aContainer);
-    return NS_OK;
+    if (tag == nsXULAtoms::listbox ||
+        tag == nsXULAtoms::treechildren ||
+        tag == nsXULAtoms::menupopup) {
+      *aContainer = aRoot;
+      NS_ADDREF(*aContainer);
+
+      return NS_OK;
+    }
   }
 
   PRUint32 numChildren = aRoot->GetChildCount();
@@ -361,25 +366,33 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
     nsIContent *child = content->GetChildAt(childIndex);
 
     if (child->IsContentOfType(nsIContent::eXUL)) {
-      nsCOMPtr<nsIAtom> tag;
-      if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) return rv;
-        
-      if (tag == nsXULAtoms::treecols || tag == nsXULAtoms::listcols || tag == nsXULAtoms::listhead) {
+      nsIAtom *tag = child->Tag();
+
+      if (tag == nsXULAtoms::treecols ||
+          tag == nsXULAtoms::listcols ||
+          tag == nsXULAtoms::listhead) {
         rv = SetSortColumnHints(child, sortResource, sortDirection);
       } else if (tag == nsXULAtoms::treecol ||
-                 tag == nsXULAtoms::listcol || tag == nsXULAtoms::listheader) {
+                 tag == nsXULAtoms::listcol ||
+                 tag == nsXULAtoms::listheader) {
         nsAutoString value;
 
-        if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::resource, value))
+        if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None,
+                                             nsXULAtoms::resource, value))
             && rv == NS_CONTENT_ATTR_HAS_VALUE)
         {
           if (value == sortResource) {
-            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, *kTrueStr, PR_TRUE);
-            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection, PR_TRUE);
-            // Note: don't break out of loop; want to set/unset attribs on ALL sort columns
+            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
+                           *kTrueStr, PR_TRUE);
+            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                           sortDirection, PR_TRUE);
+            // Note: don't break out of loop; want to set/unset
+            // attribs on ALL sort columns
           } else {
-            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, PR_TRUE);
-            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, PR_TRUE);
+            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
+                             PR_TRUE);
+            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                             PR_TRUE);
           }
         }
       }
@@ -390,30 +403,39 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
 }
 
 nsresult
-XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsAString &sortResource,
-                                      nsAString &sortDirection, nsAString &sortResource2,
+XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree,
+                                      nsAString &sortResource,
+                                      nsAString &sortDirection,
+                                      nsAString &sortResource2,
                                       PRBool &inbetweenSeparatorSort)
 {
   nsresult rv = NS_ERROR_FAILURE;
   inbetweenSeparatorSort = PR_FALSE;
 
   nsAutoString value;
-  if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, value))
+  if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
+                                      nsXULAtoms::sortActive, value))
     && (rv == NS_CONTENT_ATTR_HAS_VALUE))
   {
     if (value.Equals(NS_LITERAL_STRING("true")))
     {
-      if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, sortResource))
+      if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
+                                          nsXULAtoms::sortResource,
+                                          sortResource))
           && (rv == NS_CONTENT_ATTR_HAS_VALUE))
       {
-        if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection))
+        if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
+                                            nsXULAtoms::sortDirection,
+                                            sortDirection))
             && (rv == NS_CONTENT_ATTR_HAS_VALUE))
         {
           rv = NS_OK;
 
           // sort separator flag is optional
-          if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortSeparators,
-            value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+          if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
+                                              nsXULAtoms::sortSeparators,
+                                              value)) &&
+              (rv == NS_CONTENT_ATTR_HAS_VALUE))
           {
             if (value.Equals(NS_LITERAL_STRING("true")))
             {
@@ -422,8 +444,10 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsAString &sortResource,
           }
 
           // secondary sort info is optional
-          if (NS_FAILED(rv = tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource2, sortResource2))
-              || (rv != NS_CONTENT_ATTR_HAS_VALUE))
+          if (NS_FAILED(rv = tree->GetAttr(kNameSpaceID_None,
+                                           nsXULAtoms::sortResource2,
+                                           sortResource2)) ||
+              (rv != NS_CONTENT_ATTR_HAS_VALUE))
           {
             sortResource2.Truncate();
           }
@@ -437,8 +461,8 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsAString &sortResource,
 
 nsresult
 XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
-         nsIRDFNode *cellNode2, PRBool isCollationKey2,
-         PRBool &bothValid, PRInt32 & sortOrder)
+                                 nsIRDFNode *cellNode2, PRBool isCollationKey2,
+                                 PRBool &bothValid, PRInt32 & sortOrder)
 {
   bothValid = PR_FALSE;
   sortOrder = 0;
@@ -1100,7 +1124,6 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
   // (since we also skip over non XUL:treeitem nodes)
 
   nsresult rv;
-  nsCOMPtr<nsIAtom> tag;
   currentElement = numChildren;
   PRUint32 childIndex;
   // childIndex is unsigned, so childIndex >= 0 would always test true
@@ -1109,9 +1132,12 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
     nsIContent *child = container->GetChildAt(childIndex);
 
     if (child->IsContentOfType(nsIContent::eXUL)) {
-      if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
-      if (tag == nsXULAtoms::listitem || tag == nsXULAtoms::treeitem
-          || tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem) {
+      nsIAtom *tag = child->Tag();
+
+      if (tag == nsXULAtoms::listitem ||
+          tag == nsXULAtoms::treeitem ||
+          tag == nsXULAtoms::menu ||
+          tag == nsXULAtoms::menuitem) {
         --currentElement;
 
         nsCOMPtr<nsIRDFResource>  resource;
@@ -1171,9 +1197,12 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       nsIContent *child = container->GetChildAt(childIndex);
 
       if (child->IsContentOfType(nsIContent::eXUL)) {
-        if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
-        if (tag == nsXULAtoms::listitem || tag == nsXULAtoms::treeitem
-            || tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem) {
+        nsIAtom *tag = child->Tag();
+
+        if (tag == nsXULAtoms::listitem ||
+            tag == nsXULAtoms::treeitem ||
+            tag == nsXULAtoms::menu ||
+            tag == nsXULAtoms::menuitem) {
           // immediately remove the child node, and ignore any errors
           container->RemoveChildAt(childIndex, PR_FALSE);
         }
@@ -1202,14 +1231,13 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       for (childIndex = 0; childIndex < numChildren; childIndex++) {
         nsIContent *child = parentNode->GetChildAt(childIndex);
 
-        if (!child->IsContentOfType(nsIContent::eXUL))
-          continue;
+        nsINodeInfo *ni = child->GetNodeInfo();
 
-        if (NS_FAILED(rv = child->GetTag(getter_AddRefs(tag)))) continue;
-        if (tag != nsXULAtoms::treechildren && tag != nsXULAtoms::menupopup) continue;
-
-        sortInfo->parentContainer = parentNode;
-        SortContainer(child, sortInfo, merelyInvertFlag);
+        if (ni && (ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL) ||
+                   ni->Equals(nsXULAtoms::menupopup, kNameSpaceID_XUL))) {
+          sortInfo->parentContainer = parentNode;
+          SortContainer(child, sortInfo, merelyInvertFlag);
+        }
       }
     }
   }
@@ -1377,10 +1405,6 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
     if (parent) {
       nsAutoString id;
-      nsCOMPtr<nsIAtom> tag;
-
-      if (NS_FAILED(rv = trueParent->GetTag(getter_AddRefs(tag))))
-        return rv;
 
       rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
       if (id.IsEmpty())
@@ -1627,9 +1651,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   // store sort info in attributes on content
   SetSortHints(dbNode, sortResource, sortDirection, sortResource2, sortInfo.inbetweenSeparatorSort, PR_TRUE);
 
-  // start sorting the content depending on the tag
-  nsCOMPtr<nsIAtom> dbNodeTag;
-  dbNode->GetTag(getter_AddRefs(dbNodeTag));
+  // start sorting the content
   nsCOMPtr<nsIContent> container;
   if (NS_FAILED(rv = FindSortableContainer(dbNode, getter_AddRefs(container)))) return rv;
   SortContainer(container, &sortInfo, invertTreeFlag);

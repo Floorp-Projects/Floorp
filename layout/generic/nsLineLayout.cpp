@@ -2464,24 +2464,22 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     if (!applyMinLH && (isFirstLine || isLastLine)) {
       nsIContent* blockContent = mRootSpan->mFrame->mFrame->GetContent();
       if (blockContent) {
-        nsCOMPtr<nsIAtom> blockTagAtom;
-        nsresult result = blockContent->GetTag(getter_AddRefs(blockTagAtom));
-        if ( NS_SUCCEEDED(result) && blockTagAtom) {
-          // (2) above, if the first line of LI
-          if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
-            // if the line is empty, then don't force the min height (see bug 75963)
-            if (!IsZeroHeight()) {
-              applyMinLH = PR_TRUE;
-              foundLI = PR_TRUE;
-            }
-          }
-          // (3) above, if the last line of LI, DT, or DD
-          else if (!applyMinLH && isLastLine &&
-                ((blockTagAtom.get() == nsHTMLAtoms::li) ||
-                 (blockTagAtom.get() == nsHTMLAtoms::dt) ||
-                 (blockTagAtom.get() == nsHTMLAtoms::dd))) {
+        nsIAtom *blockTagAtom = blockContent->Tag();
+        // (2) above, if the first line of LI
+        if (isFirstLine && blockTagAtom == nsHTMLAtoms::li) {
+          // if the line is empty, then don't force the min height
+          // (see bug 75963)
+          if (!IsZeroHeight()) {
             applyMinLH = PR_TRUE;
+            foundLI = PR_TRUE;
           }
+        }
+        // (3) above, if the last line of LI, DT, or DD
+        else if (!applyMinLH && isLastLine &&
+                 ((blockTagAtom == nsHTMLAtoms::li) ||
+                  (blockTagAtom == nsHTMLAtoms::dt) ||
+                  (blockTagAtom == nsHTMLAtoms::dd))) {
+          applyMinLH = PR_TRUE;
         }
       }
     }

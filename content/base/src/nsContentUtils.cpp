@@ -1391,8 +1391,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
 
   // Don't capture state for anonymous content
-  PRUint32 contentID;
-  aContent->GetContentID(&contentID);
+  PRUint32 contentID = aContent->ContentID();
   if (!contentID) {
     return NS_OK;
   }
@@ -1565,11 +1564,8 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
       return PR_TRUE;
     }
 
-    nsCOMPtr<nsIAtom> tag;
-
-    content->GetTag(getter_AddRefs(tag));
-
-    if (tag == nsHTMLAtoms::form) {
+    if (content->Tag() == nsHTMLAtoms::form &&
+        content->IsContentOfType(nsIContent::eHTML)) {
       // The child is contained within a form, but not the right form
       // so we ignore it.
 

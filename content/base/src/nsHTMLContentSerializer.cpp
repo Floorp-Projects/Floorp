@@ -461,7 +461,7 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
       aAttrNameAtom == nsHTMLAtoms::src) {
     static const char kJavaScript[] = "javascript";
     PRInt32 pos = aValueString.FindChar(':');
-    if ( pos < (PRInt32)(sizeof kJavaScript - 1) )
+    if (pos < (PRInt32)(sizeof kJavaScript - 1))
         return PR_FALSE;
     nsAutoString scheme(Substring(aValueString, 0, pos));
     scheme.StripWhitespace();
@@ -602,21 +602,21 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     
     // XXX: This special cased textarea code should be
     //      removed when bug #17003 is fixed.  
-    if ( (aTagName == nsHTMLAtoms::textarea) &&
-         ((attrName.get() == nsHTMLAtoms::value) || 
-         (attrName.get() == nsHTMLAtoms::defaultvalue)) ){
+    if ((aTagName == nsHTMLAtoms::textarea) &&
+        ((attrName == nsHTMLAtoms::value) || 
+         (attrName == nsHTMLAtoms::defaultvalue))){
         continue;
     }
 
-    if ( mIsCopying && mIsFirstChildOfOL && (aTagName == nsHTMLAtoms::li) && 
-         (attrName.get() == nsHTMLAtoms::value)){
+    if (mIsCopying && mIsFirstChildOfOL && (aTagName == nsHTMLAtoms::li) && 
+        (attrName == nsHTMLAtoms::value)){
       // This is handled separately in SerializeLIValueAttribute()
       continue;
     }
     PRBool isJS = IsJavaScript(attrName, valueStr);
     
-    if (((attrName.get() == nsHTMLAtoms::href) || 
-         (attrName.get() == nsHTMLAtoms::src))) {
+    if (((attrName == nsHTMLAtoms::href) || 
+         (attrName == nsHTMLAtoms::src))) {
       // Make all links absolute when converting only the selection:
       if (mFlags & nsIDocumentEncoder::OutputAbsoluteLinks) {
         // Would be nice to handle OBJECT and APPLET tags,
@@ -677,10 +677,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // even if we're not in pretty printing mode
   PRBool hasDirtyAttr = HasDirtyAttr(content);
 
-  nsCOMPtr<nsIAtom> name;
-  content->GetTag(getter_AddRefs(name));
+  nsIAtom *name = content->Tag();
 
-  if (name.get() == nsHTMLAtoms::br && mPreLevel > 0
+  if (name == nsHTMLAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
     AppendToString(mLineBreak, aStr);
     mMayIgnoreLineBreakSequence = PR_TRUE;
@@ -688,7 +687,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     return NS_OK;
   }
 
-  if (name.get() == nsHTMLAtoms::body) {
+  if (name == nsHTMLAtoms::body) {
     mInBody = PR_TRUE;
   }
 
@@ -711,9 +710,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   StartIndentation(name, hasDirtyAttr, aStr);
 
-  if ((name.get() == nsHTMLAtoms::pre) ||
-      (name.get() == nsHTMLAtoms::script) ||
-      (name.get() == nsHTMLAtoms::style)) {
+  if (name == nsHTMLAtoms::pre ||
+      name == nsHTMLAtoms::script ||
+      name == nsHTMLAtoms::style) {
     mPreLevel++;
   }
   
@@ -725,7 +724,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   // Need to keep track of OL and LI elements in order to get ordinal number 
   // for the LI.
-  if (mIsCopying && name.get() == nsHTMLAtoms::ol){
+  if (mIsCopying && name == nsHTMLAtoms::ol){
     // We are copying and current node is an OL;
     // Store it's start attribute value in olState->startVal.
     nsAutoString start;
@@ -747,7 +746,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       mOLStateStack.AppendElement(state);
   }
 
-  if (mIsCopying && name.get() == nsHTMLAtoms::li) {
+  if (mIsCopying && name == nsHTMLAtoms::li) {
     mIsFirstChildOfOL = IsFirstChildOfOL(aElement);
     if (mIsFirstChildOfOL){
       // If OL is parent of this LI, serialize attributes in different manner.
@@ -769,17 +768,17 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   // XXX: This special cased textarea code should be
   //      removed when bug #17003 is fixed.  
-  if (name.get() == nsHTMLAtoms::textarea)
+  if (name == nsHTMLAtoms::textarea)
   {
     nsAutoString valueStr;
     content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, valueStr);
     AppendToString(valueStr, aStr);
   }
 
-  if ((name.get() == nsHTMLAtoms::script) ||
-      (name.get() == nsHTMLAtoms::style) ||
-      (name.get() == nsHTMLAtoms::noscript) ||
-      (name.get() == nsHTMLAtoms::noframes)) {
+  if (name == nsHTMLAtoms::script ||
+      name == nsHTMLAtoms::style ||
+      name == nsHTMLAtoms::noscript ||
+      name == nsHTMLAtoms::noframes) {
     mInCDATA = PR_TRUE;
   }
 
@@ -797,16 +796,15 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   PRBool hasDirtyAttr = HasDirtyAttr(content);
 
-  nsCOMPtr<nsIAtom> name;
-  content->GetTag(getter_AddRefs(name));
+  nsIAtom *name = content->Tag();
 
-  if ((name.get() == nsHTMLAtoms::pre) ||
-      (name.get() == nsHTMLAtoms::script) ||
-      (name.get() == nsHTMLAtoms::style)) {
+  if (name == nsHTMLAtoms::pre ||
+      name == nsHTMLAtoms::script ||
+      name == nsHTMLAtoms::style) {
     mPreLevel--;
   }
 
-  if (mIsCopying && (name.get() == nsHTMLAtoms::ol)){
+  if (mIsCopying && (name == nsHTMLAtoms::ol)){
     NS_ASSERTION((mOLStateStack.Count() > 0), "Cannot have an empty OL Stack");
     /* Though at this point we must always have an state to be deleted as all 
     the OL opening tags are supposed to push an olState object to the stack*/
@@ -819,7 +817,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
-  if (parserService && (name.get() != nsHTMLAtoms::style)) {
+  if (parserService && (name != nsHTMLAtoms::style)) {
     PRBool isContainer;
     PRInt32 id;
 

@@ -274,9 +274,7 @@ nsMathMLTokenFrame::ProcessTextData(nsIPresContext* aPresContext)
 void
 nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
-  if (tag != nsMathMLAtoms::mi_)
+  if (mContent->Tag() != nsMathMLAtoms::mi_)
     return;
 
   if (!mFrames.FirstChild())
@@ -392,9 +390,7 @@ SetQuote(nsIPresContext* aPresContext,
 void
 nsMathMLTokenFrame::SetQuotes(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(getter_AddRefs(tag));
-  if (tag != nsMathMLAtoms::ms_)
+  if (mContent->Tag() != nsMathMLAtoms::ms_)
     return;
 
   nsIFrame* rightFrame = nsnull;

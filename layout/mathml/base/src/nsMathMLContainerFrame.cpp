@@ -873,13 +873,12 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
       break;
     }
     // stop if we reach the root <math> tag
-    nsCOMPtr<nsIAtom> tag;
     nsIContent* content = frame->GetContent();
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       return NS_ERROR_FAILURE;
-    content->GetTag(getter_AddRefs(tag));
-    if (tag.get() == nsMathMLAtoms::math) {
+
+    if (content->Tag() == nsMathMLAtoms::math) {
       break;
     }
     // mark the frame dirty, and continue to climb up
@@ -1313,9 +1312,8 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       mBoundingMetrics = bmChild;
       // update to include the left correction
       // but leave <msqrt> alone because the sqrt glyph itself is there first
-      nsCOMPtr<nsIAtom> tag;
-      mContent->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsMathMLAtoms::msqrt_)
+
+      if (mContent->Tag() == nsMathMLAtoms::msqrt_)
         leftCorrection = 0;
       else
         mBoundingMetrics.leftBearing += leftCorrection;
@@ -1370,9 +1368,8 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       dy = aDesiredSize.ascent - childSize.ascent;
       if (0 == count) {
         // for <msqrt>, the sqrt glyph itself is there first
-        nsCOMPtr<nsIAtom> tag;
-        mContent->GetTag(getter_AddRefs(tag));
-        if (tag.get() == nsMathMLAtoms::msqrt_)
+
+        if (mContent->Tag() == nsMathMLAtoms::msqrt_)
           leftCorrection = 0;
       }
       else {
@@ -1438,9 +1435,8 @@ nsresult
 nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
                                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsCOMPtr<nsIAtom> parentTag;
   nsIContent* parentContent = mParent->GetContent();
-  parentContent->GetTag(getter_AddRefs(parentTag));
+  nsIAtom *parentTag = parentContent->Tag();
   if (parentTag == nsMathMLAtoms::math ||
       parentTag == nsMathMLAtoms::mtd_) {
     nscoord gap = GetInterFrameSpacingFor(aPresContext,

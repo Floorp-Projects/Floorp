@@ -199,23 +199,15 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
                 //NS_ERROR("element was already in the map");
 #ifdef PR_LOGGING
                 if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
-                    nsresult rv;
+                    const char *tagname;
+                    aContent->Tag()->GetUTF8String(&tagname);
 
-                    nsCOMPtr<nsIAtom> tag;
-                    rv = aContent->GetTag(getter_AddRefs(tag));
-                    if (NS_FAILED(rv)) return rv;
-
-                    nsAutoString tagname;
-                    rv = tag->ToString(tagname);
-                    if (NS_FAILED(rv)) return rv;
-
-                    nsCAutoString tagnameC, aidC; 
-                    tagnameC.AssignWithConversion(tagname);
+                    nsCAutoString aidC; 
                     aidC.AssignWithConversion(id, aID.Length());
                     PR_LOG(gMapLog, PR_LOG_ALWAYS,
                            ("xulelemap(%p) dup    %s[%p] <-- %s\n",
                             this,
-                            tagnameC.get(),
+                            tagname,
                             aContent,
                             aidC.get()));
                 }
@@ -236,23 +228,15 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
-        nsresult rv;
+        const char *tagname;
+        aContent->Tag()->GetUTF8String(&tagname);
 
-        nsCOMPtr<nsIAtom> tag;
-        rv = aContent->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagname;
-        rv = tag->ToString(tagname);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString tagnameC, aidC; 
-        tagnameC.AssignWithConversion(tagname);
+        nsCAutoString aidC; 
         aidC.AssignWithConversion(id, aID.Length());
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) add    %s[%p] <-- %s\n",
                 this,
-                tagnameC.get(),
+                tagname,
                 aContent,
                 aidC.get()));
     }
@@ -274,23 +258,15 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
-        nsresult rv;
+        const char *tagname;
+        aContent->Tag()->GetUTF8String(&tagname);
 
-        nsCOMPtr<nsIAtom> tag;
-        rv = aContent->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagname;
-        rv = tag->ToString(tagname);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCAutoString tagnameC, aidC; 
-        tagnameC.AssignWithConversion(tagname);
+        nsCAutoString aidC; 
         aidC.AssignWithConversion(id);
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) remove  %s[%p] <-- %s\n",
                 this,
-                tagnameC.get(),
+                tagname,
                 aContent,
                 aidC.get()));
     }

@@ -64,7 +64,7 @@ public:
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
   // nsIContent
-  NS_IMETHOD GetTag(nsIAtom** aResult) const;
+  virtual nsIAtom *Tag() const;
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
 #ifdef DEBUG

@@ -169,13 +169,12 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       break;
     }
     // stop if we reach the root <math> tag
-    nsCOMPtr<nsIAtom> tag;
     nsIContent* content = frame->GetContent();
     NS_ASSERTION(content, "dangling frame without a content node");
     if (!content)
       break;
-    content->GetTag(getter_AddRefs(tag));
-    if (tag.get() == nsMathMLAtoms::math) {
+
+    if (content->Tag() == nsMathMLAtoms::math) {
       const nsStyleDisplay* display = frame->GetStyleDisplay();
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;

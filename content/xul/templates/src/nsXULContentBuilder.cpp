@@ -437,26 +437,21 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     // Dump out the template node's tag, the template ID, and the RDF
     // resource that is being used as the index into the graph.
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aTemplateNode->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
         nsXPIDLCString resourceCStr;
         rv = aChild->GetValue(getter_Copies(resourceCStr));
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString tagstr;
-        tag->ToString(tagstr);
+        const char *tagstr;
+        aTemplateNode->Tag()->GetUTF8String(&tagstr);
 
         nsAutoString templatestr;
         aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::id, templatestr);
-        nsCAutoString templatestrC,tagstrC;
-        tagstrC.AssignWithConversion(tagstr);
+        nsCAutoString templatestrC;
         templatestrC.AssignWithConversion(templatestr);
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("xultemplate[%p] build-content-from-template %s (template='%s') [%s]",
                 this,
-                tagstrC.get(),
+                tagstr,
                 templatestrC.get(),
                 resourceCStr.get()));
     }
@@ -540,19 +535,15 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
         }
 
-        nsCOMPtr<nsIAtom> tag;
-        rv = tmplKid->GetTag(getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
+        nsIAtom *tag = tmplKid->Tag();
 
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-            nsAutoString tagname;
-            tag->ToString(tagname);
-            nsCAutoString tagstrC;
-            tagstrC.AssignWithConversion(tagname);
+            const char *tagname;
+            tag->GetUTF8String(&tagname);
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
-                    this, tagstrC.get(),
+                    this, tagname,
                     (isResourceElement ? "[resource]" : ""),
                     (isUnique ? "[unique]" : "")));
         }
@@ -667,7 +658,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
             }
         }
-        else if ((tag.get() == nsXULAtoms::textnode) && (nameSpaceID == kNameSpaceID_XUL)) {
+        else if (tag == nsXULAtoms::textnode &&
+                 nameSpaceID == kNameSpaceID_XUL) {
             // <xul:text value="..."> is replaced by text of the
             // actual value of the 'rdf:resource' attribute for the
             // given node.
@@ -901,7 +893,8 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         rv = value->GetValueConst(&valueStr);
         if (NS_FAILED(rv)) return rv;
 
-        rv = aRealNode->SetAttr(nameSpaceID, tag, nsAutoString(valueStr), PR_FALSE);
+        rv = aRealNode->SetAttr(nameSpaceID, tag, nsDependentString(valueStr),
+                                PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1012,7 +1005,7 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
 
     // Now walk up the template subtree in parallel with the generated
     // subtree.
-    nsCOMPtr<nsIAtom> tag;
+    nsINodeInfo *ni;
     nsCOMPtr<nsIContent> generated(aChild);
 
     do {
@@ -1035,10 +1028,10 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
         // The content within a template ends when we hit the
         // <template> or <rule> element in the simple syntax, or the
         // <action> element in the extended syntax.
-        tmpl->GetTag(getter_AddRefs(tag));
-    } while (tag != nsXULAtoms::templateAtom &&
-             tag != nsXULAtoms::rule &&
-             tag != nsXULAtoms::action);
+        ni = tmpl->GetNodeInfo();
+    } while (!ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL) &&
+             !ni->Equals(nsXULAtoms::rule, kNameSpaceID_XUL) &&
+             !ni->Equals(nsXULAtoms::action, kNameSpaceID_XUL));
 
     // Did we find the generated parent?
     return PRBool(generated.get() == aParent);
@@ -1097,34 +1090,21 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
 
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
-            nsCOMPtr<nsIAtom> parentTag;
-            rv = parent->GetTag(getter_AddRefs(parentTag));
-            if (NS_FAILED(rv)) return rv;
+            const char *parentTagStr;
+            parent->Tag()->GetUTF8String(&parentTagStr);
 
-            nsAutoString parentTagStr;
-            rv = parentTag->ToString(parentTagStr);
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIAtom> childTag;
-            rv = child->GetTag(getter_AddRefs(childTag));
-            if (NS_FAILED(rv)) return rv;
-
-            nsAutoString childTagStr;
-            rv = childTag->ToString(childTagStr);
-            if (NS_FAILED(rv)) return rv;
+            const char *childTagStr;
+            child->Tag()->GetUTF8String(&childTagStr);
 
             const char* resourceCStr;
             rv = aMember->GetValueConst(&resourceCStr);
             if (NS_FAILED(rv)) return rv;
             
-            nsCAutoString childtagstrC,parenttagstrC;
-            parenttagstrC.AssignWithConversion(parentTagStr);
-            childtagstrC.AssignWithConversion(childTagStr);
             PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] remove-member %s->%s [%s]",
                     this,
-                    parenttagstrC.get(),
-                    childtagstrC.get(),
+                    parentTagStr,
+                    childTagStr,
                     resourceCStr));
         }
 #endif
@@ -1377,30 +1357,23 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
 
     // XXXhyatt - use XBL service to obtain base tag.
 
-    nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return PR_FALSE;
+    nsIAtom *tag = aElement->Tag();
 
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
-    if ((aElement == mRoot) && (tag.get() != nsXULAtoms::menu) &&
-        (tag.get() != nsXULAtoms::menubutton) &&
-        (tag.get() != nsXULAtoms::toolbarbutton) &&
-        (tag.get() != nsXULAtoms::button))
+    if ((aElement == mRoot) && aElement->IsContentOfType(nsIContent::eXUL) &&
+        (tag != nsXULAtoms::menu) &&
+        (tag != nsXULAtoms::menubutton) &&
+        (tag != nsXULAtoms::toolbarbutton) &&
+        (tag != nsXULAtoms::button))
       return PR_TRUE;
 
     nsAutoString value;
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::open, value);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
-    if (NS_FAILED(rv)) return PR_FALSE;
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value == NS_LITERAL_STRING("true"))
-            return PR_TRUE;
-    }
-
-    
-    return PR_FALSE;
+    return (rv == NS_CONTENT_ATTR_HAS_VALUE &&
+            value == NS_LITERAL_STRING("true"));
 }
 
 
@@ -1427,9 +1400,8 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             // Optimize for the <template> element, because we *know*
             // it won't have any generated content: there's no reason
             // to even check this subtree.
-            nsCOMPtr<nsIAtom> tag;
-            element->GetTag(getter_AddRefs(tag));
-            if (tag.get() == nsXULAtoms::templateAtom)
+            nsINodeInfo *ni = element->GetNodeInfo();
+            if (!ni || ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))
                 continue;
 
             // If the element is in the template map, then we
@@ -1468,32 +1440,26 @@ PRBool
 nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
 {
     // Determine if this is a <tree>, <treeitem>, or <menu> element
-    nsresult rv;
 
-    PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(&nameSpaceID);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (!aElement->IsContentOfType(nsIContent::eXUL)) {
+        return PR_FALSE;
+    }
 
     // XXXhyatt Use the XBL service to obtain a base tag.
 
-    nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return PR_FALSE;
+    nsIAtom *tag = aElement->Tag();
 
-    if (nameSpaceID != kNameSpaceID_XUL)
-        return PR_FALSE;
-
-    if ((tag.get() == nsXULAtoms::menu) || (tag.get() == nsXULAtoms::menulist) ||
-        (tag.get() == nsXULAtoms::menubutton) || (tag.get() == nsXULAtoms::toolbarbutton) ||
-        (tag.get() == nsXULAtoms::button) || (tag == nsXULAtoms::treeitem))
-        return PR_TRUE;
-
-    return PR_FALSE;
-
+    return (tag == nsXULAtoms::menu ||
+            tag == nsXULAtoms::menulist ||
+            tag == nsXULAtoms::menubutton ||
+            tag == nsXULAtoms::toolbarbutton ||
+            tag == nsXULAtoms::button ||
+            tag == nsXULAtoms::treeitem);
 }
 
 nsresult
-nsXULContentBuilder::GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements)
+nsXULContentBuilder::GetElementsForResource(nsIRDFResource* aResource,
+                                            nsISupportsArray* aElements)
 {
     const char *uri;
     aResource->GetValueConst(&uri);
@@ -1876,12 +1842,11 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 nsresult
 nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 {
+#if 0 // Um, what was this really supposed to do?
     // See if we're responsible for this element
     if (! IsElementInBuilder(aElement, this))
         return NS_OK;
-
-    nsCOMPtr<nsIAtom> tag;
-    aElement->GetTag(getter_AddRefs(tag));
+#endif
 
     return NS_OK;
 }

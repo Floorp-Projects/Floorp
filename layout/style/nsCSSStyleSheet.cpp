@@ -3153,7 +3153,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     aContent->GetNameSpaceID(&mNameSpaceID);
 
     // get the tag and parent
-    aContent->GetTag(&mContentTag);
+    mContentTag = aContent->Tag();
     mParentContent = aContent->GetParent();
 
     // get the event state
@@ -3218,7 +3218,6 @@ RuleProcessorData::~RuleProcessorData()
   if (mParentData)
     mParentData->Destroy(mPresContext);
 
-  NS_IF_RELEASE(mContentTag);
   NS_IF_RELEASE(mContentID);
   NS_IF_RELEASE(mStyledContent);
 
@@ -3330,8 +3329,7 @@ inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 
 static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespaceText)
 {
-  nsCOMPtr<nsIAtom> tag;
-  aChild->GetTag(getter_AddRefs(tag)); // skip text & comments
+  nsIAtom *tag = aChild->Tag(); // skip text, comments, and PIs
   if ((tag != nsLayoutAtoms::textTagName) && 
       (tag != nsLayoutAtoms::commentTagName) &&
       (tag != nsLayoutAtoms::processingInstructionTagName)) {
