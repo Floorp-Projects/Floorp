@@ -1203,10 +1203,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   ClearFlag(IMAP_CLEAN_UP_URL_STATE);
 
   // now try queued urls, now that we've released this connection.
-  if (m_imapServerSink && GetConnectionStatus() >= 0)
+  if (m_imapServerSink)
   {
-    rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
-    SetFlag(IMAP_FIRST_PASS_IN_THREAD);
+    if (GetConnectionStatus() >= 0)
+    {
+      rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
+      SetFlag(IMAP_FIRST_PASS_IN_THREAD);
+    }
+    else // if we don't do this, they'll just sit and spin until
+          // we run some other url on this server.
+      rv = m_imapServerSink->AbortQueuedUrls();
   }
 
   // if we didn't run another url, release the server sink to
@@ -4711,7 +4717,6 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
   nsCString command(GetServerCommandTag());
   char* escapedName = CreateEscapedMailboxName(mailboxName);
   nsresult rv;
-  PRBool isOpen = PR_FALSE;
   PRBool eof = PR_FALSE;
   nsCString flagString;
   PRBool hasLiteralPlus = (GetServerStateParser().GetCapabilityFlag() &
@@ -5287,7 +5292,7 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 
 nsresult nsImapProtocol::SetFolderAdminUrl(const char *mailboxName)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_NULL_POINTER; // if m_imapServerSink is null, rv will be this.
 
   nsIMAPNamespace *nsForMailbox = nsnull;
   m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(),
@@ -6599,10 +6604,13 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
     else if (!flags && !addFlags)// we must be turning off labels, so subtract them all 
       flagString.Append("$Label1 $Label2 $Label3 $Label4 $Label5 ");
   }
+  if (flagString.Length() > 8) // if more than "+Flags ("
+  {
   // replace the final space with ')'
-  flagString.SetCharAt(')',flagString.Length() - 1);
+    flagString.SetCharAt(')',flagString.Length() - 1);
   
-  Store(messageIdsString, flagString.get(), idsAreUids);
+    Store(messageIdsString, flagString.get(), idsAreUids);
+  }
 }
 
 
