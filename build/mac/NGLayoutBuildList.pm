@@ -1071,6 +1071,7 @@ sub MakeResourceAliases()
     my($prefLocale) = "$communicatorLocale"."pref:";
 
     _InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",         "$prefContent", 0);
+    _InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:mac:MANIFEST",     "$prefContent", 0);
     _InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",    "$prefLocale", 0);
     }
     
