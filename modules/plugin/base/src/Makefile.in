@@ -119,6 +119,12 @@ CFLAGS          += $(MOZ_GTK_CFLAGS)
 EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin $(XLDFLAGS) -lXt $(MOZ_GTK_LDFLAGS)
 endif		#MOZ_ENABLE_GTK
 
+ifdef MOZ_ENABLE_GTK2
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+CFLAGS          += $(MOZ_GTK2_CFLAGS)
+EXTRA_DSO_LDOPTS += -lgtkxtbin $(XLDFLAGS) -lXt $(MOZ_GTK2_LIBS)
+endif           #MOZ_ENABLE_GTK2
+
 ifdef MOZ_ENABLE_XLIB
 EXTRA_DSO_LDOPTS += -lxlibxtbin -lxlibrgb -L/usr/X11R6/lib -lXt
 ifndef MOZ_MONOLITHIC_TOOLKIT

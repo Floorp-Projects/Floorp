@@ -49,11 +49,19 @@
 #include "nsIPref.h" // needed for NS_TRY_SAFE_CALL_*
 #include "nsPluginLogging.h"
 
-#if defined(MOZ_WIDGET_GTK)
+#ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include "gtkxtbin.h"
-#elif defined(MOZ_WIDGET_XLIB)
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include "gtk2xtbin.h"
+#endif
+
+#ifdef MOZ_WIDGET_XLIB
 #include "xlibxtbin.h"
 #include "xlibrgb.h"
 #endif
@@ -587,7 +595,7 @@ ns4xPluginInstance :: ~ns4xPluginInstance(void)
 {
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance dtor: this=%p\n",this));
 
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
   if (mXtBin)
     gtk_widget_destroy(mXtBin);
 #elif defined(MOZ_WIDGET_XLIB)
@@ -618,7 +626,7 @@ NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPluginInstance::Initialize this=%p\n",this));
 
-#ifdef MOZ_WIDGET_GTK
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
   mXtBin = nsnull;
 #elif defined(MOZ_WIDGET_XLIB)
   mXlibXtBin = nsnull;
@@ -669,7 +677,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   NPError error;
 
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
   if (mXtBin) {
     gtk_widget_destroy(mXtBin);
     mXtBin = 0;
@@ -837,7 +845,7 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_XLIB)
+#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_XLIB)
   NPSetWindowCallbackStruct *ws;
 #endif
 
@@ -847,7 +855,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   
   NPError error;
   
-#ifdef MOZ_WIDGET_GTK
+#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
   // bug 108337, flash plugin on linux doesn't like window->width <= 0
   if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
     return NS_OK;

@@ -77,7 +77,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #define DEFAULT_X11_PATH ""
 #endif
 
-#ifdef MOZ_WIDGET_GTK 
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 
 #define PLUGIN_MAX_LEN_OF_TMP_ARR 512
 
@@ -239,7 +239,7 @@ static void LoadExtraSharedLibs()
         }
     }
 }
-#endif //MOZ_WIDGET_GTK
+#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 
 
 
@@ -299,7 +299,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 
     ///////////////////////////////////////////////////////////
     // Normally, Mozilla isn't linked against libXt and libXext
