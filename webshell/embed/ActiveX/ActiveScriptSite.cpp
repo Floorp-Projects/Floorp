@@ -199,9 +199,24 @@ HRESULT CActiveScriptSite::ParseScriptText(const TCHAR *szScript)
 	}
 	else
 	{
-		// TODO stick text into a HGLOBAL, create a stream on it and load it
-		// into the script via IPersistStream
-		return E_UNEXPECTED;
+		CIPtr(IPersistStream) spPersistStream = m_spIActiveScript;
+		CIPtr(IStream) spStream;
+
+		// Load text into the stream IPersistStream
+		if (spPersistStream &&
+			SUCCEEDED(CreateStreamOnHGlobal(NULL, TRUE, &spStream)))
+		{
+			USES_CONVERSION;
+			LARGE_INTEGER cPos = { 0, 0 };
+			LPOLESTR szText = T2OLE(szScript);
+			spStream->Write(szText, wcslen(szText) * sizeof(WCHAR), NULL);
+			spStream->Seek(cPos, STREAM_SEEK_SET, NULL);
+			spPersistStream->Load(spStream);
+		}
+		else
+		{
+			return E_UNEXPECTED;
+		}
 	}
 
 	return S_OK;
