@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: true; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -240,7 +240,8 @@ private:
   PRInt32			mDisplayListCount;
   PRInt32			mOpaqueViewCount;
   PRInt32			mTranslucentViewCount;
-  nsRect			mTranslucentBounds;
+  nsRect            mTranslucentArea;       // bounding box of all translucent views.
+  nsSize			mTranslucentSize;       // size of the blending buffers.
   nsIScrollableView *mRootScrollable;
 
   //from here to public should be static and locked... MMP
@@ -252,8 +253,8 @@ private:
   static nsDrawingSurface  gOffScreen;
   static nsDrawingSurface  gRed;
   static nsDrawingSurface  gBlue;
-  static PRInt32           gBlendWidth;
-  static PRInt32           gBlendHeight;
+  static nsSize            gOffScreenSize;
+  static nsSize            gBlendSize;
 
   //compositor regions
   nsIRegion         *mTransRgn;

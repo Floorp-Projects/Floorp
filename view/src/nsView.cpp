@@ -273,7 +273,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 		if (nsnull != mClientData) {
 			nsCOMPtr<nsIViewObserver> observer;
 			if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
-				if ((mClip.mLeft != 0) && (mClip.mRight != 0) && (mClip.mTop != 0) && (mClip.mBottom != 0)) {
+				if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
 					nsRect  crect;
 					crect.x = mClip.mLeft;
 					crect.y = mClip.mTop;
@@ -972,9 +972,9 @@ NS_IMETHODIMP nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nsc
 NS_IMETHODIMP nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
                                 PRBool &aResult) const
 {
-  if ((mClip.mLeft == 0) && (mClip.mRight == 0) && (mClip.mTop == 0) && (mClip.mBottom == 0))
+  if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom)) {
     aResult = PR_FALSE;
-  else {
+  } else {
     *aLeft = mClip.mLeft;
     *aTop = mClip.mTop;
     *aRight = mClip.mRight;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: true; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -50,30 +50,33 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 // Uncomment the following to use the nsIBlender. Turned off for now,
 // so that we won't crash.
-//#define SUPPORT_TRANSLUCENT_VIEWS
+#define SUPPORT_TRANSLUCENT_VIEWS
 
 // display list elements
 struct DisplayListElement2 {
 	nsIView*			mView;
-	nsRect				mClip;
+	nsRect				mBounds;
 	nsRect				mDirty;
 	PRUint32			mFlags;
 };
 
+inline nscoord max(nscoord x, nscoord y) { return (x > y ? x : y); }
+inline nscoord min(nscoord x, nscoord y) { return (x < y ? x : y); }
+
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
-  nsViewManager2 *vm = (nsViewManager2 *)aClosure;
+	nsViewManager2 *vm = (nsViewManager2 *)aClosure;
 
-  //restart the timer
+	//restart the timer
   
-  if (vm->mTrueFrameRate == vm->mFrameRate)
-  {
-    PRUint32 fr = vm->mFrameRate;
+	if (vm->mTrueFrameRate == vm->mFrameRate)
+		{
+			PRUint32 fr = vm->mFrameRate;
 
-    vm->mFrameRate = 0;
-    vm->SetFrameRate(fr);
-  }
-//printf("timer composite...\n");
+			vm->mFrameRate = 0;
+			vm->SetFrameRate(fr);
+		}
+	//printf("timer composite...\n");
 #ifndef XP_MAC
 	//XXX temporary: The Mac doesn't need the timer to repaint but
 	// obviously this is not the good method to disable the thing.
@@ -81,7 +84,7 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 	// (set UPDATE_QUANTUM to 0, or simply not create the timer)
 	// don't work for now. We'll fix that and then disable the
 	// Mac timers as we should.
-  vm->Composite();
+	vm->Composite();
 #endif
 }
 
@@ -101,8 +104,8 @@ nsRect nsViewManager2::mDSBounds = nsRect(0, 0, 0, 0);
 nsDrawingSurface nsViewManager2::gOffScreen = nsnull;
 nsDrawingSurface nsViewManager2::gRed = nsnull;
 nsDrawingSurface nsViewManager2::gBlue = nsnull;
-PRInt32 nsViewManager2::gBlendWidth = 0;
-PRInt32 nsViewManager2::gBlendHeight = 0;
+nsSize nsViewManager2::gBlendSize = nsSize(0, 0);
+nsSize nsViewManager2::gOffScreenSize = nsSize(0, 0);
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
@@ -116,115 +119,115 @@ nsViewManager2::nsViewManager2()
 
 nsViewManager2::~nsViewManager2()
 {
-  if (nsnull != mTimer) {
-    mTimer->Cancel();     //XXX this should not be necessary. MMP
-    NS_RELEASE(mTimer);
-  }
-
-  NS_IF_RELEASE(mRootWindow);
-
-  mRootScrollable = nsnull;
-
-  NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
-  --mVMCount;
-
-  if ((0 == mVMCount) &&
-      ((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
-      (nsnull != gRed) || (nsnull != gBlue)))
-  {
-    nsCOMPtr<nsIRenderingContext> rc;
-    nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
-                                       nsnull, 
-                                       NS_GET_IID(nsIRenderingContext), 
-                                       getter_AddRefs(rc));
-
-    if (NS_OK == rv)
-    {
-      if (nsnull != mDrawingSurface)
-        rc->DestroyDrawingSurface(mDrawingSurface);
-
-      if (nsnull != gOffScreen)
-        rc->DestroyDrawingSurface(gOffScreen);
-
-      if (nsnull != gRed)
-        rc->DestroyDrawingSurface(gRed);
-
-      if (nsnull != gBlue)
-        rc->DestroyDrawingSurface(gBlue);
-    }
-    
-    mDrawingSurface = nsnull;
-    gOffScreen = nsnull;
-    gRed = nsnull;
-    gBlue = nsnull;
-    gBlendWidth = 0;
-    gBlendHeight = 0;
-  }
-
-  mObserver = nsnull;
-  mContext = nsnull;
-
-  if (nsnull != mDisplayList)
-  {
-	PRInt32 count = mDisplayList->Count();
-	for (PRInt32 index = 0; index < count; index++) {
-		DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(index);
-		if (element != nsnull)
-			delete element;
+	if (nsnull != mTimer) {
+		mTimer->Cancel();     //XXX this should not be necessary. MMP
+		NS_RELEASE(mTimer);
 	}
 
-    delete mDisplayList;
-    mDisplayList = nsnull;
-  }
+	NS_IF_RELEASE(mRootWindow);
+
+	mRootScrollable = nsnull;
+
+	NS_ASSERTION((mVMCount > 0), "underflow of viewmanagers");
+	--mVMCount;
+
+	if ((0 == mVMCount) &&
+		((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
+		 (nsnull != gRed) || (nsnull != gBlue)))
+		{
+			nsCOMPtr<nsIRenderingContext> rc;
+			nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
+															 nsnull, 
+															 NS_GET_IID(nsIRenderingContext), 
+															 getter_AddRefs(rc));
+
+			if (NS_OK == rv)
+				{
+					if (nsnull != mDrawingSurface)
+						rc->DestroyDrawingSurface(mDrawingSurface);
+
+					if (nsnull != gOffScreen)
+						rc->DestroyDrawingSurface(gOffScreen);
+
+					if (nsnull != gRed)
+						rc->DestroyDrawingSurface(gRed);
+
+					if (nsnull != gBlue)
+						rc->DestroyDrawingSurface(gBlue);
+				}
+    
+			mDrawingSurface = nsnull;
+			gOffScreen = nsnull;
+			gRed = nsnull;
+			gBlue = nsnull;
+			gBlendSize.SizeTo(0, 0);
+			gOffScreenSize.SizeTo(0, 0);
+		}
+
+	mObserver = nsnull;
+	mContext = nsnull;
+
+	if (nsnull != mDisplayList)
+		{
+			PRInt32 count = mDisplayList->Count();
+			for (PRInt32 index = 0; index < count; index++) {
+				DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(index);
+				if (element != nsnull)
+					delete element;
+			}
+
+			delete mDisplayList;
+			mDisplayList = nsnull;
+		}
   
-  if (nsnull != mTransRgn) {
-    if (nsnull != mTransRects)
-      mTransRgn->FreeRects(mTransRects);
+	if (nsnull != mTransRgn) {
+		if (nsnull != mTransRects)
+			mTransRgn->FreeRects(mTransRects);
 
-    NS_RELEASE(mTransRgn);
-  }
+		NS_RELEASE(mTransRgn);
+	}
 
-  NS_IF_RELEASE(mBlender);
-  NS_IF_RELEASE(mOpaqueRgn);
-  NS_IF_RELEASE(mTRgn);
-  NS_IF_RELEASE(mRCRgn);
+	NS_IF_RELEASE(mBlender);
+	NS_IF_RELEASE(mOpaqueRgn);
+	NS_IF_RELEASE(mTRgn);
+	NS_IF_RELEASE(mRCRgn);
 
-  NS_IF_RELEASE(mOffScreenCX);
-  NS_IF_RELEASE(mRedCX);
-  NS_IF_RELEASE(mBlueCX);
+	NS_IF_RELEASE(mOffScreenCX);
+	NS_IF_RELEASE(mRedCX);
+	NS_IF_RELEASE(mBlueCX);
 
-  if (nsnull != mCompositeListeners) {
-    mCompositeListeners->Clear();
-    NS_RELEASE(mCompositeListeners);
-  }
+	if (nsnull != mCompositeListeners) {
+		mCompositeListeners->Clear();
+		NS_RELEASE(mCompositeListeners);
+	}
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager2, knsViewManagerIID)
 
-NS_IMPL_ADDREF(nsViewManager2);
+	NS_IMPL_ADDREF(nsViewManager2);
 
 nsrefcnt nsViewManager2::Release(void)
 {
-  /* Note funny ordering of use of mRefCnt. We were seeing a problem
-     during the deletion of a view hierarchy where child views,
-     while being destroyed, referenced this view manager and caused
-     the Destroy part of this method to be re-entered. Waiting until
-     the destruction has finished to decrement the refcount
-     prevents that.
+	/* Note funny ordering of use of mRefCnt. We were seeing a problem
+	   during the deletion of a view hierarchy where child views,
+	   while being destroyed, referenced this view manager and caused
+	   the Destroy part of this method to be re-entered. Waiting until
+	   the destruction has finished to decrement the refcount
+	   prevents that.
   */
-  NS_LOG_RELEASE(this, mRefCnt - 1, "nsViewManager2");
-  if (mRefCnt == 1)
-  {
-    if (nsnull != mRootView) {
-      // Destroy any remaining views
-      mRootView->Destroy();
-      mRootView = nsnull;
-    }
-    delete this;
-    return 0;
-  }
-  mRefCnt--;
-  return mRefCnt;
+	NS_LOG_RELEASE(this, mRefCnt - 1, "nsViewManager2");
+	if (mRefCnt == 1)
+		{
+			if (nsnull != mRootView) {
+				// Destroy any remaining views
+				mRootView->Destroy();
+				mRootView = nsnull;
+			}
+			delete this;
+			return 0;
+		}
+	mRefCnt--;
+	return mRefCnt;
 }
 
 static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *result)
@@ -286,324 +289,327 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
 
 NS_IMETHODIMP nsViewManager2::GetRootView(nsIView *&aView)
 {
-  aView = mRootView;
-  return NS_OK;
+	aView = mRootView;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2 :: SetRootView(nsIView *aView, nsIWidget* aWidget)
 {
-  UpdateTransCnt(mRootView, aView);
-  // Do NOT destroy the current root view. It's the caller's responsibility
-  // to destroy it
-  mRootView = aView;
+	UpdateTransCnt(mRootView, aView);
+	// Do NOT destroy the current root view. It's the caller's responsibility
+	// to destroy it
+	mRootView = aView;
 
-  //now get the window too.
-  NS_IF_RELEASE(mRootWindow);
+	//now get the window too.
+	NS_IF_RELEASE(mRootWindow);
 
-  // The window must be specified through one of the following:
-  //* a) The aView has a nsIWidget instance or
-  //* b) the aWidget parameter is an nsIWidget instance to render into 
-  //*    that is not owned by a view.
-  //* c) aView has a parent view managed by a different view manager or
+	// The window must be specified through one of the following:
+	//* a) The aView has a nsIWidget instance or
+	//* b) the aWidget parameter is an nsIWidget instance to render into 
+	//*    that is not owned by a view.
+	//* c) aView has a parent view managed by a different view manager or
 
-  if (nsnull != aWidget) {
-    mRootWindow = aWidget;
-    NS_ADDREF(mRootWindow);
-    return NS_OK;
-  }
+	if (nsnull != aWidget) {
+		mRootWindow = aWidget;
+		NS_ADDREF(mRootWindow);
+		return NS_OK;
+	}
 
-  // case b) The aView has a nsIWidget instance
-  if (nsnull != mRootView) {
-    mRootView->GetWidget(mRootWindow);
-    if (nsnull != mRootWindow) {
-      return NS_OK;
-    }
-  }
+	// case b) The aView has a nsIWidget instance
+	if (nsnull != mRootView) {
+		mRootView->GetWidget(mRootWindow);
+		if (nsnull != mRootWindow) {
+			return NS_OK;
+		}
+	}
 
-  // case c)  aView has a parent view managed by a different view manager
+	// case c)  aView has a parent view managed by a different view manager
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GetFrameRate(PRUint32 &aRate)
 {
-  aRate = mTrueFrameRate;
-  return NS_OK;
+	aRate = mTrueFrameRate;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
 {
-  nsresult  rv;
+	nsresult  rv;
 
-  if (aFrameRate != mFrameRate)
-  {
-    if (nsnull != mTimer)
-    {
-      mTimer->Cancel();     //XXX this should not be necessary. MMP
-      NS_RELEASE(mTimer);
-    }
+	if (aFrameRate != mFrameRate)
+		{
+			if (nsnull != mTimer)
+				{
+					mTimer->Cancel();     //XXX this should not be necessary. MMP
+					NS_RELEASE(mTimer);
+				}
 
-    mFrameRate = aFrameRate;
-    mTrueFrameRate = aFrameRate;
+			mFrameRate = aFrameRate;
+			mTrueFrameRate = aFrameRate;
 
-    if (mFrameRate != 0)
-    {
-      rv = NS_NewTimer(&mTimer);
+			if (mFrameRate != 0)
+				{
+					rv = NS_NewTimer(&mTimer);
 
-      if (NS_OK == rv)
-        mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
-    }
-    else
-      rv = NS_OK;
-  }
-  else
-    rv = NS_OK;
+					if (NS_OK == rv)
+						mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
+				}
+			else
+				rv = NS_OK;
+		}
+	else
+		rv = NS_OK;
 
-  return rv;
+	return rv;
 }
 
 NS_IMETHODIMP nsViewManager2::GetWindowDimensions(nscoord *width, nscoord *height)
 {
-  if (nsnull != mRootView)
-    mRootView->GetDimensions(width, height);
-  else
-  {
-    *width = 0;
-    *height = 0;
-  }
-  return NS_OK;
+	if (nsnull != mRootView)
+		mRootView->GetDimensions(width, height);
+	else
+		{
+			*width = 0;
+			*height = 0;
+		}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetWindowDimensions(nscoord width, nscoord height)
 {
-  // Resize the root view
-  if (nsnull != mRootView)
-    mRootView->SetDimensions(width, height);
+	// Resize the root view
+	if (nsnull != mRootView)
+		mRootView->SetDimensions(width, height);
 
 //printf("new dims: %d %d\n", width, height);
   // Inform the presentation shell that we've been resized
-  if (nsnull != mObserver)
-    mObserver->ResizeReflow(mRootView, width, height);
-//printf("reflow done\n");
+	if (nsnull != mObserver)
+		mObserver->ResizeReflow(mRootView, width, height);
+	//printf("reflow done\n");
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::ResetScrolling(void)
 {
-  if (nsnull != mRootScrollable)
-    mRootScrollable->ComputeScrollOffsets(PR_TRUE);
+	if (nsnull != mRootScrollable)
+		mRootScrollable->ComputeScrollOffsets(PR_TRUE);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
 {
-  nsRect              wrect;
-  nsCOMPtr<nsIRenderingContext> localcx;
-  nsDrawingSurface    ds = nsnull;
+	nsRect              wrect;
+	nsCOMPtr<nsIRenderingContext> localcx;
+	nsDrawingSurface    ds = nsnull;
 
-  if (PR_FALSE == mRefreshEnabled)
-    return;
+	if (PR_FALSE == mRefreshEnabled)
+		return;
 
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
-  mPainting = PR_TRUE;
+	mPainting = PR_TRUE;
 
-//printf("refreshing region...\n");
-  //force double buffering because of non-opaque views?
+	//printf("refreshing region...\n");
+	//force double buffering because of non-opaque views?
 
-  if (mTransCnt > 0)
-    aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+	if (mTransCnt > 0)
+		aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
 #ifdef NO_DOUBLE_BUFFER
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
 
-  if (nsnull == aContext)
-  {
-    localcx = getter_AddRefs(CreateRenderingContext(*aView));
+	if (nsnull == aContext)
+		{
+			localcx = getter_AddRefs(CreateRenderingContext(*aView));
 
-    //couldn't get rendering context. this is ok at init time atleast
-    if (nsnull == localcx)
-      return;
-  } else {
-  	// plain assignment grabs another reference.
-    localcx = aContext;
-  }
+			//couldn't get rendering context. this is ok at init time atleast
+			if (nsnull == localcx) {
+				mPainting = PR_FALSE;
+				return;
+			}
+		} else {
+			// plain assignment grabs another reference.
+			localcx = aContext;
+		}
 
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->WillRefreshRegion(this, aView, aContext, region, aUpdateFlags);
-        }
-      }
-    }
-  }
+	// notify the listeners.
+	if (nsnull != mCompositeListeners) {
+		PRUint32 listenerCount;
+		if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+			nsCOMPtr<nsICompositeListener> listener;
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
+					listener->WillRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+				}
+			}
+		}
+	}
 
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-  {
-    nsCOMPtr<nsIWidget> widget;
-    aView->GetWidget(*getter_AddRefs(widget));
-    widget->GetClientBounds(wrect);
-    wrect.x = wrect.y = 0;
-    ds = GetDrawingSurface(*localcx, wrect);
-  }
+	if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+		{
+			nsCOMPtr<nsIWidget> widget;
+			aView->GetWidget(*getter_AddRefs(widget));
+			widget->GetClientBounds(wrect);
+			wrect.x = wrect.y = 0;
+			ds = GetDrawingSurface(*localcx, wrect);
+		}
 
-  PRBool  result;
-  nsRect  trect;
+	PRBool  result;
+	nsRect  trect;
 
-  if (nsnull != region)
-    localcx->SetClipRegion(*region, nsClipCombine_kUnion, result);
+	if (nsnull != region)
+		localcx->SetClipRegion(*region, nsClipCombine_kUnion, result);
 
-  aView->GetBounds(trect);
+	aView->GetBounds(trect);
 
-  localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
+	localcx->SetClipRect(trect, nsClipCombine_kIntersect, result);
 
-  RenderViews(aView, *localcx, trect, result);
+	RenderViews(aView, *localcx, trect, result);
 
-  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
-    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+	if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
+		localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 
-  // Subtract the area we just painted from the dirty region
-  if ((nsnull != region) && !region->IsEmpty())
-  {
-    nsRect  pixrect = trect;
-    float   t2p;
+	// Subtract the area we just painted from the dirty region
+	if ((nsnull != region) && !region->IsEmpty()) {
+		nsRect  pixrect = trect;
+		float   t2p;
+		
+		mContext->GetAppUnitsToDevUnits(t2p);
+		
+		pixrect.ScaleRoundIn(t2p);
+		region->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
+	}
 
-    mContext->GetAppUnitsToDevUnits(t2p);
+	mLastRefresh = PR_IntervalNow();
 
-    pixrect.ScaleRoundIn(t2p);
-    region->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
-  }
+	mPainting = PR_FALSE;
 
-  mLastRefresh = PR_IntervalNow();
-
-  mPainting = PR_FALSE;
-
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->DidRefreshRegion(this, aView, aContext, region, aUpdateFlags);
-        }
-      }
-    }
-  }
+	// notify the listeners.
+	if (nsnull != mCompositeListeners) {
+		PRUint32 listenerCount;
+		if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+			nsCOMPtr<nsICompositeListener> listener;
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
+					listener->DidRefreshRegion(this, aView, aContext, region, aUpdateFlags);
+				}
+			}
+		}
+	}
 }
 
 void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
 {
-  nsRect              wrect, brect;
-  nsCOMPtr<nsIRenderingContext> localcx;
-  nsDrawingSurface    ds = nsnull;
+	nsRect              wrect, brect;
+	nsCOMPtr<nsIRenderingContext> localcx;
+	nsDrawingSurface    ds = nsnull;
 
-  if (PR_FALSE == mRefreshEnabled)
-    return;
+	if (PR_FALSE == mRefreshEnabled)
+		return;
 
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
-  mPainting = PR_TRUE;
+	mPainting = PR_TRUE;
 
-  //force double buffering because of non-opaque views?
+	//force double buffering because of non-opaque views?
 
-//printf("refreshing rect... ");
-//stdout << *rect;
-//printf("\n");
-  if (mTransCnt > 0)
-    aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+	//printf("refreshing rect... ");
+	//stdout << *rect;
+	//printf("\n");
+	if (mTransCnt > 0)
+		aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
 #ifdef NO_DOUBLE_BUFFER
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
 
-  if (nsnull == aContext)
-  {
-    localcx = getter_AddRefs(CreateRenderingContext(*aView));
+	if (nsnull == aContext)
+		{
+			localcx = getter_AddRefs(CreateRenderingContext(*aView));
 
-    //couldn't get rendering context. this is ok if at startup
-    if (nsnull == localcx)
-      return;
-  } else {
-  	// plain assignment adds a ref
-    localcx = aContext;
-  }
+			//couldn't get rendering context. this is ok if at startup
+			if (nsnull == localcx) {
+				mPainting = PR_FALSE;
+				return;
+			}
+		} else {
+			// plain assignment adds a ref
+			localcx = aContext;
+		}
 
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->WillRefreshRect(this, aView, aContext, rect, aUpdateFlags);
-        }
-      }
-    }
-  }
+	// notify the listeners.
+	if (nsnull != mCompositeListeners) {
+		PRUint32 listenerCount;
+		if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+			nsCOMPtr<nsICompositeListener> listener;
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
+					listener->WillRefreshRect(this, aView, aContext, rect, aUpdateFlags);
+				}
+			}
+		}
+	}
 
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-  {
-    nsCOMPtr<nsIWidget> widget;
-    aView->GetWidget(*getter_AddRefs(widget));
-    widget->GetClientBounds(wrect);
-    brect = wrect;
-    wrect.x = wrect.y = 0;
-    ds = GetDrawingSurface(*localcx, wrect);
-  }
+	if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+		{
+			nsCOMPtr<nsIWidget> widget;
+			aView->GetWidget(*getter_AddRefs(widget));
+			widget->GetClientBounds(wrect);
+			brect = wrect;
+			wrect.x = wrect.y = 0;
+			ds = GetDrawingSurface(*localcx, wrect);
+		}
 
-  nsRect trect = *rect;
+	nsRect trect = *rect;
 
-  PRBool  result;
+	PRBool  result;
 
-  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+	localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
-  RenderViews(aView, *localcx, trect, result);
+	RenderViews(aView, *localcx, trect, result);
 
-  if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
-    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+	if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
+		localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 
 #if 0
-  // Subtract the area we just painted from the dirty region
-  nsIRegion* dirtyRegion;
-  aView->GetDirtyRegion(dirtyRegion);
+	// Subtract the area we just painted from the dirty region
+	nsIRegion* dirtyRegion;
+	aView->GetDirtyRegion(dirtyRegion);
 
-  if ((nsnull != dirtyRegion) && !dirtyRegion->IsEmpty())
-  {
-    nsRect  pixrect = trect;
-    float   t2p;
+	if ((nsnull != dirtyRegion) && !dirtyRegion->IsEmpty())
+		{
+			nsRect  pixrect = trect;
+			float   t2p;
 
-    mContext->GetAppUnitsToDevUnits(t2p);
+			mContext->GetAppUnitsToDevUnits(t2p);
 
-    pixrect.ScaleRoundIn(t2p);
-    dirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
-    NS_RELEASE(dirtyRegion);
-  }
+			pixrect.ScaleRoundIn(t2p);
+			dirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
+			NS_RELEASE(dirtyRegion);
+		}
 #endif
 
-  mLastRefresh = PR_IntervalNow();
+	mLastRefresh = PR_IntervalNow();
 
-  mPainting = PR_FALSE;
+	mPainting = PR_FALSE;
 
-  // notify the listeners.
-  if (nsnull != mCompositeListeners) {
-    PRUint32 listenerCount;
-    if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
-      nsCOMPtr<nsICompositeListener> listener;
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
-          listener->DidRefreshRect(this, aView, aContext, rect, aUpdateFlags);
-        }
-      }
-    }
-  }
+	// notify the listeners.
+	if (nsnull != mCompositeListeners) {
+		PRUint32 listenerCount;
+		if (NS_SUCCEEDED(mCompositeListeners->Count(&listenerCount))) {
+			nsCOMPtr<nsICompositeListener> listener;
+			for (PRUint32 i = 0; i < listenerCount; i++) {
+				if (NS_SUCCEEDED(mCompositeListeners->QueryElementAt(i, NS_GET_IID(nsICompositeListener), getter_AddRefs(listener)))) {
+					listener->DidRefreshRect(this, aView, aContext, rect, aUpdateFlags);
+				}
+			}
+		}
+	}
 }
 
 void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
@@ -636,8 +642,8 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		mDisplayListCount = 0;
 		mOpaqueViewCount = 0;
 		mTranslucentViewCount = 0;
-		mTranslucentBounds.x = mTranslucentBounds.y = 0;
-		mTranslucentBounds.width = mTranslucentBounds.width = 0;
+		mTranslucentArea.SetRect(0, 0, 0, 0);
+		mTranslucentSize.SizeTo(0, 0);
 		
 		CreateDisplayList(mRootView, &mDisplayListCount, origin.x, origin.y, aRootView, &aRect);
 		
@@ -645,22 +651,41 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		// with successively more and more restrictive clipping.
 		if (mOpaqueViewCount > 0)
 			OptimizeDisplayList(aRect);
-		
+
+		// create blending buffers, if necessary.
+		if (mTranslucentViewCount > 0) {
+			nsresult rv = CreateBlendingBuffers(aRC);
+			NS_ASSERTION((rv == NS_OK), "not enough memory to blend");
+			if (NS_FAILED(rv)) {
+				// fall back by just rendering with transparency.
+				mTranslucentViewCount = 0;
+				for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
+					DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(i));
+					element->mFlags &= ~VIEW_TRANSLUCENT;
+				}
+			}
+
+			// DEBUGGING:  fill in complete offscreen image in green, to see if we've got a blending bug.
+			//mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
+			//mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
+		}
+
 		// draw all views in the display list, from back to front.
 		for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
 			DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(i));
 			if (element->mFlags & VIEW_RENDERED) {
 				// typical case, just rendering a view.
-				// RenderView(element->mView, aRC, aRect, element->mClip, aResult);
+				// RenderView(element->mView, aRC, aRect, element->mBounds, aResult);
 				RenderDisplayListElement(element, aRC);
 			} else {
 				// special case, pushing or popping clipping.
 				if (element->mFlags & PUSH_CLIP) {
 					aRC.PushState();
-					aRC.SetClipRect(element->mClip, nsClipCombine_kIntersect, clipEmpty);
-				} else
-				if (element->mFlags & POP_CLIP) {
-					aRC.PopState(clipEmpty);
+					aRC.SetClipRect(element->mBounds, nsClipCombine_kIntersect, clipEmpty);
+				} else {
+					if (element->mFlags & POP_CLIP) {
+						aRC.PopState(clipEmpty);
+					}
 				}
 			}
 		}
@@ -693,70 +718,67 @@ void nsViewManager2::RenderView(nsIView *aView, nsIRenderingContext &aRC, const 
 
 void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC)
 {
-	PRBool isTranslucent = (element->mFlags & VIEW_TRANSLUCENT) != 0;
+	PRBool isTranslucent = (element->mFlags & VIEW_TRANSLUCENT) != 0, clipEmpty;
 	if (!isTranslucent) {
 		aRC.PushState();
 
-		nscoord x = element->mClip.x, y = element->mClip.y;
+		nscoord x = element->mBounds.x, y = element->mBounds.y;
 		aRC.Translate(x, y);
 
 		nsRect drect(element->mDirty.x - x, element->mDirty.y - y,
 		             element->mDirty.width, element->mDirty.height);
-		PRBool unused;
-		element->mView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, unused);
+
+		element->mView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, clipEmpty);
 		
-		aRC.PopState(unused);
+		aRC.PopState(clipEmpty);
 	}
 
 #if defined(SUPPORT_TRANSLUCENT_VIEWS)	
-	if (mTranslucentViewCount > 0 && (isTranslucent || mTranslucentBounds.Intersects(element->mDirty))) {
+	if (mTranslucentViewCount > 0 && (isTranslucent || mTranslucentArea.Intersects(element->mDirty))) {
 		// transluscency case. if this view is transluscent, have to use the nsIBlender, otherwise, just
 		// render in the offscreen. when we reach the last transluscent view, then we flush the bits
 		// to the onscreen rendering context.
-		if (mTranslucentBounds.width > gBlendWidth || mTranslucentBounds.height > gBlendHeight) {
-			nsresult rv = CreateBlendingBuffers(aRC);
-			NS_ASSERTION((rv == NS_OK), "not enough memory to blend");
-			if (NS_FAILED(rv)) {
-				// fall back by just rendering with transparency.
-				mTranslucentViewCount = 0;
-				RenderDisplayListElement(element, aRC);
-				return;
-			}
-		}
 		
-		// compute the origin of the view, relative to the blending buffer, which has the
-		// same dimensions as mTranslucentBounds. 
-		nscoord viewX = element->mClip.x - mTranslucentBounds.x, viewY = element->mClip.y - mTranslucentBounds.y;
+		// compute the origin of the view, relative to the offscreen buffer, which has the
+		// same dimensions as mTranslucentArea.
+		nscoord viewX = element->mBounds.x - mTranslucentArea.x, viewY = element->mBounds.y - mTranslucentArea.y;
 
 		nsRect damageRect(element->mDirty);
-		damageRect.IntersectRect(damageRect, mTranslucentBounds);
-		damageRect.x -= element->mClip.x, damageRect.y -= element->mClip.y;
+		damageRect.IntersectRect(damageRect, mTranslucentArea);
+		damageRect.x -= element->mBounds.x, damageRect.y -= element->mBounds.y;
 		
 		if (element->mFlags & VIEW_TRANSLUCENT) {
-			nsRect blendRect(element->mDirty.x - mTranslucentBounds.x, element->mDirty.y - mTranslucentBounds.y, 
-							 element->mDirty.width, element->mDirty.height);
+			nsIView* view = element->mView;
+			nsRect blendRect(0, 0, element->mDirty.width, element->mDirty.height);
 			
-			// paint the view twice, first in the red buffer, then the blue, the
+			// paint the view twice, first in the red buffer, then the blue;
 			// the blender will pick up the touched pixels only.
 			mRedCX->SetColor(NS_RGB(255, 0, 0));
 			mRedCX->FillRect(blendRect);
-			PaintView(element->mView, *mRedCX, viewX, viewY, damageRect);
-			
+			PaintView(view, *mRedCX, 0, 0, damageRect);
+			// DEBUGGING ONLY
+			//aRC.CopyOffScreenBits(gRed, 0, 0, element->mDirty,
+            //					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+
 			mBlueCX->SetColor(NS_RGB(0, 0, 255));
 			mBlueCX->FillRect(blendRect);
-			PaintView(element->mView, *mBlueCX, viewX, viewY, damageRect);
-			
+			PaintView(view, *mBlueCX, 0, 0, damageRect);
+			// DEBUGGING ONLY
+			//aRC.CopyOffScreenBits(gBlue, 0, 0, element->mDirty,
+			//					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+			//mOffScreenCX->CopyOffScreenBits(gBlue, 0, 0, nsRect(viewX, viewY, blendRect.width, blendRect.height),
+			//					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+
 			float opacity;
-			element->mView->GetOpacity(opacity);
-			
+			view->GetOpacity(opacity);
+
 			// perform the blend itself.
 			blendRect *= mTwipsToPixels;
-            mBlender->Blend(blendRect.x, blendRect.y,
-                            blendRect.width, blendRect.height,
-                            mRedCX, mOffScreenCX,
-                            blendRect.x, blendRect.y,
-                            opacity, mBlueCX,
-                            NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+			mBlender->Blend(0, 0, blendRect.width, blendRect.height,
+							mRedCX, mOffScreenCX,
+							viewX * mTwipsToPixels, viewY * mTwipsToPixels,
+							opacity, mBlueCX,
+							NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
 			
 			--mTranslucentViewCount;
 		} else {
@@ -765,15 +787,22 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 		
 		// flush the bits back to screen.
 		if (mTranslucentViewCount == 0) {
-            aRC.CopyOffScreenBits(gOffScreen, 0, 0, mTranslucentBounds,
-            					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+			// DEBUG: is this getting through?
+			// mOffScreenCX->SetColor(NS_RGB(0, 0, 0));
+			// mOffScreenCX->DrawRect(nsRect(0, 0, mTranslucentArea.width, mTranslucentArea.height));
+			aRC.CopyOffScreenBits(gOffScreen, 0, 0, mTranslucentArea,
+								  NS_COPYBITS_XFORM_DEST_VALUES |
+								  NS_COPYBITS_TO_BACK_BUFFER);
+			// DEBUG: what rectangle are we blitting?
+			// aRC.SetColor(NS_RGB(0, 0, 0));
+			// aRC.DrawRect(mTranslucentArea);
 		}
 	}
 #endif
 }
 
 void nsViewManager2::PaintView(nsIView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
-							  const nsRect &aDamageRect)
+							   const nsRect &aDamageRect)
 {
 	aRC.PushState();
 	aRC.Translate(x, y);
@@ -790,71 +819,113 @@ inline PRInt32 nextPowerOf2(PRInt32 value)
 	return result;
 }
 
+static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSurface surface,
+									const nsSize& size, nsIRenderingContext* *aResult)
+{
+	nsresult rv;
+	nsIRenderingContext* context;
+	rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
+											NS_GET_IID(nsIRenderingContext),
+											(void **)&context);
+	if (NS_FAILED(rv))
+		return rv;
+	rv = context->Init(deviceContext, surface);
+	if (NS_FAILED(rv))
+		return rv;
+
+	// always initialize clipping, linux won't draw images otherwise.
+	PRBool clipEmpty;
+	nsRect clip(0, 0, size.width, size.height);
+	context->SetClipRect(clip, nsClipCombine_kReplace, clipEmpty);
+	
+	*aResult = context;
+	return NS_OK;
+}
+
 nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
 {
 	nsresult rv;
-	
-	// compute the new bounds of the blending buffers. should probably round the
-	// resulting
-	nsRect blenderBounds(0, 0, mTranslucentBounds.width, mTranslucentBounds.height);
-	blenderBounds.ScaleRoundOut(mTwipsToPixels);
-	
-	blenderBounds.width = nextPowerOf2(blenderBounds.width);
-	blenderBounds.height = nextPowerOf2(blenderBounds.height);
-	
-	NS_IF_RELEASE(mOffScreenCX);
-	NS_IF_RELEASE(mRedCX);
-	NS_IF_RELEASE(mBlueCX);
 
-	if (nsnull != gOffScreen) {
-		aRC.DestroyDrawingSurface(gOffScreen);
-		gOffScreen = nsnull;
-	}
-	rv = aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
-	if (NS_FAILED(rv))
-		return rv;
-
-	if (nsnull != gRed) {
-		aRC.DestroyDrawingSurface(gRed);
-		gRed = nsnull;
-	}
-	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
-	if (NS_FAILED(rv))
-		return rv;
-
-	if (nsnull != gBlue) {
-		aRC.DestroyDrawingSurface(gBlue);
-		gBlue = nsnull;
-	}
-	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
-	if (NS_FAILED(rv))
-		return rv;
-
-	// now create the blending offscreen rendering contexts.
-	rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mOffScreenCX);
-	if (NS_FAILED(rv))
-		return rv;
-	mOffScreenCX->Init(mContext, gOffScreen);
-
-	rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mRedCX);
-	if (NS_FAILED(rv))
-		return rv;
-	mRedCX->Init(mContext, gRed);
-
-    rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mBlueCX);
-	if (NS_FAILED(rv))
-		return rv;
-	mBlueCX->Init(mContext, gBlue);
-
+	// create a blender, if none exists already.
 	if (nsnull == mBlender) {
 		rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, NS_GET_IID(nsIBlender), (void **)&mBlender);
 		if (NS_FAILED(rv))
 			return rv;
-		mBlender->Init(mContext);
+		rv = mBlender->Init(mContext);
+		if (NS_FAILED(rv))
+			return rv;
 	}
 
-	gBlendWidth = (PRInt32)(mTranslucentBounds.width * mPixelsToTwips);
-	gBlendHeight = (PRInt32)(mTranslucentBounds.height * mPixelsToTwips);
+	// ensure that the global drawing surfaces are large enough.
+	if (mTranslucentArea.width > gOffScreenSize.width || mTranslucentArea.height > gOffScreenSize.height) {
+    	nsRect offscreenBounds(0, 0, mTranslucentArea.width, mTranslucentArea.height);
+    	offscreenBounds.ScaleRoundOut(mTwipsToPixels);
+    	offscreenBounds.width = nextPowerOf2(offscreenBounds.width);
+    	offscreenBounds.height = nextPowerOf2(offscreenBounds.height);
+
+    	NS_IF_RELEASE(mOffScreenCX);
+    	if (nsnull != gOffScreen) {
+    		aRC.DestroyDrawingSurface(gOffScreen);
+    		gOffScreen = nsnull;
+    	}
+
+    	rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
+    	if (NS_FAILED(rv))
+    		return rv;
+
+		offscreenBounds.ScaleRoundOut(mPixelsToTwips);
+        gOffScreenSize.width = offscreenBounds.width;
+        gOffScreenSize.height = offscreenBounds.height;
+    }
+
+	// ensure that the global blending drawing surfaces are large enough.
+	if (mTranslucentSize.width > gBlendSize.width || mTranslucentSize.height > gBlendSize.height) {
+    	nsRect blenderBounds(0, 0, mTranslucentSize.width, mTranslucentSize.height);
+    	blenderBounds.ScaleRoundOut(mTwipsToPixels);
+    	blenderBounds.width = nextPowerOf2(blenderBounds.width);
+    	blenderBounds.height = nextPowerOf2(blenderBounds.height);
+    	
+    	NS_IF_RELEASE(mRedCX);
+    	NS_IF_RELEASE(mBlueCX);
+
+    	if (nsnull != gRed) {
+    		aRC.DestroyDrawingSurface(gRed);
+    		gRed = nsnull;
+    	}
+    	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
+    	if (NS_FAILED(rv))
+    		return rv;
+
+    	if (nsnull != gBlue) {
+    		aRC.DestroyDrawingSurface(gBlue);
+    		gBlue = nsnull;
+    	}
+    	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
+    	if (NS_FAILED(rv))
+    		return rv;
+
+		blenderBounds.ScaleRoundOut(mPixelsToTwips);
+        gBlendSize.width = blenderBounds.width;
+        gBlendSize.height = blenderBounds.height;
+    }
+
+	// recreate local offscreen & blending contexts, if necessary.
+	if (mOffScreenCX == nsnull) {
+		rv = NewOffscreenContext(mContext, gOffScreen, gOffScreenSize, &mOffScreenCX);
+    	if (NS_FAILED(rv))
+    		return rv;
+	}
+
+	if (mRedCX == nsnull) {
+		rv = NewOffscreenContext(mContext, gRed, gBlendSize, &mRedCX);
+    	if (NS_FAILED(rv))
+    		return rv;
+	}
+	if (mBlueCX == nsnull) {
+		rv = NewOffscreenContext(mContext, gBlue, gBlendSize, &mBlueCX);
+    	if (NS_FAILED(rv))
+    		return rv;
+	}
 
 	return NS_OK;
 }
@@ -922,16 +993,16 @@ void nsViewManager2::ProcessPendingUpdates(nsIView* aView)
 
 NS_IMETHODIMP nsViewManager2::Composite()
 {
-  if (mUpdateCnt > 0)
-  {
-    if (nsnull != mRootWindow)
-      mRootWindow->Update();
+	if (mUpdateCnt > 0)
+		{
+			if (nsnull != mRootWindow)
+				mRootWindow->Update();
 
-    mUpdateCnt = 0;
-    PauseTimer();
-  }
+			mUpdateCnt = 0;
+			PauseTimer();
+		}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
@@ -1055,359 +1126,359 @@ void nsViewManager2::UpdateViews(nsIView *aView, PRUint32 aUpdateFlags)
 
 NS_IMETHODIMP nsViewManager2::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aStatus)
 {
-  *aStatus = nsEventStatus_eIgnore;
+	*aStatus = nsEventStatus_eIgnore;
 
-  switch(aEvent->message)
-  {
-    case NS_SIZE:
-    {
-      nsIView*      view = nsView::GetViewFor(aEvent->widget);
+	switch(aEvent->message)
+		{
+		case NS_SIZE:
+			{
+				nsIView*      view = nsView::GetViewFor(aEvent->widget);
 
-      if (nsnull != view)
-      {
-        nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
-        nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
-        width = ((nsSizeEvent*)aEvent)->mWinWidth;
-        height = ((nsSizeEvent*)aEvent)->mWinHeight;
+				if (nsnull != view)
+					{
+						nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
+						nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
+						width = ((nsSizeEvent*)aEvent)->mWinWidth;
+						height = ((nsSizeEvent*)aEvent)->mWinHeight;
 
-        // The root view may not be set if this is the resize associated with
-        // window creation
+						// The root view may not be set if this is the resize associated with
+						// window creation
 
-        if (view == mRootView)
-        {
-          // Convert from pixels to twips
-          float p2t;
-          mContext->GetDevUnitsToAppUnits(p2t);
+						if (view == mRootView)
+							{
+								// Convert from pixels to twips
+								float p2t;
+								mContext->GetDevUnitsToAppUnits(p2t);
 
-//printf("resize: (pix) %d, %d\n", width, height);
-          SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
-                              NSIntPixelsToTwips(height, p2t));
-          *aStatus = nsEventStatus_eConsumeNoDefault;
-        }
-      }
+								//printf("resize: (pix) %d, %d\n", width, height);
+								SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
+													NSIntPixelsToTwips(height, p2t));
+								*aStatus = nsEventStatus_eConsumeNoDefault;
+							}
+					}
 
-      break;
-    }
+				break;
+			}
 
-    case NS_PAINT:
-    {
-      nsIView *view = nsView::GetViewFor(aEvent->widget);
+		case NS_PAINT:
+			{
+				nsIView *view = nsView::GetViewFor(aEvent->widget);
 
-      if (nsnull != view)
-      {
-        // The rect is in device units, and it's in the coordinate space of its
-        // associated window.
-        nsRect  damrect = *((nsPaintEvent*)aEvent)->rect;
+				if (nsnull != view)
+					{
+						// The rect is in device units, and it's in the coordinate space of its
+						// associated window.
+						nsRect  damrect = *((nsPaintEvent*)aEvent)->rect;
 
-        float   p2t;
-        mContext->GetDevUnitsToAppUnits(p2t);
-        damrect.ScaleRoundOut(p2t);
+						float   p2t;
+						mContext->GetDevUnitsToAppUnits(p2t);
+						damrect.ScaleRoundOut(p2t);
 
-        // Do an immediate refresh
-        if (nsnull != mContext)
-        {
-          nsRect  viewrect;
-          float   varea;
+						// Do an immediate refresh
+						if (nsnull != mContext)
+							{
+								nsRect  viewrect;
+								float   varea;
 
-          // Check that there's actually something to paint
-          view->GetBounds(viewrect);
-          viewrect.x = viewrect.y = 0;
-          varea = (float)viewrect.width * viewrect.height;
+								// Check that there's actually something to paint
+								view->GetBounds(viewrect);
+								viewrect.x = viewrect.y = 0;
+								varea = (float)viewrect.width * viewrect.height;
 
-          if (varea > 0.0000001f)
-          {
-            // nsRect     arearect;
-            PRUint32   updateFlags = 0;
+								if (varea > 0.0000001f)
+									{
+										// nsRect     arearect;
+										PRUint32   updateFlags = 0;
 
-            // Auto double buffering logic.
-            // See if the paint region is greater than .25 the area of our view.
-            // If so, enable double buffered painting.
+										// Auto double buffering logic.
+										// See if the paint region is greater than .25 the area of our view.
+										// If so, enable double buffered painting.
              
-            // XXX These two lines cause a lot of flicker for drag-over re-drawing - rods
-            //arearect.IntersectRect(damrect, viewrect);
+										// XXX These two lines cause a lot of flicker for drag-over re-drawing - rods
+										//arearect.IntersectRect(damrect, viewrect);
   
-            //if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
-            // XXX rods
-              updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+										//if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
+										// XXX rods
+										updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
-//printf("refreshing: view: %x, %d, %d, %d, %d\n", view, trect.x, trect.y, trect.width, trect.height);
-            // Refresh the view
-            Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
-          }
-        }
+										//printf("refreshing: view: %x, %d, %d, %d, %d\n", view, trect.x, trect.y, trect.width, trect.height);
+										// Refresh the view
+										Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
+									}
+							}
 
-        *aStatus = nsEventStatus_eConsumeNoDefault;
-      }
+						*aStatus = nsEventStatus_eConsumeNoDefault;
+					}
 
-      break;
-    }
+				break;
+			}
 
-    case NS_DESTROY:
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-      break;
+		case NS_DESTROY:
+			*aStatus = nsEventStatus_eConsumeNoDefault;
+			break;
 
-    default:
-    {
-      nsIView* baseView;
-      nsIView* view;
-      nsPoint offset;
-      nsIScrollbar* sb;
+		default:
+			{
+				nsIView* baseView;
+				nsIView* view;
+				nsPoint offset;
+				nsIScrollbar* sb;
 
-      //Find the view whose coordinates system we're in.
-      baseView = nsView::GetViewFor(aEvent->widget);
+				//Find the view whose coordinates system we're in.
+				baseView = nsView::GetViewFor(aEvent->widget);
         
-      //Find the view to which we're initially going to send the event 
-      //for hittesting.
-      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
-        view = mMouseGrabber;
-      }
-      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
-        view = mKeyGrabber;
-      }
-      else if (NS_OK == aEvent->widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void**)&sb)) {
-        view = baseView;
-        NS_RELEASE(sb);
-      }
-      else {
-        view = mRootView;
-      }
+				//Find the view to which we're initially going to send the event 
+				//for hittesting.
+				if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
+					view = mMouseGrabber;
+				}
+				else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
+					view = mKeyGrabber;
+				}
+				else if (NS_OK == aEvent->widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void**)&sb)) {
+					view = baseView;
+					NS_RELEASE(sb);
+				}
+				else {
+					view = mRootView;
+				}
 
-      if (nsnull != view) {
-        //Calculate the proper offset for the view we're going to
-        offset.x = offset.y = 0;
-        if (baseView != view) {
-          //Get offset from root of baseView
-          nsIView *parent;
-          nsRect bounds;
+				if (nsnull != view) {
+					//Calculate the proper offset for the view we're going to
+					offset.x = offset.y = 0;
+					if (baseView != view) {
+						//Get offset from root of baseView
+						nsIView *parent;
+						nsRect bounds;
 
-          parent = baseView;
-          while (nsnull != parent) {
-            parent->GetBounds(bounds);
-            offset.x += bounds.x;
-            offset.y += bounds.y;
-            parent->GetParent(parent);
-          }
+						parent = baseView;
+						while (nsnull != parent) {
+							parent->GetBounds(bounds);
+							offset.x += bounds.x;
+							offset.y += bounds.y;
+							parent->GetParent(parent);
+						}
 
-          //Subtract back offset from root of view
-          parent = view;
-          while (nsnull != parent) {
-            parent->GetBounds(bounds);
-            offset.x -= bounds.x;
-            offset.y -= bounds.y;
-            parent->GetParent(parent);
-          }
+						//Subtract back offset from root of view
+						parent = view;
+						while (nsnull != parent) {
+							parent->GetBounds(bounds);
+							offset.x -= bounds.x;
+							offset.y -= bounds.y;
+							parent->GetParent(parent);
+						}
       
-        }
+					}
 
-        //Dispatch the event
-        float p2t, t2p;
+					//Dispatch the event
+					float p2t, t2p;
 
-        mContext->GetDevUnitsToAppUnits(p2t);
-        mContext->GetAppUnitsToDevUnits(t2p);
+					mContext->GetDevUnitsToAppUnits(p2t);
+					mContext->GetAppUnitsToDevUnits(t2p);
 
-        //Before we start mucking with coords, make sure we know our baseline
-        aEvent->refPoint.x = aEvent->point.x;
-        aEvent->refPoint.y = aEvent->point.y;
+					//Before we start mucking with coords, make sure we know our baseline
+					aEvent->refPoint.x = aEvent->point.x;
+					aEvent->refPoint.y = aEvent->point.y;
 
-        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
-        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
+					aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
+					aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
-        aEvent->point.x += offset.x;
-        aEvent->point.y += offset.y;
+					aEvent->point.x += offset.x;
+					aEvent->point.y += offset.y;
  
-        PRBool handled = PR_FALSE;
-        view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
-                                  NS_VIEW_FLAG_CHECK_PARENT |
-                                  NS_VIEW_FLAG_CHECK_SIBLINGS,
-                          aStatus,
-                          handled);
+					PRBool handled = PR_FALSE;
+					view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
+									  NS_VIEW_FLAG_CHECK_PARENT |
+									  NS_VIEW_FLAG_CHECK_SIBLINGS,
+									  aStatus,
+									  handled);
 
-        aEvent->point.x -= offset.x;
-        aEvent->point.y -= offset.y;
+					aEvent->point.x -= offset.x;
+					aEvent->point.y -= offset.y;
 
-        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
-        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
+					aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
+					aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 
-		//
-		// if the event is an nsTextEvent, we need to map the reply back into platform coordinates
-		//
-		if (aEvent->message==NS_TEXT_EVENT) {
-			((nsTextEvent*)aEvent)->theReply.mCursorPosition.x=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.x, t2p);
-			((nsTextEvent*)aEvent)->theReply.mCursorPosition.y=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.y, t2p);
-			((nsTextEvent*)aEvent)->theReply.mCursorPosition.width=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.width, t2p);
-			((nsTextEvent*)aEvent)->theReply.mCursorPosition.height=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.height, t2p);
-		}
-		if((aEvent->message==NS_COMPOSITION_START) ||
-		   (aEvent->message==NS_COMPOSITION_QUERY)) {
-			((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x,t2p);
-	        ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y,t2p);
-			((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width,t2p);
-	        ((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height,t2p);
-		}
-	  }
+					//
+					// if the event is an nsTextEvent, we need to map the reply back into platform coordinates
+					//
+					if (aEvent->message==NS_TEXT_EVENT) {
+						((nsTextEvent*)aEvent)->theReply.mCursorPosition.x=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.x, t2p);
+						((nsTextEvent*)aEvent)->theReply.mCursorPosition.y=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.y, t2p);
+						((nsTextEvent*)aEvent)->theReply.mCursorPosition.width=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.width, t2p);
+						((nsTextEvent*)aEvent)->theReply.mCursorPosition.height=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.height, t2p);
+					}
+					if((aEvent->message==NS_COMPOSITION_START) ||
+					   (aEvent->message==NS_COMPOSITION_QUERY)) {
+						((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.x,t2p);
+						((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.y,t2p);
+						((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.width,t2p);
+						((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height=NSTwipsToIntPixels(((nsCompositionEvent*)aEvent)->theReply.mCursorPosition.height,t2p);
+					}
+				}
     
-      break;
-    }
-  }
+				break;
+			}
+		}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
-  mMouseGrabber = aView;
-  aResult = PR_TRUE;
-  return NS_OK;
+	mMouseGrabber = aView;
+	aResult = PR_TRUE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GrabKeyEvents(nsIView *aView, PRBool &aResult)
 {
-  mKeyGrabber = aView;
-  aResult = PR_TRUE;
-  return NS_OK;
+	mKeyGrabber = aView;
+	aResult = PR_TRUE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GetMouseEventGrabber(nsIView *&aView)
 {
-  aView = mMouseGrabber;
-  return NS_OK;
+	aView = mMouseGrabber;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GetKeyEventGrabber(nsIView *&aView)
 {
-  aView = mKeyGrabber;
-  return NS_OK;
+	aView = mKeyGrabber;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
-                                           PRBool above)
+										  PRBool above)
 {
-  NS_PRECONDITION(nsnull != parent, "null ptr");
-  NS_PRECONDITION(nsnull != child, "null ptr");
+	NS_PRECONDITION(nsnull != parent, "null ptr");
+	NS_PRECONDITION(nsnull != child, "null ptr");
 
-  if ((nsnull != parent) && (nsnull != child))
-  {
-    nsIView *kid;
-    nsIView *prev = nsnull;
+	if ((nsnull != parent) && (nsnull != child))
+		{
+			nsIView *kid;
+			nsIView *prev = nsnull;
 
-    //verify that the sibling exists...
+			//verify that the sibling exists...
 
-    parent->GetChild(0, kid);
+			parent->GetChild(0, kid);
 
-    while (nsnull != kid)
-    {
-      if (kid == sibling)
-        break;
+			while (nsnull != kid)
+				{
+					if (kid == sibling)
+						break;
 
-      //get the next sibling view
+					//get the next sibling view
 
-      prev = kid;
-      kid->GetNextSibling(kid);
-    }
+					prev = kid;
+					kid->GetNextSibling(kid);
+				}
 
-    if (nsnull != kid)
-    {
-      //it's there, so do the insertion
+			if (nsnull != kid)
+				{
+					//it's there, so do the insertion
 
-      if (PR_TRUE == above)
-        parent->InsertChild(child, prev);
-      else
-        parent->InsertChild(child, sibling);
-    }
+					if (PR_TRUE == above)
+						parent->InsertChild(child, prev);
+					else
+						parent->InsertChild(child, sibling);
+				}
 
-    UpdateTransCnt(nsnull, child);
+			UpdateTransCnt(nsnull, child);
 
-    // if the parent view is marked as "floating", make the newly added view float as well.
-    PRBool isFloating = PR_FALSE;
-    parent->GetFloating(isFloating);
-    if (isFloating)
-    	child->SetFloating(isFloating);
+			// if the parent view is marked as "floating", make the newly added view float as well.
+			PRBool isFloating = PR_FALSE;
+			parent->GetFloating(isFloating);
+			if (isFloating)
+				child->SetFloating(isFloating);
 
-    //and mark this area as dirty if the view is visible...
+			//and mark this area as dirty if the view is visible...
 
-    nsViewVisibility  visibility;
-    child->GetVisibility(visibility);
+			nsViewVisibility  visibility;
+			child->GetVisibility(visibility);
 
-    if (nsViewVisibility_kHide != visibility)
-      UpdateView(child, NS_VMREFRESH_NO_SYNC);
-  }
-  return NS_OK;
+			if (nsViewVisibility_kHide != visibility)
+				UpdateView(child, NS_VMREFRESH_NO_SYNC);
+		}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::InsertChild(nsIView *parent, nsIView *child, PRInt32 zindex)
 {
-  NS_PRECONDITION(nsnull != parent, "null ptr");
-  NS_PRECONDITION(nsnull != child, "null ptr");
+	NS_PRECONDITION(nsnull != parent, "null ptr");
+	NS_PRECONDITION(nsnull != child, "null ptr");
 
-  if ((nsnull != parent) && (nsnull != child))
-  {
-    nsIView *kid;
-    nsIView *prev = nsnull;
+	if ((nsnull != parent) && (nsnull != child))
+		{
+			nsIView *kid;
+			nsIView *prev = nsnull;
 
-    //find the right insertion point...
+			//find the right insertion point...
 
-    parent->GetChild(0, kid);
+			parent->GetChild(0, kid);
 
-    while (nsnull != kid)
-    {
-      PRInt32 idx;
+			while (nsnull != kid)
+				{
+					PRInt32 idx;
 
-      kid->GetZIndex(idx);
+					kid->GetZIndex(idx);
 
-      if (zindex >= idx)
-        break;
+					if (zindex >= idx)
+						break;
 
-      //get the next sibling view
+					//get the next sibling view
 
-      prev = kid;
-      kid->GetNextSibling(kid);
-    }
+					prev = kid;
+					kid->GetNextSibling(kid);
+				}
 
-    //in case this hasn't been set yet... maybe we should not do this? MMP
+			//in case this hasn't been set yet... maybe we should not do this? MMP
 
-    child->SetZIndex(zindex);
-    parent->InsertChild(child, prev);
+			child->SetZIndex(zindex);
+			parent->InsertChild(child, prev);
 
-    UpdateTransCnt(nsnull, child);
+			UpdateTransCnt(nsnull, child);
 
-    // if the parent view is marked as "floating", make the newly added view float as well.
-    PRBool isFloating = PR_FALSE;
-    parent->GetFloating(isFloating);
-    if (isFloating)
-    	child->SetFloating(isFloating);
+			// if the parent view is marked as "floating", make the newly added view float as well.
+			PRBool isFloating = PR_FALSE;
+			parent->GetFloating(isFloating);
+			if (isFloating)
+				child->SetFloating(isFloating);
 
-    //and mark this area as dirty if the view is visible...
-    nsViewVisibility  visibility;
-    child->GetVisibility(visibility);
+			//and mark this area as dirty if the view is visible...
+			nsViewVisibility  visibility;
+			child->GetVisibility(visibility);
 
-    if (nsViewVisibility_kHide != visibility)
-      UpdateView(child, NS_VMREFRESH_NO_SYNC);
-  }
-  return NS_OK;
+			if (nsViewVisibility_kHide != visibility)
+				UpdateView(child, NS_VMREFRESH_NO_SYNC);
+		}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::RemoveChild(nsIView *parent, nsIView *child)
 {
-  NS_PRECONDITION(nsnull != parent, "null ptr");
-  NS_PRECONDITION(nsnull != child, "null ptr");
+	NS_PRECONDITION(nsnull != parent, "null ptr");
+	NS_PRECONDITION(nsnull != child, "null ptr");
 
-  if ((nsnull != parent) && (nsnull != child))
-  {
-    UpdateTransCnt(child, nsnull);
-    UpdateView(child, NS_VMREFRESH_NO_SYNC);
-    parent->RemoveChild(child);
-  }
+	if ((nsnull != parent) && (nsnull != child))
+		{
+			UpdateTransCnt(child, nsnull);
+			UpdateView(child, NS_VMREFRESH_NO_SYNC);
+			parent->RemoveChild(child);
+		}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
 {
-  nscoord x, y;
+	nscoord x, y;
 
-  aView->GetPosition(&x, &y);
-  MoveViewTo(aView, aX + x, aY + y);
-  return NS_OK;
+	aView->GetPosition(&x, &y);
+	MoveViewTo(aView, aX + x, aY + y);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
@@ -1471,36 +1542,36 @@ NS_IMETHODIMP nsViewManager2::ResizeView(nsIView *aView, nscoord width, nscoord 
 
 NS_IMETHODIMP nsViewManager2::SetViewClip(nsIView *aView, nsRect *aRect)
 {
-  NS_ASSERTION(!(nsnull == aView), "no view");
-  NS_ASSERTION(!(nsnull == aRect), "no clip");
+	NS_ASSERTION(!(nsnull == aView), "no view");
+	NS_ASSERTION(!(nsnull == aRect), "no clip");
 
-  aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
+	aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
 
-  UpdateView(aView, *aRect, NS_VMREFRESH_NO_SYNC);
+	UpdateView(aView, *aRect, NS_VMREFRESH_NO_SYNC);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
-  nsViewVisibility  oldVisible;
-  aView->GetVisibility(oldVisible);
-  if (aVisible != oldVisible) {
-    aView->SetVisibility(aVisible);
-    if (nsViewVisibility_kHide == aVisible) {
-      nsIView* parentView = nsnull;
-      aView->GetParent(parentView);
-      if (parentView) {
-        nsRect  bounds;
-        aView->GetBounds(bounds);
-        UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
-      }
-    }
-    else {
-      UpdateView(aView, NS_VMREFRESH_NO_SYNC);
-    }
-  }
-  return NS_OK;
+	nsViewVisibility  oldVisible;
+	aView->GetVisibility(oldVisible);
+	if (aVisible != oldVisible) {
+		aView->SetVisibility(aVisible);
+		if (nsViewVisibility_kHide == aVisible) {
+			nsIView* parentView = nsnull;
+			aView->GetParent(parentView);
+			if (parentView) {
+				nsRect  bounds;
+				aView->GetBounds(bounds);
+				UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
+			}
+		}
+		else {
+			UpdateView(aView, NS_VMREFRESH_NO_SYNC);
+		}
+	}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
@@ -1535,7 +1606,7 @@ NS_IMETHODIMP nsViewManager2::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
 		}
 	}
 
-  return rv;
+	return rv;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex)
@@ -1545,120 +1616,120 @@ NS_IMETHODIMP nsViewManager2::SetViewAutoZIndex(nsIView *aView, PRBool aAutoZInd
 
 NS_IMETHODIMP nsViewManager2::MoveViewAbove(nsIView *aView, nsIView *aOther)
 {
-  nsresult  rv;
+	nsresult  rv;
 
-  NS_ASSERTION(!(nsnull == aView), "no view");
-  NS_ASSERTION(!(nsnull == aOther), "no view");
+	NS_ASSERTION(!(nsnull == aView), "no view");
+	NS_ASSERTION(!(nsnull == aOther), "no view");
 
-  nsIView *nextview;
+	nsIView *nextview;
 
-  aView->GetNextSibling(nextview);
+	aView->GetNextSibling(nextview);
  
-  if (nextview != aOther)
-  {
-    nsIView *parent;
+	if (nextview != aOther)
+		{
+			nsIView *parent;
 
-    aView->GetParent(parent);
+			aView->GetParent(parent);
 
-    if (nsnull != parent)
-    {
-      //we don't just call the view manager's RemoveChild()
-      //so that we can avoid two trips trough the UpdateView()
-      //code (one for removal, one for insertion). MMP
+			if (nsnull != parent)
+				{
+					//we don't just call the view manager's RemoveChild()
+					//so that we can avoid two trips trough the UpdateView()
+					//code (one for removal, one for insertion). MMP
 
-      parent->RemoveChild(aView);
-      UpdateTransCnt(aView, nsnull);
-      rv = InsertChild(parent, aView, aOther, PR_TRUE);
-    }
-    else
-      rv = NS_OK;
-  }
-  else
-    rv = NS_OK;
+					parent->RemoveChild(aView);
+					UpdateTransCnt(aView, nsnull);
+					rv = InsertChild(parent, aView, aOther, PR_TRUE);
+				}
+			else
+				rv = NS_OK;
+		}
+	else
+		rv = NS_OK;
 
-  return rv;
+	return rv;
 }
 
 NS_IMETHODIMP nsViewManager2::MoveViewBelow(nsIView *aView, nsIView *aOther)
 {
-  nsresult  rv;
+	nsresult  rv;
 
-  NS_ASSERTION(!(nsnull == aView), "no view");
-  NS_ASSERTION(!(nsnull == aOther), "no view");
+	NS_ASSERTION(!(nsnull == aView), "no view");
+	NS_ASSERTION(!(nsnull == aOther), "no view");
 
-  nsIView *nextview;
+	nsIView *nextview;
 
-  aOther->GetNextSibling(nextview);
+	aOther->GetNextSibling(nextview);
  
-  if (nextview != aView)
-  {
-    nsIView *parent;
+	if (nextview != aView)
+		{
+			nsIView *parent;
 
-    aView->GetParent(parent);
+			aView->GetParent(parent);
 
-    if (nsnull != parent)
-    {
-      //we don't just call the view manager's RemoveChild()
-      //so that we can avoid two trips trough the UpdateView()
-      //code (one for removal, one for insertion). MMP
+			if (nsnull != parent)
+				{
+					//we don't just call the view manager's RemoveChild()
+					//so that we can avoid two trips trough the UpdateView()
+					//code (one for removal, one for insertion). MMP
 
-      parent->RemoveChild(aView);
-      UpdateTransCnt(aView, nsnull);
-      rv = InsertChild(parent, aView, aOther, PR_FALSE);
-    }
-    else
-      rv = NS_OK;
-  }
-  else
-    rv = NS_OK;
+					parent->RemoveChild(aView);
+					UpdateTransCnt(aView, nsnull);
+					rv = InsertChild(parent, aView, aOther, PR_FALSE);
+				}
+			else
+				rv = NS_OK;
+		}
+	else
+		rv = NS_OK;
 
-  return rv;
+	return rv;
 }
 
 NS_IMETHODIMP nsViewManager2::IsViewShown(nsIView *aView, PRBool &aResult)
 {
-  aResult = PR_TRUE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+	aResult = PR_TRUE;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsViewManager2::GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult)
 {
-  aResult = PR_TRUE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+	aResult = PR_TRUE;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
-  PRBool trans;
+	PRBool trans;
 
-  aView->HasTransparency(trans);
+	aView->HasTransparency(trans);
 
-  if (trans != aTransparent)
-  {
-    UpdateTransCnt(aView, nsnull);
-    aView->SetContentTransparency(aTransparent);
-    UpdateTransCnt(nsnull, aView);
-    UpdateView(aView, NS_VMREFRESH_NO_SYNC);
-  }
+	if (trans != aTransparent)
+		{
+			UpdateTransCnt(aView, nsnull);
+			aView->SetContentTransparency(aTransparent);
+			UpdateTransCnt(nsnull, aView);
+			UpdateView(aView, NS_VMREFRESH_NO_SYNC);
+		}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewOpacity(nsIView *aView, float aOpacity)
 {
-  float opacity;
+	float opacity;
 
-  aView->GetOpacity(opacity);
+	aView->GetOpacity(opacity);
 
-  if (opacity != aOpacity)
-  {
-    UpdateTransCnt(aView, nsnull);
-    aView->SetOpacity(aOpacity);
-    UpdateTransCnt(nsnull, aView);
-    UpdateView(aView, NS_VMREFRESH_NO_SYNC);
-  }
+	if (opacity != aOpacity)
+		{
+			UpdateTransCnt(aView, nsnull);
+			aView->SetOpacity(aOpacity);
+			UpdateTransCnt(nsnull, aView);
+			UpdateView(aView, NS_VMREFRESH_NO_SYNC);
+		}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetViewObserver(nsIViewObserver *aObserver)
@@ -1684,119 +1755,115 @@ NS_IMETHODIMP nsViewManager2::GetDeviceContext(nsIDeviceContext *&aContext)
 	return NS_OK;
 }
 
-#ifndef max
-#define max(a, b) ((a) < (b) ? (b) : (a))
-#endif
-
 nsDrawingSurface nsViewManager2::GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds)
 {
 	if ((nsnull == mDrawingSurface)
 		|| (mDSBounds.width < aBounds.width)
 		|| (mDSBounds.height < aBounds.height))
-	{
-		nsRect newBounds;
-		newBounds.MoveTo(aBounds.x, aBounds.y);
-		newBounds.width = max(aBounds.width, mDSBounds.width);
-		newBounds.height = max(aBounds.height, mDSBounds.height);
+		{
+			nsRect newBounds;
+			newBounds.MoveTo(aBounds.x, aBounds.y);
+			newBounds.width = max(aBounds.width, mDSBounds.width);
+			newBounds.height = max(aBounds.height, mDSBounds.height);
 
-		if (mDrawingSurface) {
-			//destroy existing DS
-			aContext.DestroyDrawingSurface(mDrawingSurface);
-			mDrawingSurface = nsnull;
-		}
+			if (mDrawingSurface) {
+				//destroy existing DS
+				aContext.DestroyDrawingSurface(mDrawingSurface);
+				mDrawingSurface = nsnull;
+			}
 
-		nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
+			nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
 
-		if (NS_SUCCEEDED(rv)) {
-			mDSBounds = newBounds;
-			aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
+			if (NS_SUCCEEDED(rv)) {
+				mDSBounds = newBounds;
+				aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
+			} else {
+				mDSBounds.SetRect(0,0,0,0);
+				mDrawingSurface = nsnull;
+			}
 		} else {
-			mDSBounds.SetRect(0,0,0,0);
-			mDrawingSurface = nsnull;
+			aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
+
+			float p2t;
+			mContext->GetDevUnitsToAppUnits(p2t);
+			nsRect bounds = aBounds;
+			bounds *= p2t;
+
+			PRBool clipEmpty;
+			aContext.SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
+
+			nscolor col = NS_RGB(255,255,255);
+			aContext.SetColor(col);
+			//aContext.FillRect(bounds);
 		}
-	} else {
-		aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
-
-		float p2t;
-		mContext->GetDevUnitsToAppUnits(p2t);
-		nsRect bounds = aBounds;
-		bounds *= p2t;
-
-		PRBool clipEmpty;
-		aContext.SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
-
-		nscolor col = NS_RGB(255,255,255);
-		aContext.SetColor(col);
-		//aContext.FillRect(bounds);
-	}
 
 	return mDrawingSurface;
 }
 
 NS_IMETHODIMP nsViewManager2::ShowQuality(PRBool aShow)
 {
-  if (nsnull != mRootScrollable)
-    mRootScrollable->ShowQuality(aShow);
+	if (nsnull != mRootScrollable)
+		mRootScrollable->ShowQuality(aShow);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GetShowQuality(PRBool &aResult)
 {
-  if (nsnull != mRootScrollable)
-    mRootScrollable->GetShowQuality(aResult);
+	if (nsnull != mRootScrollable)
+		mRootScrollable->GetShowQuality(aResult);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::SetQuality(nsContentQuality aQuality)
 {
-  if (nsnull != mRootScrollable)
-    mRootScrollable->SetQuality(aQuality);
+	if (nsnull != mRootScrollable)
+		mRootScrollable->SetQuality(aQuality);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 nsIRenderingContext * nsViewManager2::CreateRenderingContext(nsIView &aView)
 {
-  nsIView             *par = &aView;
-  nsCOMPtr<nsIWidget> win;
-  nsIRenderingContext *cx = nsnull;
-  nscoord             x, y, ax = 0, ay = 0;
+	nsIView             *par = &aView;
+	nsCOMPtr<nsIWidget> win;
+	nsIRenderingContext *cx = nsnull;
+	nscoord             x, y, ax = 0, ay = 0;
 
-  do
-  {
-    par->GetWidget(*getter_AddRefs(win));
-    if (nsnull != win)
-      break;
+	do
+		{
+			par->GetWidget(*getter_AddRefs(win));
+			if (nsnull != win)
+				break;
 
-    //get absolute coordinates of view, but don't
-    //add in view pos since the first thing you ever
-    //need to do when painting a view is to translate
-    //the rendering context by the views pos and other parts
-    //of the code do this for us...
+			//get absolute coordinates of view, but don't
+			//add in view pos since the first thing you ever
+			//need to do when painting a view is to translate
+			//the rendering context by the views pos and other parts
+			//of the code do this for us...
 
-    if (par != &aView)
-    {
-      par->GetPosition(&x, &y);
+			if (par != &aView)
+				{
+					par->GetPosition(&x, &y);
 
-      ax += x;
-      ay += y;
-    }
+					ax += x;
+					ay += y;
+				}
 
-    par->GetParent(par);
-  }
-  while (nsnull != par);
+			par->GetParent(par);
+		}
+	while (nsnull != par);
 
-  if (nsnull != win)
-  {
-    mContext->CreateRenderingContext(&aView, cx);
+	if (nsnull != win)
+		{
+			mContext->CreateRenderingContext(&aView, cx);
 
-    if (nsnull != cx)
-      cx->Translate(ax, ay);
-  }
+			if (nsnull != cx)
+				cx->Translate(ax, ay);
+		}
 
-  return cx;
+	return cx;
 }
 
 void nsViewManager2::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const
@@ -1820,158 +1887,159 @@ void nsViewManager2::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) c
 
 void nsViewManager2::UpdateTransCnt(nsIView *oldview, nsIView *newview)
 {
-  if (nsnull != oldview)
-  {
-    PRBool  hasTransparency;
-    float   opacity;
+	if (nsnull != oldview)
+		{
+			PRBool  hasTransparency;
+			float   opacity;
 
-    oldview->HasTransparency(hasTransparency);
-    oldview->GetOpacity(opacity);
+			oldview->HasTransparency(hasTransparency);
+			oldview->GetOpacity(opacity);
 
-    if (hasTransparency || (1.0f != opacity))
-      mTransCnt--;
-  }
+			if (hasTransparency || (1.0f != opacity))
+				mTransCnt--;
+		}
 
-  if (nsnull != newview)
-  {
-    PRBool  hasTransparency;
-    float   opacity;
+	if (nsnull != newview)
+		{
+			PRBool  hasTransparency;
+			float   opacity;
 
-    newview->HasTransparency(hasTransparency);
-    newview->GetOpacity(opacity);
+			newview->HasTransparency(hasTransparency);
+			newview->GetOpacity(opacity);
 
-    if (hasTransparency || (1.0f != opacity))
-      mTransCnt++;
-  }
+			if (hasTransparency || (1.0f != opacity))
+				mTransCnt++;
+		}
 }
 
 NS_IMETHODIMP nsViewManager2::DisableRefresh(void)
 {
-  if (mUpdateBatchCnt > 0)
-    return NS_OK;
+	if (mUpdateBatchCnt > 0)
+		return NS_OK;
 
-  mRefreshEnabled = PR_FALSE;
-  return NS_OK;
+	mRefreshEnabled = PR_FALSE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::EnableRefresh(PRUint32 aUpdateFlags)
 {
-  if (mUpdateBatchCnt > 0)
-    return NS_OK;
+	if (mUpdateBatchCnt > 0)
+		return NS_OK;
 
-  mRefreshEnabled = PR_TRUE;
+	mRefreshEnabled = PR_TRUE;
 
-  if (mUpdateCnt > 0)
-    ProcessPendingUpdates(mRootView);
+	if (mUpdateCnt > 0)
+		ProcessPendingUpdates(mRootView);
 
-  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
+	if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
    
-    if (mTrueFrameRate > 0)
-    {
-      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+		if (mTrueFrameRate > 0)
+			{
+				PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
 
-      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-        Composite();
-    }
-  }
+				if (deltams > (1000 / (PRInt32)mTrueFrameRate))
+					Composite();
+			}
+	}
 
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::BeginUpdateViewBatch(void)
 {
-  nsresult result = NS_OK;
+	nsresult result = NS_OK;
   
-  if (mUpdateBatchCnt == 0)
-    result = DisableRefresh();
+	if (mUpdateBatchCnt == 0)
+		result = DisableRefresh();
 
-  if (NS_SUCCEEDED(result))
-    ++mUpdateBatchCnt;
+	if (NS_SUCCEEDED(result))
+		++mUpdateBatchCnt;
 
-  return result;
+	return result;
 }
 
 NS_IMETHODIMP nsViewManager2::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 {
-  nsresult result = NS_OK;
+	nsresult result = NS_OK;
 
-  --mUpdateBatchCnt;
+	--mUpdateBatchCnt;
 
-  NS_ASSERTION(mUpdateBatchCnt >= 0, "Invalid batch count!");
+	NS_ASSERTION(mUpdateBatchCnt >= 0, "Invalid batch count!");
 
-  if (mUpdateBatchCnt < 0)
-  {
-    mUpdateBatchCnt = 0;
-    return NS_ERROR_FAILURE;
-  }
+	if (mUpdateBatchCnt < 0)
+		{
+			mUpdateBatchCnt = 0;
+			return NS_ERROR_FAILURE;
+		}
 
-  if (mUpdateBatchCnt == 0)
-    result = EnableRefresh(aUpdateFlags);
+	if (mUpdateBatchCnt == 0)
+		result = EnableRefresh(aUpdateFlags);
 
-  return result;
+	return result;
 }
 
 NS_IMETHODIMP nsViewManager2::SetRootScrollableView(nsIScrollableView *aScrollable)
 {
-  mRootScrollable = aScrollable;
+	mRootScrollable = aScrollable;
 
-  //XXX this needs to go away when layout start setting this bit on it's own. MMP
-  if (mRootScrollable)
-    mRootScrollable->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+	//XXX this needs to go away when layout start setting this bit on it's own. MMP
+	if (mRootScrollable)
+		mRootScrollable->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::GetRootScrollableView(nsIScrollableView **aScrollable)
 {
-  *aScrollable = mRootScrollable;
-  return NS_OK;
+	*aScrollable = mRootScrollable;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::Display(nsIView* aView)
 {
-  nsIRenderingContext *localcx = nsnull;
-  nsRect              trect;
+	nsIRenderingContext *localcx = nsnull;
+	nsRect              trect;
 
-  if (PR_FALSE == mRefreshEnabled)
-    return NS_OK;
+	if (PR_FALSE == mRefreshEnabled)
+		return NS_OK;
 
-  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
-  mPainting = PR_TRUE;
+	mPainting = PR_TRUE;
 
-  mContext->CreateRenderingContext(localcx);
+	mContext->CreateRenderingContext(localcx);
 
-  //couldn't get rendering context. this is ok if at startup
-  if (nsnull == localcx)
-  {
-    return NS_ERROR_FAILURE;
-  }
+	//couldn't get rendering context. this is ok if at startup
+	if (nsnull == localcx)
+		{
+			mPainting = PR_FALSE;
+			return NS_ERROR_FAILURE;
+		}
 
-  aView->GetBounds(trect);
-  nscoord x = trect.x, y = trect.y;
+	aView->GetBounds(trect);
+	nscoord x = trect.x, y = trect.y;
 
-  // XXX Temporarily reset the position to (0, 0), that way when we paint
-  // we won't end up translating incorrectly
-  aView->SetPosition(0, 0);
+	// XXX Temporarily reset the position to (0, 0), that way when we paint
+	// we won't end up translating incorrectly
+	aView->SetPosition(0, 0);
 
-  PRBool  result;
+	PRBool  result;
 
-  trect.x = trect.y = 0;
-  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+	trect.x = trect.y = 0;
+	localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
-  // Paint the view. The clipping rect was set above set don't clip again.
-  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+	// Paint the view. The clipping rect was set above set don't clip again.
+	aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
-  // XXX Reset the view's origin
-  aView->SetPosition(x, y);
+	// XXX Reset the view's origin
+	aView->SetPosition(x, y);
 
-  NS_RELEASE(localcx);
+	NS_RELEASE(localcx);
 
-  mPainting = PR_FALSE;
+	mPainting = PR_FALSE;
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::AddCompositeListener(nsICompositeListener* aListener)
@@ -1994,50 +2062,50 @@ NS_IMETHODIMP nsViewManager2::RemoveCompositeListener(nsICompositeListener* aLis
 
 NS_IMETHODIMP nsViewManager2::GetWidgetForView(nsIView *aView, nsIWidget **aWidget)
 {
-  *aWidget = nsnull;
-  nsIView *view = aView;
-  PRBool hasWidget = PR_FALSE;
-  while (!hasWidget && view)
-  {
-	  view->HasWidget(&hasWidget);
-    if (!hasWidget)
-      view->GetParent(view);
-  }
+	*aWidget = nsnull;
+	nsIView *view = aView;
+	PRBool hasWidget = PR_FALSE;
+	while (!hasWidget && view)
+		{
+			view->HasWidget(&hasWidget);
+			if (!hasWidget)
+				view->GetParent(view);
+		}
 
-  if (hasWidget) {
-      // Widget was found in the view hierarchy
-    view->GetWidget(*aWidget);
-  } else {
-      // No widget was found in the view hierachy, so use try to use the mRootWindow
-    if (nsnull != mRootWindow) {
+	if (hasWidget) {
+		// Widget was found in the view hierarchy
+		view->GetWidget(*aWidget);
+	} else {
+		// No widget was found in the view hierachy, so use try to use the mRootWindow
+		if (nsnull != mRootWindow) {
 #ifdef NS_DEBUG
-      nsCOMPtr<nsIViewManager> vm;
-      nsCOMPtr<nsIViewManager> thisInstance(this);
-      aView->GetViewManager(*getter_AddRefs(vm));
-      NS_ASSERTION(thisInstance == vm, "Must use the view instances view manager when calling GetWidgetForView");
+			nsCOMPtr<nsIViewManager> vm;
+			nsCOMPtr<nsIViewManager> thisInstance(this);
+			aView->GetViewManager(*getter_AddRefs(vm));
+			NS_ASSERTION(thisInstance == vm, "Must use the view instances view manager when calling GetWidgetForView");
 #endif
-      *aWidget = mRootWindow;
-      NS_ADDREF(mRootWindow);
-    }
-  }
+			*aWidget = mRootWindow;
+			NS_ADDREF(mRootWindow);
+		}
+	}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 
 NS_IMETHODIMP nsViewManager2::GetWidget(nsIWidget **aWidget)
 {
-  NS_IF_ADDREF(mRootWindow);
-  *aWidget = mRootWindow;
-  return NS_OK;
+	NS_IF_ADDREF(mRootWindow);
+	*aWidget = mRootWindow;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::ForceUpdate()
 {
-  if (mRootWindow) {
-    mRootWindow->Update();
-  }
-  return NS_OK;
+	if (mRootWindow) {
+		mRootWindow->Update();
+	}
+	return NS_OK;
 }
 
 
@@ -2054,16 +2122,16 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	if (!aTopView)
 		aTopView = aView;
 
-	nsRect lrect;
-	aView->GetBounds(lrect);
+	nsRect bounds;
+	aView->GetBounds(bounds);
 
 	if (aView == aTopView) {
-		lrect.x = 0;
-		lrect.y = 0;
+		bounds.x = 0;
+		bounds.y = 0;
 	}
 
-	lrect.x += aX;
-	lrect.y += aY;
+	bounds.x += aX;
+	bounds.y += aY;
 
 	// is this a clip view?
 	PRBool isClipView = IsClipView(aView);
@@ -2080,42 +2148,42 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	aView->GetChildCount(childCount);
 	if (childCount > 0) {
 		if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
-			lrect.x -= aOriginX;
-			lrect.y -= aOriginY;
+			bounds.x -= aOriginX;
+			bounds.y -= aOriginY;
 
-			retval = AddToDisplayList(aIndex, aView, lrect, lrect, POP_CLIP);
+			retval = AddToDisplayList(aIndex, aView, bounds, bounds, POP_CLIP);
 
 			if (retval)
 				return retval;
 
-			lrect.x += aOriginX;
-			lrect.y += aOriginY;
+			bounds.x += aOriginX;
+			bounds.y += aOriginY;
 		}
 
 		if (!hasWidget || (hasWidget && isParentView))
-		//    if ((aView == aTopView) || (aView == aRealView))
-		//    if ((aView == aTopView) || !hasWidget || (aView == aRealView))
-		//    if ((aView == aTopView) || !(hasWidget && clipper) || (aView == aRealView))
-		{
-			for (aView->GetChild(0, childView); nsnull != childView; childView->GetNextSibling(childView)) {
-				PRInt32 zindex;
-				childView->GetZIndex(zindex);
-				if (zindex < 0)
-					break;
-				retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, lrect.x, lrect.y);
-				if (retval)
-					break;
+			//    if ((aView == aTopView) || (aView == aRealView))
+			//    if ((aView == aTopView) || !hasWidget || (aView == aRealView))
+			//    if ((aView == aTopView) || !(hasWidget && clipper) || (aView == aRealView))
+			{
+				for (aView->GetChild(0, childView); nsnull != childView; childView->GetNextSibling(childView)) {
+					PRInt32 zindex;
+					childView->GetZIndex(zindex);
+					if (zindex < 0)
+						break;
+					retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y);
+					if (retval)
+						break;
+				}
 			}
-		}
 	}
 
-	lrect.x -= aOriginX;
-	lrect.y -= aOriginY;
+	bounds.x -= aOriginX;
+	bounds.y -= aOriginY;
 
 	//  if (clipper)
 	if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
 		if (childCount > 0)
-			retval = AddToDisplayList(aIndex, aView, lrect, lrect, PUSH_CLIP);
+			retval = AddToDisplayList(aIndex, aView, bounds, bounds, PUSH_CLIP);
 	} else if (!retval)	{
 		nsViewVisibility  visibility;
 		float             opacity;
@@ -2128,7 +2196,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 		aView->HasTransparency(transparent);
 
 		if (aDamageRect)
-			overlap = irect.IntersectRect(lrect, *aDamageRect);
+			overlap = irect.IntersectRect(bounds, *aDamageRect);
 		else
 			overlap = PR_TRUE;
 
@@ -2140,7 +2208,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			if (opacity < 1.0f)
 				flags |= VIEW_TRANSLUCENT;
 #endif
-			retval = AddToDisplayList(aIndex, aView, lrect, irect, flags);
+			retval = AddToDisplayList(aIndex, aView, bounds, irect, flags);
 
 			if (retval || !transparent && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
@@ -2148,10 +2216,10 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 
 		// any children with negative z-indices?
 		if (!retval && nsnull != childView) {
-			lrect.x += aOriginX;
-			lrect.y += aOriginY;
+			bounds.x += aOriginX;
+			bounds.y += aOriginY;
 			for (; nsnull != childView; childView->GetNextSibling(childView)) {
-				retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, lrect.x, lrect.y);
+				retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, bounds.x, bounds.y);
 				if (retval)
 					break;
 			}
@@ -2175,7 +2243,7 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 	}
 
 	element->mView = aView;
-	element->mClip = aClipRect;
+	element->mBounds = aClipRect;
 	element->mDirty = aDirtyRect;
 	element->mFlags = aFlags;
 	
@@ -2189,10 +2257,15 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 	// views need to be rendered into the blending
 	// buffers.
 	if (aFlags & VIEW_TRANSLUCENT) {
-		if (mTranslucentViewCount++ == 0)
-			mTranslucentBounds = aDirtyRect;
-		else
-			mTranslucentBounds.UnionRect(mTranslucentBounds, aDirtyRect);
+		if (mTranslucentViewCount++ == 0) {
+			mTranslucentArea = aDirtyRect;
+			mTranslucentSize.width = aDirtyRect.width;
+			mTranslucentSize.height = aDirtyRect.height;
+		} else {
+			mTranslucentArea.UnionRect(mTranslucentArea, aDirtyRect);
+			mTranslucentSize.width = max(mTranslucentSize.width, aDirtyRect.width);
+			mTranslucentSize.height = max(mTranslucentSize.height, aDirtyRect.height);
+		}
 	}
 	
 	return PR_FALSE;
@@ -2209,7 +2282,7 @@ nsresult nsViewManager2::OptimizeDisplayList(const nsRect& aDamageRect)
 			// a view is opaque if it is neither transparent nor transluscent
 			if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
 				nsRect opaqueRect;
-				opaqueRect.IntersectRect(element->mClip, aDamageRect);
+				opaqueRect.IntersectRect(element->mBounds, aDamageRect);
 				nscoord top = opaqueRect.y, left = opaqueRect.x;
 				nscoord bottom = top + opaqueRect.height, right = left + opaqueRect.width;
 				// search for views behind this one, that are completely obscured by it.
@@ -2217,14 +2290,14 @@ nsresult nsViewManager2::OptimizeDisplayList(const nsRect& aDamageRect)
 					DisplayListElement2* lowerElement = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(j));
 					if (lowerElement->mFlags & VIEW_RENDERED) {
 						nsRect lowerRect;
-						lowerRect.IntersectRect(lowerElement->mClip, aDamageRect);
+						lowerRect.IntersectRect(lowerElement->mBounds, aDamageRect);
 						if (left <= lowerRect.x && top <= lowerRect.y &&
 						    right >= (lowerRect.x + lowerRect.width) &&
 						    bottom >= (lowerRect.y + lowerRect.height))
-						{
-							// remove this element from the display list, by clearing its VIEW_RENDERED flag.
-							lowerElement->mFlags &= ~VIEW_RENDERED;
-						}
+							{
+								// remove this element from the display list, by clearing its VIEW_RENDERED flag.
+								lowerElement->mFlags &= ~VIEW_RENDERED;
+							}
 					}
 				}
 			}
@@ -2238,63 +2311,63 @@ nsresult nsViewManager2::OptimizeDisplayList(const nsRect& aDamageRect)
 
 void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
 {
-  char     nest[400];
-  PRInt32  newnestcnt, nestcnt = 0, cnt;
+	char     nest[400];
+	PRInt32  newnestcnt, nestcnt = 0, cnt;
 
-  for (cnt = 0; cnt < 400; cnt++)
-    nest[cnt] = ' ';
+	for (cnt = 0; cnt < 400; cnt++)
+		nest[cnt] = ' ';
 
-  float t2p;
-  mContext->GetAppUnitsToDevUnits(t2p);
+	float t2p;
+	mContext->GetAppUnitsToDevUnits(t2p);
 
-  printf("### display list length=%d ###\n", flatlen);
+	printf("### display list length=%d ###\n", flatlen);
 
-  for (cnt = 0; cnt < flatlen; cnt++) {
-    nsIView   *view, *parent;
-    nsRect    rect;
-    PRUint32  flags;
-    PRInt32   zindex;
+	for (cnt = 0; cnt < flatlen; cnt++) {
+		nsIView   *view, *parent;
+		nsRect    rect;
+		PRUint32  flags;
+		PRInt32   zindex;
 
-    DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(cnt);
-    view = element->mView;
-    rect = element->mClip;
-    flags = element->mFlags;
+		DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(cnt);
+		view = element->mView;
+		rect = element->mBounds;
+		flags = element->mFlags;
 
-    nest[nestcnt << 1] = 0;
+		nest[nestcnt << 1] = 0;
 
-    view->GetParent(parent);
-    view->GetZIndex(zindex);
-    rect *= t2p;
-    printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
-           nest, view, zindex,
-           rect.x, rect.y, rect.width, rect.height, parent);
+		view->GetParent(parent);
+		view->GetZIndex(zindex);
+		rect *= t2p;
+		printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
+			   nest, view, zindex,
+			   rect.x, rect.y, rect.width, rect.height, parent);
 
-    newnestcnt = nestcnt;
+		newnestcnt = nestcnt;
 
-    if (flags)
-    {
-      printf("%s", nest);
+		if (flags)
+			{
+				printf("%s", nest);
 
-      if (flags & POP_CLIP) {
-        printf("POP_CLIP ");
-        newnestcnt--;
-      }
+				if (flags & POP_CLIP) {
+					printf("POP_CLIP ");
+					newnestcnt--;
+				}
 
-      if (flags & PUSH_CLIP) {
-        printf("PUSH_CLIP ");
-        newnestcnt++;
-      }
+				if (flags & PUSH_CLIP) {
+					printf("PUSH_CLIP ");
+					newnestcnt++;
+				}
 
-      if (flags & VIEW_RENDERED)
-        printf("VIEW_RENDERED ");
+				if (flags & VIEW_RENDERED)
+					printf("VIEW_RENDERED ");
 
-      printf("\n");
-    }
+				printf("\n");
+			}
 
-    nest[nestcnt << 1] = ' ';
+		nest[nestcnt << 1] = ' ';
 
-    nestcnt = newnestcnt;
-  }
+		nestcnt = newnestcnt;
+	}
 }
 
 void nsViewManager2::ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag)
@@ -2335,14 +2408,14 @@ PRBool nsViewManager2::IsClipView(nsIView* aView)
 
 void nsViewManager2::PauseTimer(void)
 {
-  PRUint32 oldframerate = mTrueFrameRate;
-  SetFrameRate(0);
-  mTrueFrameRate = oldframerate;
+	PRUint32 oldframerate = mTrueFrameRate;
+	SetFrameRate(0);
+	mTrueFrameRate = oldframerate;
 }
 
 void nsViewManager2::RestartTimer(void)
 {
-  SetFrameRate(mTrueFrameRate);
+	SetFrameRate(mTrueFrameRate);
 }
 
 nsIView* nsViewManager2::GetWidgetView(nsIView *aView) const
