@@ -20,6 +20,7 @@
 #define __nsRespository_h
 
 #include "prtypes.h"
+#include "prlog.h"
 #include "prmon.h"
 #include "nsCom.h"
 #include "nsID.h"
@@ -49,6 +50,12 @@ typedef nsresult (*nsRegisterProc)(const char *path);
 typedef nsresult (*nsUnregisterProc)(const char *path);
 
 /*
+ * Support types
+ */
+
+class FactoryEntry;
+
+/*
  * NSRepository class
  */
 
@@ -58,6 +65,7 @@ private:
   static PRMonitor *monitor;
 
   static nsresult checkInitialized();
+  static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
 
 public:
   static nsresult Initialize();
