@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,11 +20,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *   Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,33 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsStaticAtom.h"
-
 /**
- * Class for singleton XForms nsIAtom pointers
+ * This interface is implemented by XForms value elements.
  */
-class nsXFormsAtoms
+
+#include "nsISupports.idl"
+
+[uuid(bf2611d6-890b-4a64-95bd-db6aced79136)]
+interface nsIXFormsValueElement : nsISupports
 {
- public:
-  static NS_HIDDEN_(nsIAtom *) src;
-  static NS_HIDDEN_(nsIAtom *) bind;
-  static NS_HIDDEN_(nsIAtom *) type;
-  static NS_HIDDEN_(nsIAtom *) readonly;
-  static NS_HIDDEN_(nsIAtom *) required;
-  static NS_HIDDEN_(nsIAtom *) relevant;
-  static NS_HIDDEN_(nsIAtom *) calculate;
-  static NS_HIDDEN_(nsIAtom *) constraint;
-  static NS_HIDDEN_(nsIAtom *) p3ptype;
-  static NS_HIDDEN_(nsIAtom *) modelListProperty;
-  static NS_HIDDEN_(nsIAtom *) uploadFileProperty;
-  static NS_HIDDEN_(nsIAtom *) ref;
-  static NS_HIDDEN_(nsIAtom *) nodeset;
-  static NS_HIDDEN_(nsIAtom *) model;
-  static NS_HIDDEN_(nsIAtom *) selected;
-  static NS_HIDDEN_(nsIAtom *) appearance;
-
-  static NS_HIDDEN_(void) InitAtoms();
-
- private:
-  static NS_HIDDEN_(const nsStaticAtom) Atoms_info[];
+  /**
+   * Returns the value for this element, which can come from inline text
+   * or from instance data.
+   */
+  readonly attribute AString value;
 };

@@ -77,6 +77,8 @@ XPIDLSRCS	= \
 		nsIXFormsActionModuleElement.idl \
 		nsIXFormsSwitchElement.idl \
 		nsIXFormsCaseElement.idl \
+		nsIXFormsSelectChild.idl \
+		nsIXFormsValueElement.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -87,7 +89,7 @@ CPPSRCS		= \
 		nsXFormsGroupElement.cpp \
 		nsXFormsOutputElement.cpp \
 		nsXFormsRepeatElement.cpp \
-		nsXFormsRepeatItemElement.cpp \
+		nsXFormsContextContainer.cpp \
 		nsXFormsTriggerElement.cpp \
 		nsXFormsSubmissionElement.cpp \
 		nsXFormsStubElement.cpp \
@@ -118,6 +120,11 @@ CPPSRCS		= \
 		nsXFormsCaseElement.cpp \
 		nsXFormsSwitchElement.cpp \
 		nsXFormsUploadElement.cpp \
+		nsXFormsSelectElement.cpp \
+		nsXFormsItemElement.cpp \
+		nsXFormsValueElement.cpp \
+		nsXFormsChoicesElement.cpp \
+		nsXFormsItemSetElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

@@ -305,6 +305,11 @@ public:
    */
   static NS_HIDDEN_(PRBool) IsXFormsElement(nsIDOMNode* aNode, 
                                             const nsAString& aName);
+  /**
+   * Returns true if the given element is an XForms label.
+   */
+  static NS_HIDDEN_(PRBool) IsLabelElement(nsIDOMNode *aElement);
+
 };
 
 #endif

@@ -284,7 +284,8 @@ nsXFormsGroupElement::Process()
     model->AddFormControl(this);
   }
   
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  if (!result)
+    return NS_ERROR_FAILURE;
 
   // Get model ID
   nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);

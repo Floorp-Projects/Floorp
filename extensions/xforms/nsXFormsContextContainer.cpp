@@ -54,14 +54,15 @@
 #include "nsXFormsUtils.h"
 
 #ifdef DEBUG
-//#define DEBUG_XF_REPEATITEM
+//#define DEBUG_XF_CONTEXTCONTAINER
 #endif
 
 /**
- * Implementation of \<repeatitem\>.
+ * Implementation of \<contextcontainer\>.
  * 
- * \<repeatitem\> is a pseudo-element that is wrapped around each row in the
- * "unrolled" \<repeat\>. @see nsXFormsRepeatElement.
+ * \<contextcontainer\> is a pseudo-element that is wrapped around each row in
+ * an "unrolled" \<repeat\> or \<itemset\>. @see nsXFormsRepeatElement and
+ * nsXFormsItemSetElement.
  *
  * @todo Should this class inherit from nsIXFormsControl? (XXX)
  *
@@ -69,7 +70,7 @@
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsRepeatItemElement : public nsIXFormsControl,
+class nsXFormsContextContainer : public nsIXFormsControl,
                                   public nsXFormsXMLVisualStub,
                                   public nsIXFormsContextControl
 {
@@ -104,7 +105,7 @@ public:
   
 };
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsRepeatItemElement,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsContextContainer,
                              nsXFormsXMLVisualStub,
                              nsIXFormsControl,
                              nsIXFormsContextControl)
@@ -112,10 +113,10 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsRepeatItemElement,
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsContextContainer::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-#ifdef DEBUG_XF_REPEATITEM
-  printf("nsXFormsRepeatItemElement::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
+#ifdef DEBUG_XF_CONTEXTCONTAINER
+  printf("nsXFormsContextContainer::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
 #endif
 
   nsresult rv;
@@ -131,19 +132,28 @@ nsXFormsRepeatItemElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   rv = node->GetOwnerDocument(getter_AddRefs(domDoc));
   NS_ENSURE_SUCCESS(rv, rv);
   
+  PRBool isBlock;
+
+  // If we're a "contextcontainer" element, then we create a div child.
+  // If not, we're a "contextcontainer-inline" element and create a span child.
+  nsAutoString localName;
+  mElement->GetLocalName(localName);
+  isBlock = localName.EqualsLiteral("contextcontainer");
+
   // Create UI element
   rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                               NS_LITERAL_STRING("div"),
+                               isBlock ? NS_LITERAL_STRING("div") :
+                               NS_LITERAL_STRING("span"),
                                getter_AddRefs(mHTMLElement));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::GetVisualContent(nsIDOMElement **aElement)
+nsXFormsContextContainer::GetVisualContent(nsIDOMElement **aElement)
 {
-#ifdef DEBUG_XF_REPEATITEM
-  printf("nsXFormsRepeatItemElement::GetVisualContent()\n");
+#ifdef DEBUG_XF_CONTEXTCONTAINER
+  printf("nsXFormsContextContainer::GetVisualContent()\n");
 #endif
 
   NS_IF_ADDREF(*aElement = mHTMLElement);
@@ -151,10 +161,10 @@ nsXFormsRepeatItemElement::GetVisualContent(nsIDOMElement **aElement)
 }
 
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::GetInsertionPoint(nsIDOMElement **aElement)
+nsXFormsContextContainer::GetInsertionPoint(nsIDOMElement **aElement)
 {
-#ifdef DEBUG_XF_REPEATITEM
-  printf("nsXFormsRepeatItemElement::GetInsertionPoint()\n");
+#ifdef DEBUG_XF_CONTEXTCONTAINER
+  printf("nsXFormsContextContainer::GetInsertionPoint()\n");
 #endif
 
   NS_IF_ADDREF(*aElement = mHTMLElement);
@@ -164,7 +174,7 @@ nsXFormsRepeatItemElement::GetInsertionPoint(nsIDOMElement **aElement)
 
 // nsIXTFElement
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::OnDestroyed()
+nsXFormsContextContainer::OnDestroyed()
 {
   mHTMLElement = nsnull;
   mElement = nsnull;
@@ -175,14 +185,14 @@ nsXFormsRepeatItemElement::OnDestroyed()
 
 // nsIXFormsContextControl
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::SetContextNode(nsIDOMElement *aContextNode)
+nsXFormsContextContainer::SetContextNode(nsIDOMElement *aContextNode)
 {
   mContextNode = aContextNode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXFormsRepeatItemElement::GetContext(nsAString& aModelID,
+nsXFormsContextContainer::GetContext(nsAString& aModelID,
                                       nsIDOMElement **aContextNode,
                                       PRInt32 *aContextPosition,
                                       PRInt32 *aContextSize)
@@ -206,16 +216,16 @@ nsXFormsRepeatItemElement::GetContext(nsAString& aModelID,
 
 // nsXFormsControl
 nsresult
-nsXFormsRepeatItemElement::Refresh()
+nsXFormsContextContainer::Refresh()
 {
   return NS_OK;
 }
 
 // Factory
 NS_HIDDEN_(nsresult)
-NS_NewXFormsRepeatItemElement(nsIXTFElement **aResult)
+NS_NewXFormsContextContainer(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsRepeatItemElement();
+  *aResult = new nsXFormsContextContainer();
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 

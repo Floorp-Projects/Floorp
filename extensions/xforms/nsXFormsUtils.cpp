@@ -794,8 +794,8 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
       // context but it is invalid, ie. the XPath expression could have
       // generated an error.
 
-      if (childModelID.IsEmpty()
-          || childModelID.Equals(contextModelID)) {
+      if (tempNode && (childModelID.IsEmpty()
+                       || childModelID.Equals(contextModelID))) {
         NS_ADDREF(*aContextNode = tempNode);
         if (aContextSize) 
           *aContextSize = cSize;
@@ -884,5 +884,18 @@ nsXFormsUtils::IsXFormsElement(nsIDOMNode* aNode, const nsAString& aName)
       }
     }
   }
+  return PR_FALSE;
+}
+
+/* static */ PRBool
+nsXFormsUtils::IsLabelElement(nsIDOMNode *aElement)
+{
+  nsAutoString value;
+  aElement->GetLocalName(value);
+  if (value.EqualsLiteral("label")) {
+    aElement->GetNamespaceURI(value);
+    return value.EqualsLiteral(NS_NAMESPACE_XFORMS);
+  }
+
   return PR_FALSE;
 }

@@ -74,15 +74,15 @@
  * On Refresh(), nsXFormsRepeatElement, does the following for each node in
  * the nodeset the \<repeat\> tag is bound to:
  *
- * 1) Creates a new \<repeatitem\> (nsXFormsRepeatItemElement)
+ * 1) Creates a new \<contextcontainer\> (nsXFormsContextContainer)
  *
  * 2) Clones all its children (that is children of its nsIXTFXMLVisualWrapper)
- *    and appends them as children to the nsXFormsRepeatItemElement
+ *    and appends them as children to the nsXFormsContextContainer
  * 
- * 3) Sets the context node and size for the nsXFormsRepeatItemElement, so
+ * 3) Sets the context node and size for the nsXFormsContextContainer, so
  *    that children can retrieve this through nsIXFormsContextControl.
  *
- * 4) Inserts the nsXFormsRepeatItemElement into its visual content node
+ * 4) Inserts the nsXFormsContextContainer into its visual content node
  *    (mHTMLElement).
  *
  * For example, this instance data:
@@ -105,12 +105,12 @@
  * will be expanded to:
  * <pre>
  * <repeat nodeset="n">
- *   <repeatitem>               (contextNode == "n[0]" and contextPosition == 1)
+ *   <contextcontainer>         (contextNode == "n[0]" and contextPosition == 1)
  *     Val: <output ref="."/>   (that is: 'val1')
- *   </repeatitem>
- *   <repeatitem>               (contextNode == "n[1]" and contextPosition == 2)
+ *   </contextcontainer>
+ *   <contextcontainer>         (contextNode == "n[1]" and contextPosition == 2)
  *     Val: <output ref="."/>   (that is: 'val2')
- *   </repeatitem>
+ *   </contextcontainer>
  * </repeat>
  * </pre>
  *
@@ -381,10 +381,10 @@ nsXFormsRepeatElement::Refresh()
       for (PRUint32 i = NS_MAX((PRUint32) 1, startIndex);
            i < NS_MIN(contextSize + 1, number + startIndex);
            ++i) {
-        // Create <repeatitem>
+        // Create <contextcontainer>
         nsCOMPtr<nsIDOMElement> riElement;
         rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/2002/xforms"),
-                                     NS_LITERAL_STRING("repeatitem"),
+                                     NS_LITERAL_STRING("contextcontainer"),
                                      getter_AddRefs(riElement));
         NS_ENSURE_SUCCESS(rv, rv);
       
@@ -410,7 +410,7 @@ nsXFormsRepeatElement::Refresh()
         rv = riContext->SetContextNode(contextElement);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        // Iterate over template children, clone them, and append them to <repeatitem>
+        // Iterate over template children, clone them, and append them to <contextcontainer>
         nsCOMPtr<nsIDOMNode> child;
         rv = mElement->GetFirstChild(getter_AddRefs(child));
         NS_ENSURE_SUCCESS(rv, rv);

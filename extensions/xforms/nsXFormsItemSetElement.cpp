@@ -1,0 +1,311 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla XForms support.
+ *
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIXFormsSelectChild.h"
+#include "nsXFormsStubElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include "nsIXTFGenericElementWrapper.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNodeList.h"
+#include "nsXFormsUtils.h"
+#include "nsArray.h"
+
+class nsXFormsItemSetElement : public nsXFormsStubElement,
+                               public nsIXFormsSelectChild
+{
+public:
+  nsXFormsItemSetElement() : mElement(nsnull) {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIXTFGenericElement overrides
+  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+
+  // nsIXTFElement overrides
+  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
+  NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
+  NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
+  NS_IMETHOD WillRemoveChild(PRUint32 aIndex);
+  NS_IMETHOD BeginAddingChildren();
+  NS_IMETHOD DoneAddingChildren();
+
+  // nsIXFormsSelectChild
+  NS_DECL_NSIXFORMSSELECTCHILD
+
+private:
+  NS_HIDDEN_(void) Refresh();
+
+  nsIDOMElement *mElement;
+  nsCOMArray<nsIXFormsSelectChild> mItems;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsItemSetElement,
+                             nsXFormsStubElement,
+                             nsIXFormsSelectChild)
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+{
+  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
+                                nsIXTFElement::NOTIFY_CHILD_INSERTED |
+                                nsIXTFElement::NOTIFY_CHILD_APPENDED |
+                                nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD |
+                                nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN);
+
+  nsCOMPtr<nsIDOMElement> node;
+  aWrapper->GetElementNode(getter_AddRefs(node));
+
+  // It's ok to keep a pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+
+  mElement = node;
+  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::ParentChanged(nsIDOMElement *aNewParent)
+{
+  if (aNewParent)
+    Refresh();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
+{
+  Refresh();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::ChildAppended(nsIDOMNode *aChild)
+{
+  Refresh();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::WillRemoveChild(PRUint32 aIndex)
+{
+  Refresh();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::BeginAddingChildren()
+{
+  // Suppress child notifications until we're done getting children.
+  nsCOMPtr<nsIXTFElementWrapper> wrapper = do_QueryInterface(mElement);
+  NS_ASSERTION(wrapper, "huh? our element must be an xtf wrapper");
+
+  wrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
+                               nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::DoneAddingChildren()
+{
+  // Unsuppress child notifications until we're done getting children.
+  nsCOMPtr<nsIXTFElementWrapper> wrapper = do_QueryInterface(mElement);
+  NS_ASSERTION(wrapper, "huh? our element must be an xtf wrapper");
+
+  wrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
+                               nsIXTFElement::NOTIFY_CHILD_INSERTED |
+                               nsIXTFElement::NOTIFY_CHILD_APPENDED |
+                               nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD);
+
+  // Walk our children and get their anonymous content.
+  Refresh();
+  return NS_OK;
+}
+
+// nsIXFormsSelectChild
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::GetAnonymousNodes(nsIArray **aNodes)
+{
+  nsCOMPtr<nsIMutableArray> array;
+  nsresult rv = NS_NewArray(getter_AddRefs(array));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 itemCount = mItems.Count();
+  nsCOMPtr<nsIArray> childNodes;
+  nsCOMPtr<nsIDOMNode> childOption;
+
+  for (PRInt32 i = 0; i < itemCount; ++i) {
+    mItems[i]->GetAnonymousNodes(getter_AddRefs(childNodes));
+    if (!childNodes)
+      continue;
+
+    PRUint32 anonLength = 0;
+    childNodes->GetLength(&anonLength);
+
+    for (PRUint32 j = 0; j < anonLength; ++j) {
+      childOption = do_QueryElementAt(childNodes, j);
+      NS_ASSERTION(childOption, "invalid nodelist");
+
+      array->AppendElement(childOption, PR_FALSE);
+    }
+  }
+
+  NS_ADDREF(*aNodes = array);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::SelectItemsByValue(const nsStringArray &aValueList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::SelectItemsByContent(nsIDOMNode *aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::WriteSelectedItems(nsIDOMNode *aContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::SetContext(nsIDOMElement *aContextNode,
+                                   PRInt32 aContextPosition,
+                                   PRInt32 aContextSize)
+{
+  // itemset can't be inside another itemset, so we don't need to worry about
+  // this.
+  return NS_OK;
+}
+
+// internal methods
+
+void
+nsXFormsItemSetElement::Refresh()
+{
+  mItems.Clear();
+
+  // We need to create item elements for each element referenced by the
+  // nodeset.  Each of these items will create an anonymous HTML option element
+  // which will return from GetAnonymousNodes.  We then clone our template
+  // content and insert the cloned content as children of the HTML option.
+
+  nsCOMPtr<nsIDOMNode> modelNode;
+  nsCOMPtr<nsIDOMElement> bindElement;
+  nsCOMPtr<nsIDOMXPathResult> result =
+    nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                       NS_LITERAL_STRING("nodeset"),
+                                       EmptyString(),
+                                       nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                                       getter_AddRefs(modelNode),
+                                       getter_AddRefs(bindElement));
+  if (!result)
+    return;
+
+  nsCOMPtr<nsIDOMNode> node, templateNode, cloneNode;
+  nsCOMPtr<nsIDOMElement> itemNode, itemWrapperNode;
+  nsCOMPtr<nsIDOMNodeList> templateNodes;
+  mElement->GetChildNodes(getter_AddRefs(templateNodes));
+  PRUint32 templateNodeCount = 0;
+  if (templateNodes)
+    templateNodes->GetLength(&templateNodeCount);
+  
+  nsCOMPtr<nsIDOMDocument> document;
+  mElement->GetOwnerDocument(getter_AddRefs(document));
+  if (!document)
+    return;
+
+  PRUint32 nodeCount;
+  result->GetSnapshotLength(&nodeCount);
+
+  for (PRUint32 i = 0; i < nodeCount; ++i) {
+    result->SnapshotItem(i, getter_AddRefs(node));
+    NS_ASSERTION(node, "incorrect snapshot length");
+
+    document->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                              NS_LITERAL_STRING("item"),
+                              getter_AddRefs(itemNode));
+
+    if (!itemNode)
+      return;
+
+    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
+    nsAutoString modelID;
+    modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
+
+    itemNode->SetAttribute(NS_LITERAL_STRING("model"), modelID);
+
+    nsCOMPtr<nsIXFormsSelectChild> item = do_QueryInterface(itemNode);
+    NS_ASSERTION(item, "item must be a SelectChild!");
+
+    item->SetContext(nsCOMPtr<nsIDOMElement>(do_QueryInterface(node)),
+                     i, nodeCount);
+
+    // Clone the template content under the item
+    for (PRUint32 j = 0; j < templateNodeCount; ++j) {
+      templateNodes->Item(j, getter_AddRefs(templateNode));
+      templateNode->CloneNode(PR_TRUE, getter_AddRefs(cloneNode));
+      itemNode->AppendChild(cloneNode, getter_AddRefs(templateNode));
+    }
+
+    mItems.AppendObject(item);
+  }
+}
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsItemSetElement(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsItemSetElement();
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+

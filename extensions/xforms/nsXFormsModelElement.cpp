@@ -355,11 +355,7 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("xforms-refresh")) {
-    // refresh all of our form controls
-    PRInt32 controlCount = mFormControls.Count();
-    for (PRInt32 i = 0; i < controlCount; ++i) {
-      NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i])->Refresh();
-    }
+    Refresh();
   } else if (type.EqualsLiteral("xforms-revalidate")) {
     Revalidate();
   } else if (type.EqualsLiteral("xforms-recalculate")) {
@@ -478,6 +474,12 @@ nsXFormsModelElement::Refresh()
 #ifdef DEBUG
   printf("nsXFormsModelElement::Refresh()\n");
 #endif
+
+  // refresh all of our form controls
+  PRInt32 controlCount = mFormControls.Count();
+  for (PRInt32 i = 0; i < controlCount; ++i) {
+    NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i])->Refresh();
+  }
 
   return NS_OK;
 }

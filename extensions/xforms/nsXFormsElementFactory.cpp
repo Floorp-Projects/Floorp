@@ -52,14 +52,19 @@ NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsRepeatElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsUploadElement(nsIXTFElement **aElement);
 
-/// @todo Having \<repeatitem\> in the factory means that the item can be used
-/// by a user in a document. Not optimal, as it is not a legal XForms tag, but
-/// only a pseudo-element. But nsXFormsRepeatElement needs to be able to
-/// create the tag, so is there a "backdoor way" to do that? (XXX)
-NS_HIDDEN_(nsresult) NS_NewXFormsRepeatItemElement(nsIXTFElement **aElement);
+/// @todo Having \<contextcontainer\> in the factory means that the item can be
+/// used by a user in a document. Not optimal, as it is not a legal XForms tag,
+/// but only a pseudo-element. But nsXFormsRepeat/SelectElement needs to be
+/// able to create the tag, so is there a "backdoor way" to do that? (XXX)
+NS_HIDDEN_(nsresult) NS_NewXFormsContextContainer(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsLabelElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsSelectElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsItemElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsValueElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsChoicesElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsItemSetElement(nsIXTFElement **aElement);
 
 //Action Module Elements
 NS_HIDDEN_(nsresult) NS_NewXFormsDispatchElement(nsIXTFElement **aResult);
@@ -102,10 +107,21 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsOutputElement(aElement);
   if (aTagName.EqualsLiteral("repeat"))
     return NS_NewXFormsRepeatElement(aElement);
-  if (aTagName.EqualsLiteral("repeatitem"))
-    return NS_NewXFormsRepeatItemElement(aElement);
+  if (aTagName.EqualsLiteral("contextcontainer") ||
+      aTagName.EqualsLiteral("contextcontainer-inline"))
+    return NS_NewXFormsContextContainer(aElement);
   if (aTagName.EqualsLiteral("label"))
     return NS_NewXFormsLabelElement(aElement);
+  if (aTagName.EqualsLiteral("select") || aTagName.EqualsLiteral("select1"))
+    return NS_NewXFormsSelectElement(aElement);
+  if (aTagName.EqualsLiteral("item"))
+    return NS_NewXFormsItemElement(aElement);
+  if (aTagName.EqualsLiteral("itemset"))
+    return NS_NewXFormsItemSetElement(aElement);
+  if (aTagName.EqualsLiteral("value"))
+    return NS_NewXFormsValueElement(aElement);
+  if (aTagName.EqualsLiteral("choices"))
+    return NS_NewXFormsChoicesElement(aElement);
   if (aTagName.EqualsLiteral("dispatch"))
     return NS_NewXFormsDispatchElement(aElement);
   if (aTagName.EqualsLiteral("send"))
