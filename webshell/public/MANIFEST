@@ -3,7 +3,5 @@
 #
 
 nsIDocumentLoader.h
-nsIDocumentWidget.h
 nsILinkHandler.h
-nsIWebWidget.h
 nsweb.h
