@@ -354,7 +354,7 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-install export clean realclean distclean::
+install export clean realclean distclean:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
 cleansrcdir:
