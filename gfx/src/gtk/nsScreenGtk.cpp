@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Christopher A. Aillon <caillon@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,22 +40,23 @@
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+#include <X11/Xatom.h>
 
+#ifdef MOZ_ENABLE_XINERAMA
+#include <X11/extensions/Xinerama.h>
+#endif // MOZ_ENABLE_XINERAMA
 
 nsScreenGtk :: nsScreenGtk (  )
+  : mScreenNum(0),
+    mRect(0, 0, 0, 0),
+    mAvailRect(0, 0, 0, 0)
 {
-  mScreenNum = 0;
-  mXOrg = 0;
-  mYOrg = 0;
-  // these always default to the full screen size
-  mWidth = gdk_screen_width();
-  mHeight = gdk_screen_height();
 }
 
 
 nsScreenGtk :: ~nsScreenGtk()
 {
-  // nothing to see here.
 }
 
 
@@ -65,10 +67,10 @@ NS_IMPL_ISUPPORTS1(nsScreenGtk, nsIScreen)
 NS_IMETHODIMP
 nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outLeft = mXOrg;
-  *outTop = mYOrg;
-  *outWidth = mWidth;
-  *outHeight = mHeight;
+  *outLeft = mRect.x;
+  *outTop = mRect.y;
+  *outWidth = mRect.width;
+  *outHeight = mRect.height;
 
   return NS_OK;
   
@@ -78,10 +80,10 @@ nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 NS_IMETHODIMP
 nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outLeft = mXOrg;
-  *outTop = mYOrg;
-  *outWidth = mWidth;
-  *outHeight = mHeight;
+  *outLeft = mAvailRect.x;
+  *outTop = mAvailRect.y;
+  *outWidth = mAvailRect.width;
+  *outHeight = mAvailRect.height;
 
   return NS_OK;
   
@@ -107,3 +109,73 @@ nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 } // GetColorDepth
 
 
+void
+nsScreenGtk :: Init ()
+{
+  mAvailRect = mRect = nsRect(0, 0, gdk_screen_width(), gdk_screen_height());
+
+  // We need to account for the taskbar, etc in the available rect.
+  // See http://freedesktop.org/Standards/wm-spec/index.html#id2767771
+
+  // XXX It doesn't change that often, but we should probably
+  // listen for changes to _NET_WORKAREA.
+  // XXX do we care about _NET_WM_STRUT_PARTIAL?  That will
+  // add much more complexity to the code here (our screen
+  // could have a non-rectangular shape), but should
+  // lead to greater accuracy.
+
+#if GTK_CHECK_VERSION(2,2,0)
+  GdkWindow *root_window = gdk_get_default_root_window();
+#else
+  GdkWindow *root_window = GDK_ROOT_PARENT();
+#endif // GTK_CHECK_VERSION(2,2,0)
+
+  long *workareas;
+  GdkAtom type_returned;
+  int format_returned;
+  int length_returned;
+
+  if (!gdk_property_get(root_window,
+                        gdk_atom_intern ("_NET_WORKAREA", FALSE),
+                        gdk_x11_xatom_to_atom (XA_CARDINAL),
+                        0, G_MAXLONG, FALSE,
+                        &type_returned,
+                        &format_returned,
+                        &length_returned,
+                        (guchar **) &workareas)) {
+    // This window manager doesn't support the freedesktop standard.
+    // Nothing we can do about it, so assume full screen size.
+    return;
+  }
+
+  if (!gdk_error_trap_pop() &&
+      type_returned == gdk_x11_xatom_to_atom(XA_CARDINAL) &&
+      length_returned && (length_returned % 4) == 0 &&
+      format_returned == 32) {
+    int num_items = length_returned / sizeof(long);
+
+    for (int i = 0; i < num_items; i += 4) {
+      nsRect workarea(workareas[i],     workareas[i + 1],
+                      workareas[i + 2], workareas[i + 3]);
+      if (!mRect.Contains(workarea)) {
+        NS_WARNING("Invalid bounds");
+	continue;
+      }
+
+      mAvailRect.IntersectRect(mAvailRect, workarea);
+    }
+  }
+}
+
+#ifdef MOZ_ENABLE_XINERAMA
+void
+nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
+{
+  nsRect xineRect(aScreenInfo->x_org, aScreenInfo->y_org,
+                  aScreenInfo->width, aScreenInfo->height);
+
+  mScreenNum = aScreenInfo->screen_number;
+
+  mAvailRect = mRect = xineRect;
+}
+#endif // MOZ_ENABLE_XINERAMA
