@@ -182,7 +182,10 @@ new_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
       {
         typedef CharT* CharT_ptr;
         CharT* string_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
-        copy_string(aReadable.BeginReading(), aReadable.EndReading(), string_ptr);
+
+        nsReadingIterator<CharT> fromBegin, fromEnd;
+        CharT* toBegin = string_ptr;
+        copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
         return new (object_ptr) basic_nsSharedString<CharT>(string_ptr, string_length);
       }
 

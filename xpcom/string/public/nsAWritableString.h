@@ -17,10 +17,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
  */
 
 #ifndef nsAWritableString_h___
@@ -77,6 +75,7 @@ class nsWritingIterator
         }
 
     public:
+      nsWritingIterator<CharT>() { }
       // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
       // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
@@ -157,40 +156,24 @@ class nsWritingIterator
           return mPosition - mFragment.mStart;
         }
 
+      nsWritingIterator<CharT>& advance( difference_type );
+
+        /**
+         * Really don't want to call these two operations |+=| and |-=|.
+         * Would prefer a single function, e.g., |advance|, which doesn't imply a constant time operation.
+         *
+         * We'll get rid of these as soon as we can.
+         */
       nsWritingIterator<CharT>&
-      operator+=( difference_type n )
+      operator+=( difference_type n ) // deprecated
         {
-          if ( n < 0 )
-            return operator-=(-n);
-
-          while ( n )
-            {
-              difference_type one_hop = NS_MIN(n, size_forward());
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a writable iterator beyond the end of a string");
-              mPosition += one_hop;
-              normalize_forward();
-              n -= one_hop;
-            }
-
-          return *this;
+          return advance(n);
         }
 
       nsWritingIterator<CharT>&
-      operator-=( difference_type n )
+      operator-=( difference_type n ) // deprecated
         {
-          if ( n < 0 )
-            return operator+=(-n);
-
-          while ( n )
-            {
-              normalize_backward();
-              difference_type one_hop = NS_MIN(n, size_backward());
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a writable iterator beyond the end of a string");
-              mPosition -= one_hop;
-              n -= one_hop;
-            }
-
-          return *this;
+          return advance(-n);
         }
 
       PRUint32
@@ -200,10 +183,41 @@ class nsWritingIterator
 
           n = NS_MIN(n, PRUint32(size_forward()));
           nsCharTraits<value_type>::move(mPosition, s, n);
-          operator+=( difference_type(n) );
+          advance( difference_type(n) );
           return n;
         }
   };
+
+template <class CharT>
+nsWritingIterator<CharT>&
+nsWritingIterator<CharT>::advance( difference_type n )
+  {
+    while ( n > 0 )
+      {
+        difference_type one_hop = NS_MIN(n, size_forward());
+
+        NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a writing iterator beyond the end of a string");
+          // perhaps I should |break| if |!one_hop|?
+
+        mPosition += one_hop;
+        normalize_forward();
+        n -= one_hop;
+      }
+
+    while ( n < 0 )
+      {
+        normalize_backward();
+        difference_type one_hop = NS_MAX(n, -size_backward());
+
+        NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a writing iterator beyond the end of a string");
+          // perhaps I should |break| if |!one_hop|?
+
+        mPosition += one_hop;
+        n -= one_hop;
+      }
+
+    return *this;
+  }
 
 
 /*
@@ -237,22 +251,44 @@ class basic_nsAWritableString
 
       virtual CharT* GetWritableFragment( nsWritableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
 
+        /**
+         * Note: measure -- should the |BeginWriting| and |EndWriting| be |inline|?
+         */
+      nsWritingIterator<CharT>&
+      BeginWriting( nsWritingIterator<CharT>& aResult )
+        {
+          aResult.mOwningString = this;
+          GetWritableFragment(aResult.mFragment, kFirstFragment);
+          aResult.normalize_forward();
+          aResult.mPosition = aResult.mFragment.mStart;
+          return aResult;
+        }
 
+        // deprecated
       nsWritingIterator<CharT>
       BeginWriting()
         {
-          nsWritableFragment<CharT> fragment;
-          CharT* startPos = GetWritableFragment(fragment, kFirstFragment);
-          return nsWritingIterator<CharT>(fragment, startPos, *this);
+          nsWritingIterator<CharT> result;
+          return BeginWriting(result); // copies (since I return a value, not a reference)
         }
 
 
+      nsWritingIterator<CharT>&
+      EndWriting( nsWritingIterator<CharT>& aResult )
+        {
+          aResult.mOwningString = this;
+          GetWritableFragment(aResult.mFragment, kLastFragment);
+          aResult.mPosition = aResult.mFragment.mEnd;
+          // must not |normalize_backward| as that would likely invalidate tests like |while ( first != last )|
+          return aResult;
+        }
+
+        // deprecated
       nsWritingIterator<CharT>
       EndWriting()
         {
-          nsWritableFragment<CharT> fragment;
-          GetWritableFragment(fragment, kLastFragment);
-          return nsWritingIterator<CharT>(fragment, fragment.mEnd, *this);
+          nsWritingIterator<CharT> result;
+          return EndWriting(result); // copies (since I return a value, not a reference)
         }
 
 
@@ -417,9 +453,9 @@ inline
 void
 nsWritingIterator<CharT>::normalize_forward()
   {
-    if ( mPosition == mFragment.mEnd )
-      if ( mOwningString->GetWritableFragment(mFragment, kNextFragment) )
-        mPosition = mFragment.mStart;
+    while ( mPosition == mFragment.mEnd
+         && mOwningString->GetWritableFragment(mFragment, kNextFragment) )
+      mPosition = mFragment.mStart;
   }
 
 template <class CharT>
@@ -427,9 +463,9 @@ inline
 void
 nsWritingIterator<CharT>::normalize_backward()
   {
-    if ( mPosition == mFragment.mStart )
-      if ( mOwningString->GetWritableFragment(mFragment, kPrevFragment) )
-        mPosition = mFragment.mEnd;
+    while ( mPosition == mFragment.mStart
+         && mOwningString->GetWritableFragment(mFragment, kPrevFragment) )
+      mPosition = mFragment.mEnd;
   }
 
 template <class CharT>
@@ -497,7 +533,9 @@ basic_nsAWritableString<CharT>::AssignFromPromise( const basic_nsAReadableString
           {
             // Note: not exception safe.  We need something to manage temporary buffers like this
 
-            copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+            nsReadingIterator<CharT> fromBegin, fromEnd;
+            CharT* toBegin = buffer;
+            copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AssignFromElementPtrLength(buffer, length);
             delete buffer;
           }
@@ -514,7 +552,9 @@ basic_nsAWritableString<CharT>::do_AssignFromReadable( const basic_nsAReadableSt
       // first setting the length to |0| avoids copying characters only to be overwritten later
       //  in the case where the implementation decides to re-allocate
 
-    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting());
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsWritingIterator<CharT> toBegin;
+    copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin));
   }
 
 template <class CharT>
@@ -566,7 +606,9 @@ basic_nsAWritableString<CharT>::AppendFromPromise( const basic_nsAReadableString
         CharT* buffer = new CharT[length];
         if ( buffer )
           {
-            copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+            nsReadingIterator<CharT> fromBegin, fromEnd;
+            CharT* toBegin = buffer;
+            copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AppendFromElementPtrLength(buffer, length);
             delete buffer;
           }
@@ -580,7 +622,10 @@ basic_nsAWritableString<CharT>::do_AppendFromReadable( const basic_nsAReadableSt
   {
     PRUint32 oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
-    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting()+=oldLength);
+
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsWritingIterator<CharT> toBegin;
+    copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin).advance( PRInt32(oldLength) ) );
   }
 
 template <class CharT>
@@ -632,7 +677,9 @@ basic_nsAWritableString<CharT>::InsertFromPromise( const basic_nsAReadableString
         CharT* buffer = new CharT[length];
         if ( buffer )
           {
-            copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+            nsReadingIterator<CharT> fromBegin, fromEnd;
+            CharT* toBegin = buffer;
+            copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_InsertFromElementPtrLength(buffer, atPosition, length);
             delete buffer;
           }
@@ -646,11 +693,14 @@ basic_nsAWritableString<CharT>::do_InsertFromReadable( const basic_nsAReadableSt
   {
     PRUint32 oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
+
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsWritingIterator<CharT> toBegin;
     if ( atPosition < oldLength )
-      copy_string_backward(this->BeginReading()+=atPosition, this->BeginReading()+=oldLength, EndWriting());
+      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(atPosition)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), EndWriting(toBegin));
     else
       atPosition = oldLength;
-    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting()+=atPosition);
+    copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(atPosition)));
   }
 
 template <class CharT>
@@ -687,8 +737,11 @@ basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
     PRUint32 myLength = this->Length();
     cutLength = NS_MIN(cutLength, myLength-cutStart);
     PRUint32 cutEnd = cutStart + cutLength;
+
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsWritingIterator<CharT> toBegin;
     if ( cutEnd < myLength )
-      copy_string(this->BeginReading()+=cutEnd, this->EndReading(), BeginWriting()+=cutStart);
+      copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
     SetLength(myLength-cutLength);
   }
 
@@ -720,7 +773,9 @@ basic_nsAWritableString<CharT>::ReplaceFromPromise( PRUint32 cutStart, PRUint32 
         CharT* buffer = new CharT[length];
         if ( buffer )
           {
-            copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+            nsReadingIterator<CharT> fromBegin, fromEnd;
+            CharT* toBegin = buffer;
+            copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_ReplaceFromReadable(cutStart, cutLength, basic_nsLiteralString<CharT>(buffer, length));
             delete buffer;
           }
@@ -743,13 +798,15 @@ basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUin
 
     PRUint32 newLength = oldLength - cutLength + replacementLength;
 
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsWritingIterator<CharT> toBegin;
     if ( cutLength > replacementLength )
-      copy_string(this->BeginReading()+=cutEnd, this->EndReading(), BeginWriting()+=replacementEnd);
+      copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_string_backward(this->BeginReading()+=cutEnd, this->BeginReading()+=oldLength, BeginWriting()+=replacementEnd);
+      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
 
-    copy_string(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting()+=cutStart);
+    copy_string(aReplacement.BeginReading(fromBegin), aReplacement.EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
   }
 
 

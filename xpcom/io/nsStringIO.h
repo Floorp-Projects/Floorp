@@ -55,7 +55,9 @@ inline
 void
 fprint_string( FILE* aFile, const basic_nsAReadableString<CharT>& aString )
   {
-    copy_string(aString.BeginReading(), aString.EndReading(), nsFileCharSink<CharT>(aFile));
+    nsReadingIterator<CharT> fromBegin, fromEnd;
+    nsFileCharSink<CharT> toBegin(aFile);
+    copy_string(aString.BeginReading(fromBegin), aString.EndReading(fromEnd), toBegin);
   }
 
 

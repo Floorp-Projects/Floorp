@@ -133,7 +133,10 @@ void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
      */
   size += aString.Length() * sizeof(PRUnichar);
   AtomImpl* ii = (AtomImpl*) ::operator new(size);
-  *copy_string(aString.BeginReading(), aString.EndReading(), NS_STATIC_CAST(PRUnichar *, &ii->mString[0])) = PRUnichar(0);
+
+  PRUnichar* toBegin = &ii->mString[0];
+  nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+  *copy_string(aString.BeginReading(fromBegin), aString.EndReading(fromEnd), toBegin) = PRUnichar(0);
   return ii;
 }
 
@@ -166,8 +169,11 @@ AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
 
 static PLHashNumber HashKey(const nsAReadableString* k)
 {
-  return (PLHashNumber) copy_string(k->BeginReading(), k->EndReading(),
-                                    CalculateHash()).GetHash();
+  CalculateHash hasher;
+  nsReadingIterator<PRUnichar> hashBegin, hashEnd;
+  copy_string(k->BeginReading(hashBegin), k->EndReading(hashEnd), hasher);
+
+  return NS_STATIC_CAST(PLHashNumber, hasher.GetHash());
 }
 
 static PRIntn CompareKeys( const nsAReadableString* k1, const PRUnichar* k2 )
@@ -187,8 +193,9 @@ NS_COM nsIAtom* NS_NewAtom( const nsAReadableString& aString )
                                      (PLHashComparator)CompareKeys,
                                      (PLHashComparator)0, 0, 0);
 
-  CalculateHash hasher = copy_string(aString.BeginReading(),
-                                     aString.EndReading(), CalculateHash());
+  CalculateHash hasher;
+  nsReadingIterator<PRUnichar> hashBegin, hashEnd;
+  copy_string(aString.BeginReading(hashBegin), aString.EndReading(hashEnd), hasher);
 
   PRUint32 hashCode = hasher.GetHash();
 

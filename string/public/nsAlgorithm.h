@@ -17,10 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
+ *
  */
 
 #ifndef nsAlgorithm_h___
@@ -50,7 +49,7 @@ NS_MAX( const T& a, const T& b )
 template <class InputIterator, class T>
 inline
 PRUint32
-NS_COUNT( InputIterator first, InputIterator last, const T& value )
+NS_COUNT( InputIterator& first, const InputIterator& last, const T& value )
   {
     PRUint32 result = 0;
     for ( ; first != last; ++first )
@@ -61,8 +60,8 @@ NS_COUNT( InputIterator first, InputIterator last, const T& value )
 
 template <class InputIterator, class OutputIterator>
 inline
-OutputIterator
-copy_string( InputIterator first, InputIterator last, OutputIterator result )
+OutputIterator&
+copy_string( InputIterator& first, const InputIterator& last, OutputIterator& result )
   {
     typedef nsCharSourceTraits<InputIterator> source_traits;
     typedef nsCharSinkTraits<OutputIterator>  sink_traits;
@@ -71,15 +70,15 @@ copy_string( InputIterator first, InputIterator last, OutputIterator result )
       {
         PRInt32 count_copied = PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_distance(first, last)));
         NS_ASSERTION(count_copied > 0, "|copy_string| will never terminate");
-        first += count_copied;
+        source_traits::advance(first, count_copied);
       }
 
     return result;
   }
 
 template <class InputIterator, class OutputIterator>
-OutputIterator
-copy_string_backward( InputIterator first, InputIterator last, OutputIterator result )
+OutputIterator&
+copy_string_backward( const InputIterator& first, InputIterator& last, OutputIterator& result )
   {
     while ( first != last )
       {
@@ -98,8 +97,8 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
         nsCharTraits<typename OutputIterator::value_type>::move(result.get()-lengthToCopy, last.get()-lengthToCopy, lengthToCopy);
 #endif
 
-        last -= PRInt32(lengthToCopy);
-        result -= PRInt32(lengthToCopy);
+        last.advance( -PRInt32(lengthToCopy) );
+        result.advance( -PRInt32(lengthToCopy) );
       }
 
     return result;
