@@ -53,5 +53,5 @@ icon {
 
 treeitem > treecell > titledbutton {
  vertical-align: bottom;
- list-style-image: url("resource:/res/samples/mailMessage.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/mailMessage.gif");
 }

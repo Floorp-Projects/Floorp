@@ -21,7 +21,7 @@
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="resource:/res/samples/localMailHost.gif"/>Local Mail</treecell>
+      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="resource:/res/mailnews/messenger/localMailHost.gif"/>Local Mail</treecell>
       </treeitem>
   </treebody>
 </tree>

@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
@@ -273,28 +273,28 @@
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
 	  <html:td width="80%">	  
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/newmsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/trash.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
 
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
 	  </titledbutton>
 	  </html:td>
 
 	  <html:td width="40px">	  
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
+	  <titledbutton src="resource:/res/throbber/messenger/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
 	  </html:td>
       </html:tr></html:table>
     </toolbar>
@@ -306,7 +306,7 @@
 </html:div>
 
 <html:div id="footer">
-<html:iframe src="status.html" name="browser.status" width="100%" height="34" > </html:iframe>
+<html:iframe src="resource:/res/samples/status.html" name="browser.status" width="100%" height="34" > </html:iframe>
 </html:div>
 
 </window>

@@ -26,49 +26,26 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-SAMPLES_DIR = $(DIST)/bin/res/samples
-TOOLBAR_DIR = $(DIST)/bin/res/toolbar
+SAMPLES_DIR = $(DIST)/bin/res/mailnews/compose
 
 EXPORT_RESOURCE_SAMPLES = \
 	./Compose.xul \
 	./ComposeBody.html \
 	./ComposeFrame.html \
+	./send.gif \
+	./quote.gif \
+	./address.gif \
+	./attach.gif \
+	./spelling.gif \
+	./save.gif \
+	./stop.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 
-EXPORT_RESOURCE_TOOLBAR = \
-	./mail_options.gif \
-	./mail_options_mo.gif \
-	./mail_options_dis.gif \
-	./mail_options_dep.gif \
-	./mail_quotemsg.gif \
-	./mail_quotemsg_mo.gif \
-	./mail_quotemsg_dis.gif \
-	./mail_quotemsg_dep.gif \
-	./mail_selectaddress.gif \
-	./mail_selectaddress_mo.gif \
-	./mail_selectaddress_dis.gif \
-	./mail_selectaddress_dep.gif \
-	./mail_attach.gif \
-	./mail_attach_mo.gif \
-	./mail_attach_dis.gif \
-	./mail_attach_dep.gif \
-	./mail_spelling.gif \
-	./mail_spelling_mo.gif \
-	./mail_spelling_dis.gif \
-	./mail_spelling_dep.gif \
-	./mail_save.gif \
-	./mail_save_mo.gif \
-	./mail_save_dis.gif \
-	./mail_save_dep.gif \
-	$(NULL)
-
-EXPORT_RESOURCE_TOOLBAR_TO_REMOVE := $(addprefix $(TOOLBAR_DIR)/, $(EXPORT_RESOURCE_TOOLBAR))
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
-	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(TOOLBAR_DIR)
 
 clobber::
-	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE) $(EXPORT_RESOURCE_TOOLBAR_TO_REMOVE) 
+	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE) 

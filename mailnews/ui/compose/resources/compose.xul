@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
@@ -160,7 +160,6 @@
 		<separator/>
 		<menuitem name="Address" cmd="nsCmd:ComposeNYI"/>
 		<menuitem name="Attachments" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name="Options" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
 		<menuitem name="Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
@@ -174,28 +173,25 @@
 <html:div id="toolbar">
 <toolbox>
 	<toolbar>
- 		<titledbutton src="resource:/res/toolbar/Mail_SendMsg.gif" align="bottom" value="Send" onClick="SendMessage()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/send.gif" align="bottom" value="Send" onClick="SendMessage()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_QuoteMsg.gif" align="bottom" value="Quote" onClick="QuoteMessage()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/quote.gif" align="bottom" value="Quote" onClick="QuoteMessage()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_SelectAddress.gif" align="bottom" value="Address" onClick="SelectAddress()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/address.gif" align="bottom" value="Address" onClick="SelectAddress()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_Attach.gif" align="bottom" value="Attach" onClick="AttachFile()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/attach.gif" align="bottom" value="Attach" onClick="AttachFile()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_Options.gif" align="bottom" value="Option" onClick="Options()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_Spelling.gif" align="bottom" value="Spelling" onClick="Spelling()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
 		</titledbutton>
 
- 		<titledbutton src="resource:/res/toolbar/Mail_Save.gif" align="bottom" value="Save" onClick="SaveMessage()">	
-		</titledbutton>
-
- 		<titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" onClick="Stop()">	
+ 		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()">	
 		</titledbutton>
 	</toolbar>
 	<toolbar>
@@ -220,7 +216,7 @@
 </html:div>
 
 <html:div id="footer">
-	<html:iframe src="status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
+	<html:iframe src="resource:/res/samples/status.html" name="browser.status" width="100%" height="34px" > </html:iframe>
 </html:div>
 
 </window>

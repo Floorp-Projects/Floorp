@@ -26,7 +26,7 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-SAMPLES_DIR = $(DIST)/bin/res/samples
+SAMPLES_DIR = $(DIST)/bin/res/mailnews/messenger
 
 EXPORT_RESOURCE_SAMPLES = \
 	./mailshell.xul \
@@ -36,7 +36,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	./threadPane.xul \
 	./threadPane.css \
 	./message.html \
-	./delmsg.gif \
 	./widgetglue.js \
 	./commandglue.js \
 	./shareglue.js \
@@ -49,6 +48,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	./closedInbox.gif \
 	./closedTrash.gif \
 	./closedOutbox.gif \
+	./getmsg.gif \
+	./newmsg.gif \
+	./reply.gif \
+	./forward.gif \
+	./trash.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

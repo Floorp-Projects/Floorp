@@ -43,24 +43,24 @@ treehead treeitem treecell {
 } 
 
 treeitem > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/closedMailFolder.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/closedMailFolder.gif");
 }
 
 treeitem[open="true"] > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/openMailFolder.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/openMailFolder.gif");
 }
 
 treeitem[SpecialFolder="Inbox"] > treecell > titledbutton {
  vertical-align: bottom;
- list-style-image: url("resource:/res/samples/closedInbox.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/closedInbox.gif");
 }
 
 treeitem[SpecialFolder="Trash"] > treecell > titledbutton {
  vertical-align: bottom;
- list-style-image: url("resource:/res/samples/closedTrash.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/closedTrash.gif");
 }
 
 treeitem[SpecialFolder="Unsent Messages"] > treecell > titledbutton {
  vertical-align: bottom;
- list-style-image: url("resource:/res/samples/closedOutbox.gif");
+ list-style-image: url("resource:/res/mailnews/messenger/closedOutbox.gif");
 }

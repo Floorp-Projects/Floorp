@@ -239,22 +239,22 @@
 
 
      <xul:toolbar>
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
+	  <titledbutton src="resource:/res/mailnews/getmsg.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
+	  <titledbutton src="resource:/res/mailnews/newmsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
+	  <titledbutton src="resource:/res/mailnews/reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
+	  <titledbutton src="resource:/res/mailnews/forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
+	  <titledbutton src="resource:/res/mailnews/delmsg.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
 	  </titledbutton>
 
-	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
+	  <titledbutton src="resource:/res/mailnews/trash.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
 	  </titledbutton>
 
 	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="window.frames[0].home()"/>
