@@ -1736,11 +1736,7 @@ void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
   mBuffer.Append("</");
   mBuffer.Append(tagName);
   mBuffer.Append(">");
-  CSkippedContentToken* skipped = new CSkippedContentToken(mBuffer);
-  nsString& key = skipped->GetKey();
-  key = mBuffer;
-  
-  startNode.SetSkippedContent(skipped);  
+  startNode.SetSkippedContent(mBuffer);
   mSink->AddLeaf(startNode);
 
 }

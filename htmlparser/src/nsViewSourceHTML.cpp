@@ -526,14 +526,15 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
         temp="";
         break;
       case kSpace:
-        if((PR_TRUE==aPreserveSpace) && (kSpace==aTextString.CharAt(theOffset+1))) {
-          if(temp.Length())
-            result=aSink.AddLeaf(theTextNode); //just dump the whole string...
-          WriteNBSP(1,aSink);
-          temp="";
-          break;
-        }
-        //fall through...
+       if((PR_TRUE==aPreserveSpace)) { 
+          if(aTextString.Length() > theOffset+1 && (kSpace==aTextString.CharAt(theOffset+1))) { 
+            if(temp.Length()) 
+              result=aSink.AddLeaf(theTextNode); //just dump the whole string... 
+            WriteNBSP(1,aSink); 
+            temp=""; 
+            break; 
+          } 
+        }         //fall through...
       default:
           //scan ahead looking for valid chars...
         temp+=aTextString.CharAt(theOffset);
@@ -751,7 +752,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_text:
       {
         nsString& theText=aToken->GetStringValueXXX();
-        WriteText(theText,*mSink,PR_FALSE);
+        WriteText(theText,*mSink,PR_TRUE);
       }
       break;
 
@@ -801,8 +802,8 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         CToken* theNextToken = mTokenizer->PopToken();
         if(theNextToken) {
           theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-          if(eToken_skippedcontent==theType) {
-            attrNode.SetSkippedContent(theNextToken);
+          if(eToken_text==theType) {
+            attrNode.SetSkippedContent(theNextToken->GetStringValueXXX());
           } 
         }
         result= OpenHead(attrNode);
@@ -813,7 +814,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           if(NS_OK==result)
             result=CloseHead(attrNode);
         }
-        nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
+        const nsString& theText=attrNode.GetSkippedContent();
         WriteText(theText,*mSink,PR_FALSE);
       }
       break;

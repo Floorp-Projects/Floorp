@@ -186,6 +186,7 @@ class nsIParser : public nsISupports {
      *  @return  ptr to scanner
      */
     virtual eParseMode GetParseMode(void)=0;
+
 };
 
 /* ===========================================================*

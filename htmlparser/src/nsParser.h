@@ -69,7 +69,7 @@ class nsIHTMLContentSink;
 class nsIDTD;
 class nsScanner;
 class nsIParserFilter;
-class nsTagStack;
+
 
 #include <fstream.h>
 
@@ -165,7 +165,7 @@ friend class CTokenHandler;
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE, void* aKey=0);
+    virtual nsresult Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0);
 
     /**
      * Cause parser to parse input from given stream 
@@ -173,7 +173,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE, void* aKey=0);
+    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE,void* aKey=0);
 
     /**
      * @update	gess5/11/98
@@ -182,7 +182,6 @@ friend class CTokenHandler;
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual nsresult Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
-
 
     virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);
     virtual nsresult  ParseFragment(nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);

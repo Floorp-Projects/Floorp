@@ -297,17 +297,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
 
     /**
-     *  This is called to determine if the given parent can omit the
-	   *  given child (end tag).
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- tag type of parent
-     *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain omit child (end tag)
-     */
-    virtual PRBool CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild)const;
-
-    /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  
@@ -405,7 +394,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult    HandleEndToken(CToken* aToken);
     nsresult    HandleEntityToken(CToken* aToken);
     nsresult    HandleCommentToken(CToken* aToken);
-    nsresult    HandleSkippedContentToken(CToken* aToken);
     nsresult    HandleAttributeToken(CToken* aToken);
     nsresult    HandleScriptToken(nsCParserNode& aNode);
     nsresult    HandleStyleToken(CToken* aToken);
@@ -431,7 +419,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult OpenForm(const nsIParserNode& aNode);
     nsresult OpenMap(const nsIParserNode& aNode);
     nsresult OpenFrameset(const nsIParserNode& aNode);
-    nsresult OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack);
+    nsresult OpenContainer(const nsIParserNode& aNode,PRBool aClosedByStartTag);
 
     /**
      * The next set of methods close the given HTML element.
@@ -446,7 +434,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult CloseForm(const nsIParserNode& aNode);
     nsresult CloseMap(const nsIParserNode& aNode);
     nsresult CloseFrameset(const nsIParserNode& aNode);
-    nsresult CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aUpdateStyles);
+    nsresult CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aClosedByStartTag);
     
     /**
      * The special purpose methods automatically close
@@ -455,8 +443,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @return  error code - 0 if all went well.
      */
     nsresult CloseTopmostContainer();
-    nsresult CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
-    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles);
+    nsresult CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag);
+    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aClosedByStartTag);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -465,7 +453,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @return  error code - 0 if all went well.
      */
     nsresult AddLeaf(const nsIParserNode& aNode);
-    nsresult AddHeadLeaf(const nsIParserNode& aNode);
+    nsresult AddHeadLeaf(nsIParserNode& aNode);
 
     /**
      * Causes auto-closures of context vector stack in order to find a 
@@ -495,17 +483,16 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aTag -- represents the transient style tag to be handled.
      * @return  error code -- usually 0
      */
-    nsresult  OpenTransientStyles(eHTMLTags aTag);
-    nsresult  CloseTransientStyles(eHTMLTags aTag);
+    nsresult  OpenTransientStyles(eHTMLTags aChildTag);
+    nsresult  CloseTransientStyles(eHTMLTags aChildTag);
     nsresult  UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
     nsresult  UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    PRBool    CanContainStyles(eHTMLTags aTag) const;
 
     nsresult  DoFragment(PRBool aFlag);
 
 protected:
 
-		nsresult    CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
+		nsresult    CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
 		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult    DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
@@ -531,8 +518,10 @@ protected:
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
     nsDeque             mMisplacedContent;
+    nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
     PRBool              mSaveBadTokens;
+    eHTMLTags           mSkipTarget;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;

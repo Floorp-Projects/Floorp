@@ -91,6 +91,13 @@ class nsCParserNode :  public nsIParserNode {
     virtual const nsString& GetSkippedContent() const;
 
     /**
+     * Retrieve skipped context from node
+     * @update	gess5/11/98
+     * @return  string containing skipped content
+     */
+    virtual void SetSkippedContent(nsString& aString);
+
+    /**
      * Retrieve the type of the parser node.
      * @update	gess5/11/98
      * @return  node type.
@@ -149,14 +156,6 @@ class nsCParserNode :  public nsIParserNode {
     virtual void AddAttribute(CToken* aToken);
 
     /**
-     * 
-     * @update	gess5/11/98
-     * @param 
-     * @return
-     */
-    virtual void SetSkippedContent(CToken* aToken);
-
-    /**
      * This getter retrieves the line number from the input source where
      * the token occured. Lines are interpreted as occuring between \n characters.
      * @update	gess7/24/98
@@ -169,15 +168,14 @@ class nsCParserNode :  public nsIParserNode {
      * @return  token at anIndex
      */
     virtual CToken* PopAttributeToken();
-              
-  protected:
-    PRUint32  mAttributeCount;    
-    PRInt32   mLineNumber;
-    CToken*   mToken;
-    CToken*   mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
-    CToken*   mSkippedContent;
-    nsITokenRecycler* mRecycler;
     
+  protected:
+    PRUint32      mAttributeCount;    
+    PRInt32       mLineNumber;
+    CToken*       mToken;
+    CToken*       mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
+    nsAutoString  mSkippedContent;
+    nsITokenRecycler* mRecycler;
 };
 
 #endif

@@ -69,7 +69,7 @@ public:
 
 protected:
 
-  virtual nsresult HandleSkippedContent(nsScanner& aScanner,CToken*& aToken);
+  virtual nsresult ConsumeScriptContent(nsScanner& aScanner,CToken*& aToken);
   virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
@@ -79,7 +79,6 @@ protected:
   virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeContentToEndTag(PRUnichar aChar,eHTMLTags aChildTag,nsScanner& aScanner,CToken*& aToken);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler);

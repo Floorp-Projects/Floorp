@@ -29,7 +29,6 @@
 #include "nsHTMLTags.h"
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
-#include "nsStr.h"
 
 //#define GESS_MACHINE
 #ifdef GESS_MACHINE
@@ -78,7 +77,6 @@ void CHTMLToken::SetStringValue(const char* name){
     mTypeID = NS_TagToEnum(name);
   }
 }
-
 
 /*
  *  constructor from tag id
@@ -272,6 +270,19 @@ void CStartToken::DebugDumpSource(ostream& out) {
     out << ">";
 }
 
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   anOutputString will recieve the result
+ *  @return  nada
+ */
+void CStartToken::GetSource(nsString& anOutputString){
+  anOutputString="<";
+  anOutputString+=mTextValue;
+  if(!mAttributed)
+    anOutputString+=">";
+}
 
 /*
  *  constructor from tag id
@@ -303,7 +314,6 @@ CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
  *  @return  error result
  */
 nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-
   //if you're here, we've already Consumed the <! chars, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
@@ -386,6 +396,19 @@ void CEndToken::DebugDumpSource(ostream& out) {
   char buffer[1000];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   out << "</" << buffer << ">";
+}
+
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   anOutputString will recieve the result
+ *  @return  nada
+ */
+void CEndToken::GetSource(nsString& anOutputString){
+  anOutputString="</";
+  anOutputString+=mTextValue;
+  anOutputString+=">";
 }
 
 /*
@@ -472,6 +495,70 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
     }
   }
   return result;
+}
+
+/*
+ *  Consume as much clear text from scanner as possible.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aChar -- last char consumed from stream
+ *  @param   aScanner -- controller of underlying input source
+ *  @return  error result
+ */
+nsresult CTextToken::ConsumeUntil(PRUnichar aChar,nsScanner& aScanner,nsString& aTerminalString){
+  PRBool      done=PR_FALSE; 
+  nsresult    result=NS_OK; 
+  nsString    temp; 
+  PRUnichar   theChar;
+
+  //We're going to try a new algorithm here. Rather than scan for the matching 
+ //end tag like we used to do, we're now going to scan for whitespace and comments. 
+ //If we find either, just eat them. If we find text or a tag, then go to the 
+ //target endtag, or the start of another comment. 
+
+  static nsAutoString theWhitespace2("\b\t ");
+
+  while((!done) && (NS_OK==result)) { 
+    result=aScanner.GetChar(aChar); 
+    if((NS_OK==result) && (kLessThan==aChar)) { 
+      //we're reading a tag or a comment... 
+      result=aScanner.GetChar(theChar); 
+      if((NS_OK==result) && (kExclamation==theChar)) { 
+        //read a comment... 
+        static CCommentToken theComment; 
+        result=theComment.Consume(aChar,aScanner); 
+        if(NS_OK==result) { 
+          //result=aScanner.SkipWhitespace();
+          //temp.Append("<!");
+          temp.Append(theComment.GetStringValueXXX()); 
+          //temp.Append(">");
+        } 
+      } else { 
+        //read a tag... 
+        temp+=aChar; 
+        temp+=theChar; 
+        result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
+      } 
+    } 
+    else if(0<=theWhitespace2.BinarySearch(aChar)) { 
+      static CWhitespaceToken theWS; 
+      result=theWS.Consume(aChar,aScanner); 
+      if(NS_OK==result) { 
+        temp.Append(theWS.GetStringValueXXX()); 
+      } 
+    } 
+    else { 
+      temp+=aChar; 
+      result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
+    } 
+    nsAutoString theRight;
+    temp.Right(theRight,aTerminalString.Length());
+    done=PRBool(0==theRight.Compare(aTerminalString,PR_TRUE)); 
+  }  //while
+  int len=temp.Length(); 
+  temp.Truncate(len-aTerminalString.Length()); 
+  mTextValue=temp; 
+  return result; 
 }
 
 /*
@@ -759,14 +846,16 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   PRBool theStrictForm=PR_FALSE;
   nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
 
+/*
   //this change is here to make the editor teams' life easier.
   //I'm removing the leading and trailing markup...
-/*
+
   if(0==mTextValue.Find("<!"))
     mTextValue.Cut(0,2);  //trim off 1st 2 chars...
   if(kGreaterThan==mTextValue.Last())
     mTextValue.Truncate(mTextValue.Length()-1); //trim off last char
 */
+
   return result;
 }
 
@@ -860,21 +949,21 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   mTextValue=aChar;
 
     //we already read the \r or \n, let's see what's next!
-  PRUnichar nextChar;
-  nsresult result=aScanner.Peek(nextChar);
+  PRUnichar theChar;
+  nsresult result=aScanner.Peek(theChar);
 
   if(NS_OK==result) {
     switch(aChar) {
       case kNewLine:
-        if(kCR==nextChar) {
-          result=aScanner.GetChar(nextChar);
-          mTextValue+=nextChar;
+        if(kCR==theChar) {
+          result=aScanner.GetChar(theChar);
+          mTextValue+=theChar;
         }
         break;
       case kCR:
-        if(kNewLine==nextChar) {
-          result=aScanner.GetChar(nextChar);
-          mTextValue+=nextChar;
+        if(kNewLine==theChar) {
+          result=aScanner.GetChar(theChar);
+          mTextValue+=theChar;
         }
         break;
       default:
@@ -968,6 +1057,19 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
   out << buffer << ": " << mTypeID << endl;
 }
  
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   anOutputString will recieve the result
+ *  @return  nada
+ */
+void CAttributeToken::GetSource(nsString& anOutputString){
+  anOutputString=mTextKey;
+  anOutputString+="=";
+  anOutputString+=mTextValue;
+  anOutputString+=";";
+}
 
 /*
  *  This general purpose method is used when you want to
@@ -997,8 +1099,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar)
     aString+=aChar;
-  // aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
-  aString.StripChars("\r"); //per the HTML spec, ignore linefeeds...
+  //aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
+  aString.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
   return result;
 }
 
@@ -1270,6 +1372,7 @@ const char*  CEntityToken::GetClassName(void) {
   return "&entity";
 }
 
+
 /*
  *  
  *  
@@ -1440,6 +1543,19 @@ void CEntityToken::DebugDumpSource(ostream& out) {
 }
 
 /*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   anOutputString will recieve the result
+ *  @return  nada
+ */
+void CEntityToken::GetSource(nsString& anOutputString){
+  anOutputString="&";
+  anOutputString+=anOutputString;
+  anOutputString+=";";
+}
+
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
@@ -1591,9 +1707,9 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
       temp+=aChar; 
       result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
     } 
-    nsAutoString temp2;
-    temp.Right(temp2,mTextValue.Length());
-    done=PRBool(0==temp2.Compare(mTextValue.GetUnicode(),PR_TRUE,mTextValue.Length())); 
+    nsAutoString theRight;
+    temp.Right(theRight,mTextValue.Length());
+    done=PRBool(0==theRight.Compare(mTextValue,PR_TRUE)); 
   } 
   int len=temp.Length(); 
   temp.Truncate(len-mTextValue.Length()); 
@@ -1616,6 +1732,16 @@ void CSkippedContentToken::DebugDumpSource(ostream& out) {
     out<<">";
 }
 
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   anOutputString will recieve the result
+ *  @return  nada
+ */
+void CSkippedContentToken::GetSource(nsString& anOutputString){
+  anOutputString="$skipped-content";
+}
 
 /**
  * 
