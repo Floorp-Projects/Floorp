@@ -29,7 +29,7 @@ public class SetupPlugin extends Plugin
 {
     static private Hashtable       iniFileCache = new Hashtable();
 
-    final public void debug( String s )
+    static final public void debug( String s )
     {
         System.out.println( s );
     }
