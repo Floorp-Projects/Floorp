@@ -1144,7 +1144,7 @@ NS_IMETHODIMP nsMsgDatabase::IsIgnored(nsMsgKey key, PRBool *pIgnored)
 	nsresult rv = GetThreadForMsgKey(key, getter_AddRefs(threadHdr));
 	// This should be very surprising, but we leave that up to the caller
 	// to determine for now.
-	if (threadHdr == NULL)
+	if (!threadHdr)
 		return NS_MSG_MESSAGE_NOT_FOUND;
 
 	PRUint32 threadFlags;
@@ -1382,7 +1382,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 		msgHdr->GetMessageKey(&msgKey);
 
 		rv = GetThreadForMsgKey(msgKey, getter_AddRefs(threadHdr));
-		if (threadHdr != NULL)
+		if (threadHdr)
 		{
 			threadHdr->MarkChildRead(bRead);
 		}
