@@ -39,7 +39,22 @@ function StartUp()
     SwitchProfileManagerMode();
   // bundle = srGetStrBundle("chrome://profile/locale/profileSelection.properties");
   loadElements();
+  highlightCurrentProfile();
   DoEnabling();
+}
+
+// select the last opened profile in the profile list
+function highlightCurrentProfile()
+{
+  try {
+    var currentProfile = profile.currentProfile;
+    var currentProfileItem = document.getElementById( ( "profileName_" + currentProfile ) );
+    var profileList = document.getElementById( "profiles" );
+    profileList.selectItem( currentProfileItem );
+  }
+  catch(e) {
+    dump("*** failed to select current profile in list\n");
+  }
 }
 
 // function : <profileSelection.js>::AddItem();
@@ -58,6 +73,7 @@ function AddItem( aChildren, aCells, aIdfier, aMigrate)
   item.appendChild(row);
   item.setAttribute("profile_name", aIdfier);
   item.setAttribute("rowName", aIdfier);
+  item.setAttribute("id", ( "profileName_" + aIdfier ) );
   if( aMigrate )
     item.setAttribute("rowMigrate", "true");
   // 23/10/99 - no roaming access yet!
