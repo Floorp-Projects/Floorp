@@ -473,7 +473,13 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   
   // XXX Should focus only this presContext
   Focus();
-  return NS_OK;
+
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->ScrollIntoView(aPresContext);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
