@@ -785,7 +785,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
             if (p.y < 0) p.y = 0;
             char cbuf[50];
             PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
-            absURL.Append(cbuf);
+            absURL.AppendWithConversion(cbuf);
             PRBool clicked = PR_FALSE;
             if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
               *aEventStatus = nsEventStatus_eConsumeDoDefault; 

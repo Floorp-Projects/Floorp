@@ -1190,7 +1190,7 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
   if (mStyleSet) {
     PRInt32 count = mStyleSet->GetNumberOfDocStyleSheets();
     PRInt32 index;
-    nsAutoString textHtml("text/html");
+    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = mStyleSet->GetDocStyleSheetAt(index);
       if (nsnull != sheet) {
@@ -1217,7 +1217,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
   if (mDocument && mStyleSet) {
     PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
-    nsAutoString textHtml("text/html");
+    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
       if (nsnull != sheet) {
@@ -1249,7 +1249,7 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
   if (mDocument) {
     PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
-    nsAutoString textHtml("text/html");
+    nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
       if (nsnull != sheet) {
@@ -3554,7 +3554,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
     }
   }
   else {
-    name = "(null)";
+    name.AssignWithConversion("(null)");
   }
   fputs(name, stdout);
 
@@ -3569,7 +3569,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
     }
   }
   else {
-    name = "(null)";
+    name.AssignWithConversion("(null)");
   }
   fputs(name, stdout);
 
