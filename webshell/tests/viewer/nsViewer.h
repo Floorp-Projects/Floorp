@@ -27,6 +27,7 @@
 #include "nsIAppShell.h"
 #include "nsString.h"
 #include "nsINetContainerApplication.h"
+#include "nsVoidArray.h"
 
 class nsITextWidget;
 
@@ -113,6 +114,7 @@ public:
 
   nsIWebWidget* mWebWidget;
   nsIWidget* mWindowWidget;
+  nsViewer* mViewer;
 
 protected:
   virtual ~DocObserver();
@@ -142,6 +144,7 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   public:
     nsViewer() {
       mLocation = nsnull;
+      mHistoryIndex = 0;
     }
 
     // nsISupports
@@ -187,11 +190,18 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
 
   void Layout(WindowData* aWindowData, int aWidth, int aHeight);
+
   void Back();
   void Forward();
   void GoTo(const nsString& aURL);
+  void GoingTo(const nsString& aURL);
+  void ShowHistory();
 
   nsITextWidget* mLocation;
+
+  // Cheesy history (just the urls are stored)
+  nsVoidArray mHistory;
+  PRInt32 mHistoryIndex;
 };
 
   // Set the single viewer.

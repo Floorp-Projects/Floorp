@@ -100,7 +100,7 @@ static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
-#define VIEWER_UI
+#undef VIEWER_UI
 #undef INSET_WEBWIDGET
 
 #ifdef VIEWER_UI
@@ -502,12 +502,15 @@ DocObserver::LoadURL(const char* aURL)
 {
   nsresult rv;
 
-  rv = mDocLoader->LoadURL(aURL,            // URL string
-                           nsnull,          // Command
-                           this,            // Container
-                           nsnull,          // Post Data
-                           nsnull,          // Extra Info...
-                           this);           // Observer
+  if (nsnull != mViewer) {
+    mViewer->GoingTo(aURL);
+    rv = mDocLoader->LoadURL(aURL,            // URL string
+                             nsnull,          // Command
+                             this,            // Container
+                             nsnull,          // Post Data
+                             nsnull,          // Extra Info...
+                             this);           // Observer
+  }
 }
 
 NS_IMETHODIMP
@@ -542,12 +545,15 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
   nsresult rv;
 
   if (nsnull != mDocLoader) {
-    rv = mDocLoader->LoadURL(aURLSpec,        // URL string
-                             nsnull,          // Command
-                             this,            // Container
-                             aPostData,       // Post Data
-                             nsnull,          // Extra Info...
-                             this);           // Observer
+    if (nsnull != mViewer) {
+      mViewer->GoingTo(aURLSpec);
+      rv = mDocLoader->LoadURL(aURLSpec,        // URL string
+                               nsnull,          // Command
+                               this,            // Container
+                               aPostData,       // Post Data
+                               nsnull,          // Extra Info...
+                               this);           // Observer
+    }
 ///  if (nsnull != mWebWidget) {
 ///    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
 ///    targetWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
@@ -1207,6 +1213,23 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
   NS_ShutdownINetService();
 }
 
+void
+nsViewer::ShowHistory()
+{
+  PRInt32 i, n = mHistory.Count();
+  for (i = 0; i < n; i++) {
+    if (i == mHistoryIndex) {
+      printf("**");
+    }
+    else {
+      printf("  ");
+    }
+    nsString* u = (nsString*) mHistory.ElementAt(i);
+    fputs(*u, stdout);
+    printf("\n");
+  }
+}
+
 nsEventStatus PR_CALLBACK HandleBackEvent(nsGUIEvent *aEvent)
 {
   switch(aEvent->message) {
@@ -1220,7 +1243,11 @@ nsEventStatus PR_CALLBACK HandleBackEvent(nsGUIEvent *aEvent)
 void
 nsViewer::Back()
 {
-  printf("back\n");
+  printf("Back\n");
+  if (0 != mHistoryIndex) {
+    mHistoryIndex--;
+  }
+  ShowHistory();
 }
 
 nsEventStatus PR_CALLBACK HandleForwardEvent(nsGUIEvent *aEvent)
@@ -1236,7 +1263,11 @@ nsEventStatus PR_CALLBACK HandleForwardEvent(nsGUIEvent *aEvent)
 void
 nsViewer::Forward()
 {
-  printf("forward\n");
+  printf("Forward\n");
+  if (mHistoryIndex < mHistory.Count()) {
+    mHistoryIndex++;
+  }
+  ShowHistory();
 }
 
 nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
@@ -1257,6 +1288,25 @@ nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
 void
 nsViewer::GoTo(const nsString& aURL)
 {
+}
+
+void
+nsViewer::GoingTo(const nsString& aURL)
+{
+  // Discard part of history that is no longer reachable
+  PRInt32 n;
+  while (mHistoryIndex < (n = mHistory.Count())) {
+    nsString* u = (nsString*) mHistory.ElementAt(n - 1);
+    delete u;
+    mHistory.RemoveElementAt(n - 1);
+  }
+
+  // Tack on new url
+  nsString* url = new nsString(aURL);
+  mHistory.AppendElement(url);
+  mHistoryIndex++;
+
+  ShowHistory();
 }
 
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
@@ -1363,6 +1413,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   rv = ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
 ///  ww->Show();
   wd->observer = NewObserver(wd->windowWidget, ww);
+  wd->observer->mViewer = this;
   NS_RELEASE(ww);
 
 
