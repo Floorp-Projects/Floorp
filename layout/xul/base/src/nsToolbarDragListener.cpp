@@ -175,7 +175,7 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
     // now check to see if the mouse inside an items bounds
     if (rect.Contains(pnt)) {
       nsCOMPtr<nsIContent> content;
-      nsresult result = childFrame->GetContent(getter_AddRefs(content));
+      childFrame->GetContent(getter_AddRefs(content));
       if ( content ) {
         nsCOMPtr<nsIAtom> tag;
         content->GetTag(*getter_AddRefs(tag));
