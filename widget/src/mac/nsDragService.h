@@ -67,7 +67,7 @@ private:
   char* LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef ) ;
 
   void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
-  void BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn ) ;
+  PRBool BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNode, RgnHandle ioDragRgn ) ;
   OSErr GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
                              FlavorType inFlavor, void** outData, unsigned int * outSize ) ;
   nsresult ExtractDataFromOS ( DragReference inDragRef, ItemReference inItemRef, ResType inFlavor, 
@@ -81,7 +81,7 @@ private:
   										 ItemReference theItemRef, DragReference inDragRef ) ;
 
   PRBool mImageDraggingSupported;
-  static DragSendDataUPP sDragSendDataUPP;
+  DragSendDataUPP mDragSendDataUPP;
   DragReference mDragRef;        // reference to _the_ drag. There can be only one.
   nsISupportsArray* mDataItems;  // cached here for when we start the drag so the 
                                  // DragSendDataProc has access to them. 
