@@ -299,10 +299,10 @@ nsresult nsMailtoUrl::ParseUrl()
                                             startOfSearchPart);
     if (!searchPart.IsEmpty())
     {
-      ParseMailtoUrl(NS_CONST_CAST(char*, searchPart.get()));
       // now we need to strip off the search part from the
       // to part....
       m_toPart.Cut(startOfSearchPart, numExtraChars);
+      ParseMailtoUrl(NS_CONST_CAST(char*, searchPart.get()));
     }
 	}
   else if (!m_toPart.IsEmpty())
