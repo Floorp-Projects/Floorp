@@ -36,7 +36,7 @@
 #define MAX_ATTRIBUTES 256
 #define EXPECTING_OBJECT 1
 #define EXPECTING_PROPERTY 2
-#define  GROW_LIST_INCR 100
+#define  GROW_LIST_INCR 1000
 
 typedef struct _RDF_ResourceStruct {
   char* url;
@@ -56,14 +56,13 @@ typedef enum {
 
 typedef struct _RDF_FileStruct {
   char* url;
+  int   status;
   char* storeAway;
   char* line;
-  int   status;
   char* holdOver;
-  RDF_Resource stack[16];
+  RDF_Resource stack[256];
   RDF_Resource lastItem;
   int   depth ;
-  char* tagStack[16];
   int   tagDepth;
   int   assertionListCount;
   int   assertionListSize;
@@ -107,6 +106,7 @@ void HashAdd (HashTable ht, char* key, void* value) ;
 
 RDF_Resource getResource(char* url, int createp);
 char* getMem(size_t n);
+char* fgetMem (size_t size) ;
 void  freeMem(void* item);
 RDFT initFileStruct (char* url) ;
 void rdf_init();
@@ -127,6 +127,7 @@ int tokenizeElement (char* attr, char** attlist, char** elementName);
 void addSlotValue (RDFT f, RDF_Resource u, RDF_Resource s, void* v, 
                    RDF_ValueType type, char* op);
 char* copyString(char* str) ;
+char*  fcopyString (char* str) ;
 
 
 
