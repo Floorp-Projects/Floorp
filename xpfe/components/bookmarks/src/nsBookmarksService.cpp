@@ -85,6 +85,12 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 
+#ifdef	DEBUG
+#ifdef	XP_MAC
+#include <Timer.h>
+#endif
+#endif
+
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
 // #define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
@@ -471,7 +477,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 					// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
 
 					// Hack Start
-					for(PRInt32 i=0;i<unicharLength;i++)
+					for(PRInt32 i=0;i<unicharLength-1; i++)
 						if(0x0000 == unichars[i])	unichars[i] = 0x0020;
 					// Hack End
 
@@ -3130,6 +3136,8 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 	return rv;
 }
 
+
+
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks()
 {
@@ -3157,7 +3165,12 @@ nsBookmarksService::ReadBookmarks()
 	PRBool	foundIERoot = PR_FALSE;
 
 #ifdef	DEBUG
-	PRTime		now = PR_Now();
+	PRTime		now;
+#ifdef	XP_MAC
+	Microseconds((UnsignedWide *)&now);
+#else
+	now = PR_Now();
+#endif
 	printf("Start reading in bookmarks.html\n");
 #endif
 
@@ -3337,12 +3350,17 @@ nsBookmarksService::ReadBookmarks()
 #endif
 
 #ifdef	DEBUG
-	PRTime		now2 = PR_Now();
+	PRTime		now2;
+#ifdef	XP_MAC
+	Microseconds((UnsignedWide *)&now2);
+#else
+	now2 = PR_Now();
+#endif
 	PRUint64	loadTime64;
 	LL_SUB(loadTime64, now2, now);
 	PRUint32	loadTime32;
 	LL_L2UI(loadTime32, loadTime64);
-	printf("Finished reading in bookmarks.html  (%lu microseconds)\n", loadTime32);
+	printf("Finished reading in bookmarks.html  (%u microseconds)\n", loadTime32);
 #endif
 
 	return NS_OK;	
@@ -3726,6 +3744,251 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 // Component Exports
 
 
+#if 1
+
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
+
+
+
+// Module implementation
+class nsBookmarksServiceModule : public nsIModule
+{
+public:
+    nsBookmarksServiceModule();
+    virtual ~nsBookmarksServiceModule();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIMODULE
+
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mBookmarksServiceFactory;
+};
+
+
+
+nsBookmarksServiceModule::nsBookmarksServiceModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsBookmarksServiceModule::~nsBookmarksServiceModule()
+{
+    Shutdown();
+}
+
+
+
+NS_IMPL_ISUPPORTS(nsBookmarksServiceModule, NS_GET_IID(nsIModule))
+
+
+
+// Perform our one-time intialization for this module
+nsresult
+nsBookmarksServiceModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+
+
+// Shutdown this module, releasing all of the module resources
+void
+nsBookmarksServiceModule::Shutdown()
+{
+    // Release the factory object
+    mBookmarksServiceFactory = nsnull;
+}
+
+
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsBookmarksServiceModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    nsCOMPtr<nsIGenericFactory> fact;
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    if (aClass.Equals(kBookmarksServiceCID))
+    {
+    	if (!mBookmarksServiceFactory) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mBookmarksServiceFactory),
+                                      NS_NewBookmarksService);
+        }
+        fact = mBookmarksServiceFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsBookmarksServiceModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Bookmarks", &kBookmarksServiceCID, NS_BOOKMARKS_SERVICE_PROGID },
+    { "Bookmarks", &kBookmarksServiceCID, NS_BOOKMARKS_DATASOURCE_PROGID },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+
+
+NS_IMETHODIMP
+nsBookmarksServiceModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering nsBookmarksServiceModule\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsBookmarksServiceModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksServiceModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering nsBookmarksServiceModule\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsBookmarksServiceModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksServiceModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+
+
+//----------------------------------------------------------------------
+
+static nsBookmarksServiceModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsBookmarksServiceModule *m = new nsBookmarksServiceModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
+}
+
+
+
+#else
+
+
 
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServiceMgr,
@@ -3809,3 +4072,5 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 
 	return NS_OK;
 }
+
+#endif
