@@ -31,8 +31,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# XfeTest headers (only one) are exported to dist/public/XfeTest/Xfe
+# XfeTest headers (only one) are exported to dist/include/Xfe
 MODULE			= XfeTest/Xfe
+INCL_SUBDIR		= /Xfe
 
 LIBRARY_NAME	= XfeTest
 

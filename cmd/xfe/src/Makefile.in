@@ -69,8 +69,7 @@ REQUIRES	=\
 			caps
 
 ifdef OJI
-REQUIRES +=	  oji \
-		  ojiimpl
+REQUIRES +=	  oji ojiimpl
 endif
 
 ifdef MOZ_MAIL_NEWS
@@ -330,7 +329,7 @@ INCLUDES	+= -I$(OBJDIR) -I$(srcdir)/.. -I$(srcdir)/../DtWidgets -I$(topsrcdir)/m
 		-I$(DEPTH)/dist/public/security
 
 ifdef MOZ_MAIL_NEWS
-INCLUDES	+= -I$(topsrcdir)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
+INCLUDES	+= -I$(topsrcdir)/lib/libmsg
 endif
 
 DEFINES		+= -DNEW_DECODERS -DDELAYED_MENU_CREATION -DNETCASTER_ZAXIS_HACKERY
