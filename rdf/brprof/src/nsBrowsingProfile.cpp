@@ -163,24 +163,10 @@ nsBrowsingProfile::~nsBrowsingProfile()
 
     --gRefCnt;
     if (gRefCnt == 0) {
-        nsresult rv;
-
         // release all the properties:
-        if (gCategoryIDProperty) {
-            rv = gRDFService->UnregisterResource(gCategoryIDProperty);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "UnregisterResource failed");
-            gCategoryIDProperty = nsnull;
-        }
-        if (gChildProperty) {
-            rv = gRDFService->UnregisterResource(gChildProperty);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "UnregisterResource failed");
-            gChildProperty = nsnull;
-        }
-        if (gPageProperty) {
-            rv = gRDFService->UnregisterResource(gPageProperty);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "UnregisterResource failed");
-            gPageProperty = nsnull;
-        }
+        NS_IF_RELEASE(gCategoryIDProperty);
+        NS_IF_RELEASE(gChildProperty);
+        NS_IF_RELEASE(gPageProperty);
 
         if (gCategoryDB) {
             NS_RELEASE(gCategoryDB);
