@@ -1263,7 +1263,6 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner, &digest, HASH_AlgSHA1, PR_TRUE);
   if (rv != PR_TRUE) {
     *aErrorCode = PR_GetError();
-    return NS_OK;
   }
 
   // Get the signing cert //
