@@ -1,13 +1,19 @@
 #!/bin/sh
 #
 # Stupid wrapper to avoid win32 dospath/cygdrive issues
+# Try not to spawn programs from within this file. If the stuff in here looks royally 
+# confusing, see bug: http://bugzilla.mozilla.org/show_bug.cgi?id=206643
+# and look at the older versions of this file that are easier to read, but
+# do basically the same thing
 #
+
 prog=$1
 shift
 if test -z "$prog"; then
     exit 0
 fi
 
+# If $CYGDRIVE_MOUNT was not set in configure, give $mountpoint the results of mount -p
 mountpoint=$CYGDRIVE_MOUNT
 if test -z "$mountpoint"; then
     mountpoint=`mount -p`
@@ -17,6 +23,7 @@ if test -z "$mountpoint"; then
     fi
 fi
 
+# Delete everything but "/cygdrive" (or other mountpoint) from mount=`mount -p`
 mountpoint=${mountpoint#*/}
 mountpoint=/${mountpoint%%[!A-Za-z0-9_]*}
 mountpoint=${mountpoint%/}
@@ -31,6 +38,8 @@ fi
 
 process=1
 
+# Convert the mountpoint in parameters to Win32 filenames
+# For instance: /cygdrive/c/foo -> c:/foo
 for i in "${@}"
 do
     if test "${i}" = "-wrap"; then
