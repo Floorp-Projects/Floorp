@@ -85,6 +85,9 @@ public:
 
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
+  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
