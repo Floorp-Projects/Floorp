@@ -29,10 +29,10 @@
 // nsISupports implementation...
 //----------------------------------------------------------------------------
 //
-NS_IMPL_ISUPPORTS3(nsSimpleStreamProvider,
-                   nsISimpleStreamProvider,
-                   nsIStreamProvider,
-                   nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSimpleStreamProvider,
+                              nsISimpleStreamProvider,
+                              nsIStreamProvider,
+                              nsIStreamObserver)
 
 //
 //----------------------------------------------------------------------------
