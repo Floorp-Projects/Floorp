@@ -132,9 +132,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         const PRUint8 *data)
 {
 
-#ifdef DEBUG
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
+#ifdef DEBUG
     if (aLoader) {
       nsCOMPtr<nsIRequest> request;
       aLoader->GetRequest(getter_AddRefs(request));
@@ -151,8 +151,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         }
       }
     }
-  }
 #endif
+    return aStatus;
+  }
 
   int fd, mask = 0;
 
