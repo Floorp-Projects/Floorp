@@ -434,7 +434,7 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
     if (aEndTime)
         aEndTime->ToIcalTime(&dtend);
 
-    if (icaltime_compare (dtstart, dtend) > 0) {
+    if (icaltime_compare (rangestart, dtend) > 0) {
         *aItems = nsnull;
         *aCount = 0;
         return NS_OK;
@@ -452,6 +452,11 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
     while (!icaltime_is_null_time(next)) {
         if (*aCount && *aCount < count)
             break;
+
+        if (icaltime_compare(next, rangestart) < 0) {
+            next = icalrecur_iterator_next(recur_iter);
+            continue;
+        }
 
         if (aEndTime && icaltime_compare(next, dtend) > 0)
             break;
