@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+  <binding id="scrollbox" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
     <content>
       <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir">
         <children/>
@@ -19,16 +19,34 @@
     </content>
   </binding>
 
-  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+  <binding id="arrowscrollbox" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
     <content>
-      <xul:autorepeatbutton class="autorepeatbutton-up" scrolldir="up" collapsed="true"/>
+      <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true"
+                            oncommand="this.parentNode.scrollByIndex(-1); event.preventBubble();"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
-      <xul:autorepeatbutton class="autorepeatbutton-down" scrolldir="down" collapsed="true"/> 
+      <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true"
+                            oncommand="this.parentNode.scrollByIndex(1); event.preventBubble();"/>
     </content>
     
+    <implementation>
+      <method name="scrollByIndex">
+        <parameter name="lines"/>
+        <body><![CDATA[
+          if (!("mScrollBoxObject" in this)) {
+            var kids = document.getAnonymousNodes(this);
+            this.mScrollBoxObject = kids[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          }
+
+          this.mScrollBoxObject.scrollByIndex(lines);
+        ]]></body>
+      </method>            
+    </implementation>    
+
     <handlers>
+      <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.preventBubble();"/>
+
       <handler event="underflow"><![CDATA[
         var kids = document.getAnonymousNodes(this);
         kids[0].collapsed = true;
@@ -45,23 +63,10 @@
     </handlers>
   </binding>
 
-  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+  <binding id="autorepeatbutton" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
     <content>
       <xul:image class="autorepeatbutton-icon"/>
     </content>
-    
-    <handlers>
-      <handler event="command"><![CDATA[
-        if (!("mScrollBox" in this)) {
-          var kids = document.getAnonymousNodes(parentNode);
-          this.mScrollBox = kids[1];
-        }
-        
-        var dir = this.getAttribute("scrolldir");
-        var bx = this.mScrollBox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-        bx.scrollByIndex(dir == "up" ? -1 : 1);
-      ]]></handler>
-    </handlers>
   </binding>
 
 </bindings>
