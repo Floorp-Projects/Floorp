@@ -64,6 +64,7 @@ REQUIRES	= \
 		caps \
 		xpconnect \
 		js \
+		layout \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -74,6 +75,8 @@ XPIDLSRCS	= \
 		nsIXFormsContextControl.idl \
 		nsIXFormsActionElement.idl \
 		nsIXFormsActionModuleElement.idl \
+		nsIXFormsSwitchElement.idl \
+		nsIXFormsCaseElement.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -111,6 +114,9 @@ CPPSRCS		= \
 		nsXFormsSetValueElement.cpp \
 		nsXFormsLoadElement.cpp \
 		nsXFormsLabelElement.cpp \
+		nsXFormsToggleElement.cpp \
+		nsXFormsCaseElement.cpp \
+		nsXFormsSwitchElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

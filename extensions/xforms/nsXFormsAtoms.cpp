@@ -52,6 +52,7 @@ nsIAtom* nsXFormsAtoms::modelListProperty;
 nsIAtom *nsXFormsAtoms::ref;
 nsIAtom *nsXFormsAtoms::nodeset;
 nsIAtom *nsXFormsAtoms::model;
+nsIAtom *nsXFormsAtoms::selected;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -66,7 +67,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "ModelListProperty",        &nsXFormsAtoms::modelListProperty },
   { "ref",                      &nsXFormsAtoms::ref },
   { "nodeset",                  &nsXFormsAtoms::nodeset },
-  { "model",                    &nsXFormsAtoms::model }
+  { "model",                    &nsXFormsAtoms::model },
+  { "selected",                 &nsXFormsAtoms::selected }
 };
 
 void

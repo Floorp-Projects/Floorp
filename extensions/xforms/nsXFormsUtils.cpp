@@ -866,3 +866,23 @@ nsXFormsUtils::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
 
   return PR_FALSE;
 }
+
+/*static*/ PRBool
+nsXFormsUtils::IsXFormsElement(nsIDOMNode* aNode, const nsAString& aName)
+{
+  if (aNode) {
+    PRUint16 nodeType;
+    aNode->GetNodeType(&nodeType);
+    if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+      nsAutoString name;
+      aNode->GetLocalName(name);
+      if (name.Equals(aName)) {
+        nsAutoString ns;
+        aNode->GetNamespaceURI(ns);
+        if (ns.EqualsLiteral(NS_NAMESPACE_XFORMS))
+          return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}

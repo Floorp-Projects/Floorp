@@ -73,6 +73,10 @@ NS_HIDDEN_(nsresult) NS_NewXFormsActionElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsLoadElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSetValueElement(nsIXTFElement **aResult);
 
+NS_HIDDEN_(nsresult) NS_NewXFormsToggleElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsCaseElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsSwitchElement(nsIXTFElement **aResult);
+
 NS_IMPL_ISUPPORTS1(nsXFormsElementFactory, nsIXTFElementFactory)
 
 NS_IMETHODIMP
@@ -129,6 +133,12 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsTriggerElement(aElement);
   if (aTagName.EqualsLiteral("submit"))
     return NS_NewXFormsSubmitElement(aElement);
+  if (aTagName.EqualsLiteral("toggle"))
+    return NS_NewXFormsToggleElement(aElement);
+  if (aTagName.EqualsLiteral("case"))
+    return NS_NewXFormsCaseElement(aElement);
+  if (aTagName.EqualsLiteral("switch"))
+    return NS_NewXFormsSwitchElement(aElement);
 
   *aElement = nsnull;
   return NS_ERROR_FAILURE;

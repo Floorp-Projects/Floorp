@@ -298,6 +298,13 @@ public:
    */
   static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIURI *aBaseURI,
                                             nsIURI *aTestURI);
+
+  /**
+   * @return true if aNode is element, its namespace URI is 
+   * "http://www.w3.org/2002/xforms" and its name is aName.
+   */
+  static NS_HIDDEN_(PRBool) IsXFormsElement(nsIDOMNode* aNode, 
+                                            const nsAString& aName);
 };
 
 #endif
