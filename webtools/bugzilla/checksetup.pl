@@ -920,7 +920,7 @@ END
     # YYYY-MM-DD
     my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
     if (-e 'data/template') {
-        print "Removing existing compiled templates ...\n";
+        print "Removing existing compiled templates ...\n" unless $silent;
 
         # If File::Path::rmtree reported errors, then I'd use that
         use File::Find;
