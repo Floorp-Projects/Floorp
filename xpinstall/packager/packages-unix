@@ -156,12 +156,12 @@ bin/defaults/*
 bin/res/profile/*
 bin/res/toolbar/*
 bin/res/*
--/bin/res/strres-test.dtd
--/bin/res/strres-test.html
--/bin/res/strres-test.js
--/bin/res/strres-test.xul
--/bin/res/viewer.properties
--/bin/res/test.properties
+-bin/res/strres-test.dtd
+-bin/res/strres-test.html
+-bin/res/strres-test.js
+-bin/res/strres-test.xul
+-bin/res/viewer.properties
+-bin/res/test.properties
 bin/help/browserhelp/*
 bin/help/troubleshoot/*
 
