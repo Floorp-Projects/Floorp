@@ -814,32 +814,36 @@ nsEventStatus nsMenu::HelpMenuConstruct(
 
 	unsigned short menuIndex = 0;
 
-  while (menuitemNode) {
-    
-    nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-    if (menuitemElement) {
-      nsString menuitemNodeType;
-      nsString menuitemName;
+  // Fire our oncreate handler. If we're told to stop, don't build the menu at all
+  PRBool keepProcessing = OnCreate();
+  if ( keepProcessing ) {
+    while (menuitemNode) {
       
-      nsString label;
-      menuitemElement->GetAttribute("value", label);
-      //printf("label = %s \n", label.ToNewCString());
-      
-      menuitemElement->GetNodeName(menuitemNodeType);
-      if (menuitemNodeType.Equals("menuitem")) {
-        // LoadMenuItem
-        LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-      } else if (menuitemNodeType.Equals("menuseparator")) {
-        AddSeparator();
-      } else if (menuitemNodeType.Equals("menu")) {
-        // Load a submenu
-        LoadSubMenu(this, menuitemElement, menuitemNode);
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        nsString menuitemName;
+        
+        nsString label;
+        menuitemElement->GetAttribute("value", label);
+        //printf("label = %s \n", label.ToNewCString());
+        
+        menuitemElement->GetNodeName(menuitemNodeType);
+        if (menuitemNodeType.Equals("menuitem")) {
+          // LoadMenuItem
+          LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
+        } else if (menuitemNodeType.Equals("menuseparator")) {
+          AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {
+          // Load a submenu
+          LoadSubMenu(this, menuitemElement, menuitemNode);
+        }
       }
-    }
-	++menuIndex;
-    nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-    oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-  } // end menu item innner loop
+  	++menuIndex;
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
+  }
   
   //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
