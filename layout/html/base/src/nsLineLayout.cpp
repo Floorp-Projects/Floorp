@@ -1221,6 +1221,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Size the frame, but |RelativePositionFrames| will size the view.
   aFrame->SetSize(nsSize(metrics.width, metrics.height));
+  // XXX We shouldn't need to size the view because
+  // |RelativePositionFrames| does it, but we need to.  See 
+  // http://bugzilla.mozilla.org/show_bug.cgi?id=79315#c67
+  if (aFrame->HasView()) {
+    nsIView* view = aFrame->GetView();
+    view->GetViewManager()->ResizeView(view, pfd->mCombinedArea);
+  }
 
   // Tell the frame that we're done reflowing it
   aFrame->DidReflow(mPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
