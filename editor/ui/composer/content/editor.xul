@@ -65,8 +65,8 @@
 	</broadcasterset>
 
   <popupset>
-    <popup id="TextColorPopup"/>
     <popup id="BackColorPopup"/>
+    <popup id="TextColorPopup"/>
   </popupset>
 	
 	<!-- keys are appended from the overlay -->
@@ -131,6 +131,7 @@
     <titledbutton id="printButton" />
     <titledbutton id="findButton"/>
     <titledbutton id="spellingButton"/>
+    <menuseparator/>
     <titledbutton id="imageButton"/>
     <titledbutton id="hlineButton"/>
     <titledbutton id="tableButton"/>

@@ -685,8 +685,8 @@
 
     <!-- The new Color Picker UI -->
     <html:div id="ColorButtons">
-      <titledbutton id="TextColorPopupButton" popup="TextColorPopup"/>
       <titledbutton id="BackColorPopupButton" popup="BackColorPopup"/>
+      <titledbutton id="TextColorPopupButton" popup="TextColorPopup"/>
     </html:div>
 
     <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
