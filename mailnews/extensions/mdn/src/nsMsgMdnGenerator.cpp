@@ -598,12 +598,14 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
     m_headers->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE,
                              getter_Copies(m_messageId));
     
-    if (*m_messageId.get() == '<')
-        tmpBuffer = PR_smprintf("References: %s" CRLF, m_messageId.get());
-    else
-        tmpBuffer = PR_smprintf("References: <%s>" CRLF, m_messageId.get());
-    PUSH_N_FREE_STRING(tmpBuffer);
-
+    if (!m_messageId.IsEmpty())
+    {
+      if (*m_messageId.get() == '<')
+          tmpBuffer = PR_smprintf("References: %s" CRLF, m_messageId.get());
+      else
+          tmpBuffer = PR_smprintf("References: <%s>" CRLF, m_messageId.get());
+      PUSH_N_FREE_STRING(tmpBuffer);
+    }
     tmpBuffer = PR_smprintf("%s" CRLF, "MIME-Version: 1.0");
     PUSH_N_FREE_STRING(tmpBuffer);
 
