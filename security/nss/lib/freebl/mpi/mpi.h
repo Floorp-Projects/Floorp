@@ -22,6 +22,7 @@
  * All Rights Reserved.
  *
  * Contributor(s):
+ *	Netscape Communications Corporation
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -35,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.1 2000/07/14 00:44:21 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.2 2000/07/17 22:31:18 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -68,16 +69,50 @@
 #define  MP_LAST_CODE    MP_UNDEF
 
 typedef char              mp_sign;
-typedef unsigned short    mp_digit;
-typedef unsigned int      mp_word;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
-#define DIGIT_BIT         (CHAR_BIT*sizeof(mp_digit))
+#ifndef USE_32
+#if defined(ULONG_LONG_MAX)			/* GCC */
+#define MP_ULONG_LONG_MAX ULONG_LONG_MAX
+#elif defined(ULLONG_MAX)			/* Solaris */
+#define MP_ULONG_LONG_MAX ULLONG_MAX
+#elif defined(ULONGLONG_MAX)			/* IRIX */
+#define MP_ULONG_LONG_MAX ULONGLONG_MAX
+#endif
+
+#if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
+#if MP_ULONG_LONG_MAX == ULONG_MAX
+typedef unsigned int      mp_digit;
+typedef unsigned long     mp_word;
+#define DIGIT_MAX         UINT_MAX
+#define MP_WORD_MAX       ULONG_MAX
+#else
+typedef unsigned long     mp_digit;
+typedef unsigned long long mp_word;
+#define DIGIT_MAX         ULONG_MAX
+#define MP_WORD_MAX       MP_ULONG_LONG_MAX
+#endif
+#endif
+#endif /* !USE_32 */
+
+#if !defined(DIGIT_MAX)
+#if ULONG_MAX == UINT_MAX
+typedef unsigned short    mp_digit;
+typedef unsigned int      mp_word;
 #define DIGIT_MAX         USHRT_MAX
-#define MP_WORD_BIT       (CHAR_BIT*sizeof(mp_word))
 #define MP_WORD_MAX       UINT_MAX
-#define RADIX             (DIGIT_MAX+1)
+#else
+typedef unsigned int      mp_digit;
+typedef unsigned long     mp_word;
+#define DIGIT_MAX         UINT_MAX
+#define MP_WORD_MAX       ULONG_MAX
+#endif
+#endif
+
+#define DIGIT_BIT         (CHAR_BIT*sizeof(mp_digit))
+#define MP_WORD_BIT       (CHAR_BIT*sizeof(mp_word))
+#define RADIX             (1+(mp_word)DIGIT_MAX)
 
 #define DIGIT_FMT         "%04X"     /* printf() format for 1 digit */
 
