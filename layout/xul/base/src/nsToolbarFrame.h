@@ -46,14 +46,10 @@
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 
-#ifdef TOOLBAR_DD
 #include "nsIStyleContext.h"
-#endif
 
-#ifdef TOOLBAR_DD
 class nsToolbarDragListener;
 class nsToolbarMouseMotionListener;
-#endif
 
 class nsToolbarFrame : public nsBoxFrame
 {
@@ -87,9 +83,7 @@ public:
                                nsStyleChangeList* aChangeList,
                                PRInt32* aLocalChange);
 
-#ifdef TOOLBAR_DD
   void SetDropfeedbackLocation(nscoord aX)  { mXDropLoc = aX; }
-#endif
 
 protected:
   nsToolbarFrame();
@@ -100,11 +94,9 @@ protected:
   nsToolbarFrame ( const nsToolbarFrame& aFrame ) ;	            // DO NOT IMPLEMENT
   nsToolbarFrame& operator= ( const nsToolbarFrame& aFrame ) ;  // DO NOT IMPLEMENT
   
-#ifdef TOOLBAR_DD
   nsToolbarDragListener        * mDragListener;
   PRInt32 mXDropLoc;
 	nsCOMPtr<nsIStyleContext> mMarkerStyle;
-#endif
 
 }; // class nsToolbarFrame
 
