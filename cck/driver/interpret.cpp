@@ -371,8 +371,11 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (p2)
 						*p2++ = '\0';
 					else
-						p2 = "Enter a Verification Value";
-						
+					{
+						AfxMessageBox("Please Enter Verification Value for" + CString(parms),MB_OK);
+						exit(12);
+					}
+
 					CString Getval = replaceVars(parms, NULL);
 					
 					if (strcmp(Getval,p2) ==0)
@@ -410,18 +413,19 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 				else if (strcmp(pcmd, "inform") == 0)
 				{
+					char *p2 = strchr(parms, ',');
+
+					if (p2)
+						*p2++ = '\0';
+					else
+						p2 = "Specify Directory here";
+						
 					CString entryName;
 					CWnd myWnd;
-					char localPath[MAX_SIZE] = {'\0'};
-					char infoPath[MAX_SIZE] = {'\0'};
-					strcpy(infoPath, currDirPath);
-					if (localPath) {
-						strcat(infoPath, localPath);
-					}
-
 					entryName = theApp.GetGlobal(parms);
+					CString p2path = replaceVars(p2,NULL);
 					if (entryName != "") {
-						myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
+						myWnd.MessageBox( entryName + " is saved in " + p2path, "Information", MB_OK);
 					}
 					// Delete the global var now...
 				}	

@@ -56,12 +56,18 @@ void CNewDialog::DDV_INIFile(CDataExchange* pDX, CString value)
 {
 	if(pDX->m_bSaveAndValidate) 
 	{
-		if(value.Right(4) != ".nci")
+		value.TrimRight();
+
+		if(value.IsEmpty())
 		{
-			value = value +".nci";
 			CWnd nbox;
-			nbox.MessageBox("We have appended '.nci' to the file" ,"value",MB_ICONEXCLAMATION);
+			nbox.MessageBox("Please enter a Configuration Name" ,"Error",MB_ICONEXCLAMATION);
+			pDX->Fail();
 		}
+
+		else if(value.Right(4) != ".nci")
+			value = value +".nci";
+
 		myData = value;
 	}
 }
