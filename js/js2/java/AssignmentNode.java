@@ -5,16 +5,12 @@ class AssignmentNode extends BinaryNode {
         super(aOp, aLeft, aRight);
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.evalLHS(theEnv);
-        right.eval(theEnv);
+        JSReference lV = left.evalLHS(theEnv);
+        JSValue rV = right.eval(theEnv);
         
-        JSValue rValue = theEnv.theStack.pop();
-        JSValue lValue = theEnv.theStack.pop();
-        
-        theEnv.theStack.push(rValue);
-        lValue.putProp(theEnv);
+        return lV.base.putProp(theEnv, lV.id, rV);
     }
 
 }

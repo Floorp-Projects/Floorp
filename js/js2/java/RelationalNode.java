@@ -5,30 +5,31 @@ class RelationalNode extends BinaryNode {
         super(aOp, aLeft, aRight);
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.eval(theEnv);
-        JSValue lV = theEnv.theStack.pop();
-        right.eval(theEnv);
+        JSValue lV = left.eval(theEnv);
+        JSValue rV = right.eval(theEnv);
 
         if (op == ">")
-            lV.gt(theEnv);
+            return lV.gt(theEnv, rV);
         else
         if (op == ">=")
-            lV.ge(theEnv);
+            return lV.ge(theEnv, rV);
         else
         if (op == "<")
-            lV.lt(theEnv);
+            return lV.lt(theEnv, rV);
         else
         if (op == "<=")
-            lV.le(theEnv);
+            return lV.le(theEnv, rV);
         else
         if (op == "==")
-            lV.eq(theEnv);
+            return lV.eq(theEnv, rV);
         else
         if (op == "!=")
-            lV.ne(theEnv);
-        else
+            return lV.ne(theEnv, rV);
+        else {
             System.out.println("missing relational op");
+            return null;
+        }
     }
 }

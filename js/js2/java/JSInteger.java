@@ -10,9 +10,9 @@ class JSInteger extends JSNumber {
         i = p;
     }
     
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        theEnv.theStack.push(this);
+        return this;
     }
 
     JSBoolean toJSBoolean(Environment theEnv) {
@@ -35,38 +35,32 @@ class JSInteger extends JSNumber {
         return new JSString(Integer.toString(i));
     }
     
-    void twiddle(Environment theEnv) {
-        theEnv.theStack.push(new JSInteger(~i));
+    JSValue twiddle(Environment theEnv) {
+        return new JSInteger(~i);
     }
 
-    void and(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i & vR.toJSInteger(theEnv).i));
+    JSValue and(Environment theEnv, JSValue rV) {
+        return new JSInteger(i & rV.toJSInteger(theEnv).i);
     }
     
-    void or(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i | vR.toJSInteger(theEnv).i));
+    JSValue or(Environment theEnv, JSValue rV) {
+        return new JSInteger(i | rV.toJSInteger(theEnv).i);
     }
 
-    void xor(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i ^ vR.toJSInteger(theEnv).i));
+    JSValue xor(Environment theEnv, JSValue rV) {
+        return new JSInteger(i ^ rV.toJSInteger(theEnv).i);
     }
 
-    void shl(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i >> vR.toJSInteger(theEnv).i));
+    JSValue shl(Environment theEnv, JSValue rV) {
+        return new JSInteger(i >> rV.toJSInteger(theEnv).i);
     }
 
-    void shr(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i << vR.toJSInteger(theEnv).i));
+    JSValue shr(Environment theEnv, JSValue rV) {
+        return new JSInteger(i << rV.toJSInteger(theEnv).i);
     }
 
-    void ushl(Environment theEnv) {
-        JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i >>> vR.toJSInteger(theEnv).i));
+    JSValue ushl(Environment theEnv, JSValue rV) {
+        return new JSInteger(i >>> rV.toJSInteger(theEnv).i);
     }
 
     int i;
