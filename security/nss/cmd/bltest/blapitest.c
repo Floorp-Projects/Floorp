@@ -400,8 +400,8 @@ typedef SECStatus (* bltestSymmCipherFn)(void *cx,
 					 unsigned int inputLen);
 
 typedef SECStatus (* bltestPubKeyCipherFn)(void *key,
-					   unsigned char *output,
-					   const unsigned char *input);
+					   SECItem *output,
+					   const SECItem *input);
 
 typedef SECStatus (* bltestHashCipherFn)(unsigned char *dest,
 					 const unsigned char *src,
@@ -576,7 +576,7 @@ SECStatus
 setupIO(PRArenaPool *arena, bltestIO *input, PRFileDesc *file,
 	char *str, int numBytes)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     SECItem fileData;
     SECItem *in;
     unsigned char *tok;
@@ -645,7 +645,7 @@ setupIO(PRArenaPool *arena, bltestIO *input, PRFileDesc *file,
 SECStatus
 finishIO(bltestIO *output, PRFileDesc *file)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     PRInt32 nb;
     unsigned char byteval;
     SECItem *it;
@@ -800,15 +800,27 @@ aes_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 SECStatus
-rsa_PublicKeyOp(void *key, unsigned char *output, const unsigned char *input)
+rsa_PublicKeyOp(void *key, SECItem *output, const SECItem *input)
 {
-    return RSA_PublicKeyOp((RSAPublicKey *)key, output, input);
+    return RSA_PublicKeyOp((RSAPublicKey *)key, output->data, input->data);
 }
 
 SECStatus
-rsa_PrivateKeyOp(void *key, unsigned char *output, const unsigned char *input)
+rsa_PrivateKeyOp(void *key, SECItem *output, const SECItem *input)
 {
-    return RSA_PrivateKeyOp((RSAPrivateKey *)key, output, input);
+    return RSA_PrivateKeyOp((RSAPrivateKey *)key, output->data, input->data);
+}
+
+SECStatus
+dsa_signDigest(void *key, SECItem *output, const SECItem *input)
+{
+    return DSA_SignDigest((DSAPrivateKey *)key, output, input);
+}
+
+SECStatus
+dsa_verifyDigest(void *key, SECItem *output, const SECItem *input)
+{
+    return DSA_VerifyDigest((DSAPublicKey *)key, output, input);
 }
 
 SECStatus
@@ -1086,7 +1098,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	cipherInfo->cx = dsakey_from_filedata(&dsap->key.buf);
     }
     if (encrypt) {
-	cipherInfo->cipher.pubkeyCipher = DSA_SignDigest;
+	cipherInfo->cipher.pubkeyCipher = dsa_signDigest;
     } else {
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
@@ -1102,7 +1114,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->params.base.data = key->params.base.data;
 	pubkey->publicValue.len = key->publicValue.len;
 	pubkey->publicValue.data = key->publicValue.data;
-	cipherInfo->cipher.pubkeyCipher = DSA_VerifyDigest;
+	cipherInfo->cipher.pubkeyCipher = dsa_verifyDigest;
     }
     return SECSuccess;
 }
@@ -1128,7 +1140,7 @@ md2_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
     unsigned char *cxbytes;
     unsigned int len;
     unsigned int i, quarter;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     cx = MD2_NewContext();
     /* divide message by 4, restarting 3 times */
     quarter = src_length / 4;
@@ -1161,7 +1173,7 @@ finish:
 SECStatus
 md5_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     MD5Context *cx, *cx_cpy;
     unsigned char *cxbytes;
     unsigned int len;
@@ -1198,7 +1210,7 @@ finish:
 SECStatus
 sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     SHA1Context *cx, *cx_cpy;
     unsigned char *cxbytes;
     unsigned int len;
@@ -1237,7 +1249,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
 	      int keysize, int exponent)
 {
     int i;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     bltestRSAParams *rsap;
     bltestDSAParams *dsap;
     switch (cipherInfo->mode) {
@@ -1357,13 +1369,12 @@ SECStatus
 dsaOp(bltestCipherInfo *cipherInfo)
 {
     PRIntervalTime time1, time2;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     int i;
     int maxLen = cipherInfo->output.pBuf.len;
     SECItem dummyOut = { 0, 0, 0 };
     SECITEM_AllocItem(NULL, &dummyOut, maxLen);
-    if (cipherInfo->cipher.pubkeyCipher == 
-             (bltestPubKeyCipherFn)DSA_SignDigest) {
+    if (cipherInfo->cipher.pubkeyCipher == dsa_signDigest) {
 	if (cipherInfo->params.dsa.sigseed.buf.len > 0) {
 	    rv = DSA_SignDigestWithSeed((DSAPrivateKey *)cipherInfo->cx,
 				       &cipherInfo->output.pBuf,
@@ -1414,7 +1425,7 @@ SECStatus
 cipherDoOp(bltestCipherInfo *cipherInfo)
 {
     PRIntervalTime time1, time2;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     int i, len;
     int maxLen = cipherInfo->output.pBuf.len;
     unsigned char *dummyOut;
@@ -1438,12 +1449,15 @@ cipherDoOp(bltestCipherInfo *cipherInfo)
 	TIMEFINISH(cipherInfo->optime, 1.0);
     } else if (is_pubkeyCipher(cipherInfo->mode)) {
 	rv = (*cipherInfo->cipher.pubkeyCipher)(cipherInfo->cx,
-						cipherInfo->output.pBuf.data,
-						cipherInfo->input.pBuf.data);
+						&cipherInfo->output.pBuf,
+						&cipherInfo->input.pBuf);
 	TIMESTART();
 	for (i=0; i<cipherInfo->repetitions; i++) {
-	    (*cipherInfo->cipher.pubkeyCipher)(cipherInfo->cx, dummyOut,
-					       cipherInfo->input.pBuf.data);
+	    SECItem dummy;
+	    dummy.data = dummyOut;
+	    dummy.len = maxLen;
+	    (*cipherInfo->cipher.pubkeyCipher)(cipherInfo->cx, &dummy,
+					       &cipherInfo->input.pBuf);
 	}
 	TIMEFINISH(cipherInfo->optime, 1.0);
     } else if (is_hashCipher(cipherInfo->mode)) {
@@ -1777,7 +1791,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
     PRArenaPool *arena;
     SECItem item;
     PRBool finished;
-    SECStatus rv, srv;
+    SECStatus rv = SECSuccess, srv;
 
     PORT_Memset(&cipherInfo, 0, sizeof(cipherInfo));
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
