@@ -166,7 +166,7 @@ function CookieSelected() {
     document.getElementById("removeCookie").removeAttribute("disabled");
   } else {
     ClearCookieProperties();
-    return;
+    return true;
   }
     
   var idx = selections[0];
