@@ -39,13 +39,16 @@
 
 #include "mozcontainer.h"
 #include "mozdrawingarea.h"
+#include "nsWeakReference.h"
 
 #include <gtk/gtkwindow.h>
 
-class nsWindow : public nsCommonWidget {
+class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
  public:
   nsWindow();
   virtual ~nsWindow();
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget
   NS_IMETHOD         Create(nsIWidget        *aParent,
@@ -148,6 +151,8 @@ class nsWindow : public nsCommonWidget {
 				       GdkEventKey *aEvent);
   void               OnScrollEvent(GtkWidget *aWidget,
 				   GdkEventScroll *aEvent);
+  void               OnVisibilityNotifyEvent(GtkWidget *aWidget,
+					     GdkEventVisibility *aEvent);
 
   nsresult           NativeCreate(nsIWidget        *aParent,
 				  nsNativeWidget    aNativeParent,
@@ -169,6 +174,8 @@ class nsWindow : public nsCommonWidget {
 				  PRBool  aRepaint);
 
   void               NativeShow  (PRBool  aAction);
+
+  void               NativeGrab  (PRBool  aGrab);
   
   nsWindow           *mFocusChild;
 
@@ -189,6 +196,9 @@ class nsWindow : public nsCommonWidget {
 
   PRPackedBool        mInKeyRepeat;
 
+  PRPackedBool        mIsVisible;
+  PRPackedBool        mRetryGrab;
+  GtkWindow          *mTransientParent;
 };
 
 class nsChildWindow : public nsWindow {
