@@ -34,24 +34,6 @@ NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
 #define TEST_OUT_PTR(p)
 #endif
 
-#if 0
-// dp crud
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-//----------------------------------------------------------------------------------------
-{
-    if (aInstancePtr == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIFileSpec::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
-        *aInstancePtr = (nsIFileSpec*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-#endif
-
 //----------------------------------------------------------------------------------------
 nsFileSpecImpl::nsFileSpecImpl()
 //----------------------------------------------------------------------------------------
@@ -623,10 +605,6 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::GetCurrentSpec(nsIFileSpec * *aCurrentSpe
 NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
 //----------------------------------------------------------------------------------------
 {
-#if 1
-	NS_NOTYETIMPLEMENTED("dp checked in all this stuff in the middle of my checkin");
-	return NS_ERROR_FAILURE;
-#else
   if (aIFileSpec == NULL)
     return NS_ERROR_NULL_POINTER;
 
@@ -640,13 +618,10 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
     return rv;
   }
   return rv;
-#endif
 }
 
 //----------------------------------------------------------------------------------------
 nsresult NS_NewFileSpec(nsIFileSpec** result)
-// dp should go away. Code creation should be done through people who have real
-// features to implement.
 //----------------------------------------------------------------------------------------
 {
 	if (!result)
