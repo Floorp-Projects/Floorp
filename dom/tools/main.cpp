@@ -181,6 +181,7 @@ usage:
   cout << "-x Spit out XPCOM interfaces\n";
   cout << "-j Spit out JavaScript stub files\n";
   cout << "-p Echo normalized idl to stdout\n";
+  cout << "-g used for global objects\n";
   return -1;
 }
 
