@@ -810,6 +810,9 @@ nsresult nsParser::EnableParser(PRBool aState){
   if(mParserContext) {
     mParserContext->mParserEnabled=aState;
     if(aState) {
+
+      //printf("  Re-enable parser\n");
+
       result=ResumeParse();
       if(result!=NS_OK) 
         result=mInternalState;
@@ -926,61 +929,75 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
  * @param   aContentType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
- 
+nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString&
+aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){ 
+  
   //NOTE: Make sure that updates to this method don't cause 
-  //      bug #2361 to break again!  
+  //      bug #2361 to break again! 
 
-#if 0
-    //this is only for debug purposes
-  aSourceBuffer.DebugDump();
+#if 0 
+    //this is only for debug purposes 
+  aSourceBuffer.DebugDump(); 
 #endif 
 
-  nsresult result=NS_OK;
-  nsParser* me = this;
-  // Maintain a reference to ourselves so we don't go away
-  // till we're completely done.
-  NS_ADDREF(me);
-  if(aSourceBuffer.Length() || mUnusedInput.Length()) {
-    mDTDVerification=aVerifyEnabled;
+  nsresult result=NS_OK; 
+  nsParser* me = this; 
+  // Maintain a reference to ourselves so we don't go away 
+  // till we're completely done. 
+  NS_ADDREF(me); 
+
+  if(aSourceBuffer.Length() || mUnusedInput.Length()) { 
+    mDTDVerification=aVerifyEnabled; 
     CParserContext* pc=0; 
 
-    if((!mParserContext) || (mParserContext->mKey!=aKey))  {
-      //only make a new context if we dont have one, OR if we do, but has a different context key...
-    
-      nsScanner* theScanner=new nsScanner(mUnusedInput,mCharset,mCharsetSource);
-      pc=new CParserContext(theScanner,aKey, 0, aLastCall);
-      if(pc && theScanner) {
-        PushContext(*pc);
+    if((!mParserContext) || (mParserContext->mKey!=aKey))  { 
+      //only make a new context if we dont have one, OR if we do, but has a different context key... 
+  
+      nsScanner* theScanner=new nsScanner(mUnusedInput,mCharset,mCharsetSource); 
+      nsIDTD *theDTD=0; 
+      eAutoDetectResult theStatus=eUnknownDetect; 
 
-        pc->mMultipart=!aLastCall; //by default
-        if (pc->mPrevContext) {
-          pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available
-        }
+      if(mParserContext && (mParserContext->mSourceType==aContentType)) { 
+        theDTD=mParserContext->mDTD; 
+        theStatus=mParserContext->mAutoDetectStatus; 
 
-        pc->mStreamListenerState = (pc->mMultipart) ? eOnDataAvail : eOnStop;  
-        pc->mContextType=CParserContext::eCTString;
-        pc->mSourceType=aContentType; 
-        mUnusedInput.Truncate(0);
+        //added this to fix bug 32022.
       } 
-      else {
-        NS_RELEASE(me);        
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    else {
-      pc=mParserContext;
-      pc->mScanner->Append(mUnusedInput);
-    }
 
-    pc->mScanner->Append(aSourceBuffer);
+      pc=new CParserContext(theScanner,aKey, 0,theDTD,theStatus,aLastCall); 
+  
 
-    result=ResumeParse(PR_FALSE);
+      if(pc && theScanner) { 
+        PushContext(*pc); 
 
-  }//if
-  NS_RELEASE(me);  
-  return result;
-} 
+        pc->mMultipart=!aLastCall; //by default 
+        if (pc->mPrevContext) { 
+          pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available 
+        } 
+
+        pc->mStreamListenerState = (pc->mMultipart) ? eOnDataAvail : eOnStop; 
+        pc->mContextType=CParserContext::eCTString; 
+        pc->mSourceType=aContentType; 
+        mUnusedInput.Truncate(0); 
+
+        //printf("Parse(string) iterate: %i",PR_FALSE); 
+        pc->mScanner->Append(aSourceBuffer); 
+        result=ResumeParse(PR_FALSE); 
+
+      } 
+      else { 
+        NS_RELEASE(me); 
+        return NS_ERROR_OUT_OF_MEMORY; 
+      } 
+
+    } 
+    else { 
+      mParserContext->mScanner->Append(aSourceBuffer); 
+    } 
+  }//if 
+  NS_RELEASE(me); 
+  return result; 
+}  
 
 
 /**
@@ -1118,7 +1135,10 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
+
+  //printf("  Resume %i, prev-context: %p\n",allowIteration,mParserContext->mPrevContext);
   
+
   nsresult result=NS_OK;
 
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
@@ -1131,10 +1151,11 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
     if(mParserContext->mDTD) {
 
       mParserContext->mDTD->WillResumeParse();
-      PRBool theIterationIsOk=(allowIteration||(!mParserContext->mPrevContext));
+      PRBool theFirstTime=PR_TRUE;
+      PRBool theIterationIsOk=(allowIteration || (!mParserContext->mPrevContext));
       
-      while((result==NS_OK) && (theIterationIsOk)) {
-
+      while((result==NS_OK) && (theFirstTime || theIterationIsOk)) {
+        theFirstTime=PR_FALSE;
         if(mUnusedInput.Length()>0) {
           if(mParserContext->mScanner) {
             // -- Ref: Bug# 22485 --

@@ -49,10 +49,14 @@ public:
     enum {eTransferBufferSize=4096};
     enum eContextType {eCTNone,eCTURL,eCTString,eCTStream};
 
-    CParserContext( nsScanner* aScanner,
-                    void* aKey=0,
-                    nsIStreamObserver* aListener=0,
-                    PRBool aCopyUnused=PR_FALSE);
+   CParserContext( nsScanner* aScanner, 
+                    void* aKey=0, 
+                    nsIStreamObserver* aListener=0, 
+                    nsIDTD *aDTD=0, 
+                    eAutoDetectResult aStatus=eUnknownDetect, 
+                    PRBool aCopyUnused=PR_FALSE); 
+    
+    CParserContext( const CParserContext& aContext);
 
 
     ~CParserContext();
@@ -64,6 +68,7 @@ public:
     PRBool              mMultipart;
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
+    PRInt32             mRefCount;
 
     nsString            mSourceType;
 
