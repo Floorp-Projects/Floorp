@@ -359,29 +359,30 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        PRInt32         aHint)
 {
   nsresult result = NS_OK;
-  PRInt32 type;
-  GetType(&type);
   if (mWidget) {
     nsITextWidget* text = nsnull;
     result = mWidget->QueryInterface(kITextWidgetIID, (void**)&text);
-    if ((NS_SUCCEEDED(result)) && (nsnull != text)) {
-      if (nsHTMLAtoms::value == aAttribute) {
-          nsString value;
-          nsresult result = GetText(&value);
-          PRUint32 ignore;
-          text->SetText(value, ignore);
-          nsFormFrame::StyleChangeReflow(aPresContext, this);
-      } else if (nsHTMLAtoms::size == aAttribute) {
+    if ((nsHTMLAtoms::value == aAttribute) && (nsnull != text)) {
+        nsString value;
+        nsresult rv = GetText(&value);
+        PRUint32 ignore;
+        text->SetText(value, ignore);
         nsFormFrame::StyleChangeReflow(aPresContext, this);
-      } else if (nsHTMLAtoms::maxlength == aAttribute) {
-        PRInt32 maxLength;
-        nsresult result = GetMaxLength(&maxLength);
-        if (NS_CONTENT_ATTR_NOT_THERE != result) {
-          text->SetMaxTextLength(maxLength);
-        }
+    } else if (nsHTMLAtoms::size == aAttribute) {
+      nsFormFrame::StyleChangeReflow(aPresContext, this);
+    } else if ((nsHTMLAtoms::maxlength == aAttribute) && (nsnull != text)) {
+      PRInt32 maxLength;
+      nsresult rv = GetMaxLength(&maxLength);
+      if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+        text->SetMaxTextLength(maxLength);
       }
-      NS_RELEASE(text);
     }
+    // Allow the base class to handle common attributes supported
+    // by all form elements... 
+    else {
+      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    }
+    NS_IF_RELEASE(text);
   }
 
   return result;

@@ -428,6 +428,11 @@ nsFormControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint)
 {
+  if (nsnull != mWidget) {
+    if (nsHTMLAtoms::disabled == aAttribute) {
+      mWidget->Enable(!nsFormFrame::GetDisabled(this));
+    }
+  }
   return NS_OK;
 }
 

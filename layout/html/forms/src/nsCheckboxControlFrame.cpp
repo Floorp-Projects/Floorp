@@ -195,7 +195,12 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         }
         NS_RELEASE(button);
       }
-    }   
+    }
+    // Allow the base class to handle common attributes supported
+    // by all form elements... 
+    else {
+      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    }
   }
   return result;
 }
