@@ -58,6 +58,12 @@ nsDownloadProgressDialog::OnClose() {
 }
 
 void
+nsDownloadProgressDialog::OnUnload() {
+    // Window was closed (or is closing), release it.
+    mWindow = 0;
+}
+
+void
 nsDownloadProgressDialog::OnStart() {
     // Load source stream into file.
 #ifndef NECKO
@@ -361,6 +367,8 @@ nsDownloadProgressDialog::AttributeChanged( nsIDocument *aDocument,
             OnStop();
         } else if ( cmd == "close" ) {
             OnClose();
+        } else if ( cmd == "unload" ) {
+            OnUnload();
         } else {
         }
     }

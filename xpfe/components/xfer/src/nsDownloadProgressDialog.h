@@ -131,6 +131,7 @@ protected:
     void OnClose();
     void OnStart();
     void OnStop();
+    void OnUnload();
 
 private:
     nsCOMPtr<nsIURI>             mUrl;
