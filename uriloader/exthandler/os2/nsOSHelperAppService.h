@@ -40,9 +40,9 @@ public:
   // override nsIExternalHelperAppService methods....
   NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
-  // override nsIMIMEService methods to contain mime.types and mime.info look up steps
-  NS_IMETHODIMP GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
-  NS_IMETHODIMP GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
+  // method overrides for mime.types and mime.info look up steps
+  nsresult GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval);
+  nsresult GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo ** _retval);
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);

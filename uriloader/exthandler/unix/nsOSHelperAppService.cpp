@@ -164,30 +164,38 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     aTempFile->GetNativePath(path);
     LOG(("Launching helper on '%s'\n", path.get()));
         
-    aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    if (application)
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
+    aMIMEInfo->GetPreferredAction(&action);
+
+    if (action == nsIMIMEInfo::useHelperApp)
     {
-      if (LOG_ENABLED()) {
-        nsCAutoString appPath;
-        application->GetNativePath(appPath);
-        LOG(("The helper is '%s'\n", appPath.get()));
-      }
-      
-      // if we were given an application to use then use it....otherwise
-      // make the registry call to launch the app
-      const char * strPath = path.get();
-      nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
-      nsresult rv;
-      if (NS_FAILED(rv = process->Init(application)))
-        return rv;
-      PRUint32 pid;
-      if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
-        return rv;
-    }    
+      aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
+    }
     else
     {
-      // if we had hooks into the OS we can use them here to launch the app
+      aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
     }
+    
+    // The nsIMIMEInfo should have either the default or preferred 
+    // application handler attribute set to match the preferredAction!
+    if (!application)
+      return NS_ERROR_FAILURE;
+    
+    if (LOG_ENABLED()) {
+      nsCAutoString appPath;
+      application->GetNativePath(appPath);
+      LOG(("The helper is '%s'\n", appPath.get()));
+    }
+      
+    // if we were given an application to use then use it....otherwise
+    // make the registry call to launch the app
+    const char * strPath = path.get();
+    nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
+    if (NS_FAILED(rv = process->Init(application)))
+      return rv;
+    PRUint32 pid;
+    if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
+      return rv;
   }
 
   return rv;
@@ -1300,17 +1308,15 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   return rv;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
-                                                     nsIMIMEInfo ** _retval) {
+nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char *aFileExt,
+                                                             nsIMIMEInfo ** _retval) {
   // if the extension is null, return immediately
-  if (!aFileExt)
+  if (!aFileExt || !*aFileExt)
     return NS_ERROR_INVALID_ARG;
   
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
-
   LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
+
+  nsresult rv;
 
   nsAutoString mimeType, majorType, minorType,
                mime_types_description, mailcap_description,
@@ -1375,9 +1381,9 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
     rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
     
     if (NS_SUCCEEDED(rv)) {
-      mimeInfo->SetPreferredApplicationHandler(handlerFile);
-      mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
-      mimeInfo->SetApplicationDescription(handler.get());
+      mimeInfo->SetDefaultApplicationHandler(handlerFile);
+      mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+      mimeInfo->SetDefaultDescription(handler.get());
     }
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
@@ -1392,16 +1398,14 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
-                                                    nsIMIMEInfo ** _retval) {
+nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType,
+                                                            nsIMIMEInfo ** _retval) {
   // if the extension is null, return immediately
   if (!aMIMEType)
     return NS_ERROR_INVALID_ARG;
   
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
   LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
+  nsresult rv;
   nsAutoString extensions,
     mime_types_description, mailcap_description,
     handler, mozillaFlags;
@@ -1487,9 +1491,9 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
   rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
   
   if (NS_SUCCEEDED(rv)) {
-    mimeInfo->SetPreferredApplicationHandler(handlerFile);
-    mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
-    mimeInfo->SetApplicationDescription(handler.get());
+    mimeInfo->SetDefaultApplicationHandler(handlerFile);
+    mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+    mimeInfo->SetDefaultDescription(handler.get());
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }

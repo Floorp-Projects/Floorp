@@ -83,12 +83,24 @@ public:
   // in a in memory data source....
   nsresult GetMIMEInfoForExtensionFromDS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
+  // GetMIMEInfoForMimeTypeFromOS --> Given a content type, look up the system default information to 
+  // see if we can create a mime info object for this content type.
+  virtual nsresult GetMIMEInfoForMimeTypeFromOS(const char * aContentType, nsIMIMEInfo ** aMIMEInfo);
+
+  // GetMIMEInfoForExtensionFromOS --> Given an extension, look up the system default information to 
+  // see if we can create a mime info object for this extension.
+  virtual nsresult GetMIMEInfoForExtensionFromOS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo);
+
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile) = 0;
- 
+
+  // helper routine used to test whether a given mime type is in our
+  // mimeTypes.rdf data source
+  PRBool MIMETypeIsInDataSource(const char * aContentType);
+
 protected:
   nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
 
@@ -96,6 +108,7 @@ protected:
 	nsCOMPtr<nsIRDFResource> kNC_Value;
 	nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
   nsCOMPtr<nsIRDFResource> kNC_Path;
+  nsCOMPtr<nsIRDFResource> kNC_UseSystemDefault;
   nsCOMPtr<nsIRDFResource> kNC_SaveToDisk;
   nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
@@ -165,7 +178,7 @@ public:
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
 
-  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension, nsISupports * aWindowContext);
+  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension, nsISupports * aWindowContext, nsExternalHelperAppService *aHelperAppService);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
@@ -229,6 +242,8 @@ protected:
   // helper routine which peaks at the mime action specified by mMimeInfo
   // and calls either MoveFile or OpenWithApplication
   nsresult ExecuteDesiredAction();
+  // helper routine that searches a pref string for a given mime type
+  PRBool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
 
   // initialize an nsIDownload object for use as a progress object
   nsresult InitializeDownload(nsIDownload*);
@@ -245,6 +260,7 @@ protected:
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; // in the case of a redirect, this will be the pre-redirect channel.
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
+  nsExternalHelperAppService *mHelperAppService;
 };
 
 #endif // nsExternalHelperAppService_h__

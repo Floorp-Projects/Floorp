@@ -108,14 +108,10 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
 
 			PRBool executable = PR_TRUE;
 			local->IsExecutable(&executable);
-			if (!executable)
-			{
-				rv = local->Launch();
-			}
-			else
-			{
-				rv = NS_ERROR_FAILURE;
-			}
+			if (executable)
+				return NS_ERROR_FAILURE;
+			
+			rv = local->Launch();
 		}
 	}
 
@@ -250,7 +246,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
         nsIMIMEInfo ** _retval) {
 	// if the extension is null, return immediately
-	if (!aFileExt)
+	if (!aFileExt || !*aFileExt)
 		return NS_ERROR_INVALID_ARG;
 
 	// first, see if the base class already has an entry....

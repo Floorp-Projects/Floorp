@@ -64,11 +64,11 @@ public:
 protected:
     nsCString					     mMIMEType;
     nsCOMPtr<nsIFile>      mPreferredApplication; // preferred application associated with this type.
+    nsCOMPtr<nsIFile>      mDefaultApplication; // default application associated with this type.
     nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
     nsString               mPreferredAppDescription;
-
-    void CheckPrefForMimeType(const char * prefName, PRBool * aMimeTypeIsPresent);
-    void SetRememberPrefForMimeType(const char * prefName);
+    nsString               mDefaultAppDescription;
+    PRBool                 mAlwaysAskBeforeHandling;
 };
 
 #endif //__nsmimeinfoimpl_h___

@@ -161,7 +161,6 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       const char * strPath = path.get();
 
       nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
-      nsresult rv;
       if (NS_FAILED(rv = process->Init(application)))
         return rv;
       PRUint32 pid;
@@ -1268,30 +1267,24 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  nsresult rv = NS_OK;
 
-  if (localFile)
-  {
-    if (localFile)
-      localFile->InitWithPath(nsDependentString(platformAppPath));
-    *aFile = localFile;
-    NS_IF_ADDREF(*aFile);
-  }
-  else
-    rv = NS_ERROR_FAILURE;
+  if (!localFile)
+    return NS_ERROR_FAILURE;
 
-  return rv;
+  localFile->InitWithPath(nsDependentString(platformAppPath));
+  *aFile = localFile;
+  NS_IF_ADDREF(*aFile);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
-                                                     nsIMIMEInfo ** _retval) {
+nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval)
+{
   // if the extension is null, return immediately
-  if (!aFileExt)
+  if (!aFileExt || !*aFileExt)
     return NS_ERROR_INVALID_ARG;
   
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
+  nsresult rv = NS_ERROR_FAILURE;
 
 #ifdef DEBUG_bzbarsky
   fprintf(stderr, "Here we do an extension lookup for %s\n\n", aFileExt);
@@ -1337,12 +1330,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
     rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
     
     if (NS_SUCCEEDED(rv)) {
-      mimeInfo->SetPreferredApplicationHandler(handlerFile);
-      mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+      mimeInfo->SetDefaultApplicationHandler(handlerFile);
+      mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 #ifdef DEBUG_bzbarsky
       fprintf(stderr, "Here we want to set handler to: %s\n", NS_ConvertUCS2toUTF8(handler).get());
 #endif // DEBUG_bzbarsky
-      mimeInfo->SetApplicationDescription(handler.get());
+      mimeInfo->SetDefaultApplicationDescription(handler.get());
     }
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
@@ -1357,15 +1350,13 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
-                                                    nsIMIMEInfo ** _retval) {
+nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo ** _retval)
+{
   // if the extension is null, return immediately
   if (!aMIMEType)
     return NS_ERROR_INVALID_ARG;
   
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
+  nsresult rv;
 #ifdef DEBUG_bzbarsky
   fprintf(stderr, "Here we do a mimetype lookup for %s\n\n\n", aMIMEType);
 #endif // DEBUG_bzbarsky
@@ -1432,13 +1423,13 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
   rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
   
   if (NS_SUCCEEDED(rv)) {
-    mimeInfo->SetPreferredApplicationHandler(handlerFile);
-    mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+    mimeInfo->SetDefaultApplicationHandler(handlerFile);
+    mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
     // FIXME set the handler
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Here we want to set handler to: %s\n", NS_ConvertUCS2toUTF8(handler).get());
 #endif // DEBUG_bzbarsky
-    mimeInfo->SetApplicationDescription(handler.get());
+    mimeInfo->SetDefaultApplicationDescription(handler.get());
   } else {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
