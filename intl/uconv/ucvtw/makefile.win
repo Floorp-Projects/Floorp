@@ -29,6 +29,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsBIG5ToUnicode.cpp		\
 	nsUnicodeToBIG5.cpp		\
+	nsUnicodeToBIG5NoAscii.cpp		\
 	nsUCvTWSupport.cpp		\
 	nsUCvTWDll.cpp			\
 	$(NULL)
@@ -36,6 +37,7 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsBIG5ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToBIG5.obj			\
+	.\$(OBJDIR)\nsUnicodeToBIG5NoAscii.obj			\
 	.\$(OBJDIR)\nsUCvTWSupport.obj			\
 	.\$(OBJDIR)\nsUCvTWDll.obj 			\
 	$(NULL)
