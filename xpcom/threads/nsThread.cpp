@@ -263,6 +263,7 @@ nsThread::Init(nsIRunnable* runnable,
                PRThreadScope scope,
                PRThreadState state)
 {
+    NS_ENSURE_ARG_POINTER(runnable);
     mRunnable = runnable;
 
     NS_ADDREF_THIS();   // released in nsThread::Exit
