@@ -1545,28 +1545,24 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
   if (! mHeadersOnly)
   {
     nsXPIDLString replyHeaderOriginalmessage;
-   // For the built message body...
-   nsCOMPtr <nsIMsgDBHdr> originalMsgHdr;
-   rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(originalMsgHdr));
-   if (NS_SUCCEEDED(rv) && originalMsgHdr && !quoteHeaders)
+    // For the built message body...
+    nsCOMPtr <nsIMsgDBHdr> originalMsgHdr;
+    rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(originalMsgHdr));
+    if (NS_SUCCEEDED(rv) && originalMsgHdr && !quoteHeaders)
     {
       // Setup the cite information....
       nsXPIDLCString myGetter;
       if (NS_SUCCEEDED(originalMsgHdr->GetMessageId(getter_Copies(myGetter))))
       {
-        nsCString unencodedURL(myGetter);
-             // would be nice, if nsXPIDL*String were ns*String
-        nsCAutoString encodedURL;
-        if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv))
+        if (!myGetter.IsEmpty())
         {
-          if (NS_SUCCEEDED(nsStdEscape(unencodedURL.get(),
-                   esc_FileBaseName | esc_Forced, encodedURL )))
-          {
-            mCiteReference = NS_LITERAL_STRING("mid:");
-            mCiteReference.AppendWithConversion(encodedURL.get());
-          }
+          const char *escapedMessageId;
+          nsCAutoString buf;
+          if (NS_EscapeURLPart(myGetter.get(), myGetter.Length(), esc_FileBaseName | esc_Forced, buf))
+            escapedMessageId = buf.get();
           else
-            mCiteReference.Truncate();
+            escapedMessageId = myGetter.get();
+          mCiteReference = NS_LITERAL_STRING("mid") + NS_ConvertASCIItoUCS2(escapedMessageId);
         }
       }
 

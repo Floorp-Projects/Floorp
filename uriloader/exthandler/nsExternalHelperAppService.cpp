@@ -900,16 +900,13 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   {
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
-    nsXPIDLCString leafName;
-    url->GetFileName(getter_Copies(leafName));
-    if (leafName.get())
+    char *leafName = nsnull; // may be shortened by NS_UnescapeURL
+    url->GetFileName(&leafName);
+    if (leafName)
     {
-      nsXPIDLCString unescapedFileName; 
-      rv = nsStdUnescape((char*)leafName.get(), getter_Copies(unescapedFileName));
-      if (NS_SUCCEEDED(rv))
-        mSuggestedFileName.Assign(NS_ConvertUTF8toUCS2(unescapedFileName));
-      else
-        mSuggestedFileName.AssignWithConversion(leafName);
+      NS_UnescapeURL(leafName);
+      mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName);
+      nsMemory::Free(leafName);
     }
   }
 

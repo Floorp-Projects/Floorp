@@ -629,15 +629,14 @@ nsMsgFolder::parseURI(PRBool needServer)
   if (mName.IsEmpty()) {
     // mName:
     // the name is the trailing directory in the path
-    nsXPIDLCString fileName;
-    rv = url->GetFileName(getter_Copies(fileName));
-    if (NS_SUCCEEDED(rv) && (const char*)fileName != nsnull) {
+    char *fileName = nsnull;
+    url->GetFileName(&fileName);
+    if (fileName) {
       // XXX conversion to unicode here? is fileName in UTF8?
-		// yes, let's say it is in utf8
-
-      nsXPIDLCString result;
-      rv = nsStdUnescape((char*)fileName.get(), getter_Copies(result));
-      mName.AssignWithConversion(result);
+      // yes, let's say it is in utf8
+      NS_UnescapeURL(fileName);
+      mName = NS_ConvertUTF8toUCS2(fileName);
+      nsMemory::Free(fileName);
     }
   }
 
@@ -689,22 +688,24 @@ nsMsgFolder::parseURI(PRBool needServer)
     
   // now try to find the local path for this folder
   if (server) {
-    
-    nsXPIDLCString urlPath;
-    url->GetFilePath(getter_Copies(urlPath));
-
-    nsXPIDLCString result;
-    rv = nsStdUnescape((char*)urlPath.get(), getter_Copies(result));
-
-    // transform the filepath from the URI, such as
-    // "/folder1/folder2/foldern"
-    // to
-    // "folder1.sbd/folder2.sbd/foldern"
-    // (remove leading / and add .sbd to first n-1 folders)
-    // to be appended onto the server's path
-      
     nsCAutoString newPath;
-	NS_MsgCreatePathStringFromFolderURI(result, newPath);
+
+    char *urlPath = nsnull;
+    url->GetFilePath(&urlPath);
+    if (urlPath) {
+      NS_UnescapeURL(urlPath);
+
+      // transform the filepath from the URI, such as
+      // "/folder1/folder2/foldern"
+      // to
+      // "folder1.sbd/folder2.sbd/foldern"
+      // (remove leading / and add .sbd to first n-1 folders)
+      // to be appended onto the server's path
+      
+	  NS_MsgCreatePathStringFromFolderURI(urlPath, newPath);
+
+      nsMemory::Free(urlPath);
+    }
 
     // now append munged path onto server path
     nsCOMPtr<nsIFileSpec> serverPath;

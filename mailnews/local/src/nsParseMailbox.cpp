@@ -83,138 +83,140 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMsgMailboxParser, nsParseMailMessageState, nsIStr
 NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, 
 												  PRUint32 aLength)
 {
-	// right now, this really just means turn around and process the url
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIURI> url = do_QueryInterface(ctxt, &rv);
-	if (NS_SUCCEEDED(rv))
-		rv = ProcessMailboxInputStream(url, aIStream, aLength);
-	return rv;
+    // right now, this really just means turn around and process the url
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIURI> url = do_QueryInterface(ctxt, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = ProcessMailboxInputStream(url, aIStream, aLength);
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-	nsTime currentTime;
-	m_startTime = currentTime;
+    nsTime currentTime;
+    m_startTime = currentTime;
 
 
-	// extract the appropriate event sinks from the url and initialize them in our protocol data
-	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
-	// we have an error.
-	nsresult rv = NS_OK;
+    // extract the appropriate event sinks from the url and initialize them in our protocol data
+    // the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
+    // we have an error.
+    nsresult rv = NS_OK;
 
     nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));
 
-	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
+    nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
 
-	nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(ctxt);
+    nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(ctxt);
 
-	if (NS_SUCCEEDED(rv) && runningUrl)
-	{
-		url->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+    if (NS_SUCCEEDED(rv) && runningUrl)
+    {
+        url->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
 
-		// okay, now fill in our event sinks...Note that each getter ref counts before
-		// it returns the interface to us...we'll release when we are done
-        nsXPIDLCString fileName;
-        nsXPIDLCString folderName;
-        rv = url->GetFilePath(getter_Copies(fileName));
-		url->GetFileName(getter_Copies(folderName));
+        // okay, now fill in our event sinks...Note that each getter ref counts before
+        // it returns the interface to us...we'll release when we are done
+ 
+        char *fileName = nsnull; // may be shortened by NS_UnescapeURL
+        url->GetFilePath(&fileName);
         
-        nsXPIDLCString tempfolder;
-        rv = nsStdUnescape((char*)folderName.get(), getter_Copies(tempfolder));
+        char *folderName = nsnull; // may be shortened by NS_UnescapeURL
+        url->GetFileName(&folderName);
+        if (folderName)
+        {
+            NS_UnescapeURL(folderName);
 
-        // convert from OS native charset to unicode
-        rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), tempfolder, m_folderName);
-        if (NS_FAILED(rv))
-          m_folderName.AssignWithConversion(tempfolder);
+            // convert from OS native charset to unicode
+            rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), folderName, m_folderName);
+            if (NS_FAILED(rv))
+                m_folderName.AssignWithConversion(folderName);
 
-		if (fileName)
-		{
-            char* result = nsnull;
-            rv = nsStdUnescape((char*)fileName.get(), &result);
-			nsFilePath dbPath(result);
-            CRTFREEIF(result);
-			nsFileSpec dbName(dbPath);
+            nsMemory::Free(folderName);
+        }
 
-			// the size of the mailbox file is our total base line for measuring progress
-			m_graph_progress_total = dbName.GetFileSize();
-			UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
-			
-			nsCOMPtr<nsIMsgDatabase> mailDB;
-			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
-			if (NS_SUCCEEDED(rv) && mailDB)
-			{
-				nsCOMPtr <nsIFileSpec> dbFileSpec;
-				NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
-				rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
-                                if (m_mailDB)
-                                  m_mailDB->AddListener(this);
-			}
-			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
+        if (fileName)
+        {
+            NS_UnescapeURL(fileName);
+            nsFilePath dbPath(fileName);
+            nsFileSpec dbName(dbPath);
+
+            // the size of the mailbox file is our total base line for measuring progress
+            m_graph_progress_total = dbName.GetFileSize();
+            UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
+
+            nsCOMPtr<nsIMsgDatabase> mailDB;
+            rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
+            if (NS_SUCCEEDED(rv) && mailDB)
+            {
+                nsCOMPtr <nsIFileSpec> dbFileSpec;
+                NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
+                rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+                if (m_mailDB)
+                    m_mailDB->AddListener(this);
+            }
+            NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 #ifdef DEBUG_mscott
-			printf("url file = %s\n", (const char *)fileName);
+            printf("url file = %s\n", fileName);
 #endif
-		}
- 	}
+            nsMemory::Free(fileName);
+        }
+    }
 
-	// need to get the mailbox name out of the url and call SetMailboxName with it.
-	// then, we need to open the mail db for this parser.
-	return rv;
-
+    // need to get the mailbox name out of the url and call SetMailboxName with it.
+    // then, we need to open the mail db for this parser.
+    return rv;
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
-	DoneParsingFolder(aStatus);
-	// what can we do? we can close the stream?
-	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
+    DoneParsingFolder(aStatus);
+    // what can we do? we can close the stream?
+    m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
 
-        if (m_mailDB)
-          m_mailDB->RemoveListener(this);
-	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
-	// available for another url if there is one....
+    if (m_mailDB)
+        m_mailDB->RemoveListener(this);
+    // and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
+    // available for another url if there is one....
 #ifdef DEBUG1
-	// let's dump out the contents of our db, if possible.
-	if (m_mailDB)
-	{
-		nsMsgKeyArray	keys;
-		nsCAutoString	author;
-		nsCAutoString	subject;
+    // let's dump out the contents of our db, if possible.
+    if (m_mailDB)
+    {
+        nsMsgKeyArray	keys;
+        nsCAutoString	author;
+        nsCAutoString	subject;
 
-//		m_mailDB->PrePopulate();
-		m_mailDB->ListAllKeys(keys);
+    //	m_mailDB->PrePopulate();
+        m_mailDB->ListAllKeys(keys);
         PRUint32 size = keys.GetSize();
-		for (PRUint32 keyindex = 0; keyindex < size; keyindex++)
-		{
-			nsCOMPtr<nsIMsgDBHdr> msgHdr;
-			nsresult ret =
+        for (PRUint32 keyindex = 0; keyindex < size; keyindex++)
+        {
+            nsCOMPtr<nsIMsgDBHdr> msgHdr;
+            nsresult ret =
                 m_mailDB->GetMsgHdrForKey(keys[keyindex],
                                           getter_AddRefs(msgHdr));
-			if (NS_SUCCEEDED(ret) && msgHdr)
-			{
-				nsMsgKey key;
+            if (NS_SUCCEEDED(ret) && msgHdr)
+            {
+                nsMsgKey key;
 
-				msgHdr->GetMessageKey(&key);
-				msgHdr->GetAuthor(&author);
-				msgHdr->GetSubject(&subject);
+                msgHdr->GetMessageKey(&key);
+                msgHdr->GetAuthor(&author);
+                msgHdr->GetSubject(&subject);
 #ifdef DEBUG_bienvenu
-				// leak nsString return values...
-				printf("hdr key = %d, author = %s subject = %s\n", key, author.get(), subject.get());
+                // leak nsString return values...
+                printf("hdr key = %d, author = %s subject = %s\n", key, author.get(), subject.get());
 #endif
-			}
-		}
-		m_mailDB->Close(PR_TRUE);
-	}
+            }
+        }
+        m_mailDB->Close(PR_TRUE);
+    }
 #endif
 
 
-	// be sure to clear any status text and progress info..
-	m_graph_progress_received = 0;
-	UpdateProgressPercent();
-	UpdateStatusText(LOCAL_STATUS_DOCUMENT_DONE);
+    // be sure to clear any status text and progress info..
+    m_graph_progress_received = 0;
+    UpdateProgressPercent();
+    UpdateStatusText(LOCAL_STATUS_DOCUMENT_DONE);
 
-	return NS_OK;
-
+    return NS_OK;
 }
 
 

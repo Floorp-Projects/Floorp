@@ -201,7 +201,7 @@ private:
     nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
     nsAutoString           mFilename;   // url filename (if any)
-    nsXPIDLCString         mPath;       // the url's path
+    nsCString              mPath;       // the url's path
     nsCString              mPwd;        // login Path
 
         // ****** other vars
