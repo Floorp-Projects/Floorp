@@ -29,7 +29,8 @@ DEPTH=..\..\..
 MODULE  =mailnews
 REQUIRES=xpcom js
 EXPORTS =      \
-	          $(NULL)
+		nsMsgNewsCID.h \
+		$(NULL)
 
 
 #//------------------------------------------------------------------------
