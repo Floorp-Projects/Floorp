@@ -4907,7 +4907,7 @@ EOF
 
 fi
 
-for ac_hdr in fcntl.h limits.h malloc.h paths.h strings.h unistd.h
+for ac_hdr in fcntl.h limits.h malloc.h paths.h strings.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
@@ -9418,8 +9418,8 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 if test ! "$MOZ_NATIVE_NSPR"
 then
-  rm -f nsprpub/config/my_config.mk
-  rm -f nsprpub/config/my_overrides.mk
-  cp build/unix/nspr_my_config.mk nsprpub/config/my_config.mk
-  cp build/unix/nspr_my_overrides.mk nsprpub/config/my_overrides.mk
+  rm -f ${srcdir}/nsprpub/config/my_config.mk
+  rm -f ${srcdir}/nsprpub/config/my_overrides.mk
+  cp build/unix/nspr_my_config.mk ${srcdir}/nsprpub/config/my_config.mk
+  cp build/unix/nspr_my_overrides.mk ${srcdir}/nsprpub/config/my_overrides.mk
 fi
