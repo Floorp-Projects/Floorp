@@ -594,6 +594,10 @@ ifdef SHACK
 DEFINES		+= -DSHACK
 endif
 
+ifdef MOZ_DOM
+DEFINES		+= -DDOM
+endif
+
 ifndef NO_UNIX_ASYNC_DNS
 DEFINES		+= -DUNIX_ASYNC_DNS
 endif
