@@ -124,7 +124,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
-							  nsIMsgFolder *srcFolder,
+                              nsIMsgFolder *srcFolder,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
@@ -133,7 +133,7 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
 {
   nsresult rv = NS_OK;
   NS_ENSURE_ARG(srcFolder);
-	nsCOMPtr<nsIMailboxUrl> mailboxurl;
+  nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
   nsMailboxAction actionToUse = nsIMailboxUrl::ActionMoveMessage;
   if (!moveMessage)
@@ -151,9 +151,9 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
       srcFolder->GetUriForMsg(msgHdr, getter_Copies(uri));
       rv = PrepareMessageUrl(uri, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
 
-	    if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv))
       {
-		    nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
+        nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
         nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
         nsCOMPtr<nsIMailboxUrl> mailboxUrl (do_QueryInterface(url));
         msgUrl->SetMsgWindow(aMsgWindow);
@@ -163,8 +163,8 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
       }
     }
   }
-	if (aURL)
-		mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
+  if (aURL)
+    mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
 
   return rv;
 }

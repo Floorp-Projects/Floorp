@@ -51,6 +51,9 @@ var gSmtpPrefBranch;
 var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gSmtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 var gSavedUsername="";
+var gPort;
+var gDefaultPort;
+var gSmtpS;
 
 function initSmtpSettings(server) {
 
@@ -61,6 +64,9 @@ function initSmtpSettings(server) {
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
     gSmtpTrySSL = document.getElementById("smtp.trySSL");
+    gDefaultPort = document.getElementById("smtp.defaultPort");
+    gPort = document.getElementById("smtp.port");
+    gSmtpS = document.getElementById("smtp.alwaysSmtpS");
 
     if (server) {
         gSmtpHostname.value = server.hostname;
@@ -86,6 +92,7 @@ function initSmtpSettings(server) {
 
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
+    selectProtocol();
     if (gSmtpService.defaultServer)
       onLockPreference();
 }
@@ -174,4 +181,16 @@ function onUseUsername(checkbox, dofocus)
 function updateControls() {
     if (gSmtpTrySSL.disabled)  // see bug 70033 on why this is necessary for radiobuttons
         gSmtpTrySSL.disabled = gSmtpTrySSL.disabled;
+}
+
+function selectProtocol() {
+  if (gSmtpTrySSL.selectedItem == gSmtpS) {
+    gDefaultPort.value = "465";
+    if(gPort.value == "" || gPort.value == "25")
+        gPort.value = gDefaultPort.value;
+  } else {
+    gDefaultPort.value = "25";
+    if(gPort.value == "" || gPort.value == "465")
+        gPort.value = gDefaultPort.value;
+  }
 }

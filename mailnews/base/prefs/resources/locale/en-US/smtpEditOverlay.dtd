@@ -3,8 +3,10 @@
 <!ENTITY alwaysUseUsername.label "Use name and password">
 <!ENTITY userName.label "User Name:">
 <!ENTITY savePassword.label "Save my password">
-<!ENTITY isSecure.label "Use secure connection (SSL):">
-<!ENTITY neverSecure.label "Never">
-<!ENTITY alwaysSecure.label "Always">
-<!ENTITY sometimesSecure.label "When available">
+<!ENTITY isSecure.label "Use secure connection:">
+<!ENTITY neverSecure.label "No">
+<!ENTITY sometimesSecure.label "TLS, if available">
+<!ENTITY alwaysSecure.label "TLS">
+<!ENTITY alwaysSmtpS.label "SSL">
 <!ENTITY smtpEditTitle.label "SMTP Server">
+<!ENTITY serverPortDefault.label "Default:">

@@ -3467,6 +3467,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       
     case POP3_FREE:
       UpdateProgressPercent(0,0); // clear out the progress meter
+      NS_ASSERTION(m_nsIPop3Sink, "with no sink, can't clear busy flag");
       if (m_nsIPop3Sink)
       {
         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);

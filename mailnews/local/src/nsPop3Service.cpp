@@ -232,6 +232,8 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
         protocol->SetUsername(userName);
         rv = protocol->LoadUrl(aUrlToRun);
         NS_RELEASE(protocol);
+        if (NS_FAILED(rv))
+          aServer->SetServerBusy(PR_FALSE);
       }
     } 
   } // if server
