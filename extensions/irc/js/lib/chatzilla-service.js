@@ -52,6 +52,8 @@ const MEDIATOR_CONTRACTID =
     "@mozilla.org/appshell/window-mediator;1";
 const STANDARDURL_CONTRACTID = 
     "@mozilla.org/network/standard-url;1";
+const IOSERVICE_CONTRACTID = 
+    "@mozilla.org/network/io-service;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
 
@@ -65,6 +67,7 @@ const nsIURI             = Components.interfaces.nsIURI;
 const nsIStandardURL     = Components.interfaces.nsIStandardURL;
 const nsIChannel         = Components.interfaces.nsIChannel;
 const nsIRequest         = Components.interfaces.nsIRequest;
+const nsIIOService       = Components.interfaces.nsIIOService;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
 const nsISupports        = Components.interfaces.nsISupports;
 
@@ -84,7 +87,8 @@ CLineService.prototype.openWindowWithArgs = false;
 var CLineFactory = new Object();
 
 CLineFactory.createInstance =
-function (outer, iid) {
+function (outer, iid)
+{
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
@@ -99,8 +103,8 @@ function IRCContentHandler ()
 {}
 
 IRCContentHandler.prototype.QueryInterface =
-function (iid) {
-
+function (iid)
+{
     if (!iid.equals(nsIContentHandler))
         throw Components.results.NS_ERROR_NO_INTERFACE;
 
@@ -108,16 +112,11 @@ function (iid) {
 }
 
 IRCContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aRequest)
+function (contentType, command, windowTarget, request)
 {
     var e;
-    var channel = aRequest.QueryInterface(nsIChannel);
+    var channel = request.QueryInterface(nsIChannel);
     
-    /*
-    debug ("ircLoader.handleContent (" + aContentType + ", " +
-          aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
-    */
-
     var windowManager =
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
 
@@ -147,7 +146,8 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
 var IRCContentHandlerFactory = new Object();
 
 IRCContentHandlerFactory.createInstance =
-function (outer, iid) {
+function (outer, iid)
+{
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
@@ -169,32 +169,37 @@ IRCProtocolHandler.prototype.protocolFlags =
                    nsIProtocolHandler.ALLOWS_PROXY;
 
 IRCProtocolHandler.prototype.allowPort =
-function (aPort, aScheme)
+function (port, scheme)
 {
     return false;
 }
 
 IRCProtocolHandler.prototype.newURI =
-function (aSpec, aCharset, aBaseURI)
+function (spec, charset, baseURI)
 {
     var cls = Components.classes[STANDARDURL_CONTRACTID];
     var url = cls.createInstance(nsIStandardURL);
-    url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aCharset, aBaseURI);
-    
+    url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, spec, charset, baseURI);
+
     return url.QueryInterface(nsIURI);
 }
 
 IRCProtocolHandler.prototype.newChannel =
-function (aURI)
+function (URI)
 {
-    return new BogusChannel (aURI);
+    ios = Components.classes[IOSERVICE_CONTRACTID].getService(nsIIOService);
+    if (!ios.allowPort(URI.port, URI.scheme))
+        throw Components.results.NS_ERROR_FAILURE;
+
+    return new BogusChannel (URI);
 }
 
 /* protocol handler factory object (IRCProtocolHandler) */
 var IRCProtocolHandlerFactory = new Object();
 
 IRCProtocolHandlerFactory.createInstance =
-function (outer, iid) {
+function (outer, iid)
+{
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
@@ -205,15 +210,15 @@ function (outer, iid) {
 }
 
 /* bogus IRC channel used by the IRCProtocolHandler */
-function BogusChannel (aURI)
+function BogusChannel (URI)
 {
-    this.URI = aURI;
-    this.originalURI = aURI;
+    this.URI = URI;
+    this.originalURI = URI;
 }
 
 BogusChannel.prototype.QueryInterface =
-function (iid) {
-
+function (iid)
+{
     if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
         !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -259,9 +264,9 @@ function ()
 BogusChannel.prototype.status = Components.results.NS_OK;
 
 BogusChannel.prototype.cancel =
-function (aStatus)
+function (status)
 {
-    this.status = aStatus;
+    this.status = status;
 }
 
 BogusChannel.prototype.suspend =
@@ -326,7 +331,8 @@ function(compMgr, fileSpec, location)
 }
 
 ChatzillaModule.getClassObject =
-function (compMgr, cid, iid) {
+function (compMgr, cid, iid)
+{
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
 
@@ -350,6 +356,7 @@ function(compMgr)
 }
 
 /* entrypoint */
-function NSGetModule(compMgr, fileSpec) {
+function NSGetModule(compMgr, fileSpec)
+{
     return ChatzillaModule;
 }
