@@ -21,6 +21,7 @@
 #include "nsBlockFrame.h"
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
+#include "nsIAreaFrame.h"
 
 class nsSpaceManager;
 
@@ -39,10 +40,13 @@ struct nsStylePosition;
  *
  * @see nsLayoutAtoms::absoluteList
  */
-class nsAreaFrame : public nsBlockFrame
+class nsAreaFrame : public nsBlockFrame, public nsIAreaFrame
 {
 public:
   friend nsresult NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags);
+  
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
   // nsIFrame
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
@@ -73,11 +77,17 @@ public:
                    nsFramePaintLayer    aWhichLayer);
 #endif
 
+  NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
+                       nsDidReflowStatus aStatus);
+
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+
+  // nsIAreaFrame
+  NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
 
 protected:
   nsAreaFrame();

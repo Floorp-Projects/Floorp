@@ -29,6 +29,7 @@
 #include "nsCSSRendering.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
+#include "nsIAreaFrame.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -36,6 +37,7 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -340,6 +342,21 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
               aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+
+  // If it's an area frame then get the total size, which includes the
+  // space taken up by absolutely positioned child elements
+  nsIAreaFrame* areaFrame;
+  if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
+    nscoord xMost, yMost;
+
+    areaFrame->GetPositionedInfo(xMost, yMost);
+    if (xMost > kidDesiredSize.width) {
+      kidDesiredSize.width = xMost;
+    }
+    if (yMost > kidDesiredSize.height) {
+      kidDesiredSize.height = yMost;
+    }
+  }
   
   // Make sure the height of the scrolled frame fills the entire scroll area,
   // unless we're shrink wrapping

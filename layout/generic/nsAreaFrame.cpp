@@ -36,6 +36,7 @@
 #include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
 NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags)
@@ -51,11 +52,29 @@ NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags)
 
 nsAreaFrame::nsAreaFrame()
 {
+  mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;  // let us handle it
 }
 
 nsAreaFrame::~nsAreaFrame()
 {
   NS_IF_RELEASE(mSpaceManager);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// nsISupports
+
+NS_IMETHODIMP
+nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kAreaFrameIID)) {
+    nsIAreaFrame* tmp = (nsIAreaFrame*)this;
+    *aInstancePtr = (void*)tmp;
+    return NS_OK;
+  }
+  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -248,6 +267,82 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
 }
 #endif
 
+// Return the x-most and y-most for the child absolutely positioned
+// elements
+NS_IMETHODIMP
+nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
+{
+  aXMost = aYMost = 0;
+  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f; f->GetNextSibling(f)) {
+    // Get the frame's x-most and y-most. This is for its flowed content only
+    nsRect  rect;
+    f->GetRect(rect);
+
+    if (rect.XMost() > aXMost) {
+      aXMost = rect.XMost();
+    }
+    if (rect.YMost() > aYMost) {
+      aYMost = rect.YMost();
+    }
+
+    // If the child frame is also an area frame, then take into account its child
+    // absolutely positioned elements
+    nsIAreaFrame* areaFrame;
+    if (NS_SUCCEEDED(f->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
+      nscoord xMost, yMost;
+
+      areaFrame->GetPositionedInfo(xMost, yMost);
+      // Convert to our coordinate space
+      xMost += rect.x;
+      yMost += rect.y;
+
+      if (xMost > aXMost) {
+        aXMost = xMost;
+      }
+      if (yMost > aYMost) {
+        aYMost = yMost;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+// XXX Temporary until the view code allows positioned child views to extend
+// outside their parent without being clipped...
+NS_IMETHODIMP
+nsAreaFrame::DidReflow(nsIPresContext&   aPresContext,
+                       nsDidReflowStatus aStatus)
+{
+  nsresult  rv = nsBlockFrame::DidReflow(aPresContext, aStatus);
+
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    nsIView*  view;
+    GetView(view);
+
+    // Size and position the view if requested
+    if (nsnull != view) {
+      // Position and size view relative to its parent, not relative to our
+      // parent frame (our parent frame may not have a view).
+      nsIView* parentWithView;
+      nsPoint origin;
+      GetOffsetFromView(origin, parentWithView);
+      nsIViewManager  *vm;
+      view->GetViewManager(vm);
+
+      // Take into account any absolutely positioned children
+      nscoord xMost, yMost;
+      GetPositionedInfo(xMost, yMost);
+
+      vm->ResizeView(view, PR_MAX(mRect.width, xMost), PR_MAX(mRect.height, yMost));
+      vm->MoveViewTo(view, origin.x, origin.y);
+      NS_RELEASE(vm);
+    }
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -362,28 +457,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   
       if (floaterYMost > contentYMost) {
         aDesiredSize.height += floaterYMost - contentYMost;
-      }
-    }
-  }
-
-  // Also take into account absolutely positioned elements depending on
-  // the overflow policy
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
-    for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f;
-         f->GetNextSibling(f)) {
-      nsRect  rect;
-  
-      f->GetRect(rect);
-      nscoord xmost = rect.XMost();
-      nscoord ymost = rect.YMost();
-      if (xmost > aDesiredSize.width) {
-        aDesiredSize.width = xmost;
-      }
-      if (ymost > aDesiredSize.height) {
-        aDesiredSize.height = ymost;
       }
     }
   }
