@@ -34,6 +34,7 @@
 // 98-06-03 pinkerton -- temorary defines to turn on features before they fully land.
 #define CookieManagement 1
 #define SingleSignon 1
+#define ClientWallet 1
 
 // 98-07-29 pinnkerton -- defines to turn on feature. REMOVE WHEN THIS LANDS.
 #define PRIVACY_POLICIES 1
