@@ -274,7 +274,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	NS_PRECONDITION(aURL, "invalid URL passed into Smtp Protocol");
 	nsresult rv = NS_OK;
 
-	m_flags = nsISmtpServer::cap_undefined;
+	m_flags = 0;
   m_prefAuthMethod = PREF_AUTH_NONE;
 	m_port = SMTP_PORT;
   m_tlsInitiated = PR_FALSE;
@@ -317,10 +317,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
   nsCOMPtr<nsISmtpServer> smtpServer;
   m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
   if (smtpServer)
-  {
       smtpServer->GetAuthMethod(&m_prefAuthMethod);
-      smtpServer->GetCapability(&m_flags);
-  }
+   else
+     m_prefAuthMethod = PREF_AUTH_NONE; 
     
   rv = RequestOverrideInfo(smtpServer);
   // if we aren't waiting for a login override, then go ahead an
@@ -343,15 +342,13 @@ const char * nsSmtpProtocol::GetUserDomainName()
 	{
 		nsCOMPtr <nsIMsgIdentity> senderIdentity;
 		rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
-		if (NS_FAILED(rv) || !senderIdentity) {
+		if (NS_FAILED(rv) || !senderIdentity) 
 			return nsnull;
-		}
-		
+				
 		rv =  senderIdentity->GetEmail(getter_Copies(m_mailAddr));
-		if (NS_FAILED(rv) || !((const char *)m_mailAddr)) {	
+		if (NS_FAILED(rv) || !((const char *)m_mailAddr)) 	
 			return nsnull;
-		}
-
+		
 		const char *atSignMarker = nsnull;
 		atSignMarker = PL_strchr(m_mailAddr, '@');
 		return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
@@ -477,18 +474,16 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
      */
   if(status < 0)
 	{
-	nsresult rv = nsExplainErrorDetails(NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+    nsresult rv = nsExplainErrorDetails(NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
+	  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
-	m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-        /* return TCP error */
-	return(NS_ERROR_TCP_READ_ERROR);
+	  m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    /* return TCP error */
+	  return(NS_ERROR_TCP_READ_ERROR);
 	}
 	else if(!line)
-	{
-		return status;
-	}
-
+	  return status;
+	
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
 	cont_char = ' '; /* default */
   sscanf(line, "%d%c", &m_responseCode, &cont_char);
@@ -511,30 +506,17 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_responseText += line+4;
   }
 
-  if (m_responseCode == 220)
-  { // fisrt time we connect to the server; check for the greeting if it is a
-    // ESMTP server set capability accordingly
-      if (nsCRT::strlen(m_responseText))
-      {
-          if ((TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION)) && m_runningURL)
-          {
-              nsCOMPtr<nsISmtpServer> smtpServer;
-              m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
-              if (smtpServer)
-              {
-                  if (m_responseText.Find("ESMTP", PR_TRUE) != -1)
-                  {
-                      smtpServer->SetCapability(nsISmtpServer::cap_esmtp_server);
-                      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-                  }
-                  else
-                  {
-                      smtpServer->SetCapability(nsISmtpServer::cap_smtp_server);
-                      m_nextStateAfterResponse = SMTP_LOGIN_RESPONSE;
-                  }
-              }
-          }
-      }
+  if (m_responseCode == 220 && nsCRT::strlen(m_responseText))
+  { // check for the greeting if it is a ESMTP server set capability accordingly
+    if (m_responseText.Find("ESMTP", PR_TRUE) != -1)
+    {
+      SetFlag(SMTP_ESMTP_SERVER);
+      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+    }
+    else
+    {
+        m_nextStateAfterResponse = SMTP_LOGIN_RESPONSE;
+    }
   }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
@@ -753,6 +735,28 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     return status;
 }
 
+PRInt32 nsSmtpProtocol::SendTLSResponse()
+{
+  // only tear down our existing connection and open a new one if we received a 220 response
+  // from the smtp server after we issued the STARTTLS 
+  nsresult rv = NS_OK;
+  if (m_responseCode == 220 ) 
+  {
+    CloseSocket();
+    // now clear a bunch of internal state data...
+    
+    // now re-open the connection
+    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake");
+    m_nextState = SMTP_RESPONSE; 
+    m_nextStateAfterResponse = SMTP_START_CONNECT;
+    m_tlsInitiated = PR_TRUE;
+    m_flags = 0;
+    SetFlag(SMTP_PAUSE_FOR_READ);
+  }
+
+  return rv;
+}
+
 PRInt32 nsSmtpProtocol::ProcessAuth()
 {
     PRInt32 status = 0;
@@ -772,7 +776,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
 
                 status = SendData(url, buffer);
 
-                m_flags = nsISmtpServer::cap_esmtp_server; // resetting the flags
+                m_flags = 0; // resetting the flags
                 m_tlsInitiated = PR_TRUE;
 
                 m_nextState = SMTP_RESPONSE;
@@ -1311,12 +1315,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 			char *addrs1 = 0;
 			char *addrs2 = 0;
    		m_nextState = SMTP_RESPONSE;
-        if (TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION))
-            m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-        else if (TestFlag(nsISmtpServer::cap_esmtp_server))
-            m_nextStateAfterResponse = SMTP_AUTH_PROCESS_STATE;
-        else
-            m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
+      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 
 			/* Remove duplicates from the list, to prevent people from getting
 				more than one copy (the SMTP host may do this too, or it may not.)
@@ -1391,21 +1390,21 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 			case SMTP_START_CONNECT:
 				SetFlag(SMTP_PAUSE_FOR_READ);
 				m_nextState = SMTP_RESPONSE;
-        if (TestFlag(nsISmtpServer::cap_undefined) || TestFlag(SMTP_USE_LOGIN_REDIRECTION))
-            m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-        else if (TestFlag(nsISmtpServer::cap_esmtp_server))
-            m_nextStateAfterResponse = SMTP_AUTH_PROCESS_STATE;
-        else
-            m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
+        m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 				break;
 			case SMTP_FINISH_CONNECT:
 	            SetFlag(SMTP_PAUSE_FOR_READ);
 		        break;
-			case SMTP_LOGIN_RESPONSE:
+      case SMTP_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
 				else
 					status = LoginResponse(inputStream, length);
+			case SMTP_TLS_RESPONSE:
+				if (inputStream == nsnull)
+					SetFlag(SMTP_PAUSE_FOR_READ);
+				else
+					status = SendTLSResponse();
 				break;
 			case SMTP_EXTN_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
@@ -1426,9 +1425,9 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				else
 					status = SendEhloResponse(inputStream, length);
 				break;
-            case SMTP_AUTH_PROCESS_STATE:
-                status = ProcessAuth();
-                break;
+       case SMTP_AUTH_PROCESS_STATE:
+          status = ProcessAuth();
+          break;
 			case SMTP_AUTH_LOGIN_RESPONSE:
 				if (inputStream == nsnull)
 					SetFlag(SMTP_PAUSE_FOR_READ);
@@ -1490,20 +1489,21 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				break;
         
 			case SMTP_ERROR_DONE:
-                {
+        {
 					nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
 					// propagate the right error code
 					mailNewsUrl->SetUrlState(PR_FALSE, m_urlErrorState);
 					m_nextState = SMTP_FREE;
 				}
-	            m_nextState = SMTP_FREE;
-		        break;
+	      
+        m_nextState = SMTP_FREE;
+		    break;
         
 			case SMTP_FREE:
 				// smtp is a one time use connection so kill it if we get here...
 				CloseSocket(); 
-	            return NS_OK; /* final end */
-        
+	      return NS_OK; /* final end */
+       
 			default: /* should never happen !!! */
 				m_nextState = SMTP_ERROR_DONE;
 				break;
@@ -1738,39 +1738,5 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
 
   // we may want to always return NS_OK regardless of an error
   return rv;
-}
-
-static PRUint32 capFlags = (nsISmtpServer::cap_auth_login |
-                            nsISmtpServer::cap_dsn |
-                            nsISmtpServer::cap_auth_plain |
-                            nsISmtpServer::cap_auth_external |
-                            nsISmtpServer::cap_auth_starttls);
-
-void
-nsSmtpProtocol::SetFlag(PRUint32 flag)
-{
-    nsMsgProtocol::SetFlag(flag);
-    if (!m_tlsInitiated && flag & capFlags)
-    {
-        nsCOMPtr<nsISmtpServer> smtpServer;
-        m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
-        if (! smtpServer) return;
-        smtpServer->SetCapability(nsISmtpServer::cap_esmtp_server |
-                                  (m_flags & capFlags));
-    }
-}
-
-void
-nsSmtpProtocol::ClearFlag(PRUint32 flag)
-{
-    nsMsgProtocol::ClearFlag(flag);
-    if (!m_tlsInitiated && flag & capFlags)
-    {
-        nsCOMPtr<nsISmtpServer> smtpServer;
-        m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
-        if (! smtpServer) return;
-        smtpServer->SetCapability((m_flags & capFlags) |
-                                  nsISmtpServer::cap_esmtp_server);
-    }
 }
 

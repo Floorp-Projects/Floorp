@@ -43,7 +43,6 @@ private:
 
     nsresult getPrefString(const char *pref, nsCAutoString& result);
     nsCString m_password;
-    PRUint32 m_capability;
 };
 
 

@@ -24,17 +24,6 @@ interface nsIPrompt;
 
 [scriptable, uuid(6a0b35ce-54e4-11d3-81df-006008948010)]
 interface nsISmtpServer : nsISupports {
-
-    const unsigned long cap_undefined = 0x80000000;
-
-    const unsigned long cap_smtp_server = 0x10000000;
-    const unsigned long cap_esmtp_server = 0x20000000;
-
-    const unsigned long cap_dsn = 0x00000002;
-    const unsigned long cap_auth_login = 0x00000004;
-    const unsigned long cap_auth_plain = 0x00000008;
-    const unsigned long cap_auth_external = 0x00000010;
-    const unsigned long cap_auth_starttls = 0x00000020;
     
     attribute string key;       // unique identifier
     
@@ -43,9 +32,7 @@ interface nsISmtpServer : nsISupports {
     attribute string password;
 
     /* what kind of logon redirector to use for this server, if any */
-    attribute string redirectorType;
-    
-    attribute unsigned long capability;
+    attribute string redirectorType;   
 
     attribute long authMethod;
     attribute long trySSL;

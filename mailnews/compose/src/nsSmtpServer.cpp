@@ -40,14 +40,11 @@ NS_INTERFACE_MAP_END
 
 nsSmtpServer::nsSmtpServer()
 {
-    NS_INIT_REFCNT();
-    m_capability = nsISmtpServer::cap_undefined;
+    NS_INIT_REFCNT();    
 }
 
 nsSmtpServer::~nsSmtpServer()
 {
-
-
 }
 
 NS_IMETHODIMP
@@ -323,20 +320,5 @@ nsSmtpServer::GetRedirectorType(char **aResult)
     getPrefString("redirector_type", pref);
     rv = prefs->CopyCharPref(pref, aResult);
     if (NS_FAILED(rv)) *aResult=nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSmtpServer::SetCapability(PRUint32 capability)
-{
-    m_capability = capability;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSmtpServer::GetCapability(PRUint32 *capability)
-{
-    NS_ENSURE_ARG_POINTER(capability);
-    *capability = m_capability;
     return NS_OK;
 }

@@ -63,16 +63,13 @@ SMTP_AUTH_PROCESS_STATE                             // 21
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
-#define SMTP_PAUSE_FOR_READ			    0x00000001  /* should we pause for the
-                                                    /* next read */
-// *** don't change the following value; they are in sync with the capability
-// *** flags defined in nsISmtpServer.idl
-
+#define SMTP_PAUSE_FOR_READ			    0x00000001  /* should we pause for the next read */
 #define SMTP_EHLO_DSN_ENABLED		    0x00000002
 #define SMTP_AUTH_LOGIN_ENABLED		  0x00000004
 #define SMTP_AUTH_PLAIN_ENABLED     0x00000008
 #define SMTP_AUTH_EXTERNAL_ENABLED  0x00000010
 #define SMTP_EHLO_STARTTLS_ENABLED  0x00000020
+
 
 // if we are using a login redirection
 // and we are waiting for it to give us the
@@ -87,6 +84,7 @@ SMTP_AUTH_PROCESS_STATE                             // 21
 // Note, this is different than the flag for whether we are waiting
 // for login redirection information.
 #define SMTP_USE_LOGIN_REDIRECTION  0x00000100
+#define SMTP_ESMTP_SERVER           0x00000200
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -115,9 +113,6 @@ public:
 
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
   virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
-
-  virtual void SetFlag (PRUint32 flag);
-  virtual void ClearFlag (PRUint32 flag);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -209,6 +204,7 @@ private:
 	PRInt32 AuthLoginPassword();
 	PRInt32 AuthLoginResponse(nsIInputStream * stream, PRUint32 length);
 
+  PRInt32 SendTLSResponse();
 	PRInt32 SendVerifyResponse(); // mscott: this one is apparently unimplemented...
 	PRInt32 SendMailResponse();
 	PRInt32 SendRecipientResponse();
