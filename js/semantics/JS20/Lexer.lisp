@@ -241,7 +241,7 @@
                  "instanceof" "interface" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
                  "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use" "var" "volatile" "while" "with"))
        (define non-reserved-words (vector string)
-         (vector "exclude" "get" "include" "operator" "set"))
+         (vector "exclude" "get" "include" "set"))
        (define keywords (vector string)
          (append reserved-words non-reserved-words))
        
