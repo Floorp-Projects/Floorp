@@ -263,7 +263,11 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
-  nsCOMPtr<nsISupports> consumerToUse = aConsumer;
+  // if we were already initialized with a consumer, use it...
+  nsCOMPtr<nsIStreamListener> consumer = do_QueryInterface(aConsumer);
+  if (consumer)
+    m_channelListener = consumer;
+
 	if (aURL)
 	{
 		m_runningUrl = do_QueryInterface(aURL);
@@ -321,15 +325,16 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             // when fetching a part, we need to insert a converter into the listener chain order to
             // force just the part out of the message.
             nsCOMPtr<nsIStreamConverterService> converter = do_GetService(kIStreamConverterServiceCID);
-            nsCOMPtr<nsIStreamListener> consumer = do_QueryInterface(consumerToUse);
             nsIChannel * channel;
             QueryInterface(NS_GET_IID(nsIChannel), (void **) &channel);
             if (converter && channel)
             {
               nsCOMPtr<nsIStreamListener> newConsumer;
               converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
-                                          consumer, channel, getter_AddRefs(newConsumer));
-              consumerToUse = do_QueryInterface(newConsumer);
+                                          m_channelListener, channel, getter_AddRefs(newConsumer));
+
+              if (newConsumer)
+                m_channelListener = newConsumer;
             }
 					
             m_nextState = MAILBOX_READ_MESSAGE;
@@ -340,7 +345,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 				}
 			}
 
-			rv = nsMsgProtocol::LoadUrl(aURL, consumerToUse);
+			rv = nsMsgProtocol::LoadUrl(aURL, m_channelListener);
 
 		} // if we received an MAILBOX url...
 	} // if we received a url!
