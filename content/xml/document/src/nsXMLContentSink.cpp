@@ -399,7 +399,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     loader->RemoveObserver(this);
   }
   
-  PRUint32 documentLoadType;
+  PRUint32 documentLoadType = 0;
   if (mWebShell) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     if (docShell) {
