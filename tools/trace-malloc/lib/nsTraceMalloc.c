@@ -1004,11 +1004,11 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 
             logfilename = argv[i+1];
             switch (*logfilename) {
-            case '|':
+              case '|':
                 if (pipe(pipefds) == 0) {
                     pid_t pid = fork();
                     if (pid == 0) {
-                        /* In child: set up stdin, parse args from logfilename, and exec. */
+                        /* In child: set up stdin, parse args, and exec. */
                         int maxargc, nargc;
                         char **nargv, *token;
 
@@ -1020,14 +1020,15 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 
                         logfilename = strtok(logfilename + 1, " \t");
                         maxargc = 3;
-                        nargv = (char **) malloc((maxargc + 1) * sizeof(char *));
+                        nargv = (char **) malloc((maxargc+1) * sizeof(char *));
                         if (!nargv) exit(1);
                         nargc = 0;
                         nargv[nargc++] = logfilename;
                         while ((token = strtok(NULL, " \t")) != NULL) {
                             if (nargc == maxargc) {
                                 maxargc *= 2;
-                                nargv = (char**) realloc(nargv, (maxargc+1) * sizeof(char*));
+                                nargv = (char**)
+                                    realloc(nargv, (maxargc+1) * sizeof(char*));
                                 if (!nargv) exit(1);
                             }
                             nargv[nargc++] = token;
@@ -1040,31 +1041,31 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
                     }
 
                     if (pid > 0) {
-                        /* In parent: set logfd to the write side of the pipe. */
+                        /* In parent: set logfd to the pipe's write side. */
                         close(pipefds[0]);
                         logfd = pipefds[1];
                     }
                 }
                 if (logfd < 0) {
                     fprintf(stderr,
-                            "%s: can't pipe to trace-malloc child process %s: %s\n",
-                            argv[0], logfilename, strerror(errno));
+                        "%s: can't pipe to trace-malloc child process %s: %s\n",
+                        argv[0], logfilename, strerror(errno));
                     exit(1);
                 }
                 break;
 
-            case '-':
+              case '-':
                 /* Don't log from startup, but do prepare to log later. */
                 if (logfilename[1] == '\0')
                     break;
                 /* FALL THROUGH */
 
-            default:
+              default:
                 logfd = open(logfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
                 if (logfd < 0) {
                     fprintf(stderr,
-                            "%s: can't create trace-malloc logfilename %s: %s\n",
-                            argv[0], logfilename, strerror(errno));
+                        "%s: can't create trace-malloc logfilename %s: %s\n",
+                        argv[0], logfilename, strerror(errno));
                     exit(1);
                 }
                 break;
