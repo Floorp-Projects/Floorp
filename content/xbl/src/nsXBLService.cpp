@@ -385,9 +385,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     nsCOMPtr<nsIContent> root;
     mBindingDocument->GetRootContent(getter_AddRefs(root));
-    if (root)
-      nsXBLService::StripWhitespaceNodes(root);
-    else {
+    if (!root) {
       NS_ERROR("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
@@ -1316,41 +1314,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // Everything worked, so we can just hand this back now.
   *aResult = doc;
   NS_IF_ADDREF(*aResult);
-
-  // The XML content sink produces a ridiculous # of content nodes.
-  // It generates text nodes even for whitespace.  The following
-  // call walks the generated document tree and trims out these
-  // nodes.
-  nsCOMPtr<nsIContent> root;
-  doc->GetRootContent(getter_AddRefs(root));
-  if (root)
-    StripWhitespaceNodes(root);
-
-  return NS_OK;
-}
-
-nsresult 
-nsXBLService::StripWhitespaceNodes(nsIContent* aElement)
-{
-  PRInt32 childCount;
-  aElement->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aElement->ChildAt(i, *getter_AddRefs(child));
-    nsCOMPtr<nsITextContent> text = do_QueryInterface(child);
-    if (text) {
-      PRBool isEmpty;
-      text->IsOnlyWhitespace(&isEmpty);
-      if (isEmpty) {
-        // This node contained nothing but whitespace.
-        // Remove it from the content model.
-        aElement->RemoveChildAt(i, PR_TRUE);
-        i--; // Decrement our count, since we just removed this child.
-        childCount--; // Also decrement our total count.
-      }
-    }
-    else StripWhitespaceNodes(child);
-  }
 
   return NS_OK;
 }

@@ -117,7 +117,6 @@ public:
 
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
-  static nsresult StripWhitespaceNodes(nsIContent* aContent);
   static nsresult BuildPropertyChain(nsIXBLPrototypeBinding * aPrototypeBinding, nsIContent * aContent, nsIXBLPrototypeProperty ** aResult);
 
 // MEMBER VARIABLES

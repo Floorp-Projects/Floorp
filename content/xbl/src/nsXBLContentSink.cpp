@@ -47,6 +47,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLTokens.h"
 #include "nsIURI.h"
+#include "nsTextFragment.h"
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
@@ -193,6 +194,33 @@ nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
   }
 
   return nsXMLContentSink::CloseContainer(aNode);
+}
+
+nsresult
+nsXBLContentSink::FlushText(PRBool aCreateTextNode,
+                            PRBool* aDidFlush)
+{
+  PRBool isWS = PR_TRUE;
+  if (mTextLength > 0) {
+    const PRUnichar* cp = mText;
+    const PRUnichar* end = mText + mTextLength;
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (!XP_IS_SPACE(ch)) {
+        isWS = PR_FALSE;
+        break;
+      }
+    }
+  }
+
+  if (isWS && mTextLength > 0) {
+    mTextLength = 0;
+    if (aDidFlush)
+      *aDidFlush = PR_TRUE;
+    return NS_OK;
+  }
+
+  return nsXMLContentSink::FlushText(aCreateTextNode, aDidFlush);
 }
 
 NS_IMETHODIMP
