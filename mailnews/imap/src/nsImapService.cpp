@@ -246,10 +246,16 @@ NS_IMETHODIMP nsImapSaveAsListener::OnDataAvailable(nsIRequest* request,
 nsresult nsImapSaveAsListener::SetupMsgWriteStream(nsIFileSpec *aFileSpec, PRBool addDummyEnvelope)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  rv = aFileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
+
+  // if the file already exists, delete it.
+  // do this before we get the outputstream
   nsFileSpec fileSpec;
   aFileSpec->GetFileSpec(&fileSpec);
   fileSpec.Delete(PR_FALSE);
+
+  rv = aFileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
+  NS_ENSURE_SUCCESS(rv,rv);
+
   if (m_outputStream && addDummyEnvelope)
   {
     nsCAutoString result;
