@@ -571,15 +571,17 @@ nsSVGUseElement::LookupHref(nsIDOMSVGElement **aResult)
   nsresult rv;
   nsAutoString href;
   mHref->GetBaseVal(href);
+  if (href.IsEmpty())
+    return NS_OK;
 
   // Get ID from spec
   PRInt32 pos = href.FindChar('#');
   if (pos == -1) {
-    NS_ASSERTION(pos != -1, "URI Spec not a reference");
+    NS_WARNING("URI Spec not a reference");
     return NS_ERROR_FAILURE;
   } else if (pos > 0) {
     // XXX we don't support external <use> yet
-    NS_ASSERTION(pos > 0, "URI Spec not a local URI reference");
+    NS_WARNING("URI Spec not a local URI reference");
     return NS_ERROR_FAILURE;
   }
 
