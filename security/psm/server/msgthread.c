@@ -33,6 +33,7 @@
 /* Cartman Server specific includes */
 #include "serv.h"
 #include "ctrlconn.h"
+#include "messages.h"
 #include "msgthread.h"
 
 struct MsgThreadCtx
@@ -94,6 +95,57 @@ SSM_ProcessMsgOnThread(SSMStatus (*f)(SSMControlConnection *, SECItem *),
   if (!thrd) goto loser;
 
   ctx = 0;  /* Thread now owns the context */
+
+loser:
+  if (ctx) freectx(ctx);
+
+  return rv;
+}
+
+static void
+threadfunc1(void *arg)
+{
+  SSMStatus rv;
+  MsgThreadCtx *ctx = (MsgThreadCtx*)arg;
+
+  rv = ctx->f(ctx->ctrl, ctx->msg);
+  /* Can't indicate failure */
+  if (rv != SSM_SUCCESS) SSM_DEBUG("Thread processing function failed\n");
+
+  freectx(ctx);
+}
+
+SSMStatus
+SSM_ProcessMsgOnThreadReply(SSMStatus (*f)(SSMControlConnection *, SECItem *),
+                            SSMControlConnection *ctrl, SECItem *msg)
+{
+  SSMStatus rv = PR_SUCCESS;
+  MsgThreadCtx *ctx = 0;
+  PRThread *thrd;
+  SingleNumMessage reply;
+
+  ctx = (MsgThreadCtx*)PR_Malloc(sizeof (MsgThreadCtx));
+  if (!ctx) { rv = PR_FAILURE; goto loser; }
+
+  ctx->f = f;
+  ctx->ctrl = ctrl;
+  SSM_GetResourceReference(&ctrl->super.super);
+  ctx->msg = SECITEM_DupItem(msg);
+
+  thrd = PR_CreateThread(PR_USER_THREAD, threadfunc1, ctx, PR_PRIORITY_NORMAL,
+                  PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+  if (!thrd) goto loser;
+
+  ctx = 0;  /* Thread now owns the context */
+
+  free(msg->data);
+  msg->data = 0;
+
+  /* Send response */
+  reply.value = 0;
+  CMT_EncodeMessage(SingleNumMessageTemplate, (CMTItem*)msg, &reply);
+
+/*  ssmcontrolconnection_send_message_to_client(ctrl, msg); */
 
 loser:
   if (ctx) freectx(ctx);

@@ -2667,6 +2667,8 @@ SSMControlConnection_FormSubmitHandler(SSMResource * res, HTTPRequest * req)
         goto loser;
     if (PL_strcmp(res->m_formName, "choose_cert_by_usage") == 0)
         rv = SSM_ChooseCertUsageHandler(req);
+    else if (PL_strcmp(res->m_formName, "set_db_password") == 0)
+        rv = SSM_SetDBPasswordHandler(req);
     else /* other cases where this could be used will go here */
         goto loser;
     return rv;

@@ -53,7 +53,7 @@
 #include "ssl.h"
 #include "protocolshr.h"
 #include "msgthread.h"
-#include "pk11func.h"
+#include "pk11sdr.h"
 
 #define SSL_SC_RSA              0x00000001L
 #define SSL_SC_MD2              0x00000010L
@@ -130,6 +130,7 @@ loser:
     return rv;
 }
 
+
 /* Thread functions for SDR_ENCRYPT */
 static SSMStatus
 sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
@@ -137,10 +138,24 @@ sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
   SSMStatus rv = SSM_SUCCESS;
   CMTStatus crv;
   PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+  EncryptRequestMessage request;
+  EncryptReplyMessage reply;
+  void *ctx;
+  SECStatus s;
+
+  SSM_DEBUG("sdrEncrypt\n");
+
+  request.keyid.data = 0;
+  request.data.data = 0;
+  request.ctx.data = 0;
+
+  reply.item.data = 0;
 
   /* Make sure user has initialized database password */
   if (PK11_NeedUserInit(slot)) {
+    SSM_DEBUG("Calling SSM_SetUserPassword\n");
     rv = SSM_SetUserPassword(slot, &ctrl->super.super);
+    SSM_DEBUG("SSM_SetUserPassword returns %d\n", rv);
     if (rv != SSM_SUCCESS) { rv = SSM_ERR_NEED_USER_INIT_DB; goto loser; }
   }
 
@@ -149,25 +164,104 @@ sdrencrypt(SSMControlConnection *ctrl, SECItem *msg)
     goto loser;
   }
 
-  if (CMT_DoEncryptionRequest(msg) != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
+  /* Decode the message (frees message data) */
+  crv = CMT_DecodeMessage(EncryptRequestTemplate, &request, (CMTItem*)msg);
+  if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
+
+/*  ctx = CMT_CopyItemToPtr(request.ctx); need to put this in an resource */
+  ctx = 0;
+
+  s = PK11SDR_Encrypt((SECItem*)&request.keyid, (SECItem*)&request.data, 
+          (SECItem*)&reply.item, ctx);
+  SSM_DEBUG("Encrypt returns %d\n", s);
+  SSM_DEBUG("  -> Item: %lx (%d)\n", reply.item.data, reply.item.len);
+
+  /* Generate response */
+  msg->type = SSM_SDR_ENCRYPT_REPLY;
+  crv = CMT_EncodeMessage(EncryptReplyTemplate, (CMTItem*)msg, &reply);
+  if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser;  /* Unknown error */ }
 
 loser:
+  if (request.keyid.data) free(request.keyid.data);
+  if (request.data.data) free(request.data.data);
+  if (request.ctx.data) free(request.ctx.data);
+  if (reply.item.data) free(reply.item.data);
+
   return rv;
 }
 
 static SSMStatus
 sdrdecrypt(SSMControlConnection *ctrl, SECItem *msg)
 {
-  SSMStatus rv = PR_SUCCESS;
+  SSMStatus rv = SSM_SUCCESS;
+  CMTStatus crv;
+  SECStatus s;
+  DecryptRequestMessage request;
+  DecryptReplyMessage reply;
+
+  request.data.data = 0;
+  request.ctx.data = 0;
+
+  SSM_DEBUG("sdrDecrypt\n");
+
+  crv = CMT_DecodeMessage(DecryptRequestTemplate, &request, (CMTItem*)msg);
+  if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser; }
 
   if (PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl) != SECSuccess) {
     rv = SSM_ERR_BAD_DB_PASSWORD;
     goto loser;
   }
 
-  if (CMT_DoDecryptionRequest(msg) != CMTSuccess) { rv = PR_FAILURE; goto loser; }
+  s = PK11SDR_Decrypt((SECItem*)&request.data, (SECItem*)&reply.item, 0);
+  if (s != SECSuccess) { rv = SSM_FAILURE; goto loser; }
+
+  msg->type = SSM_SDR_DECRYPT_REPLY;
+  crv = CMT_EncodeMessage(DecryptReplyTemplate, (CMTItem*)msg, &reply);
+  if (crv != CMTSuccess) { rv = SSM_FAILURE; goto loser;  /* Unknown error */ }
 
 loser:
+  if (request.data.data) free(request.data.data);
+  if (request.ctx.data) free(request.ctx.data);
+  if (reply.item.data) free(reply.item.data);
+
+  return rv;
+}
+
+static SSMStatus
+sdrChangePassword(SSMControlConnection *ctrl, SECItem *msg)
+{
+  SSMStatus rv = SSM_SUCCESS;
+  SingleItemMessage req;
+  PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+
+  SSM_DEBUG("sdrChangePassword\n");
+
+  req.item.data = 0;
+
+  if (CMT_DecodeMessage(SingleItemMessageTemplate, &req, (CMTItem*)msg) != CMTSuccess) {
+    rv = SSM_FAILURE;
+    goto loser;
+  }
+
+  /* Should decode the item here to get context */
+  
+  /* Invoke the UI for setting password */
+  rv = SSM_SetUserPassword(slot, &ctrl->super.super);
+
+loser:
+  if (req.item.data) free(req.item.data);
+
+  return rv;
+}
+
+static SSMStatus
+ProcessMiscUI(SSMControlConnection *ctrl, SECItem *msg)
+{
+  SSMStatus rv;
+
+  rv = SSM_ProcessMsgOnThreadReply(sdrChangePassword, ctrl, msg);
+  msg->type = (SSM_REPLY_OK_MESSAGE|SSM_MISC_ACTION|SSM_MISC_UI|SSM_UI_CHANGE_PASSWORD);
+
   return rv;
 }
 
@@ -210,12 +304,8 @@ SSMControlConnection_ProcessMiscRequest(SSMControlConnection * ctrl,
         msg->type = (SECItemType) (SSM_REPLY_OK_MESSAGE | SSM_MISC_ACTION | SSM_MISC_GET_RNG_DATA);
         goto done;
 
-    case SSM_MISC_SDR_ENCRYPT:
-/*
-        PK11_Authenticate(PK11_GetInternalKeySlot(), PR_TRUE, ctrl);
 
-        if (CMT_DoEncryptionRequest(msg) != CMTSuccess) goto loser;
-*/
+    case SSM_MISC_SDR_ENCRYPT:
 	rv = SSM_ProcessMsgOnThread(sdrencrypt, ctrl, msg);
 	if (rv != PR_SUCCESS) goto loser;
 
@@ -228,6 +318,13 @@ SSMControlConnection_ProcessMiscRequest(SSMControlConnection * ctrl,
 
         rv = SSM_ERR_DEFER_RESPONSE;
 
+        goto done;
+
+    case SSM_MISC_UI:
+        rv = ProcessMiscUI(ctrl, msg);
+        if (rv != PR_SUCCESS) goto loser;
+
+/*         rv = SSM_ERR_DEFER_RESPONSE; */
         goto done;
 
     case SSM_MISC_PUT_RNG_DATA:

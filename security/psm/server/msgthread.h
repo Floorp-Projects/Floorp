@@ -40,6 +40,9 @@ SSMStatus
 SSM_ProcessMsgOnThread(SSMStatus (*f)(SSMControlConnection *, SECItem *),
                        SSMControlConnection *ctrl, SECItem *msg);
 
+SSMStatus
+SSM_ProcessMsgOnThreadReply(SSMStatus (*f)(SSMControlConnection *, SECItem *),
+                            SSMControlConnection *ctrl, SECItem *msg);
 
 #endif
 
