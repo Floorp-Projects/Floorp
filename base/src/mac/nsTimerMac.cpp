@@ -77,9 +77,23 @@ class TimerImpl : public nsITimer
 
     virtual void* GetClosure();
   
+#if DEBUG
+	enum {
+		eGoodTimerSignature = 'Barf',
+		eDeletedTimerSignature = 'oops'
+	};
+	
+  	Boolean			IsGoodTimer() { return (mSignature == eGoodTimerSignature); }
+#endif
+  	
   private:
   // Calculates mFireTime too
     void SetDelaySelf( PRUint32 aDelay );
+    
+#if DEBUG
+    UInt32		mSignature;
+#endif
+
 };
 
 #pragma mark class TimerPeriodical
@@ -126,6 +140,7 @@ TimerImpl::TimerImpl()
 ,  mClosure(nsnull)
 ,  mDelay(0)
 ,  mFireTime(0)
+,  mSignature(eGoodTimerSignature)
 {
   NS_INIT_REFCNT();
 }
@@ -136,6 +151,7 @@ TimerImpl::~TimerImpl()
 {
   Cancel();
   NS_IF_RELEASE(mCallbackObject);
+  mSignature = eDeletedTimerSignature;
 }
 
 //----------------------------------------------------------------------------------------
@@ -265,7 +281,10 @@ void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
   
   while (iter != mTimers.end())
   {
-    TimerImpl* timer = *iter; 
+    TimerImpl* timer = *iter;
+    
+    NS_ASSERTION(timer->IsGoodTimer(), "Bad timer!");
+    
     if (timer->GetFireTime() <= inMacEvent.when)
     {
       mTimers.erase(iter++);

@@ -39,6 +39,7 @@ Repeater::~Repeater()
 
 // protected helper functs
 
+//----------------------------------------------------------------------------
 void Repeater::AddToRepeatList()
 {
   if (sRepeaters)
@@ -48,6 +49,8 @@ void Repeater::AddToRepeatList()
   }
   sRepeaters = this;
 }
+
+//----------------------------------------------------------------------------
 void Repeater::RemoveFromRepeatList()
 {
   if (sRepeaters == this) sRepeaters = mNextRptr;
@@ -56,18 +59,22 @@ void Repeater::RemoveFromRepeatList()
   mPrevRptr = 0;
   mNextRptr = 0;
 }
+
+//----------------------------------------------------------------------------
 void Repeater::AddToIdleList()
 {
-  if (sRepeaters)
+  if (sIdlers)
   {
-    sRepeaters->mPrevIdlr = this;
-    mNextIdlr = sRepeaters;
+    sIdlers->mPrevIdlr = this;
+    mNextIdlr = sIdlers;
   }
-  sRepeaters = this;
+  sIdlers = this;
 }
+
+//----------------------------------------------------------------------------
 void Repeater::RemoveFromIdleList()
 {
-  if (sRepeaters == this) sRepeaters = mNextIdlr;
+  if (sIdlers == this) sIdlers = mNextIdlr;
   if (mPrevIdlr) mPrevIdlr->mNextIdlr = mNextIdlr;
   if (mNextIdlr) mNextIdlr->mPrevIdlr = mPrevIdlr;
   mPrevIdlr = 0;
@@ -75,6 +82,7 @@ void Repeater::RemoveFromIdleList()
 }
 
 // repeater methods
+//----------------------------------------------------------------------------
 
 void Repeater::StartRepeating()
 {
