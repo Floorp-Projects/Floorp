@@ -19,7 +19,7 @@
 
 DEPTH=..\.. 
 !ifdef STANDALONE_IMAGE_LIB
-DIRS = png public src
+DIRS = public src public_com png pngcom jpgcom gifcom
 !else
 DIRS = png classes public src
 !endif
