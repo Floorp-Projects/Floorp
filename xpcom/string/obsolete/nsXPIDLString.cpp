@@ -128,7 +128,8 @@ nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
 	
-    mBuf = Copy(aCString);
+    if (aCString)
+        mBuf = Copy(aCString);
     mBufOwner = PR_TRUE;
     
     return *this;
