@@ -450,7 +450,15 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
       }
     }
   }
- 
+
+  unsigned redScale, greenScale, blueScale, redFill, greenFill, blueFill;
+  redScale =   8-visual->red_prec;
+  greenScale = 8-visual->green_prec;
+  blueScale =  8-visual->blue_prec;
+  redFill =   0xff>>visual->red_prec;
+  greenFill = 0xff>>visual->green_prec;
+  blueFill =  0xff>>visual->blue_prec;
+
   for (int row=0; row<ximage->height; row++) {
     unsigned char *ptr = 
       (unsigned char *)ximage->data + row*ximage->bytes_per_line;
@@ -512,11 +520,11 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
           *target++ = ((pix&visual->blue_mask)>>visual->blue_shift);
         } else {
           *target++ = 
-            ((pix&visual->red_mask)>>visual->red_shift)<<(8-visual->red_prec);
+            redFill|((pix&visual->red_mask)>>visual->red_shift)<<redScale;
           *target++ = 
-            ((pix&visual->green_mask)>>visual->green_shift)<<(8-visual->green_prec);
+            greenFill|((pix&visual->green_mask)>>visual->green_shift)<<greenScale;
           *target++ = 
-            ((pix&visual->blue_mask)>>visual->blue_shift)<<(8-visual->blue_prec);
+            blueFill|((pix&visual->blue_mask)>>visual->blue_shift)<<blueScale;
         }
         break;
       }
@@ -524,19 +532,18 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   }
 
   // now composite
-
   for (int y=0; y<mHeight; y++) {
     for (int i=0; i<mWidth; i++) {
       unsigned char *targetRow = readData+3*y*mWidth;
       unsigned char *imageRow = mImageBits+y*mRowBytes;
       unsigned char *alphaRow = mAlphaBits+y*mAlphaRowBytes;
 
-      targetRow[3*i] =   MIN(255, (targetRow[3*i]*(255-alphaRow[i]) +
-                                   imageRow[3*i]*alphaRow[i])>>8);
-      targetRow[3*i+1] = MIN(255, (targetRow[3*i+1]*(255-alphaRow[i]) +
-                                   imageRow[3*i+1]*alphaRow[i])>>8);
-      targetRow[3*i+2] = MIN(255, (targetRow[3*i+2]*(255-alphaRow[i]) +
-                                   imageRow[3*i+2]*alphaRow[i])>>8);
+      targetRow[3*i] =   (targetRow[3*i]*(255-alphaRow[i]) +
+                           imageRow[3*i]*alphaRow[i])>>8;
+      targetRow[3*i+1] = (targetRow[3*i+1]*(255-alphaRow[i]) +
+                           imageRow[3*i+1]*alphaRow[i])>>8;
+      targetRow[3*i+2] = (targetRow[3*i+2]*(255-alphaRow[i]) +
+                           imageRow[3*i+2]*alphaRow[i])>>8;
     }
   }
 
