@@ -309,7 +309,7 @@ DOCXX_DESTDIR = $(MOZ_SRC)\ns\dist\documentation
 doc_raptor:
     -rm -rf $(DOCXX_DESTDIR)
     -@mkdir $(DOCXX_DESTDIR)
-    @for %d in (raptor xpcom img dom) do \
+    @for %d in (raptor xpcom img dom netlib) do \
       $(DOCXX_RAPTOR) -d $(DOCXX_DESTDIR)\%d $(MOZ_SRC)\ns\dist\public\%d\*.h
     @echo Documentation written to $(DOCXX_DESTDIR)
 
