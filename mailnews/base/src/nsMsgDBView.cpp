@@ -31,9 +31,9 @@ nsMsgDBView::nsMsgDBView()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
-	m_sortValid = PR_TRUE;
+  m_sortValid = PR_TRUE;
   m_sortOrder = nsMsgViewSortOrder::none;
-//	m_viewFlags = (ViewFlags) 0;
+  //m_viewFlags = (ViewFlags) 0;
 }
 
 nsMsgDBView::~nsMsgDBView()
@@ -41,35 +41,28 @@ nsMsgDBView::~nsMsgDBView()
   /* destructor code */
 }
 
-/* void open (in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType); */
-NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType)
+NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *count)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void close (); */
 NS_IMETHODIMP nsMsgDBView::Close()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void init (out long pCount); */
 NS_IMETHODIMP nsMsgDBView::Init(PRInt32 *pCount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void addKeys (out long pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd); */
-NS_IMETHODIMP nsMsgDBView::AddKeys(PRInt32 *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
+NS_IMETHODIMP nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void sort (in nsMsgViewSortType sortType, in nsMsgViewSortOrder sortOrder); */
 NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
 

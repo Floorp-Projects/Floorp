@@ -37,7 +37,7 @@ public:
   NS_IMETHOD Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *count);
   NS_IMETHOD Close();
   NS_IMETHOD Init(PRInt32 *pCount);
-  NS_IMETHOD AddKeys(PRInt32 *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd);
+  NS_IMETHOD AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd);
   NS_IMETHOD Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder);
 
 protected:

@@ -36,7 +36,6 @@ nsMsgThreadedDBView::~nsMsgThreadedDBView()
   /* destructor code */
 }
 
-/* void open (in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType); */
 NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *pCount)
 {
 	nsresult rv;;
@@ -48,15 +47,14 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType
 	return Init(pCount);
 }
 
-/* void close (); */
 NS_IMETHODIMP nsMsgThreadedDBView::Close()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void init (out long pCount); */
 NS_IMETHODIMP nsMsgThreadedDBView::Init(PRInt32 *pCount)
 {
+#ifndef DEBUG_seth
 	nsresult rv;
 	nsMsgViewSortOrder sortOrder;
 	nsMsgViewSortTypeValue sortType;
@@ -68,7 +66,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Init(PRInt32 *pCount)
 	m_prevFlags.RemoveAll();
 //	m_prevLevels.RemoveAll();
 	m_havePrevView = PR_FALSE;
-  m_sortType = nsMsgViewSortType::byThread;	// this sorts by thread, which we will resort.
+    m_sortType = nsMsgViewSortType::byThread;	// this sorts by thread, which we will resort.
 	sortType = m_sortType;
 	nsresult getSortrv = NS_OK; // ### TODO m_db->GetSortInfo(&sortType, &sortOrder);
 
@@ -100,15 +98,17 @@ NS_IMETHODIMP nsMsgThreadedDBView::Init(PRInt32 *pCount)
 	}
 
 	return rv;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
-/* void addKeys (out long pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd); */
-NS_IMETHODIMP nsMsgThreadedDBView::AddKeys(PRInt32 *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
+NS_IMETHODIMP nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
+
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void sort (in nsMsgViewSortType sortType, in nsMsgViewSortOrder sortOrder); */
 NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -121,6 +121,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSo
 nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
 									 PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders)
 {
+#ifndef DEBUG_seth
 	nsresult rv = NS_OK;
 	// N.B..don't ret before assigning numListed to *pNumListed
 	PRInt32				numListed = 0;
@@ -216,5 +217,8 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
 	}
 	*pNumListed = numListed;
 	return rv;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
