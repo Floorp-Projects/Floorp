@@ -367,7 +367,8 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (aAttributes->GetAttr(nsHTMLAtoms::nowrap)) {
         // See if our width is not a integer width.
         const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::width);
-        if (!value || value->Type() != nsAttrValue::eInteger)
+        nsCompatibility mode = aData->mPresContext->CompatibilityMode();
+        if (!value || value->Type() != nsAttrValue::eInteger || eCompatibility_NavQuirks != mode)
           aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
       }
     }
