@@ -716,9 +716,8 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
 		{
 			jobject jresult = NULL;
 			nsresult result = theLiveConnectManager->Eval(env, mObject, mScript, mLength, NULL, 0, NULL, &jresult);
-			if (result == NS_OK && jresult != NULL) {
+			if (result == NS_OK && jresult != NULL)
 				*mJavaResult = ToGlobalRef(env, jresult);
-			}
 		}
 	};
 
@@ -767,11 +766,17 @@ Java_netscape_javascript_JSObject_toString(JNIEnv* env, jobject java_wrapper_obj
 
 		virtual void execute(JNIEnv* env)
 		{
-			nsresult status = theLiveConnectManager->ToString(env, mObject, mStringResult);
+			jstring jresult = NULL;
+			nsresult status = theLiveConnectManager->ToString(env, mObject, &jresult);
+			if (status == NS_OK && jresult != NULL)
+				*mStringResult = (jstring) ToGlobalRef(env, jresult);
 		}
 	} msg(js_obj, &jresult);
 	
 	sendMessage(env, &msg);
+	
+	if (jresult != NULL)
+		jresult = (jstring) ToLocalRef(env, jresult);
 	
 	return jresult;
 }
