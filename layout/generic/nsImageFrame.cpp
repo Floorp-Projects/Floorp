@@ -189,14 +189,11 @@ nsImageFrame::GetImageLoad(imgIRequest *aRequest)
 }
 
 nsImageFrame::nsImageFrame() :
-  mIntrinsicSize(0, 0),
-  mGotInitialReflow(PR_FALSE),
-  mImageBlocked(PR_FALSE),
-  mFailureReplace(PR_TRUE)
+  mIntrinsicSize(0, 0)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
-  mSizeConstrained = PR_FALSE;
+  mState |= IMAGE_FAILUREREPLACE;
 }
 
 nsImageFrame::~nsImageFrame()
@@ -324,8 +321,8 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     NS_IF_RELEASE(tag);
   }
 
-  mInitialLoadCompleted = PR_FALSE;
-  mCanSendLoadEvent = PR_TRUE;
+  mState &= ~IMAGE_INITIALLOADCOMPLETED;
+  mState |= IMAGE_CANSENDLOADEVENT;
 
   LoadIcons(aPresContext);
 
@@ -347,7 +344,7 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
 
-  mInitialLoadCompleted = PR_TRUE;
+  mState |= IMAGE_INITIALLOADCOMPLETED;
 
   // handle iconLoads first...
   if (HandleIconLoads(aRequest, PR_FALSE)) {
@@ -387,12 +384,12 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
       load->mTransform.SetToScale((float(mComputedSize.width) / float(load->mIntrinsicSize.width)),
                                   (float(mComputedSize.height) / float(load->mIntrinsicSize.height)));
 
-    if (!mSizeConstrained) {
+    if (!(mState & IMAGE_SIZECONSTRAINED)) {
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       NS_ASSERTION(presShell, "No PresShell.");
-      if (mParent && presShell && mGotInitialReflow && whichLoad == 0) { // don't reflow if we havn't gotten the inital reflow yet
+      if (mParent && presShell && (mState & IMAGE_GOTINITIALREFLOW) && whichLoad == 0) { // don't reflow if we havn't gotten the inital reflow yet
         mState |= NS_FRAME_IS_DIRTY;
         mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
       }
@@ -636,12 +633,12 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
       imageFailedToLoad = PR_TRUE;
     }
 
-    if (!mSizeConstrained && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
+    if (!(mState & IMAGE_SIZECONSTRAINED) && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       NS_ASSERTION(presShell, "No PresShell.");
-      if (mParent && presShell && mGotInitialReflow) { // don't reflow if we havn't gotten the inital reflow yet
+      if (mParent && presShell && (mState & IMAGE_GOTINITIALREFLOW)) { // don't reflow if we havn't gotten the inital reflow yet
         mState |= NS_FRAME_IS_DIRTY;
         mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
       }
@@ -665,7 +662,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   // if src failed to load, determine how to handle it: 
   //  - either render the ALT text in this frame, or let the presShell handle it
   if (imageFailedToLoad && presShell) {
-    if (mFailureReplace) {
+    if (mState & IMAGE_FAILUREREPLACE) {
       // first check for image map
       nsAutoString usemap;
       mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);    
@@ -702,7 +699,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
                       (!prefForceInlineAltText &&
                        HaveFixedSize(*stylePosition) && 
                        mode == eCompatibility_NavQuirks &&
-                       !mImageBlocked);
+                       !(mState & IMAGE_BLOCKED));
 
         if (!useSizedBox) {
           // let the presShell handle converting this into the inline alt text frame
@@ -714,7 +711,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         }
       }
     }
-    mFailureReplace = PR_TRUE;
+    mState |= IMAGE_FAILUREREPLACE;
   }
 
   // After these DOM events are fired its possible that this frame may be deleted.  As a result
@@ -723,9 +720,9 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
     if (imageFailedToLoad) {
       // Send error event
       FireDOMEvent(NS_IMAGE_ERROR);
-    } else if (mCanSendLoadEvent) {
+    } else if (mState & IMAGE_CANSENDLOADEVENT) {
       // Send load event
-      mCanSendLoadEvent = PR_FALSE;
+      mState &= ~IMAGE_CANSENDLOADEVENT;
 
       FireDOMEvent(NS_IMAGE_LOAD);
     }
@@ -950,10 +947,14 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // see if we have a frozen size (i.e. a fixed width and height)
-  mSizeConstrained = HaveFixedSize(aReflowState);
+  if (HaveFixedSize(aReflowState)) {
+    mState |= IMAGE_SIZECONSTRAINED;
+  } else {
+    mState &= ~IMAGE_SIZECONSTRAINED;  
+  }
 
   if (aReflowState.reason == eReflowReason_Initial)
-    mGotInitialReflow = PR_TRUE;
+    mState |= IMAGE_GOTINITIALREFLOW;
 
   // get the desired size of the complete image
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
@@ -979,7 +980,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
     mLoads[0].mRequest->GetImageStatus(&loadStatus);
   }
   if (isPaginated &&
-      ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || mSizeConstrained) &&
+      ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
       (aMetrics.height > aReflowState.availableHeight)) { 
     nsCOMPtr<nsIAtom> fType;
@@ -1318,10 +1319,10 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
 #ifndef SUPPRESS_LOADING_ICON
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-          (!mImageBlocked || mIconLoad->mPrefAllImagesBlocked)) {
+          (!(mState & IMAGE_BLOCKED) || mIconLoad->mPrefAllImagesBlocked)) {
 #else
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-          mInitialLoadCompleted) {
+          (mState & IMAGE_INITIALLOADCOMPLETED)) {
 #endif
         DisplayAltFeedback(aPresContext, aRenderingContext, 
                            (loadStatus & imgIRequest::STATUS_ERROR)
@@ -1331,7 +1332,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     }
     else {
       PRBool paintOutline   = PR_FALSE;
-      mInitialLoadCompleted = PR_TRUE;
+      mState |= IMAGE_INITIALLOADCOMPLETED;
       if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
         // Now render the image into our content area (the area inside the
         // borders and padding)
@@ -1799,13 +1800,13 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       mLoads[0].mRequest->GetImageStatus(&loadStatus);
 
       if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-        mFailureReplace = PR_FALSE; // don't cause a CantRenderReplacedElement call
+        mState &= ~IMAGE_FAILUREREPLACE; // don't cause a CantRenderReplacedElement call
         mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
         mLoads[0].mRequest = nsnull;
       }
     }
 
-    mCanSendLoadEvent = PR_TRUE;
+    mState |= IMAGE_CANSENDLOADEVENT;
 
     if (mLoads[1].mRequest) {
       mLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
@@ -1950,7 +1951,7 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
   nsresult rv = NS_OK;
 
   /* set this to TRUE here in case we return early */
-  mInitialLoadCompleted = PR_TRUE;
+  mState |= IMAGE_INITIALLOADCOMPLETED;
 
   /* don't load the image if aSpec is empty */
   if (aSpec.IsEmpty()) return NS_ERROR_FAILURE;
@@ -1994,7 +1995,7 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
   }
   
   /* set this back to FALSE before we do the real load */
-  mInitialLoadCompleted = PR_FALSE;
+  mState &= ~IMAGE_INITIALLOADCOMPLETED;
 
   nsCOMPtr<nsIURI> baseURI;
   rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
@@ -2142,7 +2143,7 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
                                    aURI, element, domWin, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       // this image has been blocked, so flag it
-      mImageBlocked = PR_TRUE;
+      mState |= IMAGE_BLOCKED;
       return shouldLoad;
     }
   }
