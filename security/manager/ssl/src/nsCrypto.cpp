@@ -880,8 +880,7 @@ nsSetEscrowAuthority(CRMFCertRequest *certReq, nsKeyPairInfo *keyInfo,
     return NS_ERROR_FAILURE;
 
   CRMFPKIArchiveOptions *archOpt = 
-      CRMF_CreatePKIArchiveOptions(crmfEncryptedPrivateKey, 
-                                   NS_STATIC_CAST(void*,encrKey)); 
+      CRMF_CreatePKIArchiveOptions(crmfEncryptedPrivateKey, encrKey);
   if (!archOpt) {
     CRMF_DestroyEncryptedKey(encrKey);
     return NS_ERROR_FAILURE;
