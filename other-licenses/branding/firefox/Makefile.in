@@ -1,0 +1,13 @@
+# Branding Makefile
+#  - jars chrome artwork
+#  - copies winstaller artwork to objdir
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
