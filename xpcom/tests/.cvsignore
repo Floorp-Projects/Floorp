@@ -21,3 +21,4 @@ TestPipes
 TestThreads 
 TestXPIDLString
 TestServMgr
+nsIFileTest
