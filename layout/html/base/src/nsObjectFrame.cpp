@@ -62,7 +62,9 @@
 #include "nsISupportsArray.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
+#ifdef OJI
 #include "nsIJVMPluginTagInfo.h"
+#endif
 #include "nsIWebShell.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
@@ -148,6 +150,11 @@ static NS_DEFINE_CID(kRangeCID,     NS_RANGE_CID);
 #undef KeyPress
 #endif
 
+#ifdef XP_WIN
+#include <wtypes.h>
+#include <winuser.h>
+#endif
+
 // special class for handeling DOM context menu events
 // because for some reason it starves other mouse events if implemented on the same class
 class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener,
@@ -171,7 +178,9 @@ public:
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
+#ifdef OJI
                               public nsIJVMPluginTagInfo,
+#endif
                               public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
@@ -253,6 +262,7 @@ public:
 
   NS_IMETHOD GetUniqueID(PRUint32 *result);
 
+#ifdef OJI
   //nsIJVMPluginTagInfo interface
 
   NS_IMETHOD GetCode(const char* *result);
@@ -264,6 +274,8 @@ public:
   NS_IMETHOD GetName(const char* *result);
 
   NS_IMETHOD GetMayScript(PRBool *result);
+
+#endif /* OJI */
 
  /** nsIDOMMouseListener interfaces 
   * @see nsIDOMMouseListener
@@ -2243,7 +2255,9 @@ NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo2)
+#ifdef OJI
   NS_INTERFACE_MAP_ENTRY(nsIJVMPluginTagInfo)
+#endif
   NS_INTERFACE_MAP_ENTRY(nsIEventListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -2894,6 +2908,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
   return NS_OK;
 }
 
+#ifdef OJI
 NS_IMETHODIMP nsPluginInstanceOwner::GetCode(const char* *result)
 {
   nsresult rv;
@@ -2954,6 +2969,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 
   return NS_OK;
 }
+#endif /* OJI */
 
 // Little helper function to resolve relative URL in
 // |value| for certain inputs of |name|

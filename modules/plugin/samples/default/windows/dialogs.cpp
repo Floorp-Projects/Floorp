@@ -37,6 +37,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <assert.h>
 
 #include "resource.h"
 

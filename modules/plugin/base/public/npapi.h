@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.29 $
+ *  npapi.h $Revision: 3.30 $
  *  Netscape client plug-in API spec
  */
 
@@ -76,7 +76,9 @@
 #ifndef NO_NSPR_10_SUPPORT
 #define NO_NSPR_10_SUPPORT
 #endif
+#ifdef OJI
 #include "jri.h"                /* Java Runtime Interface */
+#endif
 
 #if defined (__OS2__ ) || defined (OS2)
 #	ifndef XP_OS2
@@ -85,6 +87,7 @@
 #endif /* __OS2__ */
 
 #ifdef _WINDOWS
+#	include <windef.h>
 #	ifndef XP_WIN
 #		define XP_WIN 1
 #	endif /* XP_WIN */
@@ -110,9 +113,12 @@
 	#include <Events.h>
 #endif
 
-#if defined(XP_UNIX) && defined(MOZ_X11)
-	#include <X11/Xlib.h>
-	#include <X11/Xutil.h>
+#if defined(XP_UNIX) 
+#	include <stdio.h>
+#	if defined(MOZ_X11)
+#		include <X11/Xlib.h>
+#		include <X11/Xutil.h>
+#	endif
 #endif
 
 /*----------------------------------------------------------------------*/
@@ -633,7 +639,9 @@ void    NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint);
 int16   NP_LOADDS NPP_HandleEvent(NPP instance, void* event);
 void    NP_LOADDS NPP_URLNotify(NPP instance, const char* url,
                                 NPReason reason, void* notifyData);
+#ifdef OJI
 jref    NP_LOADDS NPP_GetJavaClass(void);
+#endif
 NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void *value);
 
@@ -664,8 +672,10 @@ void*   NP_LOADDS NPN_MemAlloc(uint32 size);
 void    NP_LOADDS NPN_MemFree(void* ptr);
 uint32  NP_LOADDS NPN_MemFlush(uint32 size);
 void    NP_LOADDS NPN_ReloadPlugins(NPBool reloadPages);
+#ifdef OJI
 JRIEnv* NP_LOADDS NPN_GetJavaEnv(void);
 jref    NP_LOADDS NPN_GetJavaPeer(NPP instance);
+#endif
 NPError NP_LOADDS NPN_GetValue(NPP instance, NPNVariable variable, void *value);
 NPError NP_LOADDS NPN_SetValue(NPP instance, NPPVariable variable, void *value);
 void    NP_LOADDS NPN_InvalidateRect(NPP instance, NPRect *invalidRect);

@@ -65,7 +65,9 @@
 #include "nsNetUtil.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
+#ifdef OJI
 #include "nsIJVMManager.h"
+#endif
 #include "nsContentCID.h"
 
 // Interfaces Needed
@@ -165,7 +167,9 @@ PRInt32 gTimeoutCnt                                    = 0;
 
 // CIDs
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#ifdef OJI
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
+#endif
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
@@ -5813,6 +5817,7 @@ NavigatorImpl::JavaEnabled(PRBool *aReturn)
   nsresult rv = NS_OK;
   *aReturn = PR_FALSE;
 
+#ifdef OJI
   // determine whether user has enabled java.
   nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
   if (!prefBranch) {
@@ -5838,7 +5843,7 @@ NavigatorImpl::JavaEnabled(PRBool *aReturn)
   else {
     *aReturn = PR_FALSE;
   }
-
+#endif
   return rv;
 }
 

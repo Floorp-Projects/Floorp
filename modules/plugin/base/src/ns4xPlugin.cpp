@@ -185,6 +185,7 @@ PR_BEGIN_EXTERN_C
   static void* NP_EXPORT
   _memalloc (uint32 size);
 
+#ifdef OJI
   static JRIEnv* NP_EXPORT
   _getJavaEnv(void);
 
@@ -197,6 +198,7 @@ PR_BEGIN_EXTERN_C
   _getJavaClass(void* handle);
 
 #endif
+#endif /* OJI */
 
 #if defined(XP_MAC) && !defined(powerc)
 #pragma pointers_in_A0
@@ -274,8 +276,10 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.memfree          = NewNPN_MemFreeProc(FP2TV(_memfree));
   CALLBACKS.memflush         = NewNPN_MemFlushProc(FP2TV(_memflush));
   CALLBACKS.reloadplugins    = NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
+#ifdef OJI
   CALLBACKS.getJavaEnv       = NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
   CALLBACKS.getJavaPeer      = NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
+#endif
   CALLBACKS.geturlnotify     = NewNPN_GetURLNotifyProc(FP2TV(_geturlnotify));
   CALLBACKS.posturlnotify    = NewNPN_PostURLNotifyProc(FP2TV(_posturlnotify));
   CALLBACKS.getvalue         = NewNPN_GetValueProc(FP2TV(_getvalue));
@@ -1457,12 +1461,14 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 #endif
 
 ////////////////////////////////////////////////////////////////////////
+#ifdef OJI
 JRIEnv* NP_EXPORT
 _getJavaEnv(void)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
   return NULL;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 const char * NP_EXPORT
@@ -1495,7 +1501,7 @@ _memalloc (uint32 size)
   return gMalloc->Alloc(size);
 }
 
-
+#ifdef OJI
 ////////////////////////////////////////////////////////////////////////
 java_lang_Class* NP_EXPORT
 _getJavaClass(void* handle)
@@ -1512,3 +1518,5 @@ _getJavaPeer(NPP npp)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
   return NULL;
 }
+
+#endif /* OJI */

@@ -146,7 +146,11 @@ tier_9_dirs += \
 		$(NULL)
 
 ifdef MOZ_OJI
-tier_9_dirs	+= js/src/liveconnect
+tier_9_dirs	+= \
+		js/src/liveconnect \
+		sun-java \
+		modules/oji \
+		$(NULL)
 endif
 
 ifdef MOZ_JSDEBUGGER
@@ -171,7 +175,6 @@ tier_9_dirs	+= \
 		uriloader \
 		modules/libpref \
 		modules/libimg \
-		modules/oji \
 		caps \
 		rdf \
 		expat \
@@ -191,7 +194,6 @@ tier_9_dirs	+= \
 		profile \
 		embedding \
 		editor \
-		sun-java \
 		themes \
 		$(NULL)
 

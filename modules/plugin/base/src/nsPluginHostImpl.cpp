@@ -47,8 +47,10 @@
 #include "ns4xPlugin.h"
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
+#ifdef OJI
 #include "nsIJVMPlugin.h"
 #include "nsIJVMManager.h"
+#endif
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIHttpHeaderVisitor.h" 
@@ -3330,6 +3332,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if (tagType == nsPluginTagType_Applet || 
       PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
       PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0) {
+#ifdef OJI
     isJava = PR_TRUE;
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
     // see if java is enabled
@@ -3349,6 +3352,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
         isJavaEnabled = PR_TRUE;
       }
     }
+#else
+    isJavaEnabled = PR_FALSE;
+    return NS_ERROR_FAILURE;
+#endif
   }
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
@@ -3782,7 +3789,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     isJavaPlugin = PR_TRUE;
   }
 
-#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2)
+#if defined(OJI) && ((defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2))
   // This is a work-around on Unix for a LiveConnect problem (bug 83698).
   // The problem:
   // The proxy JNI needs to be created by the browser. If it is created by
@@ -4665,6 +4672,20 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   return PR_TRUE;
 }
 
+////////////////////////////////////////////////////////////////////////
+// XXX quick helper function to check for java plugin
+static PRBool isUnwantedJavaPlugin(nsPluginTag * tag) {
+#ifndef OJI
+  for (PRInt32 i = 0; i < tag->mVariants; ++i) {
+    if ((0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-vm", 21)) ||
+        (0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-applet", 25)) ||
+        (0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-bean", 23)))
+      return PR_TRUE;
+  }
+#endif /* OJI */
+  return PR_FALSE;
+}
+
 nsPluginTag * nsPluginHostImpl::HaveSamePlugin(nsPluginTag * aPluginTag)
 {
   for(nsPluginTag* tag = mPlugins; tag; tag = tag->mNext) {
@@ -4855,7 +4876,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       else {
         // if it is unwanted plugin we are checking for, get it back to the cache info list
         // if this is a duplicate plugin, too place it back in the cache info list marking unwantedness
-        if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag)) {
+        if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag) || isUnwantedJavaPlugin(pluginTag)) {
           pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
           pluginTag->mNext = mCachedPlugins;
           mCachedPlugins = pluginTag;
@@ -4917,7 +4938,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       // if this is unwanted plugin we are checkin for, or this is a duplicate plugin, 
       // add it to our cache info list so we can cache the unwantedness of this plugin 
       // when we sync cached plugins to registry
-      if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag)) {
+      if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag) || isUnwantedJavaPlugin(pluginTag)) {
         pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
         pluginTag->mNext = mCachedPlugins;
         mCachedPlugins = pluginTag;
@@ -4929,7 +4950,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     PRBool bAddIt = PR_TRUE;
 
     // check if this is a specific plugin we don't want
-    if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag))
+    if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
+       isUnwantedJavaPlugin(pluginTag))
       bAddIt = PR_FALSE;
 
     // check if we already have this plugin in the list which
