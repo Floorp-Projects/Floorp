@@ -185,6 +185,14 @@ function upgradeCleanup()
   deleteThisFile("Components", "signed.dll");
 }
 
+function updateWinIni()
+{
+  var fWinIni  = getWinProfile(getFolder("Windows"), "win.ini");
+
+  fWinIni.writeString("Mail", "MAPI", "1");
+  fWinIni.writeString("Mail", "CMCDLLNAME32", "MAPI32.DLL");
+}
+
 // main
 var srDest;
 var err;
@@ -218,6 +226,7 @@ if(verifyDiskSpace(fProgram, srDest))
   {
     createShortcuts();
     upgradeCleanup();
+    updateWinIni();
 
     // we don't want to fail on errors for the above
     resetError();
