@@ -28,56 +28,56 @@ LIBRARY_NAME=mork
 EXPORTS = \
 	$(NULL)
 
-CPPSRCS = \ 
-			orkinCell.cpp\
-			orkinEnv.cpp\
-			orkinFactory.cpp\
-			orkinHeap.cpp\
-			orkinPortTableCursor.cpp\
-			orkinRow.cpp\
-			orkinRowCellCursor.cpp\
-			orkinStore.cpp\
-			orkinTable.cpp\
-			orkinTableRowCursor.cpp\
-			orkinThumb.cpp\
-			morkArray.cpp\
-			morkAtom.cpp\
-			morkAtomMap.cpp\
-			morkAtomSpace.cpp\
-			morkBlob.cpp\
-			morkBuilder.cpp\
-			morkCell.cpp\
-			morkCellObject.cpp\
-			morkConfig.cpp\
-			morkCursor.cpp \
-			morkDeque.cpp\
-			morkEnv.cpp\
-			morkFactory.cpp\
-			morkFile.cpp\
-			morkHandle.cpp\
-			morkIntMap.cpp\
-			morkMap.cpp\
-			morkNode.cpp\
-			morkNodeMap.cpp\
-			morkObject.cpp\
-			morkParser.cpp\
-			morkPool.cpp\
-			morkRow.cpp\
-			morkRowCellCursor.cpp\
-			morkRowMap.cpp\
-			morkRowObject.cpp\
-			morkRowSpace.cpp\
-			morkSink.cpp\
-			morkSpace.cpp\
-			morkStore.cpp\
-			morkStream.cpp\
-			morkTable.cpp\
-			morkPortTableCursor.cpp\
-			morkTableRowCursor.cpp\
-			morkThumb.cpp\
-			morkWriter.cpp\
-			morkYarn.cpp\
-			$(NULL)
+CPPSRCS = \
+	orkinCell.cpp\
+	orkinEnv.cpp\
+	orkinFactory.cpp\
+	orkinHeap.cpp\
+	orkinPortTableCursor.cpp\
+	orkinRow.cpp\
+	orkinRowCellCursor.cpp\
+	orkinStore.cpp\
+	orkinTable.cpp\
+	orkinTableRowCursor.cpp\
+	orkinThumb.cpp\
+	morkArray.cpp\
+	morkAtom.cpp\
+	morkAtomMap.cpp\
+	morkAtomSpace.cpp\
+	morkBlob.cpp\
+	morkBuilder.cpp\
+	morkCell.cpp\
+	morkCellObject.cpp\
+	morkConfig.cpp\
+	morkCursor.cpp \
+	morkDeque.cpp\
+	morkEnv.cpp\
+	morkFactory.cpp\
+	morkFile.cpp\
+	morkHandle.cpp\
+	morkIntMap.cpp\
+	morkMap.cpp\
+	morkNode.cpp\
+	morkNodeMap.cpp\
+	morkObject.cpp\
+	morkParser.cpp\
+	morkPool.cpp\
+	morkRow.cpp\
+	morkRowCellCursor.cpp\
+	morkRowMap.cpp\
+	morkRowObject.cpp\
+	morkRowSpace.cpp\
+	morkSink.cpp\
+	morkSpace.cpp\
+	morkStore.cpp\
+	morkStream.cpp\
+	morkTable.cpp\
+	morkPortTableCursor.cpp\
+	morkTableRowCursor.cpp\
+	morkThumb.cpp\
+	morkWriter.cpp\
+	morkYarn.cpp\
+	$(NULL)
 
 
 include $(topsrcdir)/config/config.mk
