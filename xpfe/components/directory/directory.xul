@@ -88,6 +88,16 @@
         onkeypress="OnClick(event, event.target.parentNode.parentNode);"
         onmouseover="OnMouseOver(event, event.target.parentNode.parentNode);"
         onmouseout="OnMouseOut(event, event.target.parentNode.parentNode);" />
-
   </tree>
+
+  <splitter id="main-splitter" collapse="after" hidden="true"  >
+    <grippy/>
+  </splitter>
+
+  <box id="logbox" flex="1" orient="vertical" collapsed="true" persist="height collapsed" hidden="true">
+     <iframe id="output-iframe" type="content" flex="1" src="chrome://communicator/content/directory/directory.html"/>
+  </box>
 </window>
+
+
+

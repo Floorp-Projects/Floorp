@@ -168,12 +168,21 @@ function Init()
         	debug("append traiing slash to FTP directory URL\n");
         	baseURI += "/";
         }
+
+		// Lets also enable the loggin window.
+
+		var node = document.getElementById("main-splitter");
+		node.setAttribute("hidden", false);
+
+		node = document.getElementById("logbox");
+		node.setAttribute("hidden", false);
     }
+
     if (baseURI && (baseURI.indexOf("file://") != 0)) {
         // Note: DON'T add the HTTPIndex datasource into the tree
         // for file URLs, only do it for FTP/Gopher/etc URLs; the "rdf:files"
         // datasources handles file URLs
-        tree.database.AddDataSource(HTTPIndex.DataSource);
+        tree.database.AddDataSource(HTTPIndex);
     }
 
     // Note: set encoding BEFORE setting "ref" (important!)
@@ -216,12 +225,11 @@ function DoUnload()
 	var tree = document.getElementById("tree");
 	if (tree)
 	{
+		tree.database.RemoveDatasource(HTTPIndex);
 		tree.database.RemoveObserver(RDF_observer);
 	    debug("Directory: removed observer\n");
 	}
 }
-
-
 
 function OnClick(event, node)
 {
@@ -315,9 +323,9 @@ function BeginDragTree ( event )
 
   var dragStarted = false;
 
-  var trans = 
+  var transferable = 
     Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
-  if ( !trans ) return(false);
+  if ( !transferable ) return(false);
 
   var genData = 
     Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
@@ -327,8 +335,8 @@ function BeginDragTree ( event )
     Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
   if (!genDataURL) return(false);
 
-  trans.addDataFlavor("text/unicode");
-  trans.addDataFlavor("moz/rdfitem");
+  transferable.addDataFlavor("text/unicode");
+  transferable.addDataFlavor("moz/rdfitem");
         
   // ref/id (url) is on the <treeitem> which is two levels above the <treecell> which is
   // the target of the event.
@@ -363,15 +371,15 @@ function BeginDragTree ( event )
   genData.data = trueID;
   genDataURL.data = id;
 
-  trans.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
-  trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
+  transferable.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
+  transferable.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
   var transArray = 
     Components.classes[ARRAY_CONTRACTID].createInstance(nsISupportsArray);
   if ( !transArray )  return(false);
 
   // put it into the transferable as an |nsISupports|
-  var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+  var genTrans = transferable.QueryInterface(Components.interfaces.nsISupports);
   transArray.AppendElement(genTrans);
   
   var dragService = 
@@ -384,3 +392,28 @@ function BeginDragTree ( event )
 
   return(!dragStarted);
 }
+
+function scrollDown()
+{
+    window.frames[0].scrollTo(0, window.frames[0].document.height);
+}
+
+function OnFTPControlLog( server, msg )
+{
+	var logdoc = frames[0].document;
+	var logdocDiv = logdoc.getElementById("logboxDiv");
+	var div = document.createElementNS("http://www.w3.org/1999/xhtml", 
+                                       "html:div");
+
+	if (server)
+		div.setAttribute("class", "server");
+	else
+		div.setAttribute("class", "client");
+
+	div.appendChild (document.createTextNode(msg));
+	
+	logdocDiv.appendChild(div);
+
+	scrollDown();
+}
+
