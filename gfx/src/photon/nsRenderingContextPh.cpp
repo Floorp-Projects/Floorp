@@ -37,7 +37,6 @@
 
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-//static NS_DEFINE_IID(kIRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
@@ -63,6 +62,25 @@ long FillColorVal[8] = {Pg_BLACK,Pg_BLUE,Pg_RED,Pg_YELLOW,Pg_GREEN,Pg_MAGENTA,Pg
 // nscolor RGB values are 00 BB GG RR
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
+#ifdef DEBUG
+// By creating "/dev/shmem/grab" this enables a functions that takes the
+// offscreen buffer and stuffs it into "grab.bmp" to be viewed by the
+// developer for debug purposes...
+
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+int x=0,y=0;
+int X,Y,DEPTH;
+int real_depth;
+int scale=1;
+
+static void do_bmp(char *ptr,int bpl,int x,int y);
+#endif
 
 #include <prlog.h>
 PRLogModuleInfo *PhGfxLog = PR_NewLogModule("PhGfxLog");
@@ -230,7 +248,7 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
   nsresult res;
-  
+
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -311,12 +329,22 @@ NS_IMETHODIMP nsRenderingContextPh::CommonInit()
       mClipRegion->SetTo(0, 0, width, height);
 	}
   }
-  
-  mContext->GetAppUnitsToDevUnits(app2dev);
-  mTMatrix->AddScale(app2dev,app2dev);
-  mContext->GetDevUnitsToAppUnits(mP2T);
-  mContext->GetGammaTable(mGammaTable);
+  else
+  {
+    return NS_ERROR_FAILURE;
+  }
 
+  NS_ASSERTION(mContext,"nsRenderingContextPh::CommonInit mContext is NULL!");
+  NS_ASSERTION(mTMatrix,"nsRenderingContextPh::CommonInit mTMatrix is NULL!");
+
+  if (mContext && mTMatrix)
+  {
+    mContext->GetAppUnitsToDevUnits(app2dev);
+    mTMatrix->AddScale(app2dev,app2dev);
+    mContext->GetDevUnitsToAppUnits(mP2T);
+    mContext->GetGammaTable(mGammaTable);
+  }
+  
   return NS_OK;
 }
 
@@ -1158,9 +1186,12 @@ nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   w = aWidth;
   h = aHeight;
 
+  if (!mSurface)
+  	return NS_OK;		// kedl, error instead?
+
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SELECT(mSurface);
-//  printf ("invert rect: %d %d %d %d\n",x,y,w,h);
+  //printf ("invert rect: %d %d %d %d\n",x,y,w,h);
 
   PgSetFillColor(Pg_INVERT_COLOR);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
@@ -1524,19 +1555,21 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
   /* HACK to see if we have a clipping problem */
   //PgSetClipping(0,NULL);
 
-#if 1
-    err=PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
-#else
-	/* This is garbage and doesn't work */
-    int char_count, byte_count; 
-    char *new_str;
-    byte_count = mbstrnlen(aString, aLength, 0, &char_count);
-	printf("nsRenderingContextPh::DrawString1 aLength=<%d> char_count=<%d> byte_count=<%d>\n", aLength, char_count, byte_count);
-    new_str = malloc(byte_count+1);
-	memcpy(new_str, aString, byte_count+1);
-    err=PgDrawTextmx( new_str, byte_count, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+#if 0
+  printf("nsRenderingContextPh::DrawString1 buffer=");
+  for(int i=0; i<(aLength*2); i++)
+  {
+    printf("%X,", *(aString+i));  
+  }
+  printf("\n");
 #endif
 
+  /* Kirk: 10/22/99  HACK HACK should be fix'd  Bugzilla 16886 */
+  /* Don't print 1 character strings that are &NBSP; */
+  if ( (aLength == 1) && (*aString == 0xFFFFFFA0))
+    return NS_OK;
+
+    err=PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
     if ( err == -1)
 	{
 	  printf("nsRenderingContextPh::DrawString1 returned error code\n");
@@ -1665,7 +1698,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits this=<%p> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
      this, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height));
 
-printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
+//printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
 
   PhArea_t              area;
   PRInt32               srcX = aSrcX;
@@ -1693,7 +1726,7 @@ printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
   if( mBufferIsEmpty )
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n"));
-    printf("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n");
+    //printf("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n");
 
     SELECT( destsurf );
     PgSetGC(saveGC);
@@ -1703,7 +1736,7 @@ printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  flags=%X\n", aCopyFlags ));
 
-#if 1
+#if 0
   printf("nsRenderingContextPh::CopyOffScreenBits() flags=\n");
 
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
@@ -1732,8 +1765,8 @@ printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
   area.size.w=drect.width;
   area.size.h=drect.height;
 
-  printf ("nsRenderingContextPh::CopyOffScreenBits 1 CopyFlags=<%d>, SrcSurf=<%p> DestSurf=<%p> Src=(%d,%d) Area=(%d,%d,%d,%d)\n",
-    aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
+//  printf ("nsRenderingContextPh::CopyOffScreenBits 1 CopyFlags=<%d>, SrcSurf=<%p> DestSurf=<%p> Src=(%d,%d) Area=(%d,%d,%d,%d)\n",
+//    aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
   nsRect rect;
   PRBool valid;
@@ -1786,11 +1819,10 @@ if (aSrcSurf==destsurf)
   PhDim_t size = { area.size.w,area.size.h };
   unsigned char *ptr;
   ptr = image->image;
-//  ptr += image->bpl * srcY + srcX*3 ;
   PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
-
-//    PgSetGC( mPtGC );
-//    PgSetRegion( mPtGC->rid );
+#ifdef DEBUG
+  do_bmp(ptr,image->bpl/3,size.w,size.h);
+#endif
   }
 
   PgSetGC(saveGC);
@@ -1889,3 +1921,216 @@ void nsRenderingContextPh::SetPhLineStyle()
 }
 
 
+
+#if DEBUG
+
+/*******************************************/
+static void putshort(FILE *fp, int i)
+{
+  int c, c1;
+
+  c = ((unsigned int ) i) & 0xff;  c1 = (((unsigned int) i)>>8) & 0xff;
+  putc(c, fp);   putc(c1,fp);
+}
+
+
+/*******************************************/
+static void putint(FILE *fp, int i)
+{
+  int c, c1, c2, c3;
+  c  = ((unsigned int ) i)      & 0xff;
+  c1 = (((unsigned int) i)>>8)  & 0xff;
+  c2 = (((unsigned int) i)>>16) & 0xff;
+  c3 = (((unsigned int) i)>>24) & 0xff;
+
+  putc(c, fp);   putc(c1,fp);  putc(c2,fp);  putc(c3,fp);
+}
+
+/*******************************************/
+static void writeBMP24(FILE *fp, unsigned char *pic24,int w,int h)
+{
+  int   i,j,c,padb;
+  unsigned char *pp;
+  int xx,yy;	
+  unsigned char r,g,b;
+  unsigned char p1,p2;
+  unsigned long ar,ag,ab;
+
+  padb = (4 - ((w/scale*3) % 4)) & 0x03;  /* # of pad bytes to write at EOscanline */
+
+  for (i=h-1; i>=0; i-=scale) 
+  {
+    pp = pic24 + DEPTH*x + DEPTH*y*X + (i * X * DEPTH);
+
+    for (j=0; j<w/scale; j++)
+    {
+	ar=0; ab=0; ag=0;
+	for (yy=0;yy<scale;yy++)
+	for (xx=0;xx<scale;xx++)
+	{
+		if (real_depth==24)
+		{
+			ar+=pp[0+xx*DEPTH-yy*DEPTH*X];
+			ag+=pp[1+xx*DEPTH-yy*DEPTH*X];
+			ab+=pp[2+xx*DEPTH-yy*DEPTH*X];
+		}
+		else
+		if (real_depth==16)
+		{
+			p1=pp[0+xx*DEPTH+yy*DEPTH*X];
+			p2=pp[1+xx*DEPTH+yy*DEPTH*X];
+			ab+= (p1 & 0x1f);
+			ag+= ((p1 >> 5) | ((p2 & 7) << 3));
+			ar+= (p2 >> 3);
+		}
+		else
+		if (real_depth==15)
+		{
+			p1=pp[0+xx*DEPTH+yy*DEPTH*X];
+			p2=pp[1+xx*DEPTH+yy*DEPTH*X];
+			ab+= (p1 & 0x1f);
+			ag+= ((p1 >> 5) | ((p2 & 3) << 3));
+			ar+= ((p2 & 0x7f) >> 2);
+		}
+	}
+	r = ar/(scale*scale);
+	g = ag/(scale*scale);
+	b = ab/(scale*scale);
+	if (real_depth==24)
+	{
+		putc(r, fp);
+		putc(g, fp);
+		putc(b, fp);
+	}
+	else
+	if (real_depth==16)
+	{
+		putc(b<<3, fp);
+		putc(g<<2, fp);
+		putc(r<<3, fp);
+	}
+	else
+	if (real_depth==15)
+	{
+		putc(b<<3, fp);
+		putc(g<<3, fp);
+		putc(r<<3, fp);
+	}
+      pp += DEPTH*scale;
+    }
+
+    for (j=0; j<padb; j++) putc(0, fp);
+  }
+}
+
+void do_bmp(char *ptr, int bpl, int W, int H)
+{
+  char *p;
+  FILE *fp;
+  int i, nc, nbits, bperlin, cmaplen;
+  int w=W;
+  int h=H;
+  unsigned long aperature=0;
+  unsigned char filename[255]="grab.bmp";
+  int c;
+  static int loop=1;
+  char out[255];
+  char buf[255];
+  char *cp;
+  unsigned char *buffer=0;
+  int fildes;
+  FILE *test;
+
+	X=bpl;
+	Y=H;
+	DEPTH=24;
+
+	// don't write bmp file if not wanted
+	test = fopen ("/dev/shmem/grab","r");
+	if (test==0) 
+	  return;
+	fclose(test);
+
+	p = ptr;
+	x=0;
+	y=0;
+	if (x+w>X || w==0) 
+	  w = X-x;
+	if (y+h>Y || h==0) 
+	  h = Y-y;
+
+    //printf( "aperature 0x%x\n",aperature );
+	printf ("X:%d Y:%d DEPTH:%d\n",X,Y,DEPTH);
+	printf ("x:%d y:%d w:%d h:%d scale:%d\n",x,y,w,h,scale);
+
+	if (DEPTH!=24 && DEPTH!=16 && DEPTH!=15)
+	{
+	  printf("Depth must be 15,16 or 24 for now.\n");
+	  exit(0);
+	}
+
+	real_depth=DEPTH;
+	DEPTH = (DEPTH+1)/8;
+
+	if (loop)
+	{
+		cp = strstr(filename,".");
+		if (cp==0)
+			sprintf (buf,"%s%d",filename,loop++);
+		else
+		{
+			*cp = 0;
+			sprintf (buf,"%s%d.%s",filename,loop++,cp+1);
+			*cp = '.';
+		}
+	}
+	else
+	{
+		strcpy(buf,filename);
+	}
+
+	printf ("bmp file: %s\n",buf);
+
+	fp = fopen (buf,"w");
+
+	{
+   nbits = 24;
+   cmaplen = 0;
+   nc = 0;
+   bperlin = ((w * nbits + 31) / 32) * 4;   /* # bytes written per line */
+
+  putc('B', fp);  putc('M', fp);           /* BMP file magic number */
+
+  /* compute filesize and write it */
+  i = 14 +                /* size of bitmap file header */
+      40 +                /* size of bitmap info header */
+      (nc * 4) +          /* size of colormap */
+      bperlin * h;        /* size of image data */
+
+  putint(fp, i);
+  putshort(fp, 0);        /* reserved1 */
+  putshort(fp, 0);        /* reserved2 */
+  putint(fp, 14 + 40 + (nc * 4));  /* offset from BOfile to BObitmap */
+
+  putint(fp, 40);         /* biSize: size of bitmap info header */
+  putint(fp, w/scale);          /* biWidth */
+  putint(fp, h/scale);          /* biHeight */
+  putshort(fp, 1);        /* biPlanes:  must be '1' */
+  putshort(fp, nbits);    /* biBitCount: 1,4,8, or 24 */
+#define BI_RGB 0
+  putint(fp, BI_RGB);     /* biCompression:  BI_RGB, BI_RLE8 or BI_RLE4 */
+  putint(fp, bperlin*h);  /* biSizeImage:  size of raw image data */
+  putint(fp, 75 * 39);    /* biXPelsPerMeter: (75dpi * 39" per meter) */
+  putint(fp, 75 * 39);    /* biYPelsPerMeter: (75dpi * 39" per meter) */
+  putint(fp, nc);         /* biClrUsed: # of colors used in cmap */
+  putint(fp, nc);         /* biClrImportant: same as above */
+
+  if (buffer)
+	writeBMP24(fp,buffer,w,h);
+  else
+	writeBMP24(fp,p,w,h);
+	}
+	fclose(fp);
+}
+
+#endif
