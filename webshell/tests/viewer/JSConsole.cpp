@@ -890,6 +890,8 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
 
             if (NS_SUCCEEDED(mContext->EvaluateString(nsString(cleanBuffer), 
                                                       nsnull,
+                                                      nsnull,
+                                                      nsnull,
                                                       0,
                                                       nsnull,
                                                       returnValue,

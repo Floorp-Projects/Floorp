@@ -51,14 +51,6 @@ class nsIScriptContext : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
 
-  // deprecated: remove later (XXXbe when is later?)
-  NS_IMETHOD EvaluateString(const nsString& aScript,
-                            const char *aURL,
-                            PRUint32 aLineNo,
-                            const char* aVersion,
-                            nsString& aRetValue,
-                            PRBool* aIsUndefined) = 0;
-
   /**
    * Compile and execute a script.
    *

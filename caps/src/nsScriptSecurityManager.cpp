@@ -471,12 +471,12 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol, AboutProtocol};
+    enum Action { AllowProtocol, DenyProtocol };
     struct { 
         const char *name;
         Action action;
     } protocolList[] = {
-        { "about",           AboutProtocol },
+        { "about",           AllowProtocol },
         { "data",            AllowProtocol },
         { "file",            DenyProtocol  },
         { "ftp",             AllowProtocol },
@@ -504,15 +504,6 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
                 return NS_OK;
             case DenyProtocol:
                 // Deny access
-                return NS_ERROR_DOM_BAD_URI;
-            case AboutProtocol:
-                // Allow for about:blank, deny for others.
-                nsXPIDLCString spec;
-                if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-                    return NS_ERROR_FAILURE;
-                if (nsCRT::strcasecmp(spec, "about:blank") == 0) {
-                    return NS_OK;
-                }
                 return NS_ERROR_DOM_BAD_URI;
             }
         }

@@ -2000,6 +2000,45 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
 {
   nsresult result = NS_OK;
 
+
+  nsXPIDLCString spec;
+  if (!mDocumentURL ||
+      (NS_SUCCEEDED(mDocumentURL->GetSpec(getter_Copies(spec))) &&
+       nsCRT::strcasecmp(spec, "about:blank") == 0)) 
+  {
+    // The current document's URL and principal are empty or "about:blank".
+    // By writing to this document, the script acquires responsibility for the
+    // document for security purposes. Thus a document.write of a script tag
+    // ends up producing a script with the same principals as the script
+    // that performed the write.
+    nsIScriptContext *context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    JSObject* obj;
+    if (NS_FAILED(GetScriptObject(context, (void**)&obj))) 
+      return NS_ERROR_FAILURE;
+    nsIScriptSecurityManager *sm = nsJSUtils::nsGetSecurityManager(cx, nsnull);
+    if (!sm)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrincipal> subject;
+    if (NS_FAILED(sm->GetSubjectPrincipal(getter_AddRefs(subject))))
+      return NS_ERROR_FAILURE;
+    if (subject) {
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(subject);
+      if (codebase) {
+        nsCOMPtr<nsIURI> subjectURI;
+        if (NS_FAILED(codebase->GetURI(getter_AddRefs(subjectURI))))
+          return NS_ERROR_FAILURE;
+
+        NS_IF_RELEASE(mDocumentURL);
+        mDocumentURL = subjectURI;
+        NS_ADDREF(mDocumentURL);
+
+        NS_IF_RELEASE(mPrincipal);
+        mPrincipal = subject;
+        NS_ADDREF(mPrincipal);
+      }
+    }
+  }
+
   if (nsnull == mParser) {
     result = Open(cx, argv, argc);
     if (NS_OK != result) {

@@ -195,17 +195,6 @@ NS_IMPL_ISUPPORTS(nsJSContext, NS_GET_IID(nsIScriptContext));
 
 NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript,
-                            const char *aURL,
-                            PRUint32 aLineNo,
-                            const char* aVersion,
-                            nsString& aRetValue,
-                            PRBool* aIsUndefined)
-{
-  return EvaluateString(aScript, nsnull, nsnull, aURL, aLineNo, aVersion, aRetValue, aIsUndefined);
-}
-
-NS_IMETHODIMP
-nsJSContext::EvaluateString(const nsString& aScript,
                             void *aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
@@ -227,7 +216,6 @@ nsJSContext::EvaluateString(const nsString& aScript,
     aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
-    // norris TODO: Using GetGlobalObject to get principals is broken?
     nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
     if (!global)
       return NS_ERROR_FAILURE;

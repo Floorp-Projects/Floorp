@@ -1675,7 +1675,8 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo, const char
         nsAutoString val;
         PRBool isUndefined;
 
-        (void) context->EvaluateString(aScript, url, aLineNo, aVersion,
+        // XXX need principal
+        (void) context->EvaluateString(aScript, nsnull, nsnull, url, aLineNo, aVersion,
                                        val, &isUndefined);
 
         NS_IF_RELEASE(docURL);

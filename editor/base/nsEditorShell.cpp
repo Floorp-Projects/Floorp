@@ -3961,7 +3961,7 @@ nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScrip
     nsCRT::free(script_str);
 #endif
 
-    aContext->EvaluateString(aScript, url, 0, nsnull, rVal, &isUndefined);
+    aContext->EvaluateString(aScript, nsnull, nsnull, url, 0, nsnull, rVal, &isUndefined);
   } 
   return NS_OK;
 }
