@@ -429,7 +429,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     GetName(&name);
 
     /* get url name */
-    char *URLName;
+    char *URLName = nsnull;
     nsIURL* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
@@ -450,10 +450,13 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
                                           (nsISupports **)&service);
     if ((NS_OK == res) && (nsnull != service)) {
       char* valueString = NULL;
-      res = service->SI_RestoreSignonData(URLName, name.ToNewCString(), &valueString);
+      char* nameString = name.ToNewCString();
+      res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
+      delete[] nameString;
       NS_RELEASE(service);
+      PR_FREEIF(URLName);
       if (valueString && *valueString) {
-        value = nsAutoString(valueString);
+        value = valueString;
       } else {
         GetText(&value, PR_TRUE);
       }
