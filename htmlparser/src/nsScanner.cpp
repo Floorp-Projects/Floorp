@@ -257,6 +257,16 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 		  PRInt32 unicharLength = unicharBufLen;
 		  res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
       unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+
+
+                  // Move the nsParser.cpp 00 -> space hack to here so
+                  // it won't break UCS2 file
+                  // Hack Start
+                  for(PRInt32 i=0;i<unicharLength;i++)
+                     if(0x0000 == unichars[i])
+                        unichars[i] = 0x0020;
+                  // Hack End
+
 		  mBuffer.Append(unichars, unicharLength);
 		  mTotalRead += unicharLength;
                   // if we failed, we consume one byte by replace it with U+FFFD
