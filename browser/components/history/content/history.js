@@ -114,11 +114,7 @@ function OpenURL(aInNewWindow)
     if (aInNewWindow) {
       var count = gHistoryTree.treeBoxObject.view.selection.count;
       if (count == 1) {
-        if (isContainer(gHistoryTree, currentIndex))
-          openDialog("chrome://communicator/content/history/history.xul", 
-                     "", "chrome,all,dialog=no", url, "newWindow");
-        else      
-          openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
+        openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
       }
       else {
         var min = new Object(); 

@@ -61,7 +61,7 @@
       <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" oncommand="collapseExpand();"/>
       <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
                 oncommand="OpenURL(false);"/>
-      <menuitem id="miOpenInNewWindow" label="&openLinkCmd.label;" accesskey="&openLinkCmd.accesskey;"
+      <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
                 oncommand="OpenURL(true);"/>
       <menuseparator id="pre-bookmarks-separator"/>
       <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" oncommand="historyAddBookmarks();"/>
