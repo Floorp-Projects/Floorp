@@ -195,10 +195,28 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   nsIStyleContext*  oldContext = mStyleContext;
   nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
   if (oldContext != mStyleContext) {
+    // Update primary child list
     nsIFrame* child = mFirstChild;
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
       child->GetNextSibling(child);
+    }
+
+    // Update overflow list too
+    child = mOverflowList;
+    while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
+      result = child->ReResolveStyleContext(aPresContext, mStyleContext);
+      child->GetNextSibling(child);
+    }
+
+    // And just to be complete, update our prev-in-flows overflow list
+    // too (since in theory, those frames will become our frames)
+    if (nsnull != mPrevInFlow) {
+      child = ((nsContainerFrame*)mPrevInFlow)->mOverflowList;
+      while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
+        result = child->ReResolveStyleContext(aPresContext, mStyleContext);
+        child->GetNextSibling(child);
+      }
     }
   }
   return result;
