@@ -21,6 +21,6 @@
 
 DEPTH=..\..
 
-DIRS=webBrowser setup
+DIRS=webBrowser setup build
 
 include <$(DEPTH)\config\rules.mak>
