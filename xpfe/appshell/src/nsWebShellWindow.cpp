@@ -64,7 +64,7 @@ nsWebShellWindow::~nsWebShellWindow()
 
 NS_IMPL_ISUPPORTS(nsWebShellWindow, kISupportsIID);
 
-nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
+nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
 {
   nsresult rv;
 

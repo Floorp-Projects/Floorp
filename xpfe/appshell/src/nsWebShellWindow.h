@@ -38,7 +38,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  Initialize(nsIAppShell* aShell, nsIURL* aUrl);
+  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl);
   
   nsIWidget* GetWidget(void) { return mWindow; }
 
