@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="link.css" type="text/css"?>
+<root xmlns:xlink="http://www.w3.org/1999/xlink">
+  <p>Testing simple XLinks that must fire immediately on load.</p>
+  <mylink xlink:type="simple" xlink:actuate="onLoad" xlink:show="new" xlink:href="resource:/res/samples/test0.html">
+Must not open automatically, illegal</mylink>
+  <mylink xlink:type="simple" xlink:actuate="onLoad" xlink:show="new" xlink:href="http://www.mozilla.org">
+Must open automatically in new window (www.mozilla.org)</mylink>
+  <mylink xlink:type="simple" xlink:actuate="onLoad" xlink:show="new" xlink:href="http://www.mozillazine.org">
+Must open automatically in new window (www.mozillazine.org)</mylink>
+  <mylink xlink:type="simple" xlink:actuate="onLoad" xlink:show="replace" xlink:href="http://www.mozilla.org/mozorg.html">
+Must load automatically in same window - "Refresh" (At a glance)</mylink>
+  <mylink xlink:type="simple" xlink:actuate="onLoad" xlink:show="replace" xlink:href="http://www.netscape.com">
+Must not load automatically, one refresh link fired already (www.netscape.com)</mylink>
+</root>
+
