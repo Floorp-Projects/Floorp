@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.38 $
+ *  npapi.h $Revision: 3.39 $
  *  Netscape client plug-in API spec
  */
 
@@ -384,18 +384,23 @@ typedef enum {
   NPPVpluginScriptableInstance = (10 | NP_ABI_MASK),
   NPPVpluginScriptableIID = 11,
 
-  /* 12 and over are available on Mozilla builds starting with 0.9.9 */
+  /* Introduced in Mozilla 0.9.9 */
   NPPVjavascriptPushCallerBool = 12,
-  NPPVpluginKeepLibraryInMemory = 13,   /* available in Mozilla 1.0 */
+
+  /* Introduced in Mozilla 1.0 */
+  NPPVpluginKeepLibraryInMemory = 13,
   NPPVpluginNeedsXEmbed         = 14,
 
-  /* Get the NPObject for scripting the plugin. */
+  /* Get the NPObject for scripting the plugin. Introduced in Firefox
+   * 1.0 (NPAPI minor version 14).
+   */
   NPPVpluginScriptableNPObject  = 15,
 
   /* Get the plugin value (as \0-terminated UTF-8 string data) for
    * form submission if the plugin is part of a form. Use
-   * NPN_MemAlloc() to allocate memory for the string data.
-  */
+   * NPN_MemAlloc() to allocate memory for the string data. Introduced
+   * in Mozilla 1.8b2 (NPAPI minor version 15).
+   */
   NPPVformValue = 16
 } NPPVariable;
 
