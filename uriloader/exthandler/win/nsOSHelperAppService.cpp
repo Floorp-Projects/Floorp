@@ -131,7 +131,7 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCS
         aFileExtension = (char * )pBytes;
       }
 
-      delete pBytes;
+      delete[] pBytes;
 
       ::RegCloseKey(hKey);
    }
