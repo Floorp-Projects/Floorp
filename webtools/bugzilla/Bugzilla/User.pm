@@ -227,6 +227,40 @@ sub in_group {
     return defined($res);
 }
 
+# visible_groups_inherited returns a reference to a list of all the groups
+# whose members are visible to this user.
+sub visible_groups_inherited {
+    my $self = shift;
+    return $self->{visible_groups_inherited} if defined $self->{visible_groups_inherited};
+    my @visgroups = @{$self->visible_groups_direct};
+    @visgroups = flatten_group_membership(@visgroups);
+    $self->{visible_groups_inherited} = \@visgroups;
+    return $self->{visible_groups_inherited};
+}
+
+# visible_groups_direct returns a reference to a list of all the groups that
+# are visible to this user.
+sub visible_groups_direct {
+    my $self = shift;
+    my @visgroups = ();
+    return $self->{visible_groups_direct} if defined $self->{visible_groups_direct};
+
+    my $dbh = Bugzilla->dbh;
+    my $glist = join(',',(-1,values(%{$self->groups})));
+    my $sth = $dbh->prepare("SELECT DISTINCT grantor_id
+                                FROM group_group_map
+                               WHERE member_id IN($glist)
+                                 AND grant_type=" . GROUP_VISIBLE);
+    $sth->execute();
+
+    while (my ($row) = $sth->fetchrow_array) {
+        push @visgroups,$row;
+    }
+    $self->{visible_groups_direct} = \@visgroups;
+
+    return $self->{visible_groups_direct};
+}
+
 sub derive_groups {
     my ($self, $already_locked) = @_;
 
@@ -287,9 +321,10 @@ sub derive_groups {
             $group_sth ||= $dbh->prepare(q{SELECT grantor_id
                                              FROM group_group_map
                                             WHERE member_id=?
-                                              AND isbless=0});
+                                              AND grant_type=' . 
+                                                  GROUP_MEMBERSHIP . '});
             $group_sth->execute($group);
-            while (my $groupid = $group_sth->fetchrow_array) {
+            while (my ($groupid) = $group_sth->fetchrow_array) {
                 if (!defined($groupidschecked{"$groupid"})) {
                     push(@groupidstocheck,$groupid);
                 }
@@ -332,7 +367,8 @@ sub can_bless {
                                             FROM user_group_map, group_group_map
                                            WHERE user_group_map.user_id=?
                                              AND user_group_map.group_id=member_id
-                                             AND group_group_map.isbless=1},
+                                             AND group_group_map.grant_type=} .
+                                                 GROUP_BLESS,
                                         undef,
                                         $self->{id});
     }
@@ -340,6 +376,30 @@ sub can_bless {
     $self->{can_bless} = $res ? 1 : 0;
 
     return $self->{can_bless};
+}
+
+sub flatten_group_membership {
+    my (@groups) = @_;
+
+    my $dbh = Bugzilla->dbh;
+    my $sth;
+    my @groupidstocheck = @groups;
+    my %groupidschecked = ();
+    $sth = $dbh->prepare("SELECT member_id FROM group_group_map
+                             WHERE grantor_id = ? 
+                               AND grant_type = " . GROUP_MEMBERSHIP);
+    while (my $node = shift @groupidstocheck) {
+        $sth->execute($node);
+        my $member;
+        while (($member) = $sth->fetchrow_array) {
+            if (!$groupidschecked{$member}) {
+                $groupidschecked{$member} = 1;
+                push @groupidstocheck, $member;
+                push @groups, $member unless grep $_ == $member, @groups;
+            }
+        }
+    }
+    return @groups;
 }
 
 sub match {
@@ -364,17 +424,28 @@ sub match {
     # first try wildcards
 
     my $wildstr = $str;
+    my $user = Bugzilla->user;
 
     if ($wildstr =~ s/\*/\%/g && # don't do wildcards if no '*' in the string
         Param('usermatchmode') ne 'off') { # or if we only want exact matches
 
         # Build the query.
         my $sqlstr = &::SqlQuote($wildstr);
-        my $query  = "SELECT userid, realname, login_name " .
-                     "FROM profiles " .
-                     "WHERE (login_name LIKE $sqlstr " .
+        my $query  = "SELECT DISTINCT userid, realname, login_name " .
+                     "FROM profiles ";
+        if (&::Param('usevisibilitygroups')) {
+            $query .= ", user_group_map ";
+        }
+        $query    .= "WHERE (login_name LIKE $sqlstr " .
                      "OR realname LIKE $sqlstr) ";
-        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+        if (&::Param('usevisibilitygroups')) {
+            $query .= "AND user_group_map.user_id = userid " .
+                      "AND isbless = 0 " .
+                      "AND group_id IN(" .
+                      join(', ', (-1, @{$user->visible_groups_inherited})) . ") " .
+                      "AND grant_type <> " . GRANT_DERIVED;
+        }
+        $query    .= " AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY length(login_name) ";
         $query    .= "LIMIT $limit " if $limit;
 
@@ -410,14 +481,23 @@ sub match {
 
         my $sqlstr = &::SqlQuote(uc($str));
 
-        my $query  = "SELECT  userid, realname, login_name " .
-                     "FROM  profiles " .
-                     "WHERE  (INSTR(UPPER(login_name), $sqlstr) " .
-                     "OR INSTR(UPPER(realname), $sqlstr)) ";
-        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+        my $query  = "SELECT DISTINCT userid, realname, login_name " .
+                     "FROM  profiles ";
+        if (&::Param('usevisibilitygroups')) {
+            $query .= ", user_group_map ";
+        }
+        $query     .= "WHERE  (INSTR(UPPER(login_name), $sqlstr) " .
+                      "OR INSTR(UPPER(realname), $sqlstr)) ";
+        if (&::Param('usevisibilitygroups')) {
+            $query .= "AND user_group_map.user_id = userid " .
+                      "AND isbless = 0 " .
+                      "AND group_id IN(" .
+                      join(', ', (-1, @{$user->visible_groups_inherited})) . ") " .
+                      "AND grant_type <> " . GRANT_DERIVED;
+        }
+        $query    .= " AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY length(login_name) ";
         $query    .= "LIMIT $limit " if $limit;
-
         &::PushGlobalSQLState();
         &::SendSQL($query);
         push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
@@ -843,10 +923,20 @@ care of by the constructor. However, when updating the email address, the
 user may be placed into different groups, based on a new email regexp. This
 method should be called in such a case to force reresolution of these groups.
 
+=item C<visible_groups_inherited>
+
+Returns a list of all groups whose members should be visible to this user.
+Since this list is flattened already, there is no need for all users to
+be have derived groups up-to-date to select the users meeting this criteria.
+
+=item C<visible_groups_direct>
+
+Returns a list of groups that the user is aware of.
+
 =begin undocumented
 
 This routine takes an optional argument. If true, then this routine will not
-lock the tables, but will rely on the caller to ahve done so itsself.
+lock the tables, but will rely on the caller to have done so itsself.
 
 This is required because mysql will only execute a query if all of the tables
 are locked, or if none of them are, not a mixture. If the caller has already

@@ -1912,12 +1912,19 @@ $table{user_group_map} =
 
      unique(user_id, group_id, grant_type, isbless)';
 
+# This table determines which groups are made a member of another
+# group, given the ability to bless another group, or given
+# visibility to another groups existence and membership
+# grant_type:
+# if GROUP_MEMBERSHIP - member groups are made members of grantor
+# if GROUP_BLESS - member groups may grant membership in grantor
+# if GROUP_VISIBLE - member groups may see grantor group
 $table{group_group_map} =
     'member_id mediumint not null,
      grantor_id mediumint not null,
-     isbless tinyint not null default 0,
+     grant_type tinyint not null default 0,
 
-     unique(member_id, grantor_id, isbless)';
+     unique(member_id, grantor_id, grant_type)';
 
 # This table determines which groups a user must be a member of
 # in order to see a bug.
@@ -3947,7 +3954,18 @@ if (GetFieldDef("user_group_map", "isderived")) {
 
 AddField('flags', 'is_active', 'tinyint not null default 1');
 
-    
+# 2004-07-16 - Make it possible to have group-group relationships other than
+# membership and bless.
+if (GetFieldDef("group_group_map", "isbless")) {
+    AddField('group_group_map', 'grant_type', 'tinyint not null default 0');
+    $dbh->do("UPDATE group_group_map SET grant_type = " .
+                             "IF(isbless, " . GROUP_BLESS . ", " .
+                             GROUP_MEMBERSHIP . ")");
+    DropIndexes("group_group_map");
+    DropField("group_group_map", "isbless");
+    $dbh->do("ALTER TABLE group_group_map 
+              ADD UNIQUE (member_id, grantor_id, grant_type)");
+}    
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -4030,13 +4048,17 @@ if (@admins) {
     while ( my ($id) = $sth->fetchrow_array() ) {
         # Admins can bless every group.
         $dbh->do("INSERT INTO group_group_map 
-            (member_id, grantor_id, isbless) 
-            VALUES ($adminid, $id, 1)");
+            (member_id, grantor_id, grant_type) 
+            VALUES ($adminid, $id," . GROUP_BLESS . ")");
+        # Admins can see every group.
+        $dbh->do("INSERT INTO group_group_map 
+            (member_id, grantor_id, grant_type) 
+            VALUES ($adminid, $id," . GROUP_VISIBLE . ")");
         # Admins are initially members of every group.
         next if ($id == $adminid);
         $dbh->do("INSERT INTO group_group_map 
-            (member_id, grantor_id, isbless) 
-            VALUES ($adminid, $id, 0)");
+            (member_id, grantor_id, grant_type) 
+            VALUES ($adminid, $id," . GROUP_MEMBERSHIP . ")");
     }
 }
 
@@ -4231,8 +4253,8 @@ if ($sth->rows == 0) {
         VALUES ($userid, $id, 1, " . GRANT_DIRECT . ")");
     foreach my $group ( @groups ) {
         $dbh->do("INSERT INTO group_group_map
-            (member_id, grantor_id, isbless)
-            VALUES ($id, $group, 1)");
+            (member_id, grantor_id, grant_type)
+            VALUES ($id, $group, 1, " . GROUP_BLESS . ")");
     }
 
   print "\n$login is now set up as an administrator account.\n";

@@ -54,6 +54,10 @@ use base qw(Exporter);
     GRANT_DIRECT
     GRANT_DERIVED
     GRANT_REGEXP
+
+    GROUP_MEMBERSHIP
+    GROUP_BLESS
+    GROUP_VISIBLE
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -121,5 +125,9 @@ use constant contenttypes =>
 use constant GRANT_DIRECT => 0;
 use constant GRANT_DERIVED => 1;
 use constant GRANT_REGEXP => 2;
+
+use constant GROUP_MEMBERSHIP => 0;
+use constant GROUP_BLESS => 1;
+use constant GROUP_VISIBLE => 2;
 
 1;

@@ -165,7 +165,7 @@ sub EmitFormElements ($$$$)
                     WHERE $groupid = grantor_id 
                     AND user_group_map.user_id = $user_id
                     AND user_group_map.isbless = 0
-                    AND group_group_map.isbless = 1
+                    AND group_group_map.grant_type = " . GROUP_BLESS . "
                     AND user_group_map.group_id = member_id");
                 my $derivedbless = FetchOneColumn();
                 PopGlobalSQLState();
@@ -473,6 +473,8 @@ if ($action eq 'new') {
     SendSQL("SELECT last_insert_id()");
     my ($newuserid) = FetchSQLData();
 
+    my $changeduser = new Bugzilla::User($newuserid);
+    $changeduser->derive_groups();
     print "To change ${user}'s permissions, go back and " .
         "<a href=\"editusers.cgi?action=edit&user=" . url_quote($user) .
         "\">edit</a> this user.";

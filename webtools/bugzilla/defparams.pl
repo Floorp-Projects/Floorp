@@ -744,6 +744,14 @@ You will get this message once a day until you\'ve dealt with these bugs!
   },
 
   {
+   name => 'usevisibilitygroups',
+   desc => 'Do you wish to restrict visibility of users to members of ' .
+           'specific groups?',
+   type => 'b',
+   default => 0
+  },
+
+  {
    name => 'webdotbase',
    desc => 'It is possible to show graphs of dependent bugs. You may set ' .
            'this parameter to any of the following:

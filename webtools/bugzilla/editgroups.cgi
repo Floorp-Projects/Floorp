@@ -137,21 +137,27 @@ if ($action eq 'changeform') {
 
     my @groups;
     SendSQL("SELECT groups.id, groups.name, groups.description," .
-             " group_group_map.member_id IS NOT NULL," .
-             " B.member_id IS NOT NULL" .
+             " IF(group_group_map.member_id IS NOT NULL, 1, 0)," .
+             " IF(B.member_id IS NOT NULL, 1, 0)," .
+             " IF(C.member_id IS NOT NULL, 1, 0)" .
              " FROM groups" .
              " LEFT JOIN group_group_map" .
              " ON group_group_map.member_id = groups.id" .
              " AND group_group_map.grantor_id = $group_id" .
-             " AND group_group_map.isbless = 0" .
+             " AND group_group_map.grant_type = " . GROUP_MEMBERSHIP .
              " LEFT JOIN group_group_map as B" .
              " ON B.member_id = groups.id" .
              " AND B.grantor_id = $group_id" .
-             " AND B.isbless = 1" .
+             " AND B.grant_type = " . GROUP_BLESS .
+             " LEFT JOIN group_group_map as C" .
+             " ON C.member_id = groups.id" .
+             " AND C.grantor_id = $group_id" .
+             " AND C.grant_type = " . GROUP_VISIBLE .
              " WHERE groups.id != $group_id ORDER by name");
 
     while (MoreSQLData()) {
-        my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember) = FetchSQLData();
+        my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember, $membercansee) 
+            = FetchSQLData();
 
         my $group = {};
         $group->{'grpid'}       = $grpid;
@@ -159,6 +165,7 @@ if ($action eq 'changeform') {
         $group->{'grpdesc'}     = $grpdesc;
         $group->{'grpmember'}   = $grpmember;
         $group->{'blessmember'} = $blessmember;
+        $group->{'membercansee'}= $membercansee;
         push(@groups, $group);
     }
 
@@ -237,10 +244,14 @@ if ($action eq 'new') {
     SendSQL("SELECT last_insert_id()");
     my $gid = FetchOneColumn();
     my $admin = GroupNameToId('admin');
-    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
-             VALUES ($admin, $gid, 0)");
-    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
-             VALUES ($admin, $gid, 1)");
+    # Since we created a new group, give the "admin" group all privileges
+    # initially.
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+             VALUES ($admin, $gid, " . GROUP_MEMBERSHIP . ")");
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+             VALUES ($admin, $gid, " . GROUP_BLESS . ")");
+    SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+             VALUES ($admin, $gid, " . GROUP_VISIBLE . ")");
     # Permit all existing products to use the new group if makeproductgroups.
     if ($cgi->param('insertnew')) {
         SendSQL("INSERT INTO group_control_map " .
@@ -524,12 +535,12 @@ sub doGroupChanges {
                 $chgs = 1;
                 if ($grp != 0) {
                     SendSQL("INSERT INTO group_group_map 
-                             (member_id, grantor_id, isbless)
-                             VALUES ($v, $gid, 0)");
+                             (member_id, grantor_id, grant_type)
+                             VALUES ($v, $gid," . GROUP_MEMBERSHIP . ")");
                 } else {
                     SendSQL("DELETE FROM group_group_map
                              WHERE member_id = $v AND grantor_id = $gid
-                             AND isbless = 0");
+                             AND grant_type = " . GROUP_MEMBERSHIP);
                 }
             }
 
@@ -538,12 +549,27 @@ sub doGroupChanges {
                 $chgs = 1;
                 if ($bless != 0) {
                     SendSQL("INSERT INTO group_group_map 
-                             (member_id, grantor_id, isbless)
-                             VALUES ($v, $gid, 1)");
+                             (member_id, grantor_id, grant_type)
+                             VALUES ($v, $gid," . GROUP_BLESS . ")");
                 } else {
                     SendSQL("DELETE FROM group_group_map
                              WHERE member_id = $v AND grantor_id = $gid
-                             AND isbless = 1");
+                             AND grant_type = " . GROUP_BLESS);
+                }
+            }
+
+            my $cansee = $cgi->param("cansee-$v") || 0;
+            if (Param("usevisibilitygroups") 
+               && ($cgi->param("oldcansee-$v") != $cansee)) {
+                $chgs = 1;
+                if ($cansee != 0) {
+                    SendSQL("INSERT INTO group_group_map 
+                             (member_id, grantor_id, grant_type)
+                             VALUES ($v, $gid," . GROUP_VISIBLE . ")");
+                } else {
+                    SendSQL("DELETE FROM group_group_map
+                             WHERE member_id = $v AND grantor_id = $gid
+                             AND grant_type = " . GROUP_VISIBLE);
                 }
             }
 

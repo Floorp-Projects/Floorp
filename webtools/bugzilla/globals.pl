@@ -1217,7 +1217,7 @@ sub UserCanBlessGroup {
         WHERE groups.id = grantor_id 
         AND user_group_map.user_id = $::userid
         AND user_group_map.isbless = 0
-        AND group_group_map.isbless = 1
+        AND group_group_map.grant_type = " . GROUP_BLESS . "
         AND user_group_map.group_id = member_id
         AND groups.name = " . SqlQuote($groupname));
     $result = FetchOneColumn();

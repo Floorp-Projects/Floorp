@@ -394,10 +394,14 @@ if ($action eq 'new') {
         SendSQL("SELECT last_insert_id()");
         my $gid = FetchOneColumn();
         my $admin = GroupNameToId('admin');
-        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
-                 VALUES ($admin, $gid, 0)");
-        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
-                 VALUES ($admin, $gid, 1)");
+        # If we created a new group, give the "admin" group priviledges
+        # initially.
+        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+                 VALUES ($admin, $gid," . GROUP_MEMBERSHIP .")");
+        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+                 VALUES ($admin, $gid," . GROUP_BLESS .")");
+        SendSQL("INSERT INTO group_group_map (member_id, grantor_id, grant_type)
+                 VALUES ($admin, $gid," . GROUP_VISIBLE .")");
 
         # Associate the new group and new product.
         SendSQL("INSERT INTO group_control_map " .
