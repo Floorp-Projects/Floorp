@@ -109,7 +109,7 @@ viewer:Components:RegViewer.shlb
 viewer:Components:RegViewer.xpt 
 viewer:Components:Related.shlb 
 viewer:Components:related.xpt 
-viewer:Components:resource.shlb 
+viewer:Components:res.shlb 
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
 viewer:Components:sidebar.shlb 
