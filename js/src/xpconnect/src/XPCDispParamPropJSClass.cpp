@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the IDispatch implementation for XPConnect
+ * The Original Code is the IDispatch implementation for XPConnect.
  *
  * The Initial Developer of the Original Code is
  * David Bradley.
