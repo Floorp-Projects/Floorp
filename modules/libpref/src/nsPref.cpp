@@ -19,6 +19,8 @@
 #include "nsIPref.h"
 
 #include "nsIFileSpec.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 #include "pratom.h"
 #include "prefapi.h"
@@ -108,7 +110,6 @@ protected:
 nsPref* nsPref::gInstance = NULL;
 
 static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
 
 static PrefResult pref_OpenFileSpec(
     nsIFileSpec* fileSpec,
@@ -993,149 +994,7 @@ NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **li
 		return NS_ERROR_NULL_POINTER;
 }
 
-//========================================================================================
-class nsPrefFactory: public nsIFactory
-//========================================================================================
-{
-    NS_DECL_ISUPPORTS
-    
-    nsPrefFactory()
-    {
-        NS_INIT_REFCNT();
-        PR_AtomicIncrement(&g_InstanceCount);
-    }
 
-    virtual ~nsPrefFactory()
-    {
-        PR_AtomicDecrement(&g_InstanceCount);
-    }
-
-    NS_IMETHOD CreateInstance(nsISupports *aDelegate,
-                                                        const nsIID &aIID,
-                                                        void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock) {
-        if (aLock) {
-            PR_AtomicIncrement(&g_LockCount);
-        } else {
-            PR_AtomicDecrement(&g_LockCount);
-        }
-        return NS_OK;
-    };
-};
-
-static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
-
-NS_IMPL_ISUPPORTS(nsPrefFactory, kFactoryIID);
-
-//----------------------------------------------------------------------------------------
-nsresult nsPrefFactory::CreateInstance(
-    nsISupports *aDelegate,
-    const nsIID &aIID,
-    void **aResult)
-//----------------------------------------------------------------------------------------
-{
-    if (aDelegate != NULL)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsPref *t = nsPref::GetInstance();
-    
-    if (t == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsresult res = t->QueryInterface(aIID, aResult);
-    
-    if (NS_FAILED(res))
-        *aResult = NULL;
-
-    return res;
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_EXPORT nsresult NSGetFactory(
-    nsISupports* serviceMgr,
-    const nsCID &aClass,
-    const char *aClassName,
-    const char *aProgID,
-    nsIFactory **aFactory)
-//----------------------------------------------------------------------------------------
-{
-    if (aFactory == NULL)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aClass.Equals(kPrefCID))
-    {
-        nsresult res = NS_OK;
-        nsPrefFactory *factory = new nsPrefFactory();
-        if (factory) {
-            res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
-            if (NS_FAILED(res))
-            {
-                *aFactory = NULL;
-                delete factory;
-            }
-        } else {
-            res = NS_ERROR_OUT_OF_MEMORY;
-        }
-        return res;
-    }
-    return NS_NOINTERFACE;
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
-//----------------------------------------------------------------------------------------
-{
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
-//----------------------------------------------------------------------------------------
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                                                     nsIComponentManager::GetIID(), 
-                                                     (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kPrefCID,
-                                    "Preferences Service",
-                                    "component://netscape/preferences",
-                                    path, 
-                                    PR_TRUE, PR_TRUE);
-
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-//----------------------------------------------------------------------------------------
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(
-        kComponentManagerCID, 
-        nsIComponentManager::GetIID(), 
-        (nsISupports**)&compMgr);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = compMgr->UnregisterComponent(kPrefCID, path);
-
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
 
 //========================================================================================
 // C++ implementations of old C routines
@@ -1336,4 +1195,246 @@ done:
     NS_RELEASE(i);
 	NS_RELEASE(specialChild);
     return JS_TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+// Module implementation for the pref library
+class nsPrefModule : public nsIModule
+{
+public:
+    nsPrefModule();
+    virtual ~nsPrefModule();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIMODULE
+
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
+};
+
+
+//----------------------------------------------------------------------------------------
+// Functions used to create new instances of a given object by the
+// generic factory.
+
+static NS_IMETHODIMP
+CreateNewPref(nsISupports *aDelegate, REFNSIID aIID, void **aResult)
+{
+    if (aDelegate != NULL)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsPref *t = nsPref::GetInstance();
+    
+    if (t == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsresult res = t->QueryInterface(aIID, aResult);
+    
+    if (NS_FAILED(res))
+        *aResult = NULL;
+
+    return res;
+}
+
+//----------------------------------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(nsPrefModule, NS_GET_IID(nsIModule))
+
+nsPrefModule::nsPrefModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsPrefModule::~nsPrefModule()
+{
+    Shutdown();
+}
+
+// Perform our one-time intialization for this module
+nsresult
+nsPrefModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+void
+nsPrefModule::Shutdown()
+{
+    // Release the factory object
+    mFactory = nsnull;
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsPrefModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kPrefCID)) {
+        if (!mFactory) {
+            // Create and save away the factory object for creating
+            // new instances of Pref. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
+                                      CreateNewPref);
+        }
+        fact = mFactory;
+    }
+    else {
+		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsPrefModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Preferences Service", &kPrefCID,
+      "component://netscape/preferences", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsPrefModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering pref components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsPrefModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsPrefModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering pref components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsPrefModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PRBool(g_InstanceCount == 0);
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsPrefModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create an initialize the layout module instance
+    nsPrefModule *m = new nsPrefModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
 }
