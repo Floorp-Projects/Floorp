@@ -266,7 +266,8 @@ $vars->{'openonly'} = $openonly;
 $vars->{'reverse'} = $reverse;
 $vars->{'format'} = $cgi->param('format');
 $vars->{'query_products'} = \@query_products;
-$vars->{'products'} = \@::legal_product;
+my @selectable_products = GetSelectableProducts();
+$vars->{'products'} = \@selectable_products;
 
 
 my $format = GetFormat("reports/duplicates", scalar($cgi->param('format')),
