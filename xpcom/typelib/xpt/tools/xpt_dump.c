@@ -143,6 +143,7 @@ int
 main(int argc, char **argv)
 {
     PRBool verbose_mode = PR_FALSE;
+    XPTArena *arena;
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
@@ -150,6 +151,7 @@ main(int argc, char **argv)
     char *name;
     char *whole;
     FILE *in;
+    int result = 1;
 
     switch (argc) {
     case 2:
@@ -181,36 +183,44 @@ main(int argc, char **argv)
         return 1;
     }
 
-    whole = malloc(flen);
-    if (!whole) {
-        perror("FAILED: malloc for whole");
+    arena = XPT_NewArena(1024, sizeof(double), "main xpt_dump arena");
+    if (!arena) {
+        perror("XPT_NewArena failed");
         return 1;
+    }
+
+    /* after arena creation all exits via 'goto out' */
+
+    whole = XPT_MALLOC(arena, flen);
+    if (!whole) {
+        perror("FAILED: XPT_MALLOC for whole");
+        goto out;
     }
 
     if (flen > 0) {
         size_t rv = fread(whole, 1, flen, in);
         if (rv < flen) {
             fprintf(stderr, "short read (%d vs %d)! ouch!\n", rv, flen);
-            return 1;
+            goto out;
         }
         if (ferror(in) != 0 || fclose(in) != 0)
             perror("FAILED: Unable to read typelib file.\n");
-        
+
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
             fprintf(stdout, "XPT_MakeCursor failed for %s\n", name);
-            return 1;
+            goto out;
         }
-        if (!XPT_DoHeader(cursor, &header)) {
+        if (!XPT_DoHeader(arena, cursor, &header)) {
             fprintf(stdout,
                     "DoHeader failed for %s.  Is %s a valid .xpt file?\n",
                     name, name);
-            return 1;
+            goto out;
         }
 
         if (!XPT_DumpHeader(cursor, header, BASE_INDENT, verbose_mode)) {
             perror("FAILED: XPT_DumpHeader");
-            return 1;
+            goto out;
         }
    
         if (param_problems) {
@@ -221,15 +231,19 @@ main(int argc, char **argv)
         }
 
         XPT_DestroyXDRState(state);
-        free(whole);
+        XPT_FREE(arena, whole);
 
     } else {
         fclose(in);
         perror("FAILED: file length <= 0");
-        return 1;
+        goto out;
     }
 
-    return 0;
+    result = 0;
+
+out:
+    XPT_DestroyArena(arena);
+    return result;
 }
 
 PRBool
@@ -510,7 +524,7 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
         else 
             fprintf(stdout, "FALSE\n");
         
-        fprintf(stdout, "%*sIs NotXPCOM?       ", indent, " ");
+        fprintf(stdout, "%*sIs NotXPCOM?      ", indent, " ");
         if (XPT_MD_IS_NOTXPCOM(md->flags))
             fprintf(stdout, "TRUE\n");
         else 

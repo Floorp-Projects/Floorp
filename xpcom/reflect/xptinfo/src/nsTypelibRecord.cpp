@@ -22,6 +22,8 @@
 
 // XXX fold this (and the .h file) into nsInterfaceInfoManager.cpp?
 
+#include "nscore.h"
+
 #include "nsTypelibRecord.h"
 #include "nsInterfaceRecord.h"
 #include "xpt_struct.h"
@@ -30,6 +32,11 @@ nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *in_next,
                                  XPTHeader *in_header)
     : next(in_next),
       header(in_header)
+#ifdef XPT_INFO_STATS
+      , 
+      filename(NULL),
+      useCount(0)
+#endif
 {
     this->interfaceRecords = (nsInterfaceRecord **)
         nsAllocator::Alloc((size + 1) * (sizeof (nsInterfaceRecord *)));
@@ -43,8 +50,12 @@ nsTypelibRecord::nsTypelibRecord(int size, nsTypelibRecord *in_next,
 
 nsTypelibRecord::~nsTypelibRecord()
 {
-    XPT_FreeHeader(header);
+//    XPT_FreeHeader(header);
     nsAllocator::Free(interfaceRecords);
+#ifdef XPT_INFO_STATS
+    if (this->filename)
+        free(this->filename);
+#endif
 }    
 
 void nsTypelibRecord::DestroyList(nsTypelibRecord* aList)

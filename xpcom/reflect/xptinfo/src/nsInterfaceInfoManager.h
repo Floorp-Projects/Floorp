@@ -28,6 +28,7 @@
 #include "plhash.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+
 #include "nsHashtable.h"
 
 #include "nsCOMPtr.h"
@@ -43,22 +44,16 @@ class nsFileSpec;
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
     NS_DECL_ISUPPORTS
-
-    // nsIInformationInfo management services
-    NS_IMETHOD GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** info);
-    NS_IMETHOD GetInfoForName(const char* name, nsIInterfaceInfo** info);
-
-    // name <-> IID mapping services
-    NS_IMETHOD GetIIDForName(const char* name, nsIID** iid);
-    NS_IMETHOD GetNameForIID(const nsIID* iid, char** name);
-
-    // Get an enumeration of all the interfaces
-    NS_IMETHOD EnumerateInterfaces(nsIEnumerator** emumerator);
+    NS_DECL_NSIINTERFACEINFOMANAGER
 
 public:
     virtual ~nsInterfaceInfoManager();
     static nsInterfaceInfoManager* GetInterfaceInfoManager();
     static void FreeInterfaceInfoManager();
+
+#ifdef XPT_INFO_STATS
+    void DumpStats();
+#endif
 
 private:
     nsInterfaceInfoManager();
@@ -77,6 +72,8 @@ private:
     nsHashtable *IIDTable;
 
     PRBool ctor_succeeded;
+
+    XPTArena* arena;
 };
 
 #endif /* nsInterfaceInfoManager_h___ */

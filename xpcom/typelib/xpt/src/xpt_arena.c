@@ -37,7 +37,7 @@
 /*************************/
 /* logging stats support */
 
-#ifdef DEBUG_jband
+#if 0 && defined(DEBUG_jband)
 #define XPT_ARENA_LOGGING 1
 #endif
 

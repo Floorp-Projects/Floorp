@@ -55,6 +55,7 @@ XPTTypeDescriptor td_void;
 int
 main(int argc, char **argv)
 {
+    XPTArena *arena;
     XPTHeader *header;
     XPTAnnotation *ann;
     XPTInterfaceDescriptor *id;
@@ -85,36 +86,39 @@ main(int argc, char **argv)
 	return 1;
     }
 
+    arena = XPT_NewArena(1024, sizeof(double), "main");
+    TRY("XPT_NewArena", arena);
+
     /* construct a header */
-    header = XPT_NewHeader(1);
+    header = XPT_NewHeader(arena, 1);
     TRY("NewHeader", header);
 
     
-    ann = XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
-                            XPT_NewStringZ("SimpleTypeLib 1.0"),
-                            XPT_NewStringZ("See You In Rome"));
+    ann = XPT_NewAnnotation(arena, XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                            XPT_NewStringZ(arena, "SimpleTypeLib 1.0"),
+                            XPT_NewStringZ(arena, "See You In Rome"));
     TRY("NewAnnotation", ann);
     header->annotations = ann;
 
     header_sz = XPT_SizeOfHeaderBlock(header);
 
-    id = XPT_NewInterfaceDescriptor(0, 2, 2, 0);
+    id = XPT_NewInterfaceDescriptor(arena, 0, 2, 2, 0);
     TRY("NewInterfaceDescriptor", id);
     
-    ok = XPT_FillInterfaceDirectoryEntry(header->interface_directory, &iid,
+    ok = XPT_FillInterfaceDirectoryEntry(arena, header->interface_directory, &iid,
 					 "Interface", "NS", id);
     TRY("FillInterfaceDirectoryEntry", ok);
 
     /* void method1(void) */
     meth = &id->method_descriptors[0];
-    ok = XPT_FillMethodDescriptor(meth, 0, "method1", 0);
+    ok = XPT_FillMethodDescriptor(arena, meth, 0, "method1", 0);
     TRY("FillMethodDescriptor", ok);
     meth->result->flags = 0;
     meth->result->type.prefix.flags = TD_VOID;
 
     /* wstring method2(in uint32, in bool) */
     meth = &id->method_descriptors[1];
-    ok = XPT_FillMethodDescriptor(meth, 0, "method2", 2);
+    ok = XPT_FillMethodDescriptor(arena, meth, 0, "method2", 2);
     TRY("FillMethodDescriptor", ok);
 
     meth->result->flags = 0;
@@ -132,7 +136,7 @@ main(int argc, char **argv)
     /* const squeamish = "ossifrage"; */
     id->const_descriptors[1].name = "squeamish";
     id->const_descriptors[1].type.prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
-    id->const_descriptors[1].value.string = XPT_NewStringZ("ossifrage");
+    id->const_descriptors[1].value.string = XPT_NewStringZ(arena, "ossifrage");
 
     /* serialize it */
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
@@ -141,7 +145,7 @@ main(int argc, char **argv)
     ok = XPT_MakeCursor(state, XPT_HEADER, header_sz, cursor);
     TRY("MakeCursor", ok);
 
-    ok = XPT_DoHeader(cursor, &header);
+    ok = XPT_DoHeader(arena, cursor, &header);
     TRY("DoHeader", ok);
 
     out = fopen(argv[1], "wb");
@@ -163,7 +167,9 @@ main(int argc, char **argv)
     }
     XPT_DestroyXDRState(state);
     
-    /* XXX DestroyHeader */
+    XPT_FreeHeader(arena, header);
+    XPT_DestroyArena(arena);
+
     return 0;
 }
 

@@ -71,7 +71,7 @@ PR_END_EXTERN_C
 
 // Flyweight wrapper classes for xpt_struct.h structs. 
 // Everything here is dependent upon - and sensitive to changes in -
-// xpcom/libxpt/xpt_struct.h!
+// xpcom/typelib/xpt/public/xpt_struct.h!
 
 class nsXPTType : public XPTTypeDescriptorPrefix
 {

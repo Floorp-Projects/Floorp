@@ -106,12 +106,12 @@ void XXXNeverCalled()
     NS_QuickSort(NULL, 0, 0, NULL, NULL);
     nsString();
     nsProxyObject(NULL, 0, NULL);
-    XPT_DoString(NULL, NULL);
-    XPT_DoHeader(NULL, NULL);
+    XPT_DoString(NULL, NULL, NULL);
+    XPT_DoHeader(NULL, NULL, NULL);
     nsInterfaceInfo* info = NULL;
     info->GetName(NULL);
 #ifdef DEBUG
-    info->print(NULL);
+//    info->print(NULL);
     PurePrintf(0);
 #endif
     XPTC_InvokeByIndex(NULL, 0, 0, NULL);

@@ -54,6 +54,9 @@ public:
 
     // so that nsInterfaceInfo destructor can null it out.
     nsInterfaceInfo *info;
+#ifdef XPT_INFO_STATS
+    uint32 useCount;
+#endif
 };    
 
 #endif /* nsInterfaceRecord_h___ */
