@@ -58,7 +58,7 @@ NS_IMPL_QUERY_TAIL(nsIStreamObserver)
 // nsIBrowserWindow implementation
 
 NS_IMETHODIMP
-CWebShellContainer::Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
+CWebShellContainer::Init(nsIAppShell* aAppShell, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
 {
 	return NS_OK;
 }
