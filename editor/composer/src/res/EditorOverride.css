@@ -110,7 +110,7 @@ option {
 
 /* the following rules are for Image Resizing */
 
-*[\_moz_anonclass="mozResizer"] {
+span[\_moz_anonclass="mozResizer"] {
   width: 4px;
   height: 4px;
   position: absolute;
@@ -120,38 +120,40 @@ option {
   -moz-user-select: none;
 }
 
-*[\_moz_anonclass="mozResizer"].hidden,
-*[\_moz_anonclass="mozResizingShadow"].hidden,
-*[\_moz_anonclass="mozResizingInfo"].hidden {
+span[\_moz_anonclass="mozResizer"].hidden,
+span[\_moz_anonclass="mozResizingShadow"].hidden,
+img[\_moz_anonclass="mozResizingShadow"].hidden,
+span[\_moz_anonclass="mozResizingInfo"].hidden {
   display: none ! important;
 }
 
-*[\_moz_anonclass="mozResizer"][anonlocation="nw"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="nw"] {
   cursor: nw-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="n"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="n"] {
   cursor: n-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="ne"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="ne"] {
   cursor: ne-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="w"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="w"] {
   cursor: w-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="e"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="e"] {
   cursor: e-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="sw"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="sw"] {
   cursor: sw-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="s"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="s"] {
   cursor: s-resize;
 }
-*[\_moz_anonclass="mozResizer"][anonlocation="se"] {
+span[\_moz_anonclass="mozResizer"][anonlocation="se"] {
   cursor: se-resize;
 }
 
-*[\_moz_anonclass="mozResizingShadow"] {
+span[\_moz_anonclass="mozResizingShadow"],
+img[\_moz_anonclass="mozResizingShadow"]{
   border: thin dashed black;
   -moz-user-select: none;
   display: block;
@@ -159,7 +161,7 @@ option {
   position: absolute;
 }
 
-*[\_moz_anonclass="mozResizingInfo"] {
+span[\_moz_anonclass="mozResizingInfo"] {
   font-family: sans-serif;
   font-size: x-small;
   color: black;
@@ -169,4 +171,3 @@ option {
   position: absolute;
   display: block;
 }
-
