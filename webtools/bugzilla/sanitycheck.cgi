@@ -577,7 +577,9 @@ BugCheck("bugs WHERE bug_status NOT IN ($open_states) AND resolution = ''",
 
 Status("Checking statuses/everconfirmed");
 
-BugCheck("bugs WHERE bug_status = $unconfirmedstate AND everconfirmed = 1",
+my $sqlunconfirmed = SqlQuote($unconfirmedstate);                            
+
+BugCheck("bugs WHERE bug_status = $sqlunconfirmed AND everconfirmed = 1",
          "Bugs that are UNCONFIRMED but have everconfirmed set");
 # The below list of resolutions is hardcoded because we don't know if future
 # resolutions will be confirmed, unconfirmed or maybeconfirmed.  I suspect
