@@ -879,6 +879,11 @@ textarea {
   color:black;
 }
 
+textarea[disabled] {
+  color: gray;
+}
+
+
 /* misc */
 
 applet {
