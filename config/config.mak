@@ -285,15 +285,8 @@ CFLAGS=$(CFLAGS) -DMOZ_REFLOW_PERF
 
 NMAKE=nmake -nologo -$(MAKEFLAGS)
 
-# use whatever perl is in the path. we don't need to hardcode it
-# unless, of course it exists in the hardcoded places
-!if exist($(MOZ_TOOLS)\perl5\bin\perl.exe)
-PERL = $(MOZ_TOOLS)\perl5\bin\perl.exe
-!elseif exist($(MOZ_TOOLS)\perl5\perl.exe)
-PERL = $(MOZ_TOOLS)\perl5\perl.exe
-!else
+# grab the perl from the user's path (probably need 5.005)
 PERL = perl.exe
-!endif
 
 #if MOZILLA_OFFICIAL is set, then define splitsym
 !if defined (MOZILLA_OFFICIAL)
