@@ -46,7 +46,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX how do we choose this number?
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "plarena.h"
 
@@ -237,14 +236,8 @@ nsPermissionManager::Add(nsIURI     *aURI,
   if (typeIndex == -1 || aPermission >= NUMBER_OF_PERMISSIONS)
     return NS_ERROR_FAILURE;
 
-  rv = AddInternal(hostPort, typeIndex, aPermission);
+  rv = AddInternal(hostPort, typeIndex, aPermission, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
-
-  // Notify permission manager dialog to update its display
-  //
-  // This used to be conditional, but now we use AddInternal 
-  // for cases when no notification is needed
-  NotifyObservers(hostPort);
 
   mChangedList = PR_TRUE;
   Write();
@@ -255,8 +248,9 @@ nsPermissionManager::Add(nsIURI     *aURI,
 // bounds check aTypeIndex or aPermission. These are up to the caller.
 nsresult
 nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
-                                 PRInt32 aTypeIndex,
-                                 PRUint32 aPermission)
+                                 PRInt32               aTypeIndex,
+                                 PRUint32              aPermission,
+                                 PRBool                aNotify)
 {
   if (!gHostArena) {
     gHostArena = new PLArenaPool;
@@ -265,7 +259,7 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
     PL_INIT_ARENA_POOL(gHostArena, "PermissionHostArena", HOST_ARENA_SIZE);
   }
 
-  // When an entry already exists, AddEntry will return that, instead
+  // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
   nsHostEntry *entry = mHostTable.PutEntry(aHost.get());
   if (!entry) return NS_ERROR_FAILURE;
@@ -273,7 +267,38 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
   if (entry->PermissionsAreEmpty()) {
     ++mHostCount;
   }
+
+  PRUint32 oldPermission = entry->GetPermission(aTypeIndex);
   entry->SetPermission(aTypeIndex, aPermission);
+
+  // check whether we are deleting, adding, or changing a permission,
+  // so we can notify observers. this would be neater to do in Add(),
+  // but we need to do it here because we only know what type of notification
+  // to send (removal, addition, or change) after we've done the hash
+  // lookup.
+  if (aNotify) {
+    if (aPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+      if (oldPermission != nsIPermissionManager::UNKNOWN_ACTION)
+        // deleting
+        NotifyObserversWithPermission(aHost,
+                                      mTypeArray[aTypeIndex],
+                                      oldPermission,
+                                      NS_LITERAL_STRING("deleted").get());
+    } else {
+      if (oldPermission == nsIPermissionManager::UNKNOWN_ACTION)
+        // adding
+        NotifyObserversWithPermission(aHost,
+                                      mTypeArray[aTypeIndex],
+                                      aPermission,
+                                      NS_LITERAL_STRING("added").get());
+      else
+        // changing
+        NotifyObserversWithPermission(aHost,
+                                      mTypeArray[aTypeIndex],
+                                      aPermission,
+                                      NS_LITERAL_STRING("changed").get());
+    }
+  }
 
   return NS_OK;
 }
@@ -290,6 +315,9 @@ nsPermissionManager::Remove(const nsACString &aHost,
 
   nsHostEntry* entry = mHostTable.GetEntry(PromiseFlatCString(aHost).get());
   if (entry) {
+    // cache the old permission before we delete it, to notify observers
+    PRUint32 oldPermission = entry->GetPermission(typeIndex);
+
     entry->SetPermission(typeIndex, nsIPermissionManager::UNKNOWN_ACTION);
 
     // If no more types are present, remove the entry
@@ -301,7 +329,11 @@ nsPermissionManager::Remove(const nsACString &aHost,
     Write();
 
     // Notify Observers
-    NotifyObservers(aHost);
+    if (oldPermission != nsIPermissionManager::UNKNOWN_ACTION)
+      NotifyObserversWithPermission(PromiseFlatCString(aHost),
+                                    aType,
+                                    oldPermission,
+                                    NS_LITERAL_STRING("deleted").get());
   }
   return NS_OK;
 }
@@ -310,6 +342,7 @@ NS_IMETHODIMP
 nsPermissionManager::RemoveAll()
 {
   RemoveAllFromMemory();
+  NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
   Write();
   return NS_OK;
 }
@@ -493,23 +526,34 @@ nsPermissionManager::GetTypeIndex(const char *aType,
   return firstEmpty;
 }
 
-
-// broadcast a notification that a permission has changed
-nsresult
-nsPermissionManager::NotifyObservers(const nsACString &aHost)
+// wrapper function for mangling (host,type,perm) triplet into an nsIPermission.
+void
+nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
+                                                   const char       *aType,
+                                                   PRUint32          aPermission,
+                                                   const PRUnichar  *aData)
 {
-  if (mObserverService) {
-    return mObserverService->NotifyObservers(NS_STATIC_CAST(nsIPermissionManager *, this),
-                                             kPermissionChangeNotification,
-                                             NS_ConvertUTF8toUCS2(aHost).get());
-  }
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPermission> permission =
+    new nsPermission(aHost, nsDependentCString(aType), aPermission);
+  if (permission)
+    NotifyObservers(permission, aData);
 }
 
-// Note:
-// We don't do checkbox states here anymore.
-// When a consumer wants it back, that is up to the consumer, not this backend
-// For cookies, it is now done with a persist in the dialog xul file.
+// notify observers that the permission list changed. there are four possible
+// values for aData:
+// "deleted" means a permission was deleted. aPermission is the deleted permission.
+// "added"   means a permission was added. aPermission is the added permission.
+// "changed" means a permission was altered. aPermission is the new permission.
+// "cleared" means the entire permission list was cleared. aPermission is null.
+void
+nsPermissionManager::NotifyObservers(nsIPermission   *aPermission,
+                                     const PRUnichar *aData)
+{
+  if (mObserverService)
+    mObserverService->NotifyObservers(aPermission,
+                                      kPermissionChangeNotification,
+                                      aData);
+}
 
 static const char kTab = '\t';
 static const char kNew = '\n';
@@ -642,7 +686,7 @@ nsPermissionManager::Read()
     
       // Ignore @@@ as host. Old style checkbox status
       if (!permissionString.IsEmpty() && !host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
-        rv = AddInternal(host, type, permission);
+        rv = AddInternal(host, type, permission, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
       }
 

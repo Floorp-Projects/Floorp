@@ -87,6 +87,7 @@ class nsCookie : public nsICookie2
     inline const nsDependentCString Name()  const { return nsDependentCString(mName, mValue - 1); }
     inline const nsDependentCString Value() const { return nsDependentCString(mValue, mHost - 1); }
     inline const nsDependentCString Host()  const { return nsDependentCString(mHost, mPath - 1); }
+    inline const nsDependentCString RawHost() const { return nsDependentCString(IsDomain() ? mHost + 1 : mHost, mPath - 1); }
     inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
     inline nsInt64 Expiry()                 const { NS_ASSERTION(!IsSession(), "can't get expiry time for a session cookie"); return mExpiry; }
     inline nsInt64 LastAccessed()           const { return mLastAccessed; }
@@ -101,6 +102,9 @@ class nsCookie : public nsICookie2
     inline void SetExpiry(PRInt64 aExpiry)             { mExpiry = aExpiry; }
     inline void SetIsSession(PRBool aIsSession)        { mIsSession = aIsSession; }
 
+    // linked list management helper
+    inline nsCookie*& Next() { return mNext; }
+
   protected:
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
@@ -108,7 +112,7 @@ class nsCookie : public nsICookie2
     // store a terminating null for each string, so we can hand them
     // out as nsAFlatCStrings.
 
-    // sizeof(nsCookie) = 44 bytes + Length(strings)
+    nsCookie *mNext;
     char     *mName;
     char     *mValue;
     char     *mHost;
