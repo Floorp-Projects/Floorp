@@ -193,16 +193,6 @@ NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeig
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::SetScrollPreference(nsScrollPreference aPref)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScrollPortView::GetScrollPreference(nsScrollPreference &aScrollPreference) const
-{
-  return nsScrollPreference_kNeverScroll;
-}
-
 static void ComputeVelocities(PRInt32 aCurVelocity, nscoord aCurPos, nscoord aDstPos,
                               PRInt32* aVelocities, float aT2P, float aP2T) {
   // scrolling always works in units of whole pixels. So compute velocities

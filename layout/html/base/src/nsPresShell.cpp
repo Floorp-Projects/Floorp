@@ -6974,15 +6974,8 @@ PresShell::VerifyIncrementalReflow()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get our scrolling preference
-  nsScrollPreference scrolling;
   nsIView* rootView;
   mViewManager->GetRootView(rootView);
-  nsIScrollableView* scrollView;
-  rv = rootView->QueryInterface(NS_GET_IID(nsIScrollableView),
-                                (void**)&scrollView);
-  if (NS_SUCCEEDED (rv)) {
-    scrollView->GetScrollPreference(scrolling);
-  }
   void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.

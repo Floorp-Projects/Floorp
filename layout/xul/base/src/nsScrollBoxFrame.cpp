@@ -259,8 +259,6 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
     nsIScrollableView* scrollingView;
     CallQueryInterface(view, &scrollingView);
 
-    scrollingView->SetScrollPreference(nsScrollPreference_kNeverScroll);
-
     // Have the scrolling view create its internal widgets
     if (NeedsClipWidget()) {
       scrollingView->CreateScrollControls(); 
