@@ -30,6 +30,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsCompositeDataSource.obj     \
         .\$(OBJDIR)\nsContainerEnumerator.obj     \
         .\$(OBJDIR)\nsDefaultResourceFactory.obj  \
+        .\$(OBJDIR)\nsFixedSizeAllocator.obj      \
         .\$(OBJDIR)\nsInMemoryDataSource.obj      \
         .\$(OBJDIR)\nsRDFContentSink.obj          \
         .\$(OBJDIR)\nsRDFContainer.obj            \
