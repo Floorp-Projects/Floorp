@@ -187,8 +187,9 @@ nsresult nsWidget::UpdateICSpot()
 #endif // USE_XIM 
 
 nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
-nsCOMPtr<nsIWidget>         nsWidget::gRollupWidget;
+nsWeakPtr          nsWidget::gRollupWidget;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
+
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 PRBool             nsWidget::mTimeCBSet = PR_FALSE;
 
@@ -361,7 +362,7 @@ nsWidget::~nsWidget()
 // nsISupport stuff
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED(nsWidget, nsBaseWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED2(nsWidget, nsBaseWidget, nsIKBStateControl, nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
@@ -1986,9 +1987,11 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-  if (gRollupWidget && gRollupListener)
+  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
+
+  if (rollupWidget && gRollupListener)
   {
-    GdkWindow *rollupWindow = (GdkWindow *)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    GdkWindow *rollupWindow = (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
     gint x, y;
     gint w, h;
@@ -2007,6 +2010,9 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
       gRollupListener->Rollup();
       return;
     }
+  } else {
+    gRollupWidget = nsnull;
+    gRollupListener = nsnull;
   }
 
   // Switch on single, double, triple click.

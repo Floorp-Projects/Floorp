@@ -24,6 +24,7 @@
 #define nsWidget_h__
 
 #include "nsBaseWidget.h"
+#include "nsWeakReference.h"
 #include "nsIKBStateControl.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
@@ -70,7 +71,7 @@ class nsIMEPreedit;
  * Base of all GTK+ native widgets.
  */
 
-class nsWidget : public nsBaseWidget, public nsIKBStateControl
+class nsWidget : public nsBaseWidget, public nsIKBStateControl, public nsSupportsWeakReference
 {
 public:
   nsWidget();
@@ -497,8 +498,8 @@ protected:
 
   // this is the rollup listener variables
   static nsCOMPtr<nsIRollupListener> gRollupListener;
-  static nsCOMPtr<nsIWidget>         gRollupWidget;
-  static PRBool             gRollupConsumeRollupEvent;
+  static nsWeakPtr                   gRollupWidget;
+  static PRBool                      gRollupConsumeRollupEvent;
 
   // this is the last time that an event happened.  we keep this
   // around so that we can synth drag events properly
