@@ -233,7 +233,7 @@ class nsInstall
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
 
         PRInt32    FileOpDirCreate(nsInstallFolder& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpDirGetParent(nsInstallFolder& aTarget, nsIFile** aReturn);
+        PRInt32    FileOpDirGetParent(nsInstallFolder& aTarget, nsInstallFolder** theParentFolder);
         PRInt32    FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);

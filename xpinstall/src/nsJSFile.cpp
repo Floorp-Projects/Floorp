@@ -64,7 +64,6 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                jsval aValue);
 
 
-
 //
 // Native method DirCreate
 //
@@ -119,10 +118,8 @@ JSBool PR_CALLBACK
 InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  nsCOMPtr<nsIFile>   nativeRet;
-  nsString     nativeRetNSStr;
   JSObject *jsObj;
-  nsInstallFolder *folder;
+  nsInstallFolder *parentFolder, *folder;
 
   *rval = JSVAL_NULL;
 
@@ -150,18 +147,28 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
-  
-  if(!folder || NS_OK != nativeThis->FileOpDirGetParent(*folder, getter_AddRefs(nativeRet)))
+
+  if(!folder || NS_OK != nativeThis->FileOpDirGetParent(*folder, &parentFolder))
   {
-    // error, return NULL
     return JS_TRUE;
   }
 
-  char* temp;
-  nativeRet->GetPath(&temp);
-  nativeRetNSStr.AssignWithConversion(temp);
+  if ( parentFolder )
+  {
+    /* Now create the new JSObject */
+    JSObject *fileSpecObject;
+    JSObject *FileSpecProto = nsnull;
 
-  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, nativeRetNSStr.GetUnicode()), nativeRetNSStr.Length()));
+    fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, FileSpecProto, NULL);
+    if (fileSpecObject == NULL)
+      return JS_FALSE;
+
+    JS_SetPrivate(cx, fileSpecObject, parentFolder);
+    if (fileSpecObject == NULL)
+      return JS_FALSE;
+
+    *rval = OBJECT_TO_JSVAL(fileSpecObject);
+  }
 
   return JS_TRUE;
 }
