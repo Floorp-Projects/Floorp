@@ -71,6 +71,7 @@ protected:
                                  PRUint32 aChromeMask,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                  PRBool aIsHiddenWindow, nsIXULWindow **aResult);
+  PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
   nsresult SetXPConnectSafeContext();
   nsresult ClearXPConnectSafeContext();
   void     AttemptingQuit(PRBool aAttempt);
