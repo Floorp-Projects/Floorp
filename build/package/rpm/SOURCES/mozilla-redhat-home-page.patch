@@ -1,5 +1,5 @@
---- mozilla/xpfe/browser/resources/locale/en-US/region.properties.foo	Wed Jul 10 10:45:55 2002
-+++ mozilla/xpfe/browser/resources/locale/en-US/region.properties	Wed Jul 10 10:46:35 2002
+--- mozilla/xpfe/browser/resources/locale/en-US/region.properties.foo	Thu Aug  1 20:53:34 2002
++++ mozilla/xpfe/browser/resources/locale/en-US/region.properties	Thu Jan 30 12:13:59 2003
 @@ -1,5 +1,5 @@
  # navigator.properties
 -homePageDefault=http://www.mozilla.org/
@@ -15,4 +15,10 @@
 +browser.startup.homepage=file:///usr/share/doc/HTML/index.html
  browser.throbber.url=http://www.mozilla.org/
  browser.search.defaulturl=http://search.netscape.com/cgi-bin/search?search=
+ general.useragent.contentlocale=US
+@@ -21,4 +21,4 @@
  
+ #config.js
+ #
+-startup.homepage_override_url=http://www.mozilla.org/start/
++startup.homepage_override_url=file:///usr/share/doc/HTML/index.html
