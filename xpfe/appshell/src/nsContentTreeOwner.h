@@ -67,11 +67,12 @@ protected:
    nsSiteWindow2    *mSiteWindow2;
    PRBool            mPrimary;
    PRBool            mContentTitleSetting;
-   PRUint32          mChromeFlags;
    nsString          mWindowTitleModifier;
    nsString          mTitleSeparator;
    nsString          mTitlePreface;
 
+private:
+   PRUint32          mChromeFlags; // don't use directly! use GetChromeFlags()
 };
 
 #endif /* nsContentTreeOwner_h__ */
