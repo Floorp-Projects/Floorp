@@ -1122,9 +1122,17 @@ nsMsgAccountManager::findServersForIdentity(nsHashKey *key,
     NS_RELEASE(thisSupports);
     if (NS_SUCCEEDED(rv)) {
 
-      // if the identity is found, add this server to this element
-      // bad bad bad - pointer comparisons are evil.
-      if (entry->identity == thisIdentity) {
+	  char *thisIdentityKey = nsnull, *identityKey = nsnull;
+
+	  rv = entry->identity->GetKey(&identityKey);
+	  if(NS_SUCCEEDED(rv))
+		  rv = thisIdentity->GetKey(&thisIdentityKey);
+
+	  //SP:  Don't compare pointers.  Identities are getting created multiple times with
+	  // the same id.  Therefore ptr tests don't succeed, but key tests do.  We should probably
+	  // be making sure we only have one identity per key.  But that is a different problem that
+	  // needs to be solved.
+      if (NS_SUCCEEDED(rv) && PL_strcmp(identityKey, thisIdentityKey) == 0) {
         nsCOMPtr<nsIMsgIncomingServer> thisServer;
         rv = account->GetIncomingServer(getter_AddRefs(thisServer));
         if (NS_SUCCEEDED(rv)) {
@@ -1132,9 +1140,17 @@ nsMsgAccountManager::findServersForIdentity(nsHashKey *key,
 
           // release everything NOW since we're breaking out of the loop
           NS_RELEASE(thisIdentity);
+		  if(thisIdentityKey)
+		    PL_strfree(thisIdentityKey);
+		  if(identityKey)
+		    PL_strfree(identityKey);
           break;
         }
       }
+	  if(thisIdentityKey)
+		  PL_strfree(thisIdentityKey);
+	  if(identityKey)
+		  PL_strfree(identityKey);
       NS_RELEASE(thisIdentity);
     }
   }
