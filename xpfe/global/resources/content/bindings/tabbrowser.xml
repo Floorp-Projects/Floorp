@@ -101,7 +101,7 @@
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
-        <xul:tabpanels flex="1" class="plain">
+        <xul:tabpanels flex="1" class="plain" selectedIndex="0">
           <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
         </xul:tabpanels>
       </xul:tabbox>
