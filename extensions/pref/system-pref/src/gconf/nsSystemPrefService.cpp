@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <glib.h>
+#include <glib-object.h>
 
 #include "plstr.h"
 #include "nsCOMPtr.h"
@@ -588,16 +589,12 @@ GConfProxy::GConfProxy(nsSystemPrefService *aSysPrefService):
 
 GConfProxy::~GConfProxy()
 {
-    mInitialized = PR_FALSE;
+    if (mGConfClient)
+        g_object_unref(G_OBJECT(mGConfClient));
 
-    if (mGConfLib) {
-        PR_UnloadLibrary(mGConfLib);
-        mGConfLib = nsnull;
-    }
     if (mObservers) {
         (void)mObservers->EnumerateForwards(gconfDeleteObserver, nsnull);
         delete mObservers;
-        mObservers = nsnull;
     }
 }
 
@@ -644,7 +641,7 @@ GConfProxy::Init()
         func = PR_FindFunctionSymbol(mGConfLib, funcList->FuncName);
         if (!func) {
             SYSPREF_LOG(("Check GConf Func Error: %s", funcList->FuncName));
-            goto init_failed;
+            goto init_failed_unload;
         }
         funcList->FuncPtr = func;
     }
@@ -652,6 +649,10 @@ GConfProxy::Init()
     InitFuncPtrs();
 
     mGConfClient = GConfClientGetDefault();
+
+    // Don't unload past this point, since GConf's initialization of ORBit
+    // causes atexit handlers to be registered.
+
     if (!mGConfClient) {
         SYSPREF_LOG(("Fail to Get default gconf client\n"));
         goto init_failed;
@@ -659,8 +660,9 @@ GConfProxy::Init()
     mInitialized = PR_TRUE;
     return PR_TRUE;
 
- init_failed:
+ init_failed_unload:
     PR_UnloadLibrary(mGConfLib);
+ init_failed:
     mGConfLib = nsnull;
     return PR_FALSE;
 }
