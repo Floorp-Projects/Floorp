@@ -98,14 +98,19 @@ function LoadMessageByUri(uri)
 
 function setTitleFromFolder(msgfolder, subject)
 {
-    var title = subject || "";
+    var wintype = document.firstChild.getAttribute('windowtype');
+    var title; 
 
-    if (msgfolder)
+    // If we are showing the mail:3pane. Never include the subject of the selected
+    // message in the title. ("Inbox for greenlantern@mozilla.org - Mozilla Thunderbird")
+    // If we are a stand alone message window, we should show the Subject
+    // and the product but not the account name: "Re: New window Title - Mozilla Thunderbird"
+
+    if (wintype == "mail:messageWindow")  
+      title = subject;
+    else if (msgfolder)
     {
-      if (title)
-        title += " - ";
-
-      title += msgfolder.prettyName;
+      title = msgfolder.prettyName;
 
       if (!msgfolder.isServer)
       {
