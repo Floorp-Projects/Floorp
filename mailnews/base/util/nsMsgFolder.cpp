@@ -1590,12 +1590,7 @@ nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *
 	if(keySeparator != -1)
 	{
 		nsAutoString folderPath;
-		uriStr.Left(folderPath, keySeparator);
-		PRInt32 msfExtPos = folderPath.Find(".msf");
-		if(msfExtPos != -1)
-			folderPath.Left(folderURI, msfExtPos);
-		else
-			folderURI = folderPath;
+		uriStr.Left(folderURI, keySeparator);
 
 		nsAutoString keyStr;
 		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
