@@ -144,7 +144,10 @@ nsTEMPDragGestureEater::DragDrop(nsIDOMEvent* aMouseEvent)
 
 #endif /* TEMP_HACK_FOR_BUG_11291 */
 
+
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 
 //
