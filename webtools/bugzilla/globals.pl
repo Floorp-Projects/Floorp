@@ -39,7 +39,6 @@ use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
 
 sub globals_pl_sillyness {
     my $zz;
-    $zz = @main::SqlStateStack;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::enterable_products;

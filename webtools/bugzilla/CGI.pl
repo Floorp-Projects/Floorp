@@ -42,7 +42,7 @@ use Bugzilla::Error;
 
 sub CGI_pl_sillyness {
     my $zz;
-    $zz = %::dontchange;
+    $zz = $::buffer;
 }
 
 use CGI::Carp qw(fatalsToBrowser);
