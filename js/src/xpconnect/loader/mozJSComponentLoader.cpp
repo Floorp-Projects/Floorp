@@ -1144,7 +1144,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     nsXPIDLCString displayPath;
     FILE* fileHandle;
     
-    localFile->GetPath(getter_Copies(displayPath));   
+    localFile->GetURL(getter_Copies(displayPath));   
     rv = localFile->OpenANSIFileDesc("r", &fileHandle);
     if (NS_FAILED(rv))
         return nsnull;
