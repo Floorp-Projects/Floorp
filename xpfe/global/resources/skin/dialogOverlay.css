@@ -8,13 +8,13 @@
     margin                : 0px 5px 6px 5px;
   }
 
-.box-smallheader > .toolbar-primary
+.toolbar-primary
   {
     padding               : 0px 0px 3px 0px;
     min-height            : 0px;
   }
 
-.box-smallheader > .toolbar-primary > .box-smallheader-left 
+.box-smallheader-left 
   {
     font-size             : larger;
     font-weight           : bold;
@@ -22,7 +22,7 @@
     padding-left          : 6px;
   }
 
-.box-smallheader > .toolbar-primary > .box-smallheader-right 
+.box-smallheader-right 
   {
     color                 : #FFFFFF;
     padding-right         : 6px;
@@ -38,68 +38,84 @@
 /** 
  * Large Dialog Header (with icon) 
  **/
-box[type="largeheader"] {
-  behavior: url(chrome://global/content/dialogBindings.xml#largeheader);
-}
+.box-header 
+  {
+    behavior              : url(chrome://global/content/dialogBindings.xml#largeheader);
+  }
 
-box[type="largeheader"] > .header {
-  padding: 0px 0px 4px 5px;
-  min-height: 34px;
-}
+.box-header-header 
+  {
+    padding               : 0px 0px 4px 5px;
+    min-height            : 34px;
+  }
 
-box[type="largeheader"] > .header > .headertext-box {
-  vertical-align: middle;
-}
+.box-header-text-box 
+  {
+    vertical-align        : middle;
+  }
 
-box[type="largeheader"] > .header > .headertext-box > .headertext {
-  color: white;
-  font-size: large;
-  font-weight: bold;
-  text-decoration: underline;
-}
+.box-header-text 
+  {
+    color                 : white;
+    font-size             : large;
+    font-weight           : bold;
+    text-decoration       : underline;
+  }
 
-box[type="largeheader"] > .header > .circle {
-	background-image: url("chrome://global/skin/button28-bg.gif");
-	background-repeat: no-repeat;
-	background-position: 50% 4px;
-	background-color: transparent;
-	min-width: 28px;
-	margin: 1px 7px 1px 1px;
-  height: 28px;
-  width: 28px;
-}  
+.box-header-icon-box  
+  {
+    vertical-align        : middle;
+  }
+  
+.box-header-circle 
+  {
+	  background-image      : url("chrome://global/skin/button28-bg.gif");
+  	background-repeat     : no-repeat;
+	  background-position   : 50% 4px;
+  	background-color      : transparent;
+	  min-width             : 28px;
+  	margin                : 1px 7px 1px 1px;
+    height                : 28px;
+    width                 : 28px;
+  }  
 
 /**
  * Dialog status line (blue) including progress area
  **/
-box[type="status"] {
-  behavior: url(chrome://global/content/dialogBindings.xml#status);
-}
+.box-status 
+  {
+    behavior              : url(chrome://global/content/dialogBindings.xml#status);
+  }
 
-box[type="status"] > .title { 
-  padding: 1px 5px 1px 5px;
-  min-height: 0px ! important;
-}
+.box-status-bg 
+  {
+    padding               : 1px 5px 1px 5px;
+    min-height            : 0px ! important;
+  }
 
-box[type="status"] > .title > .statustext {
-  color: #99cccc ! important;
-}
+.box-status-text, .box-status-progress
+  {
+    color                 : #99cccc ! important;
+  }
 
+  
 /** 
  * Utility classes for use when combined headers/footers are used
  **/
 /* display area framed container */
-box#contentarea {
-  border-top: 2px groove #CCCCCC;
-  border-bottom: 2px groove #CCCCCC;
-  padding: 7px;
-}
+#contentarea 
+  {
+    border-top            : 2px groove #CCCCCC;
+    border-bottom         : 2px groove #CCCCCC;
+    padding               : 7px;
+  }
 
 /* top border on status area */
-box#wizardButtons {
-  border-bottom: 1px solid threedshadow;
-  padding-top: 1px;
-  padding-bottom: 1px;
-}
+#wizardButtons 
+  {
+    border-bottom         : 1px outset #CCCCCC;
+    padding-top           : 1px;
+    padding-bottom        : 1px;
+  }
 
 

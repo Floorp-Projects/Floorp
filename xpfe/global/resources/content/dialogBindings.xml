@@ -16,22 +16,22 @@
 
   <binding id="largeheader">
     <content>
-      <xul:box class="decorated header" align="horizontal" flex="1">
-        <xul:image inherits="src" class="circle"/>
-        <xul:box autostretch="never" class="headertext-box">
-          <xul:text class="headertext" inherits="value"/>
+      <xul:box class="box-header-header toolbar-primary" flex="1" autostretch="never">
+        <xul:image inherits="src" class="box-header-circle"/>
+        <xul:box autostretch="never" class="box-header-text-box">
+          <xul:text class="box-header-text" inherits="value"/>
         </xul:box>
-        <xul:spring flex="100%"/>
+        <xul:spring flex="1"/>
       </xul:box>
     </content>
   </binding>
   
   <binding id="status">
     <content>
-      <xul:box class="standard title" flex="1">
-        <xul:text class="statustext" inherits="value"/>
+      <xul:box class="box-status-bg toolbar-standard" flex="1">
+        <xul:text class="box-status-text" inherits="value"/>
         <xul:spring flex="1"/>
-        <xul:text class="statustext" inherits="progress:value"/>
+        <xul:text class="box-status-progress" inherits="progress:value"/>
       </xul:box>  
     </content>
   </binding>
