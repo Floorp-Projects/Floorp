@@ -214,7 +214,8 @@ extern JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *));
 
 extern JSBool
-js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
+                            JSCodeGenerator *cg, uintN flags,
                             const uintN errorNumber, ...);
 
 /*

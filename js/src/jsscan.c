@@ -55,6 +55,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsemit.h"
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
@@ -487,8 +488,9 @@ MatchChar(JSTokenStream *ts, int32 expect)
 }
 
 JSBool
-js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
-			    const uintN errorNumber, ...)
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
+                            JSCodeGenerator *cg, uintN flags,
+                            const uintN errorNumber, ...)
 {
     va_list ap;
     JSErrorReporter onError;
@@ -505,8 +507,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 
     va_start(ap, errorNumber);
     if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
-				errorNumber, &message, &report, &warning,
-                                JS_TRUE, ap)) {
+				 errorNumber, &message, &report, &warning,
+                                 JS_TRUE, ap)) {
 	return JS_FALSE;
     }
     va_end(ap);
@@ -517,13 +519,16 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     onError = cx->errorReporter;
     if (onError) {
         /* 
-         * We can be called with a null ts from the regexp compilation functions.
+         * We are typically called with non-null ts and null cg from jsparse.c.
+         * We can be called with null ts from the regexp compilation functions.
+         * The code generator (jsemit.c) may pass null ts and non-null cg.
          */
         if (ts) {
             report.filename = ts->filename;
             report.lineno = ts->lineno;
             linestr = js_NewStringCopyN(cx, ts->linebuf.base,
-                                        ts->linebuf.limit - ts->linebuf.base, 0);
+                                        ts->linebuf.limit - ts->linebuf.base,
+                                        0);
             report.linebuf = linestr
                 ? JS_GetStringBytes(linestr)
                 : NULL;
@@ -538,6 +543,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
             report.uctokenptr = linestr
                 ? report.uclinebuf + (tokenptr - ts->linebuf.base)
                 : NULL;
+        } else if (cg) {
+            report.filename = cg->filename;
+            report.lineno = cg->currentLine;
         }
 
 #if JS_HAS_ERROR_EXCEPTIONS
@@ -818,7 +826,8 @@ retry:
 		 * not always be so permissive, so we warn about it.
 		 */
 		if (radix == 8 && c >= '8') {
-		    if (!js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
+		    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                     JSREPORT_WARNING,
                                                      JSMSG_BAD_OCTAL,
                                                      c == '8' ? "08" : "09")) {
                         RETURN(TOK_ERROR);
@@ -849,7 +858,7 @@ retry:
 		    c = GetChar(ts);
 		}
 		if (!JS7_ISDEC(c)) {
-		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_MISSING_EXPONENT);
 		    RETURN(TOK_ERROR);
 		}
@@ -866,13 +875,13 @@ retry:
 
 	if (radix == 10) {
 	    if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
 		RETURN(TOK_ERROR);
 	    }
 	} else {
 	    if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
 		RETURN(TOK_ERROR);
 	    }
@@ -888,7 +897,7 @@ retry:
 	while ((c = GetChar(ts)) != qc) {
 	    if (c == '\n' || c == EOF) {
 		UngetChar(ts, c);
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_STRING);
 		RETURN(TOK_ERROR);
 	    }
@@ -1092,12 +1101,12 @@ skipline:
 		if (c == '/' && MatchChar(ts, '*')) {
 		    if (MatchChar(ts, '/'))
 			goto retry;
-		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_NESTED_COMMENT);
 		}
 	    }
 	    if (c == EOF) {
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_COMMENT);
 		RETURN(TOK_ERROR);
 	    }
@@ -1113,7 +1122,7 @@ skipline:
 	    while ((c = GetChar(ts)) != '/') {
 		if (c == '\n' || c == EOF) {
 		    UngetChar(ts, c);
-		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_UNTERMINATED_REGEXP);
 		    RETURN(TOK_ERROR);
 		}
@@ -1139,7 +1148,7 @@ skipline:
 	    c = PeekChar(ts);
 	    if (JS7_ISLET(c)) {
 		tp->ptr = ts->linebuf.ptr - 1;
-		js_ReportCompileErrorNumber(cx, ts,JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_REGEXP_FLAG);
 		(void) GetChar(ts);
 		RETURN(TOK_ERROR);
@@ -1217,7 +1226,7 @@ skipline:
 		break;
 	    n = 10 * n + JS7_UNDEC(c);
 	    if (n >= ATOM_INDEX_LIMIT) {
-		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+		js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_SHARPVAR_TOO_BIG);
 		RETURN(TOK_ERROR);
 	    }
@@ -1247,7 +1256,7 @@ skipline:
 #endif /* JS_HAS_SHARP_VARS */
 
       default:
-	js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
+	js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_ILLEGAL_CHARACTER);
 	RETURN(TOK_ERROR);
     }
