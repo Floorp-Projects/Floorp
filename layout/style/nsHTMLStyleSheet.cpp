@@ -148,6 +148,7 @@ AttributeKey::AttributeKey(nsMapAttributesFunc aMapFunc, nsIHTMLAttributes* aAtt
 {
   NS_ADDREF(mAttributes);
   mHashSet = 0;
+  mHashCode = 0;
 }
 
 AttributeKey::~AttributeKey(void)
