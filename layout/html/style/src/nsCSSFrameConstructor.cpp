@@ -8369,8 +8369,10 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
   // Remove the mapping from the content object to its frame
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
-  aFrameManager->SetPrimaryFrameFor(content, nsnull);
-  aFrameManager->ClearAllUndisplayedContentIn(content);
+  if ( content ) {
+	aFrameManager->SetPrimaryFrameFor(content, nsnull);
+	aFrameManager->ClearAllUndisplayedContentIn(content);
+  }
 
   // Walk aFrame's child frames
   nsIAtom*  childListName = nsnull;
