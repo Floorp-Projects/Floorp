@@ -81,8 +81,10 @@ CPPSRCS		= \
 		  ToolbarButton.cpp \
 		  ToolbarCascade.cpp \
 		  ToolbarItem.cpp \
+		  ToolbarNavigation.cpp \
 		  ToolbarSeparator.cpp \
 		  ToolbarUrlBar.cpp \
+		  ToolbarWindowList.cpp \
 		  plugin.cpp \
 		  BackForwardMenu.cpp \
 		  BookmarkFrame.cpp \
