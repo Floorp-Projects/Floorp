@@ -66,7 +66,7 @@ function Init() {
 }
 
 
-function OnDblClick(treeitem)
+function OnDblClick(treeitem, root)
 {
     // Deal with a double-click
 
@@ -90,9 +90,39 @@ function OnDblClick(treeitem)
 
     // Okay, it's not a container. See if it has a URL, and if so, open it.
     var id = treeitem.getAttribute('id');
-    if (id) {
-        ContentWindow.location = id;
-    }
+    if (!id)	return(false);
+
+	// rjc: add support for anonymous resources; if the node has
+	// a "#URL" property, use it, otherwise default to using the id
+	try
+	{
+		var rootNode = document.getElementById(root);
+		var ds = null;
+		if (rootNode)
+		{
+			ds = rootNode.database;
+		}
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf)
+		{
+			if (ds)
+			{
+				var src = rdf.GetResource(id, true);
+				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+				var target = ds.GetTarget(src, prop, true);
+				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (target)	target = target.Value;
+				if (target)	id = target;
+				
+			}
+		}
+	}
+	catch(ex)
+	{
+	}
+
+    ContentWindow.location = id;
 }
 
 
