@@ -295,6 +295,7 @@ NPError NewControl(const char *pluginType,
     if (pSink)
     {
         pSink->AddRef();
+        pSink->mPlugin = pData;
         CComPtr<IUnknown> control;
         pSite->GetControlUnknown(&control);
         pSink->SubscribeToEvents(control);

@@ -158,6 +158,21 @@ NS_IMETHODIMP nsWMPScriptablePeer::SetURL(const nsAString & aURL)
     return HR2NS(hr);
 }
 
+  /* readonly attribute unsigned long playState; */
+NS_IMETHODIMP nsWMPScriptablePeer::GetPlayState(PRUint32 *aPlayState)
+{
+    CComPtr<IWMPCore> wmpc;
+    HRESULT hr = GetIWMPCore(&wmpc);
+    if (FAILED(hr)) return hr;
+    WMPPlayState playState;
+    hr = wmpc->get_playState(&playState);
+    if (SUCCEEDED(hr))
+    {
+        *aPlayState = (unsigned long) playState;
+    }
+    return HR2NS(hr);
+}
+
 /* readonly attribute nsIWMPControls controls; */
 NS_IMETHODIMP nsWMPScriptablePeer::GetControls(nsIWMPControls * *aControls)
 {
