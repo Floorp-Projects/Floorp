@@ -60,3 +60,22 @@ titledbutton.down {
 titledbutton.down[disabled="true"] {
   list-style-image:url("chrome://sidebar/skin/list-down-dis.gif");
 }
+
+treeitem > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
+}
+
+treeitem[container="true"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
+}
+
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon
+{
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-open.gif");
+}
+
+treeitem > treerow > treecell > .tree-icon > .twisty{
+  display: none;
+}
