@@ -1018,6 +1018,9 @@ void showHelp(Options* inOptions)
         printf("\t %s%s", gSwitches[loop]->mShortName, valueText);
         printf(DESC_NEWLINE "%s\n\n", gSwitches[loop]->mDescription);
     }
+
+    printf("This tool takes the diff of two sorted tsv files to form a summary report\n");
+    printf("of code and data size changes which is hoped to be human readable.\n");
 }
 
 

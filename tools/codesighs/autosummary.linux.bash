@@ -127,7 +127,7 @@ grep -vi $EXCLUDE_PATTERN_01 < $ALLFILES | grep -vi $EXCLUDE_PATTERN_02 > $THEFI
 #
 #   Produce the cumulative nm output.
 #   We are very particular on what switches to use.
-#   nm --format=bsd --size-sort --print-file-name
+#   nm --format=bsd --size-sort --print-file-name --demangle
 #
 NMRESULTS="$TMPDIR/nm.txt"
 xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $THEFILES > $NMRESULTS 2> /dev/null

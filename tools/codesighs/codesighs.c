@@ -600,6 +600,8 @@ void showHelp(Options* inOptions)
         printf("\t %s%s", gSwitches[loop]->mShortName, valueText);
         printf(DESC_NEWLINE "%s\n\n", gSwitches[loop]->mDescription);
     }
+
+    printf("This tool takes a tsv file and reports composite code and data sizes.\n");
 }
 
 
