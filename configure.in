@@ -966,7 +966,10 @@ case "$target" in
     fi
 
     if test "$MOZ_TOOLS"; then
-        _MOZTOOLS=`cd $MOZ_TOOLS ; pwd`
+        _MOZTOOLS=`cd $MOZ_TOOLS && pwd`
+        if test "$?" != "0" || test -z "$_MOZTOOLS"; then
+            AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
+        fi
         _MOZTOOLS=`echo $_MOZTOOLS | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
         GLIB_CFLAGS="-I${_MOZTOOLS}/include"
         GLIB_LIBS="${_MOZTOOLS}/lib/glib-1.2.lib"
