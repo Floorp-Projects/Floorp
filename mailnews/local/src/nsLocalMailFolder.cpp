@@ -492,6 +492,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 			}
 			else
 			{
+				//We must have loaded the folder so send a notification
+				NotifyFolderLoaded();
 				//Otherwise we have a valid database so lets extract necessary info.
 				UpdateSummaryTotals(PR_TRUE);
 			}
