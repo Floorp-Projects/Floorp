@@ -270,7 +270,7 @@ PrintUsage(void)
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
-static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
+static nsresult OpenWindow(const char *urlstr, const PRUnichar *args, const char *aFeatures=0)
 {
 #ifdef DEBUG_CMD_LINE
   printf("OpenWindow(%s,?)\n",urlstr);
@@ -283,11 +283,20 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
 
   sarg->SetData(args);
 
+  nsCAutoString features("chrome,dialog=no,all");
+  if (aFeatures) {
+    features.Append(",");
+    features.Append(aFeatures);
+  }
+#ifdef DEBUG_CMD_LINE
+  printf("features: %s...\n", features.get());
+#endif /* DEBUG_CMD_LINE */
+
   nsCOMPtr<nsIDOMWindow> newWindow;
   nsresult rv;
   rv = wwatch->OpenWindow(0, urlstr, "_blank",
-                 "chrome,dialog=no,all", sarg,
-                 getter_AddRefs(newWindow));
+                          features.get(), sarg,
+                          getter_AddRefs(newWindow));
 
   return rv;
 }
@@ -679,8 +688,36 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    rv = OpenChromeURL(chromeUrlForTask, height, width);
+    nsCOMPtr <nsICmdLineService> cmdLine = do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
     if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString urlToLoad;
+    rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString features;
+    features.Assign("height=");
+    features.AppendInt(height);
+    features.Append(",width=");
+    features.AppendInt(width);
+
+    if (!urlToLoad.IsEmpty()) {
+#ifdef DEBUG_CMD_LINE
+      printf("url to load: %s\n", urlToLoad.get());
+#endif /* DEBUG_CMD_LINE */
+
+      NS_ConvertUTF8toUCS2 url(urlToLoad);
+      rv = OpenWindow(chromeUrlForTask, url.get(), features.get());
+    } else {
+      nsXPIDLString defaultArgs;
+      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+      if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_CMD_LINE
+      printf("default args: %s\n", NS_ConvertUCS2toUTF8(defaultArgs).get());
+#endif /* DEBUG_CMD_LINE */
+      rv = OpenWindow(chromeUrlForTask, defaultArgs.get(), features.get());
+    }
 
     return rv;
 }
