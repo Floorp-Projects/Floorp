@@ -267,6 +267,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
             (flags & nsIPlaintextEditor::eEditorWidgetMask))
           return NS_OK; // let it be used for focus switching
 
+        if (isAnyModifierKeyButShift)
+          return NS_OK;
+
         // else we insert the tab straight through
         textEditor->HandleKeyPress(keyEvent);
         ScrollSelectionIntoView(mEditor);
