@@ -39,15 +39,15 @@ Rights Reserved.
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/commandglue.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailWindow.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
 
   <grid flex="1" id="acctCentralGrid"> 
     <columns>

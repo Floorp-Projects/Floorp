@@ -40,10 +40,10 @@ Rights Reserved.
     <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
   </stringbundleset>
   <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/mailWindowOverlay.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/FilterEditor.js"/>
 
   <keyset id="keyset"/>
   

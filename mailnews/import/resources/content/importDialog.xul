@@ -37,7 +37,7 @@ Rights Reserved.
         title="&importDialog.windowTitle;">
 
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
-  <script type="text/javascript" src="chrome://messenger/content/importDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/importDialog.js"/>
 
   <keyset id="keyset"/>
   

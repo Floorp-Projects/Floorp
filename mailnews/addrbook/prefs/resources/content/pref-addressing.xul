@@ -10,7 +10,7 @@
         class="color-dialog"
         orient="vertical">
 
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["emailCollection", "emailCollectionIncoming",
                        "emailCollectionOutgoing", "emailCollectionNewsgroup",

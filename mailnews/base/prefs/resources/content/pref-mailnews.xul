@@ -34,7 +34,7 @@ Contributor(s):
         onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
         orient="vertical">
 
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl",
@@ -42,9 +42,9 @@ Contributor(s):
   ]]>
   </script>
   <!-- XXX: Replace strres.js when prefutilities is converted -->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/pref-mailnews.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
   
   <box class="box-smallheader" title="&pane.title;"/>
 

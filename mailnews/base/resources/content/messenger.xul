@@ -54,23 +54,23 @@ Rights Reserved.
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
 </stringbundleset>
-<script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
-<script type="text/javascript" src="chrome://messenger/content/commandglue.js"/>
-<script type="text/javascript" src="chrome://messenger/content/shareglue.js"/>
-<script type="text/javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
-<script type="text/javascript" src="chrome://messenger/content/mailWindow.js"/>
-<script type="text/javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<script type="text/javascript" src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
-<script type="text/javascript" src="chrome://messenger/content/mailContextMenus.js"/>
-<script type="text/javascript" src="chrome://messenger/content/messengerdnd.js"/>
-<script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="text/javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
-<script type="text/javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-<script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
-<script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-<script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
-<script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/shareglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgViewNavigation.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailContextMenus.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 
 <commands id="commands">

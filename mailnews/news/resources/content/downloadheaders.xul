@@ -35,7 +35,7 @@ Contributor(s):
         onload="OnLoad()">
 
   <stringbundle id="bundle_news" src="chrome://messenger/locale/news.properties"/>
-  <script type="text/javascript" src="chrome://messenger/content/downloadheaders.js" />
+  <script type="application/x-javascript" src="chrome://messenger/content/downloadheaders.js" />
 
   <keyset id="keyset"/>
   

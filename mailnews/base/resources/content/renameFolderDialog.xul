@@ -37,8 +37,8 @@
         onload="onLoad();">
 
   <stringbundleset id="stringbundleset"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/renameFolderDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/renameFolderDialog.js"/>
 
   <keyset id="keyset"/>
 

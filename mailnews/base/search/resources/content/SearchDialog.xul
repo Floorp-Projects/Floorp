@@ -47,12 +47,12 @@ Rights Reserved.
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script src="chrome://messenger/content/mailWindow.js"/>
-  <script src="chrome://messenger/content/threadPane.js"/>
-  <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-  <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://messenger/content/SearchDialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/threadPane.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/SearchDialog.js"/>
 
   <commands id="commands">
     <commandset id="mailSearchItems"

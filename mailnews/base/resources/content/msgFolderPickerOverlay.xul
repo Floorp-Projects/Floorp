@@ -27,8 +27,8 @@ Rights Reserved.
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
-  <script type="text/javascript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 
   <menu class="push" label="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">

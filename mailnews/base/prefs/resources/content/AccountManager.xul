@@ -14,8 +14,8 @@
         onload="onLoad(event);">
 
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-<script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
-<script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
 
   <keyset id="keyset"/>
 

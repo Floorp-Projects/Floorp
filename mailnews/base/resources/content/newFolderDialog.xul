@@ -38,8 +38,8 @@
         onload="onLoad();">
 
   <stringbundleset id="stringbundleset"/>
-  <script type="text/javascript" src="chrome://messenger/content/mailCommands.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/newFolderDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/newFolderDialog.js"/>
 
   <keyset id="keyset"/>
 

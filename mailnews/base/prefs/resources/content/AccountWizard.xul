@@ -34,15 +34,15 @@ Rights Reserved.
   <keyset id="keyset"/>
 
   <!-- XXX: strres.js is included so that WizardManager.js will work -->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
-  <script src="chrome://global/content/wizardOverlay.js"/>
-  <script src="chrome://global/content/wizardHandlerSet.js"/>
-  <script src="chrome://global/content/wizardManager.js"/>
-  <script src="chrome://global/content/widgetStateManager.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
-  <script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountWizard.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/ispUtils.js"/>
 
   <box orient="vertical" flex="1">
     <box id="contentarea" flex="1">

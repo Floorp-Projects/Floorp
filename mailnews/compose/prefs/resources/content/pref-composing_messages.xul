@@ -14,7 +14,7 @@
 
   <popupset id="aTooltipSet"/>
     
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList"];
 

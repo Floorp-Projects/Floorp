@@ -13,7 +13,7 @@
         orient="vertical">
   <popupset id="aTooltipSet"/>
 
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
 
@@ -40,8 +40,8 @@
   </script>
   
   <!-- XXX: Replace strres.js when prefutilities is converted -->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
   <box class="box-smallheader" title="&pane.title;"/>
 

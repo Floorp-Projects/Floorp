@@ -15,8 +15,8 @@
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
-  <script type="text/javascript" src="chrome://messenger/content/widgetglue.js"/>
-  <script type="text/javascript" src="chrome://messenger/content/am-copies.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
   
   <text hidden="true" wsm_persist="true" id="identity.fccFolder"/>
   <text hidden="true" wsm_persist="true" id="identity.draftFolder"/>

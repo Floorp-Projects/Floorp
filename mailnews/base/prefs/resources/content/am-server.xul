@@ -36,7 +36,7 @@ Contributors:
         onload="parent.onPanelLoaded('am-server.xul');"
         orient="vertical">
 
-  <script type="text/javascript" src="chrome://messenger/content/am-server.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
