@@ -63,6 +63,7 @@ OBJS = \
     .\$(OBJDIR)\nsSecureBrowserUIImpl.obj \
     .\$(OBJDIR)\nsSSLIOLayer.obj \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
+    .\$(OBJDIR)\nsTLSSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
     .\$(OBJDIR)\nsFSDR.obj \
     .\$(OBJDIR)\nsCrypto.obj \
