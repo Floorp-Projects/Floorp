@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.17 2001/05/02 05:38:26 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.18 2001/05/02 06:03:49 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1078,9 +1078,9 @@ ProcessVersion(SECItem         *versionItem,
 }
 
 nsresult 
-ProcessSerialNumber(SECItem         *serialItem, 
-                    nsINSSComponent *nssComponent,
-                    nsIASN1PrintableItem **retItem)
+ProcessSerialNumberDER(SECItem         *serialItem, 
+                       nsINSSComponent *nssComponent,
+                       nsIASN1PrintableItem **retItem)
 {
   nsresult rv;
   nsString text;
@@ -1729,8 +1729,8 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
   asn1Objects->AppendElement(printableItem);
   
-  rv = ProcessSerialNumber(&mCert->serialNumber, nssComponent,
-                           getter_AddRefs(printableItem));
+  rv = ProcessSerialNumberDER(&mCert->serialNumber, nssComponent,
+                              getter_AddRefs(printableItem));
 
   if (NS_FAILED(rv))
     return rv;
