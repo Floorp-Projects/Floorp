@@ -1,1 +1,2 @@
 nsIStreamTransfer.idl
+nsIStreamTransferOperation.idl
