@@ -43,12 +43,17 @@ if (DEBUG)
     warn = function (msg) { dd ("** WARNING " + msg + " **"); }
     ASSERT = function (expr, msg) {
         if (!expr)
-            dd ("** ASSERTION FAILED: " + msg + " **\n" + getStackTrace()); 
+            dump ("** ASSERTION FAILED: " + msg + " **\n" + getStackTrace() +
+                  "\n"); 
     }
 }    
 else
     dd = warn = ASSERT = function (){};
 
+const MAX_STR_LEN = 20;  /* max string length to display before changing to
+                          * "n characters" display mode */
+const MAX_WORD_LEN = 20; /* number of characters to display before forcing a 
+                          * potential word break point (in the console.) */
 var console = new Object();
 
 /* |this|less functions */
@@ -56,35 +61,77 @@ var console = new Object();
 function startupTests()
 {
     if (0)
-    {    
+    {   
+        /*
         dispatchCommand ("fbreak ContextMenu 199");
 
         function loaded (data, url)
         {
-            focusSource (url, 100);
+            showNextSourceLine (url, 100);
         }
         loadSource ("chrome://venkman/content/venkman-debugger.js", loaded);
+        */
+        openDialog("chrome://venkman/content/tests/tree.xul", "", "");
     }
     
 }
 
 function cont ()
 {
-    console._stackOutlinerView.setStack(null);
     disableDebugCommands();
     --console._stopLevel;
     console.jsds.exitNestedEventLoop();
     return true;
 }
 
+function next ()
+{
+    console._stepOverLevel = 0;
+    step();
+    console.jsds.functionHook = console._callHook;
+}
+
 function step ()
 {
-    console.jsds.interruptHook = console._executionHook;
+    setStopState(true);
     var topFrame = console.frames[0];
     console._stepPast = topFrame.script.fileName + topFrame.line;
     disableDebugCommands()
     --console._stopLevel;
     console.jsds.exitNestedEventLoop();
+}
+
+function stepOut ()
+{
+    console._stepOverLevel = 1;
+    setStopState(false);
+    console.jsds.functionHook = console._callHook;
+    disableDebugCommands()
+    --console._stopLevel;
+    console.jsds.exitNestedEventLoop();
+}
+
+function toggleStopState()
+{
+    if (console.jsds.interruptHook)
+        setStopState(false);
+    else
+        setStopState(true);
+}
+
+function setStopState(state)
+{
+    var tb = document.getElementById("stop-button");
+    if (state)
+    {
+        console.jsds.interruptHook = console._executionHook;
+        tb.setAttribute("checked", "true");
+    }
+    else
+    {
+        console.jsds.interruptHook = null;
+        tb.removeAttribute("checked");
+    }
 }
 
 function enableDebugCommands()
@@ -97,6 +144,14 @@ function enableDebugCommands()
         sib.removeAttribute ("disabled");
         sib = sib.nextSibling;
     }
+
+    var tb = document.getElementById("cmd_stop");
+    tb.setAttribute("disabled", "true");
+    if (console.frames.length == 1)
+    {
+        tb = document.getElementById("cmd_step_out");
+        tb.setAttribute("disabled", "true");
+    }
 }
 
 function disableDebugCommands()
@@ -108,6 +163,9 @@ function disableDebugCommands()
         sib.setAttribute ("disabled", "true");
         sib = sib.nextSibling;
     }
+
+    var tb = document.getElementById("cmd_stop");
+    tb.removeAttribute("disabled");
 }
 
 function dispatchCommand (text)
@@ -168,18 +226,36 @@ function displayCommands (pattern)
                         "]"));
 }
 
-function focusSource (url, lineNumber)
+function setCurrentSource (url, line)
 {
-    var sourceArray = console._sources[url];
-    ASSERT (sourceArray, "Attempt to focus unknown source: " + url);
+    var fileRec = console.scripts[url];
+    ASSERT (fileRec, "Attempt to focus unknown source: " + url);
 
-    console._sourceOutlinerView.setSourceArray(sourceArray, url);
-    console._sourceOutlinerView.setCurrentLine(lineNumber);
-
+    var lastFile = console._sourceOutlinerView.url
+    if (lastFile)
+    {
+        var lastFileRec = console.scripts[lastFile];
+        if (lastFileRec)
+        {
+            lastFileRec.lastLine = 
+                console._sourceOutlinerView.outliner.getFirstVisibleRow();
+        }
+    }
+    
+    console._sourceOutlinerView.setSourceArray(fileRec.source, url);
     var hdr = document.getElementById("source-line-text");
     hdr.setAttribute ("label", url);
     hdr = document.getElementById("source-line-number");
-    hdr.setAttribute ("label", "(" + lineNumber + ")");    
+    hdr.setAttribute ("label", "");    
+}
+
+function scrollSourceLineTop (url, lineNumber)
+{
+    focusSource(url);
+    if (toTop)
+        console._sourceOutlinerView.outliner.scrollToRow(lineNumber - 1);
+    else
+        console._sourceOutlinerView.centerLine(lineNumber - 1);
 }
 
 function evalInDebuggerScope (script)
@@ -314,9 +390,7 @@ function init()
         ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,})/,
          insertLink);
     console._munger.addRule ("word-hyphenator",
-                             new RegExp ("(\\S{" + 
-                                         console.prefs["output.wordbreak.length"]
-                                         + ",})"),
+                             new RegExp ("(\\S{" + MAX_WORD_LEN + ",})"),
                              insertHyphenatedWord);
     
     initDebugger(); /* debugger may need display() to init */
@@ -327,10 +401,15 @@ function init()
     startupTests();
 }
 
+function destroy ()
+{
+    destroyOutliners();
+    detachDebugger();
+}
+
 function insertHyphenatedWord (longWord, containerTag)
 {
-    var wordParts = splitLongWord (longWord,
-                                   console.prefs["output.wordbreak.length"]);
+    var wordParts = splitLongWord (longWord, MAX_WORD_LEN);
     containerTag.appendChild (htmlSpacer());
     for (var i = 0; i < wordParts.length; ++i)
     {
@@ -381,17 +460,18 @@ function matchFileName (pattern)
 {
     var rv = new Array();
     
-    for (var scriptName in console._scripts)
+    for (var scriptName in console.scripts)
         if (scriptName.search(pattern) != -1)
             rv.push (scriptName);
 
     return rv;
 }
 
-function refreshResultsArray()
+function refreshValues()
 {
     for (var i = 0; i < $.length; ++i)
         $[i].refresh();
+    console.stackView.refresh();
 }
 
 function stringToDOM (message)
