@@ -57,6 +57,9 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 nsresult
 rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsString& aURI);
 
+nsresult
+rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsCString& aURI);
+
 #endif // rdfutil_h__
 
 

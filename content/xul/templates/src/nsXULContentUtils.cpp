@@ -522,10 +522,11 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         if (! url)
             return NS_ERROR_UNEXPECTED;
 
-        rv = rdf_MakeAbsoluteURI(url, uri);
+		nsCAutoString uriStr(uri);
+        rv = rdf_MakeAbsoluteURI(url, uriStr);
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
+        rv = gRDF->GetResource(uriStr.GetBuffer(), aResult);
     }
     else {
         rv = GetElementResource(aElement, aResult);

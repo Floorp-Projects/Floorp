@@ -30,6 +30,7 @@ void XXXNeverCalled()
 {
     nsAutoString s;
     nsCAutoString cs;
+	nsCString cStr;
     int v;
 
     // nsRDFParserUtils
@@ -42,6 +43,8 @@ void XXXNeverCalled()
     rdf_MakeRelativeRef(s, s);
     rdf_MakeRelativeName(s, s);
     rdf_MakeAbsoluteURI(s, s);
+    rdf_MakeAbsoluteURI(s, cStr);
+
     NS_NewContainerEnumerator(nsnull, nsnull, nsnull);
     NS_NewEmptyEnumerator(nsnull);
 
