@@ -149,42 +149,6 @@ NS_INTERFACE_MAP_BEGIN(XULPopupListenerImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULPopupListener)
 NS_INTERFACE_MAP_END
 
-#if 0
-NS_IMETHODIMP
-XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = nsnull;
-    if (iid.Equals(NS_GET_IID(nsIXULPopupListener)) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIXULPopupListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
-        *result = NS_STATIC_CAST(nsIDOMMouseListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
-        *result = NS_STATIC_CAST(nsIDOMMouseMotionListener*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-      // compiler problems with nsIDOMEventListener::GetIID() cause us to do it this
-      // way. Please excuse the lameness (hyatt and pinkerton).
-    else if (iid.Equals(kIDomEventListenerIID)) {
-        *result = (nsIDOMEventListener*)(nsIDOMMouseListener*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
-#endif
-
 NS_IMETHODIMP
 XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 {
