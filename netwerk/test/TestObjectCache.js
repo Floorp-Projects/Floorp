@@ -27,12 +27,23 @@ function openCacheEntry(clientID, url)
     return entry;
 }
 
+function wrapString(str)
+{
+    var nsISupportsString = Components.interfaces.nsISupportsString;
+    var factory = Components.classes["@mozilla.org/supports-string;1"];
+    var wrapper = factory.createInstance(nsISupportsString);
+    wrapper.data = str;
+    return wrapper;
+}
+
+var data = wrapString("javascript");
 var entry = openCacheEntry("javascript", "theme:button");
-entry.cacheElement = entry;
+entry.cacheElement = data;
 entry.markValid();
+entry.close();
 
 var newEntry = openCacheEntry("javascript", "theme:button");
-if (newEntry.cacheElement === entry)
+if (newEntry.cacheElement === data)
     print("object cache works.");
 else
     print("object cache failed.");
