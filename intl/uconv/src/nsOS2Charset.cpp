@@ -100,6 +100,12 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsPlatformCharset::Init()
 {
