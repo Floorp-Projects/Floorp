@@ -23,6 +23,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
