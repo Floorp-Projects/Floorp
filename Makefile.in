@@ -30,9 +30,7 @@ DIRS =				\
   $(NULL)
 
 ifndef MOZ_NATIVE_NSPR
-DIRS +=				\
-  nsprpub			\
-  $(NULL)
+DIRS += $(topsrcdir)/nsprpub
 endif
 
 DIRS +=				\
@@ -42,15 +40,11 @@ DIRS +=				\
   $(NULL)
 
 ifndef MOZ_NATIVE_ZLIB
-DIRS +=				\
-  modules/zlib			\
-  $(NULL)
+DIRS += modules/zlib
 endif
 
 ifndef MOZ_NATIVE_JPEG
-DIRS +=				\
-  jpeg				\
-  $(NULL)
+DIRS += jpeg
 endif
 
 DIRS +=				\
@@ -91,8 +85,6 @@ endif
 ifdef MOZ_MAIL_NEWS
 DIRS += mailnews
 endif
-
-include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
