@@ -2095,22 +2095,31 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 /* Avoid recursion on (obj, id) already being resolved on cx. */
                 key.obj = obj;
                 key.id = id;
-                table = cx->resolving;
-                if (table) {
+                if (cx->resolving != 0) {
+                    table = cx->resolvingTable;
                     entry = JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
                     if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
                         JS_UNLOCK_OBJ(cx, obj);
                         goto out;
                     }
-                } else {
+                } else if (!(table = cx->resolvingTable)) {
                     table = JS_NewDHashTable(&resolving_dhash_ops,
                                              NULL,
                                              sizeof(JSResolvingEntry),
                                              JS_DHASH_MIN_SIZE);
                     if (!table)
                         goto outofmem;
-                    cx->resolving = table;
+                    cx->resolvingTable = table;
+                } else {
+                    /* cx->resolving is 0, so the table had better be empty! */
+                    JS_ASSERT(table->entryCount == 0);
                 }
+
+                /*
+                 * Once we have successfully added an entry for key and bumped
+                 * cx->resolving, control flow must go through cleanup: before
+                 * returning.
+                 */
                 entry = JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
                 if (!entry) {
             outofmem:
@@ -2120,6 +2129,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 }
                 ((JSResolvingEntry *)entry)->key = key;
                 generation = table->generation;
+                cx->resolving++;
 
                 /* Null *propp here so we can test it at cleanup: safely. */
                 *propp = NULL;
@@ -2199,10 +2209,20 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 }
 
             cleanup:
-                if (table->generation == generation)
+                /*
+                 * Do a raw remove only if the table hasn't changed since entry
+                 * was added, and only if fewer entries were removed than would
+                 * cause alpha to be  < .5 (alpha is at most .75).  Otherwise,
+                 * use JS_DHashTableOperate to re-lookup the key and remove its
+                 * entry, compressing or shrinking the table as needed.
+                 */
+                if (table->generation == generation &&
+                    table->removedCount < JS_BIT(table->sizeLog2) >> 2) {
                     JS_DHashTableRawRemove(table, entry);
-                else
+                } else {
                     JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
+                }
+                cx->resolving--;
                 if (!ok || *propp)
                     return ok;
             }

@@ -244,10 +244,10 @@ struct JSStackHeader {
 #define JS_STACK_SEGMENT(sh)    ((jsval *)(sh) + 2)
 
 /*
- * Key and entry types for the JSContext.resolving hash table, typedef'd here
- * because all consumers need to see these declarations (not just the typedef
- * names, as would be the case for a pointer-to-typedef'd-type declaration),
- * along with cx->resolving.
+ * Key and entry types for the JSContext.resolvingTable hash table, typedef'd
+ * here because all consumers need to see these declarations (and not just the
+ * typedef names, as would be the case for an opaque pointer-to-typedef'd-type
+ * declaration), along with cx->resolvingTable.
  */
 typedef struct JSResolvingKey {
     JSObject            *obj;
@@ -339,8 +339,14 @@ struct JSContext {
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
-    /* Non-null if init'ing standard classes lazily, to stop recursion. */
-    JSDHashTable        *resolving;
+    /*
+     * cx->resolving is non-zero if we are init'ing standard classes lazily, or
+     * if we are otherwise recursing indirectly from js_LookupProperty through
+     * a JSClass.resolve hook.  It is used together with cx->resolvingTable to
+     * limit runaway recursion (see jsapi.c and jsobj.c).
+     */
+    uint32              resolving;
+    JSDHashTable        *resolvingTable;
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
