@@ -443,6 +443,7 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
             mBoxObject->Invalidate();
 
         header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
+        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
 
         // Unset sort attribute(s) on the other columns
         nsCOMPtr<nsIContent> parentContent;
@@ -462,6 +463,8 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
                         if (childTag == nsXULAtoms::treecol && childContent != header) {
                             childContent->UnsetAttr(kNameSpaceID_None,
                                                     nsXULAtoms::sortDirection, PR_TRUE);
+                            childContent->UnsetAttr(kNameSpaceID_None,
+                                                    nsXULAtoms::sortActive, PR_TRUE);
                         }
                     }
                 }
