@@ -75,6 +75,19 @@
 #include "nsIServiceManager.h"
 ///////////////////////////////////////
 
+//#define NEW_CLIPBOARD_SUPPORT
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+// Drag & Drop, Clipboard
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+#endif
+
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
@@ -537,10 +550,38 @@ nsEditorAppCore::Close()
   return NS_OK;
 }
 
+
 NS_IMETHODIMP    
 nsEditorAppCore::Exit()
 {  
   nsIAppShellService* appShell = nsnull;
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  nsIClipboard* clipboard;
+  nsresult rvv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+
+  if (NS_OK == rvv) {
+    nsITransferable * trans;
+    clipboard->GetTransferable(&trans);
+    if (nsnull != trans) {
+      if (NS_OK == trans->IsLargeDataSet()) {
+        // XXX A Dialog goes here to see if they want to "force" a copy 
+        // of the data to the clipboard 
+
+        //if (status == IDYES) {
+        //  clipboard->ForceDataToClipboard();
+        //}
+
+      }
+      NS_RELEASE(trans);
+    }
+    NS_RELEASE(clipboard);
+  }
+
+#endif
+
 
   /*
    * Create the Application Shell instance...
