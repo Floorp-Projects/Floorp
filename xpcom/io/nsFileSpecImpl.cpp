@@ -38,22 +38,7 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 #endif
 
 //static NS_DEFINE_IID(kIFileSpecIID, NS_IFILESPEC_IID);
-NS_IMPL_AGGREGATED(nsFileSpecImpl)
-
-NS_IMETHODIMP
-nsFileSpecImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (aInstancePtr == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIFileSpec::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
-        *aInstancePtr = (nsIFileSpec*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
+NS_IMPL_ISUPPORTS(nsFileSpecImpl, nsIFileSpec::GetIID())
 
 //----------------------------------------------------------------------------------------
 nsFileSpecImpl::nsFileSpecImpl()
@@ -747,8 +732,7 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
   if (!it)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-  nsISupports* inner = outer ? it->GetInner() : it;
-  nsresult rv = inner->QueryInterface(aIID, aIFileSpec);
+  nsresult rv = it->QueryInterface(aIID, aIFileSpec);
   if (NS_FAILED(rv)) {
     delete it;
     return rv;
