@@ -118,8 +118,8 @@ nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char
     char2 = 'a';
     return eCompatibility_Standard;
   } else {
-    char1 = '%';
-    char2 = '%';
+    char1 = 'W';
+    char2 = 'w';
     return eCompatibility_NavQuirks;
   }
 }
@@ -150,7 +150,7 @@ nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFra
   if (eCompatibility_Standard == mode) {
     return ((char1Width + char2Width) / 2) + 1;
   } else {
-    return char1Width;
+    return (char1Width + char2Width) / 2;
   }
 }  
   
@@ -317,7 +317,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     }
 //    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
 	  if (!aHeightExplicit) { 
-      PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
+      PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(*aPresContext, p2t, aRowHeight));
       aDesiredSize.height += vPadding;
       aMinSize.height += vPadding;
     }
