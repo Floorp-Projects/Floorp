@@ -96,13 +96,12 @@ var personalToolbarObserver = {
       //if (!isBookmark(uri)) 
       //  return;
 
-      
       var title = aEvent.target.value;
       var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
 
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
-      flavourList["text/x-moz-url"] = { width: 2, data: homepage + " " + "[ TEMP TITLE ]" };
+      flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + "[ TEMP TITLE ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: uri };
       return flavourList;
@@ -115,7 +114,9 @@ var personalToolbarObserver = {
         return false;
         
       var element = aData.data.data;
+      var dropElement = aEvent.target.id;
       var elementRes = RDFUtils.getResource(element);
+      var dropElementRes = RDFUtils.getResource(dropElement);
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
       
       var childDB = document.getElementById("innermostBox").database;
@@ -123,9 +124,8 @@ var personalToolbarObserver = {
                                                              "nsIRDFContainer");
       rdfContainer.Init(childDB, personalToolbarRes);
       
-      var newIndex = 1; // XXX need .offset* to figure out where to drop element
-      var dropIndex = rdfContainer.IndexOf(elementRes);
-      if (dropIndex > 0) 
+      var elementIsOnToolbar = rdfContainer.IndexOf(elementRes);
+      if (elementIsOnToolbar > 0) 
         rdfContainer.RemoveElement(elementRes, true);
       else if (dropIndex == -1)
         {
@@ -145,7 +145,39 @@ var personalToolbarObserver = {
                          gRDFService.GetLiteral(linkTitle),
                          true);
         }
-      rdfContainer.InsertElementAt(elementRes, newIndex, true);
+      var dropIndex = rdfContainer.IndexOf(dropElementRes);
+      // determine the drop position
+      var dropPosition = this.determineDropPosition(aEvent);
+      switch (dropPosition) {
+      case -1:
+        rdfContainer.InsertElementAt(elementRes, dropIndex, true);
+        break;
+      case 0:
+        // do something here to drop into subfolders
+        var childContainer = nsJSComponentManager.createInstance("component://netscape/rdf/container",
+                                                                 "nsIRDFContainer");
+        childContainer.Init(childDB, dropElementRes);
+        childContainer.AppendElement(elementRes);
+        break;
+      case 1:
+      default:
+        rdfContainer.InsertElementAt(elementRes, dropIndex+1, true);
+        break;
+      }  
+    },
+  
+  mCurrentDragOverButton: null,
+  mCurrentDragPosition: null,
+  
+  onDragExit: function (aEvent, aDragSession)
+    {
+      if (this.mCurrentDragOverButton)
+        {
+          this.mCurrentDragOverButton.removeAttribute("dragover-left");
+          this.mCurrentDragOverButton.removeAttribute("dragover-right");
+          this.mCurrentDragOverButton.removeAttribute("dragover-top");
+          this.mCurrentDragOverButton.removeAttribute("open");
+        }
     },
   
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -153,9 +185,41 @@ var personalToolbarObserver = {
       // temporary
       if (!isPToolbarDNDEnabled())
         return false;
-        
-      var toolbar = document.getElementById("PersonalToolbar");
-      toolbar.setAttribute("dd-triggerrepaint", 0);
+
+      var dropPosition = this.determineDropPosition(aEvent);
+      
+      if (this.mCurrentDragOverButton != aEvent.target ||
+          (this.mCurrentDragOverButton == aEvent.target && 
+           this.mCurrentDragPosition != dropPosition)) 
+        {
+          if (this.mCurrentDragOverButton)
+            {
+              this.mCurrentDragOverButton.removeAttribute("dragover-left");
+              this.mCurrentDragOverButton.removeAttribute("dragover-right");
+              this.mCurrentDragOverButton.removeAttribute("dragover-top");
+              this.mCurrentDragOverButton.removeAttribute("open");
+            }
+          this.mCurrentDragOverButton = aEvent.target;
+          this.mCurrentDragPosition = dropPosition;
+        }
+      
+      switch (dropPosition) 
+        {
+          case -1: 
+            aEvent.target.setAttribute("dragover-left", "true");
+            break;
+          case 1:
+            aEvent.target.setAttribute("dragover-right", "true");
+            break;
+          case 0:
+          default:
+            if (aEvent.target.getAttribute("container") == "true") {
+              aEvent.target.setAttribute("dragover-top", "true");
+              //cant open a menu during a drag! suck!
+              //aEvent.target.setAttribute("open", "true");
+            }
+            break;
+        }
     },
 
   getSupportedFlavours: function ()
@@ -168,6 +232,32 @@ var personalToolbarObserver = {
       flavourList["moz/toolbaritem"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
       return flavourList;
+    },
+
+  determineDropPosition: function (aEvent)
+    {
+      var overButton = aEvent.target;
+      var overButtonBoxObject = overButton.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
+
+      if (aEvent.clientX < (overButtonBoxObject.x + overButtonBoxObject.width/3)) 
+        {
+          if (aEvent.clientY > overButtonBoxObject.y && 
+              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
+            return -1;
+        }
+      else if (aEvent.clientX > (overButtonBoxObject.x + 2*(overButtonBoxObject.width/3))) 
+        {
+          if (aEvent.clientY > overButtonBoxObject.y && 
+              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height) 
+            return 1;
+        }
+      else if (aEvent.clientX > (overButtonBoxObject.x + overButtonBoxObject.width/3) &&
+               aEvent.clientX < ((overButtonBoxObject.x + 2*(overButtonBoxObject.width/3)))) 
+        {
+          if (aEvent.clientY > overButtonBoxObject.y && 
+              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height) 
+            return 0;
+        }              
     },
 }; 
 
