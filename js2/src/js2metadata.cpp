@@ -33,10 +33,7 @@
 
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 
@@ -622,7 +619,7 @@ namespace MetaData {
                 if (!superClass->complete || superClass->final)
                     reportError(Exception::definitionError, "Illegal inheritance", p->pos);
                 JS2Object *proto = NULL;
-                bool final;
+                bool final = false;
                 switch (a->memberMod) {
                 case Attribute::NoModifier: 
                     final = false; 
@@ -793,7 +790,7 @@ namespace MetaData {
 */
             {
                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-                Reference *v;
+                Reference *v = NULL;
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *vb = vs->bindings;
@@ -1299,7 +1296,6 @@ namespace MetaData {
         case ExprNode::identifier:
             {
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-                CompoundAttribute *ca = NULL;
                 switch (name.tokenKind) {
                 case Token::Public:
                     return;
@@ -1680,7 +1676,7 @@ namespace MetaData {
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
         js2val retval;
-        uint8 *savePC;
+        uint8 *savePC = NULL;
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
@@ -1962,10 +1958,10 @@ doUnary:
             {
                 NumUnitExprNode *n = checked_cast<NumUnitExprNode *>(p);
                 if (n->str == L"UL")
-                    bCon->addUInt64(n->num, p->pos);
+                    bCon->addUInt64((uint64)(n->num), p->pos);
                 else
                     if (n->str == L"L")
-                        bCon->addInt64(n->num, p->pos);
+                        bCon->addInt64((uint64)(n->num), p->pos);
                     else
                         reportError(Exception::badValueError, "Unrecognized unit", p->pos);
             }
@@ -2131,7 +2127,7 @@ doUnary:
             break;
         case ExprNode::arrayLiteral:
             {
-                uint32 argCount = 0;
+                int32 argCount = 0;
                 PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
                 ExprPairList *e = plen->pairs;
                 while (e) {
@@ -2143,12 +2139,12 @@ doUnary:
                     e = e->next;
                 }
                 bCon->emitOp(eNewArray, p->pos, -argCount + 1);    // pop argCount args and push a new array
-                bCon->addShort(argCount);
+                bCon->addShort((uint16)argCount);
             }
             break;
         case ExprNode::objectLiteral:
             {
-                uint32 argCount = 0;
+                int32 argCount = 0;
                 PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
                 ExprPairList *e = plen->pairs;
                 while (e) {
@@ -2172,7 +2168,7 @@ doUnary:
                     e = e->next;
                 }
                 bCon->emitOp(eNewObject, p->pos, -argCount + 1);    // pop argCount args and push a new object
-                bCon->addShort(argCount);
+                bCon->addShort((uint16)argCount);
             }
             break;
         case ExprNode::Typeof:
@@ -2732,12 +2728,12 @@ doUnary:
         return result;
     }
 
-    static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    static js2val Object_toString(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
     {
         return STRING_TO_JS2VAL(meta->engine->object_StringAtom);
     }
     
-    static js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    static js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
     {
         float64 d = meta->toFloat64(argv[0]);
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
@@ -2994,7 +2990,7 @@ doUnary:
         return false;   // 'None'
     }
 
-    void DynamicInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
+    void DynamicInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
     {
         const DynamicPropertyMap::value_type e(*name, newValue);
         dynamicProperties.insert(e);
@@ -3013,7 +3009,7 @@ doUnary:
 
         char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
-        uint32 index = JS2Engine::toUInt32(f);
+        uint32 index = JS2Engine::float64toUInt32(f);
 
         if (index == f) {
             uint32 length = getLength(meta, this);
@@ -3102,7 +3098,7 @@ doUnary:
     }
 
     // Write a value to the static member
-    bool JS2Metadata::writeStaticMember(StaticMember *m, js2val newValue, Phase phase)
+    bool JS2Metadata::writeStaticMember(StaticMember *m, js2val newValue, Phase /* phase */) // phase not used?
     {
         if (m == NULL)
             return false;   // 'None'
@@ -3437,7 +3433,7 @@ deleteClassProperty:
         }
     }
 
-    bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result)
+    bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind * /* lookupKind */, bool *result)
     {
         ASSERT(container && ((container->kind == DynamicInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
@@ -3494,7 +3490,7 @@ deleteClassProperty:
 
     // Find a binding that matches the multiname and access.
     // It's an error if more than one such binding exists.
-    StaticMember *JS2Metadata::findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase)
+    StaticMember *JS2Metadata::findFlatMember(Frame *container, Multiname *multiname, Access access, Phase /* phase */)
     {
         StaticMember *found = NULL;
         StaticBindingIterator b, end;
@@ -3530,7 +3526,7 @@ deleteClassProperty:
 
     // Find the multiname in the class - either in the static bindings (first) or
     // in the instance bindings. If not there, look in the super class.
-    bool JS2Metadata::findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result)
+    bool JS2Metadata::findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase /* phase */, MemberDescriptor *result)
     {
         JS2Class *s = c;
         while (s) {
@@ -3841,14 +3837,14 @@ deleteClassProperty:
         }
         if (JS2VAL_IS_FLOAT(x)) {
             float64 f = *JS2VAL_TO_FLOAT(x);
-            return toInt32(f);
+            return JS2Engine::float64toInt32(f);
         }
         if (JS2VAL_IS_DOUBLE(x)) {
             float64 d = *JS2VAL_TO_DOUBLE(x);
-            return toInt32(d);
+            return JS2Engine::float64toInt32(d);
         }
         float64 d = convertValueToDouble(x);
-        return toInt32(d);
+        return JS2Engine::float64toInt32(d);
     }
 
     // Save off info about the current compilation and begin a
@@ -4094,7 +4090,7 @@ deleteClassProperty:
     {
         if (temps == NULL)
             temps = new std::vector<js2val>;
-        uint16 result = temps->size();
+        uint16 result = (uint16)(temps->size());
         temps->push_back(JS2VAL_VOID);
         return result;
     }
@@ -4309,7 +4305,7 @@ deleteClassProperty:
         // make sure that the thing is 16-byte aligned
         if (s & 0xF) s += 16 - (s & 0xF);
         ASSERT(s <= 0x7FFFFFFF);
-        void *p = pond.allocFromPond((int32)s);
+        void *p = pond.allocFromPond(s);
         ASSERT(((ptrdiff_t)p & 0xF) == 0);
         return p;
     }
@@ -4371,7 +4367,7 @@ deleteClassProperty:
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(int32 sz)
+    void *Pond::allocFromPond(size_t sz)
     {
         // Try scannning the free list...
         PondScum *p = freeHeader;

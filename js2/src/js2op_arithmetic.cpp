@@ -393,7 +393,7 @@
                         float64 y = meta->toFloat64(b);
                         float64 z = x + y;
                         if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
-                            pushFloat(z);
+                            pushFloat((float32)z);
                         else
                             pushNumber(z);
                     }
@@ -460,7 +460,7 @@
                     float64 y = meta->toFloat64(b);
                     float64 z = x - y;
                     if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
-                        pushFloat(z);
+                        pushFloat((float32)z);
                     else
                         pushNumber(z);
                 }
@@ -526,7 +526,7 @@
                     float64 y = meta->toFloat64(b);
                     float64 z = x * y;
                     if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
-                        pushFloat(z);
+                        pushFloat((float32)z);
                     else
                         pushNumber(z);
                 }
@@ -592,7 +592,7 @@
                     float64 y = meta->toFloat64(b);
                     float64 z = x / y;
                     if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
-                        pushFloat(z);
+                        pushFloat((float32)z);
                     else
                         pushNumber(z);
                 }
@@ -665,7 +665,7 @@
 #endif
                         z = fd::fmod(x, y);
                     if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
-                        pushFloat(z);
+                        pushFloat((float32)z);
                     else
                         pushNumber(z);
                 }

@@ -117,7 +117,7 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(int32 sz);
+    void *allocFromPond(size_t sz);
     void returnToPond(PondScum *p);
 
     void resetMarks();
@@ -435,7 +435,7 @@ public:
     std::vector<js2val> *temps;               // temporaries allocted in this frame
     uint16 allocateTemp();
 
-    virtual void instantiate(Environment *env)  { ASSERT(false); }
+    virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
 
     Frame *nextFrame;
     Frame *pluralFrame;                         // for a singular frame, this the plural frame from which it will be instantiated
@@ -655,8 +655,8 @@ private:
     bool buildNameList();
 
     const String **nameList;
-    int32 it;
-    int32 length;
+    uint32 it;
+    uint32 length;
 };
 
 // A METHODCLOSURE tuple describes an instance method with a bound this value.
@@ -674,18 +674,18 @@ public:
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
 class Reference {
 public:
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)              { ASSERT(false); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)             { ASSERT(false); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { ASSERT(false); }
-    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { ASSERT(false); }
-    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { ASSERT(false); }
+    virtual void emitReadBytecode(BytecodeContainer *, size_t)              { ASSERT(false); }
+    virtual void emitWriteBytecode(BytecodeContainer *, size_t)             { ASSERT(false); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *, size_t)     { ASSERT(false); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *, size_t)  { ASSERT(false); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *, size_t)         { ASSERT(false); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
+    virtual void emitPostIncBytecode(BytecodeContainer *, size_t)           { ASSERT(false); }
+    virtual void emitPostDecBytecode(BytecodeContainer *, size_t)           { ASSERT(false); }
+    virtual void emitPreIncBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }
+    virtual void emitPreDecBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }    
+    virtual void emitDeleteBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }    
 };
 
 class LexicalReference : public Reference {

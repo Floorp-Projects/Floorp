@@ -33,10 +33,7 @@
 */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 
@@ -106,7 +103,7 @@ namespace MetaData {
     { 
         adjustStack(op); 
         addByte((uint8)op); 
-        pcMap.push_back(MapEntry(mBuffer.size(), pos)); 
+        pcMap.push_back(MapEntry((uint16)mBuffer.size(), pos)); 
     }
 
     // insert the opcode, marking it's position in the pcmap and
@@ -115,7 +112,7 @@ namespace MetaData {
     {
         adjustStack(op, effect); 
         addByte((uint8)op); 
-        pcMap.push_back(std::pair<uint16, size_t>(mBuffer.size(), pos)); 
+        pcMap.push_back(std::pair<uint16, size_t>((uint16)mBuffer.size(), pos)); 
     }
 
     // Track the high-water mark for the stack 

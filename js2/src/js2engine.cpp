@@ -35,10 +35,7 @@
 /* JS2 Engine - */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 #include <algorithm>
@@ -181,7 +178,7 @@ namespace MetaData {
         } u;
 
         u.x = x;
-        uint8 hash = u.a[0] ^ u.a[1] ^ u.a[2] ^ u.a[3] ^ u.a[4] ^ u.a[5] ^  u.a[6] ^ u.a[7];
+        uint8 hash = (uint8)(u.a[0] ^ u.a[1] ^ u.a[2] ^ u.a[3] ^ u.a[4] ^ u.a[5] ^  u.a[6] ^ u.a[7]);
         if (float64Table[hash]) {
             if (*float64Table[hash] == x)
                 return float64Table[hash];
@@ -297,7 +294,7 @@ namespace MetaData {
         return i;
     }
 
-    int32 JS2Engine::toInt32(float64 d)
+    int32 JS2Engine::float64toInt32(float64 d)
     {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
             return 0;
@@ -309,7 +306,7 @@ namespace MetaData {
             return (int32)(d);    
     }
 
-    uint32 JS2Engine::toUInt32(float64 d)
+    uint32 JS2Engine::float64toUInt32(float64 d)
     {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
             return 0;
@@ -321,7 +318,7 @@ namespace MetaData {
         return (uint32)(d);    
     }
 
-    uint16 JS2Engine::toUInt16(float64 d)
+    uint16 JS2Engine::float64toUInt16(float64 d)
     {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
             return 0;
@@ -338,7 +335,7 @@ namespace MetaData {
     {
         ASSERT(sp < (execStack + MAX_EXEC_STACK));
         js2val *p = ++sp;
-        for (uint32 i = 0; i < count; i++) {
+        for (int32 i = 0; i < count; i++) {
             *p = p[-1];
             --p;
         }
@@ -536,14 +533,14 @@ namespace MetaData {
     // Return the mapped source location for the current pc
     size_t JS2Engine::errorPos()
     {
-        return bCon->getPosition(pc - bCon->getCodeStart()); 
+        return bCon->getPosition((uint16)(pc - bCon->getCodeStart())); 
     }
 
     // XXX Default construction of an instance of the class
     // that is the value at the top of the execution stack
-    js2val JS2Engine::defaultConstructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    js2val JS2Engine::defaultConstructor(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
     {
-        js2val v = meta->engine->pop();
+        js2val v = meta->engine->top();
         ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
         JS2Object *obj = JS2VAL_TO_OBJECT(v);
         ASSERT(obj->kind == ClassKind);

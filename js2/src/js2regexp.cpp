@@ -32,10 +32,7 @@
  */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 #include <algorithm>
@@ -183,7 +180,7 @@ namespace MetaData {
         return result;
     }
 
-    js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    js2val RegExp_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
     {
         // XXX Change constructors to take js2val pointer for the result (which would be an already
         // rooted pointer).

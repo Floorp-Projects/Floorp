@@ -165,13 +165,13 @@ extern int64 JSLL_Zero();
 #define JSLL_L2D(d, l)        ((d) = (float64)(l))
 #ifdef _WIN32
 #define JSLL_UL2D(d, ul) {              \
-    if (ul > JSLL_MAXINT) {             \
+    if (ul > (uint64)JSLL_MAXINT) {     \
         int64 _l2 = ul - JSLL_MAXINT;   \
         JSLL_L2D(d, _l2);               \
         (d) += JSLL_MININT;             \
     }                                   \
     else                                \
-        (d) = (int64)ul;                \
+        (d) = (float64)(int64)ul;       \
 }
 #else
 #define JSLL_UL2D(d, ul)      ((d) = (float64)(ul))

@@ -32,10 +32,7 @@
  */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 #include <algorithm>
@@ -104,7 +101,7 @@ static float64 firstDayOfMonth[2][12] = {
 #define Day(t)                          floor((t) / msPerDay)
 #define TIMECLIP(d)                     ((JSDOUBLE_IS_FINITE(d) \
 		                            && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                                                ? meta->engine->toInt32(d + (+0.)) : nan)
+                                                ? JS2Engine::float64toInt32(d + (+0.)) : nan)
 #define LocalTime(t)                    ((t) + LocalTZA + DaylightSavingTA(t))
 #define DayFromMonth(m, leap)           firstDayOfMonth[leap][(int32)m];
 #define DayFromYear(y)                  (365 * ((y)-1970) + fd::floor(((y)-1969)/4.0)            \
@@ -393,7 +390,7 @@ static js2val Date_makeTime(JS2Metadata *meta, const js2val thisValue, js2val *a
             *date = nan;
             return meta->engine->nanValue;
         }
-        args[i] = meta->engine->allocNumber(toInt32(f));
+        args[i] = (float64)(JS2Engine::float64toInt32(f));
     }
 
     if (local)
@@ -459,7 +456,7 @@ static js2val Date_makeDate(JS2Metadata *meta, const js2val thisValue, js2val *a
             *date = nan;
             return meta->engine->nanValue;
         }
-        args[i] = meta->engine->allocNumber(toInt32(f));
+        args[i] = (float64)(JS2Engine::float64toInt32(f));
     }
 
     /* return NaN if date is NaN and we're not setting the year,
@@ -853,7 +850,7 @@ static js2val Date_format(JS2Metadata *meta, float64 date, formatspec format)
 
 
 #define MAXARGS        7
-js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta->dateClass));
     DateInstance *thisInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thatValue));
@@ -898,7 +895,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 		        thisInst->ms = nan;
                         return thatValue;
 		    }
-		    array[loop] = meta->engine->allocNumber(meta->engine->toInt32(double_arg));
+                    array[loop] = meta->engine->allocNumber(JS2Engine::float64toInt32(double_arg));
 	        } else {
                     if (loop == 2) {
                         array[loop] = 1; /* Default the date argument to 1. */
@@ -1292,7 +1289,7 @@ static js2val Date_setYear(JS2Metadata *meta, const js2val thisValue, js2val arg
         return meta->engine->allocNumber(*date);
     }
 
-    year = meta->engine->toInt32(year);
+    year = JS2Engine::float64toInt32(year);
 
     if (!JSDOUBLE_IS_FINITE(result)) {
 	t = +0.0;

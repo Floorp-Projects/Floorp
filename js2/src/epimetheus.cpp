@@ -22,8 +22,7 @@
 //
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
- #pragma warning(disable: 4786)
+#include "msvc_pragma.h"
 #endif
 
 #define EXITCODE_RUNTIME_ERROR 3
@@ -202,7 +201,7 @@ static bool processArgs(int argc, char **argv, int *result)
 
 using namespace MetaData;
 
-js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+js2val print(JS2Metadata * /* meta */, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     for (uint32 i = 0; i < argc; i++) {
         stdOut << *metadata->toString(argv[i]) << '\n';
@@ -210,7 +209,7 @@ js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 ar
     return JS2VAL_UNDEFINED;
 }
 
-js2val load(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     // Set the environment to global object and system frame so that the
     // load happens into the top frame.

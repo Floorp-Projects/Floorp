@@ -38,8 +38,14 @@
 
 #ifdef _WIN32
  // Turn off warnings about identifiers too long in browser information
- #pragma warning(disable: 4786)
+#pragma warning(disable: 4786)
+#pragma warning(disable: 4711)
+#pragma warning(disable: 4710)
+// Turn off 'failure to generate copy constructor/assignment operator' warning
+#pragma warning(disable: 4610)
+#pragma warning(disable: 4512)
 #endif
+
 
 #define MAX_UINT16 (65535)
 

@@ -36,10 +36,7 @@
 
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 namespace JavaScript {
@@ -162,12 +159,12 @@ public:
     // Use the pc map in the current bytecode container to get a source offset
     size_t errorPos();
 
-    static int32 toInt32(float64 f);
-    static uint32 toUInt32(float64 f);
-    static uint16 toUInt16(float64 f);
+    static int32 float64toInt32(float64 f);
+    static uint32 float64toUInt32(float64 f);
+    static uint16 float64toUInt16(float64 f);
 
 
-    js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
+    js2val assignmentConversion(js2val val, JS2Class * /*type*/)     { return val; } // XXX s'more code, please
 
     int64 checkInteger(js2val x);
 
@@ -187,7 +184,7 @@ public:
     js2val allocString(const String &s)       { return allocString(&s); }
     js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
     String *allocStringPtr(const String *s);
-    String *allocStringPtr(const char *s)     { return allocStringPtr(&widenCString(s)); }
+    String *allocStringPtr(const char *s)     { String &str = widenCString(s); return allocStringPtr(&str); }
 
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }

@@ -33,10 +33,7 @@
 */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 #ifndef bytecodecontainer_h___
@@ -80,7 +77,7 @@ public:
     uint32 mLocation;
 };
 
-#define NotALabel (-1)
+#define NotALabel (BytecodeContainer::LabelID)(-1)
 
 class Multiname;
 class Frame;
@@ -135,10 +132,10 @@ public:
 
 
     // Maintain list of associated pointers, so as to keep the objects safe across gc's
-    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
-    void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort(mFrameList.size() - 1); }
+    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort((uint16)(mMultinameList.size() - 1)); }
+    void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort((uint16)(mFrameList.size() - 1)); }
     void saveFrame(Frame *f)                { mFrameList.push_back(f); }
-    void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort(mRegExpList.size() - 1); }
+    void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort((uint16)(mRegExpList.size() - 1)); }
 
     void addOffset(int32 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
     void setOffset(uint32 index, int32 v)   { *((int32 *)(mBuffer.begin() + index)) = v; }

@@ -32,10 +32,7 @@
  */
 
 #ifdef _WIN32
- // Turn off warnings about identifiers too long in browser information
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4711)
-#pragma warning(disable: 4710)
+#include "msvc_pragma.h"
 #endif
 
 #include <algorithm>
@@ -77,7 +74,7 @@ js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val
     String *resultStr = meta->engine->allocStringPtr((String *)NULL);   // can't use Empty_StringAtom; because we're modifying this below
     resultStr->reserve(argc);
     for (uint32 i = 0; i < argc; i++)
-        *resultStr += (char16)(meta->engine->toUInt16(argv[i]));
+        *resultStr += (char16)(JS2Engine::float64toUInt16(argv[i]));
 
     return STRING_TO_JS2VAL(resultStr);
 }
@@ -402,9 +399,9 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     js2val limitV = (argc > 1) ? argv[1] : JS2VAL_UNDEFINED;
         
     if (JS2VAL_IS_UNDEFINED(limitV))
-        lim = toUInt32(two32minus1);
+        lim = JS2Engine::float64toUInt32(two32minus1);
     else
-        lim = toUInt32(limitV);
+        lim = toUInt32(meta->toInteger(limitV));
 
     uint32 s = S->size();
     uint32 p = 0;
@@ -581,7 +578,7 @@ static js2val String_lastIndexOf(JS2Metadata *meta, const js2val thisValue, js2v
     return meta->engine->allocNumber((float64)pos);
 }
 
-static js2val String_localeCompare(JS2Metadata *meta, const js2val /*thisValue*/, js2val * /*argv*/, uint32 /*argc*/)
+static js2val String_localeCompare(JS2Metadata * /* meta */, const js2val /*thisValue*/, js2val * /*argv*/, uint32 /*argc*/)
 {
     return JS2VAL_UNDEFINED;
 }
@@ -716,7 +713,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
             if (!JSDOUBLE_IS_FINITE(farg0))
                 start = sourceLength;
             else {
-                start = JS2Engine::toUInt32(farg0);
+                start = JS2Engine::float64toUInt32(farg0);
                 if (start > sourceLength)
                     start = sourceLength;
             }
@@ -733,7 +730,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
             if (!JSDOUBLE_IS_FINITE(farg1))
                 end = sourceLength;
             else {
-                end = JS2Engine::toUInt32(farg1);
+                end = JS2Engine::float64toUInt32(farg1);
                 if (end > sourceLength)
                     end = sourceLength;
             }

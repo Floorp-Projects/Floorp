@@ -213,7 +213,7 @@
             if (obj->kind != ClassKind)
                  meta->reportError(Exception::badValueError, "Type expected", errorPos());
             JS2Class *isClass = checked_cast<JS2Class *>(obj);
-            push(c == obj);
+            push(c == isClass);
         }
         break;
 
