@@ -889,6 +889,7 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   popped->identity = PR_INVALID_IO_LAYER;
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo *)popped->secret;
   NS_RELEASE(infoObject);
+  popped->dtor(popped);
   
   return status;
 }
@@ -2242,8 +2243,13 @@ nsSSLIOLayerAddToSocket(const char* host,
     goto loser;
   }
 
-
   infoObject->SetFileDescPtr(sslSock);
+
+  rv = nsSSLIOLayerSetOptions(sslSock, forTLSStepUp, proxyHost, host, port,
+                              infoObject);
+
+  if (NS_FAILED(rv))
+    goto loser;
 
   /* Now, layer ourselves on top of the SSL socket... */
   layer = PR_CreateIOLayerStub(nsSSLIOLayerIdentity,
@@ -2261,15 +2267,6 @@ nsSSLIOLayerAddToSocket(const char* host,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
 
-  /* This is rather confusing, but now, "layer" points to the SSL socket,
-     and that's what we should use for manipulating it. */
-
-  rv = nsSSLIOLayerSetOptions(layer, forTLSStepUp, proxyHost, host, port,
-                              infoObject);
-
-  if (NS_FAILED(rv))
-    goto loser;
-
   // We are going use a clear connection first //
   if (forTLSStepUp || proxyHost) {
     infoObject->SetFirstWrite(PR_FALSE);
@@ -2278,6 +2275,8 @@ nsSSLIOLayerAddToSocket(const char* host,
   return NS_OK;
  loser:
   NS_IF_RELEASE(infoObject);
-  PR_FREEIF(layer);
+  if (layer) {
+    layer->dtor(layer);
+  }
   return NS_ERROR_FAILURE;
 }
