@@ -48,7 +48,7 @@
 |           class implements.                                                  |
 ------------------------------------------------------------------------------*/
 
-#ifdef NS_DEBUG
+#if defined( NS_DEBUG ) && !defined( XP_MAC )
     #define DEBUG_PRINTF PR_fprintf
 #else
     #define DEBUG_PRINTF (void)
