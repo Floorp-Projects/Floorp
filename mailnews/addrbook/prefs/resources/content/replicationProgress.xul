@@ -46,8 +46,8 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="replicationProgress"
-        height="130"
-        width="300"
+        style="width: 36em;"
+        class="dialog"
         onload="onLoad()"
         onclose="return DoReplicationClose()">
 
