@@ -2313,10 +2313,9 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	}
 	if( URL_s->server_date && expires )
 	{
-		/* If the cookie has expired, don't waste any more time. */
 		if( expires < URL_s->server_date )
 		{
-			return;
+			gmtCookieExpires=1;
 		}
 		else
 		{
