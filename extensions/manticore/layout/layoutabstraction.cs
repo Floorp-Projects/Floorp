@@ -68,9 +68,12 @@ namespace Silverstone.Manticore.LayoutAbstraction
     public void SwitchLayoutEngine(String id)
     {
       AxHost host = null;
+      String url = "about:blank";
+
       switch (id) {
       case "trident":
         if (gecko != null) {
+		  url = gecko.LocationURL;
           this.Controls.Remove(gecko as AxHost);
           gecko = null;
         }
@@ -83,6 +86,7 @@ namespace Silverstone.Manticore.LayoutAbstraction
         break;
       default:
         if (trident != null) {
+		  url = trident.LocationURL;
           this.Controls.Remove(trident as AxHost);
           trident = null;
         }
@@ -102,6 +106,8 @@ namespace Silverstone.Manticore.LayoutAbstraction
         host.EndInit();
         this.Controls.Add(host);
       }
+
+      LoadURL(url, false);
     }
 
     public void LoadURL(String url, Boolean bypassCache)
