@@ -65,7 +65,7 @@
 //file and directory name length maximums
 #ifdef XP_MAC
 #define MAX_FILENAME 31
-#elif defined (XP_PC)
+#elif defined (XP_WIN) || defined(XP_OS2)
 #define MAX_FILENAME 128
 #else
 #define MAX_FILENAME 1024
@@ -110,7 +110,7 @@ class nsInstallInfo
     nsCOMPtr<nsIXULChromeRegistry> mChromeRegistry;
 };
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #define FILESEP '\\'
 #elif defined XP_MAC
 #define FILESEP ':'

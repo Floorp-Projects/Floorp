@@ -89,7 +89,7 @@
 #include <sys/utsname.h>
 #endif /* XP_UNIX */
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <windows.h>
 #endif
 
@@ -278,9 +278,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
     // which is not yet available in a wizard install
 
     // Gather platform.
-#if defined(XP_OS2)
-    mInstallPlatform = "OS/2";
-#elif defined(XP_PC)
+#if defined(XP_WIN)
     mInstallPlatform = "Windows";
 #elif defined(XP_MAC) || defined(XP_MACOSX)
     mInstallPlatform = "Macintosh";
@@ -288,27 +286,14 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
     mInstallPlatform = "X11";
 #elif defined(XP_BEOS)
     mInstallPlatform = "BeOS";
+#elif defined(XP_OS2)
+    mInstallPlatform = "OS/2";
 #endif
 
     mInstallPlatform += "; ";
 
     // Gather OS/CPU.
-#if defined(XP_OS2)
-    ULONG os2ver = 0;
-    DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
-                    &os2ver, sizeof(os2ver));
-    if (os2ver == 11)
-        mInstallPlatform += "2.11";
-    else if (os2ver == 30)
-        mInstallPlatform += "Warp 3";
-    else if (os2ver == 40)
-        mInstallPlatform += "Warp 4";
-    else if (os2ver == 45)
-        mInstallPlatform += "Warp 4.5";
-    else
-        mInstallPlatform += "Warp ???";
-
-#elif defined(XP_PC)
+#if defined(XP_WIN)
     OSVERSIONINFO info = { sizeof OSVERSIONINFO };
     if (GetVersionEx(&info)) {
         if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
@@ -346,6 +331,20 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
     }
 #elif defined (XP_MAC)
     mInstallPlatform += "PPC";
+#elif defined(XP_OS2)
+    ULONG os2ver = 0;
+    DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
+                    &os2ver, sizeof(os2ver));
+    if (os2ver == 11)
+        mInstallPlatform += "2.11";
+    else if (os2ver == 30)
+        mInstallPlatform += "Warp 3";
+    else if (os2ver == 40)
+        mInstallPlatform += "Warp 4";
+    else if (os2ver == 45)
+        mInstallPlatform += "Warp 4.5";
+    else
+        mInstallPlatform += "Warp ???";
 #endif
   }
 
