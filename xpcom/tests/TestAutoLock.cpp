@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 /*
@@ -32,7 +33,7 @@
 PRLock* gLock;
 int gCount;
 
-static void run(void* arg)
+static void PR_CALLBACK run(void* arg)
 {
     for (int i = 0; i < 1000000; ++i) {
         nsAutoLock guard(gLock);

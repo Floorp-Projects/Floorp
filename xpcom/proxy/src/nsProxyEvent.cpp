@@ -19,6 +19,17 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 
 
@@ -42,10 +53,10 @@
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
-static void* EventHandler(PLEvent *self);
-static void DestroyHandler(PLEvent *self);
-static void* CompletedEventHandler(PLEvent *self);
-static void CompletedDestroyHandler(PLEvent *self) ;
+static void* PR_CALLBACK EventHandler(PLEvent *self);
+static void  PR_CALLBACK DestroyHandler(PLEvent *self);
+static void* PR_CALLBACK CompletedEventHandler(PLEvent *self);
+static void PR_CALLBACK CompletedDestroyHandler(PLEvent *self) ;
 
 nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
                                               nsXPTMethodInfo *methodInfo,

@@ -124,18 +124,18 @@ nsString::nsString(const nsString& aString) {
  * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 nsString::nsString(const nsSubsumeStr& aSubsumeStr)  {
   Initialize(*this,eTwoByte);
 
-  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
+  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX and VAC++ compilers
   Subsume(*this,temp);
 #else
 nsString::nsString(nsSubsumeStr& aSubsumeStr)  {
   Initialize(*this,eTwoByte);
 
   Subsume(*this,aSubsumeStr);
-#endif /* AIX */
+#endif /* AIX  || XP_OS2_VACPP */
 }
 
 /**
@@ -1081,14 +1081,14 @@ nsString& nsString::Assign(PRUnichar aChar) {
  * @param 
  * @return
  */
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
-  nsSubsumeStr temp(aSubsumeString);  // a temp is needed for the AIX compiler
+  nsSubsumeStr temp(aSubsumeString);  // a temp is needed for the AIX and VAC++ compilers
   Subsume(*this,temp);
 #else
   nsString& nsString::operator=(nsSubsumeStr& aSubsumeString) {
   Subsume(*this,aSubsumeString);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
   return *this;
 }
 #endif
@@ -2390,14 +2390,14 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
  * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStr) :nsString() {
-  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
+  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX and VAC++ compilers
   Subsume(*this,temp);
 #else
 nsAutoString::nsAutoString( nsSubsumeStr& aSubsumeStr) :nsString() {
   Subsume(*this,aSubsumeStr);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
 }
 
 /**

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #define NS_IMPL_IDS
@@ -30,7 +31,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include <fcntl.h>
-#ifdef NS_WIN32
+#if defined(NS_WIN32) || defined(XP_OS2_VACPP)
 #include <io.h>
 #else
 #include <unistd.h>

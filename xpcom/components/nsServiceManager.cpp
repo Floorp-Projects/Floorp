@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #include "nsIServiceManager.h"
@@ -202,7 +203,7 @@ protected:
     PRMonitor* mMonitor;
 };
 
-static PRBool
+static PRBool PR_CALLBACK
 DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
     nsServiceEntry* entry = (nsServiceEntry*)aData;

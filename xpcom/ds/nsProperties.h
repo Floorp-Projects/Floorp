@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #ifndef nsProperties_h___
@@ -41,7 +42,7 @@ public:
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
+  static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
 
 };
 
