@@ -46,7 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
-
+#include "nsIFrameManager.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
@@ -111,6 +111,8 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
+  void HandleFixedBackground(nsIPresContext* aPresContext, nsIPresShell *aPresShell, PRBool aIsFixed);
 
   nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
   nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
@@ -510,7 +512,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
   nsCOMPtr<nsIStyleContext> canvasContext;
   parentContext = getter_AddRefs(aContext->GetParent());
   canvasContext = getter_AddRefs(parentContext->GetParent());
-
+  PRBool bFixedBackground = PR_FALSE;
   const nsStyleColor* parentStyleColor;
   const nsStyleColor* styleColor;
   styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
@@ -552,6 +554,9 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     canvasStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
     canvasStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
 
+    bFixedBackground = 
+      canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
+
     // Reset the BODY's and HTML's background to transparent and propagated-to-parent
     bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
     bodyStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
@@ -589,7 +594,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     }
   }
 
-
+  HandleFixedBackground(aPresContext, presShell, bFixedBackground);
 
   return NS_OK;
 }
@@ -602,6 +607,34 @@ BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
  
   fputs("Special BODY tag fixup rule\n", out);
   return NS_OK;
+}
+
+void BodyFixupRule::HandleFixedBackground(nsIPresContext* aPresContext, 
+                                          nsIPresShell *aPresShell, 
+                                          PRBool aIsFixed)
+{
+  // we have to tell the canvas' view if we want to bitblt on scroll or not
+  // - if we have a fixed background we cannot bitblt when we scroll,
+  //   otherewise we can
+  nsIView*      viewportView = nsnull;
+  nsIFrame*     canvasFrame = nsnull;
+
+  nsCOMPtr<nsIFrameManager> manager;
+  nsresult rv = aPresShell->GetFrameManager(getter_AddRefs(manager));
+  if (NS_SUCCEEDED(rv) && manager) {
+    manager->GetCanvasFrame(aPresContext, &canvasFrame);
+  }
+
+  if (canvasFrame) {
+    canvasFrame->GetView(aPresContext, (nsIView**)&viewportView);
+  }
+  if (viewportView) {
+    if (aIsFixed) {
+      viewportView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+    } else {
+      viewportView->ClearViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+    }
+  }
 }
 
 /******************************************************************************
