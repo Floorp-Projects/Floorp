@@ -3,3 +3,4 @@
 #
 
 nsIFileLocator.idl
+nsIWindowMediator.idl
