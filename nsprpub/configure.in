@@ -1247,6 +1247,10 @@ case "$target" in
         fi
     fi # GNU_CC
 
+    if test -n "$USE_STATIC_TLS"; then
+        AC_DEFINE(_PR_USE_STATIC_TLS)
+    fi
+
     if test "$OS_TARGET" = "WINNT"; then
         AC_DEFINE(WINNT)
     else
