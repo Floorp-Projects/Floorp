@@ -57,6 +57,7 @@ js1_4/Eval/eval-002.js
 js1_4/Eval/eval-003.js
 js1_5/Regress/regress-68498-003.js
 #Rhino compiled mode is limited by Java classfile size limitations
+js1_5/Regress/regress-80981.js
 js1_5/Regress/regress-89443.js
 js1_5/Regress/regress-90445.js
 #These negative tests fail to compile in SpiderMonkey, but succeed in Rhino
