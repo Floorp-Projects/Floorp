@@ -38,6 +38,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSContextStack.h"
+#include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 
 #if defined(OJI)
@@ -424,12 +425,26 @@ nsJSEnvironment::GetScriptingEnvironment()
 
 nsJSEnvironment::nsJSEnvironment()
 {
-	mRuntime = JS_Init(gGCSize);
-	
+  nsresult result;
+
+  NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &result);
+
+  // get the JSRuntime from the runtime svc, if possible
+  if (NS_SUCCEEDED(result)) {
+    result = rtsvc->GetRuntime(&mRuntime);
+    if (NS_FAILED(result) || !mRuntime) {
+      mRuntime = JS_NewRuntime(gGCSize);
+      if (NS_SUCCEEDED(result)) // got service, so set it back
+        rtsvc->SetRuntime(mRuntime);
+    }
+  } else {
+    mRuntime = JS_NewRuntime(gGCSize);
+  }
+  	
 #if defined(OJI)
 	// Initialize LiveConnect.
 	nsILiveConnectManager* manager = NULL;
-	nsresult result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+	result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
 		nsILiveConnectManager::GetIID(),
 		(nsISupports **)&manager);
 	
@@ -440,11 +455,17 @@ nsJSEnvironment::nsJSEnvironment()
 		result = nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
 	}
 #endif
+
 }
 
 nsJSEnvironment::~nsJSEnvironment()
 {
-	JS_Finish(mRuntime);
+  nsresult result;
+  NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &result);
+  if (NS_SUCCEEDED(result)) {
+    rtsvc->SetRuntime(0);
+  }
+	JS_DestroyRuntime(mRuntime);
 }
 
 nsIScriptContext* nsJSEnvironment::GetNewContext()
