@@ -359,7 +359,8 @@ function onOKCommand()
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = event;
     if (!event.isMutable)
-        event = originalEvent.clone();
+        // I will cut vlad for making me do this QI
+        event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
     // get values from the form and put them into the event
     // calIEvent properties
