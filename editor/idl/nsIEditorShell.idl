@@ -20,6 +20,7 @@
 #include "domstubs.idl"
 #include "nsIFileSpec.idl"
 #include "nsISupportsArray.idl"
+#include "nsIDocumentStateListener.idl"
 
 %{C++
 
@@ -57,6 +58,19 @@ interface nsIEditorShell : nsISupports
   void SetContentWindow(in nsIDOMWindow win);
   void SetWebShellWindow(in nsIDOMWindow win);
   void LoadUrl(in wstring url);
+  
+  /* Register a doc state listener. This gets added to a list of listeners
+     which are registered with the editor when that gets instantiated.
+     If the LoadUrl fails, this listener will not receive any notifcations.
+     If you call this after the editor has been instantiated, it calls through
+     to editor::AddDocumentStateListener().
+  */
+  void RegisterDocumentStateListener(in nsIDocumentStateListener docListener);
+  /* Unregister a listener.
+     If you call this after the editor has been instantiated, it calls through
+     to editor::RemoveDocumentStateListener().
+  */
+  void UnregisterDocumentStateListener(in nsIDocumentStateListener docListener);
   
   void Init();
   
