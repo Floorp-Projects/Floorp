@@ -7,9 +7,7 @@ pref-cache.dtd
 pref-charset.dtd
 pref-cookies.dtd
 pref-colors.dtd
-pref-editing.dtd
 pref-themes.dtd
-pref-composer.dtd
 pref-debug.dtd
 pref-download.dtd
 pref-fonts.dtd
@@ -20,7 +18,6 @@ pref-offline.dtd
 pref-policies.dtd
 pref-proxies.dtd
 pref-proxy-manual.dtd
-pref-publish.dtd
 pref-search.dtd
 pref-smart_browsing.dtd
 pref-smartupdate.dtd
