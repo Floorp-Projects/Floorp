@@ -89,7 +89,7 @@ void tstDrillerLevel(BrowserInfo *pInfo, IHTMLElementCollection *pCollection, in
 			}
 
 			CIPtr(IDispatch) cpDispColl;
-			cpElem->get_all(&cpDispColl);
+			hr = cpElem->get_all(&cpDispColl);
 			if (hr == S_OK)
 			{
 				CIPtr(IHTMLElementCollection) cpColl = cpDispColl;
