@@ -96,14 +96,13 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
     mSpaceManager(aSpaceManager),
     mBlockReflowState(aOuterReflowState),
     mBlockRS(nsnull),/* XXX temporary */
+    mMinLineHeight(0),
     mComputeMaxElementSize(aComputeMaxElementSize)
 {
   // Stash away some style data that we need
   aOuterReflowState->frame->GetStyleData(eStyleStruct_Text,
                                          (const nsStyleStruct*&) mStyleText);
   mTextAlign = mStyleText->mTextAlign;
-  mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
-                                                     aOuterReflowState->frame);
   mLineNumber = 0;
   mColumn = 0;
   mEndsInWhiteSpace = PR_TRUE;
@@ -511,8 +510,16 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   aSizeResult.width = width;
   aSizeResult.height = maxHeight;
   if (aMaxElementSize) {
-    aMaxElementSize->width = maxElementWidth;
-    aMaxElementSize->height = maxElementHeight;
+    if (psd->mNoWrap) {
+      // When we have a non-breakable span, it's max-element-size
+      // width is its entire width.
+      aMaxElementSize->width = width;
+      aMaxElementSize->height = maxHeight;
+    }
+    else {
+      aMaxElementSize->width = maxElementWidth;
+      aMaxElementSize->height = maxElementHeight;
+    }
   }
 
   mSpanDepth--;
