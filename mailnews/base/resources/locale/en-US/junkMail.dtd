@@ -9,7 +9,7 @@
 <!ENTITY level.accesskey "E">
 <!ENTITY move.label "Move incoming messages determined to be junk mail to:">
 <!ENTITY otherFolder.label "Other:">
-<!ENTITY junkFolderOn.label "&quot;Junk Mail&quot; folder on:">
+<!ENTITY junkFolderOn.label "&quot;Junk&quot; folder on:">
 <!ENTITY purge1.label "Automatically delete messages marked as junk mail after">
 <!ENTITY purge1.accesskey "u">
 <!ENTITY purge2.label "days">
