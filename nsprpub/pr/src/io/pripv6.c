@@ -149,6 +149,7 @@ static PRFileDesc* PR_CALLBACK Ipv6ToIpv4SocketAccept (
     PRFileDesc *newfd;
     PRFileDesc *newstack;
 	PRNetAddr tmp_ipv4addr;
+    PRNetAddr *addrlower = NULL;
 
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
@@ -161,13 +162,16 @@ static PRFileDesc* PR_CALLBACK Ipv6ToIpv4SocketAccept (
     }
     *newstack = *fd;  /* make a copy of the accepting layer */
 
-    newfd = (fd->lower->methods->accept)(fd->lower, &tmp_ipv4addr, timeout);
+    if (addr)
+        addrlower = &tmp_ipv4addr;
+    newfd = (fd->lower->methods->accept)(fd->lower, addrlower, timeout);
     if (NULL == newfd)
     {
         PR_DELETE(newstack);
         return NULL;
     }
-	_PR_ConvertToIpv6NetAddr(&tmp_ipv4addr, addr);
+    if (addr)
+        _PR_ConvertToIpv6NetAddr(&tmp_ipv4addr, addr);
 
     rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
     PR_ASSERT(PR_SUCCESS == rv);
