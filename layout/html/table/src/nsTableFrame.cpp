@@ -2616,6 +2616,19 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
 
   SetColumnDimensions(aDesiredSize.height);
 
+  // If this is an incremental reflow, then we need to make sure that any
+  // damaged areas are repainted
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsRect  damageRect;
+
+    // XXX We need finer granularity than this...
+    damageRect.x = 0;
+    damageRect.y = 0;
+    damageRect.width = mRect.width;
+    damageRect.height = mRect.height;
+    Invalidate(damageRect);
+  }
+
   if (PR_TRUE==gsDebug) printf("end reflow for table %p\n", this);
   return rv;
 }
