@@ -1794,7 +1794,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 			pref->defaultPref.intVal = (PRInt32) -5632;
     	PR_HashTableAdd(gHashTable, PL_strdup(key), pref);
     }
-    else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
+    else if ((((pref->flags)) & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
     {
       /*PR_ASSERT(0);*/			/* this shouldn't happen */
       /* NS_ASSERTION(0, "Trying to set pref to with the wrong type!"); */
