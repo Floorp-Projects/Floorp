@@ -41,6 +41,8 @@
 
 #undef NECKO_SMALL_BUFFERS
 
+#undef NECKO_COOKIES
+
 #undef NECKO_PROTOCOL_about
 #undef NECKO_PROTOCOL_data
 #undef NECKO_PROTOCOL_file
