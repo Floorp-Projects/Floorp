@@ -107,8 +107,6 @@ Rights Reserved.
 <!ENTITY selectThreadCmd.key "a">
 <!ENTITY selectInvertCmd.label ".Invert Selection">
 <!ENTITY selectInvertCmd.accesskey "I">
-<!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
-<!ENTITY spamFiltersCmd.accesskey "J">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
 <!ENTITY filtersApply.label "Run Filters on Selected Folder">
@@ -518,3 +516,6 @@ Rights Reserved.
 
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
+
+<!ENTITY runJunkControls.label "Run Junk Mail Controls on Selected Messages...">
+<!ENTITY runJunkControls.accesskey "u">

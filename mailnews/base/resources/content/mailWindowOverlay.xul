@@ -1437,7 +1437,9 @@ Rights Reserved.
     <menuseparator/>
     <menuitem label="Mark Selected Messages As Junk" oncommand="JunkSelectedMessages(true);"/>
     <menuitem label="Mark Selected Messages As Not Junk" oncommand="JunkSelectedMessages(false);"/>
-    <menuitem label="Analyze Messages" oncommand="analyzeMessages();"/>
+    <menuitem label="&runJunkControls.label;"
+	      accesskey="&runJunkControls.accesskey;"
+	      oncommand="analyzeMessages();"/>
     <menuseparator/>
 -->
     <menuitem label="&filtersApply.label;"
