@@ -165,6 +165,8 @@ public:
   // to support 'vertical-align: baseline' in table-cells
   nscoord GetAscent() const;
 
+  static void CombineRects(const nsRect& r1, nsRect& r2);
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -452,7 +454,30 @@ protected:
 private:
   nsAbsoluteContainingBlock mAbsoluteContainer;
 
+
+#ifdef DEBUG
+public:
+  static PRBool gLamePaintMetrics;
+  static PRBool gLameReflowMetrics;
+  static PRBool gNoisy;
+  static PRBool gNoisyDamageRepair;
+  static PRBool gNoisyMaxElementSize;
+  static PRBool gNoisyReflow;
+  static PRBool gReallyNoisyReflow;
+  static PRBool gNoisySpaceManager;
+  static PRBool gVerifyLines;
+  static PRBool gDisableResizeOpt;
+
+  static PRInt32 gNoiseIndent;
+
+protected:
+  static void InitDebugFlags();
+#endif
 };
+
+// Some #ifdef'd bug fixes
+#define FIX_BUG_38157 
+#define FIX_BUG_37657
 
 #endif /* nsBlockFrame_h___ */
 

@@ -33,9 +33,9 @@
 #include "nsFrame.h"
 #include "nsVoidArray.h"
 #include "nsLineBox.h"
+#include "nsBlockReflowState.h"
 
 class nsISpaceManager;
-class nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
@@ -230,8 +230,13 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  void InitFloater(nsPlaceholderFrame* aFrame);
-  void AddFloater(nsPlaceholderFrame* aFrame);
+  void InitFloater(nsPlaceholderFrame* aFrame) {
+    mBlockRS->InitFloater(*this, aFrame);
+  }
+
+  void AddFloater(nsPlaceholderFrame* aFrame) {
+    mBlockRS->AddFloater(*this, aFrame, PR_FALSE);
+  }
 
   //----------------------------------------
 

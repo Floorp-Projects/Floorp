@@ -38,6 +38,7 @@ CPPSRCS		= \
 		nsBlockBandData.cpp \
 		nsBlockFrame.cpp \
 		nsBlockReflowContext.cpp \
+		nsBlockReflowState.cpp \
 		nsBulletFrame.cpp \
 		nsContainerFrame.cpp \
 		nsDST.cpp \

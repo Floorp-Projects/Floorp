@@ -23,7 +23,17 @@
  *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
-//----------------------------------------------------------------------
+#include "nsBlockReflowContext.h"
+#include "nsBlockReflowState.h"
+#include "nsBlockFrame.h"
+#include "nsLineLayout.h"
+#include "nsIPresContext.h"
+#include "nsLayoutAtoms.h"
+#include "nsIFrame.h"
+
+#ifdef DEBUG
+#include "nsBlockDebugFlags.h"
+#endif
 
 nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsIPresContext* aPresContext,
@@ -315,6 +325,30 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 #endif
 }
 
+void
+nsBlockReflowState::GetAvailableSpace(nscoord aY)
+{
+#ifdef DEBUG
+  // Verify that the caller setup the coordinate system properly
+  nscoord wx, wy;
+  mSpaceManager->GetTranslation(wx, wy);
+  NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
+               "bad coord system");
+#endif
+
+  mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
+
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+           mAvailSpaceRect.x, mAvailSpaceRect.y,
+           mAvailSpaceRect.width, mAvailSpaceRect.height,
+           mBand.GetTrapezoidCount());
+  }
+#endif
+}
+
 PRBool
 nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
 {
@@ -558,10 +592,10 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       floater->GetRect(r);
       floater->MoveTo(mPresContext, r.x, r.y + finalDeltaY);
 #ifdef DEBUG
-      if (gNoisyReflow || gNoisySpaceManager) {
+      if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
         nscoord tx, ty;
         mSpaceManager->GetTranslation(tx, ty);
-        nsFrame::IndentBy(stdout, gNoiseIndent);
+        nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
         printf("RecoverState: txy=%d,%d (%d,%d) ",
                tx, ty, mSpaceManagerX, mSpaceManagerY);
         nsFrame::ListTag(stdout, floater);
@@ -575,7 +609,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       fc = fc->Next();
     }
 #ifdef DEBUG
-    if (gNoisyReflow || gNoisySpaceManager) {
+    if (nsBlockFrame::gNoisyReflow || nsBlockFrame::gNoisySpaceManager) {
       mSpaceManager->List(stdout);
     }
 #endif
@@ -609,6 +643,17 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     }
   }
 }
+
+PRBool
+nsBlockReflowState::IsImpactedByFloater() const
+{
+#ifdef REALLY_NOISY_REFLOW
+  printf("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
+         this, mBand.GetFloaterCount());
+#endif
+  return mBand.GetFloaterCount();
+}
+
 
 void
 nsBlockReflowState::InitFloater(nsLineLayout& aLineLayout,
@@ -728,6 +773,44 @@ nsBlockReflowState::IsLeftMostChild(nsIPresContext* aPresContext, nsIFrame* aFra
     aFrame = parent;
   }
   return PR_TRUE;
+}
+
+void
+nsBlockReflowState::UpdateMaxElementSize(const nsSize& aMaxElementSize)
+{
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  nsSize oldSize = mMaxElementSize;
+#endif
+  if (aMaxElementSize.width > mMaxElementSize.width) {
+    mMaxElementSize.width = aMaxElementSize.width;
+  }
+  if (aMaxElementSize.height > mMaxElementSize.height) {
+    mMaxElementSize.height = aMaxElementSize.height;
+  }
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  if ((mMaxElementSize.width != oldSize.width) ||
+      (mMaxElementSize.height != oldSize.height)) {
+    nsFrame::IndentBy(stdout, mBlock->GetDepth());
+    if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
+      printf("PASS1 ");
+    }
+    nsFrame::ListTag(stdout, mBlock);
+    printf(": old max-element-size=%d,%d new=%d,%d\n",
+           oldSize.width, oldSize.height,
+           mMaxElementSize.width, mMaxElementSize.height);
+  }
+#endif
+}
+
+void
+nsBlockReflowState::UpdateMaximumWidth(nscoord aMaximumWidth)
+{
+  if (aMaximumWidth > mMaximumWidth) {
+#ifdef NOISY_MAXIMUM_WIDTH
+    printf("nsBlockReflowState::UpdateMaximumWidth block %p caching max width %d\n", mBlock, aMaximumWidth);
+#endif
+    mMaximumWidth = aMaximumWidth;
+  }
 }
 
 PRBool
@@ -992,21 +1075,21 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
       mHaveRightFloaters = PR_TRUE;
     }
     else {
-      CombineRects(combinedArea, mRightFloaterCombinedArea);
+      nsBlockFrame::CombineRects(combinedArea, mRightFloaterCombinedArea);
     }
   }
   else {
-    CombineRects(combinedArea, mFloaterCombinedArea);
+    nsBlockFrame::CombineRects(combinedArea, mFloaterCombinedArea);
   }
 
   // Now restore mY
   mY = saveY;
 
 #ifdef DEBUG
-  if (gNoisyReflow) {
+  if (nsBlockFrame::gNoisyReflow) {
     nsRect r;
     floater->GetRect(r);
-    nsFrame::IndentBy(stdout, gNoiseIndent);
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("placed floater: ");
     ((nsFrame*)floater)->ListTag(stdout);
     printf(" %d,%d,%d,%d\n", r.x, r.y, r.width, r.height);
@@ -1024,8 +1107,8 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
   while (fc) {
     if (!fc->mIsCurrentLineFloater) {
 #ifdef DEBUG
-      if (gNoisyReflow) {
-        nsFrame::IndentBy(stdout, gNoiseIndent);
+      if (nsBlockFrame::gNoisyReflow) {
+        nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
         printf("placing bcl floater: ");
         nsFrame::ListTag(stdout, fc->mPlaceholder->GetOutOfFlowFrame());
         printf("\n");
@@ -1046,15 +1129,15 @@ void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
 #ifdef DEBUG
-  if (gNoisyReflow) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("clear floaters: in: mY=%d aY=%d(%d)\n",
            mY, aY, aY - BorderPadding().top);
   }
 #endif
 
 #ifdef NOISY_FLOATER_CLEARING
-  printf("nsBlockReflowState::ClearFloaters: aY=%d breakType=%dn",
+  printf("nsBlockReflowState::ClearFloaters: aY=%d breakType=%d\n",
          aY, aBreakType);
   mSpaceManager->List(stdout);
 #endif
@@ -1064,9 +1147,10 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
   GetAvailableSpace();
 
 #ifdef DEBUG
-  if (gNoisyReflow) {
-    nsFrame::IndentBy(stdout, gNoiseIndent);
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
   }
 #endif
 }
+

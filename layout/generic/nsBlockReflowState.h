@@ -23,6 +23,12 @@
  *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
+#ifndef nsBlockReflowState_h__
+#define nsBlockReflowState_h__
+
+#include "nsBlockBandData.h"
+#include "nsLineBox.h"
+
 class nsBlockReflowState {
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
@@ -48,27 +54,7 @@ public:
     GetAvailableSpace(mY);
   }
 
-  void GetAvailableSpace(nscoord aY) {
-#ifdef DEBUG
-    // Verify that the caller setup the coordinate system properly
-    nscoord wx, wy;
-    mSpaceManager->GetTranslation(wx, wy);
-    NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
-                 "bad coord system");
-#endif
-
-    mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
-
-#ifdef DEBUG
-    if (gNoisyReflow) {
-      nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-             mAvailSpaceRect.x, mAvailSpaceRect.y,
-             mAvailSpaceRect.width, mAvailSpaceRect.height,
-             mBand.GetTrapezoidCount());
-    }
-#endif
-  }
+  void GetAvailableSpace(nscoord aY);
 
   void InitFloater(nsLineLayout& aLineLayout,
                    nsPlaceholderFrame* aPlaceholderFrame);
@@ -102,39 +88,9 @@ public:
     return mReflowState.mComputedMargin;
   }
 
-  void UpdateMaxElementSize(const nsSize& aMaxElementSize) {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    nsSize oldSize = mMaxElementSize;
-#endif
-    if (aMaxElementSize.width > mMaxElementSize.width) {
-      mMaxElementSize.width = aMaxElementSize.width;
-    }
-    if (aMaxElementSize.height > mMaxElementSize.height) {
-      mMaxElementSize.height = aMaxElementSize.height;
-    }
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    if ((mMaxElementSize.width != oldSize.width) ||
-        (mMaxElementSize.height != oldSize.height)) {
-      nsFrame::IndentBy(stdout, mBlock->GetDepth());
-      if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
-        printf("PASS1 ");
-      }
-      nsFrame::ListTag(stdout, mBlock);
-      printf(": old max-element-size=%d,%d new=%d,%d\n",
-             oldSize.width, oldSize.height,
-             mMaxElementSize.width, mMaxElementSize.height);
-    }
-#endif
-  }
+  void UpdateMaxElementSize(const nsSize& aMaxElementSize);
 
-  void UpdateMaximumWidth(nscoord aMaximumWidth) {
-    if (aMaximumWidth > mMaximumWidth) {
-#ifdef NOISY_MAXIMUM_WIDTH
-      printf("nsBlockReflowState::UpdateMaximumWidth block %p caching max width %d\n", mBlock, aMaximumWidth);
-#endif
-      mMaximumWidth = aMaximumWidth;
-    }
-  }
+  void UpdateMaximumWidth(nscoord aMaximumWidth);
 
   void RecoverVerticalMargins(nsLineBox* aLine,
                               PRBool aApplyTopMargin,
@@ -154,13 +110,7 @@ public:
     mLineNumber++;
   }
 
-  PRBool IsImpactedByFloater() {
-#ifdef REALLY_NOISY_REFLOW
-    printf("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
-           this, mBand.GetFloaterCount());
-#endif
-    return mBand.GetFloaterCount();
-  }
+  PRBool IsImpactedByFloater() const;
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
 
@@ -314,3 +264,5 @@ public:
     return PR_FALSE;
   }
 };
+
+#endif // nsBlockReflowState_h__
