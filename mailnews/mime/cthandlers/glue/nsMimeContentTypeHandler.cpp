@@ -41,6 +41,7 @@
 #include "prtypes.h"
 //#include "mimecth.h"
 #include "nsMimeContentTypeHandler.h"
+#include "nsCRT.h"
 
 /* 
  * The following macros actually implement addref, release and 

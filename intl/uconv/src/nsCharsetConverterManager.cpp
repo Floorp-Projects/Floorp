@@ -50,6 +50,7 @@
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
 #include "prmem.h"
+#include "nsCRT.h"
 
 // just for CIDs
 #include "nsIUnicodeDecodeHelper.h"

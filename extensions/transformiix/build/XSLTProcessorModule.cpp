@@ -39,6 +39,7 @@
 #include "txAtoms.h"
 #include "XSLTProcessor.h"
 #include "TxLog.h"
+#include "nsCRT.h"
 
 /* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
 #define TRANSFORMIIX_DOMCI_EXTENSION_CID   \

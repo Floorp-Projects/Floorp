@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "nsCRT.h" /* should be "plstr.h"? */
 #include "nsNetUtil.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"

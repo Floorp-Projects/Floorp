@@ -31,6 +31,7 @@
 #include "nsBidiUtils.h"
 #include "bidicattable.h"
 #include "symmtable.h"
+#include "nsCRT.h"
 
 static nsCharType ebc2ucd[15] = {
   eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */

@@ -55,6 +55,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDOMCharacterData.h"
 #include "nsEditorUtils.h"
+#include "nsCRT.h"
 
 const PRUnichar nbsp = 160;
 

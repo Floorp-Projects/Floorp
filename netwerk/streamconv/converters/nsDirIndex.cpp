@@ -37,6 +37,7 @@
 
 #include "nsDirIndex.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
                               nsIDirIndex);

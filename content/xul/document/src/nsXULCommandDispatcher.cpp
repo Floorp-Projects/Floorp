@@ -67,6 +67,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;

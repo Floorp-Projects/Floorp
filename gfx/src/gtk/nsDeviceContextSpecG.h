@@ -50,6 +50,7 @@
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
+#include "nsCRT.h" /* should be <limits.h>? */
 
 #define NS_PORTRAIT  0
 #define NS_LANDSCAPE 1

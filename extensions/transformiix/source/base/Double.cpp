@@ -35,7 +35,8 @@
  */
 
 #include "primitives.h"
-#include  <math.h>
+#include <math.h>
+#include <stdlib.h>
 #ifdef WIN32
 #include <float.h>
 #endif
@@ -46,7 +47,6 @@
 #ifndef TX_EXE
 #include "prdtoa.h"
 #else
-#include <stdlib.h>
 #include <stdio.h>
 #endif
 

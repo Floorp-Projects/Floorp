@@ -47,6 +47,13 @@
 #include "nsStringDefines.h"
 #endif
 
+#ifndef nsCharTraits_h___
+#include "nsCharTraits.h"
+#endif
+
+#include "nspr.h"
+#include "plstr.h"
+#include <ctype.h>
 
 /******************************************************************************************
   MODULE NOTES:
@@ -57,10 +64,6 @@
   Not so, today though.
 
 *******************************************************************************************/
-
-#include "nsCRT.h"
-
-
 #define KSHIFTLEFT  (0)
 #define KSHIFTRIGHT (1)
 
@@ -406,11 +409,11 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
 
       if(aIgnoreCase) {
         // safe because aChar < 256
-        char theChar=nsCRT::ToUpper(char(aChar));
+        char theChar=toupper(char(aChar));
         
         while(left<end){
           
-          if(nsCRT::ToUpper(*left)==theChar)
+          if(toupper(*left)==theChar)
             return left-aDest;
           
           ++left;
@@ -591,8 +594,16 @@ static inline PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 a
 PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
-    result=nsCRT::strncasecmp(aStr1,aStr2,aCount);
-  else result=memcmp(aStr1,aStr2,aCount);
+    result=PRInt32(PL_strncasecmp(aStr1, aStr2, aCount));
+  else 
+    result=nsCharTraits<char>::compare(aStr1,aStr2,aCount);
+
+      // alien comparisons may return out-of-bound answers
+      //  instead of the -1, 0, 1 expected by most clients
+  if ( result < -1 )
+    result = -1;
+  else if ( result > 1 )
+    result = 1;
   return result;
 }
 
@@ -607,7 +618,28 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  */
 PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
 PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
-  return nsCRT::strncmp(aStr1, aStr2, aCount);
+  PRInt32 result;
+  
+  if ( aStr1 && aStr2 )
+    result = nsCharTraits<PRUnichar>::compare(aStr1, aStr2, aCount);
+
+      // The following cases are rare and survivable caller errors.
+      //  Two null pointers are equal, but any string, even 0 length
+      //  is greater than a null pointer.  It might not really matter,
+      //  but we pick something reasonable anyway.
+  else if ( !aStr1 && !aStr2 )
+    result = 0;
+  else if ( aStr1 )
+    result = 1;
+  else
+    result = -1;
+
+      // alien comparisons may give answers outside the -1, 0, 1 expected by callers
+  if ( result < -1 )
+    result = -1;
+  else if ( result > 1 )
+    result = 1;
+  return result;
 }
 
 
@@ -645,8 +677,8 @@ PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRB
           // can't do case conversion on characters out of our range
           if (aIgnoreCase && c1<128 && c2<128) {
 
-              c1 = nsCRT::ToLower(char(c1));
-              c2 = nsCRT::ToLower(char(c2));
+              c1 = tolower(char(c1));
+              c2 = tolower(char(c2));
             
               if (c1 == c2) continue;
           }

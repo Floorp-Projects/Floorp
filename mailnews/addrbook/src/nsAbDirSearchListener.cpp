@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirSearchListener, nsIAbDirectoryQueryResultListener)

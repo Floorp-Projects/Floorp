@@ -52,6 +52,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
 #include "pldhash.h"
+#include "plstr.h"
 
 class nsIDocShell;
 class nsString;

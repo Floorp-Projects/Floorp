@@ -38,6 +38,7 @@
 
 #include "nsCookie.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "prmem.h"
 
 // nsCookie Implementation

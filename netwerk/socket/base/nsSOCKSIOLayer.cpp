@@ -23,6 +23,7 @@
 
 #include "nspr.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 #include "nsIServiceManager.h"
 #include "nsSOCKSIOLayer.h"

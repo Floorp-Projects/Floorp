@@ -42,6 +42,7 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsIServiceManager.h"
+#include "nsCRT.h"
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"

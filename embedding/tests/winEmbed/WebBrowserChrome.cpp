@@ -36,6 +36,7 @@
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
 #include "nsIProfileChangeStatus.h"
+#include "nsCRT.h"
 
 // Local includes
 #include "resource.h"

@@ -58,6 +58,7 @@
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
+#include "nsCRT.h"
 
 #include "ssl.h"
 #include "secerr.h"

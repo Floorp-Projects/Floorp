@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
+#include "nsCRT.h"
 
 
 #ifdef XP_MAC

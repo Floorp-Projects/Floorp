@@ -36,6 +36,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 #include "netCore.h"
 

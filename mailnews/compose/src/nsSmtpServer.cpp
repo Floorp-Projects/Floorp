@@ -45,6 +45,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsISmtpUrl.h"
+#include "nsCRT.h"
 
 NS_IMPL_ADDREF(nsSmtpServer)
 NS_IMPL_RELEASE(nsSmtpServer)

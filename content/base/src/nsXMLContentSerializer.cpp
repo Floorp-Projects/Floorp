@@ -52,6 +52,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 typedef struct {
   nsString mPrefix;

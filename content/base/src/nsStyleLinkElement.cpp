@@ -37,6 +37,7 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
+#include "nsCRT.h"
 
 nsStyleLinkElement::nsStyleLinkElement() :
     mDontLoadStyle(PR_FALSE),

@@ -36,6 +36,7 @@
 #include "nsLDAPURL.h"
 #include "nsReadableUtils.h"
 #include "netCore.h"
+#include "plstr.h"
 
 // The two schemes we support, LDAP and LDAPS
 //

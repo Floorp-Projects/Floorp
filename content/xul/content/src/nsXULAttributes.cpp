@@ -69,6 +69,7 @@
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
 #include "nsXULAtoms.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 

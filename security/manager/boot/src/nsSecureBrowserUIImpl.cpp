@@ -67,6 +67,7 @@
 #include "nsISecurityWarningDialogs.h"
 #include "nsIProxyObjectManager.h"
 #include "nsINSSDialogs.h"
+#include "nsCRT.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 

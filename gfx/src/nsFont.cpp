@@ -39,6 +39,7 @@
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize,

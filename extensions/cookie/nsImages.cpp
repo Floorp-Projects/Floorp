@@ -38,6 +38,7 @@
 
 #include "nsPermissions.h"
 #include "nsUtils.h"
+#include "plstr.h"
 
 #include "nsVoidArray.h"
 #include "prmem.h"

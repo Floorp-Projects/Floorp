@@ -32,6 +32,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 
 NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupportsWeakReference)

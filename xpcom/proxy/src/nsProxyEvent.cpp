@@ -35,6 +35,7 @@
 #include "nsProxyEvent.h"
 #include "nsProxyEventPrivate.h"
 #include "nsIProxyObjectManager.h"
+#include "nsCRT.h"
 
 #include "pratom.h"
 #include "prmem.h"

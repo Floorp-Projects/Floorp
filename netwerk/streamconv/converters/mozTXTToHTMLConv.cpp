@@ -38,6 +38,7 @@
 #include "nsNetCID.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 

@@ -48,6 +48,7 @@
 #include "nsIDOMRange.h"
 #include "nsHTMLEditorLog.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 #include "nsEditorTxnLog.h"
 

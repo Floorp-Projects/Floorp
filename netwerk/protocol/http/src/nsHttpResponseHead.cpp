@@ -27,6 +27,7 @@
 #include "nsPrintfCString.h"
 #include "prprf.h"
 #include "prtime.h"
+#include "nsCRT.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpResponseHead <public>

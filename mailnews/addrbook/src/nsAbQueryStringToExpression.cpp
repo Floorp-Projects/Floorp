@@ -47,6 +47,7 @@
 #include "nsITextToSubURI.h"
 #include "nsAbBooleanExpression.h"
 #include "nsAbBaseCID.h"
+#include "nsCRT.h"
 
 nsresult nsAbQueryStringToExpression::Convert (
     const char* queryString,

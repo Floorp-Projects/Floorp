@@ -46,6 +46,7 @@
 #include "nsAbUtils.h"
 #include "nsMapiAddressBook.h"
 #include "nsWabAddressBook.h"
+#include "nsCRT.h"
 
 #include <mapiguid.h>
 

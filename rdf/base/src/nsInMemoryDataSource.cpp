@@ -69,6 +69,7 @@
 #include "nsAutoLock.h"
 #include "nsEnumeratorUtils.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
+#include "nsCRT.h"
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsString.h"

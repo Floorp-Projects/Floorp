@@ -44,6 +44,7 @@
 #include "nsIStreamProvider.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
+#include "nsCRT.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;

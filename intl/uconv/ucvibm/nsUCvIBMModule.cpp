@@ -46,6 +46,7 @@
 #include "nsIModule.h"
 #include "nsUCvIBMCID.h"
 #include "nsUCvIBMDll.h"
+#include "nsCRT.h"
 
 #include "nsCP850ToUnicode.h"
 #include "nsCP852ToUnicode.h"

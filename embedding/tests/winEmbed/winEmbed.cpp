@@ -62,6 +62,7 @@
 #include "nsIURI.h"
 #include "plstr.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsCRT.h"
 
 // Local header files
 #include "winEmbed.h"

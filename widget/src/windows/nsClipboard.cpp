@@ -57,6 +57,7 @@
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
+#include "nsCRT.h"
 
 #include "nsVoidArray.h"
 #include "nsNetUtil.h"

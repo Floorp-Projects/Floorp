@@ -95,6 +95,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "jsapi.h"  // for JSVERSION_*, JS_VersionToString, etc.
+#include "nsCRT.h"
 
 #include "nsIFastLoadService.h"         // XXXbe temporary
 #include "nsIObjectInputStream.h"       // XXXbe temporary

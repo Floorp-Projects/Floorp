@@ -24,6 +24,7 @@
 
 #include <nsCOMPtr.h>
 #include <nsString.h>
+#include <nsCRT.h>
 #include <nsIURI.h>
 #include <nsIChannel.h>
 #include <nsIInputStream.h>

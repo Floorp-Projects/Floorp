@@ -77,6 +77,7 @@
 #include "nsXULAtoms.h"
 #include "nsXBLAtoms.h"
 #include "nsXBLProtoImpl.h"
+#include "nsCRT.h"
 
 #include "nsIScriptContext.h"
 

@@ -47,6 +47,7 @@
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"

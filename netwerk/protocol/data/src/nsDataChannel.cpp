@@ -48,6 +48,7 @@
 #include "nsIOutputStream.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 #include "nsEscape.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

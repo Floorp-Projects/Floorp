@@ -44,6 +44,7 @@
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
 #include "mimemoz2.h" // for prefs
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 

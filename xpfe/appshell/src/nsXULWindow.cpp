@@ -30,6 +30,7 @@
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 //Interfaces needed to be included
 #include "nsIAppShell.h"

@@ -57,6 +57,7 @@
 #include "nsReadableUtils.h"
 #include "nsICommandParams.h"
 #include "nsComponentManagerUtils.h"
+#include "nsCRT.h"
 //prototype
 nsresult GetListState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **tagStr);
 nsresult PasteAsQuotation(nsIEditor *aEditor, PRInt32 aSelectionType);

@@ -56,6 +56,7 @@
 #include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsICSSLoader.h"
+#include "nsCRT.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"

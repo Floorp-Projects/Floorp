@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBasicStreamGenerator.h"
+#include "nsCRT.h"
 
 const char * nsBasicStreamGenerator::mSignature = "Basic Keyed Stream Generator";
 

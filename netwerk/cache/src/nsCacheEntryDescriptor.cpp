@@ -28,6 +28,7 @@
 #include "nsCacheEntry.h"
 #include "nsReadableUtils.h"
 #include "nsIOutputStream.h"
+#include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheEntryDescriptor,
                               nsICacheEntryDescriptor,

@@ -45,6 +45,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsIMultiPartChannel.h"
+#include "nsCRT.h"
 
 
 //

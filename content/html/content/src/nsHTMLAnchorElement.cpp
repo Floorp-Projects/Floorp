@@ -57,6 +57,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsNetUtil.h"
+#include "nsCRT.h"
 
 // For GetText().
 #include "nsIContentIterator.h"

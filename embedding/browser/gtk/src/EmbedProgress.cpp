@@ -25,6 +25,7 @@
 #include <nsIChannel.h>
 
 #include "nsIURI.h"
+#include "nsCRT.h"
 
 EmbedProgress::EmbedProgress(void)
 {

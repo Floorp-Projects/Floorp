@@ -34,6 +34,7 @@
 #include "plbase64.h"
 #include "nsIConsoleService.h"
 #include "nscore.h"
+#include "nsCRT.h"
 
 #ifdef XP_UNIX
   #include <sys/stat.h>

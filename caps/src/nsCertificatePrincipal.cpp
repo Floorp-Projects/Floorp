@@ -42,6 +42,7 @@
 #include "prmem.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 

@@ -122,6 +122,7 @@
 #include "rdfutil.h"
 #include "prlog.h"
 #include "nsNameSpaceMap.h"
+#include "nsCRT.h"
 
 //----------------------------------------------------------------------
 

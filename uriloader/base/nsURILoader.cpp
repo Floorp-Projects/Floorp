@@ -55,6 +55,7 @@
 #include "nsWeakReference.h"
 #include "nsIHttpChannel.h"
 #include "netCore.h"
+#include "nsCRT.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

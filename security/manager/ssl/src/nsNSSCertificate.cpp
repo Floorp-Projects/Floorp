@@ -59,6 +59,7 @@
 #include "nsIPrompt.h"
 #include "nsTime.h"
 #include "nsIProxyObjectManager.h"
+#include "nsCRT.h"
 
 #include "nspr.h"
 extern "C" {

@@ -36,6 +36,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
+#include "nsCRT.h"
 #include <windows.h>
 #include <SHLOBJ.H>
 

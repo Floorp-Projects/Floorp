@@ -50,6 +50,7 @@
 #include "nsDOMCID.h"
 #include "prprf.h"
 #include "nsIDOMClassInfo.h"
+#include "nsCRT.h"
 
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"

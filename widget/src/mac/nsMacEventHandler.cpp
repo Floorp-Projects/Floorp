@@ -39,6 +39,7 @@
 
 #include "nsWindow.h"
 #include "nsMacWindow.h"
+#include "nsCRT.h"
 #include "prinrval.h"
 
 #include <ToolUtils.h>

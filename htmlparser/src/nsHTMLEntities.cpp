@@ -41,6 +41,7 @@
 
 
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsAVLTree.h"
 
 MOZ_DECL_CTOR_COUNTER(EntityNode)

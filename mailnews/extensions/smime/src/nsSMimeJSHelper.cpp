@@ -45,6 +45,7 @@
 #include "nsIX509CertDB.h"
 #include "nsIServiceManager.h"
 #include "nsPromiseFlatString.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS1(nsSMimeJSHelper, nsISMimeJSHelper)
 

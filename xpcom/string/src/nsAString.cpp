@@ -532,8 +532,8 @@ nsCaseInsensitiveCStringComparator::operator()( char lhs, char rhs ) const
   {
     if (lhs == rhs) return 0;
     
-    lhs = nsCRT::ToLower(lhs);
-    rhs = nsCRT::ToLower(rhs);
+    lhs = tolower(lhs);
+    rhs = tolower(rhs);
 
     return lhs - rhs;
   }

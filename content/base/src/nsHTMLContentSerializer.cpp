@@ -54,6 +54,7 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsITextToSubURI.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 

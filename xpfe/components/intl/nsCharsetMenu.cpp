@@ -63,6 +63,7 @@
 #include "nsIObserverService.h"
 #include "nsIRequestObserver.h"
 #include "nsITimelineService.h"
+#include "nsCRT.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]

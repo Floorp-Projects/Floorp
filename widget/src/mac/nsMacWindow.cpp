@@ -52,6 +52,7 @@
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
 #include "nsIRollupListener.h"
+#include "nsCRT.h"
 
 #if TARGET_CARBON
 #include <CFString.h>

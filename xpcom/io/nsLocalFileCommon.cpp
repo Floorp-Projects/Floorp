@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsPrintfCString.h"
+#include "nsCRT.h"
 
 
 void NS_StartupLocalFile()

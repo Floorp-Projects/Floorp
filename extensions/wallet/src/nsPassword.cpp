@@ -38,6 +38,7 @@
 
 #include "nsPassword.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "prmem.h"
 
 // nsPassword Implementation

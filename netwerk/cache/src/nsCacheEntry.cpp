@@ -32,6 +32,7 @@
 #include "nsCache.h"
 #include "nsCacheService.h"
 #include "nsCacheDevice.h"
+#include "nsCRT.h"
 
 
 nsCacheEntry::nsCacheEntry(nsCString *          key,

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #include "DeleteElementTxn.h"
 #ifdef NS_DEBUG

@@ -71,6 +71,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsDynamicMDEF.h"
+#include "nsCRT.h"
 
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler) ;

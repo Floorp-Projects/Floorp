@@ -39,6 +39,7 @@
 #include "nsFindAndReplace.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS1(nsFindAndReplace, nsIFindAndReplace)
 

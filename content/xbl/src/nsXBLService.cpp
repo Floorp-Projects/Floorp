@@ -76,6 +76,7 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsXBLAtoms.h"
 #include "nsXULAtoms.h"
+#include "nsCRT.h"
 
 #include "nsIXBLPrototypeHandler.h"
 

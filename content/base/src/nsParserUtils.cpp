@@ -40,6 +40,7 @@
 #include "nsIParser.h" // for kQuote et. al.
 #include "jsapi.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 PRBool
 nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,

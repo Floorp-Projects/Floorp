@@ -70,6 +70,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
+#include "nsCRT.h"
 
 ////////////////////////////////////////////////////////////////////////
 // CIDs

@@ -42,6 +42,7 @@
 #include "nsUnicodeMappingUtil.h"
 #include "nsDeviceContextMac.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define BAD_FONT_NUM -1 

@@ -53,6 +53,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsFIXptr.h"
+#include "nsCRT.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);

@@ -43,6 +43,7 @@
 #include "prprf.h"
 #include "nsContentUtils.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
   : mType(CSS_PX), mOwner(aOwner), mT2P(aT2P)

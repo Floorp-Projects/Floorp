@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
+#include "nsCRT.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"

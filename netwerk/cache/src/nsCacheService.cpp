@@ -31,6 +31,7 @@
 #include "nsDiskCacheDevice.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsICacheVisitor.h"
+#include "nsCRT.h"
 
 #include "nsAutoLock.h"
 #include "nsIEventQueue.h"

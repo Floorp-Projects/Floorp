@@ -40,6 +40,7 @@
 
 #include "nspr.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
 #include "nsIFactory.h"

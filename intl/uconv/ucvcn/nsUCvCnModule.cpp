@@ -49,6 +49,7 @@
 #include "nsIModule.h"
 #include "nsUCvCnCID.h"
 #include "nsUCvCnDll.h"
+#include "nsCRT.h"
 
 #include "nsHZToUnicode.h"
 #include "nsUnicodeToHZ.h"

@@ -28,6 +28,7 @@
 #include "prprf.h"
 #include "prdtoa.h"
 #include <math.h>
+#include "nsCRT.h"
 
 /***************************************************************************/
 // Helpers for static convert functions...

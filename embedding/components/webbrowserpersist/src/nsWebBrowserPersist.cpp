@@ -41,6 +41,7 @@
 #include "nsIUploadChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 #include "nsCExternalHandlerService.h"
 

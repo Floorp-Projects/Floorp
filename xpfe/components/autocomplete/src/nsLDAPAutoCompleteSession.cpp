@@ -41,6 +41,7 @@
 #include "nsReadableUtils.h"
 #include "nspr.h"
 #include "nsLDAP.h"
+#include "nsCRT.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;

@@ -36,6 +36,7 @@
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
 #include "xpcprivate.h"
+#include "nsCRT.h"
 
 /***************************************************************************/
 

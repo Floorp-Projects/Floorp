@@ -26,6 +26,7 @@
 #include "nsDiskCacheEntry.h"
 #include "nsDiskCacheBinding.h"
 #include "nsDiskCacheMap.h"
+#include "nsCRT.h"
 
 #include "nsCache.h"
 

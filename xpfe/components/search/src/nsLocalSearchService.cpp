@@ -59,6 +59,7 @@
 #include "nsIRDFObserver.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);

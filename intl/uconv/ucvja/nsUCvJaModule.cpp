@@ -49,6 +49,7 @@
 #include "nsUCVJACID.h"
 #include "nsUCVJA2CID.h"
 #include "nsUCVJADll.h"
+#include "nsCRT.h"
 
 #include "nsJapaneseToUnicode.h"
 #include "nsUnicodeToSJIS.h"

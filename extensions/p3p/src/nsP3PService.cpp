@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 

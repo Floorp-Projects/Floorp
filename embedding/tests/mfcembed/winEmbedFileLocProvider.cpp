@@ -28,6 +28,7 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 
 #include <windows.h>

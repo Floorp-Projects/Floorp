@@ -9,6 +9,7 @@
 // Mozilla
 #include "nsIProfile.h"
 #include "nsIServiceManager.h"
+#include "nsCRT.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

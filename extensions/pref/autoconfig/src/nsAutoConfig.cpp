@@ -46,6 +46,7 @@
 #include "nsIObserverService.h"
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
+#include "nsCRT.h"
 
 extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
                                           const char *filename, 

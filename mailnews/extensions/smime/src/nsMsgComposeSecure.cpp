@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMsgCompFields.h"
+#include "nsCRT.h"
 #include "nsReadableUtils.h"
 
 // String bundle for smime. Class static.

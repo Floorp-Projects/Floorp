@@ -62,6 +62,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsCRT.h"
 
 ////////////////////////////////////////////////////////////////////////
 

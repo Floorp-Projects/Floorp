@@ -44,6 +44,7 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 #include "domstubs.h" // for SetDOMStringToNull();
+#include "nsCRT.h"
 
 
 nsNodeInfo::nsNodeInfo()
