@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\js\src" /I "../../RegExp" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../../RegExp" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "XP_PC" /D "EPIMETHEUS" /D "IS_LITTLE_ENDIAN" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -107,6 +107,14 @@ SOURCE=..\..\hash.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\js2array.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2date.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\js2engine.cpp
 # End Source File
 # Begin Source File
@@ -115,7 +123,23 @@ SOURCE=..\..\js2eval.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\js2math.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\js2metadata.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2number.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2regexp.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\js2string.cpp
 # End Source File
 # Begin Source File
 
@@ -135,7 +159,15 @@ SOURCE=..\..\parser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\prmjtime.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\reader.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\regexpwrapper.cpp
 # End Source File
 # Begin Source File
 
