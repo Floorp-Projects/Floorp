@@ -2071,8 +2071,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     char *unixProfileDirectory = PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE);
 	
     if (!unixProfileName || !unixProfileDirectory || (PL_strlen(unixProfileName) == 0) || (PL_strlen(unixProfileDirectory) == 0)) {
-	    char *unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
-	    char *unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
+	    unixProfileName = PR_GetEnv(USER_ENVIRONMENT_VARIABLE);
+	    unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
     }
 
     if (unixProfileName && unixProfileDirectory) {
