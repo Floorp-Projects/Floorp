@@ -42,10 +42,11 @@ EXPORTS =     \
   nsHTMLTokens.h    \
   nsIParserNode.h   \
   nsIParser.h   \
-  nsIParserDebug.h \
   nsIParserFilter.h \
   nsToken.h   \
   $(NULL)
+
+#  nsIParserDebug.h \
 
 MODULE = raptor
 
