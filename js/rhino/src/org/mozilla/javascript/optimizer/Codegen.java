@@ -1312,7 +1312,7 @@ class BodyCodegen
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"[Ljava/lang/Object;"
                                    +")Lorg/mozilla/javascript/Scriptable;");
-        	cfw.addAStore(variableObjectLocal);
+            cfw.addAStore(variableObjectLocal);
             debugVariableName = "activation";
         } else {
             cfw.addALoad(contextLocal);
