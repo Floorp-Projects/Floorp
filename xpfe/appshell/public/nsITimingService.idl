@@ -1,0 +1,53 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(53510e04-0891-4fd0-bb63-5bf243100bf7)]
+interface nsITimingService : nsISupports
+{
+    /**
+     * startNamedTimer - start or reset the timer with the given name
+     */
+    void startTimer(in string timername);
+
+    /**
+     * getTimerElapsed()
+     * get the elapsed time on the given timer
+     */
+    long long getElapsedTime(in string timername);
+
+    /**
+     * setNamedTimer()
+     * for advanced users only - sets the start time for a given
+     * timer. Only use if you could not call startNamedTimer() for
+     * some reason
+     */
+    void setTimer(in string timername, in long long starttime);
+    
+};
+
+%{C++
+#define NS_TIMINGSERVICE_CONTRACTID \
+    "@mozilla.org/appshell/timing-service;1"
+      
+%}
