@@ -25,8 +25,6 @@
   border-right: 1px solid #999999;
 }
 
-
-
 .treecell-error {
   border-bottom: 1px solid #000000 !important;
   padding: 0px;
@@ -45,3 +43,19 @@
   list-style-image: inherit !important;
 }
 
+.button-toolbar[toggled="true"] {
+  border: 1px solid #526573 !important;
+  background-color: #B4C3D4;
+  color: #000000;
+  -moz-border-radius: 4px;
+}    
+
+.button-toolbar {
+  border: 1px solid transparent !important;
+}
+
+.button-toolbar:hover,
+.button-toolbar:hover:active,
+.button-toolbar[home-dragover="true"] {
+  border: 1px solid #526573;
+}
