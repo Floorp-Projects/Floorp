@@ -79,6 +79,8 @@
 <!ENTITY editpaste.keybinding "v">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
+<!ENTITY editStripQuotesCmd.label "Strip Quotes">
+<!ENTITY editRewrapCmd.label "Rewrap">
 <!ENTITY clearCmd.label "Clear">
 <!ENTITY editclear.accesskey "l">
 <!ENTITY selectAllCmd.label "Select All">

@@ -41,6 +41,12 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICITER_IID; return iid; }
 
   NS_IMETHOD GetCiteString(const nsString& aInString, nsString& aOutString) = 0;
+
+  NS_IMETHOD StripCites(const nsString& aInString, nsString& aOutString) = 0;
+
+  NS_IMETHOD Rewrap(const nsString& aInString,
+                    PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                    nsString& aOutString) = 0;
 };
 
 #endif //nsICiter_h__

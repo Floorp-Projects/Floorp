@@ -771,7 +771,13 @@ function EditorApplyStyleSheet(styleSheetURL)
     <menuitem value="&outputXIFCmd.label;"
            oncommand="EditorGetXIF()"/>
     <menuseparator />
-    <menuitem value="&pasteAsQuotationCmd.label;" accesskey="&editpastequotation.accesskey;" oncommand="EditorPasteAsQuotation()"/>
+    <menuitem value="&pasteAsQuotationCmd.label;"
+           accesskey="&editpastequotation.accesskey;"
+           oncommand="EditorPasteAsQuotation()"/>
+    <menuitem value="&editRewrapCmd.label;"
+           oncommand="editorShell.Rewrap()"/>
+    <menuitem value="&editStripQuotesCmd.label;"
+           oncommand="editorShell.StripCites()"/>
     <menuitem value="&insertTextCmd.label;"
            oncommand="EditorInsertText('All good things come to those who wait. ')"/>
     <menuseparator />
