@@ -411,7 +411,6 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            nsReflowMetrics& aDesiredSize)
 {
   if (mSizeFrozen) {
-    printf("image frozen, returning des size %d\n", mRect.width);
     aDesiredSize.width = mRect.width;
     aDesiredSize.height = mRect.height;
   }
@@ -441,7 +440,6 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       }
     }
     mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-    printf("image loader returning des size %d\n", aDesiredSize.width);
   }
 }
 
