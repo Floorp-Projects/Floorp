@@ -283,7 +283,7 @@ pref("wallet.Server",                       "http://www.mozilla.org/wallet/table
 pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
 pref("wallet.crypto",                       false);
-pref("imageblocker.enabled",                false);
+pref("imageblocker.enabled",                true);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
