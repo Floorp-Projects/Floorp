@@ -30,7 +30,7 @@ SRCS=					\
 	CompositionTest.java		\
 	NSTabbedPane.java		\
 	OptionsPanel.java		\
-	TestDataSource2.java		\
+	# TestDataSource2.java		\
 	$(NULL)
 
 include ../rules.mk
