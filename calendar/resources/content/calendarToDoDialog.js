@@ -351,7 +351,7 @@ function checkStartAndDueDates()
       //show alert message, disable OK button
       document.getElementById( "start-date-warning" ).removeAttribute( "collapsed" );
 
-      document.getElementById( "ok" ).setAttribute( "disabled", true );
+      document.getElementById( "calendar-new-taskwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
    }
    else
    {
@@ -359,8 +359,7 @@ function checkStartAndDueDates()
       
       document.getElementById( "start-date-warning" ).setAttribute( "collapsed", true );
       
-      document.getElementById( "ok" ).removeAttribute( "disabled" );
-
+      document.getElementById( "calendar-new-taskwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
    }
 
 }

@@ -56,7 +56,7 @@
 
 
 <dialog
-   id="calendar-new-eventwindow"
+   id="calendar-new-taskwindow"
    title="Calendar Event"
    buttons="accept,cancel"
    ondialogaccept="return onOKCommand();"

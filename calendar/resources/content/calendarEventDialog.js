@@ -270,7 +270,7 @@ function loadCalendarEventDialog()
       {
          document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
          if( serverList[i].remote == true && serverList[i].path == gEvent.parent.server )
-            document.getElementById( "ok" ).setAttribute( "disabled", "true" );
+            document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", "true" );
       }
    }
    //if the server 
@@ -519,7 +519,7 @@ function updateOKButton()
 
    var CheckRecurTime = checkRecurTime();
    
-   document.getElementById( "ok" ).setAttribute( "disabled", !( CheckEndTime && CheckRecurTime ) );
+   document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", !( CheckEndTime && CheckRecurTime ) );
 }
 
 /**
