@@ -141,7 +141,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the value you want
      * @return  string containing value.
      */
-    virtual const nsString& GetValueAt(PRUint32 anIndex) const =0;
+    virtual const nsAString& GetValueAt(PRUint32 anIndex) const =0;
 
     /**
      * NOTE: When the node is an entity, this will translate the entity

@@ -94,7 +94,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& anHTMLString, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(const nsAString& anHTMLString, const nsString& aCharset, PRInt32 aSource);
 
       /**
        *  Use this constructor if you want i/o to be based on 
@@ -117,7 +117,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(const nsAString& aFilename, nsInputStream& aStream, const nsString& aCharset, PRInt32 aSource);
 
 
       ~nsScanner();

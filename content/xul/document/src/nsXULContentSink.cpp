@@ -1667,7 +1667,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           nsAutoString extraWhiteSpace;
           PRInt32 cnt = mContextStack.Depth();
           while (--cnt >= 0)
-              extraWhiteSpace.Assign(NS_LITERAL_STRING("  "));
+              extraWhiteSpace.Append(NS_LITERAL_STRING("  "));
           nsAutoString qnameC,valueC;
           qnameC.Assign(aAttributes[0]);
           valueC.Assign(aAttributes[1]);

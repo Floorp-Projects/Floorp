@@ -576,7 +576,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
     char* key=nsnull;
     char* value=nsnull;
     const nsAReadableString& k = aNode.GetKeyAt(i);
-    const nsString& v = aNode.GetValueAt(i);
+    const nsAString& v = aNode.GetValueAt(i);
 
     GetNewCString(k, &key);
     if(key) {

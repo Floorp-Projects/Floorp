@@ -582,20 +582,20 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
           //we should only enable user-defined entities in debug builds...
 
         PRInt32 theCount=aNode.GetAttributeCount();
-        const nsString* theNamePtr=0;
-        const nsString* theValuePtr=0;
+        const nsAString* theNamePtr=0;
+        const nsAString* theValuePtr=0;
 
         if(theCount) {
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
             const nsAString& theKey = aNode.GetKeyAt(theIndex);
             if(theKey.Equals(NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
-              const nsString& theName=aNode.GetValueAt(theIndex);
+              const nsAString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
             }
             else if(theKey.Equals(NS_LITERAL_STRING("VALUE"), nsCaseInsensitiveStringComparator())) {
               //store the named enity with the context...
-              const nsString& theValue=aNode.GetValueAt(theIndex);
+              const nsAString& theValue=aNode.GetValueAt(theIndex);
               theValuePtr=&theValue;
             }
           }

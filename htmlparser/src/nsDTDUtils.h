@@ -234,7 +234,7 @@ public:
 //used for named entities and counters (XXX debug only)
 class CNamedEntity {
 public:
-  CNamedEntity(const nsString& aName,const nsString& aValue) : mName(), mValue() {
+  CNamedEntity(const nsAString& aName,const nsAString& aValue) : mName(), mValue() {
     PRUnichar theFirst=aName.First();
     PRUnichar theLast=aName.Last();
     PRInt32   theLen=aName.Length();
@@ -389,8 +389,8 @@ public:
   void            AllocateCounters(void);
   PRInt32         IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult);
     
-  CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
-  CNamedEntity*   GetEntity(const nsString& aName)const;
+  CNamedEntity*   RegisterEntity(const nsAString& aName,const nsAString& aValue);
+  CNamedEntity*   GetEntity(const nsAString& aName) const;
 #endif
 };
 

@@ -366,7 +366,7 @@ class CAttributeToken: public CHTMLToken {
     virtual const nsAReadableString&     GetKey(void) {return mTextKey;}
     virtual void          SetKey(const nsAReadableString& aKey);
     virtual void          BindKey(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
-    virtual const nsString&     GetValue(void) {return mTextValue;}
+    virtual const nsAString&     GetValue(void) {return mTextValue;}
     virtual void          SanitizeKey();
 #ifdef DEBUG
     virtual void          DebugDumpToken(nsOutputStream& out);

@@ -300,7 +300,7 @@ const nsAReadableString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text value
  */
-const nsString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
+const nsAString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
   PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
 
   NS_PRECONDITION(PRInt32(anIndex)<theCount, "Bad attr index");

@@ -153,11 +153,6 @@ const PRInt32 kBackward = 1;
 //#define DEBUG_charset
 
 
-//#define rickgdebug 1
-#ifdef rickgdebug
-#include "nsHTMLContentSinkStream.h"
-#endif
-
 #define ID_NOT_IN_DOCUMENT ((nsIContent *)1)
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
@@ -322,9 +317,9 @@ nsHTMLDocument::nsHTMLDocument()
 						  NS_GET_IID(nsIRDFService),
 						  (nsISupports**) &gRDF);
 
-    //nsCOMPtr<nsIRDFService> gRDF(do_GetService(kRDFServiceCID, &rv));
+    //nsCOMPtr<nsIRDFService> gRDF(do_GetService(kRDFServiceCID,
+    //&rv));
   }
-
   mDomainWasSet = PR_FALSE; // Bug 13871: Frameset spoofing
 }
 
@@ -358,7 +353,7 @@ nsHTMLDocument::~nsHTMLDocument()
     mReferrer = nsnull;
   }
   NS_IF_RELEASE(mParser);
-  mImageMaps.Clear();
+  mImageMaps->Clear();
   NS_IF_RELEASE(mForms);
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();  // release weak ref
@@ -394,6 +389,9 @@ nsHTMLDocument::Init()
   nsresult rv = nsDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = NS_NewISupportsArray(getter_AddRefs(mImageMaps));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   static PLDHashTableOps hash_table_ops =
   {
     PL_DHashAllocTable,
@@ -460,7 +458,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 
   mBodyContent = nsnull;
 
-  mImageMaps.Clear();
+  mImageMaps->Clear();
   NS_IF_RELEASE(mForms);
 
   if (aURL) {
@@ -1084,7 +1082,7 @@ nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
   if (nsnull == aMap) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (mImageMaps.AppendElement(aMap)) {
+  if (mImageMaps->AppendElement(aMap)) {
     return NS_OK;
   }
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1097,7 +1095,7 @@ nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
   if (nsnull == aMap) {
     return NS_ERROR_NULL_POINTER;
   }
-  mImageMaps.RemoveElement(aMap, 0);
+  mImageMaps->RemoveElement(aMap);
   return NS_OK;
 }
 
@@ -1112,10 +1110,10 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
 
   nsAutoString name;
   PRUint32 i, n;
-  mImageMaps.Count(&n);
+  mImageMaps->Count(&n);
   for (i = 0; i < n; i++) {
     nsCOMPtr<nsIDOMHTMLMapElement> map;
-    mImageMaps.QueryElementAt(i, NS_GET_IID(nsIDOMHTMLMapElement), getter_AddRefs(map));
+    mImageMaps->QueryElementAt(i, NS_GET_IID(nsIDOMHTMLMapElement), getter_AddRefs(map));
     if (map && NS_SUCCEEDED(map->GetName(name))) {
       if (name.EqualsIgnoreCase(aMapName)) {
         *aResult = map;

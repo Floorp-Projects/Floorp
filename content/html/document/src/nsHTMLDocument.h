@@ -228,7 +228,7 @@ protected:
   nsString*   mLastModified;
   nsString*   mReferrer;
   nsDTDMode mDTDMode;
-  nsSupportsArray mImageMaps;
+  nsCOMPtr<nsISupportsArray> mImageMaps;
 
   nsContentList *mImages;
   nsContentList *mApplets;

@@ -5255,8 +5255,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
       eViewSource);
 
-    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
-    parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
+    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+                               kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
     *aResult = parser;
@@ -5275,7 +5275,10 @@ nsXULDocument::ApplyPersistentAttributes()
 
     mApplyingPersistedAttrs = PR_TRUE;
 
-    nsSupportsArray elements;
+    nsresult rv;
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+    if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString docurl;
     mDocumentURL->GetSpec(getter_Copies(docurl));
@@ -5310,14 +5313,14 @@ nsXULDocument::ApplyPersistentAttributes()
         nsXULContentUtils::MakeElementID(this, NS_ConvertASCIItoUCS2(uri), id);
 
         // This will clear the array if there are no elements.
-        GetElementsForID(id, &elements);
+        GetElementsForID(id, elements);
 
         PRUint32 cnt = 0;
-        elements.Count(&cnt);
+        elements->Count(&cnt);
         if (! cnt)
             continue;
 
-        ApplyPersistentAttributesToElements(resource, &elements);
+        ApplyPersistentAttributesToElements(resource, elements);
     }
 
     mApplyingPersistedAttrs = PR_FALSE;

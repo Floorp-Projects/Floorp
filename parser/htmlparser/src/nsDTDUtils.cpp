@@ -452,30 +452,36 @@ nsDTDContext::~nsDTDContext() {
 
 #ifdef DEBUG
 
-CNamedEntity* nsDTDContext::GetEntity(const nsString& aName)const {
-  PRInt32 theCount=mEntities.GetSize();
-  PRInt32 theIndex=0;
+CNamedEntity* nsDTDContext::GetEntity(const nsAString& aName)const {
+  if (aName.Length() > 2) {
+    nsAString::const_iterator start, end;
+    aName.BeginReading(start);
+    aName.EndReading(end);
+    
 
-  PRInt32 theLen=aName.Length();
-  PRUnichar theChar=aName.Last();
+    PRInt32 theLen=aName.Length();
+    PRUnichar theChar=aName.Last();
 
-  if(theLen>2) {
-    if(kSemicolon==theChar) {
-      theLen--;
+    // skip past leading and trailing quotes/etc
+    if(kQuote==*start) {
+      start++;
     }
-
-    const PRUnichar *theBuf=aName.get();
-    if(kQuote==theBuf[0]) {
-      theBuf++;
-      theLen--;
+    
+    if(kSemicolon==theChar ||
+       kQuote == theChar) {
+      end--;
     }
-    if(kQuote==theChar) {
-      theLen--;
-    }
+    
   
+    const nsAString& entityName = Substring(start, end);
+    
+    PRInt32 theCount=mEntities.GetSize();
+    PRInt32 theIndex=0;
     for(theIndex=0;theIndex<theCount;theIndex++) {
       CNamedEntity *theResult=(CNamedEntity*)mEntities.ObjectAt(theIndex);
-      if(theResult && theResult->mName.EqualsWithConversion(theBuf,PR_TRUE,theLen)){
+      if(theResult &&
+         theResult->mName.Equals(entityName,
+                                 nsCaseInsensitiveStringComparator())) {
         return theResult;
       }
     }
@@ -483,7 +489,7 @@ CNamedEntity* nsDTDContext::GetEntity(const nsString& aName)const {
   return 0;
 }
 
-CNamedEntity*  nsDTDContext::RegisterEntity(const nsString& aName,const nsString& aValue) {
+CNamedEntity*  nsDTDContext::RegisterEntity(const nsAString& aName,const nsAString& aValue) {
   CNamedEntity *theEntity=GetEntity(aName);
   if(!GetEntity(aName)){
     theEntity=new CNamedEntity(aName,aValue);
@@ -843,7 +849,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
 
   for(theIndex=0;theIndex<theCount;theIndex++){
     const nsAString& theKey=aNode.GetKeyAt(theIndex);
-    const nsString& theValue=aNode.GetValueAt(theIndex);
+    const nsAString& theValue=aNode.GetValueAt(theIndex);
 
     if(theKey.Equals(NS_LITERAL_STRING("name"), nsCaseInsensitiveStringComparator())){
       theEntity=GetEntity(theValue);
@@ -857,9 +863,11 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       theIncrValue=0;
     }
     else if(theKey.Equals(NS_LITERAL_STRING("format"), nsCaseInsensitiveStringComparator())){
-      PRUnichar theChar=theValue.CharAt(0);
+      nsAString::const_iterator start;
+      
+      PRUnichar theChar=*theValue.BeginReading(start);
       if('"'==theChar)
-        theChar=theValue.CharAt(1);
+        theChar=*(++start);
       switch(theChar){
         case 'A': case 'a': theNumFormat=CAbacus::eAlpha;   break;
         case 'B': case 'b': theNumFormat=CAbacus::eBinary;  break;
@@ -875,7 +883,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
     }
     else if(theKey.Equals(NS_LITERAL_STRING("value"), nsCaseInsensitiveStringComparator())){
       PRInt32 err=0;
-      theNewValue=theValue.ToInteger(&err);
+      theNewValue=atoi(NS_LossyConvertUCS2toASCII(theValue).get());
       if(!err) {
 
         theIncrValue=0;
