@@ -50,7 +50,7 @@
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
 nsresult PR_CALLBACK
-app_GetModuleInfo(NSStaticModuleInfo **info, PRUint32 *count);
+app_GetModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
