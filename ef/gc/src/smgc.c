@@ -968,7 +968,7 @@ sm_FinalizerLoop(void* unused)
            our notifier to read it (during PR_Wait) */
         sm_didFinalizationWork = PR_FALSE;
         
-//        SM_VERIFY_HEAP();
+        /*        SM_VERIFY_HEAP(); */
 		
         genNum = sm_Heap.collectingGenNum;
         if (genNum >= SMGenNum_Static)
