@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
  *
  * Contributor(s): 
  */
@@ -100,6 +103,7 @@ typedef long int32;
 #include "nsIDOMSelection.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPrompt.h"
 
 #include "nsEditorCID.h"
 #include "nsIEditor.h"
@@ -138,7 +142,7 @@ typedef long int32;
 #include "IEHtmlDocument.h"
 #include "CPMozillaControl.h"
 #include "MozillaBrowser.h"
-#include "WebShellContainer.h"
+#include "WebBrowserContainer.h"
 #include "DropTarget.h"
 #include "guids.h"
 
