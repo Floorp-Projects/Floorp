@@ -1717,7 +1717,7 @@ nsMenuFrame::OnCreate()
             commandAttr.Assign(NS_LITERAL_STRING(""));
             menuAttr.Assign(NS_LITERAL_STRING(""));
 
-            // The menu's label and checked states need to be updated to match the command.
+            // The menu's label, accesskey, and checked states need to be updated to match the command.
             // Note that (unlike the disabled state) if the command has *no* label for either, we
             // assume the menu is supplying its own.
             commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr);
@@ -1726,7 +1726,17 @@ nsMenuFrame::OnCreate()
               if (!commandAttr.IsEmpty()) 
                 grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
             }
-            
+
+            commandAttr.Assign(NS_LITERAL_STRING(""));
+            menuAttr.Assign(NS_LITERAL_STRING(""));
+
+            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr);
+            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, menuAttr);
+            if (!commandAttr.Equals(menuAttr)) {
+              if (!commandAttr.IsEmpty()) 
+                grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandAttr, PR_TRUE);
+            }
+
             commandAttr.Assign(NS_LITERAL_STRING(""));
             menuAttr.Assign(NS_LITERAL_STRING(""));
 

@@ -590,6 +590,18 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
               if (!commandValue.IsEmpty()) 
                 grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandValue, PR_TRUE);
             }
+
+            commandValue.Assign(NS_LITERAL_STRING(""));
+            menuValue.Assign(NS_LITERAL_STRING(""));
+
+            // The menu's accesskey needs to be updated to match the command.
+            // If the command has no accesskey, assume the menu is supplying its own.
+            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandValue);
+            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, menuValue);
+            if (!commandValue.Equals(menuValue)) {
+              if (!commandValue.IsEmpty()) 
+                grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, commandValue, PR_TRUE);
+            }
           }
         }
       }
