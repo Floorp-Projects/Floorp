@@ -135,9 +135,6 @@ nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* sessio
     mURL = uri;
     mProxyInfo = proxyInfo;
 
-    rv = mURL->GetAsciiHost(mHost);
-    if (NS_FAILED(rv)) return rv;
-
     mIOService = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -559,8 +556,10 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
     if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending || NS_FAILED(mStatus))
         return NS_OK;
 
+    nsCAutoString host;
+    mURL->GetHost(host);
     return mEventSink->OnStatus(this, mUserContext, aStatus,
-                                NS_ConvertASCIItoUCS2(mHost).get());
+                                NS_ConvertUTF8toUTF16(host).get());
 }
 
 NS_IMETHODIMP

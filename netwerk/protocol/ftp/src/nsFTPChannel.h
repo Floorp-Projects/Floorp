@@ -134,7 +134,6 @@ protected:
 
     nsFtpState*                     mFTPState;   
 
-    nsCString                       mHost;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
     PRPackedBool                    mCanceled;

@@ -3925,8 +3925,10 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
         LOG(("sending status notification [this=%x status=%x progress=%llu/%llu]\n",
             this, status, progress, progressMax));
 
-        NS_ConvertASCIItoUCS2 host(mConnectionInfo->Host());
-        mProgressSink->OnStatus(this, nsnull, status, host.get());
+        nsCAutoString host;
+        mURI->GetHost(host);
+        mProgressSink->OnStatus(this, nsnull, status,
+                                NS_ConvertUTF8toUTF16(host).get());
 
         if (progress > 0)
             mProgressSink->OnProgress(this, nsnull, progress, progressMax);
