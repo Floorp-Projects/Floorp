@@ -260,8 +260,16 @@ var fileButton = {
 
     if ("beginBatch" in this)
       this.beginBatch();
-    for (var i = 0; i < bookmarksTree.selectedItems.length; ++i) {
-      var currItem = bookmarksTree.selectedItems[i];
+ 
+    // Save the current selection
+    var selectedItems = bookmarksTree.selectedItems;
+    var numSelected = selectedItems.length;
+    var selectionArray = new Array(numSelected);
+    for (var i = 0; i &lt; numSelected; i++)
+      selectionArray[i] = selectedItems[i];
+
+    for (i = 0; i &lt; numSelected; ++i) {  
+      var currItem = selectionArray[i];
       var currURI = NODE_ID(currItem);
       var parent = gBookmarksShell.findRDFNode(currItem, false);
       gBookmarksShell.moveBookmark(currURI, NODE_ID(parent), toFolderURI);
