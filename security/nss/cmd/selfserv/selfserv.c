@@ -63,6 +63,7 @@
 #include "prio.h"
 #include "prerror.h"
 #include "prnetdb.h"
+#include "prclist.h"
 #include "plgetopt.h"
 #include "pk11func.h"
 #include "secitem.h"
@@ -81,6 +82,8 @@
 #ifndef PORT_Malloc
 #define PORT_Malloc PR_Malloc
 #endif
+
+static int handle_connection( PRFileDesc *, PRFileDesc *, int );
 
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
@@ -127,13 +130,16 @@ const int ssl3CipherSuites[] = {
 };
 
 /* data and structures for shutdown */
-int	stopping;
+static int	stopping;
 
-int     requestCert;
-int	verbose;
-SECItem	bigBuf;
+static PRBool  noDelay;
+static int     requestCert;
+static int	verbose;
+static SECItem	bigBuf;
 
-PRLogModuleInfo *lm;
+static PRThread * acceptorThread;
+
+static PRLogModuleInfo *lm;
 
 /* Add custom password handler because SECU_GetModulePassword 
  * makes automation of this program next to impossible.
@@ -161,10 +167,11 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3RTmrvx] [-w password] [-t threads]\n"
+"Usage: %s -n rsa_nickname -p port [-3NRTmrvx] [-w password] [-t threads]\n"
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "         [-M maxProcs] \n"
 "-3 means disable SSL v3\n"
+"-D means disable Nagle delays in TCP\n"
 "-T means disable TLS\n"
 "-R means disable detection of rollback from TLS to SSL3\n"
 "-m means test the model-socket feature of SSL_ImportFD.\n"
@@ -173,10 +180,10 @@ Usage(const char *progName)
 "    2 -r's mean request  and require, cert on initial handshake.\n"
 "    3 -r's mean request, not require, cert on second handshake.\n"
 "    4 -r's mean request  and require, cert on second handshake.\n"
-"-t threads -- specify the number of threads to use for connections.\n"
 "-v means verbose output\n"
 "-x means use export policy.\n"
 "-M maxProcs tells how many processes to run in a multi-process server\n"
+"-t threads -- specify the number of threads to use for connections.\n"
 "-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
 "A    SSL2 RC4 128 WITH MD5\n"
@@ -310,14 +317,47 @@ void printSecurityInfo(PRFileDesc *fd)
 #define MIN_THREADS 3
 #define DEFAULT_THREADS 8
 #define MAX_THREADS 128
+#define MAX_PROCS 25
 static int  maxThreads = DEFAULT_THREADS;
 
 
-typedef int startFn(PRFileDesc *a, PRFileDesc *b, int c);
+typedef struct jobStr {
+    PRCList     link;
+    PRFileDesc *tcp_sock;
+    PRFileDesc *model_sock;
+    int         requestCert;
+} JOB;
 
-PZLock    * threadLock;
-PZCondVar * threadQ;
-static int threadCount = 0;
+static PZLock    * qLock; /* this lock protects all data immediately below */
+static PZCondVar * jobQNotEmptyCv;
+static PZCondVar * freeListNotEmptyCv;
+static PZCondVar * threadCountChangeCv;
+static int  threadCount;
+static int  qCount;
+static PRCList  jobQ;
+static PRCList  freeJobs;
+static JOB *jobTable;
+
+SECStatus
+setupJobs(int maxJobs)
+{
+    int i;
+
+    jobTable = (JOB *)PR_Calloc(maxJobs, sizeof(JOB));
+    if (!jobTable)
+    	return SECFailure;
+
+    PR_INIT_CLIST(&jobQ);
+    PR_INIT_CLIST(&freeJobs);
+
+    for (i = 0; i < maxJobs; ++i) {
+	JOB * pJob = jobTable + i;
+	PR_APPEND_LINK(&pJob->link, &freeJobs);
+    }
+    return SECSuccess;
+}
+
+typedef int startFn(PRFileDesc *a, PRFileDesc *b, int c);
 
 typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
 
@@ -331,7 +371,7 @@ typedef struct perThreadStr {
     runState	state;
 } perThread;
 
-perThread *threads;
+static perThread *threads;
 
 void
 thread_wrapper(void * arg)
@@ -341,78 +381,126 @@ thread_wrapper(void * arg)
     slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->c);
 
     /* notify the thread exit handler. */
-    PZ_Lock(threadLock);
-    slot->state = rs_zombie;
+    PZ_Lock(qLock);
     --threadCount;
-    PZ_NotifyAllCondVar(threadQ);
-    PZ_Unlock(threadLock);
+    PZ_NotifyAllCondVar(threadCountChangeCv);
+    PZ_Unlock(qLock);
 }
 
+int 
+jobLoop(PRFileDesc *a, PRFileDesc *b, int c)
+{
+    PRCList * myLink = 0;
+    JOB     * myJob;
+
+    PZ_Lock(qLock);
+    do {
+	myLink = 0;
+	while (PR_CLIST_IS_EMPTY(&jobQ) && !stopping) {
+            PZ_WaitCondVar(jobQNotEmptyCv, PR_INTERVAL_NO_TIMEOUT);
+	}
+	if (!PR_CLIST_IS_EMPTY(&jobQ)) {
+	    myLink = PR_LIST_HEAD(&jobQ);
+	    PR_REMOVE_AND_INIT_LINK(myLink);
+	}
+	PZ_Unlock(qLock);
+	myJob = (JOB *)myLink;
+	/* myJob will be null when stopping is true and jobQ is empty */
+	if (!myJob) 
+	    break;
+	handle_connection( myJob->tcp_sock, myJob->model_sock, 
+			   myJob->requestCert);
+	PZ_Lock(qLock);
+	PR_APPEND_LINK(myLink, &freeJobs);
+	PZ_NotifyCondVar(freeListNotEmptyCv);
+    } while (PR_TRUE);
+    return 0;
+}
+
+
 SECStatus
-launch_thread(
+launch_threads(
     startFn    *startFunc,
     PRFileDesc *a,
     PRFileDesc *b,
     int         c)
 {
-    perThread * slot;
-    int         i;
-    static int highWaterMark = 0;
-    int workToDo = 1;
+    int i;
+    SECStatus rv = SECSuccess;
 
-    PZ_Lock(threadLock);
-    /* for each perThread structure in the threads array */
-    while( workToDo )  {
-        for (i = 0; i < maxThreads; ++i) {
-            slot = threads + i;
+    /* create the thread management serialization structs */
+    qLock               = PZ_NewLock(nssILockSelfServ);
+    jobQNotEmptyCv      = PZ_NewCondVar(qLock);
+    freeListNotEmptyCv  = PZ_NewCondVar(qLock);
+    threadCountChangeCv = PZ_NewCondVar(qLock);
 
-            /* create new thread */
-            if (( slot->state == rs_idle ) || ( slot->state == rs_zombie ))  {
-                slot->state = rs_running;
-                workToDo = 0;
-                slot->a = a;
-                slot->b = b;
-                slot->c = c;
-                slot->startFunc = startFunc;
-                slot->prThread = PR_CreateThread(PR_USER_THREAD, 
-				thread_wrapper, slot, PR_PRIORITY_NORMAL, 
-				PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
-                if (slot->prThread == NULL) {
-    	            printf("selfserv: Failed to launch thread!\n");
-                    slot->state = rs_idle;
-    	            return SECFailure;
-                } 
+    /* allocate the array of thread slots */
+    threads = PR_Calloc(maxThreads, sizeof(perThread));
+    if ( NULL == threads )  {
+        fprintf(stderr, "Oh Drat! Can't allocate the perThread array\n");
+        return SECFailure;
+    }
+    /* 5 is a little extra, intended to keep the jobQ from underflowing. 
+    ** That is, from going empty while not stopping and clients are still
+    ** trying to contact us.
+    */
+    rv = setupJobs(maxThreads + 5);
+    if (rv != SECSuccess)
+    	return rv;
 
-                highWaterMark = ( i > highWaterMark )? i : highWaterMark;
-                VLOG(("selfserv: Launched thread in slot %d, highWaterMark: %d \n", 
-                      i, highWaterMark ));
-                FLUSH;
-                ++threadCount;
-                break; /* we did what we came here for, leave */
-            }
-        } /* end for() */
-        if ( workToDo )
-            PZ_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
-    } /* end while() */
-    PZ_Unlock(threadLock); 
+    PZ_Lock(qLock);
+    for (i = 0; i < maxThreads; ++i) {
+    	perThread * slot = threads + i;
+
+	slot->state = rs_running;
+	slot->a = a;
+	slot->b = b;
+	slot->c = c;
+	slot->startFunc = startFunc;
+	slot->prThread = PR_CreateThread(PR_USER_THREAD, 
+			thread_wrapper, slot, PR_PRIORITY_NORMAL, 
+			PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+	if (slot->prThread == NULL) {
+	    printf("selfserv: Failed to launch thread!\n");
+	    slot->state = rs_idle;
+	    rv = SECFailure;
+	    break;
+	} 
+
+	++threadCount;
+    }
+    PZ_Unlock(qLock); 
 
     return SECSuccess;
 }
 
-void
-destroy_thread_data(void)
-{
-    PORT_Memset(threads, 0, sizeof threads);
+#define DESTROY_CONDVAR(name) if (name) { \
+        PZ_DestroyCondVar(name); name = NULL; }
+#define DESTROY_LOCK(name) if (name) { \
+        PZ_DestroyLock(name); name = NULL; }
+	
 
-    if (threadQ) {
-        PZ_DestroyCondVar(threadQ);
-    	threadQ = NULL;
+void
+terminateWorkerThreads(void)
+{
+    VLOG(("selfserv: server_thead: waiting on stopping"));
+    stopping = 1; /* should already be true, but let's make sure. */
+    PZ_Lock(qLock);
+    PZ_NotifyAllCondVar(jobQNotEmptyCv);
+    while (threadCount > 0) {
+	PZ_WaitCondVar(threadCountChangeCv, PR_INTERVAL_NO_TIMEOUT);
     }
-    if (threadLock) {
-        PZ_DestroyLock(threadLock);
-        threadLock = NULL;
-    }
+    PZ_Unlock(qLock); 
+
+    DESTROY_CONDVAR(jobQNotEmptyCv);
+    DESTROY_CONDVAR(freeListNotEmptyCv);
+    DESTROY_CONDVAR(threadCountChangeCv);
+
+    DESTROY_LOCK(qLock);
+    PR_Free(jobTable);
+    PR_Free(threads);
 }
+
 
 /**************************************************************************
 ** End   thread management routines.
@@ -424,6 +512,8 @@ PRBool disableTLS      = PR_FALSE;
 PRBool disableRollBack  = PR_FALSE;
 
 static const char stopCmd[] = { "GET /stop " };
+static const char getCmd[]  = { "GET " };
+static const char EOFmsg[]  = { "EOF\r\n\r\n\r\n" };
 static const char outHeader[] = {
     "HTTP/1.0 200 OK\r\n"
     "Server: Generic Web Server\r\n"
@@ -431,6 +521,8 @@ static const char outHeader[] = {
     "Content-type: text/plain\r\n"
     "\r\n"
 };
+
+#ifdef FULL_DUPLEX_CAPABLE
 
 struct lockedVarsStr {
     PZLock *	lock;
@@ -517,7 +609,7 @@ do_writes(
     return (sent < bigBuf.len) ? SECFailure : SECSuccess;
 }
 
-int 
+static int 
 handle_fdx_connection(
     PRFileDesc *       tcp_sock,
     PRFileDesc *       model_sock,
@@ -591,6 +683,8 @@ cleanup:
     return SECSuccess;
 }
 
+#endif
+
 int
 handle_connection( 
     PRFileDesc *tcp_sock,
@@ -599,6 +693,7 @@ handle_connection(
     )
 {
     PRFileDesc *       ssl_sock = NULL;
+    PRFileDesc *       local_file_fd = NULL;
     char  *            post;
     char  *            pBuf;			/* unused space at end of buf */
     const char *       errString;
@@ -607,11 +702,14 @@ handle_connection(
     int                bufDat;			/* characters received in buf */
     int                newln    = 0;		/* # of consecutive newlns */
     int                firstTime = 1;
-    int                i;
+    int                reqLen;
     int                rv;
+    int                numIOVs;
     PRSocketOptionData opt;
-    char               msgBuf[120];
+    PRIOVec            iovs[16];
+    char               msgBuf[160];
     char               buf[10240];
+    char               fileName[513];
 
     pBuf   = buf;
     bufRem = sizeof buf;
@@ -639,9 +737,20 @@ handle_connection(
 	ssl_sock = tcp_sock;
     }
 
+    if (noDelay) {
+	opt.option         = PR_SockOpt_NoDelay;
+	opt.value.no_delay = PR_TRUE;
+	status = PR_SetSocketOption(ssl_sock, &opt);
+	if (status != PR_SUCCESS) {
+	    errWarn("PR_SetSocketOption(PR_SockOpt_NoDelay, PR_TRUE)");
+	    PR_Close(ssl_sock);
+	    return SECSuccess;
+	} 
+    }
+
     while (1) {
 	newln = 0;
-	i     = 0;
+	reqLen     = 0;
 	rv = PR_Read(ssl_sock, pBuf, bufRem);
 	if (rv == 0 || 
 	    (rv < 0 && PR_END_OF_FILE_ERROR == PR_GetError())) {
@@ -666,8 +775,8 @@ handle_connection(
 	 * as this signifies the end of the GET or POST portion.
 	 * The posted data follows.
 	 */
-	while (i < bufDat && newln < 2) {
-	    int octet = buf[i++];
+	while (reqLen < bufDat && newln < 2) {
+	    int octet = buf[reqLen++];
 	    if (octet == '\n') {
 		newln++;
 	    } else if (octet != '\r') {
@@ -692,63 +801,41 @@ handle_connection(
 
 	/* It's a post, so look for the next and final CR/LF. */
 	/* We should parse content length here, but ... */
-	while (i < bufDat && newln < 3) {
-	    int octet = buf[i++];
+	while (reqLen < bufDat && newln < 3) {
+	    int octet = buf[reqLen++];
 	    if (octet == '\n') {
 		newln++;
 	    }
 	}
 	if (newln == 3)
 	    break;
-    }
+    } /* read loop */
 
     bufDat = pBuf - buf;
     if (bufDat) do {	/* just close if no data */
 	/* Have either (a) a complete get, (b) a complete post, (c) EOF */
-	if (i > 0 && !strncmp(buf, stopCmd, 4)) {
-	    PRFileDesc *local_file_fd = NULL;
-	    PRInt32     bytes;
-	    char *      pSave;
+	if (reqLen > 0 && !strncmp(buf, getCmd, 4)) {
+	    char *      fnBegin = buf + 4;
+	    char *      fnEnd;
 	    PRFileInfo  info;
-	    char        saveChar;
 	    /* try to open the file named.  
 	     * If succesful, then write it to the client.
 	     */
-	    pSave = strpbrk(buf + 4, " \r\n");
-	    if (pSave) {
-		saveChar = *pSave;
-		*pSave = 0;
+	    fnEnd = strpbrk(fnBegin, " \r\n");
+	    if (fnEnd) {
+		int fnLen = fnEnd - fnBegin;
+		if (fnLen > 512)
+		    fnLen = 512;
+		strncpy(fileName, fnBegin, fnLen);
+		fileName[fnLen] = 0;	/* null terminate */
 	    }
-	    status = PR_GetFileInfo(buf + 4, &info);
+	    status = PR_GetFileInfo(fileName, &info);
 	    if (status == PR_SUCCESS &&
 		info.type == PR_FILE_FILE &&
-		info.size >= 0 &&
-		NULL != (local_file_fd = PR_Open(buf + 4, PR_RDONLY, 0))) {
-
-		bytes = PR_TransmitFile(ssl_sock, local_file_fd, outHeader,
-					sizeof outHeader - 1, 
-					PR_TRANSMITFILE_KEEP_OPEN,
-					PR_INTERVAL_NO_TIMEOUT);
-		if (bytes < 0) {
-		    errString = errWarn("PR_TransmitFile");
-		    i = PORT_Strlen(errString);
-		    PORT_Memcpy(buf, errString, i);
-		    goto send_answer;
-		} else {
-		    bytes -= sizeof outHeader - 1;
-		    FPRINTF(stderr, 
-			    "selfserv: PR_TransmitFile wrote %d bytes from %s\n",
-			    bytes, buf + 4);
-		}
-		PR_Close(local_file_fd);
-		break;
-	    }
-	    /* file didn't open. */
-	    if (pSave) {
-		*pSave = saveChar;	/* put it back. */
+		info.size >= 0 ) {
+		local_file_fd = PR_Open(fileName, PR_RDONLY, 0);
 	    }
 	}
-send_answer:
 	/* if user has requested client auth in a subsequent handshake,
 	 * do it here.
 	 */
@@ -781,58 +868,92 @@ send_answer:
 	    }
 	}
 
-	rv = PR_Write(ssl_sock, outHeader, (sizeof(outHeader)) - 1);
-	if (rv < 0) {
-	    errWarn("PR_Write");
-	    break;
-	}
-	if (i <= 0) {	/* hit eof */
+	numIOVs = 0;
+
+	iovs[numIOVs].iov_base = (char *)outHeader;
+	iovs[numIOVs].iov_len  = (sizeof(outHeader)) - 1;
+	numIOVs++;
+
+	if (local_file_fd) {
+	    PRInt32     bytes;
+	    int         errLen;
+	    bytes = PR_TransmitFile(ssl_sock, local_file_fd, outHeader,
+				    sizeof outHeader - 1, 
+				    PR_TRANSMITFILE_KEEP_OPEN,
+				    PR_INTERVAL_NO_TIMEOUT);
+	    if (bytes >= 0) {
+		bytes -= sizeof outHeader - 1;
+		FPRINTF(stderr, 
+			"selfserv: PR_TransmitFile wrote %d bytes from %s\n",
+			bytes, fileName);
+		break;
+	    }
+	    errString = errWarn("PR_TransmitFile");
+	    errLen = PORT_Strlen(errString);
+	    if (errLen > sizeof msgBuf - 1) 
+	    	errLen = sizeof msgBuf - 1;
+	    PORT_Memcpy(msgBuf, errString, errLen);
+	    msgBuf[errLen] = 0;
+
+	    iovs[numIOVs].iov_base = msgBuf;
+	    iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+	    numIOVs++;
+	} else if (reqLen <= 0) {	/* hit eof */
 	    PORT_Sprintf(msgBuf, "Get or Post incomplete after %d bytes.\r\n",
 			 bufDat);
-	    rv = PR_Write(ssl_sock, msgBuf, PORT_Strlen(msgBuf));
-	    if (rv < 0) {
-		errWarn("PR_Write");
-		break;
-	    }
-	} else {
-	    if (verbose > 1) fwrite(buf, 1, i, stdout);	/* display it */
-	    rv = PR_Write(ssl_sock, buf, i);
-	    if (rv < 0) {
-		errWarn("PR_Write");
-		break;
-	    }
-	    printSecurityInfo(ssl_sock);
-	    if (i < bufDat) {
-		PORT_Sprintf(buf, "Discarded %d characters.\r\n", rv - i);
-		rv = PR_Write(ssl_sock, buf, PORT_Strlen(buf));
-		if (rv < 0) {
-		    errWarn("PR_Write");
-		    break;
-		}
-	    }
+
+	    iovs[numIOVs].iov_base = msgBuf;
+	    iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+	    numIOVs++;
+	} else if (reqLen < bufDat) {
+	    PORT_Sprintf(msgBuf, "Discarded %d characters.\r\n", 
+	                 bufDat - reqLen);
+
+	    iovs[numIOVs].iov_base = msgBuf;
+	    iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+	    numIOVs++;
 	}
-	rv = PR_Write(ssl_sock, "EOF\r\n\r\n\r\n", 9);
+
+	if (reqLen > 0) {
+	    if (verbose > 1) 
+	    	fwrite(buf, 1, reqLen, stdout);	/* display it */
+
+	    iovs[numIOVs].iov_base = buf;
+	    iovs[numIOVs].iov_len  = reqLen;
+	    numIOVs++;
+
+	    printSecurityInfo(ssl_sock);
+	}
+
+	iovs[numIOVs].iov_base = (char *)EOFmsg;
+	iovs[numIOVs].iov_len  = 9;
+	numIOVs++;
+
+	rv = PR_Writev(ssl_sock, iovs, numIOVs, PR_INTERVAL_NO_TIMEOUT);
 	if (rv < 0) {
-	    errWarn("PR_Write");
+	    errWarn("PR_Writev");
 	    break;
 	}
     } while (0);
 
 cleanup:
     PR_Close(ssl_sock);
+    if (local_file_fd)
+	PR_Close(local_file_fd);
     VLOG(("selfserv: handle_connection: exiting\n"));
 
     /* do a nice shutdown if asked. */
     if (!strncmp(buf, stopCmd, strlen(stopCmd))) {
 	stopping = 1;
         VLOG(("selfserv: handle_connection: stop command"));
+	PR_Interrupt(acceptorThread);
         PZ_TraceFlush();
     }
     VLOG(("selfserv: handle_connection: exiting"));
     return SECSuccess;	/* success */
 }
 
-int
+SECStatus
 do_accepts(
     PRFileDesc *listen_sock,
     PRFileDesc *model_sock,
@@ -845,34 +966,54 @@ do_accepts(
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
 
+    acceptorThread = PR_GetCurrentThread();
     while (!stopping) {
 	PRFileDesc *tcp_sock;
-	SECStatus   result;
+	PRCList    *myLink;
 
 	FPRINTF(stderr, "\n\n\nselfserv: About to call accept.\n");
 	tcp_sock = PR_Accept(listen_sock, &addr, PR_INTERVAL_NO_TIMEOUT);
 	if (tcp_sock == NULL) {
     	    perr      = PR_GetError();
-	    errWarn("PR_Accept");
+	    if ((perr != PR_CONNECT_RESET_ERROR &&
+	         perr != PR_PENDING_INTERRUPT_ERROR) || verbose) {
+		errWarn("PR_Accept");
+	    } 
 	    if (perr == PR_CONNECT_RESET_ERROR) {
-		FPRINTF(stderr, "Ignoring PR_CONNECT_RESET_ERROR error - continue\n");
+		FPRINTF(stderr, 
+		        "Ignoring PR_CONNECT_RESET_ERROR error - continue\n");
 		continue;
 	    }
 	    break;
 	}
 
         VLOG(("selfserv: do_accept: Got connection\n"));
-	result = launch_thread((bigBuf.data != NULL) ? 
-	                        handle_fdx_connection : handle_connection, 
-	                        tcp_sock, model_sock, requestCert);
 
-	if (result != SECSuccess) {
+	PZ_Lock(qLock);
+	while (PR_CLIST_IS_EMPTY(&freeJobs) && !stopping) {
+            PZ_WaitCondVar(freeListNotEmptyCv, PR_INTERVAL_NO_TIMEOUT);
+	}
+	if (stopping) {
+	    PZ_Unlock(qLock);
 	    PR_Close(tcp_sock);
 	    break;
-        }
+	}
+	myLink = PR_LIST_HEAD(&freeJobs);
+	PR_REMOVE_AND_INIT_LINK(myLink);
+/*	PZ_Unlock(qLock); */
+	{
+	    JOB * myJob = (JOB *)myLink;
+	    myJob->tcp_sock    = tcp_sock;
+	    myJob->model_sock  = model_sock;
+	    myJob->requestCert = requestCert;
+	}
+/*	PZ_Lock(qLock);   */
+	PR_APPEND_LINK(myLink, &jobQ);
+	PZ_NotifyCondVar(jobQNotEmptyCv);
+	PZ_Unlock(qLock);
     }
 
-    fprintf(stderr, "selfserv: Closing listen socket.\n");
+    FPRINTF(stderr, "selfserv: Closing listen socket.\n");
     VLOG(("selfserv: do_accepts: exiting"));
     PR_Close(listen_sock);
     return SECSuccess;
@@ -933,10 +1074,6 @@ server_main(
     int         rv;
     SSLKEAType  kea;
     SECStatus	secStatus;
-
-    /* create the thread management serialization structs */
-    threadLock = PZ_NewLock(nssILockSelfServ);
-    threadQ   = PZ_NewCondVar(threadLock);
 
     if (useModelSocket) {
     	model_sock = PR_NewTCPSocket();
@@ -1027,19 +1164,10 @@ server_main(
     /* end of ssl configuration. */
 
 
-    rv = launch_thread(do_accepts, listen_sock, model_sock, requestCert);
-    if (rv != SECSuccess) {
-    	PR_Close(listen_sock);
-    } else {
-        VLOG(("selfserv: server_thead: waiting on stopping"));
-        PZ_Lock( threadLock );
-        while ( threadCount > 0 ) {
-            PZ_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
-        }
-        PZ_Unlock( threadLock );
-	destroy_thread_data();
-        VLOG(("selfserv: server_thread: exiting"));
-    }
+    /* Now, do the accepting, here in the main thread. */
+    rv = do_accepts(listen_sock, model_sock, requestCert);
+
+    terminateWorkerThreads();
 
     if (useModelSocket && model_sock) {
     	PR_Close(model_sock);
@@ -1087,7 +1215,7 @@ done:
 }
 
 int          numChildren;
-PRProcess *  child[25];
+PRProcess *  child[MAX_PROCS];
 
 PRProcess *
 haveAChild(int argc, char **argv, PRProcessAttr * attr)
@@ -1177,7 +1305,7 @@ main(int argc, char **argv)
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
-    optstate = PL_CreateOptState(argc, argv, "2:3M:RTc:d:p:mn:hi:f:rt:vw:x");
+    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:p:mn:hi:f:rt:vw:x");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1185,7 +1313,13 @@ main(int argc, char **argv)
 
 	case '3': disableSSL3 = PR_TRUE; break;
 
-	case 'M': maxProcs = PORT_Atoi(optstate->value); break;
+	case 'D': noDelay = PR_TRUE; break;
+
+	case 'M': 
+	    maxProcs = PORT_Atoi(optstate->value); 
+	    if (maxProcs < 1)         maxProcs = 1;
+	    if (maxProcs > MAX_PROCS) maxProcs = MAX_PROCS;
+	    break;
 
 	case 'R': disableRollBack = PR_TRUE; break;
 
@@ -1293,13 +1427,6 @@ main(int argc, char **argv)
 
     lm = PR_NewLogModule("TestCase");
 
-    /* allocate the array of thread slots */
-    threads = PR_Calloc(maxThreads, sizeof(perThread));
-    if ( NULL == threads )  {
-        fprintf(stderr, "Oh Drat! Can't allocate the perThread array\n");
-        goto mainExit;
-    }
-
     if (fileName)
     	readBigFile(fileName);
 
@@ -1348,19 +1475,17 @@ main(int argc, char **argv)
     }
 
     if (nickName) {
-
 	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
 	if (cert[kt_rsa] == NULL) {
 	    fprintf(stderr, "selfserv: Can't find certificate %s\n", nickName);
 	    exit(10);
 	}
-
 	privKey[kt_rsa] = PK11_FindKeyByAnyCert(cert[kt_rsa], passwd);
 	if (privKey[kt_rsa] == NULL) {
-	    fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n", nickName);
+	    fprintf(stderr, "selfserv: Can't find Private Key for cert %s\n", 
+	            nickName);
 	    exit(11);
 	}
-
     }
     if (fNickName) {
 	cert[kt_fortezza] = PK11_FindCertFromNickname(fNickName, NULL);
@@ -1368,13 +1493,18 @@ main(int argc, char **argv)
 	    fprintf(stderr, "selfserv: Can't find certificate %s\n", fNickName);
 	    exit(12);
 	}
-
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
     }
 
-    server_main(listen_sock, requestCert, privKey, cert);
+    /* allocate the array of thread slots, and launch the worker threads. */
+    rv = launch_threads(&jobLoop, 0, 0, requestCert);
 
-mainExit:
+    if ( rv == SECSuccess) {
+	server_main(listen_sock, requestCert, privKey, cert);
+    }
+
+    VLOG(("selfserv: server_thread: exiting"));
+
     NSS_Shutdown();
     PR_Cleanup();
     return 0;
