@@ -45,7 +45,7 @@
   <hbox pack="center">
     <statusbar style="width:20em">
       <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-report-button" blocked="true"/>
-      <statusbarpanel flex="1" pack="left"><description>Document: Done</description></statusbarpanel>
+      <statusbarpanel flex="1" pack="left"><description>&done.label;</description></statusbarpanel>
     </statusbar>
   </hbox>
 
