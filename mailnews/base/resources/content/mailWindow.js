@@ -334,8 +334,8 @@ nsMsgStatusFeedback.prototype =
     {
       dump('stopping meteors\n');
       this.ensureStatusFields();
-	  // Record page loading time.
-	  var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
+	    // Record page loading time.
+	    var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
       var msg = Bundle.GetStringFromName("documentDonePrefix") +
                 elapsed + Bundle.GetStringFromName("documentDonePostfix");
 
@@ -348,8 +348,8 @@ nsMsgStatusFeedback.prototype =
       this.statusBar.setAttribute("mode","normal");
       this.statusBar.value = 0;  // be sure to clear the progress bar
       this.statusBar.progresstext = "";
-	  this.stopButton.setAttribute("disabled", true);
-	  this.stopMenu.setAttribute("disabled", true);
+	    this.stopButton.setAttribute("disabled", true);
+	    this.stopMenu.setAttribute("disabled", true);
 
       this.meteorsSpinning = false;
       this.stopTimeoutID = null;
@@ -359,8 +359,20 @@ nsMsgStatusFeedback.prototype =
       if (this.pendingStartRequests > 0)
         this.pendingStartRequests--;
 
+      // if we are going to be starting the meteors, cancel the start
+      if (this.pendingStartRequests == 0 && this.startTimeoutID)
+      {
+        clearTimeout(this.startTimeoutID);
+        this.startTimeoutID = null;
+      }
+        
+      // if we have no more pending starts and we don't have a stop timeout already in progress
+      // AND the meteors are currently running then fire a stop timeout to shut them down.
       if (this.pendingStartRequests == 0 && !this.stopTimeoutID)
-        this.stopTimeoutID = setTimeout('window.MsgStatusFeedback._stopMeteors();', 500);
+      {
+        if (this.meteorsSpinning)
+          this.stopTimeoutID = setTimeout('window.MsgStatusFeedback._stopMeteors();', 500);
+      }
 	},
   showProgress : function(percentage)
     {
