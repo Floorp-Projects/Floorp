@@ -23,6 +23,35 @@ To install:
 *) Read the Policies and Overview documents found in this directory to
 help you get a feel for the scope of this installation.
 
+*) The process id which receives and process the mail must be the the
+same id which runs the tinderbox cron job to prepare the web pages.  I
+prefer to manage my webserver so that all CGI scripts do not run as
+the same user.  Using one user id can cause security problems which
+are hard to detect.  If you must run all web applications as a single
+user it would be safer to ensure that this user is a specific web user
+(apache, cgiuser, webuser) so that this is not mixed up with other
+unix system users (daemon, nobody, bin) since this could cause
+security interactions with other programs which use these ids.
+
+It may take some thought as to how the user id will be configured to
+run when recieving mail and when recieving web requests and not be a
+user id which will cause security problems.
+
+These products will help partion your web application to run as
+different users. (See http://www.w3.org/Security/Faq/wwwsf4.html for
+more info)
+
+CGIWrap 
+	http://cgiwrap.unixtools.org/
+
+
+sbox: Put CGI Scripts in a Box 
+	http://stein.cshl.org/software/sbox/
+
+
+
+The Apache Web server comes with its own wrapper script called suEXEC.
+
 *) The src/default_conf directory contains perl libraries which are
 specific to an individual users site configuration.  No two users of
 Tinderbox will have the identical sets of files.
@@ -78,7 +107,7 @@ most common changes are:
 		directory is disjoint from the prefix directory.  This
 		defaults to /var/www/cgi-bin/tinderbox.
 
-	htmldir: The directory where html files should be
+	html_prefix: The directory where html files should be
 		written. This depends on how your webserver is configured. 
 		This is where the webserver will pick up tinderbox2
 		output.  This defaults to /home/httpd/html/tinderbox.
@@ -87,8 +116,9 @@ most common changes are:
 *) run 'make' to create executable versions of the source code in the
 ./build directory.
 
-*) run 'make compile_bin_code' to ensure that the code will compile when
-it is installed.
+*) run 'make compile_bin_code' to ensure that the code will compile
+when it is installed.  This will not work if your target machine is
+very different from the machine you are running make on.
 
 *) If you wish run the test programs as described in
 /build/test/ReadMe to ensure that you have configured the program
@@ -106,7 +136,7 @@ will be where the webserver will run the tinderbox cgi's from.  You
 can copy the *.cgi files to another directory if this is not the case.
 
 
-*) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
+*) set up a cron job to run $cgi-bin/bin/tinder.cgi --daemon-mode 
 	every five minutes.  This generates the static tinderbox pages
 	which users see.
    set up a cron job to run $prefix/bin/rmlogs at least once a day.
