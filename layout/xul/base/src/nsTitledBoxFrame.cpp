@@ -64,6 +64,17 @@ public:
                   const nsRect& aDirtyRect,
                   nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("GroupBoxFrame", aResult);
@@ -77,7 +88,8 @@ public:
   
   virtual PRBool GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; return PR_TRUE; }
 
-  nsIFrame* GetGroupTitle(nsIPresContext* aPresContext, nsRect& aRect);
+  nsIFrame* GetTitleFrame(nsIPresContext* aPresContext, nsRect& aRect);
+  nsIFrame* GetContentFrame(nsIPresContext* aPresContext);
 
 };
 
@@ -171,7 +183,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
         nscoord yoff = 0;
 
         nsRect titleRect;
-        nsIFrame* titleFrame = GetGroupTitle(aPresContext, titleRect);
+        nsIFrame* titleFrame = GetTitleFrame(aPresContext, titleRect);
 
         if (titleFrame) {        
             // if the border is smaller than the legend. Move the border down
@@ -269,7 +281,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
 }
 
 nsIFrame*
-nsTitledBoxFrame::GetGroupTitle(nsIPresContext* aPresContext, nsRect& aTitleRect)
+nsTitledBoxFrame::GetTitleFrame(nsIPresContext* aPresContext, nsRect& aTitleRect)
 {
     // if we only have one child fail
     nsIFrame* frame = mFrames.FirstChild();
@@ -295,6 +307,20 @@ nsTitledBoxFrame::GetGroupTitle(nsIPresContext* aPresContext, nsRect& aTitleRect
     return child;
 }
 
+nsIFrame*
+nsTitledBoxFrame::GetContentFrame(nsIPresContext* aPresContext)
+{
+    // the content frame is always our second frame. The title frame
+    // is the first.
+    nsIFrame* frame = mFrames.FirstChild();
+    nsIFrame* next = nsnull;
+    frame->GetNextSibling(&next);
+    if (!next)
+        return frame;
+    else 
+        return next;
+}
+
 NS_IMETHODIMP 
 nsTitledBoxFrame::Reflow(nsIPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
@@ -317,5 +343,29 @@ nsTitledBoxFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+NS_IMETHODIMP
+nsTitledBoxFrame::InsertFrames(nsIPresContext* aPresContext,
+                            nsIPresShell& aPresShell,
+                            nsIAtom* aListName,
+                            nsIFrame* aPrevFrame,
+                            nsIFrame* aFrameList)
+{
+   nsIFrame* content = GetContentFrame(aPresContext);
+   NS_ASSERTION(content, "ERROR TitledBoxFrame has no content!!!");
+   return content->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+}
+
+
+NS_IMETHODIMP
+nsTitledBoxFrame::AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList)
+{
+   nsIFrame* content = GetContentFrame(aPresContext);
+   NS_ASSERTION(content, "ERROR TitledBoxFrame has no content!!!");
+   return content->AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
 }
 

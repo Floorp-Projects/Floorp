@@ -28,6 +28,7 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsXULTextFrame.cpp \
         nsTitleFrame.cpp        \
         nsTitledBoxFrame.cpp        \
         nsFrameNavigator.cpp        \
@@ -69,6 +70,7 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
         .\$(OBJDIR)\nsTitleFrame.obj    \
+        .\$(OBJDIR)\nsXULTextFrame.obj    \
         .\$(OBJDIR)\nsTitledBoxFrame.obj    \
         .\$(OBJDIR)\nsFrameNavigator.obj    \
         .\$(OBJDIR)\nsRepeatService.obj    \

@@ -78,7 +78,7 @@
 #define DEBUG_BORDER_SIZE 2
 #define COIL_SIZE 8
 
-#define TEST_SANITY
+//#define TEST_SANITY
 
 
 #define NS_STATE_IS_HORIZONTAL 0x00400000
@@ -206,6 +206,8 @@ public:
                      PRBool& needsRedraw,
                      const nsString& aReason);
 
+   void PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, nscoord aX, nscoord aY);
+
    void UpdatePseudoElements(nsIPresContext* aPresContext);
 
    void TranslateEventCoords(nsIPresContext* aPresContext,
@@ -218,7 +220,9 @@ public:
 
     nsBoxFrame::Halignment GetHAlign();
     nsBoxFrame::Valignment GetVAlign();
-    
+    void InitializeReflowState(nsIPresContext* aPresContext,  const nsCalculatedBoxInfo& aInfo, nsHTMLReflowState& aReflowState, const nsHTMLReflowState& aParentReflowState, nsIFrame* aFrame, const nsSize& aAvailSize, nsReflowReason reason);
+    void CreateResizedArray(PRBool*& aResized, PRInt32 aCount);
+
 
 #ifdef DEBUG_REFLOW
     void MakeReason(nsIFrame* aFrame, const nsString& aText, nsString& aReason);
@@ -273,6 +277,7 @@ nsBoxFrame::nsBoxFrame()
   // if not otherwise specified boxes by default are horizontal.
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
+
   mInner->mValign = nsBoxFrame::vAlign_Top;
   mInner->mHalign = nsBoxFrame::hAlign_Left;
   mInner->mInnerSize = 0;
@@ -465,9 +470,9 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
 
       if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
 
-         PRInt32 value = textStyle->mVerticalAlign.GetIntValue();
+         PRInt32 type = textStyle->mVerticalAlign.GetIntValue();
 
-         switch (value) 
+         switch (type) 
          {
                 case NS_STYLE_VERTICAL_ALIGN_BASELINE:
                     aValign = nsBoxFrame::vAlign_BaseLine;
@@ -707,6 +712,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
   nsIBox* ibox = nsnull;
   if (NS_SUCCEEDED(aFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
      ibox->GetBoxInfo(aPresContext, aReflowState, aSize); 
+     aSize.mFlags |= NS_FRAME_IS_BOX;
      // add in the border, padding, width, min, max
      GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
      return NS_OK;
@@ -1068,17 +1074,21 @@ printf("\n");
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE && layoutRect.height < aReflowState.mComputedHeight)
     layoutRect.height = aReflowState.mComputedHeight;
 
-  nsSize actualSize(layoutRect.width, layoutRect.height);
+  nsRect actualRect(layoutRect);
+  actualRect.Deflate(inset);
 
-  // flow each child at the new sizes we have calculated.
+  nsSize actualSize(actualRect.width, actualRect.height);
+
+  // flow each child at the new sizes we have calculated. With the actual size we are giving them to layout our and the
+  // size of the rect they were computed to layout in.
   mInner->FlowChildren(aPresContext, aDesiredSize, aReflowState, aStatus, incrementalChild, rect, actualSize, maxAscent);
-
 
   //-----------------------------------------------------------------------------------
   //------------------------- Add our border and insets in ----------------------------
   //-----------------------------------------------------------------------------------
 
   
+  // flow children may have changed the rect so lets use it.
   rect.Inflate(inset);
 
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && rect.width < aReflowState.mComputedWidth)
@@ -1229,10 +1239,7 @@ nsBoxFrameInner::FlowChildren(nsIPresContext* aPresContext,
   nsAutoString reason;
   nsAutoString nextReason;
   PRInt32 infoCount = mInfoList->GetCount();
-  PRBool* resized = new PRBool[infoCount];
-
-  for (int i=0; i < infoCount; i++) 
-      resized[i] = PR_FALSE;
+  PRBool* resized = nsnull;
  
   // ----------------------
   // Flow all children 
@@ -1314,7 +1321,7 @@ nsBoxFrameInner::FlowChildren(nsIPresContext* aPresContext,
                 FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, *info, x, y, PR_TRUE, aIncrementalChild, redraw, reason);
 
                 // if the child got bigger then adjust our rect and all the children.
-                mOuter->ChildResized(childFrame, aDesiredSize, aRect, aMaxAscent, *info, resized, changedIndex, finished, count, nextReason);
+                mOuter->ChildResized(childFrame, aDesiredSize, aRect, aMaxAscent, *info, resized, infoCount, changedIndex, finished, count, nextReason);
 	      }
 
           // ok if we are collapsed make sure the view and all its children
@@ -1355,7 +1362,7 @@ nsBoxFrameInner::FlowChildren(nsIPresContext* aPresContext,
           FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, *info, x, y, PR_TRUE, aIncrementalChild, redraw, reason);
  
           // if the child got bigger then adjust our rect and all the children.
-          mOuter->ChildResized(childFrame, aDesiredSize, aRect, aMaxAscent, *info, resized, changedIndex, finished, count, nextReason);
+          mOuter->ChildResized(childFrame, aDesiredSize, aRect, aMaxAscent, *info, resized, infoCount, changedIndex, finished, count, nextReason);
 
           /*
 #ifdef DEBUG_REFLOW
@@ -1433,7 +1440,8 @@ nsBoxFrameInner::FlowChildren(nsIPresContext* aPresContext,
     mOuter->Invalidate(aPresContext, nsRect(0,0,mOuter->mRect.width, mOuter->mRect.height), PR_FALSE);
   }
 
-  delete[] resized;
+  if (resized)
+     delete[] resized;
 
   return NS_OK;
 }
@@ -1473,7 +1481,16 @@ nsBoxFrameInner::MakeReason(nsIFrame* aFrame, const nsString& aText, nsString& a
 #endif
 
 void
-nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
+nsBoxFrameInner::CreateResizedArray(PRBool*& aResized, PRInt32 aCount)
+{
+  aResized = new PRBool[aCount];
+
+  for (int i=0; i < aCount; i++) 
+      aResized[i] = PR_FALSE;
+}
+
+void
+nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
 {
   if (mState & NS_STATE_IS_HORIZONTAL) {
       // if we are a horizontal box see if the child will fit inside us.
@@ -1530,6 +1547,9 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
 
             InvalidateChildren();
 
+            if (aResized == nsnull)
+                mInner->CreateResizedArray(aResized, aInfoCount); 
+
             // our index resized
             aResized[aIndex] = PR_TRUE;
 
@@ -1582,6 +1602,9 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
             // if the width changed then clear out the resized list
             // but only do this if we are vertical box. On a horizontal box increasing the height will not change the
             // width of its children.
+            if (aResized == nsnull)
+                mInner->CreateResizedArray(aResized, aInfoCount); 
+
             PRInt32 infoCount = mInner->mInfoList->GetCount();
             for (int i=0; i < infoCount; i++)
                aResized[i] = PR_FALSE;
@@ -1601,6 +1624,9 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
             aInfo.calculatedSize.height = aDesiredSize.height;
 
             InvalidateChildren();
+
+            if (aResized == nsnull)
+                mInner->CreateResizedArray(aResized, aInfoCount); 
 
             // our index resized
             aResized[aIndex] = PR_TRUE;
@@ -1785,6 +1811,69 @@ nsBoxFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
   return NS_OK;
 }
 
+void
+nsBoxFrameInner::PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, nscoord aX, nscoord aY)
+{
+      nsPoint curOrigin;
+      aFrame->GetOrigin(curOrigin);
+
+      // only if the origin changed
+    if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
+        aFrame->MoveTo(aPresContext, aX, aY);
+
+        nsIView*  view;
+        aFrame->GetView(aPresContext, &view);
+        if (view) {
+            nsContainerFrame::PositionFrameView(aPresContext, aFrame, view);
+        } else
+            nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+    }
+}
+
+
+void
+nsBoxFrameInner::InitializeReflowState(nsIPresContext* aPresContext, const nsCalculatedBoxInfo& aInfo, nsHTMLReflowState& aReflowState, const nsHTMLReflowState& aParentReflowState, nsIFrame* aFrame, const nsSize& aAvailSize, nsReflowReason aReason)
+{
+      aFrame->GetStyleData(eStyleStruct_Position,
+                          (const nsStyleStruct*&)aReflowState.mStylePosition);
+      aFrame->GetStyleData(eStyleStruct_Display,
+                          (const nsStyleStruct*&)aReflowState.mStyleDisplay);
+      aFrame->GetStyleData(eStyleStruct_Spacing,
+                          (const nsStyleStruct*&)aReflowState.mStyleSpacing);
+
+        aReflowState.mReflowDepth = aParentReflowState.mReflowDepth + 1;
+        aReflowState.parentReflowState = &aParentReflowState;
+        aReflowState.frame = aFrame;
+        aReflowState.reason = aReason;
+        aReflowState.reflowCommand = aReflowState.reflowCommand;
+        aReflowState.availableWidth = aAvailSize.width;
+        aReflowState.availableHeight = aAvailSize.height;
+
+        aReflowState.rendContext = aParentReflowState.rendContext;
+        aReflowState.mSpaceManager = aParentReflowState.mSpaceManager;
+        aReflowState.mLineLayout = aParentReflowState.mLineLayout;
+        aReflowState.isTopOfPage = aParentReflowState.isTopOfPage;
+
+        // if we are not a box then to the regular html thing.
+        // otherwise do the efficient thing for boxes.
+       // if (!(aInfo.mFlags & NS_FRAME_IS_BOX)) {
+       //     aReflowState.Init(aPresContext);
+       /// } else {
+            aReflowState.mComputedMargin.SizeTo(0,0,0,0);
+            aReflowState.mStyleSpacing->GetMargin(aReflowState.mComputedMargin);
+            aReflowState.mComputedBorderPadding.SizeTo(0,0,0,0);
+            aReflowState.mStyleSpacing->GetBorderPadding(aReflowState.mComputedBorderPadding);
+            aReflowState.mComputedPadding.SizeTo(0,0,0,0);
+            aReflowState.mStyleSpacing->GetPadding(aReflowState.mComputedPadding);
+            aReflowState.mComputedOffsets.SizeTo(0, 0, 0, 0);
+            aReflowState.mComputedMinWidth = aReflowState.mComputedMinHeight = 0;
+            aReflowState.mComputedMaxWidth = aReflowState.mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
+            aReflowState.mCompactMarginWidth = 0;
+            aReflowState.mAlignCharOffset = 0;
+            aReflowState.mUseAlignCharOffset = 0;
+            aReflowState.mFrameType = NS_CSS_FRAME_TYPE_BLOCK;
+        //}
+}
 
 /**
  * Flow an individual child. Special args:
@@ -1951,40 +2040,12 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
             size.width -= (margin.left + margin.right);
 
         // create a reflow state to tell our child to flow at the given size.
-        nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(size.width, NS_INTRINSICSIZE));
-        reflowState.reason = reason;
 
-        if (size.height != NS_INTRINSICSIZE)
-            size.height -= (border.top + border.bottom);
-
-        if (size.width != NS_INTRINSICSIZE)
-            size.width -= (border.left + border.right);
-
-        reflowState.mComputedWidth = size.width;
-        reflowState.mComputedHeight = size.height;
-
-    //    nsSize maxElementSize(0, 0);
-      //  desiredSize.maxElementSize = &maxElementSize;
-       /* 
-#if DEBUG_REFLOW
-  ListTag(stdout); 
-  if (reason == eReflowReason_Incremental && aInfo.isIncremental) 
-     printf(": INCREMENTALLY reflowing ");
-  else
-     printf(": reflowing ");
-
-   nsFrame::ListTag(stdout, childFrame);
-   char ch[100];
-   aReason.ToCString(ch,100);
-   printf("because (%s)\n", ch);
-#endif
- */
-
-#ifdef DEBUG_REFLOW
+ #ifdef DEBUG_REFLOW
 
    char* reflowReasonString;
 
-    switch(reflowState.reason) 
+    switch(reason) 
     {
         case eReflowReason_Initial:
           reflowReasonString = "initial";
@@ -2015,20 +2076,49 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
     printf(" reason=%s %s\n",reflowReasonString,ch);
 #endif
 
-    // place the child and reflow
-        childFrame->WillReflow(aPresContext);
+        if (!(aInfo.mFlags & NS_FRAME_IS_BOX)) {
+            nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(size.width, NS_INTRINSICSIZE));
+            reflowState.reason = reason;
 
-        if (aMoveFrame) {
-            childFrame->MoveTo(aPresContext, aX + margin.left, aY + margin.top);
+            if (size.height != NS_INTRINSICSIZE)
+                size.height -= (border.top + border.bottom);
 
-            nsIView*  view;
-            childFrame->GetView(aPresContext, &view);
-            if (view) {
-                nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
+            if (size.width != NS_INTRINSICSIZE)
+                size.width -= (border.left + border.right);
+
+            reflowState.mComputedWidth = size.width;
+            reflowState.mComputedHeight = size.height;
+
+          // place the child and reflow
+            childFrame->WillReflow(aPresContext);
+
+            if (aMoveFrame) {
+                  PlaceChild(aPresContext, childFrame, aX + margin.left, aY + margin.top);
             }
-        }
 
-        childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+            childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        } else {
+            nsHTMLReflowState reflowState(aReflowState);
+            InitializeReflowState(aPresContext, aInfo, reflowState, aReflowState, childFrame, nsSize(size.width, NS_INTRINSICSIZE), reason);
+
+            if (size.height != NS_INTRINSICSIZE)
+                size.height -= (border.top + border.bottom);
+
+            if (size.width != NS_INTRINSICSIZE)
+                size.width -= (border.left + border.right);
+
+            reflowState.mComputedWidth = size.width;
+            reflowState.mComputedHeight = size.height;
+
+          // place the child and reflow
+            childFrame->WillReflow(aPresContext);
+
+            if (aMoveFrame) {
+                  PlaceChild(aPresContext, childFrame, aX + margin.left, aY + margin.top);
+            }
+
+            childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        }
 
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
@@ -2080,44 +2170,13 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
  
         nsContainerFrame::FinishReflowChild(childFrame, aPresContext, desiredSize, aX + margin.left, aY + margin.top, NS_FRAME_NO_MOVE_FRAME);
 
-        /*
-        // set the rect and size the view (if it has one).. Don't position the view
-        // and sync its properties (like opacity) until later when we know its final
-        // position
-        childFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
-        nsIView*  view;
-        childFrame->GetView(aPresContext, &view);
-        if (view) {
-          nsIViewManager  *vm;
-
-          view->GetViewManager(vm);
-          vm->ResizeView(view, desiredSize.width, desiredSize.height);
-          NS_RELEASE(vm);
-        }
-        childFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-        */
-
         // Stub out desiredSize.maxElementSize so that when go out of
         // scope, nothing bad happens!
         //desiredSize.maxElementSize = nsnull;
       
       } else {
           if (aMoveFrame) {
-              nsPoint curOrigin;
-              childFrame->GetOrigin(curOrigin);
-
-              // only if the origin changed
-              //if ((curOrigin.x != aX + margin.left) || (curOrigin.y != aY + margin.top)) {
-
-                  childFrame->MoveTo(aPresContext,  aX + margin.left, aY + margin.top);
-
-                  nsIView*  view;
-                  childFrame->GetView(aPresContext, &view);
-                  if (view) 
-                      nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
-                  else
-                      nsContainerFrame::PositionChildViews(aPresContext, childFrame);
-             // }
+               PlaceChild(aPresContext, childFrame, aX + margin.left, aY + margin.top);
           }
       }    
       
@@ -2250,10 +2309,7 @@ nsBoxFrameInner::GetHAlign()
 
 void
 nsBoxFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
-{
-    nsBoxFrame::Valignment valign = mInner->GetVAlign();
-    nsBoxFrame::Halignment halign = mInner->GetHAlign();
-  
+{  
       nsCalculatedBoxInfo* first = mInner->mInfoList->GetFirst();
 
       if (!first)
@@ -2375,7 +2431,6 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
               nscoord pref = GET_WIDTH(info->prefSize);
               nscoord max  = GET_WIDTH(info->maxSize);
               nscoord min  = GET_WIDTH(info->minSize);
-              nscoord calculated = GET_WIDTH(info->calculatedSize);
      
               if (!(info->mFlags & NS_FRAME_BOX_SIZE_VALID)) {
                   PRInt32 newSize = pref + (sizeRemaining*info->flex/springConstantsRemaining);
@@ -2514,7 +2569,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    mInner->mInfoList->Insert(aPrevFrame, aFrameList);
 
    // insert the frames in out regular frame list
-   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
    mInner->SanityCheck();
 
@@ -2536,7 +2591,7 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
    mInner->mInfoList->Append(aFrameList);
 
    // append in regular frames
-   mFrames.AppendFrames(nsnull, aFrameList); 
+   mFrames.AppendFrames(this, aFrameList); 
    
    mInner->SanityCheck();
 
@@ -2599,12 +2654,14 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
             // it does not include its border.
             rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
 
+            /*
             // make sure we can see the debug info
             if (info->prefSize.width < debugInset.left)
               info->prefSize.width = debugInset.left;
 
             if (info->prefSize.height < debugInset.top)
               info->prefSize.height = debugInset.top;
+            */
 
             NS_ASSERTION(rv == NS_OK,"failed to child box info");
             if (NS_FAILED(rv))
@@ -2674,12 +2731,14 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
   aSize.minSize += in;
   aSize.prefSize += in;
 
+  /*
   // make sure we can see the debug info
   if (aSize.maxSize.width < debugInset.left + debugInset.right)
       aSize.maxSize.width = debugInset.left + debugInset.right;
 
   if (aSize.maxSize.height < debugInset.top + debugInset.bottom)
       aSize.maxSize.height = debugInset.top + debugInset.bottom;
+  */
 
   aSize.ascent += inset.top;
   aSize.ascent += debugInset.top;
@@ -3144,10 +3203,9 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                         if (mDebugChild == childFrame)
                             return PR_TRUE;
 
-                        nsCOMPtr<nsIContent> content;
-                        childFrame->GetContent(getter_AddRefs(content));
 
-                        if (content) {
+                            nsCOMPtr<nsIContent> content;
+                            mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
 
                             nsString id;
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
@@ -3174,6 +3232,10 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
     #endif
 
                         
+
+                        childFrame->GetContent(getter_AddRefs(content));
+
+                        if (content) {
 
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
                             id.ToCString(idValue,100);
@@ -3211,7 +3273,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
 
                       // add in the css min, max, pref
                         const nsStylePosition* position;
-                        nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
+                        rv = childFrame->GetStyleData(eStyleStruct_Position,
                                       (const nsStyleStruct*&) position);
 
                         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get position");
