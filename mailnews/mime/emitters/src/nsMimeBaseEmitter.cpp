@@ -349,6 +349,12 @@ nsMimeBaseEmitter::EndAttachment()
   return NS_OK;
 }
 
+nsresult
+nsMimeBaseEmitter::EndAllAttachments()
+{
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMimeBaseEmitter::AddAttachmentField(const char *field, const char *value)
 {

@@ -51,5 +51,7 @@ interface nsIMsgHeaderSink : nsISupports{
 	// make a sandwhich around header processing.....
 	void onStartHeaders();
 	void onEndHeaders();
-	void handleAttachment(in string url, in wstring displayName, in string uri, in boolean aNotDownloaded);
+	void handleAttachment(in string url, in wstring displayName, in string
+                          uri, in boolean aNotDownloaded);
+    void onEndAllAttachments();
 };

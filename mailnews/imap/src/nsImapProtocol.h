@@ -74,6 +74,8 @@ class nsIMsgIncomingServer;
 #define	IMAP_CONNECTION_IS_OPEN		0x00000004  /* is the connection currently open? */
 #define IMAP_WAITING_FOR_DATA		0x00000008
 
+#define IMAP_CLEAN_UP_URL_STATE     0x00000010 // processing clean up url state
+
 class nsImapProtocol : public nsIImapProtocol, public nsIRunnable
 {
 public:

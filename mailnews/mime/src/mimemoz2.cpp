@@ -510,6 +510,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     ++i;
     ++tmp;
   }
+  mimeEmitterEndAllAttachments(opt);
 }
 
 // Utility to create a nsIURI object...
@@ -1511,6 +1512,29 @@ mimeEmitterEndAttachment(MimeDisplayOptions *opt)
     nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
     if (emitter)
       return emitter->EndAttachment();
+    else
+      return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+extern "C" nsresult     
+mimeEmitterEndAllAttachments(MimeDisplayOptions *opt)
+{
+  // Check for draft processing...
+  if (NoEmitterProcessing(opt->format_out))
+    return NS_OK;
+
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return NS_ERROR_FAILURE;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    if (emitter)
+      return emitter->EndAllAttachments();
     else
       return NS_OK;
   }

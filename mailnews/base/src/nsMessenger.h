@@ -46,6 +46,8 @@ public:
 	NS_DECL_NSIMESSENGER
     
   nsresult Alert(const char * stringName);
+    nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
+                            const char* messageUri, void *closure);
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);

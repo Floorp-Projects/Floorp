@@ -357,6 +357,17 @@ nsMimeHtmlDisplayEmitter::EndAttachment()
 }
 
 nsresult
+nsMimeHtmlDisplayEmitter::EndAllAttachments()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  rv = GetHeaderSink(getter_AddRefs(headerSink));
+  if (headerSink)
+	  headerSink->OnEndAllAttachments();
+  return rv;
+}
+
+nsresult
 nsMimeHtmlDisplayEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
   Write(buf, size, amountWritten);

@@ -818,7 +818,7 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
 
   nsAutoCMonitor(this);
 
-  if (m_runningUrl)
+  if (m_runningUrl && !TestFlag(IMAP_CLEAN_UP_URL_STATE))
   {
     nsImapAction imapAction;
     m_runningUrl->GetImapAction(&imapAction);
@@ -1148,7 +1148,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
 
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
-  PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
+  PseudoInterrupt(PR_FALSE);  // clear this, because we must be done
+                              // interrupting?
+  SetFlag(IMAP_CLEAN_UP_URL_STATE);
   if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
 	&& m_imapMiscellaneousSink && m_runningUrl)
   {
@@ -1168,6 +1170,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   ReleaseUrlState();
   ResetProgressInfo();
   m_urlInProgress = PR_FALSE;
+  ClearFlag(IMAP_CLEAN_UP_URL_STATE);
+
   // now try queued urls, now that we've released this connection.
   if (m_imapServerSink && GetConnectionStatus() >= 0)
   {

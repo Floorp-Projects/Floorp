@@ -40,6 +40,11 @@ var currentHeaderData;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 
+// attachments array
+var attachmentUrlArray = new Array();
+var attachmentDisplayNameArray = new Array();
+var attachmentMessageUriArray = new Array();
+
 var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorProgID].getService(Components.interfaces.nsIAbAddressCollecter);
 
@@ -185,6 +190,18 @@ var messageHeaderSink = {
       }
 
       AddAttachmentToMenu(displayName, commandString);
+
+      var count = attachmentUrlArray.length;
+      // dump ("** attachment count**" + count + "\n");
+      if (count < 0) count = 0;
+      attachmentUrlArray[count] = url;
+      attachmentDisplayNameArray[count] = escape(displayName);
+      attachmentMessageUriArray[count] = uri;
+    },
+    
+    onEndAllAttachments: function()
+    {
+        AddSaveAllAttachmentsMenu();
     }
 };
 
@@ -226,25 +243,21 @@ function OpenAttachURL(url, displayName, messageUri)
 function AddAttachmentToMenu(name, oncommand) 
 { 
   var popup = document.getElementById("attachmentPopup"); 
-  if ( popup && (popup.childNodes.length >= 2) ) 
+  if (popup)
   { 
     var item = document.createElement('menuitem'); 
     if ( item ) 
     { 
       // popup.removeAttribute('menugenerated');
 
-      var child = popup.childNodes[popup.childNodes.length - 2]; 
-      
-      var bigMenu = document.getElementById('attachmentMenu');
-
-      popup.insertBefore(item, child); 
+      popup.appendChild(item);
       item.setAttribute('value', name); 
       item.setAttribute('oncommand', oncommand); 
     } 
 
     var button = document.getElementById("attachmentButton");
     if (button)
-       button.setAttribute("value", popup.childNodes.length - 2);
+       button.setAttribute("value", popup.childNodes.length);
   } 
 
   var attachBox = document.getElementById("attachmentBox");
@@ -252,19 +265,56 @@ function AddAttachmentToMenu(name, oncommand)
     attachBox.removeAttribute("hide");
 } 
 
+function SaveAllAttachments()
+{
+    try 
+    {
+        messenger.saveAllAttachments(attachmentUrlArray.length,
+                                     attachmentUrlArray,
+                                     attachmentDisplayNameArray,
+                                     attachmentMessageUriArray);
+    }
+    catch (ex)
+    {
+        dump ("** failed to save all attachments ** \n");
+    }
+}
+
+function AddSaveAllAttachmentsMenu()
+{
+    var popup = document.getElementById("attachmentPopup");
+    if (popup && popup.childNodes.length > 1)
+    {
+        var separator = document.createElement('menuseparator');
+        var item = document.createElement('menuitem');
+        if (separator && item)
+        {
+            popup.appendChild(separator);
+            popup.appendChild(item);
+            item.setAttribute('value', "Save All...");
+            item.setAttribute('oncommand', "SaveAllAttachments()");
+        }
+    }
+}
+
 
 function ClearAttachmentMenu() 
 { 
   var popup = document.getElementById("attachmentPopup"); 
   if ( popup ) 
   { 
-     while ( popup.childNodes.length > 2 ) 
+     while ( popup.childNodes.length ) 
        popup.removeChild(popup.childNodes[0]); 
   } 
 
   var attachBox = document.getElementById("attachmentBox");
   if (attachBox)
     attachBox.setAttribute("hide", "true");
+
+  // reset attachments name array
+  attachmentUrlArray.length = 0;
+  attachmentDisplayNameArray.length = 0;
+  attachmentMessageUriArray.length = 0;
 }
 
 // Assumes that all the child nodes of the parent div need removed..leaving

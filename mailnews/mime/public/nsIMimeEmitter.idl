@@ -65,6 +65,8 @@ interface nsIMimeEmitter : nsISupports{
     void    AddAttachmentField([const] in string field, [const] in string value);
     void    EndAttachment();
 
+    void    EndAllAttachments();
+
     // Body handling routines
     void    StartBody(in PRBool bodyOnly, [const] in string msgID, [const] in string outCharset);
     void    WriteBody([const] in string buf, in PRUint32 size, out PRUint32 amountWritten);

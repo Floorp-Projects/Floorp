@@ -98,6 +98,7 @@ interface nsIMessenger : nsISupports {
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);
     void openAttachment(in string url, in string displayName, in string messageUri);
+    void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray, [array, size_is(count)] in string messageUriArray);
     void find();
     void findAgain();
 };

@@ -195,6 +195,8 @@ ConvertBufToPlainText(nsString &aConBuf)
 // jefft - this is a rather obscured class serves for Save Message As File,
 // Save Message As Template, and Save Attachment to a file
 // 
+class nsSaveAllAttachmentsState;
+
 class nsSaveAsListener : public nsIUrlListener,
                          public nsIMsgCopyServiceListener,
                          public nsIStreamListener
@@ -216,12 +218,30 @@ public:
     nsCOMPtr<nsIChannel> m_channel;
     nsXPIDLCString m_templateUri;
     nsMessenger *m_messenger; // not ref counted
+    nsSaveAllAttachmentsState *m_saveAllAttachmentsState;
 
     // rhp: For character set handling
     PRBool        m_doCharsetConversion;
     nsString      m_charset;
     nsString      m_outputFormat;
     nsString      m_msgBuffer;
+};
+
+class nsSaveAllAttachmentsState
+{
+public:
+    nsSaveAllAttachmentsState(PRUint32 count, const char **urlArray,
+                              const char **displayNameArray,
+                              const char **messageUriArray,
+                              const char *directoryName);
+    virtual ~nsSaveAllAttachmentsState();
+
+    PRUint32 m_count;
+    PRUint32 m_curIndex;
+    char* m_directoryName;
+    char** m_urlArray;
+    char** m_displayNameArray;
+    char** m_messageUriArray;
 };
 
 //
@@ -453,6 +473,106 @@ nsMessenger::OpenURL(const char * url)
   return NS_OK;
 }
 
+nsresult
+nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
+                            const char * unescapedUrl,
+                            const char * messageUri,
+                            void *closure)
+{
+  nsIMsgMessageService * messageService = nsnull;
+  nsSaveAsListener *aListener = nsnull;
+  nsSaveAllAttachmentsState *saveState= (nsSaveAllAttachmentsState*) closure;
+  nsAutoString from, to;
+  nsCOMPtr<nsISupports> channelSupport;
+  nsCOMPtr<nsIStreamListener> convertedListener;
+  nsAutoString urlString;
+  char *urlCString = nsnull;
+  nsCOMPtr<nsIURI> aURL;
+  PRBool canFetchMimeParts = PR_FALSE;
+  nsCAutoString fullMessageUri = messageUri;
+  nsresult rv = NS_OK;
+  
+  fileSpec->MakeUnique();
+  NS_WITH_SERVICE(nsIStreamConverterService,
+                  streamConverterService,  
+                  kIStreamConverterServiceCID, &rv);
+  if (NS_FAILED(rv)) goto done;
+
+  aListener = new nsSaveAsListener(fileSpec, this);
+  if (!aListener)
+  {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+  }
+  NS_ADDREF(aListener);
+
+  if (saveState)
+      aListener->m_saveAllAttachmentsState = saveState;
+
+  urlString = unescapedUrl;
+
+  urlString.ReplaceSubstring("/;section", "?section");
+  urlCString = urlString.ToNewCString();
+
+  rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
+  nsCRT::free(urlCString);
+
+  if (NS_FAILED(rv)) goto done;
+
+  rv = GetMessageServiceFromURI(messageUri, &messageService);
+  if (NS_FAILED(rv)) goto done;
+
+  messageService->GetCanFetchMimeParts(&canFetchMimeParts);
+
+  if (canFetchMimeParts)
+  {
+    PRInt32 sectionPos = urlString.Find("?section");
+    nsString mimePart;
+
+    urlString.Right(mimePart, urlString.Length() - sectionPos);
+    fullMessageUri.Append(mimePart);
+   
+    messageUri = fullMessageUri.GetBuffer();
+  }
+  {
+    aListener->m_channel = null_nsCOMPtr();
+    rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
+                                  aURL,
+                                  nsnull,      // inputStream
+                                  nsnull,      // contentType
+                                  -1);
+    if (NS_FAILED(rv)) goto done;
+
+    from = MESSAGE_RFC822;
+    to = "text/xul";
+  
+    channelSupport = do_QueryInterface(aListener->m_channel);
+
+    rv = streamConverterService->AsyncConvertData(
+        from.GetUnicode(), to.GetUnicode(), aListener,
+        channelSupport, getter_AddRefs(convertedListener));
+    if (NS_FAILED(rv)) goto done;
+
+    if (canFetchMimeParts)
+      rv = messageService->OpenAttachment(aURL, messageUri, convertedListener,
+                                          mMsgWindow, nsnull,nsnull);
+    else
+      rv = messageService->DisplayMessage(messageUri,
+                                        convertedListener,mMsgWindow,
+                                        nsnull, nsnull); 
+  }
+
+done:
+    if (messageService)
+      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+
+    if (NS_FAILED(rv))
+    {
+        NS_IF_RELEASE(aListener);
+        Alert("saveAttachmentFailed");
+    }
+	return rv;
+}
 
 NS_IMETHODIMP
 nsMessenger::OpenAttachment(const char * url, const char * displayName, 
@@ -461,27 +581,10 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
     // *** for now OpenAttachment is really a SaveAttachment
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   char *unescapedUrl = nsnull;
-  nsIMsgMessageService * messageService = nsnull;
-  nsSaveAsListener *aListener = nsnull;
-  nsAutoString from, to;
   nsCOMPtr<nsIFileSpec> aSpec;
   nsCOMPtr<nsIFileSpecWithUI> fileSpec;
-  nsCOMPtr<nsISupports> channelSupport;
-  nsCOMPtr<nsIStreamListener> convertedListener;
-  nsAutoString urlString;
-  char *urlCString = nsnull;
   char * unescapedDisplayName = nsnull;
-  nsCOMPtr<nsIURI> aURL;
   nsAutoString tempStr;
-  PRBool canFetchMimeParts = PR_FALSE;
-  nsCAutoString fullMessageUri = messageUri;
-  
-  NS_WITH_SERVICE(nsIStreamConverterService,
-                  streamConverterService,  
-                  kIStreamConverterServiceCID, &rv);
-  if (NS_FAILED(rv)) goto done;
-
-  rv = NS_ERROR_OUT_OF_MEMORY;
 
   if (!url) goto done;
 
@@ -521,7 +624,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
                                   nsIFileSpecWithUI::eAllFiles);
   nsCRT::free(unescapedDisplayName);
 
-  if (rv = NS_ERROR_ABORT)
+  if (rv == NS_ERROR_ABORT)
   {
       rv = NS_OK;
       goto done;
@@ -531,84 +634,73 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   aSpec = do_QueryInterface(fileSpec, &rv);
   if (NS_FAILED(rv)) goto done;
 
-  aListener = new nsSaveAsListener(aSpec, this);
-  if (!aListener)
-  {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-  }
-  NS_ADDREF(aListener);
-
-  urlString = unescapedUrl;
-
-  urlString.ReplaceSubstring("/;section", "?section");
-  urlCString = urlString.ToNewCString();
-
-  rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
-  nsCRT::free(urlCString);
-
-  if (NS_FAILED(rv)) goto done;
-
-  rv = GetMessageServiceFromURI(messageUri, &messageService);
-  if (NS_FAILED(rv)) goto done;
-
-  messageService->GetCanFetchMimeParts(&canFetchMimeParts);
-
-  if (canFetchMimeParts)
-  {
-    PRInt32 sectionPos = urlString.Find("?section");
-    nsString mimePart;
-
-    urlString.Right(mimePart, urlString.Length() - sectionPos);
-    fullMessageUri.Append(mimePart);
-   
-//    nsCOMPtr <nsIStreamListener> streamListener = do_QueryInterface((nsIStreamListener *) aListener);
-//    nsCOMPtr <nsISupports> supportsListener = streamListener;
-    messageUri = fullMessageUri.GetBuffer();
-//    rv = messageService->DisplayMessage(fullMessageUri.GetBuffer(),
-//                                      supportsListener, mMsgWindow,
-//                                      nsnull, nsnull); 
-
-  }
-  {
-    aListener->m_channel = null_nsCOMPtr();
-    rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
-                                  aURL,
-                                  nsnull,      // inputStream
-                                  nsnull,      // contentType
-                                  -1);
-    if (NS_FAILED(rv)) goto done;
-
-    from = MESSAGE_RFC822;
-    to = "text/xul";
-  
-    channelSupport = do_QueryInterface(aListener->m_channel);
-
-    rv = streamConverterService->AsyncConvertData(
-        from.GetUnicode(), to.GetUnicode(), aListener,
-        channelSupport, getter_AddRefs(convertedListener));
-    if (NS_FAILED(rv)) goto done;
-
-    if (canFetchMimeParts)
-      rv = messageService->OpenAttachment(aURL, messageUri, convertedListener, mMsgWindow, nsnull,nsnull);
-    else
-      rv = messageService->DisplayMessage(messageUri,
-                                        convertedListener,mMsgWindow,
-                                        nsnull, nsnull); 
-  }
+  rv = SaveAttachment(aSpec, unescapedUrl, messageUri, nsnull);
 
 done:
-    if (messageService)
-      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
-
     PR_FREEIF(unescapedUrl);
+    return rv;
+}
 
-    if (NS_FAILED(rv))
+
+NS_IMETHODIMP
+nsMessenger::SaveAllAttachments(PRUint32 count, const char **urlArray,
+                                const char **displayNameArray,
+                                const char **messageUriArray)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIFileSpecWithUI> uFileSpec;
+    nsCOMPtr<nsIFileSpec> fileSpec;
+    nsFileSpec aFileSpec;
+    nsXPIDLCString dirName;
+    char *unescapedUrl = nsnull, *unescapedName = nsnull, *tempCStr = nsnull;
+    nsAutoString tempStr;
+    nsSaveAllAttachmentsState *saveState = nsnull;
+
+    uFileSpec = getter_AddRefs(NS_CreateFileSpecWithUI());
+    if (!uFileSpec) goto done;
+    
+    rv = uFileSpec->ChooseDirectory("Save All Attachments",
+                                    getter_Copies(dirName));
+    if (rv == NS_ERROR_ABORT)
     {
-        NS_IF_RELEASE(aListener);
-        Alert("saveAttachmentFailed");
+        rv = NS_OK;
+        goto done;
     }
-	return rv;
+    if (NS_FAILED(rv)) goto done;
+    rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
+    if (NS_FAILED(rv)) goto done;
+
+    saveState = new nsSaveAllAttachmentsState(count, urlArray,
+                                              displayNameArray,
+                                              messageUriArray, 
+                                              (const char*) dirName);
+    {
+        nsFileURL fileUrl((const char *) dirName);
+        nsFilePath dirPath(fileUrl);
+        unescapedUrl = PL_strdup(urlArray[0]);
+        nsUnescape(unescapedUrl);
+        unescapedName = PL_strdup(displayNameArray[0]);
+        nsUnescape(unescapedName);
+        rv = ConvertToUnicode("UTF-8", unescapedName, tempStr);
+        if (NS_FAILED(rv)) goto done;
+        rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
+                                &tempCStr);
+        if (NS_FAILED(rv)) goto done;
+        PR_FREEIF(unescapedName);
+        unescapedName = tempCStr;
+        aFileSpec = dirPath;
+        aFileSpec += unescapedName;
+        fileSpec->SetFromFileSpec(aFileSpec);
+        rv = SaveAttachment(fileSpec, unescapedUrl, messageUriArray[0], 
+                            (void *)saveState);
+        if (NS_FAILED(rv)) goto done;
+    }
+done:
+
+    PR_FREEIF (unescapedUrl);
+    PR_FREEIF (unescapedName);
+
+    return rv;
 }
 
 
@@ -1519,6 +1611,7 @@ nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
     m_charset = "";
     m_outputFormat = "";
     m_msgBuffer = "";
+    m_saveAllAttachmentsState = nsnull;
 }
 
 nsSaveAsListener::~nsSaveAsListener()
@@ -1687,6 +1780,56 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     m_outputStream = null_nsCOMPtr();
   }
   
+  if (m_saveAllAttachmentsState)
+  {
+      m_saveAllAttachmentsState->m_curIndex++;
+      if (m_saveAllAttachmentsState->m_curIndex <
+          m_saveAllAttachmentsState->m_count)
+      {
+          char * unescapedUrl = nsnull, * unescapedName = nsnull, 
+               * tempCStr = nsnull;
+          nsAutoString tempStr;
+          nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
+          PRUint32 i = state->m_curIndex;
+          nsFileURL fileUrl(state->m_directoryName);
+          nsFilePath dirPath(fileUrl);
+          nsCOMPtr<nsIFileSpec> fileSpec;
+          nsFileSpec aFileSpec;
+
+          rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
+          if (NS_FAILED(rv)) goto done;
+          unescapedUrl = PL_strdup(state->m_urlArray[i]);
+          nsUnescape(unescapedUrl);
+          unescapedName = PL_strdup(state->m_displayNameArray[i]);
+          nsUnescape(unescapedName);
+          rv = ConvertToUnicode("UTF-8", unescapedName, tempStr);
+          if (NS_FAILED(rv)) goto done;
+          rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
+                                  &tempCStr);
+          if (NS_FAILED(rv)) goto done;
+          PR_FREEIF(unescapedName);
+          unescapedName = tempCStr;
+          aFileSpec = dirPath;
+          aFileSpec += unescapedName;
+          fileSpec->SetFromFileSpec(aFileSpec);
+          rv = m_messenger->SaveAttachment(fileSpec, unescapedUrl,
+                                           state->m_messageUriArray[i],
+                                           (void *)state);
+      done:
+          if (NS_FAILED(rv))
+          {
+              delete state;
+              m_saveAllAttachmentsState = nsnull;
+          }
+          PR_FREEIF(unescapedUrl);
+          PR_FREEIF(unescapedName);
+      }
+      else
+      {
+          delete m_saveAllAttachmentsState;
+          m_saveAllAttachmentsState = nsnull;
+      }
+  }
   Release(); // all done kill ourself
   return NS_OK;
 }
@@ -1774,4 +1917,43 @@ nsMessenger::GetString(const PRUnichar *aStringName)
     return ptrv;
   else
     return nsCRT::strdup(aStringName);
+}
+
+nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,
+                                                     const char **urlArray,
+                                                     const char **nameArray,
+                                                     const char **uriArray,
+                                                     const char *dirName)
+{
+    PRUint32 i;
+    NS_ASSERTION(count && urlArray && nameArray && uriArray && dirName, 
+                 "fatal - invalid parameters\n");
+    
+    m_count = count;
+    m_curIndex = 0;
+    m_urlArray = new char*[count];
+    m_displayNameArray = new char*[count];
+    m_messageUriArray = new char*[count];
+    for (i = 0; i < count; i++)
+    {
+        m_urlArray[i] = nsCRT::strdup(urlArray[i]);
+        m_displayNameArray[i] = nsCRT::strdup(nameArray[i]);
+        m_messageUriArray[i] = nsCRT::strdup(uriArray[i]);
+    }
+    m_directoryName = nsCRT::strdup(dirName);
+}
+
+nsSaveAllAttachmentsState::~nsSaveAllAttachmentsState()
+{
+    PRUint32 i;
+    for (i = 0; i < m_count; i++)
+    {
+        nsCRT::free(m_urlArray[i]);
+        nsCRT::free(m_displayNameArray[i]);
+        nsCRT::free(m_messageUriArray[i]);
+    }
+    delete m_urlArray;
+    delete m_displayNameArray;
+    delete m_messageUriArray;
+    nsCRT::free(m_directoryName);
 }

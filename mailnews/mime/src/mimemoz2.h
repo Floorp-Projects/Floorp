@@ -141,6 +141,7 @@ extern "C" nsresult     mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const
 extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
                                                    PRBool aNotDownloaded);
 extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);
+extern "C" nsresult		mimeEmitterEndAllAttachments(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset);
 extern "C" nsresult     mimeEmitterEndBody(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterEndHeader(MimeDisplayOptions *opt);

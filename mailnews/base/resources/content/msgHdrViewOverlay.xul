@@ -71,8 +71,6 @@ Rights Reserved.
                <menu id="attachmentMenu" class="attachment-menu">
                   <titledbutton id="attachmentButton" class="push" value="1" align="right"/>
                   <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
-                    <menuseparator/>
-                    <menuitem value=".Save All..." disabled="true" oncommand="SaveAllAttachmentsDialog()"/>
                   </menupopup>
                </menu>
               <spring flex="1"/>
