@@ -176,6 +176,7 @@ nsFormFrame::~nsFormFrame()
 {
   mFormControls.Clear();
   RemoveFormFrame(*this);
+  RemoveRadioGroups();
 }
 
 PRBool 
