@@ -659,11 +659,11 @@ morkWriter::DirtyAll(morkEnv* ev)
                 
               for ( ; table && ev->Good(); table = ti->NextTable(ev) )
 #else /*MORK_BEAD_OVER_NODE_MAPS*/
-              mork_tid* key = 0; // ignore keys in table map
+              mork_tid* tableKey = 0; // ignore keys in table map
               morkTable* table = 0; // old key row in the map
                 
-              for ( c = ti->FirstTable(ev, key, &table); c && ev->Good();
-                    c = ti->NextTable(ev, key, &table) )
+              for ( c = ti->FirstTable(ev, tableKey, &table); c && ev->Good();
+                    c = ti->NextTable(ev, tableKey, &table) )
 #endif /*MORK_BEAD_OVER_NODE_MAPS*/
               {
                 if ( table && table->IsTable() )
