@@ -922,13 +922,13 @@ nsEditor::InsertFormattingForNode(nsIDOMNode* aNode)
   PRInt32 offset = GetIndexOf(parent, aNode);
 
 #ifdef DEBUG_akkana
-  DumpContentTree();
+  //DumpContentTree();
   nsString namestr;
   aNode->GetNodeName(namestr);
   char* nodename = namestr.ToNewCString();
   printf("Inserting formatting for node <%s> at offset %d\n",
          nodename, offset);
-  delete[] nodename;
+  nsCRT::free(nodename);
 #endif /* DEBUG_akkana */
 
   //
