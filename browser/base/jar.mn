@@ -1,5 +1,7 @@
 browser.jar:
         content/browser/contents.rdf                  (content/contents.rdf)
+*       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
+*       content/browser/macBrowserOverlay.xul         (content/macBrowserOverlay.xul)
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser.js                    (content/browser.js)
         content/browser/browser.css                   (content/browser.css)
