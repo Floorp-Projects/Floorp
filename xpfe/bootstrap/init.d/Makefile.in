@@ -30,6 +30,11 @@ MODULE		= apprunner
 
 include $(topsrcdir)/config/rules.mk
 
+# Only install the init.d/ files when we use the "mozilla" shell script
+# to start mozilla
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+
+
 # Solaris
 ifeq ($(OS_ARCH), SunOS)
 # Install Solaris patch checker scripts
@@ -62,4 +67,6 @@ libs:: README
 	$(INSTALL) $< $(DIST)/bin/init.d
 install:: README
 	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mozappdir)/init.d
+
+endif
 
