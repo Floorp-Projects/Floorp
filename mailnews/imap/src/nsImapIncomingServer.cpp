@@ -35,7 +35,7 @@
 #include "nsImapStringBundle.h"
 #include "nsIPref.h"
 #include "nsMsgFolderFlags.h"
-
+#include "nsTextFormater.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsXPIDLString.h"
@@ -1282,7 +1282,19 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
 {
-	return GetPasswordWithUI(aPassword);
+    PRUnichar *passwordTemplate = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
+    PRUnichar *passwordText = nsnull;
+    nsXPIDLCString hostName;
+    nsXPIDLCString userName;
+
+    GetHostName(getter_Copies(hostName));
+    GetUsername(getter_Copies(userName));
+
+    passwordText = nsTextFormater::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+    nsresult rv =  GetPasswordWithUI(passwordText, aPassword);
+    nsTextFormater::smprintf_free(passwordText);
+    nsCRT::free(passwordTemplate);
+    return rv;
 }
 
 // for the nsIImapServerSink interface

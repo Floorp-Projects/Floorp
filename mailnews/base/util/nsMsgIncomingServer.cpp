@@ -450,7 +450,8 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::GetPasswordWithUI(char **aPassword) {
+nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, char **aPassword) 
+{
 
     nsXPIDLCString prefvalue;
     GetPassword(getter_Copies(prefvalue));
@@ -463,21 +464,7 @@ nsMsgIncomingServer::GetPasswordWithUI(char **aPassword) {
 		{
 			PRUnichar * uniPassword;
 			PRBool okayValue = PR_TRUE;
-			char * promptText = nsnull;
-			nsXPIDLCString hostName;
-			nsXPIDLCString userName;
-
-			GetHostName(getter_Copies(hostName));
-			GetUsername(getter_Copies(userName));
-			// mscott - this is just a temporary hack using the raw string..this needs to be pushed into
-			// a string bundle!!!!!
-			if (hostName)
-				promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) userName, (const char *) hostName);
-			else
-				promptText = PL_strdup("Enter your password here: ");
-
-			dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
-			PR_FREEIF(promptText);
+			dialog->PromptPassword(aPromptMessage, &uniPassword, &okayValue);
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{
