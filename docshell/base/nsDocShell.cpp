@@ -2869,10 +2869,17 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
         else
             ret = chromeFocus->FocusPrevElement();
 
-        // For DocShell's not implemented by this class
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(chromeFocus));
-        MakeSureOfSetFocus(nsnull, docShell);
-        return ret;
+        if (NS_SUCCEEDED(ret)) {
+            // For DocShell's not implemented by this class
+            nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(chromeFocus));
+            MakeSureOfSetFocus(nsnull, docShell);
+            return ret;
+        } else {
+            // If the embeddor does not implement FocusNext/PrevElement,
+            // or some other error occurred, just focus ourselves again.
+            SetFocus();
+            return NS_OK;
+        }
     }
 
 #ifdef DEBUG_DOCSHELL_FOCUS
@@ -2907,7 +2914,8 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
 
         if (!mChildren.Count()) {
             //If we don't have children and our parent didn't want 
-            //the focus then we should just stop now.
+            //the focus then we should just take focus again.
+            SetFocus();
             return NS_OK;
         }
     }
