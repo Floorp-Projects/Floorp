@@ -437,7 +437,7 @@
         <vbox id="attachments-box">
           <label id="attachmentBucketText" value="&attachments.label;" crop="right"
                  accesskey="&attachments.accesskey;" control="attachmentBucket"/>
-          <listbox id="attachmentBucket" flex="1" rows="4"
+          <listbox seltype="multiple" id="attachmentBucket" flex="1" rows="4"
                    context="msgComposeAttachmentContext"
                    onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
                    onclick="AttachmentBucketClicked(event);"
