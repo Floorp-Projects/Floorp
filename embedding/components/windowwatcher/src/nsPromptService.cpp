@@ -287,7 +287,10 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   
   int buttonIDs[] = { eButton0Text, eButton1Text, eButton2Text };
   const PRUnichar* buttonStrings[] = { button0Title, button1Title, button2Title };
-  
+
+#define BUTTON_DEFAULT_MASK 0x03000000
+
+  block->SetInt(eDefaultButton, (buttonFlags & BUTTON_DEFAULT_MASK) >> 24);
   PRInt32 numberButtons = 0;
   for (int i = 0; i < 3; i++) { 
     

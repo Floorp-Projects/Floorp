@@ -130,7 +130,11 @@ interface nsIPromptService : nsISupports
   const unsigned long BUTTON_TITLE_REVERT        = 7;
 
   const unsigned long BUTTON_TITLE_IS_STRING     = 127;
-   
+  
+  const unsigned long BUTTON_POS_0_DEFAULT       = 0 << 24;
+  const unsigned long BUTTON_POS_1_DEFAULT       = 1 << 24;
+  const unsigned long BUTTON_POS_2_DEFAULT       = 2 << 24;    
+  
   const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
 

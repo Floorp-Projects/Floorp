@@ -135,7 +135,6 @@ function commonDialogOnLoad()
     iconClass = "message-icon";
   iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
-  var firstButton = document.documentElement.getButton("accept");
   switch (nButtons) {
     case 4:
       setLabelForNode(document.documentElement.getButton("extra2"), gCommonDialogParam.GetString(11));
@@ -152,7 +151,7 @@ function commonDialogOnLoad()
     case 1:
       string = gCommonDialogParam.GetString(8);
       if (string)
-        setLabelForNode(firstButton, string);
+        setLabelForNode(document.documentElement.getButton("accept"), string);
       break;
   }
 
@@ -163,7 +162,24 @@ function commonDialogOnLoad()
   setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
 
   if (gCommonDialogParam.GetInt(3) == 0) // If no text fields
-    firstButton.focus(); // Don't focus checkbox, focus first button instead
+  {
+    var defaultButton = gCommonDialogParam.GetInt(5);
+    switch (defaultButton) {
+      case 3:
+        document.documentElement.getButton("extra2").focus();
+        break;
+      case 2:
+        document.documentElement.getButton("extra1").focus();
+        break;
+      case 1:
+        document.documentElement.getButton("cancel").focus();
+        break;
+      default:
+      case 0:
+        document.documentElement.getButton("accept").focus();
+        break;
+    }
+  }
 
   getAttention();
 }
