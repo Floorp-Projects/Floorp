@@ -235,6 +235,7 @@ static BOOL ValidNSBitmapFormat(char* extension)
 void CRDFImage::ProcessIcon() 
 {
 	char *ext = FE_FindFileExt(pUrl);
+	if (!ext) return;
 	if (ValidNSBitmapFormat(ext)) 
 	{
 		// If there is no context, create one for processing the image.
