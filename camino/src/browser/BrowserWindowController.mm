@@ -867,7 +867,7 @@ static NSArray* sToolbarDefaults = nil;
     [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mSearchBar frame]))];
     [toolbarItem setMaxSize:NSMakeSize(150, NSHeight([mSearchBar frame]))];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(performAppropriateSearchAction:)];
+    [toolbarItem setAction:@selector(performSearch:)];
 
     [menuFormRep setTarget:self];
     [menuFormRep setAction:@selector(beginSearchSheet)];
