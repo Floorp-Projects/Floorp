@@ -3,7 +3,7 @@
   FILE: icalrecur.c
   CREATOR: eric 16 May 2000
   
-  $Id: icalrecur.c,v 1.1.1.1 2005/01/05 20:09:16 mvl%exedo.nl Exp $
+  $Id: icalrecur.c,v 1.1.1.2 2005/01/24 22:10:58 mvl%exedo.nl Exp $
   $Locker:  $
     
 
@@ -537,13 +537,13 @@ char* icalrecurrencetype_as_string(struct icalrecurrencetype *recur)
     }
 
     if(recur->count != 0){
-	sprintf(temp,"%d",recur->count);
+	snprintf(temp,sizeof(temp),"%d",recur->count);
 	icalmemory_append_string(&str,&str_p,&buf_sz,";COUNT=");
 	icalmemory_append_string(&str,&str_p,&buf_sz, temp);
     }
 
     if(recur->interval != 0){
-	sprintf(temp,"%d",recur->interval);
+	snprintf(temp,sizeof(temp),"%d",recur->interval);
 	icalmemory_append_string(&str,&str_p,&buf_sz,";INTERVAL=");
 	icalmemory_append_string(&str,&str_p,&buf_sz, temp);
     }
@@ -570,12 +570,12 @@ char* icalrecurrencetype_as_string(struct icalrecurrencetype *recur)
 		    if (pos == 0)
 			icalmemory_append_string(&str,&str_p,&buf_sz,daystr);
 		    else {
-			sprintf(temp,"%d%s",pos,daystr);
+			snprintf(temp,sizeof(temp),"%d%s",pos,daystr);
 			icalmemory_append_string(&str,&str_p,&buf_sz,temp);
 		    }                  
 		    
 		} else {
-		    sprintf(temp,"%d",array[i]);
+		    snprintf(temp,sizeof(temp),"%d",array[i]);
 		    icalmemory_append_string(&str,&str_p,&buf_sz, temp);
 		}
 		
@@ -589,9 +589,9 @@ char* icalrecurrencetype_as_string(struct icalrecurrencetype *recur)
 
     /* If week start is not monday (the default per RFC2445) append WKST */
     if (recur->week_start != ICAL_MONDAY_WEEKDAY) {
-	sprintf(temp,"%s", icalrecur_weekday_to_string(recur->week_start));
 	icalmemory_append_string(&str,&str_p,&buf_sz,";WKST=");
-	icalmemory_append_string(&str,&str_p,&buf_sz, temp);
+	icalmemory_append_string(&str,&str_p,&buf_sz,
+			icalrecur_weekday_to_string(recur->week_start));
     }
 
     return  str;

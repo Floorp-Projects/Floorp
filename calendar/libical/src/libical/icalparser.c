@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.1.1.1 2005/01/05 20:09:15 mvl%exedo.nl Exp $
+  $Id: icalparser.c,v 1.1.1.2 2005/01/24 22:10:58 mvl%exedo.nl Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -47,7 +47,7 @@
 #include "icalcomponent.h"
 
 #include <string.h> /* For strncpy & size_t */
-#include <stdio.h> /* For FILE and fgets and sprintf */
+#include <stdio.h> /* For FILE and fgets and snprintf */
 #include <stdlib.h> /* for free */
 
 #include "icalmemory.h"
@@ -938,7 +938,7 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 		icalproperty_kind prop_kind = icalproperty_isa(prop);
 		icalcomponent* tail = pvl_data(pvl_tail(parser->components));
 
-		sprintf(temp,"Cant parse as %s value in %s property. Removing entire property",
+		snprintf(temp,sizeof(temp),"Cant parse as %s value in %s property. Removing entire property",
 			icalvalue_kind_to_string(value_kind),
 			icalproperty_kind_to_string(prop_kind));
 
@@ -968,7 +968,7 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 		icalproperty_kind prop_kind = icalproperty_isa(prop);
 		icalcomponent *tail = pvl_data(pvl_tail(parser->components));
 		
-		sprintf(temp,"No value for %s property. Removing entire property",
+		snprintf(temp,sizeof(temp),"No value for %s property. Removing entire property",
 			icalproperty_kind_to_string(prop_kind));
 
 		insert_error(tail, str, temp,
