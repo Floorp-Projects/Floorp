@@ -610,7 +610,7 @@ function ClearTreelist(tree)
     // Skip over the first <treecolgroup> child
     if (tree.firstChild)
     {
-      nextChild = tree.firstChild.nextSibling;
+      var nextChild = tree.firstChild.nextSibling;
       while (nextChild)
       {
         var nextTmp = nextChild.nextSibling;
@@ -967,7 +967,7 @@ function GetMetaElement(name)
 
 function CreateMetaElement(name)
 {
-  metaElement = editorShell.CreateElementWithDefaults("meta");
+  var metaElement = editorShell.CreateElementWithDefaults("meta");
   if (metaElement)
     metaElement.setAttribute("name", name);
   else
