@@ -98,7 +98,7 @@ static int PR_CALLBACK enableChanged(const char *pref, void *closure)
 	if ( NS_FAILED (rv ) )
 		return rv;
 		
-	PRBool enabled;
+	PRBool enabled = PR_FALSE;
 	rv = prefs->GetBoolPref(CACHE_ENABLE_PREF, &enabled   );
 	if ( NS_FAILED( rv ) )
 		return rv;
