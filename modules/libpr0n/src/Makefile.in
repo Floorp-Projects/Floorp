@@ -32,10 +32,11 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 			DummyChannel.cpp \
-			ImageCache.cpp \
-			ImageFactory.cpp    \
-			imgLoader.cpp         \
-			imgRequest.cpp        \
+			ImageCache.cpp   \
+			ImageFactory.cpp \
+			imgContainer.cpp \
+			imgLoader.cpp    \
+			imgRequest.cpp   \
 			imgRequestProxy.cpp
 
 EXTRA_DSO_LDOPTS = \
