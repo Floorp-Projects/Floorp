@@ -78,13 +78,6 @@
         ]]></body>
       </method>
 
-      <method name="loadBookmarksWithDelay">
-        <body><![CDATA[
-          var This = this;
-          setTimeout(function () { This.loadBookmarksCallback() }, 0);
-        ]]></body>
-      </method>
-
       <field name="_selection">  null</field>
       <field name="_target">     null</field>
       <field name="_orientation">null</field>

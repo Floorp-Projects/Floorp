@@ -369,7 +369,7 @@ function Startup()
 
   // now load bookmarks after a delay
   var bt = document.getElementById("bookmarks-toolbar");
-  bt.loadBookmarksWithDelay();
+  setTimeout(function () {bt.loadBookmarksCallback()}, 0);
 }
 
 function WindowFocusTimerCallback(element)
