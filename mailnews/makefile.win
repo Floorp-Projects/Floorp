@@ -21,7 +21,7 @@
 
 DEPTH=..
 
-DIRS=public base db local news imap mime compose addrbook import absync mapi
+DIRS=public base db local news imap mime compose addrbook import absync mapi extensions
 
 include <$(DEPTH)\config\rules.mak>
 
