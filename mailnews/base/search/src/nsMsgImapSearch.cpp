@@ -495,9 +495,12 @@ nsMsgSearchValidityManager::InitOnlineMailFilterTable()
   m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
   m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
   
-  m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
-  m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
-  m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
+  m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+  m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+  m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
+  m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, 1);
+  m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
+  m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
   
   m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
   m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Size, nsMsgSearchOp::IsGreaterThan, 1);
