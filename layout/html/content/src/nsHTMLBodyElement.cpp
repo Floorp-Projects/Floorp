@@ -37,6 +37,7 @@
 #include "nsIWebShell.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsISupportsArray.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -279,7 +280,6 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 
     if (nsnull != styleSpacing) {
       nsHTMLValue   value;
-      PRInt32       count = 0;
       PRInt32       attrCount;
       float         p2t;
       mPart->GetAttributeCount(attrCount);
@@ -298,7 +298,6 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
           nsStyleCoord  widthCoord(bodyMarginWidth);
           styleSpacing->mMargin.SetLeft(widthCoord);
           styleSpacing->mMargin.SetRight(widthCoord);
-          count++;
         }
 
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
@@ -311,14 +310,6 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
           nsStyleCoord  heightCoord(bodyMarginHeight);
           styleSpacing->mMargin.SetTop(heightCoord);
           styleSpacing->mMargin.SetBottom(heightCoord);
-          count++;
-        }
-
-        if (count < attrCount) {  // more to go...
-          nsMapAttributesFunc fontFunc;
-          nsMapAttributesFunc func;
-          mPart->GetAttributeMappingFunctions(fontFunc, func);
-          (*func)(mPart->mInner.mAttributes, aContext, aPresContext);
         }
       }
 
@@ -418,18 +409,6 @@ nsresult BodyFixupRule::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSStyleRuleIID)) {
-    nsIStyleRule* inlineRule = nsnull;
-    if (nsnull != mPart) {
-      mPart->mInner.GetInlineStyleRule(inlineRule);
-    }
-    if (nsnull != inlineRule) {
-      nsresult result = inlineRule->QueryInterface(kICSSStyleRuleIID, aInstancePtrResult);
-      NS_RELEASE(inlineRule);
-      return result;
-    }
-    return NS_NOINTERFACE;
-  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)this);
     NS_ADDREF_THIS();
@@ -477,16 +456,6 @@ BodyFixupRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPres
 NS_IMETHODIMP
 BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  // Invoke style mapping of inline rule
-  nsIStyleRule* inlineRule = nsnull;
-  if (nsnull != mPart) {
-    mPart->mInner.GetInlineStyleRule(inlineRule);
-    if (nsnull != inlineRule) {
-      inlineRule->MapStyleInto(aContext, aPresContext);
-      NS_RELEASE(inlineRule);
-    }
-  }
-
   // XXX do any other body processing here
   
   const nsStyleColor* styleColor;
@@ -731,27 +700,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       }
     }
 
-    // marginwidth/marginheight
-    // XXX: see ua.css for related code in the BODY rule
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetMutableStyleData(eStyleStruct_Spacing);
-    aAttributes->GetAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) {
-      nscoord v = NSToCoordFloor(value.GetPixelValue() * p2t);
-      nsStyleCoord c(v);
-      spacing->mPadding.SetLeft(c);
-      spacing->mPadding.SetRight(c);
-    }
-    aAttributes->GetAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) {
-      nscoord v = NSToCoordFloor(value.GetPixelValue() * p2t);
-      nsStyleCoord c(v);
-      spacing->mPadding.SetTop(c);
-      spacing->mPadding.SetBottom(c);
-    }
-
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
@@ -794,8 +742,10 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetContentStyleRule(nsIStyleRule*& aResult)
+nsHTMLBodyElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
+  mInner.GetContentStyleRules(aRules);
+
   if (nsnull == mInner.mContentStyleRule) {
     nsIHTMLStyleSheet*  sheet = nsnull;
 
@@ -807,8 +757,9 @@ nsHTMLBodyElement::GetContentStyleRule(nsIStyleRule*& aResult)
     NS_IF_RELEASE(sheet);
     NS_IF_ADDREF(mInner.mContentStyleRule);
   }
-  NS_IF_ADDREF(mInner.mContentStyleRule);
-  aResult = mInner.mContentStyleRule;
+  if (aRules && mInner.mContentStyleRule) {
+    aRules->AppendElement(mInner.mContentStyleRule);
+  }
   return NS_OK;
 }
 
@@ -828,8 +779,10 @@ static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetInlineStyleRule(nsIStyleRule*& aResult)
+nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
 {
+  mInner.GetInlineStyleRules(aRules);
+
   if (nsnull == mInner.mInlineStyleRule) {
     nsIHTMLCSSStyleSheet*  sheet = nsnull;
 
@@ -841,8 +794,9 @@ nsHTMLBodyElement::GetInlineStyleRule(nsIStyleRule*& aResult)
     NS_IF_RELEASE(sheet);
     NS_IF_ADDREF(mInner.mInlineStyleRule);
   }
-  NS_IF_ADDREF(mInner.mInlineStyleRule);
-  aResult = mInner.mInlineStyleRule;
+  if (aRules && mInner.mInlineStyleRule) {
+    aRules->AppendElement(mInner.mInlineStyleRule);
+  }
   return NS_OK;
 }
 
