@@ -478,10 +478,13 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
   document.getElementById("pluginSummaryRestartNeeded").hidden = !needsRestart;
 
+  var app = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo);
+
   // set the get more info link to contain the mimetypes we couldn't install.
   notInstalledList +=
-    "&appID=" + this.getPrefBranch().getCharPref("app.id") +
-    "&appVersion=" + this.getPrefBranch().getCharPref("app.build_id") +
+    "&appID=" + app.ID +
+    "&appVersion=" + app.geckoBuildID +
     "&clientOS=" + this.getOS() +
     "&chromeLocale=" + this.getChromeLocale();
 

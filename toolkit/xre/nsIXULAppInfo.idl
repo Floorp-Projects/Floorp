@@ -66,6 +66,11 @@ interface nsIXULAppInfo : nsISupports
   readonly attribute ACString version;
 
   /**
+   * The application GUID.
+   */
+  readonly attribute nsIDPtr ID;
+
+  /**
    * The build ID/date of the application. For xulrunner applications,
    * this will be different than the build ID of gecko. Be careful
    * about which one you want. It is in the form YYYYMMDDHH.

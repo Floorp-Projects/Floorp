@@ -48,11 +48,12 @@ static const nsXREAppData kAppData = {
   "Firefox",
   APP_VERSION,
   BUILD_ID,
+  // ec8030f7-c20a-464f-9b0e-13a3a9e97384
+  { 0xec8030f7, 0xc20a, 0x464f, { 0x9b, 0x0e, 0x13, 0xa3, 0xa9, 0xe9, 0x73, 0x84 } },
   "Copyright (c) 2004 mozilla.org",
   NS_XRE_ENABLE_PROFILE_MIGRATOR |
   NS_XRE_ENABLE_EXTENSION_MANAGER
 };
-  
 
 int main(int argc, char* argv[])
 {

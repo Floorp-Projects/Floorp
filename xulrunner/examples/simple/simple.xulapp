@@ -4,6 +4,11 @@ Name=Simple
 Version=0.1.0
 BuildID=BUILD_ID
 Copyright=Copyright (c) 2004 Mozilla.org
+# This ID is just an example. Every XUL app ought to have
+# it's own unique ID. You can use the microsoft "guidgen"
+# or "uuidgen" tools, or go on irc.mozilla.org and
+# /msg botbot uuid
+ID={3aea3f07-ffe3-4060-bb03-bff3a5365e90}
 
 [XRE]
 Version=0.1

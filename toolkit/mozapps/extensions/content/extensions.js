@@ -15,7 +15,6 @@ var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gItemType         = -1;
 
-const PREF_APP_ID                           = "app.id";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
@@ -178,7 +177,9 @@ function Startup()
   gGetMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
                                                   : PREF_EXTENSIONS_GETMORETHEMESURL, 
                                      Components.interfaces.nsIPrefLocalizedString).data;
-  gGetMoreURL = gGetMoreURL.replace(/%APPID%/g, pref.getCharPref(PREF_APP_ID));
+  var app = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo);
+  gGetMoreURL = gGetMoreURL.replace(/%APPID%/g, app.ID);
   // Update various pieces of state-dependant UI
   var getMore = document.getElementById("getMore");
   getMore.setAttribute("value", getMore.getAttribute(isExtensions ? "valueextensions" : "valuethemes"));
