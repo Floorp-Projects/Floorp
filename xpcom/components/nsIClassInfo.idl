@@ -1,0 +1,96 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the NPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the NPL or the GPL.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(986c11d0-f340-11d4-9075-0010a4e73d9a)]
+interface nsIClassInfo : nsISupports
+{
+    /**
+     * Identifiers for languages 
+     */
+    const PRUint32 LANGUAGE_UNKNOWN     = 0;
+    const PRUint32 LANGUAGE_CPP         = 1;
+    const PRUint32 LANGUAGE_JAVASCRIPT  = 2;
+    const PRUint32 LANGUAGE_PYTHON      = 3;
+    const PRUint32 LANGUAGE_PERL        = 4;
+    const PRUint32 LANGUAGE_JAVA        = 5;
+    const PRUint32 LANGUAGE_ZX81_BASIC  = 6;  // it could happen :)
+    const PRUint32 LANGUAGE_JAVASCRIPT2 = 7;
+    // This list can grow indefinitely. Just don't ever change an existing item.
+    
+    /**
+     * Get an ordered list of the interface ids that instances of the class 
+     * promise to implement. Note that nsISupports is an implicit member 
+     * of any such list and need not be included. 
+     *
+     * Should set *count = 0 and *array = null and return NS_OK if getting the 
+     * list is not supported.
+     */
+    void getInterfaces(out PRUint32 count, 
+                       [array, size_is(count), retval] out nsIIDPtr array);
+
+    /**
+     * Get a language mapping specific helper object that may assist in using
+     * objects of this class in a specific lanaguage. For instance, if asked
+     * for the helper for LANGUAGE_JAVASCRIPT this might return an object that
+     * can be QI'd into the nsIXPCScriptable interface to assist xpconnect in
+     * supplying JavaScript specific behavior to callers of the instance object.
+     *
+     * Should return null if no helper available for given language.
+     */
+    nsISupports getHelperForLanguage(in PRUint32 language);
+
+    /**
+     * null if not supported
+     */
+    readonly attribute string   contractID;
+
+    /**
+     * null if not supported
+     */
+    readonly attribute nsCIDPtr classID;
+
+    readonly attribute PRUint32 implementationLanguage;
+
+    /**
+     * Bitflags for 'flags' attribute.
+     */
+    const PRUint32 THREADSAFE   = 1 << 0;
+    const PRUint32 SINGLETON    = 1 << 1;
+    // XXX what else might we want to add?
+
+    readonly attribute PRUint32 flags;
+};
