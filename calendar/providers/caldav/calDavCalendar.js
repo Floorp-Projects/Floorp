@@ -137,26 +137,11 @@ calDavCalendar.prototype = {
         if (aItem.id == null)
             aItem.id = "uuid:" + (new Date()).getTime();
 
-        if (this.mItems[aItem.id] != null) {
-            // is this an error?
-            if (aListener)
-                aListener.onOperationComplete(this,
-                                              Components.results.NS_ERROR_FAILURE,
-                                              aListener.ADD,
-                                              aItem.id,
-                                              "ID already exists for addItem");
-            return;
-        }
-
-        this.mItems[aItem.id] = aItem;
-
-        // XXX serialize to ICS
-        var eventIcs = "";
+        // XXX do we need to check the server to see if this already exists?
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventDirUri.spec + "calendar/events/" + aItem.id + 
-            ".ics";
+        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -190,10 +175,11 @@ calDavCalendar.prototype = {
                                                aItem);
         }
 
-        // XXX do webdav put
+        dump("icalString = " + aItem.icalString + "\n");
+        // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
-        webSvc.putFromString(eventResource, "text/calendar", eventIcs, 
+        webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
                              listener, null);
 
         return;
