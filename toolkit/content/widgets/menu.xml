@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+  %globalRegionDTD;
+]>
+
 <bindings id="menuitemBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,7 +37,8 @@
       <xul:hbox anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
-      <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
+      <xul:hbox align="center" class="menu-right" chromedir="&locale.dir;"
+                xbl:inherits="_moz-menuactive,disabled">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup"/>
