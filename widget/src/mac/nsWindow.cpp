@@ -481,10 +481,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-	nsRect wRect = mBounds;
-	if (mParent == nsnull)		// the topLeft corner of the window is in global coordinates
-		wRect.x = wRect.y = 0;
-	Invalidate(wRect, aIsSynchronous);
+	Invalidate(mBounds, aIsSynchronous);
 	return NS_OK;
 }
 
@@ -499,6 +496,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 //¥TODO: some of that work is done by the rendering context -> do some cleanup
 void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 {
+	// make sure we have a rendering context
 	if (aRenderingContext == nsnull)
 		mTempRenderingContext = GetRenderingContext();
 	else
@@ -508,6 +506,18 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	}
 	if (mTempRenderingContext)
 		mTempRenderingContext->PushState();
+
+	// set the origin to the topLeft corner of the widget
+	nsPoint widgetOrigin(mBounds.x, mBounds.y);
+	LocalToWindowCoordinate(widgetOrigin);
+	::SetOrigin(-widgetOrigin.x, -widgetOrigin.y);
+
+	// set the clip rgn
+	Rect macRect;
+	nsRect rect = mBounds;		//¥TODO¥: for complex objects, we should clip to the widgetRgn, not to the widget rect
+	rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
+	nsRectToMacRect(rect, macRect);
+	::ClipRect(&macRect);			//¥TODO? shouldn't this be done in the rendering context?
 		
 	// set the font
 	if (mFontMetrics)
@@ -531,6 +541,8 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
 	macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
 	::RGBForeColor(&macColor);
+
+	::PenNormal();
 }
 
 
@@ -573,11 +585,8 @@ NS_IMETHODIMP	nsWindow::Update()
 		{
 			// initialize the paint event for that widget
 			nsRect rect;
-			Rect macRect;
-			GetBounds(rect);					//¥TODO¥: for complex objects, maybe we should clip to the widgetRgn
+			GetBounds(rect);
 			rect.x = rect.y = 0;	// the origin is set on the topLeft corner of the widget
-			nsRectToMacRect(rect, macRect);
-			::ClipRect(&macRect);			//¥TODO? shouldn't this be done in the rendering context?
 
 			// 			nsEvent
 			nsPaintEvent paintEvent;
@@ -845,55 +854,20 @@ PRBool			result = PR_FALSE;
  */
 NS_IMETHODIMP nsWindow::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 {
-nsIWidget	*theparent,*child;
-nsRect		therect;
-
-	aX = 0;
-	aY = 0;
-	theparent = this->GetParent();
-	while (theparent)
+	aX = aY = 0;
+	nsIWidget* grandParent;
+	nsIWidget* theParent = this->GetParent();
+	while (theParent)
 	{
-		theparent->GetBounds(therect);
-		child = theparent->GetParent();
-		if (child)
-		{
-			aX += therect.x;
-			aY += therect.y;
-		}
-		NS_IF_RELEASE(theparent);
-		theparent = child;
+		nsRect theRect;
+		theParent->GetBounds(theRect);
+		aX += theRect.x;
+		aY += theRect.y;
+
+		grandParent = theParent->GetParent();
+		NS_IF_RELEASE(theParent);
+		theParent = grandParent;
 	}
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-/*  Calculate the x and y offsets for this particular widget
- *  @update  ps 09/22/98
- *  @param   aX -- x offset amount
- *  @param   aY -- y offset amount 
- *  @return  NOTHING
- */
-NS_IMETHODIMP nsWindow::CalcTotalOffset(PRInt32 &aX,PRInt32 &aY)
-{
-nsIWidget	*theparent,*child;
-nsRect		therect;
-
-	aX = mBounds.x;
-	aY = mBounds.y;
-	theparent = this->GetParent();
-	while (theparent)
-	{
-		theparent->GetBounds(therect);
-		child = theparent->GetParent();
-		if (child)
-		{
-			aX += therect.x;
-			aY += therect.y;
-		}
-		NS_IF_RELEASE(theparent);
-		theparent = child;
-	}
-
 	return NS_OK;
 }
 
@@ -906,7 +880,7 @@ PRBool nsWindow::PointInWidget(Point aThePoint)
 {
 	// get the origin in local coordinates
 	nsPoint widgetOrigin(0, 0);
-	ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
+	LocalToWindowCoordinate(widgetOrigin);
 
 	// get rectangle relatively to the parent
 	nsRect widgetRect;
@@ -1004,15 +978,13 @@ void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
  *  @param   nscoord -- Y coordinate to convert
  *  @return  NONE
  */
-void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX,nscoord &aY)
+void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
-PRInt32	offX,offY;
-        
+	PRInt32	offX, offY;
   this->CalcOffset(offX,offY);
-	
-	aX -=offX;
-	aY -=offY;
-	
+
+	aX += offX;
+	aY += offY;
 }
 
 /*
@@ -1023,22 +995,7 @@ PRInt32	offX,offY;
  */
 void nsWindow::LocalToWindowCoordinate(nsPoint& aPoint)
 {
-	nsIWidget* 	parent = GetParent();
-	nsIWidget* 	grandParent;
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		grandParent = parent->GetParent();
-		NS_IF_RELEASE(parent);
-		parent = grandParent;
-		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
-		{
-			aPoint.x += bounds.x;
-			aPoint.y += bounds.y;
-		}
-	}
+	ConvertToDeviceCoordinates(aPoint.x, aPoint.y);
 }
 
 /* 
@@ -1046,22 +1003,7 @@ void nsWindow::LocalToWindowCoordinate(nsPoint& aPoint)
  */
 void nsWindow::LocalToWindowCoordinate(nscoord& aX, nscoord& aY)
 {
-	nsIWidget* 	parent = GetParent();
-	nsIWidget* 	grandParent;
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		grandParent = parent->GetParent();
-		NS_IF_RELEASE(parent);
-		parent = grandParent;
-		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
-		{
-			aX += bounds.x;
-			aY += bounds.y;
-		}
-	}
+	ConvertToDeviceCoordinates(aX, aY);
 }
 
 /* 
@@ -1069,22 +1011,7 @@ void nsWindow::LocalToWindowCoordinate(nscoord& aX, nscoord& aY)
  */
 void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
 {
-	nsIWidget* 	parent = GetParent();
-	nsIWidget* 	grandParent;
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		grandParent = parent->GetParent();
-		NS_IF_RELEASE(parent);
-		parent = grandParent;
-		if (parent)		// don't add the topLeft corner of the window: it's in global coordinates
-		{
-			aRect.x += bounds.x;
-			aRect.y += bounds.y;
-		}
-	}
+	ConvertToDeviceCoordinates(aRect.x, aRect.y);
 }
 
 
