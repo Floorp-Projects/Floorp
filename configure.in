@@ -413,6 +413,7 @@ if test $ac_cv_cxx_include_flag = true ; then
 else
   AC_MSG_RESULT(no)
 fi  
+rm -f include-test-*.h
 CFLAGS=$_SAVE_CFLAGS
 
 dnl Check cc for -Wall flag support (adds compiler warnings)
