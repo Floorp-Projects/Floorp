@@ -55,7 +55,7 @@
 <!ENTITY pref.alarmbox.label    "Alarme" >
 <!ENTITY pref.showalarmbox    "Eine Alarmnachricht anzeigen" >
 <!ENTITY pref.defaultemail.label "Standardadresse, an die Alarme gesendet werden:">
-<!ENTITY pref.defaulttext.label "Stadradtext für Alarme:">
+<!ENTITY pref.defaulttext.label "Standardtext für Alarme:">
 <!ENTITY pref.missedalarms    "Versäumte Alarme anzeigen" >
 <!ENTITY pref.defalarm4events.label "Standard-Alarmeinstellung für Ereignisse:">
 <!ENTITY pref.defalarm4todos.label "Standard-Alarmeinstellung für Aufgaben:">

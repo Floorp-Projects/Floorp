@@ -71,7 +71,7 @@
 <!ENTITY newevent.location.label     "Ort" >
 <!ENTITY newevent.start.label        "Beginn" >
 <!ENTITY newevent.date.label         "Datum" >
-<!ENTITY newevent.startdate.label    "Begin" >
+<!ENTITY newevent.startdate.label    "Beginn" >
 <!ENTITY newevent.enddate.label      "Ende" >
 <!ENTITY newevent.end.label          "Ende" >
 <!ENTITY newevent.alldayevent.label  "Dieses Ereignis dauert den ganzen Tag." >
@@ -85,7 +85,7 @@
 <!ENTITY newevent.invite.label       "Einladen" >
 <!ENTITY newevent.email.label        "Alarm per E-Mail senden an..." >
 <!ENTITY newevent.beforealarm.label  "bevor das Ereignis startet" >
-<!ENTITY newevent.beforealarmends.label  "bevor das Eregnis endet" >
+<!ENTITY newevent.beforealarmends.label  "bevor das Ereignis endet" >
 <!ENTITY newevent.repeat.label       "Wiederhole jeden" >
 <!ENTITY newevent.until.label        "Bis" >
 <!ENTITY newevent.forever.label      "Immer" >
@@ -99,7 +99,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Wählen Sie einen Endzeitpunkt" >
 <!ENTITY newevent.recurend.warning    "Ihre Wiederholen-Bis-Zeit ist vor Ihrer Endzeit.">
 <!ENTITY newevent.endtime.tooltip    "Wählen Sie einen Endzeitpunkt für dieses Ereignis" >
-<!ENTITY newevent.starttimeerror.alertmessage "Ihr Ereignis kann nicht enden bevor es begonnen hat. Bitte korrigierern Sie den Begin oder das Ende." >
+<!ENTITY newevent.starttimeerror.alertmessage "Ihr Ereignis kann nicht enden bevor es begonnen hat. Bitte korrigieren Sie den Beginn oder das Ende." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Ihre Ereignis-Wiederholungszeit kann nicht vor dem Ereignisende sein. Bitte beheben Sie das Problem, oder schalten Sie die Wiederhoung ab." >
 <!ENTITY newevent.newevent.tab.label "Ereignis" >
 <!ENTITY newevent.recurrence.tab.label "Wiederholung" >
@@ -417,7 +417,7 @@
 <!ENTITY calendar.server.dialog.name.label          "Name">
 <!ENTITY calendar.server.dialog.publish.label       "Änderungen automatisch publizieren? Bei entfernten Kalendern lädt dies eine neue Version herunter, bevor Sie ein Ereignis hinzufügen, bearbeiten oder löschen. Dann wird Ihre Aktion ausgeführt und die neue Datei auf den Server geladen.">
 <!ENTITY calendar.server.dialog.location.label      "Adresse">
-<!ENTITY calendar.server.dialog.local.location.label "Loake Datei-Adresse">
+<!ENTITY calendar.server.dialog.local.location.label "Lokale Datei-Adresse">
 <!ENTITY calendar.server.dialog.browse.label        "Durchsuchen...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Sie können optional eine Datei-Adresse angeben, auf der der Kalender erstellt werden soll.">
 <!ENTITY calendar.server.dialog.help.label          "Sie können einen lokalen oder einen entfernten Dateipfad angeben. Wie: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
