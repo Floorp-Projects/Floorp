@@ -2526,7 +2526,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     nsIDKey key(aClass);
     nsFactoryEntry *entry = GetFactoryEntry(aClass, key,
                                             0 /* dont check registry */);
-    if (entry && entry->location && PL_strcasecmp(entry->location, registryName))
+    if (entry && entry->location && !PL_strcasecmp(entry->location, registryName))
     {
         mFactories->RemoveAndDelete(&key);
         entry = NULL;
