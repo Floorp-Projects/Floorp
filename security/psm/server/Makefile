@@ -147,6 +147,7 @@ I18N_COMPONENTS = \
 	$(DIST)/lib/ucharuti.dll \
 	$(DIST)/lib/uconv.dll \
 	$(DIST)/lib/ucvlatin.dll \
+	$(DIST)/lib/nslocale.dll \
 	$(NULL)
 
 XPCOM_LIBS = \
