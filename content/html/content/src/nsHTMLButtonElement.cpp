@@ -302,8 +302,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -321,8 +320,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
@@ -414,8 +412,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     nsIFrame* formFrame = nsnull;
@@ -470,8 +467,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_LEFT_CLICK:
       {
         // Tell the frame about the click
-        nsIFormControlFrame* formControlFrame = nsnull;
-        GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+        nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
         if (formControlFrame) {
           formControlFrame->MouseClicked(aPresContext);
         }

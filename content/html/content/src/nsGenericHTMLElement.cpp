@@ -2479,7 +2479,8 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
     PRInt32 v = aValue.GetIntValue();
     while (nsnull != aTable->tag) {
       if (aTable->value == v) {
-        aResult.Assign(NS_ConvertASCIItoUCS2(aTable->tag));
+        CopyASCIItoUCS2(nsDependentCString(aTable->tag), aResult);
+
         return PR_TRUE;
       }
       aTable++;
@@ -2757,45 +2758,34 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
   return PR_FALSE;
 }
 
-nsresult
-nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
-                                      nsIFormControlFrame *&aFormControlFrame,
-                                      PRBool aFlushContent,
-                                      PRBool aFlushReflows)
+// static
+nsIFormControlFrame *
+nsGenericHTMLElement::GetFormControlFrameFor(nsIContent *aContent,
+                                             nsIDocument *aDocument,
+                                             PRBool aFlushContent)
 {
-  aFormControlFrame = nsnull;
+  nsIFormControlFrame *form_frame = nsnull;
 
-  nsCOMPtr<nsIDocument> doc;
+  if (aFlushContent) {
+    // Cause a flush of content, so we get up-to-date frame
+    // information
+    aDocument->FlushPendingNotifications(PR_FALSE);
+  }
 
-  // Get the document
-  aContent->GetDocument(*getter_AddRefs(doc));
+  // Get presentation shell 0
+  nsCOMPtr<nsIPresShell> presShell;
+  aDocument->GetShellAt(0, getter_AddRefs(presShell));
 
-  if (doc) {
-    if (aFlushReflows) {
-      // Cause a flushing of notifications, so we get
-      // up-to-date presentation information
-      doc->FlushPendingNotifications(PR_TRUE);
-    } else if (aFlushContent) {
-      // Cause a flushing of notifications, so we get
-      // up-to-date presentation information
-      doc->FlushPendingNotifications(PR_FALSE);
-    }
+  if (presShell) {
+    nsIFrame *frame = nsnull;
+    presShell->GetPrimaryFrameFor(aContent, &frame);
 
-    // Get presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-
-    if (presShell) {
-      nsIFrame *frame = nsnull;
-      presShell->GetPrimaryFrameFor(aContent, &frame);
-
-      if (frame) {
-        CallQueryInterface(frame, &aFormControlFrame);
-      }
+    if (frame) {
+      CallQueryInterface(frame, &form_frame);
     }
   }
 
-  return NS_OK;
+  return form_frame;
 }
 
 nsresult

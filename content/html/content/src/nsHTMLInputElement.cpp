@@ -211,8 +211,7 @@ protected:
   {
     nsAutoString tmp;
 
-    nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                          nsHTMLAtoms::type, tmp);
+    GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
 
     return tmp.EqualsIgnoreCase("image");
   }
@@ -331,17 +330,14 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
-  return nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                               nsHTMLAtoms::value,
-                                               aDefaultValue);
+  return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
 }
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
-  return SetAttr(kNameSpaceID_HTML,
-                 nsHTMLAtoms::value,
-                 aDefaultValue, PR_TRUE); 
+  return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue,
+                 PR_TRUE); 
 }
 
 NS_IMETHODIMP 
@@ -396,9 +392,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsAWritableString& aValue)
 {
-  nsresult rv = nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::type,
-                                                      aValue);
+  nsresult rv = GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE)
     aValue.Assign(NS_LITERAL_STRING("text"));
@@ -422,12 +416,10 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 
   if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
       type == NS_FORM_INPUT_FILE) {
-    nsIFormControlFrame* formControlFrame = nsnull;
-
     // No need to flush here, if there's no frame created for this
     // input yet, there won't be a value in it (that we don't already
     // have) even if we force it to be created
-    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
     PRBool frameOwnsValue = PR_FALSE;
     if (formControlFrame) {
@@ -456,9 +448,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   }
 
   // Treat value == defaultValue for other input elements
-  nsresult rv = nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::value,
-                                                      aValue);
+  nsresult rv = GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE &&
       (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX)) {
@@ -514,13 +504,14 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
       }
     }
 
+
     nsIGfxTextControlFrame2* textControlFrame = aFrame;
     nsIFormControlFrame* formControlFrame = textControlFrame;
     if (!textControlFrame) {
       // No need to flush here, if there's no frame at this point we
       // don't need to force creation of one just to tell it about this
       // new value.
-      GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+      formControlFrame = GetFormControlFrame(PR_FALSE);
 
       if (formControlFrame) {
         CallQueryInterface(formControlFrame, &textControlFrame);
@@ -572,11 +563,10 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
   nsAutoString value; value.AssignWithConversion("0");
-  nsIFormControlFrame* formControlFrame = nsnull;
 
   // No need to flush here, if there's no frame created for this input
   // yet, we know our own checked state.
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
@@ -630,12 +620,10 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-
   // No need to flush here since if there's no frame for this input at
   // this point we don't care about creating one, once it's created
   // the frame will do the right thing.
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     // the value is being toggled
@@ -726,10 +714,8 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                            nsHTMLAtoms::disabled,
-                                            disabled)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+                                           nsHTMLAtoms::disabled, disabled)) {
     return NS_OK;
   }
  
@@ -756,9 +742,7 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -778,8 +762,7 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
@@ -813,10 +796,8 @@ nsHTMLInputElement::Select()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                            nsHTMLAtoms::disabled,
-                                            disabled)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+                                           nsHTMLAtoms::disabled, disabled)) {
     return rv;
   }
 
@@ -864,8 +845,7 @@ nsHTMLInputElement::Select()
         esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
       }
 
-      nsIFormControlFrame* formControlFrame = nsnull;
-      rv = GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+      nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
       if (formControlFrame) {
         formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -882,8 +862,7 @@ nsHTMLInputElement::Select()
 void
 nsHTMLInputElement::SelectAll(nsIPresContext* aPresContext)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
@@ -901,10 +880,8 @@ nsHTMLInputElement::Click()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafFormElement::GetAttr(kNameSpaceID_HTML,
-                                            nsHTMLAtoms::disabled,
-                                            disabled)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_HTML,
+                                           nsHTMLAtoms::disabled, disabled)) {
     return rv;
   }
 
@@ -1014,8 +991,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // Bugscape 2369: Type might change during JS event handler
   //                This pointer is only valid until
   //                nsGenericHTMLLeafFormElement::HandleDOMEvent
-  nsIFormControlFrame* formControlFrame = nsnull;
-  rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     nsIFrame* formFrame = nsnull;
@@ -1190,8 +1166,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Bugscape 2369: Frame might have changed during event handler
-  formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  formControlFrame = GetFormControlFrame(PR_FALSE);
 
   // Finish the special file control processing...
   if (oldTarget) {
@@ -1631,8 +1606,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
                                       PRInt32 aSelectionEnd)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1657,8 +1631,7 @@ nsHTMLInputElement::GetSelectionStart(PRInt32* aSelectionStart)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1684,8 +1657,7 @@ nsHTMLInputElement::GetSelectionEnd(PRInt32* aSelectionEnd)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1702,8 +1674,7 @@ nsresult
 nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
                                       PRInt32* aSelectionEnd)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1770,8 +1741,7 @@ nsHTMLInputElement::Reset()
   PRInt32 type;
   GetType(&type);
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   // Seems like a dumb idea to reset image.
   switch (type) {
@@ -1829,7 +1799,7 @@ nsHTMLInputElement::IsSuccessful(nsIContent* aSubmitElement,
 
   PRInt32 type;
   GetType(&type);
-  
+
   // if it dosn't have a name it we don't submit
   if (type != NS_FORM_INPUT_IMAGE) {
     nsAutoString val;
@@ -1937,8 +1907,7 @@ nsHTMLInputElement::GetNamesValues(PRInt32 aMaxNumValues,
       // submitting these values no matter *how* nicely you ask.
       PRInt32 clickedX;
       PRInt32 clickedY;
-      nsIFormControlFrame* formControlFrame = nsnull;
-      GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+      nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
       nsCOMPtr<nsIImageControlFrame> imageControlFrame(
           do_QueryInterface(formControlFrame));

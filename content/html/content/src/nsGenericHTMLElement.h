@@ -208,7 +208,14 @@ public:
   PRUint32 BaseSizeOf(nsISizeOfHandler* aSizer) const;
 #endif
 
+  nsIFormControlFrame *GetFormControlFrame(PRBool aFlushContent)
+  {
+    if (!mDocument || !mParent) {
+      return nsnull;
+    }
 
+    return GetFormControlFrameFor(this, mDocument, aFlushContent);
+  }
 
   //----------------------------------------
 
@@ -344,10 +351,9 @@ public:
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
-  //XXX These three create a dependency between content and frames 
-  static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
-                                  nsIFormControlFrame *&aFormControlFrame,
-                                  PRBool aFlushContent, PRBool aFlushReflows);
+  static nsIFormControlFrame* GetFormControlFrameFor(nsIContent* aContent,
+                                                     nsIDocument* aDocument,
+                                                     PRBool aFlushContent);
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
                                       nsIPresState** aPresState);
   static nsresult GetPresContext(nsIHTMLContent* aContent,

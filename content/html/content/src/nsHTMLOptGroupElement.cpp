@@ -189,21 +189,19 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   nsIFrame* formFrame = nsnull;
-  if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
-                                                    (void **)&formFrame)) &&
-      formFrame)
-  {
+  if (formControlFrame) {
+    CallQueryInterface(formControlFrame, &formFrame);
+  }
+
+  if (formFrame) {
     const nsStyleUserInterface* uiStyle;
     formFrame->GetStyleData(eStyleStruct_UserInterface,
                             (const nsStyleStruct *&)uiStyle);
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
-    {
+        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
       return NS_OK;
     }
   }
