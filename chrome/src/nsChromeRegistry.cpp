@@ -43,6 +43,7 @@
 #include <string.h>
 
 #include "prio.h"
+#include "prprf.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
@@ -64,6 +65,7 @@
 #include "nsICommandLine.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIConsoleService.h"
 #include "nsIDirectoryService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -85,6 +87,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPresShell.h"
+#include "nsIScriptError.h"
+#include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStyleSheet.h"
 #include "nsISupportsArray.h"
@@ -98,7 +102,6 @@
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFXMLSink.h"
-#include "nsIServiceManager.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFContainer.h"
@@ -125,6 +128,62 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, platformPackage);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static void
+LogMessage(const char* aMsg, ...)
+{
+  nsCOMPtr<nsIConsoleService> console 
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console)
+    return;
+
+  va_list args;
+  va_start(args, aMsg);
+  char* formatted = PR_vsmprintf(aMsg, args);
+  va_end(args);
+  if (!formatted)
+    return;
+
+  console->LogStringMessage(NS_ConvertUTF8toUTF16(formatted).get());
+  PR_smprintf_free(formatted);
+}
+
+static void
+LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
+                      const char* aMsg, ...)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIConsoleService> console 
+    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+
+  nsCOMPtr<nsIScriptError> error
+    (do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  if (!console || !error)
+    return;
+
+  va_list args;
+  va_start(args, aMsg);
+  char* formatted = PR_vsmprintf(aMsg, args);
+  va_end(args);
+  if (!formatted)
+    return;
+
+  nsCString spec;
+  if (aURL)
+    aURL->GetSpec(spec);
+
+  rv = error->Init(NS_ConvertUTF8toUTF16(formatted).get(),
+                   NS_ConvertUTF8toUTF16(spec).get(),
+                   nsnull,
+                   aLineNumber, 0, 0, "chrome registration");
+  PR_smprintf_free(formatted);
+
+  if (NS_FAILED(rv))
+    return;
+
+  console->LogMessage(error);
+}
 
 // We use a "best-fit" algorithm for matching locales and themes. 
 // 1) the exact selected locale/theme
@@ -511,15 +570,19 @@ nsChromeRegistry::GetProviderAndPath(nsIURL* aChromeURL,
   rv = aChromeURL->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (path.Length() < 3)
+  if (path.Length() < 3) {
+    LogMessage("Invalid chrome URI: %s", path.get());
     return NS_ERROR_FAILURE;
+  }
 
   path.SetLength(nsUnescapeCount(path.BeginWriting()));
   NS_ASSERTION(path.First() == '/', "Path should always begin with a slash!");
 
   PRInt32 slash = path.FindChar('/', 1);
-  if (slash == 1)
+  if (slash == 1) {
+    LogMessage("Invalid chrome URI: %s", path.get());
     return NS_ERROR_FAILURE;
+  }
 
   if (slash == -1) {
     aPath.Truncate();
@@ -566,7 +629,6 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
       path.AppendLiteral(".css");
     }
     else {
-      // XXXbsmedberg: report this to the console service?
       return NS_ERROR_INVALID_ARG;
     }
     aChromeURL->SetPath(path);
@@ -623,8 +685,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
     baseURI = entry->baseURI;
   }
 
-  if (!baseURI)
+  if (!baseURI) {
+    LogMessage("No chrome package registered for chrome://%s/%s/%s .",
+               package.get(), provider.get(), path.get());
     return NS_ERROR_FAILURE;
+  }
 
   return NS_NewURI(aResult, path, nsnull, baseURI);
 }
@@ -1036,10 +1101,8 @@ nsChromeRegistry::CheckForNewChrome()
     if (NS_SUCCEEDED(lmanifest->IsDirectory(&isDir)) && isDir) {
       nsCOMPtr<nsISimpleEnumerator> entries;
       rv = lmanifest->GetDirectoryEntries(getter_AddRefs(entries));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Could not process chrome manifest directory.");
+      if (NS_FAILED(rv))
         continue;
-      }
 
       while (NS_SUCCEEDED(entries->HasMoreElements(&exists)) && exists) {
         entries->GetNext(getter_AddRefs(next));
@@ -1050,7 +1113,11 @@ nsChromeRegistry::CheckForNewChrome()
           if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".manifest"))) {
             rv = ProcessManifest(lmanifest, PR_FALSE);
             if (NS_FAILED(rv)) {
-              NS_WARNING("Failed to process manifest.");
+              nsCAutoString path;
+              lmanifest->GetNativePath(path);
+              LogMessage("Failed to process chrome manifest '%s'.",
+                         path.get());
+
             }
           }
         }
@@ -1058,14 +1125,12 @@ nsChromeRegistry::CheckForNewChrome()
     }
     else {
       rv = ProcessManifest(lmanifest, PR_FALSE);
-#ifdef DEBUG
       if (NS_FAILED(rv)) {
-        nsCString path;
+        nsCAutoString path;
         lmanifest->GetNativePath(path);
-        path.Insert(NS_LITERAL_CSTRING("Failed to process chrome manifest: "), 0);
-        NS_WARNING(path.get());
+        LogMessage("Failed to process chrome manifest: '%s'.",
+                   path.get());
       }
-#endif
     }
   }
 
@@ -1083,14 +1148,12 @@ nsChromeRegistry::CheckForNewChrome()
     }
 
     rv = ProcessManifest(lmanifest, PR_TRUE);
-#ifdef DEBUG
     if (NS_FAILED(rv)) {
-      nsCString path;
+      nsCAutoString path;
       lmanifest->GetNativePath(path);
-      path.Insert(NS_LITERAL_CSTRING("Failed to process skin manifest: "), 0);
-      NS_WARNING(path.get());
+      LogMessage("Failed to process chrome manifest: '%s'.",
+                 path.get());
     }
-#endif
   }
 
   return NS_OK;
@@ -1391,7 +1454,11 @@ nsChromeRegistry::ProcessContentsManifest(nsIURI* aOldManifest, nsIURI* aFile,
 
   nsCOMPtr<nsIRDFDataSource> ds;
   rv = rdfs->GetDataSourceBlocking(spec.get(), getter_AddRefs(ds));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    LogMessage("Failed to load old-style contents.rdf at '%s'.",
+               spec.get());
+    return rv;
+  }
 
   nsCOMPtr<nsIFileURL> fileURL (do_QueryInterface(aFile));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_INVALID_ARG);
@@ -1711,22 +1778,27 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
   char *token;
   char *newline = buf;
+  PRUint32 line = 0;
 
   // outer loop tokenizes by newline
   while (nsnull != (token = nsCRT::strtok(newline, kNewlines, &newline))) {
+    ++line;
+
     char *whitespace = token;
     token = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
     if (!token) continue;
 
     if (!strcmp(token, "content")) {
       if (aSkinOnly) {
-        NS_WARNING("Skin manifest contained content registration. Ignoring.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Ignoring content registration in skin-only manifest.");
         continue;
       }
       char *package = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       char *uri     = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       if (!package || !uri) {
-        NS_WARNING("Malformed chrome manifest, content entry.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Malformed content registration.");
         continue;
       }
       PRBool platform = PR_FALSE;
@@ -1755,14 +1827,16 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
     }
     else if (!strcmp(token, "locale")) {
       if (aSkinOnly) {
-        NS_WARNING("Skin manifest contained locale registration. Ignoring.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Ignoring locale registration in skin-only manifest.");
         continue;
       }
       char *package  = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       char *provider = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       char *uri      = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       if (!package || !provider || !uri) {
-        NS_WARNING("Malformed chrome manifest, locale entry.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Malformed locale registration.");
         continue;
       }
 
@@ -1786,7 +1860,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
       char *provider = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       char *uri      = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
       if (!package || !provider || !uri) {
-        NS_WARNING("Malformed chrome manifest, locale entry.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Malformed skin registration.");
         continue;
       }
 
@@ -1807,7 +1882,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
     }
     else if (!strcmp(token, "overlay")) {
       if (aSkinOnly) {
-        NS_WARNING("Skin manifest contained overlay registration. Ignoring.");
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Ignoring overlay registration in skin-only manifest.");
         continue;
       }
       char *base    = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
@@ -1844,7 +1920,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
       mStyleHash.Add(baseuri, overlayuri);
     }
     else {
-      NS_WARNING("Unrecognized chrome manifest instruction ignored.");
+      LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                            "Warning: Ignoring unrecognized chrome manifest instruction.");
     }
   }
 
