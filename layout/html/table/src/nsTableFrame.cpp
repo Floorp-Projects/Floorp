@@ -4045,8 +4045,9 @@ GetPaddingFor(const nsSize&         aBasis,
 }
 
 nsMargin
-nsTableFrame::GetPadding(const nsHTMLReflowState& aReflowState,
-                         const nsTableCellFrame*  aCellFrame)
+nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
+                               float                    aPixelToTwips,
+                               const nsTableCellFrame*  aCellFrame)
 {
   const nsStylePadding* paddingData;
   aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
@@ -4066,12 +4067,16 @@ nsTableFrame::GetPadding(const nsHTMLReflowState& aReflowState,
       parentRS = parentRS->parentReflowState;
     }
   }
+  nsMargin border;
+  aCellFrame->GetBorderWidth(aPixelToTwips, border);
+  padding += border;
   return padding;
 }
 
 nsMargin
-nsTableFrame::GetPadding(const nsSize&           aBasis,
-                         const nsTableCellFrame* aCellFrame)
+nsTableFrame::GetBorderPadding(const nsSize&           aBasis,
+                               float                   aPixelToTwips,
+                               const nsTableCellFrame* aCellFrame)
 {
   const nsStylePadding* paddingData;
   aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
@@ -4079,6 +4084,9 @@ nsTableFrame::GetPadding(const nsSize&           aBasis,
   if (!paddingData->GetPadding(padding)) {
     GetPaddingFor(aBasis, *paddingData, padding);
   }
+  nsMargin border;
+  aCellFrame->GetBorderWidth(aPixelToTwips, border);
+  padding += border;
   return padding;
 }
 

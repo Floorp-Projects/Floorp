@@ -386,11 +386,13 @@ public:
                        PRBool&                  aDidBalance,
                        nsReflowStatus&          aStatus);
 
-  static nsMargin GetPadding(const nsHTMLReflowState& aReflowState,
-                             const nsTableCellFrame*  aCellFrame);
+  static nsMargin GetBorderPadding(const nsHTMLReflowState& aReflowState,
+                                   float                    aPixelToTwips,
+                                   const nsTableCellFrame*  aCellFrame);
 
-  static nsMargin GetPadding(const nsSize&           aBasis,
-                             const nsTableCellFrame* aCellFrame);
+  static nsMargin GetBorderPadding(const nsSize&           aBasis,
+                                   float                   aPixelToTwips,
+                                   const nsTableCellFrame* aCellFrame);
 
   nsFrameList& GetColGroups();
 

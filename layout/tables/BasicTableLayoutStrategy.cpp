@@ -614,9 +614,10 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
           const nsStylePosition* cellPosition;
           cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
           if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-            // need to add padding into fixed width
-            nsMargin padding = nsTableFrame::GetPadding(nsSize(aReflowState.mComputedWidth, 0), cellFrame);
-            cellWidth = cellPosition->mWidth.GetCoordValue() + padding.left + padding.right;
+            // need to add borde and padding into fixed width
+            nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
+                                                                    aPixelToTwips, cellFrame);
+            cellWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
             cellWidth = PR_MAX(cellWidth, cellFrame->GetPass1MaxElementWidth());
           }
         }
@@ -844,8 +845,8 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
         numeratorAutoDes = desWidth;
       }
 
-      nscoord divisor;
-      nscoord numerator;
+      nscoord divisor = 0;
+      nscoord numerator = 0;
 
       // let pct cols reach their target 
       if (LIMIT_PCT == aLimitType) {
@@ -969,7 +970,6 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 #ifdef DEBUG_TABLE_STRATEGY
   printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
-  PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
   nscoord spacingX = mTableFrame->GetCellSpacingX();
@@ -1026,10 +1026,10 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
         nscoord coordValue = cellPosition->mWidth.GetCoordValue();
         if (coordValue > 0) { // ignore if width == 0
-          // need to add padding into fixed width
+          // need to add border and padding into fixed width
           nsSize percentBase(aReflowState.mComputedWidth, 0);
-          nsMargin padding = nsTableFrame::GetPadding(percentBase, cellFrame);
-          nscoord newFixWidth = coordValue + padding.left + padding.right;
+          nsMargin borderPadding = nsTableFrame::GetBorderPadding(percentBase, aPixelToTwips, cellFrame);
+          nscoord newFixWidth = coordValue + borderPadding.left + borderPadding.right;
           // 2nd part of condition is Nav/IE Quirk like below
           if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
             fixWidth = newFixWidth;
@@ -1225,7 +1225,6 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
 
   PRInt32 numRows  = mTableFrame->GetRowCount();
   PRInt32 numCols  = mTableFrame->GetColCount(); // consider cols at end without orig cells 
-  nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
 
   // For an auto table, determine the potentially new percent adjusted width based 
@@ -1295,7 +1294,6 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
   } // end for (colX ..
 
   float   perTotal         = 0.0f; // total of percentage constrained cols and/or cells in cols
-  nscoord fixWidthTotal    = 0;    // total of fixed widths of all cols
   PRInt32 numPerCols       = 0;    // number of colums that have percentage constraints
   nscoord fixDesTotal      = 0;    // total of fix or des widths of cols 
   nscoord fixDesTotalNoPct = 0;    // total of fix or des widths of cols without pct
@@ -1408,9 +1406,9 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
           maxColPctWidth = nsTableFrame::RoundToPixel(NSToCoordRound( ((float)basis) * maxColPct ), aPixelToTwips);
           percentContributor = cellFrame;
           if (!mIsNavQuirksMode) { 
-            // need to add padding
-            nsMargin padding = nsTableFrame::GetPadding(nsSize(basis, 0), cellFrame);
-            maxColPctWidth += padding.left + padding.right;
+            // need to add border and padding
+            nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
+            maxColPctWidth += borderPadding.left + borderPadding.right;
           }
         }
       }
@@ -1516,9 +1514,9 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
           cellPct = 1.0f; // overwrite spurious percent colspan width's - bug 46944
         cellPctWidth = nsTableFrame::RoundToPixel(NSToCoordRound( ((float)basis) * cellPct ), aPixelToTwips);
         if (!mIsNavQuirksMode) { 
-          // need to add padding 
-          nsMargin padding = nsTableFrame::GetPadding(nsSize(basis, 0), cellFrame);
-          cellPctWidth += padding.left + padding.right;
+          // need to add border and padding 
+          nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(basis, 0), aPixelToTwips, cellFrame);
+          cellPctWidth += borderPadding.left + borderPadding.right;
         }
       }
       if (cellPctWidth > 0) {
@@ -1637,7 +1635,6 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32* aTotalCounts,
   }
   a0ProportionalCount = 0;
 
-  nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   PRInt32 colX;
 
