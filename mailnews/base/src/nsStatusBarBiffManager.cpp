@@ -105,9 +105,8 @@ nsresult nsStatusBarBiffManager::Shutdown()
 
 nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
-	// See nsMsgStatusFeedback
-	nsresult rv;
-    nsCOMPtr<nsIURI> uri;
+    // See nsMsgStatusFeedback
+    nsresult rv;
 
     // if we got new mail, attempt to play a sound.
     // if we fail along the way, don't return.
@@ -126,9 +125,11 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
       }
     }
     
-	nsCOMPtr<nsIWindowMediator> windowMediator = 
-	         do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+    nsCOMPtr<nsIWindowMediator> windowMediator = 
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
 	// why use DOM window enumerator instead of XUL window...????
 	if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
