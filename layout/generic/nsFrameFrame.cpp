@@ -327,6 +327,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsHTMLFrameOuterFrame", aReflowState.reason);
   //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
@@ -858,6 +859,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsHTMLFrameInnerFrame", aReflowState.reason);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameInnerFrame::Reflow: maxSize=%d,%d reason=%d",
       aReflowState.availableWidth,

@@ -385,6 +385,8 @@ nsGfxRadioControlFrame::Reflow(nsIPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsGfxRadioControlFrame", aReflowState.reason);
+
   nsresult rv = nsNativeFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   COMPARE_QUIRK_SIZE("nsGfxRadioControlFrame", 12, 11) 

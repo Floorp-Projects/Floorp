@@ -2379,6 +2379,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus& aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame", aReflowState.reason);
 #ifdef DEBUG
   mDebugTotalReflows++;
   if (1==mDebugTotalReflows) {  // first reflow, better be initial reflow!
