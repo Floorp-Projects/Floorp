@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  */
 
@@ -26,16 +26,6 @@
 #define nsIDeviceContextSpecXP_h___
 
 #include "nsISupports.h"
-
-/* make Xprint the default print system if user/admin has set the XPSERVERLIST"
- * env var. See Xprt config README (/usr/openwin/server/etc/XpConfig/README) 
- * for details.
- */
-#ifdef DEBUG_gisburn
-#define NS_DEFAULT_PRINT_METHOD ((PR_GetEnv("XPSERVERLIST")!=nsnull)?(puts("** using printing=Xprint"),1):(puts("** using printing=PostScript"),0))
-#else 
-#define NS_DEFAULT_PRINT_METHOD ((PR_GetEnv("XPSERVERLIST")!=nsnull)?(1):(0))
-#endif /* DEBUG_gisburn */
 
 #define NS_IDEVICE_CONTEXT_SPEC_XP_IID { 0xa4ef8910, 0xdd65, 0x11d2, { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 } }
 
@@ -142,5 +132,5 @@ public:
    NS_IMETHOD GetUserCancelled(  PRBool &aCancel ) = 0;      
 };
 
-#endif
+#endif /* !nsIDeviceContextSpecXP_h___ */
 

@@ -152,8 +152,8 @@ nsDeviceContextXlib::CommonInit(void)
         }
         else {
           // Compute dpi of display
-          float screenWidth = float(WidthOfScreen(mScreen));
-          float screenWidthIn = float(WidthMMOfScreen(mScreen)) / 25.4f;
+          float screenWidth = float(XWidthOfScreen(mScreen));
+          float screenWidthIn = float(XWidthMMOfScreen(mScreen)) / 25.4f;
           dpi = nscoord(screenWidth / screenWidthIn);
         }
       }
@@ -166,8 +166,8 @@ nsDeviceContextXlib::CommonInit(void)
 
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
 
-  mWidthFloat = (float) WidthOfScreen(mScreen);
-  mHeightFloat = (float) HeightOfScreen(mScreen);
+  mWidthFloat = (float) XWidthOfScreen(mScreen);
+  mHeightFloat = (float) XHeightOfScreen(mScreen);
 
   DeviceContextImpl::CommonInit();
 }
@@ -434,56 +434,65 @@ NS_IMETHODIMP nsDeviceContextXlib::GetClientRect(nsRect &aRect)
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                                        nsIDeviceContext *&aContext)
+                                                       nsIDeviceContext *&aContext)
 {
-#ifdef USE_XPRINT
-  int method=-1;
+  nsresult                 rv;
+  PrintMethod              method;
   nsDeviceContextSpecXlib *spec = NS_STATIC_CAST(nsDeviceContextSpecXlib *, aDevice);
-  spec->GetPrintMethod(method);
+  
+  rv = spec->GetPrintMethod(method);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  if (method == 1) { // XPRINT
+#ifdef USE_XPRINT
+  if (method == pmXprint) { // XPRINT
     static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
-    nsresult rv;
     nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context");    
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
     if (NS_FAILED(rv)) 
       return rv;
     
-    dcxp->SetSpec(aDevice);
-    dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
-                              (nsIDeviceContext*)this);
-
+    rv = dcxp->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    rv = dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
     rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
                               (void **)&aContext);
     return rv;
   }
+  else
 #endif /* USE_XPRINT */
-
-  // default/PS
-  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+  if (method == pmPostScript) { // PostScript
+    // default/PS
+    static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
   
-  // Create a Postscript device context 
-  nsresult rv;
-  nsIDeviceContextPS *dcps;
+    // Create a Postscript device context 
+    nsCOMPtr<nsIDeviceContextPS> dcps(do_CreateInstance(kCDeviceContextPS, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context.");
+    if (NS_FAILED(rv)) 
+      return rv;
   
-  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
-                                          nsnull,
-                                          NS_GET_IID(nsIDeviceContextPS),
-                                          (void **)&dcps);
+    rv = dcps->SetSpec(aDevice);
+    if (NS_FAILED(rv)) 
+      return rv;
+      
+    rv = dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
+                                   (nsIDeviceContext*)this);
+    if (NS_FAILED(rv)) 
+      return rv;
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
+    rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
+                              (void **)&aContext);
+    return rv;
+  }
   
-  dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
-                            (nsIDeviceContext*)this);
-
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                            (void **)&aContext);
-
-  NS_RELEASE(dcps);
-  
-  return rv;
+  NS_WARNING("no print module created.");
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(PRUnichar * aTitle)

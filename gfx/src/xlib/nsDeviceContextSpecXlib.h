@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  */
 
@@ -32,6 +32,19 @@
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
 #include "nsPrintdXlib.h"
+
+typedef enum
+{
+  pmAuto = 0, /* default */
+  pmXprint,
+  pmPostScript
+} PrintMethod;
+
+/* make Xprint the default print system if user/admin has set the XPSERVERLIST"
+ * env var. See Xprt config README (/usr/openwin/server/etc/XpConfig/README) 
+ * for details.
+ */
+#define NS_DEFAULT_PRINT_METHOD ((PR_GetEnv("XPSERVERLIST")!=nsnull)?(pmXprint):(pmPostScript))
 
 class nsDeviceContextSpecXlib : public nsIDeviceContextSpec,
                                 public nsIDeviceContextSpecPS
@@ -59,9 +72,7 @@ public:
   NS_IMETHOD GetPath (char **aPath);    
   NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
-#ifdef USE_XPRINT
-  NS_IMETHOD GetPrintMethod(int &aMethod); 
-#endif /* USE_XPRINT */
+  NS_IMETHOD GetPrintMethod(PrintMethod &aMethod); 
   virtual ~nsDeviceContextSpecXlib();
 protected:
   UnixPrData mPrData;
