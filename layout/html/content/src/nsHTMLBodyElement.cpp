@@ -566,6 +566,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     canvasStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
     canvasStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
     canvasStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
+    canvasStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags;
 
     bFixedBackground = 
       canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
