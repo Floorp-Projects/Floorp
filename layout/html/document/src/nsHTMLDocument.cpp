@@ -1585,6 +1585,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   }
 
   start = body;
+  NS_ADDREF(body);
   // Find Very first Piece of Content
   while (start->ChildCount() > 0) {
     nsIContent * child = start;
@@ -1593,6 +1594,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   }
 
   end = body;
+  NS_ADDREF(body);
   // Last piece of Content
   PRInt32 count = end->ChildCount();
   while (count > 0) {
@@ -1613,12 +1615,14 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
   if (endContent == nsnull && mSearchDirection == kForward) {
     searchContent = (mSearchDirection == kForward ? body:end);
+    //NS_ADDREF(searchContent);
     BlockText blockText;
     if (!BuildBlockTraversing(searchContent, blockText)) {
       if (SearchBlock(blockText, *mSearchStr)) {
         aIsFound = PR_TRUE;
       }
     }
+    //NS_RELEASE(searchContent);
   } else {
     searchContent          = (mSearchDirection == kForward ? endContent:startContent);
     mLastBlockSearchOffset = (mSearchDirection == kForward ? endPnt->GetOffset():startPnt->GetOffset());
@@ -1651,8 +1655,11 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     }
   }
 
-  //NS_RELEASE(startContent);
-  //NS_RELEASE(endContent);
+  NS_IF_RELEASE(startContent);
+  NS_IF_RELEASE(endContent);
+  NS_IF_RELEASE(body);
+  NS_IF_RELEASE(start);
+  NS_IF_RELEASE(end);
 
   SetDisplaySelection(PR_TRUE); 
 
