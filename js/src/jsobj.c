@@ -3185,17 +3185,22 @@ js_Clear(JSContext *cx, JSObject *obj)
     JSScope *scope;
     uint32 i, n;
 
-    /* Clear our scope of all symbols and properties. */
+    /*
+     * Clear our scope of all symbols and properties, only if we own the scope
+     * (i.e., not if obj is unmutated and sharing its prototype's scope).
+     */
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    scope->ops->clear(cx, scope);
+    if (scope->object == obj) {
+        scope->ops->clear(cx, scope);
 
-    /* Clear slot values and reset freeslot so we're consistent. */
-    i = scope->map.nslots;
-    n = JSSLOT_FREE(LOCKED_OBJ_GET_CLASS(obj));
-    while (--i >= n)
-        obj->slots[i] = JSVAL_VOID;
-    scope->map.freeslot = n;
+        /* Clear slot values and reset freeslot so we're consistent. */
+        i = scope->map.nslots;
+        n = JSSLOT_FREE(LOCKED_OBJ_GET_CLASS(obj));
+        while (--i >= n)
+            obj->slots[i] = JSVAL_VOID;
+        scope->map.freeslot = n;
+    }
     JS_UNLOCK_OBJ(cx, obj);
 }
 
