@@ -91,6 +91,11 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
 {
     MochaDecoder *decoder;
     lo_TopState *top;
+    LO_Color visitCol, linkCol;
+    lo_DocState *state;
+    DOM_StyleSelector *sel, *imgsel;
+    DOM_AttributeEntry *entry;
+    DOM_StyleDatabase *db = NULL;
 
     if (!cx)
         return NULL;
@@ -99,103 +104,109 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
     if (!decoder)
         return NULL;
     
+    LO_LockLayout();
     top = lo_FetchTopState(decoder->window_context->doc_id);
     if (!top)
-        return NULL;
+        goto error;
 
-    if (!top->style_db) {
-        LO_Color visitCol, linkCol;
-        lo_DocState *state = top->doc_state;
-        DOM_StyleSelector *sel, *imgsel;
-        DOM_AttributeEntry *entry;
-        DOM_StyleDatabase *db;
+    if (top->style_db) {
+        LO_UnlockLayout();
+        return (DOM_StyleDatabase *)top->style_db;
+    }
 
-        if (!state)
-            return NULL;
+    state = top->doc_state;
+    if (!state)
+        goto error;
 
-        db = DOM_NewStyleDatabase(cx);
-        if (!db)
-            return NULL;
-        /*
-         * Install default rules.
-         * In an ideal world (perhaps 5.0?), we would parse .netscape/ua.css
-         * at startup and keep the JSSS style buffer around for execution
-         * right here.  That would be very cool in many ways, including the
-         * fact that people could have ua.css at all.  We might want to
-         * make the weighting stuff work correctly at the same time, too,
-         * but I don't think it's vital.
-         */
+    db = DOM_NewStyleDatabase(cx);
+    if (!db)
+        goto error;
+    /*
+     * Install default rules.
+     * In an ideal world (perhaps 5.0?), we would parse .netscape/ua.css
+     * at startup and keep the JSSS style buffer around for execution
+     * right here.  That would be very cool in many ways, including the
+     * fact that people could have ua.css at all.  We might want to
+     * make the weighting stuff work correctly at the same time, too,
+     * but I don't think it's vital.
+     */
 
-        linkCol.red = STATE_UNVISITED_ANCHOR_RED(state);
-        linkCol.green = STATE_UNVISITED_ANCHOR_GREEN(state);
-        linkCol.blue = STATE_UNVISITED_ANCHOR_BLUE(state);
-        visitCol.red = STATE_VISITED_ANCHOR_RED(state);
-        visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
-        visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
+    linkCol.red = STATE_UNVISITED_ANCHOR_RED(state);
+    linkCol.green = STATE_UNVISITED_ANCHOR_GREEN(state);
+    linkCol.blue = STATE_UNVISITED_ANCHOR_BLUE(state);
+    visitCol.red = STATE_VISITED_ANCHOR_RED(state);
+    visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
+    visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
+    top_state->style_db = db;
 
-        sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                        "A", NULL, "link");
-        if (!sel)
-            return NULL;
+    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                    "A", NULL, "link");
+    if (!sel)
+        goto error;
 
 #define SET_DEFAULT_VALUE(name, value)                                        \
         entry = DOM_StyleAddRule(cx, db, sel, name, "default");               \
         if (!entry)                                                           \
-            return NULL;                                                      \
+            goto error;                                                       \
         entry->dirty = JS_FALSE;                                              \
         entry->data = value;
         
-        /* A:link { color:prefLinkColor } */
-        SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&linkCol);
+    /* A:link { color:prefLinkColor } */
+    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&linkCol);
 
-        /* A:link { text-decoration:underline } */
-        if (lo_underline_anchors() &&
-            !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
-            return NULL;
+    /* A:link { text-decoration:underline } */
+    if (lo_underline_anchors() &&
+        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
+        goto error;
 
-        sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                        "A", NULL, "visited");
-        if (!sel)
-            return NULL;
+    sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                    "A", NULL, "visited");
+    if (!sel)
+        goto error;
 
-        /* A:visited { color:prefVisitedLinkColor } */
-        SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&visitCol);
+    /* A:visited { color:prefVisitedLinkColor } */
+    SET_DEFAULT_VALUE(COLOR_STYLE, *(uint32*)&visitCol);
 
-        /* A:visited { text-decoration:underline } */
-        if (lo_underline_anchors() &&
-            !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
-            return NULL;
+    /* A:visited { text-decoration:underline } */
+    if (lo_underline_anchors() &&
+        !DOM_StyleAddRule(cx, db, sel, TEXTDECORATION_STYLE, "underline"))
+        goto error;
 
-        /* set styles for IMG within A:link and A:visited */
-        /* XXX should set (and teach layout about) borderTop/Bottom, etc. */
-        imgsel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
-                                           "IMG", NULL, NULL);
-        if (!imgsel)
-            return NULL;
+    /* set styles for IMG within A:link and A:visited */
+    /* XXX should set (and teach layout about) borderTop/Bottom, etc. */
+    imgsel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
+                                       "IMG", NULL, NULL);
+    if (!imgsel)
+        goto error;
 
-        /* set border styles for ``A:link IMG'' */
-        sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
-                                        "A", NULL, "link");
-        if (!sel)
-            return NULL;
-        SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
-        SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
+    /* set border styles for ``A:link IMG'' */
+    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
+                                    "A", NULL, "link");
+    if (!sel)
+        goto error;
+    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
+    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
 
-        /* set border styles for ``A:visited IMG'' */
-        sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
-                                        "A", NULL, "visited");
-        if (!sel)
-            return NULL;
-        SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
-        SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
+    /* set border styles for ``A:visited IMG'' */
+    sel = DOM_StyleFindSelectorFull(cx, db, imgsel, SELECTOR_TAG,
+                                    "A", NULL, "visited");
+    if (!sel)
+        goto error;
+    SET_DEFAULT_VALUE(BORDERWIDTH_STYLE, IMAGE_DEF_ANCHOR_BORDER);
+    SET_DEFAULT_VALUE(PADDING_STYLE, IMAGE_DEF_VERTICAL_SPACE);
 
 #ifdef DEBUG_shaver
-        fprintf(stderr, "successfully added all default rules\n");
+    fprintf(stderr, "successfully added all default rules\n");
 #endif
-        top->style_db = db;
-    }
 
-    return (DOM_StyleDatabase *)top->style_db;
+    LO_UnlockLayout();
+    return db;
+
+ error:
+    LO_UnlockLayout();
+    if (db)
+        DOM_DestroyStyleDatabase(db);
+    return NULL;
 }
 #endif /* MOZILLA_CLIENT */
 
