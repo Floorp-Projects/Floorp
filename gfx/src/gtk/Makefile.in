@@ -35,7 +35,6 @@ CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
-	nsBlenderGTK.cpp \
 	nsDrawingSurfaceGTK.cpp \
 	nsDeviceContextGTK.cpp \
 	nsDeviceContextSpecFactoryG.cpp \
