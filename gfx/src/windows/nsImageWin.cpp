@@ -612,7 +612,7 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
 void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                     int aSX, int aSY, int aSWidth, int aSHeight)
 {
-  HDC memDC = CreateCompatibleDC(TheHDC);
+  HDC memDC = ::CreateCompatibleDC(TheHDC);
   unsigned char *screenBits;
   ALPHA24BITMAPINFO bmi(aSWidth, aSHeight);
   HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
@@ -632,7 +632,7 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
 
   ::SelectObject(memDC, oldBitmap);
   ::DeleteObject(tmpBitmap);
-  ::DeleteObject(memDC);
+  ::DeleteDC(memDC);
 }
 
 /** ---------------------------------------------------
