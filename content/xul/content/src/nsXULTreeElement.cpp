@@ -537,15 +537,13 @@ nsXULTreeElement::FireOnSelectHandler()
 
   PRInt32 count = document->GetNumberOfShells();
 	for (PRInt32 i = 0; i < count; i++) {
-		nsIPresShell* shell = document->GetShellAt(i);
+		nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
 		if (nsnull == shell)
 				continue;
 
 		// Retrieve the context in which our DOM event will fire.
 		nsCOMPtr<nsIPresContext> aPresContext;
 		shell->GetPresContext(getter_AddRefs(aPresContext));
-
-		NS_RELEASE(shell);
 				
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
@@ -667,7 +665,7 @@ nsXULTreeElement::EnsureElementIsVisible(nsIDOMXULElement *aElement)
   // now call EnsureElementIsVisible on all the frames
   PRInt32 count = document->GetNumberOfShells();
 	for (PRInt32 i = 0; i < count; i++) {
-		nsCOMPtr<nsIPresShell> shell = document->GetShellAt(i);
+		nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
 		if (!shell)
 				continue;
 
