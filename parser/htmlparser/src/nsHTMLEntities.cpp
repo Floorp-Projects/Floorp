@@ -33,7 +33,7 @@ struct EntityNode {
       mUnicode(-1)
   {}
 
-  EntityNode(const nsString& aStringValue)
+  EntityNode(const nsCString& aStringValue)
     : mStr(),
       mUnicode(-1)
   { // point to the incomming buffer
@@ -166,7 +166,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
     EntityNode node(aEntity);
     EntityNode*  found = (EntityNode*)gEntityToCodeTree->FindItem(&node);
     if (found) {
-      NS_ASSERTION(found->mStr.Equals(aEntity.mUStr,PR_FALSE,aEntity.mLength), "bad tree");
+      NS_ASSERTION(found->mStr.Equals(aEntity), "bad tree");
       return found->mUnicode;
     }
   }
