@@ -37,35 +37,18 @@
  */
 
 const DEBUG = false; /* set to false to suppress debug messages */
-const PANELS_RDF_FILE  = "UPnls"; /* directory services property to find panels.rdf */
 
-const SIDEBAR_CONTRACTID   = "@mozilla.org/sidebar;1";
-const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
-const CONTAINER_CONTRACTID = "@mozilla.org/rdf/container;1";
-const DIR_SERV_CONTRACTID  = "@mozilla.org/file/directory_service;1"
-const NETSEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch"
-const IO_SERV_CONTRACTID   = "@mozilla.org/network/io-service;1";
-const nsISupports      = Components.interfaces.nsISupports;
-const nsIFactory       = Components.interfaces.nsIFactory;
-const nsISidebar       = Components.interfaces.nsISidebar;
-const nsIRDFContainer  = Components.interfaces.nsIRDFContainer;
-const nsIProperties    = Components.interfaces.nsIProperties;
-const nsIFileURL       = Components.interfaces.nsIFileURL;
-const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
-const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
-const nsIClassInfo = Components.interfaces.nsIClassInfo;
+const SIDEBAR_CONTRACTID        = "@mozilla.org/sidebar;1";
+const SIDEBAR_CID               = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
+const NETSEARCH_CONTRACTID      = "@mozilla.org/rdf/datasource;1?name=internetsearch"
+const nsISupports               = Components.interfaces.nsISupports;
+const nsIFactory                = Components.interfaces.nsIFactory;
+const nsISidebar                = Components.interfaces.nsISidebar;
+const nsIInternetSearchService  = Components.interfaces.nsIInternetSearchService;
+const nsIClassInfo              = Components.interfaces.nsIClassInfo;
 
 function nsSidebar()
 {
-    const RDF_CONTRACTID = "@mozilla.org/rdf/rdf-service;1";
-    const nsIRDFService = Components.interfaces.nsIRDFService;
-    
-    this.rdf = Components.classes[RDF_CONTRACTID].getService(nsIRDFService);
-    this.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
-    debug('datasource_uri is ' + this.datasource_uri);
-    this.resource = 'urn:sidebar:current-panel-list';
-    this.datasource = this.rdf.GetDataSource(this.datasource_uri);
-    
     const PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
     const nsIPromptService = Components.interfaces.nsIPromptService;
     this.promptService =
@@ -282,42 +265,6 @@ if (DEBUG)
     debug = function (s) { dump("-*- sidebar component: " + s + "\n"); }
 else
     debug = function (s) {}
-
-function getSidebarDatasourceURI(panels_file_id)
-{
-    try 
-    {
-        /* use the fileLocator to look in the profile directory 
-         * to find 'panels.rdf', which is the
-         * database of the user's currently selected panels. */
-        var directory_service = Components.classes[DIR_SERV_CONTRACTID].getService(Components.interfaces.nsIProperties);
-
-        /* if <profile>/panels.rdf doesn't exist, get will copy
-         *bin/defaults/profile/panels.rdf to <profile>/panels.rdf */
-        var sidebar_file = directory_service.get(panels_file_id, Components.interfaces.nsIFile);
-
-        if (!sidebar_file.exists())
-        {
-            /* this should not happen, as GetFileLocation() should copy
-             * defaults/panels.rdf to the users profile directory */
-            debug("sidebar file does not exist");
-            return null;
-        }
-
-        var io_service = Components.classes[IO_SERV_CONTRACTID].getService(Components.interfaces.nsIIOService);
-        var file_handler = io_service.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-        var sidebar_uri = file_handler.getURLSpecFromFile(sidebar_file);
-        debug("sidebar uri is " + sidebar_uri);
-        return sidebar_uri;
-    }
-    catch (ex)
-    {
-        /* this should not happen */
-        debug("caught " + ex + " getting sidebar datasource uri");
-        return null;
-    }
-}
-
 
 var strBundleService = null;
 function srGetStrBundle(path)
