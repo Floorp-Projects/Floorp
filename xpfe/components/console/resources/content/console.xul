@@ -47,18 +47,18 @@ Contributor(s): ______________________________________. -->
 <script language="javascript" src="chrome://global/content/console.js"/>
 
 <broadcasterset>
-        <broadcaster id="cmd_quit"/>
+  <broadcaster id="cmd_quit"/>
 </broadcasterset>
 
 <toolbox>
   <menubar id="main-menubar" class="chromeclass-menubar">
-    <menu accesskey="&filemenu.accesskey;" id="menu_File">
+    <menu id="menu_File">
       <menupopup id="menu_FilePopup">
         <menuitem id="menu_close" oncommand="window.close()"/>
       </menupopup>
     </menu>
 
-    <menu accesskey="&editmenu.accesskey;" id="menu_Edit">
+    <menu id="menu_Edit">
       <menupopup id="dummyid">
         <menuitem id="menu_cut" disabled="true"/>
         <menuitem id="menu_copy" disabled="true"/>
@@ -67,10 +67,10 @@ Contributor(s): ______________________________________. -->
     </menu>
   
     <!-- tasks menu filled from tasksOverlay -->
-    <menu accesskey="&tasksmenu.accesskey;" id="tasksMenu"/>
+    <menu id="tasksMenu"/>
 
     <!-- help menu filled from globalOverlay -->
-    <menu accesskey="&helpmenu.accesskey;" id="menu_Help"/>
+    <menu id="menu_Help"/>
   </menubar>
 
   <toolbar id="toolbar">

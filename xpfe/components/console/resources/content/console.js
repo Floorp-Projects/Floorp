@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+ var bundle;
+ 
 /*
  * Functions for initializing and updating the JavaScript Console.
  */
@@ -89,6 +91,8 @@ function onLoadJSConsole()
 
     cs.registerListener(consoleListener);
 
+    bundle = srGetStrBundle("chrome://global/locale/console.properties");
+    
     return true;
 }
 
@@ -111,6 +115,9 @@ function onUnloadJSConsole()
 
     return true;
 }
+
+gErrorCount = 0;
+gWarningCount = 0;
 
 /*
  * Given a message, write it to the page.
@@ -167,6 +174,7 @@ function appendMessage(messageObject)
         cell.setAttribute("col", scriptError.columnNumber);
         cell.setAttribute("msg", scriptError.message);
         cell.setAttribute("error", scriptError.sourceLine);
+        
     } catch (exn) {
 //          dump(exn + '\n');
         // QI failed, just try to treat it as an nsIConsoleMessage
@@ -175,10 +183,26 @@ function appendMessage(messageObject)
     row.appendChild(cell);
     item.appendChild(row);
     c.appendChild(item);
-	num_errors++;
 
-	//Deletes top error if error console is long
-	if(num_errors>250) { deleteOne(); }
+    /*
+    var warningBroadcaster = document.getElementById("Console:ShowWarnings");
+    var errorBroadcaster = document.getElementById("Console:ShowErrors");
+    var allBroadcaster = document.getElementById("Console:ShowAll");
+    if (warning) gWarningCount++;
+    else gErrorCount++;
+
+    warningBroadcaster.setAttribute("value", 
+                                    (bundle.GetStringFromName("warningsLabel") + " (" + gWarningCount + ")"));
+    errorBroadcaster.setAttribute("value", 
+                                  (bundle.GetStringFromName("errorsLabel") + " (" + gErrorCount + ")"));
+    allBroadcaster.setAttribute("value", 
+                                (bundle.GetStringFromName("allMsgsLabel") + " (" + (gErrorCount + gWarningCount) + ")"));
+    */  
+
+    num_errors++;
+
+    //Deletes top error if error console is long
+    if(num_errors>250) { deleteOne(); }
 
 }
 

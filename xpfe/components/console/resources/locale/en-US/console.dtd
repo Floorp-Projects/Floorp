@@ -20,11 +20,6 @@ Contributor(s): ______________________________________. -->
 
 <!ENTITY console.title "JavaScript Console">
 
-<!ENTITY filemenu.accesskey	"f">
-<!ENTITY editmenu.accesskey	"e">
-<!ENTITY tasksmenu.accesskey	"t">
-<!ENTITY helpmenu.accesskey	"h">
-
 <!ENTITY url.label     "Source File:">
 <!ENTITY line.label    "Line:">
 <!ENTITY col.label     "Column:">
@@ -34,3 +29,4 @@ Contributor(s): ______________________________________. -->
 <!ENTITY errors.label   "Errors">
 <!ENTITY warnings.label "Warnings">
 <!ENTITY clear.label "Clear">
+
