@@ -171,32 +171,10 @@ nsPlaintextEditor::~nsPlaintextEditor()
 NS_IMPL_ADDREF_INHERITED(nsPlaintextEditor, nsEditor)
 NS_IMPL_RELEASE_INHERITED(nsPlaintextEditor, nsEditor)
 
-
-NS_IMETHODIMP nsPlaintextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
- 
-  *aInstancePtr = nsnull;
-  
-  if (aIID.Equals(NS_GET_IID(nsIPlaintextEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIPlaintextEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEditor))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEditor*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEditorMailSupport))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEditorMailSupport*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return nsEditor::QueryInterface(aIID, aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsPlaintextEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
+NS_INTERFACE_MAP_END_INHERITING(nsEditor)
 
 
 NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc, 
