@@ -43,3 +43,8 @@ tab[busy] > .tab-icon {
   margin: 0;
 }
 
+.tabs-newbutton {
+  margin: 0px;
+  padding: 0px;
+  list-style-image: url("chrome://global/skin/icons/tab-new.gif");
+}

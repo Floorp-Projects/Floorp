@@ -31,16 +31,19 @@
     </content>
   </binding>
   
-    <binding id="tabs-closebutton" 
+  <binding id="tabs-closebutton" 
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:spacer class="tabs-left-cap"/>
-      <xul:spacer class="tabs-left"/>
+      <xul:stack>
+        <xul:spacer class="tabs-left"/>
+        <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
+      </xul:stack>
       <children/>
       <xul:stack flex="1">
         <xul:spacer class="tabs-right"/>
         <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="oncommand=onclosetab"/>
+          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
         </xul:hbox>
       </xul:stack>
       <xul:spacer class="tabs-right-cap"/>

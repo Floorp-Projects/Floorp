@@ -90,3 +90,18 @@ tab[busy] {
   list-style-image: url("chrome://global/skin/icons/close-dis.gif") !important;
 }
 
+.tabs-newbutton {
+  margin: 0px;
+  padding: 2px 0px 3px 2px;
+  border: none;
+  list-style-image: url("chrome://global/skin/icons/tab-new.gif");
+}
+
+.tabs-newbutton:hover {
+  list-style-image: url("chrome://global/skin/icons/tab-new-hov.gif");
+}
+
+.tabs-newbutton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/tab-new-act.gif");
+}
+

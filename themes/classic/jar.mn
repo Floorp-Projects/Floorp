@@ -142,6 +142,7 @@ classic.jar:
   skin/classic/global/console/console-error-dash.gif                    (global/console/console-error-dash.gif)
   skin/classic/global/console/console-error-caret.gif                   (global/console/console-error-caret.gif)
   skin/classic/global/icons/close-button.gif                            (global/icons/close-button.gif)
+  skin/classic/global/icons/tab-new.gif                                 (global/icons/tab-new.gif)
   skin/classic/global/toolbar/tbgrip-arrow.gif                          (global/toolbar/tbgrip-arrow.gif)
   skin/classic/global/toolbar/tbgrip-arrow-clps.gif                     (global/toolbar/tbgrip-arrow-clps.gif)
   skin/classic/global/toolbar/tbgrip-texture.gif                        (global/toolbar/tbgrip-texture.gif)
