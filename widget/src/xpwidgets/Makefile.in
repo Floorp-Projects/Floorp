@@ -63,6 +63,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 CPPSRCS += nsWidgetAtoms.cpp
 endif
 
+ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsBaseFilePicker.cpp
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
 		-I$(srcdir) \
