@@ -167,6 +167,9 @@ public:
 
   // grab in progress
   PRBool GrabInProgress(void);
+  // drag in progress
+  static PRBool DragInProgress(void);
+
   //  XXX Chris - fix these
   //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
 
@@ -208,6 +211,7 @@ protected:
   // are we doing a grab?
   static PRBool      sIsGrabbing;
   static nsWindow   *sGrabWindow;
+  static PRBool      sIsDraggingOutOf;
 
   // our wonderful hash table with our window -> nsWindow * lookup
   static GHashTable *mWindowLookupTable;

@@ -135,6 +135,7 @@ gboolean handle_toplevel_property_change (
 // are we grabbing?
 PRBool      nsWindow::sIsGrabbing = PR_FALSE;
 nsWindow   *nsWindow::sGrabWindow = NULL;
+PRBool      nsWindow::sIsDraggingOutOf = PR_FALSE;
 
 // this is a hash table that contains a list of the
 // shell_window -> nsWindow * lookups
@@ -877,10 +878,13 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
     if (mSuperWin) {
 
-      NativeGrab(PR_TRUE);
+      // real grab is only done when there is no dragging
+      if (!nsWindow::DragInProgress()) {
+        NativeGrab(PR_TRUE);
 
-      sIsGrabbing = PR_TRUE;
-      sGrabWindow = this;
+        sIsGrabbing = PR_TRUE;
+        sGrabWindow = this;
+      }
     }
 
     gRollupListener = aListener;
@@ -892,8 +896,8 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     }
     sIsGrabbing = PR_FALSE;
 
-    NativeGrab(PR_FALSE);
-
+    if (!nsWindow::DragInProgress())
+      NativeGrab(PR_FALSE);
     gRollupListener = nsnull;
     gRollupWidget = nsnull;
   }
@@ -1708,6 +1712,9 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   switch (event->any.type)
   {
   case GDK_MOTION_NOTIFY:
+    // when we receive this, it must be that the gtk dragging is over,
+    // it is dropped either in or out of mozilla, clear the flag
+    sIsDraggingOutOf = PR_FALSE;
     OnMotionNotifySignal (&event->motion);
     break;
   case GDK_BUTTON_PRESS:
@@ -2437,7 +2444,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
         gtk_widget_show(mShell);
     }
     // and if we've been grabbed, grab for good measure.
-    if (sGrabWindow == this && mLastGrabFailed)
+    if (sGrabWindow == this && mLastGrabFailed && !nsWindow::DragInProgress())
       NativeGrab(PR_TRUE);
   }
   // hide
@@ -2928,6 +2935,20 @@ nsWindow::GrabInProgress(void)
 }
 
 /* static */
+PRBool
+nsWindow::DragInProgress(void)
+{
+  // mLastDragMotionWindow means the drag arrow is over mozilla
+  // sIsDraggingOutOf means the drag arrow is out of mozilla
+  // both cases mean the dragging is happenning.
+  if (mLastDragMotionWindow || sIsDraggingOutOf)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
+
+/* static */
 nsWindow *
 nsWindow::GetGrabWindow(void)
 {
@@ -3056,6 +3077,8 @@ gint nsWindow::OnDragMotionSignal      (GtkWidget *      aWidget,
   g_print("nsWindow::OnDragMotionSignal\n");
 #endif /* DEBUG_DND_EVENTS */
 
+  sIsDraggingOutOf = PR_FALSE;
+
   // Reset out drag motion timer
   ResetDragMotionTimer(aWidget, aDragContext, aX, aY, aTime);
 
@@ -3157,6 +3180,8 @@ nsWindow::OnDragLeaveSignal       (GtkWidget *      aWidget,
 #ifdef DEBUG_DND_EVENTS
   g_print("nsWindow::OnDragLeaveSignal\n");
 #endif /* DEBUG_DND_EVENTS */
+
+  sIsDraggingOutOf = PR_TRUE;
 
   // make sure to unset any drag motion timers here.
   ResetDragMotionTimer(0, 0, 0, 0, 0);
