@@ -178,7 +178,7 @@ const int MK_MSG_OUTBOX_L10N_NAME_OLD = 0;
 
 #define NET_parse_news_url(a, b, c, d, e, f)	-1
 
-#define FE_Alert(a, b)				/*NYI*/
+#define FE_Alert(a, b)				printf("ALERT: %s", b)
 
 /* The three ways to deliver a message.
  */
