@@ -1005,17 +1005,24 @@ public class NativeRegExp extends ScriptableObject implements Function {
             if (op == REOP_END) {
                 op = REOP_LPAREN;
                 num = state.parenCount++;      /* \1 is numbered 0, etc. */
-                state.index = index + 1;
+                index++;
             }
             else
-                state.index = index + 3;
-            ren2 = parseRegExp(state);
-            if (ren2 == null)
-                return null;
-            index = state.index;
-            if (index >= source.length || source[index] != ')') {
-                reportError("msg.unterm.paren", tail(source, ocp), state);
-                return null;
+                index += 3;
+            state.index = index;
+            /* Handle empty paren */
+            if (source[index] == ')') {
+                ren2 = new RENode(state, REOP_EMPTY, null);
+            }
+            else {
+                ren2 = parseRegExp(state);
+                if (ren2 == null)
+                    return null;
+                index = state.index;
+                if (index >= source.length || source[index] != ')') {
+                    reportError("msg.unterm.paren", tail(source, ocp), state);
+                    return null;
+                }
             }
             index++;
             ren = new RENode(state, op, ren2);
