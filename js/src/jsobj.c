@@ -395,6 +395,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
+    *sp = NULL; /* Set to null in case we return an early error. */
     map = &cx->sharpObjectMap;
     table = map->table;
     if (!table) {
