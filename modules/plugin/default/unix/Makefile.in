@@ -62,9 +62,7 @@ CFLAGS		+= $(TK_CFLAGS)
 endif
 
 install-plugin: $(SHARED_LIBRARY)
-ifdef SHARED_LIBRARY
 	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
-endif
 
 install:: install-plugin
 
