@@ -65,16 +65,18 @@ public:
   NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus);
 
-  void WillNeedDirtyReflow() { mNeedsDirtyReflow = PR_TRUE; };
   PRInt32 GetCurrentGeneration() { return mGeneration; };
   void SetCurrentGeneration(PRInt32 aGeneration) { mGeneration = aGeneration; };
 
   PRBool UseGeneration() { return mUseGeneration; };
   void SetUseGeneration(PRBool aUse) { mUseGeneration = aUse; };
 
-  NS_IMETHOD AnnotateColumns();
-  
   PRBool ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, nsTableColFrame** aResult);
+
+  NS_IMETHOD MarkForDirtyReflow(nsIPresContext& aPresContext);
+
+  void SuppressReflow() { mSuppressReflow = PR_TRUE; };
+  void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
 
 protected:
   nsTreeFrame();
@@ -83,7 +85,7 @@ protected:
 protected: // Data Members
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
   nsTreeTwistyListener* mTwistyListener;
-  PRBool mNeedsDirtyReflow;
   PRInt32 mGeneration;
   PRBool mUseGeneration;
+  PRBool mSuppressReflow;
 }; // class nsTreeFrame

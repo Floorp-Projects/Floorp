@@ -216,13 +216,7 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
       treeRow->SetFlexingColumn(leftFlex);
       nsRect rect;
       GetRect(rect);
-      treeRow->SetHeaderPosition(point.x + rect.x);
-
-      // Ensure accurate annotation
-      nsTableFrame* tableFrame = nsnull;
-      nsTableFrame::GetTableFrame(this, tableFrame);
-      nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-      treeFrame->AnnotateColumns();
+      treeRow->SetHeaderPosition(point.x);
     }
   }
   else

@@ -208,20 +208,6 @@ nsTreeRowFrame::HandleMouseUpEvent(nsIPresContext& aPresContext,
 {
   if (DraggingHeader()) {
     HeaderDrag(PR_FALSE);
-    
-    nsTableFrame* tableFrame = nsnull;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-    treeFrame->SetUseGeneration(PR_FALSE); // Cached rows have to reflow.
-
-    nsCellMap* cellMap = tableFrame->GetCellMap();
-    PRInt32 numCols = cellMap->GetColCount();
-    nsTableColFrame* colFrame = tableFrame->GetColFrame(0);
-    nsCOMPtr<nsIContent> colElement;
-    colFrame->GetContent(getter_AddRefs(colElement));
-    if (colElement) {
-      colElement->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, "40", PR_TRUE);
-    }
   }
   return NS_OK;
 }
@@ -249,7 +235,7 @@ nsTreeRowFrame::GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture
     *aFrame = this;
     nsRect rect;
     GetRect(rect);
-    if (rect.Contains(aPoint)) {
+    if (!rect.Contains(aPoint)) {
       mHitFrame = nsnull;
     }
   }
@@ -284,7 +270,51 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
   // Grab our tree frame.
   nsTableFrame* tableFrame = nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
   
+  // Until we finish all of our batched operations, suppress all reflow.
+  treeFrame->SuppressReflow();
+
+  PRInt32 columnCount = treeFrame->GetColCount();
+  PRInt32* colWidths = new PRInt32[columnCount];
+  nsCRT::memset(colWidths, 0, columnCount*sizeof(PRInt32));
+
+  // Retrieve our column widths.
+  PRInt32 i;
+  for (i = 0; i < columnCount; i++) {
+    nsTableColFrame* result = treeFrame->GetColFrame(i);
+    nsCOMPtr<nsIContent> colContent;
+    result->GetContent(getter_AddRefs(colContent));
+    nsCOMPtr<nsIAtom> fixedAtom = dont_AddRef(NS_NewAtom("fixed"));
+    if (colContent) {
+      nsAutoString fixedValue;
+      colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
+      if (fixedValue != "true") {
+        // We are a proportional column and should be annotated with our current
+        // width.
+        PRInt32 colWidth = treeFrame->GetColumnWidth(i);
+        colWidths[i] = colWidth;
+      }
+    }
+  }
+
+  // Annotate with the current proportions
+  for (i = 0; i < columnCount; i++) {
+    if (colWidths[i] > 0) {
+      nsTableColFrame* result = treeFrame->GetColFrame(i);
+      nsCOMPtr<nsIContent> colContent;
+      result->GetContent(getter_AddRefs(colContent));
+      if (colContent) {
+        PRInt32 colWidth = colWidths[i];
+        char ch[100];
+        sprintf(ch,"%d*", colWidth);
+        nsAutoString propColWidth(ch);
+        colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
+                                 PR_TRUE);
+      }
+    }
+  }
+
   // Figure out how much we shifted the mouse.
   char ch[100];
   nsPoint point = ((nsMouseEvent*)aEvent)->point;
@@ -293,82 +323,83 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
 
   // The proportional columns to the right will gain or lose space
   // according to the percentages they currently consume.
-  PRInt32 numCols = tableFrame->GetColCount();
-  nscoord* propInfo = new PRInt32[numCols];
-  nsCRT::memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
 
-  // For every column, determine its proportional width
+  // Find our flexing col and note its index and width.
   PRInt32 colX;
-  for (colX = 0; colX < numCols; colX++) { 
+  PRInt32 flexWidth = 0;
+  PRInt32 flexIndex;
+  for (colX = 0; colX < columnCount; colX++) { 
     // Get column information
     nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
-    if (colFrame == mFlexingCol)
+    if (colFrame == mFlexingCol) {
+      flexWidth = colWidths[colX];
+      flexIndex = colX;
       break;
+    }
   }
-
-  colX++;
-  for ( ; colX < numCols; colX++) {
+  
+  for (colX = flexIndex+1; colX < columnCount; colX++) {
     // Retrieve the current widths for these columns and compute
     // the total amount of space they occupy.
     nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
-
-    // Get the column's width from the corresponding child cell in the header.
-    nsCOMPtr<nsIContent> colContent;
-    colFrame->GetContent(getter_AddRefs(colContent));
-
-    nsCOMPtr<nsIAtom> fixedAtom = dont_AddRef(NS_NewAtom("fixed"));
-    nsAutoString fixedVal;
-    colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedVal);
-    if (fixedVal != "true") {
-      PRInt32 colWidth = tableFrame->GetColumnWidth(colX);
-      propInfo[colX] = colWidth;
-      propTotal += propInfo[colX];
-    }
+    propTotal += colWidths[colX];
   }
 
   // Iterate over the columns to the right of the flexing column, 
   // and give them a percentage of the delta based off their proportions.
   nsCOMPtr<nsIContent> colContent;
+  nsTableColFrame* colFrame;
+  PRInt32 colWidth;
   PRInt32 remaining = delta;
-  for (colX = 0; colX < numCols; colX++) {
-    if (propInfo[colX] > 0) {
-      nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
-      float percentage = ((float)propInfo[colX])/((float)propTotal);
+  for (colX = flexIndex+1; colX < columnCount; colX++) {
+    if (colWidths[colX] > 0) {
+      colFrame = tableFrame->GetColFrame(colX);
+      float percentage = ((float)colWidths[colX])/((float)propTotal);
       PRInt32 mod = (PRInt32)(percentage * (float)delta);
-      PRInt32 colWidth = propInfo[colX] + mod;
+      colWidth = colWidths[colX] + mod;
      
       sprintf(ch,"%d*", colWidth);
       nsAutoString propColWidth(ch);
       
       colFrame->GetContent(getter_AddRefs(colContent));
-      if (colContent)
+      if (colContent) {
         colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
-                                 PR_FALSE); // Suppress a notification.
+                                 PR_TRUE);
+      }
+
       remaining -= mod;
     }
   }
 
   // Fix the spillover. We'll probably be off by a little.
   if (remaining != 0 && colContent) {
-    sprintf(ch,"%d*", remaining);
+    colWidth += remaining;
+    sprintf(ch,"%d*", colWidth);
     nsAutoString propColWidth(ch);
     colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
-                             PR_FALSE); // Suppress a notification.
+                             PR_TRUE);
+
   }
 
-  // Delete the propInfo array.
-  delete [] propInfo;
-
+  // Delete the colWidths array.
+  delete []colWidths;
+  
   // Modify the flexing column by the delta.
   nsCOMPtr<nsIContent> flexContent;
   mFlexingCol->GetContent(getter_AddRefs(flexContent));
   if (flexContent) {
-    sprintf(ch,"%d*", delta);
+    treeFrame->SetUseGeneration(PR_FALSE); // Cached rows have to reflow.
+    treeFrame->UnsuppressReflow();
+
+    PRInt32 colWidth = flexWidth - delta;
+    sprintf(ch,"%d*", colWidth);
     nsAutoString propColWidth(ch);
     flexContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
                               PR_TRUE); // NOW we send the notification that causes the reflow.
+    
+    // Do a dirty table reflow.
+    //treeFrame->MarkForDirtyReflow(aPresContext);
   }
-
   return NS_OK;
 }
