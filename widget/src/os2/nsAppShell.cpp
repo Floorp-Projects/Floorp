@@ -178,7 +178,7 @@ nsresult nsAppShell::Run()
             }
          }
 
-#ifdef 0
+#if 0
       // process timer queue.
       } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
 
@@ -253,7 +253,7 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 
         gotMessage = PR_TRUE;
 
-#ifdef 0
+#if 0
       // process timer queue.
       } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
 
