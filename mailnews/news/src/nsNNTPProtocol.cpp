@@ -949,7 +949,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 	return CloseSocket();
 }
 
-NS_IMETHODIMP nsNNTPProtocol::Cancel()  // handle stop button
+NS_IMETHODIMP nsNNTPProtocol::Cancel(nsresult status)  // handle stop button
 {
 	m_nextState = NNTP_ERROR;
 	return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);

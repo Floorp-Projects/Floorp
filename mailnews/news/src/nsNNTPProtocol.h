@@ -163,7 +163,7 @@ public:
 
 	char * m_ProxyServer;		/* proxy server hostname */
 
-	NS_IMETHOD Cancel();  // handle stop button
+	NS_IMETHOD Cancel(nsresult status);  // handle stop button
 
 private:
 	// over-rides from nsMsgProtocol
