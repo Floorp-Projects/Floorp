@@ -1222,6 +1222,12 @@ PRBool nsHTMLContentSinkStream::BreakAfterClose(eHTMLTags aTag)
     case eHTMLTag_pre:
     case eHTMLTag_title:
     case eHTMLTag_meta:
+    case eHTMLTag_li:
+    case eHTMLTag_dt:
+    case eHTMLTag_dd:
+    case eHTMLTag_blockquote:
+    case eHTMLTag_p:
+    case eHTMLTag_div:
       result = PR_TRUE;
     break;
 
@@ -1250,6 +1256,10 @@ PRBool nsHTMLContentSinkStream::IndentChildren(eHTMLTags aTag)
     case eHTMLTag_tbody:
     case eHTMLTag_form:
     case eHTMLTag_frameset:
+    case eHTMLTag_li:
+    case eHTMLTag_dt:
+    case eHTMLTag_dd:
+    case eHTMLTag_blockquote:
       result = PR_TRUE;      
       break;
 
