@@ -41,6 +41,8 @@
 
 #include "xptiprivate.h"
 
+#define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
+
 NS_IMPL_THREADSAFE_ISUPPORTS2(xptiInterfaceInfoManager, 
                               nsIInterfaceInfoManager,
                               nsIInterfaceInfoSuperManager)
@@ -157,10 +159,6 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 {
     // We only do this on shutdown of the service.
     mWorkingSet.InvalidateInterfaceInfos();
-
-#ifdef XPTI_HAS_ZIP_SUPPORT
-    xptiZipLoader::Shutdown();
-#endif /* XPTI_HAS_ZIP_SUPPORT */
 
     if(mResolveLock)
         PR_DestroyLock(mResolveLock);
@@ -437,7 +435,6 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
 
     if(aTypelibRecord.IsZip())
     {
-#ifdef XPTI_HAS_ZIP_SUPPORT
         zipItem = &aWorkingSet->GetZipItemAt(aTypelibRecord.GetZipItemIndex());
         
         // See the big comment below in the 'non-zip' case...
@@ -452,10 +449,26 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
         }
         
         LOG_LOAD(("# loading zip item %s::%s\n", fileRecord->GetName(), zipItem->GetName()));
-        header = xptiZipLoader::ReadXPTFileFromZip(file, zipItem->GetName(), aWorkingSet);
-#else
-        header = nsnull;
-#endif /* XPTI_HAS_ZIP_SUPPORT */
+        
+        nsCOMPtr<nsIXPTLoader> loader =
+            do_GetService(NS_ZIPLOADER_CONTRACTID);
+
+        if (loader) {
+            nsresult rv;
+            
+            nsCOMPtr<nsIInputStream> stream;
+            rv = loader->LoadEntry(file, zipItem->GetName(),
+                                   getter_AddRefs(stream));
+
+            if (NS_FAILED(rv))
+                return PR_FALSE;
+            
+            header =
+                xptiZipLoader::ReadXPTFileFromInputStream(stream, aWorkingSet);
+        } else {
+            header = nsnull;
+            NS_WARNING("Could not load XPT Zip loader");
+        }
     } 
     else
     {
@@ -964,20 +977,29 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
             // This will correspond to typelibRecord above.
             aWorkingSet->AppendFile(fileRecord);
         }
-#ifdef XPTI_HAS_ZIP_SUPPORT
-        else // It is a zip file, Oh boy!
+        else // its another kind of archive
         {
-            if(!xptiZipLoader::EnumerateZipEntries(file, 
-                          NS_STATIC_CAST(xptiEntrySink*, this), 
-                          aWorkingSet))
-            {
-                return PR_FALSE;    
+            nsCOMPtr<nsIXPTLoader> loader =
+                do_GetService(NS_ZIPLOADER_CONTRACTID);
+            
+            if (loader) {
+                nsresult rv;
+                
+                nsCOMPtr<nsIXPTLoaderSink> sink =
+                    new xptiZipLoaderSink(this, aWorkingSet);
+                if (!sink)
+                    return PR_FALSE;
+                
+                rv = loader->EnumerateEntries(file, sink);
+                if (NS_FAILED(rv))
+                    return PR_FALSE;
+            } else {
+                NS_WARNING("Could not load XPT Zip loader");
             }
             // This will correspond to typelibRecord used in
             // xptiInterfaceInfoManager::FoundEntry.
             aWorkingSet->AppendFile(fileRecord);
         }
-#endif /* XPTI_HAS_ZIP_SUPPORT */
     }
 
     return PR_TRUE;
@@ -1101,30 +1123,59 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aS
             // This will correspond to typelibRecord above.
             aWorkingSet->AppendFile(fileRecord);
         }
-#ifdef XPTI_HAS_ZIP_SUPPORT
-        else // It is a zip file, Oh boy!
+
+        else
         {
-            if(!xptiZipLoader::EnumerateZipEntries(file, 
-                          NS_STATIC_CAST(xptiEntrySink*, this), 
-                          aWorkingSet))
-            {
-                return PR_FALSE;    
+            nsCOMPtr<nsIXPTLoader> loader =
+                do_GetService(NS_ZIPLOADER_CONTRACTID);
+            
+            if (loader) {
+                nsresult rv;
+                
+                nsCOMPtr<nsIXPTLoaderSink> sink =
+                    new xptiZipLoaderSink(this, aWorkingSet);
+                if (!sink)
+                    return PR_FALSE;
+                
+                rv = loader->EnumerateEntries(file, sink);
+                if (NS_FAILED(rv))
+                    return PR_FALSE;
+            } else {
+                NS_WARNING("Could not load XPT Zip loader");
             }
             // This will correspond to typelibRecord used in
             // xptiInterfaceInfoManager::FoundEntry.
             aWorkingSet->AppendFile(fileRecord);
         }
-#endif /* XPTI_HAS_ZIP_SUPPORT */
     }
     return PR_TRUE;
 }        
 
+NS_IMPL_ISUPPORTS1(xptiZipLoaderSink, nsIXPTLoaderSink)
+
+// implement nsIXPTLoader
+NS_IMETHODIMP
+xptiZipLoaderSink::FoundEntry(const char* entryName,
+                              PRInt32 index,
+                              nsIInputStream *aStream)
+{
+    XPTHeader *header =
+        xptiZipLoader::ReadXPTFileFromInputStream(aStream, mWorkingSet);
+    if (!header)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    if (!mManager->FoundZipEntry(entryName, index, header, mWorkingSet))
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
 // implement xptiEntrySink
 PRBool 
-xptiInterfaceInfoManager::FoundEntry(const char* entryName,
-                                     int index,
-                                     XPTHeader* header,
-                                     xptiWorkingSet* aWorkingSet)
+xptiInterfaceInfoManager::FoundZipEntry(const char* entryName,
+                                        int index,
+                                        XPTHeader* header,
+                                        xptiWorkingSet* aWorkingSet)
 {
 
     NS_ASSERTION(entryName, "loser!");
