@@ -298,22 +298,13 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     while (fp && (!fp->script || !fp->pc))
         fp = fp->down;
 
+    reportp = &report;
+    memset(reportp, 0, sizeof (struct JSErrorReport));
+    report.flags = flags;
     if (fp) {
 	report.filename = fp->script->filename;
 	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
 	/* XXX should fetch line somehow */
-	report.linebuf = NULL;
-	report.tokenptr = NULL;
-        report.uclinebuf = NULL;
-        report.uctokenptr = NULL;
-	report.flags = flags;
-        report.errorNumber = 0;
-        report.ucmessage = NULL;
-        report.messageArgs = NULL;
-	reportp = &report;
-    } else {
-	/* XXXshaver still fill out report here for flags? */
-	reportp = NULL;
     }
     last = JS_vsmprintf(format, ap);
     if (!last)
