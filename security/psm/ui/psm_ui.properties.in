@@ -4437,7 +4437,7 @@ function openIssuerWindow()
 
 function showCertContents()
 {
-   window.open('get?baseRef=certPrettyPrint&target=%1$d', 'dump'+uniqueName,'width=760,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no');
+   window.open('get?baseRef=certPrettyPrint&target=%1$d', 'dump'+uniqueName,'width=760,height=625,scrollbars=yes,resizable=yes,toolbar=no,menubar=no');
 }
 //-->
 </script>
