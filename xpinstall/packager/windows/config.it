@@ -80,7 +80,7 @@ Verify Existance=
 [Legacy Check0]
 Filename=[SETUP PATH]\mozilla.exe
 Version=6.0.0.0
-Message=Setup has detected an old version of Netscape in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to chose a different path?
+Message=Setup has detected an old version of Mozilla in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to chose a different path?
 
 [Dialog Welcome]
 Show Dialog=TRUE
