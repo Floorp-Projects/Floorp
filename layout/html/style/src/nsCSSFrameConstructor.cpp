@@ -2537,7 +2537,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 */    
 
   if (!mTempFrameTreeState)
-    aPresShell->GetHistoryState(getter_AddRefs(mTempFrameTreeState));
+    aPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
 
   // ----- reattach gfx scrollbars ------
   // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
