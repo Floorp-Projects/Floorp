@@ -238,20 +238,6 @@ nsNSSSocketInfo::SetNetAddr(const PRNetAddr *aNetAddr)
   return NS_OK;
 }
 
-nsresult
-nsNSSSocketInfo::GetOldBlockVal(PRBool *aOldBlockVal)
-{
-  *aOldBlockVal = mOldBlockVal;
-  return NS_OK;
-}
-
-nsresult
-nsNSSSocketInfo::SetOldBlockVal(PRBool aOldBlockVal)
-{
-  mOldBlockVal = aOldBlockVal;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
@@ -398,10 +384,10 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   PRSocketOptionData sockopt;
   sockopt.option = PR_SockOpt_Nonblocking;
   PR_GetSocketOption(fd, &sockopt);
+  PRBool oldBlockVal = sockopt.value.non_blocking;
   
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo*)fd->secret;
   
-  infoObject->SetOldBlockVal(sockopt.value.non_blocking);
   infoObject->SetNetAddr(addr);
 
   sockopt.option = PR_SockOpt_Nonblocking;
@@ -435,11 +421,13 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   }
 
  loser:
-  // We keep the socket in blocking mode until the first write is completed.
-  // This makes it so that we can trap the case where we're trying to talk
-  // with a TLS intolerant server.  I wish we didn't have to do this, but
-  // outside of hacking necko, this is the only way.  After the first write,
-  // we'll set the non-blocking value back to the value it came in with.
+  // We put the Nonblocking bit back to the value it was when 
+  // we entered this function.
+  NS_ASSERTION(sockopt.option == PR_SockOpt_Nonblocking,
+               "sockopt.option was re-set to an unexpected value");
+  sockopt.value.non_blocking = oldBlockVal;
+  PR_SetSocketOption(fd, &sockopt);
+
   return status;
 }
 
@@ -552,21 +540,30 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
 #ifdef DEBUG_SSL_VERBOSE
   DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
 #endif
-
-  PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
-
-#ifdef DEBUG_SSL_VERBOSE
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
-#endif
-
   nsNSSSocketInfo *socketInfo = nsnull;
   PRBool firstWrite;
   socketInfo = (nsNSSSocketInfo*)fd->secret;
   NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
   socketInfo->GetFirstWrite(&firstWrite);
   PRBool oldBlockVal;
-  socketInfo->GetOldBlockVal(&oldBlockVal);
   PRBool oldBlockReset = PR_FALSE;
+  PRSocketOptionData sockopt;
+
+  if (firstWrite) {
+    // We only want the first write to be blocking so that we
+    // can trap the case of the TLS intolerant server.
+    sockopt.option = PR_SockOpt_Nonblocking;
+    PR_GetSocketOption(fd, &sockopt);
+    oldBlockVal = sockopt.value.non_blocking;
+    sockopt.value.non_blocking = PR_FALSE;
+    PR_SetSocketOption(fd, &sockopt);
+  }
+
+  PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
+
+#ifdef DEBUG_SSL_VERBOSE
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
+#endif
 
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
@@ -630,7 +627,6 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
           socketInfo->GetNetAddr(&addr);
           PRStatus prv = PR_Connect(fd, &addr, PR_INTERVAL_NO_TIMEOUT);
           // We no longer need this socket to block, so make it non-blocking.
-          PRSocketOptionData sockopt;
           sockopt.option = PR_SockOpt_Nonblocking;
           sockopt.value.non_blocking = oldBlockVal;
           PR_SetSocketOption(fd, &sockopt);
@@ -649,7 +645,6 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   if (firstWrite) {
     socketInfo->SetFirstWrite(PR_FALSE);
     if (!oldBlockReset) {
-      PRSocketOptionData sockopt;
       sockopt.option = PR_SockOpt_Nonblocking;
       sockopt.value.non_blocking = oldBlockVal;
       PR_SetSocketOption(fd, &sockopt);
