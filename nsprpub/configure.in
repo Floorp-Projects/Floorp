@@ -82,12 +82,7 @@ LDFLAGS="${LDFLAGS=}"
 HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
-dnl ========================================================
-dnl = Irix 6.x should use n32 ABI by default
-dnl ========================================================
 case "$target" in
-*-irix6*)
-	USE_N32=1 ;;
 *-cygwin*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=
@@ -244,6 +239,14 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
+    *-irix*)
+        CC=cc
+    ;;
+
+    *-osf*)
+        CC=cc
+    ;;
+
     *-solaris*)
         CC=cc
     ;;
@@ -279,6 +282,14 @@ if test -z "$CXX"; then
             CXX=CC
             ;;
         esac
+    ;;
+
+    *-irix*)
+        CXX=CC
+    ;;
+
+    *-osf*)
+        CXX=cxx
     ;;
 
     *-solaris*)
@@ -382,6 +393,7 @@ else
     else        
         AC_PROG_CC
     fi
+    AC_PROG_CPP
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, echo not_ar)
@@ -773,6 +785,9 @@ case "$target" in
     ;;
 
 *-freebsd*)
+    if test -z "$USE_USER_PTHREADS"; then
+        USE_PTHREADS=1
+    fi
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(FREEBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
@@ -909,11 +924,12 @@ case "$target" in
     AC_DEFINE(IRIX)
     AC_DEFINE(SVR4)
     AC_DEFINE(_SGI_MP_SOURCE)
+    AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
     PR_MD_CSRCS=irix.c
     PR_MD_ASFILES=os_Irix.s
     MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
-    #DSO_LDOPTS='-elf -shared -all'
     STRIP="$STRIP -f"
+    RESOLVE_LINK_SYMBOLS=1
     if test -n "$USE_64"; then
         MDCPUCFG_H=_irix64.cfg
     else
@@ -921,17 +937,19 @@ case "$target" in
     fi
     case "${target_os}" in
     irix6*)
-           AC_DEFINE(IRIX6)
-	   USE_PTHREADS=1
-           ;;
+        AC_DEFINE(IRIX6)
+        USE_PTHREADS=1
+        USE_N32=1
+        ;;
     irix5*)
-           AC_DEFINE(IRIX5)
-	   USE_NSPR_THREADS=1
-	   ;;
+        AC_DEFINE(IRIX5)
+        USE_NSPR_THREADS=1
+        ;;
     *)
-	   USE_PTHREADS=1
-	   ;;
- 	esac
+        USE_PTHREADS=1
+        USE_N32=1
+        ;;
+    esac
     if test "$GNU_CC"; then
 	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
@@ -949,7 +967,7 @@ case "$target" in
 	        _OPTIMIZE_FLAGS="-O -Olimit 4000"
 	    fi
 	    if test "$USE_MDUPDATE"; then
-	        $CFLAGS="$CFLAGS -MDupdate"
+                CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
 	    fi
 	    case "$target}" in
 	    *-irix6.*)
@@ -957,12 +975,7 @@ case "$target" in
 	        DSO_LDOPTS="-no_unresolved"
 	        if test "$USE_N32"; then
 		        CFLAGS="$CFLAGS -n32 -woff 1209"
-		        LDFLAGS="$LDFLAGS -n32"
 		        DSO_LDOPTS="$DSO_LDOPTS -n32"
-		        if test "${target_os}" = "irix6.2"; then
-		            LDFLAGS="$LDFLAGS -Wl,-woff,85"
-		            DSO_LDOPTS="$DSO_LDOPTS -woff 85"
-		        fi
 	        else
 		        if test "$USE_64"; then
 		            CFLAGS="$CFLAGS -64"
@@ -980,7 +993,7 @@ case "$target" in
 	    AC_DEFINE(IRIX5_3)
     fi
     case "${target_os}" in
-	irix6.5*)
+	irix6.5)
 	    if test -z "$GNU_CC"; then
 		    CFLAGS="$CFLAGS -mips3"
 	    fi
@@ -994,12 +1007,6 @@ case "$target" in
 	    AC_DEFINE(_PR_HAVE_SGI_PRDA_PROCMASK)
 	    ;;
 	esac
-    case "${target_cpu}" in
-    alpha*)
-	    AC_DEFINE(_POSIX_SOURCE)
-	    AC_DEFINE(_BSD_SOURCE)
-	    ;;
-    esac
     ;;
 
 *-linux*)
@@ -1345,8 +1352,11 @@ mips-sony-newsos*)
     ;;
 
 *-osf*)
+    SHELL_OVERRIDE="SHELL		= /usr/bin/ksh"
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OSF1)
+    AC_DEFINE(_REENTRANT)
+    AC_CHECK_HEADER(machine/builtins.h, AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H))
 
     if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
         USE_NSPR_THREADS=1
@@ -1354,17 +1364,20 @@ mips-sony-newsos*)
 
     if test -z "$GNU_CC"; then
         CC="$CC -std1 -ieee_with_inexact"
-        if test "$OS_RELEASE" = "V2.0"; then
+        if test "$OS_RELEASE" != "V2.0"; then
             CC="$CC -readonly_strings"
         fi
-        _OPTIMIZE_FLAGS='-Olimit 4000'
+        _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Olimit 4000"
     fi
 
     if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
         AC_DEFINE(HAVE_INT_LOCALTIME_R)
     else
+        AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-        AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H)
+    fi
+    if echo $OS_RELEASE | grep -c V4.0 >/dev/null; then
+        AC_DEFINE(OSF1V4_MAP_PRIVATE_BUG)
     fi
     DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
     MDCPUCFG_H=_osf1.cfg
@@ -1923,7 +1936,6 @@ if test -n "$USE_PTHREADS"; then
         fi
 	    ;;
     *-freebsd*|*-openbsd*|*-bsdi*|*-netbsd*)
-	    AC_DEFINE(_REENTRANT)
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
 	    if test "$ac_cv_have_dash_pthread" = "yes"; then
@@ -1976,6 +1988,11 @@ case "$target" in
         AC_DEFINE(_PR_NEED_PTHREAD_INIT)
     fi
     ;;
+*-freebsd*)
+    if test -n "$USE_NSPR_THREADS"; then
+        AC_DEFINE(-D_PR_LOCAL_THREADS_ONLY)
+    fi
+    ;;
 *-hpux*)
     if test -n "$USE_NSPR_THREADS"; then
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
@@ -1991,6 +2008,14 @@ case "$target" in
     fi
     if test "$USE_USER_PTHREADS"; then
         AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
+    fi
+    ;;
+*-irix*)
+    if test "${target_os}" = "irix6.5"; then
+        if test -n "$USE_PTHREADS"; then
+            AC_DEFINE(_PR_HAVE_GETHOST_R)
+            AC_DEFINE(_PR_HAVE_GETHOST_R_POINTER)
+        fi
     fi
     ;;
 *-linux*)
@@ -2009,6 +2034,18 @@ case "$target" in
         OS_LIBS="$OS_LIBS -lc"
     fi
     ;;    
+*-osf*)
+    if test -n "$USE_NSPR_THREADS"; then
+        AC_DEFINE(-D_PR_LOCAL_THREADS_ONLY)
+    fi
+    if test -n "$USE_PTHREADS"; then
+        if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
+            true
+        else
+            AC_DEFINE(_PR_HAVE_THREADSAFE_GETHOST)
+        fi
+    fi
+    ;;
 *-solaris*)
     if test -n "$USE_NATIVE_THREADS"; then
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
@@ -2053,6 +2090,8 @@ fi
 dnl ========================================================
 dnl Substitution of found variables.
 dnl ========================================================
+AC_SUBST(SHELL_OVERRIDE)
+
 AC_SUBST(MOZILLA_CLIENT)
 AC_SUBST(CC)
 AC_SUBST(CXX)
