@@ -93,30 +93,4 @@ protected:
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
 };
 
-
-
-//-------------------------------------------------------------------------
-//
-// nsRefData
-//
-//-------------------------------------------------------------------------
-//	Class to pass data around in the mac windows refCon
-
-class nsRefData
-{
-
-protected:
-	nsMacWindow*	mNSMacWindow;			// The nsMacWindow, ie. the top level widget
-	long					mUserData;				// Embedding applications data, guaranteed not to be used by widget code
-
-public:
-	nsMacWindow*	GetNSMacWindow()	{return(mNSMacWindow);}
-	long					GetUserData()			{return(mUserData);}
-
-	void					SetNSMacWindow(nsMacWindow* aNSMacWindow)	{mNSMacWindow = aNSMacWindow;}
-	void					SetUserData(long aUserData)								{mUserData = aUserData;}
-
-};
-
-
 #endif // MacWindow_h__
