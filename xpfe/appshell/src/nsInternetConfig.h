@@ -19,6 +19,10 @@
  *
  * Contributor(s): 
  */
+ 
+#ifndef __NS_INTERNETCONFIG_H__
+#define __NS_INTERNETCONFIG_H__
+
 #include <InternetConfig.h>
 #include "PRTypes.h"
 #include "nsError.h"
@@ -37,3 +41,5 @@ private:
 	static  long sSeed;
 	static  PRInt32 sRefCount;
 };
+
+#endif /* __NS_INTERNETCONFIG_H__ */
