@@ -105,6 +105,29 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIDNSService methods:
 
+//
+// Allocate space from the buffer, aligning it to "align" before doing
+// the allocation. "align" must be a power of 2.
+// NOTE: this code was taken from NSPR.
+static char *BufAlloc(PRIntn amount, char **bufp, PRIntn *buflenp, PRIntn align) {
+	char *buf = *bufp;
+	PRIntn buflen = *buflenp;
+
+	if (align && ((long)buf & (align - 1))) {
+		PRIntn skip = align - ((ptrdiff_t)buf & (align - 1));
+		if (buflen < skip) {
+			return 0;
+		}
+		buf += skip;
+		buflen -= skip;
+	}
+	if (buflen < amount) {
+		return 0;
+	}
+	*bufp = buf + amount;
+	*buflenp = buflen - amount;
+	return buf;
+}
 
 NS_IMETHODIMP
 nsDNSService::Lookup(nsISupports*    ctxt,
@@ -112,8 +135,8 @@ nsDNSService::Lookup(nsISupports*    ctxt,
                      nsIDNSListener* listener,
                      nsIRequest*     *DNSRequest)
 {
-    nsresult	rv, result;
-    PRStatus    status;
+    nsresult	rv, result = NS_OK;
+    PRStatus    status = PR_SUCCESS;
     nsHostEnt*  hostentry;
 /*
     check cache for existing nsDNSLookup with matching hostname
@@ -138,7 +161,6 @@ nsDNSService::Lookup(nsISupports*    ctxt,
 */
 
     // temporary SYNC version
-    result = NS_OK;
 
     hostentry = new nsHostEnt;
     if (!hostentry)
@@ -154,16 +176,59 @@ nsDNSService::Lookup(nsISupports*    ctxt,
         }
     }
 
+    PRNetAddr *netAddr;
+
     if (numeric) {
-        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+        // If it is numeric then try to convert it into an IP-Address
+        netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
         status = PR_StringToNetAddr(hostname, netAddr);
-        if (PR_SUCCESS != status) {
-            result = NS_ERROR_UNKNOWN_HOST; // check this!
+        if (PR_SUCCESS == status) {
+            // If it is numeric and could be converted then try to
+            // look it up, otherwise try it as normal hostname
+            status = PR_GetHostByAddr(netAddr, 
+                                      hostentry->buffer, 
+                                      PR_NETDB_BUF_SIZE, 
+                                      &hostentry->hostEnt);
+            if (PR_FAILURE == status) {
+                // reverse lookup failed. slam the IP in and move on.
+                PRHostEnt *ent = &(hostentry->hostEnt);
+                PRIntn bufLen = PR_NETDB_BUF_SIZE;
+                char *buffer = hostentry->buffer;
+                ent->h_name = (char*)BufAlloc(PL_strlen(hostname) + 1,
+                                           &buffer,
+                                           &bufLen,
+                                           0);
+                memcpy(ent->h_name, hostname, PL_strlen(hostname) + 1);
+
+                ent->h_aliases = (char**)BufAlloc(1 * sizeof(char*),
+                                               &buffer,
+                                               &bufLen,
+                                               sizeof(char **));
+                ent->h_aliases[0] = '\0';
+
+                ent->h_addrtype = 2;
+                ent->h_length = 4;
+                ent->h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
+                                                 &buffer,
+                                                 &bufLen,
+                                                 sizeof(char **));
+                ent->h_addr_list[0] = (char*)BufAlloc(ent->h_length,
+                                                   &buffer,
+                                                   &bufLen,
+                                                   0);
+                memcpy(ent->h_addr_list[0], &netAddr->inet.ip, ent->h_length);
+                ent->h_addr_list[1] = '\0';
+                status = PR_SUCCESS;
+            }
+        } else {
+            // If the hostname is numeric, but we couldn't create
+            // a net addr out of it, we're dealing w/ a purely numeric
+            // address (no dots), try a regular gethostbyname on it.
+            status = PR_GetHostByName(hostname, 
+                                      hostentry->buffer, 
+                                      PR_NETDB_BUF_SIZE, 
+                                      &hostentry->hostEnt);
         }
-        status = PR_GetHostByAddr(netAddr, 
-                                  hostentry->buffer, 
-                                  PR_NETDB_BUF_SIZE, 
-                                  &hostentry->hostEnt);
         nsAllocator::Free(netAddr);
     } else {
         status = PR_GetHostByName(hostname, 
@@ -185,5 +250,5 @@ nsDNSService::Lookup(nsISupports*    ctxt,
 	
     rv = listener->OnStopLookup(ctxt, hostname, result);
 	
-    return NS_OK;
+    return result;
 }
