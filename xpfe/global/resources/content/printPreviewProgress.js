@@ -31,28 +31,7 @@ var printProgress = null;
 // random global variables...
 var targetFile;
 
-var docTitle = "";
-var docURL   = "";
 var progressParams = null;
-
-function elipseString(aStr, doFront)
-{
-  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "...")) {
-    return aStr;
-  }
-
-  var fixedLen = 64;
-  if (aStr.length > fixedLen) {
-    if (doFront) {
-      var endStr = aStr.substr(aStr.length-fixedLen, fixedLen);
-      return "..." + endStr;
-    } else {
-      var frontStr = aStr.substr(0, fixedLen);
-      return frontStr + "...";
-    }
-  }
-  return aStr;
-}
 
 // all progress notifications are done through the nsIWebProgressListener implementation...
 var progressListener = {
@@ -69,18 +48,8 @@ var progressListener = {
     {
       if (progressParams)
       {
-        var docTitleStr = elipseString(progressParams.docTitle, false);
-        if (docTitleStr != docTitle) {
-          docTitle = docTitleStr;
-          dialog.title.value = docTitle;
-        }
-        var docURLStr = elipseString(progressParams.docURL, true);
-        if (docURLStr != docURL && dialog.title != null) {
-          docURL = docURLStr;
-          if (docTitle == "") {
-            dialog.title.value = docURLStr;
-          }
-        }
+        dialog.title.crop = progressParams.docTitle ? "end" : "center";
+        dialog.title.value = progressParams.docTitle || progressParams.docURL;
       }
     },
 
@@ -112,15 +81,6 @@ var progressListener = {
 function onLoad() {
     // Set global variables.
     printProgress = window.arguments[0];
-    if (window.arguments[1])
-    {
-      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
-      if (progressParams)
-      {
-        docTitle = elipseString(progressParams.docTitle, false);
-        docURL   = elipseString(progressParams.docURL, true);
-      }
-    }
 
     if ( !printProgress ) {
         dump( "Invalid argument to printPreviewProgress.xul\n" );
@@ -133,7 +93,13 @@ function onLoad() {
     dialog.title      = document.getElementById("dialog.title");
     dialog.titleLabel = document.getElementById("dialog.titleLabel");
 
-    dialog.title.value = docTitle;
+    if (window.arguments[1]) {
+      progressParams = window.arguments[1].QueryInterface(Components.interfaces.nsIPrintProgressParams)
+      if (progressParams) {
+        dialog.title.crop = progressParams.docTitle ? "end" : "center";
+        dialog.title.value = progressParams.docTitle || progressParams.docURL;
+      }
+    }
 
     // set our web progress listener on the helper app launcher
     printProgress.registerListener(progressListener);

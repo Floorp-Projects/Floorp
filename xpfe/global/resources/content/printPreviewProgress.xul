@@ -41,7 +41,7 @@ Contributor(s):
     <grid flex="1">
       <columns>
         <column/>
-        <column/>
+        <column flex="1"/>
       </columns>
       
       <rows>
