@@ -4237,7 +4237,7 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
                               LO_Element *pLoElement,
                               int iSizingStyle,
                               int32 xVal, int32 yVal,
-                              XP_Bool bLockAspect, XP_Rect *pRect){
+                              XP_Bool bModifierKeyPressed, XP_Rect *pRect){
     XP_ASSERT(pBuffer);
     XP_ASSERT(pRect);
     XP_ASSERT(iSizingStyle);
@@ -4589,7 +4589,7 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
 
     // Call this now primarily to start the 
     //  status line display of sizing information
-    GetSizingRect(xVal, yVal, bLockAspect, &m_Rect);
+    GetSizingRect(xVal, yVal, bModifierKeyPressed, &m_Rect);
 
     if( pRect )
         *pRect = m_Rect;
@@ -4624,11 +4624,15 @@ void CalcAddColRect(int32 iCols, XP_Rect *pTableRect, XP_Rect *pRect)
                                         style == ED_SIZE_BOTTOM_LEFT || \
                                         style == ED_SIZE_BOTTOM_RIGHT )
 
-XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect, XP_Rect *pRect)
+XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed, XP_Rect *pRect)
 {
     XP_ASSERT(pRect);
     int i;
-    XP_Bool bLockAspectRatio = EDT_IS_SIZING_CORNER(m_iStyle) && bLockAspect;
+    // We never allow lock aspect for table sizing
+    // Instead, modifier is used to distinguish between sizing the last column or row
+    //  and sizing the whole table
+    XP_Bool bLockAspectRatio = m_pLoElement->type != LO_TABLE && m_pLoElement->type != LO_CELL &&
+                               EDT_IS_SIZING_CORNER(m_iStyle) && bModifierKeyPressed;
 
     int32 iViewX = xVal - m_iXOrigin;
     int32 iViewY = yVal - m_iYOrigin;
@@ -6052,15 +6056,15 @@ XP_Bool EDT_IsSizing(MWContext *pContext){
 }
 
 ED_SizeStyle EDT_StartSizing(MWContext *pContext, LO_Element *pElement, int32 xVal, int32 yVal,
-			     XP_Bool bLockAspect, XP_Rect *pRect){
+			     XP_Bool bModifierKeyPressed, XP_Rect *pRect){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) 0;
-    return pEditBuffer->StartSizing(pElement, xVal, yVal, bLockAspect, pRect);
+    return pEditBuffer->StartSizing(pElement, xVal, yVal, bModifierKeyPressed, pRect);
 }
 
 XP_Bool EDT_GetSizingRect(MWContext *pContext, int32 xVal, int32 yVal,
-					   XP_Bool bLockAspect, XP_Rect *pRect){
+					   XP_Bool bModifierKeyPressed, XP_Rect *pRect){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
-    return pEditBuffer->GetSizingRect(xVal, yVal, bLockAspect, pRect);
+    return pEditBuffer->GetSizingRect(xVal, yVal, bModifierKeyPressed, pRect);
 }
 
 void EDT_EndSizing(MWContext *pContext){
@@ -6196,32 +6200,8 @@ void EDT_SetRefresh( MWContext* pContext, XP_Bool bRefreshOn ){
 // Warning this deletes (and recreates) the CEditBuffer if we ChangeEncoding
 XP_Bool EDT_SetEncoding(MWContext* pContext, int16 csid){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
-    ED_CharsetEncode result;
-
-    result = FE_EncodingDialog(pContext, (char*)INTL_CsidToCharsetNamePt(csid));
-
-    switch (result)
-    {
-        case ED_ENCODE_CHANGE_CHARSET:
-            // Change encoding and translate document
-            pEditBuffer->ChangeEncoding(csid);
-            return TRUE;
-
-        case ED_ENCODE_CHANGE_METATAG:
-            // Set charset param in Content-Type metatag, but don't translate document
-            pEditBuffer->SetEncoding(csid);
-            return FALSE;
-
-        case ED_ENCODE_CANCEL:
-            return FALSE;
-
-        default:
-            XP_ASSERT(0);
-            return FALSE;
-    }
-    return FALSE;       // shouldn't get here
+    return pEditBuffer->SetEncoding(csid);
 }
-// End of Block of functions moved from EDITOR.CPP for Win16 Build
 
 /*
  * Extract the Extra HTML string from the ED_Element pointer in an image struct

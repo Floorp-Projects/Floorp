@@ -2988,10 +2988,10 @@ public:
                    LO_Element *pLoElement,
                    int iSizingStyle,
                    int32 xVal, int32 yVal,
-                   XP_Bool bLockAspect, XP_Rect *pRect);
+                   XP_Bool bModifierKeyPressed, XP_Rect *pRect);
 
 
-    XP_Bool GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect, XP_Rect *pRect);
+    XP_Bool GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed, XP_Rect *pRect);
     void ResizeObject();
     void EraseAddRowsOrCols();
 
@@ -3499,7 +3499,7 @@ public:
     void PrintMetaData( CPrintState *pPrintState );
     void PrintMetaData( CPrintState *pPrintState, int index );
     // Return FALSE only if we are closing down
-    XP_Bool CheckCharset( EDT_MetaData *pData,int16 win_csid );
+    XP_Bool CheckCharset( PA_Tag *pTag, EDT_MetaData *pData,int16 win_csid );
 
     EDT_HorizRuleData* GetHorizRuleData();
     void SetHorizRuleData( EDT_HorizRuleData* pData );
@@ -3832,7 +3832,8 @@ public:
     //  If TRUE, returns ED_HIT_SEL_ALL_CELLS instead of ED_HIT_SEL_TABLE
     ED_HitType GetTableHitRegion(int32 xVal, int32 yVal, LO_Element **ppElement, XP_Bool bModifierKeyPressed = FALSE);
 
-    // Tells us where to insert or replace cell (cell we are over is in *ppElement)
+    // Tells us where to insert or replace cell 
+    // (LO_Cell we are over is returned in *ppElement)
     ED_DropType GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth, int32 *pHeight, LO_Element **ppElement);
 
     // Used within editor - use supplied cell's X and Y and get LO_CellStruct from it
@@ -3965,9 +3966,9 @@ public:
 
     // Dynamic object sizing interface
     XP_Bool       IsSizing() { return (m_pSizingObject != 0); }
-    ED_SizeStyle  CanSizeObject(LO_Element *pLoElement, int32 xVal, int32 yVal);
-    ED_SizeStyle  StartSizing(LO_Element *pLoElement, int32 xVal, int32 yVal, XP_Bool bLockAspect, XP_Rect *pRect);
-    XP_Bool       GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect, XP_Rect *pRect);
+    ED_SizeStyle  CanSizeObject(LO_Element *pLoElement, int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed = FALSE);
+    ED_SizeStyle  StartSizing(LO_Element *pLoElement, int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed, XP_Rect *pRect);
+    XP_Bool       GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed, XP_Rect *pRect);
     void          EndSizing();
     void          CancelSizing();
     
@@ -3984,11 +3985,19 @@ public:
 
     LO_Element* FirstElementOnLine(LO_Element* pTarget, int32* pLineNum);
 
+    // Return TRUE if delete the buffer by calling ChangeEncoding
+    XP_Bool SetEncoding(int16 csid);
+    // Change encoding and translate current doc
     void ChangeEncoding(int16 csid);
-    void SetEncoding(int16 csid);
-    void SetEncoding(char *pCharset);
+    // Change just the metatag charset value
+    void SetEncodingTag(int16 csid);
+    void SetEncodingTag(char *pCharset);
 
     XP_Bool HasEncoding();
+    
+    // This signals replacing the charset string in metatag
+    //  after reloading URL when we are fixing a bad original charset
+    int16 m_iReplaceCSID;
 
     // Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing
     void SelectNextNonTextObject();

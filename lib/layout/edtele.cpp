@@ -2196,17 +2196,24 @@ CEditTableRowElement* CEditTableElement::GetFirstRow()
 CEditTableCellElement* CEditTableElement::GetFirstCell()
 {
     CEditElement *pChild = GetChild();
-    if( pChild && pChild->IsTableRow() )
+    if( pChild )
     {
-        pChild = pChild->GetChild();
-        if( pChild && pChild->IsTableCell() )
+        // Skip over caption
+        if( pChild->IsCaption() )
+            pChild = pChild->GetNextSibling();
+
+        if( pChild && pChild->IsTableRow() )
         {
-            // Initialize these also so we can follow
-            //  this call with GetNextCellInRow(), GetNextCellInColumn(),
-            //  or GetNextCellInTable()
-            m_pCurrentCell = pChild->TableCell();
-            m_pFirstCellInColumnOrRow = m_pNextCellInColumnOrRow = m_pCurrentCell;
-            return m_pCurrentCell;
+            pChild = pChild->GetChild();
+            if( pChild && pChild->IsTableCell() )
+            {
+                // Initialize these also so we can follow
+                //  this call with GetNextCellInRow(), GetNextCellInColumn(),
+                //  or GetNextCellInTable()
+                m_pCurrentCell = pChild->TableCell();
+                m_pFirstCellInColumnOrRow = m_pNextCellInColumnOrRow = m_pCurrentCell;
+                return m_pCurrentCell;
+            }
         }
     }
     return NULL;
@@ -2219,7 +2226,7 @@ CEditTableCellElement* CEditTableElement::GetNextCellInTable(intn *pRowCounter)
     return m_pCurrentCell;
 }
 
-// The numbe of rows can simply be counted
+// The number of rows can simply be counted
 intn CEditTableElement::CountRows()
 {
     m_iRows = 0;
@@ -2322,6 +2329,12 @@ CEditTableCellElement* CEditTableElement::GetFirstCellInRow(CEditTableCellElemen
 // Get first cell of a "real" (geometric) row, based on location
 // If bSpan == TRUE , this will also get a cell that spans given Y, 
 //    even if top of cell != Y
+// Note: When bSpan is TRUE, we will find a cell in row above if it spans the 
+//       given Y. This is OK for current uses, but it really doesn't return 
+//       the "first" cell. (See comment below)
+//       If we don't return the spanned cell as "first", GetNextCellInRow would have
+//       to be much more complicated, as it would have to scan rows above to
+//       detect cells spanning the current row
 CEditTableCellElement* CEditTableElement::GetFirstCellInRow(int32 Y, XP_Bool bSpan)
 {
 
@@ -2331,7 +2344,11 @@ CEditTableCellElement* CEditTableElement::GetFirstCellInRow(int32 Y, XP_Bool bSp
     while( pCell )
     {
         int32 iCellY = pCell->GetY();
-        if( (bSpan && (Y >= iCellY) && (Y <= (iCellY + pCell->GetHeight()))) ||
+        // Note that a cell can really be FIRST in a spanned row only if it is 
+        // really the first cell in logical row (check for previous sibling)
+        // but if we do that, we won't hit the cell at all later.
+        if( (bSpan && Y >= iCellY && Y <= (iCellY + pCell->GetHeight()) /*&& 
+             pCell->GetPreviousSibling() == NULL*/ ) ||
             (!bSpan && ( Y == iCellY)) )
         {
             m_pFirstCellInColumnOrRow = m_pNextCellInColumnOrRow = pCell;
@@ -2850,19 +2867,10 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
     CEditBuffer *pBuffer = GetEditBuffer();
     XP_ASSERT(pBuffer);
     CEditTableCellElement *pCellForInsertPoint = NULL;
-    int32 iCurrentColumns = GetColumns();
-    int32 iTotalColumns = iCurrentColumns;
-    // Set to the total to simplify test padding the rows near end of function
-    int32 iSourceColumns = iTotalColumns;
 
     if( pSourceTable )
     {
-        iSourceColumns = pSourceTable->CountColumns();
         CEditTableRowElement *pSourceRow;
-        // If inserted rows will require new columns,
-        //  figure that out now and add the necessary columns
-        // Figure the total number of columns in table after inserting
-        iTotalColumns = max(iCurrentColumns, iStartColumn + pSourceTable->CountColumns());
 
         if( iStartColumn > 0 )
         {
@@ -2892,10 +2900,9 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
             //  from the paste source
             pBuffer->ClearFillNewCellWithSpace();
         }
-        iSourceColumns += iStartColumn;
     }
 
-    CEditTableCellElement *pCell = GetFirstCellInRow(Y, FALSE );
+    CEditTableCellElement *pCell = GetFirstCellInRow(Y, TRUE );
     while( pCell )
     {
         int32 iCellY = pCell->GetY();
@@ -2904,7 +2911,7 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
         if( Y == iNewY )
         {
             // Inserting above
-            
+        
             if( iCellY == Y )
             {
                 // We will be inserting cells above this one
@@ -2927,8 +2934,6 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
         }
         pCell = GetNextCellInRow();
     }
-
-    XP_ASSERT(iColumns == iCurrentColumns);
 
     // Now insert the new rows (including iColumns new cells in each)
     for ( intn row = 0; row < number; row++ )
@@ -2960,10 +2965,8 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number,
         pNewRow->FinishedLoad(pBuffer);
     }
 
-//    if( (iSourceColumns < iTotalColumns) ||
-//        (iCurrentColumns < iTotalColumns) )
-
-    // Do this all the time?
+    // Pad the inserted rows or the table with extra cells
+    //  to keep rectangular geometry
     NormalizeCellsPerRow();
 
     if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
@@ -3046,7 +3049,6 @@ void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number,
             //   need to add rows at bottom of table
             //   so overflow from inserted columns line up
             intn iColumnsBefore = GetColumnsSpanned(GetColumnX(0), iNewX);
-            intn iTotalColumns = pSourceTable->GetColumns() + pSourceTable->CountColumns();
 
             while(pSourceRow)
             {
@@ -3172,7 +3174,14 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
             {
                 // Skip to the next replace row (skip replacing rest on this row)
                 while( pReplaceCell && iReplaceRow == iPrevReplaceRow )
+                {
+                    // Delete contents in the extra replace cells
+                    if( pReplaceCell->IsSpecialSelected() )
+                        pReplaceCell->DeleteContents();
+
                     pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+                }
+                
                 // then find the next special selected cell
                 while( pReplaceCell && !pReplaceCell->IsSpecialSelected() )
                     pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
@@ -3214,6 +3223,16 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
         pSourceCell = pNextSourceCell;
     }
     while( pReplaceCell && pSourceCell );
+    
+    
+    // Delete contents in the remaining replace cells
+    while( pReplaceCell )
+    {
+        if( pReplaceCell->IsSpecialSelected() )
+            pReplaceCell->DeleteContents();
+        
+        pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+    }
     
     // Check if we still have cells in last source row,
     if( bAllSourceCellsPasted && pSourceCell )
@@ -3281,18 +3300,18 @@ void CEditTableElement::DeleteRows(int32 Y, intn number,
 
     // Restrict number of rows we can delete
     intn iLastIndex = min(iRowIndex + number - 1, m_iRows-1);
-    CEditTableRowElement  *pFirstRow = NULL;
-    CEditTableRowElement *pLastRow = NULL;
+    CEditTableRowElement  *pRowAbove = NULL;
+    CEditTableRowElement *pRowBelow = NULL;
+    if( iRowIndex > 0 )
+        pRowAbove = GetRow(GetRowY(iRowIndex-1));
 
     for( ; iRowIndex <= iLastIndex; iRowIndex++ )
     {
         Y = GetRowY(iRowIndex);
         CEditTableRowElement *pRow = GetRow(Y);
-        pLastRow = pRow;
 
         // Get first cell starting at or spanning the Y value (TRUE)
         CEditTableCellElement *pCell = GetFirstCellInRow(Y, TRUE);
-        pFirstRow = GetRow(Y);
 
         while( pCell )
         {
@@ -3334,20 +3353,20 @@ void CEditTableElement::DeleteRows(int32 Y, intn number,
         if( pRow && pRow->GetChild() == NULL )
         {
             // Get the next row if available before deleting this one
-            pLastRow = pRow->GetNextRow();
+            pRowBelow = pRow->GetNextRow();
 #ifdef DEBUG           
-            if( pLastRow )
-                XP_ASSERT(pLastRow->IsTableRow());
+            if( pRowBelow )
+                XP_ASSERT(pRowBelow->IsTableRow());
 #endif            
             delete pRow;
         }
     }
     // Get first cell in the next row after deleted rows,
     //  or row before if we deleted to the end of the table
-    if( pLastRow )
-         pCellForInsertPoint = pLastRow->GetFirstCell();
-    else if( pFirstRow )
-         pCellForInsertPoint = pLastRow->GetFirstCell();
+    if( pRowBelow )
+         pCellForInsertPoint = pRowBelow->GetFirstCell();
+    else if( pRowAbove )
+         pCellForInsertPoint = pRowAbove->GetFirstCell();
 
     if( ppCellForInsertPoint && *ppCellForInsertPoint == NULL )
         *ppCellForInsertPoint = pCellForInsertPoint;
@@ -5414,6 +5433,7 @@ void CEditTableCellElement::SetSizeData(EDT_TableCellData * pData)
     if( pData && pCurrentData )
     {
         pCurrentData->X = pData->X;
+        pCurrentData->Y = pData->Y;
         pCurrentData->iRow = pData->iRow;
         pCurrentData->bWidthDefined = pData->bWidthDefined;
         pCurrentData->bWidthPercent = pData->bWidthPercent;
@@ -5492,6 +5512,20 @@ void CEditTableCellElement::SetColumnWidthRight(CEditTableElement *pTable, LO_El
             }
         }
         pLoElement = pLoElement->lo_any.next;
+    }
+    EDT_TableData *pTableData = pTable->GetData();
+    if( pTableData )
+    {
+        if( pTableData->bWidthDefined )
+        {
+            // Force pixel mode and adjust the width of parent table
+            // If we don't, a table width in Percent mode will fight column size change
+            pTableData->iWidthPixels = max(1,pTableData->iWidthPixels + iDeltaWidth);
+            pTableData->bWidthPercent = FALSE;
+            pTableData->iWidth = pTableData->iWidthPixels;
+            pTable->SetData(pTableData);
+        }
+        EDT_FreeTableData(pTableData);
     }
 }
 
@@ -6180,6 +6214,12 @@ CEditTableCellElement* CEditTableCellElement::GetNextCellInColumn(CEditTableCell
 XP_Bool CEditTableCellElement::AllCellsInColumnAreSelected()
 {
     CEditTableCellElement *pCell = GetFirstCellInColumn();
+    if( !pCell ) // Unlikely
+    {
+        XP_ASSERT(FALSE);
+        return FALSE;
+    }
+
     while( pCell )
     {
         if( !pCell->IsSelected() )
@@ -6193,6 +6233,12 @@ XP_Bool CEditTableCellElement::AllCellsInColumnAreSelected()
 XP_Bool CEditTableCellElement::AllCellsInRowAreSelected()
 {
     CEditTableCellElement *pCell = GetFirstCellInRow();
+    if( !pCell ) // Unlikely
+    {
+        XP_ASSERT(FALSE);
+        return FALSE;
+    }
+
     while( pCell )
     {
         if( !pCell->IsSelected() )
@@ -8391,8 +8437,9 @@ void CEditTextElement::SetLayoutElement( intn iEditOffset, intn lo_type,
         iEditOffset, lo_type, pLoElement);
 }
 
-LO_Element* CEditTextElement::GetLayoutElement(){ 
-    return m_pFirstLayoutElement; 
+LO_Element* CEditTextElement::GetLayoutElement()
+{ 
+  return m_pFirstLayoutElement;
 }
 
 void CEditTextElement::ResetLayoutElement( intn iEditOffset, 

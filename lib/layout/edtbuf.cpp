@@ -1593,7 +1593,8 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
     	m_bEncrypt(PR_FALSE),
         m_pNonTextSelectedTable(0),
         m_bImportText(bImportText),
-        m_bFillNewCellWithSpace(FALSE)
+        m_bFillNewCellWithSpace(FALSE),
+        m_iReplaceCSID(0)
 {
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     m_originalWinCSID = INTL_GetCSIWinCSID(c);
@@ -2189,6 +2190,10 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
         }
     }
 
+    // This avoids crashes if end element wasn't set
+    if( pStartElement == m_pRoot && pEndElement == 0)
+        pEndElement = m_pRoot->GetLastMostChild();
+
     // Create a new cursor and reflow
     CEditTagCursor cursor(this, pEdStart, iOffset, pEndElement);
     if( pCell )
@@ -2417,7 +2422,7 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
     // laying out from the beginning of the document
     if( pNewStartElement == 0 ){
         if( pEndElement == 0 ){
-            pEndElement = pStartElement;
+           pEndElement = pStartElement;
         }
         iLineNum = 0;
         pEdStart = m_pRoot;
@@ -2447,7 +2452,9 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
         pEdStart = pLoStartLine->lo_any.edit_element;
         iOffset = pLoStartLine->lo_any.edit_offset;
     }
-
+    // This avoids crashes if end element wasn't set
+    if( pStartElement == m_pRoot && pEndElement == 0)
+        pEndElement = m_pRoot->GetLastMostChild();
 
     // Create a new cursor.
     CEditTagCursor cursor(this, pEdStart, iOffset, pEndElement);
@@ -2721,13 +2728,11 @@ void CEditBuffer::ResizeTableCell(CEditTableElement  *pTable, XP_Bool bChangeWid
     // Set all cell sizes to pixel mode so each col or row are equally 
     //   treated by layout. This makes sure all the change is just in the desired col or row
     // NOTE: If COLS mode is used, but 1st row has any cells with COLSPAN>1,
-    //       the column widths "under" each spanned cell will allways be
+    //       the column widths "under" each spanned cell will always be
     //       apportioned equally. Thus, in general, NOT using COLS results
     //       in more deterministic column sizing.
-    //       Lets try to be smart by testing if any cell in 1st row has colspan
-    //       and use COLS if it doesn't
     // PROBLEM: When some cells have COLSPAN (not necessarily the first row),
-    //          using COLS prevents the last column to be resized 
+    //          using COLS prevents the last column from being resized 
     //          (it seems to have a lower limit = width of column to the left)
     //          TODO: Lets not use COLS until this is fixed
     int iMode = ED_MODE_CELL_PIXELS | ED_MODE_NO_COLS; // | (pTable->FirstRowHasColSpan() ? ED_MODE_NO_COLS : ED_MODE_USE_COLS);
@@ -6205,7 +6210,7 @@ void CEditBuffer::ParseMetaTag( PA_Tag *pTag, intn& retVal )
 
         // Check our charset string for validity
         // (We may close done the buffer in this routine)
-        if( CheckCharset(pData, win_csid) )
+        if( CheckCharset(pTag, pData, win_csid) )
         {
 
             // We want to allow multiple entries with the same NAME,
@@ -6229,160 +6234,150 @@ void CEditBuffer::ParseMetaTag( PA_Tag *pTag, intn& retVal )
     if( pContent ) XP_FREE( pContent );
 }
 
-static void edt_ReplaceCharset(EDT_MetaData *pData, char *pNewCharset)
+static void edt_ReplaceCharset(PA_Tag *pTag, EDT_MetaData *pData, char *pNewCharset)
 {
-    // Find the string "charset" in the content string
-    char *pCharset = XP_STRSTR(pData->pContent, PARAM_CHARSET);
-    if( !pCharset )
+ 	char pContent[128];
+
+    if( pTag && pData && pNewCharset && *pNewCharset )
     {
-CHARSET_ERROR:
-        XP_ASSERT(0);
-        return;
-    }
-    // Find the '=' after "charset"
-    char *pEqual = XP_STRCHR(pCharset, '=');
-    if( !pEqual )
-        goto CHARSET_ERROR;
+        // Replace existing Content-Type value
+        XP_SPRINTF(pContent, "text/html; charset=%.100s", pNewCharset);
+        XP_FREEIF( pData->pContent );
+        pData->pContent = XP_STRDUP(pContent);
+        
+        // Example of a Content-Type meta tag:
+        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
 
-    char *tptr = pEqual+1;
-
-    // Terminate here -- this is where we will append the new string
-    *tptr = '\0';
-    tptr++;
-
-    // Skip over whitespace before chaset name
-	while (XP_IS_SPACE(*tptr))
-		tptr++;
-    
-    //Then find end of old charset string
-    // This assumes charset string can have no spaces in it
-	while( *tptr && !XP_IS_SPACE(*tptr) && *tptr != '\"' && *tptr != '>')
-		tptr++;
-
-    // Copy this to append at the end,
-    //  (this allows other params after charset to be retained)
-    char *pEnd = NULL;
-    if( *tptr )
-        pEnd = XP_STRDUP(tptr);
-
-    // Rebuild complete "Content=" string
-    // This avoids realloc if new and old string are the same size
-    pData->pContent = PR_sprintf_append(pData->pContent, pNewCharset);
-    if( pEnd )
-    {
-        pData->pContent = PR_sprintf_append(pData->pContent, pEnd);
-        XP_FREE(pEnd);
+        // Also replace the original tag contents
+        char *pTagContent = NULL;
+        pTagContent = PR_sprintf_append(pTagContent, "%s=\"%s\" CONTENT=\"%s\"", PARAM_HTTP_EQUIV, CONTENT_TYPE, pContent);
+        
+        if( pTagContent )
+        {
+            XP_FREEIF(pTag->data);
+            pTag->data_len = XP_STRLEN(pTagContent);
+            pTag->data = (PA_Block)pTagContent;
+        }
     }
 }
 
 // Return FALSE only if we are closing down
-XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
+XP_Bool CEditBuffer::CheckCharset( PA_Tag *pTag, EDT_MetaData *pData, int16 win_csid )
 {
     XP_Bool bRetVal = TRUE;
-    int16 default_csid = FE_DefaultDocCharSetID(m_pContext);
 
-    if( CS_USRDEF2 != default_csid && 
-        CS_USER_DEFINED_ENCODING != default_csid &&
-        pData && pData->bHttpEquiv && pData->pName && pData->pContent &&
-        0 == XP_STRCASECMP(pData->pName, CONTENT_TYPE) )
+    // If this is not 0, then we are reloading a page
+    //   that we are trying to fix a bad charset
+    if( m_iReplaceCSID )
     {
-        // Example of a charset meta tag:
-        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+        char *pNewCharset = (char *)INTL_CsidToCharsetNamePt(m_iReplaceCSID);
+        if( pNewCharset )
+            edt_ReplaceCharset(pTag, pData, pNewCharset);
 
-        // Create a simple tag so we can use tag-parsing to extract charset
-        // PA_FetchParamValue (called from edt_FetchParamString)
-        //  needs a terminal '>' to work
-        int iLen = XP_STRLEN(pData->pContent);
-        char *pContent = (char*)XP_ALLOC(iLen+1);
-        if( !pContent )
-            return FALSE; //Abort if not enough memory?
+        m_iReplaceCSID = 0;
+    }
+    else if( pData && pData->pName && *pData->pName &&
+             pData->pContent && *pData->pContent )
+    {
+        // Normal doc-loading path
+        int16 default_csid = FE_DefaultDocCharSetID(m_pContext);
         
-        XP_STRCPY(pContent, pData->pContent);
-        pContent[iLen] = '>';
-        iLen++;
-        pContent[iLen] = '\0';
-
-        PA_Tag *pTag = XP_NEW( PA_Tag );
-        XP_BZERO( pTag, sizeof( PA_Tag ) );
-        pTag->data_len = iLen;
-        pTag->data = (PA_Block)pContent;
-
-        char *pCharset = edt_FetchParamString(pTag, PARAM_CHARSET, win_csid );
-        PA_FREE(pTag);
-
-        if( pCharset )
+        if( CS_USRDEF2 != default_csid && 
+            CS_USER_DEFINED_ENCODING != default_csid &&
+            pData->bHttpEquiv &&
+            0 == XP_STRCASECMP(pData->pName, CONTENT_TYPE) )
         {
-            int iBufLen = 255;
-            char buf[256];
-            char *pMsg = NULL;
+            // Create a simple tag so we can use tag-parsing function to extract charset
+            // PA_FetchParamValue (called from edt_FetchParamString)
+            //  needs a terminal '>' to work
 
-            if(CS_UNKNOWN == INTL_CharSetNameToID(pCharset))  
+            int iLen = XP_STRLEN(pData->pContent);
+            char *pContent = (char*)XP_ALLOC(iLen+1);
+            if( !pContent )
+                return FALSE; //Abort if not enough memory?
+    
+            XP_STRCPY(pContent, pData->pContent);
+            pContent[iLen] = '>';
+            iLen++;
+            pContent[iLen] = '\0';
+
+            PA_Tag *pTempTag = XP_NEW( PA_Tag );
+            XP_BZERO( pTempTag, sizeof( PA_Tag ) );
+            pTempTag->data_len = iLen;
+            pTempTag->data = (PA_Block)pContent;
+            char *pCharset = edt_FetchParamString(pTempTag, PARAM_CHARSET, win_csid );
+            PA_FREE(pTempTag);
+
+            if( pCharset )
             {
-                // Get the default charset
-                //INTL_CharSetIDToName(default_csid, &pDefaultCharset);
-                // Above uses presized buffer, but calls following, so this is safer:
-                // (Don't free this string!)
-                char *pDefaultCharset = (char *)INTL_CsidToCharsetNamePt(default_csid);
-                if( pDefaultCharset )
+                int iBufLen = 255;
+                char buf[256];
+                char *pMsg = NULL;
+
+                if(CS_UNKNOWN == INTL_CharSetNameToID(pCharset))  
                 {
-                    // Build a very wordy message box with the default and current 
-                    //   charset strings inserted
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-                    pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_CANT_EDIT));
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CURRENT_CHARSET), pDefaultCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pDefaultCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-                    pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_EDIT_CANCEL));
-                    // If user chooses "Cancel", then we should abort editing
-                    bRetVal = FE_Confirm(m_pContext, pMsg);
-                    if( bRetVal )
+                    // Get the default charset
+                    //INTL_CharSetIDToName(default_csid, &pDefaultCharset);
+                    // Above uses presized buffer, but calls following, so this is safer:
+                    // (Don't free this string!)
+                    char *pDefaultCharset = (char *)INTL_CsidToCharsetNamePt(default_csid);
+                    if( pDefaultCharset )
                     {
-                        // Change to the default charset
-                        edt_ReplaceCharset(pData, pDefaultCharset);
+                        // Build a very wordy message box with the default and current 
+                        //   charset strings inserted
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+                        pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_CANT_EDIT));
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CURRENT_CHARSET), pDefaultCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pDefaultCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+                        pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_EDIT_CANCEL));
+                        // If user chooses "Cancel", then we should abort editing
+                        bRetVal = FE_Confirm(m_pContext, pMsg);
+                        if( bRetVal )
+                        {
+                            // Change to the default charset
+                            edt_ReplaceCharset(pTag, pData, pDefaultCharset);
+                        }
                     }
+                    else
+                        bRetVal = FALSE; //Abort if no default charset?
                 }
                 else
-                    bRetVal = FALSE; //Abort if no default charset?
-            }
-            else
-            {
-                //ftang: Implement this! If this should NOT be freed, 
-                //       then please remove the XP_FREEIF below
-                //pNewCharset = INTL_CharsetCorrection(pCharset);
-                char *pCorrectCharset = XP_STRDUP(pCharset);
-                // ftang: If this should be XP_STRCMP instead, please change it
-                if( pCorrectCharset && 0 != XP_STRCASECMP(pCorrectCharset, pCharset) )
                 {
-                    // See if user wants to replace charset with the "correct" string
-                    // In either case, we continue editing
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_SUGGESTED), pCorrectCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pCorrectCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_NOREPLACE), pCharset);
-                    pMsg = PR_sprintf_append(pMsg, buf);
-
-                    if( FE_Confirm(m_pContext, pMsg) )
+                    //TODO: ftang needs to implement this!
+                    // Note: Don't free this string!
+                    //pCorrectCharset = INTL_CharsetCorrection(pCharset);
+                    char *pCorrectCharset = pCharset;
+                    if( pCorrectCharset && 0 != XP_STRCASECMP(pCorrectCharset, pCharset) )
                     {
-                        // Change to the "correct" charset
-                        edt_ReplaceCharset(pData, pCorrectCharset);
+                        // See if user wants to replace charset with the "correct" string
+                        // In either case, we continue editing
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_SUGGESTED), pCorrectCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pCorrectCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+	                    PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_NOREPLACE), pCharset);
+                        pMsg = PR_sprintf_append(pMsg, buf);
+
+                        if( FE_Confirm(m_pContext, pMsg) )
+                        {
+                            // Change to the "correct" charset
+                            edt_ReplaceCharset(pTag, pData, pCorrectCharset);
+                        }
                     }
                 }
-                XP_FREEIF(pCorrectCharset);
+                XP_FREE(pCharset);
             }
-            XP_FREE(pCharset);
         }
     }
-
     return bRetVal;
 }
 
-// Image
-
+// Image 
 EDT_ImageData* CEditBuffer::GetImageData(){
     CEditLeafElement *pInsertPoint;
     ElementOffset iOffset;
@@ -9786,7 +9781,7 @@ void CEditBuffer::SaveFileReal(CEditSaveData *pData) {
     }
 
     // Stamp the document character set into the document.
-    SetEncoding(GetDocCharSetID());
+    SetEncodingTag(GetDocCharSetID());
 
     // tapeFS freed by CEditSaveObject (actually CFileSaveObject::~CFileSaveObject).
     m_pSaveObject = 
@@ -11222,9 +11217,6 @@ XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
         if( !pCell )
             return FALSE;
 
-        // Source table we are dragging from
-        m_pDragTableData->pSourceTable = (void*)pCell->GetTable();
-
         // Get first layout cell of selection
         if( m_pSelectedLoTable )
         {
@@ -11240,6 +11232,8 @@ XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
             XP_ASSERT(m_SelectedEdCells.Size() > 0 && m_SelectedLoCells.Size() > 0);
             m_pDragTableData->pFirstSelectedCell = (LO_Element*)m_SelectedLoCells[0];
         }                        
+        // Source table we are dragging from
+        m_pDragTableData->pSourceTable = lo_GetParentTable(m_pContext, m_pDragTableData->pFirstSelectedCell);
 
         intn  iPrevCounter = 0;
         intn  iRowCounter = 0;
@@ -11357,64 +11351,74 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
     // If we are dragging a table selection,
     //  get feedback data, except when entire table selected
     //   (use normal caret placement for that)
-    if( m_pDragTableData && m_pDragTableData->iSourceType > ED_HIT_SEL_TABLE )
+    if( m_pDragTableData )
     {
-        // Get where we currently are
-        LO_Element *pLoCell = NULL;
-        int32 iWidth = 0;
-        int32 iHeight = 0;
-
-        // Get where user is currently dragging over
-        ED_DropType iDropType = GetTableDropRegion(&x, &y, &iWidth, &iHeight, &pLoCell);
-
-        // No point in dropping exactly on top of selection being dragged
-        if( iDropType == ED_DROP_NONE )
+        // We can't drop inside the table being dragged
+        if( m_pDragTableData->iSourceType == ED_HIT_SEL_TABLE &&
+            m_pDragTableData->pSourceTable == lo_GetParentTable(m_pContext, m_pDragTableData->pDragOverCell) )
         {
+NO_DROP_ALLOWED:
             FE_DestroyCaret(m_pContext);
             // Be sure there's no special selection
             if( edt_pPrevReplaceCellSelected )
                 ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
             return FALSE;
         }
+
+        if( m_pDragTableData->iSourceType > ED_HIT_SEL_TABLE )
+        {
+            // Get where we currently are
+            LO_Element *pLoCell = NULL;
+            int32 iWidth = 0;
+            int32 iHeight = 0;
+
+            // Get where user is currently dragging over
+
+            ED_DropType iDropType = GetTableDropRegion(&x, &y, &iWidth, &iHeight, &pLoCell);
         
-        if( iDropType == ED_DROP_NORMAL )
-        {
-            // Be sure there's no special selection
-            //  when we move off of the table
-            if( edt_pPrevReplaceCellSelected )
-                ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
-        }
-        else 
-        {
-            // Call Front end to display drop feedback only if
-            //  different from previous condition
-            //if( pLoCell != m_pDragTableData->pDragOverCell ||
-            //    iDropType != m_pDragTableData->iDropType )
+            // No point in dropping exactly on top of selection being dragged
+            if( iDropType == ED_DROP_NONE )
+                goto NO_DROP_ALLOWED;
+        
+            if( iDropType == ED_DROP_NORMAL )
             {
-                m_pDragTableData->iDropType = iDropType;
-                m_pDragTableData->pDragOverCell = pLoCell;
-                m_pDragTableData->X = x;
-                m_pDragTableData->Y = y;
-                m_pDragTableData->iWidth = iWidth;
-                m_pDragTableData->iHeight = iHeight;
-
-                FE_DestroyCaret(m_pContext);
-                if( m_pDragTableData->iDropType == ED_DROP_REPLACE_CELLS )
-                {
-                    SetReplaceCellSelection();
-
-                    // Should we do this as well?
-                    //lo_PositionDropCaret(m_pContext, x, y, NULL);
-                } else {
-                    // Clear replace selection
-                    if( edt_pPrevReplaceCellSelected )
-                        ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
-
-                    // Set the caret to show inserting between rows, colomns, or entire table
-                    FE_DisplayDropTableFeedback(m_pContext, m_pDragTableData);
-                }
+                // Be sure there's no special selection
+                //  when we move off of the table
+                if( edt_pPrevReplaceCellSelected )
+                    ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
             }
-            return TRUE;
+            else 
+            {
+                // Call Front end to display drop feedback only if
+                //  different from previous condition
+                //if( pLoCell != m_pDragTableData->pDragOverCell ||
+                //    iDropType != m_pDragTableData->iDropType )
+                {
+                    m_pDragTableData->iDropType = iDropType;
+                    m_pDragTableData->pDragOverCell = pLoCell;
+                    m_pDragTableData->X = x;
+                    m_pDragTableData->Y = y;
+                    m_pDragTableData->iWidth = iWidth;
+                    m_pDragTableData->iHeight = iHeight;
+
+                    FE_DestroyCaret(m_pContext);
+                    if( m_pDragTableData->iDropType == ED_DROP_REPLACE_CELLS )
+                    {
+                        SetReplaceCellSelection();
+
+                        // Should we do this as well?
+                        //lo_PositionDropCaret(m_pContext, x, y, NULL);
+                    } else {
+                        // Clear replace selection
+                        if( edt_pPrevReplaceCellSelected )
+                            ClearSpecialCellSelection(edt_pPrevReplaceCellSelected);
+
+                        // Set the caret to show inserting between rows, colomns, or entire table
+                        FE_DisplayDropTableFeedback(m_pContext, m_pDragTableData);
+                    }
+                }
+                return TRUE;
+            }
         }
     }
 #endif
@@ -11679,49 +11683,6 @@ void CEditBuffer::SelectAll(){
 	    m_iCurrentOffset = 0;
 	}
     RevealSelection();
-}
-
-
-// This is the old version 
-void CEditBuffer::SelectTable(){
-    VALIDATE_TREE(this);
-    ClearPhantomInsertPoint();
-    ClearMove();
-    DoneTyping();
-    CEditSelection selection;
-    GetSelection(selection);
-    CEditTableElement* pStartTable = selection.m_start.m_pElement->GetTableIgnoreSubdoc();
-    CEditSelection startAll;
-    if ( pStartTable ) {
-        pStartTable->GetAll(startAll);
-    }
-    CEditTableElement* pEndTable = selection.m_end.m_pElement->GetTableIgnoreSubdoc();
-    CEditSelection endAll;
-    if ( pEndTable ) {
-        pEndTable->GetAll(endAll);
-    }
-    if ( pStartTable ) {
-        if ( pEndTable ) {
-            // Both a start table and an end table.
-            selection.m_start = startAll.m_start;
-            selection.m_end = endAll.m_end;
-        }
-        else {
-            // Just a start table.
-            selection = startAll;
-        }
-    } else {
-        if ( pEndTable ) {
-            // Just an end table.
-            selection = endAll;
-        }
-        else {
-            // No table. Don't change selection.
-            return;
-        }
-    }
-
-    SetSelection(selection);
 }
 
 // Select the cell boundary of cell containing the current edit element
@@ -13393,12 +13354,12 @@ BAD_CLIPBOARD:
 // Returns TRUE if there is another row to process 
 //   (pLoEle points to first cell on next row, and iRowY is updated)
 static XP_Bool edt_SetSpecialSelectRow(MWContext *pMWContext, LO_Element*& pLoEle, int32 iCellsInRow, 
-                                       int32 iFirstColX, int32& iRowY )
+                                       int32 iStartColX, int32& iRowY )
 {
     // Find first LO cell at appropriate column in each row to be marked
     while(TRUE)
     {
-        if( pLoEle && pLoEle->type == LO_CELL && pLoEle->lo_cell.x >= iFirstColX )
+        if( pLoEle && pLoEle->type == LO_CELL && pLoEle->lo_cell.x >= iStartColX )
             break;
         pLoEle = pLoEle->lo_any.next;
     }
@@ -13533,10 +13494,11 @@ void CEditBuffer::PasteTable( CEditTableCellElement *pCell, CEditTableElement *p
                         iCellsInRow++;
                         pSourceCell = pSourceCell->GetNextSibling();
                     }
-                    // This code is shared with SetReplaceCellSelection(),
+                    int32 iStartColX = pLoEle->lo_cell.x;
 
+                    // This code is shared with SetReplaceCellSelection(),
                     if( !edt_SetSpecialSelectRow(m_pContext, pLoEle, iCellsInRow, 
-                                                 pLoEle->lo_cell.x, iRowY) )
+                                                 iStartColX, iRowY) )
                         break;
 
                     pSourceRow = pSourceRow->GetNextRow();
@@ -14847,10 +14809,11 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                         
             if( x >= right_limit )
             {
-                if( x >= right_limit ||  // Anywhere in inter-cell space to the right of the cell
-                   (y >= top_limit && y <= bottom_limit) ) // Inside cell, near right edge, excluding corners
+                if( !bModifierKeyPressed &&
+                    (x >= right_limit ||  // Anywhere in inter-cell space to the right of the cell
+                     (y >= top_limit && y <= bottom_limit)) )  // Inside cell, near right edge, excluding corners
                 {
-                    // Modifier key pressed an near right edge, excluding corners
+                    // Modifier key pressed and near right edge, excluding corners
                     return ED_HIT_SIZE_COL;
                 }
                 
@@ -14890,7 +14853,7 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 return ED_HIT_NONE;
             }
 
-            if( y >= bottom_limit )  // Along bottom edge (including intercell region)
+            if( y >= bottom_limit && !bModifierKeyPressed )  // Along bottom edge (including intercell region)
             {
                 // Size the row
                 return ED_HIT_SIZE_ROW;
@@ -14926,7 +14889,7 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
 
                 return ED_HIT_SEL_TABLE; 
             }
-            if( y >= bottom_limit )
+            if( y >= bottom_limit && !bModifierKeyPressed )
                 // Lower left corner
                 return ED_HIT_ADD_ROWS;
             
@@ -14939,14 +14902,15 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
         } 
         else if( x >= right_limit )
         {
-            if( y >= bottom_limit )
+            // Along right edge - size table
+            if( bModifierKeyPressed )
+                return ED_HIT_SIZE_TABLE_WIDTH;
+
+            if( y >= bottom_limit && !bModifierKeyPressed )
                 // Lower right corner
                 return ED_HIT_ADD_COLS;
-
-            // Along right edge
-            return ED_HIT_SIZE_TABLE_WIDTH;
         }
-        else if( y >= bottom_limit )
+        else if( y >= bottom_limit && bModifierKeyPressed )
         {
             // Below bottom, excluding corners
             return ED_HIT_SIZE_TABLE_HEIGHT;
@@ -15735,6 +15699,13 @@ LO_CellStruct* CEditBuffer::GetLoCell(CEditElement *pEdElement)
     return NULL;
 }
 
+void CEditBuffer::SelectTable()
+{
+    CEditTableElement* pTable = m_pCurrent->GetTableIgnoreSubdoc();
+    if( pTable )
+        SelectTable(TRUE, 0, pTable);
+}
+
 CEditTableElement* CEditBuffer::SelectTable(XP_Bool bSelect, LO_TableStruct *pLoTable,
                               CEditTableElement *pEdTable)
 {
@@ -16003,12 +15974,13 @@ void CEditBuffer::SetReplaceCellSelection()
     LO_Element *pLoEle = m_pDragTableData->pDragOverCell;
     // This will get updated by  edt_SetSpecialSelectRow for each row
     int32 iRowY = pLoEle->lo_cell.y;
+    int32 iStartColX = pLoEle->lo_cell.x;
 
     for( intn iRow = 0; iRow < m_pDragTableData->iRows; iRow++ )
     {
         // Most of the code is shared with section in PasteTable() for replace cell logic
         if( !edt_SetSpecialSelectRow(m_pContext, pLoEle, m_pDragTableData->pCellsPerRow[iRow], 
-                                     pLoEle->lo_cell.x, iRowY) )
+                                     iStartColX, iRowY) )
             break;
     }
 }
@@ -16381,12 +16353,12 @@ CEditTableCellElement *CEditBuffer::GetNextSelectedCell(intn* pRowCounter)
 
 // Dynamic object sizing
 
-ED_SizeStyle CEditBuffer::CanSizeObject(LO_Element *pLoElement, int32 xVal, int32 yVal)
+ED_SizeStyle CEditBuffer::CanSizeObject(LO_Element *pLoElement, int32 xVal, int32 yVal, XP_Bool bModifierKeyPressed)
 {
     // Table and Cells are special case - use more complicated hit testing
     if( pLoElement && (pLoElement->type == LO_TABLE || pLoElement->type == LO_CELL) )
     {
-        ED_HitType iHitType = GetTableHitRegion(xVal, yVal, &pLoElement, FALSE);
+        ED_HitType iHitType = GetTableHitRegion(xVal, yVal, &pLoElement, bModifierKeyPressed);
         switch( iHitType )
         {
             case ED_HIT_SIZE_COL:
@@ -16508,7 +16480,7 @@ ED_SizeStyle CEditBuffer::CanSizeObject(LO_Element *pLoElement, int32 xVal, int3
 }
 
 ED_SizeStyle CEditBuffer::StartSizing(LO_Element *pLoElement, int32 xVal, int32 yVal,
-                                      XP_Bool bLockAspect, XP_Rect *pRect){
+                                      XP_Bool bModifierKeyPressed, XP_Rect *pRect){
     XP_ASSERT(pRect);
 
     if( m_pSizingObject ){
@@ -16518,14 +16490,16 @@ ED_SizeStyle CEditBuffer::StartSizing(LO_Element *pLoElement, int32 xVal, int32 
     // Unselect table or cell(s)
     ClearTableAndCellSelection();
 
-    // Shouldn't be here without this, but check anyway
-    int iStyle = CanSizeObject(pLoElement, xVal, yVal);
+    // We are using the "ModifierKeyPressed" (last param)
+    //   for 2 purposes: To lock the aspect ratio for non-table objects,
+    //   and for 
+    int iStyle = CanSizeObject(pLoElement, xVal, yVal, bModifierKeyPressed);
 
     if( iStyle ){
         m_pSizingObject = new CSizingObject();
         if( m_pSizingObject ){
             if( m_pSizingObject->Create(this, pLoElement, iStyle,
-                                         xVal, yVal, bLockAspect, pRect) ){
+                                         xVal, yVal, bModifierKeyPressed, pRect) ){
                 return iStyle;
             } else {
                 delete m_pSizingObject;
@@ -16537,10 +16511,10 @@ ED_SizeStyle CEditBuffer::StartSizing(LO_Element *pLoElement, int32 xVal, int32 
 }
 
 XP_Bool CEditBuffer::GetSizingRect(int32 xVal, int32 yVal,
-                                   XP_Bool bLockAspect, XP_Rect *pRect){
+                                   XP_Bool bModifierKeyPressed, XP_Rect *pRect){
     XP_ASSERT(pRect);
     if( m_pSizingObject && pRect ){
-        return m_pSizingObject->GetSizingRect(xVal, yVal, bLockAspect, pRect);
+        return m_pSizingObject->GetSizingRect(xVal, yVal, bModifierKeyPressed, pRect);
     }
     return FALSE;
 }
@@ -17231,7 +17205,7 @@ void CEditBuffer::ChangeEncoding(int16 csid) {
     ForceDocCharSetID(csid); // Will be translated to this id when saved
     // Note: Why doesn't this allow Undo to work?
     BeginBatchChanges(0); // Marks document as dirty.
-    SetEncoding(csid); // Will claim to be this id when saved.
+    SetEncodingTag(csid); // Will claim to be this id when saved.
     EndBatchChanges();
     CEditDocState *pState = RecordState(); // Actually translates.
     if (pState) {
@@ -17244,20 +17218,54 @@ void CEditBuffer::ChangeEncoding(int16 csid) {
     }
 }
 
+XP_Bool CEditBuffer::SetEncoding(int16 csid)
+{
+    ED_CharsetEncode result = FE_EncodingDialog(m_pContext, (char*)INTL_CsidToCharsetNamePt(csid));
+
+    switch (result)
+    {
+        case ED_ENCODE_CHANGE_CHARSET:
+            // Change encoding and translate document
+            ChangeEncoding(csid);
+            return TRUE;
+
+        case ED_ENCODE_CHANGE_METATAG:
+        {
+            // Set charset param in Content-Type metatag, but don't translate document
+            SetEncodingTag(csid);
+        	INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(m_pContext);
+            INTL_SetCSIWinCSID(csi, csid);
+            // This will be used to replace the charset in the metatag
+            //  after the reload
+            m_iReplaceCSID = csid;
+            INTL_Relayout(m_pContext);
+            return TRUE;
+        }
+
+        case ED_ENCODE_CANCEL:
+            return FALSE;
+
+        default:
+            XP_ASSERT(0);
+            return FALSE;
+    }
+    return FALSE;       // shouldn't get here
+}
+
 // Add content-type meta-data. This tells the reader which character set was used to create the document.
 // See RFC 2070, "Internationalization of the Hypertext Markup Language"
 // http://ds.internic.net/rfc/rfc2070.txt
 // <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-2022-JP">
-void CEditBuffer::SetEncoding(int16 csid)
+void CEditBuffer::SetEncodingTag(int16 csid)
 {
     int16 plainCSID = csid & ~CS_AUTO;
     // This is better than INTL_CharSetIDToName, which needs presized buffer;
     // (Don't free this string!)
     char *charSet = (char *)INTL_CsidToCharsetNamePt(plainCSID);
-    SetEncoding(charSet);
+    SetEncodingTag(charSet);
 }
 
-void CEditBuffer::SetEncoding(char *pCharset)
+void CEditBuffer::SetEncodingTag(char *pCharset)
 {
  	char pContent[128];
     if( pCharset && *pCharset )
