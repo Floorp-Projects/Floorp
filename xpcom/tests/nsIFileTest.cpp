@@ -1,5 +1,4 @@
 #include "nsILocalFile.h"
-#include "nsFileUtils.h"
 
 #include "stdio.h"
 #include "nsIComponentManager.h"
