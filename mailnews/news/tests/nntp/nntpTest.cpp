@@ -66,11 +66,11 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib.so"
-#define XPCOM_DLL  "libxpcom.so"
-#define NEWS_DLL   "libmsgnews.so"
-#define PREF_DLL   "libpref.so"
-#define APPSHELL_DLL "libnsappshell.so"
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
+#define NEWS_DLL   "libmsgnews"MOZ_DLL_SUFFIX
+#define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
+#define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
 #endif
 #endif
 

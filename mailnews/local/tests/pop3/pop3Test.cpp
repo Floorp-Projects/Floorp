@@ -64,11 +64,11 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib.so"
-#define XPCOM_DLL  "libxpcom.so"
-#define PREF_DLL   "libpref.so"  
-#define APPCORES_DLL "libappcores.so"
-#define APPSHELL_DLL "libnsappshell.so"
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
+#define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
+#define APPCORES_DLL "libappcores"MOZ_DLL_SUFFIX
+#define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
 #endif
 #endif
 
@@ -486,7 +486,7 @@ int main()
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-    if (NS_FAILED(result) || prefs == nsnull) {
+    if (NS_FAILED(result) || !prefs) {
         exit(result);
     }
     
