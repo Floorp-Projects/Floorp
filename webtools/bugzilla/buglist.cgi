@@ -370,8 +370,11 @@ DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"    
 DefineColumn("priority"          , "bugs.priority"              , "Priority"         );
 DefineColumn("platform"          , "bugs.rep_platform"          , "Platform"         );
 DefineColumn("owner"             , "map_assigned_to.login_name" , "Owner"            );
+DefineColumn("owner_realname"    , "map_assigned_to.realname"   , "Owner"            );
 DefineColumn("reporter"          , "map_reporter.login_name"    , "Reporter"         );
+DefineColumn("reporter_realname" , "map_reporter.realname"      , "Reporter"         );
 DefineColumn("qa_contact"        , "map_qa_contact.login_name"  , "QA Contact"       );
+DefineColumn("qa_contact_realname", "map_qa_contact.realname"   , "QA Contact"       );
 DefineColumn("status"            , "bugs.bug_status"            , "State"            );
 DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
 DefineColumn("summary"           , "bugs.short_desc"            , "Summary"          );

@@ -42,7 +42,8 @@ GetVersionTable();
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
-                  "platform", "owner", "reporter", "status", "resolution",
+                  "platform", "owner", "owner_realname", "reporter", 
+                  "reporter_realname", "status", "resolution",
                   "product", "component", "version", "os", "votes");
 
 if (Param("usetargetmilestone")) {
@@ -50,6 +51,7 @@ if (Param("usetargetmilestone")) {
 }
 if (Param("useqacontact")) {
     push(@masterlist, "qa_contact");
+    push(@masterlist, "qa_contact_realname");
 }
 if (Param("usestatuswhiteboard")) {
     push(@masterlist, "status_whiteboard");
