@@ -34,6 +34,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsINSSDialogs.h"
 #include "prlog.h"
 
 #include "nss.h"
@@ -494,4 +495,24 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
   PK11_RandomUpdate(entropy, bufLen);
   return NS_OK;
+}
+
+static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
+
+nsresult 
+getNSSDialogs(void **_result, REFNSIID aIID)
+{
+  nsresult rv;
+  nsISupports *result;
+
+  rv = nsServiceManager::GetService(kNSSDialogsContractId, 
+                                    NS_GET_IID(nsINSSDialogs),
+                                    &result);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = result->QueryInterface(aIID, _result);
+
+  NS_RELEASE(result);
+
+  return rv;
 }
