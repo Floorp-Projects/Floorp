@@ -495,10 +495,8 @@ MOZ_JSD		= 1
 endif
 
 MOZ_COOKIEMANAGEMENT    = 1
-ifndef MOZ_NO_WALLET_HACK
 MOZ_SINGLESIGNON        = 1
 MOZ_CLIENTWALLET        = 1
-endif
 
 ifndef USE_AUTOCONF
 ifdef MOZ_LITE
