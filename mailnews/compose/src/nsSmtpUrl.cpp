@@ -440,27 +440,28 @@ nsresult nsSmtpUrl::ParseUrl()
 	
 	// set the username
 	nsXPIDLCString userName;
-	rv = GetPreHost(getter_Copies(userName));
+	rv = GetUsername(getter_Copies(userName));
 	if (NS_FAILED(rv)) return rv; 
 	m_userName = (const char *)userName;
+ 
+  return NS_OK;
+}
 
-	// the recipients should consist of just the path part up to to the query
-    // part
-  nsXPIDLCString toPart;
-  rv = GetFileName(getter_Copies(toPart));
-  m_toPart = toPart;
-
+NS_IMETHODIMP
+nsSmtpUrl::SetRecipients(const char * aRecipientsList)
+{
+  NS_ENSURE_ARG(aRecipientsList);
+  m_toPart = aRecipientsList;
   if (!m_toPart.IsEmpty())
     nsUnescape(m_toPart);
-  return rv;
+	return NS_OK;
 }
 
 
-// Caller must call PR_FREE on list when it is done with it. This list is a list of all
-// recipients to send the email to. each name is NULL terminated...
 NS_IMETHODIMP
-nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
+nsSmtpUrl::GetRecipients(char ** aRecipientsList)
 {
+  NS_ENSURE_ARG_POINTER(aRecipientsList);
 	if (aRecipientsList)
 		*aRecipientsList = m_toPart.ToNewCString();
 	return NS_OK;

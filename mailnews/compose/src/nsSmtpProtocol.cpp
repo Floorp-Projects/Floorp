@@ -1269,7 +1269,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 			nsXPIDLCString addresses;
 			nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
 
-			m_runningURL->GetAllRecipients(getter_Copies(addresses));
+			m_runningURL->GetRecipients(getter_Copies(addresses));
 
 			if (NS_SUCCEEDED(rv) && parser)
 			{
