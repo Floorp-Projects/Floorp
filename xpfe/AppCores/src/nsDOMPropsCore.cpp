@@ -469,7 +469,7 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(newWindow),
+  rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(newWindow),
                                       nsnull, dialog, 450, 240);
 
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);

@@ -172,7 +172,8 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+  window = nsnull;
+  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                nsnull, nsnull, 615, 480);
 
   if (window != nsnull)
@@ -212,7 +213,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsIWebShellWindow> window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(window),
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
                                nsnull, nsnull, 615, 480);
 
   if (window)
@@ -337,7 +338,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
 
   nsCOMPtr<nsIWebShellWindow>  window;
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(window),
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, getter_AddRefs(window),
                                nsnull, cb, 615, 650);
 
   if (window)
@@ -378,7 +379,7 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  rv = appShell->RunModalDialog(parent, urlObj, window, nsnull, nsnull, 615, 480);
+  rv = appShell->RunModalDialog(&window, urlObj, parent, nsnull, nsnull, 615, 480);
   if (NS_SUCCEEDED(rv))
     NS_RELEASE(window);
   return rv;

@@ -100,18 +100,19 @@ public:
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURI* aUrl, 
                                   PRBool showWindow,
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURI* aUrl, 
                                   PRBool showWindow,
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
+  NS_IMETHOD RunModalDialog(      nsIWebShellWindow **aWindow,
                                   nsIURI* aUrl, 
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow * aParent,
+                                  nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow);
@@ -478,14 +479,14 @@ nsAppShellService::Shutdown(void)
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                         nsIURI* aUrl, PRBool showWindow,
-                                        nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                        nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                         nsIXULWindowCallbacks *aCallbacks,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
   nsWebShellWindow* window;
 
-  aResult = nsnull;
+  *aResult = nsnull;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -498,7 +499,7 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
     if (NS_SUCCEEDED(rv))
     {
       // this does the AddRef of the return value
-      rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
+      rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
       
       // the addref resulting from this is the owning addref for this window
       RegisterTopLevelWindow(window);
@@ -526,14 +527,14 @@ nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
 NS_IMETHODIMP
 nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
                                       nsIURI* aUrl, PRBool showWindow,
-                                      nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                      nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
   nsWebShellWindow* window;
 
-  aResult = nsnull;
+  *aResult = nsnull;
   window = new nsWebShellWindow();
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -544,7 +545,7 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
-      rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
+      rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
       RegisterTopLevelWindow(window);
       if (showWindow)
 				window->Show(PR_TRUE);
@@ -561,22 +562,25 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
    complications creeping in to the modal window story: there's a lot of setup.
    See the code..
 
-   Note that the window created is returned in aResult.  By the time this function
-   exits, that window has been partially destroyed.  We return it anyway, in the
-   hopes that it may be queried for results, somehow.  This may be a mistake.
-   It is returned addrefed (by the QueryInterface to nsIWebShellWindow in
-   CreateDialogWindow).
+   If a window is passed in via the first parameter, that window will be
+   the one displayed modally.  If no window is passed in (if *aWindow is null)
+   the window created will be returned in *aWindow.  Note that by the time
+   this function exits, that window has been partially destroyed.  We return it
+   anyway, in the hopes that it may be queried for results, somehow.
+   This may be a mistake.  It is returned addrefed (by the QueryInterface
+   to nsIWebShellWindow in CreateDialogWindow).
 */
 NS_IMETHODIMP
 nsAppShellService::RunModalDialog(
-                      nsIWebShellWindow *aParent, nsIURI* aUrl,
-                      nsIWebShellWindow*& aResult, nsIStreamObserver *anObserver,
+                      nsIWebShellWindow **aWindow,
+                      nsIURI* aUrl, 
+                      nsIWebShellWindow * aParent,
+                      nsIStreamObserver *anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
-
-  nsresult             rv;
-
+  nsresult          rv;
+  nsIWebShellWindow *theWindow;
 
 #ifdef XP_PC // XXX: Won't work with any other platforms yet.
   // First push a nested event queue for event processing from netlib
@@ -590,8 +594,12 @@ nsAppShellService::RunModalDialog(
   eQueueService->PushThreadEventQueue();
 #endif
 
-  rv = CreateDialogWindow(aParent, aUrl, PR_TRUE, aResult, anObserver, aCallbacks,
-            aInitialWidth, aInitialHeight);
+  if (aWindow && *aWindow) {
+    theWindow = *aWindow; // and rv is already some success indication
+    NS_ADDREF(theWindow);
+  } else
+    rv = CreateDialogWindow(aParent, aUrl, PR_TRUE, &theWindow, anObserver,
+            aCallbacks, aInitialWidth, aInitialHeight);
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWidget> parentWindowWidgetThing;
@@ -601,9 +609,18 @@ nsAppShellService::RunModalDialog(
     // Windows OS wants the parent disabled for modality
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_FALSE);
-    aResult->ShowModal();
+    theWindow->ShowModal();
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_TRUE);
+
+    // return the used window if possible, or otherwise get rid of it
+    if (aWindow)
+      if (*aWindow)
+        NS_RELEASE(theWindow); // we borrowed it, now let it go
+      else
+        *aWindow = theWindow;  // and it's addrefed from Create...
+    else
+      NS_RELEASE(theWindow);   // can't return it; let it go
   }
 
 	// Release the event queue 

@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
                                     kIAppShellServiceIID,
                                    (nsISupports**)&appShell);
 	if (NS_SUCCEEDED(rv)) 
-    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, *getter_AddRefs(newWindow),
+    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, getter_AddRefs(newWindow),
                 nsnull, nsnull, 200, 200);
 
   // Create the Event Queue for this thread...

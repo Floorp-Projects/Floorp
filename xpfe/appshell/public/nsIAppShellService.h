@@ -52,18 +52,19 @@ public:
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURI* aUrl, 
 																	PRBool showWindow, 
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURI* aUrl, 
 																	PRBool showWindow,
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow** aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
-  NS_IMETHOD RunModalDialog(      nsIWebShellWindow * aParent,
+  NS_IMETHOD RunModalDialog(      nsIWebShellWindow **aWindow,
                                   nsIURI* aUrl, 
-                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow * aParent,
+                                  nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow) = 0;

@@ -302,6 +302,9 @@ nsNetSupportDialog::nsNetSupportDialog()
 
 nsNetSupportDialog::~nsNetSupportDialog()
 {
+  // just making sure I understand what I'm doing...
+  NS_ASSERTION( !mWebShellWindow, "webshell window still exists in ~nsNetSupportDialog" );
+
 	NS_IF_RELEASE( mWebShell );
 	NS_IF_RELEASE( mWebShellWindow );
 	NS_IF_RELEASE( mOKButton );
@@ -428,50 +431,53 @@ nsresult nsNetSupportDialog::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 
 nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
 {
-	nsresult result;
+  nsresult result;
+  nsIWebShellWindow *dialogWindow;
+
  	// Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &result);
 
-	if ( !NS_SUCCEEDED ( result ) )
-  	return result;
+  if ( !NS_SUCCEEDED ( result ) )
+    return result;
 
-	nsIURI* dialogURL;
+  nsIURI* dialogURL;
 #ifndef NECKO
-    result = NS_NewURL(&dialogURL, inXULURL );
+  result = NS_NewURL(&dialogURL, inXULURL );
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+  if (NS_FAILED(result)) return result;
 
-    nsIURI *uri = nsnull;
-    const char *uriStr = inXULURL.GetBuffer();
-    result = service->NewURI(uriStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
+  nsIURI *uri = nsnull;
+  const char *uriStr = inXULURL.GetBuffer();
+  result = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(result)) return result;
 
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&dialogURL);
-    NS_RELEASE(uri);
+  result = uri->QueryInterface(nsIURI::GetIID(), (void**)&dialogURL);
+  NS_RELEASE(uri);
 #endif // NECKO
- 	if (!NS_SUCCEEDED (result) )
- 	{
- 		appShellService->Release();
- 		return result;
-    }
+  if (!NS_SUCCEEDED (result) )
+  {
+    appShellService->Release();
+    return result;
+  }
 
- 	NS_IF_RELEASE( mWebShellWindow );
- 	appShellService->RunModalDialog( nsnull, dialogURL, mWebShellWindow, nsnull, this, 300, 200);
+  result = appShellService->CreateDialogWindow(nsnull, dialogURL, PR_TRUE,
+                              &dialogWindow, nsnull, this, 300, 200);
+  mWebShellWindow = dialogWindow;
 
-	// cleanup
-	if ( mOKButton )
-		RemoveEventListener( mOKButton );
-	if ( mCancelButton )
-		RemoveEventListener( mCancelButton );
-	dialogURL->Release();
+  if (NS_SUCCEEDED(result))
+    appShellService->RunModalDialog(&dialogWindow, dialogURL, nsnull,
+                       nsnull, this, 300, 200);
 
-  // save pointer to window for later access, just in case.  note this is dangerous, since
-  // the window has been closed and partially destroyed at this point.  but here we are.
-  // it seems necessary to first release any old window we may be holding, since this is
-  // a service, and can therefore remain active between actual invocations.
+  // cleanup
+  if ( mOKButton )
+    RemoveEventListener( mOKButton );
+  if ( mCancelButton )
+    RemoveEventListener( mCancelButton );
+  dialogURL->Release();
+  NS_RELEASE( mWebShellWindow );
 
- 	return NS_OK;	
+  return NS_OK;	
 }
 
 // Event Handlers which should be called using XPConnect eventually

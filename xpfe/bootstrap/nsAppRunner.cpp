@@ -627,7 +627,7 @@ int main(int argc, char* argv[])
 			} 
 
 		  nsCOMPtr<nsIWebShellWindow>  profWindow;
-			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, *getter_AddRefs(profWindow),
+			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, getter_AddRefs(profWindow),
 				       nsnull, nsnull, profWinWidth, profWinHeight);
 
 			NS_RELEASE(profURL);
@@ -656,7 +656,7 @@ int main(int argc, char* argv[])
 
   if ( !useArgs ) {
       nsCOMPtr<nsIWebShellWindow> newWindow;
-      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
+      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
                        nsnull, nsnull, widthVal, heightVal);
   } else {
       nsIDOMToolkitCore* toolkit = nsnull;

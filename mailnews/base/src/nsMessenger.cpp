@@ -278,7 +278,7 @@ nsMessenger::Open3PaneWindow()
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    PR_TRUE,
-                                   *getter_AddRefs(newWindow),   // result widget
+                                   getter_AddRefs(newWindow),   // result widget
                                    nsnull,      // observer
                                    nsnull,      // callbacks
                                    200,         // width

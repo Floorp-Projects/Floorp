@@ -237,7 +237,7 @@ nsInstallProgressDialog::Open()
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 *getter_AddRefs(mWindow),
+                                                 getter_AddRefs(newWindow),
                                                  nsnull,
                                                  this,  // callbacks??
                                                  0,
