@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  */
 
@@ -29,31 +29,44 @@
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
- 
+
 
 //
 // nsXPITriggerItem
 //
 MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 
-nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName, 
-                                    const PRUnichar* aURL, 
+nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
+                                    const PRUnichar* aURL,
                                     PRInt32 aFlags )
-  : mName(aName), mFlags(aFlags)
+  : mName(aName), mURL(aURL), mFlags(aFlags)
 {
     MOZ_COUNT_CTOR(nsXPITriggerItem);
 
-    nsString URL(aURL);
-
-    PRInt32 pos = URL.FindChar('?');
-    if ( pos == -1 ) {
-        // no arguments
-        mURL = URL;
-    }
-    else
+    // check for arguments
+    PRInt32 qmark = mURL.FindChar('?');
+    if ( qmark != kNotFound )
     {
-        URL.Left(mURL,pos);
-        URL.Right(mArguments, URL.Length()-(pos+1));
+        mArguments = Substring( mURL, qmark+1, mURL.Length() );
+    }
+
+    // construct name if not passed in
+    if ( mName.IsEmpty() )
+    {
+        // Use the filename as the display name by starting after the last
+        // slash in the URL, looking backwards from the arguments delimiter if
+        // we found one. By good fortune using kNotFound as the 3rd param of
+        // RFindChar() makes it start at the end so we can always use qmark
+
+        PRInt32 namestart = mURL.RFindChar( '/', PR_FALSE, qmark ) + 1;
+
+        PRInt32 length;
+        if (qmark == kNotFound)
+            length =  mURL.Length();      // no '?', slurp up rest of URL
+        else
+            length = (qmark - namestart); // filename stops at the '?'
+
+        mName = Substring( mURL, namestart, length );
     }
 }
 
@@ -79,7 +92,7 @@ PRBool nsXPITriggerItem::IsRelativeURL()
 
 MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo)
 
-nsXPITriggerInfo::nsXPITriggerInfo() 
+nsXPITriggerInfo::nsXPITriggerInfo()
   : mCx(0), mCbval(JSVAL_NULL)
 {
     MOZ_COUNT_CTOR(nsXPITriggerInfo);
@@ -92,7 +105,7 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
     for(PRUint32 i=0; i < Size(); i++)
     {
         item = Get(i);
-        if (item) 
+        if (item)
             delete item;
     }
     mItems.Clear();
@@ -143,21 +156,21 @@ static void* handleTriggerEvent(XPITriggerEvent* event)
     void*  mark;
     jsval* args;
 
-    args = JS_PushArguments( event->cx, &mark, "Wi", 
-                             event->URL.get(), 
+    args = JS_PushArguments( event->cx, &mark, "Wi",
+                             event->URL.get(),
                              event->status );
     if ( args )
     {
-        JS_CallFunctionValue( event->cx, 
+        JS_CallFunctionValue( event->cx,
                               JSVAL_TO_OBJECT(event->global),
-                              event->cbval, 
-                              2, 
-                              args, 
+                              event->cbval,
+                              2,
+                              args,
                               &ret );
 
         JS_PopArguments( event->cx, mark );
     }
- 
+
     return 0;
 }
 
@@ -169,7 +182,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 
     if ( mCx && mGlobalWrapper && mCbval )
     {
-        nsCOMPtr<nsIEventQueueService> EQService = 
+        nsCOMPtr<nsIEventQueueService> EQService =
                  do_GetService(kEventQueueServiceCID, &rv);
         if ( NS_SUCCEEDED( rv ) )
         {
@@ -180,7 +193,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                 XPITriggerEvent* event = new XPITriggerEvent();
                 if (event)
                 {
-                    PL_InitEvent(&event->e, 0, 
+                    PL_InitEvent(&event->e, 0,
                         (PLHandleEventProc)handleTriggerEvent,
                         (PLDestroyEventProc)destroyTriggerEvent);
 
@@ -208,7 +221,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                     rv = NS_ERROR_OUT_OF_MEMORY;
             }
         }
-        
+
         if ( NS_FAILED( rv ) )
         {
             // couldn't get event queue -- maybe window is gone or
