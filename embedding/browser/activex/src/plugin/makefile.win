@@ -23,15 +23,34 @@ DLLNAME = npmozax
 QUIET =
 DEPTH =..\..\..\..\..
 
-# Specify the path to the Communicator plugin SDK or get the default!
+REQUIRES = \
+	java \
+	$(NULL)
+
+
+# Specify the path to the Communicator plugin SDK or get an error message!
 !ifndef MOZ_PLUGINSDK
-MOZ_PLUGINSDK = M:\PluginSDK
+!message Build cannot proceed without knowing where your Plugin SDK is installed.
+!message Please specify the path to the SDK either by setting the MOZ_PLUGINSDK
+!message environment variable or as a parameter to nmake. e.g.
+!message
+!message set MOZ_PLUGINSDK=c:\pluginsdk
+!message nmake /f makefile.win
+!message
+!message Or:
+!message
+!message nmake /f makefile.win MOZ_PLUGINSDK=c:\pluginsdk
+!message
+!message The Plugin SDK can be found at:
+!message
+!message ftp://ftp.netscape.com/pub/sdk/plugin/windows/winsdk40.zip
+!message
+!error
 !endif
 
 # The default is to include control support unless told to do otherwise
 MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
-MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
-
+# MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
 
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -85,9 +104,9 @@ include <$(DEPTH)\config\rules.mak>
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 
 LCFLAGS = /D MOZ_ACTIVEX_PLUGIN_LIVECONNECT $(LCFLAGS)
-JAVADIR = m:\VisualCafe\java
+JAVADIR = D:\jdk1.3.1
 JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
-JAVAC = $(JAVADIR)\bin\javac
+JAVAC = $(JAVADIR)\bin\oldjavac
 JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
 CLASSPATH = $(JAVACLASSES);.
 

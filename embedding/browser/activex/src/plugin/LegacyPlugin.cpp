@@ -156,23 +156,23 @@ NPError NewControl(const char *pluginType,
 			// The first example is the proper way
 
 			char szCLSID[256];
-			if (strnicmp(argv[i], "CLSID:", 6) == 0)
-			{
-				char szTmp[256];
-				sscanf(argv[i], "CLSID:%s", szTmp);
-				sprintf(szCLSID, "{%s}", szTmp);
-			}
-			else if(argv[i][0] != '{')
-			{
-				sprintf(szCLSID, "{%s}", argv[i]);
-			}
-			else
-			{
-				strncpy(szCLSID, argv[i], sizeof(szCLSID));
-			}
-
-			USES_CONVERSION;
-			CLSIDFromString(A2OLE(szCLSID), &clsid);
+            if (strlen(argv[i]) < sizeof(szCLSID))
+            {
+			    if (strnicmp(argv[i], "CLSID:", 6) == 0)
+			    {
+				    sprintf(szCLSID, "{%s}", &argv[i][6]);
+			    }
+			    else if(argv[i][0] != '{')
+			    {
+				    sprintf(szCLSID, "{%s}", argv[i]);
+			    }
+			    else
+			    {
+				    strncpy(szCLSID, argv[i], sizeof(szCLSID));
+			    }
+			    USES_CONVERSION;
+			    CLSIDFromString(A2OLE(szCLSID), &clsid);
+            }
 		}
 		else if (stricmp(argn[i], "NAME") == 0)
 		{
@@ -183,13 +183,22 @@ NPError NewControl(const char *pluginType,
 		{
 			szCodebase = tstring(A2T(argv[i]));
 		}
-		else if (strnicmp(argn[i], "PARAM_", 6) == 0)
+		else 
 		{
 			USES_CONVERSION;
 
-			std::wstring szName(A2W(argn[i] + 6));
+			std::wstring szName;
 			std::wstring szParam(A2W(argv[i]));
-	
+
+            if (strnicmp(argn[i], "PARAM_", 6) == 0)
+            {
+                szName = A2W(argn[i]+6);
+            }
+            else
+            {
+                szName = A2W(argn[i]);
+            }
+
 			// Empty parameters are ignored
 			if (szName.empty())
 			{
@@ -236,6 +245,11 @@ NPError NewControl(const char *pluginType,
 		}
 	}
 
+    // Make sure we got a CLSID
+    if (memcmp(&clsid, &CLSID_NULL, sizeof(CLSID)) == 0)
+    {
+		return NPERR_GENERIC_ERROR;
+    }
 
 	// Create the control site
 	CControlSiteInstance *pSite = NULL;
