@@ -1435,11 +1435,9 @@ dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
 dnl part of the mozilla build, will install its headers and libs in
 dnl the same place as mozilla.
 dnl
-if test ! -z "$MISSING_NSPR"; then
-   echo
-   echo "*** NSPR was not detected in your system.  This is not a problem."
-   echo "*** I will use the one in the current source tree instead. "
-   echo
+AC_MSG_CHECKING(whether have system NSPR)
+if test "$MISSING_NSPR"; then
+   AC_MSG_RESULT(no (will build it from source))
    NSPR_INCLUDE_DIR=
    NSPR_CFLAGS=
    NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $PTHREAD_LDFLAGS"
@@ -1449,6 +1447,7 @@ dnl
 dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub is not built.
 dnl
 else
+   AC_MSG_RESULT(yes)
    MOZ_NATIVE_NSPR=1
 fi
 
