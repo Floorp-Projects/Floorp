@@ -212,6 +212,10 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
     rv = ccm->GetUnicodeDecoderRaw(platformCharset.get(),
                                    getter_AddRefs(decoder));
 
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetUnicodeEncoderRaw failed.");
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
     hasConverter = PR_TRUE;
   }
   

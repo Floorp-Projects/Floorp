@@ -804,7 +804,10 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   /* get the encoder */
   nsCOMPtr<nsICharsetConverterManager> ccm = 
            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
-  rv = ccm->GetUnicodeEncoder(platformCharset.get(), getter_AddRefs(encoder));
+  rv = ccm->GetUnicodeEncoderRaw(platformCharset.get(), getter_AddRefs(encoder));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetUnicodeEncoderRaw failed.");
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
 
   /* Estimate out length and allocate the buffer based on a worst-case estimate, then do
      the conversion. */
