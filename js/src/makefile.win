@@ -23,7 +23,7 @@ DEPTH=..\..
 include <$(DEPTH)\config\config.mak>
 
 !ifdef MOZ_OJI
-#//DIRS = liveconnect
+DIRS = liveconnect
 !endif
 
 #//------------------------------------------------------------------------
