@@ -613,8 +613,10 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
       mOwnsFrameLoader = PR_TRUE;
 
       // ... and tell it to start loading.
-      nsresult rv = mFrameLoader->LoadFrame();
-      NS_ENSURE_SUCCESS(rv, rv);
+      // the failure to load a URL does not constitute failure to 
+      // create/initialize the docshell and therefore the LoadFrame() 
+      // call's return value should not be propagated.
+      mFrameLoader->LoadFrame();
     }
   }
 
