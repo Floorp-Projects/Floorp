@@ -419,6 +419,9 @@ nsLDAPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// XXX figure out why this went away
+
+#if 0
 // getter for shouldCache attribute
 //
 // Returns true if the data from this channel should be cached. Local files
@@ -436,6 +439,18 @@ nsLDAPChannel::GetShouldCache(PRBool *aShouldCache)
   NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetShouldCache");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+#else
+//
+// Returns a local file to the channel's data if one exists, null otherwise.
+//
+// readonly attribute nsIFile localFile;
+NS_IMETHODIMP
+nsLDAPChannel::GetLocalFile(nsIFile* *aFile)
+{
+    NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetLocalFile");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
 
 // getter and setter for pipeliningAllowed attribute
 //
@@ -604,6 +619,8 @@ nsLDAPChannel::Run(void)
     //
     NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
 		      NS_ERROR_UNEXPECTED);
+  } else {
+    // XXX handle incorrect second call to Run
   }
 
   // get the URI spec
@@ -636,7 +653,7 @@ nsLDAPChannel::Run(void)
   return NS_OK;
 }
 
-// XXX this function should go away
+// XXX should this function should go away?
 //
 nsresult
 nsLDAPChannel::pipeWrite(char *str)
