@@ -609,7 +609,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   //   printf("In debug\n");
   
   if (mSpaceManager == nsnull) {
-      mSpaceManager = new nsSpaceManager(mFrame);
+      mSpaceManager = nsSpaceManager::Create(mFrame);
       NS_ADDREF(mSpaceManager);
   }
 

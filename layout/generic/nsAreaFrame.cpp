@@ -26,7 +26,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
-#include "nsSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsHTMLIIDs.h"
@@ -36,7 +35,6 @@
 #include "nsISizeOfHandler.h"
 
 #undef NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_SPACEMANAGER
 #undef NOISY_FINAL_SIZE
 
 nsresult

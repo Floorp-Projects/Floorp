@@ -35,6 +35,10 @@
 /////////////////////////////////////////////////////////////////////////////
 // BandList
 
+PRInt32 nsSpaceManager::sCachedSpaceManagerCount = 0;
+nsSpaceManager *
+  nsSpaceManager::sCachedSpaceManagers[NS_SPACE_MANAGER_CACHE_SIZE];
+
 #define NSCOORD_MIN (-2147483647 - 1) /* minimum signed value */
 
 nsSpaceManager::BandList::BandList()
@@ -88,7 +92,86 @@ nsSpaceManager::~nsSpaceManager()
   ClearFrameInfo();
 }
 
-NS_IMPL_ISUPPORTS1(nsSpaceManager, nsISpaceManager)
+
+NS_INTERFACE_MAP_BEGIN(nsSpaceManager)
+  NS_INTERFACE_MAP_ENTRY(nsISpaceManager)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsSpaceManager)
+NS_IMPL_RELEASE_WITH_DESTROY(nsSpaceManager, LastRelease())
+
+
+// static
+nsSpaceManager *nsSpaceManager::Create(nsIFrame* aFrame)
+{
+  if (sCachedSpaceManagerCount > 0) {
+    // We have cached unused instances of this class, return a cached
+    // instance in stead of always creating a new one.
+    nsSpaceManager *spaceManager =
+      sCachedSpaceManagers[--sCachedSpaceManagerCount];
+
+    // Re-initialize the cached space manager by calling its
+    // constructor (using placement new), the destructor was called
+    // when the space manager was put in the cache.
+    return new (spaceManager) nsSpaceManager(aFrame);
+  }
+
+  // The cache is empty, this means we haveto create a new instance.
+  return new nsSpaceManager(aFrame);
+}
+
+
+// static
+void nsSpaceManager::Shutdown()
+{
+  // The layout module is being shut down, clean up the cache and
+  // disable further caching.
+
+  PRInt32 i;
+
+  for (i = 0; i < sCachedSpaceManagerCount; i++) {
+    // The destructor for the cached space managers has already been
+    // called (when the space manager was put in the cache) so we cast
+    // spaceManager to char * when calling delete to prevent the
+    // destructor from being called again.
+
+    nsSpaceManager *spaceManager = sCachedSpaceManagers[i];
+
+    delete (char *)spaceManager;
+  }
+
+  // Disable futher caching.
+  sCachedSpaceManagerCount = -1;
+}
+
+
+void
+nsSpaceManager::LastRelease()
+{
+  // This space manager is no longer used, if there's still room in
+  // the cache we'll cache this space manager, unless the layout
+  // module was already shut down.
+
+  if (sCachedSpaceManagerCount < NS_SPACE_MANAGER_CACHE_SIZE &&
+      sCachedSpaceManagerCount >= 0) {
+    // There's still space in the cache for more instances, put this
+    // instance in the cache in stead of deleting it.
+
+    sCachedSpaceManagers[sCachedSpaceManagerCount++] = this;
+
+    // Call the destructor so that the proper cleanup happens
+    this->~nsSpaceManager();
+
+    return;
+  }
+
+  // The cache is full, or the layout module has been shut down,
+  // delete this space manager.
+
+  delete this;
+}
+
 
 NS_IMETHODIMP
 nsSpaceManager::GetFrame(nsIFrame*& aFrame) const
