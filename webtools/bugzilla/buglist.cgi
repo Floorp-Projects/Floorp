@@ -979,14 +979,7 @@ if ($dotweak) {
 my @th;
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
-        my $h = "";
-        if ($::needquote{$c} == 1) { 
-            $h .= "<TH WIDTH=100%>";
-		} elsif ($::needquote{$c} == 5) {
-			$h .= "<TH>";
-        } else {
-            $h .= "<TH>";
-        }
+        my $h = "<TH>";
         if (defined $::sortkey{$c}) {
             $h .= "<A HREF=\"buglist.cgi?$fields&order=" . url_quote($::sortkey{$c}) . "$oldorder\">$::title{$c}</A>";
         } else {
