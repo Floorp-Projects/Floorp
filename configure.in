@@ -3352,7 +3352,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 if test "$_PEDANTIC"; then
     AC_LANG_CPLUSPLUS
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNING_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_RUN([ int main () {
                 if (sizeof(long long) != 8) { return 1; } 
@@ -3374,6 +3374,35 @@ if test "$_PEDANTIC"; then
         AC_MSG_WARN([Cannot test -pedantic long long bug when cross-compiling.])
         ;;
     esac
+fi
+
+dnl Bug 65664: gcc (with -pedantic) and HP's aCC (with +p) have
+dnl problems resolving ambiguities with some of the operator== in
+dnl nsCOMPtr.h because they consider the top-level cv-qualifiers in
+dnl overload resolution.
+
+AC_LANG_CPLUSPLUS
+_SAVE_CXXFLAGS=$CXXFLAGS
+CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS}"
+
+AC_CACHE_CHECK(for bug where toplevel cv-qualifiers are used in overload resolution,
+    ac_cv_quals_ambig_bug,
+    [AC_TRY_COMPILE([
+                      inline int f(void *p, int *q) { return 1; }
+                      inline int f(int *p, const int *q) { return 0; }
+                    ],
+                    [
+                      int *a = 0;
+                      return f(a, a); // should choose int f(int*, const int*)
+                    ],
+                    ac_cv_quals_ambig_bug="no",
+                    ac_cv_quals_ambig_bug="yes")])
+
+AC_LANG_C
+CXXFLAGS="$_SAVE_CXXFLAGS"
+
+if test "$ac_cv_quals_ambig_bug" = "yes" ; then
+    AC_DEFINE(CPP_CV_QUALIFIERS_CAUSE_AMBIGUITY)
 fi
 
 dnl pass -Wno-long-long to the compiler
