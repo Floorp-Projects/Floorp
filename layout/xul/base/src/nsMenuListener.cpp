@@ -169,8 +169,10 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (theChar == NS_VK_LEFT ||
       theChar == NS_VK_RIGHT ||
       theChar == NS_VK_UP ||
-      theChar == NS_VK_DOWN) {
-    // The arrow keys were pressed. User is moving around within
+      theChar == NS_VK_DOWN ||
+      theChar == NS_VK_HOME ||
+      theChar == NS_VK_END) {
+    // The navigation keys were pressed. User is moving around within
     // the menus.
 	  mMenuParent->KeyboardNavigation(theChar, handled);
   }

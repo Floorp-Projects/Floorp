@@ -1179,13 +1179,19 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     return NS_OK; // The child menu took it for us.
 
   // For the vertical direction, we can move up or down.
-  if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
+  if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN ||
+      aDirection == NS_VK_HOME || aDirection == NS_VK_END) {
 
     nsIMenuFrame* nextItem;
     
-    if (aDirection == NS_VK_DOWN)
+    if (aDirection == NS_VK_UP)
+      GetPreviousMenuItem(mCurrentMenu, &nextItem);
+    else if (aDirection == NS_VK_DOWN)
       GetNextMenuItem(mCurrentMenu, &nextItem);
-    else GetPreviousMenuItem(mCurrentMenu, &nextItem);
+    else if (aDirection == NS_VK_HOME)
+      GetNextMenuItem(nsnull, &nextItem);
+    else
+      GetPreviousMenuItem(mCurrentMenu, &nextItem);
 
     SetCurrentMenuItem(nextItem);
 
