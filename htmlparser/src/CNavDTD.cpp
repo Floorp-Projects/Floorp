@@ -801,13 +801,17 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
-          result=HandleSavedTokens(mBodyContext->mContextTopIndex);
-          mBodyContext->mContextTopIndex=-1; 
+         
+          result = HandleSavedTokens(mBodyContext->mContextTopIndex);
+          NS_ENSURE_SUCCESS(result, result);
 
-          if(NS_FAILED(result)) {
+          mBodyContext->mContextTopIndex = -1; 
+
+          if (mSkipTarget) {
+            mSkippedContent.Push(theToken);
             return result;
           }
-          //falling through intentionally,i.e., handle the token that is willing to be the child of the current parent.
+          // Fall through if the skipped content collection is |not| in progress - bug 124788
         }
         else {
           mMisplacedContent.Push(theToken);
