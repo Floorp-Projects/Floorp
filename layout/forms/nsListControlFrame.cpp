@@ -2794,6 +2794,9 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     CaptureMouseEvents(mPresContext, PR_FALSE);
     // Notify
     if (mChangesSinceDragStart) {
+      // reset this so that future MouseUps without a prior MouseDown
+      // won't fire onchange
+      mChangesSinceDragStart = PR_FALSE;
       FireOnChange();
     }
 #if 0 // XXX - this is a partial fix for Bug 29990
