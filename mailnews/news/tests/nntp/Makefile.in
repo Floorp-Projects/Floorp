@@ -47,8 +47,6 @@ LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnntp	\
-	-lnntpTest \
-	-lrdf \
 	-lreg	\
 	-lxpcom	\
 	-lpwcac \
@@ -68,7 +66,6 @@ LIBS = \
 	-lpng	\
 	-ljpeg	\
 	-lmozutil	\
-	-lgfxgtk	\
 	-lz \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \
