@@ -80,10 +80,10 @@ function FillHistoryMenu( aParent, aMenu )
       }
   }
  
-function executeUrlBarHistoryCommand( aEvent ) 
+function executeUrlBarHistoryCommand( aTarget) 
   {
-    var index = aEvent.target.getAttribute("index");
-    var value = aEvent.target.value;
+    var index = aTarget.getAttribute("index");
+    var value = aTarget.getAttribute("value");
     if (index && value) 
       {
         gURLBar.value = value;
