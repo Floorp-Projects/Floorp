@@ -923,7 +923,7 @@ function makeXmlNode( xmlDocument, calendarEvent )
          ruleText = eventText.substring(i+8);      
          ruleText = ruleText.substring(0, ruleText.indexOf("\n"));
       }
-      if( ruleText.length > 0)
+      if( ruleText && ruleText.length > 0)
       {
          var propertyNode = xmlDocument.createElement( "property" );
          propertyNode.setAttribute( "name", "RRULE" );
@@ -965,20 +965,33 @@ function makeXmlNode( xmlDocument, calendarEvent )
 
     // create a string in the iCalendar format, UTC time '20020412T121314Z'
     var checkDate = function ( dt, isDate )
-    {   var dateObj = new Date( dt.getTime() );
+    {   
+        var dateObj = new Date( dt.getTime() );
         var result = "";
-        result += dateObj.getUTCFullYear();
 
-        if( dateObj.getMonth() + 1 < 10 )
-           result += "0";
-        result += dateObj.getUTCMonth() + 1;
-
-        if( dateObj.getUTCDate() < 10 )
-           result += "0";
-        result += dateObj.getUTCDate();
-
-        if( !isDate )
+        if( isDate )
         {
+            result += dateObj.getFullYear();
+            if( dateObj.getMonth() + 1 < 10 )
+               result += "0";
+            result += dateObj.getMonth() + 1;
+
+            if( dateObj.getDate() < 10 )
+               result += "0";
+            result += dateObj.getDate();
+        }
+        else
+        {
+           result += dateObj.getUTCFullYear();
+
+           if( dateObj.getUTCMonth() + 1 < 10 )
+              result += "0";
+           result += dateObj.getUTCMonth() + 1;
+
+           if( dateObj.getUTCDate() < 10 )
+              result += "0";
+           result += dateObj.getUTCDate();
+
            result += "T"
 
            if( dateObj.getUTCHours() < 10 )
@@ -988,13 +1001,14 @@ function makeXmlNode( xmlDocument, calendarEvent )
            if( dateObj.getUTCMinutes() < 10 )
               result += "0";
            result += dateObj.getUTCMinutes();
-        
+
            if( dateObj.getUTCSeconds() < 10 )
               result += "0";
            result += dateObj.getUTCSeconds();
            result += "Z";
         }
-           return result;
+
+        return result;
     }
 
     // make the event tag
