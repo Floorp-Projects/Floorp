@@ -26,7 +26,6 @@
 
 #ifndef AIX4_1
 
-#include <sys/atomic_op.h>
 #include <sys/select.h>
 #include <sys/poll.h>
 #include <dlfcn.h>
@@ -34,18 +33,6 @@
 static void *aix_handle = NULL;
 static int (*aix_select_fcn)() = NULL;
 static int (*aix_poll_fcn)() = NULL;
-
-PRInt32 _AIX_AtomicSet(PRInt32 *val, PRInt32 newval)
-{
-    PRIntn oldval;
-    boolean_t stored;
-    oldval = fetch_and_add((atomic_p)val, 0);
-    do
-    {
-        stored = compare_and_swap((atomic_p)val, &oldval, newval);
-    } while (!stored);
-    return oldval;
-}  /* _AIX_AtomicSet */
 
 int _MD_SELECT(int width, fd_set *r, fd_set *w, fd_set *e, struct timeval *t)
 {
@@ -105,6 +92,20 @@ void _pr_aix_dummy()
 }
 
 #endif /* !AIX4_1 */
+
+#include <sys/atomic_op.h>
+
+PRInt32 _AIX_AtomicSet(PRInt32 *val, PRInt32 newval)
+{
+    PRIntn oldval;
+    boolean_t stored;
+    oldval = fetch_and_add((atomic_p)val, 0);
+    do
+    {
+        stored = compare_and_swap((atomic_p)val, &oldval, newval);
+    } while (!stored);
+    return oldval;
+}  /* _AIX_AtomicSet */
 
 #if !defined(PTHREADS_USER)
 
