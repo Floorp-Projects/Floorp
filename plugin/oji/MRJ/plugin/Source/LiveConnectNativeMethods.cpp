@@ -522,6 +522,9 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
 	jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
 	jobject jresult = NULL;
 	
+#ifdef MRJPLUGIN_4X
+	nsresult status = theLiveConnectManager->Eval(env, js_obj, script_ucs2, script_len, NULL, 0, NULL, &jresult);
+#else
 	/* determine the plugin instance so we can obtain its codebase. */
 	MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(env);
 	if (pluginInstance == NULL) {
@@ -534,7 +537,8 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
 
 	// Make sure it gets released!
 	pluginInstance->Release();
-	
+#endif
+
 	env->ReleaseStringChars(script_jstr, script_ucs2);
 
 	return jresult;
@@ -601,14 +605,20 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
                                             jclass js_object_class,
                                             jobject java_applet_obj)
 {
-	jsobject jswindow = NULL;
 	MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(java_applet_obj);
 	if (pluginInstance != NULL) {
+#ifdef MRJPLUGIN_4X
+		jobject jwindow = Wrap_JSObject(env, jsobject(pluginInstance));
+		pluginInstance->Release();
+		return jwindow;
+#else
+		jsobject jswindow = NULL;
 		GetWindowMessage msg(pluginInstance, &jswindow);
 		sendMessage(env, &msg);
 		pluginInstance->Release();
 		if (jswindow != NULL)
 			return Wrap_JSObject(env, jswindow);
+#endif
 	}
 	return NULL;
 }
