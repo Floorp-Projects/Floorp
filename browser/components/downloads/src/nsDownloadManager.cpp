@@ -157,16 +157,16 @@ nsDownloadManager::Init()
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
 
-  gRDFService->GetResource("NC:DownloadsRoot", &gNC_DownloadsRoot);
-  gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
-  gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
-  gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
-  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
-  gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", &gNC_Transferred);
-  gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
-  gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
-  gRDFService->GetResource(NC_NAMESPACE_URI "DateStarted", &gNC_DateStarted);
-  gRDFService->GetResource(NC_NAMESPACE_URI "DateEnded", &gNC_DateEnded);
+  gRDFService->GetResource(NS_LITERAL_CSTRING("NC:DownloadsRoot"), &gNC_DownloadsRoot);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "File"), &gNC_File);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"), &gNC_URL);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"), &gNC_Name);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ProgressPercent"), &gNC_ProgressPercent);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Transferred"), &gNC_Transferred);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DownloadState"), &gNC_DownloadState);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "StatusText"), &gNC_StatusText);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DateStarted"), &gNC_DateStarted);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "DateEnded"), &gNC_DateEnded);
 
   nsCAutoString downloadsDB;
   rv = GetProfileDownloadsFileURL(downloadsDB);
@@ -435,7 +435,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   aSource->GetSpec(spec);
 
   nsCOMPtr<nsIRDFResource> urlResource;
-  gRDFService->GetResource(spec.get(), getter_AddRefs(urlResource));
+  gRDFService->GetResource(spec, getter_AddRefs(urlResource));
   mDataSource->GetTarget(downloadRes, gNC_URL, PR_TRUE, getter_AddRefs(node));
   if (node)
     rv = mDataSource->Change(downloadRes, gNC_URL, node, urlResource);
