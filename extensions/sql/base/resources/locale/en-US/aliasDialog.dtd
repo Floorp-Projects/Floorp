@@ -40,3 +40,4 @@
 <!ENTITY hostname.label "Hostname:">
 <!ENTITY port.label "Port:">
 <!ENTITY database.label "Database:">
+<!ENTITY priority.label "Priority:">

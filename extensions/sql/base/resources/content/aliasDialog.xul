@@ -42,7 +42,7 @@
 <dialog id="aliasDialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
-  width="250" height="180"
+  width="250" height="200"
   buttons="accept,cancel" buttonpack="center"
   ondialogaccept="return onAccept(event);"
   onload="init()">
@@ -74,6 +74,10 @@
       <row>
         <label value="&database.label;"/>
         <textbox id="database"/>
+      </row>
+      <row>
+        <label value="&priority.label;"/>
+        <textbox id="priority"/>
       </row>
     </rows>
   </grid>

@@ -33,8 +33,16 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY header.label "SQL support">
+<!ENTITY title.label "Alias manager">
 
-<!ENTITY aliasManager.label "Alias Manager">
-<!ENTITY aliasManagerDescription.label "Alias manager maintains a set of aliases, one for each database to connect to.">
-<!ENTITY manageAliases.label "Manage Aliases...">
+<!ENTITY aliases.label "Aliases">
+<!ENTITY nameCol.label "Name">
+<!ENTITY typeCol.label "Type">
+<!ENTITY hostnameCol.label "Hostname">
+<!ENTITY portCol.label "Port">
+<!ENTITY databaseCol.label "Database">
+<!ENTITY priorityCol.label "Priority">
+
+<!ENTITY add.label "Add alias">
+<!ENTITY update.label "Update alias">
+<!ENTITY remove.label "Remove alias">
