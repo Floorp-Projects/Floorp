@@ -66,7 +66,7 @@ $npl = <<END_OF_NPL;
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
- H Software distributed under the NPL is distributed on an "AS IS" basis,
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
@@ -253,7 +253,7 @@ for($t = 1; $t <= $tt; $t++)
    $th = $range[($t-1) * 2 + 1];
    printf OUT "    // Handle U+%04X to U+%04X\n", $tl, $th;
    printf OUT "    if((((PRUnichar)0x%04X)<=u)&&(u<=((PRUnichar)0x%04X))) {\n", $tl, $th;
-   printf OUT "        pat = gGenCatIdx%d [( u -(PRUnichar) 0x%04X )];\n", $t, $tl;
+   printf OUT "        pat = gGenCatPat[gGenCatIdx%d [( u -(PRUnichar) 0x%04X )]];\n", $t, $tl;
    printf OUT "        return (pat  >> ((u % 8) * 4)) & 0x0F;\n";
    printf OUT "    }\n\n";
 }
