@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Matthew Tuck <matty@chariot.net.au>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 
 # This script compiles all the documentation.
 
@@ -55,7 +56,7 @@ sub MakeDocs($$) {
 
     my ($name, $cmdline) = @_;
 
-    print "Creating $name documentation ...\n";
+    print "Creating $name documentation ...\n" if defined $name;
     print "$cmdline\n\n";
     system $cmdline;
     print "\n";
@@ -76,3 +77,20 @@ MakeDocs('big HTML', "jade -V nochunks -t sgml -i html -d " .
 	 "../xml/Bugzilla-Guide.xml > Bugzilla-Guide.html");
 MakeDocs('big text', "lynx -dump -justify=off -nolist Bugzilla-Guide.html " .
 	 "> ../txt/Bugzilla-Guide.txt");
+
+if (! grep("--with-pdf", @ARGV)) {
+    exit;
+}
+
+MakeDocs('PDF', "jade -t tex -d $LDP_HOME/ldp.dsl\#print $JADE_PUB/xml.dcl " .
+         '../xml/Bugzilla-Guide.xml');
+chdir '../pdf';
+MakeDocs(undef, 'mv ../xml/Bugzilla-Guide.tex .');
+MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'dvips -o Bugzilla-Guide.ps Bugzilla-Guide.dvi');
+MakeDocs(undef, 'ps2pdf Bugzilla-Guide.ps Bugzilla-Guide.pdf');
+MakeDocs(undef, 'rm Bugzilla-Guide.tex Bugzilla-Guide.log Bugzilla-Guide.dvi ' .
+                'Bugzilla-Guide.aux Bugzilla-Guide.ps');
+
