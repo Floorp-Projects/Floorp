@@ -95,6 +95,7 @@ xp_ncent.h
 xp_path.h
 xp_qsort.h
 xp_rgb.h
+xp_sock.h
 xp_str.h
 xp_thrmo.h
 xp_time.h
