@@ -39,8 +39,8 @@ Contributor(s): ______________________________________. -->
 <!ENTITY sortLast.label  "Last > First Sort Order">
 <!ENTITY sortLast.accesskey  "l">
 
-<!ENTITY toolbarsCmd.label "Show/Hide">
-<!ENTITY toolbarsCmd.accesskey "w">
+<!ENTITY toolbarsCmd.label "Toolbars">
+<!ENTITY toolbarsCmd.accesskey "T">
 <!ENTITY toolbarMode.label "Mode">
 <!ENTITY toolbarEval.label "JavaScript Entry">
 
