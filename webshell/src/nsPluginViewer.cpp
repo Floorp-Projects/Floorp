@@ -368,7 +368,7 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
     // during reflow
     nsIPluginInstance *inst;
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
-    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst))) {
+    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst)) && (nsnull != inst)) {
       nsPluginWindow  *win;
       if (NS_OK == mOwner->GetWindow(win)) {
         win->x = aBounds.x;
@@ -394,7 +394,7 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
   if (nsnull != mWindow) {
     nsIPluginInstance *inst;
     mWindow->Move(aX, aY);
-    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst))) {
+    if ((nsnull != mOwner) && (NS_OK == mOwner->GetInstance(inst)) && (nsnull != inst)) {
       nsPluginWindow  *win;
       if (NS_OK == mOwner->GetWindow(win)) {
         win->x = aX;
