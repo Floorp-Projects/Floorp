@@ -29,7 +29,7 @@
 <!ENTITY para "Click Finish to create this new profile.">
 ]>
 
-<xul:window 
+<window 
 xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
 		width="500" height="500"
@@ -81,4 +81,4 @@ setTimeout("foo()", 0);
 <html:br/>
 <html:div>&para;</html:div> 
 
-</xul:window>
+</window>

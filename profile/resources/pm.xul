@@ -39,7 +39,7 @@
 <!ENTITY closeCmd.label "Close">
 ]>
 
-<xul:window 
+<window 
 xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
 		width="500" height="500"> 
@@ -101,4 +101,4 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 	</box>
 </box>
 
-</xul:window>
+</window>
