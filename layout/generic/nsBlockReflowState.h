@@ -214,7 +214,9 @@ public:
 
   PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
 
-  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool* aIsLeftFloater,
+  void PlaceFloater(nsPlaceholderFrame* aFloater,
+                    const nsMargin& aFloaterMargins,
+                    PRBool* aIsLeftFloater,
                     nsPoint* aNewOrigin);
 
   void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
@@ -3069,7 +3071,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     // Don't let the previous-bottom-margin value affect the newY
     // coordinate (it was applied in ReflowInlineFrames speculatively)
     // since the line is empty.
-    newY = aState.mY - aState.mPrevBottomMargin + lineBottomMargin;
+    nscoord dy = -aState.mPrevBottomMargin + lineBottomMargin;
+    newY = aState.mY + dy;
+    aLine->mCombinedArea.y += dy;
   }
   aLine->mCarriedOutBottomMargin = 0;/* XXX ib */
 
@@ -4072,69 +4076,47 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // Floater support
 
-void
+nsresult
 nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
-                            nsHTMLReflowMetrics& aMetrics)
+                            nsRect& aCombinedRect,
+                            nsMargin& aMarginResult)
 {
   // Reflow the floater. Since floaters are continued we given them an
   // unbounded height. Floaters with an auto width are sized to zero
   // according to the css2 spec.
-  nsSize kidAvailSize(aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
+  nsRect availSpace(0, 0, aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-  nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
-                                floater, kidAvailSize);
-  reflowState.lineLayout = nsnull;
-  if ((nsnull == aState.mReflowState.reflowCommand) ||
-      (floater != aState.mNextRCFrame)) {
-    // Stub out reflowCommand and repair reason in the reflowState
-    // when incremental reflow doesn't apply to the floater.
-    reflowState.reflowCommand = nsnull;
-    reflowState.reason =
-      (aState.mReflowState.reason == eReflowReason_Initial)
-      ? eReflowReason_Initial
-      : eReflowReason_Resize;
+  PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
+
+  // Setup block reflow state to reflow the floater
+  nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
+                           aState.mComputeMaxElementSize);
+  brc.SetNextRCFrame(aState.mNextRCFrame);
+
+  // Reflow the floater
+  nsReflowStatus frameReflowStatus;
+  nsMargin computedOffsets;
+  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE,
+                                0, isAdjacentWithTop,
+                                computedOffsets, frameReflowStatus);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  nsIHTMLReflow* ihr;
-  nsresult rv = floater->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
-  if (NS_SUCCEEDED(rv)) {
-    nsReflowStatus status;
-    ihr->WillReflow(aState.mPresContext);
-    ihr->Reflow(aState.mPresContext, aMetrics, reflowState, status);
-    if (!NS_FRAME_IS_REPLACED(reflowState.frameType)) {
-      // CSS 10.3.5: If 'left', 'right', 'width', 'margin-left', or
-      // 'margin-right' are specified as 'auto', their computed value
-      // is '0'.
-      //
-      // However, CSS1 says: "The 'width' has a non-negative
-      // UA-defined minimum value (which may vary from element to
-      // element and even depend on other properties). If 'width' goes
-      // below this limit, either because it was set explicitly, or
-      // because it was 'auto' and the rules below would make it too
-      // small, the value will be replaced with the minimum value
-      // instead."
-      //
-      // CSS1's definition is better than CSS2's in this regard
-      // because its compatible with existing content (e.g. a floating
-      // table that has no specified width).
-#if 0
-      if (0 == reflowState.computedWidth) {
-        nsFrame::ListTag(stdout, floater);
-        printf(": auto sized floating element forced to zero width\n");
-        aMetrics.width = 0;
-      }
-#endif
-    }
-    nsFrameState state;
-    floater->GetFrameState(&state);
-    if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
-      aMetrics.mCombinedArea.x = 0;
-      aMetrics.mCombinedArea.y = 0;
-      aMetrics.mCombinedArea.width = aMetrics.width;
-      aMetrics.mCombinedArea.height = aMetrics.height;
-    }
-    floater->SizeTo(aMetrics.width, aMetrics.height);
-  }
+
+  // Capture the margin information for the caller
+  const nsMargin& m = brc.GetMargin();
+  aMarginResult.top = brc.GetTopMargin();
+  aMarginResult.right = m.right;
+  aMarginResult.bottom = 
+    nsBlockReflowContext::MaxMargin(brc.GetCarriedOutBottomMargin(),
+                                    m.bottom);
+  aMarginResult.left = m.left;
+
+  const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
+  aCombinedRect = metrics.mCombinedArea;
+  floater->SizeTo(metrics.width, metrics.height);
+  return NS_OK;
 }
 
 void
@@ -4169,8 +4151,9 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
   if (mLineLayout->CanPlaceFloaterNow()) {
-    nsHTMLReflowMetrics metrics(nsnull);
-    mBlock->ReflowFloater(*this, aPlaceholder, metrics);
+    nsRect combinedArea;
+    nsMargin floaterMargins;
+    mBlock->ReflowFloater(*this, aPlaceholder, combinedArea, floaterMargins);
 
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
@@ -4184,12 +4167,12 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
     nsPoint origin;
-    PlaceFloater(aPlaceholder, &isLeftFloater, &origin);
+    PlaceFloater(aPlaceholder, floaterMargins, &isLeftFloater, &origin);
 
     // Update the floater combined-area
-    metrics.mCombinedArea.x += origin.x;
-    metrics.mCombinedArea.y += origin.y;
-    CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
+    combinedArea.x += origin.x;
+    combinedArea.y += origin.y;
+    CombineRects(combinedArea, mFloaterCombinedArea);
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
@@ -4350,6 +4333,7 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
 
 void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
+                                 const nsMargin& aFloaterMargins,
                                  PRBool* aIsLeftFloater,
                                  nsPoint* aNewOrigin)
 {
@@ -4382,17 +4366,10 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   nsRect region;
   floater->GetRect(region);
 
-  // XXX sometimes when we reflow the floater we already have this value...
-  // XXX_performance fix this! It's slow!
-  nsSize kidAvailSize(mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowState reflowState(mPresContext, mReflowState,
-                                floater, kidAvailSize);
-  const nsMargin& floaterMargin = reflowState.computedMargin;
-
   // Adjust the floater size by its margin. That's the area that will
   // impact the space manager.
-  region.width += floaterMargin.left + floaterMargin.right;
-  region.height += floaterMargin.top + floaterMargin.bottom;
+  region.width += aFloaterMargins.left + aFloaterMargins.right;
+  region.height += aFloaterMargins.top + aFloaterMargins.bottom;
 
   // Find a place to place the floater. The CSS2 spec doesn't want
   // floaters overlapping each other or sticking out of the containing
@@ -4446,8 +4423,8 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // Set the origin of the floater frame, in frame coordinates. These
   // coordinates are <b>not</b> relative to the spacemanager
   // translation, therefore we have to factor in our border/padding.
-  nscoord x = borderPadding.left + floaterMargin.left + region.x;
-  nscoord y = borderPadding.top + floaterMargin.top + region.y;
+  nscoord x = borderPadding.left + aFloaterMargins.left + region.x;
+  nscoord y = borderPadding.top + aFloaterMargins.top + region.y;
   floater->MoveTo(x, y);
   if (aNewOrigin) {
     aNewOrigin->x = x;
@@ -4483,25 +4460,23 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
       aFloaters->ElementAt(i);
     if (!IsLeftMostChild(placeholderFrame)) {
-      if (aReflowFloaters) {
-        // Before we can place it we have to reflow it
-        nsHTMLReflowMetrics metrics(nsnull);
-        mBlock->ReflowFloater(*this, placeholderFrame, metrics);
+      // XXX_perf
+      // Before we can place it we have to reflow it
+      nsRect combinedArea;
+      nsMargin floaterMargins;
+      mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
+                            floaterMargins);
 
-        PRBool isLeftFloater;
-        nsPoint origin;
-        PlaceFloater(placeholderFrame, &isLeftFloater, &origin);
+      PRBool isLeftFloater;
+      nsPoint origin;
+      PlaceFloater(placeholderFrame, floaterMargins, &isLeftFloater,
+                   &origin);
 
-        // Update the floater combined-area
-        // XXX SlideFrames will muck this up!
-        metrics.mCombinedArea.x += origin.x;
-        metrics.mCombinedArea.y += origin.y;
-        CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
-      }
-      else {
-        PRBool isLeftFloater;
-        PlaceFloater(placeholderFrame, &isLeftFloater, nsnull);
-      }
+      // Update the floater combined-area
+      // XXX SlideFrames will muck this up!
+      combinedArea.x += origin.x;
+      combinedArea.y += origin.y;
+      CombineRects(combinedArea, mFloaterCombinedArea);
     }
   }
 }
@@ -4519,8 +4494,22 @@ nsBlockReflowState::PlaceCurrentLineFloaters(nsVoidArray* aFloaters)
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
       aFloaters->ElementAt(i);
     if (IsLeftMostChild(placeholderFrame)) {
+      // XXX_perf
+      // Before we can place it we have to reflow it
+      nsRect combinedArea;
+      nsMargin floaterMargins;
+      mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
+                            floaterMargins);
+
       PRBool isLeftFloater;
-      PlaceFloater(placeholderFrame, &isLeftFloater, nsnull);
+      nsPoint origin;
+      PlaceFloater(placeholderFrame, floaterMargins, &isLeftFloater, &origin);
+
+      // Update the floater combined-area
+      // XXX SlideFrames will muck this up!
+      combinedArea.x += origin.x;
+      combinedArea.y += origin.y;
+      CombineRects(combinedArea, mFloaterCombinedArea);
     }
   }
 }

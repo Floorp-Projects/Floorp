@@ -245,9 +245,10 @@ protected:
                              nsIFrame* aFrame,
                              PRUint8* aLineReflowStatus);
 
-  void ReflowFloater(nsBlockReflowState& aState,
-                     nsPlaceholderFrame* aPlaceholder,
-                     nsHTMLReflowMetrics& aMetrics);
+  nsresult ReflowFloater(nsBlockReflowState& aState,
+                         nsPlaceholderFrame* aPlaceholder,
+                         nsRect& aCombinedRect,
+                         nsMargin& aMarginResult);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames

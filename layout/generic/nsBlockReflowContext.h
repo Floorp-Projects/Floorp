@@ -64,6 +64,18 @@ public:
     return mMetrics.mCarriedOutBottomMargin;
   }
 
+  nscoord GetTopMargin() const {
+    return mTopMargin;
+  }
+
+  const nsMargin& GetMargin() const {
+    return mMargin;
+  }
+
+  const nsHTMLReflowMetrics& GetMetrics() const {
+    return mMetrics;
+  }
+
   const nsSize& GetMaxElementSize() const {
     return mMaxElementSize;
   }
