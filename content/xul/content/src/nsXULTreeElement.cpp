@@ -34,9 +34,14 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsINameSpaceManager.h"
+#include "nsIFrame.h"
+#include "nsITreeFrame.h"
 #include "nsString.h"
 
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
+nsIAtom*             nsXULTreeElement::kOpenAtom;
+nsIAtom*             nsXULTreeElement::kTreeRowAtom;
+nsIAtom*             nsXULTreeElement::kTreeItemAtom;
 int                  nsXULTreeElement::gRefCnt = 0;
 
 NS_IMPL_ADDREF_INHERITED(nsXULTreeElement, nsXULAggregateElement);
@@ -69,6 +74,9 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 {
   if (gRefCnt++ == 0) {
     kSelectedAtom    = NS_NewAtom("selected");
+    kOpenAtom        = NS_NewAtom("open");
+    kTreeRowAtom     = NS_NewAtom("treerow");
+    kTreeItemAtom    = NS_NewAtom("treeitem");
   }
 
   nsresult rv;
@@ -380,5 +388,127 @@ nsXULTreeElement::FireOnSelectHandler()
   }
 
   return NS_OK;
+}
+
+nsresult
+nsXULTreeElement::GetRowIndexOf(nsIDOMXULElement *aElement, PRInt32 *aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aElement);
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIContent> elementContent = do_QueryInterface(aElement, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIContent> treeContent =
+    do_QueryInterface((nsIXULTreeContent*)this,&rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  *aReturn = 0;
+
+  return IndexOfContent(treeContent, elementContent, aReturn);
+}
+
+
+nsresult
+nsXULTreeElement::EnsureElementIsVisible(nsIDOMXULElement *aElement)
+{
+  if (!aElement) return NS_OK;
+
+  nsresult rv;
+  
+  PRInt32 indexOfContent;
+  rv = GetRowIndexOf(aElement, &indexOfContent);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+
+  // If there's no document (e.g., a selection is occuring in a
+  // 'orphaned' node), then there ain't a whole lot to do here!
+  if (! document) {
+    NS_WARNING("Trying to EnsureElementIsVisible on orphaned element!");
+    return NS_OK;
+  }
+
+  // now call EnsureElementIsVisible on all the frames
+  PRInt32 count = document->GetNumberOfShells();
+	for (PRInt32 i = 0; i < count; i++) {
+		nsCOMPtr<nsIPresShell> shell = document->GetShellAt(i);
+		if (!shell)
+				continue;
+
+    nsIFrame *frame;
+    shell->GetPrimaryFrameFor(content, &frame);
+
+    if (frame) {
+      nsITreeFrame *treeFrame = nsnull;      
+      rv = frame->QueryInterface(NS_GET_IID(nsITreeFrame),
+                                 (void **)&treeFrame);
+      if (NS_SUCCEEDED(rv) && treeFrame) {
+        treeFrame->EnsureRowIsVisible(indexOfContent);
+      }
+    }
+
+  }
+
+  return NS_OK;
+  
+  
+}
+
+
+// helper routine for GetRowIndexOf()
+// walks the DOM to get the zero-based row index of the current content
+// note that aContent can be any element, this will get the index of the
+// element's parent
+nsresult
+nsXULTreeElement::IndexOfContent(nsIContent* aRoot,
+                                 nsIContent* aContent,
+                                 PRInt32 *aResult)
+{
+  // number of rows that are direct children of aRoot
+  // on success, add this to aResult
+  PRInt32 rows=0;
+  
+  PRInt32 childCount=0;
+  aRoot->ChildCount(childCount);
+  
+  PRInt32 childIndex;
+  for (childIndex=0; childIndex<childCount; childIndex++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(childIndex, *getter_AddRefs(child));
+    
+    nsCOMPtr<nsIAtom> childTag;
+    child->GetTag(*getter_AddRefs(childTag));
+
+    // we hit a treerow, count it
+    if (childTag.get() == kTreeRowAtom)
+      rows++;
+    
+    // is this it?
+    if (child.get() == aContent) {
+      *aResult += rows;
+      return NS_OK;
+    }
+
+    // check children only if open="true"
+    if (childTag.get() == kTreeItemAtom) {
+      nsAutoString isOpen;
+      child->GetAttribute(kNameSpaceID_None, kOpenAtom, isOpen);
+
+      if (isOpen == "true" &&
+          NS_SUCCEEDED(IndexOfContent(child, aContent, aResult))) {
+        
+        *aResult += rows;
+        return NS_OK;
+      }
+    }
+  }
+
+  // not found
+  return NS_ERROR_FAILURE;
 }
 
