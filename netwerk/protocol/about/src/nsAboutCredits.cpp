@@ -30,7 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsAboutCredits, NS_GET_IID(nsIAboutModule));
 
-static const char kCreditsPage[] = "http://www.mozilla.org/credits";
+static const char kCreditsPage[] = "http://www.mozilla.org/credits/";
 
 NS_IMETHODIMP
 nsAboutCredits::NewChannel(const char *verb,
