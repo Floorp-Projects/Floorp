@@ -50,7 +50,7 @@ const short kDialogMarginWidth = 6;
 // nsMacWindow constructor
 //
 //-------------------------------------------------------------------------
-nsMacWindow::nsMacWindow() : nsWindow()
+nsMacWindow::nsMacWindow() : Inherited()
 	, mWindowMadeHere(PR_FALSE)
 	, mIsDialog(PR_FALSE)
 	, mMacEventHandler(nsnull)
@@ -193,7 +193,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
 	// init base class
-	nsWindow::StandardCreate(aParent, bounds, aHandleEventFunction, 
+	Inherited::StandardCreate(aParent, bounds, aHandleEventFunction, 
 														aContext, aAppShell, aToolkit, aInitData);
 
 
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,		// this is a wi
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 {
-  nsWindow::Show(bState);
+  Inherited::Show(bState);
 	
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
@@ -292,7 +292,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 		}
 
 		// propagate the event in global coordinates
-		nsWindow::Move(aX, aY);
+		Inherited::Move(aX, aY);
 
 		// reset the coordinates to (0,0) because it's the top level widget
 		mBounds.x = 0;
@@ -325,7 +325,7 @@ NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
 #endif
 		}
 	}
-	nsWindow::Resize(aWidth, aHeight, aRepaint);
+	Inherited::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
 }
 

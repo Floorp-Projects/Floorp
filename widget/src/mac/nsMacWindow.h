@@ -32,8 +32,10 @@ class nsMacEventHandler;
 //-------------------------------------------------------------------------
 //	MacOS native window
 
-class nsMacWindow : public nsWindow
+class nsMacWindow : public nsChildWindow
 {
+private:
+	typedef nsChildWindow Inherited;
 
 public:
     nsMacWindow();
