@@ -20,10 +20,10 @@
 
 #include "xptcprivate.h"
 
-#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(NTO)
+#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(NTO) || defined(__BEOS__)
 
 static nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
 

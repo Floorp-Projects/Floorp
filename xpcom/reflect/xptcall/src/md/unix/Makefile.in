@@ -43,6 +43,16 @@ CPPSRCS		= \
 endif
 endif
 
+# BeOS/Intel (uses the same unixish_x86 code)
+ifeq ($(OS_ARCH),BeOS)
+ifeq ($(OS_TEST),BePC)
+CPPSRCS		= \
+		  xptcinvoke_unixish_x86.cpp \
+		  xptcstubs_unixish_x86.cpp \
+		  $(NULL)
+endif
+endif
+
 # Solaris/sparc
 ifneq (,$(filter SunOS,$(OS_ARCH)))
 ifneq (86,$(findstring 86,$(OS_TEST)))
