@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.12 2002/01/24 21:33:51 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.13 2002/01/31 00:16:29 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4343,7 +4343,7 @@ nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, SECItem *crlKey,
 	goto loser;
     }
 
-    if (entry->url) {
+    if (url && entry->url) {
 	*url = PORT_Strdup(entry->url);
     }
     crl = SECITEM_DupItem(&entry->derCrl);
