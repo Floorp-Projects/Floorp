@@ -25,6 +25,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsConverterCID.h"
 #include "nsUCVJACID.h"
+#include "nsUCvLatinCID.h"
 
 #ifdef XP_UNIX
 
@@ -55,6 +56,12 @@ nsresult setupRegistry()
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterFactory(kCP1253ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterFactory(kISO88597ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   res = nsRepository::RegisterFactory(kSJIS2UnicodeCID, UCVJA_DLL, PR_FALSE, PR_FALSE);
@@ -162,6 +169,72 @@ nsresult testLatin1Decoder()
     for (int i=0;i<TABLE_SIZE1;i++) {
       printf(" %d->%x", src[i], dest[i]);
       if (dest[i] != ((PRUint8)src[i])) failed = PR_TRUE;
+    }
+    printf("\n");
+
+    if (failed) {
+      printf("Test FAILED!!!\n");
+    } else {
+      printf("Test Passed.\n");
+    }
+  }
+
+  NS_RELEASE(dec);
+
+  return NS_OK;
+
+}
+
+
+#define ISO88597TABLE_SIZE 16
+nsresult testISO88597Decoder()
+{
+  printf("\n[T3] ISO-8859-7 To Unicode\n");
+
+  // create converter
+  nsIUnicodeDecoder * dec;
+  nsAutoString str("iso-8859-7");
+  nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);
+  if (NS_FAILED(res)) {
+    printf("ERROR 0x%x: Cannot instantiate.\n",res);
+    return res;
+  } else {
+    printf("Instantiated.\n");
+  }
+
+  //test converter
+
+  PRInt32 srcL = ISO88597TABLE_SIZE;
+  PRInt32 destL = ISO88597TABLE_SIZE;
+  // some randon C0, ASCII, C1 and ISO-8859-7 code
+  static char src [ISO88597TABLE_SIZE + 1] = 
+  {
+    "\x09\x0d\x20\x40"
+    "\x80\x98\xa3\xaf"
+    "\xa7\xb1\xb3\xc9"
+    "\xd9\xe3\xf4\xff"
+  };
+  static PRUnichar expect [ISO88597TABLE_SIZE] = 
+  {
+   0x0009, 0x000d, 0x0020, 0x0040, 
+   0xfffd, 0xfffd, 0x00a3, 0x2015,
+   0x00a7, 0x00b1, 0x00b3, 0x0399,
+   0x03a9, 0x03b3, 0x03c4, 0xfffd
+
+  };
+  PRUnichar dest [ISO88597TABLE_SIZE];
+
+  res=dec->Convert(dest, 0, &destL, src, 0, &srcL);
+  if (NS_FAILED(res)) {
+    printf("ERROR 0x%x: Convert().\n",res);
+  } else {
+    printf("Read %d, write %d.\n",srcL,destL);
+    printf("Converted:");
+
+    PRBool failed = PR_FALSE;
+    for (int i=0;i<ISO88597TABLE_SIZE;i++) {
+      printf("%x convert to %x. expect value is %x\n" , src[i], dest[i], expect[i]);
+      if (dest[i] != expect[i]) failed = PR_TRUE;
     }
     printf("\n");
 
@@ -344,7 +417,13 @@ nsresult run()
   if (NS_FAILED(res)) return res;
 
   res = testLatin1Decoder();
+  if (NS_FAILED(res)) return res;
+
   res = testSJISDecoder();
+  if (NS_FAILED(res)) return res;
+
+  res = testISO88597Decoder();
+  if (NS_FAILED(res)) return res;
 
   return NS_OK;
 }
