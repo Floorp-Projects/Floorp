@@ -1372,10 +1372,16 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
 {
 PRIntn              cnt;
 nsMargin            border;
-const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
 float               percent;
+nsCompatibility     compatMode;
+aPresContext->GetCompatibilityMode(&compatMode);
+// in NavQuirks mode we want to use the parent's context as a starting point 
+// for determining the background color
+const nsStyleColor* bgColor = 
+  nsStyleUtil::FindNonTransparentBackground(aStyleContext, 
+                                            compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE); 
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -2592,7 +2598,7 @@ PRInt16   thickness;
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_INSET:
         {
-        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
         aBorderStyle.GetBorderColor(aSide,sideColor);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
         }
@@ -2637,7 +2643,7 @@ PRInt16   thickness;
       case NS_STYLE_BORDER_STYLE_RIDGE:
       case NS_STYLE_BORDER_STYLE_GROOVE:
         {
-        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
+        const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
         aBorderStyle.GetBorderColor(aSide,sideColor);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
 
