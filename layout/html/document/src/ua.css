@@ -563,3 +563,7 @@ NOFRAMES {
 :TABLE-ROW-GROUP {
 	display: table-row-group;
 }
+
+:CELL-CONTENT {
+  display: block;
+}
