@@ -69,9 +69,9 @@ $seuFileNameSpecific  = "MozillaUninstall.exe";
 $seuzFileNameSpecific = "mozillauninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "0.9.4+ (en)"; # ie: "0.9 (en)"
-$ENV{WIZ_userAgentShort}       = "0.9.4+";      # ie: "0.9"
-$ENV{WIZ_xpinstallVersion}     = "0.9.4+";      # ie: "0.9.0"
+$ENV{WIZ_userAgent}            = "0.9.5+ (en)"; # ie: "0.9 (en)"
+$ENV{WIZ_userAgentShort}       = "0.9.5+";      # ie: "0.9"
+$ENV{WIZ_xpinstallVersion}     = "0.9.5+";      # ie: "0.9.0"
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
