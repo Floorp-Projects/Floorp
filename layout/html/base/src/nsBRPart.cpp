@@ -81,10 +81,8 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
                const nsRect&        aDirtyRect)
 {
   if (nsIFrame::GetShowFrameBorders()) {
-    const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
     float p2t = aPresContext.GetPixelsToTwips();
-    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     aRenderingContext.FillRect(0, 0, nscoord(5 * p2t), mRect.height);
   }
   return NS_OK;
@@ -113,16 +111,10 @@ BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
     mStyleContext->GetStyleData(eStyleStruct_Font);
   nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(font->mFont);
 
-  aMetrics.width = 0;
-  if (nsIFrame::GetShowFrameBorders()) {
-    // Reserve a tiny bit of space so that our frame won't be zero
-    // sized so we get a chance to paint.
-    aMetrics.width = 1;
-  }
-
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
   aMetrics.height = aMetrics.ascent + aMetrics.descent;
+  aMetrics.width = 0;
   NS_RELEASE(fm);
 
   // Return our inline reflow status

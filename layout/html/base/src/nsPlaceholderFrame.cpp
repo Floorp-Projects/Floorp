@@ -142,16 +142,9 @@ nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
   }
 
-  if (nsIFrame::GetShowFrameBorders()) {
-    float p2t = presContext.GetPixelsToTwips();
-    aDesiredSize.width = nscoord(p2t * 5);
-    aDesiredSize.height = aDesiredSize.width;
-  }
-  else {
-    aDesiredSize.width = 0;
-    aDesiredSize.height = 0;
-  }
-  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.width = 0;
+  aDesiredSize.height = 0;
+  aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
@@ -166,8 +159,12 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect)
 {
   if (nsIFrame::GetShowFrameBorders()) {
+    float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
-    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+    nscoord x = nscoord(-5 * p2t);
+    aRenderingContext.FillRect(x, 0, nscoord(13 * p2t), nscoord(3 * p2t));
+    nscoord y = nscoord(-10 * p2t);
+    aRenderingContext.FillRect(0, y, nscoord(3 * p2t), nscoord(10 * p2t));
   }
   return NS_OK;
 }
