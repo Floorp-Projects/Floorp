@@ -415,24 +415,30 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
 	nsresult rv = NS_OK;
-
-	// XXX need to handle batching of command applied to all sources
-
 	PRUint32 cnt;
-	rv  = aSources->Count(&cnt);
-	if(NS_FAILED(rv)) return rv;
-	for (PRUint32 i = 0; i < cnt; i++)
+
+	rv = aSources->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsITransactionManager> transactionManager;
+	if (cnt > 1)
 	{
-		nsISupports* source = aSources->ElementAt(i);
-		nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
-		if (NS_SUCCEEDED(rv))
+		nsCOMPtr<nsISupports> supports;
+
+		supports = getter_AddRefs(aSources->ElementAt(0));
+		transactionManager = do_QueryInterface(supports, &rv);
+		if (NS_SUCCEEDED(rv) && transactionManager)
 		{
-			if((aCommand == kNC_MarkRead))
-				rv = DoMarkMessageRead(message, PR_TRUE);
-			else if((aCommand == kNC_MarkUnread))
-				rv = DoMarkMessageRead(message, PR_FALSE);
+			aSources->RemoveElementAt(0);
+			cnt--;
 		}
 	}
+
+	if((aCommand == kNC_MarkRead))
+		rv = DoMarkMessagesRead(aSources, PR_TRUE);
+	else if((aCommand == kNC_MarkUnread))
+		rv = DoMarkMessagesRead(aSources, PR_FALSE);
+
   //for the moment return NS_OK, because failure stops entire DoCommand process.
   return NS_OK;
 }
@@ -610,10 +616,28 @@ nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsAutoString 
 }
 
 nsresult
-nsMsgMessageDataSource::DoMarkMessageRead(nsIMessage *message, PRBool markRead)
+nsMsgMessageDataSource::DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 {
+	PRUint32 count;
 	nsresult rv;
-	rv = message->MarkRead(markRead);
+
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+	while(count > 0)
+	{
+		nsCOMPtr<nsISupportsArray> messageArray;
+		nsCOMPtr<nsIMsgFolder> folder;
+	
+		rv = GetMessagesAndFirstFolder(messages, getter_AddRefs(folder), getter_AddRefs(messageArray));
+		if(NS_FAILED(rv))
+			return rv;
+
+		folder->MarkMessagesRead(messageArray, markRead);
+		rv = messages->Count(&count);
+		if(NS_FAILED(rv))
+			return rv;
+	}
 	return rv;
 }
 
@@ -656,6 +680,69 @@ nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIR
 
 	return rv;
 
+
+}
+
+nsresult nsMsgMessageDataSource::GetMessagesAndFirstFolder(nsISupportsArray *messages, nsIMsgFolder **folder,
+														   nsISupportsArray **messageArray)
+{
+	nsresult rv;
+	PRUint32 count;
+	
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(count <= 0)
+		return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsISupportsArray> folderMessageArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(folderMessageArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	//Get the first message and its folder
+	nsCOMPtr<nsISupports> messageSupports = getter_AddRefs(messages->ElementAt(0));
+	nsCOMPtr<nsIMessage> message = do_QueryInterface(messageSupports);
+
+	if(!message)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIMsgFolder> messageFolder;
+	rv = message->GetMsgFolder(getter_AddRefs(messageFolder));
+	if(NS_FAILED(rv))
+		return rv;
+
+	//Now add all messages that have the same folder as the first one to the array.
+	for(PRUint32 i=0; i < count; i++)
+	{
+		messageSupports = getter_AddRefs(messages->ElementAt(i));
+		message = do_QueryInterface(messageSupports);
+
+		if(!message)
+			return NS_ERROR_NULL_POINTER;
+
+		nsCOMPtr<nsIMsgFolder> curFolder;
+		rv = message->GetMsgFolder(getter_AddRefs(curFolder));
+		if(NS_FAILED(rv))
+			return rv;
+
+		if(curFolder.get() == messageFolder.get())
+		{
+			folderMessageArray->AppendElement(messageSupports);
+			messages->RemoveElementAt(i);
+			i--;
+			count--;
+		}
+
+	}
+	*folder = messageFolder;
+	NS_IF_ADDREF(*folder);
+
+	*messageArray = folderMessageArray;
+	NS_IF_ADDREF(*messageArray);
+	return rv;
 
 }
 

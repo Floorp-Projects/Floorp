@@ -138,7 +138,7 @@ protected:
 								   nsIRDFNode **target);
 	nsresult createStatusStringFromFlag(PRUint32 flags, nsAutoString &statusStr);
 
-	nsresult DoMarkMessageRead(nsIMessage *message, PRBool markRead);
+	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
 								  nsIRDFResource *propertyResource,
@@ -146,6 +146,9 @@ protected:
 
 	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
+
+	nsresult GetMessagesAndFirstFolder(nsISupportsArray *messages, nsIMsgFolder **folder,
+														   nsISupportsArray **messageArray);
 
 	static nsresult getMessageArcLabelsOut(nsIMessage *message,
                                          nsISupportsArray **arcs);
