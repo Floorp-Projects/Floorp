@@ -35,6 +35,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSNodeObserver.obj          \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
+        .\$(OBJDIR)\nsJSXULTreeElement.obj        \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
@@ -42,7 +43,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
         .\$(OBJDIR)\nsXULDocument.obj             \
-		.\$(OBJDIR)\nsXULDocumentInfo.obj		  \
+	.\$(OBJDIR)\nsXULDocumentInfo.obj	  \
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
 	$(NULL)

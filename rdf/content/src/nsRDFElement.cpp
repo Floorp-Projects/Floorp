@@ -1125,16 +1125,12 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
 
         nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
-#if 0 // put this in once we get XPIDL interfaces
         if (mTag == kTreeAtom) {
             fn = NS_NewScriptXULTreeElement;
         }
         else {
-#endif
             fn = NS_NewScriptXULElement;
-#if 0 // put this in once we get XPIDL interfaces
         }
-#endif
 
         rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
         NS_RELEASE(global);
