@@ -27,7 +27,6 @@
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMToolkitCore.h"
 #include "nsIDOMProfileCore.h" 
-#include "nsIDOMRDFCore.h"
 #include "nsIDOMBrowserAppCore.h"
 #include "nsAppCoresCIDs.h" 
 
@@ -36,7 +35,6 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 static NS_DEFINE_IID(kAppCoresCID,           NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
-static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
 
 nsAppCoresNameSet::nsAppCoresNameSet()
@@ -64,7 +62,6 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
-    result = NS_InitRDFCoreClass(aScriptContext, nsnull);
 
     return result;
 }
@@ -86,14 +83,6 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
                                              PR_TRUE); 
 
         if (NS_OK != result) return result; 
-
-
-
-        result = manager->RegisterGlobalName("RDFCore", 
-                                             kRDFCoreCID, 
-                                             PR_TRUE);
-
-        if (NS_OK != result) return result;
 
         result = manager->RegisterGlobalName("ToolkitCore",
                                              kToolkitCoreCID,
