@@ -43,7 +43,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIStatefulFrame.h"
-#include "nsGUIEvent.h"
 
 class nsISupportsArray;
 class nsIScrollableView;
@@ -70,18 +69,8 @@ public:
   // reload our child frame list.
   // We need this if a scrollbar frame is recreated.
   void ReloadChildFrames();
-  PRBool NeedsClipWidget() const;
-  void CreateScrollableView();
 
   void CreateAnonymousContent(nsISupportsArray& aAnonymousChildren);
-  void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
-
-  nsresult GetChildContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                              const nsPoint&  aPoint,
-                                              nsIContent **   aNewContent,
-                                              PRInt32&        aContentOffset,
-                                              PRInt32&        aContentOffsetEnd,
-                                              PRBool&         aBeginFrameContent);
 
   // nsIScrollPositionListener
 
@@ -97,38 +86,41 @@ public:
 
   nsresult Layout(nsBoxLayoutState& aState);
   nsresult LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
-  void LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect);
-
+  
   // Like ScrollPositionDidChange, but initiated by this frame rather than from the
   // scrolling view
   void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
 
-  PRBool AddRemoveScrollbar(PRBool& aHasScrollbar, 
-                            nscoord& aXY, 
-                            nscoord& aSize, 
-                            nscoord aSbSize, 
-                            PRBool aOnRightOrBottom, 
-                            PRBool aAdd);
-  
-  PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
-                            nsRect& aScrollAreaSize, 
-                            PRBool aOnTop, 
-                            PRBool aHorizontal, 
-                            PRBool aAdd);
-  
-  PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-  PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
-  void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-  void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+   PRBool AddRemoveScrollbar       (PRBool& aHasScrollbar, 
+                                  nscoord& aXY, 
+                                  nscoord& aSize, 
+                                  nscoord aSbSize, 
+                                  PRBool aOnRightOrBottom, 
+                                  PRBool aAdd);
 
-  nsIScrollableView* GetScrollableView() const { return mScrollableView; }
+   PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
+                           nsRect& aScrollAreaSize, 
+                           PRBool aOnTop, 
+                           PRBool aHorizontal, 
+                           PRBool aAdd);
+
+   PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+   PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+   void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+   void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+
+   nsIScrollableView* GetScrollableView() const;
 
   void ScrollToRestoredPosition();
 
   nsPresState* SaveState();
   void RestoreState(nsPresState* aState);
 
-  nsIFrame* GetScrolledFrame() const { return mScrolledFrame; }
+  nsIFrame* GetScrolledFrame() const {
+    nsIFrame* childBox;
+    mScrollAreaBox->GetChildBox(&childBox);
+    return childBox;
+  }
 
   void ScrollbarChanged(nsPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
@@ -139,10 +131,9 @@ public:
   void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
   void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
 
-  nsIScrollableView* mScrollableView;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
-  nsIFrame* mScrolledFrame;
+  nsIBox* mScrollAreaBox;
   nsIBox* mScrollCornerBox;
   nscoord mOnePixel;
   nsBoxFrame* mOuter;
@@ -156,15 +147,14 @@ public:
   // value that indicates "not set")
   PRInt16     mLastDir;
   
-  PRPackedBool mNeverHasVerticalScrollbar:1;
-  PRPackedBool mNeverHasHorizontalScrollbar:1;
-  PRPackedBool mHasVerticalScrollbar:1;
-  PRPackedBool mHasHorizontalScrollbar:1;
-  PRPackedBool mViewInitiatedScroll:1;
-  PRPackedBool mFrameInitiatedScroll:1;
-  PRPackedBool mDidHistoryRestore:1;
-  PRPackedBool mHorizontalOverflow:1;
-  PRPackedBool mVerticalOverflow:1;
+  PRPackedBool mNeverHasVerticalScrollbar;   
+  PRPackedBool mNeverHasHorizontalScrollbar; 
+
+  PRPackedBool mHasVerticalScrollbar;
+  PRPackedBool mHasHorizontalScrollbar;
+  PRPackedBool mViewInitiatedScroll;
+  PRPackedBool mFrameInitiatedScroll;
+  PRPackedBool mDidHistoryRestore;
 };
 
 /**
@@ -218,21 +208,11 @@ public:
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent) {
-    return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
-                                                     aContentOffsetEnd, aBeginFrameContent);
-  }
+                                           PRBool&         aBeginFrameContent);
 
   virtual nsIFrame* GetContentInsertionFrame() {
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
   }
-
-  virtual nsIView* GetMouseCapturer() const {
-    return mInner.GetScrolledFrame()->GetView();
-  }
-
-  virtual PRBool TypeAlwaysNeedsView() { return PR_TRUE; }
-  virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
@@ -366,21 +346,11 @@ public:
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent) {
-    return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
-                                                     aContentOffsetEnd, aBeginFrameContent);
-  }
+                                           PRBool&         aBeginFrameContent);
 
   virtual nsIFrame* GetContentInsertionFrame() {
     return mInner.GetScrolledFrame()->GetContentInsertionFrame();
   }
-
-  virtual nsIView* GetMouseCapturer() const {
-    return mInner.GetScrolledFrame()->GetView();
-  }
-
-  virtual PRBool TypeAlwaysNeedsView() { return PR_TRUE; }
-  virtual PRBool DoesClipChildren() { return PR_TRUE; }
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
