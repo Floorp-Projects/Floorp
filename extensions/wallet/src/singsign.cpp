@@ -548,7 +548,7 @@ Local_SACopy(char **destination, const char *source) {
 PRIVATE void
 si_StripLF(nsAutoString buffer) {
   PRUnichar c;
-  while ((c=buffer.CharAt(buffer.Length())-1) == '\n' || c == '\r' ) {
+  while ((c=buffer.CharAt(buffer.Length() - 1)) == '\n' || c == '\r' ) {
     buffer.SetLength(buffer.Length()-1);
   }
 }
