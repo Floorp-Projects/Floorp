@@ -85,6 +85,7 @@ protected:
   NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext,
                                         PRInt32         aColIndex);
 
+  nsresult InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
   
   PRInt32 mColCount;

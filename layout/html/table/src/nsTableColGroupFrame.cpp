@@ -47,19 +47,8 @@ nsTableColGroupFrame::~nsTableColGroupFrame()
 }
 
 nsresult
-nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  nsIFrame* lastChild;
-  LastChild(lastChild);
-
-  // Append the new frames to the child list
-  if (nsnull == lastChild) {
-    mFirstChild = aChildList;
-  } else {
-    lastChild->SetNextSibling(aChildList);
-  }
-  mChildCount += LengthOf(aChildList);
-
   // Process the newly added column frames
   for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     // Set the preliminary values for the column frame
@@ -87,6 +76,23 @@ nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aC
 
     SetStyleContextForFirstPass(&aPresContext, colIndex);
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  nsIFrame* lastChild;
+  LastChild(lastChild);
+
+  // Append the new frames to the child list
+  if (nsnull == lastChild) {
+    mFirstChild = aChildList;
+  } else {
+    lastChild->SetNextSibling(aChildList);
+  }
+  mChildCount += LengthOf(aChildList);
 
   return NS_OK;
 }
@@ -120,95 +126,13 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
   // create a frame and adjust it's style
   nsresult rv;
   nsIFrame* kidFrame = nsnull;
-  nsIFrame* prevKidFrame;
  
-  // XXX CONSTRUCTION
-#if 0
-  LastChild(prevKidFrame);  // XXX remember this...
-  PRInt32 kidIndex = 0;     // index of the content child we are currently working on
-  PRInt32 colIndex = 0;     // number of content children that are columns, normally same as kidIndex
-  for (;;)
-  {
-    // get the next content child, breaking if there is none
-    nsIContentPtr kid;
-    mContent->ChildAt(kidIndex, kid.AssignRef());   // kid: REFCNT++
-    if (kid.IsNull()) {
-      break;
-    }
+  if (eReflowReason_Initial == aReflowState.reason) {
+    // XXX Don't do this in the Init() member function, because the cell
+    // map hasn't been created yet..
+    InitNewFrames(aPresContext, mFirstChild);
 
-//XXX: with the new content code, this check is no longer valid
-/*
-    // verify that we're dealing with table content.  If so, we know it's a column
-    nsITableContent *tableContentInterface = nsnull;
-    rv = kid->QueryInterface(kITableContentIID, 
-                                      (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
-    if (NS_FAILED(rv))
-    {
-      kidIndex++;
-      continue;
-    }
-    NS_RELEASE(tableContentInterface);                                   // tableContentInterface: REFCNT--
-*/
-    if (mChildCount<=colIndex)
-    {
-      // Resolve style
-      nsIStyleContextPtr kidSC =
-        aPresContext.ResolveStyleContextFor(kid, this, PR_TRUE);
-      const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
-        kidSC->GetStyleData(eStyleStruct_Spacing);
-
-      // Create a child frame
-      nsIContentDelegate* kidDel = nsnull;
-      kidDel = kid->GetDelegate(&aPresContext);
-      rv = kidDel->CreateFrame(&aPresContext, kid, this, kidSC, kidFrame);
-      NS_RELEASE(kidDel);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // set the preliminary values for the column frame
-      PRInt32 repeat=1;
-      nsIHTMLTableColElement* colContent = nsnull;
-      kid->QueryInterface(kIHTMLTableColElementIID, 
-                          (void**) &colContent); // colContent: ADDREF++
-      if (rv==NS_OK)
-      {
-        colContent->GetSpanValue(&repeat);
-        NS_RELEASE(colContent);
-      }
-      ((nsTableColFrame *)(kidFrame))->InitColFrame (mStartColIndex + mColCount, repeat);
-      mColCount+= repeat;
-
-      // give the child frame a chance to reflow, even though we know it'll have 0 size
-      nsReflowMetrics kidSize(nsnull);
-      nsReflowState   kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
-      kidFrame->WillReflow(aPresContext);
-      nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
-                                          kidReflowState);
-      // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
-      kidFrame->SetRect(nsRect(0,0,0,0));
-
-      // set nsColFrame-specific information
-      ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex+mStartColIndex);
-      nsIFrame* tableFrame=nsnull;
-      GetGeometricParent(tableFrame);
-      ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)kidFrame);
-
-      // Link child frame into the list of children
-      if (nsnull != prevKidFrame) {
-        prevKidFrame->SetNextSibling(kidFrame);
-      } else {
-        mFirstChild = kidFrame;  // our first child
-        SetFirstContentOffset(kidIndex);
-      }
-      prevKidFrame = kidFrame;
-      mChildCount++;
-      SetStyleContextForFirstPass(&aPresContext, colIndex);
-    }
-    colIndex++; // if this wasn't a column, we would not have gotten this far
-    kidIndex++;
-  }
-#else
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  } else if (eReflowReason_Incremental == aReflowState.reason) {
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
 
     // Get the type of reflow command
@@ -225,6 +149,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Append them to the child list
     AppendNewFrames(aPresContext, childList);
+    InitNewFrames(aPresContext, childList);
   }
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
@@ -238,7 +163,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
     // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
     kidFrame->SetRect(nsRect(0,0,0,0));
   }
-#endif
+
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)
