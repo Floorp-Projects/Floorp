@@ -3,7 +3,6 @@
   <link rel="stringprops" href="Labels.properties"/>
 </head>
 <body>
-
 <dialog id="editHost" title="$editHostLabel">
   <panel layout="gridbag">
     <input type="radio" ID="imapRadio" title="$imapLabel" value="imapRadio" 
@@ -55,7 +54,7 @@
   <label title="$errorOccurredLabel"
    weightx="1" fill="horizontal" gridwidth="remainder"
    insets="[5,5,5,5]"/>
-  <label title="$exceptionLabel""
+  <label title="$exceptionLabel"
    weightx="1" fill="horizontal" gridwidth="remainder"
    insets="[0,5,5,5]"/>
   <input type="button" ID="okButton" command="ok"
