@@ -89,7 +89,7 @@ public:
   nsNNTPNewsgroupList(nsINNTPHost *, nsINNTPNewsgroup*);
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
     
   NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_possible,

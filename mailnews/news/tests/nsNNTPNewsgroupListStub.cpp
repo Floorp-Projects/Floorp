@@ -41,7 +41,7 @@ class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 	nsNNTPNewsgroupListStub(nsINNTPHost * host, nsINNTPNewsgroup * newsgroup);
     virtual  ~nsNNTPNewsgroupListStub();
 
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 
 	NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_message, PRInt32 last_message, PRInt32 maxextra, PRInt32 *real_first_message, 
 	  PRInt32 *real_last_message, PRInt32 *_retval);
