@@ -55,6 +55,7 @@ interface nsIEntityConverter : nsISupports
   const unsigned long mathml20 = 16;
   const unsigned long html32 = html40Latin1;
   const unsigned long html40 = html40Latin1+html40Symbols+html40Special;
+  const unsigned long entityW3C = html40+mathml20;
 
   string ConvertToEntity(in wchar character, in unsigned long entityVersion);
 

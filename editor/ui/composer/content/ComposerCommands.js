@@ -986,8 +986,9 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
 // returns output flags based on mimetype, wrapCol and prefs
 function GetOutputFlags(aMimeType, aWrapColumn)
 {
+  var outputFlags = 0;
   var editor = GetCurrentEditor();
-  var outputFlags = (editor && editor.documentCharacterSet == "ISO-8859-1")
+  var outputEntity = (editor && editor.documentCharacterSet == "ISO-8859-1")
     ? webPersist.ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES
     : webPersist.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
   if (aMimeType == "text/plain")
@@ -997,14 +998,24 @@ function GetOutputFlags(aMimeType, aWrapColumn)
   }
   else
   {
-    // Should we prettyprint? Check the pref
     try {
+      // Should we prettyprint? Check the pref
       var prefs = GetPrefs();
       if (prefs.getBoolPref("editor.prettyprint"))
         outputFlags |= webPersist.ENCODE_FLAGS_FORMATTED;
+
+      // How much entity names should we output? Check the pref
+      var encodeEntity = prefs.getCharPref("editor.encode_entity");
+      switch (encodeEntity) {
+        case "basic"  : outputEntity = webPersist.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES; break;
+        case "latin1" : outputEntity = webPersist.ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES; break;
+        case "html"   : outputEntity = webPersist.ENCODE_FLAGS_ENCODE_HTML_ENTITIES; break;
+        case "none"   : outputEntity = 0; break;
+      }
     }
     catch (e) {}
   }
+  outputFlags |= outputEntity;
 
   if (aWrapColumn > 0)
     outputFlags |= webPersist.ENCODE_FLAGS_WRAP;

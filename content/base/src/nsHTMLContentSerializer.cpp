@@ -136,6 +136,11 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 
   mCharSet = aCharSet;
 
+  // set up entity converter if we are going to need it
+  if (mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities) {
+    mEntityConverter = do_CreateInstance(NS_ENTITYCONVERTER_CONTRACTID);
+  }
+
   return NS_OK;
 }
 
@@ -802,9 +807,10 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
   }
 
   if (aTranslateEntities && !mInCDATA) {
-    if (mFlags & nsIDocumentEncoder::OutputEncodeBasicEntities ||
-        mFlags & nsIDocumentEncoder::OutputEncodeLatin1Entities ||
-        mFlags & nsIDocumentEncoder::OutputEncodeHTMLEntities) {
+    if (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities  |
+                  nsIDocumentEncoder::OutputEncodeLatin1Entities |
+                  nsIDocumentEncoder::OutputEncodeHTMLEntities   |
+                  nsIDocumentEncoder::OutputEncodeW3CEntities)) {
       nsIParserService* parserService =
         nsContentUtils::GetParserServiceWeakRef();
 
@@ -831,6 +837,7 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
         const PRUnichar* fragmentEnd = c + fragmentLength;
         const char* entityText = nsnull;
         nsCAutoString entityReplacement;
+        char* fullEntityText = nsnull;
 
         advanceLength = 0;
         // for each character in this chunk, check if it
@@ -855,6 +862,13 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
               break;
             }
           }
+          else if (val > 127 && 
+                   mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities &&
+                   mEntityConverter &&
+                   NS_SUCCEEDED(mEntityConverter->ConvertToEntity(val,
+                                nsIEntityConverter::entityW3C, &fullEntityText))) {
+            break;
+          }
         }
 
         aOutputStr.Append(fragmentStart, advanceLength);
@@ -862,6 +876,12 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
           aOutputStr.Append(PRUnichar('&'));
           aOutputStr.Append(NS_ConvertASCIItoUCS2(entityText));
           aOutputStr.Append(PRUnichar(';'));
+          advanceLength++;
+        }
+        // if it comes from nsIEntityConverter, it already has '&' and ';'
+        else if (fullEntityText) {
+          aOutputStr.Append(NS_ConvertASCIItoUCS2(fullEntityText));
+          nsMemory::Free(fullEntityText);
           advanceLength++;
         }
       }
