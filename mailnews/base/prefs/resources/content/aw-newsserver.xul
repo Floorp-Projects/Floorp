@@ -21,7 +21,7 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
 <window id="serverpage" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -30,31 +30,28 @@ Rights Reserved.
     class="dialog"
     onload="parent.wizardManager.onPageLoad('newsserver');">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
-  <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&serverTitle.label;"/>
-  </box>
+  <box type="largeheader" value="&serverTitle.label;"/>
 
   <box align="vertical">
-    <html:div>&newsServerNameDesc.label;</html:div>
-    <html:div>
-      <html:label for="hostname">&incomingServerLabel.label;</html:label>
+    <html>&newsServerNameDesc.label;</html>
+    <box>
+      <text class="label" for="hostname" value="&incomingServerLabel.label;"/>
       <html:input type="text" id="hostname" name="hostname"/>
-    </html:div>
+    </box>
   </box>
 
   <spring class="spacer"/>
   <spring class="spacer"/>
   <box align="vertical">
-    <html:div class="title">&newsPasswordTitle.label;</html:div>
-    <html:div>&newsPasswordDesc.label;</html:div>
+    <html>&newsPasswordTitle.label;</html>
+    <html>&newsPasswordDesc.label;</html>
     <spring class="spacer"/>
-    <html:div>
+    <box>
       <html:input type="checkbox" id="usePassword" name="usePassword"/>
-      <html:label for="usePassword">&newsUsePasswordCheckbox.label;
-      </html:label>
-    </html:div>
+      <text class="label" for="usePassword" value="&newsUsePasswordCheckbox.label;"/>
+    </box>
   </box>
 </window>

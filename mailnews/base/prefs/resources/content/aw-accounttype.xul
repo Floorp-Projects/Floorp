@@ -21,7 +21,7 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -32,9 +32,7 @@ Rights Reserved.
 
 <script src="aw-accounttype.js"/>
 <box align="vertical" style="width: 100%; height: 100%" flex="100%">
-  <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&accountTypeTitle.label;"/>
-  </box>
+  <box type="largeheader" value="&accountTypeTitle.label;"/>
 
   <html class="desc">&accountTypeDesc.label;</html>
   <spring class="spacer"/>

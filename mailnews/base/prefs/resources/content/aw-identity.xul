@@ -21,7 +21,8 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
 <window id="identitypage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,9 +33,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
 
-  <box id="wizardHeader">
-    <text class="left-header-text" value="&identityTitle.label;"/>
-  </box>
+  <box type="largeheader" value="&identityTitle.label;"/>
   <html>&identityDesc.label;</html>
 
   <spring class="spacer"/>
@@ -42,10 +41,10 @@ Rights Reserved.
 
   <spring class="spacer"/>
 
-  <html>
-      <html:label for="fullName">&fullnameLabel.label;</html:label>
+  <box>
+      <text class="label" for="fullName" value="&fullnameLabel.label;"/>
       <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
-  </html>
+  </box>
   
   <spring class="spacer"/>
   <spring class="spacer"/>
@@ -54,9 +53,9 @@ Rights Reserved.
 
   <spring class="spacer"/>
 
-  <html>
-      <html:label for="email">&emailLabel.label;</html:label>
+  <box>
+      <text class="label" for="email" value="&emailLabel.label;"/>
       <html:input type="text" mailtype="identity" name="email" id="email"/>
-      <html:span id="postEmailText"/>
-  </html>
+      <text id="postEmailText"/>
+  </box>
 </window>

@@ -20,7 +20,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-done.dtd" >
 <window id="done" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -28,9 +29,7 @@ Rights Reserved.
     class="dialog"
     onload="parent.wizardManager.onPageLoad('done');">
   <script src="chrome://messenger/content/aw-done.js"/>
-  <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&completionTitle.label;"/>
-  </box>
+  <box type="largeheader" value="&completionTitle.label;"/>
 
 <html>&completionText.label;</html>
 <spring class="spacer"/>

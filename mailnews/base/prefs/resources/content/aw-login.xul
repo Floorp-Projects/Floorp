@@ -21,7 +21,8 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
 <window id="loginpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,9 +33,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
 
-  <box id="wizardHeader">
-    <text class="left-header-text" value="&loginTitle.label;"/>
-  </box>
+  <box type="largeheader" value="&loginTitle.label;"/>
 
   <box align="vertical">
     <html>&usernameDesc.label; &usernameExample.label;</html>
