@@ -281,3 +281,28 @@ print("\""+str2.value+"\""+" ; "+len2.value);
 obj.DoubleString(len2, str2);
 print("\""+str2.value+"\""+" ; "+len2.value);
 
+print("-------------------------------------------");
+print("GetStrings test...");
+obj.SetReceiver(null);
+var count = {};
+var strings = obj.GetStrings(count);
+print("count = "+ count.value);
+print("strings = "+ strings);
+
+print("-----------------------");
+
+var gs = {
+    GetStrings : function(count) {
+        var s = ['red', 'green', 'blue'];
+        count.value = s.length;
+        return s;
+    }
+};
+
+obj.SetReceiver(gs);
+var count = {};
+var strings = obj.GetStrings(count);
+print("count = "+ count.value);
+print("strings = "+ strings);
+
+print("\n");

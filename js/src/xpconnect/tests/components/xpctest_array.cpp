@@ -322,6 +322,32 @@ xpcarraytest::DoubleString(PRUint32 *count, char **str)
     return NS_OK;
 }        
 
+/* void GetStrings (out PRUint32 count, [array, size_is (count), retval] out string str); */
+NS_IMETHODIMP 
+xpcarraytest::GetStrings(PRUint32 *count, char ***str)
+{
+    const static char *strings[] = {"one", "two", "three", "four"};
+    const static scount = sizeof(strings)/sizeof(strings[0]);
+
+    if(mReceiver)
+        return mReceiver->GetStrings(count, str);
+
+    char** out = (char**) nsAllocator::Alloc(scount * sizeof(char*));
+    if(!out)
+        return NS_ERROR_OUT_OF_MEMORY;
+    for(int i = 0; i < scount; ++i)
+    {
+        out[i] = (char*) nsAllocator::Clone(strings[i], strlen(strings[i])+1);
+        // failure unlikely, leakage foolishly tolerated in this test case
+        if(!out[i])
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *count = scount;
+    *str = out;
+    return NS_OK;
+}
+
 /***************************************************************************/
 
 // static
