@@ -116,23 +116,6 @@ nsContainerFrame::PrepareContinuingFrame(nsIPresContext&   aPresContext,
 }
 
 NS_METHOD
-nsContainerFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                        nsIFrame*        aParent,
-                                        nsIStyleContext* aStyleContext,
-                                        nsIFrame*&       aContinuingFrame)
-{
-  nsIContentDelegate* contentDelegate = mContent->GetDelegate(&aPresContext);
-  nsresult rv = contentDelegate->CreateFrame(&aPresContext, mContent, aParent,
-                                             aStyleContext, aContinuingFrame);
-  NS_RELEASE(contentDelegate);
-  if (NS_OK == rv) {
-    PrepareContinuingFrame(aPresContext, aParent, aStyleContext,
-                           (nsContainerFrame*)aContinuingFrame);
-  }
-  return rv;
-}
-
-NS_METHOD
 nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {

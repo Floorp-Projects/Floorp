@@ -110,16 +110,7 @@ public:
   NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
-  /**
-   * Default implementation is to use the content delegate to create a new
-   * frame. After the frame is created it uses PrepareContinuingFrame() to
-   * set the content offsets, mLastContentOffset, and append the continuing
-   * frame to the flow.
-   */
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                   nsIFrame*        aParent,
-                                   nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
+
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
 

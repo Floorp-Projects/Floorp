@@ -61,43 +61,6 @@ nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-/**
- * Creates a continuing frame. The continuing frame is appended to the flow.
- *
- * @param   aPresContext presentation context to use to get the content delegate
- * @param   aParent the geometric parent to use. Note that it maybe different than
- *            the receiver's geometric parent
- * @return  the continuing frame or null if unsuccessful
- */
-NS_METHOD
-nsSplittableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
-                                         nsIFrame*        aParent,
-                                         nsIStyleContext* aStyleContext,
-                                         nsIFrame*&       aContinuingFrame)
-{
-  nsIContentDelegate* contentDelegate = mContent->GetDelegate(&aPresContext);
-
-  nsresult rv = contentDelegate->CreateFrame(&aPresContext, mContent, aParent,
-                                             aStyleContext, aContinuingFrame);
-  NS_RELEASE(contentDelegate);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Append the continuing frame to the flow
-  aContinuingFrame->AppendToFlow(this);
-
-  // XXX remove this!
-
-  // Resolve style for the continuing frame and set its style context.
-  nsIStyleContext* styleContext =
-    aPresContext.ResolveStyleContextFor(mContent, aParent);
-  aContinuingFrame->SetStyleContext(&aPresContext,styleContext);
-  NS_RELEASE(styleContext);
-
-  return rv;
-}
-
 NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
 {
   aPrevInFlow = mPrevInFlow;
