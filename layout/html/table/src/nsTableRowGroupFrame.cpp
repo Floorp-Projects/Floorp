@@ -1013,8 +1013,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
       nsIFrame* contRowFrame = nsnull;
       nscoord pageHeight = actualRect.height;
       // reflow the row in the availabe space and have it split if it is the 1st
-      // row or there is at least 20% of the current page available 
-      if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 5)) { 
+      // row or there is at least 5% of the current page available 
+      if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20)) { 
         // Reflow the row in the available space and have it split
         nsSize              availSize(availWidth, availHeight - bounds.y);
         nsHTMLReflowState   rowReflowState(aPresContext, aReflowState, rowFrame,
