@@ -60,6 +60,7 @@ public:
     eEditorMailBit,                       // use mail-compose editting rules
     eEditorDisableForcedUpdatesBit,       // prevent immediate view refreshes
     eEditorDisableForcedReflowsBit,       // prevent immediate reflows
+    eEditorEnableWrapHackBit,             // allow the editor to set font: monospace on the root node
     eEditorWidgetBit                      // bit for widgets
     
     // max 32 bits
@@ -75,6 +76,7 @@ public:
     eEditorMailMask                 = (1 << eEditorMailBit),
     eEditorDisableForcedUpdatesMask = (1 << eEditorDisableForcedUpdatesBit),
     eEditorDisableForcedReflowsMask = (1 << eEditorDisableForcedReflowsBit),
+    eEditorEnableWrapHackMask       = (1 << eEditorEnableWrapHackBit),
     eEditorWidgetMask               = (1 << eEditorWidgetBit)
   };
   
