@@ -252,25 +252,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "Zvoliť dátum" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Vystrihnúť" >
+<!ENTITY calendar.copy.button.tooltip           "Kopírovať" >
+<!ENTITY calendar.paste.button.tooltip          "Vložiť" >
+<!ENTITY calendar.print.button.tooltip          "Tlač kalendáru" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Vystrihnúť" >
+<!ENTITY calendar.copy.button.label             "Kopírovať" >
+<!ENTITY calendar.paste.button.label            "Vložiť" >
+<!ENTITY calendar.print.button.label            "Tlač" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Import: Importovať udalosti z lokálneho súboru." >
+<!ENTITY calendar.export.button.tooltip            "Export: Exportovať udalosti do lokálneho súboru." >
+<!ENTITY calendar.subscribe.button.tooltip         "Odber: Odoberať súboru s kalendárom zo vzdialeného servera." >
+<!ENTITY calendar.publish.button.tooltip            "Publikovať: Publikovať udalosti na vzdialený server." >
 
 <!ENTITY calendar.import.button.label              "Import" >
 <!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.subscribe.button.label           "Odber" >
+<!ENTITY calendar.publish.button.label             "Publikovanie" >
 
 <!ENTITY calendar.dayview.button.label          "Denný" >
 <!ENTITY calendar.weekview.button.label         "Týždenný" >
@@ -316,11 +316,11 @@
 <!ENTITY window.title            "Mozilla Kalendár">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.label             "Upraviť">
 <!ENTITY calendar.context.customize.accesskey         "C">
 <!ENTITY calendar.menu.customize.label                "Customize Toolbars">
 <!ENTITY calendar.menu.customize.accesskey            "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.maintoolbar.name                    "Moja lišta">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
@@ -446,22 +446,22 @@
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
 <!ENTITY calendar.importoutlook.mapconcepts.label "Prosim namapujte nasledujúce polia kalendára na zodpovedajúce polia CSV-súboru programu Outlook:" >
-<!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
-<!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
-<!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
-<!ENTITY calendar.importoutlook.outlookenddate.label "End date" >
-<!ENTITY calendar.importoutlook.outlookendtime.label "End time" >
-<!ENTITY calendar.importoutlook.outlooklocation.label "Location" >
-<!ENTITY calendar.importoutlook.outlookdescription.label "Description" >
-<!ENTITY calendar.importoutlook.outlookallday.label "All-day event" >
-<!ENTITY calendar.importoutlook.outlookprivate.label "Private" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm on/off" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
-<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Predmet" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Začiatočný dátum" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Začiatočný čas" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Koncový dátum" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Koncový čas" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Umiestnenie" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Popis" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Celodenná udalosť" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Súkromná" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm zap./vyp." >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Dátum alarmu" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Čas alarmu" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Kategória" >
 <!ENTITY calendar.importoutlook.selectmeaning.label "Zvoľte význam nasledujúceho slova: " >
-<!ENTITY calendar.importoutlook.true.label "True" >
-<!ENTITY calendar.importoutlook.false.label "False" >
+<!ENTITY calendar.importoutlook.true.label "Pravda" >
+<!ENTITY calendar.importoutlook.false.label "Nepravda" >
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Tlač kalendára">
