@@ -150,6 +150,7 @@ EXTRA_DSO_LDOPTS += \
 		-lgtksuperwin \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 endif
 
