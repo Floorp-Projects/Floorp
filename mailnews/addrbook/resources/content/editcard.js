@@ -1,40 +1,73 @@
-var card;
-var newCard = -1;
-var okCallback;
-var abURI;
+var editCard;
+
 var editCardTitlePrefix = "Card for ";
 
 function OnLoadNewCard()
 {
-	top.card = newCard;
-	top.okCallback = 0;
+	InitEditCard();
+
+	editCard.card = 0;
+	editCard.okCallback = 0;
+	editCard.generateDisplayName = true;
 	
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].abURI )
-			top.abURI = window.arguments[0].abURI;
+			editCard.abURI = window.arguments[0].abURI;
 	}
 }
 
 
 function OnLoadEditCard()
 {
+	InitEditCard();
+	
 	// look in arguments[0] for card
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].card )
-			top.card = window.arguments[0].card;
+			editCard.card = window.arguments[0].card;
 		if ( window.arguments[0].okCallback )
-			top.okCallback = window.arguments[0].okCallback;
+			editCard.okCallback = window.arguments[0].okCallback;
 		if ( window.arguments[0].abURI )
-			top.abURI = window.arguments[0].abURI;
+			editCard.abURI = window.arguments[0].abURI;
 	}
 			
-	GetCardValues(top.card, frames["editcard"].document);
+	// set global state variables
+	// if first or last name entered, disable generateDisplayName
+	editCard.generateDisplayName = (editCard.card.FirstName.length +
+									editCard.card.LastName.length +
+		 							editCard.card.DisplayName.length == 0)
+	
+	GetCardValues(editCard.card, frames["editcard"].document);
 		
-	//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
+	//top.window.setAttribute('title', editCardTitlePrefix + editCard.card.DisplayName);
 }
 
+function InitEditCard()
+{
+	// create editCard object that contains global variables for editCard.js
+	editCard = new Object;
+	
+	// get pointer to nsIPref object
+	var prefs = Components.classes["component://netscape/preferences"];
+	if ( prefs )
+	{
+		prefs = prefs.getService();
+		if ( prefs )
+		{
+			prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+			editCard.prefs = prefs;
+		}
+	}
+			
+	// get specific prefs that editCard will need
+	if ( prefs )
+	{
+		editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
+		editCard.displayLastNameFirst = true;//this is a test XXXXXXXXXXX this is only a test
+	}
+}
 
 function NewCardOKButton()
 {
@@ -46,7 +79,7 @@ function NewCardOKButton()
 	{
 		SetCardValues(cardproperty, frames["editcard"].document);
 	
-		cardproperty.AddCardToDatabase();// Candice pass  top.abURI  this is the var containing GetResultTreeDirectory()
+		cardproperty.AddCardToDatabase();// Candice pass  editCard.abURI  this is the var containing GetResultTreeDirectory()
 	}
 	
 	top.window.close();
@@ -55,13 +88,13 @@ function NewCardOKButton()
 
 function EditCardOKButton()
 {
-	SetCardValues(top.card, frames["editcard"].document);
+	SetCardValues(editCard.card, frames["editcard"].document);
 	
-	top.card.EditCardToDatabase();// Candice pass  top.abURI  this is the var containing GetResultTreeDirectory()
+	editCard.card.EditCardToDatabase();// Candice pass  editCard.abURI  this is the var containing GetResultTreeDirectory()
 	
 	// callback to allow caller to update
-	if ( top.okCallback )
-		top.okCallback();
+	if ( editCard.okCallback )
+		editCard.okCallback();
 	
 	top.window.close();
 }
@@ -171,5 +204,49 @@ function NewCardCancelButton()
 function EditCardCancelButton()
 {
 	top.window.close();
+}
+
+function GenerateDisplayName()
+{
+	if ( editCard.generateDisplayName )
+	{
+		var doc = frames["editcard"].document;
+		
+		var firstNameField = doc.getElementById('FirstName');
+		var lastNameField = doc.getElementById('LastName');
+		var displayNameField = doc.getElementById('DisplayName');
+
+		/* todo: i18N work todo here */
+		/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
+		
+		/* todo:  mscott says there was a pref in 4.5 that would */
+		/* cause GenerateDisplayName() to do nothing.  */
+		/* the i18N people need it. */
+		/* find the pref and heed it. */
+
+		/* trying to be smart about no using the first last sep */
+		/* if first or last is missing */
+		/* todo:  is this i18N safe? */
+		
+		var separator = "";
+		if ( lastNameField.value && firstNameField.value )
+		{
+			if ( editCard.displayLastNameFirst )
+			 	separator = ", ";
+			else
+			 	separator = " ";
+		}
+		
+		if ( editCard.displayLastNameFirst )
+			displayNameField.value = lastNameField.value + separator + firstNameField.value;
+		else
+			displayNameField.value = firstNameField.value + separator + lastNameField.value;
+	}
+}
+
+function DisplayNameChanged()
+{
+	// turn off generateDisplayName if the user changes the display name
+	editCard.generateDisplayName = false;
 }
 

@@ -5,32 +5,32 @@
 <!DOCTYPE window
 [
 <!-- Labels -->
-	<!ENTITY Name.tab						"Name"> 
-		<!ENTITY Name.box					"Name"> 
+	<!ENTITY Name.tab				"Name"> 
+		<!ENTITY Name.box				"Name"> 
 			<!ENTITY FirstName.label		"First:"> 
 			<!ENTITY LastName.label			"Last:"> 
 			<!ENTITY DisplayName.label		"Display:"> 
 			<!ENTITY NickName.label			"Nickname:"> 
-		<!ENTITY Internet.box				"Internet"> 
+		<!ENTITY Internet.box			"Internet"> 
 			<!ENTITY PrimaryEmail.label		"* Primary email:"> 
 			<!ENTITY SecondEmail.label		"Secondary email:"> 
 			<!ENTITY SendPlainText.label	"Send email as plain text (no html)"> 
-		<!ENTITY Phones.box					"Phones"> 
+		<!ENTITY Phones.box				"Phones"> 
 			<!ENTITY WorkPhone.label		"Work:"> 
 			<!ENTITY HomePhone.label		"Home:"> 
 			<!ENTITY FaxNumber.label		"Fax:"> 
 			<!ENTITY PagerNumber.label		"Pager:"> 
 			<!ENTITY CellularNumber.label	"Cellular:"> 
 		
-	<!ENTITY Address.tab					"Address"> 
-		<!ENTITY Home.box					"Home"> 
+	<!ENTITY Address.tab			"Address"> 
+		<!ENTITY Home.box				"Home"> 
 			<!ENTITY HomeAddress.label		"Address:"> 
 			<!ENTITY HomeAddress2.label		""> 
 			<!ENTITY HomeCity.label			"City:"> 
 			<!ENTITY HomeState.label		"State:"> 
 			<!ENTITY HomeZipCode.label		"Zip:"> 
 			<!ENTITY HomeCountry.label		"Country:">
-		<!ENTITY Work.box					"Work"> 
+		<!ENTITY Work.box				"Work"> 
 			<!ENTITY JobTitle.label			"Title:"> 
 			<!ENTITY Department.label		"Department:"> 
 			<!ENTITY Company.label			"Company:"> 
@@ -43,73 +43,18 @@
 		<!ENTITY Web.box				"Web"> 
 			<!ENTITY WebPage1.label			"Page:"> 
 		
-	<!ENTITY Other.tab						"Other"> 
+	<!ENTITY Other.tab				"Other"> 
 			<!ENTITY Custom1.label			"Custom 1:"> 
 			<!ENTITY Custom2.label			"Custom 2:"> 
 			<!ENTITY Custom3.label			"Custom 3:"> 
 			<!ENTITY Custom4.label			"Custom 4:"> 
-		<!ENTITY Notes.box					"Notes"> 
+		<!ENTITY Notes.box				"Notes"> 
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		style="height:100%; width:100%; border:none"
 		align="vertical">
-
-<html:script language="JavaScript">
-
-var pref;
-var prefInitialized = false;
-var lastFirst = false;
-
-function GenerateDisplayName()
-{
-        /* see AB_GenerateDisplayName in http://lxr.mcom.com/nova/source/ns/lib/libaddr/abglue.cpp for the proper logic */ 
-
-	var firstNameField = document.getElementById('FirstName');
-        var lastNameField = document.getElementById('LastName');
-	var displayNameField = document.getElementById('DisplayName');
-
-	/* todo: i18N work todo here */
-	/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
-	var firstLastSep = " ";
-
-	if (!prefInitialized) {
-		pref = Components.classes['component://netscape/preferences'];
-
-		if (pref) {
-			pref = pref.getService();
-		} 
-		if (pref) {
-			pref = pref.QueryInterface(Components.interfaces.nsIPref);
-		}
-		if (pref) {
-			lastFirst = pref.GetBoolPref("mail.addr_book.lastnamefirst");
-		}
-		prefInitialized = true;
-	}
-
-	/* todo:  mscott says there was a pref in 4.5 that would */
-	/* cause GenerateDisplayName() to do nothing.  */
-	/* the i18N people need it. */
-	/* find the pref and heed it. */
-
-	/* trying to be smart about no using the first last sep */
-	/* if first or last is missing */
-	/* todo:  is this i18N safe? */
-	if ((lastNameField.value == "") || (firstNameField.value == "")) { 
-	 	firstLastSep = "";
-	}
-
-	if (lastFirst) {
-        	displayNameField.value = lastNameField.value + firstLastSep + firstNameField.value;
-	}
-	else {
-        	displayNameField.value = firstNameField.value + firstLastSep + lastNameField.value;
-	}
-}
-
-</html:script>      
 
 	<tabcontrol align="vertical" style="margin:5px">
 	   <tabbox align="horizontal">
@@ -132,17 +77,17 @@ function GenerateDisplayName()
 						<box align="horizontal" flex="100%">
 							<spring flex="100%"/>
 							<html:label for="FirstName">&FirstName.label;</html:label>
-							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="GenerateDisplayName();" />
+							<html:input type="text" id="FirstName" class="CardEdit" onkeypress="top.GenerateDisplayName()" />
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="LastName">&LastName.label;</html:label>
-							<html:input id="LastName" type="text" class="CardEdit" onkeyup="GenerateDisplayName();"/>
+							<html:input id="LastName" type="text" class="CardEdit" onkeypress="top.GenerateDisplayName()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="DisplayName">&DisplayName.label;</html:label>
-							<html:input id="DisplayName" type="text" class="CardEdit"/>
+							<html:input id="DisplayName" type="text" class="CardEdit" onkeypress="top.DisplayNameChanged()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
