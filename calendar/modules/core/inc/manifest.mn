@@ -13,6 +13,9 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
+	nsCalNetFetchCollector.h \
+	nsCalNetFetchCommand.h \
+	nsCalNetFetchVals.h \
 	nsLayer.h \
 	nsLayerCollection.h \
 	nsCoreCIID.h \

@@ -15,29 +15,31 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsICalNetFetchCollector_h___
-#define nsICalNetFetchCollector_h___
 
-#include "nsISupports.h"
+#ifndef nsCalNetFetchCommand_h__
+#define nsCalNetFetchCommand_h__
+
+#include "nscalexport.h"
 #include "nsCalNetFetchVals.h"
+#include "nsICalNetFetchCommand.h"
+#include "nsIVector.h"
 
-//ea7225c0-6313-11d2-b564-0060088a4b1d
-#define NS_ICAL_NET_FETCH_COLLECTOR_IID   \
-{ 0xea7225c0, 0x6313, 0x11d2,    \
-{ 0xb5, 0x64, 0x00, 0x60, 0x08, 0x8a, 0x4b, 0x1d } }
 
-class nsICalNetFetchCollector : public nsISupports
+class NS_CALENDAR nsCalNetFetchCommand 
 {
 
-public:
-  NS_IMETHOD Init() = 0;
+  nsIVector * mpLayerList ;		// all the layers that need the events from this range
 
-  NS_IMETHOD QueueFetchByRange(nsIUser* pUser, nsILayer* pLayer, DateTime d1, DateTime d2) = 0;
-  NS_IMETHOD FlushFetchByRange(PRInt32* pID) = 0;
-  NS_IMETHOD SetPriority(PRInt32 id, PRInt32 iPri) = 0;
-  NS_IMETHOD GetState(PRInt32 ID, eCalNetFetchState *pState) = 0;
-  NS_IMETHOD Cancel(nsILayer * aLayer) = 0;
+public:
+  nsCalNetFetchCommand(nsISupports* outer);
+  ~nsCalNetFetchCommand();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD UpdateRange(DateTime d1, DateTime d2);
+  NS_IMETHOD AddLayer(nsILayer* pLayer);
+  NS_IMETHOD Execute(PRInt32 iPri);
+  NS_IMETHOD Cancel();
 };
 
-
-#endif /* nsICalNetFetchCollector */
+#endif //nsCalNetFetchCommand_h__

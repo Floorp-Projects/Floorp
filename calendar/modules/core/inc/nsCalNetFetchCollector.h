@@ -20,14 +20,15 @@
 #define nsCalNetFetchCollector_h__
 
 #include "nscalexport.h"
+#include "nsCalNetFetchVals.h"
 #include "nsICalNetFetchCollector.h"
+#include "nsIVector.h"
+
 
 class NS_CALENDAR nsCalNetFetchCollector : public nsICalNetFetchCollector 
 {
 
-  JulianString msCurl;
-  NSCalendar* mpCal;
-  nsCalendarShell* mpShell;
+  nsIVector * mpFetchList ;
 
 public:
   nsCalNetFetchCollector(nsISupports* outer);
@@ -35,11 +36,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD QueueFetchByRange(nsIUser* pUser, nsILayer* pLayer, DateTime d1, DateTime d2) = 0;
-  NS_IMETHOD FlushFetchByRange(PRInt32* pID) = 0;
-  NS_IMETHOD SetPriority(PRInt32 id, PRInt32 iPri) = 0;
-  NS_IMETHOD GetState(PRInt32 ID, EState *pState) = 0;
-  NS_IMETHOD Cancel(nsILayer * aLayer) = 0;
+  NS_IMETHOD QueueFetchByRange(nsIUser* pUser, nsILayer* pLayer, DateTime d1, DateTime d2);
+  NS_IMETHOD FlushFetchByRange(PRInt32* pID);
+  NS_IMETHOD SetPriority(PRInt32 id, PRInt32 iPri);
+  NS_IMETHOD GetState(PRInt32 ID, eCalNetFetchState *pState);
+  NS_IMETHOD Cancel(nsILayer * aLayer);
 };
 
 #endif //nsCalNetFetchCollector_h__
