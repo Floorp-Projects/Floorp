@@ -147,7 +147,6 @@ proc GetInfoForPeople {peoplelist} {
     if {[cequal $ldapserver ""]} {
         return
     }
-    puts "Contacting ldap server $ldapserver <br>"
     if {[catch {set fid [open "|./data/ldapsearch -b \"dc=netscape,dc=com\" -h $ldapserver -p $ldapport -s sub -S mail \"$query\" mail cn nscpcurcontactinfo" r]} errvar]} {
         set ldaperror 1
     } else {
