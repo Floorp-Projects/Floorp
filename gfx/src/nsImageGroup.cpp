@@ -28,6 +28,7 @@
 #include "libimg.h"
 #include "il_util.h"
 #include "nsIDeviceContext.h"
+#include "nsIStreamListener.h"
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
 
@@ -60,18 +61,26 @@ public:
                                     const nscolor* aBackgroundColor,
                                     PRUint32 aWidth, PRUint32 aHeight,
                                     PRUint32 aFlags);
+
+  NS_IMETHOD GetImageFromStream(const char* aURL,
+                                nsIImageRequestObserver *aObserver,
+                                const nscolor* aBackgroundColor,
+                                PRUint32 aWidth, PRUint32 aHeight,
+                                PRUint32 aFlags,
+                                nsIImageRequest*& aResult,
+                                nsIStreamListener*& aListenerResult);
   
   virtual void Interrupt(void);
 
   IL_GroupContext *GetGroupContext() { return mGroupContext; }
   nsVoidArray *GetObservers() { return mObservers; }
 
-private:
   nsIImageManager *mManager;
   IL_GroupContext *mGroupContext;
   nsVoidArray *mObservers;
   nsIDeviceContext *mDeviceContext;
   ilINetContext* mNetContext;
+  nsIStreamListener** mListenerRequest;
 };
 
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
@@ -108,6 +117,18 @@ ImageGroupImpl::~ImageGroupImpl()
 
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
 
+static PRBool
+ReconnectHack(void* arg, nsIStreamListener* aListener)
+{
+  ImageGroupImpl* ig = (ImageGroupImpl*) arg;
+  if (nsnull != ig->mListenerRequest) {
+    *ig->mListenerRequest = aListener;
+    NS_ADDREF(aListener);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsresult 
 ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
 {
@@ -125,7 +146,8 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
   }
 
   // Create an async net context
-  if ((result = NS_NewImageNetContext(&mNetContext)) != NS_OK) {
+  result = NS_NewImageNetContext(&mNetContext, ReconnectHack, this);
+  if (NS_OK != result) {
     return result;
   }
 
@@ -204,6 +226,7 @@ ImageGroupImpl::GetImage(const char* aUrl,
     nsresult  result;
 
     // Ask the image request object to get the image.
+    mListenerRequest = nsnull;
     result = image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
                              aWidth, aHeight, aFlags, mNetContext);
 
@@ -216,6 +239,42 @@ ImageGroupImpl::GetImage(const char* aUrl,
   }
 
   return image_req;
+}
+
+NS_IMETHODIMP
+ImageGroupImpl::GetImageFromStream(const char* aUrl,
+                                   nsIImageRequestObserver *aObserver,
+                                   const nscolor* aBackgroundColor,
+                                   PRUint32 aWidth, PRUint32 aHeight,
+                                   PRUint32 aFlags,
+                                   nsIImageRequest*& aResult,
+                                   nsIStreamListener*& aListenerResult)
+{
+  NS_PRECONDITION(nsnull != aUrl, "null URL");
+  
+  nsresult  result = NS_OK;
+  ImageRequestImpl *image_req = new ImageRequestImpl;
+  if (nsnull == image_req) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+    
+  // Ask the image request object to get the image.
+  nsIStreamListener* listener = nsnull;
+  mListenerRequest = &listener;
+  result = image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
+                           aWidth, aHeight, aFlags, mNetContext);
+  aListenerResult = listener;
+  mListenerRequest = nsnull;
+
+  if (NS_SUCCEEDED(result)) {
+    NS_ADDREF(image_req);
+  } else {
+    delete image_req;
+    image_req = nsnull;
+  }
+
+  aResult = image_req;
+  return result;
 }
   
 void 

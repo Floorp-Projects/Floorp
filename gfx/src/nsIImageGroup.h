@@ -28,6 +28,7 @@ class nsIImageGroupObserver;
 class nsIImageRequestObserver;
 class nsIImageRequest;
 class nsIDeviceContext;
+class nsIStreamListener;
 
 /** For important images, like backdrops. */
 #define nsImageLoadFlags_kHighPriority  0x01   
@@ -102,6 +103,20 @@ public:
                                     const nscolor* aBackgroundColor,
                                     PRUint32 aWidth, PRUint32 aHeight,
                                     PRUint32 aFlags) = 0;
+
+  /**
+   * Like GetImage except load the image from a live stream.
+   * The call returns an nsIImageRequest and an nsIStreamListener
+   * that should be connected to the live stream to accept
+   * the image data.
+   */
+  NS_IMETHOD GetImageFromStream(const char* aURL,
+                                nsIImageRequestObserver *aObserver,
+                                const nscolor* aBackgroundColor,
+                                PRUint32 aWidth, PRUint32 aHeight,
+                                PRUint32 aFlags,
+                                nsIImageRequest*& aResult,
+                                nsIStreamListener*& aListenerResult) = 0;
 
   /**
    *  Halt decoding of images or animation without destroying associated
