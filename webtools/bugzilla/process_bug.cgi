@@ -135,7 +135,7 @@ foreach my $field ("rep_platform", "priority", "bug_severity", "url",
 
 if (defined $::FORM{'qa_contact'}) {
     my $name = trim($::FORM{'qa_contact'});
-    if ($name ne $dontchange) {
+    if ($name ne $::dontchange) {
         my $id = 0;
         if ($name ne "") {
             $id = DBNameToIdAndCheck($name);
