@@ -628,7 +628,7 @@ nsBrowserAppCore::LoadInitialPage(void)
   nsCOMPtr<nsIDOMElement>    argsElement;
 
   rv = FindNamedXULElement(mWebShell, "args", &argsElement);
-  if (rv != NS_OK) {
+  if (!argsElement) {
   // Couldn't get the "args" element from the xul file. Load a blank page
      if (APP_DEBUG) printf("Couldn't find args element\n");
      nsString * url = new nsString("about:blank"); 
@@ -679,11 +679,11 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWebShell * webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) {
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (webShell) {
     mContentAreaWebShell = webShell;
-    NS_ADDREF(webShell);
+    NS_ADDREF(mContentAreaWebShell);
     webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 
     const PRUnichar * name;
