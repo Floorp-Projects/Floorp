@@ -62,8 +62,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                                   DebuggableObject
 {
 
-    static final long serialVersionUID = 2762574228534679611L;
-
     /**
      * The empty property attribute.
      *
@@ -1952,8 +1950,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             complexSlotFlag = (this instanceof GetterSlot) ? (byte)1 : (byte)0;
         }
-
-        static final long serialVersionUID = -2158009919774350004L;
 
         int intKey;
         String stringKey;

@@ -59,6 +59,9 @@ may override scopeInit or fillConstructorProperties methods.
 public abstract class IdScriptableObject extends ScriptableObject
     implements IdFunctionCall
 {
+    private int maxInstanceId;
+    private transient volatile PrototypeValues prototypeValues;
+
     private static final class PrototypeValues implements Serializable
     {
         private static final int VALUE_SLOT = 0;
@@ -84,6 +87,11 @@ public abstract class IdScriptableObject extends ScriptableObject
             if (maxId < 1) throw new IllegalArgumentException();
             this.obj = obj;
             this.maxId = maxId;
+        }
+
+        final int getMaxId()
+        {
+            return maxId;
         }
 
         final void initValue(int id, String name, Object value, int attributes)
@@ -739,7 +747,26 @@ public abstract class IdScriptableObject extends ScriptableObject
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private int maxInstanceId;
-    private volatile PrototypeValues prototypeValues;
+    private void readObject(ObjectInputStream stream)
+        throws IOException, ClassNotFoundException
+    {
+        stream.defaultReadObject();
+        int maxPrototypeId = stream.readInt();
+        if (maxPrototypeId != 0) {
+            activatePrototypeMap(maxPrototypeId);
+        }
+    }
+
+    private void writeObject(ObjectOutputStream stream)
+        throws IOException
+    {
+        stream.defaultWriteObject();
+        int maxPrototypeId = 0;
+        if (prototypeValues != null) {
+            maxPrototypeId = prototypeValues.getMaxId();
+        }
+        stream.writeInt(maxPrototypeId);
+    }
+
 }
 
