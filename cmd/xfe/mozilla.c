@@ -122,6 +122,12 @@
 #include "gmon.h"
 #endif
 
+/* Crash-reporting system */
+#ifdef MOZ_FULLCIRCLE
+#include "fullsoft.h"
+#endif
+
+
 #ifndef _STDC_
 #define _STDC_ 1
 #define HACKED_STDC 1
@@ -262,6 +268,11 @@ static int
 fe_create_pidlock (const char *name, unsigned long *paddr, pid_t *ppid);
 
 static void fe_check_use_async_dns(void);
+
+#ifdef MOZ_FULLCIRCLE
+XP_Bool fe_enable_fullcircle(void);
+#endif
+
 
 XP_Bool fe_ReadLastUserHistory(char **hist_entry_ptr);
 
@@ -2394,6 +2405,25 @@ main
   fe_mailNewsPrefs = MSG_CreatePrefs();
 #endif /* MOZ_MAIL_NEWS */
 
+/* Full Circle initialization */
+#ifdef MOZ_FULLCIRCLE
+
+  if(fe_enable_fullcircle())
+    {
+#ifdef DEBUG_mcafee
+      printf("Initializing FullCircle...");
+#endif
+      
+      FCInitialize();
+      
+#ifdef DEBUG_mcafee
+      printf("done.\n");
+#endif
+    }
+  
+#endif /* MOZ_FULLCIRCLE */
+  
+  
   toplevel = XtAppInitialize (&fe_XtAppContext, (char *) fe_progclass, options,
 			      sizeof (options) / sizeof (options [0]),
 			      &argc, argv, fe_fallbackResources, 0, 0);
@@ -5224,3 +5254,29 @@ static void fe_check_use_async_dns(void)
 		}
 	}
 }
+
+
+#ifdef MOZ_FULLCIRCLE
+/* Return True if we should do the fullcircle stuff. */
+XP_Bool fe_enable_fullcircle(void)
+{
+  XP_Bool fullcircle_enable = TRUE;
+  char * c = getenv ("MOZILLA_NO_FULLCIRCLE");
+  
+  /* Look for MOZILLA_NO_FULLCIRCLE first */
+  if (c && *c)
+    {
+      /* Just in case make sure the var is not [fF0] (for funky logic) */
+      if (*c != 'f' && *c != 'F' && *c != '0')
+        {
+          return False;
+        }
+    }
+  
+  /* Check the pref next */
+  PREF_GetBoolPref("general.fullcircle_enable", &fullcircle_enable);
+  
+  return fullcircle_enable;
+}
+#endif /* MOZ_FULLCIRCLE */
+
