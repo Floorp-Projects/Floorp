@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Mozilla
-Comment=Mozilla
+Comment=Web Browser
 Exec=/usr/bin/mozilla
 Icon=mozilla-icon.png
 Terminal=0

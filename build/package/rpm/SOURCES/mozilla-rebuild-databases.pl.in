@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+
+use File::Path;
+use POSIX ":sys_wait_h";
+
+$timeout = 60;
+
+%{ENV}->{"MOZILLA_FIVE_HOME"}="/usr/lib/mozilla-MOZILLA_VERSION";
+%{ENV}->{"LD_LIBRARY_PATH"}="/usr/lib/mozilla-MOZILLA_VERSION";
+
+umask 022;
+
+if ( -f "/usr/lib/mozilla-MOZILLA_VERSION/regxpcom" )
+{
+    # remove all of the old files
+    rmtree("/usr/lib/mozilla-MOZILLA_VERSION/chrome/overlayinfo");
+    unlink </usr/lib/mozilla-MOZILLA_VERSION/chrome/*.rdf>;
+    unlink("/usr/lib/mozilla-MOZILLA_VERSION/component.reg");
+    unlink("/usr/lib/mozilla-MOZILLA_VERSION/components/compreg.dat");
+    unlink("/usr/lib/mozilla-MOZILLA_VERSION/components/xpti.dat");
+
+    # crate a new clean path
+    mkpath("/usr/lib/mozilla-MOZILLA_VERSION/chrome/overlayinfo");
+
+    # run regxpcom
+    $pid = fork();
+
+    # I am the child.
+    if ($pid == 0) {
+	exec("/usr/lib/mozilla-MOZILLA_VERSION/regxpcom > /dev/null 2> /dev/null");
+    }
+    # I am the parent.
+    else {
+	my $timepassed = 0;
+	do {
+	    $kid = waitpid($pid, &WNOHANG);
+	    sleep(1);
+	    $timepassed++;
+        } until $kid == -1 || $timepassed > $timeout;
+
+	# should we kill?
+	if ($timepassed > $timeout) {
+	    kill (9, $pid);
+	}
+    }
+
+    # and run regchrome for good measure
+    $pid = fork();
+
+    # I am the child.
+    if ($pid == 0) {
+	exec("/usr/lib/mozilla-MOZILLA_VERSION/regchrome > /dev/null 2> /dev/null");
+    }
+    # I am the parent.
+    else {
+	my $timepassed = 0;
+	do {
+	    $kid = waitpid($pid, &WNOHANG);
+	    sleep(1);
+	    $timepassed++;
+        } until $kid == -1 || $timepassed > $timeout;
+
+	# should we kill?
+	if ($timepassed > $timeout) {
+	    kill (9, $pid);
+	}
+    }
+
+}
+
