@@ -56,10 +56,11 @@ var gOpenLabelAccesskey;
 var gSaveLabel;
 var gSaveLabelAccesskey;
 var gMessengerBundle;
+var gProfileDirURL;
+var gIconFileURL;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
-
 
 // other components may listen to on start header & on end header notifications for each message we display
 // to do that you need to add yourself to our gMessageListeners array with object that has two properties:
@@ -683,12 +684,54 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
                                fullNames.value[index], names.value[index], headerEntry.useShortView);
       }
 
+      if (headerEntry.enclosingBox.getAttribute("id") == "expandedfromBox") {
+        setFromBuddyIcon(addresses.value[index]);
+      }
+
       index++;
     }
     
     if (headerEntry.useToggle)
       headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
   } // if msgheader parser
+}
+
+function setFromBuddyIcon(email)
+{
+   var fromBuddyIcon = document.getElementById("fromBuddyIcon");
+
+   try {
+     // better to cache this?
+     var myScreenName = pref.getCharPref("aim.session.screenname");
+
+     var card = abAddressCollector.getCardFromAttribute("PrimaryEmail", email);
+
+     if (myScreenName && card && card.aimScreenName) {
+       if (!gProfileDirURL) {
+         // lazily create these file urls, and keep them around
+         gIconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+         gProfileDirURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+
+         var profile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
+         gProfileDirURL.file = profile.getProfileDir(profile.currentProfile);
+       }
+
+       // if we did have a buddy icon on disk for this screenname, this would be the file url spec for it
+       var iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
+
+       // check if the file exists
+       // is this a perf hit?  (how expensive is stat()?)
+       gIconFileURL.spec = iconURLStr;
+       if (gIconFileURL.file.exists()) {
+         fromBuddyIcon.setAttribute("src", iconURLStr);
+         return;
+       }
+     }
+   }
+   catch (ex) {
+     // can get here if no screenname
+   }
+   fromBuddyIcon.setAttribute("src", "");
 }
 
 function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, displayName, useShortView)
