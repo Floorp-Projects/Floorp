@@ -36,53 +36,81 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIFactory.idl"
 
 interface nsIFile;
 interface nsIComponentManager;
 
+/**
+ * The nsIModule interface.
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
 interface nsIModule : nsISupports
 {
-    // Object Instance Creation.
-    // Factory can be queried off the Class Object. Factory will be used to
-    //		create new objects.
-    // SingletonFactory can be queried off the Class Object. Services can be created
-    //		using the singletonfactory.
-    void getClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
+    /** 
+     * Object Instance Creation
+     *
+     * Obtains a Class Object from a nsIModule for a given CID and IID pair.  
+     * This class object can either be query to a nsIFactory or a may be 
+     * query to a nsIClassInfo.
+     *
+     * @param aCompMgr  : The global component manager
+     * @param aClass    : ClassID of object instance requested
+     * @param aIID      : IID of interface requested
+     * 
+     */
+    void getClassObject(in nsIComponentManager aCompMgr, 
+                        in nsCIDRef aClass,
                         in nsIIDRef aIID,
-                        [retval, iid_is(aIID)] out nsQIResult result);
+                        [retval, iid_is(aIID)] out nsQIResult aResult);
 
-    // Component registration
-    void registerSelf(in nsIComponentManager aCompMgr, in nsIFile location,
-                      in string registryLocation, in string componentType);
 
-    void unregisterSelf(in nsIComponentManager aCompMgr, in nsIFile location,
-                        in string registryLocation);
+    /**
+     * One time registration callback
+     *
+     * When the nsIModule is discovered, this method will be
+     * called so that any setup registration can be preformed.
+     *
+     * @param aCompMgr  : The global component manager
+     * @param aLocation : The location of the nsIModule on disk
+     * @param aLoaderStr: Opaque loader specific string
+     * @param aType     : Loader Type being used to load this module 
+     */
+    void registerSelf(in nsIComponentManager aCompMgr, 
+                      in nsIFile aLocation,
+                      in string aLoaderStr, 
+                      in string aType);
+    /**
+     * One time unregistration callback
+     *
+     * When the nsIModule is being unregistered, this method will be
+     * called so that any unregistration can be preformed
+     *
+     * @param aCompMgr   : The global component manager
+     * @param aLocation  : The location of the nsIModule on disk
+     * @param aLoaderStr : Opaque loader specific string
+     * 
+     */
+   void unregisterSelf(in nsIComponentManager aCompMgr, 
+                        in nsIFile aLocation,
+                        in string  aLoaderStr);
 
-    // Module load management
-    // @return indicates to the caller if the module can be unloaded.
-    // 		Returning PR_TRUE isn't a guarantee that the module will be
-    //		unloaded. It constitues only willingness of the module to be
-    //		unloaded.
-    //		Returning PR_FALSE guaratees that the module wont be unloaded.
-    //
+   /** 
+    * Module load management
+    * 
+    * @param aCompMgr  : The global component manager
+    *
+    * @return indicates to the caller if the module can be unloaded.
+    * 		Returning PR_TRUE isn't a guarantee that the module will be
+    *		unloaded. It constitues only willingness of the module to be
+    *		unloaded.  It is very important to ensure that no outstanding 
+    *       references to the module's code/data exist before returning 
+    *       PR_TRUE. 
+    *		Returning PR_FALSE guaratees that the module wont be unloaded.
+    */
     boolean canUnload(in nsIComponentManager aCompMgr);
 };
-
-%{C++
-
-// Exported Function from module dll to Create the nsIModule
-#define NS_GET_MODULE_SYMBOL "NSGetModule"
-
-extern "C" NS_EXPORT nsresult PR_CALLBACK NSGetModule(nsIComponentManager *aCompMgr,
-                                          nsIFile* location,
-                                          nsIModule** return_cobj);
-
-typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
-                                    nsIFile* location,
-                                    nsIModule** return_cobj);
-%}
 
 
 

@@ -61,6 +61,8 @@
 #endif
 #endif /* defined(DEBUG) */
 
+#include "nsNativeComponentLoader.h"
+
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
