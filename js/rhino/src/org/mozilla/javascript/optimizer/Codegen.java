@@ -1803,23 +1803,7 @@ class BodyCodegen
                 break;
 
               case Token.GETVAR:
-                if (hasVarsInRegs) {
-                    OptLocalVariable lVar = OptLocalVariable.get(node);
-                    if (lVar == null) {
-                        lVar = fnCurrent.getVar(node.getString());
-                    }
-                    loadVarReg(lVar, node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
-                } else {
-                    cfw.addALoad(variableObjectLocal);
-                    cfw.addPush(node.getString());
-                    cfw.addALoad(variableObjectLocal);
-                    addScriptRuntimeInvoke(
-                        "getProp",
-                        "(Ljava/lang/Object;"
-                        +"Ljava/lang/String;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                }
+                visitGetVar(node);
                 break;
 
               case Token.SETVAR:
@@ -2136,18 +2120,6 @@ class BodyCodegen
         cfw.addAStore(variableObjectLocal);
     }
 
-    private void resetTargets(Node node)
-    {
-        if (node.getType() == Token.TARGET) {
-            ((Node.Target)node).labelId = -1;
-        }
-        Node child = node.getFirstChild();
-        while (child != null) {
-            resetTargets(child);
-            child = child.getNext();
-        }
-    }
-
     private void visitCall(Node node, int type, Node child)
     {
         /*
@@ -2208,33 +2180,22 @@ class BodyCodegen
 */
             child = child.getNext();
             while (child != null) {
-                boolean handled = false;
-                if ((child.getType() == Token.GETVAR)
-                        && inDirectCallFunction) {
-                    OptLocalVariable lVar = OptLocalVariable.get(child);
-                    if (lVar != null && lVar.isParameter()) {
-                        handled = true;
-                        short reg = lVar.getJRegister();
-                        cfw.addALoad(reg);
-                        cfw.addDLoad(reg + 1);
-                    }
+                int dcp_register = nodeIsDirectCallParameter(child);
+                if (dcp_register >= 0) {
+                    cfw.addALoad(dcp_register);
+                    cfw.addDLoad(dcp_register + 1);
+                } else if (child.getIntProp(Node.ISNUMBER_PROP, -1)
+                           == Node.BOTH)
+                {
+                    cfw.add(ByteCode.GETSTATIC,
+                            "java/lang/Void",
+                            "TYPE",
+                            "Ljava/lang/Class;");
+                    generateCodeFromNode(child, node);
+                } else {
+                    generateCodeFromNode(child, node);
+                    cfw.addPush(0.0);
                 }
-                if (!handled) {
-                    int childNumberFlag
-                                = child.getIntProp(Node.ISNUMBER_PROP, -1);
-                    if (childNumberFlag == Node.BOTH) {
-                        cfw.add(ByteCode.GETSTATIC,
-                                "java/lang/Void",
-                                "TYPE",
-                                "Ljava/lang/Class;");
-                        generateCodeFromNode(child, node);
-                    }
-                    else {
-                        generateCodeFromNode(child, node);
-                        cfw.addPush(0.0);
-                    }
-                }
-                resetTargets(child);
                 child = child.getNext();
             }
 
@@ -2253,11 +2214,30 @@ class BodyCodegen
             cfw.markLabel(regularCall, stackHeight);
             cfw.add(ByteCode.POP);
 
-            visitRegularCall(node, type, chelsea, true);
+            generateRegularCallSequence(node, type, chelsea, Node.NON_SPECIALCALL, true);
             cfw.markLabel(beyond);
         }
         else {
-            visitRegularCall(node, type, chelsea, false);
+            int callType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                           Node.NON_SPECIALCALL);
+            if (type == Token.CALL && callType == Node.NON_SPECIALCALL) {
+                String simpleCallName = getSimpleCallName(node);
+                if (simpleCallName != null) {
+                    cfw.addALoad(contextLocal);
+                    cfw.addPush(simpleCallName);
+                    cfw.addALoad(variableObjectLocal);
+                    child = child.getNext().getNext();
+                    generateCallArgArray(node, child, false);
+                    addOptRuntimeInvoke("callSimple",
+                         "(Lorg/mozilla/javascript/Context;"
+                         +"Ljava/lang/String;"
+                         +"Lorg/mozilla/javascript/Scriptable;"
+                         +"[Ljava/lang/Object;"
+                         +")Ljava/lang/Object;");
+                    return;
+                }
+            }
+            generateRegularCallSequence(node, type, chelsea, callType, false);
         }
    }
 
@@ -2311,132 +2291,25 @@ class BodyCodegen
         return null;
     }
 
-    private void constructArgArray(int argCount)
+    private void generateRegularCallSequence(Node node, int type, Node child, int callType, boolean directCall)
     {
-        if (argCount == 0) {
-            if (itsZeroArgArray >= 0)
-                cfw.addALoad(itsZeroArgArray);
-            else {
-                cfw.add(ByteCode.GETSTATIC,
-                        "org/mozilla/javascript/ScriptRuntime",
-                        "emptyArgs", "[Ljava/lang/Object;");
-            }
-        }
-        else {
-            if (argCount == 1) {
-                if (itsOneArgArray >= 0)
-                    cfw.addALoad(itsOneArgArray);
-                else {
-                    cfw.addPush(1);
-                    cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
-                }
-            }
-            else {
-                cfw.addPush(argCount);
-                cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
-            }
-        }
-    }
 
-    private void visitRegularCall(Node node, int type,
-                                  Node child, boolean firstArgDone)
-    {
-        /*
-         * Generate code for call.
-         *
-         * push <arity>
-         * anewarray Ljava/lang/Object;
-         * // "initCount" instances of code from here...
-         * dup
-         * push <i>
-         * <gen code for child>
-         * acfw.addAStore
-         * //...to here
-         * invokestatic call
-         */
-
-        OptFunctionNode target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
-        Node chelsea = child;
-        int childCount = 0;
-        int argSkipCount = (type == Token.NEW) ? 1 : 2;
-        while (child != null) {
-            childCount++;
-            child = child.getNext();
-        }
-
-        child = chelsea;    // re-start the iterator from the first child,
-                    // REMIND - too bad we couldn't just back-patch the count ?
-
-        int argIndex = -argSkipCount;
-        if (firstArgDone && (child != null)) {
-            child = child.getNext();
-            argIndex++;
+        if (directCall) {
+            // Function argument was already left on stack
             cfw.addALoad(contextLocal);
             cfw.add(ByteCode.SWAP);
-        }
-        else
+        } else {
             cfw.addALoad(contextLocal);
-
-        if (firstArgDone && (type == Token.NEW))
-            constructArgArray(childCount - argSkipCount);
-
-        int callType = node.getIntProp(Node.SPECIALCALL_PROP,
-                                       Node.NON_SPECIALCALL);
-        boolean isSimpleCall = false;
-        if (!firstArgDone && type != Token.NEW) {
-            String simpleCallName = getSimpleCallName(node);
-            if (simpleCallName != null && callType == Node.NON_SPECIALCALL) {
-                isSimpleCall = true;
-                cfw.addPush(simpleCallName);
-                cfw.addALoad(variableObjectLocal);
-                child = child.getNext().getNext();
-                argIndex = 0;
-                constructArgArray(childCount - argSkipCount);
-            }
+            generateCodeFromNode(child, node);
         }
+        child = child.getNext();
 
-        while (child != null) {
-            if (argIndex < 0)       // not moving these arguments to the array
-                generateCodeFromNode(child, node);
-            else {
-                cfw.add(ByteCode.DUP);
-                cfw.addPush(argIndex);
-                if (target != null) {
-/*
-    If this has also been a directCall sequence, the Number flag will
-    have remained set for any parameter so that the values could be
-    copied directly into the outgoing args. Here we want to force it
-    to be treated as not in a Number context, so we set the flag off.
-*/
-                    boolean handled = false;
-                    if ((child.getType() == Token.GETVAR)
-                            && inDirectCallFunction) {
-                        OptLocalVariable lVar = OptLocalVariable.get(child);
-                        if (lVar != null && lVar.isParameter()) {
-                            child.removeProp(Node.ISNUMBER_PROP);
-                            generateCodeFromNode(child, node);
-                            handled = true;
-                        }
-                    }
-                    if (!handled) {
-                        generateCodeFromNode(child, node);
-                        int childNumberFlag
-                                = child.getIntProp(Node.ISNUMBER_PROP, -1);
-                        if (childNumberFlag == Node.BOTH) {
-                            addDoubleWrap();
-                        }
-                    }
-                }
-                else
-                    generateCodeFromNode(child, node);
-                cfw.add(ByteCode.AASTORE);
-            }
-            argIndex++;
-            if (argIndex == 0) {
-                constructArgArray(childCount - argSkipCount);
-            }
+        if (type == Token.CALL) {
+            generateCodeFromNode(child, node);
             child = child.getNext();
         }
+
+        generateCallArgArray(node, child, directCall);
 
         String className;
         String methodName;
@@ -2474,14 +2347,6 @@ class BodyCodegen
                 cfw.addPush(sourceName == null ? "" : sourceName);
                 cfw.addPush(itsLineNumber);
             }
-        } else if (isSimpleCall) {
-            className = "org/mozilla/javascript/optimizer/OptRuntime";
-            methodName = "callSimple";
-            callSignature = "(Lorg/mozilla/javascript/Context;"
-                            +"Ljava/lang/String;"
-                            +"Lorg/mozilla/javascript/Scriptable;"
-                            +"[Ljava/lang/Object;"
-                            +")Ljava/lang/Object;";
         } else {
             className = "org/mozilla/javascript/ScriptRuntime";
             cfw.addALoad(variableObjectLocal);
@@ -2505,6 +2370,62 @@ class BodyCodegen
 
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       className, methodName, callSignature);
+    }
+
+    private void generateCallArgArray(Node node, Node argChild, boolean directCall)
+    {
+        int argCount = 0;
+        for (Node child = argChild; child != null; child = child.getNext()) {
+            ++argCount;
+        }
+        // load array object to set arguments
+        if (argCount == 0) {
+            if (itsZeroArgArray >= 0) {
+                cfw.addALoad(itsZeroArgArray);
+            } else {
+                cfw.add(ByteCode.GETSTATIC,
+                        "org/mozilla/javascript/ScriptRuntime",
+                        "emptyArgs", "[Ljava/lang/Object;");
+            }
+        } else if (argCount == 1) {
+            if (itsOneArgArray >= 0)
+                cfw.addALoad(itsOneArgArray);
+            else {
+                cfw.addPush(1);
+                cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
+            }
+        }
+        else {
+            cfw.addPush(argCount);
+            cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
+        }
+        // Copy arguments into it
+        for (int i = 0; i != argCount; ++i) {
+            cfw.add(ByteCode.DUP);
+            cfw.addPush(i);
+            if (!directCall) {
+                generateCodeFromNode(argChild, node);
+            } else {
+                // If this has also been a directCall sequence, the Number
+                // flag will have remained set for any parameter so that
+                // the values could be copied directly into the outgoing
+                // args. Here we want to force it to be treated as not in
+                // a Number context, so we set the flag off.
+                int dcp_register = nodeIsDirectCallParameter(argChild);
+                if (dcp_register >= 0) {
+                    dcpLoadAsObject(dcp_register);
+                } else {
+                    generateCodeFromNode(argChild, node);
+                    int childNumberFlag
+                            = argChild.getIntProp(Node.ISNUMBER_PROP, -1);
+                    if (childNumberFlag == Node.BOTH) {
+                        addDoubleWrap();
+                    }
+                }
+            }
+            cfw.add(ByteCode.AASTORE);
+            argChild = argChild.getNext();
+        }
     }
 
     private void visitStatement(Node node)
@@ -2734,12 +2655,29 @@ class BodyCodegen
             if (lVar != null) {
                 if (lVar.isNumber()) {
                     cfw.addPush("number");
-                    return;
+                } else if (varIsDirectCallParameter(lVar)) {
+                    int dcp_register = lVar.getJRegister();
+                    cfw.addALoad(dcp_register);
+                    cfw.add(ByteCode.GETSTATIC, "java/lang/Void", "TYPE",
+                            "Ljava/lang/Class;");
+                    int isNumberLabel = cfw.acquireLabel();
+                    cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
+                    short stack = cfw.getStackTop();
+                    cfw.addALoad(dcp_register);
+                    addScriptRuntimeInvoke("typeof",
+                                           "(Ljava/lang/Object;"
+                                           +")Ljava/lang/String;");
+                    int beyond = cfw.acquireLabel();
+                    cfw.add(ByteCode.GOTO, beyond);
+                    cfw.markLabel(isNumberLabel, stack);
+                    cfw.addPush("number");
+                    cfw.markLabel(beyond);
+                } else {
+                    cfw.addALoad(lVar.getJRegister());
+                    addScriptRuntimeInvoke("typeof",
+                                           "(Ljava/lang/Object;"
+                                           +")Ljava/lang/String;");
                 }
-                loadVarReg(lVar, false);
-                addScriptRuntimeInvoke("typeof",
-                                       "(Ljava/lang/Object;"
-                                       +")Ljava/lang/String;");
                 return;
             }
         }
@@ -2911,15 +2849,21 @@ class BodyCodegen
 
     private int nodeIsDirectCallParameter(Node node)
     {
-        if (node.getType() == Token.GETVAR) {
+        if (node.getType() == Token.GETVAR
+            && inDirectCallFunction && !itsForcedObjectParameters)
+        {
             OptLocalVariable lVar = OptLocalVariable.get(node);
-            if (lVar != null && lVar.isParameter() && inDirectCallFunction &&
-                !itsForcedObjectParameters)
-            {
+            if (lVar.isParameter()) {
                 return lVar.getJRegister();
             }
         }
         return -1;
+    }
+
+    private boolean varIsDirectCallParameter(OptLocalVariable lVar)
+    {
+        return lVar.isParameter()
+            && inDirectCallFunction && !itsForcedObjectParameters;
     }
 
     private void genSimpleCompare(int type, int trueGOTO, int falseGOTO)
@@ -3214,28 +3158,40 @@ class BodyCodegen
             +")Ljava/lang/Object;");
     }
 
-    private void loadVarReg(OptLocalVariable lVar, boolean isNumber)
+    private void visitGetVar(Node node)
     {
-        short reg = lVar.getJRegister();
-        if (lVar.isParameter() && inDirectCallFunction &&
-            !itsForcedObjectParameters)
-        {
-            // Remember that here the isNumber flag means that we want to
-            // use the incoming parameter in a Number context, so test the
-            // object type and convert the value as necessary.
-            if (isNumber) {
-                dcpLoadAsNumber(reg);
+        if (hasVarsInRegs) {
+            OptLocalVariable lVar = OptLocalVariable.get(node);
+            if (lVar == null) {
+                lVar = fnCurrent.getVar(node.getString());
+            }
+            short reg = lVar.getJRegister();
+            if (varIsDirectCallParameter(lVar)) {
+                // Remember that here the isNumber flag means that we
+                // want to use the incoming parameter in a Number
+                // context, so test the object type and convert the
+                //  value as necessary.
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                    dcpLoadAsNumber(reg);
+                } else {
+                    dcpLoadAsObject(reg);
+                }
+            } else if (lVar.isNumber()) {
+                cfw.addDLoad(reg);
             } else {
-                dcpLoadAsObject(reg);
+                cfw.addALoad(reg);
             }
         } else {
-            if (lVar.isNumber())
-                cfw.addDLoad(reg);
-            else
-                cfw.addALoad(reg);
+            cfw.addALoad(variableObjectLocal);
+            cfw.addPush(node.getString());
+            cfw.addALoad(variableObjectLocal);
+            addScriptRuntimeInvoke(
+                "getProp",
+                "(Ljava/lang/Object;"
+                +"Ljava/lang/String;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +")Ljava/lang/Object;");
         }
-        return;
-
     }
 
     private void visitSetVar(Node node, Node child, boolean needValue)
@@ -3246,11 +3202,10 @@ class BodyCodegen
                 lVar = fnCurrent.getVar(child.getString());
             }
             generateCodeFromNode(child.getNext(), node);
+            boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
             short reg = lVar.getJRegister();
-            if (lVar.isParameter()
-                        && inDirectCallFunction
-                        && !itsForcedObjectParameters) {
-                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+            if (varIsDirectCallParameter(lVar)) {
+                if (isNumber) {
                     if (needValue) cfw.add(ByteCode.DUP2);
                     cfw.addALoad(reg);
                     cfw.add(ByteCode.GETSTATIC,
@@ -3272,9 +3227,8 @@ class BodyCodegen
                     if (needValue) cfw.add(ByteCode.DUP);
                     cfw.addAStore(reg);
                 }
-            }
-            else {
-                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+            } else {
+                if (isNumber) {
                       cfw.addDStore(reg);
                       if (needValue) cfw.addDLoad(reg);
                 }
