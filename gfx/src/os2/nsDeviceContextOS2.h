@@ -53,6 +53,7 @@ public:
 
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
+  using DeviceContextImpl::CreateRenderingContext;
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
 
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -125,9 +126,9 @@ public:
   BOOL isPrintDC();
   PRBool SupportsRasterFonts();
   PRBool IsPaletteDevice() {return mIsPaletteDevice;};
-  nsresult nsDeviceContextOS2::CreateFontAliasTable();
+  nsresult CreateFontAliasTable();
 };
 
-static int PR_CALLBACK prefChanged(const char *aPref, void *aClosure);
+int PR_CALLBACK prefChanged(const char *aPref, void *aClosure);
 
 #endif /* nsDeviceContextOS2_h___ */

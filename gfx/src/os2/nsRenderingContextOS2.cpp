@@ -1283,29 +1283,11 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const nsString &aString,
    return GetWidth( aString.get(), aString.Length(), aWidth, aFontID);
 }
 
-void
-SelectFont(HPS aPS, nsFontOS2* aFont, LONG &aLCID)
-{
-  if (aLCID == 0) {
-    // set 'other' font
-    aLCID = GFX (::GpiQueryCharSet(aPS), LCID_ERROR);
-    NS_ASSERTION(aLCID != 1, "mOldLCID is equal to one!" );
-    GFX (::GpiCreateLogFont(aPS, 0, 1, &(aFont->mFattrs)),
-         GPI_ERROR);
-    aFont->SelectIntoPS(aPS, 1);
-  } else {
-     // reset 'normal' font
-    aFont->SelectIntoPS(aPS, aLCID);
-    GFX (::GpiDeleteSetId(aPS, 1), FALSE);
-    aLCID = 0;
-  }
-}
-
 struct GetWidthData {
-  HPS         mPS;      // IN
-  nsFontOS2*  mFont;  // IN/OUT (running)
-  LONG        mWidth;   // IN/OUT (running, accumulated width so far)
-  LONG        mOldLCID; // OUT holds old font id when switching
+  HPS                   mPS;      // IN
+  nsDrawingSurfaceOS2*  mSurface; // IN
+  nsFontOS2*            mFont;    // IN/OUT (running)
+  LONG                  mWidth;   // IN/OUT (running, accumulated width so far)
 };
 
 static PRBool PR_CALLBACK
@@ -1320,7 +1302,7 @@ do_GetWidth(const nsFontSwitch* aFontSwitch,
   if (data->mFont != font) {
     // the desired font is not the current font in the PS
     data->mFont = font;
-    SelectFont(data->mPS, data->mFont, data->mOldLCID);
+    data->mSurface->SelectFont(data->mFont);
   }
   data->mWidth += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
   return PR_TRUE; // don't stop till the end
@@ -1337,15 +1319,14 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
   SetupFontAndColor();
 
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
-  GetWidthData data = {mPS, mCurrFontOS2, 0, 0};
+  GetWidthData data = {mPS, mSurface, mCurrFontOS2, 0};
 
   metrics->ResolveForwards(mPS, aString, aLength, do_GetWidth, &data);
   aWidth = NSToCoordRound(float(data.mWidth) * mP2T);
 
-  if (data.mOldLCID != 0) {
-     // If the font was changed along the way, restore our font
-    mCurrFontOS2->SelectIntoPS(mPS, data.mOldLCID);
-    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
+  if (data.mFont != mCurrFontOS2) {
+    // If the font was changed along the way, restore our font
+    mSurface->SelectFont(mCurrFontOS2);
   }
 
   if (aFontID)
@@ -1507,6 +1488,7 @@ nsRenderingContextOS2::GetTextDimensions(const char*       aString,
 
 struct BreakGetTextDimensionsData {
   HPS         mPS;                // IN
+  nsDrawingSurfaceOS2*  mSurface; // IN
   nsFontOS2*  mFont;              // IN/OUT (running)
   float       mP2T;               // IN
   PRInt32     mAvailWidth;        // IN
@@ -1529,8 +1511,6 @@ struct BreakGetTextDimensionsData {
   // to initialize the current offset from where to start measuring
   nsVoidArray* mFonts;   // OUT
   nsVoidArray* mOffsets; // IN/OUT
-
-  LONG mOldLCID;           // OUT holds old font id when switching
 };
 
 static PRBool PR_CALLBACK
@@ -1546,7 +1526,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
   if (data->mFont != font) {
     // the desired font is not the current font in the PS
     data->mFont = font;
-    SelectFont(data->mPS, data->mFont, data->mOldLCID);
+    data->mSurface->SelectFont(data->mFont);
   }
 
    // set mMaxAscent & mMaxDescent if not already set in nsFontOS2 struct
@@ -1801,17 +1781,16 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
   nsAutoVoidArray fonts, offsets;
   offsets.AppendElement((void*)aString);
 
-  BreakGetTextDimensionsData data = {mPS, mCurrFontOS2, mP2T, aAvailWidth,
-                                     aBreaks, aNumBreaks, spaceWidth,
-                                     aveCharWidth, 0, 0, 0, -1, 0, &fonts,
-                                     &offsets, 0};
+  BreakGetTextDimensionsData data = {mPS, mSurface, mCurrFontOS2, mP2T,
+                                     aAvailWidth, aBreaks, aNumBreaks,
+                                     spaceWidth, aveCharWidth, 0, 0, 0, -1, 0,
+                                     &fonts, &offsets};
 
   metrics->ResolveForwards(mPS, aString, aLength, do_BreakGetTextDimensions, &data);
 
-  if (data.mOldLCID != 0) {
+  if (data.mFont != mCurrFontOS2) {
     // If the font was changed along the way, restore our font
-    mCurrFontOS2->SelectIntoPS(mPS, data.mOldLCID);
-    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
+    mSurface->SelectFont(mCurrFontOS2);
   }
 
   if (aFontID)
@@ -1948,13 +1927,13 @@ nsRenderingContextOS2::GetTextDimensions(const char*       aString,
 }
 
 struct GetTextDimensionsData {
-  HPS         mPS;      // IN
-  float       mP2T;     // IN
-  nsFontOS2*  mFont;  // IN/OUT (running)
-  LONG        mWidth;   // IN/OUT (running)
-  nscoord     mAscent;  // IN/OUT (running)
-  nscoord     mDescent; // IN/OUT (running)
-  LONG        mOldLCID; // OUT holds old font id when switching
+  HPS                   mPS;      // IN
+  float                 mP2T;     // IN
+  nsDrawingSurfaceOS2*  mSurface; // IN
+  nsFontOS2*            mFont;    // IN/OUT (running)
+  LONG                  mWidth;   // IN/OUT (running)
+  nscoord               mAscent;  // IN/OUT (running)
+  nscoord               mDescent; // IN/OUT (running)
 };
 
 static PRBool PR_CALLBACK
@@ -1969,7 +1948,7 @@ do_GetTextDimensions(const nsFontSwitch* aFontSwitch,
   if (data->mFont != font) {
     // the desired font is not the current font in the PS
     data->mFont = font;
-    SelectFont(data->mPS, data->mFont, data->mOldLCID);
+    data->mSurface->SelectFont(data->mFont);
   }
 
   data->mWidth += font->GetWidth(data->mPS, aSubstring, aSubstringLength);
@@ -2006,17 +1985,16 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
   SetupFontAndColor();
 
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
-  GetTextDimensionsData data = {mPS, mP2T, mCurrFontOS2, 0, 0, 0, 0};
+  GetTextDimensionsData data = {mPS, mP2T, mSurface, mCurrFontOS2, 0, 0, 0};
 
   metrics->ResolveForwards(mPS, aString, aLength, do_GetTextDimensions, &data);
   aDimensions.width = NSToCoordRound(float(data.mWidth) * mP2T);
   aDimensions.ascent = data.mAscent;
   aDimensions.descent = data.mDescent;
 
-  if (data.mOldLCID != 0) {
-    // If the font was changed on the way, restore our font
-    mCurrFontOS2->SelectIntoPS(mPS, data.mOldLCID);
-    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
+  if (data.mFont != mCurrFontOS2) {
+    // If the font was changed along the way, restore our font
+    mSurface->SelectFont(mCurrFontOS2);
   }
 
   if (aFontID) *aFontID = 0;
@@ -2065,7 +2043,6 @@ struct DrawStringData {
   const nscoord*        mSpacing;   // IN
   nscoord               mMaxLength; // IN (length of the full string)
   nscoord               mLength;    // IN/OUT (running, current length already rendered)
-  LONG                  mOldLCID;   // OUT holds old font id when switching
 };
 
 static PRBool PR_CALLBACK
@@ -2081,7 +2058,7 @@ do_DrawString(const nsFontSwitch* aFontSwitch,
   if (data->mFont != font) {
     // the desired font is not the current font in the PS
     data->mFont = font;
-    SelectFont(data->mPS, data->mFont, data->mOldLCID);
+    data->mSurface->SelectFont(data->mFont);
   }
 
   data->mLength += aSubstringLength;
@@ -2138,7 +2115,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
 
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
   DrawStringData data = {mPS, mSurface, mCurrFontOS2, mTranMatrix, aX, aY,
-                         aSpacing, aLength, 0, 0};
+                         aSpacing, aLength, 0};
   if (!aSpacing) { // @see do_DrawString for the spacing case
     mTranMatrix->TransformCoord(&data.mX, &data.mY);
   }
@@ -2151,10 +2128,9 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
     metrics->ResolveForwards(mPS, aString, aLength, do_DrawString, &data);
   }
 
-  if (data.mOldLCID != 0) {
+  if (data.mFont != mCurrFontOS2) {
     // If the font was changed along the way, restore our font
-    mCurrFontOS2->SelectIntoPS(mPS, data.mOldLCID);
-    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
+    mSurface->SelectFont(mCurrFontOS2);
   }
 
   return NS_OK;
@@ -2374,9 +2350,9 @@ NS_IMETHODIMP nsRenderingContextOS2::CopyOffScreenBits(
 
    // Note rects for GpiBitBlt are in-ex.
 
-   POINTL Points [3] = { drect.x, DestHeight - drect.y - drect.height,    // TLL
-                         drect.x + drect.width, DestHeight - drect.y,     // TUR
-                         aSrcX, SourceHeight - aSrcY - drect.height };    // SLL
+   POINTL Points [3] = { {drect.x, DestHeight - drect.y - drect.height},    // TLL
+                         {drect.x + drect.width, DestHeight - drect.y},     // TUR
+                         {aSrcX, SourceHeight - aSrcY - drect.height} };    // SLL
 
 
    GFX (::GpiBitBlt(DestPS, SourceSurf->GetPS(), 3, Points, ROP_SRCCOPY, BBO_OR), GPI_ERROR);
