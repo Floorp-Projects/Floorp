@@ -33,6 +33,8 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 
+#include <Message.h>
+
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
@@ -248,6 +250,13 @@ void nsTextViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
+	int32 keycode = 0;
+	
+	BMessage *msg = this->Window()->CurrentMessage();
+	if (msg) {
+		msg->FindInt32("key", &keycode);
+	}
+	
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32 bytebuf = 0;
@@ -255,14 +264,16 @@ void nsTextViewBeOS::KeyDown(const char *bytes, int32 numBytes)
 		for(int32 i = 0; i < numBytes; i++)
 			byteptr[i] = bytes[i];
 
-		uint32	args[4];
+		uint32	args[5];
 		args[0] = NS_KEY_DOWN;
 		args[1] = bytebuf;
 		args[2] = numBytes;
 		args[3] = modifiers();
+		args[4] = keycode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 4, args);
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
 		t->CallMethodAsync(info);
+		NS_RELEASE(t);
 	}
 }
 
@@ -274,6 +285,13 @@ void nsTextViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
+	int32 keycode = 0;
+	
+	BMessage *msg = this->Window()->CurrentMessage();
+	if (msg) {
+		msg->FindInt32("key", &keycode);
+	}
+
 	if(w && (t = w->GetToolkit()) != 0)
 	{
 		uint32 bytebuf = 0;
@@ -281,13 +299,15 @@ void nsTextViewBeOS::KeyUp(const char *bytes, int32 numBytes)
 		for(int32 i = 0; i < numBytes; i++)
 			byteptr[i] = bytes[i];
 
-		uint32	args[4];
+		uint32	args[5];
 		args[0] = NS_KEY_UP;
 		args[1] = (int32)bytebuf;
 		args[2] = numBytes;
 		args[3] = modifiers();
+		args[4] = keycode;
 
-		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 4, args);
+		MethodInfo *info = new MethodInfo(w, w, nsWindow::ONKEY, 5, args);
 		t->CallMethodAsync(info);
+		NS_RELEASE(t);
 	}
 }

@@ -118,6 +118,7 @@ public:
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
     NS_IMETHOD              Update();
     virtual void*           GetNativeData(PRUint32 aDataType);
     NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
@@ -158,8 +159,9 @@ protected:
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint(nsRect &r);
     virtual PRBool          OnResize(nsRect &aWindowRect);
-	virtual PRBool			OnKey(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod);
-
+    virtual PRBool			OnKeyDown(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode);
+    virtual PRBool			OnKeyUp(PRUint32 aEventType, const char *bytes, int32 numBytes, PRUint32 mod, PRUint32 bekeycode);
+    virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode, PRUint32 aKeyCode);
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
 	virtual PRBool			OnScroll();
     static PRBool ConvertStatus(nsEventStatus aStatus);
@@ -228,6 +230,8 @@ public:	// public on BeOS to allow BViews to access it
         CREATE_NATIVE,
         DESTROY, 
         SET_FOCUS,
+        GOT_FOCUS,
+        KILL_FOCUS,
         SET_CURSOR,
         CREATE_HACK,
 		ONMOUSE,
@@ -297,6 +301,8 @@ public:
 	bool			GetPaintRect(nsRect &r);
 	void KeyDown(const char *bytes, int32 numBytes);
 	void KeyUp(const char *bytes, int32 numBytes);
+	virtual void MakeFocus(bool focused);
+	virtual void MessageReceived(BMessage *msg);
 };
 
 //
