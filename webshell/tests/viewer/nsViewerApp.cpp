@@ -779,6 +779,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsBrowserWindow*& aNewWindow)
 
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
+  bw->SetVisibility(PR_TRUE);
 
   aNewWindow = bw;
 
