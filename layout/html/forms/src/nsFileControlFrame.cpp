@@ -518,7 +518,7 @@ nsFileControlFrame::SaveState(nsISupports** aState)
 {
   nsISupportsString* value = nsnull;
   nsAutoString string;
-  nsresult res = mTextFrame->GetProperty(nsHTMLAtoms::value, string);
+  nsresult res = GetProperty(nsHTMLAtoms::value, string);
   if (NS_SUCCEEDED(res)) {
     char* chars = string.ToNewCString();
     if (chars) {
