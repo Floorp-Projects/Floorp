@@ -43,12 +43,13 @@ static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 // XXX cell-padding, spacing, etc.???
 
 struct Selector {
-  nsString mTag;     // weight 1
-  nsString mID;      // weight 100
-  nsString mClass;   // weight 10
-  nsString mPseudoClass;  // weight 10 (== class)
-  nsString mPseudoElement;  // weight 10 (== class) ??
-  PRUint32 mMask;    // which fields have values
+  nsAutoString  mTag;     // weight 1
+  nsAutoString  mID;      // weight 100
+  nsAutoString  mClass;   // weight 10
+  nsAutoString  mPseudoClass;  // weight 10 (== class)
+  nsAutoString  mPseudoElement;  // weight 10 (== class) ??
+
+  PRUint32      mMask;    // which fields have values
 
   Selector();
   ~Selector();
@@ -203,9 +204,10 @@ public:
                                nsIURL*         aBaseURL,
                                nsIStyleRule*&  aResult);
   
-  NS_IMETHOD ParseAndAppendDeclaration(const nsString& aBuffer,
-                                       nsIURL*         aBaseURL,
-                                       nsICSSDeclaration& aDeclaration);
+  NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
+                                       nsIURL*            aBaseURL,
+                                       nsICSSDeclaration* aDeclaration,
+                                       PRInt32*           aHint);
 
 protected:
   PRBool GetToken(PRInt32* aErrorCode, PRBool aSkipWS);
@@ -228,9 +230,10 @@ protected:
                                            PRBool aCheckForBraces);
   PRBool ParseDeclaration(PRInt32* aErrorCode,
                           nsICSSDeclaration* aDeclaration,
-                          PRBool aCheckForBraces);
+                          PRBool aCheckForBraces,
+                          PRInt32* aChangeHint);
   PRBool ParseProperty(PRInt32* aErrorCode, const char* aName,
-                       nsICSSDeclaration* aDeclaration);
+                       nsICSSDeclaration* aDeclaration, PRInt32* aChangeHint);
   PRBool ParseProperty(PRInt32* aErrorCode, const char* aName,
                        nsICSSDeclaration* aDeclaration, PRInt32 aID);
 
@@ -453,9 +456,10 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
 }
 
 NS_METHOD
-CSSParserImpl::ParseAndAppendDeclaration(const nsString& aBuffer,
-                                         nsIURL*         aBaseURL,
-                                         nsICSSDeclaration&  aDeclaration)
+CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
+                                         nsIURL*            aBaseURL,
+                                         nsICSSDeclaration* aDeclaration,
+                                         PRInt32*           aHint)
 {
   nsString* str = new nsString(aBuffer);
   if (nsnull == str) {
@@ -477,7 +481,9 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString& aBuffer,
   mInHead = PR_FALSE;
   PRInt32 errorCode = NS_OK;
 
-  ParseDeclaration(&errorCode, &aDeclaration, PR_FALSE);  
+  ParseDeclaration(&errorCode, aDeclaration, PR_FALSE, aHint);  
+  // XXX 
+  aHint = NS_STYLE_HINT_UNKNOWN;
 
   delete mScanner;
   mScanner = nsnull;
@@ -1026,7 +1032,8 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32* aErrorCode,
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
     PRInt32 count = 0;
     for (;;) {
-      if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces)) {
+      PRInt32 hint;
+      if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces, &hint)) {
         count++;  // count declarations
       }
       else {
@@ -1130,8 +1137,11 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32* aErrorCode,
 PRBool
 CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
                                 nsICSSDeclaration* aDeclaration,
-                                PRBool aCheckForBraces)
+                                PRBool aCheckForBraces,
+                                PRInt32* aChangeHint)
 {
+  *aChangeHint = NS_STYLE_HINT_UNKNOWN;
+
   // Get property name
   nsCSSToken* tk = &mToken;
   char propertyName[100];
@@ -1158,7 +1168,7 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
   }
 
   // Map property name to it's ID and then parse the property
-  if (!ParseProperty(aErrorCode, propertyName, aDeclaration)) {
+  if (!ParseProperty(aErrorCode, propertyName, aDeclaration, aChangeHint)) {
     return PR_FALSE;
   }
 
@@ -1711,7 +1721,8 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32* aErrorCode,
 
 PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
                                     const char* aName,
-                                    nsICSSDeclaration* aDeclaration)
+                                    nsICSSDeclaration* aDeclaration,
+                                    PRInt32* aChangeHint)
 {
   PRInt32 id = nsCSSProps::LookupName(aName);
   if (id < 0) {
@@ -1738,6 +1749,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
     // The user can't use these
     return PR_FALSE;
   }
+
+  *aChangeHint = nsCSSProps::kHintTable[id];
 
   return ParseProperty(aErrorCode, aName, aDeclaration, id);
 }
