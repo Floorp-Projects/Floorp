@@ -8,9 +8,9 @@
     <RDF:li resource="urn:mozilla:skin:blue/1.0" />
   </RDF:Seq>
 
-  <!-- Modern Information -->
+  <!-- Blue Information -->
   <RDF:Description about="urn:mozilla:skin:blue/1.0"
-        chrome:displayName="Modern"
+        chrome:displayName="Blue"
         chrome:author="mozilla.org"
         chrome:name="blue/1.0">
     <chrome:packages>
