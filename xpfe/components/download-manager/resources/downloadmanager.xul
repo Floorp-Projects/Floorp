@@ -125,7 +125,6 @@
       <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
     </toolbar>
   </toolbox>
-
   <tree id="downloadView" ref="NC:DownloadsRoot"
         datasources="rdf:null"
         seltype="multiple" flags="dont-test-empty"
@@ -258,7 +257,6 @@
       <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
     </treecolgroup>
   </tree>
-
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-text" label="" flex="1"/>
   </statusbar>
