@@ -781,7 +781,7 @@ MimeMessage_partial_message_html(const char *data, void *closure,
 								  PR_FALSE);
 	char *msgIdPtr = PL_strstr(msgId, "<");
 
-	orig_url.ReplaceSubstring("mailbox_message", "mailbox");
+	orig_url.ReplaceSubstring("mailbox-message", "mailbox");
 	orig_url.ReplaceSubstring("#", "?number=");
 
 	if (msgIdPtr)

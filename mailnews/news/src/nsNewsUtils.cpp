@@ -57,7 +57,7 @@ nsParseNewsMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key)
                                                    keySeparator); 
 
 		uriStr.Left(folderURI, keySeparator);
-        folderURI.Cut(4, 8);    // cut out the _message part of news_message:
+        folderURI.Cut(4, 8);    // cut out the -message part of news-message:
 
 		nsCAutoString keyStr;
     if (keyEndSeparator != -1)

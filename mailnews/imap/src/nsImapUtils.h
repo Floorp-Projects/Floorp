@@ -43,7 +43,7 @@
 #include "nsIMsgIncomingServer.h"
 
 static const char kImapRootURI[] = "imap:/";
-static const char kImapMessageRootURI[] = "imap_message:/";
+static const char kImapMessageRootURI[] = "imap-message:/";
 
 extern nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, 

@@ -136,7 +136,7 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
     nsresult rv = NS_OK;
     NS_ENSURE_ARG_POINTER(aMessageURI);
  
-    // double check it is a news_message:/ uri   
+    // double check it is a news-message:/ uri   
     if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen)) {
         rv = NS_ERROR_UNEXPECTED;
         NS_ENSURE_SUCCESS(rv,rv);
@@ -448,7 +448,7 @@ NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
    
   NS_ENSURE_ARG_POINTER(aMessageURI);
 
-  // double check that it is a news_message:/ uri
+  // double check that it is a news-message:/ uri
   if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen)) {
     rv = NS_ERROR_UNEXPECTED;
     NS_ENSURE_SUCCESS(rv,rv);

@@ -78,7 +78,7 @@ interface nsINntpService : nsISupports {
 
   void downloadNewsgroupsForOffline(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
   /** 
-   * can handle news_message:// and news:// 
+   * can handle news-message:// and news:// 
    */
   void decomposeNewsURI(in string uri, out nsIMsgFolder folder, out nsMsgKey key);
 

@@ -79,9 +79,9 @@
 #define NS_NNTPPROTOCOLHANDLER_CONTRACTID \
   NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "nntp"
 #define NS_NEWSMESSAGEPROTOCOLHANDLER_CONTRACTID \
-  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "news_message"
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "news-message"
 #define NS_NEWSMESSAGESERVICE_CONTRACTID \
-  "@mozilla.org/messenger/messageservice;1?type=news_message"
+  "@mozilla.org/messenger/messageservice;1?type=news-message"
 #define NS_NNTPMESSAGESERVICE_CONTRACTID \
   "@mozilla.org/messenger/messageservice;1?type=news" 
 #define NS_NNTPSERVICE_CONTRACTID \

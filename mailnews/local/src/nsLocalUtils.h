@@ -43,7 +43,7 @@
 #include "nsIMsgIncomingServer.h"
 
 static const char kMailboxRootURI[] = "mailbox:/";
-static const char kMailboxMessageRootURI[] = "mailbox_message:/";
+static const char kMailboxMessageRootURI[] = "mailbox-message:/";
 
 nsresult
 nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);

@@ -1003,7 +1003,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	if (m_messageID || (m_key != nsMsgKey_None))
 	{
 	  /* 
-    news_message://HOST/GROUP#key
+    news-message://HOST/GROUP#key
     news://HOST/MESSAGE_ID
 
     not sure about these:

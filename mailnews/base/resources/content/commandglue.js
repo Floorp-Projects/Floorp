@@ -242,7 +242,7 @@ function isNewsURI(uri)
         return false;
     }
     else {
-        return ((uri.substring(0,6) == "news:/") || (uri.substring(0,14) == "news_message:/"));
+        return ((uri.substring(0,6) == "news:/") || (uri.substring(0,14) == "news-message:/"));
     }
 }
 

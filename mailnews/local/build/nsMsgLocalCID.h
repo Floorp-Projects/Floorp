@@ -105,7 +105,7 @@
   "@mozilla.org/messenger/messageservice;1?type=mailbox"
 
 #define NS_MAILBOXSERVICE_CONTRACTID3 \
-  "@mozilla.org/messenger/messageservice;1?type=mailbox_message"
+  "@mozilla.org/messenger/messageservice;1?type=mailbox-message"
 
 #define NS_MAILBOXSERVICE_CONTRACTID4 \
   NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "mailbox"

@@ -206,7 +206,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
                                                    keySeparator); 
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
-		folderURI.Cut(4, 8);	// cut out the _message part of imap_message:
+		folderURI.Cut(4, 8);	// cut out the _message part of imap-message:
 		nsCAutoString keyStr;
     if (keyEndSeparator != -1)
         uriStr.Mid(keyStr, keySeparator+1, 

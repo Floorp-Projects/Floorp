@@ -260,7 +260,7 @@ function InitMessageMenu()
 function IsNewsMessage(messageUri)
 {
     if (!messageUri) return false;
-    return (messageUri.substring(0,14) == "news_message:/")
+    return (messageUri.substring(0,14) == "news-message:/")
 }
 
 function InitMessageMark()

@@ -109,42 +109,40 @@ nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr)
 
 nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!uri || !*uri || !aUrl) return rv;
-    *aUrl = nsnull;
-    if (PL_strncasecmp(uri, "imap", 4) == 0)
-    {
-        nsCOMPtr<nsIImapUrl> imapUrl;
-        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                                NS_GET_IID(nsIImapUrl),
-                                                getter_AddRefs(imapUrl));
-        if (NS_SUCCEEDED(rv) && imapUrl)
-            rv = imapUrl->QueryInterface(NS_GET_IID(nsIURI),
-                                         (void**) aUrl);
-    }
-    else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
-    {
-        nsCOMPtr<nsIMailboxUrl> mailboxUrl;
-        rv = nsComponentManager::CreateInstance(kCMailboxUrl, nsnull,
-                                                NS_GET_IID(nsIMailboxUrl),
-                                                getter_AddRefs(mailboxUrl));
-        if (NS_SUCCEEDED(rv) && mailboxUrl)
-            rv = mailboxUrl->QueryInterface(NS_GET_IID(nsIURI),
-                                            (void**) aUrl);
-    }
-    else if (PL_strncasecmp(uri, "news", 4) == 0)
-    {
-        nsCOMPtr<nsINntpUrl> nntpUrl;
-        rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull,
-                                                NS_GET_IID(nsINntpUrl),
-                                                getter_AddRefs(nntpUrl));
-        if (NS_SUCCEEDED(rv) && nntpUrl)
-            rv = nntpUrl->QueryInterface(NS_GET_IID(nsIURI),
-                                         (void**) aUrl);
-    }
-    if (*aUrl)
-        (*aUrl)->SetSpec(uri);
-    return rv;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (!uri || !*uri || !aUrl) return rv;
+  *aUrl = nsnull;
+  
+  // XXX fix this, so that base doesn't depend on imap, local or news.
+  // we can't do NS_NewURI(uri, aUrl), because these are imap-message://, mailbox-message://, news-message:// uris.
+  // I think we should do something like GetMessageServiceFromURI() to get the service, and then have the service create the 
+  // appropriate nsI*Url, and then QI to nsIURI, and return it.
+  // see bug #110689
+  if (PL_strncasecmp(uri, "imap", 4) == 0)
+  {
+    nsCOMPtr<nsIImapUrl> imapUrl = do_CreateInstance(kImapUrlCID, &rv);
+    
+    if (NS_SUCCEEDED(rv) && imapUrl)
+      rv = imapUrl->QueryInterface(NS_GET_IID(nsIURI),
+      (void**) aUrl);
+  }
+  else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
+  {
+    nsCOMPtr<nsIMailboxUrl> mailboxUrl = do_CreateInstance(kCMailboxUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailboxUrl)
+      rv = mailboxUrl->QueryInterface(NS_GET_IID(nsIURI),
+      (void**) aUrl);
+  }
+  else if (PL_strncasecmp(uri, "news", 4) == 0)
+  {
+    nsCOMPtr<nsINntpUrl> nntpUrl = do_CreateInstance(kCNntpUrlCID, &rv);
+    if (NS_SUCCEEDED(rv) && nntpUrl)
+      rv = nntpUrl->QueryInterface(NS_GET_IID(nsIURI),
+      (void**) aUrl);
+  }
+  if (*aUrl)
+    (*aUrl)->SetSpec(uri);
+  return rv;
 }
 
 

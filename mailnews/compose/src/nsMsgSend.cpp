@@ -2262,13 +2262,13 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
             msg_pick_real_name(&m_attachments[newLoc], proposedName, mCompFields->GetCharacterSet());
           ++newLoc;
         }
-          else if (strUrl.Find("_message:") != -1)
+          else if (strUrl.Find("-message:") != -1)
         {
-            if (strUrl.Find("mailbox_message:") != -1 ||
-                strUrl.Find("imap_message:") != -1)
+            if (strUrl.Find("mailbox-message:") != -1 ||
+                strUrl.Find("imap-message:") != -1)
             (*aMailboxCount)++;
-            else if (strUrl.Find("news_message:") != -1 ||
-                     strUrl.Find("snews_message:") != -1)
+            else if (strUrl.Find("news-message:") != -1 ||
+                     strUrl.Find("snews-message:") != -1)
             (*aNewsCount)++;
           
             m_attachments[newLoc].m_uri = ToNewCString(strUrl);

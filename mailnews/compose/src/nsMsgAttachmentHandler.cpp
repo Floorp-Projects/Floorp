@@ -478,7 +478,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
   nsresult rv = NS_ERROR_INVALID_ARG;
   nsCOMPtr <nsIMsgMessageService> messageService;
 
-  if (PL_strcasestr(m_uri, "_message:"))
+  if (PL_strcasestr(m_uri, "-message:"))
   {
     mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
     mDeleteFile = PR_TRUE;

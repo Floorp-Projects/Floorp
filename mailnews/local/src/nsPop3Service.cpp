@@ -411,7 +411,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
         if (NS_SUCCEEDED(rv))
         {
             nsCAutoString messageUri (aSpec);
-            messageUri.ReplaceSubstring("mailbox:", "mailbox_message:");
+            messageUri.ReplaceSubstring("mailbox:", "mailbox-message:");
             messageUri.ReplaceSubstring("?number=", "#");
             offset = messageUri.Find("&");
             if (offset)

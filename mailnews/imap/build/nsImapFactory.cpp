@@ -80,7 +80,7 @@ static nsModuleComponentInfo gComponents[] = {
       nsImapMailFolderConstructor },
 
     { "IMAP Service", NS_IMAPSERVICE_CID,
-      "@mozilla.org/messenger/messageservice;1?type=imap_message",
+      "@mozilla.org/messenger/messageservice;1?type=imap-message",
       nsImapServiceConstructor },
 
     { "IMAP Service", NS_IMAPSERVICE_CID,
