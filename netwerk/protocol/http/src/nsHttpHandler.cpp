@@ -388,9 +388,21 @@ nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
     NS_ENSURE_ARG_POINTER(trans);
     NS_ENSURE_ARG_POINTER(ci);
 
-    nsAutoLock lock(mConnectionLock);
+    PR_Lock(mConnectionLock);
 
-    return InitiateTransaction_Locked(trans, ci);
+    nsHttpConnection *conn = nsnull;
+    nsresult rv;
+
+    GetConnection_Locked(ci, trans->Capabilities(), &conn);
+    if (!conn) {
+        rv = EnqueueTransaction_Locked(trans, ci);
+        PR_Unlock(mConnectionLock);
+    }
+    else {
+        rv = DispatchTransaction_Locked(trans, conn);
+        NS_RELEASE(conn);
+    }
+    return rv;
 }
 
 // called from the socket thread
@@ -407,7 +419,7 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
     LOG(("nsHttpHandler::ReclaimConnection [conn=%x(%s:%d) keep-alive=%d]\n",
         conn, conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port(), reusable));
 
-    nsAutoLock lock(mConnectionLock);
+    PR_Lock(mConnectionLock);
 
     // remove connection from the active connection list
     mActiveConnections.RemoveElement(conn);
@@ -426,10 +438,7 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 
     LOG(("active connection count is now %u\n", mActiveConnections.Count()));
 
-    // process the pending transaction queue...
-    if (mTransactionQ.Count() > 0)
-        ProcessTransactionQ_Locked();
-
+    ProcessTransactionQ_Locked();
     return NS_OK;
 }
 
@@ -442,13 +451,11 @@ nsHttpHandler::ProcessTransactionQ()
     NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 #endif
 
-    nsAutoLock lock(mConnectionLock);
+    PR_Lock(mConnectionLock);
 
     // conn is no longer keep-alive, so we may be able to initiate
     // a pending transaction to the same host.
-    if (mTransactionQ.Count() > 0)
-        ProcessTransactionQ_Locked();
-
+    ProcessTransactionQ_Locked();
     return NS_OK;
 }
 
@@ -473,7 +480,7 @@ nsHttpHandler::CancelTransaction(nsHttpTransaction *trans, nsresult status)
         if (conn)
             NS_ADDREF(conn); // make sure the connection stays around.
         else
-            RemovePendingTransaction(trans);
+            RemovePendingTransaction_Locked(trans);
     }
 
     if (conn) {
@@ -646,79 +653,19 @@ nsHttpHandler::UserAgent()
     return mUserAgent.get();
 }
 
-// called with the connection lock held
-void
-nsHttpHandler::ProcessTransactionQ_Locked()
-{
-    LOG(("nsHttpHandler::ProcessTransactionQ_Locked\n"));
-
-    nsPendingTransaction *pt = nsnull;
-
-    PRInt32 i;
-    for (i=0; (i < mTransactionQ.Count()) &&
-              (mActiveConnections.Count() < PRInt32(mMaxConnections)); ++i) {
-
-        pt = (nsPendingTransaction *) mTransactionQ[i];
-
-        // skip over a busy pending transaction
-        if (pt->IsBusy())
-            continue;
-
-        // the connection lock is released during InitiateTransaction_Locked, so
-        // the transaction queue could get modified.  mark this pending transaction
-        // as busy to cause it to be skipped if this function happens to recurse.
-        pt->SetBusy(PR_TRUE);
-
-        // try to initiate this transaction... if it fails then we'll just skip
-        // over this pending transaction and try the next.
-        nsresult rv = InitiateTransaction_Locked(pt->Transaction(),
-                                                 pt->ConnectionInfo(),
-                                                 PR_TRUE);
-
-        if (NS_SUCCEEDED(rv)) {
-            mTransactionQ.RemoveElementAt(i);
-            delete pt;
-            i--;
-        }
-        else {
-            LOG(("InitiateTransaction_Locked failed [rv=%x]\n", rv));
-            pt->SetBusy(PR_FALSE);
-        }
-    }
-}
-
-// called with the connection lock held
 nsresult
-nsHttpHandler::EnqueueTransaction(nsHttpTransaction *trans,
-                                  nsHttpConnectionInfo *ci)
-{
-    LOG(("nsHttpHandler::EnqueueTransaction [trans=%x]\n", trans));
-
-    nsPendingTransaction *pt = new nsPendingTransaction(trans, ci);
-    if (!pt)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    mTransactionQ.AppendElement(pt);
-
-    LOG((">> transaction queue contains %u elements\n", mTransactionQ.Count()));
-    return NS_OK;
-}
-
-// called with the connection lock held
-nsresult
-nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
-                                          nsHttpConnectionInfo *ci,
-                                          PRBool failIfBusy)
+nsHttpHandler::GetConnection_Locked(nsHttpConnectionInfo *ci,
+                                    PRUint8 caps,
+                                    nsHttpConnection **result)
 {
     nsresult rv;
-    PRUint8 caps = trans->Capabilities();
 
-    LOG(("nsHttpHandler::InitiateTransaction_Locked [failIfBusy=%d]\n", failIfBusy));
+    LOG(("nsHttpHandler::GetConnection_Locked\n"));
 
-    if (AtActiveConnectionLimit(ci, caps)) {
-        LOG((">> unable to perform the transaction at this time [trans=%x]\n", trans));
-        return failIfBusy ? NS_ERROR_FAILURE : EnqueueTransaction(trans, ci);
-    }
+    *result = nsnull;
+
+    if (AtActiveConnectionLimit_Locked(ci, caps))
+        return NS_ERROR_FAILURE;
 
     nsHttpConnection *conn = nsnull;
 
@@ -768,61 +715,130 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
         conn->ConnectionInfo()->SetOriginServer(ci->Host(), ci->Port());
     }
 
+    *result = conn;
+    return NS_OK;
+}
+
+nsresult
+nsHttpHandler::EnqueueTransaction_Locked(nsHttpTransaction *trans,
+                                         nsHttpConnectionInfo *ci)
+{
+    LOG(("nsHttpHandler::EnqueueTransaction_Locked [trans=%x]\n", trans));
+
+    nsPendingTransaction *pt = new nsPendingTransaction(trans, ci);
+    if (!pt)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mTransactionQ.AppendElement(pt);
+
+    LOG((">> transaction queue contains %u elements\n", mTransactionQ.Count()));
+    return NS_OK;
+}
+
+// dispatch this transaction, return unlocked
+nsresult
+nsHttpHandler::DispatchTransaction_Locked(nsHttpTransaction *trans,
+                                          nsHttpConnection *conn)
+{
+    nsresult rv;
+
+    LOG(("nsHttpHandler::DispatchTransaction_Locked [trans=%x conn=%x]\n",
+        trans, conn));
+
     // assign the connection to the transaction.
     trans->SetConnection(conn);
 
     // consider this connection active, even though it may fail.
     mActiveConnections.AppendElement(conn);
+
+    // handler now owns a reference to this connection
+    NS_ADDREF(conn);
     
-    // we must not hold the connection lock while making this call
-    // as it could lead to deadlocks.
+    // we must not hold the connection lock while making the call to
+    // SetTransaction, as it could lead to deadlocks.
     PR_Unlock(mConnectionLock);
     rv = conn->SetTransaction(trans, trans->Capabilities());
-    PR_Lock(mConnectionLock);
 
     if (NS_FAILED(rv)) {
         LOG(("nsHttpConnection::SetTransaction failed [rv=%x]\n", rv));
+        nsAutoLock lock(mConnectionLock);
         // the connection may already have been removed from the 
         // active connection list.
         if (mActiveConnections.RemoveElement(conn))
             NS_RELEASE(conn);
     }
-
     return rv;
 }
 
-// called with the connection lock held
-nsresult
-nsHttpHandler::RemovePendingTransaction(nsHttpTransaction *trans)
+// try to dispatch a pending transaction, return unlocked
+void
+nsHttpHandler::ProcessTransactionQ_Locked()
 {
-    LOG(("nsHttpHandler::RemovePendingTransaction [trans=%x]\n", trans));
-
-    NS_ENSURE_ARG_POINTER(trans);
+    LOG(("nsHttpHandler::ProcessTransactionQ_Locked\n"));
 
     nsPendingTransaction *pt = nsnull;
+    nsHttpConnection *conn = nsnull;
+    
+    //
+    // step 1: locate a pending transaction that can be processed
+    //
     PRInt32 i;
     for (i=0; i<mTransactionQ.Count(); ++i) {
         pt = (nsPendingTransaction *) mTransactionQ[i];
 
-        if (pt->Transaction() == trans) {
-            mTransactionQ.RemoveElementAt(i);
-            delete pt;
-            return NS_OK;
-        }
+        GetConnection_Locked(pt->ConnectionInfo(),
+                             pt->Transaction()->Capabilities(),
+                             &conn);
+        if (conn)
+            break;
+    }
+    if (!conn) {
+        LOG((">> unable to process transaction queue at this time\n"));
+        // the caller expects us to unlock before returning...
+        PR_Unlock(mConnectionLock);
+        return;
     }
 
-    NS_WARNING("transaction not in pending queue");
-    return NS_ERROR_NOT_AVAILABLE;
+    //
+    // step 2: remove i'th pending transaction from the pending transaction
+    // queue.  we'll put it back if there is a problem dispatching it.
+    //
+    // the call to DispatchTransaction_Locked will temporarily leave
+    // mConnectionLock, so this step is crucial as it ensures that our
+    // state is completely defined on the stack (not in member variables).
+    //
+    mTransactionQ.RemoveElementAt(i);
+
+    // 
+    // step 3: dispatch this transaction
+    //
+    nsresult rv = DispatchTransaction_Locked(pt->Transaction(), conn);
+
+    // we're no longer inside mConnectionLock
+
+    // 
+    // step 4: handle errors / cleanup
+    //
+    if (NS_FAILED(rv)) {
+        LOG((">> DispatchTransaction_Locked failed [rv=%x]\n", rv));
+        nsAutoLock lock(mConnectionLock);
+        // there must have been something wrong with the connection,
+        // requeue... we'll try again later.
+        mTransactionQ.AppendElement(pt);
+    }
+    else
+        delete pt;
+    NS_RELEASE(conn);
 }
 
 // we're at the active connection limit if any one of the following conditions is true:
 //  (1) at max-connections
-//  (2) keep-alive enabled and at max-persistent-connections-per-host
-//  (3) keep-alive disabled and at max-connections-per-host
+//  (2) keep-alive enabled and at max-persistent-connections-per-server/proxy
+//  (3) keep-alive disabled and at max-connections-per-server
 PRBool
-nsHttpHandler::AtActiveConnectionLimit(nsHttpConnectionInfo *ci, PRUint8 caps)
+nsHttpHandler::AtActiveConnectionLimit_Locked(nsHttpConnectionInfo *ci, PRUint8 caps)
 {
-    LOG(("nsHttpHandler::AtActiveConnectionLimit [host=%s:%d caps=%x]\n",
+    LOG(("nsHttpHandler::AtActiveConnectionLimit_Locked [host=%s:%d caps=%x]\n",
         ci->Host(), ci->Port(), caps));
 
     // use >= just to be safe
@@ -854,6 +870,29 @@ nsHttpHandler::AtActiveConnectionLimit(nsHttpConnectionInfo *ci, PRUint8 caps)
     return (totalCount >= mMaxConnectionsPerServer) ||
                ((caps & NS_HTTP_ALLOW_KEEPALIVE) &&
                 (persistentCount >= maxPersistentConnections));
+}
+
+nsresult
+nsHttpHandler::RemovePendingTransaction_Locked(nsHttpTransaction *trans)
+{
+    LOG(("nsHttpHandler::RemovePendingTransaction_Locked [trans=%x]\n", trans));
+
+    NS_ENSURE_ARG_POINTER(trans);
+
+    nsPendingTransaction *pt = nsnull;
+    PRInt32 i;
+    for (i=0; i<mTransactionQ.Count(); ++i) {
+        pt = (nsPendingTransaction *) mTransactionQ[i];
+
+        if (pt->Transaction() == trans) {
+            mTransactionQ.RemoveElementAt(i);
+            delete pt;
+            return NS_OK;
+        }
+    }
+
+    NS_WARNING("transaction not in pending queue");
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 void

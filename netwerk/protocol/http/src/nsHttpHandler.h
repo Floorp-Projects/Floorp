@@ -165,18 +165,15 @@ private:
     };
 
     //
-    // Transaction queue helper methods
+    // Connection management methods
     //
-    void     ProcessTransactionQ_Locked();
-    nsresult EnqueueTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
+    nsresult GetConnection_Locked(nsHttpConnectionInfo *, PRUint8 caps, nsHttpConnection **);
+    nsresult EnqueueTransaction_Locked(nsHttpTransaction *, nsHttpConnectionInfo *);
+    nsresult DispatchTransaction_Locked(nsHttpTransaction *, nsHttpConnection *); // unlocked on return
+    void     ProcessTransactionQ_Locked(); // unlocked on return
+    PRBool   AtActiveConnectionLimit_Locked(nsHttpConnectionInfo *, PRUint8 caps);
+    nsresult RemovePendingTransaction_Locked(nsHttpTransaction *);
 
-    // Called with mConnectionLock held
-    nsresult InitiateTransaction_Locked(nsHttpTransaction *,
-                                        nsHttpConnectionInfo *,
-                                        PRBool failIfBusy = PR_FALSE);
-
-    nsresult RemovePendingTransaction(nsHttpTransaction *);
-    PRBool   AtActiveConnectionLimit(nsHttpConnectionInfo *, PRUint8 caps);
     void     DropConnections(nsVoidArray &);
 
     //
