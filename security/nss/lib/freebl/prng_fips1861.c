@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.7 2000/09/06 23:27:34 mcgreer%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.8 2000/11/17 01:01:36 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -371,8 +371,7 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
      */
     if (rng->seedCount < MIN_SEED_COUNT) {
 	PR_Unlock(rng->lock);
-	/* XXX this should be a new error code */
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
 	return SECFailure;
     }
     /*
