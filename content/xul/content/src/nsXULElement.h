@@ -515,9 +515,6 @@ protected:
     // RDF; see nsIXULContent and nsRDFGenericBuilder.
     PRInt32                             mLazyState;
 
-    // Our primary layout object (a wrapper for the Gecko "frame" object)
-    nsCOMPtr<nsIBoxObject>              mBoxObject;          // [OWNER]
-
     // The nearest enclosing content node with a binding
     // that created us. [Weak]
     nsIContent*                         mBindingParent;

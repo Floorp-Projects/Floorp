@@ -540,6 +540,7 @@ protected:
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings
+    nsSupportsHashtable* mBoxObjectTable; // Box objects for content nodes. 
     
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;

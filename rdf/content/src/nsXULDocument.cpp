@@ -50,6 +50,7 @@
 
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
+#include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsICodebasePrincipal.h"
@@ -97,6 +98,7 @@
 #include "nsIURL.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
+#include "nsXULAtoms.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
@@ -106,6 +108,7 @@
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
+#include "nsPIBoxObject.h"
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
@@ -427,7 +430,8 @@ nsXULDocument::nsXULDocument(void)
       mResolutionPhase(nsForwardReference::eStart),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mState(eState_Master),
-      mCurrentScriptProto(nsnull)
+      mCurrentScriptProto(nsnull),
+      mBoxObjectTable(nsnull)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
@@ -471,6 +475,8 @@ nsXULDocument::~nsXULDocument()
     if (mCSSLoader) {
       mCSSLoader->DropDocumentReference();
     }
+
+    delete mBoxObjectTable;
 
 #if 0
     PRInt32 i;
@@ -2850,51 +2856,30 @@ nsXULDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
 }
 
 NS_IMETHODIMP
+nsXULDocument::GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, 
+                                              const nsAReadableString& aAttrValue, 
+                                              nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
                                  nsIDOMNodeList** aResult)
 {
   nsresult rv;
-  nsRDFDOMNodeList* elements;
-  // Addref happens on following line in the Create call.
-  if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
-    NS_ERROR("unable to create node list");
-    return rv;
-  }
-
-  *aResult = elements;
-
-  // Use the XBL service to get a content list.
+  
+  // Use the XBL service to get the anonymous node list.
   NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return rv;
 
-  // Retrieve the anonymous content that we should build.
-  nsCOMPtr<nsISupportsArray> anonymousItems;
-  nsCOMPtr<nsIContent> dummyElt;
-  nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
-  if (!element)
-    return rv;
-
   PRBool dummy;
-  xblService->GetContentList(element, getter_AddRefs(anonymousItems), 
-                             getter_AddRefs(dummyElt), &dummy);
-  
-  if (!anonymousItems)
-    return NS_OK;
-
-  PRUint32 count = 0;
-  anonymousItems->Count(&count);
-
-  for (PRUint32 i=0; i < count; i++)
-  {
-    // get our child's content and set its parent to our content
-    nsCOMPtr<nsIDOMNode> content;
-    anonymousItems->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(content));
-    if (content)
-      elements->AppendNode(content);
-  }
-
-  return NS_OK;
+  nsCOMPtr<nsIContent> dummyElt;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  return xblService->GetContentList(content, aResult, 
+                                    getter_AddRefs(dummyElt), &dummy);
 }
 
 NS_IMETHODIMP    
@@ -6365,6 +6350,96 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
 
   *aResult = elementFactory;
   NS_IF_ADDREF(*aResult);
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
+{
+  nsresult rv;
+
+  *aResult = nsnull;
+
+  if (!mBoxObjectTable)
+    mBoxObjectTable = new nsSupportsHashtable;
+  else {
+    nsISupportsKey key(aElement);
+    nsCOMPtr<nsISupports> supports = 
+      getter_AddRefs(NS_STATIC_CAST(nsIBoxObject*, mBoxObjectTable->Get(&key))); 
+    nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(supports));
+    if (boxObject) {
+      *aResult = boxObject;
+      NS_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 namespaceID;
+  nsCOMPtr<nsIAtom> tag;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  xblService->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
+  
+  nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
+  if (namespaceID == kNameSpaceID_XUL) {
+    if (tag.get() == nsXULAtoms::browser)
+      contractID += "-browser";
+    else if (tag.get() == nsXULAtoms::editor)
+      contractID += "-editor";
+    else if (tag.get() == nsXULAtoms::iframe)
+      contractID += "-iframe";
+    else if (tag.get() == nsXULAtoms::menu)
+      contractID += "-menu";
+    else if (tag.get() == nsXULAtoms::popupset)
+      contractID += "-popupset";
+    else if (tag.get() == nsXULAtoms::tree)
+      contractID += "-tree";
+    else if (tag.get() == nsXULAtoms::scrollbox)
+      contractID += "-scrollbox";
+  }
+  contractID += ";1";
+
+  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID));
+  if (!boxObject) 
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(boxObject));
+  if (NS_FAILED(rv = privateBox->Init(content, shell)))
+    return rv;
+
+  SetBoxObjectFor(aElement, boxObject);
+
+  *aResult = boxObject;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
+{
+  if (!mBoxObjectTable) {
+    if (!aBoxObject) 
+      return NS_OK;
+    mBoxObjectTable = new nsSupportsHashtable;
+  }
+
+  nsISupportsKey key(aElement);
+
+  if (aBoxObject)
+    mBoxObjectTable->Put(&key, aBoxObject);
+  else {
+    nsCOMPtr<nsISupports> supp;
+    mBoxObjectTable->Remove(&key, getter_AddRefs(supp));
+    nsCOMPtr<nsPIBoxObject> boxObject(do_QueryInterface(supp));
+    if (boxObject)
+      boxObject->SetDocument(nsnull);
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
