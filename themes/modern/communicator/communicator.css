@@ -62,3 +62,8 @@
 .down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
+
+.sidebarTree {
+  border: none;
+  margin: 0px !important;
+}

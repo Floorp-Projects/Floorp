@@ -33,3 +33,7 @@
  display: none !important; 
 } 
 
+.bookmarks-window-tree {
+  border: none;
+  margin: 0px !important;
+}
