@@ -224,11 +224,6 @@ function Startup()
     if (!appCore)
       throw "couldn't create a browser instance";
 
-    // Get the preferences service
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                .getService(Components.interfaces.nsIPrefService);
-    pref = prefService.getBranch(null);
-
     webNavigation = getWebNavigation();
     if (!webNavigation)
       throw "no XBL binding for browser";
