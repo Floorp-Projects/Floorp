@@ -110,7 +110,8 @@ var nsDragAndDrop = {
    **/
   dragOver: function (aEvent, aDragDropObserver)
     { 
-      var dragSession = this.mDragService.getCurrentSession();
+      if (!this.mDragSession) 
+        this.mDragSession = this.mDragService.getCurrentSession();
       if (dragSession)
         {
           var flavourList = aDragDropObserver.getSupportedFlavours();
@@ -120,7 +121,7 @@ var nsDragAndDrop = {
                 {
                   dragSession.canDrop = true;
                   if (aDragDropObserver.onDragOver)
-                    aDragDropObserver.onDragOver(aEvent, flavour);
+                    aDragDropObserver.onDragOver(aEvent, flavour, this.mDragSession);
                   aEvent.preventBubble();
                   break;
                 }
@@ -143,7 +144,8 @@ var nsDragAndDrop = {
    **/
   drop: function (aEvent, aDragDropObserver)
     {
-      this.mDragSession = this.mDragService.getCurrentSession();
+      if (!this.mDragSession) 
+        this.mDragSession = this.mDragService.getCurrentSession();
       if (this.mDragSession)
         {
           var flavourList = aDragDropObserver.getSupportedFlavours();
@@ -151,14 +153,14 @@ var nsDragAndDrop = {
           aEvent.preventBubble();
           // hand over to the client to respond to dropped data
           if (aDragDropObserver.onDrop) 
-            aDragDropObserver.onDrop(aEvent, dragData);
+            aDragDropObserver.onDrop(aEvent, dragData, this.mDragSession);
         }
     },
 
   dragExit: function (aEvent, aDragDropObserver)
     {
       if (aDragDropObserver.onDragExit)
-        aDragDropObserver.onDragExit(aEvent);
+        aDragDropObserver.onDragExit(aEvent, this.mDragSession);
     },  
     
   /** 
