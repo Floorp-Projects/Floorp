@@ -28,8 +28,8 @@
 #ifndef _nsString2
 #define _nsString2
 
-#define nsString2     nsString
-#define nsAutoString2 nsAutoString
+//#define nsString2     nsString
+//#define nsAutoString2 nsAutoString
 
 
 #include "prtypes.h"
