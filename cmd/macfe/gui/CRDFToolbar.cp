@@ -114,7 +114,12 @@ CRDFToolbar::CRDFToolbar( HT_View ht_view, LView* pp_superview )
 #endif
 
 		notice_background_changed();
-}
+
+		// The top node of the toolbar may or may not be open (sigh). Make sure it _is_ open
+		// and then fill in our toolbars from the contents.
+		HT_SetOpenState(TopNode(), PR_TRUE);
+		FillInToolbar();
+	}
 
 CRDFToolbar::~CRDFToolbar()
 	{
@@ -122,6 +127,103 @@ CRDFToolbar::~CRDFToolbar()
 
 		HT_SetViewFEData(_ht_view, 0);
 	}
+
+
+//
+// FillInToolbar
+//
+// Loop through HT and create buttons for each item present. Once we build them all, 
+// lay them out. 
+//
+// Note: We will certainly get more buttons streaming in, so we'll have to
+// pitch our layout and re-layout again, but they may not stream in for a while so 
+// we still should layout what we have (WinFE has this same problem and hyatt
+// and I have yelled at rjc about it...but to no avail).
+//
+void
+CRDFToolbar :: FillInToolbar ( )
+{
+	assert(HTView() && TopNode());
+	
+	HT_Cursor cursor = HT_NewCursor(TopNode());
+	if (cursor == NULL)
+		return;
+
+	HT_Resource item = NULL;
+	while (item = HT_GetNextItem(cursor))
+		AddHTButton(item);
+
+	HT_DeleteCursor(cursor);
+
+	LayoutButtons();
+	
+} // FillInToolbar
+
+
+//
+// LayoutButtons
+//
+// Do the work to layout the buttons
+//
+void
+CRDFToolbar :: LayoutButtons ( )
+{
+	// scc will fill this in (thank god!)
+
+} // LayoutButtons
+
+
+//
+// AddHTButton
+//
+// Make a button that corresponds to the given HT_Resource. The button can be
+// one of numerous types, including things like separators, throbbers, or
+// the url entry field.
+//
+void
+CRDFToolbar :: AddHTButton ( HT_Resource inButton )
+{
+	string nodeName = HT_GetNodeName(inButton);
+	string commandURL = HT_GetNodeURL(inButton);
+	
+//	DebugStr(LStr255(nodeName.c_str()));
+//	DebugStr(LStr255(commandURL.c_str()));
+	
+	// Fetch the button's tooltip and status bar text.
+	string tooltipText;
+	string statusBarText;
+	char* data = NULL;
+	if ( HT_GetTemplateData(inButton, gNavCenter->buttonTooltipText, HT_COLUMN_STRING, &data) && data )
+		tooltipText = data;
+	data = NULL;
+	if ( HT_GetTemplateData(inButton, gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data) && data )
+		statusBarText = data;
+	
+#if 0
+// BUTTON CLASSES NOT YET IMPLEMENTED
+	CRDFToolbarButton* pButton = NULL;
+	if (HT_IsURLBar(item))
+		pButton = new CURLBarButton;
+	else if (HT_IsSeparator(item))
+	{
+		pButton = new CRDFSeparatorButton;
+		tooltipText = "Separator";
+		statusBarText = "Separator";
+	}
+	else pButton = new CRDFToolbarButton;
+
+	pButton->Create(this, GetDisplayMode(), CSize(60,42), CSize(85, 25), csAmpersandString,
+					tooltipText, statusBarText, CSize(23,17), 
+					m_nMaxToolbarButtonChars, m_nMinToolbarButtonChars, bookmark,
+					item, (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
+
+	HT_SetNodeFEData(item, pButton);
+	
+	//еее deal with computing height/width??? They do on WinFE
+#endif
+	
+} // AddHTButton
+
 
 void
 CRDFToolbar::Draw( RgnHandle inSuperDrawRgnH )
@@ -156,10 +258,15 @@ CRDFToolbar::DrawStandby( const Point&, const IconTransformType ) const
 	}
 
 void
-CRDFToolbar::HandleNotification( HT_Notification, HT_Resource, HT_Event event, void*, uint32 )
+CRDFToolbar::HandleNotification( HT_Notification, HT_Resource inNode, HT_Event event, void* /*inToken*/, uint32 /*inTokenType*/ )
 	{
 		switch ( event )
 			{
+				case HT_EVENT_NODE_ADDED:
+					AddHTButton(inNode);
+					LayoutButtons();
+					break;
+					
 				case HT_EVENT_NODE_VPROP_CHANGED:
 					notice_background_changed();
 					break;
@@ -170,7 +277,7 @@ void
 CRDFToolbar::notice_background_changed()
 	{
 		char* cp = 0;
-		if ( HT_GetTemplateData(HT_TopNode(_ht_view), gNavCenter->viewBGURL, HT_COLUMN_STRING, &cp) )
+		if ( HT_GetTemplateData(TopNode(), gNavCenter->viewBGURL, HT_COLUMN_STRING, &cp) )
 			SetImageURL(string(cp));
 	}
 

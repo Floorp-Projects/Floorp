@@ -44,19 +44,32 @@ class CRDFToolbar
 			CRDFToolbar( const CRDFToolbar& );						// DON'T IMPLEMENT
 			CRDFToolbar& operator=( const CRDFToolbar& );	// DON'T IMPLEMENT
 
-		public:			// ...for |LPane|, |LView|, |CDragBar|...
+		public:			
+				// ...for |LPane|, |LView|, |CDragBar|...
 			virtual void Draw( RgnHandle );
-			virtual void DrawSelf();
 
-		protected:	// ...for |CTiledImageMixin|
-			virtual void ImageIsReady();
-			virtual void DrawStandby( const Point&, const IconTransformType ) const;
-			
-
-		public:			// ...for |CRDFNotificationHandler|
+				// ...for |CRDFNotificationHandler|
 			virtual void HandleNotification( HT_Notification, HT_Resource, HT_Event, void*, uint32 );
 
 		protected:
+				// ...for |CTiledImageMixin|
+			virtual void ImageIsReady();
+			virtual void DrawStandby( const Point&, const IconTransformType ) const;
+
+				// PowerPlant overrides
+			virtual void DrawSelf ( ) ;
+			
+			virtual void FillInToolbar ( ) ;
+			virtual void LayoutButtons ( ) ;
+				
+			virtual void AddHTButton ( HT_Resource inButton ) ;
+			
+				// helpful accessors
+			HT_View HTView() { return _ht_view; }
+			const HT_View HTView() const { return _ht_view; }
+			HT_Resource TopNode() { return HT_TopNode(HTView()); }
+			const HT_Resource TopNode() const { return HT_TopNode(HTView()); }
+			
 			void notice_background_changed();
 
 		private:
