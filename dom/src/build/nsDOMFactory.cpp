@@ -359,7 +359,7 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
   nsDOMHTMLTag tag = NS_DOMTagToEnum(str);
 
   if (str) {
-    delete str;
+    delete[] str;
   }
 
   switch (tag) {

@@ -151,7 +151,7 @@ LocationImpl::SetHash(const nsString& aHash)
       char *buf = aHash.ToNewCString();
       url->SetRef(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -202,7 +202,7 @@ LocationImpl::SetHost(const nsString& aHost)
       char *buf = aHost.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -246,7 +246,7 @@ LocationImpl::SetHostname(const nsString& aHostname)
       char *buf = aHostname.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -335,7 +335,7 @@ LocationImpl::SetPathname(const nsString& aPathname)
       char *buf = aPathname.ToNewCString();
       url->SetFile(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -391,7 +391,7 @@ LocationImpl::SetPort(const nsString& aPort)
       }
       url->SetHostPort(port);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -437,7 +437,7 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
       char *buf = aProtocol.ToNewCString();
       url->SetProtocol(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
@@ -486,7 +486,7 @@ LocationImpl::SetSearch(const nsString& aSearch)
       char *buf = aSearch.ToNewCString();
       url->SetSearch(buf);
       SetURL(url);
-      delete buf;
+      delete[] buf;
       NS_IF_RELEASE(url);      
     }
   }
