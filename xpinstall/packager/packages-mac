@@ -95,7 +95,7 @@ viewer:Components:domds.xpt
 viewer:Components:editor.xpt 
 viewer:Components:EditorCore.shlb 
 viewer:Components:EditorTxmgr.shlb 
-viewer:Components:embedcomponents.xpt
+viewer:Components:EmbedComponents.xpt
 viewer:Components:EmbedComponents.shlb
 viewer:Components:FindComponent.shlb 
 viewer:Components:gifdecoder.shlb 
