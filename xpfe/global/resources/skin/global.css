@@ -490,7 +490,7 @@ titledbutton.status-bar:active {
 /******* Splitters *******/
 
 splitter {
-   cursor: arrow;
+   cursor: e-resize;
    min-width: 5px;
    min-height: 5px;
 }
@@ -541,6 +541,15 @@ window[align="horizontal"]>splitter grippy {
 	min-height: 60px;
 }
 
+box[align="vertical"]>splitter {
+	/* a vertical splitter */
+    cursor: n-resize;
+}
+
+window[align="vertical"]>splitter {
+	/* a vertical splitter */
+	cursor: n-resize;
+}
 
 /**
  * gray horizontal splitter for pane views
