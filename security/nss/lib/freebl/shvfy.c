@@ -33,7 +33,7 @@
  *
  * shvfy.c - routines to verify signature on a shared library.
  *
- * $Id: shvfy.c,v 1.5 2003/02/21 00:41:24 wtc%netscape.com Exp $
+ * $Id: shvfy.c,v 1.6 2003/03/01 01:53:11 wtc%netscape.com Exp $
  */
 
 #include "shsign.h"
@@ -43,7 +43,7 @@
 #include "seccomon.h"
 #include "stdio.h"
 
-/* #define DEBUG_SHVERIFY 1 */
+#define DEBUG_SHVERIFY 1
 
 static char *
 mkCheckFileName(const char *libName)
@@ -134,6 +134,10 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     /* open the check File */
     checkFD = PR_Open(checkName, PR_RDONLY, 0);
     if (checkFD == NULL) {
+#ifdef DEBUG_SHVERIFY
+        fprintf(stderr, "Failed to open the check file %s: (%d, %d)\n",
+                checkName, (int)PR_GetError(), (int)PR_GetOSError());
+#endif /* DEBUG_SHVERIFY */
 	goto loser;
     }
 
@@ -189,6 +193,10 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
     /* open our library file */
     shFD = PR_Open(shName, PR_RDONLY, 0);
     if (shFD == NULL) {
+#ifdef DEBUG_SHVERIFY
+        fprintf(stderr, "Failed to open the library file %s: (%d, %d)\n",
+                shName, (int)PR_GetError(), (int)PR_GetOSError());
+#endif /* DEBUG_SHVERIFY */
 	goto loser;
     }
 
