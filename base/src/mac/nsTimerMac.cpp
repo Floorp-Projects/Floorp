@@ -249,7 +249,7 @@ void	TimerPeriodical::SpendTime( const EventRecord &inMacEvent)
 {
 	LArrayIterator iter( *mTimers, LArrayIterator::from_Start);
 	TimerImpl * timer;
-	while (iter.Next( &timer))
+	while (iter.Next(timer))
 	{
 		if ( timer->GetFireTime() <= inMacEvent.when )
 		//if (  1  )
