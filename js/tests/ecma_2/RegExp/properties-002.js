@@ -6,37 +6,43 @@
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
  */
-    var SECTION = "RegExp/properties-002.js";
-    var VERSION = "ECMA_2";
-    var TITLE   = "Properties of RegExp Instances";
-    var BUGNUMBER ="http://scopus/bugsplat/show_bug.cgi?id=346032";
+ //-----------------------------------------------------------------------------
+var SECTION = "RegExp/properties-002.js";
+var VERSION = "ECMA_2";
+var TITLE   = "Properties of RegExp Instances";
+var BUGNUMBER ="http://scopus/bugsplat/show_bug.cgi?id=346032";
 
-    startTest();
+startTest();
 
-    re_1 = /\cA?/g;
-    re_1.lastIndex = Math.pow(2,31);
+re_1 = /\cA?/g;
+re_1.lastIndex = Math.pow(2,31);
+AddRegExpCases( re_1, "\\cA?", true, false, false, Math.pow(2,31) );
 
-    re_2 = /\w*/i;
-    re_2.lastIndex = Math.pow(2,32) -1;
+re_2 = /\w*/i;
+re_2.lastIndex = Math.pow(2,32) -1;
+AddRegExpCases( re_2, "\\w*", false, true, false, Math.pow(2,32)-1 );
 
-    re_3 = /\*{0,80}/m;
-    re_3.lastIndex = Math.pow(2,31) -1;
+re_3 = /\*{0,80}/m;
+re_3.lastIndex = Math.pow(2,31) -1;
+AddRegExpCases( re_3, "\\*{0,80}", false, false, true, Math.pow(2,31) -1 );
 
-    re_4 = /^./gim;
-    re_4.lastIndex = Math.pow(2,30) -1;
+re_4 = /^./gim;
+re_4.lastIndex = Math.pow(2,30) -1;
+AddRegExpCases( re_4, "^.", true, true, true, Math.pow(2,30) -1 );
 
-    re_5 = /\B/;
-    re_5.lastIndex = Math.pow(2,30);
+re_5 = /\B/;
+re_5.lastIndex = Math.pow(2,30);
+AddRegExpCases( re_5, "\\B", false, false, false, Math.pow(2,30) );
 
-    AddRegExpCases( re_1, "\\cA?", true, false, false, Math.pow(2,31) );
-    AddRegExpCases( re_2, "\\w*", false, true, false, Math.pow(2,32)-1 );
-    AddRegExpCases( re_3, "\\*{0,80}", false, false, true, Math.pow(2,31) -1 );
-    AddRegExpCases( re_4, "^.", true, true, true, Math.pow(2,30) -1 );
-    AddRegExpCases( re_5, "\\B", false, false, false, Math.pow(2,30) );
 
-    test();
 
-function AddRegExpCases( re, s, g, i, m, l ) {
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
+
+
+
+function AddRegExpCases( re, s, g, i, m, l ){
 
     AddTestCase( re + ".test == RegExp.prototype.test",
                  true,
