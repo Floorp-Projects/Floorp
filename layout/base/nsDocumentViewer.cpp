@@ -2922,7 +2922,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetInImage(PRBool* aInImage)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, short)
+NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, PRInt16)
 {
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 

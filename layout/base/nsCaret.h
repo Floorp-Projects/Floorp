@@ -81,7 +81,7 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
 
     //nsISelectionListener interface
-    NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+    NS_DECL_NSISELECTIONLISTENER
                               
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
   

@@ -68,7 +68,9 @@ public:
   virtual ~TypeInState();
 
   nsresult UpdateSelState(nsISelection *aSelection);
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+
+  // nsISelectionListener
+  NS_DECL_NSISELECTIONLISTENER
 
   nsresult SetProp(nsIAtom *aProp);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);

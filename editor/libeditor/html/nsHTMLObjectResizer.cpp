@@ -111,7 +111,7 @@ ResizerSelectionListener::~ResizerSelectionListener()
 }
 
 NS_IMETHODIMP
-ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection,short aReason)
+ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection, PRInt16 aReason)
 {
   if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
                   nsISelectionListener::KEYPRESS_REASON |

@@ -76,7 +76,7 @@ public:
   NS_IMETHOD RemoveSelectionListener();
 
   /* ----- nsISelectionListener ---- */
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+  NS_DECL_NSISELECTIONLISTENER
 
   /* ----- nsIAccessNode ----- */
   NS_IMETHOD Shutdown();

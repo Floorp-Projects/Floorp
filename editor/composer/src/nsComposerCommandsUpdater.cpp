@@ -112,7 +112,7 @@ nsComposerCommandsUpdater::NotifyDocumentStateChanged(PRBool aNowDirty)
 
 NS_IMETHODIMP
 nsComposerCommandsUpdater::NotifySelectionChanged(nsIDOMDocument *,
-                                                  nsISelection *, short)
+                                                  nsISelection *, PRInt16)
 {
   return PrimeUpdateTimer();
 }

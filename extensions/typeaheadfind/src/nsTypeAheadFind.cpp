@@ -1694,7 +1694,7 @@ nsTypeAheadFind::ScrollPositionDidChange(nsIScrollableView *aScrollableView,
 
 NS_IMETHODIMP
 nsTypeAheadFind::NotifySelectionChanged(nsIDOMDocument *aDoc,
-                                        nsISelection *aSel, short aReason)
+                                        nsISelection *aSel, PRInt16 aReason)
 {
   if (!mIsFindingText) {
     if (mRepeatingMode != eRepeatingNone) {
