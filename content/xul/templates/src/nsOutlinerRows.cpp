@@ -99,7 +99,7 @@ nsOutlinerRows::iterator
 nsOutlinerRows::First()
 {
     iterator result;
-    result.Push(&mRoot, 0);
+    result.Append(&mRoot, 0);
     result.SetRowIndex(0);
     return result;
 }
@@ -114,7 +114,7 @@ nsOutlinerRows::Last()
     PRInt32 count = current->Count();
     do  {
         PRInt32 last = count - 1;
-        result.Push(current, last);
+        result.Append(current, last);
         current = count ? GetSubtreeFor(current, last) : nsnull;
     } while (current && ((count = current->Count()) != 0));
 
@@ -159,7 +159,7 @@ nsOutlinerRows::operator[](PRInt32 aRow)
         Subtree* subtree = GetSubtreeFor(current, index, &subtreeSize);
 
         if (subtreeSize >= aRow) {
-            result.Push(current, index);
+            result.Append(current, index);
             current = subtree;
             index = 0;
             --aRow;
@@ -223,14 +223,14 @@ nsOutlinerRows::Subtree::Clear()
     mCount = mCapacity = mSubtreeSize = 0;
 }
 
-PRBool
+nsOutlinerRows::iterator
 nsOutlinerRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
 {
     if (mCount >= mCapacity || aIndex >= mCapacity) {
         PRInt32 newCapacity = NS_MAX(mCapacity * 2, aIndex + 1);
         Row* newRows = new Row[newCapacity];
         if (! newRows)
-            return PR_FALSE;
+            return iterator();
 
         for (PRInt32 i = mCount - 1; i >= 0; --i)
             newRows[i] = mRows[i];
@@ -250,10 +250,47 @@ nsOutlinerRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
     mRows[aIndex].mSubtree = nsnull;
     ++mCount;
 
-    for (Subtree* subtree = this; subtree != nsnull; subtree = subtree->mParent)
+    // Now build an iterator that points to the newly inserted element.
+    PRInt32 rowIndex = 0;
+    iterator result;
+    result.Push(this, aIndex);
+
+    for ( ; --aIndex >= 0; ++rowIndex) {
+        // Account for open subtrees in the absolute row index.
+        const Subtree *subtree = mRows[aIndex].mSubtree;
+        if (subtree)
+            rowIndex += subtree->mSubtreeSize;
+    }
+
+    Subtree *subtree = this;
+    do {
+        // Note that the subtree's size has expanded.
         ++subtree->mSubtreeSize;
 
-    return PR_TRUE;
+        Subtree *parent = subtree->mParent;
+        if (! parent)
+            break;
+
+        // Account for open subtrees in the absolute row index.
+        PRInt32 count = parent->Count();
+        for (aIndex = 0; aIndex < count; ++aIndex, ++rowIndex) {
+            const Subtree *child = (*parent)[aIndex].mSubtree;
+            if (subtree == child)
+                break;
+
+            if (child)
+                rowIndex += child->mSubtreeSize;
+        }
+
+        NS_ASSERTION(aIndex < count, "couldn't find subtree in parent");
+
+        result.Push(parent, aIndex);
+        subtree = parent;
+        ++rowIndex; // One for the parent row.
+    } while (1);
+
+    result.SetRowIndex(rowIndex);
+    return result;
 }
 
 void
@@ -263,6 +300,7 @@ nsOutlinerRows::Subtree::RemoveRowAt(PRInt32 aIndex)
     if (aIndex < 0 || aIndex >= Count())
         return;
 
+    // How big is the subtree we're going to be removing?
     PRInt32 subtreeSize = mRows[aIndex].mSubtree
         ? mRows[aIndex].mSubtree->GetSubtreeSize()
         : 0;
@@ -304,12 +342,27 @@ nsOutlinerRows::iterator::operator=(const iterator& aIterator)
 }
 
 void
-nsOutlinerRows::iterator::Push(Subtree* aParent, PRInt32 aChildIndex)
+nsOutlinerRows::iterator::Append(Subtree* aParent, PRInt32 aChildIndex)
 {
     if (mTop < kMaxDepth - 1) {
         ++mTop;
         mLink[mTop].mParent     = aParent;
         mLink[mTop].mChildIndex = aChildIndex;
+    }
+    else
+        NS_ERROR("overflow");
+}
+
+void
+nsOutlinerRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
+{
+    if (mTop < kMaxDepth - 1) {
+        for (PRInt32 i = mTop; i >= 0; ++i)
+            mLink[i + 1] = mLink[i];
+
+        mLink[0].mParent     = aParent;
+        mLink[0].mChildIndex = aChildIndex;
+        ++mTop;
     }
     else
         NS_ERROR("overflow");
@@ -342,7 +395,7 @@ nsOutlinerRows::iterator::Next()
     Subtree* subtree = top.GetRow().mSubtree;
 
     if (subtree && subtree->Count()) {
-        Push(subtree, 0);
+        Append(subtree, 0);
         return;
     }
 
@@ -421,7 +474,7 @@ nsOutlinerRows::iterator::Prev()
     if (subtree && subtree->Count()) {
         do {
             index = subtree->Count() - 1;
-            Push(subtree, index);
+            Append(subtree, index);
 
             parent = subtree;
             subtree = (*parent)[index].mSubtree;

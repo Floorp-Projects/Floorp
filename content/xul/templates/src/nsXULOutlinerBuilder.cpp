@@ -1124,16 +1124,16 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
                     if (cmp < 0)
                         left = ++index;
                     else if (cmp > 0)
-                        right = index - 1;
+                        right = index;
                     else
                         break;
                 }
             }
 
-            mRows.InsertRowAt(aNewMatch, parent, index);
+            nsOutlinerRows::iterator iter =
+                mRows.InsertRowAt(aNewMatch, parent, index);
 
-            row += index + 1;
-            mBoxObject->RowCountChanged(row, +1);
+            mBoxObject->RowCountChanged(iter.GetRowIndex(), +1);
 
             // See if this newly added row is open; in which case,
             // recursively add its children to the outliner, too.
@@ -1145,7 +1145,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             PRBool open;
             IsContainerOpen(member, &open);
             if (open)
-                OpenContainer(row, member);
+                OpenContainer(iter.GetRowIndex(), member);
         }
     }
 
