@@ -33,6 +33,8 @@ Rights Reserved.
         ondragover="return DragOverTree(event);"
         ondragdrop="return DropOnAddressListTree(event);">
 
+<script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
+
   <stringbundleset id="stringbundleset"/>
   <vbox id="editlist"/>		
 </dialog>
