@@ -77,6 +77,8 @@ public:
     NS_IMETHOD            	Move(PRUint32 aX, PRUint32 aY);
     NS_IMETHOD            	Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
 
+	NS_IMETHOD              SetTitle(const nsString& aTitle);
+
 		virtual PRBool					HandleOSEvent(
 																		EventRecord&		aOSEvent);
 
