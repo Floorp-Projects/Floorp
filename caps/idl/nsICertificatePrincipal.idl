@@ -19,9 +19,11 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Mitchell Stoltz <mstoltz@netscape.com>
  */
 /* Defines an interface for certificate principals. */
 #include "nsIPrincipal.idl"
+#include "nsIZipReader.idl"
 
 %{C++
 #define NS_CERTIFICATEPRINCIPAL_PROGID "component://netscape/certificateprincipal"
@@ -33,4 +35,7 @@ interface nsICertificatePrincipal : nsISupports {
 
     readonly attribute string certificateID;
     attribute string commonName;
+
+    // The archive containing the digital signature
+    attribute nsIZipReader archive;
 };

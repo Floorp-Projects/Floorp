@@ -27,6 +27,7 @@
 #ifndef _NS_CERTIFICATE_PRINCIPAL_H_
 #define _NS_CERTIFICATE_PRINCIPAL_H_
 #include "jsapi.h"
+#include "nsCOMPtr.h"
 #include "nsICertificatePrincipal.h"
 #include "nsBasePrincipal.h"
 
@@ -67,6 +68,7 @@ public:
 protected:
     char* mCertificateID;
     char* mCommonName;
+    nsCOMPtr<nsIZipReader> mArchive;
 };
 
 #endif // _NS_CERTIFICATE_PRINCIPAL_H_
