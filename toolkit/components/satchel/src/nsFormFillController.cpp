@@ -324,6 +324,11 @@ nsFormFillController::SetSearchParam(const nsAString &aSearchParam)
 NS_IMETHODIMP
 nsFormFillController::GetSearchParam(nsAString &aSearchParam)
 {
+  if (!mFocusedInput) {
+    NS_WARNING("mFocusedInput is null for some reason! avoiding a crash. should find out why... - ben");
+    return NS_ERROR_FAILURE; // XXX why? fix me. 
+  }
+    
   mFocusedInput->GetName(aSearchParam);
   if (aSearchParam.IsEmpty())
     mFocusedInput->GetId(aSearchParam);
@@ -452,7 +457,12 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   if (input) {
     nsAutoString type;
     input->GetType(type);
-    if (type.Equals(NS_LITERAL_STRING("text")))
+
+    nsAutoString autocomplete; 
+    input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+
+    if (type.Equals(NS_LITERAL_STRING("text")) && 
+        !autocomplete.Equals(NS_LITERAL_STRING("off")))
       StartControllingInput(input);
   }
     

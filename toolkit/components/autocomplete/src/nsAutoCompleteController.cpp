@@ -678,9 +678,13 @@ nsAutoCompleteController::StartSearch()
     }
     
     nsAutoString searchParam;
-    mInput->GetSearchParam(searchParam);
+    // XXXben - can yank this when we discover what's causing this to 
+    // fail & crash. 
+    nsresult rv = mInput->GetSearchParam(searchParam);
+    if (NS_FAILED(rv))
+        return rv;
     
-    nsresult rv = search->StartSearch(mSearchString, searchParam, result, NS_STATIC_CAST(nsIAutoCompleteObserver *, this));
+    rv = search->StartSearch(mSearchString, searchParam, result, NS_STATIC_CAST(nsIAutoCompleteObserver *, this));
     if (NS_FAILED(rv)) {
       ++searchesFailed;
       --mSearchesOngoing;
