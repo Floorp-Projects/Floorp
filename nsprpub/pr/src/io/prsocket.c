@@ -1167,7 +1167,7 @@ PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
 static const PRIOMethods* PR_GetSocketPollFdMethods()
 {
     return &socketpollfdMethods;
-}  /* PR_GetUDPMethods */
+}  /* PR_GetSocketPollFdMethods */
 
 
 PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
