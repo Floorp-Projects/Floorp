@@ -3,7 +3,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalvalueimpl.h,v 1.2 2001/12/21 18:56:28 mikep%oeone.com Exp $
+  $Id: icalvalueimpl.h,v 1.3 2002/04/02 16:14:33 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -43,7 +43,7 @@ struct icalvalue_impl {
     char id[5];
     int size;
     icalproperty* parent;
-    const char* x_value;
+    char* x_value;
 
     union data {
 	struct icalattachtype v_attach;		

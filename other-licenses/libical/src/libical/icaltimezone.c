@@ -4,7 +4,7 @@
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: icaltimezone.c,v 1.2 2002/03/14 15:17:52 mikep%oeone.com Exp $
+ $Id: icaltimezone.c,v 1.3 2002/04/02 16:14:32 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -195,7 +195,7 @@ icaltimezone_new			(void)
     zone = (icaltimezone*) malloc (sizeof (icaltimezone));
     if (!zone) {
 	icalerror_set_errno (ICAL_NEWFAILED_ERROR);
-	return;
+	return NULL;
     }
 
     icaltimezone_init (zone);
@@ -260,7 +260,7 @@ icaltimezone_get_vtimezone_properties	(icaltimezone	*zone,
 					 icalcomponent	*component)
 {
     icalproperty *prop;
-    const char *tzid, *location;
+    const char *tzid;
  
     prop = icalcomponent_get_first_property (component, ICAL_TZID_PROPERTY);
     if (!prop)
@@ -286,7 +286,7 @@ icaltimezone_get_location_from_vtimezone (icalcomponent *component)
 {
     icalproperty *prop;
     const char *location;
-    char *name;
+    const char *name;
     int found_location = 0;
 
     prop = icalcomponent_get_first_property (component,
@@ -1386,7 +1386,6 @@ icaltimezone_parse_zone_tab		(void)
     int latitude_degrees, latitude_minutes, latitude_seconds;
     int longitude_degrees, longitude_minutes, longitude_seconds;
     icaltimezone zone;
-	char *p;
 
     icalerror_assert (builtin_timezones == NULL,
 		      "Parsing zones.tab file multiple times");
@@ -1590,6 +1589,7 @@ icaltimezone_dump_changes		(icaltimezone	*zone,
 
 	fprintf (fp, "\n");
     }
+    return 1;
 }
 
 

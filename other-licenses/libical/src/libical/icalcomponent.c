@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.4 2002/03/14 15:17:50 mikep%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.5 2002/04/02 16:14:31 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -273,7 +273,7 @@ char*
 icalcomponent_as_ical_string (icalcomponent* component)
 {
    char* buf, *out_buf;
-   char* tmp_buf;
+   const char* tmp_buf;
    size_t buf_size = 1024;
    char* buf_ptr = 0;
     pvl_elem itr;
