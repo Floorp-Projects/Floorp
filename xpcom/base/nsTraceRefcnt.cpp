@@ -1618,8 +1618,8 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (aRefCnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08p %d Create\n",
-              aClazz, aPtr, serialno);
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Create\n",
+              aClazz, NS_PTR_TO_INT32(aPtr), serialno);
       WalkTheStack(gAllocLog);
     }
 
@@ -1632,7 +1632,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
       else {        
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08p %d AddRef %d\n", aClazz, aPtr, serialno, aRefCnt);       
+                  "\n<%s> 0x%08X %d AddRef %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefCnt);       
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
@@ -1685,7 +1685,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
       else {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08p %d Release %d\n", aClazz, aPtr, serialno, aRefCnt);
+                  "\n<%s> 0x%08X %d Release %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefCnt);
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
@@ -1698,8 +1698,8 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (aRefCnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog,
-              "\n<%s> 0x%08p %d Destroy\n",
-              aClazz, aPtr, serialno);
+              "\n<%s> 0x%08X %d Destroy\n",
+              aClazz, NS_PTR_TO_INT32(aPtr), serialno);
       WalkTheStack(gAllocLog);
     }
 
@@ -1845,8 +1845,8 @@ nsTraceRefcnt::LogCtor(void* aPtr,
     // using LogNewXPCOM instead to get file and line numbers.)
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08p %d Ctor (%d)\n",
-             aType, aPtr, serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Ctor (%d)\n",
+             aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
@@ -1888,8 +1888,8 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08p %d Dtor (%d)\n",
-             aType, aPtr, serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> 0x%08X %d Dtor (%d)\n",
+             aType, NS_PTR_TO_INT32(aPtr), serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
@@ -1931,8 +1931,8 @@ nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08p %d nsCOMPtrAddRef %d 0x%08p\n",
-              object, serialno, count?(*count):-1, aCOMPtr);
+      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrAddRef %d 0x%08X\n",
+              NS_PTR_TO_INT32(object), serialno, count?(*count):-1, NS_PTR_TO_INT32(aCOMPtr));
       WalkTheStack(gCOMPtrLog);
     }
 #endif
@@ -1974,8 +1974,8 @@ nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08p %d nsCOMPtrRelease %d 0x%08p\n",
-              object, serialno, count?(*count):-1, aCOMPtr);
+      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrRelease %d 0x%08X\n",
+              NS_PTR_TO_INT32(object), serialno, count?(*count):-1, NS_PTR_TO_INT32(aCOMPtr));
       WalkTheStack(gCOMPtrLog);
     }
 #endif
