@@ -3774,10 +3774,6 @@ SOURCE=..\..\..\dist\include\nsMsgComposeFact.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\dist\include\nsMsgCompPrefs.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\dist\include\nsMsgCompUtils.h
 # End Source File
 # Begin Source File
