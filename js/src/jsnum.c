@@ -323,7 +323,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
     /* Figure out how long resulting string will be. */
     size = digits + (dec ? decimalLength + strlen(dec + 1) : 0);
 
-    tmpGroup = rt->numGrouping;
+    numGrouping = tmpGroup = rt->numGrouping;
     remainder = digits;
     if (*num == '-')
         remainder--;
@@ -335,7 +335,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
         remainder -= *tmpGroup;
         tmpGroup++;
     }
-    if (*tmpGroup == '\0' && *rt->numGrouping != '\0') {
+    if (*tmpGroup == '\0' && *numGrouping != '\0') {
         nrepeat = (remainder - 1) / tmpGroup[-1];
         size += thousandsLength * nrepeat;
         remainder -= nrepeat * tmpGroup[-1];
