@@ -5,6 +5,8 @@
 - check for truncated xpt files and version problems
 - integreate autoreg call with xpcom's component autoreg scheme
 - support xpt files in more than just the components dir; e.g. plugins?
+   - probably just another field in the manifest containing a number
+     i.e. '0' means components dir, '1' means plugins dir, etc.
 - TESTS!
 
 - switch to MoveTo for .dat file
