@@ -1886,14 +1886,13 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 			nsFileSpec oldRcFile(filename);
 			char *leaf = oldRcFile.GetLeafName();
 
-			// use news.directory instead of newsDir?
-			nsFileSpec rcFile(newsDir);
+			nsFileSpec rcFile(newsHostsDir);
 			rcFile += leaf;
 			nsCRT::free(leaf);
 			leaf = nsnull;
 #else
 		    // use news.directory instead of newsDir?
-			nsFileSpec rcFile(newsDir);
+			nsFileSpec rcFile(newsHostsDir);
 			rcFile += filename;
 #endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
 
