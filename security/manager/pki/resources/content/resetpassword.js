@@ -53,6 +53,12 @@ function resetPassword()
   var token = pk11db.findTokenByName(tokenName);
   token.reset();
 
+  var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
+  if (wallet) {
+    wallet = wallet.getService(Components.interfaces.nsIWalletService);
+    wallet.WALLET_DeleteAll();
+  }
+
   var bundle = document.getElementById("pippki_bundle");
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
