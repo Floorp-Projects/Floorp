@@ -22,3 +22,5 @@ nsIInputStream.h
 nsIOutputStream.h
 nsInt64.h
 nsTime.h
+nsStr.h
+nsString2.h
