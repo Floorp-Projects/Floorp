@@ -155,14 +155,15 @@ MIME_GetContentType(void)
 }
 
 PUBLIC MimeObjectClass *
-MIME_CreateContentTypeHandlerClass(const char *content_type, PRBool *forceInline)
+MIME_CreateContentTypeHandlerClass(const char *content_type, 
+                                   contentTypeHandlerInitStruct *initStruct)
 {
   MimeObjectClass *class = (MimeObjectClass *)&mimeInlineTextVCardClass;
   /*
    * Must set the superclass by hand.
    */
   class->superclass = (MimeObjectClass *)MIME_GetmimeInlineTextClass();
-  *forceInline = PR_TRUE;
+  initStruct->force_inline_display = PR_TRUE;
   return class;
 }
 
