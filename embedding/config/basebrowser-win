@@ -180,6 +180,7 @@ components\necko.xpt
 components\necko_about.xpt              
 components\necko_data.xpt               
 components\necko_dns.xpt                
+components\necko_ftp.xpt
 components\necko_http.xpt               
 components\necko_jar.xpt                
 components\necko_res.xpt                
@@ -188,9 +189,8 @@ components\necko_strconv.xpt
 ; cache
 components\necko_cache.xpt              
 
-; optional for FTP support
-components\necko2.dll
-components\necko_ftp.xpt
+; optional for gopher/viewsource/etc support
+; components\necko2.dll
 
 ; plugins
 ; Optional - only if you need plugin support
@@ -229,5 +229,5 @@ components\xmlextras.xpt
 ;
 ; MathML, optional for MathML charset conversion
 ;
-components\ucvmath.dll
+; components\ucvmath.dll
 
