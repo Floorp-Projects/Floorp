@@ -46,6 +46,11 @@ MODULE		= npsimple
 LIBRARY_NAME	= npsimple
 IS_COMPONENT	= 1
 MODULE_NAME	= SimplePlugin
+
+# Ack! we should not be using the internal API or linking against
+# MOZ_COMPONENT_LIBS!
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  plugin \
