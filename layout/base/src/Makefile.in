@@ -54,7 +54,7 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
-INCLUDES +=  -I../../html/base/src -I../../html/content/src
+INCLUDES +=  -I$(srcdir)/../../html/base/src -I$(srcdir)/../../html/content/src
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
