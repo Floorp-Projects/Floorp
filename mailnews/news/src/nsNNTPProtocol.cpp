@@ -18,7 +18,7 @@
 
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 #include "msgCore.h"    // precompiled header...
-
+#include "nntpCore.h"
 
 #include "nsNNTPProtocol.h"
 #include "nsIOutputStream.h"
@@ -32,9 +32,8 @@
 
 #include "nsMsgBaseCID.h"
 
-#include "nsNntpUrl.h"
+#include "nsINntpUrl.h"
 
-#include "nntpCore.h"
 #include "nsCRT.h"
 #include "xp.h"     // XXX remove!
 
@@ -104,6 +103,7 @@ extern int MK_MSG_EXPIRE_NEWS_ARTICLES;
 extern int MK_MSG_HTML_IMAP_NO_CACHED_BODY;
 
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
+static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
 /* Logging stuff */
 
@@ -951,8 +951,6 @@ char *XP_AppCodeName = "Mozilla";
 const char *XP_AppCodeName = "Mozilla";
 #endif
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
-typedef PRUint32 nsMsgKey;
-const nsMsgKey nsMsgKey_None = 0xffffffff;
 
 /*
  * This function takes an error code and associated error data
@@ -2019,6 +2017,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // with talking to the RFC-822->HTML stream converter....clever huh =).....
 
   // we are about to display an article so open up a temp file on the article...
+  PR_Delete(ARTICLE_PATH);
   m_tempArticleFile = PR_Open(ARTICLE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
   m_nextState = NNTP_READ_ARTICLE;
 
@@ -4558,68 +4557,3 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 	return(-1); /* all done */
 }
 
-nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer)
-{
-	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
-	// and transport creation code will live in netlib..this whole function is just a hack
-	// for our mail news demo....
-
-	// for now, assume the url is a news url and load it....
-	nsINntpUrl		*nntpUrl = nsnull;
-	nsINetService	*pNetService = nsnull;
-	nsITransport	*transport = nsnull;
-	nsNNTPProtocol	*nntpProtocol = nsnull;
-	nsresult rv = NS_OK;
-
-	// make sure we have a netlib service around...
-	rv = NS_NewINetService(&pNetService, nsnull); 
-
-	if (NS_SUCCEEDED(rv) && pNetService)
-	{
-		rv = NS_NewNntpUrl(&nntpUrl, urlString);
-
-		if (NS_SUCCEEDED(rv) && nntpUrl)
-		{
-			const char * host;
-			PRUint32 port = NEWS_PORT;
-			
-			nntpUrl->GetHostPort(&port);
-			nntpUrl->GetHost(&host);
-			// okay now create a transport to run the url in...
-			pNetService->CreateSocketTransport(&transport, port, host);
-			if (NS_SUCCEEDED(rv) && transport)
-			{
-				// almost there...now create a nntp protocol instance to run the url in...
-				nntpProtocol = new nsNNTPProtocol(nntpUrl, transport);
-				if (nntpProtocol)
-					nntpProtocol->LoadURL(nntpUrl, aConsumer);
-
-			}
-
-			NS_RELEASE(nntpUrl);
-		} // if nntpUrl
-
-		NS_RELEASE(pNetService);
-	} // if pNetService
-	
-	return rv;
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// This function is used to load and prepare an nntp url which can be run by
-// a transport instance. For different protocols, you'll have different url
-// functions like this one in the test harness...
-/////////////////////////////////////////////////////////////////////////////////
-nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
-{
-	nsresult rv = NS_OK;
-
-	 nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
-	 if (nntpUrl)
-	 {
-		nntpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = nntpUrl->QueryInterface(nsINntpUrl::GetIID(), (void **) aResult);
-	 }
-
-	 return rv;
-}
