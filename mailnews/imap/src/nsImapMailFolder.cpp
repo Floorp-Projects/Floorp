@@ -2799,7 +2799,12 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 //        MarkFilteredMessageRead(msgHdr);
         break;
       case nsMsgFilterAction::MarkFlagged:
-        msgHdr->MarkFlagged(PR_TRUE);
+        {
+          nsMsgKeyArray keysToFlag;
+
+          keysToFlag.Add(msgKey);
+          StoreImapFlags(kImapMsgFlaggedFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
+        }
         break;
       case nsMsgFilterAction::KillThread:
         // for ignore and watch, we will need the db
