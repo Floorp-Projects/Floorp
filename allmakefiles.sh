@@ -360,6 +360,7 @@ widget/src/xlib/Makefile
 widget/src/qt/Makefile
 widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
+widget/src/support/Makefile
 widget/tests/Makefile
 widget/tests/scribble/Makefile
 widget/tests/widget/Makefile

@@ -27,7 +27,6 @@ LIBRARY_NAME	= widget_gtk
 REQUIRES	= util img xpcom raptor netlib
 
 CPPSRCS		= \
-		nsWidgetSupport.cpp \
 		nsAppShell.cpp \
 		nsButton.cpp \
 		nsCheckButton.cpp \

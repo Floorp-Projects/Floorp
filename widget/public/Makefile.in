@@ -58,7 +58,6 @@ EXPORTS = \
 	nsIAppShell.h \
 	nsILookAndFeel.h \
 	nsILabel.h \
-	nsWidgetSupport.h \
 	nsIMenuBar.h \
 	nsIMenu.h \
 	nsIMenuItem.h \
