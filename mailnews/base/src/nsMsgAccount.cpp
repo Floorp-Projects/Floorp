@@ -335,7 +335,7 @@ nsMsgAccount::RemoveIdentity(nsIMsgIdentity *identity)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMPL_GETTER_STR(nsMsgAccount::GetKey, m_accountKey);
+NS_IMPL_GETTER_STR(nsMsgAccount::GetKey, m_accountKey)
 
 nsresult
 nsMsgAccount::SetKey(const char *accountKey)

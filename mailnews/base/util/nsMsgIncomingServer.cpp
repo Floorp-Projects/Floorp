@@ -102,8 +102,8 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
 }
 
 
-NS_IMPL_THREADSAFE_ADDREF(nsMsgIncomingServer);
-NS_IMPL_THREADSAFE_RELEASE(nsMsgIncomingServer);
+NS_IMPL_THREADSAFE_ADDREF(nsMsgIncomingServer)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgIncomingServer)
 NS_INTERFACE_MAP_BEGIN(nsMsgIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIMsgIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -194,7 +194,7 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPerformingBiff(PRBool aPerformingBiff)
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsMsgIncomingServer, BiffState, PRUint32, m_biffState);
+NS_IMPL_GETSET(nsMsgIncomingServer, BiffState, PRUint32, m_biffState)
 
 NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {
@@ -1640,33 +1640,33 @@ nsMsgIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
 }
 
 // use the convenience macros to implement the accessors
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, IsSecure, "isSecure");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, UseSecAuth, "useSecAuth");
-NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName")
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password")
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, IsSecure, "isSecure")
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, UseSecAuth, "useSecAuth")
+NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time")
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type")
 // in 4.x, this was "mail.pop3_gets_new_mail" for pop and 
 // "mail.imap.new_mail_get_headers" for imap (it was global)
 // in 5.0, this will be per server, and it will be "download_on_biff"
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, Valid, "valid");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, RedirectorType,  "redirector_type");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff")
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, Valid, "valid")
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, RedirectorType,  "redirector_type")
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, EmptyTrashOnExit,
-                        "empty_trash_on_exit");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, CanDelete, "canDelete");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LoginAtStartUp, "login_at_startup");
+                        "empty_trash_on_exit")
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, CanDelete, "canDelete")
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LoginAtStartUp, "login_at_startup")
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
                         DefaultCopiesAndFoldersPrefsToServer, 
-                        "allows_specialfolders_usage");
+                        "allows_specialfolders_usage")
 
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
                         CanCreateFoldersOnServer, 
-                        "canCreateFolders");
+                        "canCreateFolders")
 
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
                         CanFileMessagesOnServer, 
-                        "canFileMessages");
+                        "canFileMessages")
 
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
       LimitOfflineMessageSize,

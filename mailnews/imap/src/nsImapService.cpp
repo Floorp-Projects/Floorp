@@ -115,8 +115,8 @@ static PRBool gInitialized = PR_FALSE;
 static PRInt32 gMIMEOnDemandThreshold = 15000;
 static PRBool gMIMEOnDemand = PR_FALSE;
 
-NS_IMPL_THREADSAFE_ADDREF(nsImapService);
-NS_IMPL_THREADSAFE_RELEASE(nsImapService);
+NS_IMPL_THREADSAFE_ADDREF(nsImapService)
+NS_IMPL_THREADSAFE_RELEASE(nsImapService)
 NS_IMPL_QUERY_INTERFACE6(nsImapService,
                          nsIImapService,
                          nsIMsgMessageService,

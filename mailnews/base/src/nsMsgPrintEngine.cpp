@@ -87,7 +87,7 @@ NS_IMPL_ISUPPORTS4(nsMsgPrintEngine,
                          nsIMsgPrintEngine, 
                          nsIWebProgressListener, 
                          nsIObserver,
-                         nsISupportsWeakReference);
+                         nsISupportsWeakReference)
 
 // nsIWebProgressListener implementation
 NS_IMETHODIMP

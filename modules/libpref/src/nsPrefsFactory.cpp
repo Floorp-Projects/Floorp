@@ -81,5 +81,5 @@ static const nsModuleComponentInfo components[] =
   },
 };
 
-NS_IMPL_NSGETMODULE(nsPrefModule, components);
+NS_IMPL_NSGETMODULE(nsPrefModule, components)
 

@@ -56,7 +56,7 @@
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
                             nsINoIncomingServer,
-			    nsILocalMailIncomingServer);
+			    nsILocalMailIncomingServer)
 
                             
 

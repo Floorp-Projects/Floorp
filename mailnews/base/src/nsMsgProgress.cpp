@@ -44,8 +44,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsMsgProgress);
-NS_IMPL_THREADSAFE_RELEASE(nsMsgProgress);
+NS_IMPL_THREADSAFE_ADDREF(nsMsgProgress)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgProgress)
 
 NS_INTERFACE_MAP_BEGIN(nsMsgProgress)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStatusFeedback)

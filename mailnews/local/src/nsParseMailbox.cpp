@@ -79,7 +79,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS_INHERITED2(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener, nsIDBChangeListener);
+NS_IMPL_ISUPPORTS_INHERITED2(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener, nsIDBChangeListener)
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 

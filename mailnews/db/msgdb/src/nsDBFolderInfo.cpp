@@ -95,7 +95,7 @@ public:
   virtual ~nsFolderCharsetObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(nsFolderCharsetObserver, nsIObserver);
+NS_IMPL_ISUPPORTS1(nsFolderCharsetObserver, nsIObserver)
 
 NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
@@ -1064,10 +1064,10 @@ NS_IMETHODIMP nsTransferDBFolderInfo::SetMailboxName(nsString *boxName)
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewType, nsMsgViewTypeValue, m_viewType);
-NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewFlags, nsMsgViewFlagsTypeValue, m_viewFlags);
-NS_IMPL_GETSET(nsTransferDBFolderInfo, SortType, nsMsgViewSortTypeValue, m_sortType);
-NS_IMPL_GETSET(nsTransferDBFolderInfo, SortOrder, nsMsgViewSortOrderValue, m_sortOrder);
+NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewType, nsMsgViewTypeValue, m_viewType)
+NS_IMPL_GETSET(nsTransferDBFolderInfo, ViewFlags, nsMsgViewFlagsTypeValue, m_viewFlags)
+NS_IMPL_GETSET(nsTransferDBFolderInfo, SortType, nsMsgViewSortTypeValue, m_sortType)
+NS_IMPL_GETSET(nsTransferDBFolderInfo, SortOrder, nsMsgViewSortOrderValue, m_sortOrder)
 
 /* void InitFromTransferInfo (in nsIDBFolderInfo transferInfo); */
 NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo)

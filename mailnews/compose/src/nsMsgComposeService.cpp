@@ -151,7 +151,7 @@ nsMsgComposeService::nsMsgComposeService()
   mCachedWindows = nsnull;
 }
 
-NS_IMPL_ISUPPORTS4(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS4(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler, nsISupportsWeakReference)
 
 nsMsgComposeService::~nsMsgComposeService()
 {

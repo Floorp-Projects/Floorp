@@ -74,7 +74,7 @@ nsMsgRuleAction::~nsMsgRuleAction()
 
 NS_IMPL_ISUPPORTS1(nsMsgRuleAction, nsIMsgRuleAction)
 
-NS_IMPL_GETSET(nsMsgRuleAction, Type, nsMsgRuleActionType, m_type);
+NS_IMPL_GETSET(nsMsgRuleAction, Type, nsMsgRuleActionType, m_type)
 
 NS_IMETHODIMP nsMsgRuleAction::SetPriority(nsMsgPriorityValue aPriority)
 {
@@ -150,10 +150,10 @@ nsMsgFilter::~nsMsgFilter()
 
 NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 
-NS_IMPL_GETSET(nsMsgFilter, FilterType, nsMsgFilterTypeType, m_type);
-NS_IMPL_GETSET(nsMsgFilter, Enabled, PRBool, m_enabled);
-NS_IMPL_GETSET(nsMsgFilter, Temporary, PRBool, m_temporary);
-NS_IMPL_GETSET(nsMsgFilter, Unparseable, PRBool, m_unparseable);
+NS_IMPL_GETSET(nsMsgFilter, FilterType, nsMsgFilterTypeType, m_type)
+NS_IMPL_GETSET(nsMsgFilter, Enabled, PRBool, m_enabled)
+NS_IMPL_GETSET(nsMsgFilter, Temporary, PRBool, m_temporary)
+NS_IMPL_GETSET(nsMsgFilter, Unparseable, PRBool, m_unparseable)
 
 NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {

@@ -61,4 +61,4 @@ nsPluginModuleDtor(nsIModule *self)
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsPluginModule, gComponentInfo,
-                              nsPluginModuleDtor);
+                              nsPluginModuleDtor)

@@ -44,7 +44,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 
-NS_IMPL_AGGREGATED(nsSymantecDebugManager);
+NS_IMPL_AGGREGATED(nsSymantecDebugManager)
 
 nsSymantecDebugManager::nsSymantecDebugManager(nsISupports* outer, nsJVMManager* jvmMgr)
     : fJVMMgr(jvmMgr)

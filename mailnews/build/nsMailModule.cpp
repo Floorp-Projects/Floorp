@@ -305,29 +305,29 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgStatusFeedback)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribableServer, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribableServer, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgPrintEngine)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFolderCompactState)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineStoreCompactState)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadedDBView);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadsWithUnreadDBView);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadedDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadsWithUnreadDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler)
 #ifdef XP_WIN
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init)
 #endif
 #ifdef XP_OS2
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgContentPolicy, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgContentPolicy, Init)
 
 ////////////////////////////////////////////////////////////////////////////////
 // addrbook factories
@@ -372,39 +372,39 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
 
 ////////////////////////////////////////////////////////////////////////////////
 // bayesian spam filter factories
 ////////////////////////////////////////////////////////////////////////////////
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBayesianFilter);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBayesianFilter)
 
 ////////////////////////////////////////////////////////////////////////////////
 // compose factories
 ////////////////////////////////////////////////////////////////////////////////
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompose);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSendListener);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgressParams);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAttachment);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompose)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSendListener)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgressParams)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAttachment)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDraft)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgComposeService, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeContentHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailtoUrl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRecipientArray);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposeStringService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDataSource);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDelegateFactory);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsURLFetcher);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompUtils);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgComposeService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeContentHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailtoUrl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRecipientArray)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposeStringService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDataSource)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDelegateFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsURLFetcher)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompUtils)
 
 ////////////////////////////////////////////////////////////////////////////////
 // imap factories
@@ -457,10 +457,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHeaders)
 ////////////////////////////////////////////////////////////////////////////////
 // mime emitter factories
 ////////////////////////////////////////////////////////////////////////////////
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimePlainEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimePlainEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init)
 
 static NS_METHOD RegisterMimeEmitter(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, 
                                      const char *componentType, const nsModuleComponentInfo *info)
@@ -489,12 +489,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDownloadDialogArgs)
 ////////////////////////////////////////////////////////////////////////////////
 // mail view factories
 ////////////////////////////////////////////////////////////////////////////////
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMailViewList);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMailViewList)
 
 ////////////////////////////////////////////////////////////////////////////////
 // mdn factories
 ////////////////////////////////////////////////////////////////////////////////
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMdnGenerator);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMdnGenerator)
 
 ////////////////////////////////////////////////////////////////////////////////
 // vcard factories 

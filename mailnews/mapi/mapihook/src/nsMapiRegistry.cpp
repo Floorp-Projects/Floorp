@@ -51,7 +51,7 @@
 /** Implementation of the nsIMapiRegistry interface.
  *  Use standard implementation of nsISupports stuff.
  */
-NS_IMPL_ISUPPORTS1(nsMapiRegistry, nsIMapiRegistry);
+NS_IMPL_ISUPPORTS1(nsMapiRegistry, nsIMapiRegistry)
 
 nsMapiRegistry::nsMapiRegistry() {
     m_DefaultMailClient = m_registryUtils.IsDefaultMailClient();

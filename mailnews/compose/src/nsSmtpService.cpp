@@ -110,7 +110,7 @@ nsSmtpService::~nsSmtpService()
 
 }
 
-NS_IMPL_ISUPPORTS2(nsSmtpService, nsISmtpService, nsIProtocolHandler);
+NS_IMPL_ISUPPORTS2(nsSmtpService, nsISmtpService, nsIProtocolHandler)
 
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,

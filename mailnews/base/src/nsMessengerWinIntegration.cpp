@@ -299,8 +299,8 @@ nsMessengerWinIntegration::~nsMessengerWinIntegration()
   DestroyBiffIcon(); 
 }
 
-NS_IMPL_ADDREF(nsMessengerWinIntegration);
-NS_IMPL_RELEASE(nsMessengerWinIntegration);
+NS_IMPL_ADDREF(nsMessengerWinIntegration)
+NS_IMPL_RELEASE(nsMessengerWinIntegration)
 
 NS_INTERFACE_MAP_BEGIN(nsMessengerWinIntegration)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMessengerOSIntegration)

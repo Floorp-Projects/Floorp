@@ -75,8 +75,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // Thes macro expands to the aggregated query interface scheme.
 
-NS_IMPL_ADDREF(nsCSecurityContext);
-NS_IMPL_RELEASE(nsCSecurityContext);
+NS_IMPL_ADDREF(nsCSecurityContext)
+NS_IMPL_RELEASE(nsCSecurityContext)
 
 NS_METHOD
 nsCSecurityContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)

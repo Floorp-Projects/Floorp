@@ -89,8 +89,8 @@ nsSanePluginFactoryImpl::QueryInterface(const nsIID &aIID,
 }
 
 // Standard implementation of AddRef and Release
-NS_IMPL_ADDREF( nsSanePluginFactoryImpl );
-NS_IMPL_RELEASE( nsSanePluginFactoryImpl );
+NS_IMPL_ADDREF( nsSanePluginFactoryImpl )
+NS_IMPL_RELEASE( nsSanePluginFactoryImpl )
 
 NS_IMETHODIMP
 nsSanePluginFactoryImpl::CreateInstance( nsISupports *aOuter,

@@ -38,7 +38,7 @@
 // GIF Decoder Implementation
 // This is an adaptor between GIF2 and imgIDecoder
 
-NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder);
+NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder)
 
 nsGIFDecoder2::nsGIFDecoder2()
   : mCurrentRow(-1)

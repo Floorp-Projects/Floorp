@@ -56,7 +56,7 @@
 
 #include "nsAbBaseCID.h"
 
-NS_IMPL_ISUPPORTS1(nsAbMDBDirFactory, nsIAbDirFactory);
+NS_IMPL_ISUPPORTS1(nsAbMDBDirFactory, nsIAbDirFactory)
 
 nsAbMDBDirFactory::nsAbMDBDirFactory()
 {

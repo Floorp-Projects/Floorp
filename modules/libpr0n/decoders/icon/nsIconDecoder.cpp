@@ -31,8 +31,8 @@
 #include "nsIComponentManager.h"
 #include "nsRect.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder);
-NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder);
+NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder)
+NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder)
 
 NS_INTERFACE_MAP_BEGIN(nsIconDecoder)
    NS_INTERFACE_MAP_ENTRY(imgIDecoder)

@@ -75,8 +75,8 @@ nsMsgStatusFeedback::~nsMsgStatusFeedback()
   mBundle = nsnull;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback);
-NS_IMPL_THREADSAFE_RELEASE(nsMsgStatusFeedback);
+NS_IMPL_THREADSAFE_ADDREF(nsMsgStatusFeedback)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgStatusFeedback)
 
 NS_INTERFACE_MAP_BEGIN(nsMsgStatusFeedback)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStatusFeedback)

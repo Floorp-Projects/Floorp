@@ -314,34 +314,34 @@ nsImapIncomingServer::SetUsingSubscription(PRBool bVal)
 }
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DualUseFolders,
-                        "dual_use_folders");
+                        "dual_use_folders")
 			
 			
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,
-                       "admin_url");
+                       "admin_url")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, CleanupInboxOnExit,
-                        "cleanup_inbox_on_exit");
+                        "cleanup_inbox_on_exit")
 			
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OfflineDownload,
-                        "offline_download");
+                        "offline_download")
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
-                       "max_cached_connections");
+                       "max_cached_connections")
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, EmptyTrashThreshhold,
-                       "empty_trash_threshhold");
+                       "empty_trash_threshhold")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreReadMailInPFC,
-                        "store_read_mail_in_pfc");
+                        "store_read_mail_in_pfc")
 			
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreSentMailInPFC,
-                        "store_sent_mail_in_pfc");
+                        "store_sent_mail_in_pfc")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DownloadBodiesOnGetNewMail,
-                        "download_bodies_on_get_new_mail");
+                        "download_bodies_on_get_new_mail")
 //NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
-//                       "delete_model");
+//                       "delete_model")
 
 NS_IMETHODIMP								   	
 nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
@@ -380,28 +380,28 @@ nsImapIncomingServer::SetDeleteModel(PRInt32 ivalue)
 }
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
-                       "timeout");
+                       "timeout")
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, CapabilityPref,
-                       "capability");
+                       "capability")
 
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PersonalNamespace,
-                       "namespace.personal");
+                       "namespace.personal")
 
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PublicNamespace,
-                       "namespace.public");
+                       "namespace.public")
 
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace,
-                       "namespace.other_users");
+                       "namespace.other_users")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, FetchByChunks,
-                       "fetch_by_chunks");
+                       "fetch_by_chunks")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, MimePartsOnDemand,
-                       "mime_parts_on_demand");
+                       "mime_parts_on_demand")
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, AOLMailboxView,
-                       "aol_mailbox_view");
+                       "aol_mailbox_view")
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetIsAOLServer(PRBool *aBool)

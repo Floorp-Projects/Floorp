@@ -7398,8 +7398,8 @@ protected:
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
-NS_IMPL_ADDREF(nsImapCacheStreamListener);
-NS_IMPL_RELEASE(nsImapCacheStreamListener);
+NS_IMPL_ADDREF(nsImapCacheStreamListener)
+NS_IMPL_RELEASE(nsImapCacheStreamListener)
 
 NS_INTERFACE_MAP_BEGIN(nsImapCacheStreamListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)

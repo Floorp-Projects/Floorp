@@ -1367,8 +1367,8 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 	return res;
 }
 
-NS_IMPL_GETSET(nsMsgSearchTerm, Attrib, nsMsgSearchAttribValue, m_attribute);
-NS_IMPL_GETSET(nsMsgSearchTerm, Op, nsMsgSearchOpValue, m_operator);
+NS_IMPL_GETSET(nsMsgSearchTerm, Attrib, nsMsgSearchAttribValue, m_attribute)
+NS_IMPL_GETSET(nsMsgSearchTerm, Op, nsMsgSearchOpValue, m_operator)
 
 
 NS_IMETHODIMP
@@ -1420,8 +1420,8 @@ nsMsgSearchTerm::SetArbitraryHeader(const char* aValue)
     return NS_OK;
 }
 
-NS_IMPL_GETSET(nsMsgSearchTerm, BeginsGrouping, PRBool, mEndsGrouping);
-NS_IMPL_GETSET(nsMsgSearchTerm, EndsGrouping, PRBool, mEndsGrouping);
+NS_IMPL_GETSET(nsMsgSearchTerm, BeginsGrouping, PRBool, mEndsGrouping)
+NS_IMPL_GETSET(nsMsgSearchTerm, EndsGrouping, PRBool, mEndsGrouping)
 
 //-----------------------------------------------------------------------------
 // nsMsgSearchScopeTerm implementation

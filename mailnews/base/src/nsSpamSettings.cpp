@@ -117,11 +117,11 @@ NS_IMETHODIMP nsSpamSettings::SetManualMarkMode(PRInt32 aManualMarkMode)
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled);
-NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam);
-NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge);
-NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList);
-NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark);
+NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled)
+NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam)
+NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge)
+NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList)
+NS_IMPL_GETSET(nsSpamSettings, ManualMark, PRBool, mManualMark)
 
 NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
 {

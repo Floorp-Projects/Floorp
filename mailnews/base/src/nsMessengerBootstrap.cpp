@@ -56,9 +56,9 @@
 #include "nsIDialogParamBlock.h"
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap);
-NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap);
-NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsICmdLineHandler, nsIMessengerWindowService);
+NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap)
+NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap)
+NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsICmdLineHandler, nsIMessengerWindowService)
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {

@@ -53,10 +53,10 @@
 #include "nsSMimeJSHelper.h"
 #include "nsEncryptedSMIMEURIsService.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSecure);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSMIMEComposeFields);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSMimeJSHelper);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEncryptedSMIMEURIsService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSecure)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSMIMEComposeFields)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSMimeJSHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEncryptedSMIMEURIsService)
 
 ////////////////////////////////////////////////////////////
 //

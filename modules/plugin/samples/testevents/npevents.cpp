@@ -253,7 +253,7 @@ static const nsModuleComponentInfo gComponentInfo[] = {
       EventsPluginInstance::UnregisterSelf },
 };
 
-NS_IMPL_NSGETMODULE(EventsPlugin, gComponentInfo);
+NS_IMPL_NSGETMODULE(EventsPlugin, gComponentInfo)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -570,7 +570,7 @@ EventsPluginStreamListener::~EventsPluginStreamListener(void) {
 // This macro produces a simple version of QueryInterface, AddRef and Release.
 // See the nsISupports.h header file for details.
 
-NS_IMPL_ISUPPORTS1(EventsPluginStreamListener, nsIPluginStreamListener);
+NS_IMPL_ISUPPORTS1(EventsPluginStreamListener, nsIPluginStreamListener)
 
 NS_METHOD EventsPluginStreamListener::OnStartBinding(nsIPluginStreamInfo * /*pluginInfo*/) {
 #ifdef EVENTSPLUGIN_DEBUG

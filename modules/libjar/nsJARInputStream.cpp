@@ -30,7 +30,7 @@
  *  nsISupports implementation
  *--------------------------------------------*/
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream)
 
 /*----------------------------------------------------------
  * nsJARInputStream implementation

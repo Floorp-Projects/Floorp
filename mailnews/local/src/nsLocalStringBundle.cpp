@@ -52,8 +52,8 @@ nsLocalStringService::nsLocalStringService()
 nsLocalStringService::~nsLocalStringService()
 {}
 
-NS_IMPL_ADDREF(nsLocalStringService);
-NS_IMPL_RELEASE(nsLocalStringService);
+NS_IMPL_ADDREF(nsLocalStringService)
+NS_IMPL_RELEASE(nsLocalStringService)
 
 NS_INTERFACE_MAP_BEGIN(nsLocalStringService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStringService)

@@ -1037,7 +1037,7 @@ nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
 // nsRelativeFilePref
 //----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRelativeFilePref, nsIRelativeFilePref);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRelativeFilePref, nsIRelativeFilePref)
 
 nsRelativeFilePref::nsRelativeFilePref()
 {

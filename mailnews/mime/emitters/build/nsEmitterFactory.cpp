@@ -53,10 +53,10 @@
 #include "nsMimeXmlEmitter.h"
 #include "nsMimePlainEmitter.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimePlainEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimePlainEmitter)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init)
 
 
 static NS_METHOD RegisterMimeEmitter(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, 

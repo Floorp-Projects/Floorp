@@ -584,4 +584,4 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
     return NS_OK;
 }
 
-NS_IMPL_GETSET(nsMsgWindow, Stopped, PRBool, m_stopped);
+NS_IMPL_GETSET(nsMsgWindow, Stopped, PRBool, m_stopped)

@@ -126,7 +126,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
 
 static const nsModuleComponentInfo components[] =
 {

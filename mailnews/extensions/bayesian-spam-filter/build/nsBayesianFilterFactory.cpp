@@ -49,7 +49,7 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsBayesianFilter.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBayesianFilter);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBayesianFilter)
 
 /////////////////////////////////////////////////////////////////////////////
 //

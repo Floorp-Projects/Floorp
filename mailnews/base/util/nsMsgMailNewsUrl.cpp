@@ -80,8 +80,8 @@ nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
 	PR_FREEIF(m_errorMessage);
 }
   
-NS_IMPL_THREADSAFE_ADDREF(nsMsgMailNewsUrl);
-NS_IMPL_THREADSAFE_RELEASE(nsMsgMailNewsUrl);
+NS_IMPL_THREADSAFE_ADDREF(nsMsgMailNewsUrl)
+NS_IMPL_THREADSAFE_RELEASE(nsMsgMailNewsUrl)
 
 NS_INTERFACE_MAP_BEGIN(nsMsgMailNewsUrl)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailNewsUrl)

@@ -181,7 +181,7 @@ extern "C" {
 	  extern char** fieldedProp;
 
 #ifdef __cplusplus
-    };
+    }
 #endif
 
 int yyparse();

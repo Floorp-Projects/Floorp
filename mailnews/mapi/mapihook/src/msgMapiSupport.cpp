@@ -59,7 +59,7 @@
  *  Use standard implementation of nsISupports stuff.
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMapiSupport, nsIMapiSupport, nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsMapiSupport, nsIMapiSupport, nsIObserver)
 
 static NS_METHOD nsMapiRegistrationProc(nsIComponentManager *aCompMgr,
                    nsIFile *aPath, const char *registryLocation, const char *componentType,
@@ -157,8 +157,8 @@ nsMapiSupport::ShutdownMAPISupport()
     return NS_OK ;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiRegistry);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiSupport);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiRegistry)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMapiSupport)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -180,5 +180,5 @@ static const nsModuleComponentInfo components[] =
 }
 };
 
-NS_IMPL_NSGETMODULE(msgMapiModule, components);
+NS_IMPL_NSGETMODULE(msgMapiModule, components)
 

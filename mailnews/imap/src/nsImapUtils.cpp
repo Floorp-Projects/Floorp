@@ -301,18 +301,18 @@ nsImapMailboxSpec::~nsImapMailboxSpec()
   nsCRT::free(hostName);
 }
 
-NS_IMPL_GETSET(nsImapMailboxSpec, Folder_UIDVALIDITY, PRInt32, folder_UIDVALIDITY);
-NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_messages, PRInt32, number_of_messages);
-NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_unseen_messages, PRInt32, number_of_unseen_messages);
-NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_recent_messages, PRInt32, number_of_recent_messages);
-NS_IMPL_GETSET(nsImapMailboxSpec, HierarchySeparator, char, hierarchySeparator);
-NS_IMPL_GETSET(nsImapMailboxSpec, FolderSelected, PRBool, folderSelected);
-NS_IMPL_GETSET(nsImapMailboxSpec, DiscoveredFromLsub, PRBool, discoveredFromLsub);
-NS_IMPL_GETSET(nsImapMailboxSpec, OnlineVerified, PRBool, onlineVerified);
-NS_IMPL_GETSET_STR(nsImapMailboxSpec, HostName, hostName);
-NS_IMPL_GETSET_STR(nsImapMailboxSpec, AllocatedPathName, allocatedPathName);
-NS_IMPL_GETSET(nsImapMailboxSpec, Box_flags, PRUint32, box_flags);
-NS_IMPL_GETSET(nsImapMailboxSpec, NamespaceForFolder, nsIMAPNamespace *, namespaceForFolder);
+NS_IMPL_GETSET(nsImapMailboxSpec, Folder_UIDVALIDITY, PRInt32, folder_UIDVALIDITY)
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_messages, PRInt32, number_of_messages)
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_unseen_messages, PRInt32, number_of_unseen_messages)
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_recent_messages, PRInt32, number_of_recent_messages)
+NS_IMPL_GETSET(nsImapMailboxSpec, HierarchySeparator, char, hierarchySeparator)
+NS_IMPL_GETSET(nsImapMailboxSpec, FolderSelected, PRBool, folderSelected)
+NS_IMPL_GETSET(nsImapMailboxSpec, DiscoveredFromLsub, PRBool, discoveredFromLsub)
+NS_IMPL_GETSET(nsImapMailboxSpec, OnlineVerified, PRBool, onlineVerified)
+NS_IMPL_GETSET_STR(nsImapMailboxSpec, HostName, hostName)
+NS_IMPL_GETSET_STR(nsImapMailboxSpec, AllocatedPathName, allocatedPathName)
+NS_IMPL_GETSET(nsImapMailboxSpec, Box_flags, PRUint32, box_flags)
+NS_IMPL_GETSET(nsImapMailboxSpec, NamespaceForFolder, nsIMAPNamespace *, namespaceForFolder)
 
 NS_IMETHODIMP nsImapMailboxSpec::GetUnicharPathName(PRUnichar **aUnicharPathName)
 {

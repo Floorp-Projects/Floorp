@@ -448,34 +448,34 @@ nsMsgIdentity::ClearAllValues()
 }
 
 
-NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
+NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard)
   
-NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);
+NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey)
 
-NS_IMPL_IDPREF_STR(SmtpServerKey, "smtpServer");
-NS_IMPL_IDPREF_WSTR(FullName, "fullName");
-NS_IMPL_IDPREF_STR(Email, "useremail");
-NS_IMPL_IDPREF_STR(ReplyTo, "reply_to");
-NS_IMPL_IDPREF_WSTR(Organization, "organization");
-NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html");
-NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
-NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
+NS_IMPL_IDPREF_STR(SmtpServerKey, "smtpServer")
+NS_IMPL_IDPREF_WSTR(FullName, "fullName")
+NS_IMPL_IDPREF_STR(Email, "useremail")
+NS_IMPL_IDPREF_STR(ReplyTo, "reply_to")
+NS_IMPL_IDPREF_WSTR(Organization, "organization")
+NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html")
+NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard")
+NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature")
 
-NS_IMPL_IDPREF_BOOL(AutoQuote, "auto_quote");
-NS_IMPL_IDPREF_INT(ReplyOnTop, "reply_on_top");
+NS_IMPL_IDPREF_BOOL(AutoQuote, "auto_quote")
+NS_IMPL_IDPREF_INT(ReplyOnTop, "reply_on_top")
 
-NS_IMPL_IDPREF_INT(SignatureDate,"sig_date");
+NS_IMPL_IDPREF_INT(SignatureDate,"sig_date")
 
-NS_IMPL_IDPREF_BOOL(DoFcc, "fcc");
+NS_IMPL_IDPREF_BOOL(DoFcc, "fcc")
 
-NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder");
-NS_IMPL_IDPREF_STR(FccFolderPickerMode, "fcc_folder_picker_mode");
-NS_IMPL_IDPREF_STR(DraftsFolderPickerMode, "drafts_folder_picker_mode");
-NS_IMPL_IDPREF_STR(TmplFolderPickerMode, "tmpl_folder_picker_mode");
+NS_IMPL_FOLDERPREF_STR(FccFolder, "fcc_folder")
+NS_IMPL_IDPREF_STR(FccFolderPickerMode, "fcc_folder_picker_mode")
+NS_IMPL_IDPREF_STR(DraftsFolderPickerMode, "drafts_folder_picker_mode")
+NS_IMPL_IDPREF_STR(TmplFolderPickerMode, "tmpl_folder_picker_mode")
 
-NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self");
-NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
-NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
+NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self")
+NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other")
+NS_IMPL_IDPREF_STR (BccList, "bcc_other_list")
 
 NS_IMETHODIMP
 nsMsgIdentity::GetDoBcc(PRBool *aValue)
@@ -563,14 +563,14 @@ nsMsgIdentity::SetDoBccList(const char *aValue)
   return SetCharAttribute("doBccList", aValue);
 }
 
-NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder");
-NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder");
+NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder")
+NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder")
 
-NS_IMPL_IDPREF_BOOL(ShowSaveMsgDlg, "showSaveMsgDlg");
-NS_IMPL_IDPREF_STR (DirectoryServer, "directoryServer");
-NS_IMPL_IDPREF_BOOL(OverrideGlobalPref, "overrideGlobal_Pref");
+NS_IMPL_IDPREF_BOOL(ShowSaveMsgDlg, "showSaveMsgDlg")
+NS_IMPL_IDPREF_STR (DirectoryServer, "directoryServer")
+NS_IMPL_IDPREF_BOOL(OverrideGlobalPref, "overrideGlobal_Pref")
 
-NS_IMPL_IDPREF_BOOL(Valid, "valid");
+NS_IMPL_IDPREF_BOOL(Valid, "valid")
 
 nsresult 
 nsMsgIdentity::getFolderPref(const char *prefname, char **retval, PRBool mustHaveDefault)

@@ -59,15 +59,15 @@ nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchValueImpl, nsIMsgSearchValue)
 
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Priority, nsMsgPriorityValue, mValue.u.priority);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Status, PRUint32, mValue.u.msgStatus);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Size, PRUint32, mValue.u.size);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, MsgKey, nsMsgKey, mValue.u.key);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Age, PRUint32, mValue.u.age);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Date, PRTime, mValue.u.date);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Attrib, nsMsgSearchAttribValue, mValue.attribute);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, Label, nsMsgLabelValue, mValue.u.label);
-NS_IMPL_GETSET(nsMsgSearchValueImpl, JunkStatus, PRUint32, mValue.u.junkStatus);
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Priority, nsMsgPriorityValue, mValue.u.priority)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Status, PRUint32, mValue.u.msgStatus)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Size, PRUint32, mValue.u.size)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, MsgKey, nsMsgKey, mValue.u.key)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Age, PRUint32, mValue.u.age)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Date, PRTime, mValue.u.date)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Attrib, nsMsgSearchAttribValue, mValue.attribute)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, Label, nsMsgLabelValue, mValue.u.label)
+NS_IMPL_GETSET(nsMsgSearchValueImpl, JunkStatus, PRUint32, mValue.u.junkStatus)
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)

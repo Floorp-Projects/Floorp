@@ -62,7 +62,7 @@
  *  
  */
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsPalmSyncSupport, nsIPalmSyncSupport, nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPalmSyncSupport, nsIPalmSyncSupport, nsIObserver)
 
 static NS_METHOD nsPalmSyncRegistrationProc(nsIComponentManager *aCompMgr,
                    nsIFile *aPath, const char *registryLocation, const char *componentType,
@@ -171,7 +171,7 @@ nsPalmSyncSupport::UnRegisterPalmSync()
 }
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPalmSyncSupport);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPalmSyncSupport)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -186,5 +186,5 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE(PalmSyncModule, components);
+NS_IMPL_NSGETMODULE(PalmSyncModule, components)
 

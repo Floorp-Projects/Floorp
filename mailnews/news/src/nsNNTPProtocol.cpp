@@ -685,8 +685,8 @@ protected:
   nsCOMPtr<nsIMsgMailNewsUrl> mRunningUrl;
 };
 
-NS_IMPL_ADDREF(nsNntpCacheStreamListener);
-NS_IMPL_RELEASE(nsNntpCacheStreamListener);
+NS_IMPL_ADDREF(nsNntpCacheStreamListener)
+NS_IMPL_RELEASE(nsNntpCacheStreamListener)
 
 NS_INTERFACE_MAP_BEGIN(nsNntpCacheStreamListener)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)

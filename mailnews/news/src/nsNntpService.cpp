@@ -106,8 +106,8 @@ nsNntpService::~nsNntpService()
 	// do nothing
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
-NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
+NS_IMPL_THREADSAFE_ADDREF(nsNntpService)
+NS_IMPL_THREADSAFE_RELEASE(nsNntpService)
 
 NS_IMPL_QUERY_INTERFACE7(nsNntpService,
                          nsINntpService,

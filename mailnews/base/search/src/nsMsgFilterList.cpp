@@ -96,7 +96,7 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFi
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsMsgFilterList, LoggingEnabled, PRBool, m_loggingEnabled);
+NS_IMPL_GETSET(nsMsgFilterList, LoggingEnabled, PRBool, m_loggingEnabled)
 
 NS_IMETHODIMP nsMsgFilterList::GetFolder(nsIMsgFolder **aFolder)
 {

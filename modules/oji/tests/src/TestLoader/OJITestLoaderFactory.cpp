@@ -47,7 +47,7 @@ static const nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE(OJITestLoader, components);
+NS_IMPL_NSGETMODULE(OJITestLoader, components)
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, 
                                              const char *path)

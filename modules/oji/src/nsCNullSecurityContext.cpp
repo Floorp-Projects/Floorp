@@ -35,7 +35,7 @@
 #include "nsCNullSecurityContext.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1(nsCNullSecurityContext, nsISecurityContext);
+NS_IMPL_ISUPPORTS1(nsCNullSecurityContext, nsISecurityContext)
 
 NS_IMETHODIMP nsCNullSecurityContext::Implies(const char* target, const char* action, PRBool* bActionAllowed)
 {    

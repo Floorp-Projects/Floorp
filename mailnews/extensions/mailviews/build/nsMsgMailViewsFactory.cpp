@@ -49,7 +49,7 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMsgMailViewList.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMailViewList);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMailViewList)
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -49,7 +49,7 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMsgMdnGenerator.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMdnGenerator);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMdnGenerator)
 
 /////////////////////////////////////////////////////////////////////////////
 //

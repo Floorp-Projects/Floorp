@@ -136,7 +136,7 @@ nsImapExtensionSinkProxy::~nsImapExtensionSinkProxy()
     NS_IF_RELEASE (m_realImapExtensionSink);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapExtensionSinkProxy, nsIImapExtensionSink);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapExtensionSinkProxy, nsIImapExtensionSink)
 
 NS_IMETHODIMP
 nsImapExtensionSinkProxy::ClearFolderRights(nsIImapProtocol* aProtocol,

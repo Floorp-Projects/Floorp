@@ -103,4 +103,4 @@ static const nsModuleComponentInfo gComponents[] = {
     nsImapServiceConstructor }
 };
 
-NS_IMPL_NSGETMODULE(IMAP_factory, gComponents);
+NS_IMPL_NSGETMODULE(IMAP_factory, gComponents)

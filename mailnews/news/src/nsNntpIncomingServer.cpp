@@ -152,11 +152,11 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
     NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
 }
 
-NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on");
-NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, MarkOldRead, "mark_old_read");
-NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, Abbreviate, "abbreviate");
-NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, PushAuth, "always_authenticate");
-NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaxArticles, "max_articles");
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on")
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, MarkOldRead, "mark_old_read")
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, Abbreviate, "abbreviate")
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, PushAuth, "always_authenticate")
+NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaxArticles, "max_articles")
 
 NS_IMETHODIMP
 nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
@@ -463,7 +463,7 @@ nsNntpIncomingServer::CloseCachedConnections()
 }
 
 NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaximumConnectionsNumber,
-                       "max_cached_connections");
+                       "max_cached_connections")
 
 PRBool
 nsNntpIncomingServer::ConnectionTimeOut(nsINNTPProtocol* aConnection)

@@ -292,7 +292,7 @@ ns4xPlugin::CheckClassInitialized(void)
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports stuff
-NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory);
+NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory)
 
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr)
 {
@@ -955,7 +955,7 @@ public:
   NPStream* GetNPStream(void) { return &fNPStream; };
 };
 
-NS_IMPL_ISUPPORTS1(ns4xStreamWrapper, nsISupports);
+NS_IMPL_ISUPPORTS1(ns4xStreamWrapper, nsISupports)
 
 ns4xStreamWrapper::ns4xStreamWrapper(nsIOutputStream* stream)
   : fStream(stream)
