@@ -2045,30 +2045,12 @@ var nsFindNextCommand =
 
   doCommand: function(aCommand)
   {
-    var prefs = GetPrefs();
-    var newfind;
-    if (prefs) {
-      try {
-        newfind = prefs.getBoolPref("editor.new_find");
-      }
-      catch (ex) {
-        newfind = false;
-      }
+    try {
+      var editorXUL = document.getElementById("content-frame");
+      var findInst = editorXUL.webBrowserFind;
+      findInst.findNext();
     }
-    if (newfind)
-    {
-      try {
-        var editorXUL = document.getElementById("content-frame");
-        var findInst = editorXUL.webBrowserFind;
-        findInst.findNext();
-      }
-      catch (ex) {
-        nsFindCommand.doCommand();
-      }
-    }
-    else {
-      window.editorShell.FindNext();
-    }
+    catch (ex) {}
   }
 };
 
@@ -3279,10 +3261,15 @@ var nsConvertToTable =
     {
       // Don't allow if table or cell is the selection
       var element = gEditor.getSelectedElement("");
-
-      if (element && (element.nodeName == "td" ||
-                      element.nodeName == "table"))
-        return false;
+      if (element)
+      {
+        var name = element.nodeName.toLowerCase();
+        if (name == "td" ||
+            name == "th" ||
+            name == "caption" ||
+            name == "table")
+          return false;
+      }
 
       // Selection start and end must be in the same cell
       //   in same cell or both are NOT in a cell
