@@ -1,8 +1,8 @@
 #############################################################################
-# $Id: Utils.pm,v 1.13 1999/08/24 22:30:48 leif%netscape.com Exp $
+# $Id: Utils.pm,v 1.14 2000/10/05 19:47:31 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -196,7 +196,7 @@ sub str2Scope
 #
 sub askPassword
 {
-  my ($prompt) = $_[0];
+  my ($prompt) = shift;
   my ($hasReadKey) = 0;
 
   eval "use Term::ReadKey";

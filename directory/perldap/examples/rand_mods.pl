@@ -1,18 +1,25 @@
 #!/usr/bin/perl5
 #################################################################################
-# $Id: rand_mods.pl,v 1.2 1999/08/24 22:30:51 leif%netscape.com Exp $
+# $Id: rand_mods.pl,v 1.3 2000/10/05 19:47:39 leif%netscape.com Exp $
 #
-# The contents of this file are subject to the Netscape Public License Version
-# 1.0 (the "License"); you may not use this file except in compliance with the
-# License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
 #
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-# the specific language governing rights and limitations under the License. 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are Copyright (C) 1998 Netscape
-# Communications Corporation. All Rights Reserved.
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
 #
 # SYNOPSIS:
 #    Modify an attribute for one or more entries, or possibly delete it.

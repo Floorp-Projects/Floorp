@@ -1,9 +1,9 @@
 /*
  *******************************************************************************
- * $Id: constant.h,v 1.7 1998/08/13 09:14:14 leif Exp $
+ * $Id: constant.h,v 1.8 2000/10/05 19:47:32 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
+ * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *

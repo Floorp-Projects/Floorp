@@ -1,8 +1,8 @@
 /******************************************************************************
- * $Id: API.xs,v 1.17 1999/08/24 22:30:41 leif%netscape.com Exp $
+ * $Id: API.xs,v 1.18 2000/10/05 19:47:27 leif%netscape.com Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
+ * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
@@ -184,8 +184,9 @@ avref2charptrptr(SV *avref)
    SV **current_val;
    char **tmp_cpp;
 
-   if (SvTYPE(SvRV(avref)) != SVt_PVAV ||
-        (avref_arraylen = av_len((AV *)SvRV(avref))) < 0)
+   if ((! SvROK(avref)) ||
+       (SvTYPE(SvRV(avref)) != SVt_PVAV) ||
+       ((avref_arraylen = av_len((AV *)SvRV(avref))) < 0))
    {
       return NULL;
    }
@@ -212,8 +213,9 @@ avref2berptrptr(SV *avref)
    char *tmp_char,*tmp2;
    struct berval **tmp_ber;
 
-   if (SvTYPE(SvRV(avref)) != SVt_PVAV || 
-        (avref_arraylen = av_len((AV *)SvRV(avref))) < 0)
+   if ((! SvROK(avref)) ||
+       (SvTYPE(SvRV(avref)) != SVt_PVAV) || 
+       ((avref_arraylen = av_len((AV *)SvRV(avref))) < 0))
    {
       return NULL;
    }

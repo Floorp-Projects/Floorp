@@ -1,8 +1,8 @@
 #############################################################################
-# $Id: API.pm,v 1.15 1999/08/24 22:30:40 leif%netscape.com Exp $
+# $Id: API.pm,v 1.16 2000/10/05 19:47:26 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -247,7 +247,7 @@ require AutoLoader;
 # Add Everything in %EXPORT_TAGS to @EXPORT_OK
 Exporter::export_ok_tags(keys %EXPORT_TAGS);
 
-$VERSION = '1.4';
+$VERSION = '1.41';
 
 # The XS 'constant' routine returns an integer.  There are all constants
 # we want to return something else.
@@ -462,7 +462,7 @@ OUTPUT:
   status - Integer
   msgidp - Integer
 
-AVAILABILITY: V2/V3
+AVAILABILITY: V3
 
 EXAMPLE:
 
@@ -618,7 +618,7 @@ OUTPUT:
   status - Integer
   msgidp - Integer
 
-AVAILABILITY: V2/V3
+AVAILABILITY: V3
 
 EXAMPLE:
 

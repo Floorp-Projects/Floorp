@@ -1,8 +1,8 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.15 1999/08/24 22:30:46 leif%netscape.com Exp $
+# $Id: Makefile.PL,v 1.16 2000/10/05 19:47:28 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -129,6 +129,7 @@ if (!$silent)
    chomp ($lib_line = <STDIN>);
    $lib_line = $lline unless $lib_line =~ /\S/;
 } else {
+  $lib_line = $lline;
   print "\n";
 }
 
@@ -159,6 +160,12 @@ push(@extras,
      ABSTRACT => 'Perl methods for LDAP C API calls',
      AUTHOR   => 'Netscape Communications Corp., Inc. and Clayton Donley')
     if ($] >= 5.005);
+
+#
+# Temp fix so this version compiles under Perl 5.6 - have to
+# change internal variables for version 2.0
+#
+push(@extras, POLLUTE => 1) if ($] >= 5.006);
 
 #
 # Ok, let's do it!

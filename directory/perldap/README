@@ -118,14 +118,14 @@ License/Copyright
 Portions by Netscape (c) Copyright 1998 Netscape Communications Corp, Inc.
 Portions by Clayton Donley (c) Copyright 1998 Clayton Donley
 
-Please read the MPL-1.0.txt file included for information on the Mozilla
+Please read the MPL-1.1.txt file included for information on the Mozilla
 Public License, which covers all files in this distribution.
 
 Known Bugs
 ==========
 
-There are a number of issues still outstanding at the time of release.  Most
-of these are already in the process of being resolved.
-
  - The Rebind operation on NT does NOT work properly when set to a Perl
    function.  This is being investigated.
+
+ - There are some minor issues with LDIF.pm, which will be fixed in the
+   next release (v1.4.1).

@@ -1,8 +1,8 @@
 #############################################################################
-# $Id: Conn.pm,v 1.23 1999/08/24 22:30:43 leif%netscape.com Exp $
+# $Id: Conn.pm,v 1.24 2000/10/05 19:47:28 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -36,7 +36,7 @@ use Mozilla::LDAP::Entry 1.4 ();
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.4";
+$VERSION = "1.41";
 
 
 #############################################################################
@@ -50,9 +50,8 @@ sub new
 
   if (ref $_[$[] eq "HASH")
     {
-      my ($hash);
+      my ($hash) = $_[$[];
 
-      $hash = $_[$[];
       $self->{"host"} = $hash->{"host"} if defined($hash->{"host"});
       $self->{"port"} = $hash->{"port"} if defined($hash->{"port"});
       $self->{"binddn"} = $hash->{"bind"} if defined($hash->{"bind"});
@@ -63,19 +62,28 @@ sub new
     {
       my ($host, $port, $binddn, $bindpasswd, $certdb, $authmeth) = @_;
 
-      $self->{"host"} = $host;
-      $self->{"port"} = $port;
-      $self->{"binddn"} = $binddn;
-      $self->{"bindpasswd"} = $bindpasswd;
-      $self->{"certdb"} = $certdb;
+      $self->{"host"} = $host if defined($host);
+      $self->{"port"} = $port if defined($port);
+      $self->{"binddn"} = $binddn if defined($binddn);
+      $self->{"bindpasswd"} = $bindpasswd if defined($bindpasswd);
+      $self->{"certdb"} = $certdb if defined($certdb);
     }
 
+  # Anonymous bind is the default...
   $self->{"binddn"} = "" unless defined($self->{"binddn"});
   $self->{"bindpasswd"} = "" unless defined($self->{"bindpasswd"});
 
+  # Find an appropriate default port number if not specified.
   if (!defined($self->{"port"}) || ($self->{"port"} eq ""))
     {
-      $self->{"port"} = (($self->{"certdb"} ne "") ? LDAPS_PORT : LDAP_PORT);
+      if (defined($self->{"certdb"}) && ($self->{"certdb"} ne ""))
+	{
+	  $self->{"port"} = LDAPS_PORT;
+	}
+      else
+	{
+	  $self->{"port"} = LDAP_PORT;
+	}
     }
   bless $self, $class;
 
@@ -105,6 +113,9 @@ sub init
 {
   my ($self) = shift;
   my ($ret, $ld);
+
+  return 0 unless (defined($self->{"host"}));
+  return 0 unless (defined($self->{"port"}));
 
   if (defined($self->{"certdb"}) && ($self->{"certdb"} ne ""))
     {
@@ -230,8 +241,6 @@ sub printError
 sub search
 {
   my ($self, $basedn, $scope, $filter, $attrsonly, @attrs) = @_;
-  my ($resv, $entry);
-  my ($res) = \$resv;
 
   $scope = Mozilla::LDAP::Utils::str2Scope($scope);
   $filter = "(objectclass=*)" if ($filter =~ /^ALL$/i);
@@ -241,13 +250,14 @@ sub search
       ldap_msgfree($self->{"ldres"});
       undef $self->{"ldres"};
     }
+
   if (ldap_is_ldap_url($filter))
     {
-      if (! ldap_url_search_s($self->{"ld"}, $filter, $attrsonly, $res))
+      if (! ldap_url_search_s($self->{"ld"}, $filter, $attrsonly,
+			      $self->{"ldres"}))
 	{
-	  $self->{"ldres"} = $res;
 	  $self->{"ldfe"} = 1;
-	  $entry = $self->nextEntry();
+	  return $self->nextEntry();
 	}
     }
   else
@@ -255,15 +265,15 @@ sub search
       if (! ldap_search_s($self->{"ld"}, $basedn, $scope, $filter,
 			  defined(\@attrs) ? \@attrs : 0,
 			  defined($attrsonly) ? $attrsonly : 0,
-			  defined($res) ? $res : 0))
+			  $self->{"ldres"}))
 	{
-	  $self->{"ldres"} = $res;
 	  $self->{"ldfe"} = 1;
-	  $entry = $self->nextEntry();
+	  return $self->nextEntry();
 	}
     }
 
-  return $entry;
+  undef $self->{"ldres"};
+  return "";
 }
 
 
@@ -273,8 +283,6 @@ sub search
 sub searchURL
 {
   my ($self, $url, $attrsonly) = @_;
-  my ($resv, $entry);
-  my ($res) = \$resv;
 
   if (defined($self->{"ldres"}))
     {
@@ -284,14 +292,14 @@ sub searchURL
       
   if (! ldap_url_search_s($self->{"ld"}, $url,
 			  defined($attrsonly) ? $attrsonly : 0,
-			  defined($res) ? $res : 0))
+			  $self->{"ldres"}))
     {
-      $self->{"ldres"} = $res;
       $self->{"ldfe"} = 1;
-      $entry = $self->nextEntry();
+      return $self->nextEntry();
     }
 
-  return $entry;
+  undef $self->{"ldres"};
+  return "";
 }
 
 
@@ -308,7 +316,7 @@ sub browse
   $scope = Mozilla::LDAP::Utils::str2Scope("BASE");
   $filter = "(objectclass=*)" ;
 
-  return  $self->search($basedn, $scope, $filter, 0, @attrs);
+  return $self->search($basedn, $scope, $filter, 0, @attrs);
 }
 
 
@@ -412,11 +420,13 @@ sub close
   my ($ret) = 1;
 
   ldap_unbind_s($self->{"ld"}) if defined($self->{"ld"});
+
   if (defined($self->{"ldres"}))
     {
       ldap_msgfree($self->{"ldres"});
       undef $self->{"ldres"};
     }
+
   undef $self->{"ld"};
 
   return (($ret == LDAP_SUCCESS) ? 1 : 0);
@@ -548,6 +558,7 @@ sub update
       if (defined($entry->{"_${key}_deleted_"}))
         {
           $mod{$key} = { "db", [] };
+	  undef @{$entry->{$key}};
         }
       elsif (defined($entry->{"_${key}_modified_"}))
         {

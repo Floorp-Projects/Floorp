@@ -1,9 +1,9 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.10 1998/08/13 09:13:08 leif Exp $
+# $Id: lfinger.pl,v 1.11 2000/10/05 19:47:36 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #

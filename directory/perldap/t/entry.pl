@@ -1,9 +1,9 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: entry.pl,v 1.2 1999/01/21 23:52:50 leif%netscape.com Exp $
+# $Id: entry.pl,v 1.3 2000/10/05 19:47:44 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #

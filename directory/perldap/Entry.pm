@@ -1,8 +1,8 @@
 #############################################################################
-# $Id: Entry.pm,v 1.12 1999/08/24 22:30:44 leif%netscape.com Exp $
+# $Id: Entry.pm,v 1.13 2000/10/05 19:47:28 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
-# Version 1.0 (the "License"); you may not use this file except in
+# Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
 #
@@ -35,7 +35,7 @@ use strict;
 use vars qw($VERSION @ISA);
 
 @ISA = ('Tie::StdHash');
-$VERSION = "1.4";
+$VERSION = "1.41";
 
 
 #############################################################################
@@ -75,8 +75,11 @@ sub DESTROY
 {
   my ($self) = shift;
 
-  undef %{$self};
-  undef $self;
+  if (defined($self))
+    {
+      undef %{$self} if (%{$self});
+      undef $self;
+    }
 }
 
 
@@ -134,7 +137,8 @@ sub FETCH
 
 #############################################################################
 # Delete method, to keep track of changes. Note that we actually don't
-# delete the attribute, just mark it as deleted.
+# delete the attribute, just mark it as deleted. Now, the $1M question is,
+# why don't we delete this? Seriously guys, this looks wrong...
 #
 sub DELETE
 {
@@ -184,22 +188,10 @@ sub exists
 #
 sub FIRSTKEY
 {
-  my ($self, $idx) = ($_[$[], 0);
-  my (@attrs, $key);
+  my ($self) = ($_[$[]);
 
-  return unless defined($self->{"_oc_order_"});
-
-  @attrs =  @{$self->{"_oc_order_"}};
-  while ($idx < $self->{"_oc_numattr_"})
-    {
-      $key = $attrs[$idx++];
-      next if ($key =~ /^_.+_$/);
-      next if defined($self->{"_${key}_deleted_"});
-      last;
-    }
-  $self->{"_oc_keyidx_"} = $idx;
-
-  return $key;
+  $self->{"_oc_keyidx_"} = 0;
+  return $self->NEXTKEY();
 }
 
 
@@ -307,7 +299,6 @@ sub isDeleted
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 unless (defined($attr) && ($attr ne ""));
-  return 0 unless defined($self->{$attr});
   return 0 unless defined($self->{"_${attr}_deleted_"});
 
   return 1;
@@ -409,7 +400,6 @@ sub unRemove
   if (defined($self->{"_${attr}_save_"}))
     {
       undef @{$self->{$attr}};
-      delete $self->{$attr};
       $self->{$attr} = [ @{$self->{"_${attr}_save_"}} ];
       undef @{$self->{"_${attr}_save_"}};
       delete $self->{"_${attr}_save_"};
@@ -569,7 +559,7 @@ sub setValues
 
   local $_;
 
-  return 0 unless (defined(@vals) && ($#vals >= $[));
+  return 0 unless ($#vals >= $[);
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 if ($attr eq "dn");
 
@@ -805,8 +795,10 @@ sub printLDIF
 
       while (($attr, $values) = splice @$record, 0, 2)
 	{
-	  grep((print "$attr: $_\n"), @$values);
+	  grep((print "$attr: $_\n"), 
+	       ((ref($values) eq "ARRAY") ? @$values : $values));
 	}
+
       print "\n";
     }
   else

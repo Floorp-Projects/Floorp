@@ -1,3 +1,60 @@
+2000-09-19  Leif Hedstrom  <leif@perldap.org>
+
+	* Conn.pm (update): Bug fix to allow us to delete() an attribute,
+	call update(), and then add new values (or the same values...) to
+	the entry again.
+
+2000-09-19  Leif Hedstrom  <leif@perldap.org>
+
+	* Entry.pm (DESTROY): Bug fix from daniel.hams@db.com (Daniel
+	Hams) to avoid warnings from Apache and mod_perl.
+
+2000-09-13  Leif Hedstrom  <leif@perldap.org>
+
+	* Utils.pm (askPassword): Oops, stupid typo here, should be
+	"unless $prompt" of course...
+
+2000-09-13  Leif Hedstrom  <leif@perldap.org>
+
+	* Entry.pm (isDeleted): Removed a test which made this function
+	not working at all... :)
+
+2000-09-13  Leif Hedstrom  <leif@perldap.org>
+
+	* Removed an if defined() to avoid warnings with Perl v5.6.
+
+2000-06-24  Wolfram Schmidt  <wschmidt@decefix.iao.fhg.de>
+
+	* Entry.pm (FIRSTKEY): Fix bug for deleting all attributes and calling
+	keys.
+
+2000-05-30  Kevin McCarthy  <kevin@perldap.org>
+
+	* Makefile.PL: Added fix so API.xs compiles under Perl 5.6
+	(POLLUTE=>1)
+
+2000-05-30  Leif Hedstrom  <leif@perldap.org>
+
+	* Lots of small fixes...
+
+1999-09-07  Leif Hedstrom  <leif@perldap.org>
+
+	* API.xs (avref2charptrptr): Fixed potential core dump, if the
+	argument passed wasn't a proper array.
+	(avref2berptrptr): Ditto.
+
+1999-09-06  Leif Hedstrom  <leif@perldap.org>
+
+	* Conn.pm (search): Removed $res and $resv, set the internal data
+	element directly.
+	(searchURL): Ditto.
+
+1999-08-25  John Kristian <kristian@netscape.com>
+
+	* Entry.pm (printLDIF): Bug fix.
+
+	* LDIF.pm: Cleaned out memory leaks.
+
 1999-08-24  Leif Hedstrom  <leif@netscape.com>
 
 	* Merged v1.3.x into trunk, tagged it as v1.4, and released it!
