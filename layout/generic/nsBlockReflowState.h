@@ -109,8 +109,11 @@ public:
                               const nsStyleDisplay* aDisplay,
                               nsRect& aResult);
 
-  void RecoverStateFrom(nsLineList::iterator aLine,
-                        nscoord aDeltaY);
+protected:
+  void RecoverFloaters(nsLineList::iterator aLine, nscoord aDeltaY);
+
+public:
+  void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaY);
 
   void AdvanceToNextLine() {
     mLineNumber++;
