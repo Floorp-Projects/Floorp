@@ -161,6 +161,7 @@ public:
 	char* GetSectionBuffer(CString iniFile, CString section);
 	void ExecuteAction(char action);
 	CString replaceVars(char *str);
+	BOOL interpret(CString cmd);
 	void GoToNextNode();
 	void GoToPrevNode();
 	void ExitApp();
@@ -169,8 +170,8 @@ public:
 	void PrintNodeInfo(NODE* node);
 	void CheckIniFileExistence(CString file);
 	BOOL FileExists(CString file);
-	void FillGlobalWidgetArray(CString file);
-	void FillGlobalWidgetArray();
+	BOOL FillGlobalWidgetArray(CString file);
+	BOOL FillGlobalWidgetArray();
 	void CreateNewCache();
 	BOOL IsLastNode(NODE* treeNode);
 	BOOL IsFirstNode(NODE* treeNode);

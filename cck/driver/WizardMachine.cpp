@@ -111,7 +111,9 @@ BOOL CWizardMachineApp::InitInstance()
 	strcpy(currDirPath, Path);
 
 	CString outputFile = Path + "output.dat";
-	out = OpenAFile(outputFile, "w");
+	out = fopen(outputFile, "w");
+	if (!out)
+		exit( 3 );
 
 	//char buffer[MID_SIZE];
 	char **argv;
@@ -211,7 +213,8 @@ BOOL CWizardMachineApp::InitInstance()
 	if (FileExists(CachePath))
 	{
 		UseCache = TRUE;
-		FillGlobalWidgetArray(CachePath);
+		if (!FillGlobalWidgetArray(CachePath))
+			exit(10);
 	}
 	
 	fprintf(out, "___________________________________________________________\n\n");
@@ -764,6 +767,67 @@ CString CWizardMachineApp::replaceVars(char *str)
 	return CString(buf);
 }
 
+BOOL CWizardMachineApp::interpret(CString cmd)
+{
+		// Make modifiable copy of string's buffer
+		char buf[MAX_SIZE];
+		strcpy(buf, (char *)(LPCTSTR) cmd);
+
+		// Format of commandList is:  <command1>;<command2>;...
+		// Format of command is:   <command>(<parm1>,<parm2>,...)
+		int numCmds = 0;
+		char *cmdList[100];
+		char *pcmdL = strtok(buf, ";");
+		while (pcmdL)
+		{
+			cmdList[numCmds] = strdup(pcmdL);
+			pcmdL = strtok(NULL, ";");
+			numCmds++;
+			if (numCmds >= 100)
+			{
+				fprintf(out, "Skipping command interpretation, too many commands.\n");
+				return FALSE;
+			}
+		}
+
+		int i;
+		for (i=0; i<numCmds; i++)
+		{
+			char *pcmd = strtok(cmdList[i], "(");
+			if (pcmd)
+			{
+				char *parms = strtok(NULL, ")");
+				// VerifySet checks to see if the first parameter has any value
+				//   If (p1) then continue else show error dialog and return FALSE
+				if (strcmp(pcmd, "VerifySet") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+					if (p2)
+						*p2++ = '\0';
+					else
+						p2 = "A message belongs here.";
+					CString value = replaceVars(parms);
+					if (!value || value.IsEmpty())
+					{
+						CWnd myWnd;
+						myWnd.MessageBox(p2, "Error", MB_OK);
+						return FALSE;
+					}
+				}
+				// Reload sets the CachePath and reloads the cache from the new file
+				else if (strcmp(pcmd, "Reload") == 0)
+				{
+					CString newDir = replaceVars(parms);
+					CachePath = Path + newDir + "\\" + CacheFile;
+					FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
+				}
+			}
+			free(pcmd);
+		}
+
+	return TRUE;
+}
+
 void CWizardMachineApp::GoToNextNode()
 {
 	//check if it is a container node
@@ -774,21 +838,8 @@ void CWizardMachineApp::GoToNextNode()
 	// Handle OnNext processing before doing anything else
 	//----------------------------------------------------------------------------------------------
 	if (CurrentNode->navControls->onNextAction)
-	{
-		char buf[MIN_SIZE];
-		strcpy(buf, (char *)(LPCTSTR) CurrentNode->navControls->onNextAction);
-		char *pcmd = strtok(buf, "(");
-		if (pcmd)
-		{
-			char *parms = strtok(NULL, ")");
-			if (strcmp(pcmd, "Reload") == 0)
-			{
-				CString newDir = replaceVars(parms);
-				CachePath = Path + newDir + "\\" + CacheFile;
-				FillGlobalWidgetArray(CachePath);
-			}
-		}
-	}
+		if (!interpret(CurrentNode->navControls->onNextAction))
+			return;
 
 	//----------------------------------------------------------------------------------------------
 	NODE* tmpParentNode;
@@ -949,20 +1000,20 @@ void CWizardMachineApp::ExitApp()
 }
 
 
+/*
+This routine isn't useful since the messagebox isn't usually appropriate anymore
 FILE* CWizardMachineApp::OpenAFile(CString outputFile, CString mode)
 {
 
 	if( !( filePtr = fopen( outputFile, mode ) ) )
 	{
 	    CWnd myWnd;
-	
 		myWnd.MessageBox("Unable to open file" + outputFile, "ERROR", MB_OK);
-		//fprintf(out, "--------------** TERMINATED - Can't open output file **----------------\n");
-		exit( 3 );
 	}
 
 	return filePtr;
 }
+*/
 
 void CWizardMachineApp::PrintNodeInfo(NODE* node)
 {
@@ -1014,13 +1065,15 @@ BOOL CWizardMachineApp::FileExists(CString file)
 		return TRUE;
 }
 
-void CWizardMachineApp::FillGlobalWidgetArray(CString file)
+BOOL CWizardMachineApp::FillGlobalWidgetArray(CString file)
 {
 	char buffer[MAX_SIZE] = {'\0'};
 	CString name = "";
 	CString value = "";
 
-	globs = OpenAFile(file, "r");
+	globs = fopen(file, "r");
+	if (!globs)
+		return FALSE;
 
 	while(!feof(globs))
 	{
@@ -1040,16 +1093,23 @@ void CWizardMachineApp::FillGlobalWidgetArray(CString file)
 	}
 
 	fclose(globs);
+
+	return TRUE;
 }
 
-void CWizardMachineApp::FillGlobalWidgetArray()
+BOOL CWizardMachineApp::FillGlobalWidgetArray()
 {
-	FillGlobalWidgetArray(CachePath);
+	return FillGlobalWidgetArray(CachePath);
 }
 
 void CWizardMachineApp::CreateNewCache()
 {
-	globs = OpenAFile(CachePath, "w");
+	globs = fopen(CachePath, "w");
+	if (!globs)
+	{
+		fprintf(out, "--------------** TERMINATED - Can't open cache file **----------------\n");
+		exit( 3 );
+	}
 
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{

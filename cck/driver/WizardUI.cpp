@@ -1202,35 +1202,10 @@ void CWizardUI::UpdateGlobals()
 		}
 		if (widgetType == "ComboBox")
 		{
-			/**
-			curWidget = CurrentNode->pageWidgets[i];
-			**/
 			int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
 			char tmpStr[MIN_SIZE];
-			//itoa(selectedIndex, tmpStr, 10);
 			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
 			curWidget->value = tmpStr;
-
-			/**
-			int selIndex = ((CComboBox*)curWidget->control)->GetCurSel();
-			((CComboBox*)curWidget->control)->GetLBText(selIndex, (char *)(LPCTSTR) selectedCustomization);
-
-			theApp.FillGlobalWidgetArray();
-			**/
-			/**
-			if (selectedCustomization != "")
-			{
-				FILE *custFile;
-
-				custFile = fopen(topLevelCacheFileName, "w");
-				fprintf(custFile, "[CCK]\n");
-				fprintf(custFile, "val=");
-				fprintf(custFile, "%s", (char *)(LPCTSTR)selectedCustomization);
-				fclose(custFile);
-
-				theApp.FillGlobalWidgetArray((char *)(LPCTSTR)selectedCustomization);
-			}
-			**/
 		}
 	}
 }
