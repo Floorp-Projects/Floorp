@@ -49,18 +49,14 @@ console._scriptHook = {
          * fully loaded, check to see if we need to set any breakpoints */
         if (script.lineExtent == 0)
         {
+            if (script.fileName)
+                console._scriptsOutlinerView.setScripts(console._scripts);
             for (var i = 0; i < console._futureBreaks.length; ++i)
                 if (script.fileName.search(console._futureBreaks[i].filePattern)
                     != -1)
                 {
-                    if (setBreakpoint (script.fileName,
-                                       console._futureBreaks[i].line))
-                    {
-                        display (getMsg(MSN_BP_CREATED,
-                                        [script.fileName,
-                                         console._futureBreaks[i].line, 1]));
-                    }
-                    
+                    setBreakpoint (script.fileName,
+                                   console._futureBreaks[i].line);
                 }
         }
                 
@@ -76,6 +72,57 @@ console._executionHook = {
         return debugTrap(frame, type, rv);
     }
 };
+
+function initDebugger()
+{   
+    console._continueCodeStack = new Array(); /* top of stack is the default */
+                                              /* return code for the most    */
+                                              /* recent debugTrap().         */
+    console._breakpoints = new Array();  /* breakpoints in loaded scripts.   */
+    console._futureBreaks = new Array(); /* breakpoints in scripts that we   */
+                                         /* don't know about yet.            */
+    console._scripts = new Object();     /* scripts, keyed by filename.      */
+    console._sources = new Object();     /* source code, keyed by filename.  */
+    console._stopLevel = 0;              /* nest level.                      */
+    console._scriptCount = 0;            /* active script count.             */
+    
+    /* create the debugger instance */
+    if (!Components.classes[JSD_CTRID])
+        throw BadMojo (ERR_NO_DEBUGGER);
+    
+    console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
+    console.jsds.on();
+    console.jsds.breakpointHook = console._executionHook;
+    console.jsds.debuggerHook = console._executionHook;
+    console.jsds.scriptHook = console._scriptHook;
+    //dbg.interruptHook = interruptHooker;
+
+    var enumer = new Object();
+    enumer.enumerateScript = function (script)
+    {
+        addScript(script);
+        return true;
+    }
+    console.jsds.enumerateScripts(enumer);
+
+}
+
+function detachDebugger()
+{
+    var count = console._stopLevel;
+    var i;
+
+    for (i = 0; i < count; ++i)
+        console.jsds.exitNestedEventLoop();
+
+    ASSERT (console._stopLevel == 0,
+            "console.stopLevel != 0 after detachDebugger");
+
+    console.jsds.clearAllBreakpoints();
+    console.jsds.scriptHook = null;
+    console.jsds.debuggerHook = null;
+    console.jsds.off();
+}
 
 function insertScriptEntry (script, scriptList)
 {
@@ -209,7 +256,6 @@ function debugTrap (frame, type, rv)
     console._continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
 
     $ = new Array();
-    console.currentFrameIndex = 0;
     
     /* build an array of frames */
     console.frames = new Array(frame);
@@ -224,6 +270,9 @@ function debugTrap (frame, type, rv)
     if (sourceContext > -1)
         displaySource (frame.script.fileName, frame.line, sourceContext);
     
+    setCurrentFrameByIndex(0);
+    console.onDebugTrap()
+    
     console.jsds.enterNestedEventLoop(); 
 
     /* execution pauses here until someone calls 
@@ -234,27 +283,43 @@ function debugTrap (frame, type, rv)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
     $ = new Array();
-    delete console.currentFrameIndex;
+    clearCurrentFrame();
     delete console.frames;
     
     return console._continueCodeStack.pop();
 }
 
-function detachDebugger()
+function getCurrentFrame()
 {
-    var count = console._stopLevel;
-    var i;
+    return console.frames[console._currentFrameIndex];
+}
 
-    for (i = 0; i < count; ++i)
-        console.jsds.exitNestedEventLoop();
+function getCurrentFrameIndex()
+{
+    if (typeof console._currentFrameIndex == "undefined")
+        return -1;
+    
+    return console._currentFrameIndex;
+}
 
-    ASSERT (console._stopLevel == 0,
-            "console.stopLevel != 0 after detachDebugger");
+function setCurrentFrameByIndex (index)
+{
+    if (!console.frames)
+        throw BadMojo (ERR_NO_STACK);
+    
+    ASSERT (index >= 0 && index < console.frames.length, "index out of range");
 
-    console.jsds.clearAllBreakpoints();
-    console.jsds.scriptHook = null;
-    console.jsds.debuggerHook = null;
-    console.jsds.off();
+    console._currentFrameIndex = index;
+    console.onFrameChanged (console.frames[console._currentFrameIndex],
+                            console._currentFrameIndex);
+}
+
+function clearCurrentFrame ()
+{
+    if (!console.frames)
+        throw BadMojo (ERR_NO_STACK);
+
+    delete console._currentFrameIndex;
 }
 
 function findNextExecutableLine (script, line)
@@ -376,53 +441,20 @@ function loadSource (url, cb)
 {
     var observer = {
         onComplete: function oncomplete (data, url, status) {
-            console._sources[url] = data.split("\n");
+            var ary = data.split("\n");
+            for (var i = 0; i < ary.length; ++i)
+                ary[i] = new String(ary[i]);
+            console._sources[url] = ary;
             cb(data, url, status);
         }
     };
 
     if (url.search (/^(chrome:|file:)/) != -1)
-    {
-        console._sources[url] = loadURLNow(url).split("\n");
-        cb (console._sources[url], url, Components.results.NS_OK);
-    }
+        observer.onComplete (loadURLNow(url), url, Components.results.NS_OK);
     else
         loadURLAsync (url, observer);
 }
         
-function initDebugger()
-{   
-    console._continueCodeStack = new Array(); /* top of stack is the default */
-                                              /* return code for the most    */
-                                              /* recent debugTrap().         */
-    console._breakpoints = new Array();  /* breakpoints in loaded scripts.   */
-    console._futureBreaks = new Array(); /* breakpoints in scripts that we   */
-                                         /* don't know about yet.            */
-    console._scripts = new Object();     /* scripts, keyed by filename.      */
-    console._sources = new Object();     /* source code, keyed by filename.  */
-    console._stopLevel = 0;              /* nest level.                      */
-    console._scriptCount = 0;            /* active script count.             */
-    
-    /* create the debugger instance */
-    if (!Components.classes[JSD_CTRID])
-        throw BadMojo (ERR_NO_DEBUGGER);
-    
-    console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
-    console.jsds.on();
-    console.jsds.breakpointHook = console._executionHook;
-    console.jsds.debuggerHook = console._executionHook;
-    console.jsds.scriptHook = console._scriptHook;
-    //dbg.interruptHook = interruptHooker;
-
-    var enumer = new Object();
-    enumer.enumerateScript = function (script)
-    {
-        addScript(script);
-        return true;
-    }
-    console.jsds.enumerateScripts(enumer);
-}
-
 function displayCallStack ()
 {
     for (i = 0; i < console.frames.length; ++i)
@@ -506,6 +538,7 @@ function clearBreakpoint (fileName, line)
             console._breakpoints[b].line == line)
             return clearBreakpointByNumber (Number(b));
 
+    display (getMsg(MSN_ERR_BP_NODICE, [fileName, line]), MT_ERROR);
     return 0;
 }
 
@@ -513,12 +546,34 @@ function clearBreakpointByNumber (number)
 {
     var bp = console._breakpoints[number];
     if (!bp)
+    {
+        display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
         return 0;
+    }
 
     var matches = bp.length;
+    var fileName = bp.fileName;
+    var line = bp.line;
+    
     for (var i = 0; i < bp.length; ++i)
         bp[i].script.clearBreakpoint(bp[i].pc);
     arrayRemoveAt (console._breakpoints, number);
+
+    var fileName = bp.fileName;
+    var line = bp.line;
+
+    display (getMsg(MSN_BP_DISABLED, [fileName, line, matches]));
+    
+    if (console._sources[fileName])
+        delete console._sources[fileName][line - 1].isBreakpoint;
+    else
+    {
+        function cb (data, url) {
+            delete console._sources[fileName][line - 1].isBreakpoint;
+        }
+        loadSource(fileName, cb);
+    }
+
     return matches;
 }
     
@@ -532,14 +587,6 @@ function setBreakpoint (fileName, line)
         return false;
     }
 
-    /* In case we've already got a breakpoint at this filename/ line,
-     * clear it before we continue.  This keeps us from having duplicate
-     * file/line entries in the breakpoint list.  If we just bailed out based
-     * on the return value of getBreakpoint(), the user would not be able to
-     * set the breakpoint again for new scripts.
-     */
-    clearBreakpoint (fileName, line);
-            
     var bpList = new Array();
     
     for (var i = 0; i < ary.length; ++i)
@@ -556,10 +603,41 @@ function setBreakpoint (fileName, line)
 
     bpList.fileName = fileName;
     bpList.line = line;
+
+    if (bpList.length)
+        display (getMsg(MSN_BP_CREATED,
+                        [fileName, line, bpList.length]));
+    else
+        display (getMsg(MSN_ERR_BP_NOLINE, [fileName, line]),
+                 MT_ERROR);
     
     if (bpList.length > 0)
-        console._breakpoints.push (bpList);
+    {
+        var found = false;
+        
+        for (var b in console._breakpoints)
+            if (console._breakpoints[b].fileName == fileName &&
+                console._breakpoints[b].line == line)
+            {
+                console._breakpoints[b] = bpList;
+                found = true;
+                break;
+            }
+
+        if (!found)
+            console._breakpoints.push (bpList);
+    }
     
+    if (console._sources[fileName])
+        console._sources[fileName][line - 1].isBreakpoint = true;
+    else
+    {
+        function cb (data, url) {
+            console._sources[fileName][line - 1].isBreakpoint = true;
+        }
+        loadSource(fileName, cb);
+    }
+                
     return bpList;
 }
 
@@ -578,9 +656,38 @@ function isFutureBreakpoint (filePattern, line)
 function setFutureBreakpoint (filePattern, line)
 {
     if (!isFutureBreakpoint(filePattern, line))
+    {
         console._futureBreaks.push({filePattern: filePattern, line: line});
-    
+        display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
+    }
+
     return true;
 }
+
+function clearFutureBreakpoint (filePattern, line)
+{
+    for (var i = 0; i < console._futureBreaks.length; ++i)
+    {
+        if (console._futureBreaks[i].filePattern == filePattern &&
+            console._futureBreaks[i].line == line)
+        {
+            return clearFutureBreakpointByNumber(i);
+        }
+    }
     
-            
+    display (getMsg(MSN_ERR_BP_NODICE, [filePattern, line]), MT_ERROR);
+
+    return false;
+}
+
+function clearFutureBreakpointByNumber (idx)
+{
+    var filePattern = console._futureBreaks[idx].filePattern;
+    var line = console._futureBreaks[idx].line;
+    
+    arrayRemoveAt (console._futureBreaks, idx);
+    
+    display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
+
+    return true;
+}
