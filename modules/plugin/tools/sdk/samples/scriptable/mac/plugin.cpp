@@ -166,9 +166,6 @@ nsPluginInstance::DoDraw(void)
 	SInt32		centerX = (width) >> 1;
 	SInt32		centerY = (height) >> 1;
 
-	//const char * ua = getVersion();
-	//char* pascalString = (char*) NPN_MemAlloc(strlen(ua) + 1);
-	//strcpy(pascalString, ua);
 	UInt8		*pTheText = (unsigned char*) mString;
 
 	drawRect.top = 0;
@@ -296,14 +293,20 @@ void nsPluginInstance::showVersion()
 {
   const char *ua = NPN_UserAgent(mInstance);
   strcpy(mString, ua);
+
+  StartDraw(mWindow);
   DoDraw();
+  EndDraw(mWindow);
 }
 
 // this will clean the plugin window
 void nsPluginInstance::clear()
 {
   strcpy(mString, "");
+
+  StartDraw(mWindow);
   DoDraw();
+  EndDraw(mWindow);
 }
 
 // ==============================
