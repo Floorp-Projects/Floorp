@@ -1,0 +1,31 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsIWebBrowserPersist.idl"
+
+%{ C++
+// {7E677795-C582-4cd1-9E8D-8271B3474D2A}
+#define NS_WEBBROWSERPERSIST_CID \
+{ 0x7e677795, 0xc582, 0x4cd1, { 0x9e, 0x8d, 0x82, 0x71, 0xb3, 0x47, 0x4d, 0x2a } }
+#define NS_WEBBROWSERPERSIST_CONTRACTID \
+"@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
+%}
