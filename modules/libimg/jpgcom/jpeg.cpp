@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.13 1999/12/03 01:05:41 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.14 1999/12/20 23:58:23 briano%netscape.com Exp $
  */
 
 
@@ -38,6 +38,12 @@
 #include <ctype.h>      /* to declare isprint() */
 #ifndef XP_MAC
 #    include <sys/types.h>
+#endif
+
+/* This is a lame hack to get around a problem with boolean on Solaris 2.3 */
+#if defined(__sun) && defined(__sparc) && defined(__svr4__) && (OSMINOR == 3)
+#define HAVE_BOOLEAN
+#undef MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES
 #endif
 
 PR_BEGIN_EXTERN_C

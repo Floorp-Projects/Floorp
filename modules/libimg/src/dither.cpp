@@ -23,6 +23,12 @@
 #include "if.h"
 #include "il.h"
 
+/* This is a lame hack to get around a problem with boolean on Solaris 2.3 */
+#if defined(__sun) && defined(__sparc) && defined(__svr4__) && (OSMINOR == 3)
+#define HAVE_BOOLEAN
+#undef MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES
+#endif
+
 #include "jpeglib.h"
 #include "jerror.h"
 #include "nsCRT.h"
