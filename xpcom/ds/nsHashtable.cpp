@@ -645,7 +645,7 @@ nsStringKey::nsStringKey(const nsAFlatString& str)
 nsStringKey::nsStringKey(const nsAString& str)
     : mStr(ToNewUnicode(str)),
       mStrLen(str.Length()),
-      mOwnership(OWN_CLONE)
+      mOwnership(OWN)
 {
     NS_ASSERTION(mStr, "null string key");
 #ifdef DEBUG
