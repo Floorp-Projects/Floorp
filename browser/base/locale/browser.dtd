@@ -14,24 +14,21 @@
 <!ENTITY tabCmd.label "New Navigator Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
-<!ENTITY openCmd.label "Open Web Location...">
-<!ENTITY openCmd.accesskey "l">
-<!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
-<!ENTITY openFileCmd.accesskey "o">
+<!ENTITY openFileCmd.accesskey "O">
 <!ENTITY openFileCmd.commandkey "o">
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
-<!ENTITY printCmd.accesskey "p">
+<!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.commandkey "p">
 
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
-<!ENTITY personalbarCmd.accesskey "p">
+<!ENTITY personalbarCmd.accesskey "P">
 <!ENTITY tabbarCmd.label "Tab Bar">
 <!ENTITY tabbarCmd.accesskey "T">
 <!ENTITY taskbarCmd.label "Status Bar">
@@ -41,13 +38,10 @@
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
-<!ENTITY pageInfoCmd.accesskey "i">
+<!ENTITY pageInfoCmd.accesskey "I">
 <!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY fullScreenCmd.label "Full Screen">
-<!ENTITY fullScreenCmd.accesskey "f">
-<!ENTITY translateMenu.label "Translate">
-<!ENTITY translateMenu.accesskey "T">
-<!ENTITY translate.commandKey "t">
+<!ENTITY fullScreenCmd.accesskey "F">
 
 <!ENTITY closeWindow.label "Close Window">
 
