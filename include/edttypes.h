@@ -547,6 +547,12 @@ typedef enum {
 } ED_FileError;
 
 typedef enum {
+  ED_PUBLISH_OK,
+  ED_PUBLISH_ERROR_FILENAME,
+  ED_PUBLISH_ERROR_LOCATION
+} ED_PublishError;
+
+typedef enum {
     ED_TAG_OK,
     ED_TAG_UNOPENED,
     ED_TAG_UNCLOSED,
