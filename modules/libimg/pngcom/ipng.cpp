@@ -166,7 +166,8 @@ il_png_abort(il_container *ic)
         ipng_p->rgbrow = NULL;
         ipng_p->alpharow = NULL;
 
-        png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
+        if((ipng_p->pngs_p)&&(ipng_p->info_p))
+             png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
         PR_FREEIF(ipng_p);
         ic->ds = NULL;
     }
