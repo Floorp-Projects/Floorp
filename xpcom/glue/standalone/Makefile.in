@@ -69,9 +69,6 @@ CPPSRCS		= \
 		nsDebugGlue.cpp		     \
 		$(NULL)
 
-EXPORTS		= \
-		$(NULL)
-
 SDK_HEADERS     = \
 		nsXPCOMGlue.h \
 		nsEmbedString.h \
