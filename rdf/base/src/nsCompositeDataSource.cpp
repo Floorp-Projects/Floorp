@@ -883,7 +883,7 @@ CompositeDataSourceImpl::GetEnabledCommands(nsISupportsArray* aSources,
             }
             else {
                 nsIEnumerator* unionCmds;
-//                rv = NS_NewUnionEnumerator(commands, dsCmds, &unionCmds);     // until we can fix the mac project file
+                rv = NS_NewUnionEnumerator(commands, dsCmds, &unionCmds);
                 if (NS_FAILED(rv)) return rv;
                 NS_RELEASE(dsCmds);
                 commands = dont_QueryInterface(unionCmds);
