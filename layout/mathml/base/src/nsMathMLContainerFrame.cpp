@@ -678,7 +678,8 @@ nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
 }
 
 PRInt32
-nsMathMLContainerFrame::FindSmallestFontSizeFor(nsIFrame* aFrame)
+nsMathMLContainerFrame::FindSmallestFontSizeFor(nsIPresContext* aPresContext, 
+                                                nsIFrame*       aFrame)
 {
   nsStyleFont aFont;
   nsCOMPtr<nsIStyleContext> aStyleContext;
@@ -689,10 +690,10 @@ nsMathMLContainerFrame::FindSmallestFontSizeFor(nsIFrame* aFrame)
 
   PRInt32 childSize;
   nsIFrame* childFrame;
-  aFrame->FirstChild(nsnull, &childFrame);
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
-      childSize = FindSmallestFontSizeFor(childFrame);
+      childSize = FindSmallestFontSizeFor(aPresContext, childFrame);
       if (fontSize > childSize) fontSize = childSize;
     }
     childFrame->GetNextSibling(&childFrame);
@@ -821,7 +822,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
           PRInt32 smallestFontSize, smallestFontIndex;
           if (isSmaller) {
             // find the smallest font-size in this subtree
-            smallestFontSize = FindSmallestFontSizeFor(childFrame);
+            smallestFontSize = FindSmallestFontSizeFor(aPresContext, childFrame);
           }
 
           while (0 < gap--) {
@@ -1120,7 +1121,7 @@ nsMathMLContainerFrame::ReflowTokenFor(nsIFrame*                aFrame,
   nsBoundingMetrics bm;
   PRInt32 count = 0; 
   nsIFrame* childFrame;
-  aFrame->FirstChild(nsnull, &childFrame);
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
     if (IsOnlyWhitespace(childFrame)) {
       ReflowEmptyChild(aPresContext, childFrame);      
@@ -1174,7 +1175,7 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
  
   nsRect rect;
   nsIFrame* childFrame;
-  aFrame->FirstChild(nsnull, &childFrame);
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
@@ -1190,7 +1191,7 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
     nscoord dy;
     nscoord dx = 0;
 
-    aFrame->FirstChild(nsnull, &childFrame);
+    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
     while (childFrame) {
       childFrame->GetRect(rect);
 

@@ -237,7 +237,8 @@ public:
   // scriptlevel fonts that lead to unreadable results on deeper nodes below us.
   // XXX expensive recursive function, need something better, with cache
   static PRInt32
-  FindSmallestFontSizeFor(nsIFrame* aFrame);
+  FindSmallestFontSizeFor(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame);
 
   // helper to check if a frame is an embellished container
   static PRBool

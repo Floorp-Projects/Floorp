@@ -334,7 +334,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
     nsIFrame* next = nsnull;
     nsIFrame* aFrame;
 
-    aParent->FirstChild(nsnull, &aFrame);
+    aParent->FirstChild(aPresContext, nsnull, &aFrame);
     while (aFrame) {
       if (aFrame == embellishAncestor) { // we start looking for next
         state++;
