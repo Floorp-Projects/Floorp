@@ -1105,17 +1105,17 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
       nsAutoString v(aAttributes[1]);
       nsRDFParserUtils::StripAndConvert(v);
 
-      nsAutoString attrName;
-      attr->ToString(attrName);
+      const char* attrName;
+      attr->GetUTF8String(&attrName);
 
       nsCAutoString propertyStr;
     
       if (nameSpaceURI) {
         propertyStr.Assign(nsDependentCString(nameSpaceURI) + 
-                           NS_ConvertUCS2toUTF8(attrName));
+                           nsDependentCString(attrName));
       }
       else {
-        propertyStr.Assign(NS_ConvertUCS2toUTF8(attrName));
+        propertyStr.Assign(attrName);
       }
 
       // Add the assertion to RDF
@@ -1256,10 +1256,10 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
         if (nameSpaceURI)
             typeStr = nameSpaceURI;
 
-        nsAutoString attrName;
-        tag->ToString(attrName);
+        const char* attrName;
+        tag->GetUTF8String(&attrName);
 
-        typeStr += NS_ConvertUCS2toUTF8(attrName);
+        typeStr += attrName;
 
         nsCOMPtr<nsIRDFResource> type;
         rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
@@ -1288,16 +1288,16 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
 
 
-    nsAutoString attrName;
-    tag->ToString(attrName);
+    const char* attrName;
+    tag->GetUTF8String(&attrName);
 
     nsCAutoString propertyStr;
     if (nameSpaceURI) {
         propertyStr.Assign(nsDependentCString(nameSpaceURI) + 
-                           NS_ConvertUCS2toUTF8(attrName));
+                           nsDependentCString(attrName));
     }
     else {
-        propertyStr.Assign(NS_ConvertUCS2toUTF8(attrName));
+        propertyStr.Assign(attrName);
     }
 
     nsCOMPtr<nsIRDFResource> property;
@@ -1467,17 +1467,14 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-        nsAutoString prefixStr;
+        const char* prefixStr;
         if (aPrefix)
-            aPrefix->ToString(prefixStr);
-
-        char* prefixCStr = ToNewCString(prefixStr);
+            aPrefix->GetUTF8String(&prefixStr);
 
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("rdfxml: undeclared namespace prefix '%s'",
-                prefixCStr));
+                prefixStr));
 
-        nsCRT::free(prefixCStr);
     }
 #endif
 
