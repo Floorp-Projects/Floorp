@@ -863,7 +863,8 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
               if (!NS_SUCCEEDED(rv) || !mSocketFD) break;
 
               // if the service was ssl, we want to hold onto the socket info
-              if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0) {
+              if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
+                  nsCRT::strcmp(mSocketTypes[type], "tls") == 0) {
                   mSecurityInfo = socketInfo;
               }
               else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {

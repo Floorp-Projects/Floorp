@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
@@ -22,35 +22,35 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsSSLSocketProvider.h"
+#include "nsTLSSocketProvider.h"
 #include "nsSSLIOLayer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsSSLSocketProvider::nsSSLSocketProvider()
+nsTLSSocketProvider::nsTLSSocketProvider()
 {
   NS_INIT_REFCNT();
 }
 
 nsresult
-nsSSLSocketProvider::Init()
+nsTLSSocketProvider::Init()
 {
   nsresult rv = NS_OK;
   return rv;
 }
 
-nsSSLSocketProvider::~nsSSLSocketProvider()
+nsTLSSocketProvider::~nsTLSSocketProvider()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSSLSocketProvider, nsISocketProvider, nsISSLSocketProvider);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsTLSSocketProvider, nsISocketProvider, nsISSLSocketProvider);
 
 NS_METHOD
-nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsTLSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {                                                                               
     nsresult rv;                                                                
                                                                                 
-    nsSSLSocketProvider * inst;                                                      
+    nsTLSSocketProvider * inst;                                                      
                                                                                 
     if (NULL == aResult) {                                                      
         rv = NS_ERROR_NULL_POINTER;                                             
@@ -62,7 +62,7 @@ nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         return rv;                                                              
     }                                                                           
                                                                                 
-    NS_NEWXPCOM(inst, nsSSLSocketProvider);                                          
+    NS_NEWXPCOM(inst, nsTLSSocketProvider);                                          
     if (NULL == inst) {                                                         
         rv = NS_ERROR_OUT_OF_MEMORY;                                            
         return rv;                                                              
@@ -76,7 +76,7 @@ nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
 
 NS_IMETHODIMP
-nsSSLSocketProvider::NewSocket(const char *host, 
+nsTLSSocketProvider::NewSocket(const char *host, 
                                PRInt32 port, 
                                const char *proxyHost, 
                                PRInt32 proxyPort, 
@@ -89,14 +89,14 @@ nsSSLSocketProvider::NewSocket(const char *host,
                                       proxyPort,
                                       _result, 
                                       securityInfo,
-                                      PR_FALSE);
+                                      PR_TRUE);
   
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
 
 // Add the SSL IO layer to an existing socket
 NS_IMETHODIMP
-nsSSLSocketProvider::AddToSocket(const char *host, 
+nsTLSSocketProvider::AddToSocket(const char *host, 
 				 PRInt32 port, 
 				 const char *proxyHost, 
 				 PRInt32 proxyPort, 
@@ -104,12 +104,12 @@ nsSSLSocketProvider::AddToSocket(const char *host,
 				 nsISupports **securityInfo)
 {
    nsresult rv = nsSSLIOLayerAddToSocket(host,
-					 port,
-					 proxyHost,
-					 proxyPort,
-					 socket, 
-					 securityInfo,
-           PR_FALSE);
+                                         port,
+                                         proxyHost,
+                                         proxyPort,
+                                         socket, 
+                                         securityInfo,
+                                         PR_TRUE);
    
    return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

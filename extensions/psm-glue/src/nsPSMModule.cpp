@@ -32,6 +32,7 @@
 #include "nsSecureBrowserUIImpl.h"
 
 #include "nsSSLSocketProvider.h"
+#include "nsTLSSocketProvider.h"
 
 #include "nsSDR.h"
 #include "nsFSDR.h"
@@ -124,6 +125,13 @@ static nsModuleComponentInfo components[] =
         NS_SSLSOCKETPROVIDER_CID,
         NS_ISSLFHSOCKETPROVIDER_PROGID,
         nsSSLSocketProvider::Create 
+    },
+
+    { 
+        NS_TLSSOCKETPROVIDER_CLASSNAME,
+        NS_TLSSOCKETPROVIDER_CID,
+        NS_TLSSOCKETPROVIDER_PROGID,
+        nsTLSSocketProvider::Create 
     },
 
     {
