@@ -41,10 +41,10 @@
 
 [ptr] native PRNetAddrPtr(union PRNetAddr);
 
-[noscript, uuid(8f755c44-1dd2-11b2-a613-91117453fa95)]
+[scriptable, uuid(8f755c44-1dd2-11b2-a613-91117453fa95)]
 interface nsISOCKSSocketInfo : nsISupports
 {
-    attribute PRNetAddrPtr destinationAddr;
-    attribute PRNetAddrPtr externalProxyAddr;
-    attribute PRNetAddrPtr internalProxyAddr;
+    [noscript] attribute PRNetAddrPtr destinationAddr;
+    [noscript] attribute PRNetAddrPtr externalProxyAddr;
+    [noscript] attribute PRNetAddrPtr internalProxyAddr;
 };

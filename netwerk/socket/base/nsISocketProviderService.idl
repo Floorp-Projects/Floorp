@@ -45,7 +45,7 @@ interface nsISocketProvider;
  * Provides a mapping between a socket type and its associated socket provider
  * instance.  One could also use the service manager directly.
  */
-[noscript, uuid(8f8a23d0-5472-11d3-bbc8-0000861d1237)]
+[scriptable, uuid(8f8a23d0-5472-11d3-bbc8-0000861d1237)]
 interface nsISocketProviderService : nsISupports
 {
     nsISocketProvider getSocketProvider(in string socketType);

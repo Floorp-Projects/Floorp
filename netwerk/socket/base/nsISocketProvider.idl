@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[ptr] native nsFileDescStar(struct PRFileDesc);
+[ptr] native PRFileDescStar(struct PRFileDesc);
 
 /**
  * nsISocketProvider
@@ -73,7 +73,7 @@ interface nsISocketProvider : nsISupports
                    in string          aProxyHost,
                    in long            aProxyPort,
                    in unsigned long   aFlags,
-                   out nsFileDescStar aFileDesc, 
+                   out PRFileDescStar aFileDesc, 
                    out nsISupports    aSecurityInfo);
 
     /**
@@ -92,7 +92,7 @@ interface nsISocketProvider : nsISupports
                      in string         aProxyHost,
                      in long           aProxyPort,
                      in unsigned long  aFlags,
-                     in nsFileDescStar aFileDesc, 
+                     in PRFileDescStar aFileDesc, 
                      out nsISupports   aSecurityInfo);
 
     /**
