@@ -91,13 +91,13 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   nsCOMPtr<nsIFile> soundTmp;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(soundTmp));
   if (NS_FAILED(rv)) return rv;
-  rv = soundTmp->Append(kSoundTmpFileName);
-  nsXPIDLCString soundFilename;
-  (void) soundTmp->GetPath(getter_Copies(soundFilename));
-  FILE *fp = fopen(soundFilename, "wb+");
+  rv = soundTmp->Append(nsDependentCString(kSoundTmpFileName));
+  nsCAutoString soundFilename;
+  (void) soundTmp->GetNativePath(soundFilename);
+  FILE *fp = fopen(soundFilename.get(), "wb+");
   fwrite(string, stringLen, 1, fp);
   fclose(fp);
-  HOBJECT hobject = WinQueryObject(soundFilename);
+  HOBJECT hobject = WinQueryObject(soundFilename.get());
   WinSetObjectData(hobject, "OPEN=DEFAULT");
 
   return NS_OK;
