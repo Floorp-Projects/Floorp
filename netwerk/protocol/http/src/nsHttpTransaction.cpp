@@ -629,6 +629,10 @@ nsHttpTransaction::Cancel(nsresult status)
         return NS_OK;
     }
 
+    // the status must be set immediately as the cancelation may only take
+    // action asynchronously.
+    mStatus = status;
+
     // if the transaction is already "done" then there is nothing more to do.
     // ie., our consumer _will_ eventually receive their OnStopRequest.
     PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
@@ -636,10 +640,6 @@ nsHttpTransaction::Cancel(nsresult status)
         LOG(("ignoring cancel since transaction is already done [this=%x]\n", this));
         return NS_OK;
     }
-
-    // the status must be set immediately as the cancelation may only take
-    // action asynchronously.
-    mStatus = status;
 
     return nsHttpHandler::get()->CancelTransaction(this, status);
 }
