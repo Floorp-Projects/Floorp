@@ -2694,8 +2694,8 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
   twipsPerPixel = NSToCoordRound(p2t);
 
   // Base our thickness check on the segment being less than a pixel and 1/2
-  //qtwips = twipsPerPixel >> 2;
-  qtwips = twipsPerPixel;
+  qtwips = twipsPerPixel >> 2;
+  //qtwips = twipsPerPixel;
 
   outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aBorderRadius,twipsPerPixel);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
