@@ -267,6 +267,18 @@ PRBool nsDequeIterator::operator!=(nsDequeIterator& anIter) {
   return PRBool(!this->operator==(anIter));
 }
 
+
+/**
+ * Compare 2 iterators for equivalence.
+ *
+ * @update	gess4/18/98
+ * @param   anIter is the other iterator to be compared to
+ * @return  TRUE if EQUAL
+ */
+PRBool nsDequeIterator::operator<(nsDequeIterator& anIter) {
+  return PRBool(((mIndex<anIter.mIndex) && (&mDeque==&anIter.mDeque)));
+}
+
 /**
  * Compare 2 iterators for equivalence.
  *
@@ -276,6 +288,17 @@ PRBool nsDequeIterator::operator!=(nsDequeIterator& anIter) {
  */
 PRBool nsDequeIterator::operator==(nsDequeIterator& anIter) {
   return PRBool(((mIndex==anIter.mIndex) && (&mDeque==&anIter.mDeque)));
+}
+
+/**
+ * Compare 2 iterators for equivalence.
+ *
+ * @update	gess4/18/98
+ * @param   anIter is the other iterator to be compared to
+ * @return  TRUE if EQUAL
+ */
+PRBool nsDequeIterator::operator>=(nsDequeIterator& anIter) {
+  return PRBool(((mIndex>=anIter.mIndex) && (&mDeque==&anIter.mDeque)));
 }
 
 /**
