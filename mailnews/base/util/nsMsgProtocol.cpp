@@ -54,7 +54,7 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI)
 nsMsgProtocol::~nsMsgProtocol()
 {}
 
-nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort)
+nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort, const char *connectionType)
 {
   NS_ENSURE_ARG(aHostName);
 
@@ -65,14 +65,14 @@ nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt3
 	m_readCount = -1; // with socket connections we want to read as much data as arrives
 	m_startPosition = 0;
 
-  rv = socketService->CreateTransport(aHostName, aGetPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+  rv = socketService->CreateTransportOfType(connectionType, aHostName, aGetPort, nsnull, 0, 0, getter_AddRefs(m_channel));
   if (NS_FAILED(rv)) return rv;
 
   m_socketIsOpen = PR_FALSE;
 	return SetupTransportState();
 }
 
-nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on this url
+nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType) // open a connection on this url
 {
   NS_ENSURE_ARG(aURL);
 	nsresult rv = NS_OK;
@@ -83,7 +83,7 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on
 	aURL->GetPort(&port);
 	aURL->GetHost(getter_Copies(hostName));
 
-  return OpenNetworkSocketWithInfo(hostName, port);
+  return OpenNetworkSocketWithInfo(hostName, port, connectionType);
 }
 
 nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount)

@@ -418,7 +418,8 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     }
 
     m_url = do_QueryInterface(aURL);
-    rv = OpenNetworkSocket(aURL);
+    // if the server is secure, pass in "ssl" for the last arg
+    rv = OpenNetworkSocket(aURL, nsnull);
 	if(NS_FAILED(rv))
 		return rv;
   } // if we got a url...

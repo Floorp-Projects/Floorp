@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Seth Spitzer <sspitzer@netscape.com>
+ *   Scott MacGregor <mscott@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -747,7 +749,6 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   if (!mailnewsurl) return NS_ERROR_FAILURE;
 
   mailnewsurl->SetSpec((const char *)newsUrlSpec);
-  mailnewsurl->SetPort(NEWS_PORT);
   
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
@@ -793,7 +794,6 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
   // don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
   // a "cont char *" in paramemter for uri SetSpec...
   mailnewsurl->SetSpec((char *) urlString);
-  mailnewsurl->SetPort(NEWS_PORT);
 
   if (newsgroupName != "") {
     nsCOMPtr <nsINNTPNewsgroup> newsgroup;
@@ -1039,7 +1039,6 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	// don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
 	// a "cont char *" in paramemter for uri SetSpec...
 	(*_retval)->SetSpec((char *) aSpec);
-	(*_retval)->SetPort(NEWS_PORT);
 	return rv;
 }
 

@@ -21,10 +21,10 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  */
 
-#include "nsNewsDownloadHeadersDialogArgs.h"
+#include "nsNewsDownloadDialogArgs.h"
 #include "nsCRT.h"
 
-nsNewsDownloadHeadersDialogArgs::nsNewsDownloadHeadersDialogArgs()
+nsNewsDownloadDialogArgs::nsNewsDownloadDialogArgs()
 {
     NS_INIT_REFCNT();
     
@@ -35,13 +35,13 @@ nsNewsDownloadHeadersDialogArgs::nsNewsDownloadHeadersDialogArgs()
     mDownloadAll = PR_FALSE;
 }
 
-nsNewsDownloadHeadersDialogArgs::~nsNewsDownloadHeadersDialogArgs()
+nsNewsDownloadDialogArgs::~nsNewsDownloadDialogArgs()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNewsDownloadHeadersDialogArgs, NS_GET_IID(nsINewsDownloadHeadersDialogArgs));
+NS_IMPL_ISUPPORTS(nsNewsDownloadDialogArgs, NS_GET_IID(nsINewsDownloadDialogArgs));
 
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetGroupName(char * *aGroupName)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetGroupName(char * *aGroupName)
 {
     NS_ENSURE_ARG_POINTER(aGroupName);
 
@@ -49,7 +49,7 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetGroupName(char * *aGroupName)
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetGroupName(const char * aGroupName)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetGroupName(const char * aGroupName)
 {
     NS_ENSURE_ARG_POINTER(aGroupName);
 
@@ -57,7 +57,7 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetGroupName(const char * aGroupN
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetArticleCount(PRInt32 *aArticleCount)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetArticleCount(PRInt32 *aArticleCount)
 {
     NS_ENSURE_ARG_POINTER(aArticleCount);
 
@@ -65,20 +65,20 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetArticleCount(PRInt32 *aArticle
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetArticleCount(PRInt32 aArticleCount)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetArticleCount(PRInt32 aArticleCount)
 {
     mArticleCount = aArticleCount;
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetServerKey(char * *aServerKey)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetServerKey(char * *aServerKey)
 {
     NS_ENSURE_ARG_POINTER(aServerKey);
     
     *aServerKey = nsCRT::strdup((const char *)mServerKey);
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetServerKey(const char * aServerKey)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetServerKey(const char * aServerKey)
 {
     NS_ENSURE_ARG_POINTER(aServerKey);
 
@@ -86,7 +86,7 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetServerKey(const char * aServer
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetHitOK(PRBool *aHitOK)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetHitOK(PRBool *aHitOK)
 {
     NS_ENSURE_ARG_POINTER(aHitOK);
     
@@ -94,13 +94,13 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetHitOK(PRBool *aHitOK)
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetHitOK(PRBool aHitOK)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetHitOK(PRBool aHitOK)
 {
     mHitOK = aHitOK;
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetDownloadAll(PRBool *aDownloadAll)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::GetDownloadAll(PRBool *aDownloadAll)
 {
     NS_ENSURE_ARG_POINTER(aDownloadAll);
 
@@ -108,7 +108,7 @@ NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::GetDownloadAll(PRBool *aDownloadA
 
     return NS_OK;
 }
-NS_IMETHODIMP nsNewsDownloadHeadersDialogArgs::SetDownloadAll(PRBool aDownloadAll)
+NS_IMETHODIMP nsNewsDownloadDialogArgs::SetDownloadAll(PRBool aDownloadAll)
 {
     mDownloadAll = aDownloadAll;
 

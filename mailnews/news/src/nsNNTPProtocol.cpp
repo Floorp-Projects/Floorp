@@ -87,6 +87,9 @@
 #include "nsINetPrompt.h"
 #include "nntpCore.h"
 
+#undef GetPort  // XXX Windows!
+#undef SetPort  // XXX Windows!
+
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
@@ -465,6 +468,7 @@ nsresult nsNNTPProtocol::Initialize(void)
 {
     nsresult rv = NS_OK;
     net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
+    PRBool isSecure = PR_FALSE;
 
 	rv = m_url->GetHost(getter_Copies(m_hostName));
 	if (NS_FAILED(rv)) return rv;
@@ -472,8 +476,7 @@ nsresult nsNNTPProtocol::Initialize(void)
 	if (NS_FAILED(rv)) return rv;
 
     // retrieve the AccountManager
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // find the news host
@@ -492,7 +495,24 @@ nsresult nsNNTPProtocol::Initialize(void)
 				net_NewsChunkSize = max_articles;
 			}
 		}
+
+        rv = server->GetIsSecure(&isSecure);
+        if (NS_FAILED(rv)) return rv;
 	}
+
+    PRInt32 port = 0;
+    rv = m_url->GetPort(&port);
+    if (NS_FAILED(rv) || !port || (port == -1)) {
+        if (isSecure) {
+            port = SECURE_NEWS_PORT;
+        }
+        else {
+            port = NEWS_PORT;
+        }
+
+        rv = m_url->SetPort(port);
+        if (NS_FAILED(rv)) return rv;
+    }
 
 	NS_PRECONDITION(m_url, "invalid URL passed into NNTP Protocol");
 
@@ -517,9 +537,13 @@ nsresult nsNNTPProtocol::Initialize(void)
       return rv;
     }
 	
-    
 	// call base class to set up the transport
-	rv = OpenNetworkSocket(m_url);
+    if (isSecure) {
+	    rv = OpenNetworkSocket(m_url, "ssl");
+    }
+    else {
+	    rv = OpenNetworkSocket(m_url, nsnull);
+    }
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
@@ -624,7 +648,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   if (!m_newsHost)
   {
       PRInt32 port = 0;
-	  aURL->GetPort(&port);
  
 	  rv = nsComponentManager::CreateInstance(kNNTPHostCID,
                                             nsnull,
@@ -637,20 +660,38 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       // m_newsHost holds m_runningURL (make this a weak reference)
       // m_runningURL holds m_newsHost
       // need to make sure there is no cycle. 
-      m_newsHost->Initialize(m_runningURL, m_userName, m_hostName, port ? port : NEWS_PORT);
+
+      // retrieve the AccountManager
+      NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+      if (NS_FAILED(rv)) goto FAIL;
+
+      // find the news host
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = accountManager->FindServer(m_userName,
+                                    m_hostName,
+                                    "nntp",
+                                    getter_AddRefs(server));
+      if (NS_FAILED(rv)) goto FAIL;
+
+      PRBool isSecure = PR_FALSE;
+      rv = server->GetIsSecure(&isSecure);
+      if (NS_FAILED(rv)) goto FAIL;
+
+      if (!port) {
+        if (isSecure) {
+            port = SECURE_NEWS_PORT;
+        }
+        else {
+            port = NEWS_PORT;
+        }
+      }
+
+      m_newsHost->Initialize(m_runningURL, m_userName, m_hostName, port);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
 
-#if SETH_HACK
-	  // read in the newsrc file now, to build up the host correctly.
-      char *newshosturi = PR_smprintf("%s/%s", kNewsRootURI, hostAndPort /* really just hostname */);
-	  rv = m_newsHost->LoadNewsrc(newshosturi);
-      PR_FREEIF(newshosturi);
-#endif
-
-	  if (NS_FAILED(rv))
-			goto FAIL;
+	  if (NS_FAILED(rv)) goto FAIL;
   }
 
   if (NS_FAILED(rv)) 

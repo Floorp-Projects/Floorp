@@ -89,6 +89,12 @@ typedef enum _PrefAuthMethod {
     PREF_AUTH_TLS_ONLY = 4
 } PrefAuthMethod;
 
+typedef enum _PrefTrySSL {
+    PREF_NO_SSL = 0,
+    PREF_TRY_SSL = 1,
+    PREF_ALWAYS_SSL = 2
+} PrefTrySSL;
+
 class nsSmtpProtocol : public nsMsgProtocol,
                        public nsIMsgLogonRedirectionRequester
 {

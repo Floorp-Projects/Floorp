@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 

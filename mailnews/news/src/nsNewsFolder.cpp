@@ -1195,7 +1195,20 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
     if (NS_FAILED(rv)) return rv;
 
     if (port <= 0) {
-        rv = url->SetPort(NEWS_PORT);
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        rv = GetServer(getter_AddRefs(server));
+        if (NS_FAILED(rv)) return rv;
+
+        PRBool isSecure = PR_FALSE;
+        rv = server->GetIsSecure(&isSecure);
+        if (NS_FAILED(rv)) return rv;
+
+        if (isSecure) {
+                rv = url->SetPort(SECURE_NEWS_PORT);
+        }
+        else {
+                rv = url->SetPort(NEWS_PORT);
+        }
         if (NS_FAILED(rv)) return rv;
     }
 

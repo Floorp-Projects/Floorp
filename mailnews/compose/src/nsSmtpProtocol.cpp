@@ -317,8 +317,10 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
   rv = RequestOverrideInfo(smtpServer);
   // if we aren't waiting for a login override, then go ahead an
   // open the network connection like we normally would have.
-  if (NS_FAILED(rv) || !TestFlag(SMTP_WAIT_FOR_REDIRECTION))  
-	  rv = OpenNetworkSocket(aURL);
+  if (NS_FAILED(rv) || !TestFlag(SMTP_WAIT_FOR_REDIRECTION)) {
+      // pass in "ssl" for the last arg if you want this to be over SSL
+	  rv = OpenNetworkSocket(aURL, nsnull);
+  }
 }
 
 const char * nsSmtpProtocol::GetUserDomainName()
@@ -1647,7 +1649,8 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
 
   // now that we have a host and port to connect to, 
   // open up the channel...
-  rv = OpenNetworkSocketWithInfo(nsCAutoString(aHost), aPort);
+  // pass in "ssl" for the last arg if you want this to be over SSL
+  rv = OpenNetworkSocketWithInfo(nsCAutoString(aHost), aPort, nsnull);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);

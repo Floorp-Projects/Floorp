@@ -24,7 +24,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(b5037f06-1dd1-11b2-bf61-fcab5b5837a7)]
-interface nsINewsDownloadHeadersDialogArgs: nsISupports {
+interface nsINewsDownloadDialogArgs: nsISupports {
   attribute string groupName;
   attribute long articleCount;
   attribute string serverKey;

@@ -21,20 +21,20 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-#ifndef nsNewsDownloadHeadersDialogArgs_h__
-#define nsNewsDownloadHeadersDialogArgs_h__
+#ifndef nsNewsDownloadDialogArgs_h__
+#define nsNewsDownloadDialogArgs_h__
 
-#include "nsINewsDownloadHeadersDialogArgs.h"
+#include "nsINewsDownloadDialogArgs.h"
 #include "nsString.h"
 
-class nsNewsDownloadHeadersDialogArgs : public nsINewsDownloadHeadersDialogArgs
+class nsNewsDownloadDialogArgs : public nsINewsDownloadDialogArgs
 {
 public:
-  nsNewsDownloadHeadersDialogArgs();
-  virtual ~nsNewsDownloadHeadersDialogArgs();
+  nsNewsDownloadDialogArgs();
+  virtual ~nsNewsDownloadDialogArgs();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINEWSDOWNLOADHEADERSDIALOGARGS
+  NS_DECL_NSINEWSDOWNLOADDIALOGARGS
 
 private:
   nsCString mGroupName;
@@ -44,4 +44,4 @@ private:
   PRBool mDownloadAll;
 };
 
-#endif // nsNewsDownloadHeadersDialogArgs_h__
+#endif // nsNewsDownloadDialogArgs_h__
