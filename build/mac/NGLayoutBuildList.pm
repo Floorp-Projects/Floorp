@@ -435,6 +435,7 @@ sub BuildClientDist()
 	#NETWERK
 		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
 		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
+   		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	} else {
 	#NETWORK
 	    _InstallFromManifest(":mozilla:network:public:MANIFEST",						"$distdirectory:network:");
