@@ -1143,6 +1143,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFile()
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
+#ifdef MOZ_OLD_LI_STUFF
 /* 
  *  We need to flag a bunch of prefs as local that aren't initialized via all.js.
  *  This seems the safest way to do this.
@@ -1222,6 +1223,7 @@ PREF_SetSpecialPrefsLocal(void)
 	}
 	return PREF_OK;
 }
+#endif /* MOZ_OLD_LI_STUFF */
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
 #ifdef MOZ_OLD_LI_STUFF
