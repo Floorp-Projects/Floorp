@@ -25,14 +25,14 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *    -- 19990806, added void return type declaration for ::nextToken()
  *
- * $Id: Tokenizer.h,v 1.4 2001/04/08 14:38:39 peterv%netscape.com Exp $
+ * $Id: Tokenizer.h,v 1.5 2001/06/26 14:09:44 peterv%netscape.com Exp $
  */
 
 /**
  * Tokenizer
  * A simple String tokenizer
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/04/08 14:38:39 $
+ * @version $Revision: 1.5 $ $Date: 2001/06/26 14:09:44 $
 **/
 
 
@@ -79,8 +79,8 @@ public:
 
 private:
 
-    Int32 currentPos;
-    Int32 size;
+    PRInt32 currentPos;
+    PRInt32 size;
     String str;
     String delimiters;
 

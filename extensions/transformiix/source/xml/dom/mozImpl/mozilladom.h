@@ -254,8 +254,8 @@ class NodeList : public MozillaObjectWrapper
         NodeList(nsIDOMNodeList* aNodeList, Document* aOwner);
         ~NodeList();
 
-        Node* item(UInt32 aIndex);
-        UInt32 getLength();
+        Node* item(PRUint32 aIndex);
+        PRUint32 getLength();
 };
 
 
@@ -271,8 +271,8 @@ class NamedNodeMap : public MozillaObjectWrapper
         Node* getNamedItem(const String& aName);
         Node* setNamedItem(Node* aNode);
         Node* removeNamedItem(const String& aName);
-        Node* item(UInt32 aIndex);
-        UInt32 getLength();
+        Node* item(PRUint32 aIndex);
+        PRUint32 getLength();
 };
 
 /**
@@ -425,13 +425,13 @@ class CharacterData : public Node
 
         const String& getData();
         void setData(const String& aSource);
-        Int32 getLength() const;
+        PRInt32 getLength() const;
 
-        String& substringData(Int32 aOffset, Int32 aCount, String& aDest);
+        String& substringData(PRInt32 aOffset, PRInt32 aCount, String& aDest);
         void appendData(const String& aSource);
-        void insertData(Int32 aOffset, const String& aSource);
-        void deleteData(Int32 aOffset, Int32 aCount);
-        void replaceData(Int32 aOffset, Int32 aCount, const String& aSource);
+        void insertData(PRInt32 aOffset, const String& aSource);
+        void deleteData(PRInt32 aOffset, PRInt32 aCount);
+        void replaceData(PRInt32 aOffset, PRInt32 aCount, const String& aSource);
 
     private:
         String nodeValue;
@@ -446,7 +446,7 @@ class Text : public CharacterData
         Text(nsIDOMText* aText, Document* aOwner);
         ~Text();
 
-        Text* splitText(Int32 aOffset);
+        Text* splitText(PRInt32 aOffset);
 };
 
 /**

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XMLUtils.h,v 1.5 2001/04/08 14:37:51 peterv%netscape.com Exp $
+ * $Id: XMLUtils.h,v 1.6 2001/06/26 14:10:23 peterv%netscape.com Exp $
  */
 
 /**
@@ -77,22 +77,22 @@ private:
     /**
      * Returns true if the given character represents an Alpha letter
     **/
-    static MBool isAlphaChar(Int32 ch);
+    static MBool isAlphaChar(PRInt32 ch);
 
     /**
      * Returns true if the given character represents a numeric letter (digit)
     **/
-    static MBool isDigit(Int32 ch);
+    static MBool isDigit(PRInt32 ch);
 
     /**
      * Returns true if the given character is an allowable QName character
     **/
-    static MBool isQNameChar(Int32 ch);
+    static MBool isQNameChar(PRInt32 ch);
 
     /**
      * Returns true if the given character is an allowable NCName character
     **/
-    static MBool isNCNameChar(Int32 ch);
+    static MBool isNCNameChar(PRInt32 ch);
 
 }; //-- XMLUtils
 #endif

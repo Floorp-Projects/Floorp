@@ -204,7 +204,7 @@ void DOMHelper::continueIndexing(Node* node) {
                 Element* element = (Element*)idxState->next;
                 NamedNodeMap* atts = element->getAttributes();
                 if (atts) {
-                    for (UInt32 i = 0; i < atts->getLength(); i++) {
+                    for (PRUint32 i = 0; i < atts->getLength(); i++) {
                         Node* tmpNode = atts->item(i);
                         addParentReference(tmpNode, element);
                         if (node == tmpNode) found = MB_TRUE;

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: AttributeExpr.cpp,v 1.4 2001/04/08 14:37:57 peterv%netscape.com Exp $
+ * $Id: AttributeExpr.cpp,v 1.5 2001/06/26 14:07:18 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
@@ -70,7 +70,7 @@ ExprResult* AttributeExpr::evaluate(Node* context, ContextState* cs) {
     if ( !context ) return nodeSet;
     NamedNodeMap* atts = context->getAttributes();
     if ( atts ) {
-        UInt32 i = 0;
+        PRUint32 i = 0;
         if ( isNameWild && isNamespaceWild ) {
             for ( ; i < atts->getLength(); i++ )
                 nodeSet->add(atts->item(i));

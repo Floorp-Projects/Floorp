@@ -45,7 +45,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.14 $ $Date: 2001/06/10 16:42:43 $
+ * @version $Revision: 1.15 $ $Date: 2001/06/26 14:10:10 $
 **/
 
 #ifdef TX_EXE
@@ -220,7 +220,7 @@ void URIUtils::resolveHref(const String& href, const String& base, String& dest)
 } //-- resolveHref
 
 void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
-    Int32 pos;
+    PRInt32 pos;
     pos = href.lastIndexOf('#');
     if(pos != NOT_FOUND)
         href.subString(pos+1, frag);
@@ -229,7 +229,7 @@ void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
 } //-- getFragmentIdentifier
 
 void URIUtils::getDocumentURI(const String& href, String& docUri) {
-    Int32 pos;
+    PRInt32 pos;
     pos = href.lastIndexOf('#');
     if(pos != NOT_FOUND)
         href.subString(0,pos,docUri);

@@ -20,7 +20,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DefaultStringComparator.cpp,v 1.1 2000/04/12 10:49:27 kvisco%ziplink.net Exp $
+ * $Id: DefaultStringComparator.cpp,v 1.2 2001/06/26 14:07:34 peterv%netscape.com Exp $
  */
 
 #include "StringComparator.h"
@@ -51,8 +51,8 @@ int DefaultStringComparator::compare(const String& str1, const String& str2) {
 
     int c = 0;
     while ((c < len1) && (c < len2)) {
-        Int32 ch1 = str1.charAt(c);
-        Int32 ch2 = str2.charAt(c);
+        PRInt32 ch1 = str1.charAt(c);
+        PRInt32 ch2 = str2.charAt(c);
         if (ch1 < ch2) return -1;
         else if (ch2 < ch1) return 1;
         ++c;

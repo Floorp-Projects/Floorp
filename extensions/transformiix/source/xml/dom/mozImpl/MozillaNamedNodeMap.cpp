@@ -114,7 +114,7 @@ Node* NamedNodeMap::removeNamedItem(const String& aName)
  *
  * @return the node at the given index
  */
-Node* NamedNodeMap::item(UInt32 aIndex)
+Node* NamedNodeMap::item(PRUint32 aIndex)
 {
     NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
@@ -130,10 +130,10 @@ Node* NamedNodeMap::item(UInt32 aIndex)
  *
  * @return the number of nodes stored in this NamedNodeMap
  */
-UInt32 NamedNodeMap::getLength()
+PRUint32 NamedNodeMap::getLength()
 {
     NSI_FROM_TX(NamedNodeMap)
-    UInt32 length = 0;
+    PRUint32 length = 0;
 
     if (nsNamedNodeMap)
         nsNamedNodeMap->GetLength(&length);

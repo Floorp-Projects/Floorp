@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Integer.cpp,v 1.2 1999/11/15 07:12:39 nisheeth%netscape.com Exp $
+ * $Id: Integer.cpp,v 1.3 2001/06/26 14:08:02 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
@@ -35,7 +35,7 @@
  * A wrapper for the primitive int type, and provides some simple
  * integer related routines
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:39 $
+ * @version $Revision: 1.3 $ $Date: 2001/06/26 14:08:02 $
 **/
 
 /**
@@ -56,8 +56,8 @@ Integer::Integer(int value) {
  * Creates a new Integer based on the value of the given String
 **/
 Integer::Integer(const String& str) {
-    Int32 val = 0;
-    for (Int32 i = 0; i < str.length(); i++) {
+    PRInt32 val = 0;
+    for (PRInt32 i = 0; i < str.length(); i++) {
         val = (val * 10) + (str.charAt(i) - 48);
     }
 } //-- Integer
@@ -66,7 +66,7 @@ Integer::Integer(const String& str) {
  * Returns the int value of this Integer
 **/
 
-Int32 Integer::intValue() {
+PRInt32 Integer::intValue() {
     return value;
 } //-- intValue;
 
@@ -76,7 +76,7 @@ Int32 Integer::intValue() {
 int Integer::intValue(const String& src) {
 
     int result = 0;
-    Int32 idx = 0;
+    PRInt32 idx = 0;
     int sign = 1;
 
     //-- trim leading whitespace
@@ -85,7 +85,7 @@ int Integer::intValue(const String& src) {
 
     //-- check first character for sign
     if ( idx < src.length() ) {
-        Int32 ch = src.charAt(idx);
+        PRInt32 ch = src.charAt(idx);
         if ( ch == '-' ) {
             sign = -1;
             ++idx;
@@ -97,7 +97,7 @@ int Integer::intValue(const String& src) {
 
     //-- convert remaining to number
     for ( ; idx < src.length(); idx++ ) {
-        Int32 ch = src.charAt(idx);
+        PRInt32 ch = src.charAt(idx);
         if (( ch >= '0') && (ch <= '9')) {
             result = result*10;
             result += (ch-48);
@@ -115,7 +115,7 @@ String& Integer::toString(int value, String& dest) {
 
     String result;
     UNICODE_CHAR charDigit;
-    Int32 tempVal = value;
+    PRInt32 tempVal = value;
     MBool isNegative = (value < 0);
     if ( isNegative ) tempVal = -value;
 

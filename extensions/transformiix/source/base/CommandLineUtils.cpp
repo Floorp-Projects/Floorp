@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: CommandLineUtils.cpp,v 1.3 2000/06/11 11:41:52 Peter.VanderBeken%pandora.be Exp $
+ * $Id: CommandLineUtils.cpp,v 1.4 2001/06/26 14:07:29 peterv%netscape.com Exp $
  */
 
 #include "CommandLineUtils.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 11:41:52 $
+ * @version $Revision: 1.4 $ $Date: 2001/06/26 14:07:29 $
 **/
 void CommandLineUtils::getOptions
     (NamedMap& options, int argc, char** argv, StringList& flags)
@@ -52,7 +52,7 @@ void CommandLineUtils::getOptions
                 //-- check full flag, otherwise try to find
                 //-- flag within string
                 if (!flags.contains(flag)) {
-                    Int32 idx = 1;
+                    PRInt32 idx = 1;
                     String tmpFlag;
                     while(idx <= flag.length()) {
                         flag.subString(0,idx, tmpFlag);

@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NamedMap.h,v 1.6 2001/04/08 14:36:55 peterv%netscape.com Exp $
+ * $Id: NamedMap.h,v 1.7 2001/06/26 14:08:58 peterv%netscape.com Exp $
  */
 
 /**
  * A Named Map for TxObjects
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/04/08 14:36:55 $
+ * @version $Revision: 1.7 $ $Date: 2001/06/26 14:08:58 $
 **/
 
 #ifndef TRANSFRMX_NAMEDMAP_H
@@ -167,8 +167,8 @@ private:
     // map table
     BucketItem** elements;
 
-    Int32 numberOfBuckets;
-    Int32 numberOfElements;
+    PRInt32 numberOfBuckets;
+    PRInt32 numberOfElements;
     MBool doObjectDeletion;
 
       //-------------------/

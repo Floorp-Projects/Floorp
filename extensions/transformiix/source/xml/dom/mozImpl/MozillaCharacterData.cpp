@@ -79,10 +79,10 @@ void CharacterData::setData(const String& aData)
  *
  * @return the length of the character data
  */
-Int32 CharacterData::getLength() const
+PRInt32 CharacterData::getLength() const
 {
     NSI_FROM_TX(CharacterData)
-    UInt32 length = 0;
+    PRUint32 length = 0;
 
     if (nsCharacterData)
         nsCharacterData->GetLength(&length);
@@ -99,7 +99,7 @@ Int32 CharacterData::getLength() const
  *
  * @return the length of the character data
  */
-String& CharacterData::substringData(Int32 aOffset, Int32 aCount,
+String& CharacterData::substringData(PRInt32 aOffset, PRInt32 aCount,
                     String& aDest)
 {
     NSI_FROM_TX(CharacterData)
@@ -129,7 +129,7 @@ void CharacterData::appendData(const String& aSource)
  * @param aOffset the offset at which you want to insert the string
  * @param aSource the string that you want to insert into the character data
  */
-void CharacterData::insertData(Int32 aOffset, const String& aSource)
+void CharacterData::insertData(PRInt32 aOffset, const String& aSource)
 {
     NSI_FROM_TX(CharacterData)
 
@@ -143,7 +143,7 @@ void CharacterData::insertData(Int32 aOffset, const String& aSource)
  * @param aOffset the offset at which you want to delete data
  * @param aCount the number of chars you want to delete
  */
-void CharacterData::deleteData(Int32 aOffset, Int32 aCount)
+void CharacterData::deleteData(PRInt32 aOffset, PRInt32 aCount)
 {
     NSI_FROM_TX(CharacterData)
 
@@ -158,7 +158,7 @@ void CharacterData::deleteData(Int32 aOffset, Int32 aCount)
  * @param aCount the number of chars you want to replace
  * @param aSource the data that you want to replace it with
  */
-void CharacterData::replaceData(Int32 aOffset, Int32 aCount,
+void CharacterData::replaceData(PRInt32 aOffset, PRInt32 aCount,
         const String& aSource)
 {
     NSI_FROM_TX(CharacterData)

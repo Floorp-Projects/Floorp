@@ -85,7 +85,7 @@ MBool StringList::contains(String& search) {
 /**
  * Returns the number of Strings in this List
 **/
-Int32 StringList::getLength() {
+PRInt32 StringList::getLength() {
     return itemCount;
 } //-- getLength
 

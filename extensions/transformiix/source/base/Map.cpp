@@ -20,12 +20,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.cpp,v 1.3 2001/06/26 11:58:46 sicking%bigfoot.com Exp $
+ * $Id: Map.cpp,v 1.4 2001/06/26 14:08:23 peterv%netscape.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.3 $ $Date: 2001/06/26 11:58:46 $
+ * @version $Revision: 1.4 $ $Date: 2001/06/26 14:08:23 $
  */
 
 
@@ -58,7 +58,7 @@ Map::Map(int size) {
 /**
  * Helper method for Constructors
 **/
-void Map::initialize(Int32 size) {
+void Map::initialize(PRInt32 size) {
 
     //-- by default the Map will not delete it's
     //-- object references
@@ -68,7 +68,7 @@ void Map::initialize(Int32 size) {
     elements = new BucketItem*[size];
 
     //-- initialize all elements to 0;
-    for ( Int32 i = 0; i < size; i++ ) elements[i] = 0;
+    for ( PRInt32 i = 0; i < size; i++ ) elements[i] = 0;
 
     numberOfBuckets = size;
     numberOfElements = 0;
@@ -151,7 +151,7 @@ void  Map::put(TxObject* key, TxObject* obj) {
     if ((!key) || (!obj)) return;
 
     //-- compute hash for key
-    Int32 hashCode = key->hashCode();
+    PRInt32 hashCode = key->hashCode();
 
     //-- calculate index
     int idx = hashCode % numberOfBuckets;
@@ -199,7 +199,7 @@ TxObject* Map::remove(TxObject* key) {
     if (!key) return 0;
 
     // compute hash for key
-    Int32 hashCode = key->hashCode();
+    PRInt32 hashCode = key->hashCode();
 
     int idx = hashCode % numberOfBuckets;
 
@@ -255,7 +255,7 @@ Map::BucketItem* Map::createBucketItem(TxObject* key, TxObject* obj)
 Map::BucketItem* Map::getBucketItem(TxObject* key) {
 
     // compute hash for key
-    Int32 hashCode = key->hashCode();
+    PRInt32 hashCode = key->hashCode();
 
     int idx = hashCode % numberOfBuckets;
 

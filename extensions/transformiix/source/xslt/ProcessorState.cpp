@@ -30,7 +30,7 @@
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.32 $ $Date: 2001/06/26 11:58:51 $
+ * @version $Revision: 1.33 $ $Date: 2001/06/26 14:09:18 $
 **/
 
 #include "ProcessorState.h"
@@ -978,7 +978,7 @@ void ProcessorState::initialize() {
 	    //-- process namespace nodes
 	    NamedNodeMap* atts = element->getAttributes();
 	    if ( atts ) {
-	        for (UInt32 i = 0; i < atts->getLength(); i++) {
+	        for (PRUint32 i = 0; i < atts->getLength(); i++) {
 	            Attr* attr = (Attr*)atts->item(i);
 	            String attName = attr->getName();
 	            String attValue = attr->getValue();
