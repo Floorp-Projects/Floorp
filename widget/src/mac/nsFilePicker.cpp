@@ -293,7 +293,7 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
-		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		::BlockMoveData(inTitle, dialogOptions.windowTitle, *inTitle + 1);
 		
 		// sets up the |mTypeLists| array so the filter proc can use it
 		MapFilterToFileTypes();
@@ -366,7 +366,7 @@ nsFilePicker::GetLocalFolder(Str255 & inTitle, FSSpec* outSpec)
 		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
-		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		::BlockMoveData(inTitle, dialogOptions.windowTitle, *inTitle + 1);
 		
 		// Display the get file dialog
     nsWatchTask::GetTask().Suspend();  
@@ -424,7 +424,7 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
-		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		::BlockMoveData(inTitle, dialogOptions.windowTitle, *inTitle + 1);
 		::BlockMoveData(inDefaultName, dialogOptions.savedFileName, *inDefaultName + 1);
 		
 		// Display the get file dialog
