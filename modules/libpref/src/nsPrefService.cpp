@@ -301,13 +301,13 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal, PRBool aVerif
   nsCOMPtr<nsIFileSpec> fileSpec;
   nsresult rv;
 
-  JS_BeginRequest(gMochaContext);
   rv = nsIFileToFileSpec(aFile, getter_AddRefs(fileSpec));
-  JS_EndRequest(gMochaContext);
-  if (NS_FAILED(rv))
-    return rv;        
-
-  return openPrefFileSpec(fileSpec, aIsErrorFatal, aVerifyHash, aIsGlobalContext, aSkipFirstLine);
+  if (NS_SUCCEEDED(rv)) {
+    JS_BeginRequest(gMochaContext);
+    rv = openPrefFileSpec(fileSpec, aIsErrorFatal, aVerifyHash, aIsGlobalContext, aSkipFirstLine);
+    JS_EndRequest(gMochaContext);
+  }
+  return rv;        
 }
 
 static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, PRBool aVerifyHash,
