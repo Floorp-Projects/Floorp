@@ -1604,8 +1604,8 @@ nsLocalFile::GetPath(char **_retval)
     		        FSSpec parentDirSpec;		        
     		        err = GetParentFolderSpec(mResolvedSpec, parentDirSpec);
     		        if (err == noErr) {
-    		            nsDependentCString leafName((char *)&mResolvedSpec.name[1], PRUint32(mResolvedSpec.name[0]));
-    		            nsFSStringConversionMac::FSToUCS(leafName, ucPathString);
+    		            const char *startPtr = (const char*)&mResolvedSpec.name[1];
+    		            nsFSStringConversionMac::FSToUCS(Substring(startPtr, startPtr + PRUint32(mResolvedSpec.name[0])), ucPathString);
     		            err = ::FSpMakeFSRef(&parentDirSpec, &nodeRef);
     		        }
     		    }
@@ -1623,8 +1623,8 @@ nsLocalFile::GetPath(char **_retval)
     		        {
     		            if (catalogInfo.nodeFlags & kFSNodeIsDirectoryMask)
     		                nodeName.unicode[nodeName.length++] = PRUnichar(':');
-    		            nsDependentString nodeNameStr((PRUnichar *)nodeName.unicode, (PRUint32)nodeName.length);
-    		            ucPathString.Insert(nodeNameStr, 0);
+    		            const PRUnichar* nodeNameUni = (const PRUnichar*) nodeName.unicode;
+    		            ucPathString.Insert(Substring(nodeNameUni, nodeNameUni + nodeName.length), 0);
     		            nodeRef = parentRef;
     		        }
     		    }
