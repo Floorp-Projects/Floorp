@@ -5856,6 +5856,8 @@ const char * const sScrollTopString = "cmd_scrollTop";
 const char * const sScrollBottomString = "cmd_scrollBottom";
 const char * const sScrollPageUpString = "cmd_scrollPageUp";
 const char * const sScrollPageDownString = "cmd_scrollPageDown";
+const char * const sMovePageUpString = "cmd_movePageUp";
+const char * const sMovePageDownString = "cmd_movePageDown";
 const char * const sScrollLineUpString = "cmd_scrollLineUp";
 const char * const sScrollLineDownString = "cmd_scrollLineDown";
 const char * const sScrollLeftString = "cmd_scrollLeft";
@@ -6073,6 +6075,8 @@ nsDOMWindowController::SupportsCommand(const char * aCommand,
       !nsCRT::strcmp(aCommand,sCopyImageContentsString) ||
       !nsCRT::strcmp(aCommand,sScrollPageUpString) ||
       !nsCRT::strcmp(aCommand,sScrollPageDownString) ||
+      !nsCRT::strcmp(aCommand,sMovePageUpString) ||
+      !nsCRT::strcmp(aCommand,sMovePageDownString) ||
       !nsCRT::strcmp(aCommand,sScrollLineUpString) ||
       !nsCRT::strcmp(aCommand,sScrollLineDownString) ||
       !nsCRT::strcmp(aCommand,sScrollLeftString) ||
@@ -6117,6 +6121,8 @@ nsDOMWindowController::DoCommand(const char *aCommand)
   else if (!nsCRT::strcmp(aCommand,sScrollTopString) ||
            !nsCRT::strcmp(aCommand,sScrollBottomString) ||
            !nsCRT::strcmp(aCommand,sScrollPageUpString) ||
+           !nsCRT::strcmp(aCommand,sMovePageDownString) ||
+           !nsCRT::strcmp(aCommand,sMovePageUpString) ||
            !nsCRT::strcmp(aCommand,sScrollPageDownString) ||
            !nsCRT::strcmp(aCommand,sScrollLineUpString) ||
            !nsCRT::strcmp(aCommand,sScrollLineDownString) ||
@@ -6200,9 +6206,17 @@ nsDOMWindowController::DoCommandWithSelectionController(const char *aCommandName
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_FALSE, PR_FALSE): selCont->CompleteScroll(PR_FALSE));
   else if (!nsCRT::strcmp(aCommandName,sScrollBottomString))
     rv = (mBrowseWithCaret? selCont->CompleteMove(PR_TRUE, PR_FALSE): selCont->CompleteScroll(PR_TRUE));
+  // cmd_ScrollPageUp/Down are used on Mac.  They do not move the
+  // caret in caret browsing mode.
   else if (!nsCRT::strcmp(aCommandName,sScrollPageUpString))
-    rv = (mBrowseWithCaret? selCont->PageMove(PR_FALSE, PR_FALSE): selCont->ScrollPage(PR_FALSE));
+    rv = selCont->ScrollPage(PR_FALSE);
   else if (!nsCRT::strcmp(aCommandName,sScrollPageDownString))
+    rv = selCont->ScrollPage(PR_TRUE);
+  // cmd_MovePageUp/Down are used on Window/Unix.  They move the caret
+  // in caret browsing mode.
+  else if (!nsCRT::strcmp(aCommandName,sMovePageUpString))
+    rv = (mBrowseWithCaret? selCont->PageMove(PR_FALSE, PR_FALSE): selCont->ScrollPage(PR_FALSE));
+  else if (!nsCRT::strcmp(aCommandName,sMovePageDownString))
     rv = (mBrowseWithCaret? selCont->PageMove(PR_TRUE, PR_FALSE): selCont->ScrollPage(PR_TRUE));
   else if (!nsCRT::strcmp(aCommandName,sScrollLineUpString))
     rv = (mBrowseWithCaret? selCont->LineMove(PR_FALSE, PR_FALSE): selCont->ScrollLine(PR_FALSE));
