@@ -2682,7 +2682,7 @@ int nsWindow::MenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo
   widget = widget, data = data, cbinfo = cbinfo;
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> mMenuRegion=<%p>\n", pWin, widget, data, pWin->mMenuRegion));
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> pWin2=<%p> EventName=<%s>\n", pWin, widget, data, pWin2, (const char *) nsCAutoString(PhotonEventToString(event)) ));
+//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback this=<%p> widget=<%p> apinfo=<%p> pWin2=<%p> EventName=<%s>\n", pWin, widget, data, pWin2, (const char *) nsCAutoString(PhotonEventToString(event), strlen(PhotonEventToString(event)) ) ));
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->reason=<%d>\n", cbinfo->reason));
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->subtype=<%d>\n", cbinfo->reason_subtype));
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::MenuRegionCallback cbinfo->cbdata=<%d>\n", cbinfo->cbdata));
@@ -2786,9 +2786,10 @@ int nsWindow::PopupMenuRegionCallback( PtWidget_t *widget, void *data, PtCallbac
   widget = widget, data = data, cbinfo = cbinfo;
 
  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PopupMenuRegionCallback this=<%p> widget=<%p> data=<%p> mMenuRegion=<%p>\n", pWin, widget, data, pWin->mMenuRegion));
- printf("nsWindow::PopupMenuRegionCallback this=<%p> widget=<%p> data=<%p> mMenuRegion=<%p> EventName=<%s>\n", pWin, widget, data, pWin->mMenuRegion, (const char *) nsCAutoString(PhotonEventToString(event)) );
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PMenuRegionCallback this=<%p> widget=<%p> data=<%p> pWin2=<%p> EventName=<%s>\n", pWin, widget, data, pWin2, (const char *) nsCAutoString(PhotonEventToString(event)) ));
+// printf("nsWindow::PopupMenuRegionCallback this=<%p> widget=<%p> data=<%p> mMenuRegion=<%p> EventName=<%s>\n", pWin, widget, data, pWin->mMenuRegion, (const char *) nsCAutoString(PhotonEventToString(event), strlen(PhotonEventToString(event) ));
+//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PMenuRegionCallback this=<%p> widget=<%p> data=<%p> pWin2=<%p> EventName=<%s>\n", pWin, widget, data, pWin2, (const char *) nsCAutoString(PhotonEventToString(event)) ));
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PMenuRegionCallback cbinfo->reason=<%d>\n", cbinfo->reason));
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PMenuRegionCallback cbinfo->subtype=<%d>\n", cbinfo->reason_subtype));
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PMenuRegionCallback cbinfo->cbdata=<%d>\n", cbinfo->cbdata));

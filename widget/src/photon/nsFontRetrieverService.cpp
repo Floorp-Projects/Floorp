@@ -166,7 +166,7 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFontRetrieverService::GetFontInfo\n"));
 
-  nsAutoString name(aName);
+  nsAutoString name((const PRUnichar *) aName, strlen(aName) );
   PRInt32 i;
   PRInt32 cnt = aFontList->Count();
   for (i=0;i<cnt;i++) {
@@ -177,7 +177,7 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
   }
 
   FontInfo * fontInfo   = new FontInfo();
-  fontInfo->mName       = aName;
+  fontInfo->mName       = nsString( (const PRUnichar *) aName, strlen(aName));
   printf("nsFontRetrieverService::GetFontInfo Adding [%s]\n", aName);fflush(stdout); 
   fontInfo->mIsScalable = PR_FALSE; // X fonts aren't scalable right??
   fontInfo->mSizes      = nsnull;

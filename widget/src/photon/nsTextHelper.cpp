@@ -74,7 +74,7 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
     PtGetResources(mWidget, 1, arg);
 
 	aTextBuffer.SetLength(0);
-    aTextBuffer.Append(string);
+    aTextBuffer.AppendWithConversion(string);
     aActualSize = aTextBuffer.Length();
   }
   
