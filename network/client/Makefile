@@ -17,9 +17,9 @@
 
 DEPTH		= ../..
 
-ifndef MODULAR_NETLIB
-
 MODULE		= cnetinit
+
+ifndef MODULAR_NETLIB
 LIBRARY_NAME	= cnetinit
 
 CSRCS		= \
