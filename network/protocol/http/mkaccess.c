@@ -3914,7 +3914,12 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
         fileLength = stats.st_size;
         readBuf = (char *) malloc(fileLength * sizeof(char));
         f = fopen(COOKIE_FILE, "r");
-        fread(readBuf, sizeof(char), fileLength, f);
+        if (f)
+           fread(readBuf, sizeof(char), fileLength, f);
+        else { /* Things are going to hell in a handbasket.  Dump */
+           XP_FREE(readBuf);
+           return NULL;
+        }
 
         /* find the htmldlgs cookie (it is preceded by "htmldlgs" tab verical-bar ) */
         cookie = PL_strstr(readBuf, "htmldlgs\t|"); /* get to htmldlgs tab vert-bar */
