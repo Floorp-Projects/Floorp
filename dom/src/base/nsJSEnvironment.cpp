@@ -53,6 +53,7 @@
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
 #include "prlog.h"
+#include "prthread.h"
 
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -1162,6 +1163,15 @@ nsJSEnvironment::GetScriptingEnvironment()
 
 const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 static int globalCount;
+static PRThread *gDOMThread;
+
+static JSBool
+DOMGCCallback(JSContext *cx, JSGCStatus status)
+{
+  if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
+    return JS_FALSE;
+  return JS_TRUE;
+}
 
 nsJSEnvironment::nsJSEnvironment()
 {
@@ -1176,7 +1186,10 @@ nsJSEnvironment::nsJSEnvironment()
   if (NS_FAILED(rv))
     return;                     // XXX swallow error! need Init()?
 
-  // Initialize LiveConnect.  XXXbe uses GetCID rather than progid
+  gDOMThread = PR_GetCurrentThread();
+  ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
+
+  // Initialize LiveConnect.  XXXbe use progid rather than GetCID
   NS_WITH_SERVICE(nsILiveConnectManager, manager,
                   nsIJVMManager::GetCID(), &rv);
 
