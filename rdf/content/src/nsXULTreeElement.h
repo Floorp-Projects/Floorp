@@ -83,6 +83,7 @@ protected:
 protected:
     nsRDFDOMNodeList* mSelectedItems;
     nsIDOMXULElement* mCurrentItem;
+    nsIDOMXULElement* mSelectionStart;
 };
 
 
