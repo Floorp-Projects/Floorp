@@ -442,6 +442,13 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 		NewNode->localVars->wizbut->cancel = parentNode->localVars->wizbut->cancel; 
 	} 
 
+	GetPrivateProfileString(varSection, "Help", "", buffer, MAX_SIZE, iniFile); 
+	NewNode->localVars->wizbut->help = buffer; 
+	if (NewNode->localVars->wizbut->help == "")
+	{ 
+		NewNode->localVars->wizbut->help = parentNode->localVars->wizbut->help; 
+	} 
+
 	CString tempPageVar = "";
 
 	int index = iniFile.ReverseFind('\\');
@@ -607,7 +614,7 @@ void CWizardMachineApp::CreateNode()
 	GlobalDefaults->localVars->wizbut->back = "<Back";
 	GlobalDefaults->localVars->wizbut->next = "Next>";
 	GlobalDefaults->localVars->wizbut->cancel = "Exit";
-	GlobalDefaults->localVars->wizbut->back = "Help";
+	GlobalDefaults->localVars->wizbut->help = "Offline";
 	GlobalDefaults->subPages = NULL;
 	GlobalDefaults->navControls = NULL;
 	GlobalDefaults->pageWidgets = NULL;
@@ -1599,8 +1606,17 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 
 void CWizardMachineApp::HelpWiz()
 {
-
-
-			CWizHelp hlpdlg;
-			hlpdlg.DoModal();
+	CString helpvalue = (CurrentNode->localVars->wizbut->help);
+	CString helpvar = helpvalue.Left(6);
+	if (helpvar.CompareNoCase("Online")== 0)
+	{
+		helpvalue.Delete(0,7);
+//		AfxMessageBox("online",MB_OK);
+		theInterpreter->OpenBrowser((char*)(LPCTSTR)helpvalue);
+	}
+	else 
+	{
+		CWizHelp hlpdlg;
+		hlpdlg.DoModal();
+	}
 }

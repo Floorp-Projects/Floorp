@@ -81,6 +81,7 @@ typedef struct WIZBUT
 	CString back;
 	CString next;
 	CString cancel;
+	CString help;
 }WIZBUT;
 
 typedef struct VARS
@@ -138,8 +139,8 @@ typedef int (DLLPROC)(CString parms);
 
 typedef struct DLLINFO
 {
-	CString dllName;
-	CString procName;
+	CString *dllName;
+	CString *procName;
 	HMODULE hDLL;
 	DLLPROC *procAddr;
 	DLLINFO *next;

@@ -37,13 +37,15 @@ public:
 	BOOL BrowseFile(WIDGET *curWidget);
 	BOOL BrowseDir(WIDGET *curWidget);
 	BOOL Progress();  // Not actually used right now
-	void ExecuteCommand(char *command, int showflag);
+	void ExecuteCommand(char *command, int showflag,DWORD wait);
 	BOOL IterateListBox(char *parms);
 	CString replaceVars(CString str, char *listval);
 	CString replaceVars(char *str, char *listval);
 	BOOL CallDLL(char *dll, char *proc, char *parms);
 	BOOL interpret(char *cmds, WIDGET *curWidget);
 	BOOL interpret(CString cmds, WIDGET *curWidget);
+	BOOL CInterpret::GetRegistryKey( HKEY key, char *subkey, char *retdata );
+	BOOL CInterpret::OpenBrowser(const char *url);
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CWizardMachineApp)

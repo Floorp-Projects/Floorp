@@ -6,6 +6,7 @@
 #include "ImgDlg.h"
 #include "HelpDlg.h"
 #include "WizHelp.h"
+#include "interpret.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,7 +16,7 @@ static char THIS_FILE[] = __FILE__;
 
 /////////////////////////////////////////////////////////////////////////////
 // CImgDlg dialog
-
+extern CInterpret *theInterpreter;
 extern char iniFilePath[MAX_SIZE];
 extern char imagesPath[MAX_SIZE];
 extern CString iniTracker;
@@ -72,8 +73,18 @@ void CImgDlg::OnHelpButton()
 	// TODO: Add your control notification handler code here
 //		CWnd Mywnd;
 //		Mywnd.MessageBox("hello","hello",MB_OK);
-		CHelpDlg hlpdlg;
-		int retVal = hlpdlg.DoModal();
+	CString helpvalue = iniTracker;
+	CString helpvar = helpvalue.Left(6);
+	if (helpvar.CompareNoCase("Online")== 0)
+	{
+		helpvalue.Delete(0,7);
+		theInterpreter->OpenBrowser((char*)(LPCTSTR)helpvalue);
+	}
+	else 
+	{
+		CWizHelp hlpdlg;
+		hlpdlg.DoModal();
+	}
 
 }
 

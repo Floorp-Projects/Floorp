@@ -81,6 +81,7 @@ typedef struct WIZBUT
 	CString back;
 	CString next;
 	CString cancel;
+	CString help;
 }WIZBUT;
 
 typedef struct VARS

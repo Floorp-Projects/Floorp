@@ -221,7 +221,7 @@ BOOL CInterpret::Progress()
 	return TRUE;
 }
 
-void CInterpret::ExecuteCommand(char *command, int showflag)
+void CInterpret::ExecuteCommand(char *command, int showflag, DWORD wait)
 {
 	STARTUPINFO	startupInfo; 
 	PROCESS_INFORMATION	processInfo; 
@@ -238,7 +238,7 @@ void CInterpret::ExecuteCommand(char *command, int showflag)
 												NORMAL_PRIORITY_CLASS, NULL, NULL, 
 												&startupInfo, &processInfo); 
 	DWORD error = GetLastError();
-	WaitForSingleObject(processInfo.hProcess, INFINITE);
+	WaitForSingleObject(processInfo.hProcess, wait);
 }
 
 BOOL CInterpret::IterateListBox(char *parms)
@@ -276,12 +276,66 @@ BOOL CInterpret::IterateListBox(char *parms)
 		char *cmd_copy = strdup(cmd);
 		CString command = replaceVars(cmd_copy, s);
 		free(cmd_copy);
-		ExecuteCommand((char *) (LPCSTR) command, showflag);
+		ExecuteCommand((char *) (LPCSTR) command, showflag,INFINITE);
 	}
 
 	return TRUE;
 }
 
+BOOL CInterpret::GetRegistryKey( HKEY key, char *subkey, char *retdata )
+{ 
+	long retval;
+	HKEY hkey;
+
+	retval = RegOpenKeyEx(key, subkey, 0, KEY_QUERY_VALUE, &hkey);
+
+	if(retval == ERROR_SUCCESS)
+	{
+		long datasize = MAX_SIZE;
+		char data[MAX_SIZE];
+
+		RegQueryValue(hkey,NULL,(LPSTR)data,&datasize);
+
+		lstrcpy(retdata,data);
+		RegCloseKey(hkey);
+	}
+	return retval;
+}
+
+BOOL CInterpret::OpenBrowser(const char *url)
+{
+	char key[MAX_SIZE + MAX_SIZE];
+	BOOL retflag = FALSE;
+
+	/* get the .htm regkey and lookup the program */
+	if(GetRegistryKey(HKEY_CLASSES_ROOT,".htm",key) == ERROR_SUCCESS)
+	{
+		lstrcat(key,"\\shell\\open\\command");
+		if(GetRegistryKey(HKEY_CLASSES_ROOT,key,key) == ERROR_SUCCESS)
+		{
+			char *pos;
+			pos = strstr(key,"\"%1\"");
+			if(pos == NULL)     /* if no quotes */
+			{
+				/* now check for %1, without the quotes */
+				pos = strstr(key,"%1");
+				if(pos == NULL) /* if no parameter */
+				pos = key+lstrlen(key)-1;
+				else
+				*pos = '\0';    /* remove the parameter */
+			}
+			else
+			*pos = '\0';        /* remove the parameter */
+
+		lstrcat(pos," ");
+		lstrcat(pos,url);
+		ExecuteCommand(key,SW_SHOW,50); 
+		retflag = TRUE;
+		}
+	}
+
+	return retflag;
+}
 CString CInterpret::replaceVars(CString str, char *listval)
 {
 	char *theStr = (char *) (LPCTSTR) str;
@@ -451,7 +505,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				else if (strcmp(pcmd, "command") == 0)
 				{
 					CString p = replaceVars(parms, NULL);
-					ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT);
+					ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT,INFINITE);
 				}
 				else if (strcmp(pcmd, "IterateListBox") == 0)
 				{
