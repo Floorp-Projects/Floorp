@@ -52,6 +52,10 @@ public:
 	// convenience routines to notify all our ChangeListeners
 	void NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
 		nsIDBChangeListener *instigator);
+	void NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
+		nsIDBChangeListener *instigator);
+	void NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
+		nsIDBChangeListener *instigator);
 	void NotifyAnnouncerGoingAway(nsDBChangeAnnouncer *instigator);
 };
 
@@ -109,8 +113,13 @@ public:
 	virtual nsresult	GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **msgHdr);
 	// create a new message header from a hdrStruct. Caller must release resulting header,
 	// after adding any extra properties they want.
-	virtual nsresult	CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
+	virtual nsresult	CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
+
+	// Must call AddNewHdrToDB after creating. The idea is that you create
+	// a new header, fill in its properties, and then call AddNewHdrToDB.
+	// AddNewHdrToDB will send notifications to any listeners.
 	virtual nsresult	CreateNewHdr(nsMsgKey key, nsMsgHdr **newHdr);
+	virtual nsresult	AddNewHdrToDB(nsMsgHdr *newHdr, PRBool notify);
 	// extract info from an nsMsgHdr into a MessageHdrStruct
 	virtual nsresult	GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdrStruct &hdrStruct);
 

@@ -37,7 +37,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
 			.\$(OBJDIR)\nsDBFolderInfo.obj\
 			.\$(OBJDIR)\nsMailDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
-			.\$(OBJDIR)\mdbstubs.obj\
+#			.\$(OBJDIR)\mdbstubs.obj\
 			$(NULL)
 
 

@@ -79,6 +79,29 @@ void nsDBChangeAnnouncer::NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags,
 	}
 }
 
+void nsDBChangeAnnouncer::NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
+	nsIDBChangeListener *instigator)
+{
+
+	for (int i = 0; i < Count(); i++)
+	{
+		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) ElementAt(i);
+
+		changeListener->OnKeyDeleted(keyDeleted, flags, instigator); 
+	}
+}
+void nsDBChangeAnnouncer::NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
+	nsIDBChangeListener *instigator)
+{
+
+	for (int i = 0; i < Count(); i++)
+	{
+		nsIDBChangeListener *changeListener = (nsIDBChangeListener *) ElementAt(i);
+
+		changeListener->OnKeyAdded(keyAdded, flags, instigator); 
+	}
+}
+
 void nsDBChangeAnnouncer::NotifyAnnouncerGoingAway(nsDBChangeAnnouncer *instigator)
 {
 	if (instigator == NULL)
@@ -582,7 +605,7 @@ nsresult nsMsgDatabase::DeleteHeader(nsMsgHdr *msgHdr, nsIDBChangeListener *inst
 	if (notify) {
         PRUint32 flags;
         (void)msgHdr->GetFlags(&flags);
-		NotifyKeyChangeAll(key, flags, instigator); // tell listeners
+		NotifyKeyDeletedAll(key, flags, instigator); // tell listeners
     }
 
 //	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
@@ -1179,14 +1202,30 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 		&allMsgHdrsTableOID, &hdrRow);
 	if (err == NS_OK)
 	{
-		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdrRow);
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
 		(*pnewHdr)->AddRef();
 	}
 	return err;
 }
 
-nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
+nsresult nsMsgDatabase::AddNewHdrToDB(nsMsgHdr *newHdr, PRBool notify)
+{
+	nsresult err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), newHdr->GetMDBRow());
+	if (notify)
+	{
+		nsMsgKey key;
+		PRUint32 flags;
+
+	    newHdr->GetMessageKey(&key);
+		newHdr->GetFlags(&flags);
+
+		NotifyKeyAddedAll(key, flags, NULL);
+	}
+
+	return err;
+}
+
+nsresult nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
 {
 	nsresult	err = NS_OK;
 	nsIMdbRow		*hdrRow;

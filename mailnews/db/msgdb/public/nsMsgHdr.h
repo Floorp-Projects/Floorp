@@ -98,6 +98,7 @@ protected:
     PRUint32		m_flags;
     PRUint16		m_numReferences;	// x-ref header for threading
     PRInt16			m_csID;			// cs id of message
+	nsString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
     nsMsgPriority	m_priority;
 
     // nsMsgHdrs will have to know what db and row they belong to, since they are really

@@ -468,24 +468,28 @@ nsresult nsMailDatabase::PrePopulate()
 	newHdr->SetSubject("Why the Lakers suck");
 	newHdr->SetDate(resDate);
 	newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
+	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
 	res = CreateNewHdr(2, &newHdr);
 	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
 	newHdr->SetSubject("Anyone here know how to shoot free throws?");
 	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
 	res = CreateNewHdr(3, &newHdr);
 	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
 	newHdr->SetSubject("Has anyone seen my jump shot?");
 	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
 	res = CreateNewHdr(4, &newHdr);
 	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
 	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
 	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 	return NS_OK;
 }
