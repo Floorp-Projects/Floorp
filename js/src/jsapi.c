@@ -1433,10 +1433,14 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
-    char *p = (char *) JS_malloc(cx, strlen(s) + 1);
+    size_t n;
+    void *p;
+
+    n = strlen(s) + 1;
+    p = JS_malloc(cx, n);
     if (!p)
         return NULL;
-    return strcpy(p, s);
+    return (char *)memcpy(p, s, n);
 }
 
 JS_PUBLIC_API(jsdouble *)
