@@ -2106,7 +2106,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     // if we are caching this to disk ourselves, lets write the bytes out.
     nsCOMPtr<nsIOutputStream> outStream;
     mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-    while (outStream && amountWrote <= amountRead && NS_SUCCEEDED(rv))
+    while (outStream && amountWrote < amountRead && NS_SUCCEEDED(rv))
       rv = outStream->Write(buffer, amountRead, &amountWrote);
     delete [] buffer;
   }
