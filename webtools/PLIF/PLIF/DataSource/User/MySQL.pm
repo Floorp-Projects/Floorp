@@ -423,14 +423,13 @@ sub setupInstall {
         $app->output->setupProgress('dataSource.user.userDataChanges');
         $database->execute('
             CREATE TABLE userDataChanges (
-                                  changeID integer unsigned NOT NULL,
+                                  changeID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                   userID integer unsigned NOT NULL,
                                   fieldID integer unsigned NOT NULL,
                                   newData text,
                                   password varchar(255) NOT NULL,
                                   createTime TIMESTAMP DEFAULT NULL,
                                   type integer unsigned NOT NULL DEFAULT 0,
-                                  PRIMARY KEY (changeID),
                                   KEY (userID, fieldID)
                                   )
         ');
