@@ -1983,7 +1983,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
     if (presShell) {
       nsCOMPtr<nsILayoutHistoryState> history;
       result = presShell->GetHistoryState(getter_AddRefs(history));
-      if (history) {
+      if (NS_SUCCEEDED(result) && history) {
         PRUint32 ID;
         aContent->GetContentID(&ID);
         result = history->GetState(ID, aPresState, aStateType);
