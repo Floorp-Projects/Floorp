@@ -44,6 +44,7 @@ class nsIDOMHTMLInputElement;
 class nsIDOMHTMLImageElement;
 class nsIDOMElement;
 class nsIStreamObserver;
+class nsIDocument;
 
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
@@ -96,7 +97,7 @@ public:
   NS_IMETHOD OnConnectionsComplete();
 
 protected:
-  void UpdateButtonStatus(PRBool aIsBusy);
+  PRInt32 GetDocHeight(nsIDocument * aDoc);
   void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
   void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
   void ConnectCommandToOneGUINode(
