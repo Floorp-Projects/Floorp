@@ -60,6 +60,16 @@ if (verifyDiskSpace(fProgram, srDest))
     {
 	    err = performInstall(); 
     	logComment("performInstall() returned: " + err);
+        if (! ('buildID' in Install))
+        {
+          logComment("Running Pre-Mozilla 0.9.1");
+          initInstall("Post-install Cleanup Utility", "xpicleanup", "$Version$");
+          fEssentialFiles = getFolder(fProgram, "Essential Files");
+          cleanupUtility = getFolder(fEssentialFiles, "XPICleanup");
+          err = File.execute(cleanupUtility);
+          logComment("execute() returned: " + err);
+          err = performInstall();
+        }
     }
     else
     {
