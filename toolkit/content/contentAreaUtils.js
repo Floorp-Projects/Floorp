@@ -355,7 +355,14 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     fp.init(window, bundle.GetStringFromName(titleKey), 
             Components.interfaces.nsIFilePicker.modeSave);
     
-    appendFiltersForContentType(fp, aContentType,
+    var urlExt = null;
+    try {
+      var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
+      urlExt = url.fileExtension;
+    }
+    catch (e) {
+    }
+    appendFiltersForContentType(fp, aContentType, urlExt,
                                 aIsDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
     if (dir)
@@ -547,18 +554,9 @@ nsHeaderSniffer.prototype = {
       if (this.mData.document) {
         this.contentType = this.mData.document.contentType;
       } else {
-        try {
-          var url = this.uri.QueryInterface(Components.interfaces.nsIURL);
-          var ext = url.fileExtension;
-          if (ext) {
-            var mimeInfo = getMIMEInfoForExtension(ext);
-            if (mimeInfo)
-              this.contentType = mimeInfo.MIMEType;
-          }
-        }
-        catch (e) {
-          // Not much we can do here.  Give up.
-        }
+        var type = getMIMETypeForURI(this.uri);
+        if (type)
+          this.contentType = type;
       }
     }
     this.mCallback(this, this.mData, this.mSkipPrompt);
@@ -607,7 +605,7 @@ nsHeaderSniffer.prototype = {
 const MODE_COMPLETE = 0;
 const MODE_FILEONLY = 1;
 
-function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
+function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, aSaveMode)
 {
   var bundle = getStringBundle();
     
@@ -620,7 +618,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
     break;
   default:
-    var mimeInfo = getMIMEInfoForType(aContentType);
+    var mimeInfo = getMIMEInfoForType(aContentType, aFileExtension);
     if (mimeInfo) {
 
       var extEnumerator = mimeInfo.getFileExtensions();
@@ -705,20 +703,20 @@ function getMIMEService()
   return mimeSvc;
 }
 
-function getMIMEInfoForExtension(aExtension)
+function getMIMETypeForURI(aURI)
 {
   try {  
-    return getMIMEService().GetFromExtension(aExtension);
+    return getMIMEService().getTypeFromURI(aURI);
   }
   catch (e) {
   }
   return null;
 }
 
-function getMIMEInfoForType(aMIMEType)
+function getMIMEInfoForType(aMIMEType, aExtension)
 {
   try {  
-    return getMIMEService().GetFromMIMEType(aMIMEType);
+    return getMIMEService().getFromTypeAndExtension(aMIMEType, aExtension);
   }
   catch (e) {
   }
@@ -820,11 +818,6 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   if (aContentType == "text/plain" || aContentType == "application/octet-stream" || aURI.scheme == "ftp")
     return "";   // temporary fix for bug 120327
 
-  // This mirrors some code in nsExternalHelperAppService::DoContent
-  // Use the filename first and then the URI if that fails
-  
-  var mimeInfo = getMIMEInfoForType(aContentType);
-
   // First try the extension from the filename
   const stdURLContractID = "@mozilla.org/network/standard-url;1";
   const stdURLIID = Components.interfaces.nsIURL;
@@ -832,6 +825,11 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   url.filePath = aFilename;
 
   var ext = url.fileExtension;
+
+  // This mirrors some code in nsExternalHelperAppService::DoContent
+  // Use the filename first and then the URI if that fails
+  
+  var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
   if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
     return ext;
