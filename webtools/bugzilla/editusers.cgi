@@ -320,9 +320,6 @@ if ($action eq 'list') {
           die "Unknown match type";
       }
       $query .= SqlQuote($matchstr) . " ORDER BY login_name";
-    } elsif (exists $::FORM{'query'}) {
-      $query = "SELECT login_name,realname,disabledtext " .
-          "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
     } elsif (exists $::FORM{'group'}) {
       detaint_natural($::FORM{'group'});
       $query = "SELECT DISTINCT login_name,realname,disabledtext " .
