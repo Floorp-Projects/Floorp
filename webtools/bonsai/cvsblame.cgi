@@ -54,6 +54,7 @@ sub sillyness {
 
 require 'CGI.pl';
 require 'cvsblame.pl';
+require 'lloydcgi.pl';
 use SourceChecker;
 
 # Cope with the cookie and print the header, first thing.  That way, if
@@ -96,7 +97,11 @@ if ($filename eq '')
     print "\n";
     &print_usage;
     exit;
+} elsif ($filename =~ /CVSROOT/) {
+    print "\nFiles in the CVSROOT dir cannot be viewed.\n";
+    exit;
 }
+
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 
 # Handle the "rev" argument
