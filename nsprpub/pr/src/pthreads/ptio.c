@@ -2915,7 +2915,7 @@ static PRIOMethods _pr_pipe_methods = {
     pt_Write,
     pt_Available_s,
     pt_Available64_s,
-    pt_Fsync,
+    pt_Synch,
     (PRSeekFN)_PR_InvalidInt,
     (PRSeek64FN)_PR_InvalidInt64,
     (PRFileInfoFN)_PR_InvalidStatus,
@@ -3133,7 +3133,7 @@ PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods()
 PR_IMPLEMENT(const PRIOMethods*) PR_GetPipeMethods()
 {
     return &_pr_pipe_methods;
-}  /* PR_GetFileMethods */
+}  /* PR_GetPipeMethods */
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
 {
