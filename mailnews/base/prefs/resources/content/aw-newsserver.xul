@@ -34,20 +34,23 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
   <box id="wizardHeader">
-    <html:div class="title">&serverTitle.label;</html:div>
+    <titledbutton class="left-header-text" value="&serverTitle.label;"/>
   </box>
 
-  <box align="vertical" class="padded">
+  <box align="vertical">
     <html:div>&newsServerNameDesc.label;</html:div>
     <html:div>
-      &incomingServerLabel.label;
+      <html:label for="hostname">&incomingServerLabel.label;</html:label>
       <html:input type="text" id="hostname" name="hostname"/>
     </html:div>
   </box>
 
-  <box align="vertical" class="padded">
+  <spring class="spacer"/>
+  <spring class="spacer"/>
+  <box align="vertical">
     <html:div class="title">&newsPasswordTitle.label;</html:div>
     <html:div>&newsPasswordDesc.label;</html:div>
+    <spring class="spacer"/>
     <html:div>
       <html:input type="checkbox" id="usePassword" name="usePassword"/>
       <html:label for="usePassword">&newsUsePasswordCheckbox.label;

@@ -29,7 +29,7 @@ Alec Flett <alecf@netscape.com>
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<box class="header" align="horizontal" id="wizardHeader">-->
+<box class="header" align="horizontal" id="wizardHeader" style="margin-bottom: 10px">
     <!-- titledbutton gets inserted here -->
     <spring class="header-spring" flex="1"/>
     <titledbutton class="right-header-text" id="Throbber"/>
