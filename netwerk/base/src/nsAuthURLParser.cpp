@@ -227,6 +227,9 @@ nsAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
     if (!brk) // everything is a host
     {
         rv = ExtractString((char*)i_Spec, o_Host, len);
+        if (PL_strlen(*o_Host)==0) {
+            return NS_ERROR_MALFORMED_URI;
+        }
         ToLowerCase(*o_Host);
         return rv;
     }
@@ -239,6 +242,9 @@ nsAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
         rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
         if (NS_FAILED(rv))
             return rv;
+        if (PL_strlen(*o_Host)==0) {
+            return NS_ERROR_MALFORMED_URI;
+        }
         ToLowerCase(*o_Host);
         rv = ParseAtPath(brk, o_Path);
         return rv;
@@ -248,6 +254,9 @@ nsAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
         rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
         if (NS_FAILED(rv))
             return rv;
+        if (PL_strlen(*o_Host)==0) {
+            return NS_ERROR_MALFORMED_URI;
+        }
         ToLowerCase(*o_Host);
         rv = ParseAtPort(brk+1, o_Port, o_Path);
         return rv;
