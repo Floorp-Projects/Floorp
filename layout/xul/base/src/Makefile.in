@@ -30,6 +30,10 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
+       nsGridLayout.cpp \
+       nsObeliskLayout.cpp \
+       nsTempleLayout.cpp \
+       nsMonumentLayout.cpp \
        nsImageBoxFrame.cpp \
        nsRootBoxFrame.cpp \
 		nsBox.cpp \
