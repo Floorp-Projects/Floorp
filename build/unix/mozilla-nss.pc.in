@@ -3,9 +3,9 @@ exec_prefix=%exec_prefix%
 libdir=%libdir%
 includedir=%includedir%
 
-Name: JavaScript
-Description: The Mozilla JavaScript Library
+Name: NSS
+Description: Mozilla Network Security Services
 Version: %MOZILLA_VERSION%
 Requires: mozilla-nspr = %MOZILLA_VERSION%
-Libs: -L${libdir} -js
-Cflags: -I${includedir}/js
+Libs: -L${libdir} -lnss3 -lsmime3 -lssl3 -lsoftokn3
+Cflags: -I${includedir}/nss
