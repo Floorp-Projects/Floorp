@@ -519,16 +519,15 @@ nsBaseWidget::Enumerator::Last()
 
 
 nsresult
-nsBaseWidget::Enumerator::IsDone(PRBool *aDone)
+nsBaseWidget::Enumerator::IsDone()
 {
-    if (!aDone)
-        return NS_ERROR_NULL_POINTER;
-    if ((mCurrentPosition == (mChildren.Count() -1)) || mChildren.Count() <= 0 ){ //empty lists always return done
-        *aDone = PR_TRUE;
-    }
-    else
-        *aDone = PR_FALSE;
+  if ((mCurrentPosition == (mChildren.Count() -1)) || mChildren.Count() <= 0 ){ //empty lists always return done
     return NS_OK;
+  }
+  else {
+    return NS_COMFALSE;
+  }
+  return NS_OK;
 }
 
 
@@ -573,9 +572,9 @@ NS_METHOD nsBaseWidget::SetTitle(const nsString& aTitle)
 } 
 
 /**
- * Processes a mouse pressed event
- *
- **/
+* Processes a mouse pressed event
+*
+**/
 NS_METHOD nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
 {
   NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
@@ -584,9 +583,9 @@ NS_METHOD nsBaseWidget::AddMouseListener(nsIMouseListener * aListener)
 }
 
 /**
- * Processes a mouse pressed event
- *
- **/
+* Processes a mouse pressed event
+*
+**/
 NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 {
   NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
@@ -596,18 +595,18 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 
 
 /**
- * If the implementation of nsWindow supports borders this method MUST be overridden
- *
- **/
+* If the implementation of nsWindow supports borders this method MUST be overridden
+*
+**/
 NS_METHOD nsBaseWidget::GetClientBounds(nsRect &aRect)
 {
   return GetBounds(aRect);
 }
 
 /**
- * If the implementation of nsWindow supports borders this method MUST be overridden
- *
- **/
+* If the implementation of nsWindow supports borders this method MUST be overridden
+*
+**/
 NS_METHOD nsBaseWidget::GetBounds(nsRect &aRect)
 {
   aRect = mBounds;
@@ -615,9 +614,9 @@ NS_METHOD nsBaseWidget::GetBounds(nsRect &aRect)
 }
 
 /**
- * If the implementation of nsWindow supports borders this method MUST be overridden
- *
- **/
+* If the implementation of nsWindow supports borders this method MUST be overridden
+*
+**/
 NS_METHOD nsBaseWidget::GetBoundsAppUnits(nsRect &aRect, float aAppUnits)
 {
   aRect = mBounds;
@@ -630,9 +629,9 @@ NS_METHOD nsBaseWidget::GetBoundsAppUnits(nsRect &aRect, float aAppUnits)
 }
 
 /**
- * 
- *
- **/
+* 
+*
+**/
 NS_METHOD nsBaseWidget::SetBounds(const nsRect &aRect)
 {
   mBounds = aRect;
@@ -643,9 +642,9 @@ NS_METHOD nsBaseWidget::SetBounds(const nsRect &aRect)
 
 
 /**
- * Calculates the border width and height  
- *
- **/
+* Calculates the border width and height  
+*
+**/
 NS_METHOD nsBaseWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   nsRect rectWin;
@@ -661,9 +660,9 @@ NS_METHOD nsBaseWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 
 
 /**
- * Calculates the border width and height  
- *
- **/
+* Calculates the border width and height  
+*
+**/
 void nsBaseWidget::DrawScaledRect(nsIRenderingContext& aRenderingContext, const nsRect & aRect, float aScale, float aAppUnits)
 {
   nsRect rect = aRect;
@@ -688,9 +687,9 @@ void nsBaseWidget::DrawScaledRect(nsIRenderingContext& aRenderingContext, const 
 }
 
 /**
- * Calculates the border width and height  
- *
- **/
+* Calculates the border width and height  
+*
+**/
 void nsBaseWidget::DrawScaledLine(nsIRenderingContext& aRenderingContext, 
                                   nscoord aSX, 
                                   nscoord aSY, 
@@ -723,9 +722,9 @@ void nsBaseWidget::DrawScaledLine(nsIRenderingContext& aRenderingContext,
 }
 
 /**
- * Paints default border (XXX - this should be done by CSS)
- *
- **/
+* Paints default border (XXX - this should be done by CSS)
+*
+**/
 NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
                               const nsRect&        aDirtyRect)
 {
@@ -746,6 +745,5 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
   NS_RELEASE(context);
   return NS_OK;
 }
-
 
 
