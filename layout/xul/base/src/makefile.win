@@ -134,8 +134,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSpinnerFrame.obj \
 	.\$(OBJDIR)\nsScrollbarFrame.obj \
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \
-	.\$(OBJDIR)\nsColorPickerFrame.obj \
-	.\$(OBJDIR)\nsStdColorPicker.obj \
 	.\$(OBJDIR)\nsFontPickerFrame.obj \
 	.\$(OBJDIR)\nsMenuPopupFrame.obj \
 	.\$(OBJDIR)\nsMenuBarListener.obj \
