@@ -622,6 +622,12 @@ public:
    */
   NS_IMETHOD IsTransparent(PRBool& aTransparent) const = 0;
 
+  /**
+   * called when the frame has been scrolled to a new
+   * position. only called for frames with views.
+   */
+  NS_IMETHOD Scrolled(nsIView *aView) = 0;
+
   // Debugging
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const= 0;
   NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;
