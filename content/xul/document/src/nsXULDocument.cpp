@@ -1946,7 +1946,7 @@ XULDocumentImpl::AddElementForResource(nsIRDFResource* aResource, nsIContent* aE
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef DEBUG
+#ifdef DEBUG_waterson
     const char* uri;
     aResource->GetValue(&uri);
     printf("add    [%p] <-- %s\n", aElement, uri);
@@ -1968,7 +1968,7 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef DEBUG
+#ifdef DEBUG_waterson
     const char* uri;
     aResource->GetValue(&uri);
     printf("remove [%p] <-- %s\n", aElement, uri);
