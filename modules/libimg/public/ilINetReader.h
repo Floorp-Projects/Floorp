@@ -34,7 +34,7 @@ class ilIURL;
 class ilINetReader : public nsISupports {
 public:
 
-  virtual unsigned int WriteReady()=0;
+  /*NS_IMETHOD*/virtual int WriteReady()=0;
   
   virtual int FirstWrite(const unsigned char *str, int32 len)=0;
 
