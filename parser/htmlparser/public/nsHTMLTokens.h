@@ -97,14 +97,10 @@ const PRUnichar* GetTagName(PRInt32 aTag);
  */
 class CHTMLToken : public CToken {
 public:
-    virtual             ~CHTMLToken();
-
-                        CHTMLToken(eHTMLTags aTag);
-
-    virtual eContainerInfo GetContainerInfo(void) const {return eFormUnknown;}
-    virtual void           SetContainerInfo(eContainerInfo aInfo) { }
-
-protected:
+    virtual       ~CHTMLToken();
+                   CHTMLToken(eHTMLTags aTag);
+    virtual const  PRUint16 GetContainerInfo() { return NS_HTMLTOKENS_UNKNOWNFORM; }
+    virtual void   SetContainerInfo(PRUint16 aInfo) { }
 };
 
 /**
@@ -117,47 +113,36 @@ class CStartToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                          CStartToken(eHTMLTags aTag=eHTMLTag_unknown);
-                          CStartToken(const nsAString& aString);
-                          CStartToken(const nsAString& aName,eHTMLTags aTag);
+                     CStartToken(eHTMLTags aTag=eHTMLTag_unknown);
+                     CStartToken(const nsAString& aString);
+                     CStartToken(const nsAString& aName,eHTMLTags aTag);
 
-    virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual PRInt32       GetTypeID(void);
-    virtual const char*   GetClassName(void);
-    virtual PRInt32       GetTokenType(void);
-
-    virtual PRBool        IsEmpty(void);
-    virtual void          SetEmpty(PRBool aValue);
-#ifdef DEBUG
-    virtual void          DebugDumpSource(nsOutputStream& out);
-#endif
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual PRInt32          GetTypeID(void);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
     virtual const nsAString& GetStringValue();
-    virtual void          GetSource(nsString& anOutputString);
-    virtual void          AppendSourceTo(nsAString& anOutputString);
-
+    virtual void             GetSource(nsAString& anOutputString);
+    virtual void             AppendSourceTo(nsAString& anOutputString);
+    virtual void             SetAttributeCount(PRInt16 aCount) { mAttrCount = aCount; }
+    virtual PRInt16          GetAttributeCount(void) { return mAttrCount; }
+    virtual void             SetEmpty(PRBool aValue);
+    virtual PRBool           IsEmpty(void) { return mFlags & NS_HTMLTOKENS_EMPTYTOKEN; }
       //the following info is used to set well-formedness state on start tags...
-    virtual eContainerInfo GetContainerInfo(void) const {return mContainerInfo;}
-    virtual void           SetContainerInfo(eContainerInfo aContainerInfo) {mContainerInfo=aContainerInfo;}
-    virtual PRBool         IsWellFormed(void) const {return PRBool(eWellFormed==mContainerInfo);}
-
-
-    /*
-     * Get and set the ID attribute atom for this element.  
-     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
-     * for the definition of an ID attribute.
-     *
-     */
-    virtual nsresult      GetIDAttributeAtom(nsIAtom** aResult);
-    virtual nsresult      SetIDAttributeAtom(nsIAtom* aID);
+    virtual void             SetContainerInfo(PRUint16 aInfo);
+    virtual const PRUint16   GetContainerInfo() { return mFlags; }
+    virtual PRBool           IsWellFormed(void) const { return mFlags & NS_HTMLTOKENS_WELLFORMED; }
   
-            nsString          mTextValue;
-            nsString          mTrailingContent;
-  protected:    
-            eContainerInfo    mContainerInfo;
-            nsCOMPtr<nsIAtom> mIDAttributeAtom;
-            PRPackedBool      mEmpty;  
 #ifdef DEBUG
-            PRPackedBool      mAttributed;
+    virtual void DebugDumpSource(nsOutputStream& out);
+#endif
+
+    nsString mTextValue;
+    nsString mTrailingContent;
+  protected:    
+    PRInt16 mAttrCount;
+#ifdef DEBUG
+    PRPackedBool mAttributed;
 #endif
 };
 
@@ -173,22 +158,22 @@ class CEndToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                        CEndToken(eHTMLTags aTag);
-                        CEndToken(const nsAString& aString);
-                        CEndToken(const nsAString& aName,eHTMLTags aTag);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual PRInt32     GetTypeID(void);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-#ifdef DEBUG
-    virtual void        DebugDumpSource(nsOutputStream& out);
-#endif
+                     CEndToken(eHTMLTags aTag);
+                     CEndToken(const nsAString& aString);
+                     CEndToken(const nsAString& aName,eHTMLTags aTag);
+    
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual PRInt32          GetTypeID(void);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
     virtual const nsAString& GetStringValue();
-    virtual void        GetSource(nsString& anOutputString);
-    virtual void        AppendSourceTo(nsAString& anOutputString);
-
+    virtual void             GetSource(nsAString& anOutputString);
+    virtual void             AppendSourceTo(nsAString& anOutputString);
+#ifdef DEBUG
+    virtual void DebugDumpSource(nsOutputStream& out);
+#endif
   protected:
-    nsString          mTextValue;
+    nsString mTextValue;
 };
 
 
@@ -204,18 +189,19 @@ class CCommentToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                        CCommentToken();
-                        CCommentToken(const nsAString& aString);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-    virtual const nsAString& GetStringValue(void);
-    virtual void        AppendSourceTo(nsAString& anOutputString);
+                     CCommentToken();
+                     CCommentToken(const nsAString& aString);
 
-    nsresult ConsumeStrictComment(nsScanner& aScanner);
-    nsresult ConsumeQuirksComment(nsScanner& aScanner);
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
+    virtual const nsAString& GetStringValue(void);
+    virtual void             AppendSourceTo(nsAString& anOutputString);
 
   protected:
+    nsresult         ConsumeStrictComment(nsScanner& aScanner);
+    nsresult         ConsumeQuirksComment(nsScanner& aScanner);
+
     nsSlidingSubstring mComment; // does not include MDO & MDC
     nsSlidingSubstring mCommentDecl; // includes MDO & MDC
 };
@@ -234,21 +220,22 @@ class CEntityToken : public CHTMLToken {
   public:
                         CEntityToken();
                         CEntityToken(const nsAString& aString);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-            PRInt32     TranslateToUnicodeStr(nsString& aString);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    static  nsresult    ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
-    static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
-#ifdef DEBUG
-    virtual  void       DebugDumpSource(nsOutputStream& out);
-#endif
+
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual const nsAString& GetStringValue(void);
-    virtual void        GetSource(nsString& anOutputString);
-    virtual void        AppendSourceTo(nsAString& anOutputString);
+    virtual void             GetSource(nsAString& anOutputString);
+    virtual void             AppendSourceTo(nsAString& anOutputString);
+    
+    PRInt32          TranslateToUnicodeStr(nsString& aString);
+    static nsresult  ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
+#ifdef DEBUG
+    virtual  void    DebugDumpSource(nsOutputStream& out);
+#endif
 
   protected:
-    nsString          mTextValue;
+    nsString         mTextValue;
 };
 
 
@@ -263,15 +250,16 @@ class CWhitespaceToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                        CWhitespaceToken();
-                        CWhitespaceToken(const nsAString& aString);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
+                     CWhitespaceToken();
+                     CWhitespaceToken(const nsAString& aString);
+
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
     virtual const nsAString& GetStringValue(void);
 
   protected:
-    nsString          mTextValue;
+    nsString mTextValue;
 };
 
 /**
@@ -285,21 +273,23 @@ class CTextToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                        CTextToken();
-                        CTextToken(const nsAString& aString);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-            nsresult    ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                     nsString& aEndTagName,PRInt32 aMode,PRBool& aFlushTokens);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-    virtual PRInt32     GetTextLength(void);
-    virtual void        CopyTo(nsAString& aStr);
+                     CTextToken();
+                     CTextToken(const nsAString& aString);
+
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
     virtual const nsAString& GetStringValue(void);
-    virtual void        Bind(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
-    virtual void        Bind(const nsAString& aStr);
+    
+    nsresult                  ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
+                                  nsString& aEndTagName,PRInt32 aMode,PRBool& aFlushTokens);
+    PRInt32                   GetTextLength(void);
+    void                      CopyTo(nsAString& aStr);
+    void                      Bind(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
+    void                      Bind(const nsAString& aStr);
 
   protected:
-    nsSlidingSubstring          mTextValue;
+    nsSlidingSubstring mTextValue;
 };
 
 
@@ -322,7 +312,7 @@ public:
     virtual const nsAString& GetStringValue(void);
 
   protected:
-    nsString          mTextValue;
+    nsString mTextValue;
 };
 
 
@@ -338,13 +328,13 @@ class CMarkupDeclToken : public CHTMLToken {
 public:
                         CMarkupDeclToken();
                         CMarkupDeclToken(const nsAString& aString);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);  
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);  
     virtual const nsAString& GetStringValue(void);
 
 protected:
-    nsSlidingSubstring  mTextValue;
+    nsSlidingSubstring mTextValue;
 };
 
 
@@ -360,32 +350,32 @@ class CAttributeToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                          CAttributeToken();
-                          CAttributeToken(const nsAString& aString);
-                          CAttributeToken(const nsAString& aKey, const nsAString& aString);
-                           ~CAttributeToken() {}
-    virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char*   GetClassName(void);
-    virtual PRInt32       GetTokenType(void);
-    virtual const nsAString&     GetKey(void) {return mTextKey;}
-    virtual void          SetKey(const nsAString& aKey);
-    virtual void          BindKey(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
-    virtual const nsAString&     GetValue(void) {return mTextValue;}
-    virtual void          SanitizeKey();
-#ifdef DEBUG
-    virtual void          DebugDumpToken(nsOutputStream& out);
-#endif
+                     CAttributeToken();
+                     CAttributeToken(const nsAString& aString);
+                     CAttributeToken(const nsAString& aKey, const nsAString& aString);
+                     ~CAttributeToken() {}
+
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
     virtual const nsAString& GetStringValue(void);
-    virtual void          GetSource(nsString& anOutputString);
-    virtual void          AppendSourceTo(nsAString& anOutputString);
+    virtual void             GetSource(nsAString& anOutputString);
+    virtual void             AppendSourceTo(nsAString& anOutputString);
+    
+    const nsAString& GetKey(void) {return mTextKey;}
+    void             SetKey(const nsAString& aKey);
+    void             BindKey(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
+    const nsAString& GetValue(void) {return mTextValue;}
+    void             SanitizeKey();
 #ifdef DEBUG
-    virtual void          DebugDumpSource(nsOutputStream& out);
+    virtual void     DebugDumpToken(nsOutputStream& out);
+    void             DebugDumpSource(nsOutputStream& out);
 #endif
     
-    PRPackedBool       mHasEqualWithoutValue;
+    PRPackedBool mHasEqualWithoutValue;
   protected:
 #ifdef DEBUG
-    PRPackedBool       mLastAttribute;
+    PRPackedBool mLastAttribute;
 #endif
     nsAutoString       mTextValue;
     nsSlidingSubstring mTextKey;
@@ -402,14 +392,15 @@ class CNewlineToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
   public:
-                        CNewlineToken();
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-    virtual const nsAString&   GetStringValue(void);
+                     CNewlineToken();
 
-    static void AllocNewline();
-    static void FreeNewline();
+    virtual nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    virtual const char*      GetClassName(void);
+    virtual PRInt32          GetTokenType(void);
+    virtual const nsAString& GetStringValue(void);
+
+    static void      AllocNewline();
+    static void      FreeNewline();
 };
 
 
@@ -430,10 +421,10 @@ class CScriptToken: public CHTMLToken {
                         CScriptToken(const nsAString& aString);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
-    virtual const nsAString&   GetStringValue(void);
+    virtual const nsAString& GetStringValue(void);
 
   protected:
-    nsString          mTextValue;
+    nsString mTextValue;
 };
 
 
@@ -453,10 +444,10 @@ class CStyleToken: public CHTMLToken {
                          CStyleToken(const nsAString& aString);
     virtual const char*  GetClassName(void);
     virtual PRInt32      GetTokenType(void);
-    virtual const nsAString&   GetStringValue(void);
+    virtual const nsAString& GetStringValue(void);
 
   protected:
-    nsString          mTextValue;
+    nsString mTextValue;
 };
 
 
@@ -514,16 +505,16 @@ class CDoctypeDeclToken: public CHTMLToken {
   CTOKEN_IMPL_SIZEOF
 
 public:
-                        CDoctypeDeclToken(eHTMLTags aTag=eHTMLTag_unknown);
-                        CDoctypeDeclToken(const nsAString& aString,eHTMLTags aTag=eHTMLTag_unknown);
-    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    virtual const char* GetClassName(void);
-    virtual PRInt32     GetTokenType(void);
-    virtual const nsAString& GetStringValue(void);
-    virtual void SetStringValue(const nsAString& aStr);
+                     CDoctypeDeclToken(eHTMLTags aTag=eHTMLTag_unknown);
+                     CDoctypeDeclToken(const nsAString& aString,eHTMLTags aTag=eHTMLTag_unknown);
 
+    nsresult         Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+    const char*      GetClassName(void);
+    PRInt32          GetTokenType(void);
+    void             SetStringValue(const nsAString& aStr);
+    const nsAString& GetStringValue(void);
   protected:
-    nsString          mTextValue;
+    nsString         mTextValue;
 };
 
 #endif

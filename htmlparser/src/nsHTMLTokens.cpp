@@ -90,50 +90,28 @@ CHTMLToken::~CHTMLToken() {
  *  @param   
  *  @return  
  */
-CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
-  mEmpty=PR_FALSE;
-  mContainerInfo=eFormUnknown;
+CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) 
+{
 #ifdef DEBUG
   mAttributed = PR_FALSE;
 #endif
 }
 
-CStartToken::CStartToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
-  mEmpty=PR_FALSE;
-  mContainerInfo=eFormUnknown;
+CStartToken::CStartToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) 
+{
   mTextValue.Assign(aName);
 #ifdef DEBUG
   mAttributed = PR_FALSE;
 #endif
 }
 
-CStartToken::CStartToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
-  mEmpty=PR_FALSE;
-  mContainerInfo=eFormUnknown;
+CStartToken::CStartToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) 
+{
   mTextValue.Assign(aName);
 #ifdef DEBUG
   mAttributed = PR_FALSE;
 #endif
 }
-
-nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mIDAttributeAtom;
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-
-nsresult CStartToken::SetIDAttributeAtom(nsIAtom* aID)
-{
-  NS_ENSURE_ARG(aID);
-  mIDAttributeAtom = aID;
-
-  return NS_OK;
-}
-
 
 /*
  *  This method returns the typeid (the tag type) for this token.
@@ -142,7 +120,9 @@ nsresult CStartToken::SetIDAttributeAtom(nsIAtom* aID)
  *  @param   
  *  @return  
  */
-PRInt32 CStartToken::GetTypeID(){
+PRInt32 
+CStartToken::GetTypeID()
+{
   if(eHTMLTag_unknown==mTypeID) {
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
@@ -156,7 +136,9 @@ PRInt32 CStartToken::GetTypeID(){
  *  @param   
  *  @return  
  */
-const char*  CStartToken::GetClassName(void) {
+const char*  
+CStartToken::GetClassName(void) 
+{
   return "start";
 }
 
@@ -167,10 +149,29 @@ const char*  CStartToken::GetClassName(void) {
  *  @param   
  *  @return  
  */
-PRInt32 CStartToken::GetTokenType(void) {
+PRInt32 CStartToken::GetTokenType(void) 
+{
   return eToken_start;
 }
 
+void CStartToken::SetContainerInfo(PRUint16 aInfo) 
+{
+  if (aInfo & NS_HTMLTOKENS_UNKNOWNFORM) {
+    mFlags &= ~(NS_HTMLTOKENS_MALFORMED | NS_HTMLTOKENS_WELLFORMED);
+    mFlags |= NS_HTMLTOKENS_UNKNOWNFORM;
+  }
+  else if (aInfo & NS_HTMLTOKENS_WELLFORMED) {
+    mFlags &= ~(NS_HTMLTOKENS_UNKNOWNFORM | NS_HTMLTOKENS_MALFORMED);
+    mFlags |= NS_HTMLTOKENS_WELLFORMED;
+  }
+  else if (aInfo & NS_HTMLTOKENS_MALFORMED) {
+    mFlags &= ~(NS_HTMLTOKENS_UNKNOWNFORM | NS_HTMLTOKENS_WELLFORMED);
+    mFlags |= NS_HTMLTOKENS_MALFORMED;
+  }
+  else {
+    NS_WARNING("invalid container info!");
+  }
+}
 /*
  *  
  *  
@@ -178,21 +179,15 @@ PRInt32 CStartToken::GetTokenType(void) {
  *  @param   
  *  @return  
  */
-void CStartToken::SetEmpty(PRBool aValue) {
-  mEmpty=aValue;
+void CStartToken::SetEmpty(PRBool aValue) 
+{
+  if (aValue) {
+    mFlags |= NS_HTMLTOKENS_EMPTYTOKEN;
+  }
+  else {
+    mFlags &= ~NS_HTMLTOKENS_EMPTYTOKEN;
+  }
 }
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-PRBool CStartToken::IsEmpty(void) {
-  return mEmpty;
-}
-
 
 /*
  *  Consume the identifier portion of the start tag
@@ -268,7 +263,7 @@ const nsAString& CStartToken::GetStringValue()
  *  @param   anOutputString will recieve the result
  *  @return  nada
  */
-void CStartToken::GetSource(nsString& anOutputString){
+void CStartToken::GetSource(nsAString& anOutputString){
   anOutputString.Append(PRUnichar('<'));
   /*
    * Watch out for Bug 15204 
@@ -372,7 +367,9 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
  *  @param   
  *  @return  eHTMLTag id of this endtag
  */
-PRInt32 CEndToken::GetTypeID(){
+PRInt32 
+CEndToken::GetTypeID()
+{
   if(eHTMLTag_unknown==mTypeID) {
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
     switch(mTypeID) {
@@ -439,7 +436,7 @@ const nsAString& CEndToken::GetStringValue()
  *  @param   anOutputString will recieve the result
  *  @return  nada
  */
-void CEndToken::GetSource(nsString& anOutputString){
+void CEndToken::GetSource(nsAString& anOutputString){
   anOutputString.Append(NS_LITERAL_STRING("</"));
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
@@ -1524,7 +1521,7 @@ const nsAString& CAttributeToken::GetStringValue(void)
  *  @param   anOutputString will recieve the result
  *  @return  nada
  */
-void CAttributeToken::GetSource(nsString& anOutputString){
+void CAttributeToken::GetSource(nsAString& anOutputString){
   anOutputString.Truncate();
   AppendSourceTo(anOutputString);
 }
@@ -2226,7 +2223,7 @@ const nsAString& CEntityToken::GetStringValue(void)
  *  @param   anOutputString will recieve the result
  *  @return  nada
  */
-void CEntityToken::GetSource(nsString& anOutputString){
+void CEntityToken::GetSource(nsAString& anOutputString){
   anOutputString.Append(NS_LITERAL_STRING("&"));
   anOutputString+=mTextValue;
   //anOutputString+=";";
