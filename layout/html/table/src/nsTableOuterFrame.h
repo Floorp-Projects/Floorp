@@ -21,7 +21,6 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
-class nsTableFrame;
 struct OuterTableReflowState;
 
 /**
@@ -87,9 +86,6 @@ protected:
     */
   PRBool NeedsReflow(const nsSize& aMaxSize);
 
-  /** create all child frames for this table */
-  nsresult CreateChildFrames(nsIPresContext* aPresContext);
-
   void PlaceChild(OuterTableReflowState& aState,
                   nsIFrame*              aKidFrame,
                   const nsRect&          aKidRect,
@@ -126,13 +122,6 @@ protected:
    */
   PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 
-  /**
-    * Create the inner table frame (nsTableFrame). Handles initial
-    * creation as well as creation of continuing frames
-    */
-  nsresult CreateInnerTableFrame(nsIPresContext* aPresContext,
-                                 nsTableFrame*&  aTableFrame);
-
   nsresult RecoverState(OuterTableReflowState& aState, nsIFrame* aKidFrame);
   nsresult IncrementalReflow(nsIPresContext* aPresContext,
                              OuterTableReflowState& aState,
@@ -146,8 +135,8 @@ protected:
 
 private:
   /** used to keep track of this frame's children */
-  nsTableFrame *mInnerTableFrame;
-  nsIFrame* mCaptionFrame;
+  nsIFrame *mInnerTableFrame;
+  nsIFrame *mCaptionFrame;
 
   /** used to track caption max element size */
   PRInt32 mMinCaptionWidth;
@@ -160,6 +149,8 @@ private:
 
 inline nscoord nsTableOuterFrame::GetMinCaptionWidth()
 { return mMinCaptionWidth; }
+
+
 
 
 #endif
