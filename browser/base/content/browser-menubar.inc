@@ -296,8 +296,15 @@
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
+              <menuitem label="&search.label;" accesskey="&search.accesskey;" 
+                        key="key_search" command="Tools:Search"/>
+              <menuseparator/>
               <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;" 
                         key="key_openDownloads" command="Tools:Downloads"/>
+              <menuitem label="&extensions.label;" accesskey="&extensions.accesskey;" 
+                        command="Tools:Extensions"/>
+              <menuitem label="&themes.label;" accesskey="&themes.accesskey;" 
+                        command="Tools:Themes"/>
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 

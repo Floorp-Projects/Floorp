@@ -47,6 +47,11 @@ pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallCo
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
 pref("xpinstall.dialog.progress.type", "Download:Manager");
 
+// This is this application's unique identifier used by the Extension System to identify
+// this application as an extension target, and by the SmartUpdate system to identify
+// this application to the Update server.
+pref("app.id", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}");
+
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
