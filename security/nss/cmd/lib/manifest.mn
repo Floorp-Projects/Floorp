@@ -45,6 +45,8 @@ EXPORTS		= secutil.h \
 CSRCS		= secutil.c \
 		secpwd.c    \
 		derprint.c \
+		moreoids.c \
+		pppolicy.c \
 		secerror.c \
 		ffs.c \
 		$(NULL)

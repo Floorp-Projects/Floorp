@@ -266,6 +266,13 @@ extern int SECU_PrintCrl(FILE *out, SECItem *der, char *m, int level);
 extern void
 SECU_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m, int level);
 
+extern void SECU_PrintString(FILE *out, SECItem *si, char *m, int level);
+extern void SECU_PrintAny(FILE *out, SECItem *i, char *m, int level);
+
+extern void SECU_PrintPolicy(FILE *out, SECItem *value, char *msg, int level);
+extern void SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, SECItem *value,
+                                 char *msg, int level);
+
 extern void SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 				 char *msg, int level);
 
@@ -286,6 +293,8 @@ extern void SEC_Init(void);
 extern char *SECU_SECModDBName(void);
 
 extern void SECU_PrintPRandOSError(char *progName);
+
+extern SECStatus SECU_RegisterDynamicOids(void);
 
 /*
  *
