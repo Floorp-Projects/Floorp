@@ -269,7 +269,7 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
                                          docPrincipal, URL, 0, nsnull,
                                          aOutput, &isUndefined);
 
-  XMLT_LOG(mozXMLTermUtils::ExecuteScript,0,("result=0x%x, isUndefined=0x%x\n",
+  XMLT_LOG(mozXMLTermUtils::ExecuteScript,21,("result=0x%x,isUndefined=0x%x\n",
                                              result, isUndefined));
 
   return result;

@@ -1,9 +1,8 @@
 // XMLTerm Chrome Commands
 
 function StartupXMLTerm() {
-   dump("StartupXMLTerm:\n");
-   dump("StartupXMLTerm:"+window.frames.length+"\n");
-   dump("StartupXMLTerm:"+window.frames[0].name+"\n");
+   //dump("StartupXMLTerm:"+window.frames.length+"\n");
+   //dump("StartupXMLTerm:"+window.frames[0].name+"\n");
 
    if (window.frames.length == 2) {
       xmltwin = window.frames[1];
@@ -19,18 +18,16 @@ function StartupXMLTerm() {
    if (document.location.search) {
       url = document.location.search.substr(1);
    }
-   dump("StartupXMLterm: URL="+url+"\n");
+   //dump("StartupXMLterm: URL="+url+"\n");
 
-   dump("StartupXMLterm: WINDOW.ARGUMENTS="+window.arguments+"\n");
+   //dump("StartupXMLterm: WINDOW.ARGUMENTS="+window.arguments+"\n");
 
    dump("Trying to make an XMLTerm Shell through the component manager...\n");
 
    var xmltshell = Components.classes["@mozilla.org/xmlterm/xmltermshell;1"].createInstance();
 
-   dump("Interface xmltshell1 = " + xmltshell + "\n");
-
    xmltshell = xmltshell.QueryInterface(Components.interfaces.mozIXMLTermShell);
-   dump("Interface xmltshell2 = " + xmltshell + "\n");
+   //dump("Interface xmltshell2 = " + xmltshell + "\n");
 
    if (!xmltshell) {
      dump("Failed to create XMLTerm shell\n");

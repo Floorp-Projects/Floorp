@@ -95,7 +95,7 @@ function NewTip() {
   SelectedTip = Math.floor(ranval * TipCount);
   if (SelectedTip >= TipCount) SelectedTip = 0;
 
-  dump("xmlterm: NewTip "+SelectedTip+","+ranval+"\n");
+  //dump("xmlterm: NewTip "+SelectedTip+","+ranval+"\n");
 
   var tipdata = document.getElementById('tipdata');
   tipdata.firstChild.data = Tips[SelectedTip];
@@ -107,7 +107,7 @@ function NewTip() {
 
 // Explain tip
 function ExplainTip(tipName) {
-  dump("xmlterm: ExplainTip("+tipName+")\n");
+  //dump("xmlterm: ExplainTip("+tipName+")\n");
 
   if (tipName) {
     var tipdata = document.getElementById('tipdata');
@@ -148,7 +148,7 @@ function F9Key(isShift, isControl) {
 
 // Scroll Home key
 function ScrollHomeKey(isShift, isControl) {
-  dump("ScrollHomeKey("+isShift+","+isControl+")\n");
+  //dump("ScrollHomeKey("+isShift+","+isControl+")\n");
 
   if (isControl) {
     return F1Key(isShift, 0);
@@ -160,7 +160,7 @@ function ScrollHomeKey(isShift, isControl) {
 
 // Scroll End key
 function ScrollEndKey(isShift, isControl) {
-  dump("ScrollEndKey("+isShift+","+isControl+")\n");
+  //dump("ScrollEndKey("+isShift+","+isControl+")\n");
 
   if (isControl) {
     return F2Key(isShift, 0);
@@ -172,7 +172,7 @@ function ScrollEndKey(isShift, isControl) {
 
 // Scroll PageUp key
 function ScrollPageUpKey(isShift, isControl) {
-  dump("ScrollPageUpKey("+isShift+","+isControl+")\n");
+  //dump("ScrollPageUpKey("+isShift+","+isControl+")\n");
 
   ScrollWin(isShift,isControl).scrollBy(0,-120);
   return false;
@@ -180,7 +180,7 @@ function ScrollPageUpKey(isShift, isControl) {
 
 // Scroll PageDown key
 function ScrollPageDownKey(isShift, isControl) {
-  dump("ScrollPageDownKey("+isShift+","+isControl+")\n");
+  //dump("ScrollPageDownKey("+isShift+","+isControl+")\n");
 
   ScrollWin(isShift,isControl).scrollBy(0,120);
   return false;
@@ -197,14 +197,14 @@ function ScrollWin(isShift, isControl) {
 
 // Set history buffer size
 function SetHistory(value) {
-  dump("SetHistory("+value+")\n");
+  //dump("SetHistory("+value+")\n");
   window.xmlterm.SetHistory(value, document.cookie);
   return (false);
 }
 
 // Set prompt
 function SetPrompt(value) {
-  dump("SetPrompt("+value+")\n");
+  //dump("SetPrompt("+value+")\n");
   window.xmlterm.SetPrompt(value, document.cookie);
   return (false);
 }
@@ -220,21 +220,21 @@ function NewXMLTerm(firstcommand) {
 
 // Handle resize events
 function Resize(event) {
-  dump("Resize()\n");
+  //dump("Resize()\n");
   window.xmlterm.Resize();
   return (false);
 }
 
 // Form Focus (workaround for form input being transmitted to xmlterm)
 function FormFocus() {
-  dump("FormFocus()\n");
+  //dump("FormFocus()\n");
   window.xmlterm.IgnoreKeyPress(true, document.cookie);
   return false;
 }
 
 // Form Blur (workaround for form input being transmitted to xmlterm)
 function FormBlur() {
-  dump("FormBlur()\n");
+  //dump("FormBlur()\n");
   window.xmlterm.IgnoreKeyPress(false, document.cookie);
   return false;
 }
@@ -242,7 +242,7 @@ function FormBlur() {
 // Set user level, icons mode etc.
 function UpdateSettings(selectName) {
 
-   dump("UpdateSettings: "+selectName+"\n");
+   //dump("UpdateSettings: "+selectName+"\n");
 
    switch(selectName) {
       case "level":
@@ -251,7 +251,7 @@ function UpdateSettings(selectName) {
          window.userLevel = document.xmltform1.level.options[document.xmltform1.level.selectedIndex].value;
 
          if (window.userLevel != oldUserLevel) {
-            dump("UpdateSettings: userLevel="+window.userLevel+"\n");
+            //dump("UpdateSettings: userLevel="+window.userLevel+"\n");
 
             if (window.userLevel == "advanced") {
               AlterStyle("DIV.beginner",     "display", "none");
@@ -273,7 +273,7 @@ function UpdateSettings(selectName) {
          window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
 
          if (window.showIcons != oldShowIcons) {
-            dump("UpdateSettings: showIcons="+window.showIcons+"\n");
+            //dump("UpdateSettings: showIcons="+window.showIcons+"\n");
          
             if (window.showIcons == "on") {
                AlterStyle("SPAN.noicons", "display", "none");
@@ -293,11 +293,11 @@ function UpdateSettings(selectName) {
       case "windows":
          // Change icon display style in the style sheet
          window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
-         dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
+         //dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
          break;
 
       default:
-         dump("UpdateSettings: Unknown selectName "+selectName+"\n");
+         //dump("UpdateSettings: Unknown selectName "+selectName+"\n");
          break;
    }
 
@@ -309,7 +309,7 @@ function UpdateSettings(selectName) {
 // ****CSS DOM IS BROKEN****; selectorText seems to be null for all rules
 function AlterStyle(ruleName, propertyName, propertyValue, doc) {
 
-  dump("AlterStyle("+ruleName+"{"+propertyName+":"+propertyValue+"})\n");
+  //dump("AlterStyle("+ruleName+"{"+propertyName+":"+propertyValue+"})\n");
 
   if (!doc) doc = window.document;
 
@@ -322,9 +322,9 @@ function AlterStyle(ruleName, propertyName, propertyValue, doc) {
     // Ugly workaround for accessing rules until bug 53448 is fixed
     if (gStyleRuleNames[r] == ruleName) {
 
-      dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
+      //dump("cssText["+r+"]="+sheet.cssRules[r].cssText+"\n");
       var style = sheet.cssRules[r].style;
-      dump("style="+style.getPropertyValue(propertyName)+"\n");
+      //dump("style="+style.getPropertyValue(propertyName)+"\n");
 
       style.setProperty(propertyName,propertyValue,"");
     }
@@ -341,7 +341,7 @@ function MetaDefault(arg1) {
 function Load(url) {
   var succeeded = false;
   if (window.xmltbrowser) {
-     dump("Load:xmltbrowser.location.href="+window.xmltbrowser.location.href+"\n");
+     //dump("Load:xmltbrowser.location.href="+window.xmltbrowser.location.href+"\n");
      if (window.xmltbrowser.location.href.length) {
         window.xmltbrowser.location = url;
         succeeded = true;
@@ -407,14 +407,13 @@ function DisplayAllOutput(flag) {
 //
 function HandleEvent(eventObj, eventType, targetType, entryNumber,
                      arg1, arg2) {
-  dump("HandleEvent("+eventObj+","+eventType+","+targetType+","+
-                   entryNumber+","+arg1+","+arg2+")\n");
+  //dump("HandleEvent("+eventObj+","+eventType+","+targetType+","+entryNumber+","+arg1+","+arg2+")\n");
 
   // Entry independent targets
   if (action === "textlink") {
     // Single click opens hyperlink
     // Browser-style
-    dump("textlink = "+arg1+"\n");
+    //dump("textlink = "+arg1+"\n");
     Load(arg1);
 
   } else if (targetType === "prompt") {
@@ -438,7 +437,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
   } else if (eventType === "click") {
 
-     dump("clickCount="+eventObj.detail+"\n");
+     //dump("clickCount="+eventObj.detail+"\n");
 
      var shiftClick = eventObj.shiftKey;
      var dblClick = (eventObj.detail == 2);
@@ -479,7 +478,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
        if ((entryNumber >= 0) &&
          (window.xmlterm.currentEntryNumber != entryNumber)) {
-         dump("NOT CURRENT COMMAND\n");
+         //dump("NOT CURRENT COMMAND\n");
          return (false);
        }
 
@@ -544,15 +543,15 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
        // Primitive actions
        if (action === "send") {
-         dump("send = "+sendStr+"\n");
+         //dump("send = "+sendStr+"\n");
          window.xmlterm.SendText(sendStr, document.cookie);
 
        } else if (action === "sendln") {
-         dump("sendln = "+sendStr+"\n\n");
+         //dump("sendln = "+sendStr+"\n\n");
          window.xmlterm.SendText("\025"+sendStr+"\n", document.cookie);
 
        } else if (action === "createln") {
-         dump("createln = "+sendStr+"\n\n");
+         //dump("createln = "+sendStr+"\n\n");
          newwin = NewXMLTerm(sendStr+"\n");
        }
     }
@@ -582,7 +581,7 @@ function ShowHelp(url, entryNumber, height) {
 
   if (!height) height = 120;
 
-  dump("xmlterm: ShowHelp("+url+","+entryNumber+","+height+")\n");
+  //dump("xmlterm: ShowHelp("+url+","+entryNumber+","+height+")\n");
 
   if (entryNumber) {
     beforeID = "output"+entryNumber;
@@ -595,7 +594,7 @@ function ShowHelp(url, entryNumber, height) {
   var beforeElement = document.getElementById(beforeID);
 
   if (!beforeElement) {
-    dump("InsertIFrame: beforeElement ID="+beforeID+"not found\n");
+    //dump("InsertIFrame: beforeElement ID="+beforeID+"not found\n");
     return false;
   }
 
@@ -631,7 +630,7 @@ function ShowHelp(url, entryNumber, height) {
     helpElement.appendChild(iframe);
     helpElement.appendChild(closeElement);
 
-    dump(helpElement);
+    //dump(helpElement);
 
     // Insert help element
     parentNode.insertBefore(helpElement, beforeElement);
@@ -646,7 +645,7 @@ function ShowHelp(url, entryNumber, height) {
 
 // About XMLTerm
 function AboutXMLTerm() {
-  dump("xmlterm: AboutXMLTerm\n");
+  //dump("xmlterm: AboutXMLTerm\n");
 
   var tipdata = document.getElementById('tipdata');
   tipdata.firstChild.data = "";
@@ -658,17 +657,17 @@ function AboutXMLTerm() {
 
 // onLoad event handler
 function LoadHandler() {
-  dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
+  //dump("xmlterm: LoadHandler ... "+window.xmlterm+"\n");
 
   // Ugly workaround for accessing rules in stylesheet until bug 53448 is fixed
   var sheet = document.styleSheets[0];
-  dump("sheet.cssRules.length="+sheet.cssRules.length+"\n");
+  //dump("sheet.cssRules.length="+sheet.cssRules.length+"\n");
 
   var styleElement = (document.getElementsByTagName("style"))[0];
   var styleText = styleElement.firstChild.data;
 
   gStyleRuleNames = styleText.match(/\b[\w-.]+(?=\s*\{)/g);
-  dump("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
+  //dump("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
 
   // Update settings
   UpdateSettings('level');
@@ -686,16 +685,14 @@ function LoadHandler() {
      return false;
   }
 
-  dump("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
+  //dump("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
 
   dump("Trying to make an XMLTerm Shell through the component manager...\n");
 
   var xmltshell = Components.classes["@mozilla.org/xmlterm/xmltermshell;1"].createInstance();
 
-  dump("Interface xmltshell1 = " + xmltshell + "\n");
-
   xmltshell = xmltshell.QueryInterface(Components.interfaces.mozIXMLTermShell);
-  dump("Interface xmltshell2 = " + xmltshell + "\n");
+  //dump("Interface xmltshell2 = " + xmltshell + "\n");
 
   if (!xmltshell) {
     dump("Failed to create XMLTerm shell\n");
@@ -714,9 +711,9 @@ function LoadHandler() {
 
   //dump("LoadHandler:"+document.cookie+"\n");
 
-  dump("contentWindow="+contentWindow+"\n");
-  dump("document="+document+"\n");
-  dump("documentElement="+document.documentElement+"\n");
+  //dump("contentWindow="+contentWindow+"\n");
+  //dump("document="+document+"\n");
+  //dump("documentElement="+document.documentElement+"\n");
 
   // Handle resize events
   //contentWindow.addEventListener("onresize", Resize);
@@ -730,34 +727,34 @@ function LoadHandler() {
   //dump(contentWindow.xmlterm);
 
   // The following code is for testing IFRAMEs only
-  dump("[Main] "+window+"\n");
-  dump(window.screenX+", "+window.screenY+"\n");
-  dump(window.scrollX+", "+window.scrollY+"\n");
-  dump(window.pageXOffset+", "+window.pageYOffset+"\n");
+  //dump("[Main] "+window+"\n");
+  //dump(window.screenX+", "+window.screenY+"\n");
+  //dump(window.scrollX+", "+window.scrollY+"\n");
+  //dump(window.pageXOffset+", "+window.pageYOffset+"\n");
 
-  dump("IFRAME checks\n");
+  //dump("IFRAME checks\n");
   var iframe = document.getElementById('iframe1');
 
-  dump("iframe="+iframe+"\n");
+  //dump("iframe="+iframe+"\n");
 
   frames=document.frames;
-  dump("frames="+frames+"\n");
-  dump("frames.length="+frames.length+"\n");
+  //dump("frames="+frames+"\n");
+  //dump("frames.length="+frames.length+"\n");
 
   framewin = frames[0];
 
-  dump("framewin="+framewin+"\n");
-  dump("framewin.document="+framewin.document+"\n");
+  //dump("framewin="+framewin+"\n");
+  //dump("framewin.document="+framewin.document+"\n");
 
-  dump(framewin.screenX+", "+framewin.screenY+"\n");
-  dump(framewin.scrollX+", "+framewin.scrollY+"\n");
-  dump(framewin.pageXOffset+", "+framewin.pageYOffset+"\n");
+  //dump(framewin.screenX+", "+framewin.screenY+"\n");
+  //dump(framewin.scrollX+", "+framewin.scrollY+"\n");
+  //dump(framewin.pageXOffset+", "+framewin.pageYOffset+"\n");
 
   var body = framewin.document.getElementsByTagName("BODY")[0];
-  dump("body="+body+"\n");
+  //dump("body="+body+"\n");
 
   var height= body.scrollHeight;
-  dump("height="+height+"\n");
+  //dump("height="+height+"\n");
 
 //        iframe.height = 800;
 //        iframe.width = 700;
@@ -765,9 +762,9 @@ function LoadHandler() {
 //        framewin.sizeToContent();
 
   framewin.xmltshell = xmltshell;
-  dump(framewin.xmltshell+"\n");
+  //dump(framewin.xmltshell+"\n");
 
-  dump("xmlterm: LoadHandler completed\n");
+  //dump("xmlterm: LoadHandler completed\n");
   return (false);
 }
 

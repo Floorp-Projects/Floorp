@@ -932,7 +932,7 @@ int lterm_resize(int lterm, int rows, int cols)
 
   lto = &(lts->ltermOutput);
 
-  LTERM_LOG(lterm_resize,0,("lto->outputMode=%d\n",
+  LTERM_LOG(lterm_resize,12,("lto->outputMode=%d\n",
                              lto->outputMode));
 
   /* Free full screen buffers */
