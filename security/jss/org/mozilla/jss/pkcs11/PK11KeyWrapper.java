@@ -289,7 +289,7 @@ final class PK11KeyWrapper implements KeyWrapper {
             throw new IllegalStateException();
         }
         if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
-            throw new InvalidKeyException("plaintext wrapping now supported");
+            throw new InvalidKeyException("plaintext wrapping not supported");
         }
 
         checkWrappee(toBeWrapped);
