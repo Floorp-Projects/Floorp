@@ -414,7 +414,8 @@
       <method name="showOpenInTabsMenuItem">
         <parameter name="aTarget"/>
         <body><![CDATA[
-          if (!this.validOpenInTabsMenuItem(aTarget))
+          if (!this.validOpenInTabsMenuItem(aTarget) ||
+              aTarget.lastChild.id == "openintabs-menuitem")
             return;
           var element = document.createElementNS(XUL_NS, "menuseparator");
           aTarget.appendChild(element);
