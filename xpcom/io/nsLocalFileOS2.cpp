@@ -906,8 +906,18 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     if (NS_FAILED(rv))
         return rv;
 
-    APIRET rc;
-    if (!move) {
+    APIRET rc = NO_ERROR;
+
+    if( move )
+    {
+        rc = DosMove(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()));
+    }
+
+    if (!move || rc == ERROR_NOT_SAME_DEVICE) {
+        /* will get an error if the destination and source files aren't on the
+         * same drive.  "MoveFile()" on Windows will go ahead and move the
+         * file without error, so we need to do the same   IBM-AKR
+         */
         rc = DosCopy(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
         /* WSOD2 HACK */
         if (rc == 65) { // NETWORK_ACCESS_DENIED
@@ -926,10 +936,16 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
                      EXEC_SYNC, achProgram, (PSZ)NULL,
                      &rescResults, achProgram);
           rc = 0; // Assume it worked
-        } /* endif */
-    } else {
-        rc = DosMove(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()));
-    }
+
+          /* moving the file is supposed to act like a rename, so delete the
+           * original file if we got this far without error  IBM-AKR
+           */
+          if( move && (rc == NO_ERROR) )
+          {
+             DosDelete( filePath );
+          }
+        } /* rc == 65 */
+    } /* !move or ERROR */
     
     if (rc)
         rv = ConvertOS2Error(rc);
