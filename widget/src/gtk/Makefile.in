@@ -28,7 +28,6 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES += -D_IMPL_NS_WIDGET 
 
-CXXFLAGS += $(TK_CFLAGS)
 
 DEFINES += \
 		-I$(srcdir)/../xpwidgets \
@@ -68,6 +67,8 @@ CPPSRCS = \
 
 include $(topsrcdir)/config/config.mk
 
+CXXFLAGS += $(TK_CFLAGS)
+
 SHARED_LIBRARY_LIBS =			    \
 	$(DIST)/lib/libraptorbasewidget_s.a \
 	$(NULL)
@@ -98,4 +99,3 @@ $(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
 else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
-
