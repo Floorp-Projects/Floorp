@@ -36,23 +36,10 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["startupPage", "browserStartupHomepage"];
+    var _elementIDs = ["browserStartupHomepage"];
   ]]>
   </script>
   
-  <hbox id="pref-nav-platform-extensions">
-    <!-- navigator starts with -->  
-    <groupbox flex="1">
-      <caption label="&navRadio;"/>
-      <radiogroup id="startupPage" prefstring="browser.startup.page">
-        <radio value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
-        <radio value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
-        <radio value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
-      </radiogroup>
-  
-    </groupbox>
-  </hbox>
-
   <!-- homepage specification -->
   <groupbox>
     <caption label="&header2.label;"/>
@@ -70,16 +57,13 @@
                 oncommand="setHomePageToCurrentPage();"
                 id="browserUseCurrent"
                 prefstring="pref.browser.homepage.disable_button.current_page"/>
-        <button label="&browseFile.label;" accesskey="&browseFile.accesskey;"
-                oncommand="selectFile();"
-                id="browserChooseFile"
-                prefstring="pref.browser.homepage.disable_button.select_file"/>
-        <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
-                oncommand="setHomePageToDefaultPage();"
-                id="browserUseDefault"
-                prefstring="pref.browser.homepage.disable_button.default_page"/>
+        <button label="&useBlank.label;" accesskey="&useBlank.accesskey;"
+                oncommand="document.getElementById('browserStartupHomepage').value = 'about:blank';"
+                id="browserUseBlank"
+                prefstring="pref.browser.homepage.disable_button.blank_page"/>
       </hbox>
     </vbox>
   </groupbox>
+  <groupbox id="pref-nav-platform-extensions"/>
 </page>
 
