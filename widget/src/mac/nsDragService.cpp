@@ -541,12 +541,6 @@ nsDragService :: IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 
   *_retval = PR_FALSE;
 
-  // convert to 4 character MacOS type
-  //еее this is wrong because it doesn't take the mime mappings present in the
-  //еее drag item flavor into account. FIX ME!
-  nsMimeMapperMac theMapper;
-  FlavorType macFlavor = theMapper.MapMimeTypeToMacOSType(aDataFlavor);
-
   // search through all drag items looking for something with this flavor. Recall
   // that drag item indices are 1-based.
   unsigned short numDragItems = 0;
@@ -556,6 +550,12 @@ nsDragService :: IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
     OSErr res = ::GetDragItemReferenceNumber ( mDragRef, i, &currItem );
     if ( res != noErr )
       return NS_ERROR_FAILURE;
+
+    // convert to 4 character MacOS type for this item
+    char* mappings = LookupMimeMappingsForItem(mDragRef, currItem) ;
+    nsMimeMapperMac theMapper ( mappings );
+    FlavorType macFlavor = theMapper.MapMimeTypeToMacOSType(aDataFlavor, PR_FALSE);
+    nsMemory::Free(mappings);
 
     FlavorFlags ignored;
     if ( ::GetFlavorFlags(mDragRef, currItem, macFlavor, &ignored) == noErr )
