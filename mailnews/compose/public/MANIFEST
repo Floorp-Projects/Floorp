@@ -22,6 +22,5 @@
 nsMsgComposeFact.h
 nsMsgCompFieldsFact.h
 nsMsgSendFact.h
-nsISmtpUrl.h
 nsISmtpService.h
 nsMsgSendLaterFact.h
