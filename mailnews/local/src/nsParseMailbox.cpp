@@ -1242,7 +1242,6 @@ int nsParseMailMessageState::FinalizeHeaders()
           recipient->length = nsCRT::strlen(recipient->value);
         }
         m_newMsgHdr->SetRecipients(recipient->value);
-        m_newMsgHdr->SetRecipientsIsNewsgroup(PR_FALSE);
       }
       else if (recipient)
       {
@@ -1261,7 +1260,6 @@ int nsParseMailMessageState::FinalizeHeaders()
         }
         else {	// hmm, should we just use the original string?
           m_newMsgHdr->SetRecipients(recipient->value);
-          m_newMsgHdr->SetRecipientsIsNewsgroup(PR_TRUE);
         }
       }
       if (ccList)
@@ -1775,6 +1773,13 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
                 nsMsgPriorityValue filterPriority;
                 filter->GetActionPriority(&filterPriority);
                 msgHdr->SetPriority(filterPriority);
+            }
+			break;
+		case nsMsgFilterAction::Label:
+            {
+                nsMsgLabelValue filterLabel;
+                filter->GetActionLabel(&filterLabel);
+                msgHdr->SetLabel(filterLabel);
             }
 			break;
 		default:
