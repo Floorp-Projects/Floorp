@@ -493,6 +493,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSRange range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
   if ([fieldEditor shouldChangeTextInRange:range replacementString:aString]) {
     [[fieldEditor textStorage] replaceCharactersInRange:range withString:aString];
+    if (NSMaxRange(range) == 0) // will only be true if the field is empty
+      [fieldEditor setFont:[self font]]; // wrong font will be used otherwise
     // Whenever we send [self didChangeText], we trigger the
     // textDidChange method, which will begin a new search with
     // a new search string (which we just inserted) if the selection

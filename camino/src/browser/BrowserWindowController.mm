@@ -115,10 +115,21 @@ static NSArray* sToolbarDefaults = nil;
 //////////////////////////////////////
 @interface AutoCompleteTextFieldEditor : NSTextView
 {
+  NSFont* mDefaultFont;	// will be needed if editing empty field
 }
+- (id)initWithFrame:(NSRect)bounds defaultFont:(NSFont*)defaultFont;
 @end
 
 @implementation AutoCompleteTextFieldEditor
+
+// sets the defaultFont so that we don't paste in the wrong one
+- (id)initWithFrame:(NSRect)bounds defaultFont:(NSFont*)defaultFont
+{
+  if ((self = [super initWithFrame:bounds])) {
+    mDefaultFont = defaultFont;
+  }
+  return self;
+}
 
 -(void)paste:(id)sender
 {
@@ -132,6 +143,8 @@ static NSArray* sToolbarDefaults = nil;
       NSRange aRange = [self selectedRange];
       if ([self shouldChangeTextInRange:aRange replacementString:newText]) {
         [[self textStorage] replaceCharactersInRange:aRange withString:newText];
+        if (NSMaxRange(aRange) == 0 && mDefaultFont) // will only be true if the field is empty
+          [self setFont:mDefaultFont];	// wrong font will be used otherwise
         [self didChangeText];
       }
       // after a paste, the insertion point should be after the pasted text
@@ -2129,7 +2142,8 @@ static NSArray* sToolbarDefaults = nil;
 {
   if ([anObject isEqual:mURLBar]) {
     if (!mURLFieldEditor) {
-      mURLFieldEditor = [[AutoCompleteTextFieldEditor alloc] init];
+      mURLFieldEditor = [[AutoCompleteTextFieldEditor alloc] initWithFrame:[anObject bounds]
+                                                               defaultFont:[mURLBar font]];
       [mURLFieldEditor setFieldEditor:YES];
       [mURLFieldEditor setAllowsUndo:YES];
     }
