@@ -1086,7 +1086,9 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          */
         if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList) &&
             js_FindWatchPoint(cx->runtime, scope, id)) {
-            setter = js_watch_set;
+            setter = js_WrapWatchedSetter(cx, id, attrs, setter);
+            if (!setter)
+                goto fail_overwrite;
         }
 
         /* Find or create a property tree node labeled by our arguments. */
@@ -1423,6 +1425,9 @@ js_SweepScopeProperties(JSRuntime *rt)
     js_nkids_sqsum = 0;
     memset(js_nkids_hist, 0, sizeof js_nkids_hist);
 #endif
+
+    /* Mark watched scope properties hidden in the runtime before we sweep. */
+    js_MarkWatchPoints(rt);
 
     ap = &rt->propertyArenaPool.first.next;
     while ((a = *ap) != NULL) {

@@ -61,9 +61,7 @@
 #include "jsstr.h"
 #include "jsopcode.h"
 
-#if JS_HAS_OBJ_WATCHPOINT
-#include "jsdbgapi.h"
-#endif
+#include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
 
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
@@ -1783,10 +1781,8 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     if (cx->runtime->objectHook)
         cx->runtime->objectHook(cx, obj, JS_FALSE, cx->runtime->objectHookData);
 
-#if JS_HAS_OBJ_WATCHPOINT
     /* Remove all watchpoints with weak links to obj. */
     JS_ClearWatchPointsForObject(cx, obj);
-#endif
 
     /*
      * Finalize obj first, in case it needs map and slots.  Optimized to use
@@ -2590,9 +2586,15 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             shortid = sprop->shortid;
             getter = sprop->getter;
             setter = sprop->setter;
-            if (setter == js_watch_set)
-                setter = js_GetWatchedSetter(rt, scope, sprop);
             JS_UNLOCK_SCOPE(cx, scope);
+
+            /* Recover watched setter *after* releasing scope's lock. */
+            if ((attrs & JSPROP_SETTER)
+                ? ((JSFunction *)JS_GetPrivate(cx, (JSObject *)setter))->native
+                  == js_watch_set_wrapper
+                : setter == js_watch_set) {
+                setter = js_GetWatchedSetter(rt, scope, sprop);
+            }
             sprop = NULL;
         }
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
