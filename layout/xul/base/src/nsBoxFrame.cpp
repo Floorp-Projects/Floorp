@@ -35,18 +35,20 @@
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
 #include "nsIContent.h"
+#include "nsSpaceManager.h"
+#include "nsHTMLParts.h"
 #include "nsIViewManager.h"
 
 #define CONSTANT float(0.0)
 
 nsresult
-NS_NewBoxFrame ( nsIFrame** aNewFrame )
+NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBoxFrame* it = new nsBoxFrame;
+  nsBoxFrame* it = new nsBoxFrame(aFlags);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -55,10 +57,11 @@ NS_NewBoxFrame ( nsIFrame** aNewFrame )
   
 } // NS_NewBoxFrame
 
-nsBoxFrame::nsBoxFrame()
+nsBoxFrame::nsBoxFrame(PRUint32 aFlags)
 {
   // if not otherwise specified boxes by default are horizontal.
   mHorizontal = PR_TRUE;
+  mFlags = aFlags;
 }
 
 /**
@@ -80,6 +83,9 @@ nsBoxFrame::Init(nsIPresContext&  aPresContext,
     mHorizontal = PR_FALSE;
   else if (value.EqualsIgnoreCase("horizontal"))
     mHorizontal = PR_TRUE;
+
+  nsSpaceManager* spaceManager = new nsSpaceManager(this);
+  mSpaceManager = spaceManager;
 
   return rv;
 }
@@ -198,6 +204,16 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  // If we have a space manager, then set it in the reflow state
+  if (mSpaceManager) {
+    // Modify the reflow state and set the space manager
+    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+    reflowState.spaceManager = mSpaceManager;
+
+    // Clear the spacemanager's regions.
+    mSpaceManager->ClearRegions();
+  }
+
   //--------------------------------------------------------------------
   //-------------- figure out the rect we need to fit into -------------
   //--------------------------------------------------------------------
@@ -284,6 +300,15 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
  
   aStatus = NS_FRAME_COMPLETE;
   
+  nsRect damageArea(0,0,0,0);
+  damageArea.y = 0;
+  damageArea.height = aDesiredSize.height;
+  damageArea.width = aDesiredSize.width;
+
+  if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
+    Invalidate(damageArea);
+  }
+
   return NS_OK;
 }
 
