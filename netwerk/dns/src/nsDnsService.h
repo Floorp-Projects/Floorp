@@ -98,6 +98,21 @@ protected:
     PRUint32            mMsgIDBitVector[4];
 #endif /* XP_WIN */
 
+#if defined(XP_UNIX)
+    // The lookup queue: a linked list of lookups 
+    nsDNSLookup *mLookupQ;
+
+    // The DNS thread waits on this monitor for lookups to process.
+    PRMonitor *mLookupQMon;
+
+    // Puts a lookup on the queue and signals the DNS thread.
+    nsresult EnqueueLookup(nsDNSLookup *);
+
+    // Called by the DNS thread to get the next lookup to process.
+    // Blocks until a lookup is available.
+    nsresult DequeueLookup(nsDNSLookup **);
+#endif
+
 #ifdef DNS_TIMING
     double              mCount;
     double              mTimes;
