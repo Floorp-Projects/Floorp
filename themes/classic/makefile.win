@@ -37,5 +37,5 @@ CHROME_MISC = \
 include <$(DEPTH)\config\rules.mak>
 
 # choose Classic skin as default
-chrome::
+export::
     echo skin,install,select,classic/1.0 >>$(DIST)\bin\chrome\installed-chrome.txt
