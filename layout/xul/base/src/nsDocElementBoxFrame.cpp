@@ -132,16 +132,20 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // create the top-secret popupgroup node. shhhhh!
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("popupgroup"), nsnull,
-                               kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+  rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::popupgroup,
+                                    nsnull, kNameSpaceID_XUL,
+                                    getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   aAnonymousItems.AppendElement(content);
 
   // create the top-secret default tooltip node. shhhhh!
-  nodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("tooltip"), nsnull,
-                               kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+  rv = nodeInfoManager->GetNodeInfo(nsXULAtoms::tooltip, nsnull,
+                                    kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   content->SetAttr(nsnull, nsXULAtoms::defaultz, NS_LITERAL_STRING("true"), PR_FALSE);
   aAnonymousItems.AppendElement(content);
