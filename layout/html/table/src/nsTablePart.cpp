@@ -298,7 +298,7 @@ void nsTablePart::EnsureColumns()
       for ( ; excessColumns > 0; excessColumns--)
       {
         nsTableCol *col = new nsTableCol(PR_TRUE);
-        lastColGroup->AppendChild (col);
+        lastColGroup->AppendChild (col, PR_FALSE);
       }
     }
   }
@@ -338,7 +338,8 @@ void nsTablePart::NotifyContentComplete()
   * 
   * should be broken out into separate functions!
   */
-PRBool nsTablePart::AppendChild (nsIContent * aContent)
+NS_IMETHODIMP
+nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg");
   PRBool result = PR_FALSE;
@@ -393,12 +394,12 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
         nsIAtom * rowGroupTag = NS_NewAtom(kRowGroupBodyTagString); // rowGroupTag: REFCNT++
         group = new nsTableRowGroup (rowGroupTag, PR_TRUE);
         NS_ADDREF(group);                         // group: REFCNT++
-        AppendChild (group);
+        AppendChild (group, PR_FALSE);
         group->SetTable(this);
         NS_RELEASE(rowGroupTag);                                  // rowGroupTag: REFCNT--
       }
       // group is guaranteed to be allocated at this point
-      result = group->AppendChild(aContent);
+      result = group->AppendChild(aContent, PR_FALSE);
       newCells = result;
       contentHandled = PR_TRUE;
       NS_RELEASE(group);                          // group: REFCNT--
@@ -453,7 +454,7 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
         caption = new nsTableCaption (PR_TRUE);
         AppendCaption (caption);
       }
-      result = caption->AppendChild (aContent);
+      result = caption->AppendChild (aContent, PR_FALSE);
     }
     /* if we added new cells, we need to fix up the cell map */
     if (newCells)
@@ -462,40 +463,46 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
     }
   }
   NS_RELEASE(tableContentInterface);                                        // tableContentInterface: REFCNT--
-  return result;
+
+  return rv;
 }
 
 /* SEC: why can we only insertChildAt (captions or groups) ? */
-PRBool nsTablePart::InsertChildAt(nsIContent * aContent, PRInt32 aIndex)
+NS_IMETHODIMP
+nsTablePart::InsertChildAt(nsIContent * aContent, PRInt32 aIndex,
+                           PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg");
   // aIndex checked in nsHTMLContainer
 
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
   nsTableContent *tableContent = (nsTableContent *)aContent;
   const int contentType = tableContent->GetType();
   if ((contentType == nsITableContent::kTableCaptionType) ||
       (contentType == nsITableContent::kTableColGroupType) ||
       (contentType == nsITableContent::kTableRowGroupType))
   {
-    result = nsHTMLContainer::InsertChildAt (aContent, aIndex);
-    if (result)
+    rv = nsHTMLContainer::InsertChildAt (aContent, aIndex, PR_FALSE);
+    if (NS_OK == rv)
     {
       tableContent->SetTable (this);
       ResetCellMap ();
     }
   }
-  return result;
+
+  return rv;
 }
 
-PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex)
+NS_IMETHODIMP
+nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
+                             PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
 
-  PRBool result = PR_FALSE;
+  nsresult rv = NS_OK;
   nsTableContent *tableContent = (nsTableColGroup *)aContent;
   const int contentType = tableContent->GetType();
   if ( (contentType == nsITableContent::kTableCaptionType) ||
@@ -503,8 +510,8 @@ PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex)
        (contentType == nsITableContent::kTableRowGroupType))
   {
     nsIContent *lastChild = ChildAt (aIndex);// lastChild: REFCNT++
-    result = nsHTMLContainer::ReplaceChildAt (aContent, aIndex);
-    if (result)
+    rv = nsHTMLContainer::ReplaceChildAt (aContent, aIndex, PR_FALSE);
+    if (NS_OK == rv)
     {
       if (nsnull != lastChild)
         tableContent->SetTable (nsnull);
@@ -513,22 +520,24 @@ PRBool nsTablePart::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex)
     }
     NS_IF_RELEASE(lastChild);               // lastChild: REFCNT--
   }
-  return result;
+
+  return rv;
 }
 
 /**
  * Remove a child at the given position. The method is a no-op if
  * the index is invalid (too small or too large).
  */
-PRBool nsTablePart::RemoveChildAt (PRInt32 aIndex)
+NS_IMETHODIMP
+nsTablePart::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
   if (!(0<=aIndex && aIndex<ChildCount()))
-    return PR_FALSE;
+    return NS_OK;
 
   nsIContent * lastChild = ChildAt (aIndex);    // lastChild: REFCNT++
-  PRBool result = nsHTMLContainer::RemoveChildAt (aIndex);
-  if (result)
+  nsresult rv = nsHTMLContainer::RemoveChildAt (aIndex, PR_FALSE);
+  if (NS_OK == rv)
   {
     nsTableContent *tableContent = (nsTableColGroup *)lastChild;
     const int contentType = tableContent->GetType();
@@ -541,7 +550,8 @@ PRBool nsTablePart::RemoveChildAt (PRInt32 aIndex)
     }
   }
   NS_IF_RELEASE(lastChild);
-  return result;
+
+  return rv;
 }
 
 /** protected method for appending a column group to this table */
@@ -614,9 +624,10 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   NS_RELEASE(tFootTag);
   NS_RELEASE(tHeadTag);
   NS_RELEASE(tBodyTag);
-  result = nsHTMLContainer::InsertChildAt(aContent, childIndex);
-  if (result)
-    ((nsTableContent *)aContent)->SetTable (this);
+
+  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  ((nsTableContent *)aContent)->SetTable (this);
+
   return result;
 }
 
@@ -640,22 +651,21 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
          (tableChildType == nsITableContent::kTableColGroupType)))
       break;
   }
-  PRBool result = nsHTMLContainer::InsertChildAt(aContent, childIndex);
-  if (result)
-  {
-    ((nsTableContent *)aContent)->SetTable (this);
-  }
-  // if col group has a SPAN attribute, create implicit columns for the value of SPAN
-  // what sucks is if we then get a COL for this COLGROUP, we have to delete all the
-  // COLs we created for SPAN, and just contain the explicit COLs.
+  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  ((nsTableContent *)aContent)->SetTable (this);
+
+  // if col group has a SPAN attribute, create implicit columns for
+  // the value of SPAN what sucks is if we then get a COL for this
+  // COLGROUP, we have to delete all the COLs we created for SPAN, and
+  // just contain the explicit COLs.
   PRInt32 span = 0; // SEC: TODO find a way to really get this
   for (PRInt32 i=0; i<span; i++)
   {
     nsTableCol *col = new nsTableCol(PR_TRUE);
-    aContent->AppendChild (col);
+    aContent->AppendChild (col, PR_FALSE);
   }
 
-  return result;
+  return PR_TRUE;
 }
 
 /** protected method for appending a column group to this table */
@@ -684,11 +694,12 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
     if (gsDebug==PR_TRUE) 
       printf ("nsTablePart::AppendChild -- creating an implicit column group.\n");
     group = new nsTableColGroup (PR_TRUE);
-    AppendChild (group);
+    AppendChild (group, PR_FALSE);
     group->SetTable(this);
   }
-  PRBool result = group->AppendChild (aContent);
-  return result;
+  group->AppendChild (aContent, PR_FALSE);
+
+  return PR_TRUE;
 }
 
 /** protected method for appending a column group to this table */
@@ -709,12 +720,10 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
     if (tableChildType != nsITableContent::kTableCaptionType)
       break;
   }
-  PRBool result = nsHTMLContainer::InsertChildAt(aContent, childIndex);
-  if (PR_TRUE==result)
-  {
-    ((nsTableContent *)aContent)->SetTable (this);
-  }
-  return result;
+  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  ((nsTableContent *)aContent)->SetTable (this);
+
+  return PR_TRUE;
 }
 
 /* return the index of the first row group after aStartIndex */

@@ -105,13 +105,13 @@ public:
     * of type nsITableContent::kTableCellType.)
     * @see nsIContent::AppendChild
     */
-  virtual PRBool AppendChild (nsIContent * aContent);
+  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
 
   /** can only insert objects that are cells (implement nsITableContent and are .
     * of type nsITableContent::kTableCellType.)
     * @see nsIContent::InsertChildAt
     */
-  virtual PRBool InsertChildAt (nsIContent * aContent, int aIndex);
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
 
   /** can only replace child objects with objects that are cells 
     * (implement nsITableContent and are * of type nsITableContent::kTableCellType.)
@@ -120,15 +120,11 @@ public:
     *                 0<=aIndex<ChildCount().
     * @see nsIContent::ReplaceChildAt
     */
-  virtual PRBool ReplaceChildAt (nsIContent * aContent, int aIndex);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
 
   /** @see nsIContent::InsertChildAt */
-  virtual PRBool RemoveChildAt (int aIndex);
-
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
 };
 
 #endif
-
-
-
