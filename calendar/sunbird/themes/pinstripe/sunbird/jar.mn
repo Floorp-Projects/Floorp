@@ -1,9 +1,15 @@
 calendar.jar:
 +  skin/classic/calendar/calendar.css
-+  skin/classic/calendar/pref/Options.png                           (pref/Options.png)
-+  skin/classic/calendar/pref/pref.css                              (pref/pref.css)
+   skin/classic/calendar/toolbar-large.png
+   skin/classic/calendar/toolbar-small.png
+   skin/classic/calendar/pageupdown.png
+   skin/classic/calendar/prevnextarrow.png
+   skin/classic/calendar/pref/Options.png                           (pref/Options.png)
+   skin/classic/calendar/pref/pref.css                              (pref/pref.css)
    skin/classic/calendar/datetimepickers/left-arrow.png             (datetimepickers/left-arrow.png)
    skin/classic/calendar/datetimepickers/left-arrow-hover.png       (datetimepickers/left-arrow-hover.png)
-+  skin/classic/calendar/datetimepickers/minimonth.css              (datetimepickers/minimonth.css)
    skin/classic/calendar/datetimepickers/right-arrow.png            (datetimepickers/right-arrow.png)
    skin/classic/calendar/datetimepickers/right-arrow-hover.png      (datetimepickers/right-arrow.png)
++  skin/classic/calendar/datetimepickers/datepicker.css             (datetimepickers/datepicker.css)
++  skin/classic/calendar/datetimepickers/minimonth.css              (datetimepickers/minimonth.css)
++  skin/classic/calendar/datetimepickers/timepicker.css             (datetimepickers/timepicker.css)

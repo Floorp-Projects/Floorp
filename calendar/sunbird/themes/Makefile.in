@@ -49,13 +49,8 @@ include $(DEPTH)/config/autoconf.mk
 # MacOS X                 Pinstripe
 #
 
-# Until we have the resources to create and update pinstripe for calendar,
-# we will use winstripe for most of the theme, and then selectively override
-# the glaring Mac-specific issues, hence Macs building both winstripe and
-# pinstripe.
-
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = winstripe pinstripe
+DIRS = pinstripe
 else
 DIRS = winstripe
 endif
