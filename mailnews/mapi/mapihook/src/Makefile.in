@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgMapi
 LIBRARY_NAME	= $(MODULE)
 MODULE_NAME	= msgMapiModule
+EXPORT_LIBRARY  = 1
+IS_COMPONENT	= 1
 META_COMPONENT	= mail
 
 REQUIRES	= xpcom \
