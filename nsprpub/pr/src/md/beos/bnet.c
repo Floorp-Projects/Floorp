@@ -812,14 +812,6 @@ _MD_beos_get_nonblocking_connect_error(PRFileDesc *fd)
     int rv;
     int flags = 0;
 
-    if( fd->secret->md.connectValueValid == PR_TRUE )
-
-	if( fd->secret->md.connectReturnValue == -1 )
-
-	    return fd->secret->md.connectReturnError;
-	else
-	    return 0;  /* No error */
-
     rv = recv(fd->secret->md.osfd, NULL, 0, flags);
     PR_ASSERT(-1 == rv || 0 == rv);
     if (-1 == rv && errno != EAGAIN && errno != EWOULDBLOCK) {
