@@ -1,0 +1,29 @@
+<!--
+
+This test exercises creation of DOM elements from the XUL document.
+
+-->
+
+<?xml-stylesheet type="text/css" href="dom-test-4.css"?>
+
+<foo:foo xmlns:foo="http://foo.bar.com/xml#" xmlns:html="http://www.w3.org/TR/REC-html40"
+         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+var count = 0;
+
+function newElement()
+{
+  var elem = document.createElement('foo:bar');
+  var text = document.createTextNode('Node ' + ++count);
+  elem.appendChild(text);
+  document.lastChild.appendChild(elem);
+}
+</html:script>
+
+  <html:input name="b1"
+              type="button"
+              value="New"
+              onclick="newElement();"/>
+
+</foo:foo>

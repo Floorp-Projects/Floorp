@@ -1,0 +1,12 @@
+bar {
+  display: block;
+  background-color: red;
+  width: 100px;
+  height: 100px;
+}
+
+
+bar[enabled] {
+  background-color: blue;
+}
+
