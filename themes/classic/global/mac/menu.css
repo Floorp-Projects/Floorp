@@ -214,7 +214,7 @@ menuitem[checked="true"][menuactive="true"]
 }
 
 autorepeatbutton {
-  text-align: left;
+  text-align: center;
   vertical-align: middle;
 }
 
@@ -222,10 +222,10 @@ autorepeatbutton:hover {
   background-color      : #333399;
 }
 
-.autorepeatbutton-up:hover {
+autorepeatbutton:hover > .autorepeatbutton-up {
     list-style-image: url("chrome://global/skin/arrow-med-up-hover.gif")
 }
 
-.autorepeatbutton-down:hover {
+autorepeatbutton:hover > .autorepeatbutton-down {
     list-style-image: url("chrome://global/skin/arrow-med-down-hover.gif")
 }

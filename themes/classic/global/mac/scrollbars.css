@@ -8,12 +8,15 @@ scrollbar {
 }
 
 slider {
-   behavior: url("chrome://global/skin/classicBindings.xml#scrollbar");
    user-focus: ignore;
    user-select: none;
    background-color: #AAAAAA;
+   background-image: url("chrome://global/skin/slider-bg-horiz.gif");
 }
 
+slider[align="vertical"] {
+   background-image: url("chrome://global/skin/slider-bg-vert.gif");
+}
 
 scrollbarbutton {
   display: inline;

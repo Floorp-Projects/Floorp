@@ -109,16 +109,12 @@ popup > menuitem[menuactive="true"]
 .menu-iconic-left 
   {
     color                 : inherit;
-    margin                : 0px 2px 2px 0px;
+    margin                : 0px 4px 0px 3px;
     width                 : 13px;
     text-align            : center;
     list-style-image      : inherit;
   }
 
-/*.menu-iconic-left[menuactive="true"]
-  {
-  }*/  
-  
 .menubar-left 
   {
     color                 : inherit;
@@ -128,12 +124,12 @@ popup > menuitem[menuactive="true"]
 .menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
   {
     color                 : inherit;
-    margin                : 0px 2px 0px 0px;
+    margin                : 2px 2px 2px 0px;
   }
 
 .menu-text 
   {
-    margin                : 2px 2px 2px 15px;
+    margin                : 2px 2px 2px 20px;
   }
 
 .menu-accel 
@@ -155,6 +151,11 @@ popup > menuitem[menuactive="true"]
 menuitem[checked="true"] 
   {
     list-style-image      : url("chrome://global/skin/menu-check.gif");
+  }
+
+menuitem[checked="true"][menuactive="true"]
+  {
+  	list-style-image	  : url("chrome://global/skin/menu-check-hover.gif");
   }
 
 menuitem[checked="true"][disabled="true"] 
@@ -186,7 +187,7 @@ menuitem[checked="true"][disabled="true"]
     border                : 1px solid windowframe;
     color                 : infotext;
     font                  : smaller;
-    padding               : 0px 1px 0px 2px;
+    padding               : 2px;
   }
 
 .tooltip > .popup-internal-box

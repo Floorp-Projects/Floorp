@@ -73,7 +73,7 @@
       <xul:scrollbarbutton type="decrement" inherits="align:sborient">
           <xul:image inherits="src"/>
 	  </xul:scrollbarbutton>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
       	<xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
       <xul:scrollbarbutton type="increment" inherits="align:sborient">

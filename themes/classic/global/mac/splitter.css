@@ -4,26 +4,78 @@ splitter
   {
     cursor                : e-resize;
     background-color      : #DDDDDD;
-  }
-
-splitter[state="dragging"]
-  {
-    background-color      : #9D9D9D;
+    vertical-align		  : middle;
   }
 
 grippy, grippy[collapse="before"]
   {
-	  margin                : 0px;
+    behavior              : url("chrome://global/skin/classicBindings.xml#grippy");
+	margin                : 0px;
     border-left           : 1px solid #FFFFFF;
     border-top            : 1px solid #FFFFFF;
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
-	  padding               : 0px;
-	  list-style-image      : url("chrome://global/skin/grippy-vertical-before.gif");
-	  cursor                : pointer;
+	padding               : 0px;
+	list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
+	cursor                : pointer;
   }
 
 grippy:hover
   {
 	  background-color      : #CCCCFF;
   }
+
+grippy[collapse="after"]
+  {
+	  list-style-image      : url("chrome://global/skin/grippy-horizontal-after.gif");
+  }  
+
+.grippy-box
+  {
+    border				  : none;
+  }  
+
+.grippy-image
+  {
+    list-style-image      : inherit;
+  }
+
+splitter[state="dragging"],
+splitter:hover:active
+  {
+    background-color      : #888888;
+    background-image      : url("chrome://global/skin/splitter-drag-bg.gif");
+  }
+
+/* vertical splitters */
+  window > splitter, box > splitter 
+    {
+    	width               : 6px;
+    }
+  
+/* horizontal splitters */  
+  /* XXX we should comment out the 'align' support to force people to migrate 
+         to 'orient' */
+  rows > splitter,
+  window[orient="vertical"] > splitter,
+  box[orient="vertical"] > splitter,
+  window[align="vertical"] > splitter,
+  box[align="vertical"] > splitter
+    {
+      cursor              : n-resize;
+    }
+
+  window[orient="vertical"] > splitter > grippy,
+  window[orient="vertical"] > splitter > grippy[collapse="before"],
+  box[orient="vertical"] > splitter > grippy,
+  box[orient="vertical"] > splitter > grippy[collapse="before"]
+    {
+      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
+    }
+    
+  window[orient="vertical"] > splitter > grippy[collapse="after"],
+  box[orient="vertical"] > splitter > grippy[collapse="after"]
+    {
+      list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
+    }
+    

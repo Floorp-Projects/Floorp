@@ -27,13 +27,13 @@
   menulist > .menu-icon 
     {
       border			  : none;
-      padding             : none;
+      padding             : 0px;
     }  
 
   menulist[open="true"] > .menu-icon 
     {
 	  border			  : none;
-      padding             : none;
+      padding             : 0px;
     }
     
 /* text display frame */
@@ -134,7 +134,7 @@
   	{
   	  font: 8pt geneva;
   	  min-width: 0px;
-  	  max-width: auto;
+  	  max-width: none;
   	  padding: 0px 4px;
   	}
 
