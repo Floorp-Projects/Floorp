@@ -20,4 +20,4 @@
  */
 
 @import url(resource:/res/html.css);
-@import url(resource:/chrome/xul.css);
+@import url(chrome://global/content/xul.css);
