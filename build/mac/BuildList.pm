@@ -219,7 +219,7 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:modules:libfont:src:MANIFEST",					":mozilla:dist:libfont:");
 		
 		#LDAP
-		if ( $main::MOZ_LDAP )
+		if ( $main::MOZ_LDAP ||  $main::MOZ_DARK )
 			{
 				InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",	":mozilla:dist:ldap:");
 			}
