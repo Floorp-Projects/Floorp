@@ -9,6 +9,13 @@ query the CVS tree.  For example,
 
 will tell you what has been changed in the last week.
 
+10/27/98 security check for legal products in place. bug charts are not
+available as an option if collectstats.pl has never been run. all products 
+get daily stats collected now. README updated: Chart::Base is listed as
+a requirement, instructions for using collectstats.pl included as 
+an optional step. also got silly and added optional quips to bug
+reports. 
+
 10/17/98 modified README installation instructions slightly. 
 
 10/7/98 Added a new table called "products".  Right now, this is used
