@@ -157,6 +157,8 @@ struct JSRuntime {
 
     /* Used to serialize cycle checks when setting __proto__ or __parent__. */
     PRLock              *setSlotLock;
+    PRCondVar           *setSlotDone;
+    JSBool              setSlotBusy;
     JSScope             *setSlotScope;  /* deadlock avoidance, see jslock.c */
 
     /*

@@ -246,11 +246,35 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
      * locks in the opposite order.  XXXbe ensure they don't!
      */
     rt = cx->runtime;
+#ifdef JS_THREADSAFE
+
     JS_ACQUIRE_LOCK(rt->setSlotLock);
+    while (rt->setSlotBusy) {
+        jsrefcount saveDepth = JS_SuspendRequest(cx);
+        JS_WAIT_CONDVAR(rt->setSlotDone, JS_NO_TIMEOUT);
+        JS_ResumeRequest(cx, saveDepth);
+    }
+    rt->setSlotBusy = JS_TRUE;
+    JS_RELEASE_LOCK(rt->setSlotLock);
+
+#define SET_SLOT_DONE(rt)                                                     \
+    JS_BEGIN_MACRO                                                            \
+        JS_ACQUIRE_LOCK((rt)->setSlotLock);                                   \
+        (rt)->setSlotBusy = JS_FALSE;                                         \
+        JS_NOTIFY_ALL_CONDVAR((rt)->setSlotDone);                             \
+        JS_RELEASE_LOCK((rt)->setSlotLock);                                   \
+    JS_END_MACRO
+
+#else
+
+#define SET_SLOT_DONE(rt)       /* nothing */
+
+#endif
+
     obj2 = pobj;
     while (obj2) {
         if (obj2 == obj) {
-            JS_RELEASE_LOCK(rt->setSlotLock);
+            SET_SLOT_DONE(rt);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_CYCLIC_VALUE, object_props[slot].name);
             return JS_FALSE;
@@ -270,7 +294,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
                 scope = js_GetMutableScope(cx, obj);
                 if (!scope) {
                     JS_UNLOCK_OBJ(cx, obj);
-                    JS_RELEASE_LOCK(rt->setSlotLock);
+                    SET_SLOT_DONE(rt);
                     return JS_FALSE;
                 }
             } else if (OBJ_IS_NATIVE(pobj) && OBJ_SCOPE(pobj) != scope) {
@@ -304,8 +328,10 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         OBJ_SET_SLOT(cx, obj, slot, OBJECT_TO_JSVAL(pobj));
     }
 
-    JS_RELEASE_LOCK(rt->setSlotLock);
+    SET_SLOT_DONE(rt);
     return JS_TRUE;
+
+#undef SET_SLOT_DONE
 }
 
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
@@ -1805,6 +1831,8 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     if (nslots > JS_INITIAL_NSLOTS && map->freeslot < nslots / 2) {
         nslots = map->freeslot;
         nslots += nslots / 2;
+        if (nslots < JS_INITIAL_NSLOTS)
+            nslots = JS_INITIAL_NSLOTS;
         nbytes = (nslots + 1) * sizeof(jsval);
         newslots = (jsval *) JS_realloc(cx, obj->slots - 1, nbytes);
         if (!newslots)
