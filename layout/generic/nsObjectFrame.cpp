@@ -1171,7 +1171,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     }
   }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2)
   // This is a work-around on Unix for a LiveConnect problem (bug 83698).
   // The problem:
   // The proxy JNI needs to be created by the browser. If it is created by
