@@ -40,12 +40,29 @@ nsViewSourceChannel::~nsViewSourceChannel()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsViewSourceChannel, 
-                              nsIRequest, 
-                              nsIChannel,
-                              nsIViewSourceChannel,
-                              nsIStreamListener, 
-                              nsIRequestObserver)
+
+NS_IMPL_THREADSAFE_ADDREF(nsViewSourceChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsViewSourceChannel)
+/*
+  This QI uses hand-expansions of NS_INTERFACE_MAP_ENTRY to check for
+  non-nullness of mHttpChannel and mCachingChannel.
+
+  This seems like a better approach than writing out the whole QI by hand.
+*/
+NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  if ( mHttpChannel && aIID.Equals(NS_GET_IID(nsIHttpChannel)) )
+    foundInterface = NS_STATIC_CAST(nsIHttpChannel*, this);
+  else
+  if ( mCachingChannel && aIID.Equals(NS_GET_IID(nsICachingChannel)) )
+    foundInterface = NS_STATIC_CAST(nsICachingChannel*, this);
+  else
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
+NS_INTERFACE_MAP_END_THREADSAFE
 
 nsresult
 nsViewSourceChannel::Init(nsIURI* uri)
@@ -60,6 +77,8 @@ nsViewSourceChannel::Init(nsIURI* uri)
     if (NS_FAILED(rv)) return rv;
    
     rv = pService->NewChannel(path, nsnull, getter_AddRefs(mChannel));
+    mHttpChannel = do_QueryInterface(mChannel);
+    mCachingChannel = do_QueryInterface(mChannel);
     
     return rv;
 }
@@ -351,8 +370,9 @@ NS_IMETHODIMP
 nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-    
-    return mListener->OnStartRequest(this, aContext);
+    return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                                    this),
+                                     aContext);
 }
 
 
@@ -361,8 +381,9 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
                                nsresult aStatus)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-
-    return mListener->OnStopRequest(this, aContext, aStatus);
+    return mListener->OnStopRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                                   this),
+                                    aContext, aStatus);
 }
 
 
@@ -373,7 +394,8 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext
                                PRUint32 aLength) 
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
-
-    return mListener->OnDataAvailable(this, aContext, aInputStream, 
-                                aSourceOffset, aLength);
+    return mListener->OnDataAvailable(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                                     this),
+                                      aContext, aInputStream,
+                                      aSourceOffset, aLength);
 }
