@@ -367,6 +367,20 @@ if ($#ARGV == 1) {
     $nametoexclude = lc($ARGV[1]);
 }
 
-ProcessOneBug($ARGV[0]);
+if ($ARGV[0] eq "rescanall") {
+    print "<br> Collecting bug ids...\n";
+    SendSQL("select bug_id from bugs order by bug_id");
+    my @list;
+    while (my @row = FetchSQLData()) {
+        push @list, $row[0];
+    }
+    foreach my $id (@list) {
+        $ARGV[0] = $id;
+        print "<br> Doing bug $id\n";
+        ProcessOneBug($ARGV[0]);
+    }
+} else {
+    ProcessOneBug($ARGV[0]);
+}
 
 exit;
