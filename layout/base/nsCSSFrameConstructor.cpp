@@ -8535,6 +8535,11 @@ nsCSSFrameConstructor::ContentAppended(nsPresContext* aPresContext,
           // Filters are in effect, so the insertion point needs to be refetched for
           // each child.
           GetInsertionPoint(shell, parentFrame, child, &insertionPoint);
+          if (!insertionPoint) {
+            // This content node doesn't have an insertion point, so we just
+            // skip over it
+            continue;
+          }
           insertionContent = insertionPoint->GetContent();
         }
 
