@@ -56,11 +56,11 @@ interface nsIDOMXPathEvaluator : nsISupports
                                       raises(XPathException,
                                              DOMException);
   nsIDOMXPathNSResolver    createNSResolver(in nsIDOMNode nodeResolver);
-  nsIDOMXPathResult        evaluate(in DOMString expression, 
+  nsISupports              evaluate(in DOMString expression, 
                                     in nsIDOMNode contextNode, 
                                     in nsIDOMXPathNSResolver resolver, 
                                     in unsigned short type, 
-                                    in nsIDOMXPathResult result)
+                                    in nsISupports result)
                                       raises(XPathException,
                                              DOMException);
 };
