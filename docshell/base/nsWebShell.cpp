@@ -171,6 +171,7 @@ public:
 	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
+  NS_IMETHOD RemoveChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
   NS_IMETHOD GetName(const PRUnichar** aName);
   NS_IMETHOD SetName(const PRUnichar* aName);
@@ -888,6 +889,11 @@ nsWebShell::Destroy()
   SetObserver(nsnull);
   SetDocLoaderObserver(nsnull);
 
+  // Remove this webshell from its parent's child list
+  if (nsnull != mParent) {
+    mParent->RemoveChild(this);
+  }
+
   if (nsnull != mDocLoader) {
     mDocLoader->SetContainer(nsnull);
   }
@@ -1210,6 +1216,20 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   aChild->SetParent(this);
   aChild->SetDefaultCharacterSet(mDefaultCharacterSet.GetUnicode()); 
   NS_ADDREF(aChild);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::RemoveChild(nsIWebShell* aChild)
+{
+  NS_PRECONDITION(nsnull != aChild, "nsWebShell::RemoveChild(): null ptr");
+  if (nsnull == aChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  mChildren.RemoveElement(aChild);
+  aChild->SetParent(nsnull);
+  NS_RELEASE(aChild);
 
   return NS_OK;
 }
