@@ -2465,6 +2465,8 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             // there's no need to clear this on button-up
           gLastButton1Down.x = XFROMMP(mp1);
           gLastButton1Down.y = YFROMMP(mp1);
+          WinSetActiveWindow(HWND_DESKTOP, mWnd);
+          result = PR_TRUE;
           break;
         case WM_BUTTON1UP:
           if (!mIsScrollBar)
