@@ -1162,7 +1162,7 @@ nsresult nsMsgFolder::AddSubfolder(nsAutoString *folderName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::Compact()
+NS_IMETHODIMP nsMsgFolder::Compact(nsIUrlListener *aListener)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

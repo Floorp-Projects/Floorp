@@ -124,7 +124,7 @@ public:
 	NS_IMETHOD AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, nsIMsgFolder **child);
   NS_IMETHODIMP CreateStorageIfMissing(nsIUrlListener* urlListener);
     
-  NS_IMETHOD Compact();
+  NS_IMETHOD Compact(nsIUrlListener *aListener);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);

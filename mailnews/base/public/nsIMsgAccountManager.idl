@@ -144,6 +144,10 @@ interface nsIMsgAccountManager : nsISupports {
   void SetFolderDoingEmptyTrash(in nsIMsgFolder folder);
   boolean GetEmptyTrashInProgress();
 
+  void CleanupInboxOnExit();
+  void SetFolderDoingCleanupInbox(in nsIMsgFolder folder);
+  boolean GetCleanupInboxInProgress();
+
   void addRootFolderListener(in nsIFolderListener listener);
   void removeRootFolderListener(in nsIFolderListener listener);
 

@@ -349,6 +349,7 @@ NS_IMETHODIMP nsMsgMailSession::RemoveMsgWindow(nsIMsgWindow *msgWindow)
         NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
                         kMsgAccountManagerCID, &rv);
         if (NS_FAILED(rv)) return rv;
+		accountManager->CleanupInboxOnExit();
         accountManager->EmptyTrashOnExit();
     }
 	return NS_OK;

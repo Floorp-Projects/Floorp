@@ -37,6 +37,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIUrlListener.h"
+#include "nsImapIncomingServer.h"
 
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,
@@ -72,7 +73,9 @@ private:
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
   nsCOMPtr<nsISupportsArray> m_incomingServerListeners;
   nsCOMPtr<nsIMsgFolder> m_folderDoingEmptyTrash;
+  nsCOMPtr<nsIMsgFolder> m_folderDoingCleanupInbox;
   PRBool m_emptyTrashInProgress;
+  PRBool m_cleanupInboxInProgress;
 
   nsCString mAccountKeyList;
   
@@ -126,6 +129,10 @@ private:
 
   // empty trash on exit
   static PRBool PR_CALLBACK emptyTrashOnExit(nsHashKey *aKey, void *aData,
+                                     void *closure);
+  
+  // cleanup inbox on exit
+  static PRBool PR_CALLBACK cleanupInboxOnExit(nsHashKey *aKey, void *aData,
                                      void *closure);
   //
   // account enumerators

@@ -128,6 +128,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
   m_emptyTrashInProgress(PR_FALSE),
+  m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
   m_shutdownInProgress(PR_FALSE),
   m_prefs(0)
@@ -936,9 +937,92 @@ PRBool PR_CALLBACK nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *
 	return PR_TRUE;
 }
 
-// enumaration for closing cached connections.
-PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData,
+PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void *aData,
                                              void *closure)
+{
+    nsCOMPtr<nsIFolder> root;
+	nsIMsgIncomingServer *msgserver = (nsIMsgIncomingServer*)aData;
+    msgserver->GetRootFolder(getter_AddRefs(root));
+    nsXPIDLCString type;
+    msgserver->GetType(getter_Copies(type));
+    if (root)
+	{
+       nsCOMPtr<nsIMsgFolder> folder;
+       folder = do_QueryInterface(root);
+       if (folder)
+       {
+          nsXPIDLCString passwd;
+          PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :PR_FALSE);
+		  if (isImap) 
+		  {
+		       nsImapIncomingServer *imapserver = (nsImapIncomingServer*)aData;
+               PRBool cleanupInboxOnExit = PR_FALSE;
+    
+               imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
+               if (cleanupInboxOnExit)
+			   {
+                  msgserver->GetPassword(getter_Copies(passwd));
+                  if (isImap &&  passwd && nsCRT::strlen((const char*) passwd))
+				  {
+					nsresult rv;
+					nsCOMPtr<nsIMsgFolder> inboxFolder;
+					nsCOMPtr<nsIEnumerator> aEnumerator;
+                    folder->GetSubFolders(getter_AddRefs(aEnumerator));
+                    nsCOMPtr<nsISupports> aSupport;
+                    rv = aEnumerator->First();
+                    while (NS_SUCCEEDED(rv))
+					{ 
+                        rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+			            nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
+						PRUnichar *folderName = nsnull;
+            			inboxFolder->GetName(&folderName);
+						if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
+						{
+							nsCOMPtr<nsIUrlListener> urlListener;
+							NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+									kMsgAccountManagerCID, &rv);
+							if (NS_FAILED(rv)) return rv;
+							NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+								        kEventQueueServiceCID, &rv);
+
+							if (NS_FAILED(rv)) return rv;
+							nsCOMPtr<nsIEventQueue> eventQueue;
+							pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+								               getter_AddRefs(eventQueue)); 
+
+							accountManager->SetFolderDoingCleanupInbox(inboxFolder);
+							urlListener = do_QueryInterface(accountManager, &rv);
+                    
+							inboxFolder->Compact(urlListener);
+							if (NS_SUCCEEDED(rv) && isImap && urlListener)
+		                    {
+								PRBool inProgress = PR_FALSE;
+							  accountManager->GetCleanupInboxInProgress(&inProgress);
+							  while (inProgress)
+							  {
+								accountManager->GetCleanupInboxInProgress(&inProgress);
+								PR_CEnterMonitor(inboxFolder);
+								PR_CWait(folder, 1000UL);
+								PR_CExitMonitor(inboxFolder);
+								if (eventQueue)
+									rv = eventQueue->ProcessPendingEvents();
+							  }
+							}
+							break;
+						}
+						else
+							rv = aEnumerator->Next();
+					}
+				}
+			}
+		  }
+	   }
+	}
+  return PR_TRUE;
+}
+
+// enumaration for closing cached connections.
+PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData, void *closure)
 {
     nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
 
@@ -1305,6 +1389,13 @@ nsMsgAccountManager::EmptyTrashOnExit()
 {
 	m_incomingServers.Enumerate(emptyTrashOnExit, nsnull);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::CleanupInboxOnExit()
+{
+	m_incomingServers.Enumerate(cleanupInboxOnExit,nsnull);
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1930,6 +2021,13 @@ nsMsgAccountManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     m_emptyTrashInProgress = PR_FALSE;
     PR_CExitMonitor(m_folderDoingEmptyTrash);
   }
+  else if (m_folderDoingCleanupInbox)
+  {
+    PR_CEnterMonitor(m_folderDoingCleanupInbox);
+    PR_CNotifyAll(m_folderDoingCleanupInbox);
+    m_cleanupInboxInProgress = PR_FALSE;
+    PR_CExitMonitor(m_folderDoingCleanupInbox);
+  }
   return NS_OK;
 }
 
@@ -1949,6 +2047,21 @@ nsMsgAccountManager::GetEmptyTrashInProgress(PRBool *bVal)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManager::SetFolderDoingCleanupInbox(nsIMsgFolder *folder)
+{
+  m_folderDoingCleanupInbox = folder;
+  m_cleanupInboxInProgress = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetCleanupInboxInProgress(PRBool *bVal)
+{
+  NS_ENSURE_ARG_POINTER(bVal);
+  *bVal = m_cleanupInboxInProgress;
+  return NS_OK;
+}
 nsresult 
 nsMsgAccountManager::SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const char *type)
 {
