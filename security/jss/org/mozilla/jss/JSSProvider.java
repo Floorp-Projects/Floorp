@@ -99,12 +99,6 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
 
         /////////////////////////////////////////////////////////////
-        // KeyStore
-        /////////////////////////////////////////////////////////////
-        put("KeyStore.Mozilla-JSS",
-            "org.mozilla.jss.provider.java.security.JSSKeyStoreSpi");
-
-        /////////////////////////////////////////////////////////////
         // AlgorithmParameters
         /////////////////////////////////////////////////////////////
         put("AlgorithmParameters.IvAlgorithmParameters",
