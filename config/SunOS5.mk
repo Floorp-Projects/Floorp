@@ -36,7 +36,8 @@ G++INCLUDES		=
 LOC_LIB_DIR		= /usr/openwin/lib/locale
 MOTIF			= /usr/dt
 MOTIFLIB		= -lXm
-OS_LIBS			=
+OS_LIBS			= $(THREAD_LIB) -lposix4 $(RESOLV_LIB) -lsocket -lnsl -ldl
+
 
 PLATFORM_FLAGS		= $(DSO_CFLAGS) -DSOLARIS -D__svr4 -D__svr4__
 MOVEMAIL_FLAGS		= -DUSG
@@ -88,10 +89,12 @@ endif
 ifeq ($(OS_RELEASE)$(OS_VERSION),5.5.1)
 PLATFORM_FLAGS		+= -DSOLARIS2_5 -DSOLARIS_55_OR_GREATER
 PORT_FLAGS		+= -D_SVID_GETTOD
+RESOLV_LIB		= -lresolv
 endif
 ifeq ($(OS_VERSION),.6)
 PLATFORM_FLAGS		+= -DSOLARIS2_6 -DSOLARIS_55_OR_GREATER -DSOLARIS_56_OR_GREATER
 PORT_FLAGS		+= -D_SVID_GETTOD -DHAVE_SNPRINTF
+RESOLV_LIB		= -lresolv
 else
 PORT_FLAGS		+= -DNEED_INET_TCP_H
 endif
@@ -126,6 +129,7 @@ OS_GPROF_FLAGS		= -xpg -z muldefs
 DSO_CFLAGS		= -KPIC
 else
 PLATFORM_FLAGS		+= -Wall -Wno-format
+OS_LIBS			+= -L$(NS_LIB)
 ifneq ($(CPU_ARCH),x86)
 ASFLAGS			+= -x assembler-with-cpp
 endif
@@ -142,23 +146,8 @@ USE_KERNEL_THREADS	= 0
 endif
 
 ifeq ($(USE_KERNEL_THREADS),1)
-ifdef NSPR20
 PORT_FLAGS		+= -D_PR_NTHREAD -D_REENTRANT
-else
-PORT_FLAGS		+= -DHW_THREADS -D_REENTRANT
-endif
-OS_LIBS			= -lthread -lposix4
-else
-ifdef NSPR20
-OS_LIBS			= -lposix4
-else
-PORT_FLAGS		+= -DSW_THREADS
-endif
-endif
-OS_LIBS			+= -lsocket -lnsl -ldl
-
-ifndef NS_USE_NATIVE
-OS_LIBS			+= -L$(NS_LIB)
+THREAD_LIB		= -lthread
 endif
 
 #
@@ -174,7 +163,7 @@ BUILD_UNIX_PLUGINS	= 1
 # Turn on FULLCIRCLE crash reporting for 2.5.1 & up.
 ifdef MOZ_FULLCIRCLE
 FC_PLATFORM		= SolarisSparc
-FC_PLATFORM_DIR	= SunOS5_sparc
+FC_PLATFORM_DIR		= SunOS5_sparc
 endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
