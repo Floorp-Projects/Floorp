@@ -372,47 +372,47 @@ int main()
     else
         printf("\tFAILED");
 
-    var[0].val.i32 = 1.0;
+    var[0].val.i32 = 1;
     var[0].type = nsXPTType::T_I32;
     var[0].flags = 0;
 
-    var[1].val.i32 = 2.0;
+    var[1].val.i32 = 2;
     var[1].type = nsXPTType::T_I32;
     var[1].flags = 0;
 
-    var[2].val.i32 = 3.0;
+    var[2].val.i32 = 3;
     var[2].type = nsXPTType::T_I32;
     var[2].flags = 0;
 
-    var[3].val.i32 = 4.0;
+    var[3].val.i32 = 4;
     var[3].type = nsXPTType::T_I32;
     var[3].flags = 0;
 
-    var[4].val.i32 = 5.0;
+    var[4].val.i32 = 5;
     var[4].type = nsXPTType::T_I32;
     var[4].flags = 0;
 
-    var[5].val.i32 = 6.0;
+    var[5].val.i32 = 6;
     var[5].type = nsXPTType::T_I32;
     var[5].flags = 0;
 
-    var[6].val.i32 = 7.0;
+    var[6].val.i32 = 7;
     var[6].type = nsXPTType::T_I32;
     var[6].flags = 0;
 
-    var[7].val.i32 = 8.0;
+    var[7].val.i32 = 8;
     var[7].type = nsXPTType::T_I32;
     var[7].flags = 0;
 
-    var[8].val.i32 = 9.0;
+    var[8].val.i32 = 9;
     var[8].type = nsXPTType::T_I32;
     var[8].flags = 0;
 
-    var[9].val.i32 = 10.0;
+    var[9].val.i32 = 10;
     var[9].type = nsXPTType::T_I32;
     var[9].flags = 0;
 
-    var[10].val.i32 = 0.0;
+    var[10].val.i32 = 0;
     var[10].type = nsXPTType::T_I32;
     var[10].flags = nsXPTCVariant::PTR_IS_DATA;
     var[10].ptr = &var[10].val.i32;
@@ -628,11 +628,11 @@ int main()
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 + 18 + 19 + 20 = %ff\n",
                 (double) var[20].val.f);
 
-    var[0].val.p = "moo";
+    var[0].val.p = (void*)"moo";
     var[0].type = nsXPTType::T_CHAR_STR;
     var[0].flags = 0;
 
-    var[1].val.p = "cow";
+    var[1].val.p = (void*)"cow";
     var[1].type = nsXPTType::T_CHAR_STR;
     var[1].flags = 0;
     
