@@ -27,6 +27,8 @@ function SetTitleButton(uri,pickerID)
 	var picker = document.getElementById(pickerID);
 	var msgfolder = GetMsgFolderFromUri(uri);
 
+	if (!msgfolder) return;
+
 	var selectedValue = null;
 
 	if (msgfolder.isServer)

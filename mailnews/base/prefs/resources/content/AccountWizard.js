@@ -135,7 +135,7 @@ function saveContents(win, hash) {
     var inputs = win.document.getElementsByTagName("FORM")[0].elements;
     for (var i=0 ; i<inputs.length; i++) {
         saveValue(hash, inputs[i])
-    }
+   }
 
 }
 
@@ -152,6 +152,7 @@ function restoreValue(hash, element) {
     } else {
         element.value=hash[element.name];
     }
+
 }
 
 function saveValue(hash, element) {
@@ -166,6 +167,7 @@ function saveValue(hash, element) {
     else {
         hash[element.name] = element.value;
     }
+
 }
 
 function validateIdentity(win, hash) {

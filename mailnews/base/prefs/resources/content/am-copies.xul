@@ -1,12 +1,17 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       class="dialog"
       align="vertical">
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script src="chrome://messenger/content/am-copies.js"/>
+
 <html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
 <html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
 <html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
@@ -20,23 +25,13 @@
   <box align="horizontal">
     <html:input name="identity.doFcc" type="checkbox"/>
     <html:div>&fccMailFolder.label;</html:div>
-    <html:select flex="100%"
-         onchange="dump('value=' + event.target.value + '\n')"
-         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
-         name="identity.fccFolder" 
-         ref="msgaccounts:/">
-    <template>
-      <rule iscontainer="true" isempty="false">
-          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </html:optgroup>
-      </rule>
-      <rule>
-          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      </rule>
-    </template>
-    </html:select>
-<!--    <titledbutton value="&chooseFolderButton.label;"/> -->
+
+	<!-- name="identity.fccFolder" -->
+	<box align="horizontal">
+		<menu id="msgFccFolderPicker"/>
+		<spring flex="100%"/>
+	</box>
+    
   </box>
   <box align="horizontal">
     <html:input name="identity.bccSelf" type="checkbox"/>
@@ -54,60 +49,27 @@
 <box align="vertical" flex="100%">
   <box align="horizontal">
     <html:div flex="34%">&draftMailFolder.label;</html:div>
-    <html:select flex="66%"
-         onchange="dump('value=' + event.target.value + '\n')"
-         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
-         name="identity.draftFolder"
-         ref="msgaccounts:/">
-    <template>
-      <rule iscontainer="true" isempty="false">
-          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </html:optgroup>
-      </rule>
-      <rule>
-          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      </rule>
-    </template>
-    </html:select>
+    <!-- name="identity.draftFolder" -->
+    <box align="horizontal">
+        <menu id="msgDraftsFolderPicker"/>
+        <spring flex="100%"/>
+    </box>
   </box>
   <box align="horizontal">
     <html:div flex="34%">&templateMailFolder.label;</html:div>
-    <html:select flex="66%"
-         onchange="dump('value=' + event.target.value + '\n')"
-         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
-         name="identity.stationeryFolder"
-         ref="msgaccounts:/">
-    <template>
-      <rule iscontainer="true" isempty="false">
-          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </html:optgroup>
-      </rule>
-      <rule>
-          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      </rule>
-    </template>
-    </html:select>
+    <!-- name="identity.stationeryFolder " -->
+    <box align="horizontal">
+	<menu id="msgStationeryFolderPicker"/>
+	<spring flex="100%"/>
+    </box>
   </box>
   <box align="horizontal">
-    <html:div>&junkMailFolder.label;</html:div>
-    <html:select flex="100%"
-         onchange="dump('value=' + event.target.value + '\n')"
-         datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
-         name="identity.junkMailFolder"
-         ref="msgaccounts:/">
-    <template>
-      <rule iscontainer="true" isempty="false">
-          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </html:optgroup>
-      </rule>
-      <rule>
-          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      </rule>
-    </template>
-    </html:select>
+    <html:div flex="34%">&junkMailFolder.label;</html:div>
+    <!-- name="identity.junkMailFolder" -->
+    <box align="horizontal">
+        <menu id="msgJunkMailFolderPicker"/>
+        <spring flex="100%"/>
+    </box>
   </box>
 </box>
 

@@ -21,25 +21,20 @@
 var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
 function onInit() {
-    initFolderDisplay("identity.fccFolder", "fccFolderVerbose");
-    initFolderDisplay("identity.draftFolder", "draftFolderVerbose");
-    initFolderDisplay("identity.stationeryFolder", "stationeryFolderVerbose");
-    initFolderDisplay("identity.junkMailFolder", "junkMailFolderVerbose");
+
+    initFolderDisplay("identity.fccFolder", "msgFccFolderPicker");
+    initFolderDisplay("identity.draftFolder", "msgDraftsFolderPicker");
+    initFolderDisplay("identity.stationeryFolder", "msgStationeryFolderPicker");
+    initFolderDisplay("identity.junkMailFolder", "msgJunkMailFolderPicker");
     initBccSelf();
     dump("document is " + document + "\n");
+
 }
 
-function initFolderDisplay(fieldname, divname) {
-
+function initFolderDisplay(fieldname, pickerID) {
     var formElement = document.getElementById(fieldname);
-
-    var folder = getFolder(formElement.value);
-    
-    var verboseName = "";
-    if (folder)
-        verboseName = folder.prettyName;
-
-    setDivText(divname, verboseName);
+    var uri = formElement.value;
+    SetTitleButton(uri,pickerID);
 }
 
 function initBccSelf() {
@@ -57,27 +52,24 @@ function setDivText(divid, str) {
     }
 }
 
-function getFolder(uri) {
-    dump("uri = " + uri + "\n");
-    if (uri) {
-	var res = null;
-	try {
-        	res = RDF.GetResource(uri);
-        }
-	catch (ex) {
-		dump("GetResource of this uri failed: " + uri + "\n");
-		return null;
-	}
-        if (res) {
-		try {
-            		return res.QueryInterface(Components.interfaces.nsIMsgFolder);
-		}
-		catch (ex) {
-			dump(uri + " was not a nsIMsgFolder\n");
-			return null;
-		}
-	}
-    }
-    return null;
+function onSave()
+{
+    dump("in onSave()\n");
+
+    SaveUriFromPicker("identity.fccFolder", "msgFccFolderPicker");
+    SaveUriFromPicker("identity.draftFolder", "msgDraftsFolderPicker");
+    SaveUriFromPicker("identity.stationeryFolder", "msgStationeryFolderPicker");
+    SaveUriFromPicker("identity.junkMailFolder", "msgJunkMailFolderPicker");
 }
 
+function SaveUriFromPicker(fieldName, pickerID)
+{
+	var picker = document.getElementById(pickerID);
+	var uri = picker.getAttribute("uri");
+	dump("uri = " + uri + "\n");
+	
+	formElement = document.getElementById(fieldName);
+	dump("old value = " + formElement.value + "\n");
+	formElement.value = uri;
+	dump("new value = " + formElement.value + "\n");
+}

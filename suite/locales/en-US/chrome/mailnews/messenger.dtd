@@ -221,7 +221,6 @@ Rights Reserved.
 <!ENTITY moveMsgMenu.label "Move Message">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
 <!ENTITY fileHereMenu.label "File Here">
-<!ENTITY copyHereMenu.label "Copy Here">
 <!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">  
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">  
 <!ENTITY markMenu.label "Mark">  

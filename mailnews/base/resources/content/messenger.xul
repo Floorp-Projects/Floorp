@@ -456,7 +456,7 @@ Rights Reserved.
 				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." value="&copyHereMenu.label;" 
+                <menuitem uri="..." value="&fileHereMenu.label;" 
 				oncommand="MsgCopyMessage(event.target)"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"

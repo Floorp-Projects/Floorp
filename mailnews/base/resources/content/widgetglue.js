@@ -910,9 +910,16 @@ var gMeterObserver;
 
 function GetMsgFolderFromUri(uri)
 {
-	var resource = GetResourceFromUri(uri);
-        var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        return msgfolder;
+	dump("GetMsgFolderFromUri of " + uri + "\n");
+	try {
+		var resource = GetResourceFromUri(uri);
+		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		return msgfolder;
+	}
+	catch (ex) {
+		dump("failed to get the folder resource\n");
+	}
+	return null;
 }
 
 function GetResourceFromUri(uri)
