@@ -1345,6 +1345,7 @@ static NSArray* sToolbarDefaults = nil;
       
       // replace the conversion specifiers (%d, %s) in the search string
       [self transformFormatString:searchURL domain:aDomain search:escapedSearchString];
+      [escapedSearchString release];
       
       [self loadURL:searchURL referrer:nil activate:NO];
     }
