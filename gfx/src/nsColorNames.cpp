@@ -43,7 +43,7 @@
 
 // define an array of all color names
 #define GFX_COLOR(_name, _value) #_name,
-const char* kColorNames[] = {
+const char* const kColorNames[] = {
 #include "nsColorNameList.h"
 };
 #undef GFX_COLOR
