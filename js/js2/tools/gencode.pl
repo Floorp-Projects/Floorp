@@ -37,7 +37,7 @@ my $binary_op =
    super  => "Instruction_3",
    super_has_print => 1,
    rem    => "dest, source1, source2",
-   params => [ ("Register", "Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 
 my $math_op =
@@ -45,7 +45,7 @@ my $math_op =
    super  => "Arithmetic",
    super_has_print => 1,
    rem    => "dest, source1, source2",
-   params => [ ("Register", "Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 
 my $cbranch_op =
@@ -53,14 +53,14 @@ my $cbranch_op =
    super  => "GenericBranch",
    super_has_print => 1,
    rem    => "target label, condition",
-   params => [ ("Label*", "Register") ]
+   params => [ ("Label*", "TypedRegister") ]
   };
 
 my $unary_op =
   {
    super  => "Instruction_2",
    rem    => "dest, source",
-   params => [ ("Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister") ]
   };
 
 
@@ -77,97 +77,97 @@ $ops{"MOVE"} =
   {
    super  => "Instruction_2",
    rem    => "dest, source",
-   params => [ ("Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister") ]
   };
 $ops{"LOAD_IMMEDIATE"} =
   {
    super  => "Instruction_2",
    rem    => "dest, immediate value (double)",
-   params => [ ("Register", "double" ) ]
+   params => [ ("TypedRegister", "double" ) ]
   };
-$ops{"LOAD_VALUE"} =
+$ops{"LOAD_BOOLEAN"} =
   {
    super  => "Instruction_2",
-   rem    => "dest, immediate value (JSValue)",
-   params => [ ("Register", "JSValue" ) ]
+   rem    => "dest, immediate value (boolean)",
+   params => [ ("TypedRegister", "bool" ) ]
   };
 $ops{"LOAD_STRING"} =
   {
    super  => "Instruction_2",
    rem    => "dest, immediate value (string)",
-   params => [ ("Register", "JSString*" ) ]
+   params => [ ("TypedRegister", "JSString*" ) ]
   };
 $ops{"LOAD_NAME"} =
   {
    super  => "Instruction_2",
    rem    => "dest, name",
-   params => [ ("Register", "const StringAtom*" ) ]
+   params => [ ("TypedRegister", "const StringAtom*" ) ]
   };
 $ops{"SAVE_NAME"} =
   {
    super  => "Instruction_2",
    rem    => "name, source",
-   params => [ ("const StringAtom*", "Register") ]
+   params => [ ("const StringAtom*", "TypedRegister") ]
   };
 $ops{"NEW_OBJECT"} =
   {
    super  => "Instruction_1",
    rem    => "dest",
-   params => [ ("Register") ]
+   params => [ ("TypedRegister") ]
   };
 $ops{"NEW_ARRAY"} =
   {
    super  => "Instruction_1",
    rem    => "dest",
-   params => [ ("Register") ]
+   params => [ ("TypedRegister") ]
   };
 $ops{"GET_PROP"} =
   {
    super  => "Instruction_3",
    rem    => "dest, object, prop name",
-   params => [ ("Register", "Register", "const StringAtom*") ]
+   params => [ ("TypedRegister", "TypedRegister", "const StringAtom*") ]
   };
 $ops{"SET_PROP"} =
   {
    super  => "Instruction_3",
    rem    => "object, name, source",
-   params => [ ("Register", "const StringAtom*", "Register") ]
+   params => [ ("TypedRegister", "const StringAtom*", "TypedRegister") ]
   };
 $ops{"PROP_XCR"} =
   {
    super  => "Instruction_4",
    rem    => "dest, source, name, value",
-   params => [ ("Register", "Register", "const StringAtom*", "double") ]
+   params => [ ("TypedRegister", "TypedRegister", "const StringAtom*", "double") ]
   };
 $ops{"ELEM_XCR"} =
   {
    super  => "Instruction_4",
    rem    => "dest, base, index, value",
-   params => [ ("Register", "Register", "Register", "double") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "double") ]
   };
 $ops{"NAME_XCR"} =
   {
    super  => "Instruction_3",
    rem    => "dest, name, value",
-   params => [ ("Register", "const StringAtom*", "double") ]
+   params => [ ("TypedRegister", "const StringAtom*", "double") ]
   };
 $ops{"VAR_XCR"} =
   {
    super  => "Instruction_3",
    rem    => "dest, source, value",
-   params => [ ("Register", "Register", "double") ]
+   params => [ ("TypedRegister", "TypedRegister", "double") ]
   };
 $ops{"GET_ELEMENT"} =
   {
    super  => "Instruction_3",
    rem    => "dest, base, index",
-   params => [ ("Register", "Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 $ops{"SET_ELEMENT"} =
   {
    super  => "Instruction_3",
    rem    => "base, index, value",
-   params => [ ("Register", "Register", "Register") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 $ops{"ADD"}        = $math_op;
 $ops{"SUBTRACT"}   = $math_op;
@@ -207,7 +207,7 @@ $ops{"RETURN"} =
   {
    super    => "Instruction_1",
    rem      => "return value",
-   params   => [ ("Register") ]
+   params   => [ ("TypedRegister") ]
   };
 $ops{"RETURN_VOID"} =
   {
@@ -218,13 +218,13 @@ $ops{"CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
-   params => [ ("Register" , "Register", "RegisterList") ]
+   params => [ ("TypedRegister" , "TypedRegister", "RegisterList") ]
   };
 $ops{"THROW"} =
   {
    super    => "Instruction_1",
    rem      => "exception value",
-   params   => [ ("Register") ]
+   params   => [ ("TypedRegister") ]
   };
 $ops{"TRYIN"} =
   {
@@ -252,7 +252,7 @@ $ops{"WITHIN"} =
   {
    super  => "Instruction_1",
    rem    => "within this object",
-   params => [ ("Register") ]
+   params => [ ("TypedRegister") ]
   };
 $ops{"WITHOUT"} =
   {
@@ -444,12 +444,14 @@ sub get_print_body {
 
     for $type (@types) {
 
-        if ($type eq "Register") {
-            push (@oplist, "\"R\" << mOp$op");
+        if ($type eq "TypedRegister") {
+            push (@oplist, "\"R\" << mOp$op.first");
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
         } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
+        } elsif ($type =~ /bool/) {
+            push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
         } else {
             push (@oplist, "mOp$op");
         }
@@ -475,8 +477,8 @@ sub get_printops_body {
 
     for $type (@types) {
 
-        if ($type eq "Register") {
-            push (@oplist, "\"R\" << mOp$op << '=' << registers[mOp$op]");
+        if ($type eq "TypedRegister") {
+            push (@oplist, "\"R\" << mOp$op.first << '=' << registers[mOp$op.first]");
         } elsif ($type eq "RegisterList") {
             push (@oplist, "ArgList(mOp$op, registers)");
         }
