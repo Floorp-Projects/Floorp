@@ -25,10 +25,10 @@
 #include "nsIStyleContext.h"
 
 nsresult
-nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
-                             nsIContent* aContent,
-                             nsIFrame*   aParent,
-                             nsIFrame*   aAnchoredItem)
+NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult,
+                       nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aAnchoredItem)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -52,34 +52,6 @@ nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent,
 
 nsPlaceholderFrame::~nsPlaceholderFrame()
 {
-}
-
-// XXX Major hack...
-NS_IMETHODIMP
-nsPlaceholderFrame::DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus)
-{
-  // XXX Floated frame isn't in the block frame's list of children so make
-  // sure it gets a DidReflow notification
-  if (nsnull != mAnchoredItem) {
-    nsIHTMLReflow*  htmlReflow;
-    if (NS_SUCCEEDED(mAnchoredItem->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow))) {
-      htmlReflow->DidReflow(aPresContext, aStatus);
-    }
-  }
-
-  return nsFrame::DidReflow(aPresContext, aStatus);
-}
-
-// XXX Major hack...
-NS_IMETHODIMP
-nsPlaceholderFrame::DeleteFrame(nsIPresContext& aPresContext)
-{
-  // XXX Delete the floated frame
-  if (nsnull != mAnchoredItem) {
-    mAnchoredItem->DeleteFrame(aPresContext);
-  }
-
-  return nsFrame::DeleteFrame(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -119,16 +91,19 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     nscoord x = NSIntPixelsToTwips(-5, p2t);
-    aRenderingContext.FillRect(x, 0, NSIntPixelsToTwips(13, p2t), NSIntPixelsToTwips(3, p2t));
+    aRenderingContext.FillRect(x, 0, NSIntPixelsToTwips(13, p2t),
+                               NSIntPixelsToTwips(3, p2t));
     nscoord y = NSIntPixelsToTwips(-10, p2t);
-    aRenderingContext.FillRect(0, y, NSIntPixelsToTwips(3, p2t), NSIntPixelsToTwips(10, p2t));
+    aRenderingContext.FillRect(0, y, NSIntPixelsToTwips(3, p2t),
+                               NSIntPixelsToTwips(10, p2t));
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
-                                                 nsIContent*     aChild,
-                                                 nsISupports*    aSubContent)
+NS_IMETHODIMP
+nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
+                                   nsIContent*     aChild,
+                                   nsISupports*    aSubContent)
 {
   NS_ASSERTION(mContent == aChild, "bad content-changed target");
 
@@ -136,7 +111,6 @@ NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
   if (nsnull != mAnchoredItem) {
     return mAnchoredItem->ContentChanged(aPresContext, aChild, aSubContent);
   }
-
   return NS_OK;
 }
 
@@ -148,13 +122,14 @@ nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   // Forward the notification to the floater
   if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    return mAnchoredItem->AttributeChanged(aPresContext, aChild,
+                                           aAttribute, aHint);
   }
-
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPlaceholderFrame::ListTag(FILE* out) const
+NS_IMETHODIMP
+nsPlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
   fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
