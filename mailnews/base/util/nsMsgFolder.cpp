@@ -136,26 +136,10 @@ nsMsgFolder::~nsMsgFolder(void)
 NS_IMPL_ADDREF_INHERITED(nsMsgFolder, nsRDFResource)
 NS_IMPL_RELEASE_INHERITED(nsMsgFolder, nsRDFResource)
 
-NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-	if (aIID.Equals(NS_GET_IID(nsIMsgFolder)) ||
-      aIID.Equals(NS_GET_IID(nsIFolder)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
-	}              
-   if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference)))
-       *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*, this);
-
-	if(*aInstancePtr)
-	{
-     NS_ADDREF_THIS();
-		return NS_OK;
-	}
-
-	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_QUERY_INTERFACE_INHERITED3(nsMsgFolder, nsRDFResource,
+                                   nsIMsgFolder,
+                                   nsIFolder,
+                                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)

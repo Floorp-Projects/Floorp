@@ -46,24 +46,11 @@ nsMessage::~nsMessage(void)
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMessage, nsRDFResource)
-NS_IMPL_RELEASE_INHERITED(nsMessage, nsRDFResource)                        
-
-NS_IMETHODIMP nsMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-	if (aIID.Equals(NS_GET_IID(nsIMessage)) || aIID.Equals(NS_GET_IID(nsIDBMessage)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIDBMessage*, this);
-	}              
-	if(*aInstancePtr)
-	{
-		AddRef();
-		return NS_OK;
-	}
-
-	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_RELEASE_INHERITED(nsMessage, nsRDFResource)
+NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMessage,
+                                   nsRDFResource,
+                                   nsIMessage,
+                                   nsIDBMessage)
 
 NS_IMETHODIMP
 nsMessage::Init(const char* aURI)
