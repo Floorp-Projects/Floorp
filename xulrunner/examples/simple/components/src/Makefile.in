@@ -44,7 +44,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= simple
 XPI_NAME	= simple
+LIBRARY_NAME    = simpletest
+IS_COMPONENT	= 1
 
-EXTRA_COMPONENTS = $(srcdir)/SimpleTest.js
+CPPSRCS		= SimpleTest.cpp
+
+# We link against the xpcom glue library to avoid depending on unfrozen
+# XPCOM symbols.
+EXTRA_DSO_LIBS  = xpcomglue_s
+EXTRA_DSO_LDOPTS= $(EXTRA_DSO_LIBS) $(MOZ_COMPONENT_LIBS)
+
+EXTRA_COMPONENTS= $(srcdir)/SimpleTest.js
 
 include $(topsrcdir)/config/rules.mk
