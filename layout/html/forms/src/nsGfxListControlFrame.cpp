@@ -970,7 +970,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
   if (!isInDropDownMode) {
-    COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 86) 
+    COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 127, 118) 
   }
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
@@ -2461,7 +2461,7 @@ nsGfxListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpd
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
   if (mSelectionCacheLength != length) {
-    NS_ASSERTION(0,"nsGfxListControlFrame: Cache sync'd with content!\n");
+    //NS_ASSERTION(0,"nsListControlFrame: Cache sync'd with content!\n");
     changed = PR_TRUE; // Assume the worst, there was a change.
   }
 
@@ -2469,10 +2469,22 @@ nsGfxListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpd
   if (NS_SUCCEEDED(rv)) {
     if (!changed) {
       PRBool selected;
-      for (PRInt32 i = 0; i < length; i++) {
-        selected = IsContentSelectedByIndex(i);
-        if (selected != (PRBool)mSelectionCache->ElementAt(i)) {
-          mSelectionCache->ReplaceElementAt((void*)selected, i);
+      // the content array of options is actually
+      // out of sync with the array 
+      // so until bug 38825 is fixed.
+      if (mSelectionCacheLength != length) { // this shouldn't happend
+        for (PRInt32 i = 0; i < length; i++) {
+          selected = IsContentSelectedByIndex(i);
+          if (selected != (PRBool)mSelectionCache->ElementAt(i)) {
+            mSelectionCache->ReplaceElementAt((void*)selected, i);
+            changed = PR_TRUE;
+          }
+        }
+      } else {
+        mSelectionCache->Clear();
+        for (PRInt32 i = 0; i < length; i++) {
+          selected = IsContentSelectedByIndex(i);
+          mSelectionCache->InsertElementAt((void*)selected, i);
           changed = PR_TRUE;
         }
       }
