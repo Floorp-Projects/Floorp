@@ -1644,18 +1644,12 @@ nsHttpChannel::PromptForUserPass(const char *host,
     }
 
     // construct the domain string
+    // we always add the port to domain since it is used
+    // as the key for storing in password maanger.
     nsCAutoString domain;
     domain.Assign(host);
-    // Add port only if it was originally specified in the URI
-    PRInt32 uriPort = -1;
-    mURI->GetPort(&uriPort);
-    if (uriPort != -1) {
-        domain.Append(':');
-        domain.AppendInt(port);
-    }
-
-    NS_ConvertASCIItoUCS2 hostU(domain);
-
+    domain.Append(':');
+    domain.AppendInt(port);
     domain.Append(" (");
     domain.Append(realm);
     domain.Append(')');
@@ -1670,6 +1664,16 @@ nsHttpChannel::PromptForUserPass(const char *host,
     if (NS_FAILED(rv)) return rv;
 
     // figure out what message to display...
+    nsCAutoString displayHost;
+    displayHost.Assign(host);
+    // Add port only if it was originally specified in the URI
+    PRInt32 uriPort = -1;
+    mURI->GetPort(&uriPort);
+    if (uriPort != -1) {
+        displayHost.Append(':');
+        displayHost.AppendInt(port);
+    }
+    NS_ConvertASCIItoUCS2 hostU(displayHost);
     nsXPIDLString message;
     if (proxyAuth) {
         const PRUnichar *strings[] = { hostU.get() };
