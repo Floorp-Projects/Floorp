@@ -818,9 +818,9 @@ nsFT2FontCatalog::GetFontSummaryName(nsAReadableCString &aFontDirName,
 
     int dev = file_info.st_dev;
     int inode = file_info.st_ino;
-    FONT_CATALOG_PRINTF(("parent dir dev = %d, inode = %d", dev, inode));
+    FONT_CATALOG_PRINTF(("parent dir dev = %04x, inode = %d", dev, inode));
     char buf[64];
-    sprintf(buf, ".d%d-%d.i%d", major(dev), minor(dev), inode);
+    sprintf(buf, ".d%04x.i%d", dev, inode);
     font_dir_name_tail.Append(buf);
 
     //
