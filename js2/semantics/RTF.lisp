@@ -370,20 +370,20 @@
     (:heading1-num 61)
     (:heading1 s :heading1-num qj fi -720 li 720 sb 240 sa 180 keep keepn widctlpar :asian-keywords hyphpar 0 level 1 b :14-pt :english)
     ((+ :styles) (:heading1 sbasedon :normal-num snext :body-text-num "heading 1;"))
+    (:section-heading :heading1)
     
     (:heading2-num 62)
     (:heading2 s :heading2-num qj fi -720 li 720 sb 120 sa 180 keep keepn widctlpar :asian-keywords hyphpar 0 level 2 b :12-pt :english)
     ((+ :styles) (:heading2 sbasedon :heading1-num snext :body-text-num "heading 2;"))
+    (:subsection-heading :heading2)
     
     (:heading3-num 63)
     (:heading3 s :heading3-num qj fi -720 li 720 sb 60 sa 120 keep keepn widctlpar :asian-keywords hyphpar 0 level 3 b :10-pt :english)
     ((+ :styles) (:heading3 sbasedon :heading2-num snext :body-text-num "heading 3;"))
-    (:section-heading :heading3)
 
     (:heading4-num 64)
     (:heading4 s :heading4-num qj fi -720 li 720 sa 120 keep keepn widctlpar :asian-keywords hyphpar 0 level 4 b :10-pt :english)
     ((+ :styles) (:heading4 sbasedon :heading3-num snext :body-text-num "heading 4;"))
-    (:subsection-heading :heading4)
 
 
     (:sample-code-num 70)
