@@ -232,7 +232,7 @@ foreach $checkin (@list) {
      print "<TD><tt>+$$info{added}/-". abs($$info{removed}). "</tt></td>\n";
      foreach my $fullinfo (split(/!NeXt!/, $$info{'fullinfo'})) {
           my ($file, $version) = split(/\|/, $fullinfo);
-          $versioninfo = "$$info{person}|$$info{dir}|$file|$version,";
+          $versioninfo .= "$$info{person}|$$info{dir}|$file|$version,";
      }
      print "<TD WIDTH=100%>$$info{'log'}</td>\n";
      print "</tr>\n\n";
