@@ -46,7 +46,7 @@ XPIDLSRCS	= \
 		nsIAddbookUrl.idl \
 		$(NULL)
 ifdef MOZ_LDAP_XPCOM
-XPIDLSRCS       += nsILDAPPrefsService.idl \
+XPIDLSRCS       += nsILDAPPrefsService.idl
 endif
 		
 
