@@ -109,7 +109,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static nsresult ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString); 
 
 nsAppShellService::nsAppShellService() : 
-  mDeleteCalled(PR_FALSE),
+  mXPCOMShuttingDown(PR_FALSE),
   mModalWindowCount(0),
   mConsiderQuitStopper(0),
   mShuttingDown(PR_FALSE),
@@ -983,7 +983,7 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 {
-  if (mDeleteCalled) {
+  if (mXPCOMShuttingDown) {
     /* return an error code in order to:
        - avoid doing anything with other member variables while we are in
          the destructor
@@ -1434,7 +1434,7 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
     if (!openedWindow)
       OpenBrowserWindow(SIZE_TO_CONTENT, SIZE_TO_CONTENT);
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    mDeleteCalled = PR_TRUE;
+    mXPCOMShuttingDown = PR_TRUE;
     nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
     if(hiddenWin) {
       ClearXPConnectSafeContext();

@@ -81,7 +81,7 @@ protected:
   nsCOMPtr<nsIWindowMediator> mWindowMediator;
   nsCOMPtr<nsPIWindowWatcher> mWindowWatcher;
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
-  PRBool mDeleteCalled;
+  PRBool mXPCOMShuttingDown;
 #ifndef MOZ_XUL_APP
   nsCOMPtr<nsISplashScreen> mSplashScreen;
 #endif
