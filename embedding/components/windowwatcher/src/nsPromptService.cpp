@@ -280,35 +280,39 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   PRInt32 numberButtons = 0;
   for (int i = 0; i < 3; i++) { 
     
-    nsXPIDLString buttonText;
+    nsXPIDLString buttonTextStr;
+    const PRUnichar* buttonText = 0;
     switch (buttonFlags & 0xff) {
       case BUTTON_TITLE_OK:
-        GetLocaleString("OK", getter_Copies(buttonText));
+        GetLocaleString("OK", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_CANCEL:
-        GetLocaleString("Cancel", getter_Copies(buttonText));
+        GetLocaleString("Cancel", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_YES:
-        GetLocaleString("Yes", getter_Copies(buttonText));
+        GetLocaleString("Yes", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_NO:
-        GetLocaleString("No", getter_Copies(buttonText));
+        GetLocaleString("No", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_SAVE:
-        GetLocaleString("Save", getter_Copies(buttonText));
+        GetLocaleString("Save", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_DONT_SAVE:
-        GetLocaleString("DontSave", getter_Copies(buttonText));
+        GetLocaleString("DontSave", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_REVERT:
-        GetLocaleString("Revert", getter_Copies(buttonText));
+        GetLocaleString("Revert", getter_Copies(buttonTextStr));
         break;
       case BUTTON_TITLE_IS_STRING:
-        *getter_Shares(buttonText) = buttonStrings[i];
+        buttonText = buttonStrings[i];
         break;
     }
-    if (buttonText.get()) {
-      block->SetString(buttonIDs[i], buttonText.get());
+    if (!buttonText)
+      buttonText = buttonTextStr.get();
+
+    if (buttonText) {
+      block->SetString(buttonIDs[i], buttonText);
       ++numberButtons;
     }
     buttonFlags >>= 8;

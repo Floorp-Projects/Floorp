@@ -272,7 +272,7 @@ NS_IMETHODIMP nsAbCardDataSource::QueryInterface(REFNSIID iid, void** result)
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbCardDataSource::GetURI(char* *uri)
 {
-  if ((*uri = nsXPIDLCString::Copy("rdf:addresscard")) == nsnull)
+  if ((*uri = nsCRT::strdup("rdf:addresscard")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;

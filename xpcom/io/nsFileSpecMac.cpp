@@ -1297,8 +1297,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 void nsFilePath::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
-  nsXPIDLCString temp; temp = inString;
-	AssignFromPath(*this, temp, PR_FALSE);
+	AssignFromPath(*this, inString, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------

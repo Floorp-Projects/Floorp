@@ -428,7 +428,7 @@ LocalStoreImpl::GetURI(char* *aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    *aURI = nsXPIDLCString::Copy("rdf:localstore");
+    *aURI = nsCRT::strdup("rdf:localstore");
     if (! *aURI)
         return NS_ERROR_OUT_OF_MEMORY;
 

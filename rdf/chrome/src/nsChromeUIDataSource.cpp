@@ -106,7 +106,7 @@ nsChromeUIDataSource::Release()
 NS_IMETHODIMP
 nsChromeUIDataSource::GetURI(char** aURI)
 {
-  *aURI = nsXPIDLCString::Copy("rdf:chrome");
+  *aURI = nsCRT::strdup("rdf:chrome");
 	if (! *aURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

@@ -172,7 +172,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::QueryInterface(REFNSIID iid, void** resul
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbDirectoryDataSource::GetURI(char* *uri)
 {
-  if ((*uri = nsXPIDLCString::Copy("rdf:addressdirectory")) == nsnull)
+  if ((*uri = nsCRT::strdup("rdf:addressdirectory")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;

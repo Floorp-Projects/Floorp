@@ -295,7 +295,7 @@ nsCategoryManager::GetCategoryEntryRaw( const char *aCategoryName,
         nsCStringKey entryKey(aEntryName);
         LeafNode* entry = NS_STATIC_CAST(LeafNode*, category->Get(&entryKey));
         if (entry)
-          status = (*_retval = nsXPIDLCString::Copy(*entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+          status = (*_retval = nsCRT::strdup(*entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
       }
 
     return status;
@@ -349,7 +349,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
           {
               // return the value that we're replacing
             if ( _retval )
-              *_retval = nsXPIDLCString::Copy(*entry);
+              *_retval = nsCRT::strdup(*entry);
           }
         else
           status = NS_ERROR_INVALID_ARG; // ...stops us from putting the value in

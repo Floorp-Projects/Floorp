@@ -95,7 +95,7 @@ nsSubscribeDataSource::Init()
 NS_IMETHODIMP 
 nsSubscribeDataSource::GetURI(char * *aURI)
 {
-  if ((*aURI = nsXPIDLCString::Copy("rdf:subscribe")) == nsnull)
+  if ((*aURI = nsCRT::strdup("rdf:subscribe")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;

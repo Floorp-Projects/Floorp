@@ -56,8 +56,8 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
 {
 
   nsresult rv;
-  nsXPIDLCString uri;
-  aOuter->GetValueConst(getter_Shares(uri));
+  const char* uri;
+  aOuter->GetValueConst(&uri);
 
   nsCOMPtr<nsIURL> url;
   rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,

@@ -304,7 +304,7 @@ LiteralImpl::GetValue(PRUnichar* *value)
     if (! value)
         return NS_ERROR_NULL_POINTER;
 
-    *value = nsXPIDLString::Copy(GetValue());
+    *value = nsCRT::strdup(GetValue());
     return NS_OK;
 }
 
@@ -1288,7 +1288,7 @@ RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
 #ifdef REUSE_LITERAL_VALUE_AS_KEY
         PL_HashTableAdd(mLiterals, value, aLiteral);
 #else
-        const PRUnichar* key = nsXPIDLString::Copy(value);
+        const PRUnichar* key = nsCRT::strdup(value.get());
         if (! key)
             return NS_ERROR_OUT_OF_MEMORY;
 

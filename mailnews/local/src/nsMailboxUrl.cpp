@@ -304,7 +304,7 @@ nsMailboxUrl::GetOriginalSpec(char **aSpec)
 NS_IMETHODIMP
 nsMailboxUrl::SetOriginalSpec(const char *aSpec)
 {
-    m_originalSpec = aSpec;
+    m_originalSpec.Adopt(nsCRT::strdup(aSpec));
     return NS_OK;
 }
 

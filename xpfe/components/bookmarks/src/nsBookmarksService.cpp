@@ -1109,8 +1109,8 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
     if (bookmark)
     {
-        nsXPIDLCString bookmarkURI;
-        bookmark->GetValueConst(getter_Shares(bookmarkURI));
+        const char* bookmarkURI;
+        bookmark->GetValueConst(&bookmarkURI);
 
         bookmarkNode = bookmark;
 
@@ -2081,7 +2081,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             lastModValue = val;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
             contentLengthValue = val;
-        val = 0;
+        val.Adopt(0);
 
 		PRBool		changedFlag = PR_FALSE;
 
@@ -2822,7 +2822,7 @@ nsBookmarksService::GetAnonymousResource(nsIRDFResource** aResult)
 NS_IMETHODIMP
 nsBookmarksService::GetURI(char* *aURI)
 {
-	*aURI = nsXPIDLCString::Copy("rdf:bookmarks");
+	*aURI = nsCRT::strdup("rdf:bookmarks");
 	if (! *aURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

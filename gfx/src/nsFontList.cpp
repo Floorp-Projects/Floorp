@@ -104,9 +104,9 @@ nsFontListEnumerator::Init(const PRUnichar *aLangGroup,
     return rv;
  
   nsXPIDLCString langGroup;
-  langGroup = ToNewUTF8String(nsDependentString(aLangGroup));
+  langGroup.Adopt(ToNewUTF8String(nsDependentString(aLangGroup)));
   nsXPIDLCString fontType;
-  fontType = ToNewUTF8String(nsDependentString(aFontType));
+  fontType.Adopt(ToNewUTF8String(nsDependentString(aFontType)));
   rv = fontEnumerator->EnumerateFonts(langGroup.get(), fontType.get(), 
                                         &mCount, &mFonts);
   return rv;

@@ -436,7 +436,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     // File on disk
 
     // Security Info
-    str = 0;
+    str.Adopt(0);
     nsCOMPtr<nsISupports> securityInfo;
     descriptor->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (securityInfo) {
@@ -452,7 +452,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     buffer.Append("<hr><table>");
 
     // Client ID
-    str = 0;
+    str.Adopt(0);
     descriptor->GetClientID(getter_Copies(str));
     if (str)  APPEND_ROW("Client", str);
 

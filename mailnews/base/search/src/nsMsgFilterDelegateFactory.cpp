@@ -69,8 +69,8 @@ NS_IMETHODIMP nsMsgFilterDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
     // mailbox://userid@server/foldername;filterName=foo
     
 
-    nsXPIDLCString uri;
-    aOuter->GetValueConst(getter_Shares(uri));
+    const char* uri;
+    aOuter->GetValueConst(&uri);
 
     // if it has ';filter' then it's a filter, otherwise we'll assume
     // that it's a folder.

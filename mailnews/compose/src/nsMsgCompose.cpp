@@ -87,6 +87,7 @@
 #include "nsMsgUtils.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
+#include "nsReadableUtils.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -1064,7 +1065,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           GetTopmostMsgWindowCharacterSet(mailCharset);
           if (mailCharset && (* (const PRUnichar *) mailCharset) )
           {
-            charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
+            charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
             charsetOverride = PR_TRUE;
           }
           
@@ -1117,7 +1118,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           GetTopmostMsgWindowCharacterSet(mailCharset);
           if (mailCharset && (* (const PRUnichar *) mailCharset) )
           {
-            charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
+            charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
             charsetOverride = PR_TRUE;
           }
 

@@ -324,7 +324,7 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 NS_IMETHODIMP 
 nsCachedChromeChannel::GetContentType(char * *aContentType)
 {
-    *aContentType = nsXPIDLCString::Copy("mozilla.application/cached-xul");
+    *aContentType = nsCRT::strdup("mozilla.application/cached-xul");
     return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

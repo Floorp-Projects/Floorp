@@ -840,12 +840,12 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
                                pluginHost, "application/x-java-vm", fullURL);
       } else { // traditional plugin
-        nsXPIDLCString mimeType;
+        nsXPIDLCString mimeTypeStr;
         nsAutoString type;
         mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
 
         if (type.Length()) {
-          *getter_Copies(mimeType) = type.ToNewCString();
+          mimeTypeStr.Adopt(ToNewCString(type));
         }
         //stream in the object source if there is one...
         if (NS_CONTENT_ATTR_HAS_VALUE ==
@@ -878,13 +878,14 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
         // if we didn't find the type, but we do have a src, we can
         // determine the mimetype based on the file extension
+        const char* mimeType = mimeTypeStr.get();
         if (!mimeType && src.GetUnicode()) {
           nsXPIDLCString extension;
           PRInt32 offset = src.RFindChar(PRUnichar('.'));
           if (offset != kNotFound) {
             *getter_Copies(extension) = ToNewCString(Substring(src, offset+1, src.Length()));
           }
-          pluginHost->IsPluginEnabledForExtension(extension, *getter_Shares(mimeType));
+          pluginHost->IsPluginEnabledForExtension(extension, mimeType);
         }
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
                                pluginHost, mimeType, fullURL);

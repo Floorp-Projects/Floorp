@@ -159,7 +159,7 @@ nsURLFetcher::DoContent(const char * aContentType,
   {
     rv = InsertConverter(aContentType);
     if (NS_SUCCEEDED(rv))
-      mConverterContentType = aContentType;
+      mConverterContentType.Adopt(nsCRT::strdup(aContentType));
   }
 
   return rv;
@@ -501,7 +501,10 @@ NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, ns
 
   if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
     if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE) != 0)
-      mURLFetcher->mContentType = contentType;
+      {
+        mURLFetcher->mContentType.Adopt(contentType);
+        contentType = 0;
+      }
 
   if (contentType)
     nsCRT::free(contentType);
@@ -509,7 +512,10 @@ NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, ns
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel)
     if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
-      mURLFetcher->mCharset = charset;
+      {
+        mURLFetcher->mCharset.Adopt(charset);
+        charset = 0;
+      }
 
   if (charset)
     nsCRT::free(charset);

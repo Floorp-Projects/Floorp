@@ -179,7 +179,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
   if (mCharSet && !uri.IsASCII()) {
     const PRUnichar *charset;
     mCharSet->GetUnicode(&charset);
-    documentCharset = NS_ConvertUCS2toUTF8(charset).get();
+    documentCharset.Adopt(ToNewUTF8String(nsDependentString(charset)));
     textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -198,7 +198,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      escapedURI = nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path);
+      escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
     }
     aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
 
@@ -216,7 +216,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      escapedURI = nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path);
+      escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
     }
     aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
   }
@@ -244,8 +244,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                  *getter_AddRefs(attrPrefix));
 
     // Filter out any attribute starting with _moz
-    nsXPIDLString sharedName;
-    attrName->GetUnicode(getter_Shares(sharedName));
+    const PRUnichar* sharedName;
+    attrName->GetUnicode(&sharedName);
     if (nsCRT::strncmp(sharedName, 
                        NS_ConvertASCIItoUCS2(kMozStr).get(), 
                        sizeof(kMozStr)-1) == 0) {
@@ -334,8 +334,8 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   AppendToString(kLessThan, aStr);
 
-  nsXPIDLString sharedName;
-  name->GetUnicode(getter_Shares(sharedName));
+  const PRUnichar* sharedName;
+  name->GetUnicode(&sharedName);
   AppendToString(sharedName, -1, aStr);
 
   SerializeAttributes(content, name, aStr);
@@ -376,8 +376,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     mPreLevel--;
   }
 
-  nsXPIDLString sharedName;
-  name->GetUnicode(getter_Shares(sharedName));
+  const PRUnichar* sharedName;
+  name->GetUnicode(&sharedName);
 
   nsCOMPtr<nsIParserService> parserService;
   GetParserService(getter_AddRefs(parserService));

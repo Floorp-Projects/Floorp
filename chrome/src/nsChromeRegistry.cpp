@@ -551,9 +551,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     }
   } 
 
-  finalURL += remaining;
-
-  *aResult = nsXPIDLCString::Copy(finalURL);
+  *aResult = ToNewCString(finalURL + remaining);
 
   return NS_OK;
 }
@@ -1576,7 +1574,7 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
   if (NS_FAILED(rv)) return rv;
 
   // this is not i18n friendly? RDF now use UTF8 internally.
-  *_retval = nsXPIDLString::Copy(NS_ConvertASCIItoUCS2(lc_name).GetUnicode());
+  *_retval = ToNewUnicode(lc_name);
 
   return NS_OK;
 }

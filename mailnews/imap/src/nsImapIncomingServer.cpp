@@ -153,7 +153,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
   if (NS_FAILED(rv)) return rv;
 
   if (!personalNamespace && !publicNamespace && !otherUsersNamespace)
-      personalNamespace = "\"\"";
+      personalNamespace.Adopt(nsCRT::strdup("\"\""));
 
   hostSession->SetNamespaceFromPrefForHost(aKey, personalNamespace,
                                            kPersonalNamespace);

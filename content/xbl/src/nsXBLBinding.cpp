@@ -107,7 +107,7 @@ nsXBLJSClass::nsXBLJSClass(const nsCString& aClassName)
 {
   memset(this, 0, sizeof(nsXBLJSClass));
   next = prev = NS_STATIC_CAST(JSCList*, this);
-  name = nsXPIDLCString::Copy(aClassName);
+  name = ToNewCString(aClassName);
   addProperty = delProperty = setProperty = getProperty = ::JS_PropertyStub;
   enumerate = ::JS_EnumerateStub;
   resolve = ::JS_ResolveStub;
@@ -1616,7 +1616,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
 
         // Change the class name and we're done.
         nsMemory::Free((void*) c->name);
-        c->name = nsXPIDLCString::Copy(aClassName);
+        c->name = ToNewCString(aClassName);
       }
 
       // Add c to our table.

@@ -36,6 +36,7 @@
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "prclist.h"
+#include "nsCRT.h"
 
 class nsHttpHandler;
 class nsHttpConnectionInfo;
@@ -151,10 +152,11 @@ public:
 
         NS_INIT_ISUPPORTS();
 
-        mHost = host;
+        mHost.Adopt(nsCRT::strdup(host));
+        mProxyHost.Adopt(nsCRT::strdup(proxyHost));
+        mProxyType.Adopt(nsCRT::strdup(proxyType));
+
         mPort = port == -1 ? DefaultPort() : port;
-        mProxyHost = proxyHost;
-        mProxyType = proxyType;
     }
     
     virtual ~nsHttpConnectionInfo()

@@ -35,6 +35,7 @@
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 #include "prtime.h"
+#include "nsReadableUtils.h"
 
 // hack: include this to fix opening news attachments.
 #include "nsINntpUrl.h"
@@ -219,7 +220,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       else
       {
         // Convert UTF-8 to UCS2
-        *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerValue).GetUnicode());
+        unicodeHeaderValue.Adopt(ToNewUnicode(nsDependentCString(headerValue)));
 
         if (NS_SUCCEEDED(rv))
           headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
@@ -328,21 +329,14 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     // we emit it...
     nsXPIDLString unicodeHeaderValue;
 
-    rv = NS_OK;
+    rv = NS_ERROR_FAILURE;
     if (mUnicodeConverter)
   	  rv = mUnicodeConverter->DecodeMimeHeader(name,
                                                getter_Copies(unicodeHeaderValue));
-    else {
-      nsAutoString attachmentName; attachmentName.AssignWithConversion(name);
-      *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
-        nsXPIDLString::Copy(attachmentName.GetUnicode());
-    }
 
     if (NS_FAILED(rv))
     {
-      nsAutoString attachmentName; attachmentName.AssignWithConversion(name);
-      *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
-        nsXPIDLString::Copy(attachmentName.GetUnicode());
+      unicodeHeaderValue.Adopt(ToNewUnicode(nsDependentCString(name)));
     }
 
     headerSink->HandleAttachment(contentType, url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);

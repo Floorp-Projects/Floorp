@@ -35,61 +35,18 @@
 
 nsXPIDLString::~nsXPIDLString()
 {
-    if (mBufOwner && mBuf)
+    if (mBuf)
         XPIDL_FREE(mBuf);
-}
-
-
-PRUnichar*
-nsXPIDLString::Copy(const PRUnichar* aString)
-{
-    NS_ASSERTION(aString, "null ptr");
-    if (! aString)
-        return 0;
-
-    PRInt32 len = 0;
-
-    {
-        const PRUnichar* p = aString;
-        while (*p++)
-            len++;
-    }
-
-    PRUnichar* result = XPIDL_STRING_ALLOC(len + 1);
-    if (result) {
-        PRUnichar* q = result;
-        while (*aString) {
-            *q = *aString;
-            q++;
-            aString++;
-        }
-        *q = '\0';
-    }
-    return result;
 }
 
 
 PRUnichar**
 nsXPIDLString::StartAssignmentByValue()
 {
-    if (mBufOwner && mBuf)
+    if (mBuf)
         XPIDL_FREE(mBuf);
-
     mBuf = 0;
-    mBufOwner = PR_TRUE;
     return &mBuf;
-}
-
-
-const PRUnichar**
-nsXPIDLString::StartAssignmentByReference()
-{
-    if (mBufOwner && mBuf)
-        XPIDL_FREE(mBuf);
-
-    mBuf = 0;
-    mBufOwner = PR_FALSE;
-    return (const PRUnichar**) &mBuf;
 }
 
 
@@ -98,66 +55,18 @@ nsXPIDLString::StartAssignmentByReference()
 
 nsXPIDLCString::~nsXPIDLCString()
 {
-    if (mBufOwner && mBuf)
+    if (mBuf)
         XPIDL_FREE(mBuf);
-}
-
-
-nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
-{
-    if (mBufOwner && mBuf)
-        XPIDL_FREE(mBuf);
-	
-    if (aCString) {
-        mBuf = Copy(aCString);
-        mBufOwner = PR_TRUE;
-    }
-    else {
-        mBuf = 0;
-        mBufOwner = PR_FALSE;
-    }
-    
-    return *this;
-}
-
-
-char*
-nsXPIDLCString::Copy(const char* aCString)
-{
-    NS_ASSERTION(aCString, "null ptr");
-    if (! aCString)
-        return 0;
-
-    PRInt32 len = PL_strlen(aCString);
-    char* result = XPIDL_CSTRING_ALLOC(len + 1);
-    if (result)
-        PL_strcpy(result, aCString);
-
-    return result;
 }
 
 
 char**
 nsXPIDLCString::StartAssignmentByValue()
 {
-    if (mBufOwner && mBuf)
+    if (mBuf)
         XPIDL_FREE(mBuf);
-
     mBuf = 0;
-    mBufOwner = PR_TRUE;
     return &mBuf;
-}
-
-
-const char**
-nsXPIDLCString::StartAssignmentByReference()
-{
-    if (mBufOwner && mBuf)
-        XPIDL_FREE(mBuf);
-
-    mBuf = 0;
-    mBufOwner = PR_FALSE;
-    return (const char**) &mBuf;
 }
 
 

@@ -84,7 +84,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::ClearOperation(nsOfflineImapOperationTy
   case kMsgMoved:
   case kAppendTemplate:
   case kAppendDraft:
-    m_moveDestination = "";
+    m_moveDestination.Adopt(nsCRT::strdup(""));
     break;
   case kMsgCopy:
     m_copyDestinations.RemoveCStringAt(0);
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetDestinationFolderURI(char * *aDestin
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetDestinationFolderURI(const char * aDestinationFolderURI)
 {
-  m_moveDestination = aDestinationFolderURI;
+  m_moveDestination.Adopt(nsCRT::strdup(aDestinationFolderURI));
   return m_mdb->SetProperty(m_mdbRow, PROP_MOVE_DEST_FOLDER_URI, aDestinationFolderURI);
 }
 
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetSourceFolderURI(char * *aSourceFolde
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSourceFolderURI)
 {
-  m_sourceFolder = aSourceFolderURI;
+  m_sourceFolder.Adopt(nsCRT::strdup(aSourceFolderURI));
   SetOperation(kMoveResult);
 
   return m_mdb->SetProperty(m_mdbRow, PROP_SRC_FOLDER_URI, aSourceFolderURI);

@@ -153,10 +153,10 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
   PRBool escapeSlashes = (GetHierarchyDelimiter(aImapFolder) != (PRUnichar) '/');
   if (escapeSlashes && (const char *) onlineName)
   {
-    nsXPIDLCString escapedOnlineName;
-    rv = nsImapUrl::EscapeSlashes((const char *) onlineName, getter_Copies(escapedOnlineName));
+    char* escapedOnlineName;
+    rv = nsImapUrl::EscapeSlashes((const char *) onlineName, &escapedOnlineName);
     if (NS_SUCCEEDED(rv))
-      onlineName = (const char *) escapedOnlineName;
+      onlineName.Adopt(escapedOnlineName);
   }
   // need to escape everything else
   *folderName = nsEscape((const char *) onlineName, url_Path);
@@ -1870,7 +1870,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         urlSpec.Append(messageIds);
         urlSpec.Append('>');
         urlSpec.AppendWithConversion(hierarchySeparator);
-        folderName = "";
+        folderName.Adopt(nsCRT::strdup(""));
         GetFolderName(aDstFolder, getter_Copies(folderName));
         urlSpec.Append((const char *) folderName);
 
@@ -2016,7 +2016,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append(hierarchySeparator);
             urlSpec.Append((const char *) folderName);
             urlSpec.Append('>');
-            folderName = "";
+            folderName.Adopt(nsCRT::strdup(""));
             GetFolderName(dstFolder, getter_Copies(folderName));
             if ( folderName && folderName[0])
             {

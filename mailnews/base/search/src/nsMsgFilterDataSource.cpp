@@ -283,10 +283,10 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
 
     // a better way to do this might be to ask the filter
     // what folder it's in. Then we wouldn't need aSource
-    nsXPIDLCString filterListUri;
-    aSource->GetValueConst(getter_Shares(filterListUri));
+    const char* filterListUri;
+    aSource->GetValueConst(&filterListUri);
 
-    nsCAutoString filterUri((const char *)filterListUri);
+    nsCAutoString filterUri(filterListUri);
     filterUri.Append(";filterName=");
 
     // we'll use the length of this base string to truncate the string later

@@ -548,6 +548,6 @@ nsPop3Sink::SetBaseMessageUri(const char *baseMessageUri)
 {
     if (!baseMessageUri)
         return NS_ERROR_NULL_POINTER;
-    m_baseMessageUri = baseMessageUri;
+    m_baseMessageUri.Adopt(nsCRT::strdup(baseMessageUri));
     return NS_OK;
 }

@@ -127,7 +127,7 @@ nsRDFResource::GetValue(char* *aURI)
     if (!aURI)
         return NS_ERROR_NULL_POINTER;
     
-    if ((*aURI = nsXPIDLCString::Copy(mURI)) == nsnull)
+    if ((*aURI = nsCRT::strdup(mURI)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     else
         return NS_OK;

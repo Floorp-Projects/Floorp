@@ -1899,7 +1899,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv)) { 
 	// if we fail to get the pref value, set it to "", which will
 	// later cause us to use the system charset
-	*((char **)getter_Copies(csidPrefValue)) = nsXPIDLCString::Copy("");
+	csidPrefValue.Adopt(nsCRT::strdup(""));
   }
 
   nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);

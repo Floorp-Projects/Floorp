@@ -168,7 +168,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
     if (NS_SUCCEEDED(rv))
     {
         if (nsCRT::strcmp((const char *)scheme, "pop") == 0)
-            scheme = "pop3";
+            scheme.Adopt(nsCRT::strdup("pop3"));
         NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
                         NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;

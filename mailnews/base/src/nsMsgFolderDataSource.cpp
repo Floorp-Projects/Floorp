@@ -294,7 +294,7 @@ nsMsgFolderDataSource::QueryInterface(REFNSIID iid, void** result)
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsMsgFolderDataSource::GetURI(char* *uri)
 {
-  if ((*uri = nsXPIDLCString::Copy("rdf:mailnewsfolders")) == nsnull)
+  if ((*uri = nsCRT::strdup("rdf:mailnewsfolders")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;

@@ -417,7 +417,7 @@ nsFingerChannel::SendRequest(nsITransport* aTransport) {
 
   requestBuffer.Append(CRLF);
 
-  mRequest = requestBuffer.ToNewCString();
+  mRequest.Adopt(ToNewCString(requestBuffer));
 
   rv = NS_NewCharInputStream(getter_AddRefs(result), mRequest);
   if (NS_FAILED(rv)) return rv;

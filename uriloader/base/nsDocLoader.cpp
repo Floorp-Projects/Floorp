@@ -67,7 +67,7 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 #if defined(DEBUG)
 void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
 {
-    *getter_Shares(aStr) = "???";
+    aStr.Adopt(nsCRT::strdup("???"));
 
     if (request) {
         nsXPIDLString name;

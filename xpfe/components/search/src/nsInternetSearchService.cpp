@@ -932,7 +932,7 @@ InternetSearchDataSource::GetURI(char **uri)
 	if (! uri)
 		return NS_ERROR_NULL_POINTER;
 
-	if ((*uri = nsXPIDLCString::Copy("rdf:internetsearch")) == nsnull)
+	if ((*uri = nsCRT::strdup("rdf:internetsearch")) == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
@@ -4504,7 +4504,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             lastModValue = val;
         if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
             contentLengthValue = val;
-        val = 0;
+        val.Adopt(0);
 
 		// should we fetch the entire file?
 		PRBool		updateSearchEngineFile = PR_FALSE;

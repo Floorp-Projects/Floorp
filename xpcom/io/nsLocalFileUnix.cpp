@@ -261,8 +261,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     while (name[len-1] == '/' && len > 1)
         name[--len] = '\0';
 
-    mPath = name;
-    nsMemory::Free(name);
+    mPath.Adopt(name);
 
     InvalidateCache();
     return NS_OK;
@@ -454,10 +453,8 @@ nsLocalFile::AppendRelativePath(const char *fragment)
     while (newPath[len-1] == '/' && len > 1)
         newPath[--len] = '\0';
 
-    // nsXPIDLCString will copy.
-    mPath = newPath;
+    mPath.Adopt(newPath);
     InvalidateCache();
-    nsMemory::Free(newPath);
     return NS_OK;
 }
 
@@ -483,8 +480,7 @@ nsLocalFile::Normalize()
     if (!resolved_path_ptr)
         return NSRESULT_FOR_ERRNO();
 
-    // nsXPIDLCString will copy.
-    mPath = resolved_path;
+    mPath.Adopt(nsCRT::strdup(resolved_path));
     return NS_OK;
 }
 
@@ -535,10 +531,8 @@ nsLocalFile::SetLeafName(const char *aLeafName)
     strcpy(newPath, mPath);
     strcat(newPath, aLeafName);
 
-    // nsXPIDLCString will copy.
-    mPath = newPath;
+    mPath.Adopt(newPath);
     InvalidateCache();
-    nsMemory::Free(newPath);
     return NS_OK;
 }
 
