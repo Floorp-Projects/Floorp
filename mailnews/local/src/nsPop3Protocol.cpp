@@ -421,14 +421,10 @@ nsPop3Protocol::nsPop3Protocol(nsIURL* aURL) : nsMsgLineBuffer(NULL, FALSE)
 
 void nsPop3Protocol::Initialize(nsIURL * aURL)
 {
+	nsresult rv = NS_OK;
 	m_username = nsnull;
     m_password = nsnull;
     m_pop3ConData = nsnull;
-    m_nsIPop3URL = nsnull;
-    m_transport = nsnull;
-    m_outputStream = nsnull;
-    m_outputConsumer = nsnull;
-    m_nsIPop3Sink = nsnull;
     m_isRunning = PR_FALSE;
 
 	m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED |
@@ -444,20 +440,14 @@ void nsPop3Protocol::Initialize(nsIURL * aURL)
 	m_pop3ConData->output_buffer = (char *) PR_MALLOC(OUTPUT_BUFFER_SIZE);
 	PR_ASSERT(m_pop3ConData->output_buffer);
 		
-    m_transport = nsnull;
-    m_outputStream = nsnull;
-    m_outputConsumer = nsnull;
     m_isRunning = PR_FALSE;
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsIPop3URL::GetIID(), (void **)&m_nsIPop3URL);
-		if (NS_SUCCEEDED(rv) && m_nsIPop3URL)
+		m_nsIPop3URL = do_QueryInterface(aURL);
+		if (m_nsIPop3URL)
 		{
 			// extract the file name and create a file transport...
-            nsINetService* pNetService;
-            rv = nsServiceManager::GetService(kNetServiceCID,
-                                              nsINetService::GetIID(),
-                                              (nsISupports**)&pNetService);
+			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
 				const char * hostName = nsnull;
@@ -465,21 +455,19 @@ void nsPop3Protocol::Initialize(nsIURL * aURL)
 
 				m_nsIPop3URL->GetHost(&hostName);
 				m_nsIPop3URL->GetHostPort(&port);
-				rv = pNetService->CreateSocketTransport(&m_transport, port, hostName);
+				rv = pNetService->CreateSocketTransport(getter_AddRefs(m_transport), port, hostName);
 				if (NS_SUCCEEDED(rv) && m_transport)
 				{
-					rv = m_transport->GetOutputStream(&m_outputStream);
+					rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
 					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
 
-					rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+					rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
 					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
 
 					// register self as the consumer for the socket...
 					rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
 					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
 				}
-                
-				(void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 			} // if we got a netlib service
 		} // if we have a runningUrl
 	} // if we got a url...
@@ -501,10 +489,6 @@ nsPop3Protocol::~nsPop3Protocol()
 		}
 #endif 
 
-    NS_IF_RELEASE(m_nsIPop3Sink);
-    // NS_IF_RELEASE(m_transport);  // not sure who should release the transport
-    NS_IF_RELEASE(m_nsIPop3URL);
-
 	FreeMsgInfo();
 	PR_FREEIF(m_pop3ConData->only_uidl);
 	PR_FREEIF(m_pop3ConData->output_buffer);
@@ -520,7 +504,7 @@ nsPop3Protocol::~nsPop3Protocol()
 void
 nsPop3Protocol::SetUsername(const char* name)
 {
-    PR_ASSERT(name);
+    NS_ASSERTION(name, "no name specified!");
     PR_FREEIF(m_username);
 	if (name)
 		m_username = PL_strdup(name);
@@ -529,7 +513,7 @@ nsPop3Protocol::SetUsername(const char* name)
 void
 nsPop3Protocol::SetPassword(const char* passwd)
 {
-    PR_ASSERT(passwd);
+    NS_ASSERTION(passwd, "no password specified!");
     PR_FREEIF(m_password);
 	
 	if (passwd)
@@ -547,79 +531,61 @@ nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
 
     if (aURL)
     {
+		m_nsIPop3URL = do_QueryInterface(aURL);
         rv = aURL->QueryInterface(nsIPop3URL::GetIID(), (void **) &pop3URL);
-        if (NS_SUCCEEDED(rv) && pop3URL)
-        {
-            // replace our old url with the new one...
-            
-            NS_IF_RELEASE(m_nsIPop3URL);
-            
-            m_nsIPop3URL = pop3URL;
-            
-            // okay, now fill in our event sinks...Note that each getter ref counts before
-            // it returns the interface to us...we'll release when we are done
-        }
-        else
-            NS_ASSERTION(0, "Invalid url type passed into Pop3 Protocol Handler");
     }
     else
-        rv = NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
 
-		// Time to figure out the pop3 account name and password, either from the
-		// prefs file or prompt user for them
-		// 
-		// -*-*-*- To Do:
-		// Call SetUsername(accntName);
-		// Call SetPassword(aPassword);
+	// Time to figure out the pop3 account name and password, either from the
+	// prefs file or prompt user for them
+	// 
+	// -*-*-*- To Do:
+	// Call SetUsername(accntName);
+	// Call SetPassword(aPassword);
 		
-		PR_ASSERT(aURL);
-		rv = aURL->GetSpec(&urlSpec);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get the url spect");
+	rv = aURL->GetSpec(&urlSpec);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get the url spect");
 
-		if (PL_strcasestr(urlSpec, "?check"))
-				m_pop3ConData->only_check_for_new_mail = PR_TRUE;
+	if (PL_strcasestr(urlSpec, "?check"))
+		m_pop3ConData->only_check_for_new_mail = PR_TRUE;
     else
         m_pop3ConData->only_check_for_new_mail = PR_FALSE;
 
-		if (PL_strcasestr(urlSpec, "?gurl"))
-				m_pop3ConData->get_url = PR_TRUE;
+	if (PL_strcasestr(urlSpec, "?gurl"))
+		m_pop3ConData->get_url = PR_TRUE;
     else
         m_pop3ConData->get_url = PR_FALSE;
 
-		// Time to set up the message store event sink
-		//
-		// -*-*-*- To Do:
-		// ???
+	// Time to set up the message store event sink
+	//
+	// -*-*-*- To Do:
+	// ???
 
-		if (!m_pop3ConData->only_check_for_new_mail)
-		{
-				// Pick up pref setting regarding leave messages on server, message size
-				// limit, for now do the following
+	if (!m_pop3ConData->only_check_for_new_mail)
+	{
+		// Pick up pref setting regarding leave messages on server, message size
+		// limit, for now do the following
 		
-				m_pop3ConData->leave_on_server = PR_TRUE;
-				m_pop3ConData->size_limit = 50 * 1024;
-		}
+		m_pop3ConData->leave_on_server = PR_TRUE;
+		m_pop3ConData->size_limit = 50 * 1024;
+	}
 
-		// UIDL stuff
-		rv = aURL->GetHost(&host);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get the host from the url");
+	// UIDL stuff
+	rv = aURL->GetHost(&host);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get the host from the url");
 
-    NS_IF_RELEASE(m_nsIPop3Sink);
-    m_nsIPop3URL->GetPop3Sink(&m_nsIPop3Sink);
+    m_nsIPop3URL->GetPop3Sink(getter_AddRefs(m_nsIPop3Sink));
 
-   nsIPop3IncomingServer *popServer=nsnull;
+	nsCOMPtr<nsIPop3IncomingServer> popServer;
     char* mailDirectory = 0;
 
 
-    m_nsIPop3Sink->GetPopServer(&popServer);
+    m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
     popServer->GetRootFolderPath(&mailDirectory);
-    NS_RELEASE(popServer);
 
-    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), 
-                                                  mailDirectory);
-    PR_Free(mailDirectory);
-
-    PR_ASSERT(m_pop3ConData->uidlinfo);
+    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
+    PR_FREEIF(mailDirectory);
 
 	m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
 
@@ -630,7 +596,6 @@ nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
 	{
 		uidl += 6;
 		m_pop3ConData->only_uidl = PL_strdup(uidl);
-		PR_ASSERT(m_pop3ConData->only_uidl);
 	}
 	
 	m_pop3ConData->next_state = POP3_READ_PASSWORD;
@@ -771,15 +736,10 @@ nsPop3Protocol::SendCommand(const char * command)
     rv = m_outputStream->Write(command, PL_strlen(command), &write_count);
     if (NS_SUCCEEDED(rv) && write_count == PL_strlen(command))
     {
-        nsIInputStream *inputStream = NULL;
-        m_outputStream->QueryInterface(nsIInputStream::GetIID(), (void **)
-                                       &inputStream);
+        nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(m_outputStream);
         if (inputStream)
-        {
             m_outputConsumer->OnDataAvailable(m_nsIPop3URL, inputStream,
                                               write_count);
-            NS_RELEASE(inputStream);
-        }
         m_pop3ConData->pause_for_read = PR_TRUE;
         m_pop3ConData->next_state = POP3_WAIT_FOR_RESPONSE;
 
@@ -789,7 +749,7 @@ nsPop3Protocol::SendCommand(const char * command)
     {
         m_pop3ConData->next_state = POP3_ERROR_DONE;
         return rv;
-	  }
+	}
 }
 
 /*
@@ -2910,10 +2870,7 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
               PR_Free(ce->con_data);
               ******************/
             
-            /* release the semaphore which prevents POP3 from creating more
-               connections */ 
-            // net_pop3_block = PR_FALSE;
-            
+			CloseConnection();
             return(-1);
             break;
             
@@ -2932,4 +2889,11 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
     
     return(status);
     
+}
+
+void nsPop3Protocol::CloseConnection()
+{
+	m_transport		 = null_nsCOMPtr();
+    m_outputStream   = null_nsCOMPtr();
+    m_outputConsumer = null_nsCOMPtr();
 }

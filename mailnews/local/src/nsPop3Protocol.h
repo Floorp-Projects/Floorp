@@ -26,6 +26,7 @@
 #include "nsIPop3URL.h"
 #include "nsIPop3Sink.h"
 #include "nsMsgLineBuffer.h"
+#include "nsCOMPtr.h"
 
 #include "rosetta.h"
 #include HG09893
@@ -328,12 +329,15 @@ private:
     char* m_username;
     char* m_password;
     Pop3ConData* m_pop3ConData;
-    nsIPop3URL* m_nsIPop3URL;
-    nsITransport* m_transport;
-    nsIOutputStream* m_outputStream; // from the transport
-    nsIStreamListener* m_outputConsumer; // from the transport
+
+	void CloseConnection();
+    nsCOMPtr<nsIPop3URL> m_nsIPop3URL;
+    nsCOMPtr<nsITransport> m_transport;
+    nsCOMPtr<nsIOutputStream> m_outputStream; // from the transport
+    nsCOMPtr<nsIStreamListener> m_outputConsumer; // from the transport
+    nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
+	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
-    nsIPop3Sink* m_nsIPop3Sink;
     PRBool m_isRunning;
 
     /**********************************************************************
