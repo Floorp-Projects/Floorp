@@ -45,12 +45,10 @@
 //#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
 #define ADD_GLYPH(map, g) SET_REPRESENTABLE(map, g)
 
-#ifdef MOZ_MATHML
 struct nsCharacterMap {
   PRUint8* mData;
   PRInt32  mLength;
 };
-#endif
 
 class nsFontWin
 {
