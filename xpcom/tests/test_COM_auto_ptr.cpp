@@ -148,6 +148,21 @@ CreateIFoo( void** result )
 		return 0;
 	}
 
+NS_RESULT
+CreateIFooVoidPtrRef( void*& result )
+		// a typical factory function (that calls AddRef)
+	{
+		cout << ">>CreateIFooVoidPtrRef() --> ";
+		IFoo* foop = new IFoo;
+		cout << "IFoo@" << STATIC_CAST(void*, foop) << endl;
+
+		foop->AddRef();
+		result = foop;
+
+		cout << "<<CreateIFooVoidPtrRef()" << endl;
+		return 0;
+	}
+
 void
 set_a_IFoo( COM_auto_ptr<IFoo>* result )
 	{
@@ -345,6 +360,11 @@ main()
 			CreateIFoo( (void **)(IFoo **)func_AddRefs(foop) );
 		}
 
+		{
+			cout << endl << "### Test 18: basic parameter behavior, using the short form?" << endl;
+			COM_auto_ptr<IFoo> foop;
+			CreateIFooVoidPtrRef( *(void **)func_AddRefs(foop) );
+		}
 
 		{
 			cout << endl << "### Test 19: reference parameter behavior?" << endl;
