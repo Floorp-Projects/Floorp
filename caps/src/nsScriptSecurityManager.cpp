@@ -952,8 +952,8 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
     JSObject *parent = aObj;
     do {
         JSClass *jsClass = JS_GetClass(aCx, parent);
-        const int privateNsISupports = JSCLASS_HAS_PRIVATE | 
-                                       JSCLASS_PRIVATE_IS_NSISUPPORTS;
+        const uint32 privateNsISupports = JSCLASS_HAS_PRIVATE | 
+                                          JSCLASS_PRIVATE_IS_NSISUPPORTS;
         if (jsClass && (jsClass->flags & (privateNsISupports)) == 
                             privateNsISupports)
         {
