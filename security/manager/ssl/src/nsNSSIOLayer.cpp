@@ -59,6 +59,7 @@
 #include "nsHashSets.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
+#include "nsPSMTracker.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -134,16 +135,6 @@ void MyLogFunction(const char *fmt, ...)
 #endif
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-
-static PRFileDesc*
-nsSSLIOLayerImportFD(PRFileDesc *fd,
-                     nsNSSSocketInfo *infoObject,
-                     const char *host);
-static nsresult
-nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS, 
-                       const char *proxyHost, const char *host, PRInt32 port,
-                       nsNSSSocketInfo *infoObject);
-
 
 nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
@@ -815,8 +806,16 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
       
   }
 
-   rv = displayAlert(formattedString, socketInfo);
-   return rv;
+  {
+    nsPSMUITracker tracker;
+    if (tracker.isUIForbidden()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+      rv = displayAlert(formattedString, socketInfo);
+    }
+  }
+  return rv;
 }
 
 
@@ -824,6 +823,7 @@ static PRStatus PR_CALLBACK
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
 {
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] connecting SSL socket\n", (void*)fd));
   if (!fd || !fd->lower)
     return PR_FAILURE;
   
@@ -914,6 +914,7 @@ nsSSLIOLayerClose(PRFileDesc *fd)
     return PR_FAILURE;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Shutting down socket\n", (void*)fd));
+  nsPSMTracker::decreaseSSLSocketCounter();
 
   PRFileDesc* popped = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
   nsNSSSocketInfo *infoObject = (nsNSSSocketInfo *)popped->secret;
@@ -1270,21 +1271,45 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
      this in future - need to define a proper ui for this situation
   */
   case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-    rv = badCertHandler->ConfirmUnknownIssuer(csi, callBackCert, &addType, &retVal);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+        rv = badCertHandler->ConfirmUnknownIssuer(csi, callBackCert, &addType, &retVal);
+      }
+    }
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url.get(), "could not find valid URL in ssl socket");
-      rv = badCertHandler->ConfirmMismatchDomain(csi, url,
-                                          callBackCert, &retVal);
+      {
+        nsPSMUITracker tracker;
+        if (tracker.isUIForbidden()) {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
+        else {
+        rv = badCertHandler->ConfirmMismatchDomain(csi, url,
+                                            callBackCert, &retVal);
+        }
+      }
       if (NS_SUCCEEDED(rv) && retVal) {
         rv = CERT_AddOKDomainName(peerCert, url);
       }
     }
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
-    rv = badCertHandler->ConfirmCertExpired(csi, callBackCert, & retVal);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+        rv = badCertHandler->ConfirmCertExpired(csi, callBackCert, & retVal);
+      }
+    }
     if (rv == SECSuccess && retVal) {
       // XXX We need an NSS API for this equivalent functionality.
       //     Having to reach inside the cert is evil.
@@ -1295,7 +1320,15 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
     {
       nsXPIDLCString url; url.Adopt(SSL_RevealURL(sslSocket));
       NS_ASSERTION(url, "could not find valid URL in ssl socket");
-      rv = badCertHandler->NotifyCrlNextupdate(csi, url, callBackCert);
+      {
+        nsPSMUITracker tracker;
+        if (tracker.isUIForbidden()) {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
+        else {
+          rv = badCertHandler->NotifyCrlNextupdate(csi, url, callBackCert);
+        }
+      }
       retVal = PR_FALSE;
     }
     break;
@@ -2045,9 +2078,17 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     if (NS_FAILED(rv)) goto loser;
 
-    rv = dialogs->ChooseCertificate(info, cn.get(), org.get(), issuer.get(), 
-      (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
-      CertsToUse, &selectedIndex, &canceled);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+        rv = dialogs->ChooseCertificate(info, cn.get(), org.get(), issuer.get(), 
+          (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
+          CertsToUse, &selectedIndex, &canceled);
+      }
+    }
 
     int i;
     for (i = 0; i < CertsToUse; ++i) {
@@ -2290,6 +2331,8 @@ nsSSLIOLayerAddToSocket(const char* host,
   if (NS_FAILED(rv)) {
     goto loser;
   }
+
+  nsPSMTracker::increaseSSLSocketCounter();
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));

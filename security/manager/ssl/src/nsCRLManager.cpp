@@ -46,6 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
 #include "nsArray.h"
+#include "nsPSMTracker.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -191,18 +192,30 @@ done:
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(temp);
      
-        if(prompter)
-          prompter->Alert(0, message.get());
+        if(prompter) {
+          nsPSMUITracker tracker;
+          if (!tracker.isUIForbidden()) {
+            prompter->Alert(0, message.get());
+          }
+        }
       }
     } else {
       nsCOMPtr<nsICertificateDialogs> certDialogs;
       // Not being able to display the success dialog should not
       // be a fatal error, so don't return a failure code.
-      if (NS_SUCCEEDED(::getNSSDialogs(getter_AddRefs(certDialogs),
-				       NS_GET_IID(nsICertificateDialogs),
-               NS_CERTIFICATEDIALOGS_CONTRACTID))) {
-	nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-	certDialogs->CrlImportStatusDialog(cxt, crlData);
+      {
+        nsPSMUITracker tracker;
+        if (tracker.isUIForbidden()) {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
+        else {
+          rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
+            NS_GET_IID(nsICertificateDialogs), NS_CERTIFICATEDIALOGS_CONTRACTID);
+        }
+      }
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+        certDialogs->CrlImportStatusDialog(cxt, crlData);
       }
     }
   } else {

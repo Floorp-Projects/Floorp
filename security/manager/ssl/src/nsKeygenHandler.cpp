@@ -45,6 +45,7 @@ extern "C" {
 #include "nsCRT.h"
 #include "nsITokenDialogs.h"
 #include "nsIGenKeypairInfoDlg.h"
+#include "nsPSMTracker.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -316,7 +317,15 @@ GetSlotWithMechanism(PRUint32 aMechanism,
 
 		if (NS_FAILED(rv)) goto loser;
 
-		rv = dialogs->ChooseToken(nsnull, (const PRUnichar**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+    		rv = dialogs->ChooseToken(nsnull, (const PRUnichar**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
+      }
+    }
 		NS_RELEASE(dialogs);
 		if (NS_FAILED(rv)) goto loser;
 
@@ -480,11 +489,18 @@ found_match:
         runnable = do_QueryInterface(KeygenRunnable);
         
         if (runnable) {
-            rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
-
-            // We call join on the thread, 
-            // so we can be sure that no simultaneous access to the passed parameters will happen.
-            KeygenRunnable->Join();
+            {
+              nsPSMUITracker tracker;
+              if (tracker.isUIForbidden()) {
+                rv = NS_ERROR_NOT_AVAILABLE;
+              }
+              else {
+                rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
+                // We call join on the thread, 
+                // so we can be sure that no simultaneous access to the passed parameters will happen.
+                KeygenRunnable->Join();
+              }
+            }
 
             NS_RELEASE(dialogs);
             if (NS_SUCCEEDED(rv)) {
@@ -549,7 +565,6 @@ loser:
     if ( sec_rv != SECSuccess ) {
         if ( privateKey ) {
             PK11_DestroyTokenObject(privateKey->pkcs11Slot,privateKey->pkcs11ID);
-            SECKEY_DestroyPrivateKey(privateKey);
         }
         if ( publicKey ) {
             PK11_DestroyTokenObject(publicKey->pkcs11Slot,publicKey->pkcs11ID);
@@ -560,6 +575,9 @@ loser:
     }
     if ( publicKey ) {
         SECKEY_DestroyPublicKey(publicKey);
+    }
+    if ( privateKey ) {
+        SECKEY_DestroyPrivateKey(privateKey);
     }
     if ( arena ) {
       PORT_FreeArena(arena, PR_TRUE);

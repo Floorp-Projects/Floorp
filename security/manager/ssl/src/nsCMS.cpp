@@ -49,6 +49,9 @@
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
+#include "nsNSSCleaner.h"
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHash, nsIHash)
 
 nsHash::nsHash() : m_ctxt(nsnull)
@@ -61,6 +64,7 @@ nsHash::~nsHash()
 {
   if (m_ctxt) {
     HASH_Destroy(m_ctxt);
+    m_ctxt = nsnull;
   }
 }
 
@@ -333,14 +337,96 @@ loser:
   return rv;
 }
 
+class nsZeroTerminatedCertArray
+{
+public:
+  nsZeroTerminatedCertArray()
+  :mCerts(nsnull), mPoolp(nsnull), mSize(0)
+  {
+  }
+  
+  ~nsZeroTerminatedCertArray()
+  {
+    if (mCerts)
+    {
+      for (PRUint32 i=0; i < mSize; i++) {
+        if (mCerts[i]) {
+          CERT_DestroyCertificate(mCerts[i]);
+        }
+      }
+    }
+
+    if (mPoolp)
+      PORT_FreeArena(mPoolp, PR_FALSE);
+  }
+
+  PRBool allocate(PRUint32 count)
+  {
+    // only allow allocation once
+    if (mPoolp)
+      return PR_FALSE;
+  
+    mSize = count;
+
+    if (!mSize)
+      return PR_FALSE;
+  
+    mPoolp = PORT_NewArena(1024);
+    if (!mPoolp)
+      return PR_FALSE;
+
+    mCerts = (CERTCertificate**)PORT_ArenaZAlloc(
+      mPoolp, (count+1)*sizeof(CERTCertificate*));
+
+    if (!mCerts)
+      return PR_FALSE;
+
+    // null array, including zero termination
+    for (PRUint32 i = 0; i < count+1; i++) {
+      mCerts[i] = nsnull;
+    }
+
+    return PR_TRUE;
+  }
+  
+  void set(PRUint32 i, CERTCertificate *c)
+  {
+    if (i >= mSize)
+      return;
+    
+    if (mCerts[i]) {
+      CERT_DestroyCertificate(mCerts[i]);
+    }
+    
+    mCerts[i] = CERT_DupCertificate(c);
+  }
+  
+  CERTCertificate *get(PRUint32 i)
+  {
+    if (i >= mSize)
+      return nsnull;
+    
+    return CERT_DupCertificate(mCerts[i]);
+  }
+
+  CERTCertificate **getRawArray()
+  {
+    return mCerts;
+  }
+
+private:
+  CERTCertificate **mCerts;
+  PLArenaPool *mPoolp;
+  PRUint32 mSize;
+};
+
 NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted\n"));
   NSSCMSContentInfo *cinfo;
   NSSCMSEnvelopedData *envd;
   NSSCMSRecipientInfo *recipientInfo;
-  CERTCertificate **recipientCerts;
-  PLArenaPool *tmpPoolp = nsnull;
+  nsZeroTerminatedCertArray recipientCerts;
   SECOidTag bulkAlgTag;
   int keySize;
   PRUint32 i;
@@ -352,13 +438,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
   aRecipientCerts->GetLength(&recipientCertCount);
   PR_ASSERT(recipientCertCount > 0);
 
-  if ((tmpPoolp = PORT_NewArena(1024)) == nsnull) {
-    goto loser;
-  }
-
-  if ((recipientCerts = (CERTCertificate**)PORT_ArenaZAlloc(tmpPoolp,
-                                           (recipientCertCount+1)*sizeof(CERTCertificate*)))
-                                           == nsnull) {
+  if (!recipientCerts.allocate(recipientCertCount)) {
     goto loser;
   }
 
@@ -372,12 +452,11 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     if (!nssRecipientCert)
       return NS_ERROR_FAILURE;
 
-    recipientCerts[i] = nssRecipientCert->GetCert();
+    recipientCerts.set(i, nssRecipientCert->GetCert());
   }
-  recipientCerts[i] = nsnull;
-
+  
   // Find a bulk key algorithm //
-  if (NSS_SMIMEUtil_FindBulkAlgForRecipients(recipientCerts, &bulkAlgTag,
+  if (NSS_SMIMEUtil_FindBulkAlgForRecipients(recipientCerts.getRawArray(), &bulkAlgTag,
                                             &keySize) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't find bulk alg for recipients\n"));
     rv = NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG;
@@ -409,8 +488,10 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
   }
 
   // Create and attach recipient information //
-  for (i=0; recipientCerts[i] != nsnull; i++) {
-    if ((recipientInfo = NSS_CMSRecipientInfo_Create(m_cmsMsg, recipientCerts[i])) == nsnull) {
+  for (i=0; i < recipientCertCount; i++) {
+    CERTCertificate *rc = recipientCerts.get(i);
+    CERTCertificateCleaner rcCleaner(rc);
+    if ((recipientInfo = NSS_CMSRecipientInfo_Create(m_cmsMsg, rc)) == nsnull) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create recipient info\n"));
       goto loser;
     }
@@ -420,18 +501,11 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     }
   }
 
-  if (tmpPoolp) {
-    PORT_FreeArena(tmpPoolp, PR_FALSE);
-  }
-
   return NS_OK;
 loser:
   if (m_cmsMsg) {
     NSS_CMSMessage_Destroy(m_cmsMsg);
     m_cmsMsg = nsnull;
-  }
-  if (tmpPoolp) {
-    PORT_FreeArena(tmpPoolp, PR_FALSE);
   }
 
   return rv;
@@ -455,6 +529,9 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   if (aEncryptCert) {
     ecert = NS_STATIC_CAST(nsNSSCertificate*, aEncryptCert)->GetCert();
   }
+
+  CERTCertificateCleaner ecertCleaner(ecert);
+  CERTCertificateCleaner scertCleaner(scert);
 
   /*
    * create the message object
@@ -574,6 +651,10 @@ nsCMSDecoder::nsCMSDecoder()
 
 nsCMSDecoder::~nsCMSDecoder()
 {
+  if (m_dcx) {
+    NSS_CMSDecoder_Cancel(m_dcx);
+    m_dcx = nsnull;
+  }
 }
 
 /* void start (in NSSCMSContentCallback cb, in voidPtr arg); */
@@ -604,6 +685,7 @@ NS_IMETHODIMP nsCMSDecoder::Finish(nsICMSMessage ** aCMSMsg)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSDecoder::Finish\n"));
   NSSCMSMessage *cmsMsg;
   cmsMsg = NSS_CMSDecoder_Finish(m_dcx);
+  m_dcx = nsnull;
   if (cmsMsg) {
     nsCMSMessage *obj = new nsCMSMessage(cmsMsg);
     // The NSS object cmsMsg still carries a reference to the context
@@ -625,6 +707,8 @@ nsCMSEncoder::nsCMSEncoder()
 
 nsCMSEncoder::~nsCMSEncoder()
 {
+  if (m_ecx)
+    NSS_CMSEncoder_Cancel(m_ecx);
 }
 
 /* void start (); */
@@ -656,12 +740,14 @@ NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
 /* void finish (); */
 NS_IMETHODIMP nsCMSEncoder::Finish()
 {
+  nsresult rv = NS_OK;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Finish\n"));
   if (!m_ecx || NSS_CMSEncoder_Finish(m_ecx) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Finish - can't finish encoder\n"));
-    return NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
   }
-  return NS_OK;
+  m_ecx = nsnull;
+  return rv;
 }
 
 /* void encode (in nsICMSMessage aMsg); */

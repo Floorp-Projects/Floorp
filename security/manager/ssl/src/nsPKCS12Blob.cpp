@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.32 2002/11/14 00:49:56 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.33 2003/01/06 22:23:48 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -58,6 +58,7 @@
 #include "nsKeygenHandler.h" //For GetSlotWithMechanism
 #include "nsPK11TokenDB.h"
 #include "nsICertificateDialogs.h"
+#include "nsPSMTracker.h"
 
 #include "pk11func.h"
 #include "secerr.h"
@@ -65,6 +66,9 @@
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
+
+#include "nsNSSCleaner.h"
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -107,6 +111,7 @@ nsPKCS12Blob::SetToken(nsIPK11Token *token)
       mToken = 0;  
    } else {
      mToken = new nsPK11Token(slot);
+     PK11_FreeSlot(slot);
    }
  }
  mTokenSet = PR_TRUE;
@@ -220,6 +225,8 @@ finish:
   } else if (NS_FAILED(rv)) { 
     handleError(PIP_PKCS12_RESTORE_FAILED);
   }
+  if (slot)
+    PK11_FreeSlot(slot);
   // finish the decoder
   if (dcx)
     SEC_PKCS12DecoderFinish(dcx);
@@ -254,13 +261,13 @@ nsPKCS12Blob::LoadCerts(const PRUnichar **certNames, int numCerts)
       else continue; /* user may request to keep going */
     }
     nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(nssCert);
+    CERT_DestroyCertificate(nssCert);
     if (!cert) {
       if (!handleError())
         return NS_ERROR_OUT_OF_MEMORY;
     } else {
       mCertArray->AppendElement(cert);
     }
-    CERT_DestroyCertificate(nssCert);
   }
   return NS_OK;
 }
@@ -330,6 +337,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
     CERTCertificate *nssCert = NULL;
+    CERTCertificateCleaner nssCertCleaner(nssCert);
     nssCert = cert->GetCert();
     if (!nssCert) {
       rv = NS_ERROR_FAILURE;
@@ -341,8 +349,6 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     // shape or form) from the card.  So let's punt if 
     // the cert is not in the internal db.
     if (nssCert->slot && !PK11_IsInternal(nssCert->slot)) {
-      CERT_DestroyCertificate(nssCert);
-
       if (!InformedUserNoSmartcardBackup) {
         InformedUserNoSmartcardBackup = PR_TRUE;
         handleError(PIP_PKCS12_NOSMARTCARD_EXPORT);
@@ -371,7 +377,6 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
                       SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
     if (srv) goto finish;
     // cert was dup'ed, so release it
-    CERT_DestroyCertificate(nssCert);
     ++numCertsExported;
   }
   
@@ -456,7 +461,15 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   PRBool pressedOK;
-  rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
+  {
+    nsPSMUITracker tracker;
+    if (tracker.isUIForbidden()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+      rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
+    }
+  }
   if (NS_FAILED(rv) || !pressedOK) return rv;
   unicodeToItem(password.get(), unicodePw);
   return NS_OK;
@@ -477,7 +490,15 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   PRBool pressedOK;
-  rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
+  {
+    nsPSMUITracker tracker;
+    if (tracker.isUIForbidden()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+      rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
+    }
+  }
   if (NS_FAILED(rv) || !pressedOK) return rv;
   unicodeToItem(password.get(), unicodePw);
   return NS_OK;
@@ -713,6 +734,11 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 PRBool
 nsPKCS12Blob::handleError(int myerr)
 {
+  nsPSMUITracker tracker;
+  if (tracker.isUIForbidden()) {
+    return PR_FALSE;
+  }
+
   nsresult rv;
   PRBool keepGoing = PR_FALSE;
   int prerr = PORT_GetError();

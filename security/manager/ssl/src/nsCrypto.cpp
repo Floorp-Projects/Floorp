@@ -21,6 +21,7 @@
  *  Javier Delgadillo <javi@netscape.com>
  */
 #include "nsNSSComponent.h"
+#include "nsPSMTracker.h"
 #include "nsCrypto.h"
 #include "nsKeygenHandler.h"
 #include "nsKeygenThread.h"
@@ -660,11 +661,18 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
     runnable = do_QueryInterface(KeygenRunnable);
 
     if (runnable) {
-      rv = dialogs->DisplayGeneratingKeypairInfo(uiCxt, runnable);
-
-      // We call join on the thread, 
-      // so we can be sure that no simultaneous access to the passed parameters will happen.
-      KeygenRunnable->Join();
+      {
+        nsPSMUITracker tracker;
+        if (tracker.isUIForbidden()) {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
+        else {
+          rv = dialogs->DisplayGeneratingKeypairInfo(uiCxt, runnable);
+          // We call join on the thread, 
+          // so we can be sure that no simultaneous access to the passed parameters will happen.
+          KeygenRunnable->Join();
+        }
+      }
 
       NS_RELEASE(dialogs);
       if (NS_SUCCEEDED(rv)) {
@@ -1480,7 +1488,15 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
       return rv;
 
     PRBool okay=PR_FALSE;
-    dialogs->ConfirmKeyEscrow(nssCert, &okay);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        okay = PR_FALSE;
+      }
+      else {
+        dialogs->ConfirmKeyEscrow(nssCert, &okay);
+      }
+    }
     if (!okay)
       return NS_OK;
     willEscrow = PR_TRUE;
@@ -1632,7 +1648,10 @@ alertUser(const PRUnichar *message)
   wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
   if (prompter) {
-    prompter->Alert(0, message);
+    nsPSMUITracker tracker;
+    if (!tracker.isUIForbidden()) {
+      prompter->Alert(0, message);
+    }
   }
 }
 
@@ -1641,15 +1660,10 @@ NS_IMETHODIMP
 nsP12Runnable::Run()
 {
   NS_ASSERTION(mCertArr, "certArr is NULL while trying to back up");
-  nsCOMPtr<nsIDOMCryptoDialogs> dialogs;
-  nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
-                              NS_GET_IID(nsIDOMCryptoDialogs),
-                              NS_DOMCRYPTODIALOGS_CONTRACTID);
-  if (NS_FAILED(rv))
-    return rv;
 
   nsString final;
   nsString temp;
+  nsresult rv;
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv))
@@ -2094,7 +2108,10 @@ confirm_user(const PRUnichar *message)
     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
   if (prompter) {
-    prompter->Confirm(0, message, &confirmation);
+    nsPSMUITracker tracker;
+    if (!tracker.isUIForbidden()) {
+      prompter->Confirm(0, message, &confirmation);
+    }
   }
 
   return confirmation;

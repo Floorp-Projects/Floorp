@@ -70,6 +70,7 @@
 #include "nsILocalFile.h"
 #include "nsITokenPasswordDialogs.h"
 #include "nsICRLManager.h"
+#include "nsPSMTracker.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -226,6 +227,7 @@ nsNSSComponent::nsNSSComponent()
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
   hashTableCerts = nsnull;
+  mPSMTracker = nsPSMTracker::construct();
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -254,6 +256,7 @@ nsNSSComponent::~nsNSSComponent()
   ShutdownNSS();
   nsSSLIOLayerFreeTLSIntolerantSites();
   --mInstanceCount;
+  delete mPSMTracker;
 
   if (mutex) {
     PR_DestroyLock(mutex);
@@ -901,8 +904,6 @@ nsNSSComponent::InitializeNSS()
       return NS_ERROR_FAILURE;
     }
     
-    mNSSInitialized = PR_TRUE;
-
     hashTableCerts = PL_NewHashTable( 0, certHashtable_keyHash, certHashtable_keyCompare, 
       certHashtable_valueCompare, 0, 0 );
 
@@ -970,6 +971,9 @@ nsNSSComponent::InitializeNSS()
     // init phase 3, only if phase 2 was successful
 
     if (problem_no_security_at_all != which_nss_problem) {
+
+      mNSSInitialized = PR_TRUE;
+
       ::NSS_SetDomesticPolicy();
       //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
 
@@ -1020,39 +1024,7 @@ nsNSSComponent::InitializeNSS()
 
     // We might want to use different messages, depending on what failed.
     // For now, let's use the same message.
-    nsresult rv = GetPIPNSSBundleString(NS_LITERAL_STRING("NSSInitProblem").get(), message);
-
-    if (NS_SUCCEEDED(rv)) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get error string\n"));
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-      if (!wwatch) {
-        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window watcher\n"));
-      }
-      else {
-        nsCOMPtr<nsIPrompt> prompter;
-        wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        if (!prompter) {
-          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window prompter\n"));
-        }
-        else {
-          nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-          if (!proxyman) {
-            PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy manager\n"));
-          }
-          else {
-            nsCOMPtr<nsIPrompt> proxyPrompt;
-            proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
-                                        prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
-            if (!proxyPrompt) {
-              PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy for nsIPrompt\n"));
-            }
-            else {
-              proxyPrompt->Alert(nsnull, message.get());
-            }
-          }
-        }
-      }
-    }
+    ShowAlert(ai_nss_init_problem);
   }
 
   return NS_OK;
@@ -1087,13 +1059,18 @@ nsNSSComponent::ShutdownNSS()
     SSL_ClearSessionCache();
 #if 0
     // temporarily disable this call until bug 181230 gets fixed
-    ::NSS_Shutdown();
+    if (SECSuccess != ::NSS_Shutdown()) {
+      PR_LOG(gPIPNSSLog, PR_LOG_ALWAYS, ("NSS SHUTDOWN FAILURE\n"));
+    }
+    else {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS shutdown =====>> OK <<=====\n"));
+    }
 #endif
   }
 
   return NS_OK;
 }
- 
+
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
@@ -1364,10 +1341,12 @@ nsNSSComponent::PrefChanged(const char* prefName)
 #define PROFILE_CHANGE_NET_RESTORE_TOPIC NS_LITERAL_CSTRING("profile-change-net-restore").get()
 #endif
 
+#define PROFILE_APPROVE_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-approve-change").get()
+#define PROFILE_CHANGE_TEARDOWN_TOPIC NS_LITERAL_CSTRING("profile-change-teardown").get()
+#define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC NS_LITERAL_CSTRING("profile-change-teardown-veto").get()
 #define PROFILE_BEFORE_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-before-change").get()
 #define PROFILE_AFTER_CHANGE_TOPIC NS_LITERAL_CSTRING("profile-after-change").get()
 #define SESSION_LOGOUT_TOPIC NS_LITERAL_CSTRING("session-logout").get()
-
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
@@ -1377,7 +1356,41 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   static PRBool isNetworkDown = PR_FALSE;
 #endif
 
-  if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+  if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0) {
+    if (mPSMTracker->isUIActive()) {
+      ShowAlert(ai_crypto_ui_active);
+      nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+      if (status) {
+        status->VetoChange();
+      }
+    }
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("in PSM code, receiving change-teardown\n"));
+
+    PRBool callVeto = PR_FALSE;
+    
+    if (!mPSMTracker->ifPossibleDisallowUI()) {
+      callVeto = PR_TRUE;
+      ShowAlert(ai_crypto_ui_active);
+    }
+    else if (mPSMTracker->areSSLSocketsActive()) {
+      callVeto = PR_TRUE;
+      ShowAlert(ai_sockets_still_active);
+    }
+
+    if (callVeto) {
+      nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
+      if (status) {
+        status->VetoChange();
+      }
+    }
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC) == 0) {
+    mPSMTracker->allowUI();
+  }
+  else if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving profile change topic\n"));
 #ifdef DEBUG
     NS_ASSERTION(isNetworkDown, "nsNSSComponent relies on profile manager to wait for synchronous shutdown of all network activity");
 #endif
@@ -1400,6 +1413,8 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     if (needsCleanup) {
       ShutdownNSS();
     }
+    
+    mPSMTracker->allowUI();
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
   
@@ -1457,14 +1472,71 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
 
 #ifdef DEBUG
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network teardown topic\n"));
     isNetworkDown = PR_TRUE;
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_RESTORE_TOPIC) == 0) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network restore topic\n"));
     isNetworkDown = PR_FALSE;
   }
 #endif
 
   return NS_OK;
+}
+
+void nsNSSComponent::ShowAlert(AlertIdentifier ai)
+{
+  nsString message;
+  nsresult rv;
+
+  switch (ai) {
+    case ai_nss_init_problem:
+      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("NSSInitProblem").get(), message);
+      break;
+    case ai_sockets_still_active:
+      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ProfileSwitchSocketsStillActive").get(), message);
+      break;
+    case ai_crypto_ui_active:
+      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ProfileSwitchCryptoUIActive").get(), message);
+      break;
+    case ai_incomplete_logout:
+      rv = GetPIPNSSBundleString(NS_LITERAL_STRING("LogoutIncompleteUIActive").get(), message);
+      break;
+    default:
+      return;
+  }
+  
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  if (!wwatch) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window watcher\n"));
+  }
+  else {
+    nsCOMPtr<nsIPrompt> prompter;
+    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+    if (!prompter) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window prompter\n"));
+    }
+    else {
+      nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+      if (!proxyman) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy manager\n"));
+      }
+      else {
+        nsCOMPtr<nsIPrompt> proxyPrompt;
+        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
+                                    prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
+        if (!proxyPrompt) {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy for nsIPrompt\n"));
+        }
+        else {
+          proxyPrompt->Alert(nsnull, message.get());
+        }
+      }
+    }
+  }
 }
 
 nsresult
@@ -1487,6 +1559,9 @@ nsNSSComponent::RegisterObservers()
 
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 
+    observerService->AddObserver(this, PROFILE_APPROVE_CHANGE_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC, PR_FALSE);
+    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, SESSION_LOGOUT_TOPIC, PR_FALSE);
@@ -1617,9 +1692,17 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
 
     if (NS_FAILED(rv)) goto loser;
 
-    rv = dialogs->SetPassword(ctx,
-                              tokenName.get(),
-                              &canceled);
+    {
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+        rv = dialogs->SetPassword(ctx,
+                                  tokenName.get(),
+                                  &canceled);
+      }
+    }
     NS_RELEASE(dialogs);
     if (NS_FAILED(rv)) goto loser;
 
@@ -1823,8 +1906,12 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(tmpMessage);
 
-        if(prompter)
-          prompter->Alert(0, message.get());
+        if(prompter) {
+          nsPSMUITracker tracker;
+          if (!tracker.isUIForbidden()) {
+            prompter->Alert(0, message.get());
+          }
+        }
       }
     }
     break;

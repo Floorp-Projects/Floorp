@@ -45,6 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsNSSCleaner.h"
 #include "nsICertPickDialogs.h"
+#include "nsPSMTracker.h"
 
 NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
 NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
@@ -173,10 +174,16 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
       NS_CERTPICKDIALOGS_CONTRACTID);
 
     if (NS_SUCCEEDED(rv)) {
-      /* Throw up the cert picker dialog and get back the index of the selected cert */
-      rv = dialogs->PickCertificate(ctx,
-        (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
-        CertsToUse, &selectedIndex, canceled);
+      nsPSMUITracker tracker;
+      if (tracker.isUIForbidden()) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      }
+      else {
+        /* Throw up the cert picker dialog and get back the index of the selected cert */
+        rv = dialogs->PickCertificate(ctx,
+          (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
+          CertsToUse, &selectedIndex, canceled);
+      }
 
       NS_RELEASE(dialogs);
     }
