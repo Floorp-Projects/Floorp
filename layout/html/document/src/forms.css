@@ -72,6 +72,10 @@ label {
 }
 
 /* default inputs, text inputs, and selects */
+
+/* Note: Values in nsNativeTheme IsWidgetStyled function 
+   need to match textfield background/border values here */
+
 input {
   -moz-appearance: textfield;
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
@@ -254,6 +258,7 @@ optgroup[disabled] {
 
 /* hidden inputs */
 input[type="hidden"] {
+  -moz-appearance: none;
   display: none;
   padding: 0;
   border: 0;
@@ -264,6 +269,7 @@ input[type="hidden"] {
 
 /* image buttons */
 input[type="image"] {
+  -moz-appearance: none;
   padding: 0;
   border: none;
   background-color: transparent;
@@ -378,6 +384,10 @@ input[type="radio"]:hover:active {
 }
 
 /* buttons */
+
+/* Note: Values in nsNativeTheme IsWidgetStyled function 
+   need to match button background/border values here */
+
 button, 
 input[type="reset"],
 input[type="button"],
