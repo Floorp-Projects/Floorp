@@ -1,7 +1,10 @@
 /* Copyright Owen Taylor, 1998
- *
+ * 
  * This file may be distributed under either the terms of the
  * Netscape Public License, or the GNU Library General Public License
+ *
+ * Note: No GTK+ or Mozilla code should be added to this file.
+ * The coding style should be that of the the GTK core.
  */
 
 #ifndef __GTK_LAYOUT_H
@@ -10,10 +13,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkcontainer.h>
 #include <gtk/gtkadjustment.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
 
 /*
@@ -47,9 +46,10 @@ extern "C" {
 #define gtk_layout_set_hadjustment moz_gtk_layout_set_hadjustment
 #define gtk_layout_set_vadjustment moz_gtk_layout_set_vadjustment
 
-#define GtkLayout MozGtkLayout
-#define GtkLayoutClass MozGtkLayoutClass
-#define GtkLayoutChild MozGtkLayoutChild
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #define GTK_LAYOUT(obj)          GTK_CHECK_CAST (obj, gtk_layout_get_type (), GtkLayout)
 #define GTK_LAYOUT_CLASS(klass)  GTK_CHECK_CLASS_CAST (klass, gtk_layout_get_type (), GtkLayoutClass)
@@ -64,7 +64,6 @@ struct _GtkLayoutChild {
   GdkWindow *window;	/* For NO_WINDOW widgets */
   gint x;
   gint y;
-  gboolean mapped : 1;
 };
 
 struct _GtkLayout {
@@ -93,10 +92,6 @@ struct _GtkLayout {
 
 struct _GtkLayoutClass {
   GtkContainerClass parent_class;
-
-  void  (*scroll_adjustments)   (GtkLayout	*text,
-				 GtkAdjustment  *hadjustment,
-				 GtkAdjustment  *vadjustment);
 };
 
 GtkWidget*     gtk_layout_new             (GtkAdjustment *hadjustment,
