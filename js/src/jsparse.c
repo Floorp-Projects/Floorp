@@ -1684,13 +1684,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
 
         /* Deprecate after parsing, in case of WERROR option. */
-        if (JS_HAS_STRICT_OPTION(cx)) {
-            if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                             JSREPORT_WARNING | JSREPORT_STRICT,
-                                             JSMSG_DEPRECATED_USAGE,
-                                             js_with_statement_str)) {
-                return NULL;
-            }
+        if (JS_HAS_STRICT_OPTION(cx) &&
+            !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
+                                         JSMSG_DEPRECATED_USAGE,
+                                         js_with_statement_str)) {
+            return NULL;
         }
 
         pn->pn_pos.end = pn2->pn_pos.end;
@@ -2618,8 +2617,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2->pn_op = JSOP_CALL;
             if (pn->pn_op == JSOP_NAME &&
                 pn->pn_atom == cx->runtime->atomState.evalAtom) {
-                if (JSVERSION_IS_ECMA(cx->version))
-                    pn2->pn_op = JSOP_EVAL;
+                pn2->pn_op = JSOP_EVAL;
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
             }
 
