@@ -61,25 +61,10 @@
 
     function SwitchPacks()
     {
+      var shouldRemoveFaslFile = false;
       //Switch the Content pack if necessary
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
-      var newContentPack;
-      var selectedItem;
-      var shouldRemoveFaslFile;
-
-      try {
-        var listbox = document.getElementById("contentPackList");
-        if (listbox) {
-          selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
-          if (selectedItem) {
-             newContentPack = selectedItem.getAttribute("value");
-          }
-        } else {
-          newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackList" ).prefvalue;
-        }
-      }
-      catch (e) {}
-      
+      var newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackList" ).prefvalue;
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
@@ -92,20 +77,7 @@
 
       //Switch the Language pack if necessary
       var oldLanguagePack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
-      var newLanguagePack;
-
-      try {
-        var languageList = document.getElementById("languagePackList");
-        if (languageList) {
-          selectedItem = languageList.selectedItems.length ? languageList.selectedItems[0] : null;
-          if (selectedItem) {
-             newLanguagePack = selectedItem.getAttribute("value");
-          }
-        } else {
-          newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "languagePackList" ).prefvalue;
-        }
-      }
-      catch (e) {}
+      var newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "languagePackList" ).prefvalue;
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
