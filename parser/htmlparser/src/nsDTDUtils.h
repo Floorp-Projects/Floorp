@@ -43,6 +43,7 @@
 #include "nsIElementObserver.h"
 #include "nsIParserNode.h"
 #include "nsFixedSizeAllocator.h"
+#include "nsVoidArray.h"
 
 #define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
 #define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr
@@ -483,8 +484,6 @@ public:
   nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser);
 
   nsString  mTopic;
-  nsDeque   mKeys;
-  nsDeque   mValues;
   nsString  mCharsetKey;
   nsString  mSourceKey;
   nsString  mDTDKey;
@@ -518,39 +517,7 @@ protected:
   nsDeque   mTopics;  //each topic holds a list of observers per tag.
 };
 
-/************************************************************** 
-  Define the a functor used to notify observers... 
- **************************************************************/ 
-class nsObserverNotifier: public nsDequeFunctor{ 
-public: 
-  nsObserverNotifier(const PRUnichar* aTagName,nsISupports* aUniqueKey,
-                     const nsDeque* aKeys=0,const nsDeque* aValues=0){ 
-    mKeys=aKeys; 
-    mValues=aValues; 
-    mUniqueKey=aUniqueKey; 
-    mTagName=aTagName; 
-  } 
-
-  virtual void* operator()(void* anObject) { 
-    nsIElementObserver* theObserver= (nsIElementObserver*)anObject; 
-    if(theObserver) { 
-      mResult = theObserver->Notify(mUniqueKey,mTagName,mKeys,mValues); 
-    } 
-    if(NS_OK==mResult) 
-      return 0; 
-    return anObject; 
-  } 
-
-  const nsDeque*    mKeys; 
-  const nsDeque*    mValues;   
-  const PRUnichar*  mTagName; 
-  nsISupports*      mUniqueKey; 
-  nsresult          mResult;
-};
-
-
-//*********************************************************************************************
-//*********************************************************************************************
+/*********************************************************************************************/
 
 
 struct TagList {

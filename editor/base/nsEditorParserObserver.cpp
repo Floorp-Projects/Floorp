@@ -83,7 +83,7 @@ NS_IMETHODIMP nsEditorParserObserver::Notify(
     return NS_ERROR_ILLEGAL_VALUE;
 }
 NS_IMETHODIMP nsEditorParserObserver::Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
-                                             const nsDeque* aKeys, const nsDeque* aValues)
+                                             const nsStringArray* aKeys, const nsStringArray* aValues)
 {
   Notify();
   return NS_OK;

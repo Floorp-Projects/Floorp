@@ -1452,9 +1452,7 @@ public:
   registering tags.
  **************************************************************/
 
-nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic),
-                                                           mKeys(0),
-                                                           mValues(0) {
+nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic) {
 
    nsCRT::zero(mObservers,sizeof(mObservers));
    mCharsetKey.AssignWithConversion("charset");
@@ -1512,43 +1510,47 @@ void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTM
 nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser) {
   nsresult  result=NS_OK;
 
-  nsDeque*  theDeque=GetObserversForTag(aTag);
-  if(theDeque){ 
+  nsDeque*  theObservers=GetObserversForTag(aTag);
+  if(theObservers){ 
 
     nsAutoString      theCharsetValue;
     nsCharsetSource   theCharsetSource;
     aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
 
     PRInt32 theAttrCount =aNode.GetAttributeCount(); 
-    PRUint32 theDequeSize=theDeque->GetSize(); 
-    if(0<theDequeSize){
-      mKeys.Empty();
-      mValues.Empty();
-      int index = 0; 
+    PRInt32 theObserversCount=theObservers->GetSize(); 
+    if(0<theObserversCount){
+      nsStringArray keys,values;
+
+      PRInt32 index;
       for(index=0; index<theAttrCount; index++) {
-        mKeys.Push((void*)nsPromiseFlatString(aNode.GetKeyAt(index)).get()); 
-        mValues.Push((PRUnichar*)aNode.GetValueAt(index).GetUnicode()); 
+        keys.AppendString(aNode.GetKeyAt(index));
+        values.AppendString(aNode.GetValueAt(index));
       } 
 
       nsAutoString intValue;
-      
-      // Add pseudo attribute in the end
 
-      mKeys.Push((PRUnichar*)mCharsetKey.GetUnicode()); 
-      mValues.Push((PRUnichar*)theCharsetValue.GetUnicode());
+      keys.AppendString(mCharsetKey); 
+      values.AppendString(theCharsetValue);       
       
-        
-      mKeys.Push((PRUnichar*)mSourceKey.GetUnicode()); 
+      keys.AppendString(mSourceKey); 
       intValue.AppendInt(PRInt32(theCharsetSource),10);
-      mValues.Push((PRUnichar*)intValue.GetUnicode());
+      values.AppendString(intValue); 
 
-      mKeys.Push((PRUnichar*)mDTDKey.GetUnicode());
-      mValues.Push((PRUnichar*)mTopic.GetUnicode());
+      keys.AppendString(mDTDKey);
+      values.AppendString(mTopic); 
 
       nsAutoString theTagStr; theTagStr.AssignWithConversion(nsHTMLTags::GetStringValue(aTag));
-      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),(nsISupports*)aUniqueID,&mKeys,&mValues);
-      theDeque->FirstThat(theNotifier); 
-      result=theNotifier.mResult; 
+      
+      for(index=0;index<theObserversCount;index++) {
+        nsIElementObserver* observer=NS_STATIC_CAST(nsIElementObserver*,theObservers->ObjectAt(index));
+        if(observer) {
+          result=observer->Notify((nsISupports*)aUniqueID,theTagStr.GetUnicode(),&keys,&values);
+          if(NS_FAILED(result)) {
+            break;
+          }
+        }
+      } 
      }//if 
   } 
   return result;

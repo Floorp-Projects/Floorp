@@ -745,9 +745,8 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
         CopyUnicodeTo(mCurrentPosition, current, aString);
         break;
       }
-
-      current++;
     }
+    current++;
   }
 
   SetPosition(current);  
@@ -808,9 +807,8 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
         AppendUnicodeTo(mCurrentPosition, current, aString);
         break;
       }
-      
-      current++;
     }
+    current++;
   }
   
   SetPosition(current);
@@ -867,9 +865,8 @@ nsresult nsScanner::ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
         aEnd = current;
         break;
       }
-      
-      current++;
     }
+    current++;
   }
   
   SetPosition(current);
@@ -925,9 +922,8 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
         AppendUnicodeTo(origin, current, aString);
         break;
       }
-
-      current++;
     }
+    current++;
   }
 
   SetPosition(current);
@@ -976,9 +972,8 @@ nsresult nsScanner::ReadNumber(nsReadingIterator<PRUnichar>& aStart,
         aEnd = current;
         break;
       }
-
-      current++;
     }
+    current++;
   }
 
   SetPosition(current);
@@ -1036,9 +1031,8 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
         AppendUnicodeTo(origin, current, aString);
         break;
       }
-
-      current ++;
     }
+    current ++;
   }
 
   SetPosition(current);
@@ -1143,9 +1137,8 @@ nsresult nsScanner::ReadWhile(nsString& aString,
         AppendUnicodeTo(origin, current, aString);
         break;
       }
-      
-      current++;
     }
+    current++;
   }
 
   SetPosition(current);
