@@ -108,8 +108,10 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fprintf(out, " outOfFlowFrame=");
-  nsFrame::ListTag(out, mOutOfFlowFrame);
+  if (mOutOfFlowFrame) {
+    fprintf(out, " outOfFlowFrame=");
+    nsFrame::ListTag(out, mOutOfFlowFrame);
+  }
   fputs("\n", out);
   return NS_OK;
 }
