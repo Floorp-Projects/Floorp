@@ -42,8 +42,8 @@ function mailnewsOverlayInit() {
                           .getService()
                           .QueryInterface(Components.interfaces.nsIPrefService);
             var prefBranch = prefService.getBranch(prefbase);
-            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
-                if (prefBranch.getBoolPref("defaultMailClient"))
+            if (prefBranch && prefBranch.prefIsLocked("default_mail_client")) {
+                if (prefBranch.getBoolPref("default_mail_client"))
                     mapiRegistry.setDefaultMailClient();
                 else
                     mapiRegistry.unsetDefaultMailClient();
