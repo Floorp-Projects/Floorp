@@ -113,6 +113,10 @@ private:
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir, PRBool isSecure);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
+  nsresult MigrateAddressBooks();
+  static void migrateAddressBookPrefEnum(const char *aPref, void *aClosure);
+  static nsresult Convert4xAddressBookToLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec);
+        
   nsresult ProceedWithMigration();
   
   nsresult Convert4XUri(const char *old_uri, PRBool for_news, const char *aUsername, const char *aHostname, const char *default_folder_name, char **new_uri);

@@ -32,6 +32,7 @@
 %}
 
 interface nsIDOMWindow;
+interface nsIFileSpec;
 
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
 interface nsIAddressBook : nsISupports {
@@ -43,5 +44,6 @@ interface nsIAddressBook : nsISupports {
     void printAddressbook();
     void setWebShellWindow(in nsIDOMWindow win);
 	void importAddressBook();
+    void convertLDIFtoMAB(in nsIFileSpec fileSpec);
 };
 

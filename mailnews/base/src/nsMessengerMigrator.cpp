@@ -60,7 +60,9 @@
 #include "nsEscape.h"
 
 #include "nsIUserInfo.h"
-
+#include "nsIAbUpgrader.h"
+#include "nsIAddressBook.h"
+#include "nsAbBaseCID.h"
 
 #define BUF_STR_LEN 1024
 
@@ -77,6 +79,8 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
+static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -673,6 +677,9 @@ nsMessengerMigrator::UpgradePrefs()
     rv = MigrateNewsAccounts(identity);
     if (NS_FAILED(rv)) return rv;
 
+    rv = MigrateAddressBooks();
+    if (NS_FAILED(rv)) return rv;
+    
     // we're done migrating, let's save the prefs
     rv = m_prefs->SavePrefFile();
     if (NS_FAILED(rv)) return rv;
@@ -1656,7 +1663,177 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
 
   return NS_OK;
 }
+
+static PRBool charEndsWith(const char *str, const char *endStr)
+{
+    PRUint32 endStrLen = PL_strlen(endStr);
+    PRUint32 strLen = PL_strlen(str);
+   
+    if (strLen < endStrLen) return PR_FALSE;
+
+    PRUint32 pos = strLen - endStrLen;
+    if (PL_strncmp(str + pos, endStr, endStrLen) == 0) {
+        return PR_TRUE;
+    }
+    else {
+        return PR_FALSE;
+    }
+}
+
+#define ADDRESSBOOK_PREF_NAME_ROOT "ldap_2.servers."
+#define ADDRESSBOOK_PREF_NAME_SUFFIX ".filename"
+#define ADDRESSBOOK_PREF_VALUE_4x_SUFFIX ".na2"
+#define ADDRESSBOOK_PREF_VALUE_5x_SUFFIX ".mab"
+#define TEMP_LDIF_FILE_SUFFIX ".ldif"
+
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_AB_MIGRATION 1
+#endif
+
+nsresult
+nsMessengerMigrator::Convert4xAddressBookToLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec)
+{
+  nsresult rv = NS_OK;
+  if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
   
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!abUpgrader) return NS_ERROR_FAILURE;
+
+  rv = abUpgrader->StartUpgrade4xAddrBook(srcFileSpec, dstFileSpec);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool done = PR_FALSE;
+    
+    do {
+      rv = abUpgrader->ContinueExport(&done);
+      printf("grinding...\n");
+    } while (NS_SUCCEEDED(rv) && !done);
+  }
+  return rv;  
+}
+
+void
+nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosure)
+{
+  nsresult rv = NS_OK;
+  nsIPref *prefs = (nsIPref *)aClosure;
+
+#ifdef DEBUG_AB_MIGRATION
+  printf("investigate pref: %s\n",aPref);
+#endif
+  // we only care about ldap_2.servers.*.filename" prefs
+  if (!charEndsWith(aPref, ADDRESSBOOK_PREF_NAME_SUFFIX)) return;
+      
+  nsXPIDLCString abFileName;
+  rv = prefs->CopyCharPref(aPref,getter_Copies(abFileName));
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to get ab filename");
+  if (NS_FAILED(rv)) return;
+  
+  NS_ASSERTION(((const char *)abFileName), "ERROR:  empty addressbook file name");
+  if (!((const char *)abFileName)) return;
+
+  NS_ASSERTION(PL_strlen((const char *)abFileName),"ERROR:  empty addressbook file name");
+  if (!(PL_strlen((const char *)abFileName))) return;
+
+#ifdef DEBUG_AB_MIGRATION
+  printf("pref value: %s\n",(const char *)abFileName);
+#endif /* DEBUG_AB_MIGRATION */
+  // if this a 5.x addressbook file name, skip it.
+  if (charEndsWith((const char *)abFileName, ADDRESSBOOK_PREF_VALUE_5x_SUFFIX)) return;
+    
+  nsCAutoString abName;
+  abName = (const char *)abFileName;
+  PRInt32 len = abName.Length();
+  PRInt32 suffixLen = PL_strlen(ADDRESSBOOK_PREF_VALUE_4x_SUFFIX);
+  NS_ASSERTION(len > suffixLen, "ERROR: bad length of addressbook filename");
+  if (len <= suffixLen) return;
+  
+  abName.SetLength(len - suffixLen);
+
+  // get 5.0 profile root.
+  nsCOMPtr <nsIFileSpec> ab4xFile;
+  nsCOMPtr <nsIFileSpec> tmpLDIFFile;
+
+#ifdef DEBUG_AB_MIGRATION
+  printf("turn %s%s into %s%s\n", (const char *)abName,ADDRESSBOOK_PREF_VALUE_4x_SUFFIX,(const char *)abName,TEMP_LDIF_FILE_SUFFIX);
+#endif /* DEBUG_AB_MIGRATION */
+
+  nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID,&rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && locator,"ab migration failed: failed to get locator");
+  if (NS_FAILED(rv) || !locator) return;
+
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(ab4xFile));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && ab4xFile,"ab migration failed: failed to get profile dir");
+  if (NS_FAILED(rv) || !ab4xFile) return;
+
+  rv = ab4xFile->AppendRelativeUnixPath((const char *)abFileName);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed:  failed to append filename");
+  if (NS_FAILED(rv)) return;
+
+  nsSpecialSystemDirectory file(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(tmpLDIFFile));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"ab migration failed:  failed to get tmp dir");
+  if (NS_FAILED(rv) || !tmpLDIFFile) return;
+
+  nsCAutoString ldifFileName;
+  ldifFileName = (const char *)abName;
+  ldifFileName += TEMP_LDIF_FILE_SUFFIX;
+  rv = tmpLDIFFile->AppendRelativeUnixPath((const char *)ldifFileName);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
+  if (NS_FAILED(rv)) return;
+     
+  rv = Convert4xAddressBookToLDIF(ab4xFile, tmpLDIFFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert to ldif");
+  if (NS_FAILED(rv)) return;
+  
+#ifdef DEBUG_AB_MIGRATION
+  printf("convert %s%s into %s%s\n",(const char *)abName,TEMP_LDIF_FILE_SUFFIX,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
+#endif /* DEBUG_AB_MIGRATION */
+
+  nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(kAddressBookCID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && ab, "failed to get address book");
+  if (NS_FAILED(rv) || !ab) return;
+  
+  rv = ab->ConvertLDIFtoMAB(tmpLDIFFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed: ldif to mab conversion failed\n");
+  if (NS_FAILED(rv)) return;
+  
+#ifdef DEBUG_AB_MIGRATION
+  printf("set %s the pref to %s%s\n",aPref,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
+#endif /* DEBUG_AB_MIGRATION */
+  
+  nsCAutoString newPrefValue;
+  newPrefValue = (const char *)abName;
+  newPrefValue += ADDRESSBOOK_PREF_VALUE_5x_SUFFIX;
+  rv = prefs->SetCharPref((const char *)aPref,(const char *)newPrefValue);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to set pref");
+  if (NS_FAILED(rv)) return;
+ 
+#ifdef DEBUG_AB_MIGRATION
+  printf("remove the tmp file\n");
+#endif /* DEBUG_AB_MIGRATION */
+  rv = tmpLDIFFile->Delete(PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to delete the temp ldif file");
+  if (NS_FAILED(rv)) return;
+  
+  return;
+}
+
+nsresult
+nsMessengerMigrator::MigrateAddressBooks()
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  if (NS_FAILED(rv) || !abUpgrader) {
+    printf("the addressbook migrator is only in the commercial builds.\n");
+    return NS_OK;
+  }
+
+  rv = m_prefs->EnumerateChildren(ADDRESSBOOK_PREF_NAME_ROOT, migrateAddressBookPrefEnum, (void *)m_prefs);
+  return rv;
+}
+
 #ifdef USE_NEWSRC_MAP_FILE
 #define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
 #endif /* USE_NEWSRC_MAP_FILE */

@@ -415,7 +415,7 @@ static nsresult dir_ConvertToMabFileName()
 				PRInt32 pos = name.Find(ABFileName_kPreviousSuffix);
 				if (pos > 0)
 				{
-					//Move old abook.na2 to end of the list anf change the description
+					//Move old abook.na2 to end of the list and change the description
 					DIR_Server * newServer = nsnull;
 					DIR_CopyServer(server, &newServer);
 					newServer->position = count + 1;
@@ -3422,7 +3422,10 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 	if (version < kCurrentListVersion)
 	{
 		pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
+        // not needed, we do ab conversion now
+#if 0
 		dir_ConvertToMabFileName();
+#endif
 	}
 	/* Write the merged list so we get it next time we ask */
 	if (savePrefs)

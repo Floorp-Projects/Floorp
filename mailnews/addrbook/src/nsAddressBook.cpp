@@ -348,7 +348,7 @@ class AddressBookParser
 protected:
 
     nsCAutoString	mLine;
-	nsIFileSpecWithUI*	mFileSpec;
+    nsCOMPtr <nsIFileSpec> mFileSpec;
 	char*			mDbUri;
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 	PRInt32	mFileType;
@@ -364,13 +364,13 @@ protected:
 	char * str_getline( char **next );
 
 public:
-    AddressBookParser(nsIFileSpecWithUI* fileSpec);
+    AddressBookParser(nsIFileSpec *fileSpec);
     ~AddressBookParser();
 
     nsresult ParseFile();
 };
 
-AddressBookParser::AddressBookParser(nsIFileSpecWithUI* fileSpec)
+AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec)
 {
 	mFileSpec = fileSpec;
 	mDbUri = nsnull;
@@ -397,8 +397,7 @@ nsresult AddressBookParser::ParseFile()
 	/* Get database file name */
 	char *leafName = nsnull;
 	nsString fileString;
-	if (mFileSpec)
-	{
+	if (mFileSpec) {
 		mFileSpec->GetLeafName(&leafName);
 		fileString = leafName;
 		if (-1 != fileString.Find(kTabExtension) || -1 != fileString.Find(kTxtExtension))
@@ -1249,6 +1248,23 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	}
 }
 
+NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec)
+{
+    nsresult rv;
+    if (!fileSpec) return NS_ERROR_FAILURE;
+
+	rv = fileSpec->OpenStreamForReading();
+    if (NS_FAILED(rv)) return rv;
+
+	AddressBookParser abParser(fileSpec);
+
+	rv = abParser.ParseFile();
+    if (NS_FAILED(rv)) return rv;
+
+	rv = fileSpec->CloseStream();
+    return rv;
+}
+
 NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -1257,20 +1273,13 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	if (!fileSpec)
 		return NS_ERROR_FAILURE;
 
-	rv = fileSpec->ChooseInputFile(
-	"Open File", nsIFileSpecWithUI::eAllFiles, nsnull, nsnull);
+    // XXX: todo "Open File" should be in a string bundle
+	rv = fileSpec->ChooseInputFile("Open File", nsIFileSpecWithUI::eAllFiles, nsnull, nsnull);
 	if (NS_FAILED(rv))
 		return rv;
 
-	rv = fileSpec->OpenStreamForReading();
-	if (NS_SUCCEEDED(rv))
-	{
-		AddressBookParser abParser(fileSpec);
-		rv = abParser.ParseFile();
-		rv = fileSpec->CloseStream();
-	}
-
-	return rv;
+    rv = ConvertLDIFtoMAB(fileSpec);
+    return rv;
 }
 
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://addressbook/content/","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_PROGID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
