@@ -56,7 +56,7 @@ MRJConsole::MRJConsole(MRJPlugin* plugin)
 		mShowMethod(NULL), mHideMethod(NULL), mVisibleMethod(NULL), mPrintMethod(NULL), mFinishMethod(NULL),
 		mResults(NULL), mContext(NULL), mFrame(NULL)
 {
-//	Initialize();
+	Initialize();
 }
 
 MRJConsole::~MRJConsole()
