@@ -461,7 +461,7 @@ input[type=button] {
 }
 
 input[type=button]:active {
-  border: 1px solid black;
+  border: 2px solid black;
 }
 
 input[type=button]:-moz-buttonlabel {
