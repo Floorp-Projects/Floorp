@@ -2910,7 +2910,7 @@ gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
 
         /* need to know how to get spot location */
         attr->spot_location.x = 0;
-        attr->spot_location.y = 0; // height;
+        attr->spot_location.y = 14;
 
         attr->preedit_area.x = 0;
         attr->preedit_area.y = 0;
