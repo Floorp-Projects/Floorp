@@ -33,6 +33,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
+#include "nsCURILoader.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLInputElement.h"
