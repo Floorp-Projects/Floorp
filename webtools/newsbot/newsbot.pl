@@ -213,6 +213,7 @@ my ($artref) = @_;
 my %article = %{$artref};
       
 print "<DIV NAME=\"" . %article->{'Message-ID'} . "\" CLASS=\"newsarticle\">\n";
+print "<A NAME=\"" . %article->{'Message-ID'} . "\"></A>\n";
 print "<TABLE border=0 width=100%><TR><TD><B><FONT SIZE=+1>\n";
 print "<SPAN CLASS=\"subject\">\n";
 print %article->{'Subject'} ."\n";
