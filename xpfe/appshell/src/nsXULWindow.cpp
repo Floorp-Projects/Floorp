@@ -315,7 +315,8 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    // destroyed window. This is especially necessary when the eldest window
    // in a stack of modal windows is destroyed first. It happens.
    ExitModalLoop(NS_OK);
-   mWindow->Show(PR_FALSE);
+   if (mWindow)
+     mWindow->Show(PR_FALSE);
 
    mDOMWindow = nsnull;
    if(mDocShell) {
