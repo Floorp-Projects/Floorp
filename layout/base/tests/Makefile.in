@@ -33,6 +33,7 @@ include $(topsrcdir)/config/config.mk
 PROGRAM = TestSpaceManager
 
 LIBS = \
+	-lnetlib \
 	-labouturl \
 	-lfileurl \
 	-lftpurl \
@@ -46,10 +47,12 @@ LIBS = \
 	-lnetcache \
 	-lnetwork \
 	-lnetutil \
+	-lraptorbase \
 	-lraptorhtml \
 	-lpref \
 	-lsecfree \
 	-limg \
+	-lgmbase$(MOZ_TOOLKIT) \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
@@ -58,6 +61,7 @@ LIBS = \
 	-lreg \
 	-lxp \
 	$(ZLIB_LIBS) \
+	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
 
