@@ -740,7 +740,10 @@ PRInt32 nsParser::BuildModel() {
  * @return  ptr to token
  */
 CToken* nsParser::PeekToken() {
-  CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+  CToken* theToken=0;
+  if(mParserContext)
+    if(mParserContext->mCurrentPos)
+      theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
   return theToken;
 }
 
@@ -752,8 +755,12 @@ CToken* nsParser::PeekToken() {
  * @return  ptr to token or NULL
  */
 CToken* nsParser::PopToken() {
-  CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
-  ++(*mParserContext->mCurrentPos);
+  CToken* theToken=0;
+  if(mParserContext)
+    if(mParserContext->mCurrentPos) {
+      theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+      ++(*mParserContext->mCurrentPos);
+    }
   return theToken;
 }
 
