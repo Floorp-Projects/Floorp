@@ -119,7 +119,7 @@ nsKillAll.prototype = {
 
       if (wasMozillaAlreadyRunning) {
         // Need to exit appshell in this case.
-        appShellService.quit();
+        appShellService.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
       }
 
       // We throw NS_ERROR_NOT_AVAILABLE which will be interpreted by the caller
