@@ -208,7 +208,7 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext *aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext *aPresContext);
 
-  NS_IMETHOD GetBindingParent(nsIContent** aContent);
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) const;
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 

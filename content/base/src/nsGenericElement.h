@@ -415,7 +415,7 @@ public:
   NS_IMETHOD SetContentID(PRUint32 aID);
   NS_IMETHOD SetFocus(nsIPresContext* aContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aContext);
-  NS_IMETHOD GetBindingParent(nsIContent** aContent);
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) const;
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);

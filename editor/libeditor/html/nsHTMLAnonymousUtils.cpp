@@ -152,9 +152,12 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 
   // establish parenthood of the element
   newContent->SetNativeAnonymous(PR_TRUE);
-  newContent->SetParent(parentContent);
   newContent->SetDocument(doc, PR_TRUE, PR_TRUE);
+  // Set the binding parent first, since setting the parent may cause relative
+  // URIs to change (due to xml:base) and |newContent| may need to be able to
+  // tell that it's anonymous content as it recomputes its base URI.
   newContent->SetBindingParent(newContent);
+  newContent->SetParent(parentContent);
   // display the element
   ps->RecreateFramesFor(newContent);
 

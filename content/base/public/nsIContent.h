@@ -449,7 +449,7 @@ public:
    *
    * @param aContent the binding parent [OUT]
    */
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) = 0;
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) const = 0;
 
   /**
    * Bit-flags to pass (or'ed together) to IsContentOfType()

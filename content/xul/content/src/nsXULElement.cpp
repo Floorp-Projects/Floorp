@@ -4331,10 +4331,9 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetBindingParent(nsIContent** aContent)
+nsXULElement::GetBindingParent(nsIContent** aContent) const
 {
-  *aContent = mBindingParent;
-  NS_IF_ADDREF(*aContent);
+  NS_IF_ADDREF(*aContent = mBindingParent);
   return NS_OK;
 }
 
