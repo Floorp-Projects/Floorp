@@ -454,13 +454,10 @@ function cleanUpItemForAdding(aPaletteItem)
   if (aPaletteItem.localName == "toolbaritem" && 
       aPaletteItem.firstChild) {
     aPaletteItem.firstChild.removeAttribute("observes");
-    if (aPaletteItem.firstChild.localName == "textbox")
-      aPaletteItem.firstChild.setAttribute("disabled", "true");
-    else {
+    
       // So the throbber doesn't throb in the dialog,
       // cute as that may be...
       aPaletteItem.firstChild.removeAttribute("busy");
-    }
   }
 }
 
