@@ -547,22 +547,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
         PRInt32 start;
         PRInt32 end;
         nsAutoString bodyAttributes;
-        nsAutoString headContent;
-
-        /* Before we can insert the data into editor, we need to remove the <head> tag
-           content and then insert it back using ReplaceHeadContentsWithHTML */
-        start = aBuf.Find("<head>", PR_TRUE);
-        if (start != kNotFound)
-        {
-          start += 6; // move pass the <head> tag
-          end = aBuf.Find("</head>", PR_TRUE, start);
-          if (end != kNotFound)
-          {
-            const PRUnichar* data = aBuf.get();
-            headContent.Adopt(nsCRT::strndup(&data[start], end - start));
-            aBuf.Cut(start, end - start);
-          }
-        }
 
         /* If we have attribute for the body tag, we need to save them in order
            to add them back later as InsertSource will ignore them. */
@@ -578,8 +562,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
           }
         }
 
-        if (!headContent.IsEmpty())
-          htmlEditor->ReplaceHeadContentsWithHTML(headContent);
         htmlEditor->InsertHTML(aBuf);
 
         m_editor->EndOfDocument();
