@@ -746,7 +746,8 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
 {
   nsresult rv = NS_ERROR_FAILURE;
   mWebShellServices = nsnull;
-   
+  if(!mPICSRatingsEnabled)
+    return rv;
   return rv;
 }
 
@@ -758,7 +759,8 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               PRInt32 aStatus)
 {
   nsresult rv = NS_OK;
-
+  if(!mPICSRatingsEnabled)
+    return rv;
   return rv;
 
 }
@@ -772,6 +774,9 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
   nsresult rv;
 
   nsIContentViewerContainer *cont;
+
+  if(!mPICSRatingsEnabled)
+    return NS_OK;
  
   PICS_URLData* urlData;
   nsVoidArray* currentURLList;
@@ -782,10 +787,11 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
     rv = loader->GetContainer(&cont);
     if (NS_OK == rv) {
       nsIWebShellServices  *ws;
-
-      rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
-      if (NS_OK == rv) {
-        mWebShellServices = ws;
+      if(cont) {
+        rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
+        if (NS_OK == rv) {
+          mWebShellServices = ws;
+        }
       }
     }
 
@@ -833,7 +839,8 @@ nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader,
                               PRUint32 aProgress, 
                               PRUint32 aProgressMax)
 {
-  
+  if(!mPICSRatingsEnabled)
+    return NS_OK;
   return NS_OK;
 }
 
@@ -842,7 +849,8 @@ nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader,
                             nsIURL* aURL, 
                             nsString& aMsg)
 {
- 
+  if(!mPICSRatingsEnabled)
+    return NS_OK;
   return NS_OK;
 }
 
@@ -859,6 +867,9 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
   nsIURL* rootURL;
 
   nsVoidArray* currentURLList;
+
+  if(!mPICSRatingsEnabled)
+    return NS_OK;
  
 
   rv = loader->GetContainer(&cont);
@@ -880,16 +891,28 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
     return NS_ERROR_NULL_POINTER;
   }
 
+  
   if(mWebShellServicesURLTable->Exists(&key)) {
     currentURLList = (nsVoidArray *) mWebShellServicesURLTable->Get(&key);
     if (currentURLList != NULL) {
       PRInt32 count = currentURLList->Count();
       for (PRInt32 i = 0; i < count; i++) {
         PICS_URLData* urlData = (PICS_URLData*)currentURLList->ElementAt(i);
+        if(urlData == nsnull)
+          continue;
         const char* spec1;
         const char* spec2;
+        
+        if(aURL == nsnull)
+          continue;
         aURL->GetSpec(&spec1);
         aURL->GetSpec(&spec2);
+
+        if(spec1 == nsnull)
+          continue;
+
+        if(spec2 == nsnull)
+          continue;
 
         if(0 == PL_strcmp(spec1, spec2)) {
           if(!urlData->notified) {
@@ -929,6 +952,8 @@ nsPICS::HandleUnknownContentType(nsIDocumentLoader* loader,
     // If we have a doc loader observer, let it respond to this.
 //    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, aURL, aContentType, aCommand )
                               //: NS_ERROR_FAILURE;
+  if(!mPICSRatingsEnabled)
+    return NS_OK;
   return NS_OK;
 }
 
