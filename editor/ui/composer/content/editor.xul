@@ -177,14 +177,17 @@
     <toolbarbutton id="saveButton"/>
     <toolbarbutton id="publishButton"/>
     <toolbarbutton id="previewButton"/>
+    <toolbarbutton id="cutButton"/>
+    <toolbarbutton id="copyButton"/>
+    <toolbarbutton id="pasteButton"/>
     <toolbarbutton id="printButton" />
     <toolbarbutton id="spellingButton"/>
     <toolbarseparator class="toolbarseparator-primary"/>
     <toolbarbutton id="imageButton"/>
     <toolbarbutton id="tableButton"/>
     <toolbarbutton id="linkButton"/>
-    <toolbarbutton id="namedAnchorButton" hidden="true"/>
-    <toolbarbutton id="hlineButton" hidden="true"/>
+    <toolbarbutton id="namedAnchorButton"/>
+    <toolbarbutton id="hlineButton"/>
     <spacer flex="1"/>
     <hbox id="throbber-box" align="center">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltiptext="&throbber.tooltip;">
