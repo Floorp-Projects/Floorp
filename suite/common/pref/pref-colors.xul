@@ -16,7 +16,7 @@
 <!ENTITY  unvisit "Unvisited Links:">
 <!ENTITY  visit "Visited Links:">
 <!ENTITY  someProvColors "Sometimes a document will provide its own colors and background.">
-<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding documents">
+<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding document">
 ]> 
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
