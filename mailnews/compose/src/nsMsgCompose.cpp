@@ -2201,13 +2201,9 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 	}
 
 	if (PL_strncasestr(unescapeURL, "http:", 5))
-	{
-		nsAutoString tempStr; tempStr.AssignWithConversion(&unescapeURL.mBuffer[7]);
-		*_retval = tempStr.ToNewUnicode();
-		return NS_OK;
-	}
+		unescapeURL.Cut(0, 7);
 
-	*_retval = nsCRT::strdup(url);
+	*_retval = unescapeURL.ToNewUnicode();
 	return NS_OK;
 }
 
