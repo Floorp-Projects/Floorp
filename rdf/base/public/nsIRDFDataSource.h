@@ -28,6 +28,7 @@
 
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
+#include "nsIEnumerator.h"
 
 // {0F78DA58-8321-11d2-8EAC-00805F29F370}
 #define NS_IRDFDATASOURCE_IID \
