@@ -48,12 +48,6 @@
 <!ENTITY preferencesCmd.label				"Preferences...">
 <!ENTITY preferencesCmd.key					"E">  
 <!ENTITY preferencesCmd.accesskey			"e"> 
-<!ENTITY captureCmd.label					"Save Form Data">
-<!ENTITY captureCmd.key						"S">  
-<!ENTITY captureCmd.accesskey					"s"> 
-<!ENTITY prefillCmd.label					"Prefill Form">
-<!ENTITY prefillCmd.key						"F">  
-<!ENTITY prefillCmd.accesskey					"m"> 
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 

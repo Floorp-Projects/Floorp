@@ -36,14 +36,12 @@ CHROME_L10N = \
 	.\pref-charset.dtd \
 	.\pref-colors.dtd \
 	.\pref-themes.dtd \
-	.\pref-cookies.dtd \
 	.\pref-download.dtd \
 	.\pref-debug.dtd \
 	.\pref-debug1.dtd \
 	.\pref-debug2.dtd \
 	.\pref-fonts.dtd \
 	.\pref-history.dtd \
-	.\pref-images.dtd \
 	.\pref-languages.dtd \
 	.\pref-languages.properties \
 	.\pref-navigator.dtd \
@@ -56,8 +54,6 @@ CHROME_L10N = \
 	.\prefutilities.properties \
 	.\preftree.dtd \
 	.\pref.dtd \
-	.\pref-wallet.dtd \
-	.\pref-passwords.dtd \
 	.\pref-mousewheel.dtd \
 	.\pref-winhooks.dtd \
 	$(NULL)

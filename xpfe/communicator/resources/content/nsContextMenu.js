@@ -44,8 +44,6 @@ function nsContextMenu( xulMenu ) {
     this.hasBGImage = false;
     this.inDirList  = false;
     this.shouldDisplay = true;
-    this.disableCapture = false;
-    this.disablePrefill = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -144,18 +142,6 @@ nsContextMenu.prototype = {
     
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
-
-        // Block image depends on whether an image was clicked on, and,
-        // whether the user pref is enabled.
-        this.showItem( "context-blockimage", this.onImage && this.isBlockingImages() );
-
-        // Capture depends on whether a form is being displayed.
-        this.showItem( "context-capture", this.okToCapture() );
-        this.setItemAttr( "context-capture", "disabled", this.disableCapture);
-
-        // Prefill depends on whether a form is being displayed.
-        this.showItem( "context-prefill", this.okToPrefill() );
-        this.setItemAttr( "context-prefill", "disabled", this.disablePrefill);
 
         // Remove separator if all items are removed.
         this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
@@ -438,138 +424,6 @@ nsContextMenu.prototype = {
     // Generate image URL and put it on the clipboard.
     copyImage : function () {
         this.copyToClipboard( this.imageURL );
-    },
-
-    // Capture the values that are filled in on the form being displayed.
-    capture : function () {
-      var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-      
-      walletService.WALLET_RequestToCapture(window._content);
-    },
-    // Prefill the form being displayed.
-    prefill : function () {
-      walletPreview(window._content);
-    },
-
-    // Determine if "Save Form Data" is to appear in the menu.
-    okToCapture: function () {
-      this.disableCapture = false;
-      var rv = false;
-      if (!window._content.document) {
-        return false;
-      }
-      // test for a form with at least one text element that has a value
-      var formsArray = this.target.ownerDocument.forms;
-      if (!formsArray) {
-        return false;
-      }
-      var form;
-      for (form=0; form<formsArray.length; form++) {
-        var elementsArray = formsArray[form].elements;
-        var element;
-        for (element=0; element<elementsArray.length; element++) {
-          var type = elementsArray[element].type;
-          if (type=="" || type=="text") {
-            // we have a form with at least one text element
-            var value = elementsArray[element].value;
-            rv = true;
-            if (value != "") {
-              // at least one text element has a value, thus capture is to appear in menu
-              return rv;
-            }
-          } 
-        }
-      }
-      // if we got here, then there was no text element with a value
-      if (rv) {
-        // if we got here, then we had a form with at least one text element
-        // in that case capture is to appear in menu but will be disabled
-        this.disableCapture = true;
-      }
-      return rv;
-    },
-
-    // Determine if "Prefill Form" is to appear in the menu.
-    okToPrefill: function () {
-      this.disablePrefill = false;
-      var rv = false;
-      if (!window._content.document) {
-        return false;
-      }
-      var formsArray = this.target.ownerDocument.forms;
-      if (!formsArray) {
-        return false;
-      }
-      var form;
-      for (form=0; form<formsArray.length; form++) {
-        var elementsArray = formsArray[form].elements;
-        var element;
-        for (element=0; element<elementsArray.length; element++) {
-          var type = elementsArray[element].type;
-          if (type=="" || type=="text" || type=="select-one") {
-            /* we have a form with at least one text or select element */
-            rv = true;
-
-            /* see if there is a saved value for it */
-            var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-            var value = walletService.WALLET_PrefillOneElement
-              (window._content, elementsArray[element]);
-            if (value != "") {
-              // at least element has a saved value, thus capture is to appear in menu
-              return rv;
-            }
-          }
-        }
-      }
-      // if we got here, then there was no saved value for a text or select element
-      if (rv) {
-        // if we got here, then we had a form with at least one text or select element
-        // in that case prefill is to appear in menu but will be disabled
-        this.disablePrefill = true;
-      }
-      return rv;
-    },
-
-    // Determine if "Block Image" is to appear in the menu.
-    // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
-    isBlockingImages: function () {
-        /* determine if "imageBlocker.enabled" pref is set */
-        var pref = this.getService( '@mozilla.org/preferences;1', 'nsIPref' );
-        var result = false;
-        try {
-           result = pref.GetBoolPref( "imageblocker.enabled" );
-        } catch(e) {
-        }
-        if (!result) {
-          /* pref is not set so return false */
-          return false;
-        }
-
-        /* determine if image is already being blocked */
-        var cookieViewer = this.createInstance
-          ("@mozilla.org/cookieviewer/cookieviewer-world;1", "nsICookieViewer");
-        var list = cookieViewer.GetPermissionValue(1);
-        var permissionList  = list.split(list[0]);
-        for(var i = 1; i < permissionList.length; i+=2) {
-          permStr = permissionList[i+1];
-          var type = permStr.substring(0,1);
-          if (type == "-") {
-            /* some host is being blocked, need to find out if it's our image's host */
-            var host = permStr.substring(1,permStr.length);
-            if (this.imageURL.search(host) != -1) {
-              /* it's our image's host that's being blocked */
-              return false;
-            }
-          }
-        }  
-        /* image is not already being blocked, so "Block Image" can appear on the menu */
-        return true;
-    },
-    // Block image from loading in the future.
-    blockImage : function () {
-        var cookieViewer = this.createInstance( "@mozilla.org/cookieviewer/cookieviewer-world;1",
-                                                "nsICookieViewer" );
-        cookieViewer.BlockImage(this.imageURL);
     },
 
     ///////////////
