@@ -504,7 +504,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
         */
         // END bug 4577 -------------------------------------------------------
       }
-      else { printf("IR target is cell content\n"); }
+      else if (gsDebug) { printf("IR target is cell content\n"); }
     }
     // if any of these conditions are not true, we just pass the reflow command down
   }
