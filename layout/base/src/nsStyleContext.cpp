@@ -537,7 +537,7 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mWhiteSpace = aParent->mWhiteSpace;
 
     mLetterSpacing = aParent->mLetterSpacing;
-    mLineHeight = aParent->mLineHeight;
+    mLineHeight.SetInheritValue();
     mTextIndent = aParent->mTextIndent;
     mWordSpacing = aParent->mWordSpacing;
   }
