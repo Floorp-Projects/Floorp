@@ -21,6 +21,7 @@
 #include "nsEscape.h"
 
 #include "plstr.h"
+#include "prmem.h"
 
 const int netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
@@ -166,3 +167,48 @@ NS_BASE PRInt32 nsUnescapeCount(char * str)
 
 } /* NET_UnEscapeCnt */
 
+
+NS_BASE char *
+nsEscapeHTML(const char * string)
+{
+  char *rv = (char *) PR_Malloc(PL_strlen(string)*4 + 1); /* The +1 is for
+															  the trailing
+															  null! */
+	char *ptr = rv;
+
+	if(rv)
+	  {
+		for(; *string != '\0'; string++)
+		  {
+			if(*string == '<')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'l';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }
+			else if(*string == '>')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'g';
+				*ptr++ = 't';
+				*ptr++ = ';';
+			  }
+			else if(*string == '&')
+			  {
+				*ptr++ = '&';
+				*ptr++ = 'a';
+				*ptr++ = 'm';
+				*ptr++ = 'p';
+				*ptr++ = ';';
+			  }
+			else
+			  {
+				*ptr++ = *string;
+			  }
+		  }
+		*ptr = '\0';
+	  }
+
+	return(rv);
+}

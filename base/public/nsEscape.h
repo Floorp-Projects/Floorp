@@ -53,6 +53,12 @@ NS_BASE PRInt32 nsUnescapeCount (char * str);
 	 * (result may contain \0's).
 	 */
 
+NS_BASE char *
+nsEscapeHTML(const char * string);
+ /*
+  * Escape problem char's for HTML display 
+  */
+
 #ifdef __cplusplus
 }
 #endif
