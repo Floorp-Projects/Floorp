@@ -3989,6 +3989,17 @@ case "$target" in
 	    fi
 	fi
 	AC_SUBST(AIX_SHLIB_BIN)
+
+	dnl ========================================================
+	dnl Figure out if we are using a pre-5.0x version of the
+	dnl xlC compiler and if so, set flag
+	dnl ========================================================
+
+	if test ! "$GNU_CC" && test "$ac_cv_cpp_reinterpret_cast" = no ; then
+	   CXXFLAGS="$CXXFLAGS -DAIX_XLC_364"
+	   CFLAGS="$CFLAGS -DAIX_XLC_364"
+	fi
+
 	;;
 
 esac
