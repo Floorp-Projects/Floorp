@@ -166,7 +166,16 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
         if (NS_SUCCEEDED(rv) && valid)
           rv = pop3Service->GetNewMail(msgWindow, urlListener, inbox, this, nsnull);
         else
-          rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+        {
+          PRBool isLocked;
+          inbox->GetLocked(&isLocked);
+          if (!isLocked)
+          {
+            rv = localInbox->ParseFolder(msgWindow, urlListener);
+          }
+          if (NS_SUCCEEDED(rv))
+            rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+        }
       }
     }
     else
