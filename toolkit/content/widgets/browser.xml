@@ -637,6 +637,7 @@
            el.style.zIndex = 2147483647; //Max Int
            el.style.borderStyle = "none";
            el.style.padding = "0";
+           el.style.margin = "0";
 
            this._clientFrameBody.appendChild(el);
            
