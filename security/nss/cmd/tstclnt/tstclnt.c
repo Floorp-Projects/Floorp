@@ -413,6 +413,20 @@ thread_main(void * arg)
 
 #endif
 
+static void
+printHostNameAndAddr(const char * host, const PRNetAddr * addr)
+{
+    PRUint16 port = PR_NetAddrInetPort(addr);
+    char addrBuf[80];
+    PRStatus st = PR_NetAddrToString(addr, addrBuf, sizeof addrBuf);
+
+    if (st == PR_SUCCESS) {
+	port = PR_ntohs(port);
+	FPRINTF(stderr, "%s: connecting to %s:%hu (address=%s)\n",
+	       progName, host, port, addrBuf);
+    }
+}
+
 #define SSOCK_FD 0
 #define STDIN_FD 1
 
@@ -430,7 +444,6 @@ int main(int argc, char **argv)
     SECStatus          rv;
     PRStatus           status;
     PRInt32            filesReady;
-    PRInt32            ip;
     int                npds;
     int                override = 0;
     int                disableSSL2 = 0;
@@ -441,7 +454,6 @@ int main(int argc, char **argv)
     PRNetAddr          addr;
     PRHostEnt          hp;
     PRPollDesc         pollset[2];
-    char               buf[PR_NETDB_BUF_SIZE];
     PRBool             useCommandLinePassword = PR_FALSE;
     PRBool             pingServerFirst = PR_FALSE;
     PRBool             clientSpeaksFirst = PR_FALSE;
@@ -546,24 +558,33 @@ int main(int argc, char **argv)
 	disableAllSSLCiphers();
     }
 
-    /* Lookup host */
-    status = PR_GetHostByName(host, buf, sizeof(buf), &hp);
-    if (status != PR_SUCCESS) {
-	SECU_PrintError(progName, "error looking up host");
-	return 1;
-    }
-    if (PR_EnumerateHostEnt(0, &hp, atoi(port), &addr) == -1) {
-	SECU_PrintError(progName, "error looking up host address");
-	return 1;
+    status = PR_StringToNetAddr(host, &addr);
+    if (status == PR_SUCCESS) {
+	int portno = atoi(port);
+    	addr.inet.port = PR_htons((PRUint16)portno);
+    } else {
+	/* Lookup host */
+	char buf[PR_NETDB_BUF_SIZE];
+	status = PR_GetIPNodeByName(host, PR_AF_INET6, PR_AI_DEFAULT, 
+				    buf, sizeof buf, &hp);
+	if (status != PR_SUCCESS) {
+	    SECU_PrintError(progName, "error looking up host");
+	    return 1;
+	}
+	if (PR_EnumerateHostEnt(0, &hp, (PRUint16)atoi(port), &addr) == -1) {
+	    SECU_PrintError(progName, "error looking up host address");
+	    return 1;
+	}
     }
 
-    ip = PR_ntohl(addr.inet.ip);
-    FPRINTF(stderr, "%s: connecting to %s:%d (address=%d.%d.%d.%d)\n",
-	   progName, host, PR_ntohs(addr.inet.port),
-	   (ip >> 24) & 0xff,
-	   (ip >> 16) & 0xff,
-	   (ip >>  8) & 0xff,
-	   (ip >>  0) & 0xff);
+    if (PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
+    	/* convert to IPv4.  */
+	addr.inet.family = PR_AF_INET;
+	memcpy(&addr.inet.ip, &addr.ipv6.ip.pr_s6_addr[12], 4);
+	memset(&addr.inet.pad[0], 0, sizeof addr.inet.pad);
+    }
+
+    printHostNameAndAddr(host, &addr);
 
     if (pingServerFirst) {
 	int iter = 0;
