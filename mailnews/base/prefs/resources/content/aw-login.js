@@ -59,18 +59,24 @@ function loginPageValidate() {
     return false;
   }
 
+  // If SMTP username box is blank it is because the
+  // incoming and outgoing server names were the same,
+  // so set to be same as incoming username
+  var smtpusername = document.getElementById("smtpusername").value || username;
+
   setPageData(pageData, "login", "username", username);
+  setPageData(pageData, "login", "smtpusername", smtpusername);
 
   return true;
 }
 
 function loginPageInit() {
     gPrefsBundle = document.getElementById("bundle_prefs");
+    var pageData = parent.GetPageData();
     var loginNameInput = document.getElementById("username");
     
     if (loginNameInput.value == "") {
       // retrieve data from previously entered pages
-      var pageData = parent.GetPageData();
       var type = parent.getCurrentServerType(pageData);
 
       dump("type = " + type + "\n");
@@ -78,13 +84,52 @@ function loginPageInit() {
 
       if (protocolinfo.requiresUsername) {
         // since we require a username, use the uid from the email address
-        var email = pageData.identity.email.value;
-        var emailParts = email.split("@");
-        loginNameInput.value = emailParts[0];
+        loginNameInput.value = parent.getUsernameFromEmail(pageData.identity.email.value);
+      }
+    }
+
+    var smtpNameInput = document.getElementById("smtpusername");
+    var smtpServer = null;
+    try {
+      smtpServer = parent.smtpService.defaultServer;
+    }
+    catch (ex) {}
+
+    if (smtpServer && smtpServer.hostname && smtpServer.username &&
+        smtpServer.redirectorType == null) {
+      // we have a default SMTP server, so modify and show the static text
+      // and store the username for the default server in the textbox.
+      modifyStaticText(smtpServer.username, "2")
+      hideShowLoginSettings(2, 1, 3);
+      smtpNameInput.value = smtpServer.username;
+    }
+    else {
+      // no default SMTP server yet, so need to compare
+      // incoming and outgoing server names
+      var smtpServerName = pageData.server.smtphostname.value;
+      var incomingServerName = pageData.server.hostname.value;
+      if (smtpServerName == incomingServerName) {
+        // incoming and outgoing server names are the same, so show
+        // the static text and make sure textbox blank for later tests.
+        modifyStaticText(smtpServerName, "3")
+        hideShowLoginSettings(3, 1, 2);
+        smtpNameInput.value = "";
+      }
+      else {
+        // incoming and outgoing server names are different, so set smtp
+        // username's textbox to be the same as incoming's one, unless already set.
+        hideShowLoginSettings(1, 2, 3);
+        smtpNameInput.value = smtpNameInput.value || loginNameInput.value;
       }
     }
 }
 
+function hideShowLoginSettings(aEle, bEle, cEle)
+{
+    document.getElementById("loginSet" + aEle).hidden = false;
+    document.getElementById("loginSet" + bEle).hidden = true;
+    document.getElementById("loginSet" + cEle).hidden = true;
+}
 
 var savedPassword="";
 

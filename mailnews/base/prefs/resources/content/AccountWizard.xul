@@ -156,7 +156,8 @@ Rights Reserved.
         </vbox>
 
         <vbox id="haveSmtp">
-          <description id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</description>
+          <description id="smtpStaticText1" style="width: 200px;" prefix="&haveSmtp1.prefix;"
+                       suffix="&haveSmtp1.suffix;">*</description>
         </vbox>
     </vbox>
   </wizardpage>
@@ -175,6 +176,29 @@ Rights Reserved.
                accesskey="&usernameLabel.accesskey;" control="username"/>
         <textbox id="username" wsm_persist="true" flex="1"/>
       </hbox>
+
+      <separator/>
+
+      <vbox id="loginSet1">
+        <description>&usernameSmtpDesc.label;</description>
+        <separator class="thin"/>
+        <hbox align="center">
+          <label class="label" value="&usernameSmtpLabel.label;" for="smtpusername" style="width: 8em;"
+                 accesskey="&usernameSmtpLabel.accesskey;" control="smtpusername"/>
+          <textbox id="smtpusername" wsm_persist="true" flex="1"/>
+        </hbox>
+      </vbox>
+
+      <vbox id="loginSet2" hidden="true">
+        <description id="smtpStaticText2" style="width: 200px;" prefix="&haveSmtp2.prefix;"
+                     suffix="&haveSmtp2.suffix;">*</description>
+      </vbox>
+
+      <vbox id="loginSet3" hidden="true">
+        <description id="smtpStaticText3" style="width: 200px;" prefix="&haveSmtp3.prefix;"
+                     suffix="&haveSmtp3.suffix;">*</description>
+      </vbox>
+
     </vbox>
   </wizardpage>
 
@@ -224,16 +248,16 @@ Rights Reserved.
         </columns>
         <rows>
           <row autostretch="never" id="account.name">
-            <label class="label" flex="1" id="account.name.label" value="&accountNamePrefix.label;"/>
+            <label class="label" flex="1" id="account.name.label" value="&accnameLabel.label;"/>
             <label class="label" id="account.name.text"/>
           </row>
-          <row autostretch="never" id="server.username">
-            <label class="label" flex="1" id="server.username.label" value="&userNamePrefix.label;"/>
-            <label class="label" id="server.username.text"/>
-          </row>
           <row autostretch="never" id="identity.email">
-            <label class="label" flex="1" id="identity.email.label" value="&emailPrefix.label;"/>
+            <label class="label" flex="1" id="identity.email.label" value="&emailLabel.label;"/>
             <label class="label" id="identity.email.text"/>
+          </row>
+          <row autostretch="never" id="server.username">
+            <label class="label" flex="1" id="server.username.label" value="&usernameLabel.label;"/>
+            <label class="label" id="server.username.text"/>
           </row>
           <row autostretch="never" id="server.name">
             <label class="label" flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
@@ -246,6 +270,10 @@ Rights Reserved.
           <row autostretch="never" id="newsServer.name">
             <label class="label" flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
             <label class="label" id="newsServer.name.text"/>
+          </row>
+          <row autostretch="never" id="smtpServer.username">
+            <label class="label" flex="1" id="smtpServer.username.label" value="&usernameSmtpLabel.label;"/>
+            <label class="label" id="smtpServer.username.text"/>
           </row>
           <row autostretch="never" id="smtpServer.name">
             <label class="label" flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>

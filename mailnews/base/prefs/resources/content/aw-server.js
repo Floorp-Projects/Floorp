@@ -160,35 +160,16 @@ function serverPageInit() {
   }
   catch(ex){}
 
-  // modify the value in the smtp display if we already have a 
-  // smtp server so that the single string displays the 
-  // name of the smtp server.
-  var smtpStatic = document.getElementById("smtpStaticText");
-  if (smtpServer && smtpServer.hostname && smtpStatic &&
-      smtpStatic.hasChildNodes()) {
-    var staticText = smtpStatic.firstChild.nodeValue;
-    staticText = staticText.replace(/@server_name@/, smtpServer.hostname);
-    while (smtpStatic.hasChildNodes())
-      smtpStatic.removeChild(smtpStatic.firstChild);
-    var staticTextNode = document.createTextNode(staticText);
-    smtpStatic.appendChild(staticTextNode);
-  }
-  
-  hideShowSmtpSettings(smtpServer);
-}
-
-function hideShowSmtpSettings(smtpServer) {
-
   var noSmtpBox = document.getElementById("noSmtp");
   var haveSmtpBox = document.getElementById("haveSmtp");
 
   var boxToHide;
   var boxToShow;
   
-  if (smtpServer && smtpServer.hostname && smtpServer.redirectorType == null 
-      && smtpServer.hostname != "") {
-    // we have a hostname, so show the static text and 
+  if (smtpServer && smtpServer.hostname && smtpServer.redirectorType == null) {
+    // we have a hostname, so modify and show the static text and 
     // store the value of the default smtp server in the textbox.
+    modifyStaticText(smtpServer.hostname, "1")
     var smtpTextBox = document.getElementById("smtphostname");
     if (smtpTextBox && smtpTextBox.value == "")
       smtpTextBox.value = smtpServer.hostname;
@@ -207,6 +188,17 @@ function hideShowSmtpSettings(smtpServer) {
     boxToShow.removeAttribute("hidden");
 }
 
+function modifyStaticText(smtpMod, smtpBox)
+{
+  // modify the value in the smtp display if we already have a 
+  // smtp server so that the single string displays the hostname
+  // or username for the smtp server.
+  var smtpStatic = document.getElementById("smtpStaticText"+smtpBox);
+  if (smtpStatic && smtpStatic.hasChildNodes())
+    smtpStatic.childNodes[0].nodeValue = smtpStatic.getAttribute("prefix") +
+                                         smtpMod + smtpStatic.getAttribute("suffix");  
+}
+ 
 function setServerType()
 {
   var pageData = parent.GetPageData();
