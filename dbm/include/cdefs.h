@@ -77,13 +77,6 @@
 #ifndef	_CDEFS_H_
 #define	_CDEFS_H_
 
-#ifdef __BEGIN_DECLS
-#undef __BEGIN_DECLS
-#endif
-#ifdef __END_DECLS
-#undef __END_DECLS
-#endif
-
 #if defined(__cplusplus)
 #define	__BEGIN_DECLS	extern "C" {
 #define	__END_DECLS	}
@@ -99,18 +92,12 @@
  * in between its arguments.  __CONCAT can also concatenate double-quoted
  * strings produced by the __STRING macro, but this only works with ANSI C.
  */
-#undef __P
-#undef __CONCAT
-#undef __STRING
-
 #if defined(__STDC__) || defined(__cplusplus) || defined(_WINDOWS) || defined(XP_OS2)
 #define	__P(protos)	protos		/* full-blown ANSI C */
 #define	__CONCAT(x,y)	x ## y
 #define	__STRING(x)	#x
 
-#ifndef __const
 #define	__const		const		/* define reserved names to standard */
-#endif  /* __const */
 #define	__signed	signed
 #define	__volatile	volatile
 #ifndef _WINDOWS
@@ -170,13 +157,6 @@
 #ifndef __dead
 #define	__dead
 #define	__pure
-#endif
-
-#ifdef AIXV3
-/* Wont compile without const. Need a cleaner way to handle this. */
-#ifdef const
-#undef const
-#endif
 #endif
 
 #endif /* !_CDEFS_H_ */
