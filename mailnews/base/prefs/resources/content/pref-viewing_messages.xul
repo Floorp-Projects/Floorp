@@ -58,15 +58,18 @@
   <box class="box-smallheader" title="&pane.title;"/>
 
   <titledbox orient="vertical">
-	  <title><text value="&displayWidth.label;"/></title>
-	  <html>&plainText.label;</html>
+    <title><text value="&displayWidth.label;"/></title>
+
+    <box orient="horizontal">
+      <html>&plainText.label;</html>
     
-    <radiogroup id="mailFixedWidthMessages" orient="vertical" autostretch="never"
-                pref="true" preftype="bool" prefstring="mail.fixed_width_messages"
-                prefattribute="data">
-      <radio group="mailFixedWidthMessages" data="true" value="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
-      <radio group="mailFixedWidthMessages" data="false" value="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
-    </radiogroup>
+      <radiogroup id="mailFixedWidthMessages" orient="vertical" autostretch="never"
+                  pref="true" preftype="bool" prefstring="mail.fixed_width_messages"
+                  prefattribute="data">
+        <radio group="mailFixedWidthMessages" data="true" value="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
+        <radio group="mailFixedWidthMessages" data="false" value="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+      </radiogroup>
+    </box>
 
 	<separator class="thin"/>
 	<html>&displayText.label;</html>
