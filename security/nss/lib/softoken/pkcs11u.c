@@ -2110,23 +2110,19 @@ pk11_ReferenceObject(PK11Object *object)
 static PK11Object *
 pk11_ObjectFromHandleOnSlot(CK_OBJECT_HANDLE handle, PK11Slot *slot)
 {
-    PK11Object **head;
-    PZLock *lock;
     PK11Object *object;
+    PRUint32 index = pk11_hash(handle, slot->tokObjHashSize);
 
     if (pk11_isToken(handle)) {
 	return pk11_NewTokenObject(slot, NULL, handle);
     }
 
-    head = slot->tokObjects;
-    lock = slot->objectLock;
-
-    PK11_USE_THREADS(PZ_Lock(lock);)
-    pk11queue_find(object,handle,head,slot->tokObjHashSize);
+    PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
+    pk11queue_find2(object, handle, index, slot->tokObjects);
     if (object) {
 	pk11_ReferenceObject(object);
     }
-    PK11_USE_THREADS(PZ_Unlock(lock);)
+    PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
 
     return(object);
 }
@@ -2175,8 +2171,10 @@ pk11_FreeObject(PK11Object *object)
 void
 pk11_AddSlotObject(PK11Slot *slot, PK11Object *object)
 {
+    PRUint32 index = pk11_hash(object->handle, slot->tokObjHashSize);
+    pk11queue_init_element(object);
     PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
-    pk11queue_add(object,object->handle,slot->tokObjects,slot->tokObjHashSize);
+    pk11queue_add2(object, object->handle, index, slot->tokObjects);
     PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
 }
 
@@ -2210,6 +2208,7 @@ pk11_DeleteObject(PK11Session *session, PK11Object *object)
     NSSLOWCERTCertificate *cert;
     NSSLOWCERTCertTrust tmptrust;
     PRBool isKrl;
+    PRUint32 index = pk11_hash(object->handle, slot->tokObjHashSize);
 
   /* Handle Token case */
     if (so && so->session) {
@@ -2218,9 +2217,9 @@ pk11_DeleteObject(PK11Session *session, PK11Object *object)
 	pk11queue_delete(&so->sessionList,0,session->objects,0);
 	PK11_USE_THREADS(PZ_Unlock(session->objectLock);)
 	PK11_USE_THREADS(PZ_Lock(slot->objectLock);)
-	pk11queue_delete(object,object->handle,slot->tokObjects,
-						slot->tokObjHashSize);
+	pk11queue_delete2(object, object->handle, index, slot->tokObjects);
 	PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
+	pk11queue_clear_deleted_element(object);
 	pk11_FreeObject(object); /* reduce it's reference count */
     } else {
 	PORT_Assert(to);
