@@ -42,7 +42,7 @@ include <$(DEPTH)\config\config.mak>
 
 GMAKE = gmake.exe
 
-GMAKE_FLAGS = OBJDIR_NAME=$(OBJDIR)
+GMAKE_FLAGS = OBJDIR_NAME=$(OBJDIR) MOZILLA_CLIENT=1
 
 #
 # The Client's debug build uses MSVC's debug runtime library (/MDd).
