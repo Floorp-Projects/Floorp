@@ -30,12 +30,14 @@
 #include "NSReg.h"
 #include "nsFileSpec.h"
 
+PR_BEGIN_EXTERN_C
 
-REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename);
-REGERR ReplaceFileNowOrSchedule(nsFileSpec& tmpfile, nsFileSpec& target );
+PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename);
+PRInt32 ReplaceFileNowOrSchedule(nsFileSpec& tmpfile, nsFileSpec& target );
 
 
-extern "C" void PerformScheduledTasks(void *data);
+void PerformScheduledTasks(void *data);
 
+PR_END_EXTERN_C
 
 #endif

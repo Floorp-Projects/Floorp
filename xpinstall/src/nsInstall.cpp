@@ -135,6 +135,13 @@ nsInstall::nsInstall()
     mJarFileLocation        = "";
     mInstallArguments       = "";
 
+    mUninstallPackage = PR_FALSE;
+    mRegisterPackage  = PR_FALSE;
+    mStatusSent       = PR_FALSE;
+
+    mJarFileLocation    = "";
+    mInstallArguments   = "";
+
     // mJarFileData is an opaque handle to the jarfile.
     nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
                                                      (void**) &mJarFileData);
@@ -333,7 +340,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     if (count == 0)
     {
-        *aReturn = SaveError( nsInstall::DESTINATION_DOES_NOT_EXIST );
+        *aReturn = SaveError( nsInstall::DOES_NOT_EXIST );
         return NS_OK;
     }
 
@@ -671,7 +678,7 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
         result = ScheduleForInstall( id );
     }
         
-    if (result == nsInstall::DESTINATION_DOES_NOT_EXIST) 
+    if (result == nsInstall::DOES_NOT_EXIST) 
     {
         result = nsInstall::SUCCESS;
     }
@@ -736,7 +743,7 @@ nsInstall::Execute(const nsString& aJarSource, PRInt32* aReturn)
 PRInt32    
 nsInstall::FinalizeInstall(PRInt32* aReturn)
 {
-    PRInt32 result;
+    PRInt32 result = SUCCESS;
     PRBool  rebootNeeded = PR_FALSE;
 
     *aReturn = SanityCheck();
@@ -832,7 +839,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
-   }
+    }
 
     if((result == nsInstall::SUCCESS) || (result == REBOOT_NEEDED))
         CleanUp();

@@ -253,7 +253,7 @@ PRInt32 nsInstallFile::Complete()
     
     if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
     {
-        err = RegisterInVersionRegistry();
+        RegisterInVersionRegistry();
     }
     
     return err;

@@ -31,130 +31,79 @@
 #include "prmem.h"
 #include "ScheduledTasks.h"
 
+
+
+static nsresult 
+GetPersistentStringFromSpec(const nsFileSpec& inSpec, char **string)
+{
+    if (!string) return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIFileSpec> spec;
+    nsresult rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
+    if (NS_SUCCEEDED(rv)) {
+        rv = spec->GetPersistentDescriptorString(string);
+    } 
+    else {
+        *string = nsnull;
+    }
+    return rv;
+}
+
+
+
+
+
 #ifdef _WINDOWS
 #include <sys/stat.h>
 #include <windows.h>
 
-BOOL WIN32_IsMoveFileExBroken()
+PRInt32 ReplaceExistingWindowsFile(const nsFileSpec& currentSpec, const nsFileSpec& finalSpec)
 {
-    /* the NT option MOVEFILE_DELAY_UNTIL_REBOOT is broken on 
-     * Windows NT 3.51 Service Pack 4 and NT 4.0 before Service Pack 2
-     */
-    BOOL broken = PR_FALSE;
-    OSVERSIONINFO osinfo;
+    // this routine is now for DOS-based windows only. WinNT should 
+    // be taken care of by the XP code
+    //
+    // NOTE for WINNT:
+    //
+    // the MOVEFILE_DELAY_UNTIL_REBOOT option doesn't work on
+    // NT 3.51 SP4 or on NT 4.0 until SP2. On the broken versions
+    // of NT 4.0 Microsoft warns using it can lead to an irreparably 
+    // corrupt  windows' registry "after an unknown number of calls".
+    // Time to reinstall windows when that happens.
+    //
+    // I don't want to risk it, I also don't want two separate code
+    // paths to test, so we do it the lame way on all NT systems
+    // until such time as there are few enough old revs around to
+    // make it worth switching back to MoveFileEx().
 
-    // they *all* appear broken--better to have one way that works.
-    return PR_TRUE;
-
-    osinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&osinfo) && osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
-    {
-        if ( osinfo.dwMajorVersion == 3 && osinfo.dwMinorVersion == 51 )
-        {
-            if ( 0 == stricmp(osinfo.szCSDVersion,"Service Pack 4"))
-            {
-                broken = PR_TRUE;
-            }
-        }
-        else if ( osinfo.dwMajorVersion == 4 )
-        {
-            if (osinfo.szCSDVersion[0] == '\0' || 
-                (0 == stricmp(osinfo.szCSDVersion,"Service Pack 1")))
-            {
-                broken = PR_TRUE;
-            }
-        }
-    }
-
-    return broken;
-}
-
-
-PRInt32 DoWindowsReplaceExistingFileStuff(const char* currentName, const char* finalName)
-{
-    PRInt32 err = 0;
-
-    char* final   = strdup(finalName);
-    char* current = strdup(currentName);
-
-    /* couldn't delete, probably in use. Schedule for later */
-     DWORD	dwVersion, dwWindowsMajorVersion;
+    PRInt32 err = -1;
 
     /* Get OS version info */
-    dwVersion = GetVersion();
-    dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
+    DWORD dwVersion = GetVersion();
 
     /* Get build numbers for Windows NT or Win32s */
 
-    if (dwVersion < 0x80000000)                // Windows NT
+    if (dwVersion > 0x80000000)
     {
-    	/* On Windows NT */
-        if ( WIN32_IsMoveFileExBroken() )
-        {
-            /* the MOVEFILE_DELAY_UNTIL_REBOOT option doesn't work on
-             * NT 3.51 SP4 or on NT 4.0 until SP2
-             */
-            struct stat statbuf;
-            PRBool nameFound = PR_FALSE;
-            char tmpname[_MAX_PATH];
-            
-            strncpy( tmpname, finalName, _MAX_PATH );
-            int len = strlen(tmpname);
-            while (!nameFound && len < _MAX_PATH ) 
-            {
-                    tmpname[len-1] = '~';
-                    tmpname[len] = '\0';
-                    if ( stat(tmpname, &statbuf) != 0 )
-                        nameFound = PR_TRUE;
-                    else
-                        len++;
-            }
+        // Windows 95 or Win16
 
-            if ( nameFound ) 
-            {
-                if ( MoveFile( finalName, tmpname ) ) 
-                {
-                    if ( MoveFile( currentName, finalName ) ) 
-                    {
-                        DeleteFileNowOrSchedule(nsFileSpec(tmpname));
-                    }
-                    else 
-                    {
-                        /* 2nd move failed, put old file back */
-                        MoveFile( tmpname, finalName );
-                    }
-                }
-                else
-                {
-                    /* non-executable in use; schedule for later */
-                    return -1;  // let the start registry stuff do our work!
-                }
-            }
-        }
-        else if ( MoveFileEx(currentName, finalName, MOVEFILE_DELAY_UNTIL_REBOOT) )
-        {
-		    err = 0;
-        }
-    }
-	else // Windows 95 or Win16
-	{
-        /*
- 		 * Place an entry in the WININIT.INI file in the Windows directory
-		 * to delete finalName and rename currentName to be finalName at reboot
- 		 */
+        // Place an entry in the WININIT.INI file in the Windows directory
+        // to delete finalName and rename currentName to be finalName at reboot
 
-        int strlen;
- 		char	Src[_MAX_PATH];   // 8.3 name
- 		char	Dest[_MAX_PATH];  // 8.3 name
+        int     strlen;
+        char    Src[_MAX_PATH];   // 8.3 name
+        char    Dest[_MAX_PATH];  // 8.3 name
 
-        strlen = GetShortPathName( (LPCTSTR)currentName, (LPTSTR)Src, (DWORD)sizeof(Src) );
+        char* final   = strdup(finalSpec.GetNativePathCString());
+        char* current = strdup(currentSpec.GetNativePathCString());
+
+        strlen = GetShortPathName( (LPCTSTR)current, (LPTSTR)Src, (DWORD)sizeof(Src) );
         if ( strlen > 0 ) 
         {
             free(current);
             current   = strdup(Src);
         }
 
-		strlen = GetShortPathName( (LPCTSTR) finalName, (LPTSTR) Dest, (DWORD) sizeof(Dest));
+        strlen = GetShortPathName( (LPCTSTR) final, (LPTSTR) Dest, (DWORD) sizeof(Dest));
         if ( strlen > 0 ) 
         {
             free(final);
@@ -169,12 +118,12 @@ PRInt32 DoWindowsReplaceExistingFileStuff(const char* currentName, const char* f
         AnsiToOem( current, current );
 
         if ( WritePrivateProfileString( "Rename", final, current, "WININIT.INI" ) )
-		    err = 0;
+            err = 0;
+
+        free(final);
+        free(current);
     }
     
-    free(final);
-    free(current);
-
     return err;
 }
 #endif
@@ -182,28 +131,47 @@ PRInt32 DoWindowsReplaceExistingFileStuff(const char* currentName, const char* f
 
 
 
-
-REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
+PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename)
 {
 
-    REGERR result = 0;
+    PRInt32 result = nsInstall::SUCCESS;
 
     filename.Delete(PR_FALSE);
-    
     if (filename.Exists())
     {
+        // could not delete, schedule it for later
+
         RKEY newkey;
         HREG reg;
-        if ( REGERR_OK == NR_RegOpen("", &reg) ) 
-        {
-            if (REGERR_OK == NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY, &newkey) )
-            {
-                // FIX should be using nsPersistentFileDescriptor!!!
+        REGERR  err;
+        result = nsInstall::UNEXPECTED_ERROR;
 
-                const char *fnamestr = filename.GetNativePathCString();
-                result = NR_RegSetEntry( reg, newkey, (char*)fnamestr, REGTYPE_ENTRY_FILE, (void*)fnamestr, strlen(fnamestr));
-                if (result == REGERR_OK)
-                    result = nsInstall::REBOOT_NEEDED;
+        err = NR_RegOpen("", &reg) ;
+        if ( err == REGERR_OK )
+        {
+            err = NR_RegAddKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&newkey);
+            if ( err == REGERR_OK )
+            {
+                char    valname[20];
+                char*   fnamestr = nsnull;
+
+                err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
+                if ( err == REGERR_OK )
+                {
+                    nsresult rv;
+                    rv = GetPersistentStringFromSpec( filename, &fnamestr );
+                    if ( NS_SUCCEEDED(rv) && fnamestr )
+                    {
+
+                        err = NR_RegSetEntry( reg, newkey, valname, 
+                                              REGTYPE_ENTRY_BYTES, 
+                                              (void*)fnamestr, 
+                                              strlen(fnamestr));
+
+                        if ( err == REGERR_OK )
+                            result = nsInstall::REBOOT_NEEDED;
+                    }
+                }
             }
 
             NR_RegClose(reg);
@@ -212,23 +180,41 @@ REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
 
     return result;
 }
-/* tmp file is the bad one that we want to replace with target. */
 
-REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
+
+
+
+PRInt32 ReplaceFileNow(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
 {
-    REGERR result = 0;
-    
-    if(replacementFile == doomedFile)
+    // replacement file must exist, doomed file doesn't have to
+    if ( !replacementFile.Exists() )
+        return nsInstall::DOES_NOT_EXIST;
+
+    // don't have to do anything if the files are the same
+    if ( replacementFile == doomedFile )
+        return nsInstall::SUCCESS;
+
+
+    PRInt32 result = nsInstall::ACCESS_DENIED;
+
+    // first try to rename the doomed file out of the way (if it exists)
+    char*   leafname;
+    nsFileSpec tmpfile( doomedFile );
+    if ( tmpfile.Exists() )
     {
-        /* do not have to do anything */
-        return result;
+        tmpfile.MakeUnique();
+        leafname = tmpfile.GetLeafName();
+        tmpfile = doomedFile;
+        tmpfile.Rename( leafname );
+        nsCRT::free( leafname );
     }
 
-    doomedFile.Delete(PR_FALSE);
 
+
+    // if doomedFile is gone move new file into place
+    nsresult rv;
     if ( !doomedFile.Exists() )
     {
-        // Now that we have removed the existing file, we can move the replacement file into place.
         nsFileSpec parentofFinalFile;
         nsFileSpec parentofReplacementFile;
 
@@ -240,37 +226,102 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
         // files like this (i.e. error if not in the same dir) or we need to take
         // a little more care in the move.
         if(parentofReplacementFile != parentofFinalFile)
-            result = replacementFile.MoveToDir(parentofFinalFile);
-        else
-        	result = NS_OK;
-        	
-        if ( NS_SUCCEEDED(result) )
         {
-            char* leafName = doomedFile.GetLeafName();
-            replacementFile.Rename(leafName);
-            nsCRT::free(leafName);
+            NS_WARN_IF_FALSE( 0, "File unpacked into a non-dest dir" );
+            rv = replacementFile.MoveToDir(parentofFinalFile);
         }
+        else
+        	rv = NS_OK;
+        	
+        leafname = doomedFile.GetLeafName();
+        if ( NS_SUCCEEDED(rv) )
+            rv = replacementFile.Rename( leafname );
+
+        if ( NS_SUCCEEDED(rv) ) 
+        {
+            // we replaced the old file OK, now we have to
+            // get rid of it permanently
+            result = DeleteFileNowOrSchedule( tmpfile );
+        }
+        else
+        {
+            // couldn't rename file, try to put old file back
+            tmpfile.Rename( leafname );
+        }
+        nsCRT::free( leafname );
     }
-    else
+
+    return result;
+}
+
+
+
+
+
+PRInt32 ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
+{
+    PRInt32 result = ReplaceFileNow( replacementFile, doomedFile );
+
+    if ( result == nsInstall::ACCESS_DENIED )
     {
+        // if we couldn't replace the file schedule it for later
 #ifdef _WINDOWS
-        // XXX Holy cow! what the fsck is this? Fix it!
-        if (DoWindowsReplaceExistingFileStuff(replacementFile.GetNativePathCString(), doomedFile.GetNativePathCString()) == 0)
-            return 0;
+        if ( ReplaceExistingWindowsFile(replacementFile, doomedFile) == 0 )
+            return nsInstall::REBOOT_NEEDED;
 #endif
 
-        RKEY newkey;
-        HREG reg;
+        RKEY    listkey;
+        RKEY    filekey;
+        HREG    reg;
+        REGERR  err;
 
         if ( REGERR_OK == NR_RegOpen("", &reg) ) 
         {
-            result = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &newkey);
-            if ( result == REGERR_OK ) 
+            err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &listkey );
+            if ( err == REGERR_OK ) 
             {
-                char* replacementFileName = (char*)(const char*)replacementFile.GetNativePathCString();
-                result = NR_RegSetEntry( reg, newkey, (char*)(const char*)doomedFile.GetNativePathCString(), REGTYPE_ENTRY_FILE, replacementFileName, strlen(replacementFileName));
-                if (result == REGERR_OK)
-                    result = nsInstall::REBOOT_NEEDED;
+                char     valname[20];
+                char*    fsrc = nsnull;
+                char*    fdest = nsnull;
+                REGERR   err2;
+                nsresult rv, rv2;
+
+                err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
+                if ( err == REGERR_OK )
+                {
+                    err = NR_RegAddKey( reg, listkey, valname, &filekey );
+                    if ( REGERR_OK == err )
+                    {
+                        rv = GetPersistentStringFromSpec(replacementFile, &fsrc);
+                        rv2 = GetPersistentStringFromSpec(doomedFile, &fdest);
+                        if ( NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) )
+                        {
+
+                            err = NR_RegSetEntry( reg, filekey, 
+                                                  REG_REPLACE_SRCFILE,
+                                                  REGTYPE_ENTRY_BYTES, 
+                                                  (void*)fsrc, 
+                                                  strlen(fsrc));
+
+                            err2 = NR_RegSetEntry(reg, filekey,
+                                                  REG_REPLACE_DESTFILE,
+                                                  REGTYPE_ENTRY_BYTES,
+                                                  (void*)fdest,
+                                                  strlen(fdest));
+
+                            if ( err == REGERR_OK && err2 == REGERR_OK )
+                                result = nsInstall::REBOOT_NEEDED;
+                            else
+                                NR_RegDeleteKey( reg, listkey, valname );
+                        }
+
+                        if (NS_SUCCEEDED(rv))
+                            nsCRT::free(fsrc);
+
+                        if (NS_SUCCEEDED(rv2))
+                            nsCRT::free(fdest);
+                    }
+                }
             }
 
             NR_RegClose(reg);
@@ -280,113 +331,154 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
     return result;
 }
 
-void DeleteScheduledFiles(void);
-void ReplaceScheduledFiles(void);
 
-extern "C" void PerformScheduledTasks(void *data)
+
+
+//-----------------------------------------------------------------------------
+//
+//          STARTUP: DO SCHEDULED ACTIONS
+//
+//-----------------------------------------------------------------------------
+
+void DeleteScheduledFiles(HREG);
+void ReplaceScheduledFiles(HREG);
+
+void PerformScheduledTasks(void *data)
 {
-    DeleteScheduledFiles();
-    ReplaceScheduledFiles();
-}
+    HREG   reg;
 
-
-void DeleteScheduledFiles(void)
-{
-    HREG reg;
-
-    if (REGERR_OK == NR_RegOpen("", &reg))
+    if ( REGERR_OK == NR_RegOpen("", &reg) )
     {
-        RKEY    key;
-	      REGENUM state = 0;
-
-        /* perform scheduled file deletions and replacements (PC only) */
-        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY,&key))
-        {
-            char buf[MAXREGNAMELEN];
-
-            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, buf, sizeof(buf), NULL ))
-            {
-                nsFileSpec doomedFile(buf);
-
-                doomedFile.Delete(PR_FALSE);
-                
-                if (! doomedFile.Exists()) 
-                {
-                    NR_RegDeleteEntry( reg, key, buf );
-                }
-            }
-
-            /* delete list node if empty */
-			      if (REGERR_NOMORE == NR_RegEnumEntries( reg, key, &state, buf, sizeof(buf), NULL ))
-            {
-                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY);
-            }
-        }
-        
+        DeleteScheduledFiles( reg );
+        ReplaceScheduledFiles( reg );
         NR_RegClose(reg);
     }
 }
 
-void ReplaceScheduledFiles(void)
+
+
+void DeleteScheduledFiles( HREG reg )
 {
-    HREG reg;
-     
-    if (REGERR_OK == NR_RegOpen("", &reg))
+    REGERR  err;
+    RKEY    key;
+    REGENUM state = 0;
+
+    /* perform scheduled file deletions  */
+    if (REGERR_OK == NR_RegGetKey(reg,ROOTKEY_PRIVATE,REG_DELETE_LIST_KEY,&key))
     {
-        RKEY    key;
-	    REGENUM state;
+        // the delete key exists, so we loop through its children
+        // and try to delete all the listed files
 
-        /* replace files if any listed */
-        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &key))
+        char    namebuf[MAXREGNAMELEN];
+        char    valbuf[MAXREGPATHLEN];
+
+        nsFileSpec              doomedFile;
+        nsCOMPtr<nsIFileSpec>   spec;
+
+        nsresult rv = NS_NewFileSpec(getter_AddRefs(spec));
+        if (NS_SUCCEEDED(rv))
         {
-            char dummyFile[MAXREGNAMELEN];
-            char target[MAXREGNAMELEN];
-
-            state = 0;
-            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, dummyFile, sizeof(dummyFile), NULL ))
+            while (REGERR_OK == NR_RegEnumEntries( reg, key, &state, namebuf,
+                                                   sizeof(namebuf), 0 ) )
             {
-
-                nsFileSpec replaceFile(dummyFile);
-
-                if (! replaceFile.Exists() )
+                uint32 bufsize = sizeof(valbuf); // gets changed, must reset
+                err = NR_RegGetEntry( reg, key, namebuf, valbuf, &bufsize );
+                if ( err == REGERR_OK )
                 {
-                    NR_RegDeleteEntry( reg, key, dummyFile );
-                }
-                else if ( REGERR_OK != NR_RegGetEntryString( reg, key, dummyFile, target, sizeof(target) ) )
-                {
-                    /* can't read target filename, corruption? */
-                    NR_RegDeleteEntry( reg, key, dummyFile );
-                }
-                else 
-                {
-                    nsFileSpec targetFile(target);
-                
-                    targetFile.Delete(PR_FALSE);
-                
-                    if (!targetFile.Exists())
+                    // no need to check return value of 
+                    // SetPersistentDescriptorString, it's always NS_OK
+                    spec->SetPersistentDescriptorString(valbuf);
+                    rv = spec->GetFileSpec(&doomedFile);
+                    if (NS_SUCCEEDED(rv)) 
                     {
-                        nsFileSpec parentofTarget;
-                        targetFile.GetParent(parentofTarget);                                           
-                    
-                        nsresult result = replaceFile.MoveToDir(parentofTarget);
-                        if ( NS_SUCCEEDED(result) )
+                        doomedFile.Delete(PR_FALSE);
+                        if ( !doomedFile.Exists() )
                         {
-                            char* leafName = targetFile.GetLeafName();
-                            replaceFile.Rename(leafName);
-                            nsCRT::free(leafName);
-                            
-                            NR_RegDeleteEntry( reg, key, dummyFile );
+                            // deletion successful, don't have to retry
+                            NR_RegDeleteEntry( reg, key, namebuf );
                         }
                     }
                 }
             }
+
             /* delete list node if empty */
-            if (REGERR_NOMORE == NR_RegEnumEntries(reg, key, &state, dummyFile, sizeof(dummyFile), NULL )) 
+            state = 0;
+            err = NR_RegEnumEntries(reg, key, &state, namebuf, sizeof(namebuf), 0);
+            if ( err == REGERR_NOMORE )
+            {
+                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY);
+            }
+        }
+    }
+}
+
+
+
+void ReplaceScheduledFiles( HREG reg )
+{
+    RKEY    key;
+
+    /* replace files if any listed */
+    if (REGERR_OK == NR_RegGetKey(reg,ROOTKEY_PRIVATE,REG_REPLACE_LIST_KEY,&key))
+    {
+        char keyname[MAXREGNAMELEN];
+        char doomedFile[MAXREGPATHLEN];
+        char srcFile[MAXREGPATHLEN];
+
+        nsFileSpec              doomedSpec;
+        nsFileSpec              srcSpec;
+        nsCOMPtr<nsIFileSpec>   src;
+        nsCOMPtr<nsIFileSpec>   dest;
+        nsresult                rv1, rv2;
+
+        rv1 = NS_NewFileSpec(getter_AddRefs(src));
+        rv2 = NS_NewFileSpec(getter_AddRefs(dest));
+        if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
+        {
+            uint32 bufsize;
+            REGENUM state = 0;
+            while (REGERR_OK == NR_RegEnumSubkeys( reg, key, &state, 
+                                   keyname, sizeof(keyname), REGENUM_CHILDREN))
+            {
+                bufsize = sizeof(srcFile);
+                REGERR err1 = NR_RegGetEntry( reg, (RKEY)state,
+                                    REG_REPLACE_SRCFILE, srcFile, &bufsize);
+
+                bufsize = sizeof(doomedFile);
+                REGERR err2 = NR_RegGetEntry( reg, (RKEY)state,
+                                    REG_REPLACE_DESTFILE, doomedFile, &bufsize);
+
+                if ( err1 == REGERR_OK && err2 == REGERR_OK )
+                {
+                    src->SetPersistentDescriptorString(srcFile);
+                    rv1 = src->GetFileSpec(&srcSpec);
+
+                    dest->SetPersistentDescriptorString(doomedFile);
+                    rv2 = src->GetFileSpec(&doomedSpec);
+
+                    if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
+                    {
+                        // finally now try to do the replace
+                        PRInt32 result = ReplaceFileNow( srcSpec, doomedSpec );
+
+                        if ( result == nsInstall::DOES_NOT_EXIST ||
+                             result == nsInstall::SUCCESS )
+                        {
+                            // This one is done
+                            NR_RegDeleteKey( reg, key, keyname );
+                        }
+                    }
+                }
+            }
+
+
+            /* delete list node if empty */
+            state = 0;
+            if (REGERR_NOMORE == NR_RegEnumSubkeys( reg, key, &state, keyname,
+                                          sizeof(keyname), REGENUM_CHILDREN ))
             {
                 NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
             }
         }
-        
-        NR_RegClose(reg);
     }
 }

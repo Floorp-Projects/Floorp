@@ -192,7 +192,6 @@ void ConvertJSValToStr(nsString&  aString,
                       jsval      aValue)
 {
   JSString *jsstring;
-  jschar* chars=nsnull;
 
   if((jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
@@ -1037,7 +1036,6 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 #ifdef _WINDOWS
   
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -2514,9 +2512,9 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::INSTALL_NOT_STARTED,        "INSTALL_NOT_STARTED"          },
     { nsInstall::SILENT_MODE_DENIED,         "SILENT_MODE_DENIED"           },
     { nsInstall::NO_SUCH_COMPONENT,          "NO_SUCH_COMPONENT"            },
-    { nsInstall::DESTINATION_DOES_NOT_EXIST, "DESTINATION_DOES_NOT_EXIST"   },
-    { nsInstall::DESTINATION_READ_ONLY,      "DESTINATION_READ_ONLY"        },
-    { nsInstall::DESTINATION_IS_DIRECTORY,   "DESTINATION_IS_DIRECTORY"     },
+    { nsInstall::DOES_NOT_EXIST,             "DOES_NOT_EXIST"               },
+    { nsInstall::READ_ONLY,                  "READ_ONLY"                    },
+    { nsInstall::IS_DIRECTORY,               "IS_DIRECTORY"                 },
     { nsInstall::NETWORK_FILE_IS_IN_USE,     "NETWORK_FILE_IS_IN_USE"       },
     { nsInstall::APPLE_SINGLE_ERR,           "APPLE_SINGLE_ERR"             },
     { nsInstall::INVALID_PATH_ERR,           "INVALID_PATH_ERR"             },
@@ -2531,8 +2529,8 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::DOWNLOAD_ERROR,             "DOWNLOAD_ERROR"               },
     { nsInstall::SCRIPT_ERROR,               "SCRIPT_ERROR"                 },
 
-    { nsInstall::DESTINATION_ALREADY_EXISTS, "DESTINATION_ALREADY_EXISTS"   },
-    { nsInstall::DESTINATION_IS_FILE,        "DESTINATION_IS_FILE"          },
+    { nsInstall::ALREADY_EXISTS,             "ALREADY_EXISTS"               },
+    { nsInstall::IS_FILE,                    "IS_FILE"                      },
     { nsInstall::SOURCE_DOES_NOT_EXIST,      "SOURCE_DOES_NOT_EXIST"        },
     { nsInstall::SOURCE_IS_DIRECTORY,        "SOURCE_IS_DIRECTORY"          },
     { nsInstall::SOURCE_IS_FILE,             "SOURCE_IS_FILE"               },

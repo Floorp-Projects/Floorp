@@ -450,7 +450,7 @@ nsInstallFileOpItem::RegisterPackageNode()
 PRInt32
 nsInstallFileOpItem::NativeFileOpDirCreatePrepare()
 {
-  PRInt32 ret = nsInstall::DESTINATION_ALREADY_EXISTS;
+  PRInt32 ret = nsInstall::ALREADY_EXISTS;
   PRBool  flagPreExist;
 
   mAction = nsInstallFileOpItem::ACTION_FAILED;
@@ -488,10 +488,10 @@ nsInstallFileOpItem::NativeFileOpDirRemovePrepare()
     if(!mTarget->IsFile())
       return nsInstall::SUCCESS;
     else
-      return nsInstall::DESTINATION_IS_FILE;
+      return nsInstall::IS_FILE;
   }
     
-  return nsInstall::DESTINATION_DOES_NOT_EXIST;
+  return nsInstall::DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -518,7 +518,7 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
       target += *mStrTarget;
 
       if(target.Exists())
-        return nsInstall::DESTINATION_ALREADY_EXISTS;
+        return nsInstall::ALREADY_EXISTS;
       else
         return nsInstall::SUCCESS;
     }
@@ -555,7 +555,7 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
           Recycle(cStrTarget);
       }
       else
-        return nsInstall::DESTINATION_ALREADY_EXISTS;
+        return nsInstall::ALREADY_EXISTS;
     }
     else
       ret = nsInstall::SOURCE_IS_DIRECTORY;
@@ -600,9 +600,9 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
     if(mSrc->IsFile())
     {
       if(!mTarget->Exists())
-        return nsInstall::DESTINATION_DOES_NOT_EXIST;
+        return nsInstall::DOES_NOT_EXIST;
       else if(mTarget->IsFile())
-        return nsInstall::DESTINATION_IS_FILE;
+        return nsInstall::IS_FILE;
 
       return nsInstall::SUCCESS;
     }
@@ -653,10 +653,10 @@ nsInstallFileOpItem::NativeFileOpFileDeletePrepare()
     if(mTarget->IsFile())
       return nsInstall::SUCCESS;
     else
-      return nsInstall::DESTINATION_IS_DIRECTORY;
+      return nsInstall::IS_DIRECTORY;
   }
     
-  return nsInstall::DESTINATION_DOES_NOT_EXIST;
+  return nsInstall::DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -667,10 +667,10 @@ nsInstallFileOpItem::NativeFileOpFileDeleteComplete(nsFileSpec *aTarget)
     if(aTarget->IsFile())
       return DeleteFileNowOrSchedule(*aTarget);
     else
-      return nsInstall::DESTINATION_IS_DIRECTORY;
+      return nsInstall::IS_DIRECTORY;
   }
     
-  return nsInstall::DESTINATION_DOES_NOT_EXIST;
+  return nsInstall::DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -687,10 +687,10 @@ nsInstallFileOpItem::NativeFileOpFileExecutePrepare()
     if(mTarget->IsFile())
       return nsInstall::SUCCESS;
     else
-      return nsInstall::DESTINATION_IS_DIRECTORY;
+      return nsInstall::IS_DIRECTORY;
   }
     
-  return nsInstall::DESTINATION_DOES_NOT_EXIST;
+  return nsInstall::DOES_NOT_EXIST;
 }
 
 PRInt32
@@ -711,7 +711,7 @@ nsInstallFileOpItem::NativeFileOpFileMovePrepare()
   if(mSrc->Exists())
   {
     if(!mTarget->Exists())
-      return nsInstall::DESTINATION_DOES_NOT_EXIST;
+      return nsInstall::DOES_NOT_EXIST;
     else
       return NativeFileOpFileCopyPrepare();
   }
@@ -728,7 +728,7 @@ nsInstallFileOpItem::NativeFileOpFileMoveComplete()
   if(mSrc->Exists())
   {
     if(!mTarget->Exists())
-      ret = nsInstall::DESTINATION_DOES_NOT_EXIST;
+      ret = nsInstall::DOES_NOT_EXIST;
     else
     {
       PRInt32 ret2 = nsInstall::SUCCESS;
@@ -786,7 +786,7 @@ nsInstallFileOpItem::NativeFileOpFileMoveAbort()
       }
     }
     else
-      ret = nsInstall::DESTINATION_DOES_NOT_EXIST;
+      ret = nsInstall::DOES_NOT_EXIST;
   }
 
   return ret;
@@ -809,12 +809,12 @@ nsInstallFileOpItem::NativeFileOpDirRenamePrepare()
       target += *mStrTarget;
 
       if(target.Exists())
-        return nsInstall::DESTINATION_ALREADY_EXISTS;
+        return nsInstall::ALREADY_EXISTS;
       else
         return nsInstall::SUCCESS;
     }
     else
-      return nsInstall::DESTINATION_IS_FILE;
+      return nsInstall::IS_FILE;
   }
     
   return nsInstall::SOURCE_DOES_NOT_EXIST;
@@ -846,7 +846,7 @@ nsInstallFileOpItem::NativeFileOpDirRenameComplete()
           Recycle(cStrTarget);
       }
       else
-        return nsInstall::DESTINATION_ALREADY_EXISTS;
+        return nsInstall::ALREADY_EXISTS;
     }
     else
       ret = nsInstall::SOURCE_IS_FILE;

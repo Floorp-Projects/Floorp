@@ -184,12 +184,12 @@ PRInt32 nsInstallPatch::Prepare()
         }
         else
         {
-            err = nsInstall::DESTINATION_IS_DIRECTORY;
+            err = nsInstall::IS_DIRECTORY;
         }
     }
     else
     {
-        err = nsInstall::DESTINATION_DOES_NOT_EXIST;
+        err = nsInstall::DOES_NOT_EXIST;
     }
 
     if (err != nsInstall::SUCCESS)
