@@ -423,5 +423,18 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 
 #define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
 
+////////////////////////////////////////////////////////////////////////////////
+// Convenience functions
+//
+// CreateServicesFromCategory()
+//
+// Given a category, this convenience functions enumerates the category and 
+// creates a service of every CID or ContractID registered under the category.
+// If observerTopic is non null and the service implements nsIObserver,
+// this will attempt to notify the observer with this observerTopic string
+// and origin as parameter.
+//
+extern NS_COM nsresult
+NS_CreateServicesFromCategory(const char* category, nsISupports *origin, const PRUnichar *observerTopic);
 
 #endif /* nsIServiceManager_h___ */
