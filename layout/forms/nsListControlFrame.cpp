@@ -3279,6 +3279,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
   nsresult rv         = NS_ERROR_FAILURE; 
   PRUint32 keycode    = 0;
+  PRUint32 charcode   = 0;
   PRUint32 numOptions = 0;
   PRBool isControl    = PR_FALSE;
   PRBool isShift      = PR_FALSE;
@@ -3290,6 +3291,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     //uiEvent->GetCharCode(&code);
     //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
     keyEvent->GetKeyCode(&keycode);
+    keyEvent->GetCharCode(&charcode);
 #ifdef DO_REFLOW_DEBUG
     if (code >= 32) {
       REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
@@ -3424,11 +3426,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
                                 0, -1);
       } break;
 
-
-    case nsIDOMKeyEvent::DOM_VK_SPACE: {
-      newIndex = mEndSelectionIndex;
-      } break;
-  
 #if defined(XP_WIN) || defined(XP_OS2)
     case nsIDOMKeyEvent::DOM_VK_F4: {
       if (IsInDropDownMode() == PR_TRUE) {
@@ -3453,19 +3450,19 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
+      
+      if (charcode == ' ') {
+        newIndex = mEndSelectionIndex;
+        break;
+      }
       if (isControl) {
         return NS_OK;
       }
 
       didIncrementalSearch = PR_TRUE;
-
-      PRUint32 charCode, keyCode;
-      keyEvent->GetCharCode(&charCode);
-      keyEvent->GetKeyCode(&keyCode);
-
-      if (charCode == 0) {
+      if (charcode == 0) {
         // Backspace key will delete the last char in the string
-        if (keyCode == NS_VK_BACK && !GetIncrementalString().IsEmpty()) {
+        if (keycode == NS_VK_BACK && !GetIncrementalString().IsEmpty()) {
           GetIncrementalString().Truncate(GetIncrementalString().Length() - 1);
         }
         return NS_OK;
@@ -3473,7 +3470,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       
       needPreventDefault = PR_FALSE;
 
-      PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
+      PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charcode));
 
       DOMTimeStamp keyTime;
       aKeyEvent->GetTimeStamp(&keyTime);
@@ -3532,9 +3529,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
   //if current key has been processed then we need to call PreventDefault()
   if (needPreventDefault){
-	  
       aKeyEvent->PreventDefault();
-      
   }
 
   // If we didn't do an incremental search, clear the string
@@ -3546,7 +3541,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
     // If you hold control, no key will actually do anything except space.
-    if (isControl && keycode != nsIDOMKeyEvent::DOM_VK_SPACE) {
+    if (isControl && charcode != ' ') {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
       ScrollToIndex(newIndex);
