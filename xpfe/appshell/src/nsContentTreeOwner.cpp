@@ -257,8 +257,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewBrowser(PRUint32 aChromeFlags,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::FindNamedBrowserChrome(const PRUnichar* aName,
-   nsIWebBrowserChrome** aWebBrowserChrome)
+NS_IMETHODIMP nsContentTreeOwner::FindNamedBrowser(const PRUnichar* aName,
+   nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
