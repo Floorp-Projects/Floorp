@@ -29,6 +29,7 @@ LIBRARY_NAME=msgcompose
 EXPORTS = \
 	nsSmtpUrl.h	\
 	nsSmtpProtocol.h \
+	nsSmtpService.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -37,11 +38,9 @@ CPPSRCS = \
 	msgCompGlue.cpp	\
 	nsSmtpUrl.cpp \
 	nsSmtpProtocol.cpp \
-	msgCompGlue.cpp \
-	nsMsgCompFields.cpp \
-	nsMsgCompose.cpp \
 	nsMsgSend.cpp \
 	nsMsgSendPart.cpp \
+	nsSmtpService.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
