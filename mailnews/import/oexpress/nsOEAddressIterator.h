@@ -47,8 +47,8 @@ public:
 	nsOEAddressIterator( CWAB *pWab, nsIAddrDatabase *database);
 	~nsOEAddressIterator();
 	
-	virtual PRBool	EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
-	virtual PRBool	EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
+	virtual nsresult  EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
+	virtual nsresult  EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
 
 private:
 	PRBool		BuildCard( const PRUnichar * pName, nsIMdbRow *card, LPMAILUSER pUser);

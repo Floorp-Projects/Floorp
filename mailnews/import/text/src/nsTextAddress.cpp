@@ -961,13 +961,13 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 
 void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
 {
-    nsIMdbRow* newRow = nsnull;
+    nsCOMPtr <nsIMdbRow> newRow;
     if (m_database)
     {
         if (bIsList)
-            m_database->GetNewListRow(&newRow); 
+            m_database->GetNewListRow(getter_AddRefs(newRow)); 
         else
-            m_database->GetNewRow(&newRow); 
+            m_database->GetNewRow(getter_AddRefs(newRow)); 
 
         if (!newRow)
             return;

@@ -78,6 +78,7 @@ private:
 	void		SanitizeValue( nsString& val);
 	void		SplitString( nsString& val1, nsString& val2);
 	PRBool		BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
+  nsresult  CreateList( const PRUnichar * pName, nsIAddrDatabase *pDb);
 
 private:
 	PRBool				m_gotFolders;

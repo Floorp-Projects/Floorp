@@ -49,8 +49,8 @@
 
 class CWabIterator {
 public:
-	virtual PRBool	EnumUser( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
-	virtual PRBool	EnumList( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
+	virtual nsresult  EnumUser( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
+	virtual nsresult  EnumList( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
 };
 
 

@@ -99,7 +99,7 @@ public:
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
 	
-private:
+public:
 	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
 	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
 	static void	AddLinebreak( nsString *pStream);
@@ -159,6 +159,9 @@ public:
 		{ return( NS_ERROR_FAILURE);}
 	
 	NS_IMETHOD SetSampleLocation( nsIFileSpec *) { return( NS_OK); }
+
+private:
+	static void	ReportSuccess( nsString& name, nsString *pStream);
 
 private:
 	CWAB *	m_pWab;
@@ -452,10 +455,9 @@ NS_IMETHODIMP ImportOEMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSour
       
     PRBool		abort = PR_FALSE;
     nsString	name;
-    PRUnichar *	pName;
-    if (NS_SUCCEEDED( pSource->GetDisplayName( &pName))) {
+    nsXPIDLString pName;
+    if (NS_SUCCEEDED( pSource->GetDisplayName( getter_Copies(pName)))) {
     	name = pName;
-    	nsCRT::free( pName);
     }
     
 	PRUint32 mailSize = 0;
@@ -643,12 +645,39 @@ NS_IMETHODIMP ImportOEAddressImpl::ImportAddressBook(	nsIImportABDescriptor *sou
 		return( NS_ERROR_FAILURE);
 	}
     
-    IMPORT_LOG0( "IMPORTING OUTLOOK EXPRESS ADDRESS BOOK\n");
+  IMPORT_LOG0( "IMPORTING OUTLOOK EXPRESS ADDRESS BOOK\n");
 
-    m_doneSoFar = 0;
-    nsOEAddressIterator * pIter = new nsOEAddressIterator( m_pWab, destination);
-    m_pWab->IterateWABContents( pIter, &m_doneSoFar);
-    delete pIter;
+  nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsOEStringBundle::GetStringBundleProxy()));
+  nsString	success;
+  nsString	error;
+  if (!source || !destination || !fatalError)
+  {
+    nsOEStringBundle::GetStringByID( OEIMPORT_ADDRESS_BADPARAM, error, bundle);
+    if (fatalError)
+      *fatalError = PR_TRUE;
+    ImportOEMailImpl::SetLogs( success, error, errorLog, successLog);
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  m_doneSoFar = 0;
+  nsOEAddressIterator * pIter = new nsOEAddressIterator( m_pWab, destination);
+  HRESULT hr = m_pWab->IterateWABContents( pIter, &m_doneSoFar);
+  delete pIter;
+
+  nsString	name;
+  if (SUCCEEDED(hr))
+  {
+    nsXPIDLString pName;
+    if (NS_SUCCEEDED( source->GetPreferredName(getter_Copies(pName))))
+    {
+      name = pName;
+      ReportSuccess( name, &success);
+    }
+  }
+  else
+    ImportOEMailImpl::ReportError( OEIMPORT_ADDRESS_CONVERTERROR, name, &error);
+
+  ImportOEMailImpl::SetLogs( success, error, errorLog, successLog);
     
   nsresult rv = destination->Commit(nsAddrDBCommitType::kLargeCommit);
 	return rv;
@@ -665,3 +694,17 @@ NS_IMETHODIMP ImportOEAddressImpl::GetImportProgress(PRUint32 *_retval)
 	return( NS_OK);
 }
 
+void ImportOEAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
+{
+  if (!pStream)
+    return;
+  // load the success string
+  nsIStringBundle *pBundle = nsOEStringBundle::GetStringBundleProxy();
+  PRUnichar *pFmt = nsOEStringBundle::GetStringByID( OEIMPORT_ADDRESS_SUCCESS, pBundle);
+  PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
+  pStream->Append( pText);
+  nsTextFormatter::smprintf_free( pText);
+  nsOEStringBundle::FreeString( pFmt);
+  ImportOEMailImpl::AddLinebreak( pStream);
+  NS_IF_RELEASE( pBundle);
+}

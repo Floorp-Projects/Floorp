@@ -117,7 +117,7 @@ nsOEAddressIterator::~nsOEAddressIterator()
 	NS_IF_RELEASE( m_database);
 }
 
-PRBool nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
+nsresult nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
 {
 	IMPORT_LOG1( "User: %S\n", pName);
 	
@@ -128,13 +128,15 @@ PRBool nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, U
 		if (pUser) {
 			// Get a new row from the database!
 			nsIMdbRow* newRow = nsnull;
-			m_database->GetNewRow( &newRow); 
+			rv = m_database->GetNewRow( &newRow); 
+      NS_ENSURE_SUCCESS(rv, rv);
 			// FIXME: Check with Candice about releasing the newRow if it
 			// isn't added to the database.  Candice's code in nsAddressBook
 			// never releases it but that doesn't seem right to me!
 			if (newRow) {
 				if (BuildCard( pName, newRow, pUser)) {
-					m_database->AddCardRowToDB( newRow);
+					rv = m_database->AddCardRowToDB( newRow);
+          NS_ENSURE_SUCCESS(rv, rv);
 					IMPORT_LOG0( "* Added entry to address book database\n");
 				}
 			}
@@ -142,13 +144,32 @@ PRBool nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, U
 		}
 	}	
 	
-	return( PR_TRUE);
+	return(rv);
 }
 
-PRBool nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
+nsresult nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
 {
-	IMPORT_LOG1( "List: %S\n", pName);
-	return( PR_TRUE);
+  // If no name provided then we're done.
+  if (!pName || !(*pName))
+    return NS_OK;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // Make sure we have db to work with.
+  if (!m_database)
+    return rv;
+
+  nsCOMPtr <nsIMdbRow> newRow;
+  rv = m_database->GetNewListRow(getter_AddRefs(newRow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString column;
+  column.AssignWithConversion(pName);
+  rv = m_database->AddListName(newRow, column.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = m_database->AddCardRowToDB(newRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = m_database->AddListDirNode(newRow);
+  return rv;
 }
 
 void nsOEAddressIterator::SanitizeValue( nsString& val)

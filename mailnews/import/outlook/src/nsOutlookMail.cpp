@@ -936,6 +936,15 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 						}
 					}
 				}
+        else if (type.Equals(NS_LITERAL_CSTRING("IPM.DistList")))
+        {
+          // This is a list/group, add it to the address book!
+          subject.Truncate( 0);
+          pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);
+          if (pVal)
+            m_mapi.GetStringFromProp( pVal, subject);
+          CreateList(subject.get(), pDb);
+        }
 			}			
 
 			lpMsg->Release();
@@ -945,6 +954,31 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 
   rv = pDb->Commit(nsAddrDBCommitType::kLargeCommit);
 	return rv;
+}
+
+nsresult nsOutlookMail::CreateList( const PRUnichar * pName, nsIAddrDatabase *pDb)
+{
+  // If no name provided then we're done.
+  if (!pName || !(*pName))
+    return NS_OK;
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // Make sure we have db to work with.
+  if (!pDb)
+    return rv;
+
+  nsCOMPtr <nsIMdbRow> newRow;
+  rv = pDb->GetNewListRow(getter_AddRefs(newRow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString column;
+  column.AssignWithConversion(pName);
+  rv = pDb->AddListName(newRow, column.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = pDb->AddCardRowToDB(newRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = pDb->AddListDirNode(newRow);
+  return rv;
 }
 
 void nsOutlookMail::SanitizeValue( nsString& val)
