@@ -38,16 +38,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSyncLoader.h"
+#include "jsapi.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventQueueService.h"
+#include "nsIJSContextStack.h"
 #include "nsIPrivateDOMImplementation.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsNetUtil.h"
+#include "nsIHttpChannel.h"
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -168,22 +172,34 @@ nsSyncLoader::~nsSyncLoader()
     }
 }
 
-NS_IMPL_ISUPPORTS3(nsSyncLoader, nsISyncLoader, nsIDOMLoadListener, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS5(nsSyncLoader,
+                   nsISyncLoader,
+                   nsIDOMLoadListener,
+                   nsIHttpEventSink,
+                   nsIInterfaceRequestor,
+                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocument **_retval)
+nsSyncLoader::LoadDocument(nsIURI* aDocumentURI,
+                           nsIDocument *aLoader,
+                           nsIDOMDocument **aResult)
 {
-    nsresult rv = NS_OK;
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = nsnull;
 
     nsCOMPtr<nsIURI> loaderURI;
     aLoader->GetDocumentURL(getter_AddRefs(loaderURI));
 
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = securityManager->CheckLoadURI(loaderURI, documentURI,
+    rv = securityManager->CheckLoadURI(loaderURI, aDocumentURI,
                                        nsIScriptSecurityManager::STANDARD);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = securityManager->CheckSameOriginURI(loaderURI, aDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -197,7 +213,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
 
     nsCOMPtr<nsIPrivateDOMImplementation> privImplementation(do_QueryInterface(implementation, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    privImplementation->Init(documentURI);
+    privImplementation->Init(aDocumentURI);
 
     // Create an empty document from it
     nsString emptyStr;
@@ -208,7 +224,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
                                         getter_AddRefs(DOMDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewChannel(getter_AddRefs(mChannel), documentURI, nsnull, loadGroup);
+    rv = NS_NewChannel(getter_AddRefs(mChannel), aDocumentURI, nsnull, loadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Make sure we've been opened
@@ -257,6 +273,9 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
                                      PR_FALSE);
 
     if (NS_SUCCEEDED(rv)) {
+        // Hook us up to listen to redirects and the like
+        mChannel->SetNotificationCallbacks(this);
+
         // Start reading from the channel
         rv = mChannel->AsyncOpen(listener, nsnull);
 
@@ -291,15 +310,13 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
     rv = target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
                                                          proxy), 
                                           NS_GET_IID(nsIDOMLoadListener));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMElement> documentElement;
     DOMDocument->GetDocumentElement(getter_AddRefs(documentElement));
     if (mLoadSuccess && documentElement) {
-        *_retval = DOMDocument;
-        NS_ADDREF(*_retval);
+        *aResult = DOMDocument;
+        NS_ADDREF(*aResult);
     }
 
     rv = service->PopThreadEventQueue(currentThreadQ);
@@ -350,4 +367,40 @@ nsSyncLoader::Error(nsIDOMEvent* aEvent)
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSyncLoader::OnRedirect(nsIHttpChannel *aHttpChannel,
+                         nsIChannel *aNewChannel)
+{
+    NS_ENSURE_ARG_POINTER(aNewChannel);
+
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> oldURI;
+    rv = aHttpChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = secMan->CheckSameOriginURI(oldURI, newURI);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mChannel = aNewChannel;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSyncLoader::GetInterface(const nsIID & aIID,
+                           void **aResult)
+{
+    return QueryInterface(aIID, aResult);
 }

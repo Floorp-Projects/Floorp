@@ -46,6 +46,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
 #include "nsIDOMXMLDocument.h"
+#include "nsIScriptContext.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -139,6 +140,9 @@ protected:
   nsString mBaseTarget;
 
   nsIParser *mParser;
+
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+  PRBool mCrossSiteAccessEnabled;
 };
 
 

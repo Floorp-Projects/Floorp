@@ -25,7 +25,6 @@ REQUIRES	= string \
 		  xpcom \
 		  necko \
 		  dom \
-		  layout \
 		  widget \
 		  js \
 		  appshell \

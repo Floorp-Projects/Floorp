@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  mimetype \
 		  unicharutil \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \

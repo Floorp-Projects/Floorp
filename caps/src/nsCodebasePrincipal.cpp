@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsScriptSecurityManager.h"
 
 NS_IMPL_QUERY_INTERFACE3_CI(nsCodebasePrincipal,
                             nsICodebasePrincipal,
@@ -179,129 +180,33 @@ nsCodebasePrincipal::GetSpec(char **spec)
     return *spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-
 NS_IMETHODIMP
-nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
+nsCodebasePrincipal::Equals(nsIPrincipal *aOther, PRBool *result)
 {
-    // Equals is defined as object equality or same origin
+    if (this == aOther) 
+    {
+	 *result = PR_TRUE;
+	 return NS_OK;
+    }
     *result = PR_FALSE;
-    if (this == other) 
-	{
-        *result = PR_TRUE;
-        return NS_OK;
-    }
-    if (other == nsnull) 
-        // return false
+    if (!aOther)
         return NS_OK;
 
-    // Get the other principal's URI
-    nsCOMPtr<nsICodebasePrincipal> otherCodebase;
-    if (NS_FAILED(other->QueryInterface(
-            NS_GET_IID(nsICodebasePrincipal),
-            (void **) getter_AddRefs(otherCodebase))))
+    // Get a URI from the other principal
+    nsCOMPtr<nsICodebasePrincipal> otherCodebase(
+        do_QueryInterface(aOther));
+    if (!otherCodebase)
+    {
+        // Other principal is not a codebase, so return false
         return NS_OK;
+    }
     nsCOMPtr<nsIURI> otherURI;
-    if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI))))
-        return NS_ERROR_FAILURE;
+    otherCodebase->GetURI(getter_AddRefs(otherURI));
 
-    // If either uri is a jar URI, get the base URI
-    nsCOMPtr<nsIJARURI> jarURI;
-    nsCOMPtr<nsIURI> myBaseURI(mURI);
-    while((jarURI = do_QueryInterface(myBaseURI)))
-    {
-        jarURI->GetJARFile(getter_AddRefs(myBaseURI));
-    }
-    while((jarURI = do_QueryInterface(otherURI)))
-    {
-        jarURI->GetJARFile(getter_AddRefs(otherURI));
-    }
-
-    if (!myBaseURI || !otherURI)
-        return NS_ERROR_FAILURE;
-
-    // Compare schemes
-    nsCAutoString otherScheme;
-    nsresult rv = otherURI->GetScheme(otherScheme);
-    nsCAutoString myScheme;
-    if (NS_SUCCEEDED(rv))
-        rv = myBaseURI->GetScheme(myScheme);
-    if (NS_SUCCEEDED(rv) && otherScheme.Equals(myScheme)) 
-    {
-        if (otherScheme.Equals("file"))
-        {
-            // All file: urls are considered to have the same origin.
-            *result = PR_TRUE;
-        }
-        else if (otherScheme.Equals("imap")    ||
-                 otherScheme.Equals("mailbox") ||
-                 otherScheme.Equals("news"))
-        {
-            // Each message is a distinct trust domain; use the 
-            // whole spec for comparison
-            nsCAutoString otherSpec;
-            if (NS_FAILED(otherURI->GetSpec(otherSpec)))
-                return NS_ERROR_FAILURE;
-            nsCAutoString mySpec;
-            if (NS_FAILED(myBaseURI->GetSpec(mySpec)))
-                return NS_ERROR_FAILURE;
-            *result = otherSpec.Equals(mySpec);
-        } 
-		else
-		{
-            // Compare hosts
-            nsCAutoString otherHost;
-            rv = otherURI->GetHost(otherHost);
-            nsCAutoString myHost;
-            if (NS_SUCCEEDED(rv))
-                rv = myBaseURI->GetHost(myHost);
-            *result = NS_SUCCEEDED(rv) && otherHost.Equals(myHost);
-            if (*result) 
-            {
-                // Compare ports
-                PRInt32 otherPort;
-                rv = otherURI->GetPort(&otherPort);
-                PRInt32 myPort;
-                if (NS_SUCCEEDED(rv))
-                    rv = myBaseURI->GetPort(&myPort);
-                *result = NS_SUCCEEDED(rv) && otherPort == myPort;
-                // If the port comparison failed, see if either URL has a
-                // port of -1. If so, replace -1 with the default port
-                // for that scheme.
-                if(!*result && (myPort == -1 || otherPort == -1))
-                {
-                    PRInt32 defaultPort;
-                    //XXX had to hard-code the defualt port for http(s) here.
-                    //    remove this after darin fixes bug 113206
-                    if (myScheme.Equals("http"))
-                        defaultPort = 80;
-                    else if (myScheme.Equals("https"))
-                        defaultPort = 443;
-                    else
-                    {
-                        nsCOMPtr<nsIIOService> ioService(
-                            do_GetService(NS_IOSERVICE_CONTRACTID));
-                        if (!ioService)
-                            return NS_ERROR_FAILURE;
-                        nsCOMPtr<nsIProtocolHandler> protocolHandler;
-                        rv = ioService->GetProtocolHandler(myScheme.get(),
-                                                           getter_AddRefs(protocolHandler));
-                        if (NS_FAILED(rv))
-                            return rv;
-                    
-                        rv = protocolHandler->GetDefaultPort(&defaultPort);
-                        if (NS_FAILED(rv) || defaultPort == -1)
-                            return NS_OK; // No default port for this scheme
-                    }
-                    if (myPort == -1)
-                        myPort = defaultPort;
-                    else if (otherPort == -1)
-                        otherPort = defaultPort;
-                    *result = otherPort == myPort;
-                }
-            }
-        }
-    }
-    return NS_OK;
+    NS_ENSURE_TRUE(otherURI, NS_ERROR_FAILURE);
+    return nsScriptSecurityManager::SecurityCompareURIs(mURI,
+                                                        otherURI,
+                                                        result);
 }
 
 //////////////////////////////////////////

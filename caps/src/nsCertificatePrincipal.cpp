@@ -65,7 +65,7 @@ NS_IMETHODIMP
 nsCertificatePrincipal::GetCertificateID(char** aCertificateID) 
 {
     *aCertificateID = nsCRT::strdup(mCertificateID);
-    return *mCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *aCertificateID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -80,7 +80,7 @@ nsCertificatePrincipal::SetCommonName(const char* aCommonName)
 {
     PR_FREEIF(mCommonName);
     mCommonName = nsCRT::strdup(aCommonName);
-    return * mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 ///////////////////////////////////////

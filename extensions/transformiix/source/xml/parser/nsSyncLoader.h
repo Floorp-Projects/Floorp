@@ -43,12 +43,17 @@
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsIDOMLoadListener.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIScriptContext.h"
 #include "nsISyncLoader.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
 
 class nsSyncLoader : public nsISyncLoader,
                      public nsIDOMLoadListener,
+                     public nsIHttpEventSink,
+                     public nsIInterfaceRequestor,
                      public nsSupportsWeakReference
 {
 public:
@@ -68,9 +73,14 @@ public:
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
+    NS_DECL_NSIHTTPEVENTSINK
+
+    NS_DECL_NSIINTERFACEREQUESTOR
+
 protected:
     nsCOMPtr<nsIChannel> mChannel;
-    PRBool mLoading, mLoadSuccess;
+    PRPackedBool mLoading;
+    PRPackedBool mLoadSuccess;
 };
 
 #endif

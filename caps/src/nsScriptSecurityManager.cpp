@@ -182,6 +182,141 @@ private:
     PRBool mMustFree;
 };
 
+/* Static function for comparing two URIs - for security purposes,
+ * two URIs are equivalent if their scheme, host, and port are equal.
+ */
+/*static*/ nsresult
+nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
+                                             nsIURI* aTargetURI,
+                                             PRBool* result)
+{
+    nsresult rv;
+    *result = PR_FALSE;
+
+    if (aSourceURI == aTargetURI)
+    {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    if (aTargetURI == nsnull) 
+    {
+        // return false
+        return NS_OK;
+    }
+
+    // If either uri is a jar URI, get the base URI
+    nsCOMPtr<nsIJARURI> jarURI;
+    nsCOMPtr<nsIURI> sourceBaseURI(aSourceURI);
+    while((jarURI = do_QueryInterface(sourceBaseURI)))
+    {
+        jarURI->GetJARFile(getter_AddRefs(sourceBaseURI));
+    }
+    nsCOMPtr<nsIURI> targetBaseURI(aTargetURI);
+    while((jarURI = do_QueryInterface(targetBaseURI)))
+    {
+        jarURI->GetJARFile(getter_AddRefs(targetBaseURI));
+    }
+
+    if (!sourceBaseURI || !targetBaseURI)
+        return NS_ERROR_FAILURE;
+
+    // Compare schemes
+    nsCAutoString targetScheme;
+    rv = targetBaseURI->GetScheme(targetScheme);
+    nsCAutoString sourceScheme;
+    if (NS_SUCCEEDED(rv))
+        rv = sourceBaseURI->GetScheme(sourceScheme);
+    if (NS_SUCCEEDED(rv) && 
+        targetScheme.Equals(sourceScheme, nsCaseInsensitiveCStringComparator())) 
+    {
+        if (targetScheme.Equals(NS_LITERAL_CSTRING("file"),
+            nsCaseInsensitiveCStringComparator()))
+        {
+            // All file: urls are considered to have the same origin.
+            *result = PR_TRUE;
+        }
+        else if (targetScheme.Equals(NS_LITERAL_CSTRING("imap"),
+                                     nsCaseInsensitiveCStringComparator()) ||
+                 targetScheme.Equals(NS_LITERAL_CSTRING("mailbox"),
+                                     nsCaseInsensitiveCStringComparator()) ||
+                 targetScheme.Equals(NS_LITERAL_CSTRING("news"),
+                                     nsCaseInsensitiveCStringComparator()))
+        {
+            // Each message is a distinct trust domain; use the 
+            // whole spec for comparison
+            nsCAutoString targetSpec;
+            if (NS_FAILED(targetBaseURI->GetSpec(targetSpec)))
+                return NS_ERROR_FAILURE;
+            nsCAutoString sourceSpec;
+            if (NS_FAILED(sourceBaseURI->GetSpec(sourceSpec)))
+                return NS_ERROR_FAILURE;
+            *result = targetSpec.Equals(sourceSpec);
+        }
+        else
+        {
+            // Compare hosts
+            nsCAutoString targetHost;
+            rv = targetBaseURI->GetHost(targetHost);
+            nsCAutoString sourceHost;
+            if (NS_SUCCEEDED(rv))
+                rv = sourceBaseURI->GetHost(sourceHost);
+            *result = NS_SUCCEEDED(rv) &&
+                      targetHost.Equals(sourceHost,
+                                        nsCaseInsensitiveCStringComparator());
+            if (*result) 
+            {
+                // Compare ports
+                PRInt32 targetPort;
+                rv = targetBaseURI->GetPort(&targetPort);
+                PRInt32 sourcePort;
+                if (NS_SUCCEEDED(rv))
+                    rv = sourceBaseURI->GetPort(&sourcePort);
+                *result = NS_SUCCEEDED(rv) && targetPort == sourcePort;
+                // If the port comparison failed, see if either URL has a
+                // port of -1. If so, replace -1 with the default port
+                // for that scheme.
+                if (!*result && (sourcePort == -1 || targetPort == -1))
+                {
+                    PRInt32 defaultPort;
+                    //XXX had to hard-code the defualt port for http(s) here.
+                    //    remove this after darin fixes bug 113206
+                    if (sourceScheme.Equals(NS_LITERAL_CSTRING("http"),
+                                            nsCaseInsensitiveCStringComparator()))
+                        defaultPort = 80;
+                    else if (sourceScheme.Equals(NS_LITERAL_CSTRING("https"),
+                                                 nsCaseInsensitiveCStringComparator()))
+                        defaultPort = 443;
+                    else
+                    {
+                        nsCOMPtr<nsIIOService> ioService(
+                            do_GetService(NS_IOSERVICE_CONTRACTID));
+                        if (!ioService)
+                            return NS_ERROR_FAILURE;
+                        nsCOMPtr<nsIProtocolHandler> protocolHandler;
+                        rv = ioService->GetProtocolHandler(sourceScheme.get(),
+                                                           getter_AddRefs(protocolHandler));
+                        if (NS_FAILED(rv))
+                        {
+                            *result = PR_FALSE;
+                            return NS_OK;
+                        }
+                    
+                        rv = protocolHandler->GetDefaultPort(&defaultPort);
+                        if (NS_FAILED(rv) || defaultPort == -1)
+                            return NS_OK; // No default port for this scheme
+                    }
+                    if (sourcePort == -1)
+                        sourcePort = defaultPort;
+                    else if (targetPort == -1)
+                        targetPort = defaultPort;
+                    *result = targetPort == sourcePort;
+                }
+            }
+        }
+    }
+    return NS_OK;
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////
@@ -342,6 +477,79 @@ nsScriptSecurityManager::CheckConnect(JSContext* cx,
                                    nsnull, aClassName, STRING_TO_JSVAL(propertyName), nsnull);
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
+                                         nsIURI* aTargetURI)
+{
+    nsresult rv;
+
+    // Get a context if necessary
+    if (!cx)
+    {
+        cx = GetCurrentJSContext();
+        if (!cx)
+            return NS_OK; // No JS context, so allow access
+    }
+
+    // Get a principal from the context
+    nsCOMPtr<nsIPrincipal> sourcePrincipal;
+    rv = GetSubjectPrincipal(cx, getter_AddRefs(sourcePrincipal));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!sourcePrincipal)
+    {
+        NS_WARNING("CheckSameOrigin called on script w/o principals; should this happen?");
+        return NS_OK;
+    }
+
+    PRBool equals = PR_FALSE;
+    rv = sourcePrincipal->Equals(mSystemPrincipal, &equals);
+    if (NS_SUCCEEDED(rv) && equals)
+    {
+        // This is a system (chrome) script, so allow access
+        return NS_OK;
+    }
+
+    // Get a URI from the source principal
+    nsCOMPtr<nsICodebasePrincipal> sourceCodebase(
+        do_QueryInterface(sourcePrincipal, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIURI> sourceURI;
+    rv = sourceCodebase->GetURI(getter_AddRefs(sourceURI));
+    NS_ENSURE_TRUE(sourceURI, NS_ERROR_FAILURE);
+
+    // Compare origins
+    PRBool sameOrigin = PR_FALSE;
+    rv = SecurityCompareURIs(sourceURI, aTargetURI, &sameOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!sameOrigin)
+    {
+         ReportError(cx, NS_LITERAL_STRING("CheckSameOriginError"), sourceURI, aTargetURI);
+         return NS_ERROR_DOM_BAD_URI;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
+                                            nsIURI* aTargetURI)
+{
+    nsresult rv;
+    PRBool sameOrigin = PR_FALSE;
+    rv = SecurityCompareURIs(aSourceURI, aTargetURI, &sameOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!sameOrigin)
+    {
+         ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"), 
+                     aSourceURI, aTargetURI);
+         return NS_ERROR_DOM_BAD_URI;
+    }
+    return NS_OK;
+}
+
 nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                  nsIXPCNativeCallContext* aCallContext,
@@ -432,7 +640,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #ifdef DEBUG_mstoltz
             printf("noAccess ");
 #endif
-            rv = NS_ERROR_DOM_SECURITY_ERR;
+            rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
             break;
 
         case SCRIPT_SECURITY_ALL_ACCESS:
@@ -468,9 +676,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
                     return NS_ERROR_FAILURE;
                 }
-                rv = CheckSameOrigin(
-                       cx, subjectPrincipal, objectPrincipal,
-                       aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal, aAction);
                 break;
             }
         default:
@@ -582,9 +788,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 }
 
 nsresult
-nsScriptSecurityManager::CheckSameOrigin(JSContext *aCx, nsIPrincipal* aSubject,
-                                         nsIPrincipal* aObject, PRUint32 aAction)
+nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
+                                                nsIPrincipal* aObject,
+                                                PRUint32 aAction)
 {
+    nsresult rv;
     /*
     ** Get origin of subject and object and compare.
     */
@@ -592,8 +800,8 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext *aCx, nsIPrincipal* aSubject,
         return NS_OK;
 
     PRBool isSameOrigin = PR_FALSE;
-    if (NS_FAILED(aSubject->Equals(aObject, &isSameOrigin)))
-        return NS_ERROR_FAILURE;
+    rv = aSubject->Equals(aObject, &isSameOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (isSameOrigin)
         return NS_OK;
@@ -603,22 +811,22 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext *aCx, nsIPrincipal* aSubject,
     if (objectCodebase)
     {
         nsXPIDLCString origin;
-        if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
-            return NS_ERROR_FAILURE;
+        rv = objectCodebase->GetOrigin(getter_Copies(origin));
+        NS_ENSURE_SUCCESS(rv, rv);
         if (nsCRT::strcasecmp(origin, "about:blank") == 0)
             return NS_OK;
     }
 
     /*
-    ** If we failed the origin tests it still might be the case that we
-    ** are a signed script and have permissions to do this operation.
-    ** Check for that here
+    * If we failed the origin tests it still might be the case that we
+    * are a signed script and have permissions to do this operation.
+    * Check for that here.
     */
     PRBool capabilityEnabled = PR_FALSE;
     const char* cap = aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ?
                       "UniversalBrowserWrite" : "UniversalBrowserRead";
-    if (NS_FAILED(IsCapabilityEnabled(cap, &capabilityEnabled)))
-        return NS_ERROR_FAILURE;
+    rv = IsCapabilityEnabled(cap, &capabilityEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (capabilityEnabled)
         return NS_OK;
 
@@ -822,7 +1030,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     nsCAutoString spec;
     if (NS_FAILED(aURI->GetAsciiSpec(spec)))
         return NS_ERROR_FAILURE;
-    JS_ReportError(cx, "illegal URL method '%s'", spec.get());
+    JS_ReportError(cx, "Access to '%s' from script denied", spec.get());
     return NS_ERROR_DOM_BAD_URI;
 }
 
@@ -953,6 +1161,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "res",             DenyProtocol   }
     };
 
+    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
     {
         if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0)
@@ -967,7 +1176,12 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                 // Allow access if pref is false
                 {
                     mSecurityPref->SecurityGetBoolPref("security.checkloaduri", &doCheck);
-                    return doCheck ? ReportErrorToConsole(aTargetURI) : NS_OK;
+                    if (doCheck)
+                    {
+                        ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                        return NS_ERROR_DOM_BAD_URI;
+                    }
+                    return NS_OK;
                 }
             case ChromeProtocol:
                 if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
@@ -976,10 +1190,12 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                 if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
                     (PL_strcmp(sourceScheme, "resource") == 0))
                     return NS_OK;
-                return ReportErrorToConsole(aTargetURI);
+                ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                return NS_ERROR_DOM_BAD_URI;
             case DenyProtocol:
                 // Deny access
-                return ReportErrorToConsole(aTargetURI);
+                ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
+                return NS_ERROR_DOM_BAD_URI;
             }
         }
     }
@@ -992,38 +1208,76 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     return NS_OK;
 }
 
+#define PROPERTIES_URL "chrome://communicator/locale/security/caps.properties"
+
 nsresult
-nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
+nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
+                                     nsIURI* aSource, nsIURI* aTarget)
 {
-    nsCAutoString spec;
-    nsresult rv = aTarget->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
+    NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
 
-    nsAutoString msg;
-    msg.Assign(NS_LITERAL_STRING("The link to "));
-    msg.AppendWithConversion(spec.get());
-    msg.Append(NS_LITERAL_STRING(" was blocked by the security manager.\nRemote content may not link to local content."));
-    // Report error in JS console
-    nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
-    if (console)
+    // First, create the error message text
+    // create a bundle for the localization
+    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the source URL spec
+    nsCAutoString sourceSpec;
+    rv = aSource->GetAsciiSpec(sourceSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Get the target URL spec
+    nsCAutoString targetSpec;
+    rv = aTarget->GetAsciiSpec(targetSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Localize the error message
+    nsXPIDLString message;
+    NS_ConvertASCIItoUCS2 ucsSourceSpec(sourceSpec);
+    NS_ConvertASCIItoUCS2 ucsTargetSpec(targetSpec);
+    const PRUnichar *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
+    rv = bundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
+                                      formatStrings,
+                                      2,
+                                      getter_Copies(message));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If a JS context was passed in, set a JS exception.
+    // Otherwise, print the error message directly to the JS console
+    // and to standard output
+    if (cx)
     {
-      PRUnichar* messageUni = ToNewUnicode(msg);
-      if (!messageUni)
-          return NS_ERROR_FAILURE;
-      console->LogStringMessage(messageUni);
-      nsMemory::Free(messageUni);
+        JS_SetPendingException(cx,
+            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
+                NS_REINTERPRET_CAST(const jschar*, message.get()))));
+        // Tell XPConnect that an exception was thrown, if appropriate
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+        if (xpc)
+        {
+            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
+            xpc->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+             if (xpcCallContext)
+                xpcCallContext->SetExceptionWasThrown(PR_TRUE);
+        }
     }
-#ifdef DEBUG
-    char* messageCstr = ToNewCString(msg);
-    if (!messageCstr)
-        return NS_ERROR_FAILURE;
-    fprintf(stderr, "%s\n", messageCstr);
-    PR_Free(messageCstr);
-#endif
-    //-- Always returns an error
-    return NS_ERROR_DOM_BAD_URI;
-}
+    else // Print directly to the console
+    {
+        nsCOMPtr<nsIConsoleService> console(
+            do_GetService("@mozilla.org/consoleservice;1"));
+        NS_ENSURE_TRUE(console, NS_ERROR_FAILURE);
 
+        console->LogStringMessage(message.get());
+#ifdef DEBUG
+        fprintf(stderr, "%s\n", NS_LossyConvertUCS2toASCII(message).get());
+#endif
+    }
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIStr(const char* aSourceURIStr, const char* aTargetURIStr,
@@ -1673,8 +1927,6 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     return NS_OK;
 }
 
-#define PROPERTIES_URL "chrome://communicator/locale/security/caps.properties"
-
 PRBool
 nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
                                             PRBool *checkValue)
@@ -1737,14 +1989,15 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     rv = aPrincipal->ToUserVisibleString(getter_Copies(source));
     if (NS_FAILED(rv))
         return PR_FALSE;
-    nsXPIDLString message;
-    message.Assign(nsTextFormatter::smprintf(query.get(), source.get()));
+    PRUnichar* message = nsTextFormatter::smprintf(query.get(), source.get());
+    NS_ENSURE_TRUE(message, PR_FALSE);
 
     PRInt32 buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
-    rv = prompter->ConfirmEx(title.get(), message.get(),
+    rv = prompter->ConfirmEx(title.get(), message,
                              (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                              (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                              nsnull, nsnull, nsnull, check.get(), checkValue, &buttonPressed);
+    nsTextFormatter::smprintf_free(message);
 
     if (NS_FAILED(rv))
         *checkValue = PR_FALSE;

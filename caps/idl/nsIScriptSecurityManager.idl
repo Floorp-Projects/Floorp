@@ -204,6 +204,20 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     boolean subjectPrincipalIsSystem();
 
+    /**
+     * Returns OK if aJSContext and target have the same "origin"
+     * (scheme, host, and port).
+     */
+    [noscript] void checkSameOrigin(in JSContextPtr aJSContext,
+                                    in nsIURI aTargetURI);
+
+    /**
+     * Returns OK if aSourceURI and target have the same "origin"
+     * (scheme, host, and port).
+     */
+    [noscript] void checkSameOriginURI(in nsIURI aSourceURI,
+                                       in nsIURI aTargetURI);
+
 };
 
 %{C++

@@ -100,6 +100,8 @@
 #include "nsContentUtils.h"
 #include "nsIElementFactory.h"
 #include "nsCRT.h"
+#include "nsIWindowWatcher.h"
+#include "nsIAuthPrompt.h"
 
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
@@ -217,7 +219,8 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 
 nsXMLDocument::nsXMLDocument() 
   : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
-    mCountCatalogSheets(0), mParser(nsnull)
+    mCountCatalogSheets(0), mParser(nsnull),
+    mCrossSiteAccessEnabled(PR_FALSE)
 {
 }
 
@@ -280,38 +283,76 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   return result;
 }
 
+/////////////////////////////////////////////////////
+// nsIInterfaceRequestor methods:
+//
 NS_IMETHODIMP
 nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
 {
-  // Since we implement all the interfaces that you can get with
-  // GetInterface() we can simply call QueryInterface() here and let
-  // it do all the work.
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    NS_ENSURE_ARG_POINTER(aSink);
+    *aSink = nsnull;
+
+    nsresult rv;
+    nsCOMPtr<nsIWindowWatcher> ww(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIAuthPrompt> prompt;
+    rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsIAuthPrompt *p = prompt.get();
+    NS_ADDREF(p);
+    *aSink = p;
+    return NS_OK;
+  }
+
 
   return QueryInterface(aIID, aSink);
 }
-
 
 // nsIHttpEventSink
 NS_IMETHODIMP
 nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 {
+  NS_ENSURE_ARG_POINTER(aNewChannel);
+
   nsresult rv;
 
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) 
+    return rv;
 
   nsCOMPtr<nsIURI> newLocation;
-  rv = aNewChannel->GetURI(getter_AddRefs(newLocation));
+  rv = aNewChannel->GetURI(getter_AddRefs(newLocation)); // The redirected URI
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+  if (mScriptContext && !mCrossSiteAccessEnabled) {
+    nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", & rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
+    if (!cx)
+      return NS_ERROR_UNEXPECTED;
+
+    stack->Push(cx);
+
+    rv = secMan->CheckSameOrigin(nsnull, newLocation);
+
+    stack->Pop(&cx);
+  
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   nsCOMPtr<nsIPrincipal> newCodebase;
-  rv = securityManager->GetCodebasePrincipal(newLocation,
-                                             getter_AddRefs(newCodebase));
+  rv = secMan->GetCodebasePrincipal(newLocation,
+                                    getter_AddRefs(newCodebase));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -364,6 +405,24 @@ nsXMLDocument::Load(const nsAString& aUrl)
   
   SetDocumentURL(uri);
   SetBaseURL(uri);
+
+  // Store script context, if any, in case we encounter redirect (because we need it there)
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (stack) {
+    JSContext *cx;
+    if (NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
+      nsISupports *priv = (nsISupports *)::JS_GetContextPrivate(cx);
+      if (priv) {
+        priv->QueryInterface(NS_GET_IID(nsIScriptContext), getter_AddRefs(mScriptContext));        
+      }
+    }
+  }
+
+  // Find out if UniversalBrowserRead privileges are enabled - we will need this
+  // in case of a redirect
+  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &mCrossSiteAccessEnabled);
+  if (NS_FAILED(rv)) return rv;
 
   // Create a channel
   rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, this);
