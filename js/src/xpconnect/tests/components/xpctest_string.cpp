@@ -113,8 +113,6 @@ static PRUnichar* GetTestWString(int* size)
 /* void GetWStringCopied ([retval] out wstring s); */
 NS_IMETHODIMP xpcstringtest::GetWStringCopied(PRUnichar **s)
 {
-    const char myResult[] = "result of xpcstringtest::GetStringB";
-
     if(!s)
         return NS_ERROR_NULL_POINTER;
 
