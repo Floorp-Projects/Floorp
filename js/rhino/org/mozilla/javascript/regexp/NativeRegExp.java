@@ -1379,7 +1379,63 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 return false;
     }
     
-    int matchGreedyKid(MatchState state, RENode ren, RENode stop,
+    
+	int greedyRecurse(GreedyState grState, int index, int previousKid)
+	{
+	    int kidMatch;
+	    int match;
+	    int num;
+
+	/*
+	*    when the kid match fails, we reset the parencount and run any 
+	*    previously succesful kid in order to restablish it's paren
+	*    contents.
+	*/
+
+	    num = grState.state.parenCount;
+	    kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
+	    if (kidMatch == -1) {
+	        grState.state.parenCount = num;
+	        if (previousKid != -1)
+	            matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+	        return matchRENodes(grState.state, grState.next, grState.stop, index);
+	    }
+	    else {
+	        if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
+	        if ((grState.maxKid == 0) || (++grState.kidCount < grState.maxKid)) {
+	            match = greedyRecurse(grState, kidMatch, index);
+	            if (match != -1) return match;
+	            --grState.kidCount;
+	            grState.state.parenCount = num;
+	            matchRENodes(grState.state, grState.kid, grState.next, index);
+	        }
+	        match = matchRENodes(grState.state, grState.next, grState.stop, kidMatch);
+	        if (match != -1) return match;
+	/* No subsequent kid could complete; final backtrack attempt with zero kids */        
+	        grState.state.parenCount = num;
+	        if (previousKid != -1)
+	            matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+	        return matchRENodes(grState.state, grState.next, grState.stop, index);
+	    }
+	}
+
+	int matchGreedyKid(MatchState state, RENode ren, RENode stop,
+                            int kidCount, int maxKid,
+                            int index, int previousKid)
+	{
+	    GreedyState grState = new GreedyState();
+	    grState.state = state;
+	    grState.kid = (RENode)ren.kid;
+	    grState.next = ren.next;
+	    grState.stop = stop;
+	    grState.kidCount = kidCount;
+	    grState.maxKid = (ren.op == REOP_QUANT) ? ren.max : 0;
+	    return greedyRecurse(grState, index, previousKid);
+	}
+
+	
+	/*
+	int matchGreedyKid(MatchState state, RENode ren, RENode stop,
                             int kidCount, int maxKid,
                             char[] input, int index, int previousKid)
     {
@@ -1423,10 +1479,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
             return deeper;
         }
     }
+	*/
 
-    int matchRENodes(MatchState state, RENode ren, RENode stop, 
-                                                char[] input, int index)
+    int matchRENodes(MatchState state, RENode ren, RENode stop, int index)
     {
+		char[] input = state.input;
         while ((ren != stop) && (ren != null))
         {
             switch (ren.op) {
@@ -1439,7 +1496,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         }
                         else {
                             int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                            stop, input, index);
+                                                            stop, index);
                             if (kidMatch != -1) return kidMatch;
                         }
                     }
@@ -1449,7 +1506,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         int lastKid = -1;
                         for (num = 0; num < ren.min; num++) {
                             int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
+                                                        ren.next, index);
                             if (kidMatch == -1)
                                 return -1;
                             else {
@@ -1457,37 +1514,41 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                 index = kidMatch;
                             }
                         }
-                        return matchGreedyKid(state, ren, stop, num, ren.max,
-                                                        input, index, lastKid);
+						if (num < ren.max)
+							return matchGreedyKid(state, ren, stop, num, ren.max,
+                                                        index, lastKid);
+						// Have matched the exact count required, 
+						// need to match the rest of the regexp.
+						break;
                     }
                 case REOP_PLUS: {
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
+                                                        ren.next, index);
                         if (kidMatch != -1)
                             return matchGreedyKid(state, ren, stop, 1, 0,
-                                                        input, kidMatch, index);
+                                                        kidMatch, index);
                         else
                             return -1;
                     }
                 case REOP_STAR:
                     return matchGreedyKid(state, ren, stop,
-                                                        0, 0, input, index, -1);
+                                                        0, 0, index, -1);
                 case REOP_OPT: {
                         int saveNum = state.parenCount;
                         if (((ren.flags & RENode.MINIMAL) != 0)) {
                             int restMatch = matchRENodes(state, ren.next,
-                                                        stop, input, index);
+                                                        stop, index);
                             if (restMatch != -1) return restMatch;
                         }
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
+                                                        ren.next, index);
                         if (kidMatch == -1) {
                             state.parenCount = saveNum;
                             break;
                         }
                         else {
                             int restMatch = matchRENodes(state, ren.next,
-                                                        stop, input, kidMatch);
+                                                        stop, kidMatch);
                             if (restMatch == -1) {
                                 // need to undo the result of running the kid
                                 state.parenCount = saveNum;
@@ -1526,13 +1587,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     }
                 case REOP_ASSERT: {
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
+                                                        ren.next, index);
                         if (kidMatch == -1) return -1;
                         break;
                     }
                 case REOP_ASSERT_NOT: {
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, input, index);
+                                                        ren.next, index);
                         if (kidMatch != -1) return -1;
                         break;
                     }
@@ -1597,7 +1658,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         int cp2;
                         for (cp2 = index; cp2 < input.length; cp2++) {
                             int cp3 = matchRENodes(state, ren.next,
-                                                            stop, input, cp2);
+                                                            stop, cp2);
                             if (cp3 != -1) return cp3;
             		        if (input[cp2] == '\n')
             		            return -1;
@@ -1611,7 +1672,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                 break;
                         while (cp2 >= index) {
                             int cp3 = matchRENodes(state, ren.next,
-                                                            stop, input, cp2);
+                                                            stop, cp2);
                             if (cp3 != -1)
                                 return cp3;
                             cp2--;
@@ -1742,14 +1803,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
         return index;
     }
 
-    int matchRegExp(MatchState state, RENode ren, char[] input, int index)
+    int matchRegExp(MatchState state, RENode ren, int index)
     {
         // have to include the position beyond the last character
         // in order to detect end-of-input/line condition
-        for (int i = index; i <= input.length; i++) {            
+        for (int i = index; i <= state.input.length; i++) {            
             state.skipped = i - index;
             state.parenCount = 0;
-            int result = matchRENodes(state, ren, null, input, i);
+            int result = matchRENodes(state, ren, null, i);
             if (result != -1)
                 return result;
         }
@@ -1783,6 +1844,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         state.cpend = charArray.length;
         state.start = start;
         state.skipped = 0;
+		state.input = charArray;
 
         state.parenCount = 0;
         state.maybeParens = new SubString[re.parenCount];
@@ -1794,7 +1856,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
          * Call the recursive matcher to do the real work.  Return null on mismatch
          * whether testing or not.  On match, return an extended Array object.
          */
-        index = matchRegExp(state, ren, charArray, index);
+        index = matchRegExp(state, ren, index);
         if (index == -1) {
             return null;
         }
@@ -2249,5 +2311,15 @@ class MatchState {
     SubString[] maybeParens;            /* possible paren substring pointers */
     SubString[] parens;                 /* certain paren substring matches */
     Scriptable  scope;
+	char[]		input;
+}
+
+class GreedyState {
+    MatchState state;
+    RENode kid;
+    RENode next;
+    RENode stop;
+    int kidCount;
+    int maxKid;
 }
 
