@@ -58,3 +58,82 @@ sol_getsp:
 sol_curthread:
 	movl	%ecx, %eax
 	ret
+
+/
+/ PR_StackPush(listp, elementp)
+/
+/ Atomically push ElementP onto linked list ListP.
+/
+	.text
+	.globl	PR_StackPush
+	.align	4
+PR_StackPush:
+	movl	4(%esp), %ecx
+	movl	$-1,%eax
+pulock:
+/ Already locked?
+	cmpl	%eax,(%ecx)
+	je	pulock
+
+/ Attempt to lock it
+	lock
+	xchgl	%eax, (%ecx)
+
+/ Did we set the lock?
+	cmpl	$-1, %eax
+	je	pulock
+
+/ We now have the lock.  Update pointers
+	movl	8(%esp), %edx
+	movl	%eax, (%edx)
+	movl	%edx, (%ecx)
+
+/ Done
+	ret
+
+
+/
+/ elementp = PR_StackPop(listp)
+/
+/ Atomically pop ElementP off linked list ListP
+/
+	.text
+	.globl	PR_StackPop
+	.align	4
+PR_StackPop:
+	movl	4(%esp), %ecx
+	movl	$-1, %eax
+polock:
+/ Already locked?
+	cmpl	%eax, (%ecx)
+	je	polock
+
+/ Attempt to lock it
+	lock
+	xchgl	%eax, (%ecx)
+
+/ Did we set the lock?
+	cmpl	$-1, %eax
+	je	polock
+
+/ We set the lock so now update pointers
+
+/ Was it empty?
+	movl	$0, %edx
+	cmpl	%eax,%edx
+	je	empty
+
+/ Get element "next" pointer
+	movl	(%eax), %edx
+
+/ Write NULL to the element "next" pointer
+	movl	$0, (%eax)
+
+empty:
+/ Put elements previous "next" value into listp
+/ NOTE: This also unlocks the listp
+	movl	%edx, (%ecx)
+
+/ Return previous listp value (already in eax)
+	ret
+
