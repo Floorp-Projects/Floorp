@@ -150,6 +150,20 @@ char *MSG_EscapeSearchUrl (const char *nntpCommand)
 	return result;
 }
 
+/* strip out non-printable characters */
+static void strip_nonprintable(char *string) {
+    char *dest, *src;
+
+    dest=src=string;
+    while (*src) {
+        while (*src != '\0' && !isprint(*src)) src++;
+        *dest=*src;
+        dest++;
+        src++;
+    }
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////
 // The nsNntpTestDriver is a class that I envision could be generalized to form the
 // building block of a protocol test harness. To configure it, you would list all of
@@ -289,6 +303,7 @@ void nsNntpTestDriver::InitializeTestDriver()
 	// prompt user for port...
 	printf("Enter port to use [%d]: ", m_port);
     fgets(portString, sizeof(portString), stdin);
+    strip_nonprintable(portString);
 	if (portString && *portString)
 	{
 		m_port = atoi(portString);
@@ -297,6 +312,7 @@ void nsNntpTestDriver::InitializeTestDriver()
 	// now prompt for the host name....
 	printf("Enter host name to use [%s]: ", m_host);
     fgets(hostString, sizeof(hostString), stdin);
+    strip_nonprintable(hostString);
 	if(hostString && *hostString)
 	{
 		PL_strcpy(m_host, hostString);
@@ -319,21 +335,8 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 		printf("Enter data for command: ");
 
     fgets(tempBuffer, sizeof(tempBuffer), stdin);
-	if (*tempBuffer)
-	{
-		if (tempBuffer[0])  // kill off any CR or LFs...
-		{
-			PRUint32 length = PL_strlen(tempBuffer);
-			if (length > 0 && tempBuffer[length-1] == '\r')
-				tempBuffer[length-1] = '\0';
-
-			// okay, user gave us a valid line so copy it into the user data field..o.t. leave user
-			// data field untouched. This allows us to use default values for things...
-			m_userData[0] = '\0';
-			PL_strcpy(m_userData, tempBuffer);
-		}
-		
-	}
+    strip_nonprintable(tempBuffer);
+    PL_strcpy(m_userData, tempBuffer);
 
 	return NS_OK;
 }
@@ -347,6 +350,7 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 
 	printf("Enter command number: ");
     fgets(commandString, sizeof(commandString), stdin);
+    strip_nonprintable(commandString);
 	if (commandString && *commandString)
 	{
 		command = atoi(commandString);
@@ -447,9 +451,10 @@ nsresult nsNntpTestDriver::OnListIDs()
 	
 	
 	// load the correct newsgroup interface as an event sink...
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
-    
+        rv = m_nntpProtocol->LoadURL(m_url);
+    }
 
 	return rv;
 }
@@ -469,8 +474,10 @@ nsresult nsNntpTestDriver::OnListArticle()
 	PL_strcat(m_urlString, "/");
 	PL_strcat(m_urlString, m_userData);
 
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        rv = m_nntpProtocol->LoadURL(m_url);
+    }
     
 	return rv;
 }
@@ -496,8 +503,10 @@ nsresult nsNntpTestDriver::OnSearch()
 	}
 
 	
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        rv = m_nntpProtocol->LoadURL(m_url);
+    }
     
 	return rv;
 	
@@ -519,7 +528,6 @@ nsNntpTestDriver::OnPostMessage()
 
     // now we need to attach a message
 
-    SetupUrl(m_userData);
     
     rv = PromptForUserDataAndBuildUrl("Subject: ");
     subject = PL_strdup(m_userData);
@@ -527,13 +535,13 @@ nsNntpTestDriver::OnPostMessage()
     rv = PromptForUserDataAndBuildUrl("");
     int messagelen = 0;
     message = NULL;
-    printf("[%2X][%2X][%2X][%2X]\n",
-           m_userData[0], m_userData[1], m_userData[2], m_userData[3]);
     while (m_userData[0]) {
         int linelen = PL_strlen(m_userData);
         char *newMessage = (char *)PR_Malloc(linelen+messagelen+2);
+        messagelen = linelen+messagelen+2;
         
-        PL_strcpy(newMessage, message);
+        newMessage[0]='\0';
+        if (message) PL_strcpy(newMessage, message);
         PL_strcat(newMessage, m_userData);
         PL_strcat(newMessage, "\n");
         PR_FREEIF(message);
@@ -544,10 +552,13 @@ nsNntpTestDriver::OnPostMessage()
     printf("Ready to post the message:\n");
     printf("Subject: %s\n", subject);
     printf("Message:\n", message);
+    
+    SetupUrl(m_userData);
+    rv = m_nntpProtocol->LoadURL(m_url);
 
 	return rv;
-
 }
+
 nsresult nsNntpTestDriver::OnGetGroup()
 {
 	nsresult rv = NS_OK;
@@ -565,27 +576,8 @@ nsresult nsNntpTestDriver::OnGetGroup()
 	else
 		m_url->SetSpec(m_urlString); // reset spec
 
-	
-	if (NS_SUCCEEDED(rv))
-	{
-		 // before we re-load, assume it is a group command and configure our nntpurl correctly...
-		 nsINNTPHost * host = nsnull;
-		 nsINNTPNewsgroup * group = nsnull;
-		 nsINNTPNewsgroupList * list = nsnull;
-		 rv = m_url->GetNntpHost(&host);
-		 if (host)
-		 {
-			rv = host->FindGroup(m_userData, &group);
-			if (group)
-				group->GetNewsgroupList(&list);
-
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
-		 }
-
+    if (NS_SUCCEEDED(rv)) {
+        SetupUrl(m_userData);
 		rv = m_nntpProtocol->LoadURL(m_url);
 	} // if user provided the data...
 
@@ -638,8 +630,6 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 			NS_IF_RELEASE(host);
         }
     
-    rv = m_nntpProtocol->LoadURL(m_url);
-	return rv; 
 } // if user provided the data...
 
 
