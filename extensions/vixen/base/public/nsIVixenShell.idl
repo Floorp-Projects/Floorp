@@ -22,16 +22,15 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+interface nsIDOMDocument;
+interface nsIOutputStream;
 
 [scriptable, uuid(86b91da8-2516-4478-8dad-4c17185f1065)]
 interface nsIVixenShell : nsISupports 
 {
-    void setAttribute(in nsIDOMElement aElement, in wstring aAttribute, in wstring aValue);
-    void removeAttribute(in nsIDOMElement aElement, in wstring aAttribute);
-
-    void insertElement(in nsIDOMElement aElement, in nsIDOMElement aParent, in PRInt32 aPos);
-    void removeElement(in nsIDOMElement aElement);
+	void encodeDocumentToStream(in nsIDOMDocument aDocument, 
+                                in nsIOutputStream aOutputStream);
+	wstring encodeDocumentToString(in nsIDOMDocument aDocument);
 };
 
 %{ C++

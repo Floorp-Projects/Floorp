@@ -34,12 +34,8 @@
 
 #define NS_VIXENSHELL_CONTRACTID "@mozilla.org/vixen/shell;1"
 
-class VxChangeAttributeTxn;
-class VxRemoveAttributeTxn;
-class VxInsertElementTxn;
-class VxRemoveElementTxn;
-class nsITransaction;
-class nsIDOMElement;
+class nsIDOMDocument;
+class nsIOutputStream;
 
 class nsVixenShell : public nsIVixenShell
 {
@@ -50,28 +46,6 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIVIXENSHELL
-
-public:
-    // Execute Transactions
-    NS_IMETHOD Do(nsITransaction* aTxn);
-
-    // Create transactions for the Transaction Manager
-    NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement* aElement, 
-                                        const nsString& aAttribute, 
-                                        const nsString& aValue, 
-                                        VxChangeAttributeTxn** aTxn);
-    
-    NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement* aElement,
-                                           const nsString& aAttribute,
-                                           VxRemoveAttributeTxn** aTxn);
-
-    NS_IMETHOD CreateTxnForInsertElement(nsIDOMElement* aElement,
-                                         nsIDOMElement* aParent,
-                                         PRInt32 aPos,
-                                         VxInsertElementTxn** aTxn);
-
-    NS_IMETHOD CreateTxnForRemoveElement(nsIDOMElement* aElement,
-                                         VxRemoveElementTxn** aTxn);
 
 };
 

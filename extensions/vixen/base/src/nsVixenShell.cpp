@@ -21,17 +21,11 @@
  */
 
 #include "nsVixenShell.h"
-
-#include "nsTransactionManagerCID.h"
-#include "nsITransactionManager.h"
-
-// Supported Transactions
-/*
-#include "VxSetAttributeTxn.h"
-#include "VxRemoveAttributeTxn.h"
-#include "VxInsertElementTxn.h"
-#include "VxRemoveElementTxn.h"
-*/
+#include "nsIDocumentEncoder.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIComponentManager.h"
+#include "prmem.h"
 
 nsVixenShell::nsVixenShell()
 {
@@ -44,74 +38,59 @@ nsVixenShell::~nsVixenShell()
 
 NS_IMPL_ISUPPORTS1(nsVixenShell, nsIVixenShell);
 
-NS_IMETHODIMP 
-nsVixenShell::SetAttribute(nsIDOMElement *aElement, 
-                           const PRUnichar *aAttribute, 
-                           const PRUnichar *aValue)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsVixenShell::RemoveAttribute(nsIDOMElement *aElement, 
-                              const PRUnichar *aAttribute)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsVixenShell::InsertElement(nsIDOMElement *aElement, 
-                            nsIDOMElement *aParent, 
-                            PRInt32 aPos)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsVixenShell::RemoveElement(nsIDOMElement *aElement)
-{
-    return NS_OK;
-}
-
-// Execute Transactions
-NS_IMETHODIMP 
-nsVixenShell::Do(nsITransaction* aTxn)
-{
-    return NS_OK;
-}
-
-// Create Transformations for the Transaction Manager
 NS_IMETHODIMP
-nsVixenShell::CreateTxnForSetAttribute(nsIDOMElement* aElement, 
-                                       const nsString& aAttribute, 
-                                       const nsString& aValue, 
-                                       VxChangeAttributeTxn** aTxn)
+nsVixenShell::EncodeDocumentToStream(nsIDOMDocument* aDocument,
+                                     nsIOutputStream* aOutputStream)
 {
+    nsresult rv;
+
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(aDocument, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = docEncoder->Init(document, 
+                          NS_LITERAL_STRING("text/xml"), 
+                          nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = docEncoder->EncodeToStream(aOutputStream);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsVixenShell::CreateTxnForRemoveAttribute(nsIDOMElement* aElement,
-                                          const nsString& aAttribute,
-                                          VxRemoveAttributeTxn** aTxn)
+nsVixenShell::EncodeDocumentToString(nsIDOMDocument* aDocument,
+                                     PRUnichar** aResult)
 {
+    nsresult rv;
+
+    *aResult = nsnull;
+
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(aDocument, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX - This is dependant on a modification I made to my local version of nsLayoutModule.cpp
+    //       to add a doc-encoder contractID for "text/xml" serialization. 
+    nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = docEncoder->Init(document, 
+                          NS_LITERAL_STRING("text/xml"), 
+                          nsIDocumentEncoder::OutputFormatted);
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString temp;
+    rv = docEncoder->EncodeToString(temp);
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 len = temp.Length() + sizeof('\0');
+    if (!len) return rv;
+    
+    *aResult = (PRUnichar*) PR_Calloc(len, sizeof(PRUnichar));
+    *aResult = (PRUnichar*) memcpy(*aResult, temp.GetUnicode(), sizeof(PRUnichar)*len);
+
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsVixenShell::CreateTxnForInsertElement(nsIDOMElement* aElement,
-                                        nsIDOMElement* aParent,
-                                        PRInt32 aPos,
-                                        VxInsertElementTxn** aTxn)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsVixenShell::CreateTxnForRemoveElement(nsIDOMElement* aElement,
-                                        VxRemoveElementTxn** aTxn)
-{
-    return NS_OK;
-}
-
-
