@@ -1,20 +1,3 @@
-window { 
- display: block;
- background-color: white; 
- width: 100%;
-}
-
-titledbutton {
-  display: inline;
-  color:black; 
-  border: 0px outset white;
-  padding: 0px;
-  margin: 0px;
-  text-align: center;
-  font: inherit;
-  background-color: inherit;
-  background-image: inherit;
-}
 
 treecol[sortActive="true"] {
  background-color: lightgray;

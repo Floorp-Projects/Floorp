@@ -1,8 +1,3 @@
-window { 
- display: block;
- background-color: white;
-}
-
 tree[id="searchengines"] {
  width: 300px;
 }
@@ -13,16 +8,4 @@ tree[id="searchengines"] > treecol[id="CheckboxColumn"] {
 
 treecol[sortActive="true"] {
  background-color: lightgray;
-}
-
-titledbutton {
-  display: inline;
-  color:black; 
-  border: 0px outset white;
-  padding: 0px;
-  margin: 0px;
-  text-align: center;
-  font: inherit;
-  background-color: inherit;
-  background-image: inherit;
 }

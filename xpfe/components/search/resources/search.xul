@@ -4,6 +4,7 @@
 <!DOCTYPE window SYSTEM "chrome://search/locale/search.dtd">
 
 <window id="search-window" title="&window.title.label;"
+    class="dialog"
 	width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
