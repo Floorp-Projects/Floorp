@@ -860,6 +860,11 @@ IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 RDFServiceImpl::RDFServiceImpl()
     :  mNamedDataSources(nsnull)
 {
+    mResources.ops = nsnull;
+    mLiterals.ops = nsnull;
+    mInts.ops = nsnull;
+    mDates.ops = nsnull;
+    mBlobs.ops = nsnull;
 }
 
 nsresult
@@ -876,21 +881,31 @@ RDFServiceImpl::Init()
     if (! mNamedDataSources)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_DHashTableInit(&mResources, &gResourceTableOps, nsnull,
-                      sizeof(ResourceHashEntry), PL_DHASH_MIN_SIZE);
-
-    PL_DHashTableInit(&mLiterals, &gLiteralTableOps, nsnull,
-                      sizeof(LiteralHashEntry), PL_DHASH_MIN_SIZE);
-
-    PL_DHashTableInit(&mInts, &gIntTableOps, nsnull,
-                      sizeof(IntHashEntry), PL_DHASH_MIN_SIZE);
-
-    PL_DHashTableInit(&mDates, &gDateTableOps, nsnull,
-                      sizeof(DateHashEntry), PL_DHASH_MIN_SIZE);
-
-    PL_DHashTableInit(&mBlobs, &gBlobTableOps, nsnull,
-                      sizeof(BlobHashEntry), PL_DHASH_MIN_SIZE);
-
+    if (!PL_DHashTableInit(&mResources, &gResourceTableOps, nsnull,
+                           sizeof(ResourceHashEntry), PL_DHASH_MIN_SIZE)) {
+        mResources.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&mLiterals, &gLiteralTableOps, nsnull,
+                           sizeof(LiteralHashEntry), PL_DHASH_MIN_SIZE)) {
+        mLiterals.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&mInts, &gIntTableOps, nsnull,
+                           sizeof(IntHashEntry), PL_DHASH_MIN_SIZE)) {
+        mInts.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&mDates, &gDateTableOps, nsnull,
+                           sizeof(DateHashEntry), PL_DHASH_MIN_SIZE)) {
+        mDates.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&mBlobs, &gBlobTableOps, nsnull,
+                           sizeof(BlobHashEntry), PL_DHASH_MIN_SIZE)) {
+        mBlobs.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     rv = nsComponentManager::FindFactory(kRDFDefaultResourceCID, getter_AddRefs(mDefaultResourceFactory));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
@@ -910,11 +925,16 @@ RDFServiceImpl::~RDFServiceImpl()
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nsnull;
     }
-    PL_DHashTableFinish(&mResources);
-    PL_DHashTableFinish(&mLiterals);
-    PL_DHashTableFinish(&mInts);
-    PL_DHashTableFinish(&mDates);
-    PL_DHashTableFinish(&mBlobs);
+    if (mResources.ops)
+        PL_DHashTableFinish(&mResources);
+    if (mLiterals.ops)
+        PL_DHashTableFinish(&mLiterals);
+    if (mInts.ops)
+        PL_DHashTableFinish(&mInts);
+    if (mDates.ops)
+        PL_DHashTableFinish(&mDates);
+    if (mBlobs.ops)
+        PL_DHashTableFinish(&mBlobs);
     gRDFService = nsnull;
 }
 
