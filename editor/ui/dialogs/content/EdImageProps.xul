@@ -67,23 +67,22 @@
             align = "right" />
           <textfield 
             id         = "srcInput" 
-            class      = "MinWidth20em"
             onkeyup    = "doOverallEnabling()"
             onmouseup  = "doOverallEnabling()"
-            onchange   = "doOverallEnabling()" />
+            onchange   = "doOverallEnabling()"
+            style      = "min-width : 20em"/>
           <!-- from EdDialogOverlay.xul -->
           <button id="ChooseFile" />
         </row>
         <row>
           <text class = "label"
-            id    = "altTextLabel" 
-            for   = "altTextInput"
-            tooltip="aTooltip" tooltiptext="&altTextEditField.tooltip;"
-            value = "&altTextEditField.label;" />
+            id      = "altTextLabel" 
+            for     = "altTextInput"
+            tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+            value   = "&altTextEditField.label;" />
           <textfield
-            id       ="altTextInput"
-            class    = "MinWidth20em"
-            onchange = "doOverallEnabling()"/>
+            id     ="altTextInput"
+            style  = "min-width : 20em"/>
           <spring/> <!-- placeholder for 3rd column -->
         </row>
       </rows>
@@ -106,28 +105,38 @@
 
   <!-- Area that shows and hides via MoreFewerButton --> 
   <box id="MoreSection" orient="vertical" flex="1">
-    <box flex="1">
+    <box>
       <box orient="vertical">
         <!-- //////// Image Dimensions //////// -->
         <titledbox orient="vertical" flex="1">
           <title id="dimensionsLabel" value="&dimensionsBox.label;"/>
-          <radiogroup id="imgSizeGroup" orient="vertical">
-            <radio
-              group   = "imgSizeGroup"
-              id      = "originalsizeRadio" 
-              value   = "&originalSizeRadio.label;"
-              tooltip = "aTooltip" tooltiptext="&originalSizeRadio.tooltip;"
-              oncommand = "doDimensionEnabling( true );"/>
-            <radio
-              group   = "imgSizeGroup"
-              id      = "customsizeRadio" 
-              value   = "&customSizeRadio.label;"
-              tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
-              oncommand = "doDimensionEnabling( true );" />
-          </radiogroup>
+          <box>
+            <radiogroup id="imgSizeGroup" orient="vertical">
+              <radio
+                group   = "imgSizeGroup"
+                id      = "originalsizeRadio" 
+                value   = "&originalSizeRadio.label;"
+                tooltip = "aTooltip" tooltiptext="&originalSizeRadio.tooltip;"
+                oncommand = "doDimensionEnabling();"/>
+              <radio
+                group   = "imgSizeGroup"
+                id      = "customsizeRadio" 
+                value   = "&customSizeRadio.label;"
+                tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
+                oncommand = "doDimensionEnabling();" />
+            </radiogroup>
+            <spring flex="1"/>
+            <box orient="vertical">
+              <spring flex="1"/>
+              <!--////// CONSTRAIN DIMENSIONS //////-->
+              <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
+                   tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
+            </box>
+            <spring flex="1"/>
+          </box>
           <spring class="spacer"/>
           <grid class="big-left-margin">
-            <columns><column/><column/><column/></columns>
+            <columns><column/><column/><column flex="1"/></columns>
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
               <row valign="middle" autostretch="never">
@@ -139,9 +148,8 @@
                   id       = "widthInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
-                  onkeyup  = "constrainProportions(this.id, 'heightInput')" 
-                  onchange = "doOverallEnabling()" />
-                <menulist id = "widthUnitsMenulist" oncommand = "doOverallEnabling()"/>
+                  onkeyup  = "constrainProportions(this.id, 'heightInput')"/>
+                <menulist id = "widthUnitsMenulist"/>
                 <!-- contents are appended by JS -->
               </row>
               <!--////// IMAGE HEIGHT //////-->
@@ -154,33 +162,32 @@
                   id       = "heightInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
-                  onkeyup  = "constrainProportions(this.id, 'widthInput')"
-                  onchange = "doOverallEnabling()" />
-                <menulist id = "heightUnitsMenulist" oncommand = "doOverallEnabling()"/>
+                  onkeyup  = "constrainProportions(this.id, 'widthInput')"/>
+                <menulist id = "heightUnitsMenulist"/>
                 <!-- contents are appended by JS -->
               </row>
             </rows>          
           </grid>
-          <!--////// CONSTRAIN DIMENSIONS //////-->
-          <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
-               tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
         </titledbox>
         <!--////// IMAGE MAP BUTTONS //////-->
-        <titledbox flex="1">
-          <title id="imagemapLabel" value="&imagemapBox.label;"/>
-          <box>
+        <titledbox orient="vertical" flex="1">
+           <title id="imagemapLabel" value="&imagemapBox.label;"/>
+           <box flex="1">
             <button
               class   = "dialog"
               id      = "editImageMap"
               oncommand = "editImageMap()"
               tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
-              value   = "&editImageMapButton.label;"/>
+              value   = "&editImageMapButton.label;"
+              flex    = "1"/>
             <button
               class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
-              value   = "&removeImageMapButton.label;"/>
-          </box>
+              value   = "&removeImageMapButton.label;"
+              flex    = "1"/>
+            </box>
+          <spring class="spacer"/>
         </titledbox>
       </box> <!-- vert. box on bottom left side -->
 
@@ -189,15 +196,47 @@
         <!--//////// Alignment ////////-->
         <titledbox flex="1" orient="vertical">
           <title id="alignLabel" value="&alignment.label;"/>
-          <menulist id = "alignTypeSelect" onchange ="doOverallEnabling()">
-            <menupopup valign="middle">
-              <menuitem class="middle"><image id="img-align-top"/>   <text class="label" value = "&topPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-middle"/><text class="label" value = "&centerPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-bottom"/><text class="label" value = "&bottomPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-left"/>  <text class="label" value = "&wrapLeftPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-right"/> <text class="label" value = "&wrapRightPopup.value;"/></menuitem>
-            </menupopup>
-          </menulist>
+          <spring class="spacer"/>
+          <stack orient="vertical">
+            <box valign="middle" autostretch="never" style="padding: 4px 4px 4px 10px">
+              <image id="alignImage"/>
+              <spring class="spacer"/>
+              <text id="alignText" class="label"/>
+            </box>
+            <menulist id = "alignTypeSelect" oncommand="changeAlignment(event.target)" style="background: transparent">
+              <menupopup valign="middle">
+                <menuitem class="middle" valign="middle" autostretch="never">
+                  <spring class="spacer"/>
+                  <image class="img-align-top"/>
+                  <spring class="spacer"/>
+                  <text id="topText"    class="label" value = "&topPopup.value;"/>
+                </menuitem>
+                <menuitem class="middle" valign="middle" autostretch="never">
+                  <spring class="spacer"/>
+                  <image class="img-align-middle"/>
+                  <spring class="spacer"/>
+                  <text id="middleText" class="label" value = "&centerPopup.value;"/>
+                </menuitem>
+                <menuitem class="middle" valign="middle" autostretch="never">
+                  <spring class="spacer"/>
+                  <image class="img-align-bottom"/>
+                  <spring class="spacer"/>
+                  <text id="bottomText" class="label" value = "&bottomPopup.value;"/>
+                </menuitem>
+                <menuitem class="middle" valign="middle" autostretch="never">
+                  <spring class="spacer"/>
+                  <image class="img-align-right"/>  <spring class="spacer"/>
+                  <text id="rightText"  class="label" value = "&wrapLeftPopup.value;"/>
+                </menuitem>
+                <menuitem class="middle" valign="middle" autostretch="never">
+                  <spring class="spacer"/>
+                  <image class="img-align-left"/>
+                  <spring class="spacer"/>
+                  <text id="leftText" class="label" value = "&wrapRightPopup.value;"/>
+                </menuitem>
+              </menupopup>
+            </menulist>
+          </stack>
         </titledbox>
 
         <!--//////// Borders and Spacing ////////-->
@@ -214,8 +253,7 @@
                 <textfield 
                   class     = "narrow"
                   id        = "imageleftrightInput" 
-                  onkeyup   = "forceInteger(this.id)" 
-                  onchange  = "doOverallEnabling()"/>
+                  onkeyup   = "forceInteger(this.id)"/>
                 <text 
                   class = "label" 
                   id    = "leftrighttypeLabel"
@@ -229,8 +267,7 @@
                 <textfield 
                   class     = "narrow"
                   id        = "imagetopbottomInput" 
-                  onkeyup   = "forceInteger(this.id)"
-                  onchange  = "doOverallEnabling()"/>
+                  onkeyup   = "forceInteger(this.id)"/>
                 <text
                   class = "label" 
                   id    = "topbottomtypeLabel"
@@ -243,8 +280,7 @@
                 <textfield
                   class     = "narrow"
                   id        = "border" 
-                  onkeyup   = "forceInteger(this.id)"
-                  onchange  = "doOverallEnabling()" />
+                  onkeyup   = "forceInteger(this.id)"/>
                 <text 
                   class = "label" 
                   id    = "bordertypeLabel"
@@ -257,6 +293,7 @@
     </box> <!-- The horizontal box -->
   
     <!-- buttons along bottom -->
+    <spring class="spacer"/>
     <box>
       <spring flex="1"/>
       <!-- From EdDialogOverlay -->

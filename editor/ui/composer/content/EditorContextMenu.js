@@ -30,17 +30,14 @@ function EditorFillContextMenu(event, contextMenuNode)
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm");
 
   var inCell = IsInTableCell();
-  if (inCell)
-  {
-    // Set appropriate text for join cells command
-    InitJoinCellMenuitem("joinTableCells_cm");
+  // Set appropriate text for join cells command
+  InitJoinCellMenuitem("joinTableCells_cm");
 
-    // If displaying cell commands,
-    //   these are the only commands that need enable/disabling
-    goUpdateCommand("cmd_JoinTableCells");
-    goUpdateCommand("cmd_SplitTableCell");
-    goUpdateCommand("cmd_TableOrCellColor");
-  }
+  // If displaying cell commands,
+  // Set  these are the only commands that need enable/disabling
+  goUpdateCommand("cmd_JoinTableCells");
+  goUpdateCommand("cmd_SplitTableCell");
+  goUpdateCommand("cmd_TableOrCellColor");
 
   // Loop through all children to hide disabled items
   var children = contextMenuNode.childNodes;

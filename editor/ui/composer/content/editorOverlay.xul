@@ -447,7 +447,7 @@
           position="7"/>
     <menuseparator position="8"/>
 
-    <!-- Note: the 'Init' menu methods for Paragraph and List 
+    <!-- Note: the 'Init' menu methods for Paragraph, List, and Align
          assume that the id = 'menu_'+tagName (the 'data' value),
          except for the first ('none') item
      -->
@@ -493,13 +493,14 @@
               observes="cmd_outdent"  position="13"/>
 
     <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
+        oncreate="InitAlignMenu()"
         position="14">
       <!-- Align submenu -->
       <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('data'))">
-        <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
-        <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  data="center"/>
-        <menuitem value="&alignRight.label;"   accesskey="&alignright.accesskey;"   data="right"/>
-        <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" data="justify"/>
+        <menuitem id="menu_left"    value="&alignLeft.label;"  accesskey="&alignleft.accesskey;"      type="radio" data="left"/>
+        <menuitem id="menu_center"  value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  type="radio" data="center"/>
+        <menuitem id="menu_right"   value="&alignRight.label;"   accesskey="&alignright.accesskey;"   type="radio" data="right"/>
+        <menuitem id="menu_justify" value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" type="radio" data="justify"/>
       </menupopup>
     </menu>
     <menuseparator position="15"/>

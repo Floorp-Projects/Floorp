@@ -73,13 +73,15 @@ function Startup()
 
 
   dialog.ColorInput.value = "";
+  var tmpColor;
 
   // window.arguments[1] is object to set initial and return color
   switch (ColorType)
   {
     case "Page":
-      if (window.arguments[1].PageColor)
-        color = window.arguments[1].PageColor;
+      tmpColor = window.arguments[1].PageColor;
+      if (tmpColor && tmpColor.toLowerCase() != "window")
+        color = tmpColor;
       break;
     case "Table":
       if (window.arguments[1].TableColor)
@@ -106,7 +108,8 @@ function Startup()
     default:
       // Any other type will change some kind of text,
       TextType = true;
-      if (window.arguments[1].TextColor)
+      tmpColor = window.arguments[1].TextColor;
+      if (tmpColor && tmpColor.toLowerCase() != "windowtext")
         color = window.arguments[1].TextColor;
       break;
   }
@@ -210,8 +213,8 @@ function onOKClick()
   // Clicking on OK should not use LastPickedColor automatically
   //  as using Enter ("default") key does
   LastPickedIsDefault = false;
-  onOK();
-  window.close();
+  if ( onOK() )
+    window.close();
 }
 
 function ValidateData()
@@ -225,7 +228,7 @@ function ValidateData()
 
   // TODO: Validate the color string!
 
-  if (NoDefault && color.length == 0)
+  if (NoDefault && !color)
   {
     ShowInputErrorMessage(GetString("NoColorError"));
     SetTextfieldFocus(dialog.ColorInput);

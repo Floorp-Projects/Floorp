@@ -833,14 +833,44 @@ function GetParentTable(element)
 function GetObjectForProperties()
 {
   var element = editorShell.GetSelectedElement("");
-  if (!element)
-    element = editorShell.GetElementOrParentByTagName("href",null);
-  if (!element)
-    element = editorShell.GetElementOrParentByTagName("list",null);
-  if (!element)
-    element = editorShell.GetElementOrParentByTagName("td",null);
+  if (element)
+    return element;
 
-  return element;
+  // Find nearest parent of selection anchor node 
+  //   that is a link, list, table cell, or table
+
+  var anchorNode = editorShell.editorSelection.anchorNode;
+  if (!anchorNode) return null;
+  var node;
+  if (anchorNode.firstChild)
+  {
+    // Start at actual selected node
+    var offset = editorShell.editorSelection.anchorOffset;
+    node = anchorNode.childNodes.item(offset)
+  }
+  else
+    node = anchorNode;
+
+  while (node)
+  {
+    if (node.tagName)
+    {
+      var tagName = node.tagName.toLowerCase();
+
+      // Done when we hit the body
+      if (tagName == "body") break;
+
+      if ((tagName == "a" && node.href) ||
+          tagName == "ol" || tagName == "ul" || tagName == "dl" ||
+          tagName == "td" || tagName == "th" ||
+          tagName == "table")
+      {
+        return node;
+      }
+    }
+    node = node.parentNode;
+  }
+  return null;
 }
 
 function SetEditMode(mode)
@@ -1285,6 +1315,7 @@ function EditorInitFormatMenu()
 {
   InitObjectPropertiesMenuitem("objectProperties");
   InitRemoveStylesMenuitems("removeStylesMenuitem", "removeLinksMenuitem");
+  // Set alignment check
 }
 
 function InitObjectPropertiesMenuitem(id)
@@ -1396,6 +1427,27 @@ function InitListMenu()
   menuItem.setAttribute("checked", "true");
 
   // ..."noList" is returned if mixed selection, so remove checkmark
+  if (mixedObj.value)
+    menuItem.setAttribute("checked", "false");
+}
+
+function InitAlignMenu()
+{
+  var mixedObj = new Object();
+  // Note: GetAlignment DOESN'T set the "mixed" flag,
+  //  but always returns "left" in mixed state
+  // We'll pay attention to it here so it works when fixed
+  var state = editorShell.GetAlignment(mixedObj);
+  var IDSuffix;
+
+  if (!state)
+    IDSuffix = "left"
+  else
+    IDSuffix = state;
+  
+  var menuItem = document.getElementById("menu_"+IDSuffix);
+  menuItem.setAttribute("checked", "true");
+
   if (mixedObj.value)
     menuItem.setAttribute("checked", "false");
 }
@@ -1904,8 +1956,7 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
 
     // Disable if not in a link, but always allow "Remove" 
     //  if selection isn't collapsed since we only look at anchor node 
-    DisableItem(removeLinksId, 
-                isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
+    DisableItem(removeLinksId, isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
   }
 }
 

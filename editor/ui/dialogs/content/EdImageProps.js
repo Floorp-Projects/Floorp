@@ -33,6 +33,7 @@ var canRemoveImageMap = false;
 var imageMapDisabled = false;
 var dialog;
 var globalMap;
+var doAltTextError = true;
 
 // dialog initialization code
 
@@ -63,6 +64,8 @@ function Startup()
   dialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
   dialog.border            = document.getElementById( "border" );
   dialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
+  dialog.alignImage        = document.getElementById( "alignImage" );
+  dialog.alignText         = document.getElementById( "alignText" );
   dialog.editImageMap      = document.getElementById( "editImageMap" );
   dialog.removeImageMap    = document.getElementById( "removeImageMap" );
   dialog.doConstrain = false;
@@ -123,6 +126,8 @@ function Startup()
     globalMap = null;
   }
 
+  InitDialog();
+
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
   //   attribute on the MoreFewerButton button
@@ -130,10 +135,8 @@ function Startup()
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
 
   // Initialize widgets with image attributes in the case where the entire dialog isn't visible
-  if ( SeeMore ) // this is actually in the opposite state until onMoreFewerImage is called below
-    InitDialog();
-  
   onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
+
   SetTextfieldFocus(dialog.srcInput);
 
   SetWindowLocation();
@@ -156,7 +159,7 @@ function InitDialog()
   
   // Check for image map
   
-  if ( SeeMore )
+//  if ( SeeMore )
   {
 	  // setup the height and width widgets
 	  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "width", "widthUnitsMenulist", gPixel);
@@ -187,36 +190,54 @@ function InitDialog()
 	  if (align) {
 	    align = align.toLowerCase();
 	  }
-
+    var imgClass;
+    var textID;
 	  switch ( align )
 	  {
 	    case "top":
 	      dialog.alignTypeSelect.selectedIndex = 0;
+        imgClass = "img-align-top";
+        textID   = "topText";
 	      break;
 	    case "center":
 	      dialog.alignTypeSelect.selectedIndex = 1;
+        imgClass = "img-align-middle";
+        textID   = "middleText";
 	      break;
 	    case "right":
+        // Note: this means the image is on the right
 	      dialog.alignTypeSelect.selectedIndex = 3;
+        imgClass = "img-align-right";
+        textID   = "rightText";
 	      break;
 	    case "left":
+        // Note: this means the image is on the left
 	      dialog.alignTypeSelect.selectedIndex = 4;
+        imgClass = "img-align-left";
+        textID   = "leftText";
 	      break;
 	    default:  // Default or "bottom"
 	      dialog.alignTypeSelect.selectedIndex = 2;
+        imgClass = "img-align-bottom";
+        textID   = "bottomText";
 	      break;
 	  }
+    // Set the same image and text as used in the selected menuitem in the menulist    
+    // Image url is CSS-driven based on class
+    dialog.alignImage.setAttribute("class", imgClass);
+    dialog.alignText.setAttribute("value", document.getElementById(textID).getAttribute("value"));
   }
 
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
   wasEnableAll = !IsValidImage(dialog.srcInput.value);
   doOverallEnabling();
+  doDimensionEnabling();
 }
 
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  fileName = GetLocalFileURL("img");
+  var fileName = GetLocalFileURL("img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
     doOverallEnabling();
@@ -258,24 +279,23 @@ function SetGlobalElementToCurrentDialogSettings()
       alignment = "";
       break;
   }
-dump("alignment ="+alignment+"\n");
 
   if ( alignment == "" )
     globalElement.removeAttribute( "align" );
   else
     globalElement.setAttribute( "align", alignment );
 
-  if ( dialog.imagelrInput.value.length > 0 )
+  if ( dialog.imagelrInput.value )
     globalElement.setAttribute("hspace", dialog.imagelrInput.value);
   else
     globalElement.removeAttribute("hspace");
   
-  if ( dialog.imagetbInput.value.length > 0 )
+  if ( dialog.imagetbInput.value )
     globalElement.setAttribute("vspace", dialog.imagetbInput.value);
   else
     globalElement.removeAttribute("vspace");
 
-  if ( dialog.border.value.length > 0 )
+  if ( dialog.border.value )
     globalElement.setAttribute("border", dialog.border.value);
   else
     globalElement.removeAttribute("border");
@@ -302,53 +322,34 @@ function onMoreFewerImage()
     SetGlobalElementToCurrentDialogSettings();
     
     dialog.MoreSection.setAttribute("collapsed","true");
+    dialog.MoreFewerButton.setAttribute("value", GetString("MoreProperties"));
     dialog.MoreFewerButton.setAttribute("more","0");
-    dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
     SeeMore = false;
-
     // Show the "Advanced Edit" button on same line as "More Properties"
-    dialog.AdvancedEditButton.removeAttribute("collapsed");
+    dialog.AdvancedEditButton.setAttribute("collapsed","false");
     dialog.AdvancedEditButton2.setAttribute("collapsed","true");
-    window.sizeToContent();
+    // Weird caret appearing when we collapse, so force focus to URL textfield
+    dialog.srcInput.focus();
   }
   else
   {
-    dialog.MoreSection.removeAttribute("collapsed");
+    dialog.MoreSection.setAttribute("collapsed","false");
+    dialog.MoreFewerButton.setAttribute("value", "");
+    dialog.MoreFewerButton.setAttribute("value", GetString("FewerProperties"));
     dialog.MoreFewerButton.setAttribute("more","1");
-    dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
     SeeMore = true;
 
     // Show the "Advanced Edit" button at bottom
     dialog.AdvancedEditButton.setAttribute("collapsed","true");
-    dialog.AdvancedEditButton2.removeAttribute("collapsed");
-    window.sizeToContent();
-    
-    InitDialog();
-    
-    //TODO: We won't need to do this when we convert to using "collapsed"
-    if (dialog.isCustomSize)
-    {
-      dialog.customsizeRadio.checked = true;
-      dialog.originalsizeRadio.checked = false;
-    }
-    else
-    {
-      dialog.customsizeRadio.checked = false;
-      dialog.originalsizeRadio.checked = true;
-    }
-
-    if (dialog.doConstrain)
-      dialog.constrainCheckbox.checked = true;
+    dialog.AdvancedEditButton2.setAttribute("collapsed","false");
   }
+  window.sizeToContent();
 }
 
-function doDimensionEnabling( doEnable )
+function doDimensionEnabling()
 {
-  SetElementEnabledById( "originalsizeRadio", doEnable );
-  SetElementEnabledById( "customsizeRadio", doEnable);
-
   // Enabled only if "Custom" is checked
-  var enable = (doEnable && dialog.customsizeRadio.checked);
+  var enable = (dialog.customsizeRadio.checked);
   
   if ( !dialog.customsizeRadio.checked && !dialog.originalsizeRadio.checked)
     dump("BUG!  neither radio button is checked!!!! \n");
@@ -364,54 +365,34 @@ function doDimensionEnabling( doEnable )
   var constrainEnable = enable 
          && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
          && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
+
   SetElementEnabledById( "constrainCheckbox", constrainEnable );
+
+  // Counteracting another weird caret 
+  //  (appears in Height input, but not really focused!)
+  if (enable)
+    dialog.widthInput.focus();
 }
 
 function doOverallEnabling()
 {
-  var canEnableAll = IsValidImage(dialog.srcInput.value);
-  if ( wasEnableAll == canEnableAll )
+  var canEnableOk = IsValidImage(dialog.srcInput.value);
+  if ( wasEnableAll == canEnableOk )
     return;
   
-  wasEnableAll = canEnableAll;
+  wasEnableAll = canEnableOk;
 
-  SetElementEnabledById("ok", canEnableAll );
-  SetElementEnabledById( "altTextLabel", canEnableAll );
+  SetElementEnabledById("ok", canEnableOk );
 
-  // Do widgets for sizing
-  SetElementEnabledById( "dimensionsLabel", canEnableAll );
-  doDimensionEnabling( canEnableAll );
-  
-  SetElementEnabledById("alignLabel", canEnableAll );
-  SetElementEnabledById("alignTypeSelect", canEnableAll );
-
-  // spacing Box
-  SetElementEnabledById( "spacingLabel", canEnableAll );
-  SetElementEnabledById( "imageleftrightInput", canEnableAll );
-  SetElementEnabledById( "leftrightLabel", canEnableAll );
-  SetElementEnabledById( "leftrighttypeLabel", canEnableAll );
-
-  SetElementEnabledById( "imagetopbottomInput", canEnableAll );
-  SetElementEnabledById( "topbottomLabel", canEnableAll );
-  SetElementEnabledById( "topbottomtypeLabel", canEnableAll );
-
-  SetElementEnabledById( "border", canEnableAll );
-  SetElementEnabledById( "borderLabel", canEnableAll );
-  SetElementEnabledById( "bordertypeLabel", canEnableAll );
-
-  // This shouldn't find button, but it does!
-  SetElementEnabledById( "AdvancedEditButton", canEnableAll );
-  SetElementEnabledById( "AdvancedEditButton2", canEnableAll );
-
-  SetElementEnabledById( "imagemapLabel", canEnableAll );
-  SetElementEnabledById( "editImageMap", canEnableAll );
-  SetElementEnabledById( "removeImageMap", canEnableAll && canRemoveImageMap);
+  SetElementEnabledById( "imagemapLabel",  canEnableOk );
+  SetElementEnabledById( "editImageMap",   canEnableOk );
+  SetElementEnabledById( "removeImageMap", canRemoveImageMap);
 }
 
 // constrainProportions contribution by pete@postpagan.com
 function constrainProportions( srcID, destID )
 {
-  srcElement = document.getElementById ( srcID );
+  var srcElement = document.getElementById ( srcID );
   if ( !srcElement )
     return;
   
@@ -424,7 +405,7 @@ function constrainProportions( srcID, destID )
   if ( !constrainChecked )
     return;
   
-  destElement = document.getElementById( destID );
+  var destElement = document.getElementById( destID );
   if ( !destElement )
     return;
   
@@ -466,6 +447,16 @@ function removeImageMap()
   }
 }
 
+function changeAlignment(menuItem)
+{
+  // Item index assume structure in XUL
+  // (current item has spring, image, spring, text)
+  var image = menuItem.childNodes.item(1);
+  var text =  menuItem.childNodes.item(3);
+  dialog.alignImage.setAttribute("class", image.getAttribute("class"));
+  dialog.alignText.setAttribute("value", text.getAttribute("value"));
+}
+
 // Get data from widgets, validate, and set for the global element
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
@@ -480,8 +471,17 @@ function ValidateData()
   var src = dialog.srcInput.value.trimString();
   globalElement.setAttribute("src", src);
   
-  // TODO: Should we confirm with user if no alt tag? Or just set to empty string?
-  var alt = dialog.altTextInput.value; //.trimString();
+  // Note: allow typing spaces, 
+  // Warn user if empty string just once per dialog session
+  //   but don't consider this a failure
+  var alt = dialog.altTextInput.value;
+  if (doAltTextError && !alt)
+  {
+    ShowInputErrorMessage(GetString("NoAltText"));
+    SetTextfieldFocus(dialog.altTextInput);
+    doAltTextError = false;
+    return false;
+  }
   globalElement.setAttribute("alt", alt);
   
   //TODO: WE SHOULD ALWAYS SET WIDTH AND HEIGHT FOR FASTER IMAGE LAYOUT
@@ -556,9 +556,9 @@ function ValidateData()
   }
   else
   {
-	  if (width.length > 0)
+	  if (width)
 	    globalElement.setAttribute("width", width);
-	  if (height.length > 0)
+	  if (height)
 	    globalElement.setAttribute("height", height);
   }
 
@@ -569,7 +569,7 @@ function ValidateData()
   if ( SeeMore )
   {
     dump("SeeMore spacing attribs\n");
-	  if ( dialog.imagelrInput.value.length > 0 )
+	  if ( dialog.imagelrInput.value )
 	  {
 	    amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
 	    if (amount == "")
@@ -579,7 +579,7 @@ function ValidateData()
     else
       globalElement.removeAttribute( "hspace" );
 
-	  if ( dialog.imagetbInput.value.length > 0 )
+	  if ( dialog.imagetbInput.value )
 	  {
 	    var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
 	    if (vspace == "")
@@ -590,7 +590,7 @@ function ValidateData()
 	    globalElement.removeAttribute( "vspace" );
 
   // note this is deprecated and should be converted to stylesheets
-	  if ( dialog.border.value.length > 0 )
+	  if ( dialog.border.value )
 	  {
 	    var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
 	    if (border == "")

@@ -146,6 +146,10 @@ function InitDialog()
         customBackgroundColor;
 
   // Set default color explicitly for any that are missing
+  // PROBLEM: We are using "windowtext" and "window" for the Windows OS
+  //   default color values. This works with CSS in preview window,
+  //   but we should NOT use these as values for HTML attributes!
+
   if (!customTextColor) customTextColor = defaultTextColor;
   if (!customLinkColor) customLinkColor = defaultLinkColor;
   if (!customActiveColor) customActiveColor = defaultActiveColor;
@@ -253,10 +257,11 @@ function SetColorPreview(ColorWellID, color)
     case "backgroundCW":
       // Must combine background color and image style values
       var styleValue = backColorStyle+color;
-      if (backgroundImage.length > 0)
+      if (backgroundImage)
         styleValue += ";"+backImageStyle+backgroundImage+");";
 
       dialog.ColorPreview.setAttribute(styleStr,styleValue);
+      previewBGColor = color;
       break;
   }
 }
@@ -336,7 +341,8 @@ function ChangeBackgroundImage()
 function ValidateAndPreviewImage(ShowErrorMessage)
 {
   // First make a string with just background color
-  var styleValue = backColorStyle+dialog.backgroundColor+";";
+  var styleValue = backColorStyle+previewBGColor+";";
+
   var retVal = true;
   var image = dialog.BackgroundImageInput.value.trimString();
   if (image)
@@ -361,6 +367,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   }
   else backgroundImage = null;
 
+dump("Set preview background CSS: "+styleValue+"\n");
   // Set style on preview (removes image if not valid)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);
 
@@ -381,11 +388,24 @@ function ValidateData()
   }
   else
   {
-    globalElement.setAttribute(textStr,    customTextColor);
+    //Do NOT accept the CSS "WindowsOS" color strings!
+    // Problem: We really should try to get the actual color values
+    //  from windows, but I don't know how to do that!
+    var tmpColor = customTextColor.toLowerCase();
+    if (tmpColor != "windowtext")
+      globalElement.setAttribute(textStr,    customTextColor);
+    else
+      globalElement.removeAttribute(textStr);
+
+    tmpColor = customBackgroundColor.toLowerCase();
+    if (tmpColor != "window")
+      globalElement.setAttribute(bgcolorStr, customBackgroundColor);
+    else
+      globalElement.removeAttribute(bgcolorStr);
+
     globalElement.setAttribute(linkStr,    customLinkColor);
     globalElement.setAttribute(vlinkStr,   customVisitedColor);
     globalElement.setAttribute(alinkStr,   customActiveColor);
-    globalElement.setAttribute(bgcolorStr, customBackgroundColor);
   }
 
   if (ValidateAndPreviewImage(true))
