@@ -145,7 +145,18 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
 {
   printf("nsScrollbar::OnScroll\n");
-  return PR_FALSE;
+  PRBool result = PR_FALSE;
+  switch (scrollCode) {
+  case NS_SCROLLBAR_PAGE_NEXT:
+    result = NextPage();
+    break;
+  case NS_SCROLLBAR_PAGE_PREV:
+    result = PrevPage();
+    break;
+  default:
+    break;
+  }
+  return result;
 }
 
 PRBool nsScrollbar::OnResize(nsSizeEvent &event)
@@ -163,6 +174,29 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
   PRBool result;
   printf("nsScrollbar::DispatchMouseEvent\n");
+  // check to see if this was on the main window.
+  switch (aEvent.message) {
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+    if (mIsVertical == PR_TRUE) {
+      if (aEvent.point.y < mBarBounds.y) {
+        OnScroll(NS_SCROLLBAR_PAGE_PREV, 0);
+      }
+      else if (aEvent.point.y > mBarBounds.height) {
+        OnScroll(NS_SCROLLBAR_PAGE_NEXT, 0);
+      }
+    }
+    else {
+      if (aEvent.point.x < mBarBounds.x) {
+        OnScroll(NS_SCROLLBAR_PAGE_PREV, 0);
+      }
+      else if (aEvent.point.x > mBarBounds.width) {
+        OnScroll(NS_SCROLLBAR_PAGE_NEXT, 0);
+      }
+    }
+    break;
+  default:
+    break;
+  }
   result = PR_FALSE;
   return result;
 }
@@ -177,7 +211,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = SouthEastGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;
@@ -192,6 +226,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
   CreateGC();
   // set up the scrolling bar.
+  attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask;
   attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
   attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
   // set up the size
@@ -240,6 +275,64 @@ NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aX,
   CalcBarBounds();
   LayoutBar();
   return NS_OK;
+}
+
+nsresult nsScrollbar::NextPage(void)
+{
+  PRUint32 max;
+  nsresult result = PR_FALSE;
+
+  // change it locally.
+  max = mMaxRange - mThumbSize;
+  mPosition += mThumbSize;
+  if (mPosition > max)
+    mPosition = max;
+  
+  // send the event
+  if (mEventCallback) {
+    nsScrollbarEvent sevent;
+    sevent.message = NS_SCROLLBAR_POS;
+    sevent.widget = (nsWidget *)this;
+    sevent.eventStructType = NS_SCROLLBAR_EVENT;
+    sevent.position = (mPosition);
+    // send the event
+    result = ConvertStatus((*mEventCallback) (&sevent));
+    // the gtk code indicates that the callback can
+    // modify the position.  how odd.
+    mPosition = sevent.position;
+  }
+  CalcBarBounds();
+  LayoutBar();
+  return result;
+}
+
+nsresult nsScrollbar::PrevPage(void)
+{
+  nsresult result = PR_FALSE;
+  // check to make sure we don't go backwards
+  if (mThumbSize > mPosition) {
+    mPosition = 0;
+  }
+  else {
+    mPosition -= mThumbSize;
+  }
+  
+  // send the event
+  if (mEventCallback) {
+    nsScrollbarEvent sevent;
+    sevent.message = NS_SCROLLBAR_POS;
+    sevent.widget = (nsWidget *)this;
+    sevent.eventStructType = NS_SCROLLBAR_EVENT;
+    sevent.position = (mPosition);
+    // send the event
+    result = ConvertStatus((*mEventCallback) (&sevent));
+    // the gtk code indicates that the callback can
+    // modify the position.  how odd.
+    mPosition = sevent.position;
+  }
+  CalcBarBounds();
+  LayoutBar();
+  return result;
 }
 
 void nsScrollbar::CalcBarBounds(void)
