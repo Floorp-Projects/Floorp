@@ -5151,7 +5151,6 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     nsCOMPtr<nsISupports> srcSupport;
     nsCOMPtr<nsISupportsArray> messages;
 
-    mCopyListener = listener;
     if (!fileSpec) return rv;
 
     srcSupport = do_QueryInterface(fileSpec, &rv);
