@@ -110,7 +110,10 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
   if (mMakePassword) {
     SetPassword(PR_TRUE);
     PasswordData * data = new PasswordData();
-    data->mPassword = "";
+    if (data) {
+      data->mPassword = "";
+    }
+    else return NS_ERROR_OUT_OF_MEMORY;
     XtVaSetValues(mWidget, XmNuserData, data, NULL);
   }
   return NS_OK;
@@ -190,5 +193,3 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
   nsTextHelper::SetPassword(aIsPassword);
   return NS_OK;
 }
-
-
