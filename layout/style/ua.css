@@ -430,12 +430,32 @@ input[type=radio] {
   margin-right:  5px;  
   margin-top:    3px; 
   margin-bottom: 3px; 
-  border: 2px inset rgb(192, 192, 192);
-  background-color:white;
+  border: 2px outset rgb(192, 192, 192);
+  background-color:rgb(192, 192, 192);
   color:black;
   width:12px;
   height:12px;
+  -moz-border-radius:6px;
 }
+
+input[type=radio]:active {
+  background-color:white;
+  border: 2px inset rgb(192, 192, 192);
+}
+
+input[type=radio]:hover {
+  border : 2px solid black;
+}
+
+:-moz-radio {
+  background-color:black;
+  width:6px;
+  height:6px;
+  left:6px;
+  top:6px;
+  -moz-border-radius:3px;
+}
+
 
 input[type=checkbox] {
   /* these margins are for NavQuirks, we need a Standard ua.css */  
@@ -443,11 +463,21 @@ input[type=checkbox] {
   margin-right:  5px;  
   margin-top:    3px; 
   margin-bottom: 4px;
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px outset rgb(192, 192, 192);
   width:11px;
   height:11px;
-  background-color:white;
+  background-color:rgb(192, 192, 192);
   color:black;
+  -moz-border-radius:1px;
+}
+
+input[type=checkbox]:active {
+  background-color:gray;
+  border: 2px inset rgb(192, 192, 192);
+}
+
+input[type=checkbox]:hover {
+  border : 1px solid black;
 }
 
 input[type="submit"] { 
@@ -706,9 +736,29 @@ select {
   background-color: white;
   color:black;
   white-space:nowrap;
+  text-align: left; 
 }
+
+select:active {
+  border : 1px solid black;
+}
+
 option {
   display:block;
+  padding-left:3px;
+  padding-right:3px;
+}
+
+/* Combobox item style */
+select option[-moz-option-selected], select[size="1"] option[-moz-option-selected] {
+ color:black;
+ background-color:white; 
+}
+
+/* List box item selected style */
+select[size] option[-moz-option-selected] {
+ color:white;
+ background-color:black; 
 }
 
 option.selected {
@@ -717,10 +767,6 @@ option.selected {
   color: rgb(255,255,255);
 }
 
-option[-moz-option-selected] {
-  color:white;
-  background-color: rgb(0,0,128);
-}
 
 option.selectedfocus {
   border:   1px dotted white;
@@ -940,14 +986,15 @@ sourcetext { /* XXX should not be in HTML namespace */
 }
 
 :-moz-dropdown-btn-pressed {
-  border: 2px inset #c0c0c0;
-  background-color: rgb(206, 207, 206);
+/*  border: 2px inset #c0c0c0; */
+  background-color: rgb(192, 192, 192);
+  border: none;
 }
 
 :-moz-dropdown-list {
  position:absolute;
- background-color:white;
- border: 1px solid blue;
+ background-color:rgb(192, 192, 192);
+ border: 1px solid black;
 } 
 
 

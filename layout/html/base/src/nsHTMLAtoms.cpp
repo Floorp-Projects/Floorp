@@ -211,6 +211,7 @@ nsIAtom* nsHTMLAtoms::pre;
 nsIAtom* nsHTMLAtoms::processingInstructionPseudo;
 nsIAtom* nsHTMLAtoms::profile;
 nsIAtom* nsHTMLAtoms::prompt;
+nsIAtom* nsHTMLAtoms::radioPseudo;
 nsIAtom* nsHTMLAtoms::readonly;
 nsIAtom* nsHTMLAtoms::rel;
 nsIAtom* nsHTMLAtoms::repeat;
@@ -481,6 +482,7 @@ void nsHTMLAtoms::AddrefAtoms()
     processingInstructionPseudo = NS_NewAtom(":-moz-pi");
     profile = NS_NewAtom("profile");
     prompt = NS_NewAtom("prompt");
+    radioPseudo = NS_NewAtom(":-moz-radio");
     readonly = NS_NewAtom("readonly");
     rel = NS_NewAtom("rel");
     repeat = NS_NewAtom("repeat");
@@ -740,6 +742,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(processingInstructionPseudo);
     NS_RELEASE(profile);
     NS_RELEASE(prompt);
+    NS_RELEASE(radioPseudo);
     NS_RELEASE(readonly);
     NS_RELEASE(rel);
     NS_RELEASE(repeat);

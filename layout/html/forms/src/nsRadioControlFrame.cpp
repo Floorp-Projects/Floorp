@@ -40,6 +40,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
+#include "nsCSSRendering.h"
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -49,6 +51,7 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 #define NS_DEFAULT_RADIOBOX_SIZE  12
 
+static NS_DEFINE_IID(kIRadioControlFrameIID,  NS_IRADIOCONTROLFRAME_IID);
 
 nsresult
 NS_NewRadioControlFrame(nsIFrame** aNewFrame)
@@ -69,8 +72,29 @@ nsRadioControlFrame::nsRadioControlFrame()
 {
    // Initialize GFX-rendered state
   mChecked = PR_FALSE;
+  mRadioButtonFaceStyle = nsnull;
 }
 
+nsRadioControlFrame::~nsRadioControlFrame()
+{
+ NS_IF_RELEASE(mRadioButtonFaceStyle);
+}
+
+//--------------------------------------------------------------
+nsresult
+nsRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIRadioControlFrameIID)) {
+    *aInstancePtr = (void*) ((nsIRadioControlFrame*) this);
+    return NS_OK;
+  }
+ 
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 
 const nsIID&
@@ -85,6 +109,42 @@ nsRadioControlFrame::GetCID()
   static NS_DEFINE_IID(kRadioCID, NS_RADIOBUTTON_CID);
   return kRadioCID;
 }
+
+
+NS_IMETHODIMP
+nsRadioControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
+                                              nsIStyleContext* aParentContext,
+                                              PRInt32 aParentChange,
+                                              nsStyleChangeList* aChangeList,
+                                              PRInt32* aLocalChange)
+{
+ // this re-resolves |mStyleContext|, so it may change
+  nsresult rv = nsFormControlFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange,
+                                               aChangeList, aLocalChange); 
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (NS_COMFALSE != rv) {  // frame style changed
+    if (aLocalChange) {
+      aParentChange = *aLocalChange;  // tell children about or change
+    }
+  }
+
+ // see if the outline has changed.
+  nsCOMPtr<nsIStyleContext> oldRadioButtonFaceStyle = mRadioButtonFaceStyle;
+	aPresContext->ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::radioPseudo, mStyleContext,
+										  PR_FALSE,
+										  &mRadioButtonFaceStyle);
+
+  if ((mRadioButtonFaceStyle && oldRadioButtonFaceStyle) && (mRadioButtonFaceStyle != oldRadioButtonFaceStyle)) {
+    nsFormControlFrame::CaptureStyleChangeFor(this, oldRadioButtonFaceStyle, mRadioButtonFaceStyle, 
+                              aParentChange, aChangeList, aLocalChange);
+  }
+
+  return rv;
+}
+
 
 nscoord 
 nsRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
@@ -339,50 +399,45 @@ nsRadioControlFrame::GetFrameName(nsString& aResult) const
 }
 
 
+NS_IMETHODIMP
+nsRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext)
+{
+  mRadioButtonFaceStyle = aRadioButtonFaceStyleContext;
+  NS_ADDREF(mRadioButtonFaceStyle);
+  return NS_OK;
+}
+
 void
 nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
-  aRenderingContext.PushState();
-
-  const nsStyleColor* color = (const nsStyleColor*)
-     mStyleContext->GetStyleData(eStyleStruct_Color); 
-
-  //XXX: This is backwards for now. The PaintCircular border code actually draws pie slices.
-
-  nsFormControlHelper::PaintCircularBorder(aPresContext,aRenderingContext,
-                         aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
-  nsFormControlHelper::PaintCircularBackground(aPresContext,aRenderingContext,
-                         aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
-
- 
+   
   PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (PR_TRUE == checked) {
-	  // Have to do 180 degress at a time because FillArc will not correctly
-	  // go from 0-360
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    // Paint the button for the radio button using CSS background rendering code
+   if (nsnull != mRadioButtonFaceStyle) {
+     const nsStyleColor* myColor = (const nsStyleColor*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Color);
+     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Spacing);
+     const nsStylePosition* myPosition = (const nsStylePosition*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Position);
 
-    nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
-//XXX    nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
+     nscoord width = myPosition->mWidth.GetCoordValue();
+     nscoord height = myPosition->mHeight.GetCoordValue();
+       // Position the button centered within the radio control's rectangle.
+     nscoord x = (mRect.width - width) / 2;
+     nscoord y = (mRect.height - height) / 2;
+     nsRect rect(x, y, width, height); 
 
-    nsRect outside;
-    nsFormControlHelper::GetCircularRect(mRect.width, mRect.height, outside);
-  
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-    outside.Deflate(onePixel, onePixel);
-    
-    aRenderingContext.SetColor(color->mColor);
-    aRenderingContext.FillArc(outside, 0, 180);
-    aRenderingContext.FillArc(outside, 180, 360);
+     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *mySpacing, mRadioButtonFaceStyle, 0);
+   }
   }
-
-  PRBool clip;
-  aRenderingContext.PopState(clip);
 }
 
 NS_METHOD 
@@ -395,6 +450,9 @@ nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
 	mStyleContext->GetStyleData(eStyleStruct_Display);
 	if (!disp->mVisible)
 		return NS_OK;
+
+     // Paint the background
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);

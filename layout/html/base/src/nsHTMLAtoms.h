@@ -243,7 +243,8 @@ public:
   static nsIAtom* processingInstructionPseudo;
   static nsIAtom* profile;
   static nsIAtom* prompt;
-
+ 
+  static nsIAtom* radioPseudo;
   static nsIAtom* readonly;
   static nsIAtom* rel;
   static nsIAtom* repeat;
