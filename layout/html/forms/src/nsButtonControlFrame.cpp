@@ -238,7 +238,8 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
 	  if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
       GetDefaultLabel(label);
 	  }
-    PaintButton(aPresContext, aRenderingContext, aDirtyRect, label);
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    PaintButton(aPresContext, aRenderingContext, aDirtyRect, label, rect);
   }
   return NS_OK;
 }
@@ -416,7 +417,7 @@ void
 nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
-                                  nsString& aLabel)
+                                  nsString& aLabel, const nsRect& aRect)
 {
   PRBool disabled = nsFormFrame::GetDisabled(this);
   if ( disabled != mDisabled)
@@ -445,8 +446,7 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
 
   nsFormControlHelper::PaintRectangularButton(aPresContext,
                                               aRenderingContext,
-                                              aDirtyRect, mRect.width, 
-                                              mRect.height,
+                                              aDirtyRect, aRect,
                                               mPressed && mInside, mGotFocus, 
                                               nsFormFrame::GetDisabled(this),
                                               mInside,

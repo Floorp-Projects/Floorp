@@ -82,7 +82,8 @@ public:
   virtual void PaintButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
-                            nsString& aLabel);
+                            nsString& aLabel,
+                            const nsRect& aRect);
 
    NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,

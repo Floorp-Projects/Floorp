@@ -97,6 +97,8 @@ nsIAtom* nsHTMLAtoms::enctype;
 nsIAtom* nsHTMLAtoms::face;
 nsIAtom* nsHTMLAtoms::fieldset;
 nsIAtom* nsHTMLAtoms::fieldsetContentPseudo;
+nsIAtom* nsHTMLAtoms::fileButtonStylePseudo;
+nsIAtom* nsHTMLAtoms::fileTextStylePseudo;
 nsIAtom* nsHTMLAtoms::firstLetterPseudo;
 nsIAtom* nsHTMLAtoms::firstLinePseudo;
 nsIAtom* nsHTMLAtoms::font;
@@ -352,6 +354,9 @@ void nsHTMLAtoms::AddrefAtoms()
     face = NS_NewAtom("face");
     fieldset = NS_NewAtom("fieldset");
     fieldsetContentPseudo = NS_NewAtom(":fieldset-content");
+    fileButtonStylePseudo = NS_NewAtom(":file-buttonstyle");
+    fileTextStylePseudo = NS_NewAtom(":file-textstyle");
+
     firstLetterPseudo = NS_NewAtom(":first-letter");
     firstLinePseudo = NS_NewAtom(":first-line");
     font = NS_NewAtom("font");

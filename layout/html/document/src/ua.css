@@ -490,6 +490,19 @@ input[type=file] {
   color:black;
 }
 
+:file-buttonstyle {
+  border: 2px outset rgb(192, 192, 192);
+  color:black;
+  background-color: rgb(192, 192, 192);
+}
+
+:file-textstyle {
+  border: 2px inset rgb(192, 192, 192);
+  margin-right:10px; 
+  background-color: white;
+  color: black;
+}
+
 input[type=file].rollover {
 }
 

@@ -335,7 +335,9 @@ nsTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
   PRInt32 type;
   GetType(&type);
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    nsIDOMHTMLInputElement* textElem = nsnull;
+   nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+/* XXX REMOVE 
+   nsIDOMHTMLInputElement* textElem = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
     if ((NS_OK == result) && textElem) {
       if (PR_TRUE == aInitialValue) {
@@ -347,6 +349,8 @@ nsTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
 
       NS_RELEASE(textElem);
     }
+*/
+
   } else {
     nsIDOMHTMLTextAreaElement* textArea = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
@@ -576,11 +580,19 @@ nsTextControlFrame::GetFrameName(nsString& aResult) const
 
 
 void
+nsTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect,
+                                     nsFramePaintLayer aWhichLayer) {
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+void
 nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect,
                                      nsString& aText,
-                                     nsIStyleContext* aStyleContext)
+                                     nsIStyleContext* aStyleContext, nsRect& aRect)
 {
     aRenderingContext.PushState();
 
@@ -593,7 +605,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-    nsRect outside(0, 0, mRect.width, mRect.height);
+    nsRect outside(aRect.x, aRect.y, aRect.width, aRect.height);
     outside.Deflate(border);
     outside.Deflate(onePixel, onePixel);
 
@@ -704,18 +716,18 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &arrowStyle);
       NS_RELEASE(sbAtom);
 
-      nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);
+      nsRect srect(aRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, aRect.height-(onePixel*4)-scrollbarScaledWidth);
 
       nsFormControlHelper::PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
-																          scrollbarStyle, arrowStyle, this, mRect);   
+																          scrollbarStyle, arrowStyle, this, aRect);   
       // Horizontal
-      srect.SetRect(2*onePixel, mRect.height-scrollbarScaledHeight-(2*onePixel), mRect.width-(onePixel*4)-scrollbarScaledHeight, scrollbarScaledHeight);
+      srect.SetRect(2*onePixel, aRect.height-scrollbarScaledHeight-(2*onePixel), aRect.width-(onePixel*4)-scrollbarScaledHeight, scrollbarScaledHeight);
       nsFormControlHelper::PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_TRUE, onePixel, 
-																        scrollbarStyle, arrowStyle, this, mRect);   
+																        scrollbarStyle, arrowStyle, this, aRect);   
 
       // Draw the small rect "gap" in the bottom right that the two scrollbars don't cover
       const nsStyleColor*   sbColor   = (const nsStyleColor*)scrollbarStyle->GetStyleData(eStyleStruct_Color);
-      srect.SetRect(mRect.width-scrollbarScaledWidth-(2*onePixel), mRect.height-scrollbarScaledHeight-(onePixel*2), scrollbarScaledWidth, scrollbarScaledHeight);
+      srect.SetRect(aRect.width-scrollbarScaledWidth-(2*onePixel), aRect.height-scrollbarScaledHeight-(onePixel*2), scrollbarScaledWidth, scrollbarScaledHeight);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                       aDirtyRect, srect, *sbColor, *spacing, 0, 0);
     }
@@ -733,11 +745,12 @@ nsTextControlFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (eFramePaintLayer_Content == aWhichLayer) {
     nsString text;
     GetText(&text, PR_FALSE);
-    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext, rect);
   }
   return NS_OK;
 }

@@ -36,6 +36,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
+#include "nsCOMPtr.h"
 
 // XXX make this pixels
 #define CONTROL_SPACING 40  
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsresult
 NS_NewFileControlFrame(nsIFrame*& aResult)
@@ -197,7 +199,16 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
       text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
     }
     NS_NewTextControlFrame(childFrame);
-    childFrame->Init(aPresContext, text, this, mStyleContext);
+
+   
+     // Get pseudo style for the text field
+    nsCOMPtr<nsIStyleContext> textFieldStyleContext;
+    nsresult rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileTextStylePseudo,
+                                                       mStyleContext, PR_FALSE,
+                                                       getter_AddRefs(textFieldStyleContext));
+
+
+    childFrame->Init(aPresContext, text, this, textFieldStyleContext);
     mTextFrame = (nsTextControlFrame*)childFrame;
     mFrames.SetFrames(childFrame);
 
@@ -211,7 +222,14 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     NS_NewButtonControlFrame(childFrame);
     ((nsButtonControlFrame*)childFrame)->SetMouseListener((nsIFormControlFrame*)this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
-    childFrame->Init(aPresContext, browse, this, mStyleContext);
+
+       // Get pseudo style for the button
+    nsCOMPtr<nsIStyleContext> buttonStyleContext;
+    rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileButtonStylePseudo,
+                                                       mStyleContext, PR_FALSE,
+                                                       getter_AddRefs(buttonStyleContext));
+
+    childFrame->Init(aPresContext, browse, this, buttonStyleContext);
 
     mFrames.FirstChild()->SetNextSibling(childFrame);
 
@@ -379,7 +397,22 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   }
  
   return NS_OK;
-}  
+}
+
+PRBool 
+nsFileControlFrame::HasWidget()
+{
+  PRBool hasWidget = PR_FALSE;
+  nsIWidget* widget;
+  mTextFrame->GetWidget(&widget);
+  if (widget) {
+    NS_RELEASE(widget);
+    hasWidget = PR_TRUE;
+  } 
+  return(hasWidget);
+}
+
+
 
 
 NS_METHOD
@@ -388,6 +421,10 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
+#ifndef XP_MAC
+// XXX: This is temporary until we can find out whats going wrong on the MAC
+// where widget's are not being created in presentation shell 0. 
+
   // Since the file control has a mTextFrame which does not live in
   // the content model it is necessary to get the current text value
   // from the nsFileControlFrame through the content model, then
@@ -396,16 +433,41 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
   // contents because it will not be possible for the content
   // associated with the mTextFrame to get a handle to it frame in the
   // presentation shell 0.
- 
-  nsAutoString browse("Browse");
+
+   // Only paint if it doesn't have a widget.
+  if (HasWidget())
+    return NS_OK;
+
+#if 0
+//XXX: TODO Get style for button and text box using pseduo classes
+  nsCOMPtr<nsIStyleContext> fileButtonStyle(mStyleContext);
+  nsCOMPtr<nsIAtom> fileButtonAtom (NS_NewAtom(":file-button"));
+  aPresContext.ProbePseudoStyleContextFor(mContent, fileButtonAtom, mStyleContext,
+                                          PR_FALSE,
+                                          getter_AddRefs(fileButtonStyle));
+
+  nsCOMPtr<nsIStyleContext> fileTextFieldStyle(mStyleContext);
+  nsCOMPtr<nsIAtom> fileButtonAtom (NS_NewAtom(":file-textfield"));
+  aPresContext.ProbePseudoStyleContextFor(mContent, fileButtonAtom, mStyleContext,
+                                          PR_FALSE,
+                                          getter_AddRefs(fileTextFieldStyle));
+#endif 
+  nsAutoString browse("Browse...");
+  nsRect rect;
+  mBrowseFrame->GetRect(rect);
   mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect,
-                            browse);
+                            browse, rect /*, fileButtonStyle */);
+
+  mTextFrame->PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
   if (eFramePaintLayer_Content == aWhichLayer) {
     nsString text;
-    if (NS_SUCCEEDED(nsFormControlHelper::GetValue(mContent, &text))) {
-      mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext);
+    if (NS_SUCCEEDED(nsFormControlHelper::GetInputElementValue(mContent, &text, PR_FALSE))) {
+      nsRect rect;
+      mTextFrame->GetRect(rect);
+      mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext, rect);
     }
   }
-
+#endif
   return NS_OK;
 }

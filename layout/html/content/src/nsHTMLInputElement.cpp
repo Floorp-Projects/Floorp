@@ -315,7 +315,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
+  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE) {
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame) {
