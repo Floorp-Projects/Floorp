@@ -627,10 +627,10 @@ public class Interpreter
                     case Token.TYPEOF :
                         iCodeTop = addToken(Token.TYPEOF, iCodeTop);
                         break;
-                    case Token.SUB :
+                    case Token.NEG :
                         iCodeTop = addToken(Token.NEG, iCodeTop);
                         break;
-                    case Token.ADD :
+                    case Token.POS :
                         iCodeTop = addToken(Token.POS, iCodeTop);
                         break;
                     default:

@@ -762,11 +762,11 @@ public class Decompiler
                     result.append('~');
                     break;
 
-                case Token.ADD:
+                case Token.POS:
                     result.append('+');
                     break;
 
-                case Token.SUB:
+                case Token.NEG:
                     result.append('-');
                     break;
                 }

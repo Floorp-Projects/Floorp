@@ -2305,13 +2305,13 @@ public class Codegen extends Interpreter {
             addDoubleConstructor();
             break;
 
-          case Token.ADD:
-          case Token.SUB:
+          case Token.POS:
+          case Token.NEG:
             addByteCode(ByteCode.NEW, "java/lang/Double");
             addByteCode(ByteCode.DUP);
             generateCodeFromNode(child, node);
             addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
-            if (op == Token.SUB) {
+            if (op == Token.NEG) {
                 addByteCode(ByteCode.DNEG);
             }
             addDoubleConstructor();
