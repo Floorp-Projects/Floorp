@@ -26,7 +26,6 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMToolkitCore.h"
-#include "nsIDOMProfileCore.h" 
 #include "nsIDOMBrowserAppCore.h"
 #include "nsAppCoresCIDs.h" 
 
@@ -34,7 +33,6 @@
 static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 static NS_DEFINE_IID(kAppCoresCID,           NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
-static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 
 nsAppCoresNameSet::nsAppCoresNameSet()
 {
@@ -58,7 +56,6 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     result = NS_InitAppCoresManagerClass(aScriptContext, nsnull);
     if (NS_OK != result) return result;
 
-    result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
 
     return result;
@@ -76,12 +73,6 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     result = aScriptContext->GetNameSpaceManager(&manager);
     if (NS_OK == result) 
     {
-        result = manager->RegisterGlobalName("ProfileCore", 
-                                             kProfileCoreCID, 
-                                             PR_TRUE); 
-
-        if (NS_OK != result) return result; 
-
         result = manager->RegisterGlobalName("ToolkitCore",
                                              kToolkitCoreCID,
                                              PR_TRUE);

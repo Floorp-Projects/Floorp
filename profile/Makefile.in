@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src resources defaults idlservices pref-migrator
+DIRS		= public src resources defaults pref-migrator
 
 include $(topsrcdir)/config/rules.mk
 

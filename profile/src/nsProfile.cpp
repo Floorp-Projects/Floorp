@@ -871,7 +871,8 @@ nsProfile::GetCurrentProfileDirFromJS(nsIFileSpec **spec)
 }                  
 
 // Returns the name of the current profile i.e., the last used profile
-NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
+NS_IMETHODIMP
+nsProfile::GetCurrentProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
   
@@ -946,7 +947,6 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 #endif
 
     char *profileName = nsnull;
-
     rv = GetCurrentProfile(&profileName);
 
 	if (NS_SUCCEEDED(rv))
@@ -970,7 +970,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 
 
     if (profileName) {
-   	    PR_DELETE(profileName);
+	PR_DELETE(profileName);
     }
     
     return rv;
@@ -1630,9 +1630,10 @@ void nsProfile::GetAllProfiles()
 // Essentially calls GetAllProfiles to fill mProfiles[].
 // This method is written to support the core service
 // call to get the names all profiles.
-NS_IMETHODIMP nsProfile::GetProfileList(nsString& profileList)
+NS_IMETHODIMP nsProfile::GetProfileList(char **profileListStr)
 {
-
+    nsCAutoString profileList("");
+    
 #if defined(DEBUG_profile)
 	printf("Inside GetProfileList routine.\n" );
 #endif
@@ -1647,7 +1648,9 @@ NS_IMETHODIMP nsProfile::GetProfileList(nsString& profileList)
 		}
 		profileList += mProfiles[i];
 	}
-	return NS_OK;
+
+    *profileListStr = nsCRT::strdup((const char *)profileList);
+    return NS_OK;
 }
 
 
@@ -1702,24 +1705,6 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
     return rv;
 }
 
-
-// Get Current Profile (Support for Core service call).
-// Populate the input param with current profile.
-NS_IMETHODIMP nsProfile::GetCurrProfile(nsString& currProfile)
-{
-
-#if defined(DEBUG_profile)
-	printf("Inside GetCurrentProfile (JSReflec) routine.\n" );
-#endif
-
-	char *localCurProf = nsnull;
-
-	GetCurrentProfile(&localCurProf);
-
-	currProfile += localCurProf;
-
-	return NS_OK;
-}
 
 // Migrate profile information from the 4x registry to 5x registry.
 NS_IMETHODIMP nsProfile::MigrateProfileInfo()
@@ -2064,7 +2049,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 }
 
 
-NS_IMETHODIMP nsProfile::GetCookie(nsString& aCookie)
+NS_IMETHODIMP nsProfile::GetCookie(char **cookie)
 {
 #ifndef NECKO
   nsINetService *service;
@@ -2099,11 +2084,11 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 
 	nsresult rv = NS_OK;
 
-	nsString aCookie;
-	GetCookie(aCookie);
-
-	rv = ProcessPREGInfo(aCookie.ToNewCString());
-
+	char *aCookie = nsnull;
+    GetCookie(&aCookie);
+	rv = ProcessPREGInfo(aCookie);
+    PR_FREEIF(aCookie);
+    
 	return rv;
 }
 

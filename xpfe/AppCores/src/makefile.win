@@ -75,16 +75,13 @@ LLIBS =				            \
 
 OBJS = \
     .\$(OBJDIR)\nsBaseAppCore.obj       \
-    .\$(OBJDIR)\nsProfileCore.obj       \
     .\$(OBJDIR)\nsAppCoresNameSet.obj       \
     .\$(OBJDIR)\nsToolkitCore.obj        \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
-    .\$(OBJDIR)\nsProfileCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresManager.obj       \
     .\$(OBJDIR)\nsAppCoresManagerFactory.obj       \
     .\$(OBJDIR)\nsJSBaseAppCore.obj       \
     .\$(OBJDIR)\nsJSAppCoresManager.obj       \
-    .\$(OBJDIR)\nsJSProfileCore.obj   \
     .\$(OBJDIR)\nsJSToolkitCore.obj     \
     .\$(OBJDIR)\nsAppCores.obj         \
     $(NULL)

@@ -16,9 +16,6 @@ var currentPageTag;
 var profName = "";
 var profDir = "";
 
-var toolkitCore;
-
-
 // hack for inability to gray out finish button in first screen on first load
 var isProfileData = false;
 
@@ -150,15 +147,7 @@ function getUrlFromTag(title)
 
 function Startup()
 {
-	//dump("Doing Startup...\n");
-	toolkitCore = XPAppCoresManager.Find("toolkitCore");
-	if (!toolkitCore) {
-		toolkitCore = new ToolkitCore();
-		
-		if (toolkitCore) {
-			toolkitCore.Init("toolkitCore");
-		}
-	}
+	dump("Doing Startup...\n");
 }
 
 function Finish(opener)
@@ -205,30 +194,14 @@ function processCreateProfileData()
     }
 
 	dump("data: "+data+"\n");
-    dump("calling javascript reflection\n");
-    var profileCore = XPAppCoresManager.Find("ProfileCore");
-    if (!profileCore)
-    {
-	    //dump("!profileCore\n");
-		profileCore = new ProfileCore();
-		//dump("!profileCore\n");
+	var profile = Components.classes[""component://netscape/profile/manager"].createInstance();
+	profile = profile.QueryInterface(Components.interfaces.nsIProfile);
+	dump("profile = " + profile + "\n");  
 
-		if (profileCore) {
-			//dump("after ! yes profileCore in if loop\n");
-			profileCore.Init("ProfileCore");
-		}
-		else {
-			dump("profile not created\n");
-		}
-	}
-
-	if (profileCore) {
-	    //dump("yes profileCore\n");
-		dump("********DATA: "+data+"\n\n");
-		profileCore.CreateNewProfile(data);
-		profileCore.StartCommunicator(profName);
-		ExitApp();
-	}
+	dump("********DATA: "+data+"\n\n");
+	profile.createNewProfile(data);
+	profile.startCommunicator(profName);
+	ExitApp();
 }
 
 function ExitApp()
