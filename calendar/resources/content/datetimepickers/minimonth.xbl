@@ -500,7 +500,7 @@
     <binding id="minimonth-day" extends="xul:text">
         <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
-            <handler event="click" action="this.calendar.dayClicked(this)"/>
+            <handler event="click" action="if (event.button == 0) this.calendar.dayClicked(this)"/>
         </handlers>
     </binding>
 
