@@ -7,8 +7,8 @@
 # Contributed by dominik.stadler@gmx.at 
 
 
-# $Revision: 1.5 $
-# $Date: 2003/08/17 01:31:49 $
+# $Revision: 1.6 $
+# $Date: 2004/07/18 16:42:39 $
 # $Author: kestes%walrus.com $
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/OverLib.pm,v $
 # $Name:  $
@@ -60,507 +60,237 @@ $VERSION = '#tinder_version#';
 # written.
 
 $OVERLIB_JS .=<<'EOF';
-//\//////////////////////////////////////////////////////////////////////////////////
-//\  overLIB 3.51  --  This notice must remain untouched at all times.
-//\  Copyright Erik Bosrup 1998-2002. All rights reserved.
+//\/////
+//\  overLIB 4.00 - You may not remove or change this notice.
+//\  Copyright Erik Bosrup 1998-2004. All rights reserved.
 //\
-//\  By Erik Bosrup (erik@bosrup.com).  Last modified 2002-11-01.
-//\  Portions by Dan Steinman (dansteinman.com). Additions by other people are
-//\  listed on the overLIB homepage.
+//\  Contributors are listed on the homepage.
+//\  This file might be old, always check for the latest version at:
+//\  http://www.bosrup.com/web/overlib/
 //\
-//\  Get the latest version at http://www.bosrup.com/web/overlib/
+//\  Please read the license agreement (available through the link above)
+//\  before using overLIB. Direct any licensing questions to erik@bosrup.com.
 //\
-//\  This script is published under an open source license. Please read the license
-//\  agreement online at: http://www.bosrup.com/web/overlib/license.html
-//\  If you have questions regarding the license please contact erik@bosrup.com.
-//\
-//\  This script library was originally created for personal use. By request it has
-//\  later been made public. This is free software. Do not sell this as your own
-//\  work, or remove this copyright notice. For full details on copying or changing
-//\  this script please read the license agreement at the link above.
-//\
-//\  Please give credit on sites that use overLIB and submit changes of the script
-//\  so other people can use them as well. This script is free to use, don't abuse.
-//\//////////////////////////////////////////////////////////////////////////////////
+//\  Do not sell this as your own work or remove this copyright notice. 
+//\  For full details on copying or changing this script please read the
+//\  license agreement at the link above. Please give credit on sites that
+//\  use overLIB and submit changes of the script so other people can use
+//\  them as well.
+//   $Revision: 1.6 $                $Date: 2004/07/18 16:42:39 $
+//\/////
 //\mini
 
+////////
+// PRE-INIT
+// Ignore these lines, configuration is below.
+////////
+var olLoaded = 0;var pmStart = 10000000; var pmUpper = 10001000; var pmCount = pmStart+1;  var pms = new Array(); var olInfo = new Info('4.00', 1);
+var FREPLACE = 0; var FBEFORE = 1; var FAFTER = 2; var FALTERNATE = 3;
+var olHideForm=0;  // parameter for hiding SELECT and ActiveX elements in IE5.5+ 
+registerCommands('donothing,inarray,caparray,sticky,background,noclose,caption,left,right,center,offsetx,offsety,fgcolor,bgcolor,textcolor,capcolor,closecolor,width,border,cellpad,status,autostatus,autostatuscap,height,closetext,snapx,snapy,fixx,fixy,relx,rely,fgbackground,bgbackground,padx,pady,fullhtml,above,below,capicon,textfont,captionfont,closefont,textsize,captionsize,closesize,timeout,function,delay,hauto,vauto,closeclick,wrap,followmouse,mouseoff,closetitle,cssoff,cssclass,fgclass,bgclass,textfontclass,captionfontclass,closefontclass');
 
-////////////////////////////////////////////////////////////////////////////////////
-// CONSTANTS
-// Don't touch these. :)
-////////////////////////////////////////////////////////////////////////////////////
-var INARRAY		=	1;
-var CAPARRAY		=	2;
-var STICKY		=	3;
-var BACKGROUND		=	4;
-var NOCLOSE		=	5;
-var CAPTION		=	6;
-var LEFT		=	7;
-var RIGHT		=	8;
-var CENTER		=	9;
-var OFFSETX		=	10;
-var OFFSETY		=	11;
-var FGCOLOR		=	12;
-var BGCOLOR		=	13;
-var TEXTCOLOR		=	14;
-var CAPCOLOR		=	15;
-var CLOSECOLOR		=	16;
-var WIDTH		=	17;
-var BORDER		=	18;
-var STATUS		=	19;
-var AUTOSTATUS		=	20;
-var AUTOSTATUSCAP	=	21;
-var HEIGHT		=	22;
-var CLOSETEXT		=	23;
-var SNAPX		=	24;
-var SNAPY		=	25;
-var FIXX		=	26;
-var FIXY		=	27;
-var FGBACKGROUND	=	28;
-var BGBACKGROUND	=	29;
-var PADX		=	30; // PADX2 out
-var PADY		=	31; // PADY2 out
-var FULLHTML		=	34;
-var ABOVE		=	35;
-var BELOW		=	36;
-var CAPICON		=	37;
-var TEXTFONT		=	38;
-var CAPTIONFONT		=	39;
-var CLOSEFONT		=	40;
-var TEXTSIZE		=	41;
-var CAPTIONSIZE		=	42;
-var CLOSESIZE		=	43;
-var FRAME		=	44;
-var TIMEOUT		=	45;
-var FUNCTION		=	46;
-var DELAY		=	47;
-var HAUTO		=	48;
-var VAUTO		=	49;
-var CLOSECLICK		=	50;
-var CSSOFF		=	51;
-var CSSSTYLE		=	52;
-var CSSCLASS		=	53;
-var FGCLASS		=	54;
-var BGCLASS		=	55;
-var TEXTFONTCLASS	=	56;
-var CAPTIONFONTCLASS	=	57;
-var CLOSEFONTCLASS	=	58;
-var PADUNIT		=	59;
-var HEIGHTUNIT		=	60;
-var WIDTHUNIT		=	61;
-var TEXTSIZEUNIT	=	62;
-var TEXTDECORATION	=	63;
-var TEXTSTYLE		=	64;
-var TEXTWEIGHT		=	65;
-var CAPTIONSIZEUNIT	=	66;
-var CAPTIONDECORATION	=	67;
-var CAPTIONSTYLE	=	68;
-var CAPTIONWEIGHT	=	69;
-var CLOSESIZEUNIT	=	70;
-var CLOSEDECORATION	=	71;
-var CLOSESTYLE		=	72;
-var CLOSEWEIGHT		=	73;
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
 // DEFAULT CONFIGURATION
-// You don't have to change anything here if you don't want to. All of this can be
+// Settings you want everywhere are set here. All of this can also be
 // changed on your html page or through an overLIB call.
-////////////////////////////////////////////////////////////////////////////////////
-
-// Main background color (the large area)
-// Usually a bright color (white, yellow etc)
-if (typeof ol_fgcolor == 'undefined') { var ol_fgcolor = "#CCCCFF";}
-	
-// Border color and color of caption
-// Usually a dark color (black, brown etc)
-if (typeof ol_bgcolor == 'undefined') { var ol_bgcolor = "#333399";}
-	
-// Text color
-// Usually a dark color
-if (typeof ol_textcolor == 'undefined') { var ol_textcolor = "#000000";}
-	
-// Color of the caption text
-// Usually a bright color
-if (typeof ol_capcolor == 'undefined') { var ol_capcolor = "#FFFFFF";}
-	
-// Color of "Close" when using Sticky
-// Usually a semi-bright color
-if (typeof ol_closecolor == 'undefined') { var ol_closecolor = "#9999FF";}
-
-// Font face for the main text
-if (typeof ol_textfont == 'undefined') { var ol_textfont = "Verdana,Arial,Helvetica";}
-
-// Font face for the caption
-if (typeof ol_captionfont == 'undefined') { var ol_captionfont = "Verdana,Arial,Helvetica";}
-
-// Font face for the close text
-if (typeof ol_closefont == 'undefined') { var ol_closefont = "Verdana,Arial,Helvetica";}
-
-// Font size for the main text
-// When using CSS this will be very small.
-if (typeof ol_textsize == 'undefined') { var ol_textsize = "1";}
-
-// Font size for the caption
-// When using CSS this will be very small.
-if (typeof ol_captionsize == 'undefined') { var ol_captionsize = "1";}
-
-// Font size for the close text
-// When using CSS this will be very small.
-if (typeof ol_closesize == 'undefined') { var ol_closesize = "1";}
-
-// Width of the popups in pixels
-// 100-300 pixels is typical
-if (typeof ol_width == 'undefined') { var ol_width = "200";}
-
-// How thick the ol_border should be in pixels
-// 1-3 pixels is typical
-if (typeof ol_border == 'undefined') { var ol_border = "1";}
-
-// How many pixels to the right/left of the cursor to show the popup
-// Values between 3 and 12 are best
-if (typeof ol_offsetx == 'undefined') { var ol_offsetx = 10;}
-	
-// How many pixels to the below the cursor to show the popup
-// Values between 3 and 12 are best
-if (typeof ol_offsety == 'undefined') { var ol_offsety = 10;}
-
-// Default text for popups
-// Should you forget to pass something to overLIB this will be displayed.
-if (typeof ol_text == 'undefined') { var ol_text = "Default Text"; }
-
-// Default caption
-// You should leave this blank or you will have problems making non caps popups.
-if (typeof ol_cap == 'undefined') { var ol_cap = ""; }
-
-// Decides if sticky popups are default.
-// 0 for non, 1 for stickies.
-if (typeof ol_sticky == 'undefined') { var ol_sticky = 0; }
-
-// Default background image. Better left empty unless you always want one.
-if (typeof ol_background == 'undefined') { var ol_background = ""; }
-
-// Text for the closing sticky popups.
-// Normal is "Close".
-if (typeof ol_close == 'undefined') { var ol_close = "Close"; }
-
-// Default vertical alignment for popups.
-// It's best to leave RIGHT here. Other options are LEFT and CENTER.
-if (typeof ol_hpos == 'undefined') { var ol_hpos = RIGHT; }
-
-// Default status bar text when a popup is invoked.
-if (typeof ol_status == 'undefined') { var ol_status = ""; }
-
-// If the status bar automatically should load either text or caption.
-// 0=nothing, 1=text, 2=caption
-if (typeof ol_autostatus == 'undefined') { var ol_autostatus = 0; }
-
-// Default height for popup. Often best left alone.
-if (typeof ol_height == 'undefined') { var ol_height = -1; }
-
-// Horizontal grid spacing that popups will snap to.
-// 0 makes no grid, anything else will cause a snap to that grid spacing.
-if (typeof ol_snapx == 'undefined') { var ol_snapx = 0; }
-
-// Vertical grid spacing that popups will snap to.
-// 0 makes no grid, andthing else will cause a snap to that grid spacing.
-if (typeof ol_snapy == 'undefined') { var ol_snapy = 0; }
-
-// Sets the popups horizontal position to a fixed column.
-// Anything above -1 will cause fixed position.
-if (typeof ol_fixx == 'undefined') { var ol_fixx = -1; }
-
-// Sets the popups vertical position to a fixed row.
-// Anything above -1 will cause fixed position.
-if (typeof ol_fixy == 'undefined') { var ol_fixy = -1; }
-
-// Background image for the popups inside.
-if (typeof ol_fgbackground == 'undefined') { var ol_fgbackground = ""; }
-
-// Background image for the popups frame.
-if (typeof ol_bgbackground == 'undefined') { var ol_bgbackground = ""; }
-
-// How much horizontal left padding text should get by default when BACKGROUND is used.
-if (typeof ol_padxl == 'undefined') { var ol_padxl = 1; }
-
-// How much horizontal right padding text should get by default when BACKGROUND is used.
-if (typeof ol_padxr == 'undefined') { var ol_padxr = 1; }
-
-// How much vertical top padding text should get by default when BACKGROUND is used.
-if (typeof ol_padyt == 'undefined') { var ol_padyt = 1; }
-
-// How much vertical bottom padding text should get by default when BACKGROUND is used.
-if (typeof ol_padyb == 'undefined') { var ol_padyb = 1; }
-
-// If the user by default must supply all html for complete popup control.
-// Set to 1 to activate, 0 otherwise.
-if (typeof ol_fullhtml == 'undefined') { var ol_fullhtml = 0; }
-
-// Default vertical position of the popup. Default should normally be BELOW.
-// ABOVE only works when HEIGHT is defined.
-if (typeof ol_vpos == 'undefined') { var ol_vpos = BELOW; }
-
-// Default height of popup to use when placing the popup above the cursor.
-if (typeof ol_aboveheight == 'undefined') { var ol_aboveheight = 0; }
-
-// Default icon to place next to the popups caption.
-if (typeof ol_capicon == 'undefined') { var ol_capicon = ""; }
-
-// Default frame. We default to current frame if there is no frame defined.
-if (typeof ol_frame == 'undefined') { var ol_frame = self; }
-
-// Default timeout. By default there is no timeout.
-if (typeof ol_timeout == 'undefined') { var ol_timeout = 0; }
-
-// Default javascript funktion. By default there is none.
-if (typeof ol_function == 'undefined') { var ol_function = null; }
-
-// Default timeout. By default there is no timeout.
-if (typeof ol_delay == 'undefined') { var ol_delay = 0; }
-
-// If overLIB should decide the horizontal placement.
-if (typeof ol_hauto == 'undefined') { var ol_hauto = 0; }
-
-// If overLIB should decide the vertical placement.
-if (typeof ol_vauto == 'undefined') { var ol_vauto = 0; }
-
-
-
-// If the user has to click to close stickies.
-if (typeof ol_closeclick == 'undefined') { var ol_closeclick = 0; }
-
-// This variable determines if you want to use CSS or inline definitions.
-// CSSOFF=no CSS    CSSSTYLE=use CSS inline styles    CSSCLASS=use classes
-if (typeof ol_css == 'undefined') { var ol_css = CSSOFF; }
-
-// Main background class (eqv of fgcolor)
-// This is only used if CSS is set to use classes (ol_css = CSSCLASS)
-if (typeof ol_fgclass == 'undefined') { var ol_fgclass = ""; }
-
-// Frame background class (eqv of bgcolor)
-// This is only used if CSS is set to use classes (ol_css = CSSCLASS)
-if (typeof ol_bgclass == 'undefined') { var ol_bgclass = ""; }
-
-// Main font class
-// This is only used if CSS is set to use classes (ol_css = CSSCLASS)
-if (typeof ol_textfontclass == 'undefined') { var ol_textfontclass = ""; }
-
-// Caption font class
-// This is only used if CSS is set to use classes (ol_css = CSSCLASS)
-if (typeof ol_captionfontclass == 'undefined') { var ol_captionfontclass = ""; }
-
-// Close font class
-// This is only used if CSS is set to use classes (ol_css = CSSCLASS)
-if (typeof ol_closefontclass == 'undefined') { var ol_closefontclass = ""; }
-
-// Unit to be used for the text padding above
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-// Options include "px", "%", "in", "cm"
-if (typeof ol_padunit == 'undefined') { var ol_padunit = "px";}
-
-// Unit to be used for height of popup
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-// Options include "px", "%", "in", "cm"
-if (typeof ol_heightunit == 'undefined') { var ol_heightunit = "px";}
-
-// Unit to be used for width of popup
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-// Options include "px", "%", "in", "cm"
-if (typeof ol_widthunit == 'undefined') { var ol_widthunit = "px";}
-
-// Font size unit for the main text
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_textsizeunit == 'undefined') { var ol_textsizeunit = "px";}
-
-// Decoration of the main text ("none", "underline", "line-through" or "blink")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_textdecoration == 'undefined') { var ol_textdecoration = "none";}
-
-// Font style of the main text ("normal" or "italic")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_textstyle == 'undefined') { var ol_textstyle = "normal";}
-
-// Font weight of the main text ("normal", "bold", "bolder", "lighter", ect.)
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_textweight == 'undefined') { var ol_textweight = "normal";}
-
-// Font size unit for the caption
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_captionsizeunit == 'undefined') { var ol_captionsizeunit = "px";}
-
-// Decoration of the caption ("none", "underline", "line-through" or "blink")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_captiondecoration == 'undefined') { var ol_captiondecoration = "none";}
-
-// Font style of the caption ("normal" or "italic")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_captionstyle == 'undefined') { var ol_captionstyle = "normal";}
-
-// Font weight of the caption ("normal", "bold", "bolder", "lighter", ect.)
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_captionweight == 'undefined') { var ol_captionweight = "bold";}
-
-// Font size unit for the close text
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_closesizeunit == 'undefined') { var ol_closesizeunit = "px";}
-
-// Decoration of the close text ("none", "underline", "line-through" or "blink")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_closedecoration == 'undefined') { var ol_closedecoration = "none";}
-
-// Font style of the close text ("normal" or "italic")
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_closestyle == 'undefined') { var ol_closestyle = "normal";}
-
-// Font weight of the close text ("normal", "bold", "bolder", "lighter", ect.)
-// Only used if CSS inline styles are being used (ol_css = CSSSTYLE)
-if (typeof ol_closeweight == 'undefined') { var ol_closeweight = "normal";}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
+if (typeof ol_fgcolor=='undefined') var ol_fgcolor="#CCCCFF";
+if (typeof ol_bgcolor=='undefined') var ol_bgcolor="#333399";
+if (typeof ol_textcolor=='undefined') var ol_textcolor="#000000";
+if (typeof ol_capcolor=='undefined') var ol_capcolor="#FFFFFF";
+if (typeof ol_closecolor=='undefined') var ol_closecolor="#9999FF";
+if (typeof ol_textfont=='undefined') var ol_textfont="Verdana,Arial,Helvetica";
+if (typeof ol_captionfont=='undefined') var ol_captionfont="Verdana,Arial,Helvetica";
+if (typeof ol_closefont=='undefined') var ol_closefont="Verdana,Arial,Helvetica";
+if (typeof ol_textsize=='undefined') var ol_textsize="1";
+if (typeof ol_captionsize=='undefined') var ol_captionsize="1";
+if (typeof ol_closesize=='undefined') var ol_closesize="1";
+if (typeof ol_width=='undefined') var ol_width="200";
+if (typeof ol_border=='undefined') var ol_border="1";
+if (typeof ol_cellpad=='undefined') var ol_cellpad=2;
+if (typeof ol_offsetx=='undefined') var ol_offsetx=10;
+if (typeof ol_offsety=='undefined') var ol_offsety=10;
+if (typeof ol_text=='undefined') var ol_text="Default Text";
+if (typeof ol_cap=='undefined') var ol_cap="";
+if (typeof ol_sticky=='undefined') var ol_sticky=0;
+if (typeof ol_background=='undefined') var ol_background="";
+if (typeof ol_close=='undefined') var ol_close="Close";
+if (typeof ol_hpos=='undefined') var ol_hpos=RIGHT;
+if (typeof ol_status=='undefined') var ol_status="";
+if (typeof ol_autostatus=='undefined') var ol_autostatus=0;
+if (typeof ol_height=='undefined') var ol_height=-1;
+if (typeof ol_snapx=='undefined') var ol_snapx=0;
+if (typeof ol_snapy=='undefined') var ol_snapy=0;
+if (typeof ol_fixx=='undefined') var ol_fixx=-1;
+if (typeof ol_fixy=='undefined') var ol_fixy=-1;
+if (typeof ol_relx=='undefined') var ol_relx=null;
+if (typeof ol_rely=='undefined') var ol_rely=null;
+if (typeof ol_fgbackground=='undefined') var ol_fgbackground="";
+if (typeof ol_bgbackground=='undefined') var ol_bgbackground="";
+if (typeof ol_padxl=='undefined') var ol_padxl=1;
+if (typeof ol_padxr=='undefined') var ol_padxr=1;
+if (typeof ol_padyt=='undefined') var ol_padyt=1;
+if (typeof ol_padyb=='undefined') var ol_padyb=1;
+if (typeof ol_fullhtml=='undefined') var ol_fullhtml=0;
+if (typeof ol_vpos=='undefined') var ol_vpos=BELOW;
+if (typeof ol_aboveheight=='undefined') var ol_aboveheight=0;
+if (typeof ol_capicon=='undefined') var ol_capicon="";
+if (typeof ol_frame=='undefined') var ol_frame=self;
+if (typeof ol_timeout=='undefined') var ol_timeout=0;
+if (typeof ol_function=='undefined') var ol_function=null;
+if (typeof ol_delay=='undefined') var ol_delay=0;
+if (typeof ol_hauto=='undefined') var ol_hauto=0;
+if (typeof ol_vauto=='undefined') var ol_vauto=0;
+if (typeof ol_closeclick=='undefined') var ol_closeclick=0;
+if (typeof ol_wrap=='undefined') var ol_wrap=0;
+if (typeof ol_followmouse=='undefined') var ol_followmouse=1;
+if (typeof ol_mouseoff=='undefined') var ol_mouseoff=0;
+if (typeof ol_closetitle=='undefined') var ol_closetitle='Close';
+if (typeof ol_css=='undefined') var ol_css=CSSOFF;
+if (typeof ol_fgclass=='undefined') var ol_fgclass="";
+if (typeof ol_bgclass=='undefined') var ol_bgclass="";
+if (typeof ol_textfontclass=='undefined') var ol_textfontclass="";
+if (typeof ol_captionfontclass=='undefined') var ol_captionfontclass="";
+if (typeof ol_closefontclass=='undefined') var ol_closefontclass="";
+
+////////
 // ARRAY CONFIGURATION
-// You don't have to change anything here if you don't want to. The following
-// arrays can be filled with text and html if you don't wish to pass it from
-// your html page.
-////////////////////////////////////////////////////////////////////////////////////
+////////
 
-// Array with texts.
-if (typeof ol_texts == 'undefined') { var ol_texts = new Array("Text 0", "Text 1"); }
+// You can use these arrays to store popup text here instead of in the html.
+if (typeof ol_texts=='undefined') var ol_texts = new Array("Text 0", "Text 1");
+if (typeof ol_caps=='undefined') var ol_caps = new Array("Caption 0", "Caption 1");
 
-// Array with captions.
-if (typeof ol_caps == 'undefined') { var ol_caps = new Array("Caption 0", "Caption 1"); }
-
-
-////////////////////////////////////////////////////////////////////////////////////
-// END CONFIGURATION
+////////
+// END OF CONFIGURATION
 // Don't change anything below this line, all configuration is above.
-////////////////////////////////////////////////////////////////////////////////////
+////////
 
 
 
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
 // INIT
-////////////////////////////////////////////////////////////////////////////////////
-
-// Runtime variables init. Used for runtime only, don't change, not for config!
-var o3_text = "";
-var o3_cap = "";
-var o3_sticky = 0;
-var o3_background = "";
-var o3_close = "Close";
-var o3_hpos = RIGHT;
-var o3_offsetx = 2;
-var o3_offsety = 2;
-var o3_fgcolor = "";
-var o3_bgcolor = "";
-var o3_textcolor = "";
-var o3_capcolor = "";
-var o3_closecolor = "";
-var o3_width = 100;
-var o3_border = 1;
-var o3_status = "";
-var o3_autostatus = 0;
-var o3_height = -1;
-var o3_snapx = 0;
-var o3_snapy = 0;
-var o3_fixx = -1;
-var o3_fixy = -1;
-var o3_fgbackground = "";
-var o3_bgbackground = "";
-var o3_padxl = 0;
-var o3_padxr = 0;
-var o3_padyt = 0;
-var o3_padyb = 0;
-var o3_fullhtml = 0;
-var o3_vpos = BELOW;
-var o3_aboveheight = 0;
-var o3_capicon = "";
-var o3_textfont = "Verdana,Arial,Helvetica";
-var o3_captionfont = "Verdana,Arial,Helvetica";
-var o3_closefont = "Verdana,Arial,Helvetica";
-var o3_textsize = "1";
-var o3_captionsize = "1";
-var o3_closesize = "1";
-var o3_frame = self;
-var o3_timeout = 0;
-var o3_timerid = 0;
-var o3_allowmove = 0;
-var o3_function = null; 
-var o3_delay = 0;
-var o3_delayid = 0;
-var o3_hauto = 0;
-var o3_vauto = 0;
-var o3_closeclick = 0;
-
-var o3_css = CSSOFF;
-var o3_fgclass = "";
-var o3_bgclass = "";
-var o3_textfontclass = "";
-var o3_captionfontclass = "";
-var o3_closefontclass = "";
-var o3_padunit = "px";
-var o3_heightunit = "px";
-var o3_widthunit = "px";
-var o3_textsizeunit = "px";
-var o3_textdecoration = "";
-var o3_textstyle = "";
-var o3_textweight = "";
-var o3_captionsizeunit = "px";
-var o3_captiondecoration = "";
-var o3_captionstyle = "";
-var o3_captionweight = "";
-var o3_closesizeunit = "px";
-var o3_closedecoration = "";
-var o3_closestyle = "";
-var o3_closeweight = "";
-
-
+////////
+// Runtime variables init. Don't change for config!
+var o3_text="";
+var o3_cap="";
+var o3_sticky=0;
+var o3_background="";
+var o3_close="Close";
+var o3_hpos=RIGHT;
+var o3_offsetx=2;
+var o3_offsety=2;
+var o3_fgcolor="";
+var o3_bgcolor="";
+var o3_textcolor="";
+var o3_capcolor="";
+var o3_closecolor="";
+var o3_width=100;
+var o3_border=1;
+var o3_cellpad=2;
+var o3_status="";
+var o3_autostatus=0;
+var o3_height=-1;
+var o3_snapx=0;
+var o3_snapy=0;
+var o3_fixx=-1;
+var o3_fixy=-1;
+var o3_relx=null;
+var o3_rely=null;
+var o3_fgbackground="";
+var o3_bgbackground="";
+var o3_padxl=0;
+var o3_padxr=0;
+var o3_padyt=0;
+var o3_padyb=0;
+var o3_fullhtml=0;
+var o3_vpos=BELOW;
+var o3_aboveheight=0;
+var o3_capicon="";
+var o3_textfont="Verdana,Arial,Helvetica";
+var o3_captionfont="Verdana,Arial,Helvetica";
+var o3_closefont="Verdana,Arial,Helvetica";
+var o3_textsize="1";
+var o3_captionsize="1";
+var o3_closesize="1";
+var o3_frame=self;
+var o3_timeout=0;
+var o3_timerid=0;
+var o3_allowmove=0;
+var o3_function=null; 
+var o3_delay=0;
+var o3_delayid=0;
+var o3_hauto=0;
+var o3_vauto=0;
+var o3_closeclick=0;
+var o3_wrap=0;
+var o3_followmouse=1;
+var o3_mouseoff=0;
+var o3_closetitle='';
+var o3_css=CSSOFF;
+var o3_fgclass="";
+var o3_bgclass="";
+var o3_textfontclass="";
+var o3_captionfontclass="";
+var o3_closefontclass="";
 
 // Display state variables
 var o3_x = 0;
 var o3_y = 0;
-var o3_allow = 0;
 var o3_showingsticky = 0;
 var o3_removecounter = 0;
 
 // Our layer
 var over = null;
-var fnRef;
+var fnRef, hoveringSwitch = false;
 
 // Decide browser version
-var ns4 = (navigator.appName == 'Netscape' && parseInt(navigator.appVersion) == 4);
-var ns6 = (document.getElementById)? true:false;
-var ie4 = (document.all)? true:false;
-if (ie4) var docRoot = 'document.body';
-var ie5 = false;
-if (ns4) {
+var isMac = (navigator.userAgent.indexOf("Mac") != -1);
+var olOp = (navigator.userAgent.toLowerCase().indexOf('opera 7.') > -1);
+var olNs4 = (navigator.appName=='Netscape' && parseInt(navigator.appVersion) == 4);
+var olNs6 = (document.getElementById) ? true : false;
+var olIe4 = (document.all) ? true : false;
+var olIe5 = false; 
+var olIe55 = false; // Added additional variable to identify IE5.5+
+var docRoot = 'document.body';
+
+// Resize fix for NS4.x to keep track of layer
+if (olNs4) {
 	var oW = window.innerWidth;
 	var oH = window.innerHeight;
-	window.onresize = function () {if (oW!=window.innerWidth||oH!=window.innerHeight) location.reload();}
+	window.onresize = function() { if (oW != window.innerWidth || oH != window.innerHeight) location.reload(); }
 }
-
 
 // Microsoft Stupidity Check(tm).
-if (ie4) {
-	if ((navigator.userAgent.indexOf('MSIE 5') > 0) || (navigator.userAgent.indexOf('MSIE 6') > 0)) {
-		if(document.compatMode && document.compatMode == 'CSS1Compat') docRoot = 'document.documentElement';
-		ie5 = true;
+if (olIe4) {
+	var versNum=parseFloat(navigator.userAgent.match(/MSIE (\d\.\d+)\.*/i)[1]);
+	if (versNum >= 5){
+		olIe5=true;
+		olIe55=(versNum>=5.5&&!olOp) ? true : false;
+		if (olNs6) olNs6=false;
 	}
-	if (ns6) {
-		ns6 = false;
-	}
+	if (olNs6) olIe4 = false;
 }
 
+// Check for compatability mode.
+if (document.compatMode && document.compatMode == 'CSS1Compat') {
+	docRoot= ((olIe4 && !olOp) ? 'document.documentElement' : docRoot);
+}
+
+// Add window onload handlers to indicate when all modules have been loaded
+// For Netscape 6+ and Mozilla, uses addEventListener method on the window object
+// For IE it uses the attachEvent method of the window object and for Netscape 4.x
+// it sets the window.onload handler to the OLonload_handler function
+if(window.addEventListener) window.addEventListener("load",OLonLoad_handler,true);
+else if (window.attachEvent) window.attachEvent("onload",OLonLoad_handler);
+else window.onload=OLonLoad_handler;
 
 // Capture events, alt. diffuses the overlib function.
-if ( (ns4) || (ie4) || (ns6)) {
-	document.onmousemove = mouseMove
-	if (ns4) document.captureEvents(Event.MOUSEMOVE)
+var olCheckMouseCapture = true;
+if ((olNs4 || olNs6 || olIe4)) {
+	olMouseCapture();
 } else {
 	overlib = no_overlib;
 	nd = no_overlib;
@@ -568,211 +298,115 @@ if ( (ns4) || (ie4) || (ns6)) {
 }
 
 
-// Fake function for 3.0 users.
-function no_overlib() {
-	return ver3fix;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
 // PUBLIC FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////////
+////////
 
-
-// overlib(arg0, ..., argN)
+// overlib(arg0,...,argN)
 // Loads parameters into global runtime variables.
 function overlib() {
-	
+	if (!olLoaded || isExclusive(overlib.arguments)) return true;
+	if (olCheckMouseCapture) olMouseCapture();
+	if (over) cClick();
+
 	// Load defaults to runtime.
-	o3_text = ol_text;
-	o3_cap = ol_cap;
-	o3_sticky = ol_sticky;
-	o3_background = ol_background;
-	o3_close = ol_close;
-	o3_hpos = ol_hpos;
-	o3_offsetx = ol_offsetx;
-	o3_offsety = ol_offsety;
-	o3_fgcolor = ol_fgcolor;
-	o3_bgcolor = ol_bgcolor;
-	o3_textcolor = ol_textcolor;
-	o3_capcolor = ol_capcolor;
-	o3_closecolor = ol_closecolor;
-	o3_width = ol_width;
-	o3_border = ol_border;
-	o3_status = ol_status;
-	o3_autostatus = ol_autostatus;
-	o3_height = ol_height;
-	o3_snapx = ol_snapx;
-	o3_snapy = ol_snapy;
-	o3_fixx = ol_fixx;
-	o3_fixy = ol_fixy;
-	o3_fgbackground = ol_fgbackground;
-	o3_bgbackground = ol_bgbackground;
-	o3_padxl = ol_padxl;
-	o3_padxr = ol_padxr;
-	o3_padyt = ol_padyt;
-	o3_padyb = ol_padyb;
-	o3_fullhtml = ol_fullhtml;
-	o3_vpos = ol_vpos;
-	o3_aboveheight = ol_aboveheight;
-	o3_capicon = ol_capicon;
-	o3_textfont = ol_textfont;
-	o3_captionfont = ol_captionfont;
-	o3_closefont = ol_closefont;
-	o3_textsize = ol_textsize;
-	o3_captionsize = ol_captionsize;
-	o3_closesize = ol_closesize;
-	o3_timeout = ol_timeout;
-	o3_function = ol_function;
-	o3_delay = ol_delay;
-	o3_hauto = ol_hauto;
-	o3_vauto = ol_vauto;
-	o3_closeclick = ol_closeclick;
+	o3_text=ol_text;
+	o3_cap=ol_cap;
+	o3_sticky=ol_sticky;
+	o3_background=ol_background;
+	o3_close=ol_close;
+	o3_hpos=ol_hpos;
+	o3_offsetx=ol_offsetx;
+	o3_offsety=ol_offsety;
+	o3_fgcolor=ol_fgcolor;
+	o3_bgcolor=ol_bgcolor;
+	o3_textcolor=ol_textcolor;
+	o3_capcolor=ol_capcolor;
+	o3_closecolor=ol_closecolor;
+	o3_width=ol_width;
+	o3_border=ol_border;
+	o3_cellpad=ol_cellpad;
+	o3_status=ol_status;
+	o3_autostatus=ol_autostatus;
+	o3_height=ol_height;
+	o3_snapx=ol_snapx;
+	o3_snapy=ol_snapy;
+	o3_fixx=ol_fixx;
+	o3_fixy=ol_fixy;
+	o3_relx=ol_relx;
+	o3_rely=ol_rely;
+	o3_fgbackground=ol_fgbackground;
+	o3_bgbackground=ol_bgbackground;
+	o3_padxl=ol_padxl;
+	o3_padxr=ol_padxr;
+	o3_padyt=ol_padyt;
+	o3_padyb=ol_padyb;
+	o3_fullhtml=ol_fullhtml;
+	o3_vpos=ol_vpos;
+	o3_aboveheight=ol_aboveheight;
+	o3_capicon=ol_capicon;
+	o3_textfont=ol_textfont;
+	o3_captionfont=ol_captionfont;
+	o3_closefont=ol_closefont;
+	o3_textsize=ol_textsize;
+	o3_captionsize=ol_captionsize;
+	o3_closesize=ol_closesize;
+	o3_timeout=ol_timeout;
+	o3_function=ol_function;
+	o3_delay=ol_delay;
+	o3_hauto=ol_hauto;
+	o3_vauto=ol_vauto;
+	o3_closeclick=ol_closeclick;
+	o3_wrap=ol_wrap;	
+	o3_followmouse=ol_followmouse;
+	o3_mouseoff=ol_mouseoff;
+	o3_closetitle=ol_closetitle;
+	o3_css=ol_css;
+	o3_fgclass=ol_fgclass;
+	o3_bgclass=ol_bgclass;
+	o3_textfontclass=ol_textfontclass;
+	o3_captionfontclass=ol_captionfontclass;
+	o3_closefontclass=ol_closefontclass;
 	
-	o3_css = ol_css;
-	o3_fgclass = ol_fgclass;
-	o3_bgclass = ol_bgclass;
-	o3_textfontclass = ol_textfontclass;
-	o3_captionfontclass = ol_captionfontclass;
-	o3_closefontclass = ol_closefontclass;
-	o3_padunit = ol_padunit;
-	o3_heightunit = ol_heightunit;
-	o3_widthunit = ol_widthunit;
-	o3_textsizeunit = ol_textsizeunit;
-	o3_textdecoration = ol_textdecoration;
-	o3_textstyle = ol_textstyle;
-	o3_textweight = ol_textweight;
-	o3_captionsizeunit = ol_captionsizeunit;
-	o3_captiondecoration = ol_captiondecoration;
-	o3_captionstyle = ol_captionstyle;
-	o3_captionweight = ol_captionweight;
-	o3_closesizeunit = ol_closesizeunit;
-	o3_closedecoration = ol_closedecoration;
-	o3_closestyle = ol_closestyle;
-	o3_closeweight = ol_closeweight;
+	setRunTimeVariables();
+	
 	fnRef = '';
 	
-
 	// Special for frame support, over must be reset...
-	if ( (ns4) || (ie4) || (ns6) ) {
-		if (over) cClick();
-		o3_frame = ol_frame;
-		if (ns4) over = o3_frame.document.overDiv
-		if (ie4) over = o3_frame.overDiv.style
-		if (ns6) over = o3_frame.document.getElementById("overDiv");
+	o3_frame = ol_frame;
+	
+	if (olNs4) {
+		over = o3_frame.document.layers['overDiv'];
+	} else if (document.all) {
+		over = o3_frame.document.all['overDiv'];
+	} else if (document.getElementById) {
+		over = o3_frame.document.getElementById("overDiv");
 	}
-	
-	
-	// What the next argument is expected to be.
-	var parsemode = -1, udf, v = null;
-	
-	var ar = arguments;
-	udf = (!ar.length ? 1 : 0);
 
-	for (i = 0; i < ar.length; i++) {
-
-		if (parsemode < 0) {
-			// Arg is maintext, unless its a PARAMETER
-			if (typeof ar[i] == 'number') {
-				udf = (ar[i] == FUNCTION ? 0 : 1);
-				i--;
-			} else {
-				o3_text = ar[i];
-			}
-
-			parsemode = 0;
-		} else {
-			// Note: NS4 doesn't like switch cases with vars.
-			if (ar[i] == INARRAY) { udf = 0; o3_text = ol_texts[ar[++i]]; continue; }
-			if (ar[i] == CAPARRAY) { o3_cap = ol_caps[ar[++i]]; continue; }
-			if (ar[i] == STICKY) { o3_sticky = 1; continue; }
-			if (ar[i] == BACKGROUND) { o3_background = ar[++i]; continue; }
-			if (ar[i] == NOCLOSE) { o3_close = ""; continue; }
-			if (ar[i] == CAPTION) { o3_cap = ar[++i]; continue; }
-			if (ar[i] == CENTER || ar[i] == LEFT || ar[i] == RIGHT) { o3_hpos = ar[i]; continue; }
-			if (ar[i] == OFFSETX) { o3_offsetx = ar[++i]; continue; }
-			if (ar[i] == OFFSETY) { o3_offsety = ar[++i]; continue; }
-			if (ar[i] == FGCOLOR) { o3_fgcolor = ar[++i]; continue; }
-			if (ar[i] == BGCOLOR) { o3_bgcolor = ar[++i]; continue; }
-			if (ar[i] == TEXTCOLOR) { o3_textcolor = ar[++i]; continue; }
-			if (ar[i] == CAPCOLOR) { o3_capcolor = ar[++i]; continue; }
-			if (ar[i] == CLOSECOLOR) { o3_closecolor = ar[++i]; continue; }
-			if (ar[i] == WIDTH) { o3_width = ar[++i]; continue; }
-			if (ar[i] == BORDER) { o3_border = ar[++i]; continue; }
-			if (ar[i] == STATUS) { o3_status = ar[++i]; continue; }
-			if (ar[i] == AUTOSTATUS) { o3_autostatus = (o3_autostatus == 1) ? 0 : 1; continue; }
-			if (ar[i] == AUTOSTATUSCAP) { o3_autostatus = (o3_autostatus == 2) ? 0 : 2; continue; }
-			if (ar[i] == HEIGHT) { o3_height = ar[++i]; o3_aboveheight = ar[i]; continue; } // Same param again.
-			if (ar[i] == CLOSETEXT) { o3_close = ar[++i]; continue; }
-			if (ar[i] == SNAPX) { o3_snapx = ar[++i]; continue; }
-			if (ar[i] == SNAPY) { o3_snapy = ar[++i]; continue; }
-			if (ar[i] == FIXX) { o3_fixx = ar[++i]; continue; }
-			if (ar[i] == FIXY) { o3_fixy = ar[++i]; continue; }
-			if (ar[i] == FGBACKGROUND) { o3_fgbackground = ar[++i]; continue; }
-			if (ar[i] == BGBACKGROUND) { o3_bgbackground = ar[++i]; continue; }
-			if (ar[i] == PADX) { o3_padxl = ar[++i]; o3_padxr = ar[++i]; continue; }
-			if (ar[i] == PADY) { o3_padyt = ar[++i]; o3_padyb = ar[++i]; continue; }
-			if (ar[i] == FULLHTML) { o3_fullhtml = 1; continue; }
-			if (ar[i] == BELOW || ar[i] == ABOVE) { o3_vpos = ar[i]; continue; }
-			if (ar[i] == CAPICON) { o3_capicon = ar[++i]; continue; }
-			if (ar[i] == TEXTFONT) { o3_textfont = ar[++i]; continue; }
-			if (ar[i] == CAPTIONFONT) { o3_captionfont = ar[++i]; continue; }
-			if (ar[i] == CLOSEFONT) { o3_closefont = ar[++i]; continue; }
-			if (ar[i] == TEXTSIZE) { o3_textsize = ar[++i]; continue; }
-			if (ar[i] == CAPTIONSIZE) { o3_captionsize = ar[++i]; continue; }
-			if (ar[i] == CLOSESIZE) { o3_closesize = ar[++i]; continue; }
-			if (ar[i] == FRAME) { opt_FRAME(ar[++i]); continue; }
-			if (ar[i] == TIMEOUT) { o3_timeout = ar[++i]; continue; }
-			if (ar[i] == FUNCTION) { udf = 0; if (typeof ar[i+1] != 'number') v = ar[++i]; opt_FUNCTION(v); continue; } 
-			if (ar[i] == DELAY) { o3_delay = ar[++i]; continue; }
-			if (ar[i] == HAUTO) { o3_hauto = (o3_hauto == 0) ? 1 : 0; continue; }
-			if (ar[i] == VAUTO) { o3_vauto = (o3_vauto == 0) ? 1 : 0; continue; }
-			if (ar[i] == CLOSECLICK) { o3_closeclick = (o3_closeclick == 0) ? 1 : 0; continue; }
-			if (ar[i] == CSSOFF) { o3_css = ar[i]; continue; }
-			if (ar[i] == CSSSTYLE) { o3_css = ar[i]; continue; }
-			if (ar[i] == CSSCLASS) { o3_css = ar[i]; continue; }
-			if (ar[i] == FGCLASS) { o3_fgclass = ar[++i]; continue; }
-			if (ar[i] == BGCLASS) { o3_bgclass = ar[++i]; continue; }
-			if (ar[i] == TEXTFONTCLASS) { o3_textfontclass = ar[++i]; continue; }
-			if (ar[i] == CAPTIONFONTCLASS) { o3_captionfontclass = ar[++i]; continue; }
-			if (ar[i] == CLOSEFONTCLASS) { o3_closefontclass = ar[++i]; continue; }
-			if (ar[i] == PADUNIT) { o3_padunit = ar[++i]; continue; }
-			if (ar[i] == HEIGHTUNIT) { o3_heightunit = ar[++i]; continue; }
-			if (ar[i] == WIDTHUNIT) { o3_widthunit = ar[++i]; continue; }
-			if (ar[i] == TEXTSIZEUNIT) { o3_textsizeunit = ar[++i]; continue; }
-			if (ar[i] == TEXTDECORATION) { o3_textdecoration = ar[++i]; continue; }
-			if (ar[i] == TEXTSTYLE) { o3_textstyle = ar[++i]; continue; }
-			if (ar[i] == TEXTWEIGHT) { o3_textweight = ar[++i]; continue; }
-			if (ar[i] == CAPTIONSIZEUNIT) { o3_captionsizeunit = ar[++i]; continue; }
-			if (ar[i] == CAPTIONDECORATION) { o3_captiondecoration = ar[++i]; continue; }
-			if (ar[i] == CAPTIONSTYLE) { o3_captionstyle = ar[++i]; continue; }
-			if (ar[i] == CAPTIONWEIGHT) { o3_captionweight = ar[++i]; continue; }
-			if (ar[i] == CLOSESIZEUNIT) { o3_closesizeunit = ar[++i]; continue; }
-			if (ar[i] == CLOSEDECORATION) { o3_closedecoration = ar[++i]; continue; }
-			if (ar[i] == CLOSESTYLE) { o3_closestyle = ar[++i]; continue; }
-			if (ar[i] == CLOSEWEIGHT) { o3_closeweight = ar[++i]; continue; }
-		}
-	}
-	if (udf && o3_function) o3_text = o3_function();
+	parseTokens('o3_', overlib.arguments);
+	if (!postParseChecks()) return false;
 
 	if (o3_delay == 0) {
-		return overlib351();
-	} else {
-		o3_delayid = setTimeout("overlib351()", o3_delay);
+		return runHook("olMain", FREPLACE);
+ 	} else {
+		o3_delayid = setTimeout("runHook('olMain', FREPLACE)", o3_delay);
 		return false;
 	}
 }
 
-
-
 // Clears popups if appropriate
-function nd() {
-	if ( o3_removecounter >= 1 ) { o3_showingsticky = 0 };
-	if ( (ns4) || (ie4) || (ns6) ) {
-		if ( o3_showingsticky == 0 ) {
+function nd(time) {
+	if (olLoaded && !isExclusive()) {
+		if (time && !o3_delay) {
+			if (o3_timerid > 0) clearTimeout(o3_timerid);
+			
+			o3_timerid = setTimeout("cClick()",(o3_timeout = time));
+		}
+		if (o3_removecounter >= 1) { o3_showingsticky = 0 };
+		
+		if (o3_showingsticky == 0) {
 			o3_allowmove = 0;
-			if (over != null) hideObject(over);
+			if (over != null && o3_timerid == 0) runHook("hideObject", FREPLACE, over);
 		} else {
 			o3_removecounter++;
 		}
@@ -781,68 +415,65 @@ function nd() {
 	return true;
 }
 
+// The Close onMouseOver function for stickies
+function cClick() {
+	if (olLoaded) {
+		runHook("hideObject", FREPLACE, over);
+		o3_showingsticky = 0;	
+	}	
+	return false;
+}
+
+// Method for setting page specific defaults.
+function overlib_pagedefaults() {
+	parseTokens('ol_', overlib_pagedefaults.arguments);
+}
 
 
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////
-// OVERLIB 3.51 FUNCTION
-////////////////////////////////////////////////////////////////////////////////////
-
+////////
+// OVERLIB MAIN FUNCTION
+////////
 
 // This function decides what it is we want to display and how we want it done.
-function overlib351() {
-
-	// Make layer content
-	var layerhtml;
-
-	if (o3_background != "" || o3_fullhtml) {
+function olMain() {
+	var layerhtml, styleType;
+ 	runHook("olMain", FBEFORE);
+ 	
+	if (o3_background!="" || o3_fullhtml) {
 		// Use background instead of box.
-		layerhtml = ol_content_background(o3_text, o3_background, o3_fullhtml);
+		layerhtml = runHook('ol_content_background', FALTERNATE, o3_css, o3_text, o3_background, o3_fullhtml);
 	} else {
 		// They want a popup box.
+		styleType = (pms[o3_css-1-pmStart] == "cssoff" || pms[o3_css-1-pmStart] == "cssclass");
 
 		// Prepare popup background
-		if (o3_fgbackground != "" && o3_css == CSSOFF) {
-			o3_fgbackground = "BACKGROUND=\""+o3_fgbackground+"\"";
-		}
-		if (o3_bgbackground != "" && o3_css == CSSOFF) {
-			o3_bgbackground = "BACKGROUND=\""+o3_bgbackground+"\"";
-		}
+		if (o3_fgbackground != "") o3_fgbackground = "background=\""+o3_fgbackground+"\"";
+		if (o3_bgbackground != "") o3_bgbackground = (styleType ? "background=\""+o3_bgbackground+"\"" : o3_bgbackground);
 
 		// Prepare popup colors
-		if (o3_fgcolor != "" && o3_css == CSSOFF) {
-			o3_fgcolor = "BGCOLOR=\""+o3_fgcolor+"\"";
-		}
-		if (o3_bgcolor != "" && o3_css == CSSOFF) {
-			o3_bgcolor = "BGCOLOR=\""+o3_bgcolor+"\"";
-		}
+		if (o3_fgcolor != "") o3_fgcolor = (styleType ? "bgcolor=\""+o3_fgcolor+"\"" : o3_fgcolor);
+		if (o3_bgcolor != "") o3_bgcolor = (styleType ? "bgcolor=\""+o3_bgcolor+"\"" : o3_bgcolor);
 
 		// Prepare popup height
-		if (o3_height > 0 && o3_css == CSSOFF) {
-			o3_height = "HEIGHT=" + o3_height;
-		} else {
-			o3_height = "";
-		}
+		if (o3_height > 0) o3_height = (styleType ? "height=\""+o3_height+"\"" : o3_height);
+		else o3_height = "";
 
 		// Decide which kinda box.
-		if (o3_cap == "") {
+		if (o3_cap=="") {
 			// Plain
-			layerhtml = ol_content_simple(o3_text);
+			layerhtml = runHook('ol_content_simple', FALTERNATE, o3_css, o3_text);
 		} else {
 			// With caption
 			if (o3_sticky) {
 				// Show close text
-				layerhtml = ol_content_caption(o3_text, o3_cap, o3_close);
+				layerhtml = runHook('ol_content_caption', FALTERNATE, o3_css, o3_text, o3_cap, o3_close);
 			} else {
 				// No close text
-				layerhtml = ol_content_caption(o3_text, o3_cap, "");
+				layerhtml = runHook('ol_content_caption', FALTERNATE, o3_css, o3_text, o3_cap, "");
 			}
 		}
-	}
-	
+	}	
+
 	// We want it to stick!
 	if (o3_sticky) {
 		if (o3_timerid > 0) {
@@ -852,92 +483,77 @@ function overlib351() {
 		o3_showingsticky = 1;
 		o3_removecounter = 0;
 	}
-	
-	// Write layer
-	layerWrite(layerhtml);
-	
+
+	// Created a separate routine to generate the popup to make it easier
+	// to implement a plugin capability
+	if (!runHook("createPopup", FREPLACE, layerhtml)) return false;
+
 	// Prepare status bar
 	if (o3_autostatus > 0) {
 		o3_status = o3_text;
-		if (o3_autostatus > 1) {
-			o3_status = o3_cap;
-		}
+		if (o3_autostatus > 1) o3_status = o3_cap;
 	}
 
 	// When placing the layer the first time, even stickies may be moved.
 	o3_allowmove = 0;
 
 	// Initiate a timer for timeout
-	if (o3_timeout > 0) {
+	if (o3_timeout > 0) {          
 		if (o3_timerid > 0) clearTimeout(o3_timerid);
 		o3_timerid = setTimeout("cClick()", o3_timeout);
 	}
 
 	// Show layer
-	disp(o3_status);
+	runHook("disp", FREPLACE, o3_status);
+	runHook("olMain", FAFTER);
 
-	// Stickies should stay where they are.	
-	if (o3_sticky) o3_allowmove = 0;
-
-	return (o3_status != '');
+	if (o3_status != '') {
+		return true;
+	} else {
+		return;
+	}
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
 // LAYER GENERATION FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////////
+////////
+// These functions just handle popup content with tags that should adhere to the W3C standards specification.
 
 // Makes simple table without caption
 function ol_content_simple(text) {
-	if (o3_css == CSSCLASS) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 class=\""+o3_bgclass+"\"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 class=\""+o3_fgclass+"\"><TR><TD VALIGN=TOP><FONT class=\""+o3_textfontclass+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
-	if (o3_css == CSSSTYLE) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 style=\"background-color: "+o3_bgcolor+"; height: "+o3_height+o3_heightunit+";\"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 style=\"color: "+o3_fgcolor+"; background-color: "+o3_fgcolor+"; height: "+o3_height+o3_heightunit+";\"><TR><TD VALIGN=TOP><FONT style=\"font-family: "+o3_textfont+"; color: "+o3_textcolor+"; font-size: "+o3_textsize+o3_textsizeunit+"; text-decoration: "+o3_textdecoration+"; font-weight: "+o3_textweight+"; font-style:"+o3_textstyle+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
-	if (o3_css == CSSOFF) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 "+o3_bgcolor+" "+o3_height+"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 "+o3_fgcolor+" "+o3_fgbackground+" "+o3_height+"><TR><TD VALIGN=TOP><FONT FACE=\""+o3_textfont+"\" COLOR=\""+o3_textcolor+"\" SIZE=\""+o3_textsize+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
+	txt='<table width="'+o3_width+ '" border="0" cellpadding="'+o3_border+'" cellspacing="0" '+(o3_bgclass ? 'class="'+o3_bgclass+'"' : o3_bgcolor+' '+o3_height)+'><tr><td><table width="100%" border="0" cellpadding="' + o3_cellpad + '" cellspacing="0" '+(o3_fgclass ? 'class="'+o3_fgclass+'"' : o3_fgcolor+' '+o3_fgbackground+' '+o3_height)+'><tr><td valign="TOP"'+(o3_textfontclass ? ' class="'+o3_textfontclass+'">' : '>')+(o3_textfontclass ? '' : wrapStr(0,o3_textsize,'text'))+text+(o3_textfontclass ? '' : wrapStr(1,o3_textsize))+'</td></tr></table></td></tr></table>';
 
 	set_background("");
 	return txt;
 }
-
-
-
 
 // Makes table with caption and optional close link
-function ol_content_caption(text, title, close) {
-	closing = "";
-	closeevent = "onMouseOver";
-
-	if (o3_closeclick == 1) closeevent = "onClick";
-	if (o3_capicon != "") o3_capicon = "<IMG SRC=\""+o3_capicon+"\"> ";
-
-	if (close != "") {
-		if (o3_css == CSSCLASS) closing = "<TD ALIGN=RIGHT><A HREF=\"javascript:return "+fnRef+"cClick();\" "+closeevent+"=\"return " + fnRef + "cClick();\" class=\""+o3_closefontclass+"\">"+close+"</A></TD>";
-		if (o3_css == CSSSTYLE) closing = "<TD ALIGN=RIGHT><A HREF=\"javascript:return "+fnRef+"cClick();\" "+closeevent+"=\"return " + fnRef + "cClick();\" style=\"color: "+o3_closecolor+"; font-family: "+o3_closefont+"; font-size: "+o3_closesize+o3_closesizeunit+"; text-decoration: "+o3_closedecoration+"; font-weight: "+o3_closeweight+"; font-style:"+o3_closestyle+";\">"+close+"</A></TD>";
-		if (o3_css == CSSOFF) closing = "<TD ALIGN=RIGHT><A HREF=\"javascript:return "+fnRef+"cClick();\" "+closeevent+"=\"return " + fnRef + "cClick();\"><FONT COLOR=\""+o3_closecolor+"\" FACE=\""+o3_closefont+"\" SIZE=\""+o3_closesize+"\">"+close+"</FONT></A></TD>";
+function ol_content_caption(text,title,close) {
+	var nameId;
+	closing="";
+	closeevent="onmouseover";
+	if (o3_closeclick==1) closeevent= (o3_closetitle ? "title='" + o3_closetitle +"'" : "") + " onclick";
+	if (o3_capicon!="") {
+		nameId=' hspace=\"5\"'+' align=\"middle\" alt=\"\"';
+		if (typeof o3_dragimg!='undefined'&&o3_dragimg) nameId=' hspace=\"5\"'+' name=\"'+o3_dragimg+'\" id=\"'+o3_dragimg+'\" align=\"middle\" alt=\"Drag Enabled\" title=\"Drag Enabled\"';
+		o3_capicon='<img src=\"'+o3_capicon+'\"'+nameId+' />';
 	}
 
-	if (o3_css == CSSCLASS) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 class=\""+o3_bgclass+"\"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=0 CELLSPACING=0><TR><TD><FONT class=\""+o3_captionfontclass+"\">"+o3_capicon+title+"</FONT></TD>"+closing+"</TR></TABLE><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 class=\""+o3_fgclass+"\"><TR><TD VALIGN=TOP><FONT class=\""+o3_textfontclass+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
-	if (o3_css == CSSSTYLE) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 style=\"background-color: "+o3_bgcolor+"; background-image: url("+o3_bgbackground+"); height: "+o3_height+o3_heightunit+";\"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=0 CELLSPACING=0><TR><TD><FONT style=\"font-family: "+o3_captionfont+"; color: "+o3_capcolor+"; font-size: "+o3_captionsize+o3_captionsizeunit+"; font-weight: "+o3_captionweight+"; font-style: "+o3_captionstyle+"; text-decoration: " + o3_captiondecoration + ";\">"+o3_capicon+title+"</FONT></TD>"+closing+"</TR></TABLE><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 style=\"color: "+o3_fgcolor+"; background-color: "+o3_fgcolor+"; height: "+o3_height+o3_heightunit+";\"><TR><TD VALIGN=TOP><FONT style=\"font-family: "+o3_textfont+"; color: "+o3_textcolor+"; font-size: "+o3_textsize+o3_textsizeunit+"; text-decoration: "+o3_textdecoration+"; font-weight: "+o3_textweight+"; font-style:"+o3_textstyle+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
-	if (o3_css == CSSOFF) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING="+o3_border+" CELLSPACING=0 "+o3_bgcolor+" "+o3_bgbackground+" "+o3_height+"><TR><TD><TABLE WIDTH=100% BORDER=0 CELLPADDING=0 CELLSPACING=0><TR><TD><B><FONT COLOR=\""+o3_capcolor+"\" FACE=\""+o3_captionfont+"\" SIZE=\""+o3_captionsize+"\">"+o3_capicon+title+"</FONT></B></TD>"+closing+"</TR></TABLE><TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 "+o3_fgcolor+" "+o3_fgbackground+" "+o3_height+"><TR><TD VALIGN=TOP><FONT COLOR=\""+o3_textcolor+"\" FACE=\""+o3_textfont+"\" SIZE=\""+o3_textsize+"\">"+text+"</FONT></TD></TR></TABLE></TD></TR></TABLE>";
+	if (close != "") closing='<td '+(o3_closefontclass ? 'class="'+o3_closefontclass : 'align="RIGHT')+'"><a href="javascript:return '+fnRef+'cClick();" '+closeevent+'="return '+fnRef+'cClick();">'+(o3_closefontclass ? '' : wrapStr(0,o3_closesize,'close'))+close+(o3_closefontclass ? '' : wrapStr(1,o3_closesize,'close'))+'</a></td>';
+	txt='<table width="'+o3_width+ '" border="0" cellpadding="'+o3_border+'" cellspacing="0" '+(o3_bgclass ? 'class="'+o3_bgclass+'"' : o3_bgcolor+' '+o3_bgbackground+' '+o3_height)+'><tr><td><table width="100%" border="0" cellpadding="0" cellspacing="0"><tr><td'+(o3_captionfontclass ? ' class="'+o3_captionfontclass+'">' : '>')+(o3_captionfontclass ? '' : '<b>'+wrapStr(0,o3_captionsize,'caption'))+o3_capicon+title+(o3_captionfontclass ? '' : wrapStr(1,o3_captionsize)+'</b>')+'</td>'+closing+'</tr></table><table width="100%" border="0" cellpadding="' + o3_cellpad + '" cellspacing="0" '+(o3_fgclass ? 'class="'+o3_fgclass+'"' : o3_fgcolor+' '+o3_fgbackground+' '+o3_height)+'><tr><td valign="TOP"'+(o3_textfontclass ? ' class="'+o3_textfontclass+'">' :'>')+(o3_textfontclass ? '' : wrapStr(0,o3_textsize,'text'))+text+(o3_textfontclass ? '' : wrapStr(1,o3_textsize)) + '</td></tr></table></td></tr></table>';
 
 	set_background("");
 	return txt;
 }
 
-// Sets the background picture, padding and lots more. :)
-function ol_content_background(text, picture, hasfullhtml) {
-	var txt;
+// Sets the background picture,padding and lots more. :)
+function ol_content_background(text,picture,hasfullhtml) {
 	if (hasfullhtml) {
-		txt = text;
+		txt=text;
 	} else {
-		var pU, hU, wU;
-		pU = (o3_padunit == '%' ? '%' : '');
-		hU = (o3_heightunit == '%' ? '%' : '');
-		wU = (o3_widthunit == '%' ? '%' : '');
-
-		if (o3_css == CSSCLASS) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING=0 CELLSPACING=0 HEIGHT="+o3_height+"><TR><TD COLSPAN=3 HEIGHT="+o3_padyt+"></TD></TR><TR><TD WIDTH="+o3_padxl+"></TD><TD VALIGN=TOP WIDTH="+(o3_width-o3_padxl-o3_padxr)+"><FONT class=\""+o3_textfontclass+"\">"+text+"</FONT></TD><TD WIDTH="+o3_padxr+"></TD></TR><TR><TD COLSPAN=3 HEIGHT="+o3_padyb+"></TD></TR></TABLE>";
-		if (o3_css == CSSSTYLE) txt = "<TABLE WIDTH="+o3_width+wU+" BORDER=0 CELLPADDING=0 CELLSPACING=0 HEIGHT="+o3_height+hU+"><TR><TD COLSPAN=3 HEIGHT="+o3_padyt+pU+"></TD></TR><TR><TD WIDTH="+o3_padxl+pU+"></TD><TD VALIGN=TOP WIDTH="+(o3_width-o3_padxl-o3_padxr)+pU+"><FONT style=\"font-family: "+o3_textfont+"; color: "+o3_textcolor+"; font-size: "+o3_textsize+o3_textsizeunit+";\">"+text+"</FONT></TD><TD WIDTH="+o3_padxr+pU+"></TD></TR><TR><TD COLSPAN=3 HEIGHT="+o3_padyb+pU+"></TD></TR></TABLE>";
-		if (o3_css == CSSOFF) txt = "<TABLE WIDTH="+o3_width+" BORDER=0 CELLPADDING=0 CELLSPACING=0 HEIGHT="+o3_height+"><TR><TD COLSPAN=3 HEIGHT="+o3_padyt+"></TD></TR><TR><TD WIDTH="+o3_padxl+"></TD><TD VALIGN=TOP WIDTH="+(o3_width-o3_padxl-o3_padxr)+"><FONT FACE=\""+o3_textfont+"\" COLOR=\""+o3_textcolor+"\" SIZE=\""+o3_textsize+"\">"+text+"</FONT></TD><TD WIDTH="+o3_padxr+"></TD></TR><TR><TD COLSPAN=3 HEIGHT="+o3_padyb+"></TD></TR></TABLE>";
+		txt='<table width="'+o3_width+'" border="0" cellpadding="0" cellspacing="0" height="'+o3_height+'"><tr><td colspan="3" height="'+o3_padyt+'"></td></tr><tr><td width="'+o3_padxl+'"></td><td valign="TOP" width="'+(o3_width-o3_padxl-o3_padxr)+'">'+wrapStr(0,o3_textsize,'text')+text+wrapStr(1,o3_textsize)+'</td><td width="'+o3_padxr+'"></td></tr><tr><td colspan="3" height="'+o3_padyb+'"></td></tr></table>';
 	}
+
 	set_background(picture);
 	return txt;
 }
@@ -945,397 +561,823 @@ function ol_content_background(text, picture, hasfullhtml) {
 // Loads a picture into the div.
 function set_background(pic) {
 	if (pic == "") {
-		if (ns4) over.background.src = null;
-		if (ie4) over.backgroundImage = "none";
-		if (ns6) over.style.backgroundImage = "none";
+		if (olNs4) {
+			over.background.src = null; 
+		} else if (over.style) {
+			over.style.backgroundImage = "none";
+		}
 	} else {
-		if (ns4) {
+		if (olNs4) {
 			over.background.src = pic;
-		} else if (ie4) {
-			over.backgroundImage = "url("+pic+")";
-		} else if (ns6) {
+		} else if (over.style) {
 			over.style.backgroundImage = "url("+pic+")";
 		}
 	}
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////////
+////////
 // HANDLING FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////////
-
+////////
 
 // Displays the popup
 function disp(statustext) {
-	if ( (ns4) || (ie4) || (ns6) ) {
-		if (o3_allowmove == 0) 	{
-			placeLayer();
-			showObject(over);
-			o3_allowmove = 1;
+	runHook("disp", FBEFORE);
+	
+	if (o3_allowmove == 0) {
+		runHook("placeLayer", FREPLACE);
+		runHook("showObject", FREPLACE, over);
+		o3_allowmove = (o3_sticky || o3_followmouse==0) ? 0 : 1;
+	}
+	
+	runHook("disp", FAFTER);
+
+	if (statustext != "") self.status = statustext;
+}
+
+// Creates the actual popup structure
+function createPopup(lyrContent){
+	runHook("createPopup", FBEFORE);
+	
+	if (o3_wrap && !(olNs4 || olOp)) {
+		if (olIe4) {
+			over.style.pixelWidth = 0;
+		} else if (olNs6) {
+			repositionTo(over, 0, -over.offsetHeight);
 		}
 	}
 
-	if (statustext != "") {
-		self.status = statustext;
-	}
+	layerWrite(lyrContent);
+	
+	// Have to set o3_width for placeLayer() routine if o3_wrap is turned on
+	if (o3_wrap) o3_width=(olNs4 ? over.clip.width : over.offsetWidth);
+	
+	runHook("createPopup", FAFTER, lyrContent);
+
+	return true;
 }
 
 // Decides where we want the popup.
 function placeLayer() {
-	var placeX, placeY;
+	var placeX, placeY, widthFix = 0;
 	
 	// HORIZONTAL PLACEMENT
-	if (o3_fixx > -1) {
+	if (eval('o3_frame.'+docRoot) && eval("typeof o3_frame."+docRoot+".clientWidth=='number'") && eval('o3_frame.'+docRoot+'.clientWidth')) {
+		iwidth = eval('o3_frame.'+docRoot+'.clientWidth');
+	} else if (typeof(o3_frame.innerWidth) == 'number') {
+		widthFix = Math.ceil(1.2*(o3_frame.outerWidth - o3_frame.innerWidth));
+		iwidth = o3_frame.innerWidth;
+	}
+
+	// Horizontal scroll offset
+	winoffset=(olIe4) ? eval('o3_frame.'+docRoot+'.scrollLeft') : o3_frame.pageXOffset;
+	var parsedWidth = parseInt(o3_width);
+
+	if (o3_fixx > -1 || o3_relx != null) {
 		// Fixed position
-		placeX = o3_fixx;
-	} else {
-		winoffset = (ie4) ? eval('o3_frame.'+docRoot+'.scrollLeft') : o3_frame.pageXOffset;
-		if (ie4) iwidth = eval('o3_frame.'+docRoot+'.clientWidth');
-		if (ns4 || ns6) iwidth = o3_frame.innerWidth;
-		
+		placeX=(o3_relx != null ? ( o3_relx < 0 ? winoffset +o3_relx+ iwidth - parsedWidth - widthFix : winoffset+o3_relx) : o3_fixx);
+	} else {  
 		// If HAUTO, decide what to use.
 		if (o3_hauto == 1) {
-			if ( (o3_x - winoffset) > ((eval(iwidth)) / 2)) {
+			if ((o3_x - winoffset) > (iwidth / 2)) {
 				o3_hpos = LEFT;
 			} else {
 				o3_hpos = RIGHT;
 			}
-		}
-		
+		}  		
+
 		// From mouse
 		if (o3_hpos == CENTER) { // Center
-			placeX = o3_x+o3_offsetx-(o3_width/2);
+			placeX = o3_x+o3_offsetx-(parsedWidth/2);
+
 			if (placeX < winoffset) placeX = winoffset;
 		}
+
 		if (o3_hpos == RIGHT) { // Right
 			placeX = o3_x+o3_offsetx;
-			if ( (eval(placeX) + eval(o3_width)) > (winoffset + iwidth) ) {
-				placeX = iwidth + winoffset - o3_width;
+
+			if ((placeX+parsedWidth) > (winoffset+iwidth - widthFix)) {
+				placeX = iwidth+winoffset - parsedWidth - widthFix;
 				if (placeX < 0) placeX = 0;
 			}
 		}
 		if (o3_hpos == LEFT) { // Left
-			placeX = o3_x-o3_offsetx-o3_width;
+			placeX = o3_x-o3_offsetx-parsedWidth;
 			if (placeX < winoffset) placeX = winoffset;
-		}
-	
+		}  	
+
 		// Snapping!
 		if (o3_snapx > 1) {
 			var snapping = placeX % o3_snapx;
+
 			if (o3_hpos == LEFT) {
-				placeX = placeX - (o3_snapx + snapping);
+				placeX = placeX - (o3_snapx+snapping);
 			} else {
 				// CENTER and RIGHT
-				placeX = placeX + (o3_snapx - snapping);
+				placeX = placeX+(o3_snapx - snapping);
 			}
+
 			if (placeX < winoffset) placeX = winoffset;
 		}
+	}	
+
+	// VERTICAL PLACEMENT
+	if (eval('o3_frame.'+docRoot) && eval("typeof o3_frame."+docRoot+".clientHeight=='number'") && eval('o3_frame.'+docRoot+'.clientHeight')) {
+		iheight = eval('o3_frame.'+docRoot+'.clientHeight');
+	} else if (typeof(o3_frame.innerHeight)=='number') {
+		iheight = o3_frame.innerHeight;
 	}
 
-	
-	
-	// VERTICAL PLACEMENT
-	if (o3_fixy > -1) {
+	// Vertical scroll offset
+	scrolloffset=(olIe4) ? eval('o3_frame.'+docRoot+'.scrollTop') : o3_frame.pageYOffset;
+	var parsedHeight=(o3_aboveheight ? parseInt(o3_aboveheight) : (olNs4 ? over.clip.height : over.offsetHeight));
+
+	if (o3_fixy > -1 || o3_rely != null) {
 		// Fixed position
-		placeY = o3_fixy;
+		placeY=(o3_rely != null ? (o3_rely < 0 ? scrolloffset+o3_rely+iheight - parsedHeight : scrolloffset+o3_rely) : o3_fixy);
 	} else {
-		scrolloffset = (ie4) ? eval('o3_frame.'+docRoot+'.scrollTop') : o3_frame.pageYOffset;
-
 		// If VAUTO, decide what to use.
-		if (o3_vauto == 1) {
-			if (ie4) iheight = eval('o3_frame.'+docRoot+'.clientHeight');
-			if (ns4 || ns6) iheight = o3_frame.innerHeight;
-
-			iheight = (eval(iheight)) / 2;
-			if ( (o3_y - scrolloffset) > iheight) {
+		if (o3_vauto == 1) {  
+			if ((o3_y - scrolloffset) > (iheight/2)) {
 				o3_vpos = ABOVE;
 			} else {
 				o3_vpos = BELOW;
 			}
 		}
 
-
 		// From mouse
 		if (o3_vpos == ABOVE) {
-			if (o3_aboveheight == 0) {
-				var divref = (ie4) ? o3_frame.document.all['overDiv'] : over;
-				o3_aboveheight = (ns4) ? divref.clip.height : divref.offsetHeight;
-			}
+			if (o3_aboveheight == 0) o3_aboveheight = parsedHeight; 
 
-			placeY = o3_y - (o3_aboveheight + o3_offsety);
+			placeY = o3_y - (o3_aboveheight+o3_offsety);
 			if (placeY < scrolloffset) placeY = scrolloffset;
 		} else {
 			// BELOW
-			placeY = o3_y + o3_offsety;
-		}
+			placeY = o3_y+o3_offsety;
+		} 
 
 		// Snapping!
 		if (o3_snapy > 1) {
-			var snapping = placeY % o3_snapy;
-			
+			var snapping = placeY % o3_snapy;  			
+
 			if (o3_aboveheight > 0 && o3_vpos == ABOVE) {
-				placeY = placeY - (o3_snapy + snapping);
+				placeY = placeY - (o3_snapy+snapping);
 			} else {
-				placeY = placeY + (o3_snapy - snapping);
-			}
-			
+				placeY = placeY+(o3_snapy - snapping);
+			} 			
+
 			if (placeY < scrolloffset) placeY = scrolloffset;
 		}
 	}
 
-
-	// Actually move the object.	
+	// Actually move the object.
 	repositionTo(over, placeX, placeY);
 }
 
-
 // Moves the layer
-function mouseMove(e) {
-	if ( (ns4) || (ns6) ) {o3_x=e.pageX; o3_y=e.pageY;}
-	if (ie4) {o3_x=event.x; o3_y=event.y;}
-	if (ie5) {o3_x=eval('event.x+o3_frame.'+docRoot+'.scrollLeft'); o3_y=eval('event.y+o3_frame.'+docRoot+'.scrollTop');}
+function olMouseMove(e) {
+	var e = (e) ? e : event;
+
+	if (e.pageX) {
+		o3_x = e.pageX;
+		o3_y = e.pageY;
+	} else if (e.clientX) {
+		o3_x = eval('e.clientX+o3_frame.'+docRoot+'.scrollLeft');
+		o3_y = eval('e.clientY+o3_frame.'+docRoot+'.scrollTop');
+	}
 	
-	if (o3_allowmove == 1) {
-		placeLayer();
+	if (o3_allowmove == 1) runHook("placeLayer", FREPLACE);
+
+	// MouseOut handler
+	if (hoveringSwitch && !olNs4 && runHook("cursorOff", FREPLACE)) {
+		cClick();
+		hoveringSwitch = !hoveringSwitch;
 	}
 }
 
-// The Close onMouseOver function for stickies
-function cClick() {
-	hideObject(over);
-	o3_showingsticky = 0;
+// Fake function for 3.0 users.
+function no_overlib() { return ver3fix; }
+
+// Capture the mouse and chain other scripts.
+function olMouseCapture() {
+	capExtent = document;
+	var fN, mseHandler = olMouseMove;
+	var re = /function[ ]+(\w+)\(/;
 	
-	return false;
-}
+	if (document.onmousemove || (!olIe4 && window.onmousemove)) {
+		if (window.onmousemove) capExtent = window;
+		fN = capExtent.onmousemove.toString().match(re);
 
-
-// Makes sure target frame has overLIB
-function compatibleframe(frameid) {
-	if (ns4) {
-		if (typeof frameid.document.overDiv =='undefined') return false;
-	} else if (ie4) {
-		if (typeof frameid.document.all["overDiv"] =='undefined') return false;
-	} else if (ns6) {
-		if (frameid.document.getElementById('overDiv') == null) return false;
+		if (fN[1] == 'anonymous' || fN[1] == 'olMouseMove') {
+			olCheckMouseCapture = false;
+			return;
+		}
+		var str = fN[1]+'(e); ' + 'olMouseMove(e); ';
+		mseHandler = new Function('e', str);
 	}
 
-	return true;
+	capExtent.onmousemove = mseHandler;
+	if (olNs4) capExtent.captureEvents(Event.MOUSEMOVE);
 }
 
 
+////////
+// PARSING FUNCTIONS
+////////
 
-////////////////////////////////////////////////////////////////////////////////////
+// Does the actual command parsing.
+function parseTokens(pf, ar) {
+	// What the next argument is expected to be.
+	var v, mode=-1, par = (pf != 'ol_');	
+	var fnMark = (par && !ar.length ? 1 : 0);
+
+	for (i = 0; i < ar.length; i++) {
+		if (mode < 0) {
+			// Arg is maintext,unless its a number between pmStart and pmUpper
+			// then its a command.
+			if (typeof ar[i] == 'number' && ar[i] > pmStart && ar[i] < pmUpper) {
+				fnMark = (par ? 1 : 0);
+				i--;   // backup one so that the next block can parse it
+			} else {
+				switch(pf) {
+					case 'ol_':
+						ol_text = ar[i].toString();
+						break;
+					default:
+						o3_text=ar[i].toString();  
+				}
+			}
+			mode = 0;
+		} else {
+			// Note: NS4 doesn't like switch cases with vars.
+			if (ar[i] >= pmCount || ar[i]==DONOTHING) { continue; }
+			if (ar[i]==INARRAY) { fnMark = 0; eval(pf+'text=ol_texts['+ar[++i]+'].toString()'); continue; }
+			if (ar[i]==CAPARRAY) { eval(pf+'cap=ol_caps['+ar[++i]+'].toString()'); continue; }
+			if (ar[i]==STICKY) { if (pf!='ol_') eval(pf+'sticky=1'); continue; }
+			if (ar[i]==BACKGROUND) { eval(pf+'background="'+ar[++i]+'"'); continue; }
+			if (ar[i]==NOCLOSE) { if (pf!='ol_') opt_NOCLOSE(); continue; }
+			if (ar[i]==CAPTION) { eval(pf+"cap='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==CENTER || ar[i]==LEFT || ar[i]==RIGHT) { eval(pf+'hpos='+ar[i]); continue; }
+			if (ar[i]==OFFSETX) { eval(pf+'offsetx='+ar[++i]); continue; }
+			if (ar[i]==OFFSETY) { eval(pf+'offsety='+ar[++i]); continue; }
+			if (ar[i]==FGCOLOR) { eval(pf+'fgcolor="'+ar[++i]+'"'); continue; }
+			if (ar[i]==BGCOLOR) { eval(pf+'bgcolor="'+ar[++i]+'"'); continue; }
+			if (ar[i]==TEXTCOLOR) { eval(pf+'textcolor="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CAPCOLOR) { eval(pf+'capcolor="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CLOSECOLOR) { eval(pf+'closecolor="'+ar[++i]+'"'); continue; }
+			if (ar[i]==WIDTH) { eval(pf+'width='+ar[++i]); continue; }
+			if (ar[i]==BORDER) { eval(pf+'border='+ar[++i]); continue; }
+			if (ar[i]==CELLPAD) { i=opt_MULTIPLEARGS(++i,ar,(pf+'cellpad')); continue; }
+			if (ar[i]==STATUS) { eval(pf+"status='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==AUTOSTATUS) { eval(pf +'autostatus=('+pf+'autostatus == 1) ? 0 : 1'); continue; }
+			if (ar[i]==AUTOSTATUSCAP) { eval(pf +'autostatus=('+pf+'autostatus == 2) ? 0 : 2'); continue; }
+			if (ar[i]==HEIGHT) { eval(pf+'height='+pf+'aboveheight='+ar[++i]); continue; } // Same param again.
+			if (ar[i]==CLOSETEXT) { eval(pf+"close='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==SNAPX) { eval(pf+'snapx='+ar[++i]); continue; }
+			if (ar[i]==SNAPY) { eval(pf+'snapy='+ar[++i]); continue; }
+			if (ar[i]==FIXX) { eval(pf+'fixx='+ar[++i]); continue; }
+			if (ar[i]==FIXY) { eval(pf+'fixy='+ar[++i]); continue; }
+			if (ar[i]==RELX) { eval(pf+'relx='+ar[++i]); continue; }
+			if (ar[i]==RELY) { eval(pf+'rely='+ar[++i]); continue; }
+			if (ar[i]==FGBACKGROUND) { eval(pf+'fgbackground="'+ar[++i]+'"'); continue; }
+			if (ar[i]==BGBACKGROUND) { eval(pf+'bgbackground="'+ar[++i]+'"'); continue; }
+			if (ar[i]==PADX) { eval(pf+'padxl='+ar[++i]); eval(pf+'padxr='+ar[++i]); continue; }
+			if (ar[i]==PADY) { eval(pf+'padyt='+ar[++i]); eval(pf+'padyb='+ar[++i]); continue; }
+			if (ar[i]==FULLHTML) { if (pf!='ol_') eval(pf+'fullhtml=1'); continue; }
+			if (ar[i]==BELOW || ar[i]==ABOVE) { eval(pf+'vpos='+ar[i]); continue; }
+			if (ar[i]==CAPICON) { eval(pf+'capicon="'+ar[++i]+'"'); continue; }
+			if (ar[i]==TEXTFONT) { eval(pf+"textfont='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==CAPTIONFONT) { eval(pf+"captionfont='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==CLOSEFONT) { eval(pf+"closefont='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==TEXTSIZE) { eval(pf+'textsize="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CAPTIONSIZE) { eval(pf+'captionsize="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CLOSESIZE) { eval(pf+'closesize="'+ar[++i]+'"'); continue; }
+			if (ar[i]==TIMEOUT) { eval(pf+'timeout='+ar[++i]); continue; }
+			if (ar[i]==FUNCTION) { if (pf=='ol_') { if (typeof ar[i+1]!='number') { v=ar[++i]; ol_function=(typeof v=='function' ? v : null); }} else {fnMark = 0; v = null; if (typeof ar[i+1]!='number') v = ar[++i];  opt_FUNCTION(v); } continue; }
+			if (ar[i]==DELAY) { eval(pf+'delay='+ar[++i]); continue; }
+			if (ar[i]==HAUTO) { eval(pf+'hauto=('+pf+'hauto == 0) ? 1 : 0'); continue; }
+			if (ar[i]==VAUTO) { eval(pf+'vauto=('+pf+'vauto == 0) ? 1 : 0'); continue; }
+			if (ar[i]==CLOSECLICK) { eval(pf +'closeclick=('+pf+'closeclick == 0) ? 1 : 0'); continue; }
+			if (ar[i]==WRAP) { eval(pf +'wrap=('+pf+'wrap == 0) ? 1 : 0'); continue; }
+			if (ar[i]==FOLLOWMOUSE) { eval(pf +'followmouse=('+pf+'followmouse == 1) ? 0 : 1'); continue; }
+			if (ar[i]==MOUSEOFF) { eval(pf +'mouseoff=('+pf+'mouseoff == 0) ? 1 : 0'); continue; }
+			if (ar[i]==CLOSETITLE) { eval(pf+"closetitle='"+escSglQuote(ar[++i])+"'"); continue; }
+			if (ar[i]==CSSOFF||ar[i]==CSSCLASS) { eval(pf+'css='+ar[i]); continue; }
+			if (ar[i]==FGCLASS) { eval(pf+'fgclass="'+ar[++i]+'"'); continue; }
+			if (ar[i]==BGCLASS) { eval(pf+'bgclass="'+ar[++i]+'"'); continue; }
+			if (ar[i]==TEXTFONTCLASS) { eval(pf+'textfontclass="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CAPTIONFONTCLASS) { eval(pf+'captionfontclass="'+ar[++i]+'"'); continue; }
+			if (ar[i]==CLOSEFONTCLASS) { eval(pf+'closefontclass="'+ar[++i]+'"'); continue; }
+			i = parseCmdLine(pf, i, ar);
+		}
+	}
+
+	if (fnMark && o3_function) o3_text = o3_function();
+	
+	if ((pf == 'o3_') && o3_wrap) {
+		o3_width = 0;
+		
+		if (olOp || (olIe4 && isMac)) {
+			var tReg=/<.*\n*>/ig;
+			if (!tReg.test(o3_text)) o3_text = o3_text.replace(/[ ]+/g, '&nbsp;');
+			if (!tReg.test(o3_cap))o3_cap = o3_cap.replace(/[ ]+/g, '&nbsp;');
+		}
+	}
+	if ((pf == 'o3_') && o3_sticky) {
+		if (!o3_close && (o3_frame != ol_frame)) o3_close = ol_close;
+		if (o3_mouseoff && (o3_frame == ol_frame)) opt_NOCLOSE(' ');
+	}
+}
+
+
+////////
 // LAYER FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////////
-
+////////
 
 // Writes to a layer
 function layerWrite(txt) {
 	txt += "\n";
-	
-	if (ns4) {
+	if (olNs4) {
 		var lyr = o3_frame.document.overDiv.document
 		lyr.write(txt)
 		lyr.close()
-	} else if (ie4) {
-		o3_frame.document.all["overDiv"].innerHTML = txt
-	} else if (ns6) {
+	} else if (typeof over.innerHTML != 'undefined') {
+		if (olIe5 && isMac) over.innerHTML = '';
+		over.innerHTML = txt;
+	} else {
 		range = o3_frame.document.createRange();
-		range.setStartBefore(over);
+		range.setStartAfter(over);
 		domfrag = range.createContextualFragment(txt);
+		
 		while (over.hasChildNodes()) {
 			over.removeChild(over.lastChild);
 		}
+		
 		over.appendChild(domfrag);
 	}
 }
 
 // Make an object visible
 function showObject(obj) {
-	if (ns4) obj.visibility = "show";
-	else if (ie4) obj.visibility = "visible";
-	else if (ns6) obj.style.visibility = "visible";
+	runHook("showObject", FBEFORE);
+
+	var theObj=(olNs4 ? obj : obj.style);
+	theObj.visibility = 'visible';
+
+	runHook("showObject", FAFTER);
 }
 
 // Hides an object
 function hideObject(obj) {
-	if (ns4) obj.visibility = "hide";
-	else if (ie4) obj.visibility = "hidden";
-	else if (ns6) obj.style.visibility = "hidden";
+	runHook("hideObject", FBEFORE);
+
+	var theObj=(olNs4 ? obj : obj.style);
+	theObj.visibility = 'hidden';
 
 	if (o3_timerid > 0) clearTimeout(o3_timerid);
 	if (o3_delayid > 0) clearTimeout(o3_delayid);
+
 	o3_timerid = 0;
 	o3_delayid = 0;
 	self.status = "";
+
+	if (over.onmouseout || over.onmouseover) {
+		if (olNs4) over.releaseEvents(Event.MOUSEOUT || Event.MOUSEOVER);
+		over.onmouseout = over.onmouseover = null;
+	}
+
+	runHook("hideObject", FAFTER);
 }
 
 // Move a layer
-function repositionTo(obj,xL,yL) {
-	if ( (ns4) || (ie4) ) {
-		obj.left = (ie4 ? xL + 'px' : xL);
-		obj.top = (ie4 ? yL + 'px' : yL);
-	} else if (ns6) {
-		obj.style.left = xL + "px";
-		obj.style.top = yL+ "px";
+function repositionTo(obj, xL, yL) {
+	var theObj=(olNs4 ? obj : obj.style);
+	theObj.left = xL + (!olNs4 ? 'px' : 0);
+	theObj.top = yL + (!olNs4 ? 'px' : 0);
+}
+
+// Check position of cursor relative to overDiv DIVision; mouseOut function
+function cursorOff() {
+	var left = parseInt(over.style.left);
+	var top = parseInt(over.style.top);
+	var right = left+over.offsetWidth;
+	var bottom = top+ over.offsetHeight;
+
+	if (o3_x < left || o3_x > right || o3_y < top || o3_y > bottom) return true;
+
+	return false;
+}
+
+
+////////
+// COMMAND FUNCTIONS
+////////
+
+// Calls callme or the default function.
+function opt_FUNCTION(callme) {
+	o3_text = (callme ? (typeof callme=='string' ? (/.+\(.*\)/.test(callme) ? eval(callme) : callme) : callme()) : (o3_function ? o3_function() : 'No Function'));
+
+	return 0;
+}
+
+// Handle hovering
+function opt_NOCLOSE(unused) {
+	if (!unused) o3_close = "";
+
+	if (olNs4) {
+		over.captureEvents(Event.MOUSEOUT || Event.MOUSEOVER);
+		over.onmouseover = function () { if (o3_timerid > 0) { clearTimeout(o3_timerid); o3_timerid = 0; } }
+		over.onmouseout = cClick;
+	} else {
+		over.onmouseover = function () {hoveringSwitch = true; if (o3_timerid > 0) { clearTimeout(o3_timerid); o3_timerid =0; } }
+	}
+
+	return 0;
+}
+
+// Function to scan command line arguments for multiples
+function opt_MULTIPLEARGS(i, args, parameter) {
+  var k = i, l, re, pV, str = '';
+
+  for(k=i; k<args.length; k++) {
+		str += args[k] + ',';
+		if(typeof args[k] == 'number'&&args[k]>pmStart) break;
+	}
+  if(k >= args.length) l = str.length-1;
+  else {
+    re = eval('/,' + args[k] + '/');
+    l = str.search(re);
+  }
+
+	k--;  // reduce by one so the for loop this is in works correctly
+	str = str.substring(0, l);
+	pV = (olNs4&&/cellpad/i.test(parameter)) ? str.split(',')[0] : str;
+	eval(parameter + '="' + pV + '"');
+
+	return k;
+}
+
+// Remove &nbsp; in texts when done.
+function nbspCleanup() {
+	if (o3_wrap && (olOp || (olIe4 && isMac))) {
+		o3_text = o3_text.replace(/\&nbsp;/g, ' ');
+		o3_cap = o3_cap.replace(/\&nbsp;/g, ' ');
 	}
 }
 
-function getFrameRef(thisFrame, ofrm) {
-	var retVal = '';
-	for (var i=0; i<thisFrame.length; i++) {
-		if (thisFrame[i].length > 0) { 
-			retVal = getFrameRef(thisFrame[i],ofrm);
-			if (retVal == '') continue;
-		} else if (thisFrame[i] != ofrm) continue;
-		
-		retVal = '['+i+']' + retVal;
-		break;
-	}
+// Escape embedded single quotes in text strings
+function escSglQuote(str) {
+  return str.toString().replace(/'/g,"\\'");
+}
+
+// Onload handler for window onload event
+function OLonLoad_handler(e) {
+	if (!olLoaded) olLoaded=1;  // indicates that all modules have loaded now
+
+	// remove the OLonload_handler for Ns6+, Mozilla based browsers, and IE
+	if (window.removeEventListener) window.removeEventListener("load",OLonLoad_handler,true);
+	else if (window.detachEvent) window.detachEvent("onload",OLonLoad_handler);
 	
-	return retVal;
+	// Route the event to the normal handler in Nx4.x
+	if (olNs4) routeEvent(e);
 }
 
+// Wraps strings in Layer Generation Functions with the correct tags
+//    endWrap true(if end tag) or false if start tag
+//    fontSizeStr - font size string such as '1' or '10px'
+//    whichString is being wrapped -- 'text', 'caption', or 'close'
+function wrapStr(endWrap,fontSizeStr,whichString) {
+	var fontStr, fontColor, isClose=((whichString=='close') ? 1 : 0), hasDims=/[%\-a-z]+$/.test(fontSizeStr);
+	fontSizeStr = (olNs4) ? (!hasDims ? fontSizeStr : '1') : fontSizeStr;
+	if (endWrap) return (hasDims&&!olNs4) ? (isClose ? '</span>' : '</div>') : '</font>';
+	else {
+		fontStr='o3_'+whichString+'font';
+		fontColor='o3_'+((whichString=='caption')? 'cap' : whichString)+'color';
+		return (hasDims&&!olNs4) ? (isClose ? '<span style="font-family: '+quoteMultiNameFonts(eval(fontStr))+'; color: '+eval(fontColor)+'; font-size: '+fontSizeStr+';">' : '<div style="font-family: '+quoteMultiNameFonts(eval(fontStr))+'; color: '+eval(fontColor)+'; font-size: '+fontSizeStr+';">') : '<font face="'+eval(fontStr)+'" color="'+eval(fontColor)+'" size="'+(parseInt(fontSizeStr)>7 ? '7' : fontSizeStr)+'">';
+	}
+}
 
+// Quotes Multi word font names; needed for CSS Standards adherence in font-family
+function quoteMultiNameFonts(theFont) {
+	var v, pM=theFont.split(',');
+	for (var i=0; i<pM.length; i++) {
+		v=pM[i];
+		v=v.replace(/^\s+/,'').replace(/\s+$/,'');
+		if(/\s/.test(v) && !/['"]/.test(v)) {
+			v="\'"+v+"\'";
+			pM[i]=v;
+		}
+	}
+	return pM.join();
+}
 
+// dummy function which will be overridden 
+function isExclusive(args) {
+	return false;
+}
+////////
+//  PLUGIN ACTIVATION FUNCTIONS
+////////
 
-////////////////////////////////////////////////////////////////////////////////////
-// PARSER FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////////
+// Runs plugin functions to set runtime variables.
+function setRunTimeVariables(){
+	if (typeof runTime != 'undefined' && runTime.length) {
+		for (var k = 0; k < runTime.length; k++) {
+			runTime[k]();
+		}
+	}
+}
 
-
-// Defines which frame we should point to.
-function opt_FRAME(frm) {
-	o3_frame = compatibleframe(frm) ? frm : ol_frame;
-
-	if (o3_frame != ol_frame) {
-		var tFrm = getFrameRef(top.frames, o3_frame);
-		var sFrm = getFrameRef(top.frames, ol_frame);
-
-		if (sFrm.length == tFrm.length) { 
-			l = tFrm.lastIndexOf('['); 
-			if (l) {
-				while(sFrm.substring(0,l) != tFrm.substring(0,l)) l = tFrm.lastIndexOf('[',l-1);
-				tFrm = tFrm.substr(l);
-				sFrm = sFrm.substr(l);
+// Runs plugin functions to parse commands.
+function parseCmdLine(pf, i, args) {
+	if (typeof cmdLine != 'undefined' && cmdLine.length) { 
+		for (var k = 0; k < cmdLine.length; k++) { 
+			var j = cmdLine[k](pf, i, args);
+			if (j >- 1) {
+				i = j;
+				break;
 			}
 		}
-			
-		var cnt = 0, p = '', str = tFrm;
-			
-		while((k = str.lastIndexOf('[')) != -1) {
-			cnt++;
-			str = str.substring(0,k);
+	}
+
+	return i;
+}
+
+// Runs plugin functions to do things after parse.
+function postParseChecks(){
+	if (typeof postParse != 'undefined' && postParse.length) {
+		for (var k = 0; k < postParse.length; k++) {
+			if (postParse[k]()) continue;
+			return false;  // end now since have an error
+		}
+	}
+	return true;
+}
+
+
+////////
+//  PLUGIN REGISTRATION FUNCTIONS
+////////
+
+// Registers commands and creates constants.
+function registerCommands(cmdStr) {
+	if (typeof cmdStr!='string') return;
+
+	var pM = cmdStr.split(',');
+	pms = pms.concat(pM);
+
+	for (var i = 0; i< pM.length; i++) {
+		eval(pM[i].toUpperCase()+'='+pmCount++);
+	}
+}
+
+// Register a function to hook at a certain point.
+function registerHook(fnHookTo, fnRef, hookType, optPm) {
+	var hookPt, last = typeof optPm;
+	
+	if (fnHookTo == 'plgIn'||fnHookTo == 'postParse') return;
+	if (typeof hookPts == 'undefined') hookPts = new Array();
+	if (typeof hookPts[fnHookTo] == 'undefined') hookPts[fnHookTo] = new FunctionReference();
+
+	hookPt = hookPts[fnHookTo];
+
+	if (hookType != null) {
+		if (hookType == FREPLACE) {
+			hookPt.ovload = fnRef;  // replace normal overlib routine
+			if (fnHookTo.indexOf('ol_content_') > -1) hookPt.alt[pms[CSSOFF-1-pmStart]]=fnRef; 
+
+		} else if (hookType == FBEFORE || hookType == FAFTER) {
+			var hookPt=(hookType == 1 ? hookPt.before : hookPt.after);
+
+			if (typeof fnRef == 'object') {
+				hookPt = hookPt.concat(fnRef);
+			} else {
+				hookPt[hookPt.length++] = fnRef;
+			}
+
+			if (optPm) hookPt = reOrder(hookPt, fnRef, optPm);
+
+		} else if (hookType == FALTERNATE) {
+			if (last=='number') hookPt.alt[pms[optPm-1-pmStart]] = fnRef;
 		}
 
-		for (var i=0; i<cnt; i++) p = p + 'parent.';
-		fnRef = p + 'frames' + sFrm + '.';
+		return;
 	}
-
-	if ( (ns4) || (ie4 || (ns6)) ) {
-		if (ns4) over = o3_frame.document.overDiv;
-		if (ie4) over = o3_frame.overDiv.style;
-		if (ns6) over = o3_frame.document.getElementById("overDiv");
-	}
-
-	return 0;
 }
 
-// Calls an external function
-function opt_FUNCTION(callme) {
-	o3_text = (callme ? callme() : (o3_function ? o3_function() : 'No Function'));
-	return 0;
-}
-
-
-
-
-//end (For internal purposes.)
-////////////////////////////////////////////////////////////////////////////////////
-// OVERLIB 2 COMPATABILITY FUNCTIONS
-// If you aren't upgrading you can remove the below section.
-////////////////////////////////////////////////////////////////////////////////////
-
-// Converts old 0=left, 1=right and 2=center into constants.
-function vpos_convert(d) {
-	if (d == 0) {
-		d = LEFT;
-	} else {
-		if (d == 1) {
-			d = RIGHT;
+// Register a function that will set runtime variables.
+function registerRunTimeFunction(fn) {
+	if (isFunction(fn)) {
+		if (typeof runTime == 'undefined') runTime = new Array();
+		if (typeof fn == 'object') {
+			runTime = runTime.concat(fn);
 		} else {
-			d = CENTER;
+			runTime[runTime.length++] = fn;
 		}
+	}
+}
+
+// Register a function that will handle command parsing.
+function registerCmdLineFunction(fn){
+	if (isFunction(fn)) {
+		if (typeof cmdLine == 'undefined') cmdLine = new Array();
+		if (typeof fn == 'object') {
+			cmdLine = cmdLine.concat(fn);
+		} else {
+			cmdLine[cmdLine.length++] = fn;
+		}
+	}
+}
+
+// Register a function that does things after command parsing. 
+function registerPostParseFunction(fn){
+	if (isFunction(fn)) {
+		if (typeof postParse == 'undefined') postParse = new Array();
+		if (typeof fn == 'object') {
+			postParse = postParse.concat(fn);
+		} else {
+			postParse[postParse.length++] = fn;
+		}
+	}
+}
+
+////////
+//  PLUGIN REGISTRATION FUNCTIONS
+////////
+
+// Runs any hooks registered.
+function runHook(fnHookTo, hookType) {
+	var l = hookPts[fnHookTo], optPm, arS, ar = runHook.arguments;
+
+	if (hookType == FREPLACE) {
+		arS = argToString(ar, 2);
+
+		if (typeof l == 'undefined' || !(l = l.ovload)) return eval(fnHookTo+'('+arS+')');
+		else return eval('l('+arS+')');
+
+	} else if (hookType == FBEFORE || hookType == FAFTER) {
+		if (typeof l == 'undefined') return;
+		l=(hookType == 1 ? l.before : l.after);
+
+		if (!l.length) return;
+
+		arS = argToString(ar, 2);
+		for (var k = 0; k < l.length; k++) eval('l[k]('+arS+')'); 
+
+	} else if (hookType == FALTERNATE) {
+		optPm = ar[2];
+		arS = argToString(ar, 3);
+
+		if (typeof l == 'undefined' || (l = l.alt[pms[optPm-1-pmStart]]) == 'undefined') {
+			return eval(fnHookTo+'('+arS+')');
+		} else {
+			return eval('l('+arS+')');
+		}
+	}
+}
+
+////////
+//  UTILITY FUNCTIONS
+////////
+
+// Checks if something is a function.
+function isFunction(fnRef) {
+	var rtn = true;
+
+	if (typeof fnRef == 'object') {
+		for (var i = 0; i < fnRef.length; i++) {
+			if (typeof fnRef[i]=='function') continue;
+			rtn = false;
+			break;
+		}
+	} else if (typeof fnRef != 'function') {
+		rtn = false;
 	}
 	
-	return d;
+	return rtn;
 }
 
-// Simple popup
-function dts(d,text) {
-	o3_hpos = vpos_convert(d);
-	overlib(text, o3_hpos, CAPTION, "");
+// Converts an array into an argument string for use in eval.
+function argToString(array, strtInd, argName) {
+	var jS = strtInd, aS = '', ar = array;
+	argName=(argName ? argName : 'ar');
+	
+	if (ar.length > jS) {
+		for (var k = jS; k < ar.length; k++) aS += argName+'['+k+'], ';
+		aS = aS.substring(0, aS.length-2);
+	}
+	
+	return aS;
 }
 
-// Caption popup
-function dtc(d,text, title) {
-	o3_hpos = vpos_convert(d);
-	overlib(text, CAPTION, title, o3_hpos);
+// Places a hook in the correct position in a hook point.
+function reOrder(hookPt, fnRef, order) {
+	if (!order || typeof order == 'undefined' || typeof order == 'number') return;
+	
+	var newPt = new Array(), match;
+
+	if (typeof order=='function') {
+		if (typeof fnRef=='object') {
+			newPt = newPt.concat(fnRef);
+		} else {
+			newPt[newPt.length++]=fnRef;
+		}
+		
+		for (var i = 0; i < hookPt.length; i++) {
+			match = false;
+			if (typeof fnRef == 'function' && hookPt[i] == fnRef) {
+				continue;
+			} else {
+				for(var j = 0; j < fnRef.length; j++) if (hookPt[i] == fnRef[j]) {
+					match = true;
+					break;
+				}
+			}
+			if (!match) newPt[newPt.length++] = hookPt[i];
+		}
+
+		newPt[newPt.length++] = order;
+
+	} else if (typeof order == 'object') {
+		if (typeof fnRef == 'object') {
+			newPt = newPt.concat(fnRef);
+		} else {
+			newPt[newPt.length++] = fnRef;
+		}
+		
+		for (var j = 0; j < hookPt.length; j++) {
+			match = false;
+			if (typeof fnRef == 'function' && hookPt[j] == fnRef) {
+				continue;
+			} else {
+				for (var i = 0; i < fnRef.length; i++) if (hookPt[j] == fnRef[i]) {
+					match = true;
+					break;
+				}
+			}
+			if (!match) newPt[newPt.length++]=hookPt[j];
+		}
+
+		for (i = 0; i < newPt.length; i++) hookPt[i] = newPt[i];
+		newPt.length = 0;
+		
+		for (var j = 0; j < hookPt.length; j++) {
+			match = false;
+			for (var i = 0; i < order.length; i++) {
+				if (hookPt[j] == order[i]) {
+					match = true;
+					break;
+				}
+			}
+			if (!match) newPt[newPt.length++] = hookPt[j];
+		}
+		newPt = newPt.concat(order);
+	}
+
+	for(i = 0; i < newPt.length; i++) hookPt[i] = newPt[i];
+
+	return hookPt;
 }
 
-// Sticky
-function stc(d,text, title) {
-	o3_hpos = vpos_convert(d);
-	overlib(text, CAPTION, title, o3_hpos, STICKY);
+////////
+// OBJECT CONSTRUCTORS
+////////
+
+// Object for handling hooks.
+function FunctionReference() {
+	this.ovload = null;
+	this.before = new Array();
+	this.after = new Array();
+	this.alt = new Array();
 }
 
-// Simple popup right
-function drs(text) {
-	dts(1,text);
+// Object for simple access to the overLIB version used.
+// Examples: simpleversion:351 major:3 minor:5 revision:1
+function Info(version, prerelease) {
+	this.version = version;
+	this.prerelease = prerelease;
+
+	this.simpleversion = parseInt(this.version*100);
+	this.major = parseInt(this.simpleversion / 100);
+	this.minor = parseInt(this.simpleversion / 10) - this.major * 10;
+	this.revision = parseInt(this.simpleversion) - this.major * 100 - this.minor * 10;
 }
 
-// Caption popup right
-function drc(text, title) {
-	dtc(1,text,title);
-}
 
-// Sticky caption right
-function src(text,title) {
-	stc(1,text,title);
-}
 
-// Simple popup left
-function dls(text) {
-	dts(0,text);
-}
+////////
+// STANDARD REGISTRATIONS
+////////
+registerHook("ol_content_simple", ol_content_simple, FALTERNATE, CSSOFF);
+registerHook("ol_content_caption", ol_content_caption, FALTERNATE, CSSOFF);
+registerHook("ol_content_background", ol_content_background, FALTERNATE, CSSOFF);
+registerHook("ol_content_simple", ol_content_simple, FALTERNATE, CSSCLASS);
+registerHook("ol_content_caption", ol_content_caption, FALTERNATE, CSSCLASS);
+registerHook("ol_content_background", ol_content_background, FALTERNATE, CSSCLASS);
+registerHook("hideObject", nbspCleanup, FAFTER);
 
-// Caption popup left
-function dlc(text, title) {
-	dtc(0,text,title);
-}
-
-// Sticky caption left
-function slc(text,title) {
-	stc(0,text,title);
-}
-
-// Simple popup center
-function dcs(text) {
-	dts(2,text);
-}
-
-// Caption popup center
-function dcc(text, title) {
-	dtc(2,text,title);
-}
-
-// Sticky caption center
-function scc(text,title) {
-	stc(2,text,title);
-}
 
 // end of the overlib code
+// emacs formatting comment '
 
 EOF
     ;
@@ -1370,16 +1412,13 @@ sub page_header {
   # overwritten, so that status pages load faster. Hopefuly browsers
   # will keep this file cached separately from the status page.
 
-  if ( !($WROTE_OVERLIB_JS) ) {
-      $WROTE_OVERLIB_JS = 1;
+  if ( !(-e $overlib_file) || (-M $overlib_file > 1 ) ) {
 
-      if ( !( -r $overlib_file) ) {
-          main::overwrite_file(
-                               $overlib_file, 
-                               $OVERLIB_JS
-                               );
-        }
-  }
+      main::overwrite_file(
+                           $overlib_file, 
+                           $OVERLIB_JS
+                           );
+    }
 
 $header .=<<EOF;
 <HTML>
@@ -1512,12 +1551,18 @@ sub Link {
   
   my $href = '';
 
-  if ($args{'href'}) {
-      $href .= "HREF=\"$args{'href'}\"";
-  } elsif ($args{'windowtxt'}) {
+  # I would like to support the use of text only browsers who can not
+  # render the javascript popup to click through. But I can not find a
+  # way to have both the popups for those browsers who can render them
+  # and the link for the others.
+  #
+  #  $href .= "HREF=\"$args{'href'}\"";
+
+  if ($args{'windowtxt'}) {
       $href .= "HREF=\"javascript:void(0);\"";
+  } elsif ($args{'href'}) {
+      $href .= "HREF=\"$args{'href'}\"";
   }
-  
     $out .= "<A $name $href $popup>$linktxt</A>";
     
     return $out;
