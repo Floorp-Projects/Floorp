@@ -73,7 +73,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -142,9 +142,10 @@ sub apply_db_updates {
     # This require will set a variable called $record with all
     # the info from this build update.
 
-    require ("$dirname/$update_file") ||
-      die("Could not eval filename: ".
-          "'$dirname/$filename': $!\n");
+    my ($record) = Persistence::load_structure("$dirname/$update_file");
+
+    ($record) ||
+      die("Error reading Notice update file '$dirname/$update_file'.\n");
 
     my $time = $record->{'time'};
     my $mailaddr = $record->{'mailaddr'};

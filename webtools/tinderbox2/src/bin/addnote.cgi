@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:10:42 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/24 14:47:09 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
 
@@ -197,8 +197,7 @@ sub save_note {
   main::mkdir_R(dirname($update_file));
   
   Persistence::save_structure( 
-                             [$record],
-                             ['record'],
+                             $record,
                              $tmp_file,
                             );
   

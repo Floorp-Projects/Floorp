@@ -6,8 +6,8 @@
 # gettree_header(), ).
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:20:31 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:50:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/BasicTxtHeader.pm,v $ 
 # $Name:  $ 
@@ -46,7 +46,7 @@ package TinderHeader::BasicTxtHeader;
 use FileStructure;
 use Persistence;
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 
 sub new {
@@ -86,21 +86,13 @@ sub savetree_header {
   my ($filename) = $self->db_file($tree);
   my ($name_space) = ref($self);
 
-  Persistence::save_structure( 
-                              [ 
-                               $value,
-                              ],
-                              [
-                               "\$".$name_space."{'$tree'}", 
-                              ],
-                              $filename);
+  Persistence::save_structure($value, $filename);
 
   return ;
 }
 
 
-# return the "$value" which is defined by evaling the file
-# FileStructure::get_filename($tree, ref($self)).
+# return the "$value" which was saved into the file
 
 sub gettree_header {
   my ($self, $tree) = @_;
@@ -110,12 +102,7 @@ sub gettree_header {
   (-r $filename) || 
     return ;
   
-  require($filename) ||
-    die("Could not eval filename: '$filename': $!\n");
-
-  my ($variable) = "\$".$name_space."{'$tree'}"; 
-  my ($value);
-  eval "\$value = $variable";
+  my ($value) = Persistence::load_structure($filename);
 
   return $value
 }
