@@ -161,7 +161,9 @@ nsAutoIndexBuffer::nsAutoIndexBuffer()
   : mBuffer(mAutoBuffer),
     mBufferLen(TEXT_BUF_SIZE)
 {
-  memset(mAutoBuffer, 0, sizeof(mAutoBuffer));
+#ifdef DEBUG
+  memset(mAutoBuffer, 0xdd, sizeof(mAutoBuffer));
+#endif 
 }
 
 nsAutoIndexBuffer::~nsAutoIndexBuffer()
@@ -184,7 +186,9 @@ nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
     if (!newBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    memset(newBuffer, 0, sizeof(PRInt32) * newSize);
+#ifdef DEBUG
+    memset(newBuffer, 0xdd, sizeof(PRInt32) * newSize);
+#endif
     memcpy(newBuffer, mBuffer, sizeof(PRInt32) * mBufferLen);
     if (mBuffer != mAutoBuffer) {
       delete [] mBuffer;
