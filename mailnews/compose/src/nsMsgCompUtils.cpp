@@ -37,6 +37,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
+#define NS_IMPL_IDS
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
 
 /* for GET_xxx_PART */
 #include "net.h"
@@ -1521,14 +1524,48 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 
   if (parmFolding == 0 || parmFolding == 1)
   {
+    /* Get a charset used for the file. */
+    static nsAutoString aPlatformCharset;
+
+    if (aPlatformCharset.Length() < 1) 
+    {
+      nsCOMPtr <nsIPlatformCharset> platformCharset;
+      rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+      if (NS_SUCCEEDED(rv)) 
+      {
+       rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
+      }
+      if (NS_FAILED(rv)) 
+      {
+       aPlatformCharset.SetString("ISO-8859-1");
+       rv = NS_OK;
+      }
+    }
+
+    /* Convert to unicode */
+    nsAutoString uStr;
+    rv = ConvertToUnicode(aPlatformCharset, attachment->m_real_name,uStr);
+    if (NS_FAILED(rv)) 
+    {
+      uStr.SetString(attachment->m_real_name);
+    }
+
+    char *utf8Str = uStr.ToNewUTF8String();
+
 	  /* Try to MIME-2 encode the filename... */
-	  char *mime2Name = nsMsgI18NEncodeMimePartIIStr(attachment->m_real_name, charset, 
+    char *mime2Name = nsMsgI18NEncodeMimePartIIStr((NULL != utf8Str) ? utf8Str : attachment->m_real_name, 
+                        charset, 
 												nsMsgMIMEGetConformToStandard());
-	  if (mime2Name && (mime2Name != attachment->m_real_name))
+    if (mime2Name && (mime2Name != attachment->m_real_name))
 	  {
 		  PR_Free(attachment->m_real_name);
 		  attachment->m_real_name = mime2Name;
 	  }
+    if (NULL != utf8Str)
+    {
+      nsAllocator::Free(utf8Str);
+    }
    
 	  /* ... and then put backslashes before special characters (RFC 822 tells us
 		 to). */
