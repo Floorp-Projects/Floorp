@@ -411,6 +411,7 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
         {
           var textNode = document.createElement("text");
           textNode.setAttribute("value", ", ");
+          textNode.setAttribute("class", "emailSeparator");
           parentDiv.insertBefore(textNode, child);
         }
         itemInDocument = parentDiv.insertBefore(item, child);

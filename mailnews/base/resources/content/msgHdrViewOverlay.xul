@@ -80,28 +80,28 @@ Rights Reserved.
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&toField.label;"/>
-            <box class="headervalue" id="ToValueShort" flex="1">
+            <html class="headervalue" id="ToValueShort" flex="1">
             <button class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </box>
+            </html>
 
-            <box class="headervalue" id="ToValueLong" collapsed="true" flex="1">
+            <html class="headervalue" id="ToValueLong" collapsed="true" flex="1">
             <button class="showFewerAddressesButton"  
                oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </box>
+            </html>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&ccField.label;"/>
-              <box class="headervalue" id="CcValueShort" flex="1">
+              <html class="headervalue" id="CcValueShort" flex="1">
               <button class="showMoreAddressesButton" id="CcValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </box>
+              </html>
 
-              <box class="headervalue" id="CcValueLong" collapsed="true" flex="1">
+              <html class="headervalue" id="CcValueLong" collapsed="true" flex="1">
               <button class="showFewerAddressesButton"  
                 oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </box>
+              </html>
 				  </box>
 
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" collapsed="true">
