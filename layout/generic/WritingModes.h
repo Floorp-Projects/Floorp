@@ -539,7 +539,8 @@ class WritingMode {
    */
   void SetDirectionFromBidiLevel(uint8_t level) {
     if (IS_LEVEL_RTL(level) == IsBidiLTR()) {
-      mWritingMode ^= StyleWritingMode_RTL | StyleWritingMode_INLINE_REVERSED;
+      mWritingMode.bits ^= static_cast<uint8_t>(
+          (StyleWritingMode_RTL | StyleWritingMode_INLINE_REVERSED).bits);
     }
   }
 
