@@ -65,6 +65,8 @@
 #include "nsContentList.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 
 #include "nsIDOMEventListener.h"
 #include "nsGUIEvent.h"
@@ -1639,6 +1641,24 @@ nsDocument::BeginLoad()
   return NS_OK;
 }
 
+static void
+GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
+                                nsIDocument **aDocument)
+{
+  *aDocument = nsnull;
+
+  nsCOMPtr<nsIDOMWindow> window(do_GetInterface(aDocShell));
+
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> dom_doc;
+    window->GetDocument(getter_AddRefs(dom_doc));
+
+    if (dom_doc) {
+      CallQueryInterface(dom_doc, aDocument);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsDocument::EndLoad()
 {
@@ -1646,8 +1666,9 @@ nsDocument::EndLoad()
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
-    nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+    nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];
     observer->EndLoad(this);
+
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
@@ -1659,12 +1680,123 @@ nsDocument::EndLoad()
   // loaded (excluding images and other loads initiated by this
   // document).
   nsCOMPtr<nsIDOMEvent> event;
-  CreateEvent(NS_LITERAL_STRING("Events"),
-              getter_AddRefs(event));
+  CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("DOMContentLoaded"), PR_TRUE, PR_TRUE);
     PRBool noDefault;
     DispatchEvent(event, &noDefault);
+  }
+
+  // If this document is a [i]frame, fire a DOMFrameContentLoaded
+  // event on all parent documents notifying that the HTML (excluding
+  // other external files such as images and stylesheets) in a frame
+  // has finished loading.
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+
+  // target_frame is the [i]frame element that will be used as the
+  // target for the event. It's the [i]frame whose content is done
+  // loading.
+  nsCOMPtr<nsIDOMEventTarget> target_frame;
+
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDocShell> docShell;
+    mScriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(docShell);
+
+    if (docShellAsItem) {
+      docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+
+      nsCOMPtr<nsIDocument> doc;
+
+      GetDocumentFromDocShellTreeItem(docShellParent, getter_AddRefs(doc));
+
+      if (doc) {
+        nsCOMPtr<nsIPresShell> shell;
+        doc->GetShellAt(0, getter_AddRefs(shell));
+
+        if (shell) {
+          nsCOMPtr<nsIContent> target_content;
+
+          nsCOMPtr<nsISupports> docshell_identity(docShell);
+          shell->FindContentForShell(docshell_identity,
+                                     getter_AddRefs(target_content));
+
+          target_frame = do_QueryInterface(target_content);
+        }
+      }
+    }
+  }
+
+  if (target_frame) {
+    while (docShellParent) {
+      nsCOMPtr<nsIDocument> ancestor_doc;
+
+      GetDocumentFromDocShellTreeItem(docShellParent,
+                                      getter_AddRefs(ancestor_doc));
+
+      if (!ancestor_doc) {
+        break;
+      }
+
+      nsCOMPtr<nsIPrivateDOMEvent> private_event;
+
+      nsCOMPtr<nsIDOMDocumentEvent> document_event =
+        do_QueryInterface(ancestor_doc);
+
+      if (document_event) {
+        document_event->CreateEvent(NS_LITERAL_STRING("Events"),
+                                    getter_AddRefs(event));
+
+        private_event = do_QueryInterface(event);
+      }
+
+      if (event && private_event) {
+        event->InitEvent(NS_LITERAL_STRING("DOMFrameContentLoaded"), PR_TRUE,
+                         PR_TRUE);
+
+        private_event->SetTarget(target_frame);
+
+        // To dispatch this event we must manually call
+        // HandleDOMEvent() on the ancestor document since the target
+        // is not in the same document, so the event would never reach
+        // the ancestor document if we used the normal event
+        // dispatching code.
+
+        nsEvent* innerEvent;
+        private_event->GetInternalNSEvent(&innerEvent);
+        if (innerEvent) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+
+          nsCOMPtr<nsIPresShell> shell;
+          ancestor_doc->GetShellAt(0, getter_AddRefs(shell));
+
+          if (shell) {
+            nsCOMPtr<nsIPresContext> context;
+            shell->GetPresContext(getter_AddRefs(context));
+
+            if (context) {
+              // The event argument to HandleDOMEvent() is inout, and
+              // that doesn't mix well with nsCOMPtr's. We'll need to
+              // perform some refcounting magic here.
+              nsIDOMEvent *tmp_event = event;
+              NS_ADDREF(tmp_event);
+
+              ancestor_doc->HandleDOMEvent(context, innerEvent, &tmp_event,
+                                           NS_EVENT_FLAG_INIT, &status);
+
+              NS_IF_RELEASE(tmp_event);
+            }
+          }
+        }
+      }
+
+      nsCOMPtr<nsIDocShellTreeItem> tmp(docShellParent);
+      tmp->GetSameTypeParent(getter_AddRefs(docShellParent));
+    }
   }
 
   return NS_OK;
@@ -3195,8 +3327,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent((nsISupports *)(nsIDOMDocument *)this, aEvent,
-                                 _retval);
+    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDOMDocument *, this),
+                                 aEvent, _retval);
   }
 
   return NS_ERROR_FAILURE;
