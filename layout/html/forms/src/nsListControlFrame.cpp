@@ -247,14 +247,14 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     // added in so we need to subtract them out.
 
     // Retrieve the scrollbar's width and height
-  float sbWidth = 0.0;
+  float sbWidth  = 0.0;
   float sbHeight = 0.0;;
   nsCOMPtr<nsIDeviceContext> dc;
   aPresContext.GetDeviceContext(getter_AddRefs(dc));
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
-   // Convert to nscoord's by rounding
+  // Convert to nscoord's by rounding
   nscoord scrollbarWidth = NSToCoordRound(sbWidth);
-  //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
+  nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
     // Subtract out the scrollbar width
   scrolledAreaWidth -= scrollbarWidth;
@@ -383,6 +383,24 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     mIsScrollbarVisible = PR_TRUE; // XXX temp code
   } else {
     mIsScrollbarVisible = PR_FALSE; // XXX temp code
+  }
+
+  // options that are null <option></option> end up with no height
+  // so we need to make sure the list box size is at some small minimum
+  // because we could have a select with a single <option></option>
+  // which means we size the select do to almost nothing.
+  // We also have to make sure we set the mMaxWidth & mMaxHeight
+  // because these are used to calculate the size of the select
+  // get the css size 
+  //nsSize  txtSize;
+  //nsFormControlHelper::GetTextSize(aPresContext, this,nsAutoString("."), txtSize, aReflowState.rendContext);
+  /*if (visibleWidth < scrollbarWidth) {
+    visibleWidth  = scrollbarWidth;
+    mMaxWidth     = scrollbarWidth;
+  }*/
+  if (visibleHeight < scrollbarHeight) {
+    visibleHeight  = scrollbarHeight;
+    mMaxHeight     = scrollbarHeight;
   }
 
    // Do a second reflow with the adjusted width and height settings
