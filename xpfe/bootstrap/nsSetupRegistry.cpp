@@ -31,8 +31,6 @@
 #include "nsIServiceManager.h"
 
 #include "nsFileSpec.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 
 #include "rdf.h"

@@ -43,8 +43,6 @@
 #include "nsIGenericFactory.h"
 #include "nsGfxCIID.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 
 #include "nsISound.h"
 #include "nsIFileSpecWithUI.h"
@@ -154,8 +152,6 @@ static NS_DEFINE_IID(kCScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
-// for prefs
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 // OJI
 #ifdef OJI
