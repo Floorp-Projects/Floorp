@@ -103,10 +103,10 @@ public:
     //
     // Returns TRUE if found, and sets |result| to the cached value.
     //
-    PRBool LookupHost(const char *host, PRIPv6Addr *result);
+    PRBool LookupHost(const char *host, PRInt32 port, PRIPv6Addr *result);
 
     void OnTransportCreated()   { PR_AtomicIncrement(&mTotalTransports); }
-    void OnTransportConnected(const char *aHost, PRNetAddr *aAddr);
+    void OnTransportConnected(const char *aHost, PRInt32 port, PRNetAddr *aAddr);
     void OnTransportClosed()    { PR_AtomicDecrement(&mConnectedTransports); }
     void OnTransportDestroyed() { PR_AtomicDecrement(&mTotalTransports); } 
     
@@ -125,7 +125,7 @@ protected:
     struct nsHostEntry : PLDHashEntryStub
     {
         PRIPv6Addr  addr;
-        const char *host() const { return (const char *) key; }
+        const char *hostport() const { return (const char *) key; }
     };
 
     static PLDHashTableOps ops;

@@ -46,6 +46,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
 #include "prlog.h"
@@ -878,7 +879,7 @@ nsSocketTransportService::MatchEntry(PLDHashTable *table,
     const nsSocketTransportService::nsHostEntry *he =
         NS_REINTERPRET_CAST(const nsSocketTransportService::nsHostEntry *, entry);
 
-    return !strcmp(he->host(), (const char *) key);
+    return !strcmp(he->hostport(), (const char *) key);
 }
 
 void PR_CALLBACK
@@ -894,14 +895,16 @@ nsSocketTransportService::ClearEntry(PLDHashTable *table,
 }
 
 PRBool
-nsSocketTransportService::LookupHost(const char *host, PRIPv6Addr *addr)
+nsSocketTransportService::LookupHost(const char *host, PRInt32 port, PRIPv6Addr *addr)
 {
     NS_ASSERTION(host, "null host");
     NS_ASSERTION(addr, "null addr");
 
     PLDHashEntryHdr *hdr;
 
-    hdr = PL_DHashTableOperate(&mHostDB, host, PL_DHASH_LOOKUP);
+    nsCAutoString hostport(nsDependentCString(host) + nsPrintfCString(":%d", port));
+
+    hdr = PL_DHashTableOperate(&mHostDB, hostport.get(), PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
         // found match
         nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
@@ -913,13 +916,15 @@ nsSocketTransportService::LookupHost(const char *host, PRIPv6Addr *addr)
 }
 
 void
-nsSocketTransportService::OnTransportConnected(const char *host, PRNetAddr *addr)
+nsSocketTransportService::OnTransportConnected(const char *host, PRInt32 port, PRNetAddr *addr)
 {
     // remember hostname
 
     PLDHashEntryHdr *hdr;
 
-    hdr = PL_DHashTableOperate(&mHostDB, host, PL_DHASH_ADD);
+    nsCAutoString hostport(nsDependentCString(host) + nsPrintfCString(":%d", port));
+
+    hdr = PL_DHashTableOperate(&mHostDB, hostport.get(), PL_DHASH_ADD);
     if (!hdr)
         return;
 
@@ -927,13 +932,13 @@ nsSocketTransportService::OnTransportConnected(const char *host, PRNetAddr *addr
 
     nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
     if (ent->key == nsnull) {
-        ent->key = (const void *) PL_strdup(host);
+        ent->key = (const void *) ToNewCString(hostport);
         memcpy(&ent->addr, &addr->ipv6.ip, sizeof(ent->addr));
     }
 #ifdef DEBUG
     else {
         // verify that the existing entry is in fact a perfect match
-        NS_ASSERTION(PL_strcmp(ent->host(), host) == 0, "bad match");
+        NS_ASSERTION(PL_strcmp(ent->hostport(), hostport.get()) == 0, "bad match");
         NS_ASSERTION(memcmp(&ent->addr, &addr->ipv6.ip, sizeof(ent->addr)) == 0, "bad match");
     }
 #endif

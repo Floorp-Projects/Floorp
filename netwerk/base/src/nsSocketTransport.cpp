@@ -465,7 +465,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             // A connection has been established with the server
             //
             if (!mWasConnected) {
-                mService->OnTransportConnected(GetSocketHost(), mNetAddress);
+                mService->OnTransportConnected(GetSocketHost(), GetSocketPort(), mNetAddress);
                 mWasConnected = PR_TRUE;
             }
 
@@ -769,15 +769,16 @@ nsresult nsSocketTransport::doResolveHost(void)
     //
     if (mNetAddress == nsnull) {
         const char *host = GetSocketHost();
+        PRInt32 port = GetSocketPort();
         //
         // Check the socket transport service's hostname database first.
         //
         PRIPv6Addr addr;
-        if (mService->LookupHost(host, &addr)) {
+        if (mService->LookupHost(host, port, &addr)) {
             // found address!
             mNetAddrList.Init(1);
             mNetAddress = mNetAddrList.GetNext(nsnull);
-            PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, GetSocketPort(), mNetAddress);
+            PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, port, mNetAddress);
             memcpy(&mNetAddress->ipv6.ip, &addr, sizeof(addr));
 #ifdef PR_LOGGING
             char buf[128];
