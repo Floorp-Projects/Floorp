@@ -403,7 +403,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mThreadEventQueue = nsnull;
   InitFrameData();
   mItemType = typeContent;
-  mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
   mCharsetReloadState = eCharsetReloadInit;
   mHistoryState = nsnull;
@@ -1158,8 +1157,7 @@ nsWebShell::GetURL(PRInt32 aIndex, const PRUnichar** aURLResult)
    nsXPIDLCString spec;
    uri->GetSpec(getter_Copies(spec));
 
-   nsAutoString uriSpec(spec);
-   *aURLResult = uriSpec.ToNewUnicode();
+   *aURLResult = NS_ConvertASCIItoUCS2(spec).ToNewUnicode();
 
    return NS_OK;
 }
@@ -1197,14 +1195,12 @@ nsWebShell::LoadDocument(const char* aURL,
       muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
       if( aSource > hint ) 
       {
-        nsAutoString inputCharSet(aCharset);
-        muDV->SetHintCharacterSet(inputCharSet.GetUnicode());
+        muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).GetUnicode());
         muDV->SetHintCharacterSetSource((PRInt32)aSource);
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
           mCharsetReloadState = eCharsetReloadRequested;
-          nsAutoString url(aURL);
-          LoadURI(url.GetUnicode());
+          LoadURI(NS_ConvertASCIItoUCS2(aURL).GetUnicode());
         }
       }
     }
@@ -1229,8 +1225,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
       muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
       if( aSource > hint ) 
       {
-        nsAutoString inputCharSet(aCharset);
-         muDV->SetHintCharacterSet(inputCharSet.GetUnicode());
+         muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).GetUnicode());
          muDV->SetHintCharacterSetSource((PRInt32)aSource);
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
@@ -1375,7 +1370,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target.Assign("_blank");
+      target.AssignWithConversion("_blank");
       // Fall into replace case
     case eLinkVerb_Undefined:
       // Fall through, this seems like the most reasonable action
@@ -1387,7 +1382,9 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), aURLSpec, nsnull);
 
-        InternalLoad(uri, mCurrentURI, nsCAutoString(aTargetSpec), aPostDataStream, loadLink); 
+        nsCAutoString tempTargetSpecCString;
+        tempTargetSpecCString.AssignWithConversion(aTargetSpec);
+        InternalLoad(uri, mCurrentURI, tempTargetSpecCString, aPostDataStream, loadLink); 
       }
       break;
     case eLinkVerb_Embed:
@@ -1605,8 +1602,8 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
             if (keywordsEnabled && (-1 == dotLoc)) {
                 // only send non-qualified hosts to the keyword server
-                nsAutoString keywordSpec("keyword:");
-                keywordSpec.Append(host);
+                nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
+                keywordSpec.AppendWithConversion(host);
                 return LoadURI(keywordSpec.GetUnicode());
             } // end keywordsEnabled
         }
@@ -1643,9 +1640,8 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                 nsXPIDLCString aSpec;
                 rv = aURL->GetSpec(getter_Copies(aSpec));
                 if (NS_FAILED(rv)) return rv;
-                nsAutoString newURL(aSpec);
                 // reload the url
-                return LoadURI(newURL.GetUnicode());
+                return LoadURI(NS_ConvertASCIItoUCS2(aSpec).GetUnicode());
             } // retry
 
             // throw a DNS failure dialog
@@ -1653,12 +1649,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (NS_FAILED(rv)) return rv;
 
             nsXPIDLString messageStr;
-            nsAutoString name("dnsNotFound");
-            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
-            errorMsg.Assign(host);
-            errorMsg.Append(' ');
+            errorMsg.AssignWithConversion(host);
+            errorMsg.AppendWithConversion(' ');
             errorMsg.Append(messageStr);
 
             (void)mPrompter->Alert(errorMsg.GetUnicode());
@@ -1675,18 +1670,17 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (NS_FAILED(rv)) return rv;
 
             nsXPIDLString messageStr;
-            nsAutoString name("connectionFailure");
-            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
             errorMsg.Assign(messageStr);
-            errorMsg.Append(' ');
-            errorMsg.Append(host);
+            errorMsg.AppendWithConversion(' ');
+            errorMsg.AppendWithConversion(host);
             if (port > 0) {
-                errorMsg.Append(':');
-                errorMsg.Append(port);
+                errorMsg.AppendWithConversion(':');
+                errorMsg.AppendInt(port);
             }
-            errorMsg.Append('.');
+            errorMsg.AppendWithConversion('.');
 
             (void)mPrompter->Alert(errorMsg.GetUnicode());
         } else // end NS_ERROR_CONNECTION_REFUSED
@@ -1698,14 +1692,13 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (NS_FAILED(rv)) return rv;
 
             nsXPIDLString messageStr;
-            nsAutoString name("netTimeout");
-            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            rv = mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
 
             errorMsg.Assign(messageStr);
-            errorMsg.Append(' ');
-            errorMsg.Append(host);
-            errorMsg.Append('.');
+            errorMsg.AppendWithConversion(' ');
+            errorMsg.AppendWithConversion(host);
+            errorMsg.AppendWithConversion('.');
 
             (void)mPrompter->Alert(errorMsg.GetUnicode());            
         } // end NS_ERROR_NET_TIMEOUT
@@ -2104,9 +2097,8 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   NS_ENSURE_SUCCESS(SetupNewViewer(documentViewer), NS_ERROR_FAILURE);
 
   // XXX: It would be great to get rid of this dummy channel!
-  const nsAutoString uriString = "about:blank";
   nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), NS_ConvertASCIItoUCS2("about:blank")), NS_ERROR_FAILURE);
   if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
 
   nsCOMPtr<nsIChannel> dummyChannel;
