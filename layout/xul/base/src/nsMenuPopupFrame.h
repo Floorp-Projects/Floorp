@@ -60,8 +60,11 @@ public:
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   nsresult SyncViewWithFrame(PRBool aOnMenuBar);
 
+  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+
 protected:
   nsIContent* mCurrentMenu; // The current menu that is active.
+  PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
 }; // class nsMenuPopupFrame
 
 #endif

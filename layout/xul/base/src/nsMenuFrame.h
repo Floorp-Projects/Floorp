@@ -34,6 +34,7 @@
 nsresult NS_NewMenuFrame(nsIFrame** aResult) ;
 
 class nsMenuBarFrame;
+class nsMenuPopupFrame;
 
 class nsMenuFrame : public nsBoxFrame
 {
