@@ -48,8 +48,8 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD SetHostName(char * aHostName);
 
   /* attribute string userName; */
-  NS_IMETHOD GetUserName(char * *aUserName);
-  NS_IMETHOD SetUserName(char * aUserName);
+  NS_IMETHOD GetUsername(char * *aUserName);
+  NS_IMETHOD SetUsername(char * aUserName);
 
   /* attribute boolean rememberPassword; */
   NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);

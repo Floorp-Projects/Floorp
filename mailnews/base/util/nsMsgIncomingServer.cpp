@@ -238,7 +238,7 @@ nsMsgIncomingServer::setCharPref(const char *prefname,
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrettyName, "name")
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, UserName, "userName");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");

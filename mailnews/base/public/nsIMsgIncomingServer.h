@@ -33,9 +33,9 @@ class nsIMsgIncomingServer : public nsISupports {
   NS_IMETHOD GetHostName(char * *aHostName) = 0;
   NS_IMETHOD SetHostName(char * aHostName) = 0;
 
-  /* attribute string userName; */
-  NS_IMETHOD GetUserName(char * *aUserName) = 0;
-  NS_IMETHOD SetUserName(char * aUserName) = 0;
+  /* attribute string username; */
+  NS_IMETHOD GetUsername(char * *aUsername) = 0;
+  NS_IMETHOD SetUsername(char * aUsername) = 0;
 
   /* attribute boolean rememberPassword; */
   NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword) = 0;

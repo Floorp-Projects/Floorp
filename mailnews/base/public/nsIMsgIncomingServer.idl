@@ -29,7 +29,7 @@ interface nsIMsgIncomingServer : nsISupports {
   
   attribute string prettyName;
   attribute string hostName;
-  attribute string userName;
+  attribute string username;
   attribute boolean rememberPassword;
   attribute string password;
 
