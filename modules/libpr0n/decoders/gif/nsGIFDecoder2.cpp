@@ -333,7 +333,7 @@ int HaveDecodedRow(
     if (decoder->mGIFStruct->is_transparent)
       format = gfxIFormats::RGB_A1;
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_BEOS)
     // XXX this works...
     format += 1; // RGB to BGR
 #endif
@@ -421,7 +421,7 @@ int HaveDecodedRow(
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
           if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_BEOS)
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;

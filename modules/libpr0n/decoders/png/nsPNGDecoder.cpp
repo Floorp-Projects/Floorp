@@ -234,7 +234,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
       png_set_gray_to_rgb(png_ptr);
 
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_BEOS)
   // windows likes BGR
   png_set_bgr(png_ptr);
 #endif
@@ -333,7 +333,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_BEOS)
   // XXX this works...
   format += 1; // RGB to BGR
 #endif
