@@ -298,3 +298,11 @@ Rights Reserved.
 
 <!-- Print Engine -->
 <!ENTITY printEngine.title "Printing...">
+
+<!-- Open/Save Attachment -->
+<!ENTITY openSaveAttachment.title "Open/Save Attachment">
+<!ENTITY openSaveAttachmentHeading.label "Attachment: ">
+<!ENTITY openSaveAttachmentWarning.label "Some files can contain viruses or otherwise be harmful to your computer. It is important to be certain that this file is from a trustworthy source.">
+<!ENTITY openSaveAttachmentToDo.label "What would you like to do with this file?">
+<!ENTITY openSaveAttachmentOpen.label "Open it">
+<!ENTITY openSaveAttachmentSave.label "Save it to disk">

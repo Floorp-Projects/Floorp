@@ -578,6 +578,99 @@ NS_IMETHODIMP
 nsMessenger::OpenAttachment(const char * url, const char * displayName, 
                             const char * messageUri)
 {
+  nsIMsgMessageService * messageService = nsnull;
+  nsAutoString from, to;
+  nsCOMPtr<nsISupports> channelSupport;
+  nsCOMPtr<nsIStreamListener> convertedListener;
+  nsAutoString urlString;
+  char *urlCString = nsnull;
+  char *unescapedUrl = nsnull;
+  nsCOMPtr<nsIURI> aURL;
+  PRBool canFetchMimeParts = PR_FALSE;
+  nsCAutoString fullMessageUri = messageUri;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIChannel> channel;
+
+  NS_WITH_SERVICE(nsIStreamConverterService,
+                  streamConverterService,  
+                  kIStreamConverterServiceCID, &rv);
+  if (NS_FAILED(rv)) goto done;
+
+  if (!url) return NS_ERROR_NULL_POINTER;
+
+  unescapedUrl = PL_strdup(url);
+  if (!unescapedUrl) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsUnescape(unescapedUrl);
+
+  urlString.AssignWithConversion(unescapedUrl);
+
+  urlString.ReplaceSubstring(NS_ConvertASCIItoUCS2("/;section"), NS_ConvertASCIItoUCS2("?section"));
+  urlCString = urlString.ToNewCString();
+
+  rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
+  nsCRT::free(urlCString);
+
+  if (NS_FAILED(rv)) goto done;
+
+  rv = GetMessageServiceFromURI(messageUri, &messageService);
+  if (NS_FAILED(rv)) goto done;
+
+  messageService->GetCanFetchMimeParts(&canFetchMimeParts);
+
+  if (canFetchMimeParts)
+  {
+    PRInt32 sectionPos = urlString.Find("?section");
+    nsString mimePart;
+
+    urlString.Right(mimePart, urlString.Length() - sectionPos);
+    fullMessageUri.AppendWithConversion(mimePart);
+   
+    messageUri = fullMessageUri.GetBuffer();
+  }
+  {
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                  aURL,
+                                  nsnull,      // inputStream
+                                  nsnull,      // contentType
+                                  -1);
+    if (NS_FAILED(rv)) goto done;
+
+    from.AssignWithConversion(MESSAGE_RFC822);
+    to.AssignWithConversion("text/xul");
+  
+    channelSupport = do_QueryInterface(channel);
+
+    // *** this isn't working yet needs to come back for it
+    // *** We need to use the mime stream coverter to pull out the part stream
+    // *** and then pass it to the display consumer
+    rv = streamConverterService->AsyncConvertData(
+        from.GetUnicode(), to.GetUnicode(), nsnull,
+        channelSupport, getter_AddRefs(convertedListener));
+    if (NS_FAILED(rv)) goto done;
+
+    if (canFetchMimeParts)
+      rv = messageService->OpenAttachment(aURL, messageUri, convertedListener,
+                                          mMsgWindow, nsnull,nsnull);
+    else
+      rv = messageService->DisplayMessage(messageUri,
+                                          convertedListener,mMsgWindow,
+                                          nsnull, nsnull); 
+  }
+
+done:
+    if (messageService)
+      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+
+    PR_FREEIF(unescapedUrl);
+
+	return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::SaveAttachment(const char * url, const char * displayName, 
+                            const char * messageUri)
+{
     // *** for now OpenAttachment is really a SaveAttachment
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   char *unescapedUrl = nsnull;
@@ -589,7 +682,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   if (!url) goto done;
 
 #ifdef DEBUG_MESSENGER
-  printf("nsMessenger::OpenAttachment(%s)\n",url);
+  printf("nsMessenger::SaveAttachment(%s)\n",url);
 #endif    
   unescapedUrl = PL_strdup(url);
   if (!unescapedUrl) goto done;

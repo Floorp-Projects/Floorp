@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" text="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
+<window id="open-save-attachment"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	flex="100%" class="dialog" title="&openSaveAttachment.title;" 
+	align="vertical" onload="onLoad();" >
+
+	<script language="JavaScript" src="chrome://global/content/strres.js"/>
+	<script src="chrome://messenger/content/openSaveAttachment.js"/>
+
+	<box width="360px">
+		<box orient="vertical">
+			<image class="question-icon"/>
+			<spring flex="1"/>
+		</box>
+		<box width="10px" />
+	    <box orient="vertical" flex="1">
+			<separator class="thin"/>
+			<box id="documentNameBox">
+				<text value="&openSaveAttachmentHeading.label;" />
+			</box>
+			<separator class="thin"/>
+			<html>&openSaveAttachmentWarning.label;</html>
+			<separator class="thin"/>
+			<text value="&openSaveAttachmentToDo.label;" />
+			<separator class="thin"/>
+			<radiogroup orient="vertical">
+				<radio value="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
+				<radio id="save_it" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true" />
+			</radiogroup>
+			<separator class="thin"/>
+		</box>
+	</box>
+	<separator class="thin"/>
+	<box id="okCancelButtons"/>
+</window>

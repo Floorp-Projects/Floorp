@@ -58,6 +58,8 @@ install::
 	$(MAKE_INSTALL)	mailContextMenus.js $(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL)	msgPrintEngine.js $(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL)	msgPrintEngine.xul $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL)	openSaveAttachment.xul $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL)	openSaveAttachment.js $(DIST)\bin\chrome\messenger\content
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\messenger.xul
@@ -92,5 +94,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\mailContextMenus.js
 	rm -f $(DIST)\chrome\messenger\content\msgPrintEngine.js
 	rm -f $(DIST)\chrome\messenger\content\msgPrintEngine.xul
+	rm -f $(DIST)\chrome\messenger\content\openSaveAttachment.xul
+	rm -f $(DIST)\chrome\messenger\content\openSaveAttachment.js
 
 

@@ -75,6 +75,7 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPop3URL.h"
+#include "nsIMsgMailSession.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -2637,7 +2638,20 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
             nsXPIDLCString newMessageUri;
             rv = popurl->GetPop3Sink(getter_AddRefs(pop3sink));
             if (NS_SUCCEEDED(rv))
+            {
               pop3sink->GetMessageUri(getter_Copies(newMessageUri));
+              NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
+                              kMsgMailSessionCID, &rv);
+              if (NS_FAILED(rv)) return rv;
+	
+              nsCOMPtr<nsIMsgWindow> msgWindow;
+
+              rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+              if(NS_SUCCEEDED(rv))
+              {
+                msgWindow->SelectMessage(newMessageUri);
+              }
+            }
           }
         }
       }

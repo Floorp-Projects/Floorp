@@ -211,7 +211,14 @@ function AddSenderToAddressBook()
 
 function OpenAttachURL(url, displayName, messageUri)
 {
-  messenger.openAttachment(url, displayName, messageUri);
+    var args = {dspname: displayName, opval: 0};
+
+  window.openDialog("chrome://messenger/content/openSaveAttachment.xul",
+                    "openSaveAttachment", "chrome,modal", args);
+  if (args.opval == 1)
+      messenger.openAttachment(url, displayName, messageUri);
+  else if (args.opval == 2)
+      messenger.saveAttachment(url, displayName, messageUri);
 }
 
 function AddAttachmentToMenu(name, oncommand) 

@@ -52,3 +52,5 @@ messengerdnd.js
 mailContextMenus.js
 msgPrintEngine.js
 msgPrintEngine.xul
+openSaveAttachment.xul
+openSaveAttachment.js
