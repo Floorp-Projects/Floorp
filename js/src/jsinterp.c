@@ -1654,17 +1654,19 @@ js_Interpret(JSContext *cx, jsval *result)
                 *vp = OBJECT_TO_JSVAL(propobj);
 
                 ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
-                if (!ok)
-                    goto out;
 
                 /*
                  * Stash private iteration state into property iterator object.
+                 * We do this before checking 'ok' to ensure that propobj is
+                 * in a valid state even if OBJ_ENUMERATE returned JS_FALSE.
                  * NB: This code knows that the first slots are pre-allocated.
                  */
 #if JS_INITIAL_NSLOTS < 5
 #error JS_INITIAL_NSLOTS must be greater than or equal to 5.
 #endif
                 propobj->slots[JSSLOT_ITER_STATE] = iter_state;
+                if (!ok)
+                    goto out;
             } else {
                 /* This is not the first iteration. Recover iterator state. */
                 propobj = JSVAL_TO_OBJECT(rval);
@@ -1688,11 +1690,22 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
 
                 ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
+
+                /*
+                 * Stash private iteration state into property iterator object.
+                 * We do this before checking 'ok' to ensure that propobj is
+                 * in a valid state even if OBJ_ENUMERATE returned JS_FALSE.
+                 * NB: This code knows that the first slots are pre-allocated.
+                 */
                 propobj->slots[JSSLOT_ITER_STATE] = iter_state;
                 if (!ok)
                     goto out;
 
-                /* Stash private iteration state into iterator JSObject. */
+                /*
+                 * Update the iterator JSObject's parent link to refer to the
+                 * current object. This is used in the iterator JSObject's
+                 * finalizer.
+                 */
                 propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
                 goto enum_next_property;
             }

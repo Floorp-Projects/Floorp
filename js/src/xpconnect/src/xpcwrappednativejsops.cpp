@@ -1026,6 +1026,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
            wrapper->HasMutatedSet() &&
            !XPC_WN_Shared_Enumerate(cx, obj))
         {
+            *statep = JSVAL_NULL;
             return JS_FALSE;
         }
 
@@ -1034,6 +1035,10 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         rv = si->GetCallback()->
             NewEnumerate(wrapper, cx, obj, enum_op, statep, idp, &retval);
+        
+        if(enum_op == JSENUMERATE_INIT && (NS_FAILED(rv) || !retval))
+            *statep = JSVAL_NULL;
+        
         if(NS_FAILED(rv))
             return Throw(rv, cx);
         return retval;
@@ -1047,10 +1052,15 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                wrapper->HasMutatedSet() &&
                !XPC_WN_Shared_Enumerate(cx, obj))
             {
+                *statep = JSVAL_NULL;
                 return JS_FALSE;
             }
             rv = si->GetCallback()->
                 Enumerate(wrapper, cx, obj, &retval);
+
+            if(NS_FAILED(rv) || !retval)
+                *statep = JSVAL_NULL;
+
             if(NS_FAILED(rv))
                 return Throw(rv, cx);
             if(!retval)
