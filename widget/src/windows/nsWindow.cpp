@@ -2573,7 +2573,19 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             point.y = (short) HIWORD(lParam);
             HWND destWnd = ::WindowFromPoint(point);
             
-            if (destWnd != mWnd) {
+            // Since we receive mousewheel events for as long as
+            // we are focused, it's entirely possible that there
+            // is another app's window or no window under the
+            // pointer.
+
+            if (!destWnd)  // No window is under the pointer
+                break;
+
+            LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
+            if (proc != (LONG)&nsWindow::WindowProc)  // Some other app
+                break;
+
+            else if (destWnd != mWnd) {
                 nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
                 if (destWindow)
                     return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
