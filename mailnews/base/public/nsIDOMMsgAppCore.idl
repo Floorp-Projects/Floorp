@@ -42,6 +42,7 @@
 #include "nsIDOMNodeList.idl"
 #include "nsIDOMXULTreeElement.idl"
 #include "nsIDOMXULElement.idl"
+#include "nsIRDFCompositeDataSource.idl"
 
 [object, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
@@ -55,6 +56,8 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
 	void Exit();
+	void ViewAllMessages(in nsIRDFCompositeDataSource database);
+	void ViewUnreadMessages(in nsIRDFCompositeDataSource database);
 };
 
 /* hack to make MsgAppCore visible from AppCore */

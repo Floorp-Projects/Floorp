@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
+#include "nsIRDFCompositeDataSource.h" /* interface nsIRDFCompositeDataSource */
 #include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
@@ -54,6 +55,12 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void Exit (); */
   NS_IMETHOD Exit() = 0;
+
+  /* void ViewAllMessages (in nsIRDFCompositeDataSource database); */
+  NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *database) = 0;
+
+  /* void ViewUnreadMessages (in nsIRDFCompositeDataSource database); */
+  NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *database) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
