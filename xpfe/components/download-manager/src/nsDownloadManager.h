@@ -59,6 +59,8 @@
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
  
+enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
+
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIDOMEventListener,
                           public nsIObserver
@@ -80,6 +82,7 @@ protected:
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult AssertProgressInfo();
   nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
+  nsresult DownloadStarted(const char* aPersistentDescriptor);
   nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
@@ -115,6 +118,8 @@ protected:
   nsresult SetSource(nsIURI* aSource);
   nsresult SetPrettyName(const PRUnichar* aPrettyName);
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
+  nsresult GetDownloadState(DownloadState* aState);
+  nsresult SetDownloadState(DownloadState aState);
 private:
   nsDownloadManager* mDownloadManager;
 
@@ -127,6 +132,7 @@ private:
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIProgressDialog> mDialog;
   nsCOMPtr<nsIObserver> mObserver;
+  DownloadState mDownloadState;
 
   PRInt32 mPercentComplete;
   PRInt32 mCurrBytes;
@@ -135,4 +141,5 @@ private:
 
   friend class nsDownloadManager;
 };
+
 #endif
