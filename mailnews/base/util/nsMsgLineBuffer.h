@@ -108,9 +108,10 @@ protected:
 	PRBool m_eatCRLFs;
 	PRBool m_allocateNewLines;
 	char * m_dataBuffer;
-	char * m_startPos;
 	const char * m_endOfLineToken;
 	PRUint32 m_dataBufferSize;
+    PRUint32 m_startPos;
+    PRUint32 m_numBytesInBuffer;
 };
 
 
