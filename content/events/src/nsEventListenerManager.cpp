@@ -421,6 +421,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
   else if (aType == nsLayoutAtoms::onresize) {
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_RESIZE;
+  }
+  else if (aType == nsLayoutAtoms::onscroll) {
+    aIID = kIDOMPaintListenerIID;
+    *aFlags = NS_EVENT_BITS_PAINT_SCROLL;
   } // extened this to handle IME related events
   else if (aType == nsLayoutAtoms::oncreate) {
     aIID = kIDOMMenuListenerIID; 
@@ -1327,6 +1331,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
   
     case NS_PAINT:
     case NS_RESIZE_EVENT:
+    case NS_SCROLL_EVENT:
       if (nsnull != mPaintListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
@@ -1348,6 +1353,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_RESIZE_EVENT:
                     ret = paintListener->Resize(*aDOMEvent);
                     break;
+                  case NS_SCROLL_EVENT:
+                    ret = paintListener->Scroll(*aDOMEvent);
+                    break;
                   default:
                     break;
                 }
@@ -1366,6 +1374,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_RESIZE_EVENT:
                     subType = NS_EVENT_BITS_PAINT_RESIZE;
                     if (ls->mSubType & NS_EVENT_BITS_PAINT_RESIZE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_SCROLL_EVENT:
+                    subType = NS_EVENT_BITS_PAINT_SCROLL;
+                    if (ls->mSubType & NS_EVENT_BITS_PAINT_SCROLL) {
                       correctSubType = PR_TRUE;
                     }
                     break;
@@ -1813,6 +1827,15 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
     }
   }
   if (aEventTypes & nsIDOMEvent::RESIZE) {
+    iid = kIDOMPaintListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_PAINT_RESIZE; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_PAINT_RESIZE;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::SCROLL) {
     iid = kIDOMPaintListenerIID;
     ls = FindJSEventListener(iid);
     if (ls) {
