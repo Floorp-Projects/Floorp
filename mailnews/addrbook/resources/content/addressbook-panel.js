@@ -21,8 +21,10 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  */
 
-function abPanelStartup() 
+function abPanelLoad() 
 {
+  InitCommonJS(); 
+
   var selectedAB = "moz-abmdbdirectory://abook.mab";
 
   // XXX duplicated code, see OnLoadMailList()
@@ -47,6 +49,11 @@ function abPanelStartup()
   }
 
   ChangeDirectoryByDOMNode(abPopup.selectedItem);
+}
+
+function abPanelUnload()
+{
+  CloseAbView();
 }
 
 function AbPanelNewCard() 
