@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -152,6 +153,52 @@ nsRedoCommand::GetCommandStateParams(const char *aCommandName,
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
   return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
+}
+
+NS_IMETHODIMP
+nsClearUndoCommand::IsCommandEnabled(const char * aCommandName,
+                                     nsISupports *refCon, PRBool *outCmdEnabled)
+{ 
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  *outCmdEnabled = (editor != nsnull);
+  return NS_OK;
+}
+  
+
+NS_IMETHODIMP
+nsClearUndoCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
+{ 
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) return NS_ERROR_NOT_IMPLEMENTED;
+  
+  editor->EnableUndo(PR_FALSE);  // Turning off undo clears undo/redo stacks.
+  editor->EnableUndo(PR_TRUE);   // This re-enables undo/redo.
+  
+  return NS_OK;
+}
+                                  
+NS_IMETHODIMP                       
+nsClearUndoCommand::DoCommandParams(const char *aCommandName,
+                                    nsICommandParams *aParams,
+                                    nsISupports *refCon)
+{
+  return DoCommand(aCommandName, refCon);
+}
+                                                  
+NS_IMETHODIMP                                     
+nsClearUndoCommand::GetCommandStateParams(const char *aCommandName,
+                                          nsICommandParams *aParams,
+                                          nsISupports *refCon)
+{ 
+  NS_ENSURE_ARG_POINTER(aParams);
+  
+  PRBool enabled = PR_FALSE;
+  nsresult rv = IsCommandEnabled(aCommandName, refCon, &enabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+   
+  return aParams->SetBooleanValue(STATE_ENABLED, enabled);
 }
 
 NS_IMETHODIMP
