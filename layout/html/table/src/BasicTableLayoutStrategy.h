@@ -71,6 +71,16 @@ public:
   virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState);
  
+  /**
+    * Calculate the basis for percent width calculations of the table elements
+    * @param aReflowState   - the reflow state of the table
+    * @param aAvailWidth    - the available width for the table
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    * @return               - the basis for percent calculations
+    */
+  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                       nscoord                  aAvailWidth,
+                                       float                    aPixelToTwips);
   void Dump(PRInt32 aIndent);
 
 protected:
@@ -138,17 +148,6 @@ protected:
                                 nscoord                  aBasis,
                                 PRBool                   aTableIsAutoWidth,
                                 float                    aPixelToTwips);
-
-  /**
-    * Calculate the basis for percent width calculations of the table elements
-    * @param aReflowState   - the reflow state of the table
-    * @param aAvailWidth    - the available width for the table
-    * @param aPixelToTwips  - the number of twips in a pixel.
-    * @return               - the basis for percent calculations
-    */
-  nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
-                               nscoord                  aAvailWidth,
-                               float                    aPixelToTwips);
 
   /**
     * Reduce the percent columns by the amount specified in aExcess as the percent width's

@@ -602,7 +602,9 @@ public:
   nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
   // calculate the minimum width to layout aFrame and its desired width 
   // including border and padding given its reflow state and column width information 
-  void CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
+  void CalcMinAndPreferredWidths(nsIPresContext*          aPresContextconst,
+                                 const nsHTMLReflowState& aReflowState,
+                                 PRBool                   aCalcPrefWidthIfAutoWithPctCol,
                                  nscoord&                 aMinWidth,
                                  nscoord&                 aPreferredWidth);
 protected:
