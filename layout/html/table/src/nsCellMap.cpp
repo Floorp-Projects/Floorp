@@ -1741,8 +1741,9 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   // update the row and col info due to shifting
   for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
     nsVoidArray* row = (nsVoidArray *)mRows.ElementAt(rowX);
+    PRInt32 rowCount = row->Count();
     for (colX = aColIndex; colX < numCols - colSpan; colX++) {
-      CellData* data = (CellData*) row->ElementAt(colX);
+      CellData* data = (colX < rowCount) ? (CellData*)row->ElementAt(colX) : nsnull;
       if (data) {
         if (data->IsOrig()) {
           // a cell that gets moved to the left needs adjustment in its new location 
