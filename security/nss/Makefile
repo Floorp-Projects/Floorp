@@ -73,8 +73,8 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 moz_import::
-	$(NSINSTALL) -L ../../../dist include $(DIST)
-	$(NSINSTALL) -L ../../../dist lib $(DIST)
+	$(NSINSTALL) -L ../../dist include $(DIST)
+	$(NSINSTALL) -L ../../dist lib $(DIST)
 	cp $(DIST)/lib/libmozdbm_s.a $(DIST)/lib/libdbm.a
 
 nsm:: all 
