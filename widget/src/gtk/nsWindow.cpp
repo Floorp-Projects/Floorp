@@ -1741,7 +1741,19 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "property_notify_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_property_change),
                        this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "key_press_event",
+                       GTK_SIGNAL_FUNC(handle_key_press_event),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "key_release_event",
+                       GTK_SIGNAL_FUNC(handle_key_release_event),
+                       this);
+
+
     mask = (GdkEventMask) (GDK_PROPERTY_CHANGE_MASK |
+                           GDK_KEY_PRESS_MASK |
+                           GDK_KEY_RELEASE_MASK |
                            GDK_FOCUS_CHANGE_MASK );
     gdk_window_set_events(mShell->window, 
                           mask);
