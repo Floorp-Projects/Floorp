@@ -364,6 +364,17 @@ nsHttpResponseHead::MustValidateIfExpired()
 }
 
 PRBool
+nsHttpResponseHead::IsResumable()
+{
+    // even though some HTTP/1.0 servers may support byte range requests, we're not
+    // going to bother with them, since those servers wouldn't understand If-Range.
+    return mVersion >= NS_HTTP_VERSION_1_1 &&
+           PeekHeader(nsHttp::Content_Length) && 
+          (PeekHeader(nsHttp::ETag) || PeekHeader(nsHttp::Last_Modified)) &&
+           PL_strcasestr(PeekHeader(nsHttp::Accept_Ranges), "bytes");
+}
+
+PRBool
 nsHttpResponseHead::ExpiresInPast()
 {
     PRUint32 expiresVal, dateVal;

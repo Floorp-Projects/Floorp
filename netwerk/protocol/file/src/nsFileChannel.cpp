@@ -231,7 +231,7 @@ nsFileChannel::EnsureTransport()
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mFile, mIOFlags, mPerm, 
+    rv = fts->CreateTransport(mFile, mIOFlags, mPerm, PR_TRUE,
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
 

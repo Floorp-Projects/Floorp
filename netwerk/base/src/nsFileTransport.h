@@ -88,14 +88,17 @@ public:
     
     nsresult Init(nsFileTransportService *aService, nsIFile* file,
                   PRInt32 ioFlags,
-                  PRInt32 perm);
+                  PRInt32 perm,
+                  PRBool closeStreamWhenDone);
     nsresult Init(nsFileTransportService *aService, const nsACString &name, 
                   nsIInputStream *fromStream,
                   const nsACString &contentType,
                   const nsACString &contentCharset,
                   PRInt32 contentLength,
                   PRBool closeStreamWhenDone);
-    nsresult Init(nsFileTransportService *aService, nsIStreamIO* io);
+    nsresult Init(nsFileTransportService *aService,
+                  nsIStreamIO* io,
+                  PRBool closeStreamWhenDone);
 
     void Process(nsIProgressEventSink *);
     void DoClose(void);

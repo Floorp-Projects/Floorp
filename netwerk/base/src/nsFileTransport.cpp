@@ -234,14 +234,18 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsFileTransportService *aService, nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+nsFileTransport::Init(nsFileTransportService *aService,
+                      nsIFile *file,
+                      PRInt32 ioFlags,
+                      PRInt32 perm,
+                      PRBool closeStreamWhenDone)
 {
     nsresult rv;
     nsCOMPtr<nsIFileIO> io;
     rv = NS_NewFileIO(getter_AddRefs(io), file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
 
-    return Init(aService, io);
+    return Init(aService, io, closeStreamWhenDone);
 }
 
 nsresult
@@ -258,12 +262,13 @@ nsFileTransport::Init(nsFileTransportService *aService,
     rv = NS_NewInputStreamIO(getter_AddRefs(io), name, inStr,
                              contentType, contentCharset, contentLength);
     if (NS_FAILED(rv)) return rv;
-    mCloseStreamWhenDone = closeStreamWhenDone;
-    return Init(aService, io);
+    return Init(aService, io, closeStreamWhenDone);
 }
 
 nsresult
-nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
+nsFileTransport::Init(nsFileTransportService *aService,
+                      nsIStreamIO* io,
+                      PRBool closeStreamWhenDone)
 {
     nsresult rv = NS_OK;
     if (mLock == nsnull) {
@@ -274,6 +279,8 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIStreamIO* io)
     mStreamIO = io;
     rv = mStreamIO->GetName(mStreamName);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
+
+    mCloseStreamWhenDone = closeStreamWhenDone;
 
     NS_ADDREF(mService = aService);
     PR_AtomicIncrement(&mService->mTotalTransports);

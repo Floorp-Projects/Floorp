@@ -204,7 +204,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
-    rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
+    rv = fts->CreateTransport(file, PR_RDONLY, 0, PR_TRUE, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -260,7 +260,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
-                              0664, &fileTrans);
+                              0664, PR_TRUE, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
