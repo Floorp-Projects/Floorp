@@ -26,3 +26,5 @@
 <!ENTITY urlsNotFound.label    "The following image or link locations were not found:">
 <!ENTITY notFoundKey.label     "(&quot;X&quot; = file not found, &quot;?&quot; = timed-out attempting to connect.)">
 <!ENTITY changeUrlButton.label "Change Location of Selected Item">
+<!ENTITY succeeded.label       "Succeeded">
+<!ENTITY failed.label          "Failed">
