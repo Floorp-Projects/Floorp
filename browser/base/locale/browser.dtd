@@ -61,8 +61,6 @@
 <!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY manBookmarksCmd.commandkey "b">
 <!ENTITY emptyItem.label "(Empty)">
-<!ENTITY openInTabs.label "Open in Tabs">
-<!ENTITY openInTabs.accesskey "O">
 
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpMenuCmd.accesskey "h">

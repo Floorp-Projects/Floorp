@@ -326,7 +326,6 @@
         ]]></body>
       </method>
 
-
       <method name="onCommandUpdate">
         <body><![CDATA[
           var selection = this._selection;
@@ -336,6 +335,63 @@
             // disabling 'copy' on the empty area of the personal toolbar
             var commandNode = document.getElementById("cmd_bm_copy");
             commandNode.setAttribute("disabled", "true");
+          }
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // returns false if...
+      // - the parent is the bookmark menu or the chevron
+      // - the menupopup contains ony one bookmark -->
+      <method name="validOpenInTabsMenuItem">
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          var rParent = RDF.GetResource(aTarget.parentNode.id)
+          if (BookmarksUtils.resolveType(rParent) != "Folder")
+            return false;
+          var count = 0;
+          if (!aTarget.hasChildNodes())
+            return false;
+          var curr = aTarget.firstChild;
+          do {
+            var type = BookmarksUtils.resolveType(curr.id);
+            if (type == "Bookmark" && ++count == 2)
+              return true;
+            curr = curr.nextSibling;
+          } while (curr)
+          return false;
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // shows the 'Open in Tabs' menu item if validOpenInTabsMenuItem is true -->
+      <method name="showOpenInTabsMenuItem">
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          if (!this.validOpenInTabsMenuItem(aTarget))
+            return;
+          var element = document.createElementNS(XUL_NS, "menuseparator");
+          aTarget.appendChild(element);
+          element = document.createElementNS(XUL_NS, "menuitem");
+          element.setAttribute("id", "openintabs-menuitem")
+          element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
+          element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
+          element.setAttribute("class", "menuitem-iconic groupmark-item");
+          element.setAttribute("oncommand", "BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode, this.database); event.preventBubble();");
+          aTarget.appendChild(element);
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // hides the 'Open in Tabs' on popuphidden so that we won't duplicate it -->
+      <method name="hideOpenInTabsMenuItem">
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          if (!aTarget.hasChildNodes())
+            return;
+          if (aTarget.lastChild.id == "openintabs-menuitem") {
+            aTarget.removeChild(aTarget.lastChild);
+            aTarget.removeChild(aTarget.lastChild);
           }
         ]]></body>
       </method>
@@ -487,6 +543,8 @@
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                onpopupshowing="this.parentNode.parentNode.showOpenInTabsMenuItem(event.originalTarget)"
+                onpopuphidden="this.parentNode.parentNode.hideOpenInTabsMenuItem(event.originalTarget)"
                 oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
                 onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
                 ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
@@ -579,12 +637,6 @@
               <xul:menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"
                             image="rdf:http://home.netscape.com/NC-rdf#Icon"/>
-              <xul:vbox>
-                <xul:menuseparator/>
-                <xul:menuitem class="menuitem-iconic groupmark-item"
-                              label="&openInTabs.label;" accesskey="&openInTabs.accesskey;"
-                              oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode.parentNode, this.database); event.preventBubble();"/>
-              </xul:vbox>
             </xul:menupopup>
           </xul:rule>
 
@@ -595,6 +647,8 @@
         <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu" class="chevron"
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+              onpopupshowing="this.parentNode.parentNode.parentNode.showOpenInTabsMenuItem(event.originalTarget)"
+              onpopuphidden="this.parentNode.parentNode.parentNode.hideOpenInTabsMenuItem(event.originalTarget)"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.originalTarget, this.database)"
               onclick="BookmarksUtils.loadBookmarkBrowserMiddleClick(event, this.database)"
               ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
