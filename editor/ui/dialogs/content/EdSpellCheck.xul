@@ -39,76 +39,60 @@
   </script>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <xul:broadcaster id="args" value=""/>
-  <table>
-    <tr valign="top">
-      <td colspan="3">
-        <label for="Word"> &wordEditField.label; </label>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td>
-        <input type="text" class="SpellCheckWord" id="Word" size="24"/>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
-      </td>
-      <td>
-      </td>
-    </tr>
-    <tr  valign="top">
-      <td colspan="3">
-        <label> &suggestions.label; </label>
-      </td>
-    </tr>
-    <tr  valign="top">
-      <td rowspan="5">
-        <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()">
-        </select>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <label> &userDictionary.label; </label>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td colspan="3">
-        <label> &languagePopup.label; </label>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td colspan="2">
-        <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
-          <option> &englishLanguagePopup.value; </option>
-        </select>
-      </td>
-      <td>
-        <xul:titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
-      </td>
-    </tr>
-  </table>
+
+<xul:box align="vertical">
+  <label for="Word"> &wordEditField.label; </label>
+  <xul:box align="horizontal">
+    <input type="text" class="SpellCheckWord" id="Word" size="24"/>
+    <xul:spring class="bigspacer"/>
+    <xul:titledbutton class="push SizeToParent" id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
+    <xul:spring flex="100%"/>
+  </xul:box>
+  <label> &suggestions.label; </label>
+  <xul:box align="horizontal">
+    <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()"/>
+    <div>
+      <table>
+        <tr>
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
+          </td>
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
+          </td>
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <label> &userDictionary.label; </label>
+         </td>
+        </tr>
+        <tr valign="top">
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
+          </td>
+          <td>
+            <xul:titledbutton class="push SizeToParent"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </xul:box>
+  <label> &languagePopup.label; </label>
+  <xul:box align="horizontal">
+    <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
+      <option> &englishLanguagePopup.value; </option>
+    </select>
+    <xul:spring class="bigspacer"/>
+    <xul:titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
+    <xul:spring flex="100%"/>
+  </xul:box> 
+</xul:box>
 </xul:window>

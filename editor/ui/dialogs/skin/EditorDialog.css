@@ -38,7 +38,7 @@ tr {
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
-    width: 20em;
+    width: 200px;
 }
 
 select.dialog {
