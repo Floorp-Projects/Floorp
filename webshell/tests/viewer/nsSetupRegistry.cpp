@@ -50,7 +50,6 @@
 #include "nsIFileLocator.h"
 
 #include "nsISound.h"
-#include "nsIFileSpecWithUI.h"
 
 #if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
 #include "nsIUnixToolkitService.h"
@@ -137,7 +136,6 @@ static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
 static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
-static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
@@ -275,9 +273,9 @@ NS_SetupRegistry()
   NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
 
 
-  nsAutoString unixToolkitName("error");
-  nsAutoString unixWidgetDllName("error");
-  nsAutoString unixGfxDllName("error");
+  nsCAutoString unixToolkitName("error");
+  nsCAutoString unixWidgetDllName("error");
+  nsCAutoString unixGfxDllName("error");
   
   if (NS_OK == rv && nsnull != unixToolkitService)
   {
@@ -300,16 +298,16 @@ NS_SetupRegistry()
 
 #ifdef NS_DEBUG
   printf("NS_SetupRegistry() MOZ_TOOLKIT=%s, WIDGET_DLL=%s, GFX_DLL=%s\n",
-         (const char *) nsCAutoString(unixToolkitName),
-         (const char *) nsCAutoString(unixWidgetDllName),
-         (const char *) nsCAutoString(unixGfxDllName));
+         (const char *) unixToolkitName,
+         (const char *) unixWidgetDllName,
+         (const char *) unixGfxDllName);
 #endif
   
 #undef WIDGET_DLL
 #undef GFXWIN_DLL
 
-#define WIDGET_DLL (const char *) nsCAutoString(unixWidgetDllName)
-#define GFXWIN_DLL (const char *) nsCAutoString(unixGfxDllName)
+#define WIDGET_DLL (const char *) unixWidgetDllName
+#define GFXWIN_DLL (const char *) unixGfxDllName
 
 #endif /* defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT) */
 
@@ -338,7 +336,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // WIDGETS
   nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
