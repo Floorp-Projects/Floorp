@@ -171,7 +171,7 @@ Rights Reserved.
          valueGeneric="&folderPropsCmd.label;"/>
   <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
   <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
-  <command id="cmd_stop" oncommand="goDoCommand('cmd_stop')"/>
+  <command id="cmd_stop" oncommand="MsgStop();"/>
 </commandset>
 
 <commandset id="mailEditContextMenuItems">
