@@ -285,7 +285,13 @@ public:
         nsresult rv;
         nsIByteArrayInputStream* str;
         rv = NS_NewByteArrayInputStream(&str, mResult, mLength);
-        *aInputStream = str;
+        if (NS_SUCCEEDED(rv)) {
+            mResult = nsnull; // XXX Whackiness. The input stream takes ownership
+            *aInputStream = str;
+        }
+        else {
+            *aInputStream = nsnull;
+        }
         return rv;
     }
 
@@ -409,6 +415,11 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     nsCOMPtr<nsIStreamIOChannel> channel;
     rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, thunk);
+    // If the resultant script evaluation actually does return a
+    // value, we treat it as html.
+    if (NS_SUCCEEDED(rv)) {
+        rv = channel->SetContentType("text/html");
+    }
     if (NS_SUCCEEDED(rv)) {
         rv = thunk->Init(uri, channel);
     }
