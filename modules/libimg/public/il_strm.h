@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_strm.h --- Stream converters for the image library.
- *  $Id: il_strm.h,v 3.3 1999/05/27 22:37:43 pnunn%netscape.com Exp $
+ *  $Id: il_strm.h,v 3.4 1999/06/22 20:11:53 pnunn%netscape.com Exp $
  */
 
 
@@ -29,6 +29,7 @@
 #define IL_JPEG    3
 #define IL_PPM     4
 #define IL_PNG     5
+#define IL_ART     6
 
 #define IL_NOTFOUND 256
 
