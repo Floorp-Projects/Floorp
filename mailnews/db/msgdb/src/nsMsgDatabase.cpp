@@ -1961,7 +1961,11 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 		nsIMdbRow	*destRow = destMsgHdr->GetMDBRow();
 		err = destRow->SetRow(GetEnv(), sourceRow);
 		if (NS_SUCCEEDED(err))
+		{
 			err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
+			if (NS_SUCCEEDED(err) && newHdr)
+				*newHdr = destMsgHdr;
+		}
 
 	}
 	return err;
@@ -2589,7 +2593,7 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 					(void)pMessage->GetMessageKey(&key);
 					pMessage->GetSubject(subject);
 
-					printf("message in thread %u %s\n", key, (const char *) &nsAutoString(subject));
+					printf("message in thread %u %s\n", key, (const char *) nsAutoCString(subject));
 				}
 #endif /* DEBUG_bienvenu */
 		//		NS_RELEASE(pMessage);

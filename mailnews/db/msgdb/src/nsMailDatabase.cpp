@@ -386,20 +386,6 @@ MSG_FolderInfo *nsMailDatabase::GetFolderInfo()
 	return NULL;
 }
 	
-	// for offline imap queued operations
-	// these are in the base mail class (presumably) because offline moves between online and offline
-	// folders can cause these operations to be stored in local mail folders.
-nsresult nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray &outputIds)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
-
-int nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray &outputIds)
-{
-	nsresult ret = NS_OK;
-	return ret;
-}
 nsresult nsMailDatabase::GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **)
 {
 	nsresult ret = NS_OK;

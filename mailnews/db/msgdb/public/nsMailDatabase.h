@@ -56,11 +56,6 @@ public:
 	virtual PRUint32		GetCurVersion() {return kMailDBVersion;}
 	virtual MSG_FolderInfo *GetFolderInfo();
 	
-	// for offline imap queued operations
-	// these are in the base mail class (presumably) because offline moves between online and offline
-	// folders can cause these operations to be stored in local mail folders.
-	nsresult				ListAllOfflineOpIds(nsMsgKeyArray &outputIds);
-	int						ListAllOfflineDeletes(nsMsgKeyArray &outputIds);
 	nsresult				GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsOfflineImapOperation **);
 	nsresult				AddOfflineOp(nsOfflineImapOperation *op);
 	nsresult				DeleteOfflineOp(nsMsgKey opKey);
