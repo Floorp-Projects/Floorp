@@ -97,21 +97,6 @@ nsDocShell::~nsDocShell()
    Destroy();
 }
 
-NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID, 
-  void** ppv)
-{
-  NS_ENSURE_ARG_POINTER(ppv);
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
-  nsDocShell* docShell = new  nsDocShell();
-  NS_ENSURE_TRUE(docShell, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(docShell);
-  nsresult rv = docShell->QueryInterface(aIID, ppv);
-  NS_RELEASE(docShell);  
-  return rv;
-}
-
 NS_IMETHODIMP nsDocShell::DestroyChildren()
 {
    PRInt32 i, n = mChildren.Count();
@@ -1027,10 +1012,9 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
       {
       // we weren't able to find a protocol handler
       nsCOMPtr<nsIPrompt> prompter;
-      GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
-      
       nsCOMPtr<nsIStringBundle> stringBundle;
-      GetStringBundle(getter_AddRefs(stringBundle));
+      GetPromptAndStringBundle(getter_AddRefs(prompter), 
+         getter_AddRefs(stringBundle));
 
       NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
@@ -1270,6 +1254,7 @@ NS_IMETHODIMP nsDocShell::Create()
 {
    NS_ENSURE_STATE(!mContentViewer);
    mPrefs = do_GetService(NS_PREF_PROGID);
+   mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
 
    return NS_OK;
 }
@@ -1624,8 +1609,6 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       treeOwnerAsWin->SetTitle(aTitle);
       }
 
-   EnsureGlobalHistory();
-
    if(mGlobalHistory && mCurrentURI)
       {
       nsXPIDLCString url;
@@ -1635,16 +1618,16 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
 
    // Update SessionHistory too with Title. Otherwise entry for current page
    // has previous page's title.
-   if (mSessionHistory) {
-     PRInt32 index = 0;
-     mSessionHistory->GetIndex(&index);
-     nsCOMPtr<nsISHEntry>   shEntry;
-     mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
-     NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
-     shEntry->SetTitle(mTitle.GetUnicode());      
-   }
+   if(mSessionHistory)
+      {
+      PRInt32 index = -1;
+      mSessionHistory->GetIndex(&index);
+      nsCOMPtr<nsISHEntry>   shEntry;
+      mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
+      if(shEntry)
+         shEntry->SetTitle(mTitle.GetUnicode());      
+      }
    
-
    return NS_OK;
 }
 
@@ -2749,23 +2732,11 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 // nsDocShell: Global History
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::EnsureGlobalHistory()
-{
-   if(mGlobalHistory)
-      return NS_OK;
-
-   mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
-   if(!mGlobalHistory)
-      return NS_ERROR_FAILURE;
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
    PRBool* aShouldAdd)
 {
    *aShouldAdd = PR_FALSE;
-   if(!aURI || (typeContent != mItemType))
+   if(!mGlobalHistory || !aURI || (typeContent != mItemType))
       return NS_OK;
 
    nsXPIDLCString scheme;
@@ -2795,10 +2766,7 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI,
 
 NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
 {
-   if(NS_FAILED(EnsureGlobalHistory()))
-      return NS_ERROR_FAILURE;  // XXX REMOVE THIS!!!!
-
-   NS_ENSURE_SUCCESS(EnsureGlobalHistory(), NS_ERROR_FAILURE);
+   NS_ENSURE_STATE(mGlobalHistory);
 
    nsXPIDLCString spec;
    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(spec)), NS_ERROR_FAILURE);
@@ -2965,8 +2933,11 @@ nsDocShellInitInfo* nsDocShell::InitInfo()
 
 #define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
 
-NS_IMETHODIMP nsDocShell::GetStringBundle(nsIStringBundle** aStringBundle)
+NS_IMETHODIMP nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
+   nsIStringBundle** aStringBundle)
 {
+   NS_ENSURE_SUCCESS(GetInterface(NS_GET_IID(nsIPrompt), (void**)aPrompt), NS_ERROR_FAILURE);
+
    nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_PROGID));
    NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
 
