@@ -438,6 +438,14 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsFrameState)
+nsBlockFrame::GetDebugStateBits() const
+{
+  // We don't want to include our cursor flag in the bits the
+  // regression tester looks at
+  return nsBlockFrameSuper::GetDebugStateBits() & ~NS_BLOCK_HAS_LINE_CURSOR;
+}
+
 NS_IMETHODIMP
 nsBlockFrame::GetFrameName(nsAString& aResult) const
 {
