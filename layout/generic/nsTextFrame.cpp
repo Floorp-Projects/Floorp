@@ -1780,7 +1780,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 textLength;
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
@@ -1930,7 +1930,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 textLength;
   PRInt32 numSpaces;
 
@@ -2302,7 +2302,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
     return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 numSpaces;
   
   numSpaces = PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
@@ -2456,7 +2456,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
     return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
 
   // See if we need to transform the text. If the text fragment is ascii and
   // wasn't transformed, then we can skip this step. If we're displaying the
@@ -2713,7 +2713,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aCX)));
       nsCOMPtr<nsILineBreaker> lb;
       doc->GetLineBreaker(getter_AddRefs(lb));
-      nsTextTransformer tx(lb, nsnull);
+      nsTextTransformer tx(lb, nsnull, aCX);
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -3012,7 +3012,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
   PRInt32 textLength;
   PRInt32 numSpaces;
 
@@ -3163,7 +3163,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       doc->GetLineBreaker(getter_AddRefs(lb));
       NS_RELEASE(doc);
 
-      nsTextTransformer tx(lb, nsnull);
+      nsTextTransformer tx(lb, nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       if (textLength)//if no renderable length, you cant park here.
@@ -3193,7 +3193,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       doc->GetLineBreaker(getter_AddRefs(lb));
       NS_RELEASE(doc);
 
-      nsTextTransformer tx(lb, nsnull);
+      nsTextTransformer tx(lb, nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       nsIFrame *frameUsed = nsnull;
@@ -3261,7 +3261,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       doc->GetWordBreaker(getter_AddRefs(wb));
       NS_RELEASE(doc);
 
-      nsTextTransformer tx(lb, wb);
+      nsTextTransformer tx(lb, wb, aPresContext);
 
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
       nsIFrame *frameUsed = nsnull;
@@ -3467,7 +3467,7 @@ nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRIn
     nsCOMPtr<nsILineBreaker> lb;
     doc->GetLineBreaker(getter_AddRefs(lb));
   //create texttransformer
-    nsTextTransformer tx(lb, nsnull);
+    nsTextTransformer tx(lb, nsnull, aContext);
   //create the buffers
     nsAutoTextBuffer paintBuffer;
     nsAutoIndexBuffer indexBuffer;
@@ -4172,7 +4172,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   }
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull);
+  nsTextTransformer tx(lb, nsnull, aPresContext);
   // Keep the text in ascii if possible. Note that if we're measuring small
   // caps text then transform to Unicode because the helper function only
   // accepts Unicode text
@@ -4527,7 +4527,7 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                       PRUint32& aRunningWordLen,
                                       PRUint32 aWordBufSize)
 {
-  nsTextTransformer tx(aLineBreaker, nsnull);
+  nsTextTransformer tx(aLineBreaker, nsnull, aPresContext);
   tx.Init(aTextFrame, aContent, 0);
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;

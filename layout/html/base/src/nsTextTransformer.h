@@ -24,6 +24,7 @@
 
 #include "nsTextFragment.h"
 #include "nsISupports.h"
+#include "nsIPresContext.h"
 
 class nsIContent;
 class nsIFrame;
@@ -97,7 +98,8 @@ public:
   // Note: The text transformer does not hold a reference to the line
   // breaker and work breaker objects
   nsTextTransformer(nsILineBreaker* aLineBreaker,
-                    nsIWordBreaker* aWordBreaker);
+                    nsIWordBreaker* aWordBreaker,
+                    nsIPresContext* aPresContext);
 
   ~nsTextTransformer();
 
@@ -222,6 +224,9 @@ protected:
   // Unicode
   void ConvertTransformedTextToUnicode();
   
+  void LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
+                                 PRBool* aWasTransformed);
+
   // The text fragment that we are looking at
   const nsTextFragment* mFrag;
 
@@ -239,6 +244,8 @@ protected:
 
   nsIWordBreaker* mWordBreaker;  // [WEAK]
 
+  nsLanguageSpecificTransformType mLanguageSpecificTransformType;
+
   // Buffer used to hold the transformed words from GetNextWord or
   // GetPrevWord
   nsAutoTextBuffer mTransformBuf;
@@ -255,7 +262,8 @@ protected:
 
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
-                       nsIWordBreaker* aWordBreaker);
+                       nsIWordBreaker* aWordBreaker,
+                       nsIPresContext* aPresContext);
 
   nsresult Init2(const nsTextFragment* aFrag,
                  PRInt32 aStartingOffset,
