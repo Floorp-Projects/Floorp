@@ -365,12 +365,15 @@ function FillInTooltip ( tipElement )
 {
   var retVal = false;
   var textNode = document.getElementById("TOOLTIP_tooltipText");
-  if ( textNode ) {  
-    var tipText = tipElement.getAttribute("tooltiptext");
-    if ( tipText != "" ) {
-      textNode.setAttribute('value', tipText);
-      retVal = true;
+  if ( textNode ) {
+    try {  
+      var tipText = tipElement.getAttribute("tooltiptext");
+      if ( tipText != "" ) {
+        textNode.setAttribute('value', tipText);
+        retVal = true;
+      }
     }
+    catch (e) { }
   }
   
   return retVal;
