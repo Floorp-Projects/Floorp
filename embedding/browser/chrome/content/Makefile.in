@@ -29,6 +29,7 @@ CHROME_DIR	= packages/embedding
 CHROME_CONTENT_DIR = browser/content
 
 CHROME_CONTENT 	= \
+		simple-shell.xul \
 		mini-nav.xul \
 		mini-nav.js \
 		$(NULL)
