@@ -189,7 +189,7 @@ namespace ICG {
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
         JSType *findType(const StringAtom& typeName);
-        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret);
+        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
         ICodeModule *genFunction(FunctionStmtNode *f);
     
     public:
