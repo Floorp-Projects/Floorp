@@ -47,6 +47,10 @@ public:
 
   virtual void SetBackgroundLoad(PRBool aBgload);
 
+  virtual int GetOwnerId();
+
+  virtual void SetOwnerId(int aOwnderId);
+
 private:
   nsIURL *mURL;
   ilINetReader *mReader;
@@ -159,6 +163,17 @@ ImageURLImpl::GetExpires()
 
 void 
 ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
+{
+}
+
+int
+ImageURLImpl::GetOwnerId()
+{
+    return 0;
+}
+
+void
+ImageURLImpl::SetOwnerId(int aOwnerId)
 {
 }
 
