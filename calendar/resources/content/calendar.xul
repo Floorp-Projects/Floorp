@@ -128,7 +128,7 @@
    <menuitem label="&calendar.context.weekview;" oncommand="gCalendarWindow.switchToWeekView()"/>
    <menuitem label="&calendar.context.monthview;" oncommand="gCalendarWindow.switchToMonthView()"/>
    <menuseparator/>
-   <menuitem label="&file.mail.event;" observes="send_event_command" oncommand="sendEvent();"/>
+   <menuitem label="&event.mail.event;" observes="send_event_command" oncommand="sendEvent();"/>
    <menuseparator/>
    <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
    <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
