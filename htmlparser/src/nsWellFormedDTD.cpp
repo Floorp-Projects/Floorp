@@ -659,13 +659,13 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
   if (error) {
     char* temp;          
     cerr << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
-    delete [] temp;
+    Recycle(temp);
     cerr << "Line Number: " << error->lineNumber << ", ";
     cerr << "Col Number: " << error->colNumber << ", ";
     cerr << "Description: " << (temp = error->description.ToNewCString()) << "\n";
-    delete [] temp;
+    Recycle(temp);
     cerr << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
-    delete [] temp;
+    Recycle(temp);
   }
   result=(mSink)? mSink->NotifyError(errTok->GetError()):NS_OK;
   return result;
