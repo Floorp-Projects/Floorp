@@ -1244,7 +1244,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   *_retval = nsnull;
   
   // TODO: DON'T ACCEPT NULL PARENT AFTER WIDGET IS FIXED
-  if (parent|| !(htmlFilter || imgFilter))
+  if (/*parent||*/ !(htmlFilter || imgFilter))
     return NS_ERROR_NOT_INITIALIZED;
 
 
