@@ -64,7 +64,6 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // needed for NS_TRY_SAFE_CALL_*
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIPluginStreamListener2IID, NS_IPLUGINSTREAMLISTENER2_IID);
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -72,8 +71,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 ///////////////////////////////////////////////////////////////////////////////
 // ns4xPluginStreamListener Methods
 
-NS_IMPL_ISUPPORTS2(ns4xPluginStreamListener, nsIPluginStreamListener, 
-                                             nsIPluginStreamListener2);
+NS_IMPL_ISUPPORTS1(ns4xPluginStreamListener, nsIPluginStreamListener);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +87,7 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
   mInst = (ns4xPluginInstance*) inst;
   mStreamBuffer=nsnull;
   mPosition = 0;
-  mCurrentStreamOffset = -1;
+  mStreamBufferSize = 0;
   // Initialize the 4.x interface structure
   memset(&mNPStream, 0, sizeof(mNPStream));
 
@@ -122,6 +120,14 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
   // notification callback. Return network error as fallback reason because for other
   // cases, notify should have already been called for other reasons elsewhere.
   CallURLNotify(NPRES_NETWORK_ERR);
+
+  // lets get rid of the buffer
+  if (mStreamBuffer)
+  {
+    PR_Free(mStreamBuffer);
+    mStreamBuffer=nsnull;
+  }
+
 
   NS_IF_RELEASE(inst);
 }
@@ -161,13 +167,6 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 
     if(error == NPERR_NO_ERROR)
       rv = NS_OK;
-  }
-
-  // lets get rid of the buffer if we made one globally
-  if (mStreamBuffer)
-  {
-    PR_Free(mStreamBuffer);
-    mStreamBuffer=nsnull;
   }
 
   mStreamCleanedUp = PR_TRUE;
@@ -286,296 +285,178 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
       return NS_ERROR_FAILURE;
   }
 
-  // create buffer for stream here because we know the size
-  mStreamBuffer = (char*) PR_Malloc((PRUint32)MAX_PLUGIN_NECKO_BUFFER);
-  if (!mStreamBuffer)
-  {
-    NS_ASSERTION(PR_FALSE,"failed to create 4.x plugin stream buffer or size MAX_PLUGIN_NECKO_BUFFER");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   mStreamStarted = PR_TRUE;
   return NS_OK;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
+  nsresult rv = NS_ERROR_FAILURE;
   if (!mInst || !mInst->IsStarted())
-    return NS_ERROR_FAILURE;
+    return rv;
 
   const NPPluginFuncs *callbacks = nsnull;
-  NPP npp;
-
   mInst->GetCallbacks(&callbacks);
+  // check out if plugin implements NPP_Write call
+  if(!callbacks || !callbacks->write || !length)
+    return rv; // it'll cancel necko transaction 
+  
+  if (!mStreamBuffer)
+  {
+    // to optimize the mem usage & performance we have to allocate mStreamBuffer here
+    // in first ODA when length of data available in input stream is known.
+    // mStreamBuffer will be freed in DTOR.
+    // we also have to remember the size of that buff
+    // to make safe consecutive Read() calls form input stream into our buff.
+    if (length >= MAX_PLUGIN_NECKO_BUFFER) {
+        // ">" is rare case for decoded stream, but lets eat it all
+        mStreamBufferSize = length;    
+    } else {
+      PRUint32 contentLength;
+      pluginInfo->GetLength(&contentLength);
+      if (contentLength < MAX_PLUGIN_NECKO_BUFFER) {
+        // this is most common case for contentLength < 16k
+        mStreamBufferSize = length < contentLength ? contentLength:length; 
+      } else {
+        mStreamBufferSize = MAX_PLUGIN_NECKO_BUFFER;
+      }
+    }
+    mStreamBuffer = (char*) PR_Malloc(mStreamBufferSize);
+    if (!mStreamBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  // prepare NPP_ calls params
+  NPP npp;    
   mInst->GetNPP(&npp);
-
-  if(!callbacks)
-    return NS_ERROR_FAILURE;
-
-  PRInt32   numtowrite = 0;
-  PRInt32   amountRead = 0;
-  PRInt32   writeCount = 0;
-  PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
-  PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
-
   pluginInfo->GetURL(&mNPStream.url);
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
 
-  if (callbacks->write == nsnull || length == 0)
-    return NS_OK; // XXX ?
+  PRInt32 streamOffset;
+  pluginInfo->GetStreamOffset(&streamOffset);
+  mPosition = streamOffset;
+  streamOffset += length; 
+  // Set new stream offset for the next ODA call
+  // regardless of how following NPP_Write call will behave
+  // we pretend to consume all data from the input stream.
+  // It's possible that current steam position will be overwritten
+  // from NPP_RangeRequest call made from NPP_Write, so
+  // we cannot call SetStreamOffset after NPP_Write.
+  // Note: there is a special case when data flow
+  // should be temporarily stopped if NPP_WriteReady returns 0 (bug #89270)
+  pluginInfo->SetStreamOffset(streamOffset);
 
-  if (nsnull == mStreamBuffer)
-  {
-    // create the buffer here because we failed in OnStartBinding
-    // XXX why don't we always get an OnStartBinding? This will protect us.
-    mStreamBuffer = (char*) PR_Malloc(length);
-    if (!mStreamBuffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-    createdHere = PR_TRUE;
+  PRUint32 bytesToRead = mStreamBufferSize;
+  if (length < mStreamBufferSize) {
+    // do not read more that supplier wants us to read
+    bytesToRead = length;
   }
 
-  if (length > MAX_PLUGIN_NECKO_BUFFER)  // what if Necko gives us a lot of data?
+  do 
   {
-    leftToRead = length - MAX_PLUGIN_NECKO_BUFFER; // break it up
-    length     = MAX_PLUGIN_NECKO_BUFFER;
-  }
-  nsresult rv = input->Read(mStreamBuffer, length, (PRUint32*)&amountRead);
-  if (NS_FAILED(rv))
-    goto error;
+    PRInt32 amountRead = 0;
+    rv = input->Read(mStreamBuffer, bytesToRead, (PRUint32*)&amountRead);
+    if (amountRead == 0 || NS_FAILED(rv)) {
+      NS_WARNING("input->Read() returns no data, it's almost impossible to get here");
+      break;
+    }
 
-  // amountRead tells us how many bytes were put in the buffer
-  // WriteReady returns to us how many bytes the plugin is 
-  // ready to handle  - we have to keep calling WriteReady and
-  // Write until the buffer is empty
-  while (amountRead > 0)
-  {
-    if (callbacks->writeready != NULL)
-    {
-      PRLibrary* lib = nsnull;
-      lib = mInst->fLibrary;
+    // this loop in general case will end on length <= 0, without extra input->Read() call
+    length -= amountRead;
+    
+    char *ptrStreamBuffer = mStreamBuffer; // tmp ptr
 
-      NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
-                                                                   npp,
-                                                                   &mNPStream), lib);
-
-      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-      ("NPP WriteReady called: this=%p, npp=%p, return(towrite)=%d, url=%s\n",
-      this, npp, numtowrite, mNPStream.url));
-
-      // if WriteReady returned 0, the plugin is not ready to handle 
-      // the data, return FAILURE for now
-      if (numtowrite <= 0) {
-        NS_ASSERTION(numtowrite,"WriteReady returned Zero");
-        rv = NS_ERROR_FAILURE;
-        goto error;
+    // it is possible plugin's NPP_Write() returns 0 byte consumed
+    // we use zeroBytesWriteCount to count situation like this
+    // and break the loop
+    PRInt32 zeroBytesWriteCount = 0;
+    
+    // amountRead tells us how many bytes were put in the buffer
+    // WriteReady returns to us how many bytes the plugin is 
+    // ready to handle  - we have to keep calling WriteReady and
+    // Write until amountRead > 0
+    for(;;) 
+    { // it breaks on (amountRead <= 0) or on error
+      PRInt32   numtowrite;
+      if (callbacks->writeready)
+      {
+        NS_TRY_SAFE_CALL_RETURN(numtowrite, 
+          CallNPP_WriteReadyProc(callbacks->writeready, npp, &mNPStream),
+          mInst->fLibrary);
+       
+        NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
+          ("NPP WriteReady called: this=%p, npp=%p, return(towrite)=%d, url=%s\n",
+          this, npp, numtowrite, mNPStream.url));
+        
+        // if WriteReady returned 0, the plugin is not ready to handle 
+        // the data, return FAILURE for now
+        if (numtowrite <= 0) {
+          NS_ASSERTION(numtowrite,"WriteReady returned Zero");
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
+        if (numtowrite > amountRead)
+          numtowrite = amountRead;
       }
-
-      if (numtowrite > amountRead)
+      else
+      {
+        // if WriteReady is not supported by the plugin, 
+        // just write the whole buffer
         numtowrite = amountRead;
-    }
-    else 
-    {
-      // if WriteReady is not supported by the plugin, 
-      // just write the whole buffer
-      numtowrite = length;
-    }
-
-    if (numtowrite > 0)
-    {
-      NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
-                                                            npp,
-                                                            &mNPStream, 
-                                                            mPosition,
-                                                            numtowrite,
-                                                            (void *)mStreamBuffer), mInst->fLibrary);
-
-      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d,  url=%s\n",
-      this, npp, mPosition, numtowrite, (char *)mStreamBuffer, writeCount, mNPStream.url));
-
-      if (writeCount < 0) {
-        rv = NS_ERROR_FAILURE;
-        goto error;
       }
-
-      amountRead -= writeCount;
-      mPosition += writeCount;
-      if (amountRead > 0)
-        memmove(mStreamBuffer,mStreamBuffer+writeCount,amountRead); 
-    }
-  }
-
-  rv = NS_OK;
-
-error:
-  if (PR_TRUE == createdHere) // cleanup buffer if we made it locally
-  {
-    PR_Free(mStreamBuffer);
-    mStreamBuffer=nsnull;
-  }
-
-  if (leftToRead > 0)  // if we have more to read in this pass, do it recursively
-  {
-    OnDataAvailable(pluginInfo, input, leftToRead);
-  }
+      
+      PRInt32   writeCount = 0; // bytes consumed by plugin instance
+      
+      NS_TRY_SAFE_CALL_RETURN(writeCount, 
+        CallNPP_WriteProc(callbacks->write, npp, &mNPStream, mPosition, numtowrite, (void *)ptrStreamBuffer),
+        mInst->fLibrary);
+      
+      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
+        ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d,  url=%s\n",
+        this, npp, mPosition, numtowrite, (char *)ptrStreamBuffer, writeCount, mNPStream.url));
+      
+      if (writeCount > 0)
+      {
+        mPosition += writeCount;
+        amountRead -= writeCount;
+        if (amountRead <= 0)
+          break; // in common case we'll break for(;;) loop here 
+        
+        zeroBytesWriteCount = 0;
+        if (writeCount % sizeof(long)) {
+          // memmove will take care  about alignment 
+          memmove(ptrStreamBuffer,ptrStreamBuffer+writeCount,amountRead);
+        } else {
+          // if aligned we can use ptrStreamBuffer += to eliminate memmove()
+          ptrStreamBuffer += writeCount;
+        }
+      } 
+      else if (writeCount == 0)
+      {
+        // if NPP_Write() returns writeCount == 0 lets say 3 times in a raw
+        // lets consider this as end of ODA call (plugin isn't hungry, or broken) without an error.
+        if (++zeroBytesWriteCount == 3)
+        {
+          length = 0; // break do{}while
+          rv = NS_OK;
+          break;
+        }
+      } 
+      else
+      {
+        length = 0; // break do{}while
+        rv = NS_ERROR_FAILURE;
+        break;
+      }  
+    } // end of for(;;)
+  } while ((PRInt32)(length) > 0);
 
   return rv;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP
-ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
-                                          nsIInputStream* input,
-                                          PRUint32 sourceOffset, 
-                                          PRUint32 length)
-{
-  if (!mInst || !mInst->IsStarted())
-    return NS_ERROR_FAILURE;
-
-  const NPPluginFuncs *callbacks = nsnull;
-  NPP npp;
-
-  mInst->GetCallbacks(&callbacks);
-  mInst->GetNPP(&npp);
-
-  if(!callbacks)
-    return NS_ERROR_FAILURE;
-
-  PRInt32   numtowrite = 0;
-  PRInt32   amountRead = 0;
-  PRInt32   writeCount = 0;
-  PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
-  PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
-
-  // if we are getting a range request, reset mPosition.  
-  if (sourceOffset != mCurrentStreamOffset ||
-      mCurrentStreamOffset == -1 ) 
-  {
-    mPosition = 0;
-    mCurrentStreamOffset = sourceOffset;
-  }
-
-  pluginInfo->GetURL(&mNPStream.url);
-  pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
-
-  if (callbacks->write == nsnull || length == 0)
-    return NS_OK; // XXX ?
-
-  if (nsnull == mStreamBuffer)
-  {
-    // create the buffer here because we failed in OnStartBinding
-    // XXX why don't we always get an OnStartBinding? This will protect us.
-    mStreamBuffer = (char*) PR_Malloc(length);
-    if (!mStreamBuffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-    createdHere = PR_TRUE;
-  }
-
-  if (length > MAX_PLUGIN_NECKO_BUFFER)  // what if Necko gives us a lot of data?
-  {
-    leftToRead = length - MAX_PLUGIN_NECKO_BUFFER; // break it up
-    length     = MAX_PLUGIN_NECKO_BUFFER;
-  }
-  nsresult rv = input->Read(mStreamBuffer, length, (PRUint32*)&amountRead);
-  if (NS_FAILED(rv))
-    goto error;
-
-  // amountRead tells us how many bytes were put in the buffer
-  // WriteReady returns to us how many bytes the plugin is 
-  // ready to handle  - we have to keep calling WriteReady and
-  // Write until the buffer is empty
-  while (amountRead > 0)
-  {
-    if (callbacks->writeready != NULL)
-    {
-      PRLibrary* lib = nsnull;
-      lib = mInst->fLibrary;
-
-      NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
-                                                                   npp,
-                                                                   &mNPStream), lib);
-
-      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-      ("NPP WriteReady called: this=%p, npp=%p, return(towrite)=%d, url=%s\n",
-      this, npp, numtowrite, mNPStream.url));
-
-      // if WriteReady returned 0, the plugin is not ready to handle 
-      // the data, return FAILURE for now
-      if (numtowrite <= 0) {
-        rv = NS_ERROR_FAILURE;
-        goto error;
-      }
-
-      if (numtowrite > amountRead)
-        numtowrite = amountRead;
-    }
-    else 
-    {
-      // if WriteReady is not supported by the plugin, 
-      // just write the whole buffer
-      numtowrite = length;
-    }
-
-    if (numtowrite > 0)
-    {
-#if 0 // useful for debugging problems with byte range buffers
-      printf(">  %d - %d \n", sourceOffset + writeCount + mPosition, numtowrite);
-      nsCString x; 
-      x.Append("d:\\parts\\");
-      x.AppendInt(sourceOffset);
-
-      PRFileDesc* fd;
-      fd = PR_Open(x, PR_CREATE_FILE |PR_SYNC| PR_APPEND | PR_RDWR, 777);
-      PR_Write(fd, mStreamBuffer, numtowrite);
-      PR_Close(fd);
-#endif
-
-      NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
-                                                            npp,
-                                                            &mNPStream, 
-                                                            sourceOffset + writeCount + mPosition,
-                                                            numtowrite,
-                                                            (void *)mStreamBuffer), mInst->fLibrary);
-
-     NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-     ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d, url=%s\n",
-     this, npp, mPosition, numtowrite, (char *)mStreamBuffer, writeCount, mNPStream.url));
-
-      if (writeCount < 0) {
-        rv = NS_ERROR_FAILURE;
-        goto error;
-      }
-
-      if (sourceOffset == 0)
-          mPosition += numtowrite;
-
-      amountRead -= numtowrite;
-    }
-  }
-
-  rv = NS_OK;
-
-error:
-  if (PR_TRUE == createdHere) // cleanup buffer if we made it locally
-  {
-    PR_Free(mStreamBuffer);
-    mStreamBuffer=nsnull;
-  }
-
-  if (leftToRead > 0)  // if we have more to read in this pass, do it recursively
-  {
-    OnDataAvailable(pluginInfo, input, sourceOffset, leftToRead);
-  }
-
-  return rv;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
@@ -798,7 +679,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   if (fCallbacks->destroy == NULL)
     return NS_ERROR_FAILURE; // XXX right error?
 
-  NPSavedData *sdata;
+  NPSavedData *sdata = 0;
 
   // clean up open streams
   for(nsInstanceStream *is = mStreams; is != nsnull;) {

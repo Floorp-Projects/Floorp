@@ -72,6 +72,12 @@ public:
 
 	NS_IMETHOD
 	RequestRead(nsByteRange* rangeList) = 0;
+
+        NS_IMETHOD
+        GetStreamOffset(PRInt32 *aStreamOffset) = 0;
+
+        NS_IMETHOD
+        SetStreamOffset(PRInt32 aStreamOffset) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
