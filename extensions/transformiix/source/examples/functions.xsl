@@ -1153,6 +1153,37 @@
          </FONT>
       </TD>
    </TR>
+
+   <!-- new test -->
+
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="generate-id(..)"/&gt;<BR />
+         <B>Note:</B>
+         <UL>
+            <FONT COLOR="red">
+               This function will generate a unique id for the parent of the current node.
+               I don't what this will be exactly, until run-time
+            </FONT>
+         </UL>
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">id{some-number}</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="generate-id(..)"/>
+         </FONT>
+      </TD>
+   </TR>
+
    </TABLE>
 
   </BODY>
