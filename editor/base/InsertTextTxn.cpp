@@ -20,6 +20,8 @@
 #include "editor.h"
 #include "nsIDOMCharacterData.h"
 
+static NS_DEFINE_IID(kInsertTextTxnIID, INSERTTEXTTXN_IID);
+
 // note that aEditor is not refcounted
 InsertTextTxn::InsertTextTxn(nsEditor *aEditor,
                              nsIDOMCharacterData *aElement,
@@ -52,6 +54,23 @@ nsresult InsertTextTxn::GetIsTransient(PRBool *aIsTransient)
 
 nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
+  // set out param default value
+  if (nsnull!=aDidMerge)
+    *aDidMerge=PR_FALSE;
+
+  if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
+  {
+    // if aTransaction isa InsertTextTxn, absorb it
+    nsCOMPtr<InsertTextTxn> otherTxn;
+    nsresult result = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
+    if (NS_SUCCEEDED(result) && (otherTxn))
+    {
+      nsString otherData;
+      otherTxn->GetData(otherData);
+      mStringToInsert += otherData;
+    }
+    *aDidMerge = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -77,5 +96,29 @@ nsresult InsertTextTxn::GetRedoString(nsString **aString)
     **aString="Insert Text: ";
     **aString += mStringToInsert;
   }
+  return NS_OK;
+}
+
+/* ============= nsISupports implementation ====================== */
+
+nsresult
+InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kInsertTextTxnIID)) {
+    *aInstancePtr = (void*)(InsertTextTxn*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return (EditTxn::QueryInterface(aIID, aInstancePtr));
+}
+
+/* ============ protected methods ================== */
+
+nsresult InsertTextTxn::GetData(nsString& aResult)
+{
+  aResult = mStringToInsert;
   return NS_OK;
 }

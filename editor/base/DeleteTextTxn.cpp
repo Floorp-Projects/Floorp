@@ -55,6 +55,8 @@ nsresult DeleteTextTxn::GetIsTransient(PRBool *aIsTransient)
 
 nsresult DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
+  if (nsnull!=aDidMerge)
+    *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 

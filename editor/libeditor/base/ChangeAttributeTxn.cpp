@@ -94,6 +94,8 @@ nsresult ChangeAttributeTxn::GetIsTransient(PRBool *aIsTransient)
 
 nsresult ChangeAttributeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
+  if (nsnull!=aDidMerge)
+    *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 

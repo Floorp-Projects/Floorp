@@ -21,27 +21,31 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
-      editor.cpp			\
-      editorInterfaces.cpp    \
-      nsEditFactory.cpp \
-      EditTxn.cpp \
+      editor.cpp			       \
+      editorInterfaces.cpp   \
+      nsEditFactory.cpp      \
+      EditTxn.cpp            \
       ChangeAttributeTxn.cpp \
-      InsertTextTxn.cpp \
-      DeleteTextTxn.cpp \
-      CreateElementTxn.cpp \
-      SplitElementTxn.cpp \
+      InsertTextTxn.cpp      \
+      DeleteTextTxn.cpp      \
+      CreateElementTxn.cpp   \
+      DeleteElementTxn.cpp   \
+      DeleteRangeTxn.cpp     \
+      SplitElementTxn.cpp    \
 	$(NULL)
 
 CPP_OBJS =					\
-	.\$(OBJDIR)\editor.obj		\
-	.\$(OBJDIR)\nsEditFactory.obj		\
+	.\$(OBJDIR)\editor.obj		          \
+	.\$(OBJDIR)\nsEditFactory.obj		    \
 	.\$(OBJDIR)\editorInterfaces.obj		\
-  .\$(OBJDIR)\EditTxn.obj \
-  .\$(OBJDIR)\ChangeAttributeTxn.obj \
-  .\$(OBJDIR)\InsertTextTxn.obj \
-  .\$(OBJDIR)\DeleteTextTxn.obj \
-  .\$(OBJDIR)\CreateElementTxn.obj \
-  .\$(OBJDIR)\SplitElementTxn.obj \
+  .\$(OBJDIR)\EditTxn.obj             \
+  .\$(OBJDIR)\ChangeAttributeTxn.obj  \
+  .\$(OBJDIR)\InsertTextTxn.obj       \
+  .\$(OBJDIR)\DeleteTextTxn.obj       \
+  .\$(OBJDIR)\CreateElementTxn.obj    \
+  .\$(OBJDIR)\DeleteElementTxn.obj    \
+  .\$(OBJDIR)\DeleteRangeTxn.obj      \
+  .\$(OBJDIR)\SplitElementTxn.obj     \
 	$(NULL)
 
 MODULE=editor 
