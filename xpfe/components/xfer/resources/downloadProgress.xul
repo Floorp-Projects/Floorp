@@ -2,7 +2,19 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <?xml-stylesheet href="downloadProgress.css" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+<!ENTITY downloadWindow.title "Saving file"> 
+<!ENTITY  location "Location"> 
+<!ENTITY  saving "Saving"> 
+<!ENTITY  status "Status:"> 
+<!ENTITY  dialogStatus.label "( nn.nK of mm.mK bytes )"> 
+<!ENTITY  timeLeft "Time Left:">
+<!ENTITY dialogTimeLeft.label "?"> 
+<!ENTITY dialogCancel.label "Cancel"> 
+
+]
+> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -166,7 +178,7 @@
 
         <html:tr>
             <html:td align="right">
-                Location:
+                &location;
             </html:td>
             <html:td align="left">
                 <html:input id="dialog.location" readonly="" style="background-color:lightgray;width:300px;"/>
@@ -175,7 +187,7 @@
     
         <html:tr>
             <html:td align="right">
-                Saving:
+                &saving;
             </html:td>
             <html:td align="left">
                 <html:input id="dialog.fileName" readonly="" value="" style="background-color:lightgray;width:300px;"/>
@@ -184,22 +196,22 @@
 
         <html:tr>
             <html:td align="right">
-                Status:
+                &status;
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.status">
-                    ( nn.nK of mm.mK bytes )
+                    &dialogStatus.label;
                 </html:span>
             </html:td>
         </html:tr>
 
         <html:tr>
             <html:td align="right">
-                Time Left:
+                &timeLeft;
             </html:td>
             <html:td align="left">
                 <html:span id="dialog.timeLeft">
-                    ?
+                    &dialogTimeLeft.label;
                 </html:span>
             </html:td>
         </html:tr>
@@ -216,7 +228,7 @@
 
         <html:tr>
             <html:td align="center" colspan="2">
-                <html:button id="dialog.cancel" onclick="stop()">Cancel</html:button>
+                <html:button id="dialog.cancel" onclick="stop()">&dialogCancel.label;</html:button>
             </html:td>
         </html:tr>
 
