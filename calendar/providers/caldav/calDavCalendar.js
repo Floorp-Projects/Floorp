@@ -151,7 +151,7 @@ calDavCalendar.prototype = {
 
         // XXX how are we REALLY supposed to figure this out?
         var itemUri = this.mUri.clone();
-        itemUri.spec = itemUri.spec + "calendar/" + aItem.id + ".ics";
+        itemUri.spec = itemUri.spec + aItem.id + ".ics";
         var eventResource = new WebDavResource(itemUri);
 
         var listener = new WebDavListener();
@@ -186,8 +186,6 @@ calDavCalendar.prototype = {
                                                newItem.id,
                                                newItem);
         }
-
-        dump("aItem.icalString = " + aItem.icalString + "\n");
 
         var newItem = aItem.clone();
         newItem.parent = this;
@@ -227,7 +225,7 @@ calDavCalendar.prototype = {
             dump("using locationURI: " + eventUri.spec + "\n");
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
-            eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
+            eventUri.spec = eventUri.spec + aItem.id + ".ics";
         }
 
         var eventResource = new WebDavResource(eventUri);
@@ -274,6 +272,7 @@ calDavCalendar.prototype = {
         // XXX use if-exists stuff here
         // XXX use etag as generation
         // do WebDAV put
+        dump("modifyItem: aItem.icalString = " + aItem.icalString + "\n");
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
             .getService(Components.interfaces.nsIWebDAVService);
         webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
@@ -298,7 +297,7 @@ calDavCalendar.prototype = {
 
         // XXX how are we REALLY supposed to figure this out?
         var eventUri = this.mUri.clone();
-        eventUri.spec = eventUri.spec + "calendar/" + aItem.id + ".ics";
+        eventUri.spec = eventUri.spec + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
@@ -430,7 +429,7 @@ calDavCalendar.prototype = {
 
                 // cause returned data to be parsed into the event item
                 // XXX try-catch
-                dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
+                //dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
                 item.icalString = 
                     responseElement..C::["calendar-query-result"]; 
 
@@ -442,8 +441,8 @@ calDavCalendar.prototype = {
                 if(aOccurrences) {
                     iid = calIItemOccurrence;
                     if (item.recurrenceInfo) {
-                        dump ("ITEM has recurrence: " + item + " (" + item.title + ")\n");
-                        dump ("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
+                        //dump ("ITEM has recurrence: " + item + " (" + item.title + ")\n");
+                        //dump ("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
                         items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
                     } else {
                         item = makeOccurrence(item, item.startDate, item.endDate);
@@ -506,7 +505,6 @@ calDavCalendar.prototype = {
         // construct the resource we want to search against
         // XXX adding "calendar/" to the uri is wrong
         var calendarDirUri = this.mUri.clone();
-        calendarDirUri.spec = calendarDirUri.spec + "calendar/";
         var calendarDirResource = new WebDavResource(calendarDirUri);
 
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -540,7 +538,7 @@ calDavCalendar.prototype = {
                        </calendar-query>;
 
         // if a time range has been specified, do the appropriate restriction.
-        // XXX no way to express "end of time" in caldav in either direction
+        // XXX express "end of time" in caldav by leaving off "start", "end"
         if (aRangeStart && aRangeStart.valid && 
             aRangeEnd && aRangeEnd.valid) {
 
