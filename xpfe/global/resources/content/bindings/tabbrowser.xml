@@ -80,8 +80,7 @@
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
                     tooltiptextnew="&newTabButton.tooltip;"
-                    onclick="if (event.button != 1 || event.target.localName != 'tab') return; 
-                             this.parentNode.parentNode.parentNode.removeTab(event.target);"
+                    onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
@@ -436,6 +435,20 @@
 
             // Focus our new content area.
             setTimeout("window._content.focus()", 0);
+          ]]>
+        </body>
+      </method>
+
+      <method name="onTabClick">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            if (event.button != 1 || event.target.localName != 'tab' ||
+                this.mPrefs.getBoolPref("middlemouse.contentLoadURL"))
+              return; 
+
+            this.removeTab(event.target);
+            event.stopPropagation();
           ]]>
         </body>
       </method>
