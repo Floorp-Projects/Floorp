@@ -82,6 +82,19 @@ xptiInterfaceInfo::~xptiInterfaceInfo()
         delete mInterface;        
 }        
 
+void 
+xptiInterfaceInfo::Invalidate()
+{ 
+    if(IsValid())
+    {
+        // The order of operations here is important!
+        xptiTypelib typelib = GetTypelibRecord();
+        if(HasInterfaceRecord())
+            delete mInterface;        
+        mTypelib = typelib;
+        mName = nsnull;
+    }
+}
 
 PRBool 
 xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet /* = nsnull */)
