@@ -2091,8 +2091,6 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             } else {
                 if( m_type == ICAL_VEVENT_COMPONENT && !icaltime_is_null_time( m_start->m_datetime ) ) {
                     m_end->m_datetime = m_start->m_datetime;
-                    m_end->SetHour( 23 );
-                    m_end->SetMinute( 59 );
                 } else {
                     m_end->m_datetime = icaltime_null_time();
                 }
@@ -2426,9 +2424,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //Create enddate if does not exist
     if( icaltime_is_null_time( m_end->m_datetime ) && !icaltime_is_null_time( m_start->m_datetime ) ) {
-        //Set to the same as start date 23:59
+        //Set to the same as start date
         m_end->m_datetime = m_start->m_datetime;
-        m_end->SetHour( 23 ); m_end->SetMinute( 59 );
     }
 
     //recurunits
