@@ -39,7 +39,7 @@
 #include <MacWindows.h>
 
 #include "nsCommandLineServiceMac.h"
-#include "nsComPtr.h"
+#include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
