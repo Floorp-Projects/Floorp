@@ -36,6 +36,8 @@ inFileSearch::inFileSearch()
 
 inFileSearch::~inFileSearch()
 {
+  delete mSearchLoop;
+  delete mTextCriteria;
 }
 
 NS_IMPL_ISUPPORTS2(inFileSearch, inISearchProcess, inIFileSearch);
@@ -70,7 +72,6 @@ inFileSearch::SetHoldResults(PRBool aHoldResults)
   mHoldResults = aHoldResults;
   return NS_OK;
 }
-
 
 NS_IMETHODIMP 
 inFileSearch::SearchSync()
@@ -240,7 +241,7 @@ inFileSearch::SetFilenameCriteria(const PRUnichar* aFilenameCriteria)
 
   // second pass: split up at commas and insert into array
   idx = 0;
-  PRUint32 lastComma = -1;
+  PRInt32 lastComma = -1;
   PRUnichar* buf = new PRUnichar[257];
   c = aFilenameCriteria;
   PRBool going = PR_TRUE;

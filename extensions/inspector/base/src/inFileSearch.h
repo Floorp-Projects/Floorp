@@ -40,13 +40,13 @@ public:
   NS_DECL_INIFILESEARCH
 
   inFileSearch();
-  ~inFileSearch();
+  virtual ~inFileSearch();
 
 protected:
   // inISearchProcess related
   PRBool mIsActive;
   PRInt32 mResultCount;
-  nsIFile* mLastResult;
+  nsCOMPtr<nsIFile> mLastResult;
   nsCOMPtr<nsISupportsArray> mResults;
   PRBool mHoldResults;
   nsAutoString* mBasePath;

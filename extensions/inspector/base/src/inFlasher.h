@@ -39,8 +39,11 @@
 class inFlasher : public inIFlasher
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_INIFLASHER
+
   inFlasher();
-  ~inFlasher();
+  virtual ~inFlasher();
 
 protected:
   nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
@@ -50,11 +53,6 @@ protected:
                            PRUint32 aThickness, float aP2T, nsIRenderingContext* aRenderContext);
   NS_IMETHOD DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
                         PRBool aDir, PRBool aBounds, float aP2T, nsIRenderingContext* aRenderContext);
-  
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_INIFLASHER
 };
 
 #endif // __inFlasher_h__

@@ -34,6 +34,9 @@ var viewer;
 
 //////////// global constants ////////////////////
 
+const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
+const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard;
+
 //////////////////////////////////////////////////
 
 window.addEventListener("load", JSObjectViewer_initialize, false);
@@ -107,8 +110,10 @@ JSObjectViewer.prototype =
     var sels = this.mTree.selectedItems;
     if (sels.length > 0) {
       var val = sels[0].__JSValue__;
-      if (val)
-        ClipboardUtils.writeString(val.toString());
+      if (val) {
+        var helper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
+        helper.copyStringToClipboard(val, kGlobalClipboard);    
+      }
     }
   },
   

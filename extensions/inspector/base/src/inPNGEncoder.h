@@ -35,7 +35,7 @@ public:
   NS_DECL_INIPNGENCODER
 
   inPNGEncoder();
-  ~inPNGEncoder();
+  virtual ~inPNGEncoder();
 
 protected:
   

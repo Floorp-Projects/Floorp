@@ -37,7 +37,7 @@ public:
 	NS_DECL_INIDEEPTREEWALKER
 
   inDeepTreeWalker();
-  ~inDeepTreeWalker();
+  virtual ~inDeepTreeWalker();
 
 protected:
   void PushNode(nsIDOMNode* aNode);

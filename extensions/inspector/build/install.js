@@ -22,7 +22,7 @@
 
 var gVersion = "0.5";
 
-var err = initInstall("Document Inspector", "inspector", gVersion);
+var err = initInstall("DOM Inspector", "inspector", gVersion);
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");

@@ -165,7 +165,6 @@ NS_IMETHODIMP inBitmapChannel::AsyncOpen(nsIStreamListener *aListener, nsISuppor
   wbuf[1] = h;
   buffer = (PRUint8*)(wbuf+2);
   
-  PRUint32 p = 0;
   for (PRUint32 i = 0; i < w*h; ++i) {
     buffer[0] = bitmapBuf[0];
     buffer[1] = bitmapBuf[1];

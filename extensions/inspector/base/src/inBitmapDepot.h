@@ -33,7 +33,7 @@ public:
   NS_DECL_INIBITMAPDEPOT
 
   inBitmapDepot();
-  ~inBitmapDepot();
+  virtual ~inBitmapDepot();
 
 protected: 
   nsSupportsHashtable mHash;

@@ -39,8 +39,12 @@
 class inCSSValueSearch : public inICSSValueSearch
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_INISEARCHPROCESS
+  NS_DECL_INICSSVALUESEARCH
+
   inCSSValueSearch();
-  ~inCSSValueSearch();
+  virtual ~inCSSValueSearch();
 
 protected:
   PRBool mIsActive;
@@ -64,13 +68,6 @@ protected:
   nsresult SearchStyleRule(nsIStyleRule* aStyleRule);
   nsresult SearchStyleValue(nsICSSDeclaration* aDec, nsCSSProperty aProp);
   nsresult EqualizeURL(nsAutoString* aURL);
-
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_INISEARCHPROCESS
-
-  NS_DECL_INICSSVALUESEARCH
 };
 
 #endif // __inCSSValueSearch_h__

@@ -54,15 +54,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_INIDOMRDFRESOURCE
 
-public:
   inDOMRDFResource();
   virtual ~inDOMRDFResource();
 
   static NS_METHOD Create(nsISupports* aOuter, const nsIID& iid, void **result);
   
-private:
+protected:
   nsCOMPtr<nsISupports> mObject;
-
 };
 
 #endif // __inDOMRDFResource_h__

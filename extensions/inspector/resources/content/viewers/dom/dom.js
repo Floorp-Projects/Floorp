@@ -459,8 +459,9 @@ DOMViewer.prototype =
     var walker = this.createDOMWalker(aEl);
     var line = [];
     var parent = aEl;
+    var index = null;
     while (parent) {
-      var index = this.getRowIndexFromNode(parent);
+      index = this.getRowIndexFromNode(parent);
       line.push(parent);
       if (index < 0) { 
         // row for this node hasn't been created yet
@@ -475,7 +476,7 @@ DOMViewer.prototype =
     // we've got all the ancestors, now open them 
     // one-by-one from the top on down
     for (var i = line.length-1; i >= 0; i--) {
-      var index = this.getRowIndexFromNode(line[i]);
+      index = this.getRowIndexFromNode(line[i]);
       if (index < 0) return false; // can't find row, so stop trying to descend
       if ((aExpand || i > 0) && !view.isContainerOpen(index))
         view.toggleOpenState(index);
@@ -588,7 +589,7 @@ DOMViewer.prototype =
 
   get flasher()
   {
-    if (!this.mFlasher) {
+    if (!("mFlasher" in this)) {
       this.mFlasher = new Flasher(PrefUtils.getPref("inspector.blink.border-color"), 
                                   PrefUtils.getPref("inspector.blink.border-width"), 
                                   PrefUtils.getPref("inspector.blink.duration"), 
