@@ -202,7 +202,7 @@ print_IID(struct nsID *iid, FILE *file)
 {
     char iid_buf[UUID_LENGTH];
 
-    xpidl_sprint_iid(id, iid_buf);
+    xpidl_sprint_iid(iid, iid_buf);
     fprintf(file, "%s\n", iid_buf);
 }
 #endif
