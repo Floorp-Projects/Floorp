@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.3 2003/01/14 20:26:35 glen.beasley%sun.com Exp $"
+#ident	"$Id: Makefile.com,v 1.4 2004/01/16 00:50:21 wchang0222%aol.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -20,8 +20,8 @@ FILES = $(DATAFILES) pkginfo prototype
 
 PACKAGE = $(shell basename `pwd`)
 
-PRODUCT_VERSION = 3.3
-PRODUCT_NAME = JSS_3_3_RTM
+PRODUCT_VERSION = 3.5
+PRODUCT_NAME = JSS_3_5_RTM
 
 LN = /usr/bin/ln
 
