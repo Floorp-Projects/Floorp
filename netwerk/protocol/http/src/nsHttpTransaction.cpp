@@ -87,7 +87,7 @@ LogHeaders(const char *lines)
             char *p = PL_strchr(PL_strchr(buf.get(), ' ')+1, ' ');
             while (*++p) *p = '*';
         }
-        LOG2(("  %s\n", buf.get()));
+        LOG3(("  %s\n", buf.get()));
         lines = p + 2;
     }
 }
@@ -180,10 +180,10 @@ nsHttpTransaction::Init(PRUint8 caps,
     requestHead->Flatten(mReqHeaderBuf, pruneProxyHeaders);
 
 #if defined(PR_LOGGING)
-    if (LOG2_ENABLED()) {
-        LOG2(("http request [\n"));
+    if (LOG3_ENABLED()) {
+        LOG3(("http request [\n"));
         LogHeaders(mReqHeaderBuf.get());
-        LOG2(("]\n"));
+        LOG3(("]\n"));
     }
 #endif
 
@@ -680,12 +680,12 @@ nsHttpTransaction::HandleContentStart()
 
     if (mResponseHead) {
 #if defined(PR_LOGGING)
-        if (LOG2_ENABLED()) {
-            LOG2(("http response [\n"));
+        if (LOG3_ENABLED()) {
+            LOG3(("http response [\n"));
             nsCAutoString headers;
             mResponseHead->Flatten(headers, PR_FALSE);
             LogHeaders(headers.get());
-            LOG2(("]\n"));
+            LOG3(("]\n"));
         }
 #endif
         // notify the connection, give it a chance to cause a reset.
