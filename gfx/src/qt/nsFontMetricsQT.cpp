@@ -1715,7 +1715,7 @@ nsFontQTNormal::GetBoundingMetrics(const PRUnichar *aString,
 
     aBoundingMetrics.width = mFontMetrics->width(qStr);
     aBoundingMetrics.leftBearing
-      = mFontMetrics->leftBearing(buf)[0]);
+      = mFontMetrics->leftBearing(buf[0]);
     aBoundingMetrics.rightBearing
       = mFontMetrics->rightBearing(buf[aLength - 1]);
     aBoundingMetrics.ascent = mFontMetrics->ascent();
@@ -1928,7 +1928,7 @@ nsFontQTUserDefined::GetBoundingMetrics(const PRUnichar *aString,
     QString qStr(buf,aLength);
 
     aBoundingMetrics.width = mFontMetrics->width(qStr);
-    aBoundingMetrics.leftBearing = mFontMetrics->leftBearing(buf)[0]);
+    aBoundingMetrics.leftBearing = mFontMetrics->leftBearing(buf[0]);
     aBoundingMetrics.rightBearing = mFontMetrics->rightBearing(buf[aLength - 1]);
     aBoundingMetrics.ascent = mFontMetrics->ascent();
     aBoundingMetrics.descent = mFontMetrics->descent();
