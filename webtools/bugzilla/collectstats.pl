@@ -74,7 +74,8 @@ foreach (@myproducts) {
     }
 }
 my $tend = time;
-print "Total time taken " . delta_time($tstart, $tend) . "\n";
+# Uncomment the following line for performance testing.
+#print "Total time taken " . delta_time($tstart, $tend) . "\n";
 
 &calculate_dupes();
 
