@@ -1007,6 +1007,7 @@ sub MakeResourceAliases()
 	my($chrome_dir) = "$dist_dir" . "Chrome:";
 	my($resource_dir) = "$dist_dir" . "res:";
 	my($samples_dir) = "$resource_dir" . "samples:";
+	my($defaults_dir) = "$dist_dir" . "Defaults:";
 
 	#//
 	#// Make aliases of resource files
@@ -1034,6 +1035,7 @@ sub MakeResourceAliases()
 	
 	my($profile_dir) = "$resource_dir" . "profile:";
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
+	BuildFolderResourceAliases(":mozilla:profile:defaults:",							"$defaults_dir");
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";

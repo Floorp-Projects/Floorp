@@ -26,6 +26,7 @@ DIRS= \
     src       \
     resources \
     pref-migrator \
+    defaults \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
