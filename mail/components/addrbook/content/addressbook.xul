@@ -132,6 +132,11 @@
   <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
   <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+#ifdef MOZ_WIDGET_GTK2
+  <key id="key_searchAddresses" key="&searchAddressesCmd.key;" oncommand="onAdvancedAbSearch();" modifiers="shift"/>
+#else
+  <key id="key_searchAddresses" key="&searchAddressesCmd.key;" oncommand="onAdvancedAbSearch();" modifiers="accel, shift"/>
+#endif
   <key id="key_properties" command="cmd_properties" key="&propertiesCmd.key;" modifiers="accel"/>
 
   <!-- Tab/F6 Keys -->
@@ -273,7 +278,7 @@
 
             <menuseparator/>
             <menuitem label="&searchAddressesCmd.label;" accesskey="&searchAddressesCmd.accesskey;"
-                          id="menu_search_addresses" oncommand="onAdvancedAbSearch();"/>
+                          id="menu_search_addresses" key="key_searchAddresses"  oncommand="onAdvancedAbSearch();"/>
 
             <menuseparator/>
             <!-- LOCALIZATION NOTE: set "hideSwapFnLnUI" to false in .dtd to enable the UI -->

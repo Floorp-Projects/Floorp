@@ -65,6 +65,7 @@
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">
 <!ENTITY selectAllCmd.label                             "Select All">
 <!ENTITY selectAllCmd.key                               "A">
+<!ENTITY searchAddressesCmd.key                         "f">
 <!ENTITY selectAllCmd.accesskey                         "a">
 <!ENTITY swapFirstNameLastNameCmd.label                 "Swap First/Last Name">
 <!ENTITY swapFirstNameLastNameCmd.accesskey             "w">
