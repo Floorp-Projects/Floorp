@@ -35,7 +35,8 @@
   onload="onLoadPageInfo()"
   align="stretch" class="dialog"
   screenX="10" screenY="10"
-  persist="screenX screenY">
+  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
+  persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
