@@ -18,6 +18,7 @@ class nsISelfScrollingFrame : public nsISupports {
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)=0;
 
   NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide) = 0;
+  NS_IMETHOD ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages) = 0;
 };
 
 #endif /* _nsISelfScrollingFrame_h */

@@ -95,6 +95,7 @@ public:
   // nsISelfScrollingFrame interface
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
   NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide);
+  NS_IMETHOD ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages);
 
   // nsITreeFrame.h
   NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);

@@ -203,6 +203,25 @@ nsTreeOuterFrame::FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
   return NS_OK;
 }
 
+nsITreeFrame*
+nsTreeOuterFrame::FindTreeFrame()
+{
+  nsITreeFrame* treeframe;
+  nsIFrame* child;
+  FirstChild(nsnull, &child);
+
+  while (child != nsnull) {
+    if (NS_OK == child->QueryInterface(NS_GET_IID(nsITreeFrame),
+                                       (void**)&treeframe)) {
+      return treeframe;
+    }
+    child->GetNextSibling(&child);
+  }
+
+  return nsnull;
+}
+
+
 NS_IMETHODIMP
 nsTreeOuterFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 {
@@ -210,16 +229,35 @@ nsTreeOuterFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
 
-  nsISelfScrollingFrame* sf;
-  nsIFrame* child;
-  FirstChild(NULL, &child);
+  nsITreeFrame* treeframe = FindTreeFrame();
+  nsISelfScrollingFrame* ssf;
 
-  while (child != nsnull) {
-    if (NS_OK == child->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
-                                       (void**)&sf)) {
-      return sf->ScrollByLines(aPresContext, lines);
+  if (treeframe) {
+    if (NS_OK == treeframe->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
+                                           (void**)&ssf)) {
+      return ssf->ScrollByLines(aPresContext, lines);
     }
-    child->GetNextSibling(&child);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsTreeOuterFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
+{
+  printf("nsTreeOuterFrame::ScrollByPages\n");
+  // What we need to do is call the corresponding method on our TreeFrame
+  // In most cases the TreeFrame will be the only child, but just to make
+  // sure we'll check for the right interface
+
+  nsITreeFrame* treeframe = FindTreeFrame();
+  nsISelfScrollingFrame* ssf;
+
+  if (treeframe) {
+    if (NS_OK == treeframe->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
+                                           (void**)&ssf)) {
+      return ssf->ScrollByPages(aPresContext, pages);
+    }
   }
 
   return NS_ERROR_FAILURE;
@@ -232,16 +270,14 @@ nsTreeOuterFrame::CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide)
   // In most cases the TreeFrame will be the only child, but just to make
   // sure we'll check for the right interface
 
-  nsISelfScrollingFrame* sf;
-  nsIFrame* child;
-  FirstChild(NULL, &child);
+  nsITreeFrame* treeframe = FindTreeFrame();
+  nsISelfScrollingFrame* ssf;
 
-  while (child != nsnull) {
-    if (NS_OK == child->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
-                                       (void**)&sf)) {
-      return sf->CollapseScrollbar(aPresContext, aHide);
+  if (treeframe) {
+    if (NS_OK == treeframe->QueryInterface(NS_GET_IID(nsISelfScrollingFrame),
+                                       (void**)&ssf)) {
+      return ssf->CollapseScrollbar(aPresContext, aHide);
     }
-    child->GetNextSibling(&child);
   }
 
   return NS_ERROR_FAILURE;
