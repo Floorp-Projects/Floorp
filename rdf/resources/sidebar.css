@@ -89,9 +89,13 @@ treeitem[container="true"] > treerow > treecell > titledbutton
 
 treeitem > treerow > treecell > titledbutton
 {
+ height: 16px;
+ width: 16px;
+ color: inherit;
  border: none;
+ padding: 0px;
+ margin: 0px;
  font: inherit;
- list-style-image: url("resource:/res/rdf/document.gif");
 }
 
 /*
