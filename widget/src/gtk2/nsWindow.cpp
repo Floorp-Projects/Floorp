@@ -80,6 +80,10 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint x, gint y,
                                         gint *retx, gint *rety);
 
+static PRBool is_context_menu_key            (const nsKeyEvent& inKeyEvent);
+static void   key_event_to_context_menu_event(const nsKeyEvent* inKeyEvent,
+                                              nsMouseEvent* outCMEvent);
+
 /* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
                                            GdkEventExpose *event);
@@ -1548,8 +1552,16 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         }
     }
 
-    // send the key press event
-    DispatchEvent(&event, status);
+    // before we dispatch a key, check if it's the context menu key.
+    // If so, send a context menu key event instead.
+    if (is_context_menu_key(event)) {
+        nsMouseEvent contextMenuEvent;
+        key_event_to_context_menu_event(&event, &contextMenuEvent);
+        DispatchEvent(&contextMenuEvent, status);
+    }
+    else
+        // send the key press event
+        DispatchEvent(&event, status);
     return TRUE;
 }
 
@@ -3359,6 +3371,26 @@ get_inner_gdk_window (GdkWindow *aWindow,
     *retx = x;
     *rety = y;
     return aWindow;
+}
+
+inline PRBool
+is_context_menu_key(const nsKeyEvent& aKeyEvent)
+{
+    return (aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.isShift &&
+            !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt);
+}
+
+void
+key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
+                                nsMouseEvent* aCMEvent)
+{
+    memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
+    aCMEvent->eventStructType = NS_MOUSE_EVENT;
+    aCMEvent->message = NS_CONTEXTMENU_KEY;
+    aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
+    aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
+    aCMEvent->clickCount = 0;
+    aCMEvent->acceptActivation = PR_FALSE;
 }
 
 #ifdef ACCESSIBILITY
