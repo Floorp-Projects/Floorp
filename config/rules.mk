@@ -413,11 +413,19 @@ ifdef IS_COMPONENT
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
+ifdef NEED_BASE_DLL_NAME_ALSO
+	@cd $(DIST)/lib/components; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
+	@cd $(DIST)/bin/components; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
+endif
 else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
+endif
+ifdef NEED_BASE_DLL_NAME_ALSO
+	@cd $(DIST)/lib; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
+	@cd $(DIST)/bin; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
 endif
 endif
 endif

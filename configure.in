@@ -329,6 +329,7 @@ OBJ_SUFFIX=o
 LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
+NEED_BASE_DLL_NAME_ALSO=
 
 OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -610,6 +611,11 @@ case "$target" in
     MKSHLIB_FORCE_ALL='--whole-archive'
     MKSHLIB_UNFORCE_ALL='--no-whole-archive'
     case $OS_TEST in
+	alpha)
+		dnl NetBSD/alpha can't find a shared lib
+		dnl (.so.1.0) unless there's a .so as well.
+		NEED_BASE_DLL_NAME_ALSO=1
+		;;
 	*86)
 		MKSHLIB='$(LD) $(DSO_LDOPTS)'
 		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -779,6 +785,9 @@ dnl the qsort routine under solaris is faulty
     ;;
 
 esac
+
+dnl See above (netbsd)
+AC_SUBST(NEED_BASE_DLL_NAME_ALSO)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
