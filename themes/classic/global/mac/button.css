@@ -26,7 +26,78 @@
       padding             : 0px;
       color				  : #000000;
     }
+  
+/*** class=plain-extended ***/
+/****************************/
+/* This class has all the functionality of the plain class, but extends it so that it includes
+ * rollover styles, borders, paddings, and margins.  Essentially, this class consists of the
+ * old, pre-Macified button styles, similar to the ones on Windows.  You can use this class if
+ * you want to make standard square buttons that do not look like Mac Buttons with rounded corners, etc.
+ ****************************/
+ 
+  button.plain-extended
+    {
+      behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
+      border-left         : 1px solid #DDDDDD;
+      border-top          : 1px solid #DDDDDD;
+      border-right        : 1px solid #000000;
+      border-bottom       : 1px solid #000000;
+      margin              : 1px 5px 2px 5px;
+      background-color    : #DDDDDD;
+      min-width           : 8em;
+      font                : geneva 10px;
+      color               : #000000;
+      -moz-border-radius  : 3px 2px 2px 3px;
+    }
+  
+  button.plain-extended > .button-box-1  
+    {
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
+    }
+
+  button.plain-extended > .button-box-1 > .button-box-2
+    {
+	  border              : 1px solid #DDDDDD;	
+    }
     
+  button.plain-extended:hover:active 
+    {
+      border              : 1px solid #000000;
+    }
+
+  button.plain-extended:hover:active > .button-box-1
+    {
+      border              : 1px solid #9D9D9D;
+    }
+
+  button.plain-extended:hover:active > .button-box-1 > .button-box-2
+    {
+      border              : 1px solid #DDDDDD;
+    }
+
+  button.plain-extended:hover:active > .button-box-1 > .button-box-2 > .button-box-text
+    {
+      padding             : 1px 2px 0px 3px;
+      color				  : #000000;
+    }
+  
+  button.plain-extended[disabled="true"],
+  button.plain-extended[disabled="true"]:hover:active 
+    {
+      color               : #999999;
+    }
+        
+  button.plain-extended > .button-box-1 > .button-box-2 > .button-box-text,
+  button.plain-extended > .button-box-1 > .button-box-2 > .button-box-text
+    {
+      padding             : 0px 3px 1px 2px;
+    }
+
+  
+  
 /** Mac Buttons **/
 /** All .button-* styles also apply to dialog exit buttons (OK/Cancel) (as seen in XBL binding) **/
 

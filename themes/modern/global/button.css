@@ -148,6 +148,18 @@
       padding             : 0px;
     }
     
+/*** class = "plain-extended" ***/
+/********************************/
+/* This is a dummy class that is specified in the several XUL files for the sake of the
+ * Macintosh Classic Skin.  This class has essentially the same behavior and styles as
+ * the above <button> and accompanying styles, but is useful in the Mac Classic skin.  This is because <button>
+ * styles have been completely rewritten to produce Macintosh buttons with bevels, rounded corners,
+ * etc.  Plain-extended thereby functions to produce square buttons with all the same hover and active
+ * effects that modern <button>'s do.
+ ********************************/
+
+button.plain-extended {}
+
 
 /** 
  * utility class for buttons with associated popup
