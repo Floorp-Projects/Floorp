@@ -38,10 +38,11 @@ function onLoad()
 
   for (i=0; i<crls.Count(); i++) {
     crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
-    var name = crlEntry.name;
+    var org = crlEntry.org;
+    var orgUnit = crlEntry.orgUnit;
     var lastUpdate = crlEntry.lastUpdate;
     var nextUpdate = crlEntry.nextUpdate;
-    AddItem("crlList", [name, lastUpdate, nextUpdate], "crltree_", i);
+    AddItem("crlList", [org, orgUnit, lastUpdate, nextUpdate], "crltree_", i);
   }
 }
 

@@ -78,7 +78,7 @@
 <!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
 
 <!-- Strings for the SSL client auth ask dialog -->
-<!ENTITY clientAuthAsk.title "User Indentification Request">
+<!ENTITY clientAuthAsk.title "User Identification Request">
 <!ENTITY clientAuthAsk.message1 "This site has requested that you identify yourself with a security certificate:">
 <!ENTITY clientAuthAsk.message2 "Choose a certificate to present as identification:">
 

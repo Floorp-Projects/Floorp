@@ -27,7 +27,12 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/pref-validation.dtd">
+<!DOCTYPE window [
+    <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/pref-validation.dtd">
+    %prefValDTD;
+    <!ENTITY % prefCertMgrDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
+    %prefCertMgrDTD;
+]>
 
 <window id="crlviewer"
         class="dialog"
@@ -46,7 +51,9 @@
   <tree id="crltree" class="inset" style="height: 10em;"
    multiple="false" onclick="EnableCrlActions()" flex="1">
     <treecolgroup>
-      <treecol flex="4" width="0"/>
+      <treecol flex="3" width="0"/>
+      <splitter class="tree-splitter"/>
+      <treecol flex="5" width="0"/>
       <splitter class="tree-splitter"/>
       <treecol flex="2" width="0"/>
       <splitter class="tree-splitter"/>
@@ -55,7 +62,10 @@
     <treehead>
       <treerow>
         <treecell class="treecell-header sortDirectionIndicator"
-                          label="&validation.crlname.label;"
+                          label="&certmgr.certdetail.o;"
+                          />
+        <treecell class="treecell-header sortDirectionIndicator"
+                          label="&certmgr.certdetail.ou;"
                           />
         <treecell class="treecell-header
                           sortDirectionIndicator"

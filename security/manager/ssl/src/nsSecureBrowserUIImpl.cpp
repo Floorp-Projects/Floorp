@@ -330,6 +330,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     if (!nsCRT::strncmp((const char*) temp, "file:", 5) ||
         !nsCRT::strncmp((const char*) temp, "jar:", 4) ||
+        !nsCRT::strncmp((const char*) temp, "javascript:", 10) ||
         !nsCRT::strcmp((const char*) temp, "about:layout-dummy-request")) {
       return NS_OK;
     }
