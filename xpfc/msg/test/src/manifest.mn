@@ -7,10 +7,21 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../../..
 
-#DIRS_EXPORT = public inc 
-#DIRS_LIBS = src 
-DIRS = test
+EXPORTS = \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	$(NULL)
+
+MODULE = trex
+
+CPPSRCS = \
+	nsMsgTest.cpp \
+	nsMsgTestFactory.cpp \
+	$(NULL)
+
+
+REQUIRES = xpcom raptor julian nls netlib pref js xpfc trex msgsdk
 

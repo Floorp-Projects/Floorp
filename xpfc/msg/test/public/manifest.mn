@@ -7,10 +7,16 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../..
-DEPTH  = ../..
+GDEPTH = ../../../..
+DEPTH = ../../../..
 
-#DIRS_EXPORT = public inc 
-#DIRS_LIBS = src 
-DIRS = test
+EXPORTS = \
+	nsIMsgTest.h \
+	$(NULL)
 
+PRIVATE_EXPORTS = \
+	$(NULL)
+
+MODULE = trex
+
+REQUIRES = raptor xpfc msgsdk
