@@ -50,6 +50,7 @@ REQUIRES	= raptor xpcom
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
