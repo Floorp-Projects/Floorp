@@ -807,7 +807,7 @@ function setupLdapAutocompleteSession()
             // set the LDAP protocol version correctly
             var protocolVersion;
             try { 
-                `protocolVersion = sPrefs.getCharPref(autocompleteDirectory + 
+                protocolVersion = sPrefs.getCharPref(autocompleteDirectory + 
                                                       ".protocolVersion");
             } catch (ex) {
                 // if we don't have this pref, no big deal
