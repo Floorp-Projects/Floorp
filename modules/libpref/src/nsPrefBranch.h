@@ -26,18 +26,21 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
+#include "nsISecurityPref.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 
 class nsPrefBranch : public nsIPrefBranch,
-                     public nsIPrefBranchInternal
+                     public nsIPrefBranchInternal,
+                     public nsISecurityPref
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFBRANCH
   NS_DECL_NSIPREFBRANCHINTERNAL
+  NS_DECL_NSISECURITYPREF
 
   nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch);
   virtual ~nsPrefBranch();
@@ -50,11 +53,11 @@ protected:
   nsresult QueryObserver(const char *aPrefName);
 
 private:
-  PRInt32                    mPrefRootLength;
-  nsCOMPtr<nsISupportsArray> mObservers;
-  nsCString                  mPrefRoot;
-  nsCStringArray             mObserverDomains;
-  PRBool                     mIsDefault;
+  PRInt32         mPrefRootLength;
+  nsAutoVoidArray *mObservers;
+  nsCString       mPrefRoot;
+  nsCStringArray  mObserverDomains;
+  PRBool          mIsDefault;
 
 };
 
