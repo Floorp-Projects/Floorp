@@ -44,6 +44,6 @@ interface nsIAddressBook : nsISupports {
     void printAddressbook();
     void setWebShellWindow(in nsIDOMWindow win);
 	void importAddressBook();
-    void convertLDIFtoMAB(in nsIFileSpec fileSpec);
+    void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating);
 };
 

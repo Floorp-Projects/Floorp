@@ -228,13 +228,13 @@ NS_IMETHODIMP nsAbDirectory::GetMailingList(nsIEnumerator **mailingList)
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const char *fileName)
+NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating)
 {
 	if (!dirName)
 		return NS_ERROR_NULL_POINTER;
 
 	DIR_Server * server = nsnull;
-	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, &server);
+	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, migrating, &server);
 
 	nsCOMPtr<nsIAbDirectory> newDir;
 	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);

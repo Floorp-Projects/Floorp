@@ -194,7 +194,7 @@ nsAbDirProperty::GetMailingList(nsIEnumerator **mailingList)
 { return NS_OK; }
 
 NS_IMETHODIMP
-nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileName)
+nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating)
 { return NS_OK; }
 
 NS_IMETHODIMP

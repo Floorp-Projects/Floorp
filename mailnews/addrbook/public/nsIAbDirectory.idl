@@ -49,7 +49,7 @@ interface nsIAbDirectory : nsISupports {
 	boolean hasCard(in nsIAbCard cards);
 	boolean hasDirectory(in nsIAbDirectory dir);
 	readonly attribute nsIEnumerator mailingList;
-	void createNewDirectory(in wstring dirName, in string fileName);
+	void createNewDirectory(in wstring dirName, in string fileName, in boolean migrating);
 	string getDirUri();
 
 };

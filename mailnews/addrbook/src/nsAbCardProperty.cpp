@@ -586,6 +586,7 @@ NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
 	nsresult rv = NS_OK;
 	if (mCardDatabase)
 		mCardDatabase = null_nsCOMPtr();
+	// this should not be hardcoded to abook.mab
 	rv = GetCardDatabase("abdirectory://abook.mab");
 	if (NS_SUCCEEDED(rv) && mCardDatabase)
 		rv = mCardDatabase->AddAnonymousAttributesFromCard(this);
@@ -597,6 +598,7 @@ NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesInDB()
 	nsresult rv = NS_OK;
 	if (mCardDatabase)
 		mCardDatabase = null_nsCOMPtr();
+	// this should not be hardcoded to abook.mab
 	rv = GetCardDatabase("abdirectory://abook.mab");
 	if (NS_SUCCEEDED(rv) && mCardDatabase)
 		rv = mCardDatabase->EditAnonymousAttributesFromCard(this);

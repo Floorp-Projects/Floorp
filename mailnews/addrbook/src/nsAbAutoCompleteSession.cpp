@@ -123,6 +123,7 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIRDFResource> resource;
+  // this should not be hardcoded to abook.mab
   rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
   

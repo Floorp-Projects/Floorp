@@ -352,6 +352,7 @@ protected:
 	char*			mDbUri;
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 	PRInt32	mFileType;
+	PRBool mMigrating;
 
     nsresult ParseTabFile();
     nsresult ParseLdifFile();
@@ -364,17 +365,18 @@ protected:
 	char * str_getline( char **next );
 
 public:
-    AddressBookParser(nsIFileSpec *fileSpec);
+    AddressBookParser(nsIFileSpec *fileSpec, PRBool migrating);
     ~AddressBookParser();
 
     nsresult ParseFile();
 };
 
-AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec)
+AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec, PRBool migrating)
 {
 	mFileSpec = fileSpec;
 	mDbUri = nsnull;
 	mFileType = UnknownFile;
+	mMigrating = migrating;
 }
 
 AddressBookParser::~AddressBookParser(void)
@@ -465,7 +467,7 @@ nsresult AddressBookParser::ParseFile()
 	if (parentUri)
 		PR_smprintf_free(parentUri);
 
-	parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName);
+	parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName, mMigrating);
 
 	if (leafName)
 		nsCRT::free(leafName);
@@ -1248,7 +1250,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	}
 }
 
-NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec)
+NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migrating)
 {
     nsresult rv;
     if (!fileSpec) return NS_ERROR_FAILURE;
@@ -1256,7 +1258,7 @@ NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec)
 	rv = fileSpec->OpenStreamForReading();
     if (NS_FAILED(rv)) return rv;
 
-	AddressBookParser abParser(fileSpec);
+	AddressBookParser abParser(fileSpec, migrating);
 
 	rv = abParser.ParseFile();
     if (NS_FAILED(rv)) return rv;
@@ -1278,7 +1280,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	if (NS_FAILED(rv))
 		return rv;
 
-    rv = ConvertLDIFtoMAB(fileSpec);
+    rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
     return rv;
 }
 

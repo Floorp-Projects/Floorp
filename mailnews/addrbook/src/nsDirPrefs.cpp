@@ -504,7 +504,7 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 	return NS_OK;
 }
 
-nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, DIR_Server** pServer)
+nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, PRBool migrating, DIR_Server** pServer)
 {
 	DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
 	DIR_InitServerWithType (server, PABDirectory);
@@ -525,7 +525,14 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, D
 			DIR_SetFileName(&server->fileName, kMainPersonalAddressBook);
 
 		dir_ServerList->AppendElement(server);
-		DIR_SavePrefsForOneServer(server); 
+		if (!migrating) {
+			DIR_SavePrefsForOneServer(server); 
+		}
+#ifdef DEBUG_sspitzer
+		else {
+			printf("don't set the prefs, they are already set since this ab was migrated\n");
+		}
+#endif
 		*pServer = server;
 		return NS_OK;
 	}

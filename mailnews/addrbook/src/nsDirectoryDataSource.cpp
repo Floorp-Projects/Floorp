@@ -630,7 +630,7 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 		PRUnichar *name;
 		literal->GetValue(&name);
 
-		rv = directory->CreateNewDirectory(name, nsnull);
+		rv = directory->CreateNewDirectory(name, nsnull, PR_FALSE /* migrating */);
 		nsAllocator::Free(name);
 	}
 	return rv;

@@ -1775,6 +1775,11 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"ab migration failed:  failed to get tmp dir");
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
+// HACK:  I need to rename pab.ldif -> abook.ldif, because a bunch of places are hacked to point to abook.mab, and when I import abook.ldif it will create abook.mab. this is a temporary hack and will go away soon.
+  if (!PL_strcmp((const char *)abName,"pab")) {
+	abName = "abook";
+  }
+
   nsCAutoString ldifFileName;
   ldifFileName = (const char *)abName;
   ldifFileName += TEMP_LDIF_FILE_SUFFIX;
@@ -1785,6 +1790,7 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   rv = Convert4xAddressBookToLDIF(ab4xFile, tmpLDIFFile);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert to ldif");
   if (NS_FAILED(rv)) return;
+
   
 #ifdef DEBUG_AB_MIGRATION
   printf("convert %s%s into %s%s\n",(const char *)abName,TEMP_LDIF_FILE_SUFFIX,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
@@ -1794,10 +1800,12 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab, "failed to get address book");
   if (NS_FAILED(rv) || !ab) return;
   
-  rv = ab->ConvertLDIFtoMAB(tmpLDIFFile);
+  rv = ab->ConvertLDIFtoMAB(tmpLDIFFile, PR_TRUE /* migrating */);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed: ldif to mab conversion failed\n");
   if (NS_FAILED(rv)) return;
-  
+ 
+  // this sucks.
+  // ConvertLDIFtoMAB should set this pref value for us. 
 #ifdef DEBUG_AB_MIGRATION
   printf("set %s the pref to %s%s\n",aPref,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
 #endif /* DEBUG_AB_MIGRATION */

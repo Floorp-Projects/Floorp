@@ -58,7 +58,7 @@ public:
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList);
-	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName);
+	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating);
 	NS_IMETHOD GetDirUri(char **uri);
 
 	// nsIAddrDBListener methods:

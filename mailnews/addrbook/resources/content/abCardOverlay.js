@@ -48,8 +48,10 @@ function OnLoadNewCard()
 	{
 		if ( editCard.selectedAB )
 			abPopup.value = editCard.selectedAB;
-		else
+		else {
+			// this should not be hardcoded.
 			abPopup.value = "abdirectory://abook.mab";
+		}
 	}
 	
 	GetCardValues(editCard.card, document);
