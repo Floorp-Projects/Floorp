@@ -1563,7 +1563,7 @@ RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
         rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(valueNode));
         if (NS_FAILED(rv)) return rv;
 
-        if (valueNode) {
+        if ((rv != NS_RDF_NO_VALUE) && (valueNode)) {
             rv = gXULUtils->GetTextForNode(valueNode, aResult);
             if (NS_FAILED(rv)) return rv;
         }
