@@ -2333,11 +2333,11 @@ sub BuildPluginsProjects()
 	    if (-e $linker_path) {
 	        print("CodeWarrior Java tools detected, building MRJPlugin.jar.\n");
 	        BuildProject($plugin_path . "MRJPlugin$C.xml", "MRJPlugin.jar");
+    	    MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
 	    }
 	    # Copy MRJPlugin, MRJPlugin.jar to appropriate plugins folder.
 	    my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
 	    MakeAlias($plugin_path . "MRJPlugin$C", $plugin_dist);
-	    MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
 	    if ($main::options{carbon}) {
             MakeAlias($plugin_path . "MRJPlugin.policy", $plugin_dist);
             MakeAlias($plugin_path . "MRJPlugin.properties", $plugin_dist);
