@@ -617,11 +617,11 @@ PRBool printNodeProcessor(STRequest* inRequest, STOptions* inOptions, STContext*
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
     fprintf(stderr, "%-25s [ %9s size", node->categoryName,
-            FormatNumber(node->run ? node->run->mFacts[inContext->mIndex].mSize:0));
+            FormatNumber(node->run ? node->run->mStats[inContext->mIndex].mSize:0));
     fprintf(stderr, ", %5.1f%%",
-            node->run ? ((double)node->run->mFacts[inContext->mIndex].mSize / root->run->mFacts[inContext->mIndex].mSize * 100):0);
+            node->run ? ((double)node->run->mStats[inContext->mIndex].mSize / root->run->mStats[inContext->mIndex].mSize * 100):0);
     fprintf(stderr, ", %7s allocations ]\n",
-            FormatNumber(node->run ? node->run->mFacts[inContext->mIndex].mCompositeCount:0));
+            FormatNumber(node->run ? node->run->mStats[inContext->mIndex].mCompositeCount:0));
     return PR_TRUE;
 }
 
@@ -656,14 +656,14 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
     {
         if (oc->mOptions->mOrderBy == ST_COUNT)
         {
-            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mCompositeCount : 0;
-            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mCompositeCount : 0;
+            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mStats[oc->mContext->mIndex].mCompositeCount : 0;
+            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mStats[oc->mContext->mIndex].mCompositeCount : 0;
         }
         else
         {
             /* Default is by size */
-            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mSize : 0;
-            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mFacts[oc->mContext->mIndex].mSize : 0;
+            a = (node1->runs[oc->mContext->mIndex]) ? node1->runs[oc->mContext->mIndex]->mStats[oc->mContext->mIndex].mSize : 0;
+            b = (node2->runs[oc->mContext->mIndex]) ? node2->runs[oc->mContext->mIndex]->mStats[oc->mContext->mIndex].mSize : 0;
         }
         if (a < b)
             retval = __LINE__;
@@ -873,24 +873,24 @@ PRBool displayCategoryNodeProcessor(STRequest* inRequest, STOptions* inOptions, 
         /*
         ** Byte size
         */
-        byteSize = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mSize;
+        byteSize = node->runs[inContext->mIndex]->mStats[inContext->mIndex].mSize;
 
         /*
         ** Composite count
         */
-        count = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mCompositeCount;
+        count = node->runs[inContext->mIndex]->mStats[inContext->mIndex].mCompositeCount;
 
         /*
         ** Heap operation cost
         **/
-        heapCost = node->runs[inContext->mIndex]->mFacts[inContext->mIndex].mHeapRuntimeCost;
+        heapCost = node->runs[inContext->mIndex]->mStats[inContext->mIndex].mHeapRuntimeCost;
 
         /*
         ** % of total size
         */
         if (root->runs[inContext->mIndex])
         {
-            percent = ((double) byteSize) / root->runs[inContext->mIndex]->mFacts[inContext->mIndex].mSize * 100;
+            percent = ((double) byteSize) / root->runs[inContext->mIndex]->mStats[inContext->mIndex].mSize * 100;
         }
     }
 
