@@ -590,21 +590,25 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
     rv = shell->GetDocument(getter_AddRefs(doc));
     if (NS_SUCCEEDED(rv) && doc) {
       result = doc->GetDisplaySelection();
+		  if (result) {
+				// check whether style allows selection
+		    const nsStyleUserInterface* userinterface;
+		    GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+		    if (userinterface) {
+					if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+							// if 'user-select' isn't set for this frame, use the parent's
+							if (mParent) {
+								mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+							}
+					}
+		      if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		        result = PR_FALSE;
+		        isOkToTurnOn = PR_FALSE;
+		      }
+		    }
+		  }
       if (isOkToTurnOn && !result) {
         doc->SetDisplaySelection(PR_TRUE);
-        result = PR_TRUE;
-      }
-    }
-  }
-  if (result)
-  {
-    // Prepare the block reflow engine
-    const nsStyleUserInterface* userinterface;
-    GetStyleData(eStyleStruct_UserInterface,
-                      (const nsStyleStruct*&) userinterface);
-    if (userinterface)
-    {
-      if (isOkToTurnOn && (userinterface->mUserSelect != NS_STYLE_USER_SELECT_NONE)) {
         result = PR_TRUE;
       }
     }
