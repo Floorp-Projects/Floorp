@@ -45,6 +45,14 @@ NS_DEF_PTR(nsIDOMComposeAppCore);
 NS_DEF_PTR(nsIDOMWindow);
 
 
+//
+// nsIDOMComposeAppCore property ids
+//
+enum nsIDOMComposeAppCore_slots {
+  NSIDOMCOMPOSEAPPCORE_USEHTML = -1,
+  NSIDOMCOMPOSEAPPCORE_WRAPCOLUMN = -2
+};
+
 /***********************************************************************/
 //
 // ComposeAppCore Properties Getter
@@ -61,7 +69,28 @@ GetComposeAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NSIDOMCOMPOSEAPPCORE_USEHTML:
+      {
+        PRBool prop;
+        if (NS_OK == a->GetUseHtml(&prop)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSIDOMCOMPOSEAPPCORE_WRAPCOLUMN:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetWrapColumn(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -89,7 +118,17 @@ SetComposeAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NSIDOMCOMPOSEAPPCORE_USEHTML:
+      {
+        PRBool prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+          return JS_FALSE;
+        }
+      
+        a->SetUseHtml(prop);
+        
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
@@ -418,6 +457,8 @@ JSClass ComposeAppCoreClass = {
 //
 static JSPropertySpec ComposeAppCoreProperties[] =
 {
+  {"useHtml",    NSIDOMCOMPOSEAPPCORE_USEHTML,    JSPROP_ENUMERATE},
+  {"wrapColumn",    NSIDOMCOMPOSEAPPCORE_WRAPCOLUMN,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

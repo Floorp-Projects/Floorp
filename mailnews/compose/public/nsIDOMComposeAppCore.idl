@@ -47,6 +47,9 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 			in nsAutoString subject, 
 			in nsAutoString msg);
     long SendMessage2();
+
+    attribute boolean useHtml;
+    readonly attribute long wrappingPosition;
 };
 
 /* hack to make MsgAppCore visible from AppCore */

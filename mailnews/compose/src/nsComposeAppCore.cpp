@@ -55,6 +55,7 @@
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
 #include "nsIMsgSend.h"
+#include "nsMsgCompPrefs.h"
 
 // jefft
 #include "nsIXULWindowCallbacks.h"
@@ -144,6 +145,9 @@ public:
                            nsAutoString& aSubject,
                            nsAutoString& aMsg);
 	NS_IMETHOD SendMessage2(PRInt32 * _retval);
+	NS_IMETHOD GetUseHtml(PRBool *_retval);
+	NS_IMETHOD SetUseHtml(PRBool aUseHtml);
+	NS_IMETHOD GetWrapColumn(PRInt32 * _retval);
 
 protected:
   
@@ -161,11 +165,14 @@ protected:
 	nsIWebShellWindow		*mWebShellWindow;
 	nsIDOMEditorAppCore     *mEditor;
 
-	nsIMsgCompFields *mMsgCompFields;
-	nsIMsgSend *mMsgSend;
+	nsIMsgCompFields 		*mMsgCompFields;
+	nsIMsgSend 				*mMsgSend;
 
-	nsAutoString mArgs;
+	nsAutoString 			mArgs;
 
+	PRBool					mUseHtml;
+	PRInt32					mWrapColumn;
+	
     // ****** Hack Alert ***** Hack Alert ***** Hack Alert *****
     void HackToGetBody(PRInt32 what);
 };
@@ -229,6 +236,8 @@ static nsresult setAttribute( nsIWebShell *shell,
 //
 nsComposeAppCore::nsComposeAppCore()
 {
+	nsMsgCompPrefs prefs;
+
 	NS_INIT_REFCNT();
 	mScriptObject		= nsnull;
 	mWebShell			= nsnull;
@@ -238,6 +247,8 @@ nsComposeAppCore::nsComposeAppCore()
 	mEditor				= nsnull;
 	mMsgCompFields		= nsnull;
 	mMsgSend			= nsnull;
+	mUseHtml			= prefs.GetUseHtml();
+	mWrapColumn			= prefs.GetWrapColumn();
 }
 
 nsComposeAppCore::~nsComposeAppCore()
@@ -858,18 +869,18 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
 		if (mMsgSend)
     {
         mMsgSend->SendMessage(mMsgCompFields, 
-            "",               // const char *smtp,
-						PR_FALSE,         // PRBool                            digest_p,
-						PR_FALSE,         // PRBool                            dont_deliver_p,
-						nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
-						TEXT_HTML,        // const char                        *attachment1_type,
-						nsAutoCString(aMsg),            // const char                        *attachment1_body,
-            PL_strlen(nsAutoCString(aMsg)), // PRUint32                          attachment1_body_length,
-						NULL,             // const struct nsMsgAttachmentData   *attachments,
-						NULL,             // const struct nsMsgAttachedFile     *preloaded_attachments,
-						NULL,             // nsMsgSendPart                     *relatedPart,
-						NULL);            // void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
-								              //                                         int status, const char *error_message))
+        			"",               				// const char *smtp,
+					PR_FALSE,         				// PRBool                            digest_p,
+					PR_FALSE,         				// PRBool                            dont_deliver_p,
+					nsMsgDeliverNow,   				// nsMsgDeliverMode                  mode,
+					mUseHtml?TEXT_HTML:TEXT_PLAIN,  // const char                        *attachment1_type,
+					nsAutoCString(aMsg),            // const char                        *attachment1_body,
+        			PL_strlen(nsAutoCString(aMsg)), // PRUint32                          attachment1_body_length,
+					NULL,             				// const struct nsMsgAttachmentData   *attachments,
+					NULL,             				// const struct nsMsgAttachedFile     *preloaded_attachments,
+					NULL,             				// nsMsgSendPart                     *relatedPart,
+					NULL);            				// void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
+								             			//                                         int status, const char *error_message))
     }
 	}
 	if (nsnull != mScriptContext) {
@@ -942,8 +953,11 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 
 				if (mEditor)
 				{
-					mEditor->GetContentsAsText(msgBody);
-					SendMsg(msgTo, msgCc, msgBcc, msgNewsgroup, msgSubject, msgBody);          
+					if (mUseHtml)
+						mEditor->GetContentsAsHTML(msgBody);
+					else
+						mEditor->GetContentsAsText(msgBody);
+					*_retval = SendMsg(msgTo, msgCc, msgBcc, msgNewsgroup, msgSubject, msgBody);          
 				}
 			}
 		}
@@ -951,7 +965,26 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 	
 	return res;
 }
-  
+
+NS_IMETHODIMP nsComposeAppCore::GetUseHtml(PRBool *_retVal)
+{
+	*_retVal = mUseHtml;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsComposeAppCore::SetUseHtml(PRBool aUseHtml)
+{
+	mUseHtml = aUseHtml;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsComposeAppCore::GetWrapColumn(PRInt32 *_retval)
+{
+	*_retval = mWrapColumn;
+	return NS_OK;
+}
+
+ 
 extern "C"
 nsresult
 NS_NewComposeAppCore(const nsIID &aIID, void **aResult)

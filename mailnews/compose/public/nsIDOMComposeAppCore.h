@@ -53,6 +53,14 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   /* long SendMessage2 (); */
   NS_IMETHOD SendMessage2(PRInt32 *_retval) = 0;
 
+  /* attribute bool useHtml; */
+  NS_IMETHOD GetUseHtml(PRBool *aUseHtml) = 0;
+  NS_IMETHOD SetUseHtml(PRBool aUseHtml) = 0;
+
+  /* readonly attribute long wrapColumn; */
+  NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn) = 0;
+
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMComposeAppCore *priv);
