@@ -44,6 +44,7 @@ bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 bin\xpcom_compat.dll
+bin\xpcom_core.dll
 
 [browser]
 ; [Base Browser Files]
