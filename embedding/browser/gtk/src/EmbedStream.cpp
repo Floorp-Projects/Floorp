@@ -271,6 +271,9 @@ EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
     // XXX writeCount may be less than nBytes!!  This is the wrong
     // way to synthesize ReadSegments.
     NS_ASSERTION(writeCount == nBytes, "data loss");
+
+    // errors returned from the writer end here!
+    rv = NS_OK;
   }
 
   nsMemory::Free(readBuf);

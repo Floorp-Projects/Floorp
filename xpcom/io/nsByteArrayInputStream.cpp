@@ -83,7 +83,6 @@ nsByteArrayInputStream::Read (char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
 NS_IMETHODIMP 
 nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * aClosure, PRUint32 aCount, PRUint32 *aNumRead)
 {
-    nsresult rv = NS_OK;
     if (aNumRead == NULL)
         return NS_ERROR_NULL_POINTER;
 
@@ -97,14 +96,16 @@ nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * aClosure, 
         PRUint32 readCount = PR_MIN(aCount, (_nbytes - _pos));
         if (_buffer == NULL)
             *aNumRead = 0;
-        else 
-            rv = writer (this, aClosure, &_buffer[_pos], 
-                         _pos, readCount, aNumRead);
-        
-        _pos += *aNumRead;
+        else {
+            nsresult rv = writer (this, aClosure, &_buffer[_pos], 
+                                  _pos, readCount, aNumRead);
+            if (NS_SUCCEEDED(rv))
+                _pos += *aNumRead;
+        }
     }
 
-    return rv;
+    // do not propogate errors returned from writer!
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
