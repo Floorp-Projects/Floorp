@@ -596,9 +596,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mXULWindow->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
@@ -629,9 +627,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   else
     title.Assign(mWindowTitleModifier); // Title will just be plain "Mozilla"
 
-  // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
-  // return mXULWindow->SetTitle(title.get());
-  return mXULWindow->nsXULWindow::SetTitle(title.get());
+  return mXULWindow->SetTitle(title.get());
 }
 
 //*****************************************************************************
