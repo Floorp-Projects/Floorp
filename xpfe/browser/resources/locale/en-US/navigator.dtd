@@ -133,6 +133,12 @@
 <!ENTITY dcharIso8Cmd.label ".Hebrew (ISO-8859-8)">
 <!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
+<!ENTITY applyTheme.label				"Apply Theme"> 
+<!ENTITY applyTheme.accesskey				"A"> 
+<!ENTITY themePreferencesCmd.label				"Theme Preferences..."> 
+<!ENTITY themePreferencesCmd.accesskey				"T"> 
+<!ENTITY getNewThemesCmd.label                             "Get New Themes">
+<!ENTITY getNewThemesCmd.accesskey                             "G">
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "s">
 <!ENTITY findOnCmd.label "Find in This Page...">
@@ -338,7 +344,7 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
-<!ENTITY  buildId.label               "Build ID: 2000073008">
+<!ENTITY  buildId.label               "Build ID: 2000082508">
 
 <!-- Context Menu -->                 
 <!ENTITY blockImageCmd.label          "Block Image from Loading">
