@@ -16,3 +16,5 @@
 LIBRARY mimect-vcard.dll
 
 EXPORTS	
+  MIME_GetContentType
+  MIME_CreateContentTypeHandlerClass
