@@ -44,28 +44,28 @@ Contributors:
 
     <dialogheader id="headertitle"/>
 
-    <groupbox id="offline.titlebox"  hidable="true" hidefor="movemail,pop3">
+    <groupbox id="offline.titlebox" hidefor="movemail,pop3">
       <caption label="&offlineGroupTitle.label;"/>
 
-    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3">&offlineDesc.label;</description>
+    <description hidefor="movemail,pop3">&offlineDesc.label;</description>
 
-    <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp" 
+    <checkbox hidefor="movemail,pop3,nntp" 
               id="offline.downloadBodiesOnGetNewMail" wsm_persist="true" 
               label="&makeInboxMsgsAvailable.label;" 
               accesskey="&makeInboxMsgsAvailable.accesskey;"/>
 
-    <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp" 
+    <checkbox hidefor="movemail,pop3,nntp" 
               id="offline.newFolder" label="&offlineNewFolder.label;" 
               accesskey="&offlineNewFolder.accesskey;"/>
 
-    <separator class="thin" hidable="true" hidefor="movemail,pop3,nntp"/>
+    <separator class="thin" hidefor="movemail,pop3,nntp"/>
 
-    <hbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp" align="right">
+    <hbox hidefor="movemail,pop3,nntp" align="right">
         <button label="&offlineSelectImap.label;" accesskey="&offlineSelect.accesskey;"
                 oncommand="onClickSelect()" id="selectImapFoldersButton" class="selectForOfflineUseButton"/>
     </hbox>
 
-    <hbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" align="right">
+    <hbox hidefor="movemail,pop3,imap" align="right">
         <button label="&offlineSelectNntp.label;" accesskey="&offlineSelect.accesskey;"
                 oncommand="onClickSelect()" id="selectNewsgroupsButton" class="selectForOfflineUseButton"/>
     </hbox>
@@ -75,12 +75,12 @@ Contributors:
     <groupbox id="diskspace.titlebox">
       <caption label="&diskspaceGroupTitle.label;"/>
 
-    <description iscontrolcontainer="true" hidable="true" hidefor="pop3,movemail">&doNotDownload.label;</description>
-    <description iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&doNotDownloadPop3Movemail.label;</description>
+    <description hidefor="pop3,movemail">&doNotDownload.label;</description>
+    <description hidefor="imap,nntp">&doNotDownloadPop3Movemail.label;</description>
     
     <hbox align="center" class="indent">
-        <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" 
-            wsm_persist="true" id="nntp.notDownloadRead" label="&nntpNotDownloadRead.label;" accesskey="&nntpNotDownloadRead.accesskey;"/>
+        <checkbox hidefor="movemail,pop3,imap" wsm_persist="true" id="nntp.notDownloadRead"
+                  label="&nntpNotDownloadRead.label;" accesskey="&nntpNotDownloadRead.accesskey;"/>
     </hbox>
 
     <hbox align="center" class="indent">
@@ -90,13 +90,13 @@ Contributors:
         <label value="&kb.label;"/>
     </hbox>
 
-    <hbox iscontrolcontainer="true" align="center" class="indent" hidable="true" hidefor="movemail,pop3,imap">
+    <hbox align="center" class="indent" hidefor="movemail,pop3,imap">
         <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;" oncommand="onCheckItem('bc_downloadMsg', 'nntp.downloadMsg');"/>
         <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="2" value="30" observes="bc_downloadMsg"/>
         <label value="&daysOld.label;"/>
     </hbox>
 
-    <vbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" align="start">  
+    <vbox hidefor="movemail,pop3,imap" align="start">  
     <separator/>
     <description class="desc">&nntpCleanup.label;</description>
 

@@ -71,8 +71,8 @@ var setDefaultButton;
 // preference types set different attributes.  We get the value
 // in the same way as the function getAccountValue() determines it.
 function updateElementWithKeys(account, element, type) {
-    switch (type)
-    {
+  switch (type)
+  {
     case "identity":
       element["identitykey"] = account.defaultIdentity.key;
       break;
@@ -89,7 +89,30 @@ function updateElementWithKeys(account, element, type) {
     default:
 //      dump("unknown element type! "+type+"\n");
       break;
+  }
+}
+
+function hideShowControls(serverType) {
+  var controls = document.getElementsByAttribute("hidefor", "*");
+  for (var controlNo = 0; controlNo < controls.length; controlNo++) {
+    var control = controls[controlNo];
+    var hideFor = control.getAttribute("hidefor");
+
+    // Hide unsupported server types using hideFor="servertype1,servertype2".
+    var hide = false;
+    var hideForTokens = hideFor.split(",");
+    for (var tokenNo = 0; tokenNo < hideForTokens.length; tokenNo++) {
+      if (hideForTokens[tokenNo] == serverType) {
+        hide = true;
+        break;
+      }
     }
+
+    if (hide)
+      control.setAttribute("hidden", "true");
+    else
+      control.removeAttribute("hidden");
+  }
 }
 
 // called when the whole document loads
@@ -248,14 +271,14 @@ function onAccept() {
   }
 
   onSave();
-    // hack hack - save the prefs file NOW in case we crash
-    try {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefService);
-        prefs.savePrefFile(null);
-    } catch (ex) {
-        dump("Error saving prefs!\n");
-    }
+  // hack hack - save the prefs file NOW in case we crash
+  try {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefService);
+    prefs.savePrefFile(null);
+  } catch (ex) {
+    dump("Error saving prefs!\n");
+  }
   return true;
 }
 
@@ -295,25 +318,25 @@ function checkUserServerChanges(showAlert) {
     if (pageElements[i].id) {
       var vals = pageElements[i].id.split(".");
       if (vals.length >= 2) {
-          var type = vals[0];
-          var slot = vals[1];
-          //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
-    
-          // if this type doesn't exist (just removed) then return.
-          if (!(type in accountValues) || !accountValues[type]) return true;
-    
-          if (slot == "realHostName") {
-            oldHost = accountValues[type][slot];
-            newHost = getFormElementValue(pageElements[i]);
-            hIndx = i;
-          }
-          else if (slot == "realUsername") {
-            oldUser = accountValues[type][slot];
-            newUser = getFormElementValue(pageElements[i]);
-            uIndx = i;
-          }
-          else if (slot == "type")
-            newType = getFormElementValue(pageElements[i]);
+        var type = vals[0];
+        var slot = vals[1];
+        //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
+
+        // if this type doesn't exist (just removed) then return.
+        if (!(type in accountValues) || !accountValues[type]) return true;
+
+        if (slot == "realHostName") {
+          oldHost = accountValues[type][slot];
+          newHost = getFormElementValue(pageElements[i]);
+          hIndx = i;
+        }
+        else if (slot == "realUsername") {
+          oldUser = accountValues[type][slot];
+          newUser = getFormElementValue(pageElements[i]);
+          uIndx = i;
+        }
+        else if (slot == "type")
+          newType = getFormElementValue(pageElements[i]);
       }
     }
   }
@@ -408,44 +431,44 @@ function ReloadSmtpPanel()
   smtpPort.value = defaultServer.port ? defaultServer.port : "";
   smtpAuthMethod.setAttribute("value", defaultServer.authMethod);
   if (smtpAuthMethod.getAttribute("value") == "1")
-      smtpUseUsername.checked = true;
+    smtpUseUsername.checked = true;
   var elements = smtpTrySSL.getElementsByAttribute("value", defaultServer.trySSL);
   if (elements.length == 0)
-      elements = smtpTrySSL.getElementsByAttribute("value", "1");
+    elements = smtpTrySSL.getElementsByAttribute("value", "1");
   smtpTrySSL.selectedItem = elements[0];
 }
 
 
 function onDuplicateAccount() {
-    //dump("onDuplicateAccount\n");
+  //dump("onDuplicateAccount\n");
 
-    if (duplicateButton.getAttribute("disabled") == "true") return;
+  if (duplicateButton.getAttribute("disabled") == "true") return;
 
-    var result = getServerIdAndPageIdFromTree(accounttree);
-    if (result) {
-        var canDuplicate = true;
-        var account = getAccountFromServerId(result.serverId);
-        if (account) {
-            var server = account.incomingServer;
-            var type = server.type;
+  var result = getServerIdAndPageIdFromTree(accounttree);
+  if (result) {
+    var canDuplicate = true;
+    var account = getAccountFromServerId(result.serverId);
+    if (account) {
+      var server = account.incomingServer;
+      var type = server.type;
 
       var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
       canDuplicate = protocolinfo.canDuplicate;
-        }
-        else {
-            canDuplicate = false;
-        }
+    }
+    else {
+      canDuplicate = false;
+    }
 
-        if (canDuplicate) {
+    if (canDuplicate) {
       try {
-              accountManager.duplicateAccount(account);
-            }
+        accountManager.duplicateAccount(account);
+      }
       catch (ex) {
         var alertText = gPrefsBundle.getString("failedDuplicateAccount");
-                window.alert(alertText);
+        window.alert(alertText);
       }
-        }
     }
+  }
 }
 
 function onSetDefault(event) {
@@ -590,7 +613,7 @@ function saveAccount(accountValues, account)
           default:
             dump("unexpected preftype: " + preftype + "\n");
             break;
-         }
+        }
       }
       else {
       if (slot in dest && dest[slot] != typeArray[slot]) {
@@ -691,8 +714,8 @@ function onAccountClick(tree) {
 
   //dump("sputter:"+bug51546CurrentPage+","+bug51546CurrentServerId+":"+result.pageId+","+result.serverId+"\n");
   if ((bug51546CurrentPage == result.pageId) && (bug51546CurrentServerId == result.serverId)) {
-  //dump("workaround for #51546\n");
-  return;
+    //dump("workaround for #51546\n");
+    return;
   }
 
   bug51546CurrentPage = result.pageId;
@@ -790,7 +813,7 @@ function savePage(serverId)
 
   // tell the page that it's about to save
   if ("onSave" in top.frames["contentFrame"])
-      top.frames["contentFrame"].onSave();
+    top.frames["contentFrame"].onSave();
 
   var accountValues = getValueArrayFor(serverId);
   if (!accountValues) 
@@ -802,17 +825,17 @@ function savePage(serverId)
 
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
-      if (pageElements[i].id) {
-        var vals = pageElements[i].id.split(".");
-        if (vals.length >= 2) {
-            var type = vals[0];
-            var slot = vals[1];
-    
-            setAccountValue(accountValues,
-                            type, slot,
-                            getFormElementValue(pageElements[i]));
-         }
+    if (pageElements[i].id) {
+      var vals = pageElements[i].id.split(".");
+      if (vals.length >= 2) {
+        var type = vals[0];
+        var slot = vals[1];
+
+        setAccountValue(accountValues,
+                        type, slot,
+                        getFormElementValue(pageElements[i]));
       }
+    }
   }
 }
 
@@ -856,7 +879,7 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
       source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
     else if (type == "smtp")
-        source = smtpService.defaultServer;
+      source = smtpService.defaultServer;
 
     } catch (ex) {
     }
@@ -884,7 +907,7 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
           default:
             dump("unexpected preftype: " + preftype + "\n");
             break;
-          }
+        }
       }
       else if (slot in source) {
         accountValues[type][slot] = source[slot];
@@ -923,27 +946,27 @@ function restorePage(pageId, serverId)
 
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
-      if (pageElements[i].id) {
-        var vals = pageElements[i].id.split(".");
-        if (vals.length >= 2) {
-            var type = vals[0];
-            var slot = vals[1];
-            // buttons are lockable, but don't have any data so we skip that part.
-            // elements that do have data, we get the values at poke them in.
-            if (pageElements[i].localName != "button") {
-              var value = getAccountValue(account, accountValues, type, slot, pageElements[i].getAttribute("preftype"), (pageElements[i].getAttribute("genericattr") == "true"));
-              setFormElementValue(pageElements[i], value);
-            }
-            updateElementWithKeys(account,pageElements[i],type);
-            var isLocked = getAccountValueIsLocked(pageElements[i]);
-            setEnabled(pageElements[i],!isLocked);
-         }
+    if (pageElements[i].id) {
+      var vals = pageElements[i].id.split(".");
+      if (vals.length >= 2) {
+        var type = vals[0];
+        var slot = vals[1];
+        // buttons are lockable, but don't have any data so we skip that part.
+        // elements that do have data, we get the values at poke them in.
+        if (pageElements[i].localName != "button") {
+          var value = getAccountValue(account, accountValues, type, slot, pageElements[i].getAttribute("preftype"), (pageElements[i].getAttribute("genericattr") == "true"));
+          setFormElementValue(pageElements[i], value);
+        }
+        updateElementWithKeys(account,pageElements[i],type);
+        var isLocked = getAccountValueIsLocked(pageElements[i]);
+        setEnabled(pageElements[i],!isLocked);
       }
+    }
   }
 
   // tell the page that new values have been loaded
   if ("onInit" in top.frames["contentFrame"])
-      top.frames["contentFrame"].onInit();
+    top.frames["contentFrame"].onInit();
 
   // everything has succeeded, vervied by setting currentPageId
   currentPageId = pageId;
@@ -955,55 +978,49 @@ function restorePage(pageId, serverId)
 // gets the value of a widget
 //
 function getFormElementValue(formElement) {
- try {
-  var type = formElement.localName;
-  if (type=="checkbox") {
-    if (formElement.getAttribute("reversed"))
-      return !formElement.checked;
-    else
+  try {
+    var type = formElement.localName;
+    if (type=="checkbox") {
+      if (formElement.getAttribute("reversed"))
+        return !formElement.checked;
       return formElement.checked;
-  }
-  else if (type == "radiogroup" || type=="menulist") {
-    return formElement.selectedItem.value;
-  }
-  else if (type == "textbox" &&
-           formElement.getAttribute("datatype") == "nsIFileSpec") {
-    if (formElement.value) {
-      var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
-      filespec.nativePath = formElement.value;
-      return filespec;
-    } else {
+    }
+    if (type == "radiogroup" || type=="menulist") {
+      return formElement.selectedItem.value;
+    }
+    if (type == "textbox" &&
+        formElement.getAttribute("datatype") == "nsIFileSpec") {
+      if (formElement.value) {
+        var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
+        filespec.nativePath = formElement.value;
+        return filespec;
+      }
       return null;
     }
-  }
-  else if (type == "textbox" &&
-           formElement.getAttribute("datatype") == "nsILocalFile") {
-    if (formElement.value) {
-      var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+    if (type == "textbox" &&
+        formElement.getAttribute("datatype") == "nsILocalFile") {
+      if (formElement.value) {
+        var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
-      localfile.initWithPath(formElement.value);
-      return localfile;
-    }
-    else {
+        localfile.initWithPath(formElement.value);
+        return localfile;
+      }
       return null;
     }
-  }
-  else if (type == "text") {
-    var val = formElement.getAttribute("value");
-    if (val) return val;
-    else return null;
-  }
-  else if ("value" in formElement) {
-    return formElement.value;
-  }
-  else {
+    if (type == "text") {
+      var val = formElement.getAttribute("value");
+      if (val) return val;
+      return null;
+    }
+    if ("value" in formElement) {
+      return formElement.value;
+    }
     return null;
   }
- }
- catch (ex) {
-  dump("getFormElementValue failed, ex="+ex+"\n");
- }
- return null;
+  catch (ex) {
+    dump("getFormElementValue failed, ex="+ex+"\n");
+  }
+  return null;
 }
 
 //
@@ -1122,17 +1139,17 @@ function getAccountFromServerId(serverId) {
 // get the array of form elements for the given page
 //
 function getPageFormElements() {
- try {
+  try {
     if("getElementsByAttribute" in top.frames["contentFrame"].document) {
-        var pageElements =
-            top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
-        return pageElements;
+      var pageElements =
+             top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
+      return pageElements;
     }
- }
- catch (ex) {
-  dump("getPageFormElements() failed: " + ex + "\n");
- }
- return null;
+  }
+  catch (ex) {
+    dump("getPageFormElements() failed: " + ex + "\n");
+  }
+  return null;
 }
 
 //

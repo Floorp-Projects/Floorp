@@ -83,43 +83,6 @@ function initServerType() {
   document.getElementById("defaultPort").value = protocolInfo.getDefaultServerPort(isSecureSelected);
 }
 
-function hideShowControls(serverType)
-{
-    var controls = document.getElementsByAttribute("hidable", "true");
-    var len = controls.length;
-    for (var i=0; i<len; i++) {
-        var control = controls[i];
-
-        var hideFor = control.getAttribute("hidefor");
-        if (!hideFor)
-            throw "this should not happen, things that are hidable should have hidefor set";
-
-        var box = getEnclosingContainer(control);
-
-        if (!box)
-            throw "this should not happen, things that are hidable should be in a box";
-
-        // hide unsupported server type
-        // adding support for hiding multiple server types using hideFor="server1,server2"
-        var hideForBool = false;
-        var hideForTokens = hideFor.split(",");
-        for (var j = 0; j < hideForTokens.length; j++) {
-            if (hideForTokens[j] == serverType) {
-                hideForBool = true;
-                break;
-            }
-        }
-
-        if (hideForBool) {
-            box.setAttribute("hidden", "true");
-        }
-        else {
-            box.removeAttribute("hidden");
-        }
-    }
-}
-
-
 function setDivText(divname, value) {
     var div = document.getElementById(divname);
     if (!div) return;
@@ -180,30 +143,6 @@ function onAdvanced()
     document.getElementById("imap.otherUsersNamespace").setAttribute("value", serverSettings.otherUsersNamespace);
     document.getElementById("imap.overrideNamespaces").checked = serverSettings.overrideNamespaces;
   }
-}
-
-function getEnclosingContainer(startNode) {
-
-    var parent = startNode;
-    var box;
-    
-    while (parent && parent != document) {
-
-        var isContainer =
-            (parent.getAttribute("iscontrolcontainer") == "true");
-          
-        // remember the FIRST container we encounter, or the first
-        // controlcontainer
-        if (!box || isContainer)
-            box=parent;
-        
-        // break out with a controlcontainer
-        if (isContainer)
-            break;
-        parent = parent.parentNode;
-    }
-    
-    return box;
 }
 
 function secureSelect() {

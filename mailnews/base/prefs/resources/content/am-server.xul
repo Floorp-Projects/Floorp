@@ -33,6 +33,7 @@ Contributors:
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-server.xul');">
 
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -58,28 +59,27 @@ Contributors:
         <hbox>
             <label value="&serverName.label;"/>
         </hbox>
-        <hbox iscontrolcontainer="true" align="center">
+        <hbox align="center">
             <label id="fixedServerName" collapsed="true" use="server.realHostName"/>
             <textbox wsm_persist="true" size="20" id="server.realHostName"
                      prefstring="mail.server.%serverkey%.realhostname" class="uri-element"/>
-            <label hidable="true" hidefor="movemail" value="&port.label;"/>
-            <label id="fixedServerPort" collapsed="true" use="server.port"/>
+            <label hidefor="movemail" value="&port.label;"/>
+            <label id="fixedServerPort" hidefor="movemail" 
+                   collapsed="true" use="server.port"/>
             <textbox wsm_persist="true" size="3" id="server.port"
-                     preftype="int" hidable="true" hidefor="movemail" 
+                     preftype="int" hidefor="movemail" 
                      prefstring="mail.server.%serverkey%.port"/>
-            <label value="&serverPortDefault.label;" hidable="true" hidefor="movemail"/>
-            <label id="defaultPort" hidable="true" hidefor="movemail"/>
+            <label value="&serverPortDefault.label;" hidefor="movemail"/>
+            <label id="defaultPort" hidefor="movemail"/>
         </hbox>
       </row>
       <row align="center">
-        <hbox iscontrolcontainer="true" align="center">
-            <label hidable="true" hidefor="nntp" id="userNameLabel" 
-                  value="&userName.label;"/>
+        <hbox align="center" hidefor="nntp">
+            <label value="&userName.label;"/>
         </hbox>
-        <hbox iscontrolcontainer="true" align="center">
+        <hbox align="center" hidefor="nntp">
             <label id="fixedUserName" collapsed="true" use="server.realUsername"/>
-            <textbox hidable="true" hidefor="nntp" wsm_persist="true"
-                     size="20" id="server.realUsername"
+            <textbox wsm_persist="true" size="20" id="server.realUsername"
                      prefstring="mail.server.%serverkey%.realusername"/>
         </hbox>
       </row>
@@ -91,21 +91,21 @@ Contributors:
   <groupbox>
   <caption label="&serverSettings.label;"/>
   <vbox flex="1">
-  <checkbox iscontrolcontainer="true" wsm_persist="true" id="server.isSecure"
+  <checkbox wsm_persist="true" id="server.isSecure"
             label="&isSecure.label;" oncommand="secureSelect();"
             prefattribute="value"
             prefstring="mail.server.%serverkey%.isSecure"/>
-  <checkbox iscontrolcontainer="true" wsm_persist="true" id="server.useSecAuth"
-            label="&useSecAuth.label;" hidable="true" hidefor="nntp,movemail"
+  <checkbox wsm_persist="true" id="server.useSecAuth"
+            label="&useSecAuth.label;" hidefor="nntp,movemail"
             prefattribute="value"
             prefstring="mail.server.%serverkey%.useSecAuth"/>
-  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true"
+  <checkbox wsm_persist="true"
             id="server.loginAtStartUp" hidefor="nntp"
             label="&loginAtStartup.label;"
             prefattribute="value"
             prefstring="mail.server.%serverkey%.login_at_startup"/>
 <!--
-  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
+  <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
   <hbox align="center">
@@ -120,22 +120,19 @@ Contributors:
     <label id="biffEnd" control="server.biffMinutes" value="&biffEnd.label;"/>
   </hbox>
   <!-- POP3 -->
-  <vbox iscontrolcontainer="true" align="start">
-    <checkbox hidable="true" hidefor="imap,nntp"
-              wsm_persist="true" id="server.downloadOnBiff"
+  <vbox align="start" hidefor="imap,nntp,movemail">
+    <checkbox wsm_persist="true" id="server.downloadOnBiff"
               label="&downloadOnBiff.label;" prefattribute="value"
               prefstring="mail.server.%serverkey%.download_on_biff"/>
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
               label="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"
-              hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.leave_on_server"/>
 
     <hbox align="center">
       <checkbox wsm_persist="true" id="pop3.deleteByAgeFromServer" class="indent"
                 label="&deleteByAgeFromServer.label;" oncommand="setupAgeMsgOnServerUI();"
-                hidable="true" hidefor="imap,nntp,movemail"
                 prefattribute="value"
                 prefstring="mail.server.%serverkey%.delete_by_age_from_server"/>
       <textbox wsm_persist="true" id="pop3.numDaysToLeaveOnServer" size="3" 
@@ -146,15 +143,13 @@ Contributors:
 
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
               label="&deleteOnServer.label;"
-              hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
   </vbox>
   <!-- IMAP -->
-  <hbox iscontrolcontainer="true" align="center" id="imap.deleteModel.box">
+  <hbox align="center" id="imap.deleteModel.box" hidefor="pop3,nntp,movemail">
     <label value="&deleteMessagePrefix.label;"/>
-    <menulist hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.deleteModel"
-              prefstring="mail.server.%serverkey%.delete_model">
+    <menulist wsm_persist="true" id="imap.deleteModel" prefstring="mail.server.%serverkey%.delete_model">
       <menupopup>
         <menuitem value="1" label="&modelMoveToTrash.label;"/>
         <menuitem value="0" label="&modelMarkDeleted.label;"/>
@@ -164,8 +159,8 @@ Contributors:
     <spacer flex="1"/>
   </hbox>
 
-  <hbox iscontrolcontainer="true" flex="1">
-    <checkbox hidable="true" hidefor="pop3,nntp,movemail" hidden="true" wsm_persist="true" id="imap.dualUseFolders"
+  <hbox flex="1" hidefor="pop3,nntp,movemail" hidden="true">
+    <checkbox hidden="true" wsm_persist="true" id="imap.dualUseFolders"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.dual_use_folders"/>
     <checkbox hidden="true" wsm_persist="true" id="imap.usingSubscription"
@@ -182,34 +177,30 @@ Contributors:
   </hbox>
 
   <!-- NNTP -->
-  <hbox iscontrolcontainer="true">
-    <checkbox hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true" id="nntp.notifyOn"
+  <hbox hidefor="pop3,imap,movemail" align="center">
+    <checkbox wsm_persist="true" id="nntp.notifyOn"
               label="&maxMessagesStart.label;"
               oncommand="setupNotifyUI();"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.notify.on"/>
-    <hbox iscontrolcontainer="true" align="center">
-      <textbox wsm_persist="true" id="nntp.maxArticles" size="6"
-               observes="broadcaster_notify"
-               preftype="int"
-               prefstring="mail.server.%serverkey%.max_articles"/>
-      <label control="nntp.maxArticles" value="&maxMessagesEnd.label;"
-             observes="broadcaster_notify"/>
-    </hbox>
+    <textbox wsm_persist="true" id="nntp.maxArticles" size="6"
+             observes="broadcaster_notify"
+             preftype="int"
+             prefstring="mail.server.%serverkey%.max_articles"/>
+    <label control="nntp.maxArticles" value="&maxMessagesEnd.label;"
+           observes="broadcaster_notify"/>
   </hbox>
-  <hbox iscontrolcontainer="true">
-    <checkbox hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true" id="nntp.pushAuth"
-              label="&alwaysAuthenticate.label;"
-              prefattribute="value"
-              prefstring="mail.server.%serverkey%.always_authenticate"/>
-  </hbox>
+  <checkbox hidefor="pop3,imap,movemail" wsm_persist="true" id="nntp.pushAuth"
+            label="&alwaysAuthenticate.label;"
+            prefattribute="value"
+            prefstring="mail.server.%serverkey%.always_authenticate"/>
+
 <!-- take out for now - bug 45079
-    <hbox iscontrolcontainer="true" flex="100%">
+    <hbox flex="1" hidefor="pop3,imap,movemail">
       <groupbox>
          <caption class="header" label="&abbreviate.label;"/>
 
-         <radiogroup hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true"
-                     id="nntp.abbreviate">
+         <radiogroup wsm_persist="true" id="nntp.abbreviate">
            <radio wsm_persist="true" value="true"
                   label="&abbreviateOn.label;"/>
            <radio wsm_persist="true" value="false" 
@@ -221,12 +212,12 @@ Contributors:
 
   <hbox align="end">
     <vbox flex="1">
-      <checkbox hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
-                label="&expungeOnExit.label;" iscontrolcontainer="true"
+      <checkbox hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
+                label="&expungeOnExit.label;"
                 prefattribute="value"
                 prefstring="mail.server.%serverkey%.cleanup_inbox_on_exit"/>
-      <checkbox hidable="true" hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
-                label="&emptyTrashOnExit.label;" iscontrolcontainer="true"
+      <checkbox hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
+                label="&emptyTrashOnExit.label;"
                 prefattribute="value"
                 prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
     </vbox>
@@ -237,9 +228,9 @@ Contributors:
     <label hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
   </hbox>
 
-  <vbox iscontrolcontainer="true">
+  <vbox hidefor="imap,pop3,movemail">
     <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"/>
-    <textbox hidable="true" hidefor="imap,pop3,movemail" wsm_persist="true" id="nntp.newsrcFilePath"
+    <textbox wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"
                prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
   </vbox>
