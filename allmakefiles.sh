@@ -854,6 +854,12 @@ if [ ! "$SYSTEM_ZLIB" ]; then
 "
 fi
 
+MAKEFILES_zlib="
+    $MAKEFILES_zlib
+    modules/zlib/standalone/Makefile
+"
+
+
 if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
 fi
