@@ -46,7 +46,8 @@
 *  in some more global way at runtime.
 */
 
-struct ResultMap {nsresult rv; const char* name; const char* format;} map[] = {
+static struct ResultMap 
+{nsresult rv; const char* name; const char* format;} map[] = {
 #define XPC_MSG_DEF(val, format) \
     {(val), #val, format},
 #include "xpc.msg"

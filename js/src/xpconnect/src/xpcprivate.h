@@ -250,10 +250,12 @@ public:
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
    void DEBUG_AddWrappedNative(nsIXPConnectWrappedNative* wrapper)
-        {JS_HashTableAdd(DEBUG_WrappedNativeHashtable, wrapper, wrapper);}
+        {nsAutoLock lock(mMapLock);
+         JS_HashTableAdd(DEBUG_WrappedNativeHashtable, wrapper, wrapper);}
 
    void DEBUG_RemoveWrappedNative(nsIXPConnectWrappedNative* wrapper)
-        {JS_HashTableRemove(DEBUG_WrappedNativeHashtable, wrapper);}
+        {nsAutoLock lock(mMapLock);
+         JS_HashTableRemove(DEBUG_WrappedNativeHashtable, wrapper);}
 
    private:                            
    JSHashTable *DEBUG_WrappedNativeHashtable;
@@ -751,7 +753,7 @@ public:
     NS_DECL_NSIXPCONNECTWRAPPEDJS
 
     // Note that both nsXPTCStubBase and nsIXPConnectWrappedJS declare
-    // a GetInterfaceInfo methos\d with the same sig. So, the declaration
+    // GetInterfaceInfo methods with the same sig. So, the declaration
     // for it here comes from the NS_DECL_NSIXPCONNECTWRAPPEDJS macro
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,
@@ -765,7 +767,8 @@ public:
     */
     static nsXPCWrappedJS* GetNewOrUsedWrapper(XPCContext* xpcc,
                                                JSObject* aJSObj,
-                                               REFNSIID aIID);
+                                               REFNSIID aIID,
+                                               nsISupports* aOuter);
 
     JSObject* GetJSObject() const {return mJSObj;}
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
@@ -773,9 +776,13 @@ public:
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
 
     nsXPCWrappedJS* Find(REFNSIID aIID);
+    nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
     JSBool IsValid() const {return mJSObj != nsnull;}
     void SystemIsBeingShutDown(JSRuntime* rt);
+
+    JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
+    nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
     virtual ~nsXPCWrappedJS();
 private:
@@ -783,13 +790,15 @@ private:
     nsXPCWrappedJS(XPCContext* xpcc,
                    JSObject* aJSObj,
                    nsXPCWrappedJSClass* aClass,
-                   nsXPCWrappedJS* root);
+                   nsXPCWrappedJS* root,
+                   nsISupports* aOuter);
 
 private:
     JSObject* mJSObj;
     nsXPCWrappedJSClass* mClass;
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
+    nsISupports* mOuter;    // only set in root
 };
 
 /***************************************************************************/
@@ -1125,7 +1134,9 @@ public:
 
     static JSBool JSObject2NativeInterface(JSContext* cx,
                                            void** dest, JSObject* src,
-                                           const nsID* iid, nsresult* pErr);
+                                           const nsID* iid, 
+                                           nsISupports* aOuter,
+                                           nsresult* pErr);
 
     static JSBool NativeArray2JS(JSContext* cx,
                                  jsval* d, const void** s,
@@ -1373,6 +1384,8 @@ public:
 private:
     xpcPerThreadData();
 
+    void SyncJSContexts();
+
 private:
     nsIXPCException*  mException;
     nsDeque*          mJSContextStack;
@@ -1515,6 +1528,16 @@ private:
     nsCString mCategory;
 };
 
+/***************************************************************************/
+class AutoJSRequest
+{
+public:
+    AutoJSRequest(JSContext* aCX)
+      : mCX(JS_GetContextThread(aCX) ? (JS_BeginRequest(aCX), aCX) : nsnull) {}
+    ~AutoJSRequest() { if(mCX) JS_EndRequest(mCX); }
+private:
+    JSContext* mCX;    
+};
 
 /***************************************************************************/
 // the include of declarations of the maps comes last because they have

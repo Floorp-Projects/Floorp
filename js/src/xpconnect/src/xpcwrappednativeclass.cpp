@@ -83,12 +83,11 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
         nsAutoLock lock(rt->GetMapLock());  
         IID2WrappedNativeClassMap* map = rt->GetWrappedNativeClassMap();
         clazz = map->Find(aIID);
-    }
-
-    if(clazz)
-    {
-        NS_ADDREF(clazz);
-        return clazz;
+        if(clazz)
+        {
+            NS_ADDREF(clazz);
+            return clazz;
+        }
     }
 
     nsCOMPtr<nsIInterfaceInfoManager> iimgr = 
@@ -558,6 +557,14 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     XPCJSRuntime* rt;
     nsXPConnect* xpc;
 
+    // This is used to gate calls to JS_SuspendRequest/JS_ResumeRequest 
+    // XXX Looking at cx->requestDepth is currently necessary because the DOM
+    // nsJSContexts break the nice rules and don't do their work within
+    // JS Requests. Calling JS_SuspendRequest with a zero requestDepth
+    // would cause the requestDepth to wrap around to a big number and
+    // Bad Things would happen.
+    JSBool useJSRequest = JS_GetContextThread(cx) && cx->requestDepth;
+
 #ifdef DEBUG_stats_jband
     PRIntervalTime startTime = PR_IntervalNow();
     PRIntervalTime endTime = 0;
@@ -908,10 +915,16 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     ccdata.init(callee, vtblIndex, wrapper, cx, argc, argv, vp);
     oldccdata = cc->SetData(&ccdata);
 
+    if(useJSRequest)
+        JS_SuspendRequest(cx);
+    
     // do the invoke
     invokeResult = XPTC_InvokeByIndex(callee, vtblIndex,
                                       paramCount, dispatchParams);
     
+    if(useJSRequest)
+        JS_ResumeRequest(cx);
+
     xpcc->SetLastResult(invokeResult);
     cc->SetData(oldccdata);
 
@@ -1107,6 +1120,7 @@ JSObject*
 nsXPCWrappedNativeClass::NewFunObj(JSContext *cx, JSObject *obj,
                                    const XPCNativeMemberDescriptor* desc)
 {
+    JSFunction *fun;
     NS_ASSERTION(desc->IsMethod(), "we can only create FunObjs for methods");
 
     if(-1 == desc->argc)
@@ -1125,10 +1139,13 @@ nsXPCWrappedNativeClass::NewFunObj(JSContext *cx, JSObject *obj,
             return nsnull;
     }
 
-    JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod,
-                                     (uintN) desc->argc,
-                                     JSFUN_BOUND_METHOD, obj, 
-                                     GetMemberName(desc));
+    {
+      AutoJSRequest req(cx); // scoped JS Request
+      fun = JS_NewFunction(cx, WrappedNative_CallMethod,
+                           (uintN) desc->argc,
+                           JSFUN_BOUND_METHOD, obj, 
+                           GetMemberName(desc));
+    }
     if(!fun)
         return nsnull;
     return JS_GetFunctionObject(fun);
@@ -1269,6 +1286,7 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(XPCContext* xpcc,
                                              JSObject* aGlobalObject,
                                              nsXPCWrappedNative* self)
 {
+    JSObject* jsobj;
     JSContext* cx = xpcc->GetJSContext();
     JSClass* jsclazz = self->GetDynamicScriptable() ?
                             &WrappedNativeWithCall_class :
@@ -1279,8 +1297,11 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(XPCContext* xpcc,
     // after creation.  If we just pass nsnull as the prototype argument, the
     // engine will do a scope search for the class name to find the constructor,
     // which is an expense we don't need, and will always fail anyway.
-
-    JSObject* jsobj = JS_NewObject(cx, jsclazz, aGlobalObject, aGlobalObject);
+    
+    {
+      AutoJSRequest req(cx); // scoped JS Request  
+      jsobj = JS_NewObject(cx, jsclazz, aGlobalObject, aGlobalObject);
+    }
     if(!jsobj || !JS_SetPrototype(cx, jsobj, nsnull) ||
        !JS_SetPrivate(cx, jsobj, self))
         return nsnull;
