@@ -13,6 +13,7 @@ packages/core.jar:
     communicator/content/platformBrowserBindings.xul     (resources/content/win/platformBrowserBindings.xul) 
     communicator/content/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul) 
     communicator/content/platformGlobalOverlay.xul       (resources/content/win/platformGlobalOverlay.xul) 
+    communicator/content/builtinURLs.js                  (resources/content/builtinURLs.js)
 
 locales/en-US.jar:
 	communicator/locale/utilityOverlay.dtd         (resources/locale/en-US/utilityOverlay.dtd) 
