@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
@@ -1747,6 +1748,13 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     nsresult rv;
     NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
     if (NS_FAILED(rv) || NS_FAILED(uri->SetSpec(image_url))) {
+        return PR_TRUE;
+    }
+
+    // remove this code once #73845 is fixed.
+    nsXPIDLCString scheme;
+    rv = uri->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv) || (!scheme.get())) {
         return PR_TRUE;
     }
 
