@@ -535,6 +535,12 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         }
         else if (numProfiles == 1)
         {
+            // If we get here and the 1 profile is the current profile,
+            // which can happen with QuickLaunch, there's no need to do
+            // any futher work.
+            if (mCurrentProfileAvailable)
+               return NS_OK;
+
             // Make sure the profile dir exists. If not, we need the UI
             nsCOMPtr<nsIFile> curProfileDir;
             PRBool exists = PR_FALSE;
