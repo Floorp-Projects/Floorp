@@ -149,7 +149,7 @@ public class NativeJavaMethod extends BaseFunction
             throw new RuntimeException("No methods defined for call");
         }
 
-        int index = findFunction(methods, args);
+        int index = findFunction(cx, methods, args);
         if (index < 0) {
             Class c = methods[0].method().getDeclaringClass();
             String sig = c.getName() + '.' + functionName + '(' +
@@ -230,7 +230,8 @@ public class NativeJavaMethod extends BaseFunction
      * or constructors and the arguments.
      * If no function can be found to call, return -1.
      */
-    static int findFunction(MemberBox[] methodsOrCtors, Object[] args)
+    static int findFunction(Context cx,
+                            MemberBox[] methodsOrCtors, Object[] args)
     {
         if (methodsOrCtors.length == 0) {
             return -1;

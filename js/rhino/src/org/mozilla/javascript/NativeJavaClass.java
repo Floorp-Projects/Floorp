@@ -173,7 +173,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                Modifier.isAbstract(modifiers)))
         {
             MemberBox[] ctors = members.ctors;
-            int index = NativeJavaMethod.findFunction(ctors, args);
+            int index = NativeJavaMethod.findFunction(cx, ctors, args);
             if (index < 0) {
                 String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
