@@ -959,8 +959,12 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   // only borders between <frame>s. There are none on the edges (e.g the
   // leftmost <frame> has no left border).
   PRInt32 borderWidth = GetBorderWidth(aPresContext);
+
   width  -= (mNumCols - 1) * borderWidth;
+  if (width < 0) width = 0;
+
   height -= (mNumRows - 1) * borderWidth;
+  if (height < 0) height = 0;
 
   if (!mDrag.mActive && ( (firstTime) ||
                   ( (mRect.width != 0) && (mRect.height != 0) &&
