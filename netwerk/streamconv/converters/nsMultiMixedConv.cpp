@@ -273,7 +273,16 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
 		    rv = mFinalListener->OnStopRequest(channel, ctxt, status, errorMsg);
         }
 	}
-    NS_ASSERTION(mBufLen < 1 && !mBuffer, "we're leaving with data leftover");
+    else
+    if (mBufLen > 0 && mBuffer)
+    {
+        SendData(mBuffer, mBufLen);
+        nsAllocator::Free(mBuffer);
+        mBuffer = nsnull;
+        mBufLen = 0;
+        rv = SendStop ();
+    }
+
     return rv;
 }
 
