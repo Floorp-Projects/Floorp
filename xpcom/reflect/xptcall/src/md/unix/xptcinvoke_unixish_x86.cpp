@@ -19,11 +19,9 @@
 /* Platform specific code to invoke XPCOM methods on native objects */
 
 #include "xptcprivate.h"
+#include "xptc_platforms_unixish_x86.h"
 
 // Remember that these 'words' are 32bit DWORDS
-
-#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
-    defined(__bsdi__) || defined(NTO) || defined(__BEOS__) || defined(__sun__)
 
 static PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
@@ -131,17 +129,24 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "call  *%%eax\n\t"       /* copy params */
     "addl  $0xc, %%esp\n\t"
     "movl  %1, %%ecx\n\t"
+#ifdef CFRONT_STYLE_THIS_ADJUST
+    "movl  (%%ecx), %%edx\n\t"
+    "movl  %2, %%eax\n\t"   /* function index */
+    "shl   $3, %%eax\n\t"   /* *= 8 */
+    "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
+    "addl  %%eax, %%edx\n\t"
+    "movswl (%%edx), %%eax\n\t" /* 'this' offset */
+    "addl  %%eax, %%ecx\n\t"
+    "pushl %%ecx\n\t"
+    "addl  $4, %%edx\n\t"   /* += 4, method pointer */
+#else /* THUNK_BASED_THIS_ADJUST */
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
     "movl  %2, %%eax\n\t"   /* function index */
-#if (__GNUC__ == 2) && ((__GNUC_MINOR__ == 7) || (__GNUC_MINOR__ == 8) || (__GNUC_MINOR__ == 9))
-    "shl   $3, %%eax\n\t"   /* *= 8 */
-    "addl  $0x0c, %%eax\n\t"   /* += 12 */
-#else
     "shl   $2, %%eax\n\t"   /* *= 4 */
     "addl  $8, %%eax\n\t"   /* += 8 */
-#endif
     "addl  %%eax, %%edx\n\t"
+#endif
     "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
     "movl  %%eax, %0"
     : "=g" (result)         /* %0 */
@@ -156,5 +161,3 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
   
   return result;
 }    
-
-#endif

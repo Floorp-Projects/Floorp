@@ -30,7 +30,7 @@ Feel free to email me with questions or to volunteer to contribute xptcall code 
 
 <TR>
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
-<TD>Win32</TD>
+<TD>Win32 x86</TD>
 <TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
 <TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/win32">win32</a></TD>
@@ -108,25 +108,48 @@ John?
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
-<TD>OpenVMS Alpha and VAX</TD>
-<TD><img alt="Started" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>OpenVMS Alpha</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:colin@theblakes.com">Colin R. Blake &lt;colin@theblakes.com&gt;</a></TD>
 <TD>
-Colin wrote: 
-I am porting Mozilla to OpenVMS. I guess you can put me down as someone who will port xptcall to
-OpenVMS Alpha and OpenVMS VAX. Won't be for a while though since Mozilla's nowhere near
-building on OpenVMS yet. 
+Colin says this is passing all the tests on OpenVMS Alpha!
 </TD>
 </TR>
 
+<TR>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>NT Alpha</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:bob@guiduck.com">bob meader &lt;bob@guiduck.com&gt;</a></TD>
+<TD>
+bob writes:<br>
+Enclosed is xptcall for alpha/nt target..
+<p>
+It is a variation of the IRIS port (only targeted for win32).
+<p>
+Notice the last 2 files (the change to mozilla\xpcom\build\makefile.win and
+mozilla\xpcom\build) are needed because I was unable to figure how to do a
+"declspecexport" from the assembler ASAXP ... if some knows how to do that then
+those last 2 files won't be needed.
+<p>
+I have had someone look over this code at bridge.com (the entry point to
+compaq/gem compiler team) and this code was given the OK. I consider it "done".
+<p>
+This code lives in the files where the name includes 'alpha' in the <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/win32">win32</a> directory.<BR>
+</TD>
+</TR>
 
 <TR>
-<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
 <TD>Linux ARM</TD>
-<TD> <font color="red"><b>?</b></font>
+<TD><img alt="Started" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:sh990154@mail.uni-greifswald.de">Stefan Hanske&lt;sh990154@mail.uni-greifswald.de&gt;</a><BR>
+<font color="red"><b>?</b></font>
 <a href="mailto:willy@bofh.ai">Matthew Wilcox &lt;willy@bofh.ai&gt;</a></TD>
-<TD align="center">-</TD>
+<TD>
+Stefan says he has some code working.
+</TD>
 </TR>
 
 <TR>
@@ -156,14 +179,32 @@ I will do the Linux Sparc xptcall if nobody else commits to it.
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Working</b></font></TD>
 <TD>Linux Alpha</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<TD>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:glen.nakamura@usa.net">Glen Nakamura &lt;glen.nakamura@usa.net&gt;</a><BR>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:morrildl@nycap.rr.com">Dan Morril &lt;morrildl@nycap.rr.com&gt;</a><BR>
 </TD>
 <TD>
-Dan is working on this. I get the feeling that he wouldn't
-mind getting some help.
+Glen writes:
+<p>
+I am attaching a patch which contains my Linux Alpha xptcall code.
+It passes TestXPTCInvoke and TestXPC on my machine which runs
+kernel 2.2.7, glibc 2.1.1, and egcs 1.1.2.  I have not tested it
+with older GNU compilers such as gcc 2.8.x.  From looking at the
+Linux x86 code, I gather that the vtable layout is a little different
+for those compilers and the code will need minor modifications
+in order to work properly.
+<p>
+I am not sure how much of the code can be used for OpenVMS Alpha
+and/or Digital UNIX.  Currently the code is dependent on the g++
+name mangling convention and a few GNU extensions so I'm not sure
+how useful it will be for the other systems.  Hopefully the
+comments in the code are detailed enough to help people attempting
+a port.
+<p>
 </TD>
 </TR>
 
@@ -208,14 +249,14 @@ but eventually I will verify.
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Coded</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Working</b></font></TD>
 <TD>BeOS x86</TD>
 <TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:duncan@be.com">Duncan Wilcox &lt;duncan@be.com&gt;</a><BR>
 </TD>
 <TD>
 <a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/unix">unix</a> (yet another reuse of the Linux 86 code!)<BR>
-Duncan has the invoker test working and is confident that the stubs stuff will work, but it's untested (TestXPC not yet compiling).
+Duncan has this all working. He did the code for old cfront style 'this' adjustment for others to use too! I will check this in soon.
 </TD>
 </TR>
 
