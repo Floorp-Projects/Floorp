@@ -373,7 +373,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 
     rt = cx->runtime;
     JS_LOCK_GC(rt);
-    JS_ASSERT(rt->gcLevel == 0);
+    JS_ASSERT(rt->gcThread == 0);
     if (rt->gcLevel != 0) {
         METER(rt->gcStats.finalfail++);
         JS_UNLOCK_GC(rt);
@@ -1018,13 +1018,15 @@ js_GC(JSContext *cx, uintN gcflags)
 	return;
     }
 
-    /* No other thread is in GC, so indicate that we're now in GC. */
+    /* Increment gcLevel now to block requests that are about to run. */
     rt->gcLevel = 1;
-    rt->gcThread = currentThread;
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)
 	JS_AWAIT_REQUEST_DONE(rt);
+
+    /* No other thread is in GC, so indicate that we're now in GC. */
+    rt->gcThread = currentThread;
 
 #else  /* !JS_THREADSAFE */
 
