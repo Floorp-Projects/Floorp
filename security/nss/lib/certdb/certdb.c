@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.57 2003/12/06 06:52:53 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.58 2003/12/17 22:43:25 wchang0222%aol.com Exp $
  */
 
 #include "nssilock.h"
@@ -2598,7 +2598,7 @@ CERT_FilterCertListByUsage(CERTCertList *certList, SECCertUsage usage,
 		 * takes trust flags into consideration.  Should probably
 		 * fix the cert decoding code to do this.
 		 */
-		PRBool dummyret = CERT_IsCACert(node->cert, &certType);
+		(void)CERT_IsCACert(node->cert, &certType);
 	    } else {
 		certType = node->cert->nsCertType;
 	    }
