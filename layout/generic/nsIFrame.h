@@ -94,9 +94,9 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// c8f3532b-ed45-4812-8da9-2a1b0afe4179
+// 715842c9-8d33-41e9-8d71-78c81850c882
 #define NS_IFRAME_IID \
- { 0xc8f3532b, 0xed45, 0x4812, { 0x8d, 0xa9, 0x2a, 0x1b, 0x0a, 0xfe, 0x41, 0x79 } }
+ { 0x715842c9, 0x8d33, 0x41e9, { 0x8d, 0x71, 0x78, 0xc8, 0x18, 0x50, 0xc8, 0x82 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1059,6 +1059,12 @@ public:
    * Is this frame a containing block for non-positioned elements?
    */
   virtual PRBool IsContainingBlock() const = 0;
+
+  /**
+   * Is this frame a containing block for floating elements?
+   * Note that very few frames are, so default to false.
+   */
+  virtual PRBool IsFloatContainingBlock() const { return PR_FALSE; }
 
   /**
    * Does this frame want to capture the mouse when the user clicks in

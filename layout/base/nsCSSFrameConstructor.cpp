@@ -1232,6 +1232,12 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
                                                   PRBool aFirstLetterStyle,
                                                   PRBool aFirstLineStyle)
 {
+  // XXXbz we should probably just be able to assert that
+  // aNewFloatContainingBlock is a float containing block... see XXX comment at
+  // the top of ProcessChildren.
+  NS_PRECONDITION(aNewFloatContainingBlock->GetContentInsertionFrame()->
+                    IsFloatContainingBlock(),
+                  "Please push a real float containing block!");
   aSaveState.mItems = &mFloatedItems;
   aSaveState.mFirstLetterStyle = &mFirstLetterStyle;
   aSaveState.mFirstLineStyle = &mFirstLineStyle;
@@ -1584,6 +1590,7 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
       // containing block has changed as the result of reparenting,
       
       nsIFrame *parent = aState.mFloatedItems.containingBlock;
+      NS_ASSERTION(parent, "Should have float containing block here!");
       outOfFlowFrame->SetParent(parent);
       if (outOfFlowFrame->GetStateBits() &
           (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
@@ -1599,8 +1606,7 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
     return;
   }
 
-  // XXXbz we really want IsFloatContainingBlock() here!
-  if (IsBlockFrame(aFrame)) {
+  if (aFrame->IsFloatContainingBlock()) {
     // No need to recurse further; floats whose placeholders are
     // inside a block already have the right parent.
     return;
@@ -4306,7 +4312,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
       if (NS_FAILED(rv)) {
         return rv;
       }
-      isBlockFrame = PR_TRUE;
     }
     else 
 #endif
@@ -6590,8 +6595,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     NS_NewFloatingItemWrapperFrame(mPresShell, &newFrame);
 
     rv = ConstructBlock(aState, aDisplay, aContent, 
-                        aState.mFloatedItems.containingBlock, aParentFrame,
-                        aStyleContext, &newFrame, aFrameItems,
+                        aState.GetGeometricParent(aDisplay, aParentFrame),
+                        aParentFrame, aStyleContext, &newFrame, aFrameItems,
                         aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
     if (NS_FAILED(rv)) {
       return rv;
@@ -7937,26 +7942,18 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
   
-  // Starting with aFrame, look for a frame that is a real block frame
-  // XXXbz some frames are float containing blocks but not "real block frames".
-  // Perhaps we need to make more use of GetContentInsertionFrame() somewhere?
-  nsIFrame* containingBlock = aFrame;
-  while (nsnull != containingBlock) {
-    const nsStyleDisplay* display = containingBlock->GetStyleDisplay();
-    if ((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
-        (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay)) {
-      break;
+  // Starting with aFrame, look for a frame that is a float containing block
+  for (nsIFrame* containingBlock = aFrame;
+       containingBlock;
+       containingBlock = containingBlock->GetParent()) {
+    if (containingBlock->IsFloatContainingBlock()) {
+      return containingBlock;
     }
-    // Continue walking up the hierarchy
-    containingBlock = containingBlock->GetParent();
   }
 
-  // If we didn't find a containing block, then use the initial
-  // containing block
-  if (nsnull == containingBlock) {
-    containingBlock = mInitialContainingBlock;
-  }
-  return containingBlock;
+  // If we didn't find a containing block, then there just isn't
+  // one.... return null
+  return nsnull;
 }
 
 /**
@@ -8637,13 +8634,15 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                 GetFloatContainingBlock(parentFrame));
 
   // See if the containing block has :first-letter style applied.
-  PRBool haveFirstLetterStyle, haveFirstLineStyle;
+  PRBool haveFirstLetterStyle = PR_FALSE, haveFirstLineStyle = PR_FALSE;
   nsIFrame* containingBlock = state.mFloatedItems.containingBlock;
-  nsIContent* blockContent = containingBlock->GetContent();
-  nsStyleContext* blockSC = containingBlock->GetStyleContext();
-  HaveSpecialBlockStyle(blockContent, blockSC,
-                        &haveFirstLetterStyle,
-                        &haveFirstLineStyle);
+  if (containingBlock) {
+    nsIContent* blockContent = containingBlock->GetContent();
+    nsStyleContext* blockSC = containingBlock->GetStyleContext();
+    HaveSpecialBlockStyle(blockContent, blockSC,
+                          &haveFirstLetterStyle,
+                          &haveFirstLineStyle);
+  }
 
   if (haveFirstLetterStyle) {
     // Before we get going, remove the current letter frames
@@ -9263,11 +9262,13 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       (NS_STYLE_DISPLAY_INLINE == parentDisplay->mDisplay) ||
       (NS_STYLE_DISPLAY_INLINE_BLOCK == parentDisplay->mDisplay)) {
     // Recover the special style flags for the containing block
-    blockSC = containingBlock->GetStyleContext();
-    blockContent = containingBlock->GetContent();
-    HaveSpecialBlockStyle(blockContent, blockSC,
-                          &haveFirstLetterStyle,
-                          &haveFirstLineStyle);
+    if (containingBlock) {
+      blockSC = containingBlock->GetStyleContext();
+      blockContent = containingBlock->GetContent();
+      HaveSpecialBlockStyle(blockContent, blockSC,
+                            &haveFirstLetterStyle,
+                            &haveFirstLineStyle);
+    }
 
     if (haveFirstLetterStyle) {
       // Get the correct parentFrame and prevSibling - if a
@@ -9730,9 +9731,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
     nsIFrame* containingBlock = GetFloatContainingBlock(parentFrame);
-    nsStyleContext* blockSC = containingBlock->GetStyleContext();
-    nsIContent* blockContent = containingBlock->GetContent();
-    PRBool haveFLS = HaveFirstLetterStyle(blockContent, blockSC);
+    PRBool haveFLS = containingBlock ?
+      HaveFirstLetterStyle(containingBlock->GetContent(),
+                           containingBlock->GetStyleContext()) :
+      PR_FALSE;
     if (haveFLS) {
       // Trap out to special routine that handles adjusting a blocks
       // frame tree when first-letter style is present.
@@ -11781,6 +11783,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                        PRBool                   aParentIsBlock,
                                        nsTableCreator*          aTableCreator)
 {
+  // XXXbz ideally, this would do all the pushing of various
+  // containing blocks as needed, so callers don't have to do it...
   nsresult rv = NS_OK;
   nsStyleContext* styleContext = aFrame->GetStyleContext();
     
