@@ -938,10 +938,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   } else if (aParent) {
     // this ups the refcount of the gtk widget, we must unref later.
     parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else if(aAppShell) {
-    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
-    if (shellWidget)
-      parentWidget = GTK_WIDGET(shellWidget);
   }
 
   mBounds = aRect;
