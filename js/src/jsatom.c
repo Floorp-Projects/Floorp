@@ -50,6 +50,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsconfig.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -104,7 +105,6 @@ const char js_caller_str[]          = "caller";
 const char js_class_prototype_str[] = "prototype";
 const char js_constructor_str[]     = "constructor";
 const char js_count_str[]           = "__count__";
-const char js_etago_str[]           = "</";
 const char js_eval_str[]            = "eval";
 const char js_getter_str[]          = "getter";
 const char js_get_str[]             = "get";
@@ -112,24 +112,28 @@ const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
 const char js_length_str[]          = "length";
 const char js_name_str[]            = "name";
-const char js_namespace_str[]       = "namespace";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
 const char js_parent_str[]          = "__parent__";
 const char js_proto_str[]           = "__proto__";
-const char js_ptagc_str[]           = "/>";
-const char js_qualifier_str[]       = "::";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";
+const char js_toSource_str[]        = "toSource";
+const char js_toString_str[]        = "toString";
+const char js_toLocaleString_str[]  = "toLocaleString";
+const char js_valueOf_str[]         = "valueOf";
+
+#if JS_HAS_XML_SUPPORT
+const char js_etago_str[]           = "</";
+const char js_namespace_str[]       = "namespace";
+const char js_ptagc_str[]           = "/>";
+const char js_qualifier_str[]       = "::";
 const char js_space_str[]           = " ";
 const char js_stago_str[]           = "<";
 const char js_star_str[]            = "*";
 const char js_starQualifier_str[]   = "*::";
 const char js_tagc_str[]            = ">";
-const char js_toSource_str[]        = "toSource";
-const char js_toString_str[]        = "toString";
-const char js_toLocaleString_str[]  = "toLocaleString";
-const char js_valueOf_str[]         = "valueOf";
 const char js_xml_str[]             = "xml";
+#endif
 
 #ifdef NARCISSUS
 const char js_call_str[]             = "__call__";
@@ -310,7 +314,6 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(classPrototypeAtom,      js_class_prototype_str);
     FROB(constructorAtom,         js_constructor_str);
     FROB(countAtom,               js_count_str);
-    FROB(etagoAtom,               js_etago_str);
     FROB(evalAtom,                js_eval_str);
     FROB(getAtom,                 js_get_str);
     FROB(getterAtom,              js_getter_str);
@@ -318,24 +321,28 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(inputAtom,               js_input_str);
     FROB(lengthAtom,              js_length_str);
     FROB(nameAtom,                js_name_str);
-    FROB(namespaceAtom,           js_namespace_str);
     FROB(noSuchMethodAtom,        js_noSuchMethod_str);
     FROB(parentAtom,              js_parent_str);
     FROB(protoAtom,               js_proto_str);
-    FROB(ptagcAtom,               js_ptagc_str);
-    FROB(qualifierAtom,           js_qualifier_str);
     FROB(setAtom,                 js_set_str);
     FROB(setterAtom,              js_setter_str);
+    FROB(toSourceAtom,            js_toSource_str);
+    FROB(toStringAtom,            js_toString_str);
+    FROB(toLocaleStringAtom,      js_toLocaleString_str);
+    FROB(valueOfAtom,             js_valueOf_str);
+
+#if JS_HAS_XML_SUPPORT
+    FROB(etagoAtom,               js_etago_str);
+    FROB(namespaceAtom,           js_namespace_str);
+    FROB(ptagcAtom,               js_ptagc_str);
+    FROB(qualifierAtom,           js_qualifier_str);
     FROB(spaceAtom,               js_space_str);
     FROB(stagoAtom,               js_stago_str);
     FROB(starAtom,                js_star_str);
     FROB(starQualifierAtom,       js_starQualifier_str);
     FROB(tagcAtom,                js_tagc_str);
-    FROB(toSourceAtom,            js_toSource_str);
-    FROB(toStringAtom,            js_toString_str);
-    FROB(toLocaleStringAtom,      js_toLocaleString_str);
-    FROB(valueOfAtom,             js_valueOf_str);
     FROB(xmlAtom,                 js_xml_str);
+#endif
 
 #ifdef NARCISSUS
     FROB(callAtom,                js_call_str);

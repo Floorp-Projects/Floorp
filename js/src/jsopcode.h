@@ -194,6 +194,7 @@ extern const char       js_null_str[];
 extern const char       js_this_str[];
 extern const char       js_false_str[];
 extern const char       js_true_str[];
+extern const char       js_default_str[];
 extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
 extern const jschar     js_EscapeMap[];
