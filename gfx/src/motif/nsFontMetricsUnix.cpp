@@ -288,7 +288,7 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
   XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
   
 //  width = ::XTextWidth16(fs, xstring, aLength);
-  width = ::XTextWidth16(fs, aString, aLength);
+  width = ::XTextWidth16(fs, (XChar2b *)aString, aLength);
 
 //  PR_Free(xstring);
 
