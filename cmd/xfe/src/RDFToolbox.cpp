@@ -51,11 +51,21 @@ XFE_RDFToolbox::notify(HT_Resource n, HT_Event whatHappened)
   switch (whatHappened) {
   case HT_EVENT_VIEW_ADDED:
       {
-          XFE_RDFToolbar * toolbar = new XFE_RDFToolbar(_frame, 
-                                                        _toolbox, 
-                                                        HT_GetView(n));
+          HT_View view = HT_GetView(n);
+
+          XFE_RDFToolbar * toolbar
+              = new XFE_RDFToolbar(_frame, _toolbox, view);
       }
     break;
+  case HT_EVENT_VIEW_DELETED:
+      {
+          HT_View view = HT_GetView(n);
+
+          XFE_RDFToolbar * toolbar = (XFE_RDFToolbar *)HT_GetViewFEData(view);
+
+          if (toolbar)
+              delete toolbar;
+      }
   default:
       // Fall through and let the base class handle this.
     break;
