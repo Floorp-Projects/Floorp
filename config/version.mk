@@ -51,7 +51,7 @@ ifndef RESFILE
 RCFILE=./module.rc
 RESFILE=./module.res
 _RC_STRING = -QUIET 1 -DEPTH $(DEPTH) -TOPSRCDIR $(topsrcdir) -BITS $(MOZ_BITS) -OBJDIR . -SRCDIR $(srcdir)
-ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
+ifneq ($(BUILD_OFFICIAL)_$(MOZILLA_OFFICIAL),_)
 _RC_STRING += -OFFICIAL 1
 endif
 ifdef MOZ_DEBUG
