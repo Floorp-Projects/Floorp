@@ -32,7 +32,6 @@ REQUIRES	= string \
 		  xpcom \
 		  necko \
 		  dom \
-		  layout \
 		  content \
 		  widget \
 		  js \

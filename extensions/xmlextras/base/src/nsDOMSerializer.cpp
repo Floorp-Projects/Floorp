@@ -49,6 +49,11 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
+#include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIURI.h"
+
 #include "nsLayoutCID.h" // XXX Need range CID
 static NS_DEFINE_CID(kRangeCID,NS_RANGE_CID);
 
@@ -136,8 +141,64 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
   
   *_retval = nsnull;
 
+  // Get JSContext from stack.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  JSContext *cx = nsnull;
+  nsresult rv = NS_OK;
+
+  if (stack) {
+    rv = stack->Peek(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (cx) {
+    // We're called from script, make sure the caller and the root are
+    // from the same origin...
+
+    nsCOMPtr<nsIDOMDocument> owner_doc(do_QueryInterface(root));
+
+    if (!owner_doc) {
+      root->GetOwnerDocument(getter_AddRefs(owner_doc));
+    }
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(owner_doc));
+
+    if (doc) {
+      nsCOMPtr<nsIPrincipal> principal;
+      nsCOMPtr<nsIURI> root_uri;
+
+      doc->GetPrincipal(getter_AddRefs(principal));
+
+      nsCOMPtr<nsICodebasePrincipal> codebase_principal =
+        do_QueryInterface(principal);
+
+      if (codebase_principal) {
+        codebase_principal->GetURI(getter_AddRefs(root_uri));
+      }
+
+      if (root_uri) {
+        nsCOMPtr<nsIScriptSecurityManager> secMan = 
+          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = secMan->CheckSameOrigin(cx, root_uri);
+
+        if (NS_FAILED(rv)) {
+          // The node that's being serialized comes from a different
+          // origin than the calling script comes from...
+
+          return rv;
+        }
+      }
+    }      
+  }
+
+  // We're ok security wise...
+
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  nsresult rv = SetUpEncoder(root,nsnull,getter_AddRefs(encoder));
+  rv = SetUpEncoder(root,nsnull,getter_AddRefs(encoder));
   if (NS_FAILED(rv))
     return rv;
 

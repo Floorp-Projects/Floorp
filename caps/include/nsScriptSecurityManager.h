@@ -285,6 +285,11 @@ public:
 
     JSContext* GetSafeJSContext();
 
+    static nsresult
+    SecurityCompareURIs(nsIURI* aSourceURI,
+                        nsIURI* aTargetURI,
+                        PRBool* result);
+
 private:
 
     static JSBool JS_DLL_CALLBACK
@@ -299,7 +304,8 @@ private:
     GetBaseURIScheme(nsIURI* aURI, char** aScheme);
 
     static nsresult 
-    ReportErrorToConsole(nsIURI* aTarget);
+    ReportError(JSContext* cx, const nsAString& messageTag,
+                nsIURI* aSource, nsIURI* aTarget);
 
     nsresult
     GetRootDocShell(JSContext* cx, nsIDocShell **result);
@@ -314,8 +320,9 @@ private:
                             void** aCachedClassPolicy);
 
     nsresult
-    CheckSameOrigin(JSContext* aCx, nsIPrincipal* aSubject, 
-                    nsIPrincipal* aObject, PRUint32 aAction);
+    CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
+                           nsIPrincipal* aObject,
+                           PRUint32 aAction);
     
     PRInt32 
     GetSecurityLevel(nsIPrincipal *principal,

@@ -82,6 +82,8 @@
 #include "nsIVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
+#include "nsIWindowWatcher.h"
+#include "nsIAuthPrompt.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -139,6 +141,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
   NS_INIT_ISUPPORTS();
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED,PR_FALSE);
   mAsync = PR_TRUE;
+  mCrossSiteAccessEnabled = PR_FALSE;
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
@@ -163,6 +166,8 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLHttpRequest)
 NS_INTERFACE_MAP_END
@@ -660,6 +665,12 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
       // Security check failed.
       return NS_OK;
     }
+
+    // Find out if UniversalBrowserRead privileges are enabled
+    // we will need this in case of a redirect
+    rv = secMan->IsCapabilityEnabled("UniversalBrowserRead",
+                                     &mCrossSiteAccessEnabled);
+    if (NS_FAILED(rv)) return rv;
 
     if (argc > 2) {
       JSBool asyncBool;
@@ -1194,6 +1205,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   }
 #endif
 
+  if (!mScriptContext) {
+    // We need a context to check if redirect (if any) is allowed
+    GetCurrentContext(getter_AddRefs(mScriptContext));
+  }
+
   rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
@@ -1209,6 +1225,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 #else
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 #endif
+
+  // Hook us up to listen to redirects and the like
+  mChannel->SetNotificationCallbacks(this);
 
   // Start reading from the channel
   ChangeState(XML_HTTP_REQUEST_SENT);
@@ -1428,6 +1447,80 @@ nsXMLHttpRequest::ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast)
 
   return rv;
 }
+
+/////////////////////////////////////////////////////
+// nsIHttpEventSink methods:
+//
+NS_IMETHODIMP
+nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
+{
+  NS_ENSURE_ARG_POINTER(aNewChannel);
+
+  if (mScriptContext && !mCrossSiteAccessEnabled) {
+    nsresult rv = NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", & rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
+    if (!cx)
+      return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The redirected URI
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    stack->Push(cx);
+
+    rv = secMan->CheckSameOrigin(cx, newURI);
+
+    stack->Pop(&cx);
+    
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  mChannel = aNewChannel;
+
+  return NS_OK;
+}
+
+/////////////////////////////////////////////////////
+// nsIInterfaceRequestor methods:
+//
+NS_IMETHODIMP
+nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
+{
+  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = nsnull;
+
+    nsresult rv;
+    nsCOMPtr<nsIWindowWatcher> ww(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIAuthPrompt> prompt;
+    rv = ww->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsIAuthPrompt *p = prompt.get();
+    NS_ADDREF(p);
+    *aResult = p;
+    return NS_OK;
+  }
+
+  return QueryInterface(aIID, aResult);
+}
+
 
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
