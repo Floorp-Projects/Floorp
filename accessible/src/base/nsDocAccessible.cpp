@@ -443,11 +443,7 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 
     nsRect viewBounds(0, 0, 0, 0);
     if (scrollableView) {
-      const nsIView *view = nsnull;
-      scrollableView->GetClipView(&view);
-      if (view) {
-        viewBounds = view->GetBounds();
-      }
+      viewBounds = scrollableView->View()->GetBounds();
     }
     else {
       nsIView *view;

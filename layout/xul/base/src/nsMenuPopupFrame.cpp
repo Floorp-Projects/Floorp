@@ -1407,23 +1407,19 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
     nsIScrollableView *scrollableView;
     scrollableView=GetScrollableView(childFrame);
     if ( scrollableView ) {
-      nsIView* view=nsnull;
-      scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
-      if ( view ) {
-        nscoord scrollX, scrollY;
+      nscoord scrollX, scrollY;
 
-        nsRect viewRect = view->GetBounds();
-        nsRect itemRect = frame->GetRect();
-        scrollableView->GetScrollPosition(scrollX, scrollY);
-    
-        // scroll down
-        if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
-          scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
-        
-        // scroll up
-        else if ( itemRect.y < scrollY )
-          scrollableView->ScrollTo(scrollX, itemRect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
-      }
+      nsRect viewRect = scrollableView->View()->GetBounds();
+      nsRect itemRect = frame->GetRect();
+      scrollableView->GetScrollPosition(scrollX, scrollY);
+  
+      // scroll down
+      if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
+        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+      
+      // scroll up
+      else if ( itemRect.y < scrollY )
+        scrollableView->ScrollTo(scrollX, itemRect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
     }
   }
 }

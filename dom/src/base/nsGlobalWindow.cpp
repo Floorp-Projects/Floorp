@@ -1958,11 +1958,7 @@ GlobalWindowImpl::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
   rv = view->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIView* portView;
-  rv = CallQueryInterface(view, &portView);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect portRect = portView->GetBounds();
+  nsRect portRect = view->View()->GetBounds();
 
   if (aScrollMaxX)
     *aScrollMaxX = PR_MAX(0,

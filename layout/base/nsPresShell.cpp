@@ -4040,10 +4040,7 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
 {
   // Determine the visible rect in the scrolling view's coordinate space.
   // The size of the visible area is the clip view size
-  const nsIView*  clipView;
-
-  aScrollingView->GetClipView(&clipView);
-  nsRect visibleRect = clipView->GetBounds(); // get width and height
+  nsRect visibleRect = aScrollingView->View()->GetBounds(); // get width and height
   aScrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
 
   // The actual scroll offsets

@@ -426,9 +426,7 @@ CanvasFrame::Paint(nsPresContext*      aPresContext,
         if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
           nscoord width, height;
           scrollableView->GetContainerSize(&width, &height);
-          const nsIView* clippedView;
-          scrollableView->GetClipView(&clippedView);
-          nsRect vcr = clippedView->GetBounds();
+          nsRect vcr = scrollableView->View()->GetBounds();
           focusRect.width = vcr.width;
           focusRect.height = vcr.height;
           nscoord x,y;

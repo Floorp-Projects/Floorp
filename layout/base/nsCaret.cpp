@@ -784,11 +784,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     
     if (scrollableView)
     {
-      const nsIView*      clipView = nsnull;
-      scrollableView->GetClipView(&clipView);
-      if (!clipView) return;      // should always have one
-      
-      nsRect  bounds = clipView->GetBounds();
+      nsRect  bounds = scrollableView->View()->GetBounds();
       scrollableView->GetScrollPosition(bounds.x, bounds.y);
       
       bounds += drawViewOffset;   // offset to coords of returned view

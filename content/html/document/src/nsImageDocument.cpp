@@ -391,15 +391,11 @@ nsImageDocument::RestoreImageTo(PRInt32 aX, PRInt32 aY)
   if (!view)
     return NS_OK;
 
-  nsIView* portView;
-  if (NS_FAILED(CallQueryInterface(view, &portView)))
-    return NS_OK;
-
   nsSize scrolledSize;
   if (NS_FAILED(view->GetContainerSize(&scrolledSize.width, &scrolledSize.height)))
     return NS_OK;
 
-  nsRect portRect = portView->GetBounds();
+  nsRect portRect = view->View()->GetBounds();
   view->ScrollTo((nscoord)(aX / (ratio * mImageWidth) * PR_MAX(0, scrolledSize.width - portRect.width) + 0.5),
                  (nscoord)(aY / (ratio * mImageHeight) * PR_MAX(0, scrolledSize.height - portRect.height) + 0.5),
                  NS_VMREFRESH_IMMEDIATE);
