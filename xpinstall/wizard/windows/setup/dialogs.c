@@ -527,6 +527,13 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           DlgSequenceNext();
           break;
 
+        case IDC_README:
+          if(*diSetupType.szReadmeApp == '\0')
+            WinSpawn(diSetupType.szReadmeFilename, NULL, szSetupDir, SW_SHOWNORMAL, FALSE);
+          else
+            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, SW_SHOWNORMAL, FALSE);
+          break;
+
         case ID_WIZNEXT:
           GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           lstrcpy(sgProduct.szPath, szTempSetupPath);

@@ -1,3 +1,41 @@
+function updateWinReg()
+{
+  //Notes:
+  // can't use a double backslash before subkey - Windows already puts it in.
+  // subkeys have to exist before values can be put in.
+  var winreg = getWinRegistry();
+  var subkey;  //the name of the subkey you are poking around in
+  var valname; // the name of the value you want to look at
+  var value;   //the data in the value you want to look at.
+
+  if(winreg != null) 
+  {
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey  = "SOFTWARE\\Netscape\\Netscape Seamonkey";
+    winreg.createKey(subkey,"");
+    valname = "CurrentVersion";
+    value   = "$UserAgent$";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\Netscape\\Netscape Seamonkey\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+    valname = "Install Directory";
+    value   = communicatorFolder;
+    err     = winreg.setValueString(subkey, valname, value);
+
+    // set the App Paths key here
+    subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\mozilla.exe";
+    winreg.createKey(subkey,"");
+    valname = "";
+    value   = communicatorFolder + "\\mozilla.exe";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    valname = "Path";
+    value   = communicatorFolder;
+    err     = winreg.setValueString(subkey, valname, value);
+  }
+}
+
 // main
 var srDest;
 var err;
@@ -7,7 +45,7 @@ var fileComponentRegStr;
 var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Seamonkey", "", "$Version$"); 
+err    = startInstall("Netscape Seamonkey", "", "$Version$"); 
 logComment("startInstall: " + err);
 
 communicatorFolder = getFolder("Communicator");
@@ -40,6 +78,8 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
     fileComponentReg    = getFolder("file:///", fileComponentRegStr);
     err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);
+
+    updateWinReg();
 
     err = finalizeInstall(); 
     logComment("finalizeInstall() returned: " + err);

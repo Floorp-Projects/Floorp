@@ -169,6 +169,8 @@ typedef struct dlgSetupType
   BOOL  bShowDialog;
   LPSTR szTitle;
   LPSTR szMessage0;
+  LPSTR szReadmeFilename;
+  LPSTR szReadmeApp;
   st    stSetupType0;
   st    stSetupType1;
   st    stSetupType2;
