@@ -21,12 +21,12 @@
 
 <!ENTITY cookieDetails                  "Cookies are small pieces of information that some web sites ask to store on (and later retrieve from) your computer.">
 
-<!ENTITY viewCookies.label              "View Stored Cookies">
-<!ENTITY viewCookies.accesskey          "S">
+<!ENTITY viewCookies.label              "Manage Stored Cookies">
+<!ENTITY viewCookies.accesskey          "M">
 <!ENTITY viewP3P.label                  "View">
 <!ENTITY viewP3P.accesskey              "V">
-<!ENTITY viewTutorial.label             "More Information">
-<!ENTITY viewTutorial.accesskey         "M">
+<!ENTITY viewTutorial.label             "Understanding Privacy">
+<!ENTITY viewTutorial.accesskey         "U">
 
 <!ENTITY limitLifetime.label            "Limit maximum lifetime of cookies to:">
 <!ENTITY limitLifetime.accesskey        "L">
