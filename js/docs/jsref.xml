@@ -692,7 +692,7 @@ JSPROP_INDEX
 JSFUN_BOUND_METHOD
     </SYNTAX>
     <DESCRIPTION>
-      This macro is deprecated. <C>JSFUN_BOUND_METHOD</C> is a flag that indicates a method associated with an object is bound to the object's parent. This macro is no longer needed because the JS engine now supports closures.<P/>
+      This macro is deprecated. <C>JSFUN_BOUND_METHOD</C> is a flag that indicates a method associated with an object is bound to the method's parent, the object on which the method is called.<P/>
     </DESCRIPTION>
     <NOTE>
       This macro exists only for backward compatibility with existing applications. Its 
@@ -2168,7 +2168,7 @@ void JS_Finish(JSRuntime *rt);
 void JS_Lock(JSRuntime *rt);
     </SYNTAX>
     <DESCRIPTION>
-      <C>JS_Lock</C> is an empty, API hook function for developers so that they provide an exclusive locking mechanism for the <C>JSRuntime</C> on a specific platform or for a specific application. Developers must create their own locking function that takes a single argument, <C>rt</C>, the JS run-time environment to lock. Locking the runtime protects critical sections in a threaded environment. After performing one or more exclusive lock operations, the runtime should be unlocked with a call to <C>JS_Unlock</C>.<P/>
+      <C>JS_Lock</C> is a deprecated API; don't use it.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_Unlock'/>
     <SEEALSO value='JS_GetRuntime'/>
@@ -2185,7 +2185,7 @@ void JS_Unlock(JSRuntime *rt);
       </PARAM>
     </SYNTAX>
     <DESCRIPTION>
-      <C>JS_Unlock</C> is an empty, API hook function for developers so that they can provide a mechanism for unlocking the JS run-time environment after having previously locked it with a call to <C>JS_Lock</C>. Developers must create their own unlocking function that takes a single argument, <C>rt</C>, the JS run-time environment to unlock. <C>JS_Unlock</C> must undo the actions taken by the developer's implementation of <C>JS_Lock</C>.<P/>
+      <C>JS_Unlock</C> is a deprecated API; don't use it.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_Lock'/>
     <SEEALSO value='JS_GetRuntime'/>
@@ -2871,16 +2871,18 @@ JSBool JS_RemoveRoot(JSContext *cx, void *rp);
   <ENTRY id='JS_BeginRequest'>
     <TYPE value='Function'/>
     <SUMMARY>
-      Indicates to the JS engine that the application is starting a thread.
+      Indicates to the JS engine that an application thread is entering a critical section that calls the JS API freely but does not block.
     </SUMMARY>
     <SYNTAX>
 void JS_BeginRequest(JSContext *cx);
     </SYNTAX>
     <DESCRIPTION>
-      When your application start a new thread, <C>JS_BeginRequest</C> safely increments the thread counter for the JS engine runtime associated with a given context, <C>cx</C>. In order to increment the counter, this function first checks that garbage collection is not in process. If it is, <C>JS_BeginRequest</C> waits until garbage collection is complete before locking the JS engine runtime and incrementing the thread counter. After incrementing the counter, <C>JS_BeginRequest</C> unlocks the runtime if it previously locked it.<P/>
+      When your multi-threaded application wants to execute JS API calls on a thread, it should use <C>JS_BeginRequest</C> and <C>JS_EndRequest</C> to bracket maximal non-blocking hunks of native code that call the JS API. This "request model" serves two purposes: to interlock with the global mark/sweep garbage collector, and to optimize object locking to be lock-free in most cases. In order to achieve these purposes, <C>JS_BeginRequest</C> first checks that garbage collection is not in process. If it is, <C>JS_BeginRequest</C> waits until garbage collection is complete before locking the JS engine runtime and incrementing its request counter. After incrementing the counter, <C>JS_BeginRequest</C> unlocks the runtime if it previously locked it.<P/>
+      It is therefore imperative that native code executing within an active request on <C>cx</C> not block, or simply take too long. Any blocking native call, or lengthy computation that can race safely with the garbage collector, must be bracketed within the native method or function with <C>JS_SuspendRequest</C> and <C>JS_ResumeRequest</C>.<P/>
+      It is safe to nest calls to <C>JS_BeginRequest</C> so long as each call is balanced by a matching <C>JS_EndRequest</C>.<P/>
     </DESCRIPTION>
     <NOTE>
-      <C>JS_BeginRequest</C> is only available if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
+      <C>JS_BeginRequest</C> is available only if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
     </NOTE>
     <SEEALSO value='JS_EndRequest'/>
     <SEEALSO value='JS_SuspendRequest'/>
@@ -2889,16 +2891,17 @@ void JS_BeginRequest(JSContext *cx);
   <ENTRY id='JS_EndRequest'>
     <TYPE value='Function'/>
     <SUMMARY>
-      Indicates to the JS engine that the application no longer requires a thread.
+      Indicates to the JS engine that an application thread is leaving a critical section that calls the JS API freely but does not block.
     </SUMMARY>
     <SYNTAX>
 void JS_EndRequest(JSContext *cx);
     </SYNTAX>
     <DESCRIPTION>
-      When your application no longer requires a thread, <C>JS_EndRequest</C> safely decrements the thread counter for the JS engine runtime associated with a given context, <C>cx</C>. If decrementing the counter reduces it to zero, <C>JS_EndRequest</C> locks the runtime and notifies the garbage collector so that values no longer in use can be cleaned up. To avoid garbage collection notification, call <C>JS_SuspendRequest</C> instead of <C>JS_EndRequest</C>.<P/>
+      When your multi-threaded application has called <C>JS_BeginRequest</C> and no longer needs to call the JS API in a non-blocking burst of activity, <C>JS_EndRequest</C> safely decrements the request counter for the JS engine runtime associated with a given context, <C>cx</C>. If decrementing the counter reduces it to zero, <C>JS_EndRequest</C> locks the runtime and notifies the garbage collector so that values no longer in use can be cleaned up.<P/>
+      The application may nest calls to <C>JS_BeginRequest</C> provided it balances each such call with a matching <C>JS_EndRequest</C>.<P/>
     </DESCRIPTION>
     <NOTE>
-      <C>JS_EndRequest</C> is only available if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
+      <C>JS_EndRequest</C> is available only if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
     </NOTE>
     <SEEALSO value='JS_BeginRequest'/>
     <SEEALSO value='JS_SuspendRequest'/>
@@ -2907,16 +2910,16 @@ void JS_EndRequest(JSContext *cx);
   <ENTRY id='JS_SuspendRequest'>
     <TYPE value='Function'/>
     <SUMMARY>
-      Indicates to the JS engine that the application is temporarily suspending a thread.
+      Indicates to the JS engine that an application thread executing JS API calls in a request can suspend its API-calling critical section and block.
     </SUMMARY>
     <SYNTAX>
-void JS_SuspendRequest(JSContext *cx);
+jsrefcount JS_SuspendRequest(JSContext *cx);
     </SYNTAX>
     <DESCRIPTION>
-      When your application suspends use of a thread, <C>JS_SuspendRequest</C> safely decrements the thread counter for the JS engine runtime associated with a given context, <C>cx</C>. <P/>
+      When your multi-threaded application is in a request but needs to block or perform lengthy computation that can race safely with the garbage collector, it should call <C>JS_SuspendRequest</C> before the blocking or length call, and <C>JS_ResumeRequest</C> after. <C>JS_SuspendRequest</C> safely decrements the request counter for the JS engine runtime associated with a given context, <C>cx</C>. <C>JS_SuspendRequest</C> returns the saved value of the request-depth counter stored in <C>cx</C>, which must be passed to the matching <C>JS_SuspendRequest</C> after the blocking or length code completes.<P/>
     </DESCRIPTION>
     <NOTE>
-      <C>JS_SuspendRequest</C> is only available if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
+      <C>JS_SuspendRequest</C> is available only if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
     </NOTE>
     <SEEALSO value='JS_BeginRequest'/>
     <SEEALSO value='JS_EndRequest'/>
@@ -2925,16 +2928,18 @@ void JS_SuspendRequest(JSContext *cx);
   <ENTRY id='JS_ResumeRequest'>
     <TYPE value='Function'/>
     <SUMMARY>
+      Indicates to the JS engine that an application thread in a suspended request wants to resume executing JS API calls from non-blocking code.
       Restarts a previously suspended thread.
     </SUMMARY>
     <SYNTAX>
-void JS_ResumeRequest(JSContext *cx);
+void JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
     </SYNTAX>
     <DESCRIPTION>
-      When your application restart a previously suspended thread, <C>JS_BeginRequest</C> safely increments the thread counter for the JS engine runtime associated with a given context, <C>cx</C>. In order to increment the counter, this function first checks that garbage collection is not in process. If it is, <C>JS_ResumeRequest</C> waits until garbage collection is complete before locking the JS engine runtime and incrementing the thread counter. After incrementing the counter, <C>JS_ResumeRequest</C> unlocks the runtime if it previously locked it.<P/>
+      When your multi-threaded application restarts a previously suspended request, <C>JS_ResumeRequest</C> safely restores the request depth counter from <C>saveDepth</C> for the given context, <C>cx</C>. It does this by calling <C>JS_BeginRequest</C> exactly <C>saveDepth</C> times, so <C>saveDepth</C> must come from the return value of a prior <C>JS_SuspendRequest</C> call.
+      <P/>
     </DESCRIPTION>
     <NOTE>
-      <C>JS_ResumeRequest</C> is only available if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
+      <C>JS_ResumeRequest</C> is available only if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
     </NOTE>
     <SEEALSO value='JS_BeginRequest'/>
     <SEEALSO value='JS_EndRequest'/>
@@ -5547,7 +5552,7 @@ JSScript * JS_CompileFile(JSContext *cx, JSObject *obj,
       <C>JS_CompileFile</C> compiles the text of script in an external file location for execution by the JS engine.<P/>
     </DESCRIPTION>
     <NOTE>
-      <C>JS_CompileFile</C> is only available if you compile the JS engine with the <C>JSFILE</C> macro defined.<P/>
+      <C>JS_CompileFile</C> is available only if you compile the JS engine with the <C>JSFILE</C> macro defined.<P/>
       <C>filename</C> is the name of the file (or URL) containing the script to compile.<P/>
       If a script compiles successfully, <C>JS_CompileFile</C> returns a pointer to the compiled script. Otherwise <C>JS_CompileFile</C> returns <C>NULL</C>.<P/>
     </NOTE>
