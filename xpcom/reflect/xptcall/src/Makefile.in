@@ -33,6 +33,6 @@ CSRCS		= xptcall.c 	\
 
 REQUIRES	= $(MODULE)
 
-export:: libs
+# export:: libs
 
 include $(topsrcdir)/config/rules.mk
