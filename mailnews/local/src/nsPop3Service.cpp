@@ -77,6 +77,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 
 	nsXPIDLCString popHost;
 	nsXPIDLCString popUser;
+	PRInt32 popPort;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
 	nsCOMPtr<nsIURI> url;
@@ -89,6 +90,9 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 	if (NS_FAILED(rv)) return rv;
 	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
 
+    rv = server->GetPort(&popPort);
+	if (NS_FAILED(rv)) return rv;
+
 	rv = server->GetUsername(getter_Copies(popUser));
 	if (NS_FAILED(rv)) return rv;
 	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
@@ -100,8 +104,8 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)escapedUsername, (const char *)popHost, POP3_PORT);
-        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)escapedUsername, (const char *)popHost, &popPort);
+        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow, popPort);
         PR_FREEIF(urlSpec);
     }
 
@@ -127,6 +131,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	nsresult rv = NS_OK;
 	nsXPIDLCString popHost;
 	nsXPIDLCString popUser;
+	PRInt32 popPort;
 	nsCOMPtr<nsIURI> url;
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
@@ -138,6 +143,9 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	if (NS_FAILED(rv)) return rv;
 	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
 
+    rv = server->GetPort(&popPort);
+	if (NS_FAILED(rv)) return rv;
+
 	rv = server->GetUsername(getter_Copies(popUser));
     if (NS_FAILED(rv)) return rv;
 
@@ -148,14 +156,14 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
     
 	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
     
-	if (NS_SUCCEEDED(rv) && popServer)
+	if (NS_SUCCEEDED(rv) && popServer )
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, POP3_PORT);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, popPort);
 
 		if (aInbox) 
 		{
-			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
+			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow, popPort );
 		}
 
         PR_FREEIF(urlSpec);
@@ -182,7 +190,7 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
                                      nsIPop3IncomingServer *server,
 									 nsIUrlListener * aUrlListener,
                                      nsIURI ** aUrl,
-									 nsIMsgWindow *aMsgWindow)
+									 nsIMsgWindow *aMsgWindow, PRInt32 popPort)
 {
 	nsPop3Sink * pop3Sink = new nsPop3Sink();
 	if (pop3Sink)
@@ -230,7 +238,7 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 				// is loosing our port when the url is just scheme://host:port.
 				// when they fix this bug I can remove the following code where we
 				// manually set the port.
-				(*aUrl)->SetPort(POP3_PORT);
+				(*aUrl)->SetPort(popPort);
 			}
 		}
 	}
@@ -339,7 +347,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = BuildPop3Url((char *)popSpec.GetBuffer(), folder, popServer,
-                      urlListener, _retval, nsnull); 
+                      urlListener, _retval, nsnull, port); 
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = 
