@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 			layout \
 			xuldoc \
 			view \
+			imglib2 \
 			$(NULL)
 
 CPPSRCS		= \
