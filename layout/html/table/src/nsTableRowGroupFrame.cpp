@@ -220,22 +220,6 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
-
-  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&  
-      (eCompatibility_Standard == mode)) {
-    const nsStyleVisibility* vis = 
-    (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisibleOrCollapsed()) {
-      const nsStyleBorder* border =
-        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      nsRect rect(0,0,mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *border, 0, 0, PR_TRUE);
-    }
-  }
-
 #ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
@@ -243,34 +227,18 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
+  // Standards mode background painting removed.  See bug 4510
 
-  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&  
-      (eCompatibility_Standard == mode)) {
-    // paint the backgrouds of the rows, skipping the cells
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, NS_ROW_FRAME_PAINT_SKIP_CELLS);
-      kid->GetNextSibling(&kid);
-    }
-    // paint the backgrounds of the cells and their descendants, skipping the rows
-    kid = mFrames.FirstChild();
-    while (kid) {
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer, NS_ROW_FRAME_PAINT_SKIP_ROW);
-      kid->GetNextSibling(&kid);
-    }
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+    aRenderingContext.PushState();
+    SetOverflowClipRect(aRenderingContext);
   }
-  else {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
-      aRenderingContext.PushState();
-      SetOverflowClipRect(aRenderingContext);
-    }
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
-    }
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
   }
   return NS_OK;
   /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/

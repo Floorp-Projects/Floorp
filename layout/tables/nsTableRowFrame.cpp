@@ -584,22 +584,6 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
-      !(aFlags && (NS_ROW_FRAME_PAINT_SKIP_ROW == aFlags))) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_Standard == mode) {
-      const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      if (vis->IsVisibleOrCollapsed()) {
-        const nsStyleBorder* border =
-          (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *border, 0, 0, PR_TRUE);
-      }
-    }
-  }
 
 #ifdef DEBUG
   // for debug...
@@ -608,19 +592,18 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
+  // Standards mode background painting removed.  See bug 4510
 
-  if (!(aFlags && (NS_ROW_FRAME_PAINT_SKIP_CELLS == aFlags))) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
-      aRenderingContext.PushState();
-      SetOverflowClipRect(aRenderingContext);
-    }
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
-    }
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+    aRenderingContext.PushState();
+    SetOverflowClipRect(aRenderingContext);
+  }
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
   }
   return NS_OK;
 

@@ -197,6 +197,11 @@ table[rules] {
   border: inherit;
   -moz-opacity: inherit;
 }
+
+/* make sure backgrounds are inherited in tables  -- see bug 4510*/
+td, th, tr {
+  background: inherit;
+}
    
 /* caption inherits from table not table-outer */  
 caption {
