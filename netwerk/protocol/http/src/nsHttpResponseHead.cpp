@@ -624,9 +624,12 @@ nsHttpResponseHead::ParseContentType(char *type)
         // if the server sent "*/*", it is meaningless, so do not store it.
         // also, if type is the same as mContentType, then just update the
         // charset.  however, if charset is empty and mContentType hasn't
-        // changed, then don't wipe-out an existing mContentCharset.
+        // changed, then don't wipe-out an existing mContentCharset.  we
+        // also want to reject a mime-type if it does not include a slash.
+        // some servers give junk after the charset parameter, which may
+        // include a comma, so this check makes us a bit more tolerant.
 
-        if (*type && strcmp(type, "*/*") != 0) {
+        if (*type && strcmp(type, "*/*") != 0 && strchr(type, '/')) {
             PRBool eq = mContentType.Equals(Substring(type, typeEnd));
             if (!eq)
                 mContentType.Assign(type, typeEnd - type);
