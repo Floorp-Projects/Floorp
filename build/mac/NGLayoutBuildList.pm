@@ -1052,6 +1052,7 @@ sub MakeResourceAliases()
 	#// Make aliases of resource files
 	#//
 	_MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
+	_MakeAlias(":mozilla:layout:html:document:src:arrow.gif",								"$resource_dir");	
 	_MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",			"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
