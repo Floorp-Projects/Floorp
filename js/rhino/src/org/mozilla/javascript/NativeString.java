@@ -72,11 +72,6 @@ final class NativeString extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-    {
-        return "(new String(\""+ScriptRuntime.escapeString(string)+"\"))";
-    }
-
     protected int getIdAttributes(int id)
     {
         if (id == Id_length) {
@@ -101,6 +96,7 @@ final class NativeString extends IdScriptable {
 
                 case Id_constructor:               return 1;
                 case Id_toString:                  return 0;
+                case Id_toSource:                  return 0;
                 case Id_valueOf:                   return 0;
                 case Id_charAt:                    return 1;
                 case Id_charCodeAt:                return 1;
@@ -169,6 +165,12 @@ final class NativeString extends IdScriptable {
                 case Id_valueOf:
                     // ECMA 15.5.4.2: 'the toString function is not generic.
                     return realThis(thisObj, f).string;
+
+                case Id_toSource: {
+                    String s = realThis(thisObj, f).string;
+                    return "(new String(\""+ScriptRuntime.escapeString(s)
+                           +"\"))";
+                }
 
                 case Id_charAt:
                 case Id_charCodeAt: {
@@ -735,6 +737,7 @@ final class NativeString extends IdScriptable {
 
                 case Id_constructor:             return "constructor";
                 case Id_toString:                return "toString";
+                case Id_toSource:                return "toSource";
                 case Id_valueOf:                 return "valueOf";
                 case Id_charAt:                  return "charAt";
                 case Id_charCodeAt:              return "charCodeAt";
@@ -791,7 +794,7 @@ final class NativeString extends IdScriptable {
     private static int toPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2001-04-23 12:50:07 GMT+02:00
+// #generated# Last update: 2004-03-17 13:44:29 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 3: c=s.charAt(2);
@@ -812,10 +815,7 @@ final class NativeString extends IdScriptable {
                 case 't': X="split";id=Id_split; break L;
                 } break L;
             case 6: switch (s.charAt(1)) {
-                case 'e': c=s.charAt(0);
-                    if (c=='l') { X="length";id=Id_length; }
-                    else if (c=='s') { X="search";id=Id_search; }
-                    break L;
+                case 'e': X="search";id=Id_search; break L;
                 case 'h': X="charAt";id=Id_charAt; break L;
                 case 'n': X="anchor";id=Id_anchor; break L;
                 case 'o': X="concat";id=Id_concat; break L;
@@ -829,9 +829,10 @@ final class NativeString extends IdScriptable {
                 case 'n': X="indexOf";id=Id_indexOf; break L;
                 case 't': X="italics";id=Id_italics; break L;
                 } break L;
-            case 8: c=s.charAt(0);
-                if (c=='f') { X="fontsize";id=Id_fontsize; }
-                else if (c=='t') { X="toString";id=Id_toString; }
+            case 8: c=s.charAt(4);
+                if (c=='r') { X="toString";id=Id_toString; }
+                else if (c=='s') { X="fontsize";id=Id_fontsize; }
+                else if (c=='u') { X="toSource";id=Id_toSource; }
                 break L;
             case 9: c=s.charAt(0);
                 if (c=='f') { X="fontcolor";id=Id_fontcolor; }
@@ -855,38 +856,39 @@ final class NativeString extends IdScriptable {
     private static final int
         Id_constructor               = MAX_INSTANCE_ID + 1,
         Id_toString                  = MAX_INSTANCE_ID + 2,
-        Id_valueOf                   = MAX_INSTANCE_ID + 3,
-        Id_charAt                    = MAX_INSTANCE_ID + 4,
-        Id_charCodeAt                = MAX_INSTANCE_ID + 5,
-        Id_indexOf                   = MAX_INSTANCE_ID + 6,
-        Id_lastIndexOf               = MAX_INSTANCE_ID + 7,
-        Id_split                     = MAX_INSTANCE_ID + 8,
-        Id_substring                 = MAX_INSTANCE_ID + 9,
-        Id_toLowerCase               = MAX_INSTANCE_ID + 10,
-        Id_toUpperCase               = MAX_INSTANCE_ID + 11,
-        Id_substr                    = MAX_INSTANCE_ID + 12,
-        Id_concat                    = MAX_INSTANCE_ID + 13,
-        Id_slice                     = MAX_INSTANCE_ID + 14,
-        Id_bold                      = MAX_INSTANCE_ID + 15,
-        Id_italics                   = MAX_INSTANCE_ID + 16,
-        Id_fixed                     = MAX_INSTANCE_ID + 17,
-        Id_strike                    = MAX_INSTANCE_ID + 18,
-        Id_small                     = MAX_INSTANCE_ID + 19,
-        Id_big                       = MAX_INSTANCE_ID + 20,
-        Id_blink                     = MAX_INSTANCE_ID + 21,
-        Id_sup                       = MAX_INSTANCE_ID + 22,
-        Id_sub                       = MAX_INSTANCE_ID + 23,
-        Id_fontsize                  = MAX_INSTANCE_ID + 24,
-        Id_fontcolor                 = MAX_INSTANCE_ID + 25,
-        Id_link                      = MAX_INSTANCE_ID + 26,
-        Id_anchor                    = MAX_INSTANCE_ID + 27,
-        Id_equals                    = MAX_INSTANCE_ID + 28,
-        Id_equalsIgnoreCase          = MAX_INSTANCE_ID + 29,
-        Id_match                     = MAX_INSTANCE_ID + 30,
-        Id_search                    = MAX_INSTANCE_ID + 31,
-        Id_replace                   = MAX_INSTANCE_ID + 32,
+        Id_toSource                  = MAX_INSTANCE_ID + 3,
+        Id_valueOf                   = MAX_INSTANCE_ID + 4,
+        Id_charAt                    = MAX_INSTANCE_ID + 5,
+        Id_charCodeAt                = MAX_INSTANCE_ID + 6,
+        Id_indexOf                   = MAX_INSTANCE_ID + 7,
+        Id_lastIndexOf               = MAX_INSTANCE_ID + 8,
+        Id_split                     = MAX_INSTANCE_ID + 9,
+        Id_substring                 = MAX_INSTANCE_ID + 10,
+        Id_toLowerCase               = MAX_INSTANCE_ID + 11,
+        Id_toUpperCase               = MAX_INSTANCE_ID + 12,
+        Id_substr                    = MAX_INSTANCE_ID + 13,
+        Id_concat                    = MAX_INSTANCE_ID + 14,
+        Id_slice                     = MAX_INSTANCE_ID + 15,
+        Id_bold                      = MAX_INSTANCE_ID + 16,
+        Id_italics                   = MAX_INSTANCE_ID + 17,
+        Id_fixed                     = MAX_INSTANCE_ID + 18,
+        Id_strike                    = MAX_INSTANCE_ID + 19,
+        Id_small                     = MAX_INSTANCE_ID + 20,
+        Id_big                       = MAX_INSTANCE_ID + 21,
+        Id_blink                     = MAX_INSTANCE_ID + 22,
+        Id_sup                       = MAX_INSTANCE_ID + 23,
+        Id_sub                       = MAX_INSTANCE_ID + 24,
+        Id_fontsize                  = MAX_INSTANCE_ID + 25,
+        Id_fontcolor                 = MAX_INSTANCE_ID + 26,
+        Id_link                      = MAX_INSTANCE_ID + 27,
+        Id_anchor                    = MAX_INSTANCE_ID + 28,
+        Id_equals                    = MAX_INSTANCE_ID + 29,
+        Id_equalsIgnoreCase          = MAX_INSTANCE_ID + 30,
+        Id_match                     = MAX_INSTANCE_ID + 31,
+        Id_search                    = MAX_INSTANCE_ID + 32,
+        Id_replace                   = MAX_INSTANCE_ID + 33,
 
-        MAX_PROTOTYPE_ID             = MAX_INSTANCE_ID + 32;
+        MAX_PROTOTYPE_ID             = MAX_INSTANCE_ID + 33;
 
 // #/string_id_map#
 

@@ -91,11 +91,6 @@ final class NativeDate extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-    {
-        return "(new Date("+ScriptRuntime.toString(date)+"))";
-    }
-
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
@@ -109,6 +104,7 @@ final class NativeDate extends IdScriptable {
                 case Id_toLocaleTimeString: return 0;
                 case Id_toLocaleDateString: return 0;
                 case Id_toUTCString:        return 0;
+                case Id_toSource:           return 0;
                 case Id_valueOf:            return 0;
                 case Id_getTime:            return 0;
                 case Id_getYear:            return 0;
@@ -190,6 +186,11 @@ final class NativeDate extends IdScriptable {
                     double t = realThis(thisObj, f).date;
                     if (t == t) { return js_toUTCString(t); }
                     return js_NaN_date_str;
+                }
+
+                case Id_toSource: {
+                    double t = realThis(thisObj, f).date;
+                    return "(new Date("+ScriptRuntime.toString(t)+"))";
                 }
 
                 case Id_valueOf:
@@ -1433,6 +1434,7 @@ final class NativeDate extends IdScriptable {
                 case Id_toLocaleTimeString: return "toLocaleTimeString";
                 case Id_toLocaleDateString: return "toLocaleDateString";
                 case Id_toUTCString:        return "toUTCString";
+                case Id_toSource:           return "toSource";
                 case Id_valueOf:            return "valueOf";
                 case Id_getTime:            return "getTime";
                 case Id_getYear:            return "getYear";
@@ -1479,7 +1481,7 @@ final class NativeDate extends IdScriptable {
     protected int mapNameToId(String s) {
         if (!prototypeFlag) { return 0; }
         int id;
-// #generated# Last update: 2001-04-22 23:46:59 CEST
+// #generated# Last update: 2004-03-17 13:33:23 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 6: X="getDay";id=Id_getDay; break L;
@@ -1498,19 +1500,18 @@ final class NativeDate extends IdScriptable {
                     break L;
                 case 'u': X="valueOf";id=Id_valueOf; break L;
                 } break L;
-            case 8: c=s.charAt(0);
-                if (c=='g') {
-                    c=s.charAt(7);
-                    if (c=='h') { X="getMonth";id=Id_getMonth; }
-                    else if (c=='s') { X="getHours";id=Id_getHours; }
-                }
-                else if (c=='s') {
-                    c=s.charAt(7);
-                    if (c=='h') { X="setMonth";id=Id_setMonth; }
+            case 8: switch (s.charAt(3)) {
+                case 'H': c=s.charAt(0);
+                    if (c=='g') { X="getHours";id=Id_getHours; }
                     else if (c=='s') { X="setHours";id=Id_setHours; }
-                }
-                else if (c=='t') { X="toString";id=Id_toString; }
-                break L;
+                    break L;
+                case 'M': c=s.charAt(0);
+                    if (c=='g') { X="getMonth";id=Id_getMonth; }
+                    else if (c=='s') { X="setMonth";id=Id_setMonth; }
+                    break L;
+                case 'o': X="toSource";id=Id_toSource; break L;
+                case 't': X="toString";id=Id_toString; break L;
+                } break L;
             case 9: X="getUTCDay";id=Id_getUTCDay; break L;
             case 10: c=s.charAt(3);
                 if (c=='M') {
@@ -1604,44 +1605,45 @@ final class NativeDate extends IdScriptable {
         Id_toLocaleTimeString   =  6,
         Id_toLocaleDateString   =  7,
         Id_toUTCString          =  8,
-        Id_valueOf              =  9,
-        Id_getTime              = 10,
-        Id_getYear              = 11,
-        Id_getFullYear          = 12,
-        Id_getUTCFullYear       = 13,
-        Id_getMonth             = 14,
-        Id_getUTCMonth          = 15,
-        Id_getDate              = 16,
-        Id_getUTCDate           = 17,
-        Id_getDay               = 18,
-        Id_getUTCDay            = 19,
-        Id_getHours             = 20,
-        Id_getUTCHours          = 21,
-        Id_getMinutes           = 22,
-        Id_getUTCMinutes        = 23,
-        Id_getSeconds           = 24,
-        Id_getUTCSeconds        = 25,
-        Id_getMilliseconds      = 26,
-        Id_getUTCMilliseconds   = 27,
-        Id_getTimezoneOffset    = 28,
-        Id_setTime              = 29,
-        Id_setMilliseconds      = 30,
-        Id_setUTCMilliseconds   = 31,
-        Id_setSeconds           = 32,
-        Id_setUTCSeconds        = 33,
-        Id_setMinutes           = 34,
-        Id_setUTCMinutes        = 35,
-        Id_setHours             = 36,
-        Id_setUTCHours          = 37,
-        Id_setDate              = 38,
-        Id_setUTCDate           = 39,
-        Id_setMonth             = 40,
-        Id_setUTCMonth          = 41,
-        Id_setFullYear          = 42,
-        Id_setUTCFullYear       = 43,
-        Id_setYear              = 44,
+        Id_toSource             =  9,
+        Id_valueOf              = 10,
+        Id_getTime              = 11,
+        Id_getYear              = 12,
+        Id_getFullYear          = 13,
+        Id_getUTCFullYear       = 14,
+        Id_getMonth             = 15,
+        Id_getUTCMonth          = 16,
+        Id_getDate              = 17,
+        Id_getUTCDate           = 18,
+        Id_getDay               = 19,
+        Id_getUTCDay            = 20,
+        Id_getHours             = 21,
+        Id_getUTCHours          = 22,
+        Id_getMinutes           = 23,
+        Id_getUTCMinutes        = 24,
+        Id_getSeconds           = 25,
+        Id_getUTCSeconds        = 26,
+        Id_getMilliseconds      = 27,
+        Id_getUTCMilliseconds   = 28,
+        Id_getTimezoneOffset    = 29,
+        Id_setTime              = 30,
+        Id_setMilliseconds      = 31,
+        Id_setUTCMilliseconds   = 32,
+        Id_setSeconds           = 33,
+        Id_setUTCSeconds        = 34,
+        Id_setMinutes           = 35,
+        Id_setUTCMinutes        = 36,
+        Id_setHours             = 37,
+        Id_setUTCHours          = 38,
+        Id_setDate              = 39,
+        Id_setUTCDate           = 40,
+        Id_setMonth             = 41,
+        Id_setUTCMonth          = 42,
+        Id_setFullYear          = 43,
+        Id_setUTCFullYear       = 44,
+        Id_setYear              = 45,
 
-        MAX_PROTOTYPE_ID        = 44;
+        MAX_PROTOTYPE_ID        = 45;
 
     private static final int
         Id_toGMTString  =  Id_toUTCString; // Alias, see Ecma B.2.6

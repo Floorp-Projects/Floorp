@@ -91,21 +91,6 @@ public class BaseFunction extends IdScriptable implements Function {
                                        functionName);
     }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-    {
-        int indent = 0;
-        int flags = Decompiler.TO_SOURCE_FLAG;
-        if (args.length != 0) {
-            indent = ScriptRuntime.toInt32(args[0]);
-            if (indent >= 0) {
-                flags = 0;
-            } else {
-                indent = 0;
-            }
-        }
-        return decompile(cx, indent, flags);
-    }
-
     protected int getIdAttributes(int id)
     {
         switch (id) {
@@ -176,6 +161,7 @@ public class BaseFunction extends IdScriptable implements Function {
             switch (methodId) {
                 case Id_constructor: return 1;
                 case Id_toString:    return 1;
+                case Id_toSource:    return 1;
                 case Id_apply:       return 2;
                 case Id_call:        return 1;
             }
@@ -191,15 +177,27 @@ public class BaseFunction extends IdScriptable implements Function {
         if (prototypeFlag) {
             switch (methodId) {
               case Id_constructor:
-                  return jsConstructor(cx, scope, args);
+                return jsConstructor(cx, scope, args);
 
               case Id_toString: {
+                BaseFunction realf = realFunction(thisObj, f);
                 int indent = ScriptRuntime.toInt32(args, 0);
-                Object x = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-                if (x instanceof BaseFunction) {
-                    return ((BaseFunction)x).decompile(cx, indent, 0);
+                return realf.decompile(cx, indent, 0);
+              }
+
+              case Id_toSource: {
+                BaseFunction realf = realFunction(thisObj, f);
+                int indent = 0;
+                int flags = Decompiler.TO_SOURCE_FLAG;
+                if (args.length != 0) {
+                    indent = ScriptRuntime.toInt32(args[0]);
+                    if (indent >= 0) {
+                        flags = 0;
+                    } else {
+                        indent = 0;
+                    }
                 }
-                throw ScriptRuntime.typeError1("msg.incompat.call", "toString");
+                return realf.decompile(cx, indent, flags);
               }
 
               case Id_apply:
@@ -209,6 +207,15 @@ public class BaseFunction extends IdScriptable implements Function {
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
+    }
+
+    private BaseFunction realFunction(Scriptable thisObj, IdFunction f)
+    {
+        Object x = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
+        if (x instanceof BaseFunction) {
+            return (BaseFunction)x;
+        }
+        throw ScriptRuntime.typeError1("msg.incompat.call", f.functionName);
     }
 
     /**
@@ -510,6 +517,7 @@ public class BaseFunction extends IdScriptable implements Function {
             switch (id) {
                 case Id_constructor:  return "constructor";
                 case Id_toString:     return "toString";
+                case Id_toSource:     return "toSource";
                 case Id_apply:        return "apply";
                 case Id_call:         return "call";
             }
@@ -552,12 +560,15 @@ public class BaseFunction extends IdScriptable implements Function {
         if (id != 0 || !prototypeFlag) { return id; }
 
 // #string_id_map#
-// #generated# Last update: 2001-05-20 00:12:12 GMT+02:00
-        L0: { id = 0; String X = null;
+// #generated# Last update: 2004-03-17 13:23:22 CET
+        L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 4: X="call";id=Id_call; break L;
             case 5: X="apply";id=Id_apply; break L;
-            case 8: X="toString";id=Id_toString; break L;
+            case 8: c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+                break L;
             case 11: X="constructor";id=Id_constructor; break L;
             }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
@@ -569,10 +580,11 @@ public class BaseFunction extends IdScriptable implements Function {
     private static final int
         Id_constructor    = MAX_INSTANCE_ID + 1,
         Id_toString       = MAX_INSTANCE_ID + 2,
-        Id_apply          = MAX_INSTANCE_ID + 3,
-        Id_call           = MAX_INSTANCE_ID + 4,
+        Id_toSource       = MAX_INSTANCE_ID + 3,
+        Id_apply          = MAX_INSTANCE_ID + 4,
+        Id_call           = MAX_INSTANCE_ID + 5,
 
-        MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 4;
+        MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 5;
 
 // #/string_id_map#
 

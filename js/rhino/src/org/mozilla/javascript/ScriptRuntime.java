@@ -603,10 +603,6 @@ public class ScriptRuntime {
                 Function f = (Function)v;
                 return toString(f.call(cx, scope, obj, emptyArgs));
             }
-            if (value instanceof ScriptableObject) {
-                ScriptableObject so = (ScriptableObject)obj;
-                return so.toSource(cx, scope, emptyArgs);
-            }
             return toString(value);
         }
         throw errorWithClassName("msg.invalid.type", value);

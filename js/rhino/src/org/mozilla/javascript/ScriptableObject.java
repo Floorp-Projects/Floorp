@@ -676,69 +676,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return ScriptRuntime.jsDelegatesTo(instance, this);
     }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
-    {
-        boolean toplevel, iterating;
-        if (cx.iterating == null) {
-            toplevel = true;
-            iterating = false;
-            cx.iterating = new ObjToIntMap(31);
-        } else {
-            toplevel = false;
-            iterating = cx.iterating.has(this);
-        }
-
-        StringBuffer result = new StringBuffer(128);
-        if (toplevel) {
-            result.append("(");
-        }
-        result.append('{');
-
-        // Make sure cx.iterating is set to null when done
-        // so we don't leak memory
-        try {
-            if (!iterating) {
-                cx.iterating.intern(this); // stop recursion.
-                Object[] ids = this.getIds();
-                for(int i=0; i < ids.length; i++) {
-                    if (i > 0)
-                        result.append(", ");
-                    Object id = ids[i];
-                    Object value;
-                    if (id instanceof Integer) {
-                        int intId = ((Integer)id).intValue();
-                        value = this.get(intId, this);
-                        result.append(intId);
-                    } else {
-                        String strId = (String)id;
-                        value = this.get(strId, this);
-                        if (ScriptRuntime.isValidIdentifierName(strId)) {
-                            result.append(strId);
-                        } else {
-                            result.append('\'');
-                            result.append(
-                                ScriptRuntime.escapeString(strId, '\''));
-                            result.append('\'');
-                        }
-                    }
-                    result.append(':');
-                    result.append(ScriptRuntime.uneval(cx, scope, value));
-                }
-            }
-        } finally {
-            if (toplevel) {
-                cx.iterating = null;
-            }
-        }
-
-        result.append('}');
-        if (toplevel) {
-            result.append(')');
-        }
-        return result.toString();
-    }
-
     /**
      * Defines JavaScript objects from a Java class that implements Scriptable.
      *

@@ -56,11 +56,6 @@ final class NativeMath extends IdScriptable
 
     public String getClassName() { return "Math"; }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-    {
-        return "Math";
-    }
-
     protected int getIdAttributes(int id)
     {
         if (id > LAST_METHOD_ID) {
@@ -92,6 +87,7 @@ final class NativeMath extends IdScriptable
     public int methodArity(int methodId)
     {
         switch (methodId) {
+            case Id_toSource: return 0;
             case Id_abs:      return 1;
             case Id_acos:     return 1;
             case Id_asin:     return 1;
@@ -121,6 +117,9 @@ final class NativeMath extends IdScriptable
     {
         double x;
         switch (methodId) {
+            case Id_toSource:
+                return "Math";
+
             case Id_abs:
                 x = ScriptRuntime.toNumber(args, 0);
                 // abs(-0.0) should be 0.0, but -0.0 < 0.0 == false
@@ -306,6 +305,7 @@ final class NativeMath extends IdScriptable
     protected String getIdName(int id)
     {
         switch (id) {
+            case Id_toSource: return "toSource";
             case Id_abs:      return "abs";
             case Id_acos:     return "acos";
             case Id_asin:     return "asin";
@@ -342,7 +342,7 @@ final class NativeMath extends IdScriptable
     protected int mapNameToId(String s)
     {
         int id;
-// #generated# Last update: 2001-03-23 13:50:14 GMT+01:00
+// #generated# Last update: 2004-03-17 13:51:32 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 1: if (s.charAt(0)=='E') {id=Id_E; break L0;} break L;
@@ -381,6 +381,7 @@ final class NativeMath extends IdScriptable
                 else if (c=='r') { X="random";id=Id_random; }
                 break L;
             case 7: X="SQRT1_2";id=Id_SQRT1_2; break L;
+            case 8: X="toSource";id=Id_toSource; break L;
             }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
@@ -389,37 +390,39 @@ final class NativeMath extends IdScriptable
     }
 
     private static final int
-        Id_abs          =  1,
-        Id_acos         =  2,
-        Id_asin         =  3,
-        Id_atan         =  4,
-        Id_atan2        =  5,
-        Id_ceil         =  6,
-        Id_cos          =  7,
-        Id_exp          =  8,
-        Id_floor        =  9,
-        Id_log          = 10,
-        Id_max          = 11,
-        Id_min          = 12,
-        Id_pow          = 13,
-        Id_random       = 14,
-        Id_round        = 15,
-        Id_sin          = 16,
-        Id_sqrt         = 17,
-        Id_tan          = 18,
+        Id_toSource     =  1,
+        Id_abs          =  2,
+        Id_acos         =  3,
+        Id_asin         =  4,
+        Id_atan         =  5,
+        Id_atan2        =  6,
+        Id_ceil         =  7,
+        Id_cos          =  8,
+        Id_exp          =  9,
+        Id_floor        = 10,
+        Id_log          = 11,
+        Id_max          = 12,
+        Id_min          = 13,
+        Id_pow          = 14,
+        Id_random       = 15,
+        Id_round        = 16,
+        Id_sin          = 17,
+        Id_sqrt         = 18,
+        Id_tan          = 19,
 
-        LAST_METHOD_ID  = 18,
+        LAST_METHOD_ID  = 19;
 
-        Id_E            = 19,
-        Id_PI           = 20,
-        Id_LN10         = 21,
-        Id_LN2          = 22,
-        Id_LOG2E        = 23,
-        Id_LOG10E       = 24,
-        Id_SQRT1_2      = 25,
-        Id_SQRT2        = 26,
+    private static final int
+        Id_E            = LAST_METHOD_ID + 1,
+        Id_PI           = LAST_METHOD_ID + 2,
+        Id_LN10         = LAST_METHOD_ID + 3,
+        Id_LN2          = LAST_METHOD_ID + 4,
+        Id_LOG2E        = LAST_METHOD_ID + 5,
+        Id_LOG10E       = LAST_METHOD_ID + 6,
+        Id_SQRT1_2      = LAST_METHOD_ID + 7,
+        Id_SQRT2        = LAST_METHOD_ID + 8,
 
-        MAX_INSTANCE_ID = 26;
+        MAX_INSTANCE_ID = LAST_METHOD_ID + 8;
 
     { setMaxId(MAX_INSTANCE_ID); }
 

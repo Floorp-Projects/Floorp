@@ -66,18 +66,11 @@ final class NativeBoolean extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-    {
-        if (booleanValue)
-            return "(new Boolean(true))";
-        else
-            return "(new Boolean(false))";
-    }
-
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             if (methodId == Id_constructor) return 1;
             if (methodId == Id_toString) return 0;
+            if (methodId == Id_toSource) return 0;
             if (methodId == Id_valueOf) return 0;
         }
         return super.methodArity(methodId);
@@ -97,8 +90,16 @@ final class NativeBoolean extends IdScriptable {
                 }
                 // Boolean(val) converts val to a boolean.
                 return wrap_boolean(b);
+
             } else if (methodId == Id_toString) {
                 return realThisBoolean(thisObj, f) ? "true" : "false";
+
+            } else if (methodId == Id_toSource) {
+                if (realThisBoolean(thisObj, f))
+                    return "(new Boolean(true))";
+                else
+                    return "(new Boolean(false))";
+
             } else if (methodId == Id_valueOf) {
                 return wrap_boolean(realThisBoolean(thisObj, f));
             }
@@ -118,6 +119,7 @@ final class NativeBoolean extends IdScriptable {
         if (prototypeFlag) {
             if (id == Id_constructor) return "constructor";
             if (id == Id_toString) return "toString";
+            if (id == Id_toSource) return "toSource";
             if (id == Id_valueOf) return "valueOf";
         }
         return null;
@@ -128,11 +130,15 @@ final class NativeBoolean extends IdScriptable {
     protected int mapNameToId(String s) {
         if (!prototypeFlag) { return 0; }
         int id;
-// #generated# Last update: 2001-04-23 10:38:18 CEST
-        L0: { id = 0; String X = null;
+// #generated# Last update: 2004-03-17 13:28:00 CET
+        L0: { id = 0; String X = null; int c;
             int s_length = s.length();
             if (s_length==7) { X="valueOf";id=Id_valueOf; }
-            else if (s_length==8) { X="toString";id=Id_toString; }
+            else if (s_length==8) {
+                c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+            }
             else if (s_length==11) { X="constructor";id=Id_constructor; }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
@@ -143,8 +149,9 @@ final class NativeBoolean extends IdScriptable {
     private static final int
         Id_constructor          = 1,
         Id_toString             = 2,
-        Id_valueOf              = 3,
-        MAX_PROTOTYPE_ID        = 3;
+        Id_toSource             = 3,
+        Id_valueOf              = 4,
+        MAX_PROTOTYPE_ID        = 4;
 
 // #/string_id_map#
 

@@ -132,6 +132,7 @@ public class NativeArray extends IdScriptable {
                 case Id_constructor:     return 1;
                 case Id_toString:        return 0;
                 case Id_toLocaleString:  return 1;
+                case Id_toSource:        return 0;
                 case Id_join:            return 1;
                 case Id_reverse:         return 0;
                 case Id_sort:            return 1;
@@ -164,6 +165,9 @@ public class NativeArray extends IdScriptable {
 
                 case Id_toLocaleString:
                     return toStringHelper(cx, scope, thisObj, false, true);
+
+                case Id_toSource:
+                    return toStringHelper(cx, scope, thisObj, true, false);
 
                 case Id_join:
                     return js_join(cx, thisObj, args);
@@ -316,13 +320,6 @@ public class NativeArray extends IdScriptable {
         }
         return super.getDefaultValue(hint);
     }
-
-    protected String toSource(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
-    {
-        return toStringHelper(cx, scope, this, true, false);
-    }
-
 
     /**
      * See ECMA 15.4.1,2
@@ -1126,6 +1123,7 @@ public class NativeArray extends IdScriptable {
                 case Id_constructor:     return "constructor";
                 case Id_toString:        return "toString";
                 case Id_toLocaleString:  return "toLocaleString";
+                case Id_toSource:        return "toSource";
                 case Id_join:            return "join";
                 case Id_reverse:         return "reverse";
                 case Id_sort:            return "sort";
@@ -1161,7 +1159,7 @@ public class NativeArray extends IdScriptable {
     private static int toPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2001-04-23 11:46:01 GMT+02:00
+// #generated# Last update: 2004-03-17 13:17:02 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 3: X="pop";id=Id_pop; break L;
@@ -1176,14 +1174,16 @@ public class NativeArray extends IdScriptable {
                 break L;
             case 6: c=s.charAt(0);
                 if (c=='c') { X="concat";id=Id_concat; }
-                else if (c=='l') { X="length";id=Id_length; }
                 else if (c=='s') { X="splice";id=Id_splice; }
                 break L;
             case 7: c=s.charAt(0);
                 if (c=='r') { X="reverse";id=Id_reverse; }
                 else if (c=='u') { X="unshift";id=Id_unshift; }
                 break L;
-            case 8: X="toString";id=Id_toString; break L;
+            case 8: c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+                break L;
             case 11: X="constructor";id=Id_constructor; break L;
             case 14: X="toLocaleString";id=Id_toLocaleString; break L;
             }
@@ -1197,18 +1197,19 @@ public class NativeArray extends IdScriptable {
         Id_constructor          = MAX_INSTANCE_ID + 1,
         Id_toString             = MAX_INSTANCE_ID + 2,
         Id_toLocaleString       = MAX_INSTANCE_ID + 3,
-        Id_join                 = MAX_INSTANCE_ID + 4,
-        Id_reverse              = MAX_INSTANCE_ID + 5,
-        Id_sort                 = MAX_INSTANCE_ID + 6,
-        Id_push                 = MAX_INSTANCE_ID + 7,
-        Id_pop                  = MAX_INSTANCE_ID + 8,
-        Id_shift                = MAX_INSTANCE_ID + 9,
-        Id_unshift              = MAX_INSTANCE_ID + 10,
-        Id_splice               = MAX_INSTANCE_ID + 11,
-        Id_concat               = MAX_INSTANCE_ID + 12,
-        Id_slice                = MAX_INSTANCE_ID + 13,
+        Id_toSource             = MAX_INSTANCE_ID + 4,
+        Id_join                 = MAX_INSTANCE_ID + 5,
+        Id_reverse              = MAX_INSTANCE_ID + 6,
+        Id_sort                 = MAX_INSTANCE_ID + 7,
+        Id_push                 = MAX_INSTANCE_ID + 8,
+        Id_pop                  = MAX_INSTANCE_ID + 9,
+        Id_shift                = MAX_INSTANCE_ID + 10,
+        Id_unshift              = MAX_INSTANCE_ID + 11,
+        Id_splice               = MAX_INSTANCE_ID + 12,
+        Id_concat               = MAX_INSTANCE_ID + 13,
+        Id_slice                = MAX_INSTANCE_ID + 14,
 
-        MAX_PROTOTYPE_ID        = MAX_INSTANCE_ID + 13;
+        MAX_PROTOTYPE_ID        = MAX_INSTANCE_ID + 14;
 
 // #/string_id_map#
 
