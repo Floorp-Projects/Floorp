@@ -267,13 +267,13 @@ C<BuildProject()> and C<BuildProjectClean()> are identical, except that the latt
 sub BuildProject($;$)
 	{
 		my ($project_path, $target_name) = @_;
-		build_project($project_path, $target_name, "false");
+		build_project($project_path, $target_name, 0);
 	}
 
 sub BuildProjectClean($;$)
 	{
 		my ($project_path, $target_name) = @_;
-		build_project($project_path, $target_name, "true");
+		build_project($project_path, $target_name, 1);
 	}
 
 
