@@ -517,12 +517,12 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
                                     m_hostName,
                                     "nntp",
                                     getter_AddRefs(server));
-	if (NS_FAILED(rv)) return rv;
-	if (!server) return NS_ERROR_FAILURE;
+	NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
+	if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
     
 	m_nntpServer = do_QueryInterface(server, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!m_nntpServer) return NS_ERROR_FAILURE;
+	NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
+	if (!m_nntpServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
 	PRInt32 max_articles;
 	rv = m_nntpServer->GetMaxArticles(&max_articles);
