@@ -1768,7 +1768,6 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       if (NS_ERROR_UENC_NOMAPPING == rv) {
         PRBool needToCheckCharset;
         mCompFields->GetNeedToCheckCharset(&needToCheckCharset);
-        printf("need to check charset=%d\n", needToCheckCharset);
         if (needToCheckCharset) {
           nsCOMPtr<nsIPrompt> prompt;
           GetDefaultPrompt(getter_AddRefs(prompt));
