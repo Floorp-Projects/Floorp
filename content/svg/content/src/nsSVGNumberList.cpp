@@ -143,7 +143,7 @@ nsSVGNumberList::SetValueString(const nsAString& aValue)
     double value = PR_strtod(token, &left);
     if (token!=left) {
       nsCOMPtr<nsIDOMSVGNumber> number;
-      NS_NewSVGNumber(getter_AddRefs(number), value);
+      NS_NewSVGNumber(getter_AddRefs(number), float(value));
       if (!number) {
         rv = NS_ERROR_FAILURE;
         break;

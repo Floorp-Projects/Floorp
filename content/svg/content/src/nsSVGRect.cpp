@@ -119,10 +119,10 @@ nsSVGRect::SetValueString(const nsAString& aValue)
   }
   else {
     WillModify();
-    mX      = (double)vals[0];
-    mY      = (double)vals[1];
-    mWidth  = (double)vals[2];
-    mHeight = (double)vals[3];
+    mX      = float(vals[0]);
+    mY      = float(vals[1]);
+    mWidth  = float(vals[2]);
+    mHeight = float(vals[3]);
     DidModify();
   }
 

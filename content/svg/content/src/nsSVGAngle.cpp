@@ -214,13 +214,13 @@ nsSVGAngle::GetValue(float *aValue)
   switch (mSpecifiedUnitType) {
   case SVG_ANGLETYPE_UNSPECIFIED:
   case SVG_ANGLETYPE_DEG:
-    *aValue = (mValueInSpecifiedUnits * M_PI) / 180.0;
+    *aValue = float((mValueInSpecifiedUnits * M_PI) / 180.0);
     break;
   case SVG_ANGLETYPE_RAD:
     *aValue = mValueInSpecifiedUnits;
     break;
   case SVG_ANGLETYPE_GRAD:
-    *aValue = (mValueInSpecifiedUnits * M_PI) / 100.0;
+    *aValue = float((mValueInSpecifiedUnits * M_PI) / 100.0);
     break;
   default:
     rv = NS_ERROR_FAILURE;
@@ -239,13 +239,13 @@ nsSVGAngle::SetValue(float aValue)
   switch (mSpecifiedUnitType) {
   case SVG_ANGLETYPE_UNSPECIFIED:
   case SVG_ANGLETYPE_DEG:
-    mValueInSpecifiedUnits = (aValue * 180.0) / M_PI;
+    mValueInSpecifiedUnits = float((aValue * 180.0) / M_PI);
     break;
   case SVG_ANGLETYPE_RAD:
     mValueInSpecifiedUnits = aValue;
     break;
   case SVG_ANGLETYPE_GRAD:
-    mValueInSpecifiedUnits = (aValue * 100.0) / M_PI;
+    mValueInSpecifiedUnits = float((aValue * 100.0) / M_PI);
     break;
   default:
     rv = NS_ERROR_FAILURE;

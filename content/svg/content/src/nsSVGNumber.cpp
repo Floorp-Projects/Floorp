@@ -128,10 +128,10 @@ nsSVGNumber::SetValueString(const nsAString& aValue)
     double value = PR_strtod(str, &rest);
     if (rest && rest!=str) {
       if (*rest=='%') {
-        rv = SetValue(value/100.0);
+        rv = SetValue(float(value/100.0));
         rest++;
       } else {
-        rv = SetValue(value);
+        rv = SetValue(float(value));
       }
       // skip trailing spaces
       while (*rest && isspace(*rest))
