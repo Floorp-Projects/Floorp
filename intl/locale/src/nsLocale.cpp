@@ -152,7 +152,7 @@ nsLocale::Hash_CompareNSString(const void* s1, const void* s2)
 
 
 PRIntn
-nsLocale::Hash_EnmerateDelete(PLHashEntry *he, PRIntn index, void *arg)
+nsLocale::Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg)
 {
 	nsString*	key, *value;
 
