@@ -45,6 +45,11 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredSize)
+ 				{ nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, aDesiredSize); }
 };
 
 #endif
