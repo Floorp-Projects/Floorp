@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:17:39 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/28 00:28:02 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -47,7 +47,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -147,14 +147,12 @@ sub readdir_file_prefix {
   
   my (@sorted_files) = sort grep ( /^$prefix/, @dir_list );
 
-  # remove the real database, which has no suffix so appears first in
-  # the list.
+  # make it taint safe.
 
+  my (@untainted_files) = map { main::extract_filename_chars($_) } 
+  @sorted_files;
 
- #this looks very wrong.  The grep should take care of this
-#  my (@sorted_files) = @sorted_files[1 .. $#sorted_files];
-  
-  return @sorted_files;
+  return @untainted_files;
 }
 
 
