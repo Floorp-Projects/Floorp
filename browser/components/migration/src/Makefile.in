@@ -53,6 +53,7 @@ REQUIRES	= \
 		  browsercomps \
 		  toolkitcomps \
 		  profile \
+		  profilemanager \
 		  pref \
 		  rdf \
 		  satchel \
