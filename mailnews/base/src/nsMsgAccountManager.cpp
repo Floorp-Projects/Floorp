@@ -548,8 +548,10 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   m_accounts->RemoveElement(aAccount);
 
   // if it's the default, clear the default account
-  if (m_defaultAccount.get() == aAccount)
+  if (m_defaultAccount.get() == aAccount) {
     m_defaultAccount = nsnull;
+    setDefaultAccountPref(nsnull);
+  }
 
   // XXX - need to figure out if this is the last time this server is
   // being used, and only send notification then.
