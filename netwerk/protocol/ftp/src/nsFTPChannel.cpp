@@ -94,6 +94,10 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
     if (mConnected)
         return NS_ERROR_FAILURE;
 
+    if (!getter) {
+        return NS_ERROR_FAILURE;
+    }
+
     mUrl = uri;
     NS_ADDREF(mUrl);
 
