@@ -49,6 +49,7 @@ nsContentIterator::nsContentIterator(nsIContent* aRoot)
   mCurNode = nsnull;
   mFirst = nsnull;
   mLast = nsnull;
+  mIsDone = false;
   
   if (!aRoot)
   {
@@ -68,6 +69,7 @@ nsContentIterator::nsContentIterator(nsIDOMRange* aRange)
   mCurNode = nsnull;
   mFirst = nsnull;
   mLast = nsnull;
+  mIsDone = false;
   
   if (!aRange)
   {
@@ -176,6 +178,7 @@ nsContentIterator::~nsContentIterator()
 nsresult nsContentIterator::First()
 {
   if (!mFirst) return NS_ERROR_FAILURE;
+  mIsDone = false;
   if (mFirst == mCurNode) return NS_OK;
   NS_IF_RELEASE(mCurNode);
   mCurNode = mFirst;
@@ -187,6 +190,7 @@ nsresult nsContentIterator::First()
 nsresult nsContentIterator::Last()
 {
   if (!mLast) return NS_ERROR_FAILURE;
+  mIsDone = false;
   if (mLast == mCurNode) return NS_OK;
   NS_IF_RELEASE(mCurNode);
   mCurNode = mLast;
@@ -197,8 +201,13 @@ nsresult nsContentIterator::Last()
 
 nsresult nsContentIterator::Next()
 {
+  if (mIsDone) return NS_ERROR_FAILURE;
   if (!mCurNode) return NS_OK;
-  if (mCurNode == mLast) return NS_ERROR_FAILURE;
+  if (mCurNode == mLast) 
+  {
+    mIsDone = true;
+    return NS_ERROR_FAILURE;
+  }
   
   nsIContent *cParent;
   nsIContent *cSibling;
@@ -242,6 +251,7 @@ nsresult nsContentIterator::Prev()
 nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
 {
   if (!mCurNode) return NS_ERROR_FAILURE;
+  if (mIsDone) return NS_ERROR_FAILURE;
   *aNode = mCurNode;
   NS_ADDREF(*aNode);
   return NS_OK;
@@ -250,7 +260,7 @@ nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
 
 nsresult nsContentIterator::IsDone()
 {
-  if (mCurNode == mLast) return NS_OK;
+  if (mIsDone) return NS_OK;
   else return NS_COMFALSE;
 }
 
