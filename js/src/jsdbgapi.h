@@ -252,6 +252,10 @@ typedef struct JSPropertyDesc {
 #define JSPD_ALIAS      0x08    /* property has an alias id */
 #define JSPD_ARGUMENT   0x10    /* argument to function */
 #define JSPD_VARIABLE   0x20    /* local variable in function */
+#define JSPD_EXCEPTION  0x40    /* exception occurred fetching the property, */
+                                /* value is exception */
+#define JSPD_ERROR      0x80    /* native getter returned JS_FALSE without */
+                                /* throwing an exception */
 
 typedef struct JSPropertyDescArray {
     uint32          length;     /* number of elements in array */
