@@ -309,3 +309,7 @@ searchattribute {
 searchoperator {
   behavior: url(chrome://messenger/skin/mailWidgets.xml#searchoperator);
 }
+
+searchvalue {
+ behavior: url(chrome://messenger/skin/mailWidgets.xml#searchvalue);
+}

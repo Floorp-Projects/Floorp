@@ -1,3 +1,74 @@
+ 
+menubar 
+  {
+    background-color      : #CCCCCC;
+  }
+
+menu, menuitem  
+  {
+    color                 : #000000;
+	  vertical-align        : middle;
+  }
+
+menu[disabled="true"], menuitem[disabled="true"],
+menu[menuactive="true"][disabled="true"],
+menuitem[menuactive="true"][disabled="true"]
+  {
+	  color                 : #999999;
+  }
+
+/* XXX menupopups have to have a color explicitly specified. this is a bug */
+menupopup, popup 
+  {
+    background-color      : #CCCCCC;
+    border                : 1px outset #CCCCCC;
+  }
+
+menupopup > menu, popup > menu,
+menupopup > menuitem, popup > menuitem
+  {
+    max-width             : 25em;
+    min-width             : 10em;
+    margin                : 0px;
+  }
+
+menuseparator 
+  {
+    border-bottom         : 1px solid #336699; 
+    margin                : 2px 0px 2px 0px;
+  }
+
+menubar > menu 
+  {
+    border                : 1px solid transparent;
+    padding               : 2px 3px 2px 3px;
+    margin                : 2px 0px 2px 0px;
+  }
+
+menupopup > menu, menupopup > menuitem,
+popup > menu, popup > menuitem
+  {
+    padding               : 2px;
+  }
+
+menubar > menu[menuactive="true"] 
+  {
+    border                : 1px outset #CCCCCC;
+  }
+
+menubar > menu[menuactive="true"][open="true"] 
+  {
+    border                : 1px outset #CCCCCC;
+  }
+
+menupopup > menu[menuactive="true"],
+menupopup > menuitem[menuactive="true"],
+popup > menu[menuactive="true"],
+popup > menuitem[menuactive="true"]
+  {
+    background-color      : #000080;
+    color                 : #FFFFFF;
+  }
 
 /** 
  * Atomic sub-parts of standard menus

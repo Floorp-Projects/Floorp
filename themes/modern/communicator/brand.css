@@ -9,6 +9,11 @@
     padding               : 11px 3px 1px 23px;
     margin                : 0px;
   }  
+
+#navigator-throbber[busy="true"]
+  {
+    list-style-image      : url("chrome://global/skin/animthrob.gif");
+  }
   
 #navigator-throbber:hover:active
   {

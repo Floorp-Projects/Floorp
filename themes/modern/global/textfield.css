@@ -64,9 +64,8 @@
       background-color    : inherit;
     }
 
-  .textfield-input, .textfield-textarea
+  textfield[disabled="true"] 
     {
-      color               : #999999;
       cursor              : default ! important;
     } 
     

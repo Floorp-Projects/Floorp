@@ -23,7 +23,14 @@
           <![CDATA[
             this.internalScope = val;
             this.refreshList();
-            if (this.target) this.target.searchScope = val;
+            var targets = this.targets;
+            if (targets) {
+              for (var i=0; i< targets.length; i++) {
+                dump("searchScopeSet: targets[" + i + "] = " + targets[i] + "\n")
+                targets[i].searchScope = val;
+              }
+            }
+            dump("done\n");
           ]]>
         </setter>
         <getter>
@@ -47,10 +54,22 @@
           ]]>
         </getter>
       </property>
-      <property name="target" readonly="true">
+      <property name="targets" readonly="true">
         <getter>
           <![CDATA[
-            return document.getElementById(this.getAttribute("for"));
+            var forAttrs =  this.getAttribute("for");
+            if (!forAttrs) return null;
+            var targetIds = forAttrs.split(",");
+            if (targetIds.length == 0) return null;
+
+            var targets = new Array;
+            var j=0;
+            for (var i=0; i<targetIds.length;i++) {
+              var target = document.getElementById(targetIds[i]);
+              if (target) targets[j++] = target;
+              if (!target) dump("Bad target " + i + ": " + targetIds[i] + "\n");
+            }
+            return targets;
           ]]>
         </getter>
       </property>
@@ -96,13 +115,24 @@
           <![CDATA[
             dump("onSelect!\n");
             var menulist = this.anonymousContent[0];
-            if (this.target) this.target.searchAttribute = menulist.data;
+
+            // notify targets
+            var targets = this.targets;
+            if (targets) {
+              dump("There are " + targets.length + " targets\n");
+              for (var i=0; i< targets.length; i++) {
+                dump("onSelect: targets[" + i + "] = " + targets[i] + "\n");
+                targets[i].parentValue = menulist.data;
+              }
+            }
           ]]>
         </body>
       </method>
     </interface>
     <handler type="command" value="dump('onCommand!\n');"/>
   </binding>
+
+  <!-- searchattribute - Subject, Sender, To, CC, etc. -->
   <binding id="searchattribute"
            extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
     <interface>
@@ -121,6 +151,8 @@
       </property>
     </interface>
   </binding>
+
+  <!-- searchoperator - Contains, Is Less than, etc -->
   <binding id="searchoperator"
            extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
     <interface>
@@ -137,20 +169,66 @@
           ]]>
         </getter>
       </property>
-      <property name="searchAttribute">
+      <property name="parentValue">
         <setter>
           <![CDATA[
-            this.internalSearchAttribute = val;
+            this.searchAttribute = val;
             this.refreshList();
           ]]>
         </setter>
         <getter>
           <![CDATA[
-            return this.internalSearchAttribute;
+            return this.searchAttribute;
           ]]>
         </getter>
       </property>
     </interface>
   </binding>
 
+  <!-- searchvalue - a widget which dynamically changes it's user interface
+       depending on what type of data it's supposed to be showing
+       currently handles arbitrary text entry, and menulists for priority and
+       status
+  -->
+  <binding id="searchvalue" extends="xul:deck">
+    <!-- yeah yeah, this stuff needs to be localized. I'm working on it! -->
+    <content>
+      <xul:textfield flex="1" />
+      <xul:menulist flex="1" >
+        <xul:menupopup>
+          <xul:menuitem value="Lowest"/>
+          <xul:menuitem value="Low"/>
+          <xul:menuitem value="Normal"/>
+          <xul:menuitem value="High"/>
+          <xul:menuitem value="Highest"/>
+        </xul:menupopup>
+      </xul:menulist>
+      <xul:menulist flex="1" >
+        <xul:menupopup>
+          <xul:menuitem value="read"/>
+          <xul:menuitem value="replied"/>
+        </xul:menupopup>
+      </xul:menulist>
+    </content>
+    <interface>
+      <!-- parentValue forwards to the attribute -->
+      <property name="parentValue" onset="this.searchAttribute=val;"
+                                   onget="return this.searchAttribute;"/>
+      <property name="searchAttribute" onget="return this.internalAttribute;">
+        <setter>
+          <![CDATA[
+            this.internalAttribute = val;
+            // we inherit from a deck, so just use it's index attribute
+            // to hide/show widgets
+            if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
+              this.setAttribute("index", "2");
+            else if (val == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
+              this.setAttribute("index", "2");
+            else
+              this.setAttribute("index", "0");
+          ]]>
+        </setter>
+      </property>
+    </interface>
+  </binding>
 </bindings>
