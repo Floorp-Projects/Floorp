@@ -46,7 +46,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Undo.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_TextColor.gif $(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_BackColor.gif	$(DIST)\bin\chrome\editor\composer\skin\default\images
-  $(MAKE_INSTALL) images\ED_AlignPopup.gif	$(DIST)\bin\chrome\editor\composer\skin\default\images
+  $(MAKE_INSTALL) images\ED_Align.gif	    $(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_ObjectPopup.gif	$(DIST)\bin\chrome\editor\composer\skin\default\images
 
 clobber::
@@ -76,6 +76,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Undo.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_TextColor.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_BackColor.gif			
-  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_AlignPopup.gif			
+  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Align.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_ObjectPopup.gif			
 

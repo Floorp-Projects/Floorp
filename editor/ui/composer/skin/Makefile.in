@@ -54,7 +54,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_Undo.gif \
 	$(srcdir)/images/ED_TextColor.gif \
 	$(srcdir)/images/ED_BackColor.gif \
-	$(srcdir)/images/ED_AlignPopup.gif \
+	$(srcdir)/images/ED_Align.gif \
 	$(srcdir)/images/ED_ObjectPopup.gif \
 	$(NULL)
 
