@@ -70,13 +70,6 @@ interface nsIPref : nsISupports {
    */
 
   /*
-   * readConfigFile
-   * 
-   * identify and read the configuration (.cfg) file
-   */
-  void readConfigFile();
-
-  /*
    * readUserPrefs
    * 
    * read a user preference file, pass in null for default file

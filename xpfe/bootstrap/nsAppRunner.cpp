@@ -936,16 +936,11 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 
         rv = prefs->ResetPrefs(); 
         if (NS_FAILED(rv)) return rv; 
-        rv = prefs->ReadConfigFile(); 
-        if (NS_FAILED(rv)) return rv; 
         rv = prefs->ReadUserPrefs(nsnull); 
         if (NS_FAILED(rv)) return rv; 
     } 
     else 
     {
-        rv = prefs->ReadConfigFile(); 
-        if (NS_FAILED(rv)) return rv; 
-
         nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsINativeAppSupport> nativeAppSupport;
