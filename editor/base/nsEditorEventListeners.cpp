@@ -1116,7 +1116,20 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (selCon)
       {
         selCon->SetCaretEnabled(PR_FALSE);
-        selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+        if((flags & nsIHTMLEditor::eEditorSingleLineMask) ||
+          (flags & nsIHTMLEditor::eEditorPlaintextMask) ||
+          (flags & nsIHTMLEditor::eEditorPasswordMask) ||
+          (flags & nsIHTMLEditor::eEditorReadonlyMask) ||
+          (flags & nsIHTMLEditor::eEditorDisabledMask) ||
+          (flags & nsIHTMLEditor::eEditorFilterInputMask))
+        {
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+        }
+        else
+        {
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+        }
+
 #ifdef USE_HACK_REPAINT
 // begin hack repaint
         nsCOMPtr<nsIViewManager> viewmgr;
