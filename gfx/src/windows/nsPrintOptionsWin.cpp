@@ -63,7 +63,6 @@ nsPrintOptionsWin::~nsPrintOptionsWin()
 /* nsIPrintSettings CreatePrintSettings (); */
 nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
-  nsresult rv = NS_OK;
   nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count
   NS_ASSERTION(printSettings, "Can't be NULL!");
 
