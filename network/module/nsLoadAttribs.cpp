@@ -20,6 +20,8 @@
 #include "nsString.h"
 #include "nsILoadAttribs.h"
 #include "prtypes.h"
+#include "prmem.h"
+#include "plstr.h"
 
 #if defined(XP_PC)
 #include <windows.h>  // Needed for Interlocked APIs defined in nsISupports.h
@@ -49,6 +51,10 @@ public:
   NS_IMETHOD SetLoadType(nsURLLoadType aType);
   NS_IMETHOD GetLoadType(nsURLLoadType* aResult);
 
+  // Byte Range Support
+  NS_IMETHOD SetByteRangeHeader(const char *aByteRangeHeader);
+  NS_IMETHOD GetByteRangeHeader(char** aByteRangeHeader);
+
 protected:
     virtual ~nsLoadAttribs();
 
@@ -57,6 +63,7 @@ private:
     PRUint32        mLocalIP;
     nsURLLoadType   mLoadType;
     nsURLReloadType mReloadType;
+    char*           mByteRangeHeader;
 };
 
 // nsLoadAttribs Implementation
@@ -72,10 +79,12 @@ nsLoadAttribs::nsLoadAttribs()
   mLocalIP    = 0;
   mLoadType   = nsURLLoadNormal;
   mReloadType = nsURLReload;
+  mByteRangeHeader = NULL;
 }
 
 nsLoadAttribs::~nsLoadAttribs() 
 {
+    PR_FREEIF(mByteRangeHeader);
 }
 
 NS_IMETHODIMP
@@ -205,6 +214,37 @@ nsLoadAttribs::GetLoadType(nsURLLoadType* aResult)
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsLoadAttribs::SetByteRangeHeader(const char* aByteRangeHeader) 
+{
+  NS_LOCK_INSTANCE();
+
+  mByteRangeHeader = PL_strdup(aByteRangeHeader);
+
+  NS_UNLOCK_INSTANCE();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadAttribs::GetByteRangeHeader(char **aByteRangeHeader) 
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aByteRangeHeader) 
+  {
+    rv = NS_ERROR_NULL_POINTER;
+  } 
+  else 
+  {
+    NS_LOCK_INSTANCE();
+    *aByteRangeHeader = PL_strdup(mByteRangeHeader);
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
+}
+
+
 
 // Creation routines
 NS_NET nsresult NS_NewLoadAttribs(nsILoadAttribs** aInstancePtrResult) {

@@ -75,6 +75,11 @@ public:
   // Load method
   NS_IMETHOD SetLoadType(nsURLLoadType aType) = 0;
   NS_IMETHOD GetLoadType(nsURLLoadType* aResult) = 0;
+
+  // Byte Range Support
+  NS_IMETHOD SetByteRangeHeader(const char *aByteRangeHeader) = 0;
+  NS_IMETHOD GetByteRangeHeader(char** aByteRangeHeader) = 0;
+  
 };
 
 /* Creation routines. */
