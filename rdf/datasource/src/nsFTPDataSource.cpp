@@ -41,8 +41,8 @@
 #include "prprf.h"
 #include "prio.h"
 
-#include "net.h"
-#include "nsINetlibURL.h"
+//#include "net.h"
+//#include "nsINetlibURL.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -52,6 +52,7 @@
 
 
 static NS_DEFINE_CID(kRDFServiceCID,                  NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,       NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_IID(kIRDFServiceIID,                 NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,              NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFFTPDataSourceIID,           NS_IRDFFTPDATAOURCE_IID);
@@ -62,7 +63,7 @@ static NS_DEFINE_IID(kISupportsIID,                   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,                NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,                    NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,                 NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kINetlibURLIID,                  NS_INETLIBURL_IID);
+//static NS_DEFINE_IID(kINetlibURLIID,                  NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIRDFFTPDataSourceCallbackIID,   NS_IRDFFTPDATASOURCECALLBACK_IID);
 
 
@@ -78,8 +79,6 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
 static	nsIRDFService		*gRDFService = nsnull;
 static	FTPDataSource		*gFTPDataSource = nsnull;
 
-PRInt32 FTPDataSource::gRefCnt;
-
 nsIRDFResource		*FTPDataSource::kNC_Child;
 nsIRDFResource		*FTPDataSource::kNC_Name;
 nsIRDFResource		*FTPDataSource::kNC_URL;
@@ -87,7 +86,10 @@ nsIRDFResource		*FTPDataSource::kNC_FTPObject;
 nsIRDFResource		*FTPDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FTPDataSource::kRDF_type;
 
+PRInt32			FTPDataSource::gRefCnt;
+PRInt32			FTPDataSourceCallback::gRefCnt;
 
+nsIRDFResource		*FTPDataSourceCallback::kNC_Child;
 
 static PRBool
 peq(nsIRDFResource* r1, nsIRDFResource* r2)
@@ -146,8 +148,7 @@ isFTPDirectory(nsIRDFResource *r)
 
 
 FTPDataSource::FTPDataSource(void)
-	: mURI(nsnull),
-	  mObservers(nsnull)
+	: mURI(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -176,16 +177,6 @@ FTPDataSource::~FTPDataSource (void)
 	gRDFService->UnregisterDataSource(this);
 
 	PL_strfree(mURI);
-	if (nsnull != mObservers)
-	{
-		for (PRInt32 i = mObservers->Count(); i >= 0; --i)
-		{
-			nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-			NS_RELEASE(obs);
-		}
-		delete mObservers;
-		mObservers = nsnull;
-	}
 
 	if (--gRefCnt == 0)
 	{
@@ -195,6 +186,8 @@ FTPDataSource::~FTPDataSource (void)
 		NS_RELEASE(kNC_FTPObject);
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
+
+		NS_RELEASE(mInner);
 
 		gFTPDataSource = nsnull;
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -236,6 +229,12 @@ FTPDataSource::Init(const char *uri)
 {
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
+	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+				nsnull, kIRDFDataSourceIID, (void **)&mInner)))
+		return rv;
+	if (NS_FAILED(rv = mInner->Init(uri)))
+		return rv;
+
 	if ((mURI = PL_strdup(uri)) == nsnull)
 		return rv;
 
@@ -262,8 +261,7 @@ FTPDataSource::GetSource(nsIRDFResource* property,
                           PRBool tv,
                           nsIRDFResource** source /* out */)
 {
-	nsresult rv = NS_ERROR_RDF_NO_VALUE;
-	return rv;
+	return mInner->GetSource(property, target, tv, source);
 }
 
 
@@ -274,8 +272,7 @@ FTPDataSource::GetSources(nsIRDFResource *property,
 			   PRBool tv,
                            nsIRDFAssertionCursor **sources /* out */)
 {
-	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return mInner->GetSources(property, target, tv, sources);
 }
 
 
@@ -369,6 +366,17 @@ FTPDataSourceCallback::FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResourc
 	NS_INIT_REFCNT();
 	NS_ADDREF(mDataSource);
 	NS_ADDREF(mParent);
+
+	if (gRefCnt++ == 0)
+	{
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   kIRDFServiceIID,
+                                                   (nsISupports**) &gRDFService);
+
+		PR_ASSERT(NS_SUCCEEDED(rv));
+
+		gRDFService->GetResource(kURINC_child, &kNC_Child);
+	}
 }
 
 
@@ -377,6 +385,10 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 {
 	NS_IF_RELEASE(mDataSource);
 	NS_IF_RELEASE(mParent);
+	if (--gRefCnt == 0)
+	{
+		NS_RELEASE(kNC_Child);
+	}
 }
 
 
@@ -483,7 +495,15 @@ FTPDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, P
 				char		*name = path.ToNewCString();
 				if (nsnull != name)
 				{
-					printf("File: %s\n", name);
+					nsIRDFResource		*ftpChild;
+					if (NS_SUCCEEDED(rv = gRDFService->GetResource(name,
+						&ftpChild)))
+					{
+						printf("File: %s\n", name);
+
+						mDataSource->Assert(mParent, kNC_Child,
+							ftpChild, PR_TRUE);
+					}
 					delete []name;
 				}
 			}
@@ -538,7 +558,7 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsVoidArray **array)
 		nsIURL		*url;
 		if (NS_SUCCEEDED(rv = NS_NewURL(&url, ftpURL)))
 		{
-			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(this, source);
+			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
 			if (nsnull != callback)
 			{
 				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
@@ -560,10 +580,8 @@ FTPDataSource::GetTargets(nsIRDFResource *source,
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the FTP data source.
-	if (! tv)
-		return rv;
 
-	if (isFTPURI(source))
+	if ((tv) && isFTPURI(source))
 	{
 		if (peq(property, kNC_Child))
 		{
@@ -590,11 +608,15 @@ FTPDataSource::GetTargets(nsIRDFResource *source,
 				}
 			}
 		}
+		if ((rv == NS_OK) && (nsnull != array))
+		{
+			*targets = new FTPCursor(source, property, PR_FALSE, array);
+			NS_ADDREF(*targets);
+		}
 	}
-	if ((rv == NS_OK) && (nsnull != array))
+	else
 	{
-		*targets = new FTPCursor(source, property, PR_FALSE, array);
-		NS_ADDREF(*targets);
+		rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	return(rv);
 }
@@ -635,11 +657,9 @@ FTPDataSource::HasAssertion(nsIRDFResource *source,
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the FTP data source.
-	if (! tv)
-		return rv;
 
 	*hasAssertion = PR_FALSE;
-	if (isFTPURI(source))
+	if ((tv) && isFTPURI(source))
 	{
 		if (peq(property, kRDF_type))
 		{
@@ -650,6 +670,11 @@ FTPDataSource::HasAssertion(nsIRDFResource *source,
 			}
 		}
 	}
+	else
+	{
+		rv = mInner->HasAssertion(source, property, target,
+			tv, hasAssertion);
+	}
 	return (rv);
 }
 
@@ -659,8 +684,7 @@ NS_IMETHODIMP
 FTPDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsIRDFArcsInCursor ** labels /* out */)
 {
-	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return mInner->ArcLabelsIn(node, labels);
 }
 
 
@@ -686,6 +710,10 @@ FTPDataSource::ArcLabelsOut(nsIRDFResource *source,
 			rv = NS_OK;
 		}
 	}
+	else
+	{
+		rv = mInner->ArcLabelsOut(source, labels);
+	}
 	return(rv);
 
 }
@@ -695,8 +723,7 @@ FTPDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 FTPDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
 {
-	NS_NOTYETIMPLEMENTED("sorry!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return mInner->GetAllResources(aCursor);
 }
 
 
@@ -704,13 +731,7 @@ FTPDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
 NS_IMETHODIMP
 FTPDataSource::AddObserver(nsIRDFObserver *n)
 {
-	if (nsnull == mObservers)
-	{
-		if ((mObservers = new nsVoidArray()) == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-	mObservers->AppendElement(n);
-	return NS_OK;
+	return mInner->AddObserver(n);
 }
 
 
@@ -718,10 +739,7 @@ FTPDataSource::AddObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 FTPDataSource::RemoveObserver(nsIRDFObserver *n)
 {
-	if (nsnull == mObservers)
-		return NS_OK;
-	mObservers->RemoveElement(n);
-	return NS_OK;
+	return mInner->RemoveObserver(n);
 }
 
 
@@ -729,8 +747,7 @@ FTPDataSource::RemoveObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 FTPDataSource::Flush()
 {
-	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return mInner->Flush();
 }
 
 
