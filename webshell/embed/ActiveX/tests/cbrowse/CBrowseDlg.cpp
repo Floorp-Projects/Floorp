@@ -29,6 +29,7 @@ void __cdecl fperr(int sig)
 
 TCHAR *aURLs[] =
 {
+	_T("http://whippy/calendar.html"),
 	_T("http://www.mozilla.org"),
 	_T("http://www.yahoo.com"),
 	_T("http://www.netscape.com"),
@@ -236,8 +237,10 @@ void CBrowseDlg::OnGo()
 	IWebBrowser *pIWebBrowser = NULL;
 	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
 	{
-		int nItem = m_cmbURLs.GetCurSel();
-		CString szURL = (nItem == 0) ? m_szTestURL : aURLs[nItem - 1];
+		CString szURL;
+		m_cmbURLs.GetWindowText(szURL);
+//		int nItem = m_cmbURLs.GetCurSel();
+//		CString szURL = (nItem == 0) ? m_szTestURL : aURLs[nItem - 1];
 
 		BSTR bstrURL = szURL.AllocSysString();
 		pIWebBrowser->Navigate(bstrURL, NULL, NULL, NULL, NULL);
