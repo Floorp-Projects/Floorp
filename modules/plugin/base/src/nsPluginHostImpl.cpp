@@ -2564,7 +2564,12 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   {
     next = p->mNext;
 
-    if(!IsRunningPlugin(p))
+    // XXX only remove our plugin from the list if it's not running and not
+    // an XPCOM plugin. XPCOM plugins do not get a call to nsIPlugin::Shutdown
+    // if plugins are reloaded. This also fixes a crash on UNIX where the call
+    // to shutdown would break the ProxyJNI connection to the JRE after a reload.
+    // see bug 86591
+    if(!IsRunningPlugin(p) && (!p->mEntryPoint || (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)))
     {
       if(p == mPlugins)
         mPlugins = next;
