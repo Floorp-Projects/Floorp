@@ -21,6 +21,7 @@
 #define nsScriptNameSetRegistry_h__
 
 #include "nsIScriptNameSetRegistry.h"
+#include "nsIScriptContext.h"
 #include "nsVoidArray.h"
 
 class nsScriptNameSetRegistry : public nsIScriptNameSetRegistry {
@@ -32,6 +33,7 @@ class nsScriptNameSetRegistry : public nsIScriptNameSetRegistry {
 
   NS_IMETHOD AddExternalNameSet(nsIScriptExternalNameSet* aNameSet);
   NS_IMETHOD RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSet);
+  NS_IMETHOD PopulateNameSpace(nsIScriptContext* aScriptContext);
 
  protected:
   nsVoidArray mNameSets;

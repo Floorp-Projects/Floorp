@@ -41,6 +41,7 @@ protected:
      void     GenerateForwardDecls(IdlInterface &aInterface);
      void     GenerateGuid(IdlInterface &aInterface);
      void     GenerateClassDecl(IdlInterface &aInterface);
+     void     GenerateStatic(IdlInterface &aInterface);
      void     GenerateEnums(IdlInterface &aInterface);
      void     GenerateMethods(IdlInterface &aInterface);
      void     GenerateEndClassDecl();

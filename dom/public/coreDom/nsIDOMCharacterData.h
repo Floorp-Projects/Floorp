@@ -32,6 +32,7 @@
 
 class nsIDOMCharacterData : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCHARACTERDATA_IID; return iid; }
 
   NS_IMETHOD    GetData(nsString& aData)=0;
   NS_IMETHOD    SetData(const nsString& aData)=0;

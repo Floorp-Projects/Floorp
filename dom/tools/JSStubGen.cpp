@@ -91,8 +91,7 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsString.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kIncludeConstructorStr =
-"#include \"nsIDOMNativeObjectRegistry.h\"\n"
-"#include \"nsIServiceManager.h\"\n"
+"#include \"nsIScriptNameSpaceManager.h\"\n"
 "#include \"nsRepository.h\"\n"
 "#include \"nsDOMCID.h\"\n";
 
@@ -253,7 +252,7 @@ static const char *kPropFuncBeginStr = "\n"
 
 static const char *kPropFuncDefaultStr = 
 "      default:\n"
-"        return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "    }\n"
 "  }\n";
 
@@ -296,7 +295,7 @@ static const char *kPropFuncDefaultItemNonPrimaryStr =
 
 static const char *kPropFuncEndStr = 
 "  else {\n"
-"    return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "  }\n"
 "\n"
 "  return PR_TRUE;\n"
@@ -320,7 +319,7 @@ static const char *kPropFuncNamedItemStr =
 "%s"
 "      }\n"
 "      else {\n"
-"        return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "      }\n"
 "    }\n"
 "    else {\n"
@@ -349,7 +348,7 @@ static const char *kPropFuncNamedItemNonPrimaryStr =
 "%s"
 "        }\n"
 "        else {\n"
-"          return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"          return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "        }\n"
 "      }\n"
 "      else {\n"
@@ -483,7 +482,12 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
                        JSSTUBGEN_NAMED_ITEM : JSSTUBGEN_NAMED_ITEM_NONPRIMARY);
   }
 
-  JSGEN_GENERATE_PROPFUNCEND(buf, aIsGetter ? "Get" : "Set");
+  if (aIsGetter) {
+    JSGEN_GENERATE_PROPFUNCEND(buf, "Get");
+  }
+  else {
+    JSGEN_GENERATE_PROPFUNCEND(buf, "Set");
+  }
   *file << buf;
 }
 
@@ -516,10 +520,10 @@ static const char *kGetCaseNonPrimaryStr =
 
 static const char *kObjectGetCaseStr = 
 "          // get the js object\n"
-"          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
+"          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
 
 static const char *kStringGetCaseStr = 
-"          nsConvertStringToJSVal(prop, cx, vp);\n";
+"          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
 
 static const char *kIntGetCaseStr = 
 "          *vp = INT_TO_JSVAL(prop);\n";
@@ -630,7 +634,7 @@ static const char *kSetCaseNonPrimaryStr =
 
 
 static const char *kObjectSetCaseStr = 
-"        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,\n"
+"        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,\n"
 "                                                kI%sIID, \"%s\",\n"
 "                                                cx, *vp)) {\n"
 "          return JS_FALSE;\n"
@@ -639,7 +643,7 @@ static const char *kObjectSetCaseStr =
 static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
 
 static const char *kStringSetCaseStr = 
-"        nsConvertJSValToString(prop, cx, *vp);\n";
+"        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);\n";
 
 static const char *kIntSetCaseStr = 
 "        int32 temp;\n"
@@ -652,7 +656,7 @@ static const char *kIntSetCaseStr =
 "        }\n";
 
 static const char *kBoolSetCaseStr =
-"        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {\n"
+"        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
@@ -715,7 +719,7 @@ static const char *kFinalizeStr =
 "PR_STATIC_CALLBACK(void)\n"
 "Finalize%s(JSContext *cx, JSObject *obj)\n"
 "{\n"
-"  nsGenericFinalize(cx, obj);\n"
+"  nsJSUtils::nsGenericFinalize(cx, obj);\n"
 "}\n";
 
 static const char *kGlobalFinalizeStr = 
@@ -751,7 +755,7 @@ static const char *kEnumerateStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Enumerate%s(JSContext *cx, JSObject *obj)\n"
 "{\n"
-"  return nsGenericEnumerate(cx, obj);\n"
+"  return nsJSUtils::nsGenericEnumerate(cx, obj);\n"
 "}\n";
 
 #define JSGEN_GENERATE_ENUMERATE(buf, className)                           \
@@ -777,11 +781,17 @@ static const char *kResolveStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Resolve%s(JSContext *cx, JSObject *obj, jsval id)\n"
 "{\n"
-"  return nsGenericResolve(cx, obj, id);\n"
+"%s"
 "}\n";
 
-#define JSGEN_GENERATE_RESOLVE(buf, className)                           \
-  sprintf(buf, kResolveStr, className, className);
+static const char* kGenericResolveStr = 
+"  return nsJSUtils::nsGenericResolve(cx, obj, id);\n";
+
+static const char* kGlobalResolveStr = 
+"  return nsJSUtils::nsGlobalResolve(cx, obj, id);\n";
+
+#define JSGEN_GENERATE_RESOLVE(buf, className, str)                       \
+  sprintf(buf, kResolveStr, className, className, str);
 
 void     
 JSStubGen::GenerateResolve(IdlSpecification &aSpec)
@@ -791,7 +801,12 @@ JSStubGen::GenerateResolve(IdlSpecification &aSpec)
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
   char *name = iface->GetName();
 
-  JSGEN_GENERATE_RESOLVE(buf, name);
+  if (mIsGlobal) {
+    JSGEN_GENERATE_RESOLVE(buf, name, kGlobalResolveStr);
+  }
+  else {
+    JSGEN_GENERATE_RESOLVE(buf, name, kGenericResolveStr);
+  }
   *file << buf;
 }
 
@@ -837,7 +852,7 @@ static const char *kMethodBodyBeginStr = "\n"
 "  if (argc >= %d) {\n";
 
 static const char *kMethodObjectParamStr = "\n"
-"    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b%d,\n"
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b%d,\n"
 "                                           kI%sIID,\n"
 "                                           \"%s\",\n"
 "                                           cx,\n"
@@ -851,13 +866,13 @@ static const char *kMethodObjectParamStr = "\n"
 
 
 static const char *kMethodStringParamStr = "\n"
-"    nsConvertJSValToString(b%d, cx, argv[%d]);\n";
+"    nsJSUtils::nsConvertJSValToString(b%d, cx, argv[%d]);\n";
 
 #define JSGEN_GENERATE_STRINGPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodStringParamStr, paramNum, paramNum)
 
 static const char *kMethodBoolParamStr = "\n"
-"    if (!nsConvertJSValToBool(&b%d, cx, argv[%d])) {\n"
+"    if (!nsJSUtils::nsConvertJSValToBool(&b%d, cx, argv[%d])) {\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
@@ -892,10 +907,10 @@ static const char *kMethodBodyMiddleNoReturnStr =
 "\n";
 
 static const char *kMethodObjectRetStr = 
-"    nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
+"    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodStringRetStr = 
-"    nsConvertStringToJSVal(nativeRet, cx, rval);\n";
+"    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodIntRetStr = 
 "    *rval = INT_TO_JSVAL(nativeRet);\n";
@@ -1228,49 +1243,34 @@ static const char *kConstructorBeginStr =
 "%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
 "  nsresult result;\n"
-"  nsIID factoryCID;\n"
-"  nsIDOMNativeObjectRegistry *registry;\n"
-"  nsIDOM%sFactory *factory;\n"
+"  nsIID classID;\n"
+"  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);\n"
+"  nsIScriptNameSpaceManager* manager;\n"
 "  nsIDOM%s *nativeThis;\n"
 "  nsIScriptObjectOwner *owner = nsnull;\n"
 "\n"
-"  static NS_DEFINE_IID(kDOMNativeObjectRegistryCID, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);\n"
-"  static NS_DEFINE_IID(kIDOMNativeObjectRegistryIID, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);\n"
-"  static NS_DEFINE_IID(kIDOM%sFactoryIID, NS_IDOM%sFACTORY_IID);\n"
+"  static NS_DEFINE_IID(kIDOM%sIID, NS_IDOM%s_IID);\n"
 "\n"
-"  result = nsServiceManager::GetService(kDOMNativeObjectRegistryCID,\n"
-"                                        kIDOMNativeObjectRegistryIID,\n"
-"                                        (nsISupports **)&registry);\n"
+"  result = context->GetNameSpaceManager(&manager);\n"
 "  if (NS_OK != result) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
 "\n"
-"  result = registry->GetFactoryCID(\"%s\", factoryCID);\n"
-"  nsServiceManager::ReleaseService(kDOMNativeObjectRegistryCID,\n"
-"                                   registry);\n"
+"  result = manager->LookupName(\"%s\", PR_TRUE, classID);\n"
+"  NS_RELEASE(manager);\n"
 "  if (NS_OK != result) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
 "\n"
-"  result = nsRepository::CreateInstance(factoryCID,\n"
+"  result = nsRepository::CreateInstance(classID,\n"
 "                                        nsnull,\n"
-"                                        kIDOM%sFactoryIID,\n"
-"                                        (void **)&factory);\n"
+"                                        kIDOM%sIID,\n"
+"                                        (void **)&nativeThis);\n"
 "  if (NS_OK != result) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
-"\n";
-
-#define JSGEN_GENERATE_CONSTRUCTORBEGIN(buf, className, caps)               \
-     sprintf(buf, kConstructorBeginStr, className, className, className,    \
-             className, className, caps, className, className);
-
-static const char *kConstructorEndStr =
-"  result = factory->CreateInstance(%s&nativeThis);\n"
-"  NS_RELEASE(factory);\n"
-"  if (NS_OK != result) {\n"
-"    return JS_FALSE;\n"
-"  }\n"
+"\n"
+"  // XXX We should be calling Init() on the instance\n"
 "\n"
 "  result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);\n"
 "  if (NS_OK != result) {\n"
@@ -1284,7 +1284,11 @@ static const char *kConstructorEndStr =
 "  NS_RELEASE(owner);\n"
 "  return JS_TRUE;\n"
 "}";
-  
+
+#define JSGEN_GENERATE_CONSTRUCTOR(buf, className, caps)                    \
+     sprintf(buf, kConstructorBeginStr, className, className, className,    \
+             className, caps, className, className);
+
 void     
 JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
 {
@@ -1299,9 +1303,7 @@ JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
   StrUpr(caps_name);
 
   if (HasConstructor(*primary_iface, &constructor)) {
-    JSGEN_GENERATE_CONSTRUCTORBEGIN(buf, name, caps_name);
-    *file << buf;
-    sprintf(buf, kConstructorEndStr, "");
+    JSGEN_GENERATE_CONSTRUCTOR(buf, name, caps_name);
     *file << buf;
   }
   else {

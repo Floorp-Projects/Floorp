@@ -34,6 +34,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMHTMLTableRowElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLTABLEROWELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetRowIndex(PRInt32* aRowIndex)=0;
   NS_IMETHOD    SetRowIndex(PRInt32 aRowIndex)=0;

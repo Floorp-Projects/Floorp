@@ -28,6 +28,7 @@
  {0xa6cf90d9, 0x15b3, 0x11d2,                           \
  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+class nsIScriptContext;
 class nsIScriptExternalNameSet;
 
 /**
@@ -47,13 +48,23 @@ public:
    */
   NS_IMETHOD AddExternalNameSet(nsIScriptExternalNameSet* aNameSet) = 0;
 
-  /*
+  /**
    * Remove a name set from the manager's list.
    *
    * @param aNameSet the name set to unregister.
    * @result NS_OK if successful
    */
   NS_IMETHOD RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSet) = 0;
+  
+  /**
+   * Populate the specified script context with all of the
+   * name sets in the registry. Will generally be called when the
+   * script context first needs to create a name space manager.
+   *
+   * @param aScriptContext the script context to populate
+   * @result NS_OK if successful
+   */
+  NS_IMETHOD PopulateNameSpace(nsIScriptContext* aContext) = 0;
 };
 
 #endif /* nsIScriptNameSetRegistry_h__ */

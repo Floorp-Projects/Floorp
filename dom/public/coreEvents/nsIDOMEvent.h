@@ -32,6 +32,7 @@ class nsIDOMNode;
 
 class nsIDOMEvent : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMEVENT_IID; return iid; }
   enum {
     VK_CANCEL = 3,
     VK_BACK = 8,

@@ -32,6 +32,7 @@
 
 class nsIDOMLocation : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMLOCATION_IID; return iid; }
 
   NS_IMETHOD    GetHash(nsString& aHash)=0;
   NS_IMETHOD    SetHash(const nsString& aHash)=0;

@@ -36,6 +36,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMHTMLTableElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLTABLEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetCaption(nsIDOMHTMLTableCaptionElement** aCaption)=0;
   NS_IMETHOD    SetCaption(nsIDOMHTMLTableCaptionElement* aCaption)=0;

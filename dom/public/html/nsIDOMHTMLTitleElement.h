@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLTitleElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLTITLEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetText(nsString& aText)=0;
   NS_IMETHOD    SetText(const nsString& aText)=0;

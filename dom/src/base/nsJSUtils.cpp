@@ -23,6 +23,7 @@
  * the generated code itself.
  */
 
+#include "nsJSUtils.h"
 #include "jsapi.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
@@ -30,20 +31,23 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsString.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsRepository.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 PRBool 
-nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
-				JSContext* aContext,
-				jsval aId,
-				jsval* aReturn)
+nsJSUtils::nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
+                                           JSContext* aContext,
+                                           jsval aId,
+                                           jsval* aReturn)
 {
   nsIJSScriptObject *object;
  
   if (NS_OK == aSupports->QueryInterface(kIJSScriptObjectIID, 
-					 (void**)&object)) {
+                                         (void**)&object)) {
     PRBool rval;
     rval =  object->GetProperty(aContext, aId, aReturn);
     NS_RELEASE(object);
@@ -54,15 +58,57 @@ nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
 }
 
 PRBool 
-nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
-				JSContext* aContext,
-				jsval aId,
-				jsval* aReturn)
+nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
+                              JSContext* aContext,
+                              jsval aId,
+                              jsval* aReturn)
+{
+  nsresult result;
+
+  if (JSVAL_IS_STRING(aId)) {
+    JSString* jsstring = JS_ValueToString(aContext, aId);
+    nsAutoString name(JS_GetStringChars(jsstring));
+    nsIScriptNameSpaceManager* manager;
+    nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
+    nsIID classID;
+    nsISupports* native;
+
+    result =  scriptContext->GetNameSpaceManager(&manager);
+    if (NS_OK == result) {
+      result = manager->LookupName(name, PR_FALSE, classID);
+      NS_RELEASE(manager);
+      if (NS_OK == result) {
+        result = nsRepository::CreateInstance(classID,
+                                              nsnull,
+                                              kISupportsIID,
+                                              (void **)&native);
+        if (NS_OK == result) {
+          nsConvertObjectToJSVal(native, aContext, aReturn);
+          return PR_TRUE;
+        }
+        else {
+          return PR_FALSE;
+        }
+      }
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+  
+  return nsCallJSScriptObjectGetProperty(aSupports, aContext, aId, aReturn);
+}
+
+PRBool 
+nsJSUtils::nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
+                                           JSContext* aContext,
+                                           jsval aId,
+                                           jsval* aReturn)
 {
   nsIJSScriptObject *object;
  
   if (NS_OK == aSupports->QueryInterface(kIJSScriptObjectIID, 
-					 (void**)&object)) {
+                                         (void**)&object)) {
     PRBool rval;
     rval =  object->SetProperty(aContext, aId, aReturn);
     NS_RELEASE(object);
@@ -73,9 +119,9 @@ nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
 }
 
 void 
-nsConvertObjectToJSVal(nsISupports* aSupports,
-		       JSContext* aContext,
-		       jsval* aReturn)
+nsJSUtils::nsConvertObjectToJSVal(nsISupports* aSupports,
+                                  JSContext* aContext,
+                                  jsval* aReturn)
 {
   // get the js object\n"
   if (aSupports != nsnull) {
@@ -84,8 +130,8 @@ nsConvertObjectToJSVal(nsISupports* aSupports,
       JSObject *object = nsnull;
       nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
       if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-	// set the return value
-	*aReturn = OBJECT_TO_JSVAL(object);
+        // set the return value
+        *aReturn = OBJECT_TO_JSVAL(object);
       }
       NS_RELEASE(owner);
     }
@@ -97,9 +143,9 @@ nsConvertObjectToJSVal(nsISupports* aSupports,
 }
 
 void 
-nsConvertStringToJSVal(const nsString& aProp,
-		       JSContext* aContext,
-		       jsval* aReturn)
+nsJSUtils::nsConvertStringToJSVal(const nsString& aProp,
+                                  JSContext* aContext,
+                                  jsval* aReturn)
 {
   JSString *jsstring = JS_NewUCStringCopyN(aContext, aProp, aProp.Length());
   // set the return value
@@ -108,11 +154,11 @@ nsConvertStringToJSVal(const nsString& aProp,
 
 
 PRBool 
-nsConvertJSValToObject(nsISupports** aSupports,
-		       REFNSIID aIID,
-		       const nsString& aTypeName,
-		       JSContext* aContext,
-		       jsval aValue)
+nsJSUtils::nsConvertJSValToObject(nsISupports** aSupports,
+                                  REFNSIID aIID,
+                                  const nsString& aTypeName,
+                                  JSContext* aContext,
+                                  jsval aValue)
 {
   if (JSVAL_IS_NULL(aValue)) {
     *aSupports = nsnull;
@@ -138,9 +184,9 @@ nsConvertJSValToObject(nsISupports** aSupports,
 }
 
 void 
-nsConvertJSValToString(nsString& aString,
-		       JSContext* aContext,
-		       jsval aValue)
+nsJSUtils::nsConvertJSValToString(nsString& aString,
+                                  JSContext* aContext,
+                                  jsval aValue)
 {
   JSString *jsstring;
   if ((jsstring = JS_ValueToString(aContext, aValue)) != nsnull) {
@@ -152,9 +198,9 @@ nsConvertJSValToString(nsString& aString,
 }
 
 PRBool
-nsConvertJSValToBool(PRBool* aProp,
-		     JSContext* aContext,
-		     jsval aValue)
+nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
+                                JSContext* aContext,
+                                jsval aValue)
 {
   JSBool temp;
   if (JSVAL_IS_BOOLEAN(aValue) && JS_ValueToBoolean(aContext, aValue, &temp)) {
@@ -169,17 +215,17 @@ nsConvertJSValToBool(PRBool* aProp,
 }
 
 void 
-nsGenericFinalize(JSContext* aContext,
-		  JSObject* aObj)
+nsJSUtils::nsGenericFinalize(JSContext* aContext,
+                             JSObject* aObj)
 {
   nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(aContext, 
-							aObj);
+                                                        aObj);
   
   if (nsnull != nativeThis) {
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
     if (NS_OK == nativeThis->QueryInterface(kIScriptObjectOwnerIID, 
-					    (void**)&owner)) {
+                                            (void**)&owner)) {
       owner->SetScriptObject(nsnull);
       NS_RELEASE(owner);
     }
@@ -189,11 +235,11 @@ nsGenericFinalize(JSContext* aContext,
 }
 
 JSBool 
-nsGenericEnumerate(JSContext* aContext,
-		   JSObject* aObj)
+nsJSUtils::nsGenericEnumerate(JSContext* aContext,
+                              JSObject* aObj)
 {
   nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(aContext, 
-							aObj);
+                                                        aObj);
   
   if (nsnull != nativeThis) {
     // get the js object
@@ -206,13 +252,62 @@ nsGenericEnumerate(JSContext* aContext,
   return JS_TRUE;
 }
 
+JSBool
+nsJSUtils::nsGlobalResolve(JSContext* aContext,
+                           JSObject* aObj, 
+                           jsval aId)
+{
+  nsresult result;
+  jsval val;
+
+  if (JSVAL_IS_STRING(aId)) {
+    JSString* jsstring = JS_ValueToString(aContext, aId);
+    nsAutoString name(JS_GetStringChars(jsstring));
+    nsIScriptNameSpaceManager* manager;
+    nsIScriptContext* scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
+    nsIID classID;
+    nsISupports* native;
+
+    result =  scriptContext->GetNameSpaceManager(&manager);
+    if (NS_OK == result) {
+      result = manager->LookupName(name, PR_FALSE, classID);
+      NS_RELEASE(manager);
+      if (NS_OK == result) {
+        result = nsRepository::CreateInstance(classID,
+                                              nsnull,
+                                              kISupportsIID,
+                                              (void **)&native);
+        if (NS_OK == result) {
+          nsConvertObjectToJSVal(native, aContext, &val);
+          if (JS_DefineProperty(aContext, aObj, JS_GetStringBytes(jsstring),
+                                val, nsnull, nsnull, 
+                                JSPROP_ENUMERATE | JSPROP_READONLY)) {
+            return PR_TRUE;
+          }
+          else {
+            return PR_FALSE;
+          }
+        }
+        else {
+          return PR_FALSE;
+        }
+      }
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
 JSBool 
-nsGenericResolve(JSContext* aContext,
-		 JSObject* aObj, 
-		 jsval aId)
+nsJSUtils::nsGenericResolve(JSContext* aContext,
+                            JSObject* aObj, 
+                            jsval aId)
 {
   nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(aContext, 
-							aObj);
+                                                        aObj);
   
   if (nsnull != nativeThis) {
     // get the js object
@@ -224,3 +319,4 @@ nsGenericResolve(JSContext* aContext,
   }
   return JS_TRUE;
 }
+

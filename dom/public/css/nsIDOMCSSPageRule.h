@@ -33,6 +33,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class nsIDOMCSSPageRule : public nsIDOMCSSRule {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSPAGERULE_IID; return iid; }
 
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;

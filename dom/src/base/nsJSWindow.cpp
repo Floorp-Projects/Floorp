@@ -95,7 +95,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindow* prop;
         if (NS_OK == a->GetWindow(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -107,7 +107,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindow* prop;
         if (NS_OK == a->GetSelf(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -119,7 +119,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMDocument* prop;
         if (NS_OK == a->GetDocument(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -131,7 +131,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNavigator* prop;
         if (NS_OK == a->GetNavigator(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -143,7 +143,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindow* prop;
         if (NS_OK == a->GetParent(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -155,7 +155,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindow* prop;
         if (NS_OK == a->GetTop(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -178,7 +178,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindowCollection* prop;
         if (NS_OK == a->GetFrames(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -190,7 +190,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMWindow* prop;
         if (NS_OK == a->GetOpener(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -201,7 +201,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetStatus(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -212,7 +212,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetDefaultStatus(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -223,7 +223,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -319,11 +319,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -348,7 +348,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OPENER:
       {
         nsIDOMWindow* prop;
-        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIWindowIID, "Window",
                                                 cx, *vp)) {
           return JS_FALSE;
@@ -361,7 +361,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetStatus(prop);
         
@@ -370,7 +370,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DEFAULTSTATUS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetDefaultStatus(prop);
         
@@ -379,7 +379,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAME:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetName(prop);
         
@@ -514,11 +514,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -540,7 +540,7 @@ FinalizeWindow(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateWindow(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -550,7 +550,7 @@ EnumerateWindow(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveWindow(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGlobalResolve(cx, obj, id);
 }
 
 
@@ -573,7 +573,7 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->Dump(b0)) {
       return JS_FALSE;
@@ -609,7 +609,7 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->Alert(b0)) {
       return JS_FALSE;
@@ -1296,7 +1296,7 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function open requires 0 parameters");
@@ -1332,7 +1332,7 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->CaptureEvent(b0)) {
       return JS_FALSE;
@@ -1374,7 +1374,7 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->ReleaseEvent(b0)) {
       return JS_FALSE;

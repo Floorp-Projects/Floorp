@@ -33,6 +33,7 @@ class nsIDOMHTMLFormElement;
 
 class nsIDOMHTMLTextAreaElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLTEXTAREAELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetDefaultValue(nsString& aDefaultValue)=0;
   NS_IMETHOD    SetDefaultValue(const nsString& aDefaultValue)=0;

@@ -65,7 +65,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -76,7 +76,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetFace(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetSize(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -95,11 +95,11 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -124,7 +124,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_COLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetColor(prop);
         
@@ -133,7 +133,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_FACE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFace(prop);
         
@@ -142,18 +142,18 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_SIZE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSize(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -166,7 +166,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -176,7 +176,7 @@ FinalizeHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -186,7 +186,7 @@ EnumerateHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLBaseFontElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 

@@ -32,6 +32,7 @@ class nsIDOMNode;
 
 class nsIDOMNodeList : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNODELIST_IID; return iid; }
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 

@@ -33,6 +33,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMNSHTMLDocument : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNSHTMLDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor)=0;
   NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor)=0;

@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLStyleElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLSTYLEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;

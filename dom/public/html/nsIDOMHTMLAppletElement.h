@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLAppletElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLAPPLETELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetAlign(nsString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsString& aAlign)=0;

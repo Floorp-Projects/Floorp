@@ -33,6 +33,7 @@ class nsIDOMCSSStyleSheet;
 
 class nsIDOMCSSImportRule : public nsIDOMCSSRule {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSIMPORTRULE_IID; return iid; }
 
   NS_IMETHOD    GetHref(nsString& aHref)=0;
   NS_IMETHOD    SetHref(const nsString& aHref)=0;

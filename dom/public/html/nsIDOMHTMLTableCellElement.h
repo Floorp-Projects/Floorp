@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLTableCellElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLTABLECELLELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetCellIndex(PRInt32* aCellIndex)=0;
   NS_IMETHOD    SetCellIndex(PRInt32 aCellIndex)=0;

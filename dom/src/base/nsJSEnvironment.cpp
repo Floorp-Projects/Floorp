@@ -29,6 +29,10 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptNameSetRegistry.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsDOMCID.h"
+#include "nsIServiceManager.h"
 
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
@@ -36,6 +40,8 @@ const size_t gStackSize = 8192;
 static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
+static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
@@ -54,6 +60,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mRefCnt = 0;
   mContext = JS_NewContext(aRuntime, gStackSize);
   JS_SetContextPrivate(mContext, (void *)this);
+  mNameSpaceManager = nsnull;
 }
 
 nsJSContext::~nsJSContext()
@@ -204,7 +211,27 @@ nsJSContext::GC()
 NS_IMETHODIMP 
 nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
 {
-  return NS_OK;
+  nsresult result = NS_OK;
+
+  if (nsnull == mNameSpaceManager) {
+    result = NS_NewScriptNameSpaceManager(&mNameSpaceManager);
+    if (NS_OK == result) {
+      nsIScriptNameSetRegistry* registry;
+      result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                            kIScriptNameSetRegistryIID,
+                                            (nsISupports **)&registry);
+      if (NS_OK == result) {
+        result = registry->PopulateNameSpace(this);
+        nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
+                                         registry);
+      }
+    }
+  }
+
+  *aInstancePtr = mNameSpaceManager;
+  NS_ADDREF(mNameSpaceManager);
+
+  return result;
 }
 
 NS_IMETHODIMP

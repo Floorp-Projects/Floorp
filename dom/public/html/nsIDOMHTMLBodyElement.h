@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLBodyElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLBODYELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetALink(nsString& aALink)=0;
   NS_IMETHOD    SetALink(const nsString& aALink)=0;

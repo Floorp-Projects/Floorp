@@ -32,6 +32,7 @@
 
 class nsIDOMCSS2Properties : public nsIDOMCSSStyleDeclaration {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSS2PROPERTIES_IID; return iid; }
 
   NS_IMETHOD    GetAzimuth(nsString& aAzimuth)=0;
   NS_IMETHOD    SetAzimuth(const nsString& aAzimuth)=0;

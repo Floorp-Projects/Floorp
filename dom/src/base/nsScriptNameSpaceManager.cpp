@@ -52,9 +52,9 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
   }
 }
 
-static NS_DEFINE_IID(kIScriptNameSpaceManager, NS_ISCRIPTNAMESPACEMANAGER_IID);
+static NS_DEFINE_IID(kIScriptNameSpaceManagerIID, NS_ISCRIPTNAMESPACEMANAGER_IID);
 
-NS_IMPL_ISUPPORTS(nsScriptNameSpaceManager, kIScriptNameSpaceManager);
+NS_IMPL_ISUPPORTS(nsScriptNameSpaceManager, kIScriptNameSpaceManagerIID);
 
 NS_IMETHODIMP 
 nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName, 
@@ -123,3 +123,22 @@ nsScriptNameSpaceManager::LookupName(const nsString& aName,
 
   return NS_COMFALSE;
 }
+
+extern "C" NS_DOM nsresult 
+NS_NewScriptNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {  
+    return NS_ERROR_NULL_POINTER;  
+  }  
+
+  *aInstancePtr = NULL;  
+  
+  nsScriptNameSpaceManager *manager = new nsScriptNameSpaceManager();
+  if (nsnull == manager) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return manager->QueryInterface(kIScriptNameSpaceManagerIID, (void **)aInstancePtr);
+
+}
+

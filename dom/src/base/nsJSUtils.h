@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef nsJSUtils_h__
+#define nsJSUtils_h__
+
 /**
  * This is not a generated file. It contains common utility functions 
  * invoked from the JavaScript code generated from IDL interfaces.
@@ -27,44 +30,58 @@
 #include "jsapi.h"
 #include "nsString.h"
 
-PRBool nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
-				       JSContext* aContext,
-				       jsval aId,
-				       jsval* aReturn);
+class nsJSUtils {
+public:
+  static PRBool nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
+                                                JSContext* aContext,
+                                                jsval aId,
+                                                jsval* aReturn);
 
-PRBool nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
-				       JSContext* aContext,
-				       jsval aId,
-				       jsval* aReturn);
+  static PRBool nsLookupGlobalName(nsISupports* aSupports,
+                                   JSContext* aContext,
+                                   jsval aId,
+                                   jsval* aReturn);
 
-void nsConvertObjectToJSVal(nsISupports* aSupports,
-			    JSContext* aContext,
-			    jsval* aReturn);
+  static PRBool nsCallJSScriptObjectSetProperty(nsISupports* aSupports,
+                                                JSContext* aContext,
+                                                jsval aId,
+                                                jsval* aReturn);
 
-void nsConvertStringToJSVal(const nsString& aProp,
-			    JSContext* aContext,
-			    jsval* aReturn);
+  static void nsConvertObjectToJSVal(nsISupports* aSupports,
+                                     JSContext* aContext,
+                                     jsval* aReturn);
 
-PRBool nsConvertJSValToObject(nsISupports** aSupports,
-			      REFNSIID aIID,
-			      const nsString& aTypeName,
-			      JSContext* aContext,
-			      jsval aValue);
+  static void nsConvertStringToJSVal(const nsString& aProp,
+                                     JSContext* aContext,
+                                     jsval* aReturn);
 
-void nsConvertJSValToString(nsString& aString,
-			    JSContext* aContext,
-			    jsval aValue);
+  static PRBool nsConvertJSValToObject(nsISupports** aSupports,
+                                       REFNSIID aIID,
+                                       const nsString& aTypeName,
+                                       JSContext* aContext,
+                                       jsval aValue);
 
-PRBool nsConvertJSValToBool(PRBool* aProp,
-			    JSContext* aContext,
-			    jsval aValue);
+  static void nsConvertJSValToString(nsString& aString,
+                                     JSContext* aContext,
+                                     jsval aValue);
 
-void nsGenericFinalize(JSContext* aContext,
-		       JSObject* aObj);
+  static PRBool nsConvertJSValToBool(PRBool* aProp,
+                                     JSContext* aContext,
+                                     jsval aValue);
+
+  static void nsGenericFinalize(JSContext* aContext,
+                                JSObject* aObj);
 		     
-JSBool nsGenericEnumerate(JSContext* aContext,
-			  JSObject* aObj);
+  static JSBool nsGenericEnumerate(JSContext* aContext,
+                                   JSObject* aObj);
 
-JSBool nsGenericResolve(JSContext* aContext,
-			JSObject* aObj, 
-			jsval aId);
+  static JSBool nsGlobalResolve(JSContext* aContext,
+                                JSObject* aObj, 
+                                jsval aId);
+
+  static JSBool nsGenericResolve(JSContext* aContext,
+                                 JSObject* aObj, 
+                                 jsval aId);
+};
+
+#endif /* nsJSUtils_h__ */

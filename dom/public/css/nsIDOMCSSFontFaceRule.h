@@ -33,6 +33,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class nsIDOMCSSFontFaceRule : public nsIDOMCSSRule {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSFONTFACERULE_IID; return iid; }
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
   NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;

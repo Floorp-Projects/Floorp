@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLDirectoryElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLDIRECTORYELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
   NS_IMETHOD    SetCompact(PRBool aCompact)=0;

@@ -32,6 +32,7 @@
 
 class nsIDOMCSSUnknownRule : public nsIDOMCSSRule {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSUNKNOWNRULE_IID; return iid; }
 };
 
 

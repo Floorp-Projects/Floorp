@@ -64,3 +64,23 @@ nsScriptNameSetRegistry::RemoveExternalNameSet(nsIScriptExternalNameSet* aNameSe
     return NS_ERROR_INVALID_ARG;
   }
 }
+
+NS_IMETHODIMP 
+nsScriptNameSetRegistry::PopulateNameSpace(nsIScriptContext* aContext)
+{
+  nsresult result = NS_OK;
+  if (nsnull != aContext) {
+    PRInt32 i, count = mNameSets.Count();
+
+    for (i = 0; i < count; i++) {
+      nsIScriptExternalNameSet* ns = (nsIScriptExternalNameSet*)mNameSets.ElementAt(i);
+      if (nsnull != ns) {
+        result = ns->AddNameSet(aContext);
+        if (NS_OK != result) {
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}

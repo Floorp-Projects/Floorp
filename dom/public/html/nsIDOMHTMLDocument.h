@@ -37,6 +37,7 @@ class nsIDOMNodeList;
 
 class nsIDOMHTMLDocument : public nsIDOMDocument {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetTitle(nsString& aTitle)=0;
   NS_IMETHOD    SetTitle(const nsString& aTitle)=0;

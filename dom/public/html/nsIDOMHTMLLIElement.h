@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLLIElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLLIELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetType(nsString& aType)=0;
   NS_IMETHOD    SetType(const nsString& aType)=0;

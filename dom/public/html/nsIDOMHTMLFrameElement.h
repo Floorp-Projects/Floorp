@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLFrameElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLFRAMEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetFrameBorder(nsString& aFrameBorder)=0;
   NS_IMETHOD    SetFrameBorder(const nsString& aFrameBorder)=0;
