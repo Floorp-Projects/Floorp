@@ -17,7 +17,7 @@
 #
 
 nsMessenger.h
-msMessengerBootstrap.h
+nsMessengerBootstrap.h
 nsMsgKeyArray.h
 nsUrlListenerManager.h
 nsMsgMailSession.h
