@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.9 $ $Date: 2002/04/03 19:22:15 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.10 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSDEVT_H
@@ -124,6 +124,10 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc);
 
 NSS_EXTERN PRStatus
 STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust);
+
+NSS_EXTERN PRStatus
+nssPKIX509_GetIssuerAndSerialFromDER(NSSDER *der, NSSArena *arena, 
+                                     NSSDER *issuer, NSSDER *serial);
 
 /* exposing this */
 NSS_EXTERN NSSCertificate *

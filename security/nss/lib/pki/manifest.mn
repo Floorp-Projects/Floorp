@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.10 $ $Date: 2002/03/14 04:12:25 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.11 $ $Date: 2002/04/15 15:22:08 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -55,6 +55,7 @@ CSRCS =		        \
 	tdcache.c       \
 	certdecode.c    \
 	pkistore.c      \
+	pkibase.c       \
 	$(NULL)
 
 ifndef PURE_STAN_BUILD

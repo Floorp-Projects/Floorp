@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.33 $ $Date: 2002/03/07 22:07:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.34 $ $Date: 2002/04/15 15:22:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -61,6 +61,40 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.33 $
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
 
+/* Creates a certificate from a base object */
+NSS_IMPLEMENT NSSCertificate *
+nssCertificate_Create
+(
+  nssPKIObject *object
+)
+{
+    PRStatus status;
+    NSSCertificate *rvCert;
+    /* mark? */
+    NSSArena *arena = object->arena;
+    PR_ASSERT(object->instances != NULL && object->numInstances > 0);
+    rvCert = nss_ZNEW(arena, NSSCertificate);
+    if (!rvCert) {
+	return (NSSCertificate *)NULL;
+    }
+    rvCert->object = *object;
+    /* XXX should choose instance based on some criteria */
+    status = nssCryptokiCertificate_GetAttributes(object->instances[0],
+                                                  NULL,  /* XXX sessionOpt */
+                                                  arena,
+                                                  &rvCert->type,
+                                                  &rvCert->id,
+                                                  &rvCert->encoding,
+                                                  &rvCert->issuer,
+                                                  &rvCert->serial,
+                                                  &rvCert->subject,
+                                                  &rvCert->email);
+    if (status != PR_SUCCESS) {
+	return (NSSCertificate *)NULL;
+    }
+    return rvCert;
+}
+
 NSS_IMPLEMENT NSSCertificate *
 nssCertificate_AddRef
 (
@@ -74,7 +108,7 @@ nssCertificate_AddRef
 }
 
 NSS_IMPLEMENT PRStatus
-NSSCertificate_Destroy
+nssCertificate_Destroy
 (
   NSSCertificate *c
 )
@@ -92,37 +126,84 @@ NSSCertificate_Destroy
     return PR_SUCCESS;
 }
 
+NSS_IMPLEMENT PRStatus
+NSSCertificate_Destroy
+(
+  NSSCertificate *c
+)
+{
+    return nssCertificate_Destroy(c);
+}
+
+NSS_IMPLEMENT NSSDER *
+nssCertificate_GetEncoding
+(
+  NSSCertificate *c
+)
+{
+    if (c->encoding.size > 0 && c->encoding.data) {
+	return &c->encoding;
+    } else {
+	return (NSSDER *)NULL;
+    }
+}
+
+NSS_IMPLEMENT NSSDER *
+nssCertificate_GetIssuer
+(
+  NSSCertificate *c
+)
+{
+    if (c->issuer.size > 0 && c->issuer.data) {
+	return &c->issuer;
+    } else {
+	return (NSSDER *)NULL;
+    }
+}
+
+NSS_IMPLEMENT NSSDER *
+nssCertificate_GetSerialNumber
+(
+  NSSCertificate *c
+)
+{
+    if (c->serial.size > 0 && c->serial.data) {
+	return &c->serial;
+    } else {
+	return (NSSDER *)NULL;
+    }
+}
+
+NSS_IMPLEMENT NSSDER *
+nssCertificate_GetSubject
+(
+  NSSCertificate *c
+)
+{
+    if (c->subject.size > 0 && c->subject.data) {
+	return &c->subject;
+    } else {
+	return (NSSDER *)NULL;
+    }
+}
+
 NSS_IMPLEMENT NSSUTF8 *
-NSSCertificate_GetNickname
+nssCertificate_GetNickname
 (
   NSSCertificate *c,
   NSSToken *tokenOpt
 )
 {
-    NSSUTF8 *rvNick = NULL;
-    nssCryptokiInstance *instance;
-    nssListIterator *instances = c->object.instances;
-    if (c->object.cryptoContext) {
-	return c->object.tempName;
-    }
-    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
-         instance != (nssCryptokiInstance *)NULL;
-         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances)) 
-    {
-	if (tokenOpt) {
-	    if (instance->token == tokenOpt) {
-		/* take the nickname on the given token */
-		rvNick = instance->label;
-		break;
-	    }
-	} else {
-	    /* take the first one */
-	    rvNick = instance->label;
-	    break;
-	}
-    }
-    nssListIterator_Finish(instances);
-    return rvNick;
+    return nssPKIObject_GetNicknameForToken(&c->object, tokenOpt);
+}
+
+NSS_IMPLEMENT NSSASCII7 *
+nssCertificate_GetEmailAddress
+(
+  NSSCertificate *c
+)
+{
+    return c->email;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -132,39 +213,7 @@ NSSCertificate_DeleteStoredObject
   NSSCallback *uhh
 )
 {
-    /* this needs more thought on what will happen when there are multiple
-     * instances
-     */
-    /* XXX use callback to log in if neccessary */
-    PRStatus nssrv = PR_SUCCESS;
-    nssCryptokiInstance *instance;
-    nssListIterator *instances = c->object.instances;
-    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
-         instance != (nssCryptokiInstance *)NULL;
-         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances)) 
-    {
-	/* XXX this should be fixed to understand read-only tokens, for
-	 * now, to handle the builtins, just make the attempt.
-	 */
-	nssrv = nssToken_DeleteStoredObject(instance);
-	if (nssrv == PR_SUCCESS) {
-	    nssList_Remove(c->object.instanceList, instance);
-#ifdef NSS_3_4_CODE
-	    if (instance->token->certList) {
-		/* If the cert has been cached locally on the token, remove
-		 * that reference
-		 */
-		nssList_Remove(instance->token->certList, c);
-		NSSCertificate_Destroy(c);
-	    }
-#endif
-	}
-    }
-    nssListIterator_Finish(instances);
-    c->object.instances = nssList_CreateIterator(c->object.instanceList);
-    nssListIterator_Destroy(instances);
-    /* XXX for now, always success */
-    return PR_SUCCESS;
+    return nssPKIObject_DeleteStoredObject(&c->object, uhh, PR_TRUE);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -238,85 +287,171 @@ nssCertificate_GetDecoding
     return c->decoding;
 }
 
-static void
-nssCertificateArray_Destroy
-(
-  NSSCertificate **certArray
-)
-{
-    NSSCertificate **ci;
-    ci = certArray;
-    while (ci && *ci) {
-	NSSCertificate_Destroy(*ci);
-	ci++;
-    }
-    nss_ZFreeIf(certArray);
-}
-
 static NSSCertificate *
-filter_subject_certs_for_id(NSSCertificate **subjectCerts, NSSItem *id)
+filter_subject_certs_for_id
+(
+  NSSCertificate **subjectCerts, 
+  NSSItem *id
+)
 {
     NSSCertificate **si;
     NSSCertificate *rvCert = NULL;
     nssDecodedCert *dcp;
     /* walk the subject certs */
-    si = subjectCerts;
-    while (*si) {
+    for (si = subjectCerts; *si; si++) {
 	dcp = nssCertificate_GetDecoding(*si);
 	if (dcp->matchIdentifier(dcp, id)) {
 	    /* this cert has the correct identifier */
 	    rvCert = nssCertificate_AddRef(*si);
 	    break;
 	}
-	si++;
     }
     return rvCert;
 }
 
 static NSSCertificate *
-find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
+find_cert_issuer
+(
+  NSSCertificate *c,
+  NSSTime *timeOpt,
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt
+)
 {
-    NSSCertificate *rvCert = NULL;
-    NSSCertificate **subjectCerts = NULL;
+    NSSArena *arena;
+    NSSCertificate **certs = NULL;
+    NSSCertificate **ccIssuers = NULL;
+    NSSCertificate **tdIssuers = NULL;
+    NSSCertificate *issuer = NULL;
     NSSTrustDomain *td;
     NSSCryptoContext *cc;
-    /* Find all certs with this cert's issuer as the subject */
     cc = c->object.cryptoContext; /* NSSCertificate_GetCryptoContext(c); */
+    td = NSSCertificate_GetTrustDomain(c);
+#ifdef NSS_3_4_CODE
+    if (!td) {
+	td = STAN_GetDefaultTrustDomain();
+    }
+#endif
+    arena = nssArena_Create();
+    if (!arena) {
+	return (NSSCertificate *)NULL;
+    }
     if (cc) {
-	subjectCerts = NSSCryptoContext_FindCertificatesBySubject(cc,
-	                                                          &c->issuer,
-	                                                          NULL,
-	                                                          0,
-	                                                          NULL);
-	if (subjectCerts) {
-	    rvCert = filter_subject_certs_for_id(subjectCerts, id);
-	    nssCertificateArray_Destroy(subjectCerts);
-	}
+	ccIssuers = nssCryptoContext_FindCertificatesBySubject(cc,
+	                                                       &c->issuer,
+	                                                       NULL,
+	                                                       0,
+	                                                       arena);
     }
-    if (!rvCert) {
-	/* The general behavior of NSS <3.4 seems to be that if the search
-	 * turns up empty in the temp db, fall back to the perm db,
-	 * irregardless of whether or not the cert itself is perm or temp.
-	 * This is replicated here.
-	 */
-	td = NSSCertificate_GetTrustDomain(c);
-	subjectCerts = NSSTrustDomain_FindCertificatesBySubject(td,
-	                                                        &c->issuer,
-	                                                        NULL,
-	                                                        0,
-	                                                        NULL);
-	if (subjectCerts) {
-	    rvCert = filter_subject_certs_for_id(subjectCerts, id);
-	    nssCertificateArray_Destroy(subjectCerts);
+    tdIssuers = nssTrustDomain_FindCertificatesBySubject(td,
+                                                         &c->issuer,
+                                                         NULL,
+                                                         0,
+                                                         arena);
+    certs = nssCertificateArray_Join(ccIssuers, tdIssuers);
+    if (certs) {
+	nssDecodedCert *dc = NULL;
+	NSSItem *issuerID = NULL;
+	dc = nssCertificate_GetDecoding(c);
+	if (dc) {
+	    issuerID = dc->getIssuerIdentifier(dc);
 	}
+	if (issuerID) {
+	    issuer = filter_subject_certs_for_id(certs, issuerID);
+	    nssItem_Destroy(issuerID);
+	} else {
+	    issuer = nssCertificateArray_FindBestCertificate(certs,
+	                                                     timeOpt,
+	                                                     usage,
+	                                                     policiesOpt);
+	}
+	nssCertificateArray_Destroy(certs);
     }
-    return rvCert;
+    nssArena_Destroy(arena);
+    return issuer;
 }
 
 /* XXX review based on CERT_FindCertIssuer
  * this function is not using the authCertIssuer field as a fallback
  * if authority key id does not exist
  */
+NSS_IMPLEMENT NSSCertificate **
+nssCertificate_BuildChain
+(
+  NSSCertificate *c,
+  NSSTime *timeOpt,
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt,
+  NSSCertificate **rvOpt,
+  PRUint32 rvLimit,
+  NSSArena *arenaOpt,
+  PRStatus *statusOpt
+)
+{
+    PRStatus status;
+    NSSCertificate **rvChain;
+#ifdef NSS_3_4_CODE
+    NSSCertificate *cp;
+#endif
+    NSSTrustDomain *td;
+    nssPKIObjectCollection *collection;
+    td = NSSCertificate_GetTrustDomain(c);
+#ifdef NSS_3_4_CODE
+    if (!td) {
+	td = STAN_GetDefaultTrustDomain();
+    }
+#endif
+    if (statusOpt) *statusOpt = PR_SUCCESS;
+    collection = nssCertificateCollection_Create(td, NULL);
+    if (!collection) {
+	if (statusOpt) *statusOpt = PR_FAILURE;
+	return (NSSCertificate **)NULL;
+    }
+    nssPKIObjectCollection_AddObject(collection, (nssPKIObject *)c);
+    if (rvLimit == 1) {
+	goto finish;
+    }
+    while (!nssItem_Equal(&c->subject, &c->issuer, &status)) {
+#ifdef NSS_3_4_CODE
+	cp = c;
+#endif
+	c = find_cert_issuer(c, timeOpt, usage, policiesOpt);
+#ifdef NSS_3_4_CODE
+	if (!c) {
+	    PRBool tmpca = usage->nss3lookingForCA;
+	    usage->nss3lookingForCA = PR_TRUE;
+	    c = find_cert_issuer(cp, timeOpt, usage, policiesOpt);
+	    if (!c && !usage->anyUsage) {
+		usage->anyUsage = PR_TRUE;
+		c = find_cert_issuer(cp, timeOpt, usage, policiesOpt);
+		usage->anyUsage = PR_FALSE;
+	    }
+	    usage->nss3lookingForCA = tmpca;
+	}
+#endif /* NSS_3_4_CODE */
+	if (c) {
+	    nssPKIObjectCollection_AddObject(collection, (nssPKIObject *)c);
+	    nssCertificate_Destroy(c); /* collection has it */
+	    if (rvLimit > 0 &&
+	        nssPKIObjectCollection_Count(collection) == rvLimit) 
+	    {
+		break;
+	    }
+	} else {
+	    nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
+	    if (statusOpt) *statusOpt = PR_FAILURE;
+	    break;
+	}
+    }
+finish:
+    rvChain = nssPKIObjectCollection_GetCertificates(collection, 
+                                                     rvOpt, 
+                                                     rvLimit, 
+                                                     arenaOpt);
+    nssPKIObjectCollection_Destroy(collection);
+    return rvChain;
+}
+
 NSS_IMPLEMENT NSSCertificate **
 NSSCertificate_BuildChain
 (
@@ -330,129 +465,26 @@ NSSCertificate_BuildChain
   PRStatus *statusOpt
 )
 {
-    PRStatus nssrv;
-    nssList *chain;
-    NSSItem *issuerID;
-    NSSCertificate **rvChain;
-    NSSTrustDomain *td;
-    NSSCryptoContext *cc;
-    nssDecodedCert *dc;
-    NSSCertificate *ct, *cp;
-    cc = c->object.cryptoContext; /* NSSCertificate_GetCryptoContext(c); */
-    td = NSSCertificate_GetTrustDomain(c);
-#ifdef NSS_3_4_CODE
-    if (!td) {
-	td = STAN_GetDefaultTrustDomain();
-    }
-#endif
-    chain = nssList_Create(NULL, PR_FALSE);
-    nssList_Add(chain, nssCertificate_AddRef(c));
-    if (statusOpt) *statusOpt = PR_SUCCESS;
-    if (rvLimit == 1) goto finish;
-    while (!nssItem_Equal(&c->subject, &c->issuer, &nssrv)) {
-	dc = nssCertificate_GetDecoding(c);
-	issuerID = dc->getIssuerIdentifier(dc);
-	if (issuerID) {
-	    c = find_issuer_cert_for_identifier(c, issuerID);
-	    nssItem_Destroy(issuerID);
-	    issuerID = NULL;
-	    if (!c) {
-		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
-		if (statusOpt) *statusOpt = PR_FAILURE;
-		goto finish;
-	    }
-	} else {
-	    nssBestCertificateCB best;
-	    NSSDER *issuer = &c->issuer;
-#ifdef NSS_3_4_CODE
-	    PRBool tmpca = usage->nss3lookingForCA;
-	    usage->nss3lookingForCA = PR_TRUE;
-#endif
-	    c = ct = cp = NULL;
-	    if (cc) {
-		ct = NSSCryptoContext_FindBestCertificateBySubject(cc,
-		                                                   issuer,
-		                                                   timeOpt,
-		                                                   usage,
-		                                                   policiesOpt);
-		/* Mimic functionality from CERT_FindCertIssuer.  If a matching
-		 * cert (based on trust & usage) cannot be found, just take the
-		 * newest cert with the correct subject.
-		 */
-		if (!ct && !usage->anyUsage) {
-		    usage->anyUsage = PR_TRUE;
-		    ct = NSSCryptoContext_FindBestCertificateBySubject(cc,
-		                                                  issuer,
-		                                                  timeOpt,
-		                                                  usage,
-		                                                  policiesOpt);
-		    usage->anyUsage = PR_FALSE;
-		}
-	    }
-	    cp = NSSTrustDomain_FindBestCertificateBySubject(td,
-	                                                     issuer,
-	                                                     timeOpt,
-	                                                     usage,
-	                                                     policiesOpt);
-	    /* Mimic functionality from CERT_FindCertIssuer.  If a matching
-	     * cert (based on trust & usage) cannot be found, just take the
-	     * newest cert with the correct subject.
-	     */
-	    if (!cp && !usage->anyUsage) {
-		usage->anyUsage = PR_TRUE;
-		cp = NSSTrustDomain_FindBestCertificateBySubject(td,
-		                                                 issuer,
-		                                                 timeOpt,
-		                                                 usage,
-		                                                 policiesOpt);
-		usage->anyUsage = PR_FALSE;
-	    }
-	    nssBestCertificate_SetArgs(&best, timeOpt, usage, policiesOpt);
-	    /* Take the better of the best temp and best perm cert, according
-	     * to the given usage
-	     */
-	    if (ct) {
-		nssBestCertificate_Callback(ct, (void *)&best);
-	    }
-	    if (cp) {
-		nssBestCertificate_Callback(cp, (void *)&best);
-	    }
-	    if (!best.cert) {
-		best.usage->anyUsage = PR_TRUE;
-		/* Take the newest of the best temp and best perm cert */
-		if (ct) {
-		    nssBestCertificate_Callback(ct, (void *)&best);
-		}
-		if (cp) {
-		    nssBestCertificate_Callback(cp, (void *)&best);
-		}
-	    }
-	    if (ct) NSSCertificate_Destroy(ct);
-	    if (cp) NSSCertificate_Destroy(cp);
-	    c = best.cert;
-#ifdef NSS_3_4_CODE
-	    usage->nss3lookingForCA = tmpca;
-#endif
-	    if (!c) {
-		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
-		if (statusOpt) *statusOpt = PR_FAILURE;
-		goto finish;
-	    }
-	}
-	nssList_Add(chain, c);
-	if (nssList_Count(chain) == rvLimit) goto finish;
-    }
-finish:
-    if (rvOpt) {
-	rvChain = rvOpt;
-    } else {
-	rvLimit = nssList_Count(chain);
-	rvChain = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, rvLimit + 1);
-    }
-    nssList_GetArray(chain, (void **)rvChain, rvLimit);
-    nssList_Destroy(chain);
-    /* XXX now, the question is, cache all certs in the chain? */
-    return rvChain;
+    return nssCertificate_BuildChain(c, timeOpt, usage, policiesOpt,
+                                     rvOpt, rvLimit, arenaOpt, statusOpt);
+}
+
+NSS_IMPLEMENT NSSCryptoContext *
+nssCertificate_GetCryptoContext
+(
+  NSSCertificate *c
+)
+{
+    return c->object.cryptoContext;
+}
+
+NSS_IMPLEMENT NSSTrustDomain *
+nssCertificate_GetTrustDomain
+(
+  NSSCertificate *c
+)
+{
+    return c->object.trustDomain;
 }
 
 NSS_IMPLEMENT NSSTrustDomain *
@@ -461,7 +493,7 @@ NSSCertificate_GetTrustDomain
   NSSCertificate *c
 )
 {
-    return c->object.trustDomain;
+    return nssCertificate_GetTrustDomain(c);
 }
 
 NSS_IMPLEMENT NSSToken *
@@ -825,22 +857,24 @@ nssSMIMEProfile_Create
   NSSItem *profileData
 )
 {
-    PRStatus nssrv;
     NSSArena *arena;
     nssSMIMEProfile *rvProfile;
+    nssPKIObject *object;
+    NSSTrustDomain *td = nssCertificate_GetTrustDomain(cert);
+    NSSCryptoContext *cc = nssCertificate_GetCryptoContext(cert);
     arena = nssArena_Create();
     if (!arena) {
 	return NULL;
     }
-    rvProfile = nss_ZNEW(arena, nssSMIMEProfile);
-    if (!rvProfile) {
-	nssArena_Destroy(arena);
-	return NULL;
-    }
-    nssrv = nssPKIObject_Initialize(&rvProfile->object, arena, NULL, NULL);
-    if (nssrv != PR_SUCCESS) {
+    object = nssPKIObject_Create(arena, NULL, td, cc);
+    if (!object) {
 	goto loser;
     }
+    rvProfile = nss_ZNEW(arena, nssSMIMEProfile);
+    if (!rvProfile) {
+	goto loser;
+    }
+    rvProfile->object = *object;
     rvProfile->certificate = cert;
     rvProfile->email = nssUTF8_Duplicate(cert->email, arena);
     rvProfile->subject = nssItem_Duplicate(&cert->subject, arena, NULL);
@@ -852,8 +886,8 @@ nssSMIMEProfile_Create
     }
     return rvProfile;
 loser:
-    nssPKIObject_Destroy(&rvProfile->object);
-    return NULL;
+    nssPKIObject_Destroy(object);
+    return (nssSMIMEProfile *)NULL;
 }
 
 /* execute a callback function on all members of a cert list */
@@ -893,6 +927,65 @@ nssCertificateList_AddReferences
 )
 {
     (void)nssCertificateList_DoCallback(certList, add_ref_callback, NULL);
+}
+
+NSS_IMPLEMENT NSSTrust *
+nssTrust_Create
+(
+  nssPKIObject *object
+)
+{
+    PRStatus status;
+    PRUint32 i;
+    PRUint32 lastTrustOrder, myTrustOrder;
+    NSSTrust *rvt;
+    nssCryptokiObject *instance;
+    nssTrustLevel serverAuth, clientAuth, codeSigning, emailProtection;
+    lastTrustOrder = 1<<16; /* just make it big */
+    PR_ASSERT(object->instances != NULL && object->numInstances > 0);
+    rvt = nss_ZNEW(object->arena, NSSTrust);
+    if (!rvt) {
+	return (NSSTrust *)NULL;
+    }
+    rvt->object = *object;
+    /* trust has to peek into the base object members */
+    PZ_Lock(object->lock);
+    for (i=0; i<object->numInstances; i++) {
+	instance = object->instances[i];
+	myTrustOrder = nssToken_GetTrustOrder(instance->token);
+	status = nssCryptokiTrust_GetAttributes(instance, NULL,
+	                                        &serverAuth,
+	                                        &clientAuth,
+	                                        &codeSigning,
+	                                        &emailProtection);
+	if (status != PR_SUCCESS) {
+	    PZ_Unlock(object->lock);
+	    return (NSSTrust *)NULL;
+	}
+	if (rvt->serverAuth == nssTrustLevel_Unknown ||
+	    myTrustOrder < lastTrustOrder) 
+	{
+	    rvt->serverAuth = serverAuth;
+	}
+	if (rvt->clientAuth == nssTrustLevel_Unknown ||
+	    myTrustOrder < lastTrustOrder) 
+	{
+	    rvt->clientAuth = clientAuth;
+	}
+	if (rvt->emailProtection == nssTrustLevel_Unknown ||
+	    myTrustOrder < lastTrustOrder) 
+	{
+	    rvt->emailProtection = emailProtection;
+	}
+	if (rvt->codeSigning == nssTrustLevel_Unknown ||
+	    myTrustOrder < lastTrustOrder) 
+	{
+	    rvt->codeSigning = codeSigning;
+	}
+	lastTrustOrder = myTrustOrder;
+    }
+    PZ_Unlock(object->lock);
+    return rvt;
 }
 
 NSS_IMPLEMENT NSSTrust *

@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.14 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.15 $ $Date: 2002/04/15 15:22:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -86,6 +86,12 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
     (pattr)->ulValueLen = (CK_ULONG)sizeof(var);      \
     (pattr)++;
 
+#define NSS_CK_SET_ATTRIBUTE_NULL(pattr, kind)        \
+    (pattr)->type = kind;                             \
+    (pattr)->pValue = (CK_VOID_PTR)NULL;              \
+    (pattr)->ulValueLen = 0;                          \
+    (pattr)++;
+
 #define NSS_CK_TEMPLATE_FINISH(_template, attr, size) \
     size = (attr) - (_template);                      \
     PR_ASSERT(size <= sizeof(_template)/sizeof(_template[0]));
@@ -127,7 +133,7 @@ nssCKObject_GetAttributes
   CK_ULONG count,
   NSSArena *arenaOpt,
   nssSession *session,
-  NSSSlot  *slot
+  NSSSlot *slot
 );
 
 /* Get a single attribute as an item. */

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.19 $ $Date: 2002/04/09 17:58:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.20 $ $Date: 2002/04/15 15:22:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -287,7 +287,6 @@ nssCKObject_IsTokenObjectTemplate
     return PR_FALSE;
 }
 
-#ifdef PURE_STAN_BUILD
 static NSSCertificateType
 nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
 {
@@ -358,10 +357,14 @@ nssCryptokiCertificate_GetAttributes
 	return PR_SUCCESS;
     }
 
+#ifdef PURE_STAN_BUILD
     status = nssToken_GetCachedObjectAttributes(certObject->token, arenaOpt,
                                                 certObject, CKO_CERTIFICATE,
                                                 cert_template, template_size);
     if (status != PR_SUCCESS) {
+#else
+    if (PR_TRUE) {
+#endif
 
 	session = sessionOpt ? 
 	          sessionOpt : 
@@ -402,6 +405,7 @@ nssCryptokiCertificate_GetAttributes
     return PR_SUCCESS;
 }
 
+#ifdef PURE_STAN_BUILD
 static NSSKeyPairType
 nss_key_pair_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
 {
@@ -523,6 +527,7 @@ nssCryptokiPublicKey_GetAttributes
     }
     return PR_SUCCESS;
 }
+#endif /* PURE_STAN_BUILD */
 
 static nssTrustLevel 
 get_nss_trust
@@ -572,11 +577,15 @@ nssCryptokiTrust_GetAttributes
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
     NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
 
+#ifdef PURE_STAN_BUILD
     status = nssToken_GetCachedObjectAttributes(trustObject->token, NULL,
                                                 trustObject, 
                                                 CKO_NETSCAPE_TRUST,
                                                 trust_template, trust_size);
     if (status != PR_SUCCESS) {
+#else
+    if (PR_TRUE) {
+#endif
 	session = sessionOpt ? 
 	          sessionOpt : 
 	          nssToken_GetDefaultSession(trustObject->token);
@@ -598,6 +607,7 @@ nssCryptokiTrust_GetAttributes
     return PR_SUCCESS;
 }
 
+#ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT PRStatus
 nssCryptokiCRL_GetAttributes
 (

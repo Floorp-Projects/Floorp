@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.28 $ $Date: 2002/03/07 22:08:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.29 $ $Date: 2002/04/15 15:22:11 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -308,7 +308,7 @@ remove_nickname_entry
 )
 {
     PRStatus nssrv;
-    NSSUTF8 *nickname = NSSCertificate_GetNickname(cert, NULL);
+    NSSUTF8 *nickname = nssCertificate_GetNickname(cert, NULL);
     if (nickname) {
 	nssHash_Remove(cache->nickname, nickname);
 	nssrv = PR_SUCCESS;
@@ -562,7 +562,7 @@ add_nickname_entry
 )
 {
     PRStatus nssrv = PR_SUCCESS;
-    NSSUTF8 *certNickname = NSSCertificate_GetNickname(cert, NULL);
+    NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
     cache_entry *ce;
     ce = (cache_entry *)nssHash_Lookup(cache->nickname, certNickname);
     if (ce) {
@@ -654,7 +654,7 @@ add_email_entry
 
 extern const NSSError NSS_ERROR_CERTIFICATE_IN_CACHE;
 
-static PRStatus
+static NSSCertificate *
 add_cert_to_cache
 (
   NSSTrustDomain *td, 
@@ -665,18 +665,24 @@ add_cert_to_cache
     nssList *subjectList;
     PRStatus nssrv;
     PRUint32 added = 0;
+    cache_entry *ce;
+    NSSCertificate *rvCert = NULL;
     PZ_Lock(td->cache->lock);
     /* If it exists in the issuer/serial hash, it's already in all */
-    if (nssHash_Exists(td->cache->issuerAndSN, cert)) {
+    ce = (cache_entry *)nssHash_Lookup(td->cache->issuerAndSN, cert);
+    if (ce) {
+	ce->hits++;
+	ce->lastHit = PR_Now();
+	rvCert = nssCertificate_AddRef(ce->entry.cert);
 #ifdef DEBUG_CACHE
 	log_cert_ref("attempted to add cert already in cache", cert);
 #endif
 	PZ_Unlock(td->cache->lock);
-	/* collision - most likely, somebody else already added the cert
+	/* collision - somebody else already added the cert
 	 * to the cache before this thread got around to it.
 	 */
-	nss_SetError(NSS_ERROR_CERTIFICATE_IN_CACHE);
-	return PR_FAILURE;
+	nssCertificate_Destroy(cert);
+	return rvCert;
     }
     /* create a new cache entry for this cert within the cert's arena*/
     nssrv = add_issuer_and_serial_entry(cert->object.arena, td->cache, cert);
@@ -698,7 +704,7 @@ add_cert_to_cache
     /* If a new subject entry was created, also need nickname and/or email */
     if (subjectList != NULL) {
 	PRBool handle = PR_FALSE;
-	NSSUTF8 *certNickname = NSSCertificate_GetNickname(cert, NULL);
+	NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
 	if (certNickname) {
 	    nssrv = add_nickname_entry(arena, td->cache, cert, subjectList);
 	    if (nssrv != PR_SUCCESS) {
@@ -729,7 +735,7 @@ add_cert_to_cache
     }
     nssCertificate_AddRef(cert);
     PZ_Unlock(td->cache->lock);
-    return nssrv;
+    return rvCert;
 loser:
     /* Remove any handles that have been created */
     subjectList = NULL;
@@ -753,7 +759,7 @@ loser:
 	nssArena_Destroy(arena);
     }
     PZ_Unlock(td->cache->lock);
-    return PR_FAILURE;
+    return NULL;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -765,32 +771,14 @@ nssTrustDomain_AddCertsToCache
 )
 {
     PRUint32 i;
-    NSSError e;
+    NSSCertificate *c;
     for (i=0; i<numCerts && certs[i]; i++) {
-	if (add_cert_to_cache(td, certs[i]) != PR_SUCCESS) {
-	    if ((e = NSS_GetError()) == NSS_ERROR_CERTIFICATE_IN_CACHE) {
-		/* collision - delete and replace the cert here in favor
-		 * of the already cached entry.  This is safe as long as
-		 * the cert being added here only has a single reference.
-		 * This should be the case as this function is only called
-		 * immediately following a traversal and before any certs
-		 * are returned to the caller.
-		 */
-		NSSCertificate *c;
-		c = nssTrustDomain_GetCertForIssuerAndSNFromCache(td,
-		                                            &certs[i]->issuer,
-		                                            &certs[i]->serial);
-		if (c != certs[i]) {
-		    NSSCertificate_Destroy(certs[i]);
-		    certs[i] = c;
-		} else {
-		    NSSCertificate_Destroy(c);
-		}
-		nss_ClearErrorStack();
-		continue;
-	    }
+	c = add_cert_to_cache(td, certs[i]);
+	if (c == NULL) {
 	    return PR_FAILURE;
-	} 
+	} else {
+	    certs[i] = c;
+	}
     }
     return PR_SUCCESS;
 }

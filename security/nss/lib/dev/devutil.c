@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.2 $ $Date: 2002/04/04 20:00:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.3 $ $Date: 2002/04/15 15:22:01 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -43,7 +43,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.2 $ $Dat
 #include "ckhelper.h"
 #endif /* CKHELPER_H */
 
-#ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT nssCryptokiObject *
 nssCryptokiObject_Create
 (
@@ -161,6 +160,7 @@ nssSlotArray_Clone
     return rvSlots;
 }
 
+#ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT void
 nssModuleArray_Destroy
 (
@@ -175,6 +175,7 @@ nssModuleArray_Destroy
 	nss_ZFreeIf(modules);
     }
 }
+#endif
 
 NSS_IMPLEMENT void
 nssSlotArray_Destroy
@@ -239,6 +240,7 @@ nssCryptokiObjectArray_Destroy
     }
 }
 
+#ifdef PURE_STAN_BUILD
 /*
  * Slot lists
  */
