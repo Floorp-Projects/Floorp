@@ -309,17 +309,15 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // are released
   nsBaseWidget::Destroy();
 
-#if SHORTBUS
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.
   nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-  if ( NS_REINTERPRET_CAST(this,nsIWidget*) == rollupWidget.get() ) {
+  if ( NS_REINTERPRET_CAST(nsIWidget*,this) == rollupWidget.get() ) {
     if ( gRollupListener )
       gRollupListener->Rollup();
     gRollupWidget = nsnull;
     gRollupListener = nsnull;
   }
-#endif
 
   // destroy our native windows
   DestroyNative();
