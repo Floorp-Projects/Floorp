@@ -214,6 +214,7 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_BACK_QUOTE, GDK_asciitilde },
   { NS_VK_COMMA, GDK_less },
   { NS_VK_PERIOD, GDK_greater },
+  { NS_VK_SLASH,      GDK_question },
   { NS_VK_1, GDK_exclam },
   { NS_VK_2, GDK_at },
   { NS_VK_3, GDK_numbersign },
