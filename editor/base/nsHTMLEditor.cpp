@@ -3800,7 +3800,8 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   // anchors are containers, named anchors are "empty" but we don't
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.
-  if (!IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) || 
+  if (!IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) ||
+       nsHTMLEditUtils::IsTextarea(aNode) || nsHTMLEditUtils::IsMap(aNode) ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
   {

@@ -28,6 +28,21 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLAnchorElement.h"
 
+PRBool
+nsHTMLEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag)
+{
+  NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::NodeIsType");
+  if (aNode)
+  {
+    nsAutoString tag;
+    nsEditor::GetTagString(aNode,tag);
+    tag.ToLowerCase();
+    if (tag.Equals(aTag))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 /********************************************************
  *  helper methods from nsTextEditRules
  ********************************************************/
@@ -38,18 +53,7 @@
 PRBool 
 nsHTMLEditUtils::IsBody(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsBody");
-  if (node)
-  {
-    nsAutoString tag;
-    nsEditor::GetTagString(node,tag);
-    tag.ToLowerCase();
-    if (tag.EqualsWithConversion("body"))
-    {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("body"));
 }
 
 
@@ -60,15 +64,7 @@ nsHTMLEditUtils::IsBody(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsBreak");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("br"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("br"));
 }
 
 
@@ -78,15 +74,7 @@ nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsBig(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsBig");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("big"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("big"));
 }
 
 
@@ -96,15 +84,7 @@ nsHTMLEditUtils::IsBig(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsSmall");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("small"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("small"));
 }
 
 
@@ -202,15 +182,7 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsParagraph(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsParagraph");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("p"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("p"));
 }
 
 
@@ -260,13 +232,7 @@ nsHTMLEditUtils::IsTableElement(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsTable(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  if (tag.EqualsWithConversion("table"))
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("table"));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -275,15 +241,7 @@ nsHTMLEditUtils::IsTable(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsTableRow(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsTableRow");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("tr"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("tr"));
 }
 
 
@@ -351,15 +309,7 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsOrderedList");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("ol"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("ol"));
 }
 
 
@@ -369,15 +319,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsUnorderedList");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("ul"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("ul"));
 }
 
 
@@ -387,15 +329,7 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsDefinitionList");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("dl"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("dl"));
 }
 
 
@@ -405,15 +339,7 @@ nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsBlockquote");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("blockquote"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("blockquote"));
 }
 
 
@@ -423,15 +349,7 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsPre(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsPre");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("pre"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("pre"));
 }
 
 
@@ -441,15 +359,7 @@ nsHTMLEditUtils::IsPre(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsAddress");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("address"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("address"));
 }
 
 
@@ -459,15 +369,7 @@ nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsAnchor");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("a"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("a"));
 }
 
 
@@ -477,15 +379,7 @@ nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsImage(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsImage");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("img"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("img"));
 }
 
 PRBool 
@@ -523,15 +417,7 @@ nsHTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
 PRBool 
 nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsDiv");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
-  if (tag.EqualsWithConversion("div"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  return NodeIsType(node, NS_LITERAL_STRING("div"));
 }
 
 
@@ -579,6 +465,26 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
     }
   }
   return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTextarea: true if node is an html textarea node
+//                  
+PRBool 
+nsHTMLEditUtils::IsTextarea(nsIDOMNode *node)
+{
+  return NodeIsType(node, NS_LITERAL_STRING("textarea"));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsMap: true if node is an html map node
+//                  
+PRBool 
+nsHTMLEditUtils::IsMap(nsIDOMNode *node)
+{
+  return NodeIsType(node, NS_LITERAL_STRING("map"));
 }
 
 
