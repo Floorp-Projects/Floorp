@@ -56,11 +56,16 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
   NS_ASSERTION(*currentLocaleName, 
     "currentLocaleName has string length == 0");
 
+#if 0
+  /* This implementation of automatic keyboard layout switching is too buggy to be useful
+     and the feature itself is inconsistent with Windows. See Bug 162242 */
   if (strcmp(mCurrentLocaleName, currentLocaleName)) {
     if (!::LoadKeyboardLayout(currentLocaleName, KLF_ACTIVATE | KLF_SUBSTITUTE_OK)) {
       return NS_ERROR_FAILURE;
     }
   }
+#endif
+
   return NS_OK;
 }
 
