@@ -2797,7 +2797,7 @@ nsBrowserWindow::DoDebugSave()
 	    parser->RegisterDTD(dtd);
 	    //dtd->SetContentSink(sink);
 	    //dtd->SetParser(parser);
-	    parser->Parse(buffer, PR_FALSE);           
+	    parser->Parse(buffer, PR_FALSE,PR_FALSE,PR_TRUE);           
 	  }
 	  out.close();
 
