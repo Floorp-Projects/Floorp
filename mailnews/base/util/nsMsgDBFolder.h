@@ -65,6 +65,9 @@ class nsICollation;
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
   */ 
 
+#undef IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_MSG_BASE nsMsgDBFolder: public nsRDFResource,
                                  public nsSupportsWeakReference,
                                  public nsIMsgFolder,
@@ -246,5 +249,8 @@ protected:
 
   static const nsStaticAtom folder_atoms[];
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif

@@ -613,7 +613,7 @@ nsFontCache::~nsFontCache()
   Flush();
 }
 
-NS_IMETHODIMP 
+nsresult
 nsFontCache::Init(nsIDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
@@ -623,7 +623,7 @@ nsFontCache::Init(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsFontCache::GetDeviceContext(nsIDeviceContext *&aContext) const
 {
   aContext = mContext;
@@ -631,7 +631,7 @@ nsFontCache::GetDeviceContext(nsIDeviceContext *&aContext) const
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics *&aMetrics)
 {
@@ -708,7 +708,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 /* PostScript and Xprint module may override this method to create 
  * nsIFontMetrics objects with their own classes 
  */
-NS_IMETHODIMP
+nsresult
 nsFontCache::CreateFontMetricsInstance(nsIFontMetrics** fm)
 {
   static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);

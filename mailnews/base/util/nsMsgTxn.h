@@ -50,6 +50,10 @@
 /**
  * base class for all message undo/redo transactions.
  */
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_MSG_BASE nsMsgTxn : public nsITransaction
 {
     NS_DECL_ISUPPORTS 
@@ -77,5 +81,8 @@ protected:
     PRUint32 m_txnType;
     nsresult CheckForToggleDelete(nsIMsgFolder *aFolder, const nsMsgKey &aMsgKey, PRBool *aResult);
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif

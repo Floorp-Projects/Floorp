@@ -67,6 +67,49 @@
 /*----------------------------------------------------------------------*/
 /* Import/export defines */
 
+/**
+ * Using the visibility("hidden") attribute allows the compiler to use
+ * PC-relative addressing to call this function.  If a function does not
+ * access any global data, and does not call any methods which are not either
+ * file-local or hidden, then on ELF systems we avoid loading the address of
+ * the PLT into a register at the start of the function, which reduces code
+ * size and frees up a register for general use.
+ *
+ * As a general rule, this should be used for any non-exported symbol
+ * (including virtual method implementations).  NS_IMETHOD uses this by
+ * default; if you need to have your NS_IMETHOD functions exported, you can
+ * wrap your class as follows:
+ *
+ * #undef  IMETHOD_VISIBILITY
+ * #define IMETHOD_VISIBILITY default
+
+ * class Foo {
+ * ...
+ * };
+ *
+ * #undef  IMETHOD_VISIBILITY
+ * #define IMETHOD_VISIBILITY hidden
+ *
+ * Don't forget to change the visibility back to hidden before the end
+ * of a header!
+ */
+
+#ifdef HAVE_VISIBILITY_ATTRIBUTE
+#define NS_VISIBILITY_(vis) __attribute__ ((visibility (#vis)))
+#define NS_HIDDEN_(type)   type NS_VISIBILITY(hidden)
+#else
+#define NS_VISIBILITY_(vis)
+#define NS_HIDDEN_(type)   type
+#endif
+
+#define NS_HIDDEN NS_VISIBILITY(hidden)
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY  hidden
+/* Extra layer of macro expansion to allow IMETHOD_VISIBILITY to be
+   stringified. */
+#define NS_VISIBILITY(vis) NS_VISIBILITY_(vis)
+
 #ifdef NS_WIN32
 
 #define NS_IMPORT __declspec(dllimport)
@@ -97,7 +140,7 @@
 #define NS_IMPORT_(type) type
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
-#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHOD_(type) virtual type NS_VISIBILITY(IMETHOD_VISIBILITY)
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)

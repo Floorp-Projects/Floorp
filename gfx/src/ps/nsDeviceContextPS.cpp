@@ -520,11 +520,11 @@ class nsFontCachePS : public nsFontCache
 {
 public:
   /* override DeviceContextImpl::CreateFontCache() */
-  NS_IMETHODIMP CreateFontMetricsInstance(nsIFontMetrics** aResult);
+  virtual nsresult CreateFontMetricsInstance(nsIFontMetrics** aResult);
 };
 
 
-NS_IMETHODIMP nsFontCachePS::CreateFontMetricsInstance(nsIFontMetrics** aResult)
+nsresult nsFontCachePS::CreateFontMetricsInstance(nsIFontMetrics** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
   nsIFontMetrics *fm = new nsFontMetricsPS();

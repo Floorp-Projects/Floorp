@@ -44,6 +44,9 @@
 
 static const PRUint32 kAutoArraySize = 8;
 
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_COM nsSupportsArray : public nsISupportsArray {
 public:
   nsSupportsArray(void);
@@ -162,5 +165,8 @@ private:
   // Copy constructors are not allowed
   nsSupportsArray(const nsISupportsArray& other);
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif // nsSupportsArray_h__

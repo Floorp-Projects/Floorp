@@ -62,6 +62,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY default
+
 class NS_MSG_BASE nsMsgMailNewsUrl : public nsIMsgMailNewsUrl
 {
 public:
@@ -105,5 +108,8 @@ protected:
 	// manager of all of current url listeners....
 	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 };
+
+#undef  IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY hidden
 
 #endif /* nsMsgMailNewsUrl_h___ */

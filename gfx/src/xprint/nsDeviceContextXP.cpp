@@ -398,11 +398,11 @@ class nsFontCacheXp : public nsFontCache
 {
 public:
   /* override DeviceContextImpl::CreateFontCache() */
-  NS_IMETHOD CreateFontMetricsInstance(nsIFontMetrics** aResult);
+  virtual nsresult CreateFontMetricsInstance(nsIFontMetrics** aResult);
 };
 
 
-NS_IMETHODIMP nsFontCacheXp::CreateFontMetricsInstance(nsIFontMetrics** aResult)
+nsresult nsFontCacheXp::CreateFontMetricsInstance(nsIFontMetrics** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
   nsIFontMetrics *fm = new nsFontMetricsXlib();
