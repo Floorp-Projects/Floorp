@@ -1427,8 +1427,12 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
 {
   nsHTMLReflowState* firstBlockRS = nsnull; // a candidate for body frame
   nsHTMLReflowState* firstAreaRS  = nsnull; // a candidate for html frame
-  nscoord result = 0;
-
+  
+  // initialize the default to NS_AUTOHEIGHT as this is the containings block
+  // computed height when this function is called. It is possible that we 
+  // don't alter this height especially if we are restricted to one level
+  nscoord result = NS_AUTOHEIGHT; 
+                             
   const nsHTMLReflowState* rs = &aReflowState;
   for (; rs && rs->frame; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
     nsCOMPtr<nsIAtom> frameType;
