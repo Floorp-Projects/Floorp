@@ -20,44 +20,51 @@
 #include "COM_auto_ptr.h"
 
 
-/*implementation of an editor object.  it ALSO supplies an nsIEditor Interface*/
-
+/** implementation of an editor object.  it will be the controler/focal point 
+ *  for the main editor services. i.e. the GUIControler, publishing, transaction 
+ *  manager, event interfaces. the idea for the event interfaces is to have them 
+ *  delegate the actual commands to the editor independent of the XPFE implementation.
+ */
 class Editor : public nsIEditor
 {
 private:
   COM_auto_ptr<nsIDOMDocument> mDomInterfaceP;
 public:
-/*nsIEditorInterfaces*/
+/*BEGIN nsIEditor interfaces*/
+  /*see the nsIEditor for more details*/
   virtual nsresult Init();
-  virtual nsresult Init() = 0;
 
-/*BEGIN interface manipulators and accessors*/
-
-  /*SetDomInterface accepts an interface to a nsIDOMDocument and it will add a reference to it 
-  since it will keep it for some time*/
   virtual nsresult SetDomInterface(nsIDOMDocument *aDomInterface){mDomInterfaceP = aDomInterface}
-  
-  /*GetDomInterface returns a "look" at the dom interface. it will NOT ADD A REFERENCE!!!!!.*/
   virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP;}
-/*END interface manipulators*/
 
   virtual nsresult SetProperties(PROPERTIES aProperty){}
   virtual nsresult GetProperties(PROPERTIES &){}
+/*END nsIEditor interfaces*/
 
-/*EditorInterfaces*/
+/*BEGIN Editor interfaces*/
+
+  /** The default constructor. This should suffice. the setting of the interfaces is done
+   *  after the construction of the editor class.
+   */
   Editor();
+  /** The default destructor. This should suffice. Should this be pure virtual 
+   *  for someone to derive from the Editor later? I dont believe so.
+   */
   ~Editor();
 
 /*KeyListener Methods*/
-
-  /*KeyDown :accepts a keycode
-   :returns False if ignored*/
-  PR_Bool KeyDown(int keycode);
+  /** KeyDown 
+   *  @param int aKeycode the keycode or ascii
+   *  value of the key that was hit for now
+   *  @return False if ignored
+   */
+  PR_Bool KeyDown(int aKeycode);
 
 /*MouseListener Methods*/
-
-  /* Mouse Click accepts an x and 
-  a y for location in the webshell*/
+  /** MouseClick
+   *  @param int x the xposition of the click
+   *  @param int y the yposition of the click
+   */
   PR_Bool MouseClick(int x,int y); //it should also tell us the dom element that was selected.
 };
 
