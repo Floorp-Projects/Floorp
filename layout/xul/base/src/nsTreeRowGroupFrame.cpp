@@ -818,6 +818,11 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
 
     mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE);
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    //tableFrame->InvalidateCellMap();
+    tableFrame->InvalidateColumnCache();
+
     //printf("Created a frame\n");
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
@@ -887,6 +892,11 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         }
         mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, prevFrame, nextContent,
                                                    aResult, isAppend, PR_FALSE);
+        nsTableFrame* tableFrame;
+        nsTableFrame::GetTableFrame(this, tableFrame);
+        //tableFrame->InvalidateCellMap();
+        tableFrame->InvalidateColumnCache();
+
         //printf("Created a frame\n");
         const nsStyleDisplay *rowDisplay;
         (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
