@@ -88,10 +88,19 @@ if (exists($::FORM{'person'})) {
      @list = @::CheckInList;
 }
 
+my $treepart = '';
+$treepart = "&treeid=$::TreeID"    if ($::TreeID ne "default");
+my $branchpart = '';
+$branchpart = "&branch=$::TreeInfo{$::TreeID}{branch}"
+     if ($::TreeInfo{$::TreeID}{branch});
 
 $subhead .= "<br><font color=red>
-Be aware that you are looking at an old hook!</font>"
+These checkins are <em>not</em> from <a 
+href='showcheckins.cgi?$treepart$branchpart'>the current 
+hook</a>!</font><br>"
      if (Param('readonly'));
+$subhead .= "View a <a href=\"viewold.cgi?" . BatchIdPart('?') . "&target=showcheckins\">different 
+day's checkins</a>.<br>";
 
 PutsHeader($title, $head, $subhead);
 
@@ -201,10 +210,6 @@ print "
 
 my $count = 0;
 my $maxcount = 100;
-my $branchpart = '';
-
-$branchpart = "&branch=$::TreeInfo{$::TreeID}{branch}"
-     if ($::TreeInfo{$::TreeID}{branch});
 
 foreach $checkin (@list) {
      $info = eval("\\\%$checkin");

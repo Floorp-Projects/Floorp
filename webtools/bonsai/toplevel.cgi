@@ -76,19 +76,26 @@ foreach my $tree (@::TreeList) {
 print "</SELECT></H3></FORM>\n";
 
 
+my $treepart = '';
+$treepart = "&treeid=$::TreeID"
+    if ($::TreeID ne "default");
+my $branchpart='';
+$branchpart="&branch=$::TreeInfo{$::TreeID}{branch}"
+    if $::TreeInfo{$::TreeID}{branch};
 if (Param('readonly')) {
-    print "<h2><font color=red>
-Be aware that you are looking at an old hook!</font></h2>\n";
+    print "<div style='border: 2px dotted grey; padding: 2px'><h2><font color=red>
+Be aware that this is <em>not</em> the <a href='toplevel.cgi?$treepart$branchpart'>current 
+hook!</a></font></h2>\n";
+} else {
+    print "<div><tt>" . time2str("%m/%d/%Y %T %Z", time())."</tt>:";
 }
-
-print "<tt>" . time2str("%m/%d/%Y %T %Z", time()) .
-      "</tt>: The tree is currently $openword<br>\n";
+print " The tree is currently $openword<br>\n";
 unless ($::TreeOpen) {
     print "The tree has been closed since <tt>" .
          MyFmtClock($::CloseTimeStamp) . "</tt>.<BR>\n";
 }
 
-print "The last known good tree had a timestamp of <tt>";
+print "</div>The last known good tree had a timestamp of <tt>";
 print time2str("%m/%d/%Y %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
 print "<hr><pre variable>$::MOTD</pre><hr>";
 print "<br clear=all>";
@@ -204,9 +211,8 @@ Can't contact the directory server at $ldapserver:$ldapport</font>\n";
 
 my $cvsqueryurl = "cvsqueryform.cgi?" .
     "cvsroot=$::TreeInfo{$::TreeID}{repository}" .
-    "&module=$::TreeInfo{$::TreeID}{module}";
-$cvsqueryurl.= "&branch=$::TreeInfo{$::TreeID}{branch}"
-     if ($::TreeInfo{$::TreeID}{branch});
+    "&module=$::TreeInfo{$::TreeID}{module}" .
+    $branchpart;
 my $bip = BatchIdPart('?');
 my $tinderboxbase = Param('tinderboxbase');
 my $tinderboxlink = '';

@@ -55,7 +55,14 @@ foreach my $i (glob(DataDir() . "/batch-*\[0-9\].pl")) {
 
 @list = sort {$b <=> $a} @list;
 
-print "<FORM method=get action=\"toplevel.cgi\">\n";
+print '<FORM method=get action="';
+if ($::FORM{'target'} eq 'showcheckins') {
+print 'showcheckins.cgi';
+} else {
+print 'toplevel.cgi';
+}
+print '">
+';
 print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>\n";
 print "<INPUT TYPE=SUBMIT Value=\"Submit\"><BR>\n";
 
