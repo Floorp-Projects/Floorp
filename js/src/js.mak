@@ -66,6 +66,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jscntxt.obj"
 	-@erase "$(INTDIR)\jsdate.obj"
 	-@erase "$(INTDIR)\jsdbgapi.obj"
+	-@erase "$(INTDIR)\jsdhash.obj"
 	-@erase "$(INTDIR)\jsdtoa.obj"
 	-@erase "$(INTDIR)\jsemit.obj"
 	-@erase "$(INTDIR)\jsexn.obj"
@@ -155,6 +156,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jscntxt.obj" \
 	"$(INTDIR)\jsdate.obj" \
 	"$(INTDIR)\jsdbgapi.obj" \
+	"$(INTDIR)\jsdhash.obj" \
 	"$(INTDIR)\jsdtoa.obj" \
 	"$(INTDIR)\jsemit.obj" \
 	"$(INTDIR)\jsexn.obj" \
@@ -212,6 +214,7 @@ CLEAN :
 	-@erase "$(INTDIR)\jscntxt.obj"
 	-@erase "$(INTDIR)\jsdate.obj"
 	-@erase "$(INTDIR)\jsdbgapi.obj"
+	-@erase "$(INTDIR)\jsdhash.obj"
 	-@erase "$(INTDIR)\jsdtoa.obj"
 	-@erase "$(INTDIR)\jsemit.obj"
 	-@erase "$(INTDIR)\jsexn.obj"
@@ -305,6 +308,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\jscntxt.obj" \
 	"$(INTDIR)\jsdate.obj" \
 	"$(INTDIR)\jsdbgapi.obj" \
+	"$(INTDIR)\jsdhash.obj" \
 	"$(INTDIR)\jsdtoa.obj" \
 	"$(INTDIR)\jsemit.obj" \
 	"$(INTDIR)\jsexn.obj" \
@@ -1430,6 +1434,56 @@ NODEP_CPP_JSDBG=\
 	
 
 "$(INTDIR)\jsdbgapi.obj" : $(SOURCE) $(DEP_CPP_JSDBG) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\jsdhash.c
+
+!IF  "$(CFG)" == "js - Win32 Release"
+
+DEP_CPP_JSDHA=\
+	".\jsbit.h"\
+	".\jscompat.h"\
+	".\jscpucfg.h"\
+	".\jsdhash.h"\
+	".\jslong.h"\
+	".\jsosdep.h"\
+	".\jsotypes.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSDHA=\
+	".\jsautocfg.h"\
+	
+
+"$(INTDIR)\jsdhash.obj" : $(SOURCE) $(DEP_CPP_JSDHA) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "js - Win32 Debug"
+
+DEP_CPP_JSDHA=\
+	".\jsbit.h"\
+	".\jscompat.h"\
+	".\jscpucfg.h"\
+	".\jsdhash.h"\
+	".\jslong.h"\
+	".\jsosdep.h"\
+	".\jsotypes.h"\
+	".\jstypes.h"\
+	".\jsutil.h"\
+	{$(INCLUDE)}"\sys\types.h"\
+	
+NODEP_CPP_JSDHA=\
+	".\jsautocfg.h"\
+	
+
+"$(INTDIR)\jsdhash.obj" : $(SOURCE) $(DEP_CPP_JSDHA) "$(INTDIR)"
 
 
 !ENDIF 
