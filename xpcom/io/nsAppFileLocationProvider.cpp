@@ -310,8 +310,8 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 // GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
 //
 // UNIX   : ~/.mozilla/
-// WIN    : <Application Data folder on user's machine>\Mozilla\Users50 
-// Mac    : :Documents:Mozilla:Users50:
+// WIN    : <Application Data folder on user's machine>\Mozilla\Profiles 
+// Mac    : :Documents:Mozilla:Profiles:
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
 {
@@ -326,7 +326,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
 
 #if defined(XP_MAC) || defined(XP_OS2) || defined(XP_PC)
     // These 3 platforms share this part of the path - do them as one
-    rv = localDir->AppendRelativePath("Users50");
+    rv = localDir->AppendRelativePath("Profiles");
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
