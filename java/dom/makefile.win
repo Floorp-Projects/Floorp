@@ -26,7 +26,7 @@ DIRS = jni
 JAVAHOME=$(JDKHOME)
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 !ifdef JAVA_DOM_OJI_ENABLE
-DEFINES+= -DJAVA_DOM_OJI_ENABLE
+DEFINES=$(DEFINES) -DJAVA_DOM_OJI_ENABLE
 !endif
 MODULE=javadom 
 IS_COMPONENT=1
@@ -73,11 +73,6 @@ LLIBS=	\
 	$(JAVAHOME)\lib\jvm.lib \
 !endif
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\img32$(VERSION_NUMBER).lib \
-	$(DIST)\lib\util.lib \
-	$(DIST)\lib\plc3.lib \
-	$(DIST)\lib\jsdom.lib \
-	$(DIST)\lib\js3250.lib \
 	$(LIBNSPR) 
 
 include <$(DEPTH)\config\config.mak>

@@ -88,15 +88,17 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
- $(DIST)\lib\img32$(VERSION_NUMBER).lib \
- $(DIST)\lib\util.lib \
- $(DIST)\lib\plc3.lib \
- $(DIST)\lib\jsdom.lib \
  $(LIBNSPR)
 
 include <$(DEPTH)\config\config.mak>
-
 include <$(DEPTH)\config\rules.mak>
+
+export:: classes
+
+#XXX - assume that DOM2 java-bindings are in CLASSPATH 
+classes:
+	@echo "Making java classes ..."
+	$(JAVAHOME)\bin\javac -d $(JAVA_DESTPATH) *.java
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
