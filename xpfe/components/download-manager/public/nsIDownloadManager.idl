@@ -135,9 +135,14 @@ interface nsIDownloadManager : nsISupports {
   *                              display progress for.
   *
   * @param aParent The parent, or opener, of the front end (optional).
+  *
+  * @param aCancelDownloadOnClose       Whether closing the dialog
+  *                                     should cancel the download.
   */
 
-  void openProgressDialogFor(in AUTF8String aTargetPath, in nsIDOMWindow aParent);
+  void openProgressDialogFor(in AUTF8String aTargetPath,
+                             in nsIDOMWindow aParent,
+                             in boolean aCancelDownloadOnClose);
 
   /**
   * Called when the download manager front end is closed.  Useful for

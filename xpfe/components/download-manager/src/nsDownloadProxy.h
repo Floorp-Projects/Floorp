@@ -84,7 +84,7 @@ public:
       if (NS_FAILED(rv)) return rv;
 
       NS_ConvertUCS2toUTF8 utf8Path(path);
-      return dm->OpenProgressDialogFor(utf8Path, nsnull);
+      return dm->OpenProgressDialogFor(utf8Path, nsnull, PR_TRUE);
     }
     return rv;
   }
