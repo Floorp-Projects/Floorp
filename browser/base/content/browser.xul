@@ -55,7 +55,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
