@@ -348,7 +348,7 @@ void TextTimer::Notify(nsITimer *timer)
     nsIViewManager* vm = view->GetViewManager();
     bounds.x = offset.x;
     bounds.y = offset.y;
-    vm->UpdateView(view, &bounds, 0);
+    vm->UpdateView(view, bounds, 0);
     NS_RELEASE(vm);
     NS_RELEASE(view);
   }

@@ -272,7 +272,8 @@ public:
    * child insertion will happen through the view manager and it
    * will determine the ordering of children in the child list.
    * @param child to insert in this view's child list
-   * @param sibling view to set as next sibling of child
+   * @param sibling view to set as previous sibling of child
+   *                if nsnull, then child is inserted at head of list
    */
   virtual void InsertChild(nsIView *child, nsIView *sibling) = 0;
 

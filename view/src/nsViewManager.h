@@ -81,9 +81,9 @@ public:
   // Called to inform the layer manager that some portion of a layer
   // is dirty and needs to be redrawn. The region or rect passed in
   // should be in the layer's coordinate space.
-  virtual void UpdateView(nsIView *aView, nsRegion *region,
+  virtual void UpdateView(nsIView *aView, nsRegion *aRegion,
                           PRUint32 aUpdateFlags);
-  virtual void UpdateView(nsIView *aView, nsRect *rect, PRUint32 aUpdateFlags);
+  virtual void UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags);
 
   // Called to dispatch an event to the appropriate layer. Often called
   // as a result of receiving a mouse or keyboard event from the native

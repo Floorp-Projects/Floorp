@@ -152,10 +152,11 @@ public:
    * is dirty and needs to be redrawn. The region passed in
    * should be in the view's coordinate space.
    * @param aView view to paint. should be root view
-   * @param region region to mark as damaged
+   * @param region region to mark as damaged, if nsnull, then entire
+   *               view is marked as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, nsRegion *region,
+  virtual void UpdateView(nsIView *aView, nsRegion *aRegion,
                           PRUint32 aUpdateFlags) = 0;
 
   /**
@@ -166,7 +167,7 @@ public:
    * @param rect rect to mark as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, nsRect *rect, PRUint32 aUpdateFlags) = 0;
+  virtual void UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
