@@ -533,6 +533,8 @@ pref("profile.confirm_automigration",true);
 // if -1, we never think your profile is defunct
 // and users will never see the remigrate UI.
 pref("profile.seconds_until_defunct", -1);
+// We can show it anytime from menus
+pref("profile.manage_only_at_launch",false);
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
