@@ -81,7 +81,6 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_IID(kIMsgSendLaterIID, NS_IMSGSENDLATER_IID); 
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 
 
@@ -153,7 +152,7 @@ int main(int argc, char *argv[])
   }  
   
   nsCOMPtr<nsIMsgSendLater> pMsgSendLater;
-  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, 
+  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, NS_GET_IID(nsIMsgSendLater), 
                                           (void **) getter_AddRefs(pMsgSendLater)); 
   if (NS_SUCCEEDED(rv) && pMsgSendLater) 
   { 

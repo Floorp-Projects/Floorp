@@ -86,9 +86,7 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
-static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
-static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -411,11 +409,11 @@ int main(int argc, char *argv[])
 	if (!mailIFile)
     return NS_ERROR_FAILURE;
 
-  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, kIMsgSendIID, (void **) &pMsgSend); 
+  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
     printf("We succesfully obtained a nsIMsgSend interface....\n");    
-    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, kIMsgCompFieldsIID, 
+    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
                                              (void **) &pMsgCompFields); 
     if (NS_SUCCEEDED(rv) && pMsgCompFields)
     { 

@@ -55,10 +55,9 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
-static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -257,7 +256,7 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 		// create an nsISupportsWString, get the current mailbox
 		// name being imported and put it in the string
 		nsCOMPtr<nsISupportsWString>	data;
-		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, kISupportsWStringIID, getter_AddRefs( data));
+		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsWString), getter_AddRefs( data));
 		if (NS_FAILED( rv))
 			return( rv);
 		if (m_pThreadData) {

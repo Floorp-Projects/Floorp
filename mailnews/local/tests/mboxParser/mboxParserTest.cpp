@@ -64,10 +64,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test

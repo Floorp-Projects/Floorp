@@ -1960,6 +1960,8 @@ ERROR_OUT:
 #include "nsIContentSink.h"
 #include "nsICharsetConverterManager.h"
 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID); 
+
 /**
  * Converts a buffer to plain text. Some conversions may
  * or may not work with certain end charsets which is why we
@@ -1976,11 +1978,8 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
   if (aConBuf.IsEmpty())
     return NS_OK;
 
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID); 
-
   rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          kCParserIID, getter_AddRefs(parser));
+                                          NS_GET_IID(nsIParser), getter_AddRefs(parser));
   if (NS_SUCCEEDED(rv) && parser)
   {
     PRUint32 converterFlags = 0;

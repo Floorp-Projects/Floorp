@@ -58,9 +58,8 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 /* The definition is nsAddressBook.cpp */
 extern const char *kCardDataSourceRoot;
@@ -3939,7 +3938,7 @@ nsresult nsAddrDatabase::GetCollationKeyGenerator()
 			nsCOMPtr <nsICollationFactory> factory;
 
 			rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-									  kICollationFactoryIID, getter_AddRefs(factory)); 
+									  NS_GET_IID(nsICollationFactory), getter_AddRefs(factory)); 
 			if (NS_SUCCEEDED(rv) && factory)
 			{
 				rv = factory->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));

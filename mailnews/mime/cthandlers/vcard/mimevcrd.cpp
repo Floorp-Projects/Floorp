@@ -93,9 +93,8 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 
 /* This is the next generation string retrieval call */
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
 

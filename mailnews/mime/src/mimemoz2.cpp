@@ -73,7 +73,6 @@
 
 #include "mimeebod.h"
 
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -1459,7 +1458,7 @@ mime_bridge_create_display_stream(
 //  memset(msd->options, 0, sizeof(*msd->options));
   msd->options->format_out = format_out;     // output format
 
-  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->options->prefs));
+  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(msd->options->prefs));
   if (! (msd->options->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(msd);
@@ -1896,7 +1895,7 @@ mimeSetNewURL(nsMIMESession *stream, char *url)
 }
 
 /* This is the next generation string retrieval call */
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define     MIME_URL "chrome://messenger/locale/mime.properties"
 

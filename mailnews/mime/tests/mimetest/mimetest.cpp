@@ -92,7 +92,6 @@
 
 // I18N
 static NS_DEFINE_CID(charsetCID,  CONV_CID);
-NS_DEFINE_IID(kConvMeIID,             CONV_IID);
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
 // prefs
@@ -126,7 +125,7 @@ SetupRegistry(void)
 
   // i18n
   nsComponentManager::RegisterComponent(charsetCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
-  nsresult res = nsServiceManager::GetService(charsetCID, kConvMeIID, (nsISupports **)&ccMan);
+  nsresult res = nsServiceManager::GetService(charsetCID, NS_GET_IID(nsIConvMe), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
     printf("ERROR at GetService() code=0x%x.\n",res);

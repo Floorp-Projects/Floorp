@@ -108,11 +108,10 @@ static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 /////////////////////////////////////////////////////////////////////////////////

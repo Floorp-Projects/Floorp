@@ -57,13 +57,10 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_IID(kIStandardUrlIID, NS_IURL_IID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kIImportFieldMapIID, NS_IIMPORTFIELDMAP_IID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
-static NS_DEFINE_IID(kISupportsWStringIID, NS_ISUPPORTSWSTRING_IID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
 static const char *kDirectoryDataSourceRoot = "abdirectory://";
@@ -255,7 +252,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
 		if (m_pDestinationUri) {
 			nsCOMPtr<nsIURL>	url;
-			rv = nsComponentManager::CreateInstance( kStandardUrlCID, nsnull, kIStandardUrlIID, getter_AddRefs( url));
+			rv = nsComponentManager::CreateInstance( kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs( url));
 			if (NS_SUCCEEDED( rv)) {
 				url->SetSpec( m_pDestinationUri);
 				*_retval = url;
@@ -296,7 +293,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		IMPORT_LOG1( "Requesting sample data #: %ld\n", (long)rNum);
 		if (m_pInterface) {
 			nsCOMPtr<nsISupportsWString>	data;
-			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, kISupportsWStringIID, getter_AddRefs( data));
+			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsWString), getter_AddRefs( data));
 			if (NS_FAILED( rv))
 				return( rv);
 			PRUnichar *	pData = nsnull;
@@ -345,7 +342,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
 		if (item) {
 			nsCOMPtr<nsIURL> url;
-			item->QueryInterface( kIStandardUrlIID, getter_AddRefs( url));
+			item->QueryInterface( NS_GET_IID(nsIURL), getter_AddRefs( url));
 			if (url) {
 				if (m_pDestinationUri)
 					nsCRT::free( m_pDestinationUri);

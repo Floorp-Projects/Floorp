@@ -37,7 +37,6 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_IID(kIWindowMediatorIID,   NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID,    NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,    NS_MSGMAILSESSION_CID);
 

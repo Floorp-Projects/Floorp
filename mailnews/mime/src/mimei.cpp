@@ -82,7 +82,6 @@
 #include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);
 
 /* ==========================================================================
    Allocation and destruction
@@ -202,7 +201,7 @@ mime_locate_external_content_handler(const char *content_type,
 	if (nsComponentManager::ContractIDToClassID(lookupID, &classID) != NS_OK)
     return NULL;
   
-  rv  = nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kIMimeContentTypeHandlerIID, 
+  rv  = nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, NS_GET_IID(nsIMimeContentTypeHandler), 
                                      (void **) getter_AddRefs(ctHandler));
   if (NS_FAILED(rv) || !ctHandler)
     return nsnull;

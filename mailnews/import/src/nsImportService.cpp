@@ -51,7 +51,6 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
-static NS_DEFINE_IID(kImportModuleIID,		NS_IIMPORTMODULE_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 
@@ -582,7 +581,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 	nsCID				clsId;
 	clsId.Parse( pClsId);
 	nsIImportModule *	module;
-	rv = compMgr->CreateInstance( clsId, nsnull, kImportModuleIID, (void **) &module);
+	rv = compMgr->CreateInstance( clsId, nsnull, NS_GET_IID(nsIImportModule), (void **) &module);
 	if (NS_FAILED(rv)) return rv;
 	
 	nsString	theTitle;	
@@ -624,7 +623,7 @@ nsIImportModule *ImportModuleDesc::GetModule( PRBool keepLoaded)
    	NS_WITH_SERVICE( nsIComponentManager, compMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return nsnull;
 	
-	rv = compMgr->CreateInstance( m_cid, nsnull, kImportModuleIID, (void **) &m_pModule);
+	rv = compMgr->CreateInstance( m_cid, nsnull, NS_GET_IID(nsIImportModule), (void **) &m_pModule);
 	if (NS_FAILED(rv)) {
 		m_pModule = nsnull;
 		return nsnull;

@@ -57,7 +57,6 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_IID(kIMsgSendLater, NS_IMSGSENDLATER_IID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
@@ -74,7 +73,7 @@ nsresult NS_NewMsgSendLater(const nsIID &aIID, void ** aInstancePtrResult)
 	{
 		nsMsgSendLater *pSendLater = new nsMsgSendLater();
 		if (pSendLater)
-			return pSendLater->QueryInterface(kIMsgSendLater, aInstancePtrResult);
+			return pSendLater->QueryInterface(NS_GET_IID(nsIMsgSendLater), aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}

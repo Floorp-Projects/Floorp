@@ -70,12 +70,9 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #include <stdlib.h>
 #endif /* ENABLE_TESTING_HACK */
 
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
 #define MSG_HASH_SIZE 512
@@ -2627,7 +2624,7 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 				nsCOMPtr <nsICollationFactory> f;
 
 				err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-										  kICollationFactoryIID, getter_AddRefs(f)); 
+										  NS_GET_IID(nsICollationFactory), getter_AddRefs(f)); 
 				if (NS_SUCCEEDED(err) && f)
 				{
 					// get a collation interface instance 

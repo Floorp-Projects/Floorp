@@ -51,7 +51,6 @@
 
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISupportsArrayIID,	NS_ISUPPORTSARRAY_IID);
 static NS_DEFINE_CID(kPrefServiceCID,		NS_PREF_CID);
 
 
@@ -383,7 +382,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		IMPORT_LOG0( "*** Error creating address book descriptor for text import\n");
 	}		
 	else {
-		rv = array->QueryInterface( kISupportsArrayIID, (void **) ppArray);
+		rv = array->QueryInterface( NS_GET_IID(nsISupportsArray), (void **) ppArray);
 	}
 
 	return( rv);

@@ -49,7 +49,7 @@ static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID( kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID( kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_IID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
 // We need to do some calculations to set these numbers to something reasonable!

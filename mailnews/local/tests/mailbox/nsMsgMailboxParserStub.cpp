@@ -66,8 +66,7 @@ nsMsgMailboxParserStub::nsMsgMailboxParserStub()
 nsMsgMailboxParserStub::~nsMsgMailboxParserStub()
 {}
 
-NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(nsMsgMailboxParserStub,kIStreamListenerIID);
+NS_IMPL_ISUPPORTS(nsMsgMailboxParserStub,NS_GET_IID(nsIStreamListener));
 
 NS_IMETHODIMP nsMsgMailboxParserStub::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
 {
@@ -150,7 +149,7 @@ nsresult NS_NewMsgParser(nsIStreamListener ** aInstancePtr)
 	{
 		nsMsgMailboxParserStub * parser = new nsMsgMailboxParserStub();
 		if (parser)
-			rv =parser->QueryInterface(kIStreamListenerIID, (void **) aInstancePtr);		
+			rv =parser->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aInstancePtr);		
 	}
 
 	return rv;

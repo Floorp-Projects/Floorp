@@ -60,7 +60,6 @@
 
 static NS_DEFINE_CID(kPrefCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-static NS_DEFINE_IID(kIFileLocatorIID,   NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,    NS_FILELOCATOR_CID);
 
 nsMovemailService::nsMovemailService()

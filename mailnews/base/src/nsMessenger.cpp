@@ -115,6 +115,7 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
+
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -133,6 +134,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #include "nsIContentSink.h"
 #include "nsIHTMLToTextSink.h"
 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
+
 static nsresult
 ConvertBufToPlainText(nsString &aConBuf)
 {
@@ -143,11 +146,8 @@ ConvertBufToPlainText(nsString &aConBuf)
   if (aConBuf.IsEmpty())
     return NS_OK;
 
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
   rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          kCParserIID, getter_AddRefs(parser));
+                                          NS_GET_IID(nsIParser), getter_AddRefs(parser));
   if (NS_SUCCEEDED(rv) && parser)
   {
     nsCOMPtr<nsIContentSink> sink;
