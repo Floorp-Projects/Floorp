@@ -17,9 +17,11 @@
  */
 
 #include "nsISupports.idl"
-interface nsIDOMXULFocusTracker;
+interface nsIDOMXULCommandDispatcher;
 
 [scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
 interface nsIController : nsISupports {
-	attribute nsIDOMXULFocusTracker focusTracker;
+	attribute nsIDOMXULCommandDispatcher commandDispatcher;
+	boolean IsCommandEnabled(in string command);
+	void DoCommand(in string command);
 };
