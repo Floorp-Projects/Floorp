@@ -49,8 +49,9 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define AD_WORKING_BUFF_SIZE	                8192
 
 
-extern PRBool       nsMsgIsMacFile(const char *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
+
+#include "nsIInternetConfigService.h"
 
 #endif /* XP_MAC */
 
@@ -574,10 +575,50 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		  m_x_mac_creator = PL_strdup(filetype);
 		}
 
-    PRBool isAMacFile = nsMsgIsMacFile(url_string);
+    PRBool sendResourceFork = PR_TRUE;
+    PRBool sendDataFork = PR_TRUE;
+    PRBool icGaveNeededInfo = PR_FALSE;
+ 
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+    if (icService)
+    {
+      PRInt32 icFlags;
+      nsresult rv = icService->GetFileMappingFlags(&fsSpec, PR_FALSE, &icFlags);
+      if (NS_SUCCEEDED(rv) && icFlags != -1 && !(icFlags & nsIInternetConfigService::eIICMapFlag_NotOutgoingMask))
+      {
+        sendResourceFork = (icFlags & nsIInternetConfigService::eIICMapFlag_ResourceForkMask);
+        sendDataFork = (icFlags & nsIInternetConfigService::eIICMapFlag_DataForkMask);
+        
+        icGaveNeededInfo = PR_TRUE;
+      }
+    }
+    
+    if (! icGaveNeededInfo)
+    {
+      // If InternetConfig cannot help us, then just try our best...
+      sendResourceFork = PR_FALSE;
+      nsAutoString urlStr; urlStr.AssignWithConversion(url_string);
+      char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
+      if (ext && *ext)
+      {
+       sendResourceFork = 
+           PL_strcasecmp(ext, "TXT") &&
+           PL_strcasecmp(ext, "JPG") &&
+           PL_strcasecmp(ext, "GIF") &&
+           PL_strcasecmp(ext, "TIF") &&
+           PL_strcasecmp(ext, "HTM") &&
+           PL_strcasecmp(ext, "HTML") &&
+           PL_strcasecmp(ext, "ART") &&
+           PL_strcasecmp(ext, "XUL") &&
+           PL_strcasecmp(ext, "XML") &&
+           PL_strcasecmp(ext, "CSS") &&
+           PL_strcasecmp(ext, "JS");
+      }
+      PR_FREEIF(ext);
+    }
 
 		// Only use appledouble if we aren't uuencoding.
-	  if( isAMacFile && (! UseUUEncode_p()) )
+	  if( sendResourceFork && (! UseUUEncode_p()) )
 		{
 		  char	          		*separator;
       nsInputFileStream   *myInputFile = new nsInputFileStream(scr_fileSpec);
@@ -715,7 +756,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
  		}
 	  else
 		{
-      if ( isAMacFile )
+      if ( sendResourceFork )
 			{
 				// The only time we want to send just the data fork of a two-fork
 				// Mac file is if uuencoding has been requested.

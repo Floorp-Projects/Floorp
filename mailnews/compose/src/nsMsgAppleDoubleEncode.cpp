@@ -46,41 +46,6 @@
 
 #pragma cplusplus on
 
-//
-// Returns true if the resource fork should be sent!
-//
-// RICHIEHACK: for now, this is a temporary solution that should be
-// replaced by calls to the MIME service! We look for files that typically
-// don't have resource forks and if it is one of these types, we go with
-// it, but otherwise, we are going to do the fancy encoding!
-//
-PRBool	
-nsMsgIsMacFile(const char *aUrlString)
-{
-  nsAutoString urlStr; urlStr.AssignWithConversion(aUrlString);
-  char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
-  if ( (!ext) || (!*ext) )
-  {
-    PR_FREEIF(ext);
-    return PR_TRUE;
-  }
-
-  PRBool isMacFile = 
-       PL_strcasecmp(ext, "JPG") &&
-       PL_strcasecmp(ext, "GIF") &&
-       PL_strcasecmp(ext, "TIF") &&
-       PL_strcasecmp(ext, "HTM") &&
-       PL_strcasecmp(ext, "HTML") &&
-       PL_strcasecmp(ext, "ART") &&
-       PL_strcasecmp(ext, "XUL") &&
-       PL_strcasecmp(ext, "XML") &&
-       PL_strcasecmp(ext, "CSS") &&
-       PL_strcasecmp(ext, "JS");
- 
-  PR_Free(ext);
-  return isMacFile;
-}
-
 void	
 MacGetFileType(nsFileSpec   *fs, 
                PRBool       *useDefault, 
