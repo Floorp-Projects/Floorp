@@ -119,24 +119,33 @@ inDOMView::inDOMView() :
   mShowWhitespaceNodes(PR_TRUE),
   mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
-  kAnonymousAtom = NS_NewAtom("anonymous");
-  kElementNodeAtom = NS_NewAtom("ELEMENT_NODE");
-  kAttributeNodeAtom = NS_NewAtom("ATTRIBUTE_NODE");
-  kTextNodeAtom = NS_NewAtom("TEXT_NODE");
-  kCDataSectionNodeAtom = NS_NewAtom("CDATA_SECTION_NODE");
-  kEntityReferenceNodeAtom = NS_NewAtom("ENTITY_REFERENCE_NODE");
-  kEntityNodeAtom = NS_NewAtom("ENTITY_NODE");
-  kProcessingInstructionNodeAtom = NS_NewAtom("PROCESSING_INSTRUCTION_NODE");
-  kCommentNodeAtom = NS_NewAtom("COMMENT_NODE");
-  kDocumentNodeAtom = NS_NewAtom("DOCUMENT_NODE");
-  kDocumentTypeNodeAtom = NS_NewAtom("DOCUMENT_TYPE_NODE");
-  kDocumentFragmentNodeAtom = NS_NewAtom("DOCUMENT_FRAGMENT_NODE");
-  kNotationNodeAtom = NS_NewAtom("NOTATION_NODE");
 }
 
 inDOMView::~inDOMView()
 {
   SetRootNode(nsnull);
+}
+
+/* static */ const nsStaticAtom inDOMView::Atoms_info[] = {
+  {"anonymous", &inDOMView::kAnonymousAtom},
+  {"ELEMENT_NODE", &inDOMView::kElementNodeAtom},
+  {"ATTRIBUTE_NODE", &inDOMView::kAttributeNodeAtom},
+  {"TEXT_NODE", &inDOMView::kTextNodeAtom},
+  {"CDATA_SECTION_NODE", &inDOMView::kCDataSectionNodeAtom},
+  {"ENTITY_REFERENCE_NODE", &inDOMView::kEntityReferenceNodeAtom},
+  {"ENTITY_NODE", &inDOMView::kEntityNodeAtom},
+  {"PROCESSING_INSTRUCTION_NODE", &inDOMView::kProcessingInstructionNodeAtom},
+  {"COMMENT_NODE", &inDOMView::kCommentNodeAtom},
+  {"DOCUMENT_NODE", &inDOMView::kDocumentNodeAtom},
+  {"DOCUMENT_TYPE_NODE", &inDOMView::kDocumentTypeNodeAtom},
+  {"DOCUMENT_FRAGMENT_NODE", &inDOMView::kDocumentFragmentNodeAtom},
+  {"NOTATION_NODE", &inDOMView::kNotationNodeAtom}
+};
+
+/* static */ void
+inDOMView::InitAtoms()
+{
+  NS_RegisterStaticAtoms(Atoms_info, NS_ARRAY_LENGTH(Atoms_info));
 }
 
 ////////////////////////////////////////////////////////////////////////

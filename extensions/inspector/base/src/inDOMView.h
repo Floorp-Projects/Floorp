@@ -49,6 +49,7 @@
 #include "nsIDOMDocument.h"
 #include "nsVoidArray.h"
 #include "nsCOMArray.h"
+#include "nsStaticAtom.h"
 
 class inDOMViewNode;
 
@@ -67,6 +68,8 @@ public:
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER
 
+  static void InitAtoms();
+
 protected:
   static nsIAtom* kAnonymousAtom;
   static nsIAtom* kElementNodeAtom;
@@ -81,6 +84,8 @@ protected:
   static nsIAtom* kDocumentTypeNodeAtom;
   static nsIAtom* kDocumentFragmentNodeAtom;
   static nsIAtom* kNotationNodeAtom;
+
+  static const nsStaticAtom Atoms_info[]; 
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;

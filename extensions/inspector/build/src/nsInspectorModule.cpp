@@ -109,4 +109,12 @@ static const nsModuleComponentInfo components[] =
     inDOMUtilsConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsInspectorModule, components)
+PR_STATIC_CALLBACK(nsresult)
+InspectorModuleCtor(nsIModule* aSelf)
+{
+  inDOMView::InitAtoms();
+  return NS_OK;
+}
+
+NS_IMPL_NSGETMODULE_WITH_CTOR(nsInspectorModule, components,
+                              InspectorModuleCtor)
