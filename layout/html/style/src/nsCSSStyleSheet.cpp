@@ -2675,7 +2675,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
     nsIAtom* tagAtom;
     aContent->GetTag(tagAtom);
     nsIAtom* idAtom = nsnull;
-    nsVoidArray classArray; // XXX need to recycle this guy (or make nsAutoVoidArray?)
+    nsAutoVoidArray classArray;
 
     nsIStyledContent* styledContent;
     if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
