@@ -55,7 +55,7 @@ PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 {
 	int dirSize;
 	char *dirAliasBuf = NULL;
-	PrefResult result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize);
+	PrefResult result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize, PR_FALSE);
 	if (result != PREF_NOERROR)
 		return result;
 
