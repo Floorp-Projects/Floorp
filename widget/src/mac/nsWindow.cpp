@@ -955,7 +955,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 			nsWindow* child;
 			do
 			{
-        if (NS_SUCCEEDED(children->CurrentItem(&child))
+        if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child))
         {
 				  nsWindow* deeperHit = child->FindWidgetHit(aThePoint);
 				  if (deeperHit)
