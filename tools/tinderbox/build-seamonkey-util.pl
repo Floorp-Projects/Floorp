@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.223 $ ';
+$::UtilsVersion = '$Revision: 1.224 $ ';
 
 package TinderUtils;
 
@@ -1441,6 +1441,7 @@ sub run_all_tests {
            $Settings::XULWindowOpenTest      or
            $Settings::StartupPerformanceTest or
            $Settings::MailBloatTest          or
+           $Settings::QATest                 or
            $Settings::BloatTest2             or
            $Settings::BloatTest) {
             
@@ -2025,7 +2026,7 @@ sub QATest {
                     $Settings::QATestTimeout);
     
     # XXXX testing.  -mcafee
-    #$rv = 'success';
+    $rv = 'success';
 
 
     # Post-process log of test output.
