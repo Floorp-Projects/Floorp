@@ -57,13 +57,6 @@
 
 #include "ImageLogging.h"
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMAT gfxIFormats::BGR
-#else
-#define USE_RGB
-#define GFXFORMAT gfxIFormats::RGB
-#endif
-
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
 
 NS_IMPL_ISUPPORTS1(nsBMPDecoder, imgIDecoder)
@@ -253,7 +246,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         if (!mRow) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, GFXFORMAT);
+        rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, BMP_GFXFORMAT);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mImage->AppendFrame(mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
