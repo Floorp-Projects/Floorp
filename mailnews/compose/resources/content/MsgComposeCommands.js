@@ -1588,6 +1588,9 @@ function SelectAddress()
 					   toAddress:toAddress,
 					   ccAddress:ccAddress,
 					   bccAddress:bccAddress});
+  // We have to set focus to the addressingwidget because we seem to loose focus often 
+  // after opening the SelectAddresses Dialog- bug # 89950
+  AdjustFocus();
 }
 
 function queryISupportsArray(supportsArray, iid) {
