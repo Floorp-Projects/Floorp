@@ -624,6 +624,7 @@ cmd/xfe/XfeWidgets/Xfe/Makefile
 cmd/xfe/XfeWidgets/XfeBm/Makefile
 cmd/xfe/XfeWidgets/XfeCaption/Makefile
 cmd/xfe/XfeWidgets/XfeComboBox/Makefile
+cmd/xfe/XfeWidgets/XfeToolBar/Makefile
 cmd/xfe/XfeWidgets/XfeToolTip/Makefile
 cmd/xfe/XfeWidgets/XfeTest/Makefile
 cmd/xfe/XfeWidgets/tests/Makefile
@@ -631,6 +632,7 @@ cmd/xfe/XfeWidgets/tests/Xfe/Makefile
 cmd/xfe/XfeWidgets/tests/XfeBm/Makefile
 cmd/xfe/XfeWidgets/tests/XfeCaption/Makefile
 cmd/xfe/XfeWidgets/tests/XfeComboBox/Makefile
+cmd/xfe/XfeWidgets/tests/XfeToolBar/Makefile
 cmd/xfe/XfeWidgets/tests/XfeToolTip/Makefile
 cmd/xfe/XfeWidgets/tests/XmL/Makefile
 cmd/xfe/icons/Makefile
