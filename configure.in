@@ -1071,6 +1071,55 @@ else
   AC_MSG_RESULT(unknown)
 fi
 
+dnl Check for dll-challenged libc's.
+dnl This check is apparently only needed for Linux.
+case "$target" in
+	*-linux*)
+	    dnl ===================================================================
+	    curdir=`pwd`
+	    rm -f conftest* /tmp/conftest*
+	    cat >> conftest.C <<\EOF
+#include <stdio.h>
+#include <link.h>
+#include <dlfcn.h>
+void __dump_link_map(void) {
+  struct link_map *map = _dl_loaded;
+  while (NULL != map) {printf("0x%08x %s\n", map->l_addr, map->l_name); map = map->l_next;}
+}
+int main() {
+  dlopen("./conftest1.so",RTLD_LAZY);
+  dlopen("./../tmp/conftest1.so",RTLD_LAZY);
+  dlopen("/tmp/conftest1.so",RTLD_LAZY);
+  dlopen("/tmp/../tmp/conftest1.so",RTLD_LAZY);
+  __dump_link_map();
+}
+EOF
+
+	    cat >> conftest1.C <<\EOF
+#include <stdio.h>
+void foo(void) {printf("foo in dll called\n");}
+EOF
+
+	    ${CXX-g++} -fPIC -c -g conftest1.C
+	    ${CXX-g++} -shared -Wl,-h -Wl,conftest1.so -o conftest1.so conftest1.o
+	    ${CXX-g++} -g conftest.C -o conftest -ldl
+	    cp -f conftest1.so conftest /tmp
+	    cd /tmp
+	    if test `./conftest | grep conftest1.so | wc -l` -gt 1
+	    then
+		echo
+		echo "*** Your libc has a bug that can result in loading the same dynamic"
+		echo "*** library multiple times.  This bug is known to be fixed in glibc-2.0.7-32"
+		echo "*** or later.  However, if you choose not to upgrade, the only effect"
+		echo "*** will be excessive memory usage at runtime."
+		echo
+	    fi
+	    cd ${curdir}
+	    rm -f conftest* /tmp/conftest*
+	    dnl ===================================================================
+	    ;;
+esac
+
 dnl Checks for specific (libc) global variables
 AC_MSG_CHECKING(for sys_errlist/sys_nerr)
 AC_CACHE_VAL(ac_cv_syserrlist,
