@@ -2055,7 +2055,15 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 
 NS_IMETHODIMP nsChildView::CancelIMEComposition()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_IME
+  NSLog(@"**** CancelIMEComposition\n");
+#endif
+  // Flush InputManager's markedText
+  NSInputManager *currentIM = [NSInputManager currentInputManager];
+  [currentIM markedTextAbandoned:mView];
+  [currentIM unmarkText];
+  
+  return NS_OK;
 }
 
 
