@@ -737,9 +737,8 @@
       <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="menu_ToolsPopup">
           <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-          <menuseparator id="firstSep"/>
           <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
-          <menuseparator id="secondSep"/>
+          <menuseparator id="prefSep"/>
           <menuitem label="&preferencesCmd.label;"
                     accesskey="&preferencesCmd.accesskey;"
                     oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
