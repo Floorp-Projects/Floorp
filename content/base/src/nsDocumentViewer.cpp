@@ -5577,6 +5577,7 @@ printf("DocumentViewerImpl::PrintPreview\n");
   // Let's print ...
   mIsCreatingPrintPreview = PR_TRUE;
   mIsDoingPrintPreview    = PR_TRUE;
+  aPrintSettings->SetIsPrintPreview(mIsDoingPrintPreview);
 
   // Very important! Turn Off scripting
   TurnScriptingOn(PR_FALSE);
@@ -5595,6 +5596,7 @@ printf("DocumentViewerImpl::PrintPreview\n");
     if (mPrt->mPrintDocList == nsnull) {
       mIsCreatingPrintPreview = PR_FALSE;
       mIsDoingPrintPreview    = PR_FALSE;
+      aPrintSettings->SetIsPrintPreview(mIsDoingPrintPreview);
       TurnScriptingOn(PR_TRUE);
       return NS_ERROR_FAILURE;
     }
@@ -5853,7 +5855,9 @@ DocumentViewerImpl::Print(PRBool            aSilent,
   if (printSettings) printSettings->SetPrintSilent(aSilent);
 #endif
 
+
   return Print(printSettings, nsnull);
+  
 }
 
 /** ---------------------------------------------------
@@ -5869,7 +5873,9 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   gDumpLOFileNameCnt = 0;
 #endif
 
+
   nsresult rv = NS_ERROR_FAILURE;
+
 
   if (mIsDoingPrintPreview) {
     PRBool okToPrint = PR_FALSE;
@@ -6025,10 +6031,15 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     mPrt->mDebugFilePtr = mDebugFile;
 #endif
 
+	// we have to turn off printpreview mode for now.. because this is a real request to print.
+  if ( mIsDoingPrintPreview == PR_TRUE) {
+  	aPrintSettings->SetIsPrintPreview(PR_FALSE);
+  }
+
     PRBool printSilently;
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
     rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, *getter_AddRefs(devspec), printSilently);
-    if (NS_SUCCEEDED(rv)) {
+	    if (NS_SUCCEEDED(rv)) {
       rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
       if (NS_SUCCEEDED(rv)) {
         rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
@@ -6199,7 +6210,14 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       mPrt->mPrintSettings->SetIsCancelled(PR_TRUE);
       mPrt->mPrintOptions->SetIsCancelled(PR_TRUE);
     }
+    
+    //  Set that we are once again in print preview 
+    if ( mIsDoingPrintPreview == PR_TRUE) {
+  	  aPrintSettings->SetIsPrintPreview(PR_TRUE);
+  	}
   }
+ 
+
  
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {

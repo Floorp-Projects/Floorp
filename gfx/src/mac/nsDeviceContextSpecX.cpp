@@ -46,6 +46,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
+#include "CoreServices.h"
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -79,12 +80,21 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContex
 NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aQuiet)
 {
   nsresult rv;
+  OSStatus status;
+   
   nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
+	// are we doing a printpreview.. then don't start setting up for the printing
+	PRBool	doingPrintPreview;
+	
+	aPS->GetIsPrintPreview(&doingPrintPreview);
+
   // Because page setup can get called at any time, we can't use the session APIs here.
-  OSStatus status = ::PMBegin();
-  if (status != noErr) return NS_ERROR_FAILURE;
+	if(!doingPrintPreview) {
+		status = ::PMBegin();
+		if (status != noErr) return NS_ERROR_FAILURE;
+	}
 
   mBeganPrinting = PR_TRUE;
   
@@ -117,6 +127,13 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aQuiet)
   if (! aQuiet)
   {
 		::InitCursor();
+
+		//CFStringRef pathRef = CFStringCreateWithCString(NULL,"file://Macintosh HD/Developer/Examples/Printing/App/build/PrintDialogPDE.plugin",kCFStringEncodingUTF8);
+		CFStringRef pathRef = CFStringCreateWithCString(NULL,"Developer:Examples:Printing:App:build:PrintDialogPDE.plugin",kCFStringEncodingUTF8);
+		if(pathRef){
+			CFURLRef	bundleURL=CFURLCreateWithFileSystemPath(NULL,pathRef,kCFURLPOSIXPathStyle,false);
+    	CFPlugInRef	plugin = ::CFPlugInCreate(NULL,bundleURL);
+    }
 
     Boolean accepted = false;
     status = ::PMPrintDialog(mPrintSettings, mPageFormat, &accepted);
