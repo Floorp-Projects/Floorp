@@ -26,6 +26,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kJSIID_CID, NS_JS_IID_CID);
 static NS_DEFINE_CID(kJSCID_CID, NS_JS_CID_CID);
 static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
+static NS_DEFINE_CID(kXPCThreadJSContextStack_CID, NS_XPC_THREAD_JSCONTEXT_STACK_CID);
 
 class nsXPCFactory : public nsIFactory
 {
@@ -114,6 +115,10 @@ nsXPCFactory::CreateInstance(nsISupports *aOuter,
     {
         inst = nsXPConnect::GetXPConnect();    
     }
+    else if (mCID.Equals(kXPCThreadJSContextStack_CID))
+    {
+        inst = nsXPCThreadJSContextStackImpl::GetSingleton();
+    }
     else
         return NS_NOINTERFACE;
 
@@ -155,6 +160,7 @@ NSGetFactory(nsISupports* servMgr,
     static nsXPCFactory iid_factory(kJSIID_CID);
     static nsXPCFactory cid_factory(kJSCID_CID);
     static nsXPCFactory xpc_factory(kXPConnect_CID);
+    static nsXPCFactory threadstack_factory(kXPCThreadJSContextStack_CID);
 
     if(!aFactory)
         return NS_ERROR_NULL_POINTER;
@@ -175,6 +181,12 @@ NSGetFactory(nsISupports* servMgr,
     {
         xpc_factory.AddRef();
         *aFactory = &xpc_factory;
+        return NS_OK;
+    }
+    if(aClass.Equals(kXPCThreadJSContextStack_CID))
+    {
+        threadstack_factory.AddRef();
+        *aFactory = &threadstack_factory;
         return NS_OK;
     }
 
@@ -210,6 +222,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
     rv = compMgr->RegisterComponent(kXPConnect_CID,
                                     "nsIXPConnect","nsIXPConnect",
                                     aPath, PR_TRUE, PR_TRUE);
+
+    rv = compMgr->RegisterComponent(kXPCThreadJSContextStack_CID,
+                                    "nsThreadJSContextStack","nsThreadJSContextStack",
+                                    aPath, PR_TRUE, PR_TRUE);
+
     return rv;
 }
 
@@ -227,6 +244,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
     rv = compMgr->UnregisterComponent(kJSIID_CID, aPath);
     rv = compMgr->UnregisterComponent(kJSCID_CID, aPath);
     rv = compMgr->UnregisterComponent(kXPConnect_CID, aPath);
+    rv = compMgr->UnregisterComponent(kXPCThreadJSContextStack_CID, aPath);
 
     return rv;
 }        

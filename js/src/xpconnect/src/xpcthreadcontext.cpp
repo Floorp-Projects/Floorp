@@ -16,6 +16,148 @@
  * Reserved.
  */
 
-/* placeholder file to get build projects stabilized */
+/* Implement global service to track stack of JSContext per thread. */
 
 #include "xpcprivate.h"
+
+void JS_DLL_CALLBACK
+xpc_ThreadDTORCB(void* ptr)
+{
+    nsDeque* myStack = (nsDeque*) ptr;
+    if(myStack)
+        delete myStack;
+}        
+
+static nsDeque*
+GetMyStack()
+{
+    nsDeque* myStack;
+    static PRUintn index = -1;
+    if(-1 == index)
+    {
+        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDTORCB))
+        {
+            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
+            return NULL;
+        }
+    }
+
+    myStack = (nsDeque*) PR_GetThreadPrivate(index);
+    if(!myStack)
+    {
+        if(NULL != (myStack = new nsDeque(nsnull)))
+        {
+            if(PR_FAILURE == PR_SetThreadPrivate(index, myStack))
+            {
+                NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
+                delete myStack;
+                myStack = NULL;
+            }
+        }
+        else
+        {
+            NS_ASSERTION(0, "new nsDeque failed!");
+        }
+    }
+    return myStack;
+}        
+
+
+/***************************************************************************/
+
+nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
+{
+    NS_INIT_ISUPPORTS();
+    NS_ADDREF_THIS();
+}
+
+nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
+
+static NS_DEFINE_IID(knsXPCThreadJSContextStackImplIID, NS_IJSCONTEXTSTACK_IID);
+NS_IMPL_ISUPPORTS(nsXPCThreadJSContextStackImpl, knsXPCThreadJSContextStackImplIID);
+
+//static 
+nsXPCThreadJSContextStackImpl* 
+nsXPCThreadJSContextStackImpl::GetSingleton()
+{
+    static nsXPCThreadJSContextStackImpl* singleton = NULL;
+    if(!singleton)
+        singleton = new nsXPCThreadJSContextStackImpl();
+    return singleton;
+}        
+
+/* readonly attribute PRInt32 Count; */
+NS_IMETHODIMP
+nsXPCThreadJSContextStackImpl::GetCount(PRInt32 *aCount)
+{
+    if(!aCount)
+        return NS_ERROR_NULL_POINTER;
+
+    nsDeque* myStack = GetMyStack();
+
+    if(!myStack)
+    {
+        *aCount = 0;
+        return NS_ERROR_FAILURE;
+    }
+
+    *aCount = myStack->GetSize();
+    return NS_OK;
+}        
+
+/* JSContext Peek (); */
+NS_IMETHODIMP
+nsXPCThreadJSContextStackImpl::Peek(JSContext * *_retval)
+{
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+
+    nsDeque* myStack = GetMyStack();
+
+    if(!myStack)
+    {
+        *_retval = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    if(myStack->GetSize() > 0)
+        *_retval = (JSContext*) myStack->Peek();
+    else
+        *_retval = nsnull;
+    return NS_OK;
+}        
+
+/* JSContext Pop (); */
+NS_IMETHODIMP
+nsXPCThreadJSContextStackImpl::Pop(JSContext * *_retval)
+{
+    nsDeque* myStack = GetMyStack();
+
+    if(!myStack)
+    {
+        if(_retval)
+            *_retval = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_ASSERTION(myStack->GetSize() > 0, "ThreadJSContextStack underflow");
+
+    if(_retval)
+        *_retval = (JSContext*) myStack->Pop();
+    else
+        myStack->Pop();
+    return NS_OK;
+}        
+
+/* void Push (in JSContext cx); */
+NS_IMETHODIMP
+nsXPCThreadJSContextStackImpl::Push(JSContext * cx)
+{
+    nsDeque* myStack = GetMyStack();
+
+    if(!myStack)
+        return NS_ERROR_FAILURE;
+
+    myStack->Push(cx);
+    return NS_OK;
+}        

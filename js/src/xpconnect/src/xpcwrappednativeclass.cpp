@@ -610,6 +610,8 @@ done:
 JSObject*
 nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
 {
+    NS_ASSERTION(desc->IsMethod(), "only methods have invoke objects");
+
     if(!desc->invokeFuncObj)
     {
         const char* name = GetMemberName(desc);
@@ -620,7 +622,19 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
         if(!cx)
             return NULL;
 
-        JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod, 0,
+        const nsXPTMethodInfo* info;
+        uint8 requiredArgs = 0;
+
+        if(NS_SUCCEEDED(mInfo->GetMethodInfo(desc->index, &info)))
+        {
+            // XXX ASSUMES that retval is last arg.
+            uint8 paramCount = info->GetParamCount();
+            requiredArgs = paramCount -
+                (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
+        }
+
+        JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod, 
+                                         (uintN) requiredArgs,
                                          JSFUN_BOUND_METHOD, NULL, name);
         if(!fun)
             return NULL;

@@ -20,6 +20,9 @@
 
 #include "xpcprivate.h"
 
+static void ThrowException(uintN errNum, JSContext* cx)
+    {nsXPConnect::GetJSThrower()->ThrowException(errNum, cx);}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
@@ -30,8 +33,7 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
             return JS_TRUE;
         }
-
-        JS_ReportError(cx, "illegal operation on WrappedNative prototype object");
+        ThrowException(XPCJSError::BAD_OP_ON_WN_PROTO, cx);
         return JS_FALSE;
     }
 
@@ -46,7 +48,7 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
             return JS_TRUE;
         }
-        JS_ReportError(cx, "can't convert WrappedNative to function");
+        ThrowException(XPCJSError::CANT_CONVERT_WN_TO_FUN, cx);
         return JS_FALSE;
 
     case JSTYPE_VOID:
@@ -285,7 +287,7 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         }
     }
     // else fall through
-    JS_ReportError(cx, "Cannot define new property in a WrappedNative");
+    ThrowException(XPCJSError::CANT_DEFINE_PROP_ON_WN, cx);
     return JS_FALSE;
 }
 
@@ -433,11 +435,11 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
     // else fall through...
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportError(cx, "Cannot place watchpoints on WrappedNative object static properties");
+        ThrowException(XPCJSError::CANT_WATCH_WN_STATIC, cx);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportError(cx, "Cannot export a WrappedNative object's static properties");
+        ThrowException(XPCJSError::CANT_EXPORT_WN_STATIC, cx);
         return JS_FALSE;
 
     default:
@@ -466,10 +468,10 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
         if(NS_SUCCEEDED(ds->Call(cx, obj, argc, argv, rval,
                         wrapper, as, &retval)))
             return retval;
-        JS_ReportError(cx, "Call to nsXPCScriptable failed");
+        ThrowException(XPCJSError::SCRIPTABLE_CALL_FAILED, cx);
     }
     else
-        JS_ReportError(cx, "Cannot use wrapper as function unless it implements nsXPCScriptable");
+        ThrowException(XPCJSError::CANT_CALL_WO_SCRIPTABLE, cx);
     return JS_FALSE;
 }
 
@@ -493,10 +495,10 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
         if(NS_SUCCEEDED(ds->Construct(cx, obj, argc, argv, rval,
                                       wrapper, as, &retval)))
             return retval;
-        JS_ReportError(cx, "Call to nsXPCScriptable failed");
+        ThrowException(XPCJSError::SCRIPTABLE_CTOR_FAILED, cx);
     }
     else
-        JS_ReportError(cx, "Cannot use wrapper as contructor unless it implements nsXPCScriptable");
+        ThrowException(XPCJSError::CANT_CTOR_WO_SCRIPTABLE, cx);
     return JS_FALSE;
 }
 

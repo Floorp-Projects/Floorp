@@ -17,6 +17,7 @@
  */
 
 #include "nsISupports.idl"
+#include "xpcexception.idl"
 
 [scriptable, uuid(4b62a640-d26c-11d2-9842-006008962422)]
 interface nsIXPCInterfaces : nsISupports
@@ -32,8 +33,9 @@ interface nsIXPCClasses : nsISupports
 [scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents : nsISupports
 {
-    readonly attribute nsIXPCInterfaces interfaces;
-    readonly attribute nsIXPCClasses    classes;  
+    readonly attribute nsIXPCInterfaces         interfaces;
+    readonly attribute nsIXPCClasses            classes;
+    readonly attribute nsIJSStackFrameLocation  stack;
 
     /* 'lastResult' is accessable via JavaScript only */
 

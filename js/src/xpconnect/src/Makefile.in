@@ -72,6 +72,13 @@ ifeq ($(OS_ARCH),AIX)
 IS_COMPONENT =  1
 endif
 
+# IRIX
+ifeq ($(OS_ARCH), IRIX)
+ifneq ($(basename $(OS_RELEASE)),5)
+IS_COMPONENT =  1
+endif
+endif
+
 # OpenVMS (Alpha only at this point)
 ifeq ($(OS_ARCH),OpenVMS)
 ifeq ($(CPU_ARCH),Alpha)

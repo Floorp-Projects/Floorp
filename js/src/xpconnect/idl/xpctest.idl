@@ -1,8 +1,6 @@
 
 #include "nsISupports.idl"
-
-/* XXX should be built in */
-native nsID(nsID *);
+#include "xpcexception.idl"
 
 [scriptable, uuid(159E36D0-991E-11d2-AC3F-00C09300144B)]
 interface nsITestXPCFoo : nsISupports {
@@ -46,7 +44,7 @@ interface nsIEcho : nsISupports {
                        in boolean               p11,
                        in char                  p12,
                        in wchar                 p13,
-                       in nsID                  p14,
+                       in nsIDPtr               p14,
                        in string                p15,
                        in wstring               p16);
 
@@ -63,7 +61,7 @@ interface nsIEcho : nsISupports {
                             inout boolean               p11,
                             inout char                  p12,
                             inout wchar                 p13,
-                            inout nsID                  p14,
+                            inout nsIDPtr               p14,
                             inout string                p15,
                             inout wstring               p16);
     
@@ -79,6 +77,8 @@ interface nsIEcho : nsISupports {
     void ReturnCode_NS_ERROR_OUT_OF_MEMORY();
 
     nsISupports ReturnInterface(in nsISupports obj);
+
+    nsIJSStackFrameLocation GetStack();
 };
 
 /***************************************************************************/

@@ -1,77 +1,63 @@
-/* jband - 02/20/99 - TODO and issues list */
+/* jband - 07/08/99 - stuff to do */
 
-**** TODO ****
+**** DOCS ****
+
 - Docs
-    - list of required docs
-    - docs on source?
+
+**** TESTING ****
+
+- for xpconnect
+- for xptcall
+
+**** PORTS ****
+
+- additional xptcall ports
+
+**** GENERAL ****
+
+- versioning 
+- binary compatibility
+- componentization
+- debugging
+
+
+**** FEATURES ****
+
 - namespaces
-    + xpidl work
     - xptinfo work
     - XPConnect work
-- ports
-    + Mac!
-    - other
-+ xpidl work for marking pointer, const, reference, nsID
-+ 64bit ints on platforms w/o 'long long'
-+ re-org the source directory layout
-+ define 'JSFILE' by default in JS engines
-+ better api for Components object
+
 - reimplement nsSJIID and nsJSCID using multiple inheritence
-+ nsJSCID getService method
-- global namespace interface
-+ fix interface constant stuff
-+ XPConnect as a service
-    + auto reg stuff
+
 - flattened component scheme
     - xpidl extensions
     - XPConnect support
     - simple aggregatable interface for GetCID()
-+ 'shared'
-- resolve the string issues
-- work with embedders
-- better exceptions (not just throw strings)
+    - coclass design
+    - registry 'merging'
+
 - work in JS engine to track more info when exceptions thrown so that
   the uncaught exceptions will not be so mysterious (filename and lineno)
-- better tests
-- xpidl work and documents
 
-- proto object per class?
-+ Param gc rooting?
-- safer use of jsdoubles?
+- proto object per class
 
-**** ISSUES ****
+- safer use of jsdoubles
 
-- Contexts\Runtimes\ScopeChain problems
+- refactor wrapper tracking based on JSRuntime no JSContext
 
 - Constants for WrappedJS objects? 
     - Even for WrappedNatives the constants should (perhaps) be in the 
       (as yet not created) class proto object rather than props of each object?
       This makes then overwritable?
 
-- Ref counting for contexts?
-
-- JSContext and JSRuntime life times and how that impacts XPConnect stuff
-
-- wrappedJS stub stuff can't handle (non-xpcom) natives passed by value -
-  we need to know the object size to cleanup the stack!
-
-- Listener interface for class and instance create/destroy?
-
-
-/***************************************************************************/
-
-- Continue coordinating xptcall. I'd love to work more closely
-with someone with more Unix/GNU experience to help solve some of
-the compiler compatibility issues and come up with better
-implementation strategy advice for implementors as they look at
-what can and can't be done on their own special platforms.
-
-+ Teach xpconnect about DestroyContext
-
 - Add thread safety to xpconnect (and xptinfo)
+
+- JS examples emitted from xpidl compiler
 
 - Add support for further wrapping the component manager to allow
 registering services and factories implemented in JS.
+
+- XPJS
 
 - Add better error support - reflect more xpcom error codes into
 JS. I'd like to be able to declare xpcom error (and success)
@@ -80,19 +66,15 @@ codes in idl
 - Improve exception scheme so that exceptions thrown by JS are
 not just strings, but instead are more interesting objects.
 
-- write better tests (for xpconnect *and* xptcall)
+- better debug and exception loocation support
+    - reflect js lcations and stacks as an xpcom service
+    - expose a debugger callable eval and dump stack
 
-- add runtime support for interface namespaces
+- write better tests (for xpconnect *and* xptcall)
 
 - add coclass-like and flattened interfaces scheme. Needed for
 DOM. Requires xpidl and typelib extensions in addition to runtime
 support.
-
-+ make 'createInstance' and 'getService' take an optional
-interface id param to make using them a more natural single step
-process instead of the clumsy two step process we have now; i.e.
-get the object with only an nsISupports wrapper and then
-QueryInterface that wrapper into the 'real' interface.
 
 - define and enforce data conversion limits; e.g. what happens
 when we try to coerce an out of range conversion, like converting
@@ -100,7 +82,15 @@ when we try to coerce an out of range conversion, like converting
 
 - possibly support opaque pointer typedefs and/or structs.
 
-- deal with whatever comes up as we get deployment feedback.
+- declare C arrays in xpidl and map to JS
 
-- manage JSContexts on a stack per thread basis - get rid of XPCContext?
+- cycle breaking issues
+    - recomended patterns?
+    - weak refs for JS -> native
+    - weak refs for native -> JS
 
+- We need better error reporting across the xpconnect boundary!
+    - xpconnect specific nsresult error codes ? 
+    - expose 'get last error details' to native xpcom?
+
+- a global object will need global namespace interface

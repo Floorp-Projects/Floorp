@@ -23,6 +23,13 @@
 /***************************************************************************/
 // stuff used for both classes...
 
+static void ThrowException(uintN errNum, JSContext* cx)
+    {nsXPConnect::GetJSThrower()->ThrowException(errNum, cx);}
+
+static void ThrowBadResultException(uintN errNum, JSContext* cx, nsresult rv)
+    {nsXPConnect::GetJSThrower()->ThrowBadResultException(errNum, cx, nsnull, 
+                                                          nsnull, rv);}
+
 static const nsID& GetInvalidIID()
 {
     // {BB1F47B0-D137-11d2-9841-006008962422}
@@ -310,14 +317,18 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     nsCID*  cid;
     PRBool valid;
 
-    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)) ||
-       !(cidObj = self->GetCID()) ||
+    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)))
+        return NS_ERROR_FAILURE;
+
+    if(!(cidObj = self->GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
        !valid ||
        NS_FAILED(cidObj->GetId(&cid)) ||
        !cid)
     {
-        return NS_ERROR_FAILURE;
+        ThrowException(XPCJSError::BAD_CID, cx);
+        *retval = JS_FALSE;
+        return NS_OK;
     }
 
     // Do the security check if necessary
@@ -362,7 +373,11 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     nsAllocator::Free(cid);
 
     if(NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    {
+        ThrowBadResultException(XPCJSError::CI_RETURNED_FAILURE, cx, rv);
+        *retval = JS_FALSE;
+        return NS_OK;
+    }
 
     nsIXPConnectWrappedNative* instWrapper = NULL;
 
@@ -375,7 +390,11 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
 
     NS_RELEASE(inst);
     if(NS_FAILED(rv) || !instWrapper)
-        return NS_ERROR_FAILURE;
+    {
+        ThrowException(XPCJSError::CANT_CREATE_WN, cx);
+        *retval = JS_FALSE;
+        return NS_OK;
+    }
 
     JSObject* instJSObj;
     instWrapper->GetJSObject(&instJSObj);
@@ -530,14 +549,18 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     nsCID*  cid;
     PRBool valid;
 
-    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)) ||
-       !(cidObj = self->GetCID()) ||
+    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)))
+        return NS_ERROR_FAILURE;
+
+    if(!(cidObj = self->GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
        !valid ||
        NS_FAILED(cidObj->GetId(&cid)) ||
        !cid)
     {
-        return NS_ERROR_FAILURE;
+        ThrowException(XPCJSError::BAD_CID, cx);
+        *retval = JS_FALSE;
+        return NS_OK;
     }
 
     // Do the security check if necessary
@@ -581,7 +604,11 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     rv = nsServiceManager::GetService(*cid, *piid, &srvc, NULL);
 
     if(NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
+    {
+        ThrowBadResultException(XPCJSError::GS_RETURNED_FAILURE, cx, rv);
+        *retval = JS_FALSE;
+        return NS_OK;
+    }
 
     nsIXPConnectWrappedNative* srvcWrapper = NULL;
 
@@ -596,7 +623,9 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     {
         nsServiceManager::ReleaseService(*cid, srvc, NULL);
         nsAllocator::Free(cid);
-        return NS_ERROR_FAILURE;
+        ThrowException(XPCJSError::CANT_CREATE_WN, cx);
+        *retval = JS_FALSE;
+        return NS_OK;
     }
 
     // This will eventually release the reference we got from

@@ -29,6 +29,7 @@
 
 #include "xpccomponents.h"
 #include "xpcjsid.h"
+#include "xpcexception.h"
 
 /*
  * The linkage of XPC API functions differs depending on whether the file is
@@ -185,6 +186,16 @@ public:
     NS_IMETHOD GetSecurityManagerForJSContext(JSContext* aJSContext,
                                     nsIXPCSecurityManager** aManager,
                                     PRUint16* flags) = 0;
+
+    NS_IMETHOD GetCurrentJSStack(nsIJSStackFrameLocation** aStack) = 0;
+
+    NS_IMETHOD CreateStackFrameLocation(JSBool isJSFrame,
+                                        const char* aFilename,
+                                        const char* aFunctionName,
+                                        PRInt32 aLineNumber,
+                                        nsIJSStackFrameLocation* aCaller,
+                                        nsIJSStackFrameLocation** aStack) = 0;
+
     // XXX other methods?
 };
 
