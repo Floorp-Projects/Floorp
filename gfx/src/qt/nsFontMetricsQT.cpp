@@ -1538,7 +1538,7 @@ nsFontMetricsQT::FindLocalFont(PRUnichar aChar)
     if (mFontIsGeneric[mFontsIndex]) {
       return nsnull;
     }
-    QString qName(*(mFonts.CStringAt(mFontsIndex++))); 
+    QString qName((*(mFonts.CStringAt(mFontsIndex++))).get()); 
     nsFontQT *font;
 
     font = LoadFont(qName,aChar);
