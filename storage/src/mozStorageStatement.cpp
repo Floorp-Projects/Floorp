@@ -137,7 +137,7 @@ mozStorageStatementRowEnumerator::GetNext (nsISupports **_retval)
     mDidStep = PR_FALSE;
 
     // assume this is SQLITE_ROW
-    int numColumns = sqlite3_data_count (mDBStatement);
+    sqlite3_data_count (mDBStatement);
 
     mozStorageStatementRowValueArray *mssrva = new mozStorageStatementRowValueArray(mDBStatement);
     NS_ADDREF(mssrva);
@@ -161,7 +161,6 @@ NS_IMETHODIMP
 mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsACString & aSQLStatement)
 {
     int srv;
-    nsresult rv;
 
     sqlite3 *db = nsnull;
     // XXX - need to implement a private iid to QI for here, to make sure
@@ -240,7 +239,8 @@ mozStorageStatement::BindCStringParameter(PRUint32 aParamIndex, const char *aVal
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_text (mDBStatement, aParamIndex + 1, aValue, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text (mDBStatement, aParamIndex + 1, aValue, -1, SQLITE_TRANSIENT);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -253,9 +253,10 @@ mozStorageStatement::BindUTF8StringParameter(PRUint32 aParamIndex, const nsACStr
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_text (mDBStatement, aParamIndex + 1,
-                                 nsPromiseFlatCString(aValue).get(), aValue.Length(),
-                                 SQLITE_TRANSIENT);
+    sqlite3_bind_text (mDBStatement, aParamIndex + 1,
+                       nsPromiseFlatCString(aValue).get(), aValue.Length(),
+                       SQLITE_TRANSIENT);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -268,7 +269,8 @@ mozStorageStatement::BindWStringParameter(PRUint32 aParamIndex, const PRUnichar 
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_text16 (mDBStatement, aParamIndex + 1, aValue, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text16 (mDBStatement, aParamIndex + 1, aValue, -1, SQLITE_TRANSIENT);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -281,9 +283,10 @@ mozStorageStatement::BindStringParameter(PRUint32 aParamIndex, const nsAString &
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_text16 (mDBStatement, aParamIndex + 1,
-                                   nsPromiseFlatString(aValue).get(), aValue.Length() * 2,
-                                   SQLITE_TRANSIENT);
+    sqlite3_bind_text16 (mDBStatement, aParamIndex + 1,
+                         nsPromiseFlatString(aValue).get(), aValue.Length() * 2,
+                         SQLITE_TRANSIENT);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -296,7 +299,8 @@ mozStorageStatement::BindDoubleParameter(PRUint32 aParamIndex, double aValue)
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_double (mDBStatement, aParamIndex + 1, aValue);
+    sqlite3_bind_double (mDBStatement, aParamIndex + 1, aValue);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -309,7 +313,8 @@ mozStorageStatement::BindInt32Parameter(PRUint32 aParamIndex, PRInt32 aValue)
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_int (mDBStatement, aParamIndex + 1, aValue);
+    sqlite3_bind_int (mDBStatement, aParamIndex + 1, aValue);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -322,7 +327,8 @@ mozStorageStatement::BindInt64Parameter(PRUint32 aParamIndex, PRInt64 aValue)
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_int64 (mDBStatement, aParamIndex + 1, aValue);
+    sqlite3_bind_int64 (mDBStatement, aParamIndex + 1, aValue);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -335,7 +341,8 @@ mozStorageStatement::BindNullParameter(PRUint32 aParamIndex)
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_null (mDBStatement, aParamIndex + 1);
+    sqlite3_bind_null (mDBStatement, aParamIndex + 1);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -348,7 +355,8 @@ mozStorageStatement::BindDataParameter(PRUint32 aParamIndex, PRUint8 *aValue, PR
     if (aParamIndex < 0 || aParamIndex >= mParamCount)
         return NS_ERROR_FAILURE; // XXXerror
 
-    int srv = sqlite3_bind_blob (mDBStatement, aParamIndex + 1, aValue, aValueSize, SQLITE_TRANSIENT);
+    sqlite3_bind_blob (mDBStatement, aParamIndex + 1, aValue, aValueSize, SQLITE_TRANSIENT);
+    // XXX check return value for errors?
 
     return NS_OK;
 }
@@ -379,9 +387,6 @@ mozStorageStatement::ExecuteDataSet(mozIStorageDataSet **_retval)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
-    int srv;
-
-    
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

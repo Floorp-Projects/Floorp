@@ -202,7 +202,6 @@ mozStorageConnection::ExecuteSimpleSQL(const nsACString& aSQLStatement)
 {
     NS_ENSURE_ARG_POINTER(mDBConn);
 
-    char *errMsg = NULL;
     int srv = sqlite3_exec (mDBConn, PromiseFlatCString(aSQLStatement).get(),
                             NULL, NULL, NULL);
     if (srv != SQLITE_OK) {
@@ -266,11 +265,11 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
                                   const char *aTableName,
                                   const char *aTableSchema)
 {
+#if 0
     int srv;
     char *buf;
     int buflen = 0;
 
-#if 0
     buflen = snprintf(nsnull, 0, "CREATE TABLE %s (%s)");
     if (buflen <= 0)
         return NS_ERROR_FAILURE;
@@ -360,9 +359,9 @@ mozStorageConnection::CreateTrigger(const char *aTriggerName,
                                     const char *aTriggerFunction,
                                     const char *aParameters)
 {
+#if 0
     nsresult rv;
 
-#if 0
     /* We don't need to split this until we need to generate
      * our own IPC trigger
      */
