@@ -97,6 +97,9 @@ endif
 else
 MKSHLIB += -M $(MAPFILE)
 endif
+# The -R '$ORIGIN' linker option instructs this library to search for its
+# dependencies in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
 endif
 
 ifeq ($(OS_ARCH),OS2)
