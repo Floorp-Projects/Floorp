@@ -39,6 +39,7 @@
 #include "nsMimeTypes.h"
 #include "nspr.h"
 #include "nsMimeStringResources.h"
+#include "mimemsg.h"
 #include "mimemoz2.h"
 #include "nsIURI.h"
 #include "nsIMsgWindow.h"
@@ -46,6 +47,7 @@
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgSMIMEHeaderSink.h"
 #include "nsCOMPtr.h"
+#include "nsIX509Cert.h"
 
 #define MIME_SUPERCLASS mimeMultipartSignedClass
 MimeDefClass(MimeMultipartSignedCMS, MimeMultipartSignedCMSClass,
@@ -111,6 +113,7 @@ typedef struct MimeMultCMSdata
   MimeObject *self;
   PRBool parent_is_encrypted_p;
   PRBool parent_holds_stamp_p;
+  nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
   
   MimeMultCMSdata()
   :hash_type(0),
@@ -248,6 +251,31 @@ MimeMultCMS_init (MimeObject *obj)
 	  obj->parent && obj->parent->parent)
 	data->parent_holds_stamp_p =
 	  mime_crypto_stamped_p (obj->parent->parent);
+
+  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
+  if (msd)
+  {
+    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+    if (channel)
+    {
+      nsCOMPtr<nsIURI> uri;
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      nsCOMPtr<nsIMsgHeaderSink> headerSink;
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
+      nsCOMPtr<nsISupports> securityInfo;
+      channel->GetURI(getter_AddRefs(uri));
+      if (uri)
+        msgurl = do_QueryInterface(uri);
+      if (msgurl)
+        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+      if (msgWindow)
+        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
+        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
+      if (securityInfo)
+        data->smimeHeaderSink = do_QueryInterface(securityInfo);
+    } // if channel
+  } // if msd
 
   return data;
 }
@@ -404,11 +432,32 @@ MimeMultCMS_generate (void *crypto_closure)
   nsresult rv;
   if (!data) return 0;
   encrypted_p = data->parent_is_encrypted_p;
+  PRInt32 signature_status = -1;
+  nsCOMPtr<nsIX509Cert> signerCert;
+
+  // if we are the child of the topmost message, aNestLeve == 1
+  int aNestLevel = 0;
+
+  if (data->self) {
+    MimeObject *walker = data->self;
+    while (walker) {
+      if (mime_typep(walker, (MimeObjectClass *) &mimeMessageClass)) {
+        ++aNestLevel;
+      }
+      walker = walker->parent;
+    }
+  }
 
   if (data->content_info)
 	{
 	  rv = data->content_info->VerifyDetachedSignature(data->item_data, data->item_len);
+    data->content_info->GetSignerCert(getter_AddRefs(signerCert));
+
 	  if (NS_FAILED(rv)) {
+      if (NS_ERROR_MODULE_SECURITY == NS_ERROR_GET_MODULE(rv)) {
+        signature_status = NS_ERROR_GET_CODE(rv);
+      }
+      
       if (!data->verify_error) {
         data->verify_error = PR_GetError();
       }
@@ -419,9 +468,16 @@ MimeMultCMS_generate (void *crypto_closure)
 		  good_p = MimeCMSHeadersAndCertsMatch(data->self,
 												 data->content_info,
 												 &data->sender_addr);
-      if (!good_p && !data->verify_error) {
-        data->verify_error = -1;
-        // XXX Fix this		data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX //
+      if (!good_p) {
+        signature_status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+        if (!data->verify_error) {
+          data->verify_error = -1;
+          // XXX Fix this		data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX //
+        }
+      }
+      else 
+      {
+        signature_status = nsICMSMessageErrors::SUCCESS;
       }
     }
 
@@ -449,35 +505,15 @@ MimeMultCMS_generate (void *crypto_closure)
 	   */
 	}
 
-  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
-  if (msd)
-  {
-    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
-    if (channel)
+  PRInt32 maxNestLevel = 0;
+  if (data->smimeHeaderSink) {
+    data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
+
+    if (aNestLevel >= maxNestLevel)
     {
-      nsCOMPtr<nsIURI> uri;
-      nsCOMPtr<nsIMsgWindow> msgWindow;
-      nsCOMPtr<nsIMsgHeaderSink> headerSink;
-      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
-      nsCOMPtr<nsISupports> securityInfo;
-      nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
-      channel->GetURI(getter_AddRefs(uri));
-      if (uri)
-        msgurl = do_QueryInterface(uri);
-      if (msgurl)
-        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
-      if (msgWindow)
-        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
-      if (headerSink)
-        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
-      if (securityInfo)
-        smimeHeaderSink = do_QueryInterface(securityInfo);
-      if (smimeHeaderSink)
-      {
-          smimeHeaderSink->SignedStatus(good_p);
-      }
-    } // if channel
-  } // if msd
+      data->smimeHeaderSink->SignedStatus(aNestLevel, signature_status, signerCert);
+    }
+  }
 
   unverified_p = data->self->options->missing_parts; 
 

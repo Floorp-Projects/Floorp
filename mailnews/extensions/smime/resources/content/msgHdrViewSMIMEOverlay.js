@@ -26,14 +26,31 @@ var gSignedUINode = null;
 var gEncryptedUINode = null;
 var gSMIMEContainer = null;
 
+// manipulates some globals from msgReadSMIMEOverlay.js
+
+const nsICMSMessageErrors = Components.interfaces.nsICMSMessageErrors;
+
 var smimeHeaderSink = 
 { 
-  signedStatus: function(aValidSignature)
+  maxWantedNesting: function()
   {
+    return 1;
+  },
+
+  signedStatus: function(aNestingLevel, aSignatureStatus, aSignerCert)
+  {
+    if (aNestingLevel > 1) {
+      // we are not interested
+      return;
+    }
+
+    gSignatureStatus = aSignatureStatus;
+    gSignerCert = aSignerCert;
+
     gSignedUINode.collapsed = false; 
     gSMIMEContainer.collapsed = false; 
 
-    if (aValidSignature)
+    if (nsICMSMessageErrors.SUCCESS == aSignatureStatus)
     {
       gSignedUINode.value = "<signed>";
     }
@@ -46,12 +63,19 @@ var smimeHeaderSink =
     gSignedUIVisible = true;
   },
 
-  encryptionStatus: function(aValidEncryption)
+  encryptionStatus: function(aNestingLevel, aEncryptionStatus)
   {
+    if (aNestingLevel > 1) {
+      // we are not interested
+      return;
+    }
+
+    gEncryptionStatus = aEncryptionStatus;
+
     gEncryptedUINode.collapsed = false; 
     gSMIMEContainer.collapsed = false; 
 
-    if (aValidEncryption)
+    if (nsICMSMessageErrors.SUCCESS == aEncryptionStatus)
     {
       gEncryptedUINode.value = "<encrypted>";
     }
@@ -63,6 +87,7 @@ var smimeHeaderSink =
 
     gEncryptionUIVisible = true;
   },
+
   QueryInterface : function(iid)
   {
     if (iid.equals(Components.interfaces.nsIMsgSMIMEHeaderSink) || iid.equals(Components.interfaces.nsISupports))
@@ -73,7 +98,12 @@ var smimeHeaderSink =
 
 function onSMIMEStartHeaders()
 {
-  gSMIMEContainer.collapsed = true; 
+  gEncryptionStatus = -1;
+  gSignatureStatus = -1;
+  
+  gSignerCert = null;
+  
+  gSMIMEContainer.collapsed = true;
 
   if (gEncryptionUIVisible)
   {
@@ -110,7 +140,3 @@ function msgHdrViewSMIMEOnLoad(event)
 }
 
 addEventListener('messagepane-loaded', msgHdrViewSMIMEOnLoad, true);
-
-function showMessageSecurityInfo()
-{
-}

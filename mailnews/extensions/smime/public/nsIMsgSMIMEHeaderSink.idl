@@ -44,9 +44,13 @@
 
 #include "nsISupports.idl"
 
+interface nsIX509Cert;
+
 [scriptable, uuid(25380FA1-E70C-4e82-B0BC-F31C2F41C470)]
 interface nsIMsgSMIMEHeaderSink : nsISupports 
 {
-  void signedStatus(in boolean aValidSignature);
-  void encryptionStatus(in boolean aValidEncryption);
+  void signedStatus(in PRInt32 aNestingLevel, in PRInt32 aSignatureStatus, in nsIX509Cert aSignerCert);
+  void encryptionStatus(in PRInt32 aNestingLevel, in PRInt32 aEncryptionStatus);
+
+  PRInt32 maxWantedNesting(); // 1 == only info on outermost nesting level wanted
 };

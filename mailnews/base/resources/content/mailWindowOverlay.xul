@@ -1087,7 +1087,7 @@ Rights Reserved.
       <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
       <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
       <menuseparator/>
-      <menuitem label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
+      <menuitem id="pageSourceMenuItem" label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
       <menuseparator/>
       <menu id = "mailviewCharsetMenu" />
     </menupopup>

@@ -100,6 +100,7 @@ typedef struct MimeCMSdata
   MimeObject *self;
   PRBool parent_is_encrypted_p;
   PRBool parent_holds_stamp_p;
+  nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
   
   MimeCMSdata()
   :output_fn(nsnull),
@@ -369,6 +370,31 @@ MimeCMS_init(MimeObject *obj,
 	data->parent_holds_stamp_p =
 	  mime_crypto_stamped_p (obj->parent->parent);
 
+  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
+  if (msd)
+  {
+    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+    if (channel)
+    {
+      nsCOMPtr<nsIURI> uri;
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      nsCOMPtr<nsIMsgHeaderSink> headerSink;
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
+      nsCOMPtr<nsISupports> securityInfo;
+      channel->GetURI(getter_AddRefs(uri));
+      if (uri)
+        msgurl = do_QueryInterface(uri);
+      if (msgurl)
+        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+      if (msgWindow)
+        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
+        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
+      if (securityInfo)
+        data->smimeHeaderSink = do_QueryInterface(securityInfo);
+    } // if channel
+  } // if msd
+
   return data;
 }
 
@@ -399,6 +425,19 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   	return -1;
   }
 
+  // if we are the child of the topmost message, aNestLevel == 1
+  int aNestLevel = 0;
+
+  if (data->self) {
+    MimeObject *walker = data->self;
+    while (walker) {
+      if (mime_typep(walker, (MimeObjectClass *) &mimeMessageClass)) {
+        ++aNestLevel;
+      }
+      walker = walker->parent;
+    }
+  }
+
   /* Hand an EOF to the crypto library.  It may call data->output_fn.
 	 (Today, the crypto library has no flushing to do, but maybe there
 	 will be someday.)
@@ -418,40 +457,27 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   if (NS_FAILED(rv))
 	  data->verify_error = PR_GetError();
 
-  mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
-  if (msd)
-  {
-    nsIChannel *channel = msd->channel;  // note the lack of ref counting...
-    if (channel)
+  PRInt32 maxNestLevel = 0;
+  if (data->smimeHeaderSink) {
+    data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
+
+    if (aNestLevel >= maxNestLevel)
     {
-      nsCOMPtr<nsIURI> uri;
-      nsCOMPtr<nsIMsgWindow> msgWindow;
-      nsCOMPtr<nsIMsgHeaderSink> headerSink;
-      nsCOMPtr<nsIMsgMailNewsUrl> msgurl;
-      nsCOMPtr<nsISupports> securityInfo;
-      nsCOMPtr<nsIMsgSMIMEHeaderSink> smimeHeaderSink;
-      channel->GetURI(getter_AddRefs(uri));
-      if (uri)
-        msgurl = do_QueryInterface(uri);
-      if (msgurl)
-        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
-      if (msgWindow)
-        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
-      if (headerSink)
-        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
-      if (securityInfo)
-        smimeHeaderSink = do_QueryInterface(securityInfo);
-      if (smimeHeaderSink)
-      {
-          smimeHeaderSink->EncryptionStatus(
-            data->ci_is_encrypted 
-            && !data->verify_error
-            && !data->decode_error
-            && NS_SUCCEEDED(rv)
-          );
-      }
-    } // if channel
-  } // if msd
+      data->smimeHeaderSink->EncryptionStatus(
+        aNestLevel,
+        (
+          data->ci_is_encrypted 
+          && !data->verify_error
+          && !data->decode_error
+          && NS_SUCCEEDED(rv)
+        )
+        ?
+          nsICMSMessageErrors::SUCCESS
+        :
+         -1
+      );
+    }
+  }
 
   data->decoder_context = 0;
 

@@ -253,6 +253,7 @@ classic.jar:
   skin/classic/messenger/addressbook/icons/remote-addrbook-error.gif    (messenger/addressbook/icons/remote-addrbook-error.gif)
   skin/classic/messenger/addressbook/icons/abcard.gif                   (messenger/addressbook/icons/abcard.gif)
   skin/classic/messenger/messengercompose/messengercompose.css          (messenger/messengercompose/messengercompose.css)
+  skin/classic/messenger/smime/msgReadSecurityInfo.css                  (messenger/smime/msgReadSecurityInfo.css)
   skin/classic/navigator/contents.rdf                                   (navigator/contents.rdf)
   skin/classic/navigator/navigator.css                                  (navigator/navigator.css)
   skin/classic/navigator/linkToolbar.css                                (navigator/linkToolbar.css)

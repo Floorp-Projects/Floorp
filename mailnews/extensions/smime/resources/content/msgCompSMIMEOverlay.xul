@@ -42,9 +42,10 @@
           accesskey="&menu_securityEncryptIfPossible.accesskey;" label="&menu_securityEncryptIfPossible.label;" disabled="true"/>
         <menuseparator/>
         <menuitem id="menu_securitySign" type="checkbox" accesskey="&menu_securitySign.accesskey;" label="&menu_securitySign.label;" oncommand="signMessage()"/>
+        <menuseparator/>
+        <menuitem id="menu_securityStatus" type="checkbox" accesskey="&menu_securityStatus.accesskey;" label="&menu_securityStatus.label;" oncommand="showMessageComposeSecurityStatus()"/>
       </menupopup>
     </menu>
   </menupopup>
 
 </overlay>
-

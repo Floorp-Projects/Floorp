@@ -117,3 +117,8 @@ function setSecuritySettings()
   document.getElementById("menu_securityNoEncryption").setAttribute("checked", !smimeCompFields.alwaysEncryptMessage);
   document.getElementById("menu_securitySign").setAttribute("checked", smimeCompFields.signMessage);
 }
+
+function showMessageComposeSecurityStatus()
+{
+  dump("showSecurityStatus when composing message not yet implemented\n");
+}

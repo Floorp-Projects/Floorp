@@ -145,6 +145,45 @@ NS_IMETHODIMP nsCMSMessage::ContentIsSigned(int *)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
+{
+  if (!m_cmsMsg)
+    return NS_ERROR_FAILURE;
+
+  if (!NSS_CMSMessage_IsSigned(m_cmsMsg))
+    return NS_ERROR_FAILURE;
+
+  NSSCMSContentInfo *cinfo = NSS_CMSMessage_ContentLevel(m_cmsMsg, 0);
+  if (!cinfo)
+    return NS_ERROR_FAILURE;
+
+  NSSCMSSignedData *sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
+  if (!sigd)
+    return NS_ERROR_FAILURE;
+
+  PR_ASSERT(NSS_CMSSignedData_SignerInfoCount(sigd) > 0);
+  NSSCMSSignerInfo *si = NSS_CMSSignedData_GetSignerInfo(sigd, 0);
+  if (!si)
+    return NS_ERROR_FAILURE;
+
+  if (si->cert) {
+    *scert = new nsNSSCertificate(si->cert);
+    if (*scert) {
+      (*scert)->AddRef();
+    }
+  }
+  else {
+    *scert = nsnull;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCMSMessage::GetEncryptionCert(nsIX509Cert **ecert)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature\n"));
@@ -160,25 +199,29 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
 
   if (NSS_CMSMessage_IsSigned(m_cmsMsg) == PR_FALSE) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - not signed\n"));
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
   } 
 
   cinfo = NSS_CMSMessage_ContentLevel(m_cmsMsg, 0);
-  sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
-  if (sigd == nsnull) {
+  if (cinfo) {
+    sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
+  }
+  
+  if (!sigd) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - no content info\n"));
+    rv = NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
     goto loser;
   }
 
   if (NSS_CMSSignedData_SetDigestValue(sigd, SEC_OID_SHA1, &digest)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - can't set digest value\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - bad digest\n"));
+    rv = NS_ERROR_CMS_VERIFY_BAD_DIGEST;
     goto loser;
   }
 
-  // Import certs //
+  // Import certs. Note that import failure is not a signature verification failure. //
   if (NSS_CMSSignedData_ImportCerts(sigd, CERT_GetDefaultCertDB(), certUsageEmailSigner, PR_TRUE) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - can not import certs\n"));
-    goto loser;
   }
 
   nsigners = NSS_CMSSignedData_SignerInfoCount(sigd);
@@ -188,21 +231,50 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
   // We verify the first signer info,  only //
   if (NSS_CMSSignedData_VerifySignerInfo(sigd, 0, CERT_GetDefaultCertDB(), certUsageEmailSigner) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - unable to verify signature\n"));
-#ifdef DEBUG
+
     if (NSSCMSVS_SigningCertNotFound == si->verificationStatus) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - signing cert not found\n"));
+      rv = NS_ERROR_CMS_VERIFY_NOCERT;
     }
     else if(NSSCMSVS_SigningCertNotTrusted == si->verificationStatus) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - signing cert not trusted\n"));
+      rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
     }
-#endif
+    else if(NSSCMSVS_Unverified == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - can not verify\n"));
+      rv = NS_ERROR_CMS_VERIFY_ERROR_UNVERIFIED;
+    }
+    else if(NSSCMSVS_ProcessingError == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - processing error\n"));
+      rv = NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
+    }
+    else if(NSSCMSVS_BadSignature == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - bad signature\n"));
+      rv = NS_ERROR_CMS_VERIFY_BAD_SIGNATURE;
+    }
+    else if(NSSCMSVS_DigestMismatch == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - digest mismatch\n"));
+      rv = NS_ERROR_CMS_VERIFY_DIGEST_MISMATCH;
+    }
+    else if(NSSCMSVS_SignatureAlgorithmUnknown == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - algo unknown\n"));
+      rv = NS_ERROR_CMS_VERIFY_UNKNOWN_ALGO;
+    }
+    else if(NSSCMSVS_SignatureAlgorithmUnsupported == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - algo not supported\n"));
+      rv = NS_ERROR_CMS_VERIFY_UNSUPPORTED_ALGO;
+    }
+    else if(NSSCMSVS_MalformedSignature == si->verificationStatus) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - malformed signature\n"));
+      rv = NS_ERROR_CMS_VERIFY_MALFORMED_SIGNATURE;
+    }
+
     goto loser;
   }
 
-  // Save the profile //
+  // Save the profile. Note that save import failure is not a signature verification failure. //
   if (NSS_SMIMESignerInfo_SaveSMIMEProfile(si) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - unable to save smime profile\n"));
-    goto loser;
   }
 
   rv = NS_OK;
@@ -221,6 +293,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
   SECOidTag bulkAlgTag;
   int keySize, i;
   nsNSSCertificate *nssRecipientCert;
+  nsresult rv = NS_ERROR_FAILURE;
 
   // Check the recipient certificates //
   PRUint32 recipientCertCount;
@@ -247,12 +320,14 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
   if (NSS_SMIMEUtil_FindBulkAlgForRecipients(recipientCerts, &bulkAlgTag,
                                             &keySize) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't find bulk alg for recipients\n"));
+    rv = NS_ERROR_CMS_ENCRYPT_NO_BULK_ALG;
     goto loser;
   }
 
   m_cmsMsg = NSS_CMSMessage_Create(NULL);
   if (m_cmsMsg == nsnull) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create new cms message\n"));
+    rv = NS_ERROR_OUT_OF_MEMORY;
     goto loser;
   }
 
@@ -263,7 +338,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
 
   cinfo = NSS_CMSMessage_GetContentInfo(m_cmsMsg);
   if (NSS_CMSContentInfo_SetContent_EnvelopedData(m_cmsMsg, cinfo, envd) != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't set content enveloped data\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create content enveloped data\n"));
     goto loser;
   }
 
@@ -299,7 +374,7 @@ loser:
     PORT_FreeArena(tmpPoolp, PR_FALSE);
   }
 
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert* aEncryptCert, unsigned char* aDigestData, PRUint32 aDigestDataLen)
@@ -309,6 +384,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   NSSCMSSignedData *sigd;
   NSSCMSSignerInfo *signerinfo;
   CERTCertificate *scert, *ecert;
+  nsresult rv = NS_ERROR_FAILURE;
 
   /* Get the certs */
   scert = NS_STATIC_CAST(nsNSSCertificate*, aSigningCert)->GetCert();
@@ -320,6 +396,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   m_cmsMsg = NSS_CMSMessage_Create(NULL); /* create a message on its own pool */
   if (m_cmsMsg == NULL) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't create new message\n"));
+    rv = NS_ERROR_OUT_OF_MEMORY;
     goto loser;
   }
 
@@ -409,7 +486,7 @@ loser:
     NSS_CMSMessage_Destroy(m_cmsMsg);
     m_cmsMsg = nsnull;
   }
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSDecoder, nsICMSDecoder)
