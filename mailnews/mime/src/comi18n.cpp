@@ -1566,48 +1566,23 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
       (!nsCRT::strcasecmp(from_charset,to_charset) ||
        (!nsCRT::strcasecmp(from_charset,"us-ascii") && !nsCRT::strcasecmp(to_charset,"UTF-8")) ||
        (!nsCRT::strcasecmp(from_charset,"UTF-8")    && !nsCRT::strcasecmp(to_charset,"us-ascii")))) {
+    if (NULL != numUnConverted) 
+      *numUnConverted = 0;
 
-    // make sure if the data is really ASCII in order to prevent generating illegal UTF-8
-    PRInt32 len = inLength;
-    PRBool bASCII = PR_TRUE;
-    // check 4 bytes at a time
-    for (PRUint32* p = (PRUint32 *) inBuffer; len > 3; p++) {
-      if (*p & (PRUint32)0x80808080) {
-        bASCII = PR_FALSE;
-        break;
-      }
-      len -= 4;
+    *outBuffer = (char *) PR_Malloc(inLength+1);
+    if (NULL != *outBuffer) {
+      nsCRT::memcpy(*outBuffer, inBuffer, inLength);
+      *outLength = inLength;
+      (*outBuffer)[inLength] = '\0';
+      return 0;
     }
-    // check rest of the data
-    if (bASCII) {
-      for (PRUint8* p = (PRUint8 *) (inBuffer + inLength - len); len; p++) {
-        if (*p & (PRUint8)0x80) {
-          bASCII = PR_FALSE;
-          break;
-        }
-        len--;
-      }
-    }
-    if (bASCII) {
-      if (NULL != numUnConverted) 
-        *numUnConverted = 0;
-
-      *outBuffer = (char *) PR_Malloc(inLength+1);
-      if (NULL != *outBuffer) {
-        nsCRT::memcpy(*outBuffer, inBuffer, inLength);
-        *outLength = inLength;
-        (*outBuffer)[inLength] = '\0';
-        return 0;
-      }
-      return -1;
-    }
+    return -1;
   } 
   
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
 
-  res = aMimeCharsetConverterClass.Initialize(nsCRT::strcasecmp(from_charset,"us-ascii") ? from_charset : "ISO-8859-1", 
-                                              to_charset, autoDetection, -1);
+  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength, NULL);
