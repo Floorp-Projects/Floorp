@@ -30,7 +30,7 @@ MODULE		= apprunner
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
-EXTRA_DSO_LIBS	= nggfx
+EXTRA_DSO_LIBS	= gkgfx
 WEBSHELL_LIB	= $(DIST)/lib/webshell.$(LIB_SUFFIX)
 else
 PROGRAM		= mozilla-bin
