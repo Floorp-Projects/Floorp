@@ -109,7 +109,7 @@ $source_root = 'mozilla';
 @ignore_dir = (
   # mailnews is stuck with this
   { warning=>'aggregate has a partly bracketed initializer', 
-    dir=>'mozilla/mailnews/mime/' }
+    dir=>'mailnews/mime/' }
 );
 
 # Patterns that need to match warning text and source code text
