@@ -22,6 +22,9 @@
   including the root resource, CSS style sheets, and named data
   sources.
 
+  This file also includes an observer interface for nsIRDFXMLDocument
+  objects.
+
  */
 
 #ifndef nsIRDFXMLDocument_h__
@@ -38,15 +41,44 @@ class nsIURL;
 class nsIRDFXMLDocumentObserver : public nsISupports
 {
 public:
+    /**
+     * Called when the RDF/XML document begins to load.
+     */
     NS_IMETHOD OnBeginLoad(void) = 0;
+
+    /**
+     * Called when the RDF/XML document load is interrupted for some reason.
+     */
     NS_IMETHOD OnInterrupt(void) = 0;
+
+    /**
+     * Called when an interrupted RDF/XML document load is resumed.
+     */
     NS_IMETHOD OnResume(void) = 0;
+
+    /**
+     * Called whtn the RDF/XML document load is complete.
+     */
     NS_IMETHOD OnEndLoad(void) = 0;
 
+    /**
+     * Called when the root resource of the RDF/XML document is found
+     */
     NS_IMETHOD OnRootResourceFound(nsIRDFResource* aResource) = 0;
+
+    /**
+     * Called when a CSS style sheet is included (via XML processing
+     * instruction) to the document.
+     */
     NS_IMETHOD OnCSSStyleSheetAdded(nsIURL* aCSSStyleSheetURL) = 0;
+
+    /**
+     * Called when a named data source is included (via XML processing
+     * instruction) to the document.
+     */
     NS_IMETHOD OnNamedDataSourceAdded(const char* aNamedDataSourceURI) = 0;
 };
+
 
 // {EB1A5D31-AB33-11d2-8EC6-00805F29F370}
 #define NS_IRDFXMLDOCUMENT_IID \
@@ -55,18 +87,76 @@ public:
 class nsIRDFXMLDocument : public nsISupports
 {
 public:
+    /**
+     * Notify the document that the load is beginning.
+     */
     NS_IMETHOD BeginLoad(void) = 0;
+
+    /**
+     * Notify the document that the load is being interrupted.
+     */
     NS_IMETHOD Interrupt(void) = 0;
+
+    /**
+     * Notify the document that an interrupted load is being resumed.
+     */
     NS_IMETHOD Resume(void) = 0;
+
+    /**
+     * Notify the document that the load is ending.
+     */
     NS_IMETHOD EndLoad(void) = 0;
 
+    /**
+     * Set the root resource for the document.
+     */
     NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;
+
+    /**
+     * Retrieve the root resource for the document.
+     */
     NS_IMETHOD GetRootResource(nsIRDFResource** aResource) = 0;
+
+    /**
+     * Add a CSS style sheet to the document.
+     * @param aStyleSheetURL An nsIURL object that is the URL of the style
+     * sheet to add to the document.
+     */
     NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL) = 0;
+
+    /**
+     * Get the set of style sheets that have been included in the
+     * document.
+     * @param aStyleSheetURLs (out) A pointer to an array of pointers to nsIURL objects.
+     * @param aCount (out) The number of nsIURL objects returned.
+     */
     NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount) = 0;
+
+    /**
+     * Add a named data source to the document.
+     * @param aNamedDataSoruceURI A URI identifying the data source.
+     */
     NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI) = 0;
+
+    /**
+     * Get the set of named data sources that have been included in
+     * the document
+     * @param aNamedDataSourceURIs (out) A pointer to an array of C-style character
+     * strings.
+     * @param aCount (out) The number of named data sources in the array.
+     */
     NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount) = 0;
+
+    /**
+     * Add an observer to the document. The observer will be notified of
+     * RDF/XML events via the nsIRDFXMLDocumentObserver interface. Note that
+     * the observer is <em>not</em> reference counted.
+     */
     NS_IMETHOD AddDocumentObserver(nsIRDFXMLDocumentObserver* aObserver) = 0;
+
+    /**
+     * Remove an observer from the document.
+     */
     NS_IMETHOD RemoveDocumentObserver(nsIRDFXMLDocumentObserver* aObserver) = 0;
 };
 
