@@ -67,6 +67,7 @@ OBJS =                           \
     .\$(OBJDIR)\MostRecentUrls.obj \
     .\$(OBJDIR)\PrintProgressDialog.obj       \
     .\$(OBJDIR)\Preferences.obj \
+    .\$(OBJDIR)\SecurityInfoDlg.obj \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 
