@@ -101,10 +101,25 @@ FindAmbitiousMailToTag(const char *line)
 
   ++ptr;
 
-  if ( (*ptr == '@') || (!PL_strncasecmp(ptr, "mailto:", 7)) )
+  if (*ptr == '@') 
+  {
+    PR_FREEIF(workLine);
     return NULL;
-  else
-    return (PL_strdup(ptr));
+  }
+
+  PRInt32           retType;
+  nsMimeURLUtils    util;
+
+  util.URLType(ptr, &retType);
+  if (retType != 0)
+  {
+    PR_FREEIF(workLine);
+    return NULL;
+  }
+
+  char *retVal = PL_strdup(ptr);
+  PR_FREEIF(workLine);
+  return retVal;
 }
 
 nsresult
@@ -112,7 +127,7 @@ AmbitiousURLType(const char *URL, PRInt32  *retType, const char *newURLTag)
 {
   *retType = 0;
 
-  if (!PL_strncasecmp(URL,newURLTag, PL_strlen(newURLTag))) 
+  if (!PL_strncasecmp(URL, newURLTag, PL_strlen(newURLTag))) 
   {
     *retType = MAILTO_TYPE_URL;
   }
@@ -549,6 +564,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
       PR_snprintf(output_ptr, size_available, glyphHTML);
       output_ptr += PL_strlen(glyphHTML);
       cp += glyphTextLen-1;
+      PR_FREEIF(glyphHTML);
       continue;
     }
 
