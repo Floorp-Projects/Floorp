@@ -78,6 +78,7 @@
 #include "nsTitleFrame.h"
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
+#include "nsIBindingManager.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -5123,14 +5124,14 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsISupportsArray> anonymousItems;
     nsCOMPtr<nsIContent> childElement;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
+    PRBool multiple;
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
     
     if (anonymousItems)
     {
-
       // See if we have to move our explicit content.
       nsFrameItems explicitItems;
-      if (childElement) {
+      if (childElement || multiple) {
         // First, remove all of the kids from the frame list and put them
         // in a new frame list.
         explicitItems.childList = aChildItems.childList;
@@ -5182,6 +5183,61 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           // leave this on nsIBox.
           nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
           box->SetInsertionPoint(frame);
+        }
+      }
+      else if (multiple) {
+        nsCOMPtr<nsIDocument> document;
+        nsCOMPtr<nsIBindingManager> bindingManager;
+        aParent->GetDocument(*getter_AddRefs(document));
+        document->GetBindingManager(getter_AddRefs(bindingManager));
+        nsCOMPtr<nsIContent> currContent;
+        nsCOMPtr<nsIContent> insertionElement;
+        nsIFrame* currFrame = explicitItems.childList;
+        explicitItems.childList = explicitItems.lastChild = nsnull;
+        nsCOMPtr<nsIFrameManager> frameManager;
+        aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+          
+        while (currFrame) {
+          nsIFrame* nextFrame;
+          currFrame->GetNextSibling(&nextFrame);
+          currFrame->SetNextSibling(nsnull);
+          
+          currFrame->GetContent(getter_AddRefs(currContent));
+          bindingManager->GetInsertionPoint(aParent, currContent, getter_AddRefs(insertionElement));
+          
+          nsIFrame* frame = nsnull;
+          if (insertionElement) {
+            nsIFrame* childFrame = aChildItems.childList;
+            while (childFrame) {
+              LocateAnonymousFrame(aPresContext,
+                                   childFrame,
+                                   insertionElement,
+                                   &frame);
+              if (frame)
+                break;
+              childFrame->GetNextSibling(&childFrame);
+            }
+          }
+
+          if (!frame) {
+            if (!explicitItems.childList)
+              explicitItems.childList = explicitItems.lastChild = currFrame;
+            else {
+              explicitItems.lastChild->SetNextSibling(currFrame);
+              explicitItems.lastChild = currFrame;
+            }
+          }
+
+          if (frameManager && frame) {
+            frameManager->AppendFrames(aPresContext, *aPresShell, frame,
+                                       nsnull, currFrame);
+          }
+       
+          currFrame = nextFrame;
+        }
+        if (explicitItems.lastChild) {
+          explicitItems.lastChild->SetNextSibling(aChildItems.childList);
+          aChildItems.childList = explicitItems.childList;
         }
       }
 
@@ -5293,7 +5349,8 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsIContent> childElement;
     nsCOMPtr<nsISupportsArray> anonymousItems;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
+    PRBool multiple;
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
     
     if (!anonymousItems)
       return NS_OK;
@@ -5587,7 +5644,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       ) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
+#ifdef XULTREE
+      PRBool isHorizontal = (aTag == nsXULAtoms::row) || (aTag == nsXULAtoms::treerow);
+#else
       PRBool isHorizontal = (aTag == nsXULAtoms::row);
+#endif
       nsCOMPtr<nsIBoxLayout> layout;
       NS_NewObeliskLayout(aPresShell, layout);
 
