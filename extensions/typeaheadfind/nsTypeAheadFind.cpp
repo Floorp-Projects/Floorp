@@ -566,7 +566,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   gIsFindingText = PR_TRUE; // prevents listener callbacks from resetting us during typeahead find processing
 
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
 
 #ifndef PREFER_LINK_CYCLE_ON_SAME_CHAR
   if (!mDontTryExactMatch)

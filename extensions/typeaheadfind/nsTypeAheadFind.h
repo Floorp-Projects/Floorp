@@ -155,6 +155,7 @@ protected:
   PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
   static PRBool gIsFindingText; // this flag prevents side effects from listener callbacks while selecting/focusing found text
   nsCOMPtr<nsIDOMRange> mStartFindRange;  // where selection was when user started the find
+  nsCOMPtr<nsIDOMRange> mOverrideStartPointRange;
 
 #ifdef RESTORE_SEARCH
   // Old nsIFindService state
