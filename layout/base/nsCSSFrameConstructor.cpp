@@ -1649,47 +1649,39 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
                                         nsIFrame        *&aFrame,
                                         nsIStyleContext *aStyleContext)
 {
-  nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
-  NS_ASSERTION(control, "input is not an nsIFormControl!");
-  
-  PRInt32 type;
-  control->GetType(&type);
-  switch (type) {
-    case NS_FORM_INPUT_SUBMIT:
-    case NS_FORM_INPUT_RESET:
-    case NS_FORM_INPUT_BUTTON:
+  // Figure out which type of input frame to create
+  nsAutoString  val;
+  if (NS_OK == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, val)) {
+    if (val.EqualsIgnoreCase("submit") ||
+        val.EqualsIgnoreCase("reset") ||
+        val.EqualsIgnoreCase("button")) {
       if (UseXBLForms())
         return NS_OK;
       return ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
-
-    case NS_FORM_INPUT_CHECKBOX:
+    }
+    else if (val.EqualsIgnoreCase("checkbox")) {
       if (UseXBLForms())
         return NS_OK;
       return ConstructCheckboxControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
-
-    case NS_FORM_INPUT_RADIO:
+    }
+    else if (val.EqualsIgnoreCase("file")) {
+      return NS_NewFileControlFrame(aPresShell, &aFrame);
+    }
+    else if (val.EqualsIgnoreCase("hidden")) {
+      return NS_OK;
+    }
+    else if (val.EqualsIgnoreCase("image")) {
+      return NS_NewImageControlFrame(aPresShell, &aFrame);
+    }
+    else if (val.EqualsIgnoreCase("radio")) {
       if (UseXBLForms())
         return NS_OK;
       return ConstructRadioControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
-
-    case NS_FORM_INPUT_FILE:
-      return NS_NewFileControlFrame(aPresShell, &aFrame);
-
-    case NS_FORM_INPUT_HIDDEN:
-      return NS_OK;
-
-    case NS_FORM_INPUT_IMAGE:
-      return NS_NewImageControlFrame(aPresShell, &aFrame);
-
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_PASSWORD:
-      return ConstructTextControlFrame(aPresShell, aPresContext,
-                                       aFrame, aContent);
-
-    default:
-      NS_ASSERTION(0, "Unknown input type!");
-      return NS_ERROR_INVALID_ARG;
+    }
   }
+
+  // "password", "text", and all others
+  return ConstructTextControlFrame(aPresShell, aPresContext, aFrame, aContent);
 }
 
 static PRBool

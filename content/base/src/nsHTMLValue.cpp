@@ -42,60 +42,94 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
-#include "nsMemory.h"
 
 nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
-  : mUnit(aUnit), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(aUnit)
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_NOSTORE, "not a valueless unit");
-  if (GetUnitClass() != HTMLUNIT_NOSTORE) {
+  NS_ASSERTION((aUnit <= eHTMLUnit_Empty), "not a valueless unit");
+  if (aUnit > eHTMLUnit_Empty) {
     mUnit = eHTMLUnit_Null;
   }
   mValue.mString = nsnull;
 }
 
 nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
-  : mUnit(aUnit), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(aUnit)
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_INTEGER ||
-               GetUnitClass() == HTMLUNIT_PIXEL, "unit not an integer unit");
-  if (GetUnitClass() == HTMLUNIT_INTEGER ||
-      GetUnitClass() == HTMLUNIT_PIXEL) {
+  NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
+               (eHTMLUnit_Enumerated == aUnit) ||
+               (eHTMLUnit_Proportional == aUnit) ||
+               (eHTMLUnit_Pixel == aUnit), "not an integer value");
+  if ((eHTMLUnit_Integer == aUnit) ||
+      (eHTMLUnit_Enumerated == aUnit) ||
+      (eHTMLUnit_Proportional == aUnit) ||
+      (eHTMLUnit_Pixel == aUnit)) {
     mValue.mInt = aValue;
-  } else {
+  }
+  else {
     mUnit = eHTMLUnit_Null;
-    mValue.mString = nsnull;
+    mValue.mInt = 0;
   }
 }
 
 nsHTMLValue::nsHTMLValue(float aValue)
-  : mUnit(eHTMLUnit_Percent), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(eHTMLUnit_Percent)
 {
   mValue.mFloat = aValue;
 }
 
 nsHTMLValue::nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit)
-  : mUnit(aUnit), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(aUnit)
 {
-  SetStringValueInternal(aValue, aUnit);
+  NS_ASSERTION((eHTMLUnit_String == aUnit) ||
+               (eHTMLUnit_ColorName == aUnit), "not a string value");
+  if ((eHTMLUnit_String == aUnit) ||
+      (eHTMLUnit_ColorName == aUnit)) {
+    mValue.mString = ToNewUnicode(aValue);
+  }
+  else {
+    mUnit = eHTMLUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
 nsHTMLValue::nsHTMLValue(nsISupports* aValue)
-  : mUnit(eHTMLUnit_ISupports), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(eHTMLUnit_ISupports)
 {
   mValue.mISupports = aValue;
   NS_IF_ADDREF(mValue.mISupports);
 }
 
 nsHTMLValue::nsHTMLValue(nscolor aValue)
-  : mUnit(eHTMLUnit_Color), mStorageFlags(HTMLSTORAGE_NORMAL)
+  : mUnit(eHTMLUnit_Color)
 {
   mValue.mColor = aValue;
 }
 
 nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
+  : mUnit(aCopy.mUnit)
 {
-  InitializeFrom(aCopy);
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+    if (nsnull != aCopy.mValue.mString) {
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
+    }
+    else {
+      mValue.mString = nsnull;
+    }
+  }
+  else if (eHTMLUnit_ISupports == mUnit) {
+    mValue.mISupports = aCopy.mValue.mISupports;
+    NS_IF_ADDREF(mValue.mISupports);
+  }
+  else if (eHTMLUnit_Color == mUnit){
+    mValue.mColor = aCopy.mValue.mColor;
+  }
+  else if (eHTMLUnit_Percent == mUnit) {
+    mValue.mFloat = aCopy.mValue.mFloat;
+  }
+  else {
+    mValue.mInt = aCopy.mValue.mInt;
+  }
 }
 
 nsHTMLValue::~nsHTMLValue(void)
@@ -106,81 +140,79 @@ nsHTMLValue::~nsHTMLValue(void)
 nsHTMLValue& nsHTMLValue::operator=(const nsHTMLValue& aCopy)
 {
   Reset();
-  InitializeFrom(aCopy);
+  mUnit = aCopy.mUnit;
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+    if (nsnull != aCopy.mValue.mString) {
+      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
+    }
+  }
+  else if (eHTMLUnit_ISupports == mUnit) {
+    mValue.mISupports = aCopy.mValue.mISupports;
+    NS_IF_ADDREF(mValue.mISupports);
+  }
+  else if (eHTMLUnit_Color == mUnit){
+    mValue.mColor = aCopy.mValue.mColor;
+  }
+  else if (eHTMLUnit_Percent == mUnit) {
+    mValue.mFloat = aCopy.mValue.mFloat;
+  }
+  else {
+    mValue.mInt = aCopy.mValue.mInt;
+  }
   return *this;
 }
 
 PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 {
-  if (mUnit != aOther.mUnit) {
-    return PR_FALSE;
-  }
-  // Call GetUnit() so that we turn StringWithLength into String
-  PRUint32 unitClass = GetUnitClass();
-  switch (unitClass) {
-  case HTMLUNIT_NOSTORE:
-    return PR_TRUE;
-
-  case HTMLUNIT_STRING:
-    if (mValue.mString && aOther.mValue.mString) {
-      return GetDependentString().Equals(aOther.GetDependentString(),
-                                         nsCaseInsensitiveStringComparator());
+  if (mUnit == aOther.mUnit) {
+    if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+      if (nsnull == mValue.mString) {
+        if (nsnull == aOther.mValue.mString) {
+          return PR_TRUE;
+        }
+      }
+      else if (nsnull != aOther.mValue.mString) {
+        return nsDependentString(mValue.mString).Equals(nsDependentString(aOther.mValue.mString),
+                                                        nsCaseInsensitiveStringComparator());
+      }
     }
-    // One of them is null.  An == check will see if they are both null.
-    return mValue.mString == aOther.mValue.mString;
-
-  case HTMLUNIT_INTEGER:
-  case HTMLUNIT_PIXEL:
-    return mValue.mInt == aOther.mValue.mInt;
-
-  case HTMLUNIT_COLOR:
-    return mValue.mColor == aOther.mValue.mColor;
-
-  case HTMLUNIT_ISUPPORTS:
-    return mValue.mISupports == aOther.mValue.mISupports;
-
-  case HTMLUNIT_PERCENT:
-    return mValue.mFloat == aOther.mValue.mFloat;
-
-  default:
-    NS_WARNING("Unknown unit");
-    return PR_TRUE;
+    else if (eHTMLUnit_ISupports == mUnit) {
+      return PRBool(mValue.mISupports == aOther.mValue.mISupports);
+    }
+    else if (eHTMLUnit_Color == mUnit){
+      return PRBool(mValue.mColor == aOther.mValue.mColor);
+    }
+    else if (eHTMLUnit_Percent == mUnit) {
+      return PRBool(mValue.mFloat == aOther.mValue.mFloat);
+    }
+    else {
+      return PRBool(mValue.mInt == aOther.mValue.mInt);
+    }
   }
+  return PR_FALSE;
 }
 
 PRUint32 nsHTMLValue::HashValue(void) const
 {
-  PRUint32 retval;
-  if (GetUnitClass() == HTMLUNIT_STRING) {
-    if (mStorageFlags & HTMLSTORAGE_STRWITHLEN) {
-      retval = mValue.mString ? nsCheapStringBufferUtils::HashCode(mValue.mString)
-                              : 0;
-    } else {
-      retval = mValue.mString ? nsCRT::HashCode(mValue.mString) : 0;
-    }
-  } else {
-    retval = mValue.mInt;
-  }
-  return retval ^ PRUint32(mUnit);
+  return PRUint32(mUnit) ^ 
+         ((((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) && 
+           (nsnull != mValue.mString)) ? 
+          nsCRT::HashCode(mValue.mString) : 
+          mValue.mInt);
 }
 
 
 void nsHTMLValue::Reset(void)
 {
-  if (GetUnitClass() == HTMLUNIT_STRING) {
-    if (mValue.mString) {
-      if (mStorageFlags & HTMLSTORAGE_STRWITHLEN) {
-        nsCheapStringBufferUtils::Free(mValue.mString);
-      } else {
-        nsMemory::Free(mValue.mString);
-      }
+  if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+    if (nsnull != mValue.mString) {
+      nsCRT::free(mValue.mString);
     }
   }
-  else if (mUnit == eHTMLUnit_ISupports) {
+  else if (eHTMLUnit_ISupports == mUnit) {
     NS_IF_RELEASE(mValue.mISupports);
   }
   mUnit = eHTMLUnit_Null;
-  mStorageFlags = 0;
   mValue.mString = nsnull;
 }
 
@@ -188,12 +220,14 @@ void nsHTMLValue::Reset(void)
 void nsHTMLValue::SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit)
 {
   Reset();
-  mUnit = aUnit;
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_INTEGER, "not an int value");
-  if (GetUnitClass() == HTMLUNIT_INTEGER) {
+  NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
+               (eHTMLUnit_Enumerated == aUnit) ||
+               (eHTMLUnit_Proportional == aUnit), "not an int value");
+  if ((eHTMLUnit_Integer == aUnit) ||
+      (eHTMLUnit_Enumerated == aUnit) ||
+      (eHTMLUnit_Proportional == aUnit)) {
+    mUnit = aUnit;
     mValue.mInt = aValue;
-  } else {
-    mUnit = eHTMLUnit_Null;
   }
 }
 
@@ -211,50 +245,14 @@ void nsHTMLValue::SetPercentValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-static inline PRBool
-ShouldStoreLength(const nsAString& aStr, PRUint32 aLen)
-{
-  // Always remember the length of the string if the length is greater than 30
-  if (aLen > 30) {
-    return PR_TRUE;
-  }
-  // Obviously never remember the length of the string if it is empty :)
-  if (aLen == 0) {
-    return PR_FALSE;
-  }
-  // Remember the length of the string if it has embedded nulls
-  nsAString::const_iterator begin, end;
-  return FindCharInReadable('\0', aStr.BeginReading(begin),
-                                  aStr.EndReading(end));
-}
-
-void nsHTMLValue::SetStringValueInternal(const nsAString& aValue,
-                                         nsHTMLUnit aUnit)
-{
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_STRING, "unit not a string unit!");
-  if (GetUnitClass() == HTMLUNIT_STRING) {
-    // Remember the length of the string if necessary
-    PRUint32 len = aValue.Length();
-    if (ShouldStoreLength(aValue, len)) {
-      mStorageFlags = HTMLSTORAGE_STRWITHLEN;
-      nsCheapStringBufferUtils::CopyToBuffer(mValue.mString, aValue, len);
-      return;
-    }
-
-    // Else just store as a normal string
-    mValue.mString = ToNewUnicode(aValue);
-  } else {
-    mUnit = eHTMLUnit_Null;
-    mValue.mString = nsnull;
-  }
-}
-
 void nsHTMLValue::SetStringValue(const nsAString& aValue,
                                  nsHTMLUnit aUnit)
 {
   Reset();
-  mUnit = aUnit;
-  SetStringValueInternal(aValue, aUnit);
+  if ((eHTMLUnit_String == aUnit) || (eHTMLUnit_ColorName == aUnit)) {
+    mUnit = aUnit;
+    mValue.mString = ToNewUnicode(aValue);
+  }
 }
 
 void nsHTMLValue::SetISupportsValue(nsISupports* aValue)
@@ -281,72 +279,64 @@ void nsHTMLValue::SetEmptyValue(void)
 #ifdef DEBUG
 void nsHTMLValue::AppendToString(nsAString& aBuffer) const
 {
-  switch (GetUnitClass()) {
-  case HTMLUNIT_NOSTORE:
-    break;
-  case HTMLUNIT_STRING:
-    if (mValue.mString) {
-      aBuffer.Append(PRUnichar('"'));
-      aBuffer.Append(GetDependentString());
-      aBuffer.Append(PRUnichar('"'));
-    } else {
-      aBuffer.Append(NS_LITERAL_STRING("null str"));
-    }
-    break;
-  case HTMLUNIT_INTEGER:
-  case HTMLUNIT_PIXEL:
-    {
-      nsAutoString intStr;
-      intStr.AppendInt(mValue.mInt, 10);
-      intStr.Append(NS_LITERAL_STRING("[0x"));
-      intStr.AppendInt(mValue.mInt, 16);
-      intStr.Append(PRUnichar(']'));
-
-      aBuffer.Append(intStr);
-    }
-    break;
- case HTMLUNIT_COLOR:
-    {
-      nsAutoString intStr;
-      intStr.Append(NS_LITERAL_STRING("(0x"));
-      intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
-      intStr.Append(NS_LITERAL_STRING(" 0x"));
-      intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
-      intStr.Append(NS_LITERAL_STRING(" 0x"));
-      intStr.AppendInt(NS_GET_B(mValue.mColor), 16);
-      intStr.Append(NS_LITERAL_STRING(" 0x"));
-      intStr.AppendInt(NS_GET_A(mValue.mColor), 16);
-      intStr.Append(PRUnichar(')'));
-
-      aBuffer.Append(intStr);
-    }
-    break;
-  case HTMLUNIT_ISUPPORTS:
-    {
-      aBuffer.Append(NS_LITERAL_STRING("0x"));
-      nsAutoString intStr;
-      intStr.AppendInt(NS_PTR_TO_INT32(mValue.mISupports), 16);
-      aBuffer.Append(intStr);
-    }
-    break;
-  case HTMLUNIT_PERCENT:
-    {
-      nsAutoString floatStr;
-      floatStr.AppendFloat(mValue.mFloat * 100.0f);
-      aBuffer.Append(floatStr);
-    }
-    break;
-  default:
-    NS_ERROR("Unknown HTMLValue type!");
+  if (eHTMLUnit_Null == mUnit) {
+    return;
   }
 
-  //
-  // Append the type name for types that are ambiguous
-  //
+  if (eHTMLUnit_Empty == mUnit) {
+  }
+  else if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+    if (nsnull != mValue.mString) {
+      aBuffer.Append(PRUnichar('"'));
+      aBuffer.Append(mValue.mString);
+      aBuffer.Append(PRUnichar('"'));
+    }
+    else {
+      aBuffer.Append(NS_LITERAL_STRING("null str"));
+    }
+  }
+  else if (eHTMLUnit_ISupports == mUnit) {
+    aBuffer.Append(NS_LITERAL_STRING("0x"));
+    nsAutoString intStr;
+    intStr.AppendInt(NS_PTR_TO_INT32(mValue.mISupports), 16);
+    aBuffer.Append(intStr);
+  }
+  else if (eHTMLUnit_Color == mUnit){
+    nsAutoString intStr;
+    intStr.Append(NS_LITERAL_STRING("(0x"));
+    intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_B(mValue.mColor), 16);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_A(mValue.mColor), 16);
+    intStr.Append(PRUnichar(')'));
+
+    aBuffer.Append(intStr);
+  }
+  else if (eHTMLUnit_Percent == mUnit) {
+    nsAutoString floatStr;
+    floatStr.AppendFloat(mValue.mFloat * 100.0f);
+    aBuffer.Append(floatStr);
+  }
+  else {
+    nsAutoString intStr;
+    intStr.AppendInt(mValue.mInt, 10);
+    intStr.Append(NS_LITERAL_STRING("[0x"));
+    intStr.AppendInt(mValue.mInt, 16);
+    intStr.Append(PRUnichar(']'));
+
+    aBuffer.Append(intStr);
+  }
+
   switch (mUnit) {
-    case eHTMLUnit_Null:      aBuffer.Append(NS_LITERAL_STRING("null")); break;
-    case eHTMLUnit_Empty:     aBuffer.Append(NS_LITERAL_STRING("empty")); break;
+    case eHTMLUnit_Null:       break;
+    case eHTMLUnit_Empty:      break;
+    case eHTMLUnit_String:     break;
+    case eHTMLUnit_ColorName:  break;
     case eHTMLUnit_ISupports:  aBuffer.Append(NS_LITERAL_STRING("ptr"));  break;
+    case eHTMLUnit_Integer:    break;
     case eHTMLUnit_Enumerated: aBuffer.Append(NS_LITERAL_STRING("enum")); break;
     case eHTMLUnit_Proportional:  aBuffer.Append(NS_LITERAL_STRING("*")); break;
     case eHTMLUnit_Color:      aBuffer.Append(NS_LITERAL_STRING("rbga")); break;
@@ -356,49 +346,3 @@ void nsHTMLValue::AppendToString(nsAString& aBuffer) const
   aBuffer.Append(PRUnichar(' '));
 }
 #endif // DEBUG
-
-void
-nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
-{
-  mUnit = aCopy.mUnit;
-  mStorageFlags = aCopy.mStorageFlags;
-  switch (GetUnitClass()) {
-  case HTMLUNIT_NOSTORE:
-    mValue.mString = nsnull;
-    break;
-
-  case HTMLUNIT_STRING:
-    if (aCopy.mValue.mString) {
-      if (aCopy.mStorageFlags & HTMLSTORAGE_STRWITHLEN) {
-        // Clone the string = (PRUint32) + PRUnichar*len
-        nsCheapStringBufferUtils::Clone(mValue.mString, aCopy.mValue.mString);
-      } else {
-        mValue.mString = ToNewUnicode(nsDependentString(aCopy.mValue.mString));
-      }
-    } else {
-      mValue.mString = nsnull;
-    }
-    break;
-
-  case HTMLUNIT_INTEGER:
-  case HTMLUNIT_PIXEL:
-    mValue.mInt = aCopy.mValue.mInt;
-    break;
-
-  case HTMLUNIT_COLOR:
-    mValue.mColor = aCopy.mValue.mColor;
-    break;
-
-  case HTMLUNIT_ISUPPORTS:
-    mValue.mISupports = aCopy.mValue.mISupports;
-    NS_IF_ADDREF(mValue.mISupports);
-    break;
-
-  case HTMLUNIT_PERCENT:
-    mValue.mFloat = aCopy.mValue.mFloat;
-    break;
-
-  default:
-    NS_ERROR("Unknown HTMLValue type!");
-  }
-}

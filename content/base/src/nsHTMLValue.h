@@ -43,130 +43,20 @@
 #include "nsString.h"
 #include "nsISupports.h"
 
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-
-class nsCheapStringBufferUtils {
-public:
-  /**
-   * Get the string pointer
-   * @param aBuf the buffer
-   * @return a pointer to the string
-   */
-  static const PRUnichar* StrPtr(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return (const PRUnichar*)( ((const char*)aBuf) + sizeof(PRUint32) );
-  }
-  static PRUnichar* StrPtr(PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return (PRUnichar*)( ((char*)aBuf) + sizeof(PRUint32) );
-  }
-  /**
-   * Get the string length
-   * @param aBuf the buffer
-   * @return the string length
-   */
-  static PRUint32 Length(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return *((PRUint32*)aBuf);
-  }
-  /**
-   * Get a DependentString from a buffer
-   *
-   * @param aBuf the buffer to get string from
-   * @return a DependentString representing this string
-   */
-  static nsDependentSingleFragmentSubstring GetDependentString(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    const PRUnichar* buf = StrPtr(aBuf);
-    return Substring(buf, buf + Length(aBuf));
-  }
-  /**
-   * Construct from an AString
-   * @param aBuf the buffer to copy to
-   * @param aStr the string to construct from
-   * @param aLen the length of the string (passed for efficiency)
-   */
-  static void CopyToBuffer(PRUnichar*& aBuf, const nsAString& aStr, PRUint32 aLen) {
-    NS_ASSERTION(aStr.Length() == aLen, "Wrong length passed in!");
-    aBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUint32) +
-                                       aLen * sizeof(PRUnichar));
-    *((PRUint32*)aBuf) = aLen;
-    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), aLen);
-  }
-  /**
-   * Construct from another nsCheapStringBuffer
-   * @param aBuf the buffer to put into
-   * @param aSrc the buffer to construct from
-   */
-  static void Clone(PRUnichar*& aBuf, const PRUnichar* aSrc) {
-    NS_ASSERTION(aSrc, "Cannot work on null buffer!");
-    aBuf = (PRUnichar*)nsMemory::Clone(aSrc, sizeof(PRUint32) +
-                                             Length(aSrc) * sizeof(PRUnichar));
-  }
-  /**
-   * Free the memory for the buf
-   * @param aBuf the buffer to free
-   */
-  static void Free(PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    nsMemory::Free(aBuf);
-  }
-  /**
-   * Get a hashcode for the buffer
-   * @param aBuf the buffer
-   * @return the hashcode
-   */
-  static PRUint32 HashCode(const PRUnichar* aBuf) {
-    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return nsCRT::BufferHashCode((char*)StrPtr(aBuf),
-                                 Length(aBuf)*sizeof(PRUnichar));
-  }
-};
-
-//
-// nsHTMLUnit is two bytes: the class of type, and a specifier to distinguish
-// between different things stored as the same type.  Doing
-// mUnit & HTMLUNIT_CLASS_MASK should give you the class of type.
-//
-#define HTMLUNIT_NOSTORE    0x0000
-#define HTMLUNIT_STRING     0x0100
-#define HTMLUNIT_INTEGER    0x0200
-#define HTMLUNIT_PIXEL      0x0400
-#define HTMLUNIT_COLOR      0x0800
-#define HTMLUNIT_ISUPPORTS  0x1000
-#define HTMLUNIT_PERCENT    0x2000
-#define HTMLUNIT_CLASS_MASK 0xff00
-
 enum nsHTMLUnit {
-  // null, value is not specified: 0x0000
-  eHTMLUnit_Null          = HTMLUNIT_NOSTORE,
-  // empty, value is not specified: 0x0001
-  eHTMLUnit_Empty         = HTMLUNIT_NOSTORE | 1,
+  eHTMLUnit_Null          = 0,      // (n/a) null unit, value is not specified
+  eHTMLUnit_Empty         = 1,      // (n/a) empty unit, value is not specified
+  eHTMLUnit_String        = 10,     // (nsString) a string value
+  eHTMLUnit_ISupports     = 20,     // (nsISupports*) a ref counted interface
+  eHTMLUnit_Integer       = 50,     // (int) simple value
+  eHTMLUnit_Enumerated    = 51,     // (int) value has enumerated meaning
+  eHTMLUnit_Proportional  = 52,     // (int) value is a relative proportion of some whole
+  eHTMLUnit_Color         = 80,     // (color) an RGBA value
+  eHTMLUnit_ColorName     = 81,     // (nsString/color) a color name value
+  eHTMLUnit_Percent       = 90,     // (float) 1.0 == 100%) value is percentage of something
 
-  // a string value
-  eHTMLUnit_String        = HTMLUNIT_STRING,
-  // a color name value
-  eHTMLUnit_ColorName     = HTMLUNIT_STRING | 1,
-
-  // a simple int value
-  eHTMLUnit_Integer       = HTMLUNIT_INTEGER,
-  // value has enumerated meaning
-  eHTMLUnit_Enumerated    = HTMLUNIT_INTEGER | 1,
-  // value is a relative proportion of some whole
-  eHTMLUnit_Proportional  = HTMLUNIT_INTEGER | 2,
-
-  // screen pixels (screen relative measure)
-  eHTMLUnit_Pixel         = HTMLUNIT_PIXEL,
-
-  // an RGBA value
-  eHTMLUnit_Color         = HTMLUNIT_COLOR,
-
-  // (nsISupports*) a ref counted interface
-  eHTMLUnit_ISupports     = HTMLUNIT_ISUPPORTS,
-
-  // (1.0 == 100%) value is percentage of something
-  eHTMLUnit_Percent       = HTMLUNIT_PERCENT
+  // Screen relative measure
+  eHTMLUnit_Pixel      = 600    // (int) screen pixels
 };
 
 /**
@@ -191,22 +81,14 @@ public:
   PRBool        operator!=(const nsHTMLValue& aOther) const;
   PRUint32      HashValue(void) const;
 
-  /**
-   * Get the unit of this HTMLValue
-   * @return the unit of this HTMLValue
-   */
-  nsHTMLUnit   GetUnit(void) const { return (nsHTMLUnit)mUnit; }
-
-  PRInt32      GetIntValue(void) const;
-  PRInt32      GetPixelValue(void) const;
-  float        GetPercentValue(void) const;
+  nsHTMLUnit  GetUnit(void) const { return mUnit; }
+  PRInt32     GetIntValue(void) const;
+  PRInt32     GetPixelValue(void) const;
+  float       GetPercentValue(void) const;
   nsAString&   GetStringValue(nsAString& aBuffer) const;
-  nsISupports* GetISupportsValue(void) const;
-  nscolor      GetColorValue(void) const;
+  nsISupports*  GetISupportsValue(void) const;
+  nscolor     GetColorValue(void) const;
 
-  /**
-   * Reset the string to null type, freeing things in the process if necessary.
-   */
   void  Reset(void);
   void  SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit);
   void  SetPixelValue(PRInt32 aValue);
@@ -221,98 +103,34 @@ public:
 #endif
 
 protected:
-  /**
-   * The unit of the value
-   * @see nsHTMLUnit
-   */
-  PRUint16 mUnit;
-  /** Flags indicating specifics of the storage format (HTMLSTORAGE_*) */
-  PRUint16 mStorageFlags;
-  /**
-   * The actual value.  Please to not be adding more-than-4-byte things to this
-   * union.
-   */
+  nsHTMLUnit  mUnit;
   union {
-    /** Int. */
     PRInt32       mInt;
-    /** Float. */
     float         mFloat;
-    /**
-     * String.  Depending on mStorageFlags & HTMLSTORAGE_STRWITHLEN, this may be
-     * stored with the first 4 bytes being the length (this is done for
-     * embedded nulls and long strings).
-     */
     PRUnichar*    mString;
-    /** ISupports.  Strong reference.  */
     nsISupports*  mISupports;
-    /** Color. */
     nscolor       mColor;
-  } mValue;
-private:
-  /**
-   * Copy into this HTMLValue from aCopy.  Please be aware that if this is an
-   * existing HTMLValue and you do not call Reset(), this will leak.
-   * @param aCopy the value to copy
-   */
-  void InitializeFrom(const nsHTMLValue& aCopy);
-  /**
-   * Helper to set string value (checks for embedded nulls or length); verifies
-   * that aUnit is a string type as well.
-   * @param aValue the value to set
-   * @param aUnit the unit to set
-   */
-  void SetStringValueInternal(const nsAString& aValue, nsHTMLUnit aUnit);
-  /**
-   * Get a DependentString from mValue.mString (if the string is stored with
-   * length, passes that information to the DependentString).  Do not call this
-   * if mValue.mString is null.
-   *
-   * @return a DependentString representing this string
-   */
-  nsDependentSingleFragmentSubstring GetDependentString() const;
-  /**
-   * Get the unit class (HTMLUNIT_*)
-   * @return the unit class
-   */
-  PRUint32 GetUnitClass() const { return mUnit & HTMLUNIT_CLASS_MASK; }
+  }           mValue;
 };
-
-/** Indicates that a string is stored as an nsCheapStringBuffer */
-#define HTMLSTORAGE_NORMAL 0
-#define HTMLSTORAGE_STRWITHLEN 1
-
-inline nsDependentSingleFragmentSubstring nsHTMLValue::GetDependentString() const
-{
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_STRING,
-               "Some dork called GetDependentString() on a non-string!");
-  NS_ASSERTION(mValue.mString, "buffer is null!  This is bad.");
-  // If it is stored in string-with-length format, use the length properly
-  return (mStorageFlags & HTMLSTORAGE_STRWITHLEN) ?
-         nsCheapStringBufferUtils::GetDependentString(mValue.mString) :
-         Substring(mValue.mString,
-                   mValue.mString
-                   + nsCharTraits<PRUnichar>::length(mValue.mString));
-}
 
 inline PRInt32 nsHTMLValue::GetIntValue(void) const
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_STRING ||
-               GetUnitClass() == HTMLUNIT_INTEGER,
-               "not an int value");
-  PRUint32 unitClass = GetUnitClass();
-  if (unitClass == HTMLUNIT_INTEGER) {
+  NS_ASSERTION((mUnit == eHTMLUnit_String) ||
+               (mUnit == eHTMLUnit_Integer) || 
+               (mUnit == eHTMLUnit_Enumerated) ||
+               (mUnit == eHTMLUnit_Proportional), "not an int value");
+  if ((mUnit == eHTMLUnit_Integer) || 
+      (mUnit == eHTMLUnit_Enumerated) ||
+      (mUnit == eHTMLUnit_Proportional)) {
     return mValue.mInt;
   }
-
-  if (unitClass == HTMLUNIT_STRING) {
+  else if (mUnit == eHTMLUnit_String) {
     if (mValue.mString) {
       PRInt32 err=0;
-      // XXX this copies. new string APIs will make this better, right?
-      nsAutoString str(GetDependentString());
+      nsAutoString str(mValue.mString); // XXX copy. new string APIs will make this better, right?
       return str.ToInteger(&err);
     }
   }
-
   return 0;
 }
 
@@ -336,12 +154,12 @@ inline float nsHTMLValue::GetPercentValue(void) const
 
 inline nsAString& nsHTMLValue::GetStringValue(nsAString& aBuffer) const
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_STRING || mUnit == eHTMLUnit_Null,
-               "not a string value");
-  if (GetUnitClass() == HTMLUNIT_STRING && mValue.mString) {
-    aBuffer = GetDependentString();
-  } else {
-    aBuffer.Truncate();
+  NS_ASSERTION((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName) ||
+               (mUnit == eHTMLUnit_Null), "not a string value");
+  aBuffer.SetLength(0);
+  if (((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName)) && 
+      (nsnull != mValue.mString)) {
+    aBuffer.Append(mValue.mString);
   }
   return aBuffer;
 }
