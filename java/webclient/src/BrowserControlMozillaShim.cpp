@@ -94,6 +94,9 @@ struct WebShellInitContext {
 	int					h;
 };
 
+void    PostEvent (WebShellInitContext * initContext, PLEvent * event);
+void *  PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event);
+
 static void
 ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -264,9 +267,6 @@ EmbeddedEventHandler (void * arg) {
 		}
 	}
 
-    // PENDING(mark): This is a test
-    //PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Create the WebShell...\n", initContext);
 #endif
@@ -303,9 +303,6 @@ EmbeddedEventHandler (void * arg) {
     printf("EmbeddedEventHandler(%lx): enter event loop\n", initContext);
 #endif
     
-    // PENDING(mark): This is a test
-    //PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
     do {
         if (!processEventLoop(initContext)) {
 #ifndef XP_UNIX	
@@ -347,6 +344,9 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
 	printf("InitEmbeddedEventHandler(%lx): Embedded Thread created...\n", initContext);
 #endif
     while (initContext->initComplete == FALSE) {
+
+        ::PR_Sleep(PR_INTERVAL_NO_WAIT);
+
         if (initContext->initFailCode != 0) {
 	    ::ThrowExceptionToJava(initContext->env, errorMessages[initContext->initFailCode]);
 	    return;
@@ -1171,12 +1171,8 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL (
 		wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webShell, urlStringChars);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-	}
+		::PostEvent(initContext, event);
+    }
 
 	env->ReleaseStringChars(urlString, urlStringChars);
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL()
@@ -1207,11 +1203,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop (
 		wsStopEvent		* actionEvent = new wsStopEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-        
-        ::PL_PostEvent(initContext->actionQueue, event);
-		
-	PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        ::PostEvent(initContext, event);
 	}
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop()
 
@@ -1241,11 +1233,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow (
 		wsShowEvent		* actionEvent = new wsShowEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-        
-	::PL_PostEvent(initContext->actionQueue, event);
-		
-	PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+        ::PostEvent(initContext, event);
 	}
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow()
 
@@ -1275,11 +1263,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide (
 		wsHideEvent		* actionEvent = new wsHideEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-	PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide()
@@ -1314,11 +1298,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds (
 		wsResizeEvent	* actionEvent = new wsResizeEvent(initContext->webShell, x, y, width, height);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds()
@@ -1351,11 +1331,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo (
 		wsMoveToEvent	* actionEvent = new wsMoveToEvent(initContext->webShell, x, y);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo()
@@ -1386,11 +1362,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus (
 		wsSetFocusEvent	* actionEvent = new wsSetFocusEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus()
@@ -1421,11 +1393,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus (
 		wsRemoveFocusEvent	* actionEvent = new wsRemoveFocusEvent(initContext->webShell);
         PLEvent				* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus()
@@ -1457,11 +1425,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint (
 		wsRepaintEvent	* actionEvent = new wsRepaintEvent(initContext->webShell, (PRBool) forceRepaint);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-		
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		::PostEvent(initContext, event);
 	}
 
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint()
@@ -1493,24 +1457,9 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack (
 		wsCanBackEvent	* actionEvent = new wsCanBackEvent(initContext->webShell);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-            Sleep(0);
-#else
-            ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
-
-		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
+        return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
 	}
 
 	return JNI_FALSE;
@@ -1543,22 +1492,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward (
 		wsCanForwardEvent	* actionEvent = new wsCanForwardEvent(initContext->webShell);
         PLEvent				* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
 	}
@@ -1593,22 +1527,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack (
 		wsBackEvent	* actionEvent = new wsBackEvent(initContext->webShell);
         PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+        voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
 	}
@@ -1643,22 +1562,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward (
 		wsForwardEvent	* actionEvent = new wsForwardEvent(initContext->webShell);
         PLEvent		   	* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
 	}
@@ -1694,22 +1598,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo (
 		wsGoToEvent	* actionEvent = new wsGoToEvent(initContext->webShell, historyIndex);
         PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return (NS_FAILED((nsresult) voidResult)) ? JNI_FALSE : JNI_TRUE;
 	}
@@ -1744,22 +1633,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLen
 		wsGetHistoryLengthEvent	* actionEvent = new wsGetHistoryLengthEvent(initContext->webShell);
         PLEvent	   				* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return ((jint) voidResult);
 	}
@@ -1794,22 +1668,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryInd
 		wsGetHistoryIndexEvent	* actionEvent = new wsGetHistoryIndexEvent(initContext->webShell);
         PLEvent	   				* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		return ((jint) voidResult);
 	}
@@ -1846,22 +1705,7 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 		wsGetURLEvent	* actionEvent = new wsGetURLEvent(initContext->webShell, historyIndex);
         PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
 
-		PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		::PL_PostEvent(initContext->actionQueue, event);
-
-		PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-
-		while (actionEvent->isComplete() == PR_FALSE) {
-#ifndef XP_UNIX
-            //PENDING(mark): Why not just use PR_Sleep?
-			Sleep(0);
-#else
-          ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-#endif
-		}
-		voidResult = actionEvent->getResult();
-		delete actionEvent;
+		voidResult = ::PostSynchronousEvent(initContext, event);
 
 		if (voidResult != nsnull) {
 
@@ -1899,5 +1743,33 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 #ifdef XP_UNIX
 }// End extern "C"
 #endif
+
+
+void
+PostEvent (WebShellInitContext * initContext, PLEvent * event)
+{
+        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+
+        ::PL_PostEvent(initContext->actionQueue, event);
+        
+        PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+} // PostEvent()
+
+
+void *
+PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event)
+{
+        void    *       voidResult = nsnull;
+
+        PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+
+        voidResult = ::PL_PostSynchronousEvent(initContext->actionQueue, event);
+
+        PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
+
+        return voidResult;
+} // PostSynchronousEvent()          
+
+
 
 // EOF

@@ -23,35 +23,30 @@
 
 
 
-void *		handleEvent		(PLEvent * event);
-void		destroyEvent	(PLEvent * event);
+void *          handleEvent     (PLEvent * event);
+void            destroyEvent    (PLEvent * event);
 
 
 void *
 handleEvent (PLEvent * event)
 {
-	nsActionEvent	* actionEvent = (nsActionEvent*) event->owner;
-	void			* result = nsnull;
+        nsActionEvent   * actionEvent = (nsActionEvent*) event->owner;
+        void            * result = nsnull;
 
-	if (actionEvent != NULL) {
-		actionEvent->setResult(result = actionEvent->handleEvent());
-		actionEvent->setComplete(PR_TRUE);
-	}
-	return result;
+        result = actionEvent->handleEvent();
+
+        return result;
 } // handleEvent()
 
 
 void
 destroyEvent (PLEvent * event)
 {
-	nsActionEvent *	actionEvent = (nsActionEvent*) event->owner;
+        nsActionEvent * actionEvent = (nsActionEvent*) event->owner;
 
-	if (actionEvent != NULL) {
-		if (!actionEvent->isSynchronous()) {
-			// Only delete if non-synchronous.  Synchronous events are deleted by the event poster.
-			actionEvent->destroyEvent();
-		}
-	}
+        if (actionEvent != NULL) {
+                actionEvent->destroyEvent();
+        }
 } // destroyEvent()
 
 
@@ -60,27 +55,12 @@ destroyEvent (PLEvent * event)
  * nsActionEvent
  */
 
-nsActionEvent::nsActionEvent (PRBool synchronous)
+nsActionEvent::nsActionEvent ()
 {
-	PL_InitEvent(&mEvent, this,
-		(PLHandleEventProc ) ::handleEvent,
-		(PLDestroyEventProc) ::destroyEvent);
-	mSynchronous = synchronous;
-	mComplete = PR_FALSE;
-	mResult = nsnull;
+        PL_InitEvent(&mEvent, this,
+                (PLHandleEventProc ) ::handleEvent,
+                (PLDestroyEventProc) ::destroyEvent);
 }
-
-
-PRBool
-nsActionEvent::isComplete (void)
-{
-	if (mSynchronous) {
-		return mComplete;
-	}
-	else {
-		return PR_TRUE;
-	}
-} // isComplete()
 
 
 
@@ -89,12 +69,12 @@ nsActionEvent::isComplete (void)
  */
 
 wsResizeEvent::wsResizeEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell),
-	mLeft(x),
-	mBottom(y),
-	mWidth(w),
-	mHeight(h)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mLeft(x),
+        mBottom(y),
+        mWidth(w),
+        mHeight(h)
 {
 }
 
@@ -102,17 +82,17 @@ wsResizeEvent::wsResizeEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y, PRInt3
 void *
 wsResizeEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(resize) x = %d y = %d w = %d h = %d\n", mLeft, mBottom, mWidth, mHeight);
+        if (mWebShell) {
+                
+                printf("handleEvent(resize(x = %d y = %d w = %d h = %d))\n", mLeft, mBottom, mWidth, mHeight);
 
-		nsresult rv = mWebShell->SetBounds(mLeft, mBottom, mWidth, mHeight);
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->SetBounds(mLeft, mBottom, mWidth, mHeight);
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -123,39 +103,33 @@ wsResizeEvent::handleEvent ()
  */
 
 wsLoadURLEvent::wsLoadURLEvent(nsIWebShell* webShell, PRUnichar * urlString) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell),
-	mURL(nsnull)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mURL(nsnull)
 {
-#ifdef NECKO
-	mURL = new nsString(urlString);
-#else
-	mURL = new nsString1(urlString);
-#endif
+        mURL = new nsString(urlString);
 }
 
 
 void *
 wsLoadURLEvent::handleEvent ()
 {
-	if (mWebShell && mURL) {
-		
-		printf("handleEvent(loadURL)\n");
+        if (mWebShell && mURL) {
+                
+                printf("handleEvent(loadURL))\n");
 
-		nsresult rv = mWebShell->LoadURL(mURL->GetUnicode());
+                nsresult rv = mWebShell->LoadURL(mURL->GetUnicode());
 
-		printf("result = %lx\n", rv);
-
-        PR_Sleep(PR_SecondsToInterval(5));
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
 wsLoadURLEvent::~wsLoadURLEvent ()
 {
-	if (mURL != nsnull)
-		delete mURL;
+        if (mURL != nsnull)
+                delete mURL;
 }
 
 
@@ -165,8 +139,8 @@ wsLoadURLEvent::~wsLoadURLEvent ()
  */
 
 wsStopEvent::wsStopEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -174,15 +148,15 @@ wsStopEvent::wsStopEvent(nsIWebShell* webShell) :
 void *
 wsStopEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Stop)\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(Stop))\n");
 
-		nsresult rv = mWebShell->Stop();
+                nsresult rv = mWebShell->Stop();
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -192,8 +166,8 @@ wsStopEvent::handleEvent ()
  */
 
 wsShowEvent::wsShowEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -201,15 +175,15 @@ wsShowEvent::wsShowEvent(nsIWebShell* webShell) :
 void *
 wsShowEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Show)\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(Show))\n");
 
-		nsresult rv = mWebShell->Show();
-		
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                nsresult rv = mWebShell->Show();
+                
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -219,8 +193,8 @@ wsShowEvent::handleEvent ()
  */
 
 wsHideEvent::wsHideEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -228,15 +202,15 @@ wsHideEvent::wsHideEvent(nsIWebShell* webShell) :
 void *
 wsHideEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Hide)\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(Hide))\n");
 
-		nsresult rv = mWebShell->Hide();
+                nsresult rv = mWebShell->Hide();
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -246,10 +220,10 @@ wsHideEvent::handleEvent ()
  */
 
 wsMoveToEvent::wsMoveToEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell),
-	mX(x),
-	mY(y)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mX(x),
+        mY(y)
 {
 }
 
@@ -257,15 +231,15 @@ wsMoveToEvent::wsMoveToEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y) :
 void *
 wsMoveToEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(MoveTo(%ld, %ld)\n", mX, mY);
+        if (mWebShell) {
+                
+                printf("handleEvent(MoveTo(%ld, %ld))\n", mX, mY);
 
-		nsresult rv = mWebShell->MoveTo(mX, mY);
+                nsresult rv = mWebShell->MoveTo(mX, mY);
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -274,8 +248,8 @@ wsMoveToEvent::handleEvent ()
  */
 
 wsSetFocusEvent::wsSetFocusEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -283,15 +257,15 @@ wsSetFocusEvent::wsSetFocusEvent(nsIWebShell* webShell) :
 void *
 wsSetFocusEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(SetFocus()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(SetFocus())\n");
 
-		nsresult rv = mWebShell->SetFocus();
+                nsresult rv = mWebShell->SetFocus();
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -301,8 +275,8 @@ wsSetFocusEvent::handleEvent ()
  */
 
 wsRemoveFocusEvent::wsRemoveFocusEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -310,15 +284,15 @@ wsRemoveFocusEvent::wsRemoveFocusEvent(nsIWebShell* webShell) :
 void *
 wsRemoveFocusEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(RemoveFocus()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(RemoveFocus())\n");
 
-		nsresult rv = mWebShell->RemoveFocus();
+                nsresult rv = mWebShell->RemoveFocus();
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -328,9 +302,9 @@ wsRemoveFocusEvent::handleEvent ()
  */
 
 wsRepaintEvent::wsRepaintEvent(nsIWebShell* webShell, PRBool forceRepaint) :
-	nsActionEvent(PR_FALSE),
-	mWebShell(webShell),
-	mForceRepaint(forceRepaint)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mForceRepaint(forceRepaint)
 {
 }
 
@@ -338,15 +312,15 @@ wsRepaintEvent::wsRepaintEvent(nsIWebShell* webShell, PRBool forceRepaint) :
 void *
 wsRepaintEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Repaint(%d)\n", mForceRepaint);
+        if (mWebShell) {
+                
+                printf("handleEvent(Repaint(%d))\n", mForceRepaint);
 
-		nsresult rv = mWebShell->Repaint(mForceRepaint);
+                nsresult rv = mWebShell->Repaint(mForceRepaint);
 
-		printf("result = %lx\n", rv);
-	}
-	return NULL;
+                printf("result = %lx\n", rv);
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -356,8 +330,8 @@ wsRepaintEvent::handleEvent ()
  */
 
 wsCanBackEvent::wsCanBackEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -365,17 +339,17 @@ wsCanBackEvent::wsCanBackEvent(nsIWebShell* webShell) :
 void *
 wsCanBackEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(CanBack()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(CanBack())\n");
 
-		nsresult rv = mWebShell->CanBack();
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->CanBack();
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -385,8 +359,8 @@ wsCanBackEvent::handleEvent ()
  */
 
 wsCanForwardEvent::wsCanForwardEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -394,17 +368,17 @@ wsCanForwardEvent::wsCanForwardEvent(nsIWebShell* webShell) :
 void *
 wsCanForwardEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(CanForward()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(CanForward())\n");
 
-		nsresult rv = mWebShell->CanForward();
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->CanForward();
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -414,8 +388,8 @@ wsCanForwardEvent::handleEvent ()
  */
 
 wsBackEvent::wsBackEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -423,17 +397,17 @@ wsBackEvent::wsBackEvent(nsIWebShell* webShell) :
 void *
 wsBackEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Back()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(Back())\n");
 
-		nsresult rv = mWebShell->Back();
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->Back();
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -443,8 +417,8 @@ wsBackEvent::handleEvent ()
  */
 
 wsForwardEvent::wsForwardEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -452,17 +426,17 @@ wsForwardEvent::wsForwardEvent(nsIWebShell* webShell) :
 void *
 wsForwardEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(Forward()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(Forward())\n");
 
-		nsresult rv = mWebShell->Forward();
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->Forward();
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -472,9 +446,9 @@ wsForwardEvent::handleEvent ()
  */
 
 wsGoToEvent::wsGoToEvent(nsIWebShell* webShell, PRInt32 historyIndex) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell),
-	mHistoryIndex(historyIndex)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mHistoryIndex(historyIndex)
 {
 }
 
@@ -482,17 +456,17 @@ wsGoToEvent::wsGoToEvent(nsIWebShell* webShell, PRInt32 historyIndex) :
 void *
 wsGoToEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(GoTo(%ld)\n", mHistoryIndex);
+        if (mWebShell) {
+                
+                printf("handleEvent(GoTo(%ld))\n", mHistoryIndex);
 
-		nsresult rv = mWebShell->GoTo(mHistoryIndex);
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->GoTo(mHistoryIndex);
+                
+                printf("result = %lx\n", rv);
 
-		return (void *) rv;
-	}
-	return NULL;
+                return (void *) rv;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -502,8 +476,8 @@ wsGoToEvent::handleEvent ()
  */
 
 wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -511,19 +485,19 @@ wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(nsIWebShell* webShell) :
 void *
 wsGetHistoryLengthEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(wsGetHistoryLengthEvent()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(wsGetHistoryLengthEvent())\n");
 
-		PRInt32 historyLength = 0;
+                PRInt32 historyLength = 0;
 
-		nsresult rv = mWebShell->GetHistoryLength(historyLength);
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->GetHistoryLength(historyLength);
+                
+                printf("result = %lx\n", rv);
 
-		return (void *)	historyLength;
-	}
-	return NULL;
+                return (void *) historyLength;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -533,8 +507,8 @@ wsGetHistoryLengthEvent::handleEvent ()
  */
 
 wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(nsIWebShell* webShell) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell)
+        nsActionEvent(),
+        mWebShell(webShell)
 {
 }
 
@@ -542,19 +516,19 @@ wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(nsIWebShell* webShell) :
 void *
 wsGetHistoryIndexEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(wsGetHistoryIndexEvent()\n");
+        if (mWebShell) {
+                
+                printf("handleEvent(wsGetHistoryIndexEvent())\n");
 
-		PRInt32 historyIndex = 0;
+                PRInt32 historyIndex = 0;
 
-		nsresult rv = mWebShell->GetHistoryIndex(historyIndex);
-		
-		printf("result = %lx\n", rv);
+                nsresult rv = mWebShell->GetHistoryIndex(historyIndex);
+                
+                printf("result = %lx\n", rv);
 
-		return (void *)	historyIndex;
-	}
-	return NULL;
+                return (void *) historyIndex;
+        }
+        return NULL;
 } // handleEvent()
 
 
@@ -564,9 +538,9 @@ wsGetHistoryIndexEvent::handleEvent ()
  */
 
 wsGetURLEvent::wsGetURLEvent(nsIWebShell* webShell, PRInt32 historyIndex) :
-	nsActionEvent(PR_TRUE),
-	mWebShell(webShell),
-	mHistoryIndex(historyIndex)
+        nsActionEvent(),
+        mWebShell(webShell),
+        mHistoryIndex(historyIndex)
 {
 }
 
@@ -574,22 +548,23 @@ wsGetURLEvent::wsGetURLEvent(nsIWebShell* webShell, PRInt32 historyIndex) :
 void *
 wsGetURLEvent::handleEvent ()
 {
-	if (mWebShell) {
-		
-		printf("handleEvent(wsGetURLEvent(%ld)\n", mHistoryIndex);
+        if (mWebShell) {
+                
+                printf("handleEvent(wsGetURLEvent(%ld))\n", mHistoryIndex);
 
-		const PRUnichar * url = nsnull;
+                const PRUnichar * url = nsnull;
 
-		// returns PRUninchar * URL in <url>.  No need to delete.  References internal buffer of an nsString
-		nsresult rv = mWebShell->GetURL(mHistoryIndex, &url);
-		
-		printf("result = %lx, url = %lx\n", rv, url);
+                // returns PRUninchar * URL in <url>.  No need to delete.  References internal buffer of an nsString
+                nsresult rv = mWebShell->GetURL(mHistoryIndex, &url);
+                
+                printf("result = %lx, url = %lx\n", rv, url);
 
-		return (void *)	url;
-	}
-	return NULL;
+                return (void *) url;
+        }
+        return NULL;
 } // handleEvent()
 
 
 
 // EOF
+
