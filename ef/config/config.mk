@@ -49,11 +49,10 @@ else
 	CCC = g++
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
-#	EXC_FLAGS = -fexceptions
-	EXC_FLAGS =
+	EXC_FLAGS = -fexceptions
 	EF_LIBS = -L$(DIST)/lib -lEF -lDebuggerChannel -lEFDisassemble
 	EF_LIB_FILES = $(DIST)/lib/libEF.a $(DIST)/lib/libDebuggerChannel.a $(DIST)/lib/libEFDisassemble.a
-	NSPR_LIBS = -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21 $(NSPR_THREAD_LIBS)
+	NSPR_LIBS = $(NSPR_THREAD_LIBS) -L$(NSPR_PREFIX)/lib -lnspr21 -lplc21
 	MKDIR = mkdir -p
 	LN = ln -s -f
 endif
