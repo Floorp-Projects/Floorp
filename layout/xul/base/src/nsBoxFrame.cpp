@@ -2736,12 +2736,8 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
       // Create a view
       static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, 
-                                                     nsnull, 
-                                                     NS_GET_IID(nsIView), 
-                                                     (void **)&view);
-      if (NS_OK == result) {
+      nsresult result = CallCreateInstance(kViewCID, &view);
+      if (NS_SUCCEEDED(result)) {
         nsIViewManager* viewManager;
         parentView->GetViewManager(viewManager);
         NS_ASSERTION(nsnull != viewManager, "null view manager");
@@ -2760,7 +2756,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
         nsIScrollableView*  scrollingView;
-        if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
+        if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollingView))) {
           scrollingView->SetScrolledView(view);
         } else {
           viewManager->SetViewZIndex(view, autoZIndex, zIndex);

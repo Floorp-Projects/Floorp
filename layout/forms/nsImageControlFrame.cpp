@@ -60,6 +60,7 @@
 #include "nsGUIEvent.h"
 #include "nsLayoutAtoms.h"
 #include "nsIServiceManager.h"
+#include "nsContainerFrame.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -283,14 +284,15 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView);
-    viewMan->SetViewContentTransparency(view, PR_TRUE);
+
+    nsContainerFrame::SyncFrameViewProperties(aPresContext, this, aContext, view);
+
+    // this gets reset during reflow anyway
+    // viewMan->SetViewContentTransparency(view, PR_TRUE);
+
     // XXX put the view last in document order until we know how to do better
     viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
     SetView(aPresContext, view);
-
-    const nsStyleVisibility* vis = (const nsStyleVisibility*) mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    // set the opacity
-    viewMan->SetViewOpacity(view, vis->mOpacity);
   }
 
   return rv;

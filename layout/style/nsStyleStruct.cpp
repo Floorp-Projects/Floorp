@@ -1049,23 +1049,28 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 {
-  if (mBinding != aOther.mBinding || mPosition != aOther.mPosition)
-    return NS_STYLE_HINT_FRAMECHANGE;
+  nsChangeHint hint = nsChangeHint_None;
 
-  if ((mDisplay == aOther.mDisplay) &&
-      (mFloats == aOther.mFloats) &&
-      (mOverflow == aOther.mOverflow)) {
-    if ((mBreakType == aOther.mBreakType) &&
-        (mBreakBefore == aOther.mBreakBefore) &&
-        (mBreakAfter == aOther.mBreakAfter) &&
-        (mClipFlags == aOther.mClipFlags) &&
-        (mClip == aOther.mClip) &&
-        (mAppearance == aOther.mAppearance)) {
-      return NS_STYLE_HINT_NONE;
-    }
-    return NS_STYLE_HINT_REFLOW;
-  }
-  return NS_STYLE_HINT_FRAMECHANGE;
+  if (mBinding != aOther.mBinding
+      || mPosition != aOther.mPosition
+      || mDisplay != aOther.mDisplay
+      || mFloats != aOther.mFloats
+      || mOverflow != aOther.mOverflow)
+    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
+
+  // XXX the following is conservative, for now: changing float breaking shouldn't
+  // necessarily require a repaint, reflow should suffice.
+  if (mBreakType != aOther.mBreakType
+      || mBreakBefore != aOther.mBreakBefore
+      || mBreakAfter != aOther.mBreakAfter
+      || mAppearance != aOther.mAppearance)
+    NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
+
+  if (mClipFlags != aOther.mClipFlags
+      || mClip != aOther.mClip)
+    NS_UpdateHint(hint, nsChangeHint_SyncFrameView);
+
+  return hint;
 }
 
 // --------------------

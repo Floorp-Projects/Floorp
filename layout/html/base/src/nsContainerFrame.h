@@ -100,14 +100,7 @@ public:
   static void PositionFrameView(nsIPresContext* aPresContext,
                                 nsIFrame*       aKidFrame);
 
-  // Sets several view attributes:
-  // - if requested sizes the frame's view based on the current size and origin.
-  //   Takes into account the combined area and (if overflow is visible) whether
-  //   the frame has children that extend outside
-  // - opacity
-  // - visibility
-  // - content transparency
-  // - clip
+  // Set the view's size and position after its frame has been reflowed.
   //
   // Flags:
   // NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
@@ -118,6 +111,34 @@ public:
                                        nsIView*        aView,
                                        const nsRect*   aCombinedArea,
                                        PRUint32        aFlags = 0);
+  
+  // Sets view attributes from the frame style that depend on the view's size
+  // (clip, transparency). This needs to be called if you change the size of
+  // a view and the view's frame could have clipping set on it.
+  // @param aStyleContext can be null, in which case the frame's style context is used
+  static void SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
+                                           nsIFrame*        aFrame,
+                                           nsIStyleContext* aStyleContext,
+                                           nsIView*         aView,
+                                           PRUint32         aFlags = 0);
+  
+  // Sets the view's attributes from the frame style.
+  // - opacity
+  // - visibility
+  // - content transparency
+  // - clip
+  // Call this when one of these styles changes or when the view has just
+  // been created.
+  // @param aStyleContext can be null, in which case the frame's style context is used
+  static void SyncFrameViewProperties(nsIPresContext*  aPresContext,
+                                      nsIFrame*        aFrame,
+                                      nsIStyleContext* aStyleContext,
+                                      nsIView*         aView,
+                                      PRUint32         aFlags = 0);
+
+  // Returns PR_TRUE if the frame requires a view
+  static PRBool FrameNeedsView(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame, nsIStyleContext* aStyleContext);
   
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if

@@ -243,57 +243,23 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
   GetScrollingParentView(aPresContext, parent, &parentView);
  
   // Get the view manager
-  nsIViewManager* viewManager;
-  parentView->GetViewManager(viewManager);
+  nsCOMPtr<nsIViewManager> viewManager;
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
 
- 
   // Create the scrolling view
-  nsresult rv = nsComponentManager::CreateInstance(kScrollBoxViewCID, 
-                                             nsnull, 
-                                             NS_GET_IID(nsIView), 
-                                             (void **)&view);
-
-
- 
-  
-  
-
-  if (NS_OK == rv) {
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    const nsStylePosition* position = (const nsStylePosition*)
-      mStyleContext->GetStyleData(eStyleStruct_Position);
-    const nsStyleBorder*  borderStyle = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-
-    // Get the z-index
-    PRInt32 zIndex = 0;
-    PRBool autoZIndex = PR_FALSE;
-    if (eStyleUnit_Integer == position->mZIndex.GetUnit()) {
-      zIndex = position->mZIndex.GetIntValue();
-    } else if (eStyleUnit_Auto == position->mZIndex.GetUnit()) {
-      autoZIndex = PR_TRUE;
-    }
-
+  nsresult rv = CallCreateInstance(kScrollBoxViewCID, &view);
+  if (NS_SUCCEEDED(rv)) {
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, vis->IsVisibleOrCollapsed() ?
-               nsViewVisibility_kShow : nsViewVisibility_kHide);
+    view->Init(viewManager, mRect, parentView);
 
-    viewManager->SetViewZIndex(view, autoZIndex, zIndex);
+    SyncFrameViewProperties(aPresContext, this, mStyleContext, view);
 
     // Insert the view into the view hierarchy
     // XXX Put view last in document order until we know how to do better
     viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
-    // Set the view's opacity
-    viewManager->SetViewOpacity(view, vis->mOpacity);
-
-    // Because we only paint the border and we don't paint a background,
-    // inform the view manager that we have transparent content
-    viewManager->SetViewContentTransparency(view, PR_TRUE);
-
+    const nsStyleDisplay* display;
+    ::GetStyleData(mStyleContext, &display);
     // If it's fixed positioned, then create a widget too
     CreateScrollingViewWidget(view, display);
 
@@ -308,6 +274,8 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
       scrollingView->CreateScrollControls(); 
     }
 
+    const nsStyleBorder* borderStyle;
+    ::GetStyleData(mStyleContext, &borderStyle);
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
     if (!borderStyle->GetBorder(border)) {
@@ -319,8 +287,6 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
     // Remember our view
     SetView(aPresContext, view);
   }
-
-  NS_RELEASE(viewManager);
   return rv;
 }
 

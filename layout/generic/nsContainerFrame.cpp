@@ -504,77 +504,266 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                                            const nsRect*   aCombinedArea,
                                            PRUint32        aFlags)
 {
-  if (aView) {
+  if (!aView) {
+    return;
+  }
+
+  // Make sure the view is sized and positioned correctly
+  if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
+    PositionFrameView(aPresContext, aFrame);
+  }
+
+  if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
     nsCOMPtr<nsIViewManager> vm;
-    nsFrameState             kidState;
-    nsSize                   frameSize;
-    
     aView->GetViewManager(*getter_AddRefs(vm));
+    nsRect oldBounds;
+    aView->GetBounds(oldBounds);
+    nsFrameState kidState;
     aFrame->GetFrameState(&kidState);
-    aFrame->GetSize(frameSize);
-    
-    // Make sure the view is sized and positioned correctly
-    if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-      PositionFrameView(aPresContext, aFrame);
+
+    // If the frame has child frames that stick outside the content
+    // area, then size the view large enough to include those child
+    // frames
+    if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
+      vm->ResizeView(aView, *aCombinedArea);
+    } else {
+      // If the width is unchanged and the height is not decreased then repaint only the 
+      // newly exposed or contracted area, otherwise repaint the union of the old and new areas
+
+      // XXX:  We currently invalidate the newly exposed areas only when the 
+      // container frame's width is unchanged and the height is either unchanged or increased
+      // This is because some frames do not invalidate themselves properly. see bug 73825.
+      // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
+      // frameSize.width == width && frameSize.height >= height.
+      nsSize frameSize;
+      aFrame->GetSize(frameSize);
+      nsRect newSize(0, 0, frameSize.width, frameSize.height);
+      vm->ResizeView(aView, newSize, 
+                     (frameSize.width == oldBounds.width && frameSize.height >= oldBounds.height));
     }
 
-    nsRect newSize(0, 0, frameSize.width, frameSize.height);
-    if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
-      // If the frame has child frames that stick outside the content
-      // area, then size the view large enough to include those child
-      // frames
-      if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
-        vm->ResizeView(aView, *aCombinedArea);
-        newSize = *aCombinedArea;
-      } else {
-        nsRect bounds;
-        aView->GetBounds(bounds);
-        // If the width is unchanged and the height is not decreased then repaint only the 
-        // newly exposed or contracted area, otherwise repaint the union of the old and new areas
+    nsRect newBounds;
+    aView->GetBounds(newBounds);
 
-        // XXX:  We currently invalidate the newly exposed areas only when the 
-        // container frame's width is unchanged and the height is either unchanged or increased
-        // This is because some frames do not invalidate themselves properly. see bug 73825.
-        // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
-        // frameSize.width == width && frameSize.height >= height.
-        vm->ResizeView(aView, newSize, 
-                       (frameSize.width == bounds.width && frameSize.height >= bounds.height));
+    // if the bounds have changed and clipping is enabled, we need to update the clip area
+    // and also possibly the transparency (in case the view grew bigger than the clip area
+    // so clipping is now cutting out part of the view)
+    if (oldBounds != newBounds) {
+      SyncFrameViewAfterSizeChange(aPresContext, aFrame, nsnull, aView, aFlags);
+    }
+  }
+}
+
+static void
+SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
+                                         nsIFrame*        aFrame,
+                                         nsIStyleContext* aStyleContext,
+                                         nsIView*         aView,
+                                         PRUint32         aFlags)
+{
+  nsCOMPtr<nsIViewManager> vm;
+  aView->GetViewManager(*getter_AddRefs(vm));
+
+  PRBool isCanvas;
+  const nsStyleBackground* bg;
+  PRBool hasBG =
+    nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
+
+  // background-attachment: fixed is not really geometry dependent, but
+  // we set it here because it's cheap to do so
+  PRBool fixedBackground = hasBG &&
+    NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment;
+  // If the frame has a fixed background attachment, then indicate that the
+  // view's contents should be repainted and not bitblt'd
+  vm->SetViewBitBltEnabled(aView, !fixedBackground);
+
+  PRBool  viewHasTransparentContent =
+    !hasBG ||
+    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
+    !aFrame->CanPaintBackground();
+  if (isCanvas && viewHasTransparentContent) {
+    nsIView* rootView;
+    vm->GetRootView(rootView);
+    nsIView* rootParent;
+    rootView->GetParent(rootParent);
+    if (nsnull == rootParent) {
+      viewHasTransparentContent = PR_FALSE;
+    }
+  }
+
+  const nsStyleDisplay* display;
+  ::GetStyleData(aStyleContext, &display);
+  nsFrameState kidState;
+  aFrame->GetFrameState(&kidState);
+  
+  if (!viewHasTransparentContent) {
+    // If we're showing the view but the frame is hidden, then the view is transparent
+    nsViewVisibility visibility;
+    aView->GetVisibility(visibility);
+    const nsStyleVisibility* vis;
+    ::GetStyleData(aStyleContext, &vis);
+    if ((nsViewVisibility_kShow == visibility
+         && NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)
+        || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow
+            && (kidState & NS_FRAME_OUTSIDE_CHILDREN) != 0)) {
+      viewHasTransparentContent = PR_TRUE;
+    }
+  }
+
+  // If the frame has visible content that overflows the content area, then we
+  // need the view marked as having transparent content
+
+  // There are two types of clipping:
+  // - 'clip' which only applies to absolutely positioned elements, and is
+  //    relative to the element's border edge. 'clip' applies to the entire
+  //    element
+  // - 'overflow-clip' which only applies to block-level elements and replaced
+  //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
+  //   to the content area and applies to content only (not border or background).
+  //   Note that out-of-flow frames like floated or absolutely positioned frames
+  //   are block-level, but we can't rely on the 'display' value being set correctly
+  //   in the style context...
+  PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
+  PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
+  PRBool hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
+  if (hasClip || hasOverflowClip) {
+    nsSize frameSize;
+    aFrame->GetSize(frameSize);
+    nsRect  clipRect;
+
+    if (hasClip) {
+      // Start with the 'auto' values and then factor in user specified values
+      clipRect.SetRect(0, 0, frameSize.width, frameSize.height);
+
+      if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
+        if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+          clipRect.y = display->mClip.y;
+        }
+        if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+          clipRect.x = display->mClip.x;
+        }
+        if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+          clipRect.width = display->mClip.width;
+        }
+        if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+          clipRect.height = display->mClip.height;
+        }
       }
-    } else {
-      aView->GetBounds(newSize);
-      nscoord x, y;
-      aView->GetPosition(&x, &y);
-      newSize.x -= x;
-      newSize.y -= y;
+    }
+
+    if (hasOverflowClip) {
+      const nsStyleBorder* borderStyle;
+      ::GetStyleData(aStyleContext, &borderStyle);
+      const nsStylePadding* paddingStyle;
+      ::GetStyleData(aStyleContext, &paddingStyle);
+
+      nsMargin border, padding;
+      // XXX We don't support the 'overflow-clip' property yet so just use the
+      // content area (which is the default value) as the clip shape
+      nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
+      borderStyle->GetBorder(border);
+      overflowClipRect.Deflate(border);
+      // XXX We need to handle percentage padding
+      if (paddingStyle->GetPadding(padding)) {
+        overflowClipRect.Deflate(padding);
+      }
+
+      if (hasClip) {
+        // If both 'clip' and 'overflow-clip' apply then use the intersection
+        // of the two
+        clipRect.IntersectRect(clipRect, overflowClipRect);
+      } else {
+        clipRect = overflowClipRect;
+      }
     }
   
-    const nsStyleBackground* bg;
-    const nsStyleVisibility* vis;
-    const nsStyleDisplay* display;
-    PRBool isCanvas;
-    PRBool hasBG =
-        nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
-    aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    nsRect newSize;
+    aView->GetBounds(newSize);
+    nscoord x, y;
+    aView->GetPosition(&x, &y);
+    newSize.x -= x;
+    newSize.y -= y;
 
-    // Set the view's opacity
-    vm->SetViewOpacity(aView, vis->mOpacity);
+    // If part of the view is being clipped out, then mark it transparent
+    if (clipRect.y > newSize.y
+        || clipRect.x > newSize.x
+        || clipRect.XMost() < newSize.XMost()
+        || clipRect.YMost() < newSize.YMost()) {
+      viewHasTransparentContent = PR_TRUE;
+    }
 
+    // Set clipping of child views.
+    nsRegion region;
+    region.Copy(nsRectFast(clipRect));
+    vm->SetViewChildClipRegion(aView, &region);
+  } else {
+    // Remove clipping of child views.
+    vm->SetViewChildClipRegion(aView, nsnull);
+  }
+
+  vm->SetViewContentTransparency(aView, viewHasTransparentContent);
+}
+
+void
+nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
+                                               nsIFrame*        aFrame,
+                                               nsIStyleContext* aStyleContext,
+                                               nsIView*         aView,
+                                               PRUint32         aFlags)
+{
+  if (!aView) {
+    return;
+  }
+  
+  nsCOMPtr<nsIStyleContext> savedStyleContext;
+  if (nsnull == aStyleContext) {
+    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
+    aStyleContext = savedStyleContext;
+  }
+
+  const nsStyleDisplay* display;
+  ::GetStyleData(aStyleContext, &display);
+  nsFrameState kidState;
+  aFrame->GetFrameState(&kidState);
+
+  PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
+  PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
+  PRBool hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
+  if (hasClip || hasOverflowClip) {
+    SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
+  }
+}
+
+void
+nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
+                                          nsIFrame*        aFrame,
+                                          nsIStyleContext* aStyleContext,
+                                          nsIView*         aView,
+                                          PRUint32         aFlags)
+{
+  if (!aView) {
+    return;
+  }
+
+  nsCOMPtr<nsIViewManager> vm;
+  aView->GetViewManager(*getter_AddRefs(vm));
+
+  nsCOMPtr<nsIStyleContext> savedStyleContext;
+  if (nsnull == aStyleContext) {
+    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
+    aStyleContext = savedStyleContext;
+  }
+    
+  const nsStyleVisibility* vis;
+  ::GetStyleData(aStyleContext, &vis);
+
+  // Set the view's opacity
+  vm->SetViewOpacity(aView, vis->mOpacity);
+
+  // Make sure visibility is correct
+  if (0 == (aFlags & NS_FRAME_NO_VISIBILITY)) {
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
-    PRBool  viewHasTransparentContent =
-         (!hasBG ||
-         (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
-         !aFrame->CanPaintBackground());
-    if (isCanvas && viewHasTransparentContent) {
-      nsIView* rootView;
-      vm->GetRootView(rootView);
-      nsIView* rootParent;
-      rootView->GetParent(rootParent);
-      if (nsnull == rootParent) {
-        viewHasTransparentContent = PR_FALSE;
-      }
-    }
 
     if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
       viewIsVisible = PR_FALSE;
@@ -597,147 +786,106 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 
         if (frameType == nsLayoutAtoms::scrollFrame || frameType == nsLayoutAtoms::listControlFrame) {
           viewIsVisible = PR_FALSE;
-
-        } else {
-          // If we're a container element, then leave the view visible, but
-          // mark it as having transparent content. The reason we need to
-          // do this is that child elements can override their parent's
-          // hidden visibility and be visible anyway
-          nsIFrame* firstChild;
-
-          aFrame->FirstChild(aPresContext, nsnull, &firstChild);
-          if (firstChild) {
-            // Not a left frame, so the view needs to be visible, but marked
-            // as having transparent content
-            viewHasTransparentContent = PR_TRUE;
-          } else {
-            // Leaf frame so go ahead and hide the view
-            viewIsVisible = PR_FALSE;
-          }
         }
       }
-    }
-
-    // If the frame has visible content that overflows the content area, then we
-    // need the view marked as having transparent content
-    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-      if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
-        viewHasTransparentContent = PR_TRUE;
-      }
-    }
-
-    // Make sure visibility is correct
-    if (0 == (aFlags & NS_FRAME_NO_VISIBILITY)) {
-      vm->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
-                            nsViewVisibility_kHide);
-    }
-
-    // Make sure z-index is correct
-    PRInt32                zIndex = 0;
-    PRInt32                oldZIndex;
-    PRBool                 oldAutoZIndex;
-    PRBool                 oldTopMost;
-    PRBool                 autoZIndex = PR_FALSE;
-    const nsStylePosition* position;
-
-    aView->GetZIndex(oldZIndex, oldAutoZIndex, oldTopMost);
-
-    aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zIndex = position->mZIndex.GetIntValue();
-
-    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-      autoZIndex = PR_TRUE;
-    } 
-
-    vm->SetViewZIndex(aView, autoZIndex, zIndex, oldTopMost);
-
-    // There are two types of clipping:
-    // - 'clip' which only applies to absolutely positioned elements, and is
-    //    relative to the element's border edge. 'clip' applies to the entire
-    //    element
-    // - 'overflow-clip' which only applies to block-level elements and replaced
-    //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
-    //   to the content area and applies to content only (not border or background).
-    //   Note that out-of-flow frames like floated or absolutely positioned frames
-    //   are block-level, but we can't rely on the 'display' value being set correctly
-    //   in the style context...
-    PRBool  hasClip, hasOverflowClip;
-    PRBool  isBlockLevel = display->IsBlockLevel() || (0 != (kidState & NS_FRAME_OUT_OF_FLOW));
-    hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
-    hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
-    if (hasClip || hasOverflowClip) {
-      nsRect  clipRect;
-
-      if (hasClip) {
-        // Start with the 'auto' values and then factor in user specified values
-        clipRect.SetRect(0, 0, frameSize.width, frameSize.height);
-
-        if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
-          if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
-            clipRect.y = display->mClip.y;
-          }
-          if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
-            clipRect.x = display->mClip.x;
-          }
-          if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-            clipRect.width = display->mClip.width;
-          }
-          if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-            clipRect.height = display->mClip.height;
-          }
-        }
-      }
-
-      if (hasOverflowClip) {
-        const nsStyleBorder* borderStyle;
-        const nsStylePadding* paddingStyle;
-        nsMargin border, padding;
-
-        aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
-        aFrame->GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingStyle);
-        
-        // XXX We don't support the 'overflow-clip' property yet so just use the
-        // content area (which is the default value) as the clip shape
-        nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
-        borderStyle->GetBorder(border);
-        overflowClipRect.Deflate(border);
-        // XXX We need to handle percentage padding
-        if (paddingStyle->GetPadding(padding)) {
-          overflowClipRect.Deflate(padding);
-        }
-
-        if (hasClip) {
-          // If both 'clip' and 'overflow-clip' apply then use the intersection
-          // of the two
-          clipRect.IntersectRect(clipRect, overflowClipRect);
-        } else {
-          clipRect = overflowClipRect;
-        }
-      }
-
-      // If part of the view is being clipped out, then mark it transparent
-      if (clipRect.y > newSize.y
-          || clipRect.x > newSize.x
-          || clipRect.XMost() < newSize.XMost()
-          || clipRect.YMost() < newSize.YMost()) {
-        viewHasTransparentContent = PR_TRUE;
-      }
-
-      // Set clipping of child views.
-      nsRegion region;
-      region.Copy(clipRect);
-      vm->SetViewChildClipRegion(aView, &region);
     } else {
-      // Remove clipping of child views.
-      vm->SetViewChildClipRegion(aView, nsnull);
+      // if the view is for a popup, don't show the view if the popup is closed
+      nsCOMPtr<nsIWidget> widget;
+      aView->GetWidget(*getter_AddRefs(widget));
+      if (widget) {
+        nsWindowType windowType;
+        widget->GetWindowType(windowType);
+        if (windowType == eWindowType_popup) {
+          widget->IsVisible(viewIsVisible);
+        }
+      }
     }
 
-    // Make sure content transparency is correct
-    if (viewIsVisible) {
-      vm->SetViewContentTransparency(aView, viewHasTransparentContent);
+    vm->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
+                          nsViewVisibility_kHide);
+  }
+
+  const nsStyleDisplay* display;
+  ::GetStyleData(aStyleContext, &display);
+  // See if the frame is being relatively positioned or absolutely
+  // positioned
+  PRBool isTopMostView = display->IsPositioned();
+
+  // Make sure z-index is correct
+  const nsStylePosition* position;
+  ::GetStyleData(aStyleContext, &position);
+
+  PRInt32 zIndex = 0;
+  PRBool  autoZIndex = PR_FALSE;
+
+  if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+    zIndex = position->mZIndex.GetIntValue();
+  } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+    autoZIndex = PR_TRUE;
+  }
+
+  vm->SetViewZIndex(aView, autoZIndex, zIndex, isTopMostView);
+
+  SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
+}
+
+PRBool
+nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
+                                 nsIFrame* aFrame,
+                                 nsIStyleContext* aStyleContext)
+{
+  const nsStyleVisibility* vis;
+  ::GetStyleData(aStyleContext, &vis);
+    
+  if (vis->mOpacity != 1.0f) {
+    return PR_TRUE;
+  }
+
+  // See if the frame has a fixed background attachment
+  const nsStyleBackground *color;
+  PRBool isCanvas;
+  PRBool hasBackground = 
+    nsCSSRendering::FindBackground(aPresContext, aFrame, &color, &isCanvas);
+  if (hasBackground &&
+      NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+    return PR_TRUE;
+  }
+    
+  const nsStyleDisplay* display;
+  ::GetStyleData(aStyleContext, &display);
+
+  if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
+    return PR_TRUE;
+  } else if (display->IsAbsolutelyPositioned()) {
+    return PR_TRUE;
+  } 
+
+  nsCOMPtr<nsIAtom>  pseudoTag;
+  aStyleContext->GetPseudoType(*getter_AddRefs(pseudoTag));
+  if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
+    return PR_TRUE;
+  }
+
+  // See if the frame is block-level and has 'overflow' set to 'hidden'. If
+  // so, then we need to give it a view so clipping
+  // of any child views works correctly. Note that if it's floated it is also
+  // block-level, but we can't trust that the style context 'display' value is
+  // set correctly
+  if ((display->IsBlockLevel() || display->IsFloating()) &&
+      (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)) {
+    // XXX Check for the frame being a block frame and only force a view
+    // in that case, because adding a view for box frames seems to cause
+    // problems for XUL...
+    nsCOMPtr<nsIAtom> frameType;
+    
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    if ((frameType == nsLayoutAtoms::blockFrame) ||
+        (frameType == nsLayoutAtoms::areaFrame)) {
+      return PR_TRUE;
     }
   }
+
+  return PR_FALSE;
 }
 
 /**

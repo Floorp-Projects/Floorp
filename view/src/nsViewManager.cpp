@@ -2553,15 +2553,17 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
   view->SetClipChildren(newClipFlag);
   view->SetChildClip(newClipRect);
  
-  // Invalidate changed areas
-  // Paint (new - old) in the current view
-  InvalidateRectDifference(view, newClipRect, oldClipRect, NS_VMREFRESH_NO_SYNC);
-  // Paint (old - new) in the parent view, since it'll be clipped out of the current view
-  nsView* parent = view->GetParent();
-  if (parent != nsnull) {
-    view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
-    view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
-    InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC);
+  if (IsViewInserted(view)) {
+    // Invalidate changed areas
+    // Paint (new - old) in the current view
+    InvalidateRectDifference(view, newClipRect, oldClipRect, NS_VMREFRESH_NO_SYNC);
+    // Paint (old - new) in the parent view, since it'll be clipped out of the current view
+    nsView* parent = view->GetParent();
+    if (parent != nsnull) {
+      view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
+      view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
+      InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+    }
   }
 
   return NS_OK;
@@ -2850,9 +2852,9 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
   PRInt32 oldidx = view->GetZIndex();
   view->SetZIndex(aAutoZIndex, aZIndex, aTopMost);
 
-  if (IsViewInserted(view)) {
-    if (CompareZIndex(oldidx, oldTopMost, oldIsAuto,
-		              aZIndex, aTopMost, aAutoZIndex) != 0) {
+  if (CompareZIndex(oldidx, oldTopMost, oldIsAuto,
+                    aZIndex, aTopMost, aAutoZIndex) != 0) {
+    if (IsViewInserted(view)) {
       nsView *parent = view->GetParent();
       if (nsnull != parent) {
         //we don't just call the view manager's RemoveChild()
@@ -2862,20 +2864,19 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
         UpdateTransCnt(view, nsnull);
         rv = InsertChild(parent, view, aZIndex);
       }
-      
       // XXX The following else block is a workaround and should be cleaned up (bug 43410)
-    } else {
-      nsCOMPtr<nsIWidget> widget;
-      view->GetWidget(*getter_AddRefs(widget));
-      if (widget) {
-        widget->SetZIndex(aZIndex);
-      }
     }
+  } else {
+    nsCOMPtr<nsIWidget> widget;
+    view->GetWidget(*getter_AddRefs(widget));
+    if (widget) {
+      widget->SetZIndex(aZIndex);
+    }
+  }
 
-    nsZPlaceholderView* zParentView = view->GetZParent();
-    if (nsnull != zParentView) {
-      SetViewZIndex(zParentView, aAutoZIndex, aZIndex, aTopMost);
-    }
+  nsZPlaceholderView* zParentView = view->GetZParent();
+  if (nsnull != zParentView) {
+    SetViewZIndex(zParentView, aAutoZIndex, aZIndex, aTopMost);
   }
 
   return rv;
@@ -2888,13 +2889,15 @@ NS_IMETHODIMP nsViewManager::SetViewContentTransparency(nsIView *aView, PRBool a
 
   view->HasTransparency(trans);
 
-  if (trans != aTransparent && IsViewInserted(view))
-    {
-      UpdateTransCnt(view, nsnull);
-      view->SetContentTransparency(aTransparent);
-      UpdateTransCnt(nsnull, view);
+  if (trans != aTransparent) {
+    UpdateTransCnt(view, nsnull);
+    view->SetContentTransparency(aTransparent);
+    UpdateTransCnt(nsnull, view);
+
+    if (IsViewInserted(view)) {
       UpdateView(view, NS_VMREFRESH_NO_SYNC);
     }
+  }
 
   return NS_OK;
 }
@@ -2906,12 +2909,15 @@ NS_IMETHODIMP nsViewManager::SetViewOpacity(nsIView *aView, float aOpacity)
 
   view->GetOpacity(opacity);
 
-  if (opacity != aOpacity && IsViewInserted(view))
+  if (opacity != aOpacity)
     {
       UpdateTransCnt(view, nsnull);
       view->SetOpacity(aOpacity);
       UpdateTransCnt(nsnull, view);
-      UpdateView(view, NS_VMREFRESH_NO_SYNC);
+
+      if (IsViewInserted(view)) {
+        UpdateView(view, NS_VMREFRESH_NO_SYNC);
+      }
     }
 
   return NS_OK;

@@ -419,45 +419,17 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
   nsresult rv = CallCreateInstance(kScrollingViewCID, &view);
 
   if (NS_OK == rv) {
-    const nsStylePosition* position = (const nsStylePosition*)
-      mStyleContext->GetStyleData(eStyleStruct_Position);
-    const nsStyleBorder*  borderStyle = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStyleDisplay*  display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    
-    // Get the z-index
-    PRInt32 zIndex = 0;
-    PRBool  autoZIndex = PR_FALSE;
-
-    if (eStyleUnit_Integer == position->mZIndex.GetUnit()) {
-      zIndex = position->mZIndex.GetIntValue();
-    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-      autoZIndex = PR_TRUE;
-    }
-
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, 
-               vis->IsVisible() ?
-                nsViewVisibility_kShow : 
-                nsViewVisibility_kHide);
+    view->Init(viewManager, mRect, parentView);
 
-    // Initialize the view's z-index
-    viewManager->SetViewZIndex(view, autoZIndex, zIndex);
+    SyncFrameViewProperties(aPresContext, this, mStyleContext, view);
 
     // Insert the view into the view hierarchy
     // XXX Put it last in document order, until we can do better
     viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
-    // Set the view's opacity
-    viewManager->SetViewOpacity(view, vis->mOpacity);
-
-    // Because we only paint the border and we don't paint a background,
-    // inform the view manager that we have transparent content
-    viewManager->SetViewContentTransparency(view, PR_TRUE);
-
+    const nsStyleDisplay* display;
+    ::GetStyleData(mStyleContext, &display);
     // If it's fixed positioned, then create a widget too
     CreateScrollingViewWidget(view, display);
 
@@ -520,6 +492,8 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
     }
     scrollingView->SetScrollPreference(scrollPref);
 
+    const nsStyleBorder* borderStyle;
+    ::GetStyleData(mStyleContext, &borderStyle);
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
     if (!borderStyle->GetBorder(border)) {
