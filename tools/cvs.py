@@ -20,7 +20,7 @@
 # Contributor(s): Stephen Lamm <slamm@netscape.com>
 # 
 
-# Version: $Id: cvs.py,v 1.5 2000/01/29 02:04:43 slamm%netscape.com Exp $
+# Version: $Id: cvs.py,v 1.6 2000/01/31 17:38:41 slamm%netscape.com Exp $
 
 # module cvs -- Add multithreading to the cvs client.
 
@@ -213,8 +213,10 @@ class XArgsThread(threading.Thread):
                 sys.exit()
             if files:
                 if self.verbose:
-                    print "%s: %s %s" % (self.getName(), self.shell_command,
-                                         string.join(files))
+                    sys.stderr.write("%s: %s %s\n" %
+                                     (self.getName(),
+                                      self.shell_command,
+                                      string.join(files)))
                 def add_quotes(xx): return '"' + xx + '"'
                 quoted_files = map(add_quotes, files)
                 quoted_files = string.join(files)
