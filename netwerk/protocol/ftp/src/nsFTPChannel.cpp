@@ -38,6 +38,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "prprf.h" // PR_sscanf
 
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gFTPLog;
+#endif /* PR_LOGGING */
+
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 // There are actually two transport connections established for an 
@@ -108,9 +113,11 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
         nsIProgressEventSink* eventSink;
         rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
                                   (nsISupports**)&eventSink);
-        //if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
+        }
 
-        // XXX event sinks are optional in ftp
+        // XXX event sinks are optional (for now) in ftp
         if (eventSink) {
             mEventSink = eventSink;
             NS_ADDREF(mEventSink);
@@ -182,6 +189,8 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     // data down the output stream end of a pipe.
     nsresult rv;
 
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OpenInputStream() called\n"));
+
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -233,6 +242,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 {
     nsresult rv;
 
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncRead() called\n"));
 
     ///////////////////////////
     //// setup channel state
@@ -319,6 +329,8 @@ NS_IMETHODIMP
 nsFTPChannel::GetContentType(char* *aContentType) {
     nsresult rv = NS_OK;
 
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType()\n"));
+
     // Parameter validation...
     if (!aContentType) {
         return NS_ERROR_NULL_POINTER;
@@ -330,6 +342,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         if (!*aContentType) {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
         return rv;
     }
 
@@ -337,7 +350,8 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     if (NS_SUCCEEDED(rv)) {
         rv = MIMEService->GetTypeFromURI(mUrl, aContentType);
         if (NS_SUCCEEDED(rv)) {
-            mContentType = *aContentType;            
+            mContentType = *aContentType;
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
             return rv;
         }
     }
@@ -350,6 +364,8 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     } else {
         rv = NS_OK;
     }
+
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
 
     return rv;
 }
@@ -416,6 +432,7 @@ nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
 NS_IMETHODIMP
 nsFTPChannel::OnStartRequest(nsIChannel* channel, nsISupports* context) {
     nsresult rv = NS_OK;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStartRequest(channel = %x, context = %x)\n", channel, context));
     if (mListener) {
         rv = mListener->OnStartRequest(channel, context);
     }
@@ -427,6 +444,7 @@ nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg) {
     nsresult rv = NS_OK;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnStopRequest(channel = %x, context = %x, status = %d, msg = N/A)\n",channel, context, aStatus));
     if (mListener) {
         rv = mListener->OnStopRequest(channel, context, aStatus, aMsg);
     }
@@ -442,6 +460,8 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                               PRUint32 aSourceOffset,
                               PRUint32 aLength) {
     nsresult rv = NS_OK;
+
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OnDataAvailable(channel = %x, context = %x, stream = %x, srcOffset = %d, length = %d)\n", channel, context, aIStream, aSourceOffset, aLength));
 
     nsIFTPContext *ftpCtxt = nsnull;
     rv = context->QueryInterface(nsCOMTypeInfo<nsIFTPContext>::GetIID(), (void**)&ftpCtxt);
