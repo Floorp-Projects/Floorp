@@ -52,6 +52,9 @@ CMozillaBrowser::CMozillaBrowser()
 	m_pIPref = nsnull;
 #endif
 
+	// Ready state of control
+	m_nReadyState = READYSTATE_UNINITIALIZED;
+	
 	// Create the container that handles some things for us
 	m_pWebShellContainer = NULL;
 
@@ -109,6 +112,9 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
     // Create the NGLayout WebShell
     CreateWebShell();
+
+	// Control is ready
+	m_nReadyState = READYSTATE_LOADED;
 
 	// Browse to a default page
 	USES_CONVERSION;
@@ -285,6 +291,142 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 /////////////////////////////////////////////////////////////////////////////
 // IOleObject overrides
+
+// This is an almost verbatim copy of the standard InPlaceActivate but with
+// a few lines commented out.
+
+HRESULT CMozillaBrowser::InPlaceActivate(LONG iVerb, const RECT* prcPosRect)
+{
+	HRESULT hr;
+
+	if (m_spClientSite == NULL)
+		return S_OK;
+
+	CComPtr<IOleInPlaceObject> pIPO;
+	ControlQueryInterface(IID_IOleInPlaceObject, (void**)&pIPO);
+	_ASSERTE(pIPO != NULL);
+	if (prcPosRect != NULL)
+		pIPO->SetObjectRects(prcPosRect, prcPosRect);
+
+	if (!m_bNegotiatedWnd)
+	{
+		if (!m_bWindowOnly)
+			// Try for windowless site
+			hr = m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless, (void **)&m_spInPlaceSite);
+
+		if (m_spInPlaceSite)
+		{
+			m_bInPlaceSiteEx = TRUE;
+			m_bWndLess = SUCCEEDED(m_spInPlaceSite->CanWindowlessActivate());
+			m_bWasOnceWindowless = TRUE;
+		}
+		else
+		{
+			m_spClientSite->QueryInterface(IID_IOleInPlaceSiteEx, (void **)&m_spInPlaceSite);
+			if (m_spInPlaceSite)
+				m_bInPlaceSiteEx = TRUE;
+			else
+				hr = m_spClientSite->QueryInterface(IID_IOleInPlaceSite, (void **)&m_spInPlaceSite);
+		}
+	}
+
+	_ASSERTE(m_spInPlaceSite);
+	if (!m_spInPlaceSite)
+		return E_FAIL;
+
+	m_bNegotiatedWnd = TRUE;
+
+	if (!m_bInPlaceActive)
+	{
+
+		BOOL bNoRedraw = FALSE;
+		if (m_bWndLess)
+			m_spInPlaceSite->OnInPlaceActivateEx(&bNoRedraw, ACTIVATE_WINDOWLESS);
+		else
+		{
+			if (m_bInPlaceSiteEx)
+				m_spInPlaceSite->OnInPlaceActivateEx(&bNoRedraw, 0);
+			else
+			{
+				HRESULT hr = m_spInPlaceSite->CanInPlaceActivate();
+				if (FAILED(hr))
+					return hr;
+				m_spInPlaceSite->OnInPlaceActivate();
+			}
+		}
+	}
+
+	m_bInPlaceActive = TRUE;
+
+	// get location in the parent window,
+	// as well as some information about the parent
+	//
+	OLEINPLACEFRAMEINFO frameInfo;
+	RECT rcPos, rcClip;
+	CComPtr<IOleInPlaceFrame> spInPlaceFrame;
+	CComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
+	frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
+	HWND hwndParent;
+	if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK)
+	{
+		m_spInPlaceSite->GetWindowContext(&spInPlaceFrame,
+			&spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
+
+		if (!m_bWndLess)
+		{
+			if (m_hWndCD)
+			{
+				::ShowWindow(m_hWndCD, SW_SHOW);
+				::SetFocus(m_hWndCD);
+			}
+			else
+			{
+				HWND h = CreateControlWindow(hwndParent, rcPos);
+				_ASSERTE(h == m_hWndCD);
+			}
+		}
+
+		pIPO->SetObjectRects(&rcPos, &rcClip);
+	}
+
+	CComPtr<IOleInPlaceActiveObject> spActiveObject;
+	ControlQueryInterface(IID_IOleInPlaceActiveObject, (void**)&spActiveObject);
+
+	// Gone active by now, take care of UIACTIVATE
+	if (DoesVerbUIActivate(iVerb))
+	{
+		if (!m_bUIActive)
+		{
+			m_bUIActive = TRUE;
+			hr = m_spInPlaceSite->OnUIActivate();
+			if (FAILED(hr))
+				return hr;
+
+			SetControlFocus(TRUE);
+			// set ourselves up in the host.
+			//
+			if (spActiveObject)
+			{
+				if (spInPlaceFrame)
+					spInPlaceFrame->SetActiveObject(spActiveObject, NULL);
+				if (spInPlaceUIWindow)
+					spInPlaceUIWindow->SetActiveObject(spActiveObject, NULL);
+			}
+
+// These lines are deliberately commented out to demonstrate what breaks certain
+// control containers.
+
+//			if (spInPlaceFrame)
+//				spInPlaceFrame->SetBorderSpace(NULL);
+//			if (spInPlaceUIWindow)
+//				spInPlaceUIWindow->SetBorderSpace(NULL);
+		}
+	}
+
+	m_spClientSite->ShowObject();
+
+	return S_OK;
+}
 
 
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite)
@@ -1407,13 +1549,15 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *
 {
 	NG_TRACE(_T("CMozillaBrowser::get_ReadyState\n"));
 
-    if (!IsValid())
+	if (plReadyState == NULL)
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		return E_INVALIDARG;
 	}
 
-	return E_NOTIMPL;
+	*plReadyState = m_nReadyState;
+
+	return S_OK;
 }
 
 
