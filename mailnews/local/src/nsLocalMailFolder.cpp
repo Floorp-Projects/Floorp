@@ -1187,14 +1187,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
         PRInt32 totalMessages = 0;
         rv = trashFolder->GetTotalMessages(PR_TRUE, &totalMessages);
-        if (totalMessages <= 0) return NS_OK;
+        PRUint32 cnt = 0;
+        if (mSubFolders)
+            mSubFolders->Count(&cnt);
+
+        if (totalMessages <= 0 && cnt == 0 ) return NS_OK;
 
         nsCOMPtr<nsIFolder> parent;
         rv = trashFolder->GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)
         {
-            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv)
-;
+            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv);
             if (NS_SUCCEEDED(rv) && parentFolder)
             {
                 nsXPIDLString idlFolderName;
@@ -1204,29 +1207,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE);
-                    nsCOMPtr<nsISupports> trashSupport = do_QueryInterface(trashFolder);
-                    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
-                    if (trashSupport && parentSupport)
-                      NotifyItemDeleted(parentSupport, trashSupport, "folderView");
-                    parentFolder->CreateSubfolder(folderName.GetUnicode(),msgWindow);
-                    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,&rv);
-                    if (NS_FAILED(rv)) return rv;
-                    nsCOMPtr<nsIRDFResource> res;
-                    rv = rdfService->GetResource(trashUri,getter_AddRefs(res));
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        nsCOMPtr<nsIMsgFolder> newfolder =
-                            do_QueryInterface(res);
-                        if (newfolder)
-                            newfolder->SetFlags(flags);
-                    }
+                    parentFolder->CreateSubfolder(folderName.GetUnicode(),nsnull);
                 }
             }
         }
     }
     return rv;
 }
-
 
 nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
 {
