@@ -190,6 +190,7 @@ class nsReadingIterator
           while ( n )
             {
               difference_type one_hop = NS_MIN(n, size_forward());
+              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a readable iterator beyond the end of a string");
               mPosition += one_hop;
               normalize_forward();
               n -= one_hop;
@@ -207,6 +208,7 @@ class nsReadingIterator
           while ( n )
             {
               difference_type one_hop = NS_MIN(n, size_backward());
+              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a readable iterator beyond the end of a string");
               mPosition -= one_hop;
               normalize_backward();
               n -= one_hop;
