@@ -2640,6 +2640,52 @@ nsBlockFrame::GetTopBlockChild()
   return nsnull;
 }
 
+static void ComputeCombinedArea(const nsRect aRect1, const nsRect aRect2, nsRect& aOutRect)
+{
+  // Rect 1's top left point: (aRect.x, aRect1.y)  
+  // Rect 2's top left point: (aRect2.x, aRect2.y)
+  // Rect 2's bottom right point: (x2, y2)
+  // Output rect's top left point: (aOutRect.x, aOutRect.y)
+  // Output rect's bottom right point: (xOut, yOut)  
+
+  // 
+  // Calculate the top left point of the output rect
+  // 
+
+  // Initialize output rect's top left point to Rect 1's top left point
+  aOutRect.x = aRect1.x;
+  aOutRect.y = aRect1.y;
+  if (aRect2.x < aRect1.x) {
+    aOutRect.x = aRect2.x;
+  }
+  if (aRect2.y < aRect1.y) {
+    aOutRect.y = aRect2.y;
+  }
+
+  // 
+  // Calculate the bottom right point of the output rect
+  // 
+
+  // Initialize output rect's bottom right point to Rect 1's bottom right point
+  nscoord xOut = aRect1.x + aRect1.width;
+  nscoord yOut = aRect1.y + aRect1.height;
+  // Initialize Rect 2's bottom right point
+  nscoord x2 = aRect2.x + aRect2.width;
+  nscoord y2 = aRect2.y + aRect2.height;
+  if (x2 > xOut) {
+    xOut = x2;
+  }
+  if (y2 > yOut) {
+    yOut = y2;
+  }
+
+  // 
+  // Set the width and height on the output rect.
+  // 
+  aOutRect.width = xOut - aOutRect.x;
+  aOutRect.height = yOut - aOutRect.y;
+}
+
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                nsLineBox* aLine,
@@ -2829,6 +2875,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         bbox.y = aState.BorderPadding().top + ascent -
           metrics.ascent + topMargin;
         mBullet->SetRect(bbox);
+
+        // Fix for bug 8314.  Include the bullet's area in the combined area
+        // of the current line.
+        ComputeCombinedArea((const nsRect) bbox, (const nsRect) aLine->mCombinedArea, 
+          aLine->mCombinedArea);
       }
     }
     else {
