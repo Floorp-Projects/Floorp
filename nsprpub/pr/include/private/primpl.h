@@ -1470,6 +1470,7 @@ extern PRBool _pr_ipv6_enabled;  /* defined in prnetdb.c */
         && (!defined(HPUX) || !defined(_PR_PTHREADS)) \
         && (!defined(IRIX) || !defined(_PR_PTHREADS)) \
         && (!defined(LINUX) || !defined(_PR_PTHREADS)) \
+	&& (!defined(RHAPSODY)) \
         && !defined(PURIFY) \
         && !(defined (UNIXWARE) && defined (USE_SVR4_THREADS))
 #define _PR_OVERRIDE_MALLOC

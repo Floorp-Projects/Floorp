@@ -74,6 +74,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(OSF1)
 #include "md/_osf1.h"
 
+#elif defined(RHAPSODY)
+#include "md/_rhapsody.h"
+
 #elif defined(SOLARIS)
 #include "md/_solaris.h"
 

@@ -73,6 +73,10 @@ RELIANTUNIX_CSRCS = \
 	reliantunix.c \
 	$(NULL)
 
+RHAPSODY_CSRCS = \
+	rhapsody.c \
+	$(NULL)
+
 NEC_CSRCS = \
 	nec.c \
 	$(NULL)
@@ -129,6 +133,9 @@ CSRCS += $(UNIXWARE_CSRCS)
 endif
 ifeq ($(OS_ARCH),SINIX)
 CSRCS += $(RELIANTUNIX_CSRCS)
+endif
+ifeq ($(OS_ARCH),Rhapsody)
+CSRCS += $(RHAPSODY_CSRCS)
 endif
 ifeq ($(OS_ARCH),NEC)
 CSRCS += $(NEC_CSRCS)

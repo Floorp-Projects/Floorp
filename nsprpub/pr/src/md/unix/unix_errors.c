@@ -160,7 +160,7 @@ void _MD_unix_map_unlink_error(int err)
 		case EROFS:
 			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
 			break;
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 			PR_SetError(PR_REMOTE_FILE_ERROR, err);
@@ -185,7 +185,7 @@ void _MD_unix_map_stat_error(int err)
 			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
 			break;
 		case ETIMEDOUT:
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 #endif
@@ -278,7 +278,7 @@ void _MD_unix_map_rename_error(int err)
 		case ELOOP:
 			PR_SetError(PR_LOOP_ERROR, err);
 			break;
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 			PR_SetError(PR_REMOTE_FILE_ERROR, err);
@@ -329,7 +329,7 @@ void _MD_unix_map_access_error(int err)
 		case ELOOP:
 			PR_SetError(PR_LOOP_ERROR, err);
 			break;
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 #endif
@@ -395,7 +395,7 @@ void _MD_unix_map_mkdir_error(int err)
 		case EIO:
 			PR_SetError(PR_IO_ERROR, err);
 			break;
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 			PR_SetError(PR_REMOTE_FILE_ERROR, err);
@@ -432,7 +432,7 @@ void _MD_unix_map_rmdir_error(int err)
 		case ELOOP:
 			PR_SetError(PR_LOOP_ERROR, err);
 			break;
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 #endif
@@ -1345,7 +1345,7 @@ void _MD_unix_map_open_error(int err)
 			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
 			break;
 		case ETIMEDOUT:
-#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(OSF1) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 		case EMULTIHOP:
 		case ENOLINK:
 #endif
