@@ -31,14 +31,16 @@ PROG6 = .\$(OBJDIR)\urltest.exe
 PROG7 = .\$(OBJDIR)\TestFileInput2.exe
 PROG8 = .\$(OBJDIR)\TestFileTransport.exe
 PROG9 = .\$(OBJDIR)\TestRes.exe
+PROGA = .\$(OBJDIR)\TestUpload.exe
+PROGB = .\$(OBJDIR)\TestPageLoad.exe
 PROGC = .\$(OBJDIR)\TestWriteStream.exe
 PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
 PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGF = .\$(OBJDIR)\TestHttp.exe
-PROGG = .\$(OBJDIR)\TestPageLoad.exe
+
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
-          $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)
+          $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -78,6 +80,10 @@ $(PROG8): $(OBJDIR) TestFileTransport.cpp
 
 $(PROG9): $(OBJDIR) TestRes.cpp
 
+$(PROGA): $(OBJDIR) TestUpload.cpp
+
+$(PROGB): $(OBJDIR) TestPageLoad.cpp
+
 $(PROGC): $(OBJDIR) TestWriteStream.cpp
 
 $(PROGD): $(OBJDIR) TestWriteSpeed.cpp
@@ -86,4 +92,8 @@ $(PROGE): $(OBJDIR) TestCallbacks.cpp
 
 $(PROGF): $(OBJDIR) TestHttp.cpp
 
-$(PROGG): $(OBJDIR) TestPageLoad.cpp
+
+
+
+
+
