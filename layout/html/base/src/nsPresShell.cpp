@@ -801,11 +801,11 @@ PresShell::Init(nsIDocument* aDocument,
     // First, set the defaults
     gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
     gDoAsyncReflow = PR_FALSE;
-    gDoAsyncReflowAfterDocLoad = PR_FALSE;
+    gDoAsyncReflowAfterDocLoad = PR_TRUE;
 
     // Get the prefs service
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
-    if (NS_SUCCEEDED(result)) {      
+    if (NS_SUCCEEDED(result)) {
       prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
       prefs->GetBoolPref("layout.reflow.async", &gDoAsyncReflow);
       prefs->GetBoolPref("layout.reflow.async.afterDocLoad", &gDoAsyncReflowAfterDocLoad);
