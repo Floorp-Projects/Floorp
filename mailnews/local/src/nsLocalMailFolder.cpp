@@ -815,7 +815,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
 	{
 		char *oldTotalMessages = PR_smprintf("%d", oldTotalMessages);
 		char *totalMessages = PR_smprintf("%d",mNumTotalMessages);
-		//NotifyPropertyChanged("TotalMessages", oldTotalMessages, totalMessages);
+		NotifyPropertyChanged("TotalMessages", oldTotalMessages, totalMessages);
 		PR_smprintf_free(totalMessages);
 		PR_smprintf_free(oldTotalMessages);
 	}
@@ -824,7 +824,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
 	{
 		char *oldUnreadMessages = PR_smprintf("%d", oldUnreadMessages);
 		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
-	//	NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessages, totalUnreadMessages);
+		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessages, totalUnreadMessages);
 		PR_smprintf_free(totalUnreadMessages);
 		PR_smprintf_free(oldUnreadMessages);
 	}
