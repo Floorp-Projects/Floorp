@@ -453,6 +453,7 @@ js_CleanupLocks()
             deleteListOfFatlocks(_fl_tables[i].taken);
             _fl_tables[i].taken = NULL;
         }
+        free(_global_locks);
         _global_locks = NULL;
 #ifdef UsingCounterLock
         PR_DestroyLock(_counter_lock);
