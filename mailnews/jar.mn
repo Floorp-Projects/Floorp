@@ -132,6 +132,7 @@ messenger.jar:
     content/messenger/FilterEditor.js                                          (base/search/resources/content/FilterEditor.js)
     content/messenger/messengercompose/pref-composing_messages.xul             (compose/prefs/resources/content/pref-composing_messages.xul)
     content/messenger/messengercompose/pref-formatting.xul                     (compose/prefs/resources/content/pref-formatting.xul)
+    content/messenger/messengercompose/pref-formatting.js                     (compose/prefs/resources/content/pref-formatting.js)
     content/messenger/messengercompose/messengercompose.xul                    (compose/resources/content/messengercompose.xul)
     content/messenger/messengercompose/MsgComposeCommands.js                   (compose/resources/content/MsgComposeCommands.js)
     content/messenger/messengercompose/addressingWidgetOverlay.js              (compose/resources/content/addressingWidgetOverlay.js)

@@ -32,3 +32,32 @@ Rights Reserved.
 <!ENTITY sendBoth.accesskey           "e">
 <!ENTITY override.label               "You can override these settings for individual messages by using the Options menu in the Mail Compose window.">
 <!ENTITY receiveHTML.label            "If you know a particular recipient can receive HTML mail, uncheck the 'Send email as plain text (no HTML)' checkbox on the recipient's Address Book card.">
+
+<!-- Html and Plain Text Domains  -->
+<!ENTITY domain.title                 "HTML and Plain Text Domains">
+<!ENTITY domaindesc.label             "You can specify those mail domain names(for example netscape.net) that you know can receive HTML messages, as well as those that can receive plain text only.When you send a message to an address that has one of those domain names listed below, Mail automatically sends the message in the correct format.">
+<!ENTITY HTMLdomaintitle.label        "HTML domains.">
+<!ENTITY HTMLdomaintitle.accesskey    "h">
+<!ENTITY PlainTexttitle.label         "Plain Text domains.">
+<!ENTITY PlainTexttitle.accesskey     "p">
+<!ENTITY AddButton.label              "Add...">
+<!ENTITY AddHtmlDomain.accesskey      "a">
+<!ENTITY AddPlainText.accesskey       "d">
+<!ENTITY DeleteButton.label           "Delete">
+<!ENTITY DeleteHtmlDomain.accesskey   "l">
+<!ENTITY DeletePlainText.accesskey    "t">
+
+<!-- Add HTML Domain Name -->
+<!ENTITY add.htmltitle                "Add HTML Domain Name">
+<!ENTITY add.htmldomain               "HTML Domain Name:">
+<!ENTITY add.htmldomain.accesskey     "d">
+<!ENTITY add.plaintexttitle           "Add Plain Text Domain Name">
+<!ENTITY add.plaintextdomain          "Plain Text Domain Name:">
+<!ENTITY add.plaintext.accesskey      "d">
+
+<!-- LOCALIZATION NOTE: do not translate @string@ -->
+<!ENTITY domainnameError.title        "Domain Name Error">
+<!ENTITY duplicationError.label       "The domain name @string@ already exists in this list.">
+
+<!-- LOCALIZATION NOTE: do not translate @string@ -->
+<!ENTITY dualEntryError.label         "A domain name cannot appear in both the HTML and Plain Text lists. The domain name @string@ already exists.">

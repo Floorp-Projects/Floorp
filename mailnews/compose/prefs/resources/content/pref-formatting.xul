@@ -6,16 +6,37 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-formatting.xul');"
+        onload="Init()"
         orient="vertical"
         class="color-dialog">
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["mailDefaultHTMLAction"];
+    var _elementIDs = ["mailDefaultHTMLAction","mailhtmldomain","mailplaintextdomain"];
   ]]>
   </script>  
-    
+  <script language="javascript" src="chrome://messenger/content/messengercompose/pref-formatting.js"></script>
+  
+  <!-- we are using these DTD values for localization -->
+ 
+  <html id="domaindlg" htmldlg_title="&add.htmltitle;" htmldlg_msg="&add.htmldomain;"
+        plaintextdlg_title="&add.plaintexttitle;" plaintextdlg_msg="&add.plaintextdomain;"/>
+  <html id="domainerrdlg" domainerrdlg_title="&domainnameError.title;" duperr="&duplicationError.label;"
+        dualerr="&dualEntryError.label;"/>
+
+  <broadcaster  id="mailhtmldomain" 
+                pref="true"
+                preftype="string" 
+                prefstring="mailnews.html_domains"
+                prefattribute="value"
+                wsm_attributes="value"/>
+  <broadcaster  id="mailplaintextdomain" 
+                pref="true"
+                preftype="string" 
+                prefstring="mailnews.plaintext_domains"
+                prefattribute="value"
+                wsm_attributes="value"/>
+  
   <box class="box-smallheader" title="&pane.title;"/>
 
   <titledbox orient="vertical">
@@ -38,5 +59,49 @@
 	<html>&receiveHTML.label;</html>
 
   </titledbox>
+  <titledbox orient="vertical" flex="1">
+    <title><text value="&domain.title;"/></title>
 
+    <html>&domaindesc.label;</html>
+	<box orient="horizontal" flex="1">
+    <titledbox orient="vertical" id="html_box" flex="1">
+     <title>
+       <text value = "&HTMLdomaintitle.label;"/>
+     </title>
+      <tree class="inset" id="html_domains" flex="1"
+            datasources="rdf:null" multiple="true"
+            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="html_domains_root" flex="1"/>
+      </tree>
+      <box orient="horizontal">
+        <spring flex="1"/>
+        <button class="dialog" value="&AddButton.label;" oncommand="AddDomain(htmlobj);"/>
+        <button class="dialog" value="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);"/>
+        <spring flex="1"/>
+      </box>
+    </titledbox>
+	<titledbox orient="vertical" id="plaintext_box" flex="1">
+     <title>
+       <text value = "&PlainTexttitle.label;"/>
+     </title>
+      <tree class="inset" id="plaintext_domains" flex="1"
+            datasources="rdf:null" multiple="true"
+            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="plaintext_domains_root" flex="1"/>
+      </tree>
+      <box orient="horizontal">
+        <spring flex="1"/>
+        <button class="dialog" value="&AddButton.label;" oncommand="AddDomain(plainobj);"/>
+        <button class="dialog" value="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);"/>
+        <spring flex="1"/>
+      </box>
+    </titledbox>
+	</box>
+  </titledbox>
 </window>
