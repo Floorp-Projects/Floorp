@@ -78,7 +78,7 @@ WebBrowser::Init(nsNativeWidget widget)
     webBrowserWin->SetVisibility(PR_TRUE);
 
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2("http://people.netscape.com/dougt").GetUnicode());
+    webNav->LoadURI(NS_ConvertASCIItoUCS2("http://www.mozilla.org").GetUnicode());
 
    return rv;
 }
@@ -176,32 +176,27 @@ NS_IMETHODIMP WebBrowser::SetOverLink(const PRUnichar* aLink)
 
 NS_IMETHODIMP WebBrowser::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::GetChromeMask(PRUint32* aChromeMask)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetChromeMask(PRUint32 aChromeMask)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP WebBrowser::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **webBrowser)
-{
-   NS_ERROR("Haven't Implemented this yet");
+{    
    return NS_ERROR_FAILURE;
 }
 
@@ -209,21 +204,18 @@ NS_IMETHODIMP WebBrowser::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **web
 NS_IMETHODIMP WebBrowser::FindNamedBrowserItem(const PRUnichar* aName,
                                                   	  nsIDocShellTreeItem ** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP WebBrowser::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP WebBrowser::ShowAsModal(void)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 
@@ -253,26 +245,21 @@ NS_IMETHODIMP WebBrowser::OnLocationChange(nsIURI *location)
 NS_IMETHODIMP WebBrowser::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::Create()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP WebBrowser::Destroy()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP WebBrowser::SetPosition(PRInt32 x, PRInt32 y)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
@@ -280,93 +267,68 @@ NS_IMETHODIMP WebBrowser::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+    nsCOMPtr<nsIBaseWindow> webBrowserWin = do_QueryInterface(mWebBrowser);
+    return webBrowserWin->SetPositionAndSize(x, y,cx, cy,fRepaint);
 }
 
 NS_IMETHODIMP WebBrowser::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
    PRInt32* cy)
 {
-   
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::Repaint(PRBool aForce)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::GetParentWidget(nsIWidget** aParentWidget)
 {
    NS_ENSURE_ARG_POINTER(aParentWidget);
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(aParentNativeWindow);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::GetVisibility(PRBool* aVisibility)
 {
    NS_ENSURE_ARG_POINTER(aVisibility);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetVisibility(PRBool aVisibility)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
@@ -374,23 +336,17 @@ NS_IMETHODIMP WebBrowser::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::SetFocus()
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
@@ -410,51 +366,41 @@ NS_IMETHODIMP WebBrowser::SetTitle(const PRUnichar* aTitle)
 
 NS_IMETHODIMP WebBrowser::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
-  NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-     return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP WebBrowser::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm, PRUint32 savePassword, PRUnichar **user, PRBool *_retval)
 {
-    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::Select(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 count, const PRUnichar **selectList, PRInt32 *outSelection, PRBool *_retval)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowser::UniversalDialog(const PRUnichar *inTitleMessage, const PRUnichar *inDialogTitle, const PRUnichar *inMsg, const PRUnichar *inCheckboxMsg, const PRUnichar *inButton0Text, const PRUnichar *inButton1Text, const PRUnichar *inButton2Text, const PRUnichar *inButton3Text, const PRUnichar *inEditfield1Msg, const PRUnichar *inEditfield2Msg, PRUnichar **inoutEditfield1Value, PRUnichar **inoutEditfield2Value, const PRUnichar *inIConURL, PRBool *inoutCheckboxState, PRInt32 inNumberButtons, PRInt32 inNumberEditfields, PRInt32 inEditField1Password, PRInt32 *outButtonPressed)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
