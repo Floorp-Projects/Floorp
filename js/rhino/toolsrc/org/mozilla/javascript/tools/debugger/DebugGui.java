@@ -1683,6 +1683,9 @@ class ContextWindow extends JPanel implements ActionListener
 class Menubar extends JMenuBar implements ActionListener
 {
 
+    private Vector interruptOnlyItems = new Vector();
+    private Vector runOnlyItems = new Vector();
+
     DebugGui debugGui;
     JMenu windowMenu;
     JCheckBoxMenuItem breakOnExceptions;
@@ -1762,7 +1765,9 @@ class Menubar extends JMenuBar implements ActionListener
                 item.setAccelerator(k);
             }
             if (i != 0) {
-                item.setEnabled(false);
+                interruptOnlyItems.add(item);
+            } else {
+                runOnlyItems.add(item);
             }
             debugMenu.add(item);
         }
@@ -1798,6 +1803,7 @@ class Menubar extends JMenuBar implements ActionListener
         item.addActionListener(this);
         add(windowMenu);
 
+        updateEnabled(false);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -1867,6 +1873,19 @@ class Menubar extends JMenuBar implements ActionListener
         }
         item.setActionCommand(url);
         item.addActionListener(this);
+    }
+
+    void updateEnabled(boolean interrupted)
+    {
+        for (int i = 0; i != interruptOnlyItems.size(); ++i) {
+            JMenuItem item = (JMenuItem)interruptOnlyItems.elementAt(i);
+            item.setEnabled(interrupted);
+        }
+
+        for (int i = 0; i != runOnlyItems.size(); ++i) {
+            JMenuItem item = (JMenuItem)runOnlyItems.elementAt(i);
+            item.setEnabled(!interrupted);
+        }
     }
 
 }
@@ -2344,19 +2363,7 @@ class DebugGui extends JFrame implements GuiCallback
                                                    JOptionPane.ERROR_MESSAGE);
         }
 
-        JMenu menu = getJMenuBar().getMenu(0);
-        //menu.getItem(0).setEnabled(false); // File->Load
-        menu = getJMenuBar().getMenu(2);
-        menu.getItem(0).setEnabled(false); // Debug->Break
-        int count = menu.getItemCount();
-        for (int i = 1; i < count; ++i) {
-            menu.getItem(i).setEnabled(true);
-        }
-        boolean b = false;
-        for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
-            toolBar.getComponent(ci).setEnabled(b);
-            b = true;
-        }
+        ((Menubar)getJMenuBar()).updateEnabled(true);
         toolBar.setEnabled(true);
         // raise the debugger window
         toFront();
@@ -2564,15 +2571,7 @@ class DebugGui extends JFrame implements GuiCallback
     private void disableInterruptOnlyGui()
     {
         if (currentWindow != null) currentWindow.setPosition(-1);
-        JMenu menu = getJMenuBar().getMenu(0);
-        menu.getItem(0).setEnabled(true); // File->Load
-        menu = getJMenuBar().getMenu(2);
-        menu.getItem(0).setEnabled(true); // Debug->Break
-        int count = menu.getItemCount() - 1;
-        int i = 1;
-        for (; i < count; ++i) {
-            menu.getItem(i).setEnabled(false);
-        }
+        ((Menubar)getJMenuBar()).updateEnabled(false);
         context.disable();
         boolean b = true;
         for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
