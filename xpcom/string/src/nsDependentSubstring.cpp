@@ -21,16 +21,16 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-#include "nsPromiseSubstring.h"
+#include "nsDependentSubstring.h"
 
 PRUint32
-nsPromiseSubstring::Length() const
+nsDependentSubstring::Length() const
   {
     return mLength;
   }
 
 const PRUnichar*
-nsPromiseSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+nsDependentSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string
@@ -75,13 +75,13 @@ nsPromiseSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
 
 
 PRUint32
-nsPromiseCSubstring::Length() const
+nsDependentCSubstring::Length() const
   {
     return mLength;
   }
 
 const char*
-nsPromiseCSubstring::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+nsDependentCSubstring::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string

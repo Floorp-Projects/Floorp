@@ -24,24 +24,29 @@
 //-------1---------2---------3---------4---------5---------6---------7---------8
 
 #include "nsAString.h"
-  // remember, no one should include "nsPromiseConcatenation.h" themselves
+  // remember, no one should include "nsDependentConcatenation.h" themselves
   //  one always gets it through "nsAString.h"
 
+#ifndef nsDependentConcatenation_h___
+#include "nsDependentConcatenation.h"
+#endif
+
+
 PRUint32
-nsPromiseConcatenation::Length() const
+nsDependentConcatenation::Length() const
   {
     return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
   }
 
 PRBool
-nsPromiseConcatenation::Promises( const string_type& aString ) const
+nsDependentConcatenation::Promises( const string_type& aString ) const
   {
     return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
   }
 
 #if 0
 PRBool
-nsPromiseConcatenation::PromisesExactly( const string_type& aString ) const
+nsDependentConcatenation::PromisesExactly( const string_type& aString ) const
   {
       // Not really like this, test for the empty string, etc
     return mStrings[0] == &aString && !mStrings[1] || !mStrings[0] && mStrings[1] == &aString;
@@ -49,7 +54,7 @@ nsPromiseConcatenation::PromisesExactly( const string_type& aString ) const
 #endif
 
 const PRUnichar*
-nsPromiseConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+nsDependentConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
     int whichString;
 
@@ -113,20 +118,20 @@ nsPromiseConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFra
 
 
 PRUint32
-nsPromiseCConcatenation::Length() const
+nsDependentCConcatenation::Length() const
   {
     return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
   }
 
 PRBool
-nsPromiseCConcatenation::Promises( const string_type& aString ) const
+nsDependentCConcatenation::Promises( const string_type& aString ) const
   {
     return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
   }
 
 #if 0
 PRBool
-nsPromiseCConcatenation::PromisesExactly( const string_type& aString ) const
+nsDependentCConcatenation::PromisesExactly( const string_type& aString ) const
   {
       // Not really like this, test for the empty string, etc
     return mStrings[0] == &aString && !mStrings[1] || !mStrings[0] && mStrings[1] == &aString;
@@ -134,7 +139,7 @@ nsPromiseCConcatenation::PromisesExactly( const string_type& aString ) const
 #endif
 
 const char*
-nsPromiseCConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+nsDependentCConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
     int whichString;
 

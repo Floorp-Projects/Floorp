@@ -21,8 +21,8 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-#ifndef nsLocalString_h___
-#define nsLocalString_h___
+#ifndef nsDependentString_h___
+#define nsDependentString_h___
 
 #ifndef nsAFlatString_h___
 #include "nsAFlatString.h"
@@ -41,24 +41,21 @@
 
       This class just holds a pointer.  If you don't supply the length, it must calculate it.
       No copying or allocations are performed.
-
-      |const nsLocalString&| appears frequently in interfaces because it
-      allows the automatic conversion of a |PRUnichar*|.
     */
 
-class NS_COM nsLocalString
+class NS_COM nsDependentString
       : public nsAFlatString
   {
     public:
     
       explicit
-      nsLocalString( const PRUnichar* aLiteral )
+      nsDependentString( const PRUnichar* aLiteral )
           : mHandle(NS_CONST_CAST(PRUnichar*, aLiteral), aLiteral ? (NS_CONST_CAST(PRUnichar*, aLiteral)+nsCharTraits<PRUnichar>::length(aLiteral)) : NS_CONST_CAST(PRUnichar*, aLiteral))
         {
           // nothing else to do here
         }
 
-      nsLocalString( const PRUnichar* aLiteral, PRUint32 aLength )
+      nsDependentString( const PRUnichar* aLiteral, PRUint32 aLength )
           : mHandle(NS_CONST_CAST(PRUnichar*, aLiteral), NS_CONST_CAST(PRUnichar*, aLiteral)+aLength)
         {
             // This is an annoying hack.  Callers should be fixed to use the other
@@ -70,8 +67,8 @@ class NS_COM nsLocalString
             }
         }
 
-      // nsLocalString( const nsLocalString& );  // auto-generated copy-constructor OK
-      // ~nsLocalString();                       // auto-generated destructor OK
+      // nsDependentString( const nsDependentString& );  // auto-generated copy-constructor OK
+      // ~nsDependentString();                       // auto-generated destructor OK
 
       virtual const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const  { return &mHandle; }
       virtual const nsBufferHandle<PRUnichar>* GetBufferHandle() const      { return &mHandle; }
@@ -81,24 +78,24 @@ class NS_COM nsLocalString
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsLocalString& );    // we're immutable
+      void operator=( const nsDependentString& );    // we're immutable
   };
 
 
 
-class NS_COM nsLocalCString
+class NS_COM nsDependentCString
       : public nsAFlatCString
   {
     public:
     
       explicit
-      nsLocalCString( const char* aLiteral )
+      nsDependentCString( const char* aLiteral )
           : mHandle(NS_CONST_CAST(char*, aLiteral), aLiteral ? (NS_CONST_CAST(char*, aLiteral)+nsCharTraits<char>::length(aLiteral)) : NS_CONST_CAST(char*, aLiteral))
         {
           // nothing else to do here
         }
 
-      nsLocalCString( const char* aLiteral, PRUint32 aLength )
+      nsDependentCString( const char* aLiteral, PRUint32 aLength )
           : mHandle(NS_CONST_CAST(char*, aLiteral), NS_CONST_CAST(char*, aLiteral)+aLength)
         {
             // This is an annoying hack.  Callers should be fixed to use the other
@@ -110,8 +107,8 @@ class NS_COM nsLocalCString
             }
         }
 
-      // nsLocalCString( const nsLocalCString& );   // auto-generated copy-constructor OK
-      // ~nsLocalCString();                         // auto-generated destructor OK
+      // nsDependentCString( const nsDependentCString& );   // auto-generated copy-constructor OK
+      // ~nsDependentCString();                         // auto-generated destructor OK
 
       virtual const nsBufferHandle<char>* GetFlatBufferHandle() const   { return &mHandle; }
       virtual const nsBufferHandle<char>* GetBufferHandle() const       { return &mHandle; }
@@ -121,7 +118,7 @@ class NS_COM nsLocalCString
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsLocalCString& );    // we're immutable
+      void operator=( const nsDependentCString& );    // we're immutable
   };
 
-#endif /* !defined(nsLocalString_h___) */
+#endif /* !defined(nsDependentString_h___) */

@@ -21,8 +21,8 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-#ifndef nsPromiseSubstring_h___
-#define nsPromiseSubstring_h___
+#ifndef nsDependentSubstring_h___
+#define nsDependentSubstring_h___
 
 #ifndef nsAString_h___
 #include "nsAString.h"
@@ -35,16 +35,16 @@
 
 
   //
-  // nsPromiseSubstring
+  // nsDependentSubstring
   //
 
-class NS_COM nsPromiseSubstring
+class NS_COM nsDependentSubstring
       : public nsAPromiseString
     /*
       NOT FOR USE BY HUMANS (mostly)
 
-      ...not unlike |nsPromiseConcatenation|.  Instances of this class exist only as anonymous
-      temporary results from |Substring()|.  Like |nsPromiseConcatenation|, this class only
+      ...not unlike |nsDependentConcatenation|.  Instances of this class exist only as anonymous
+      temporary results from |Substring()|.  Like |nsDependentConcatenation|, this class only
       holds a pointer, no string data of its own.  It does its magic by overriding and forwarding
       calls to |GetReadableFragment()|.
     */
@@ -57,7 +57,7 @@ class NS_COM nsPromiseSubstring
       virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsPromiseSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+      nsDependentSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
             mStartPos( NS_MIN(aStartPos, aString.Length()) ),
             mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
@@ -65,7 +65,7 @@ class NS_COM nsPromiseSubstring
           // nothing else to do here
         }
 
-      nsPromiseSubstring( const const_iterator& aStart, const const_iterator& aEnd )
+      nsDependentSubstring( const const_iterator& aStart, const const_iterator& aEnd )
           : mString(aStart.string())
         {
           const_iterator zeroPoint;
@@ -74,12 +74,12 @@ class NS_COM nsPromiseSubstring
           mLength = Distance(aStart, aEnd);
         }
 
-      // nsPromiseSubstring( const nsPromiseSubstring& ); // auto-generated copy-constructor should be OK
-      // ~nsPromiseSubstring();                           // auto-generated destructor OK
+      // nsDependentSubstring( const nsDependentSubstring& ); // auto-generated copy-constructor should be OK
+      // ~nsDependentSubstring();                           // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsPromiseSubstring& );        // we're immutable, you can't assign into a substring
+      void operator=( const nsDependentSubstring& );        // we're immutable, you can't assign into a substring
 
     public:
       virtual PRUint32 Length() const;
@@ -91,13 +91,13 @@ class NS_COM nsPromiseSubstring
       PRUint32            mLength;
   };
 
-class NS_COM nsPromiseCSubstring
+class NS_COM nsDependentCSubstring
       : public nsAPromiseCString
     /*
       NOT FOR USE BY HUMANS (mostly)
 
-      ...not unlike |nsPromiseConcatenation|.  Instances of this class exist only as anonymous
-      temporary results from |Substring()|.  Like |nsPromiseConcatenation|, this class only
+      ...not unlike |nsDependentConcatenation|.  Instances of this class exist only as anonymous
+      temporary results from |Substring()|.  Like |nsDependentConcatenation|, this class only
       holds a pointer, no string data of its own.  It does its magic by overriding and forwarding
       calls to |GetReadableFragment()|.
     */
@@ -110,7 +110,7 @@ class NS_COM nsPromiseCSubstring
       virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsPromiseCSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+      nsDependentCSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
             mStartPos( NS_MIN(aStartPos, aString.Length()) ),
             mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
@@ -118,7 +118,7 @@ class NS_COM nsPromiseCSubstring
           // nothing else to do here
         }
 
-      nsPromiseCSubstring( const const_iterator& aStart, const const_iterator& aEnd )
+      nsDependentCSubstring( const const_iterator& aStart, const const_iterator& aEnd )
           : mString(aStart.string())
         {
           const_iterator zeroPoint;
@@ -127,12 +127,12 @@ class NS_COM nsPromiseCSubstring
           mLength = Distance(aStart, aEnd);
         }
 
-      // nsPromiseCSubstring( const nsPromiseCSubstring& ); // auto-generated copy-constructor should be OK
-      // ~nsPromiseCSubstring();                            // auto-generated destructor OK
+      // nsDependentCSubstring( const nsDependentCSubstring& ); // auto-generated copy-constructor should be OK
+      // ~nsDependentCSubstring();                            // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsPromiseCSubstring& );         // we're immutable, you can't assign into a substring
+      void operator=( const nsDependentCSubstring& );         // we're immutable, you can't assign into a substring
 
     public:
       virtual PRUint32 Length() const;
@@ -151,32 +151,32 @@ class NS_COM nsPromiseCSubstring
 
 
 inline
-const nsPromiseCSubstring
+const nsDependentCSubstring
 Substring( const nsACString& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
-    return nsPromiseCSubstring(aString, aStartPos, aSubstringLength);
+    return nsDependentCSubstring(aString, aStartPos, aSubstringLength);
   }
 
 inline
-const nsPromiseSubstring
+const nsDependentSubstring
 Substring( const nsAString& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
-    return nsPromiseSubstring(aString, aStartPos, aSubstringLength);
+    return nsDependentSubstring(aString, aStartPos, aSubstringLength);
   }
 
 inline
-const nsPromiseCSubstring
+const nsDependentCSubstring
 Substring( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
   {
-    return nsPromiseCSubstring(aStart, aEnd);
+    return nsDependentCSubstring(aStart, aEnd);
   }
 
 inline
-const nsPromiseSubstring
+const nsDependentSubstring
 Substring( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
   {
-    return nsPromiseSubstring(aStart, aEnd);
+    return nsDependentSubstring(aStart, aEnd);
   }
 
 
-#endif /* !defined(nsPromiseSubstring_h___) */
+#endif /* !defined(nsDependentSubstring_h___) */

@@ -21,5 +21,5 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-#include "nsLocalString.h"
+#include "nsDependentString.h"
 
