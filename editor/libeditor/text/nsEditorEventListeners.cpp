@@ -131,7 +131,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   {
     if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
     {
-      if (nsIDOMUIEvent::VK_TAB==keyCode)
+      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode)
       {
         nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
         PRUint32 flags=0;
@@ -203,19 +203,19 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // so look for special keys using keyCode
     if (0==charCode)
     {
-      if (nsIDOMUIEvent::VK_BACK==keyCode) 
+      if (nsIDOMUIEvent::DOM_VK_BACK==keyCode) 
       {
         mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
-      if (nsIDOMUIEvent::VK_DELETE==keyCode)
+      if (nsIDOMUIEvent::DOM_VK_DELETE==keyCode)
       {
         mEditor->DeleteSelection(nsIEditor::eDeleteNext);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
-      if (nsIDOMUIEvent::VK_TAB==keyCode)
+      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode)
       {
         if (metaKey || altKey)  // why block option-tab?
           return NS_OK;   // don't consume
@@ -230,7 +230,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // "I handled the event, don't do default processing"
       }
-      if (nsIDOMUIEvent::VK_RETURN==keyCode) 
+      if (nsIDOMUIEvent::DOM_VK_RETURN==keyCode) 
       {
         PRUint32 flags=0;
         mEditor->GetFlags(&flags);
@@ -250,8 +250,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     
     if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey))
     {
-      // XXX: this must change.  vk_tab must be handled here, not in keyDown
-      if (nsIDOMUIEvent::VK_TAB==keyCode) 
+      // XXX: this must change.  DOM_VK_tab must be handled here, not in keyDown
+      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
       }
@@ -312,7 +312,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     switch (keyCode)
     {
       // XXX: hard-coded select all
-      case nsIDOMUIEvent::VK_A:
+      case nsIDOMUIEvent::DOM_VK_A:
       case (PRUint32)('a'):
         if (PR_TRUE==ctrlKey)
         {
@@ -322,7 +322,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded cut
-      case nsIDOMUIEvent::VK_X:
+      case nsIDOMUIEvent::DOM_VK_X:
       case (PRUint32)('x'):
         if (PR_TRUE==ctrlKey)
         {
@@ -354,7 +354,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded copy
-      case nsIDOMUIEvent::VK_C:
+      case nsIDOMUIEvent::DOM_VK_C:
       case (PRUint32)('c'):
         if (PR_TRUE==ctrlKey)
         {
@@ -377,7 +377,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      case nsIDOMUIEvent::VK_OPEN_BRACKET:
+      case nsIDOMUIEvent::DOM_VK_OPEN_BRACKET:
         // hard coded "Decrease wrap size"
         if (PR_TRUE==altKey)
         {
@@ -402,7 +402,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      case nsIDOMUIEvent::VK_CLOSE_BRACKET:
+      case nsIDOMUIEvent::DOM_VK_CLOSE_BRACKET:
         // hard coded "Increase wrap size"
         if (PR_TRUE==altKey)
         {
@@ -428,7 +428,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // Hard coded "No wrap" or "wrap to window size"
-      case nsIDOMUIEvent::VK_BACK_SLASH:
+      case nsIDOMUIEvent::DOM_VK_BACK_SLASH:
       {
         if (PR_TRUE==ctrlKey)
         {
@@ -453,7 +453,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
       }
 
       // XXX: hard-coded paste
-      case nsIDOMUIEvent::VK_V:
+      case nsIDOMUIEvent::DOM_VK_V:
       case (PRUint32)('v'):
         if (PR_TRUE==ctrlKey)
         {
@@ -473,7 +473,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded undo
-      case nsIDOMUIEvent::VK_Z:
+      case nsIDOMUIEvent::DOM_VK_Z:
       case (PRUint32)('z'):
         if (PR_TRUE==ctrlKey)
         {
@@ -483,7 +483,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // XXX: hard-coded redo
-      case nsIDOMUIEvent::VK_Y:
+      case nsIDOMUIEvent::DOM_VK_Y:
       case (PRUint32)('y'):
         if (PR_TRUE==ctrlKey)
         {
@@ -493,7 +493,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- italics
-      case nsIDOMUIEvent::VK_I:
+      case nsIDOMUIEvent::DOM_VK_I:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -528,7 +528,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- bold
-      case nsIDOMUIEvent::VK_B:
+      case nsIDOMUIEvent::DOM_VK_B:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -551,7 +551,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- underline
-      case nsIDOMUIEvent::VK_U:
+      case nsIDOMUIEvent::DOM_VK_U:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -574,7 +574,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font color red
-      case nsIDOMUIEvent::VK_1:
+      case nsIDOMUIEvent::DOM_VK_1:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -599,7 +599,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- remove font color
-      case nsIDOMUIEvent::VK_2:
+      case nsIDOMUIEvent::DOM_VK_2:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -623,7 +623,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font size +2
-      case nsIDOMUIEvent::VK_3:
+      case nsIDOMUIEvent::DOM_VK_3:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -642,7 +642,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font size -2
-      case nsIDOMUIEvent::VK_4:
+      case nsIDOMUIEvent::DOM_VK_4:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -661,7 +661,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font face helvetica
-      case nsIDOMUIEvent::VK_5:
+      case nsIDOMUIEvent::DOM_VK_5:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -680,7 +680,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded ChangeTextAttributes test -- font face times
-      case nsIDOMUIEvent::VK_6:
+      case nsIDOMUIEvent::DOM_VK_6:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -699,7 +699,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- transform block H1
-      case nsIDOMUIEvent::VK_7:
+      case nsIDOMUIEvent::DOM_VK_7:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -713,7 +713,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- transform block H2
-      case nsIDOMUIEvent::VK_8:
+      case nsIDOMUIEvent::DOM_VK_8:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -727,7 +727,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- normal
-      case nsIDOMUIEvent::VK_9:
+      case nsIDOMUIEvent::DOM_VK_9:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -738,7 +738,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- GetParagraphStyle
-      case nsIDOMUIEvent::VK_0:
+      case nsIDOMUIEvent::DOM_VK_0:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -764,7 +764,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- block blockquote (indent)
-      case nsIDOMUIEvent::VK_COMMA:
+      case nsIDOMUIEvent::DOM_VK_COMMA:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -778,7 +778,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         break;
 
       // hard-coded change structure test -- un-BlockQuote
-      case nsIDOMUIEvent::VK_PERIOD:
+      case nsIDOMUIEvent::DOM_VK_PERIOD:
         if (PR_TRUE==ctrlKey)
         {
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -794,7 +794,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
 #ifdef NS_DEBUG
       // hard-coded Text Editor Unit Test
-      case nsIDOMUIEvent::VK_T:
+      case nsIDOMUIEvent::DOM_VK_T:
         if (PR_TRUE==ctrlKey)
         {
           if (mEditor)
