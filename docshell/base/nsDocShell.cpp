@@ -121,7 +121,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
-#include "nsICacheEntryDescriptor.h"
+#include "nsICacheVisitor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIWyciwygChannel.h"
 
@@ -6372,7 +6372,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     }
     if (cacheToken) {
         // Check if the page has expired from cache 
-        nsCOMPtr<nsICacheEntryDescriptor> cacheEntryInfo(do_QueryInterface(cacheToken));
+        nsCOMPtr<nsICacheEntryInfo> cacheEntryInfo(do_QueryInterface(cacheToken));
         if (cacheEntryInfo) {        
             PRUint32 expTime;         
             cacheEntryInfo->GetExpirationTime(&expTime);         
