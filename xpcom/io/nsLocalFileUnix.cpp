@@ -1321,6 +1321,16 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
                                (void **)entries);
 }
 
+NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary **_retval)
 {

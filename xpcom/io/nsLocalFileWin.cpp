@@ -1848,6 +1848,55 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
+{
+    nsresult rv;
+    char* ePath = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+    if (ePath == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+#if defined (XP_PC)
+    // Replace \ with / to convert to an url
+    char* s = ePath;
+    while (*s)
+    {
+        // We need to call IsDBCSLeadByte because
+        // Japanese windows can have 0x5C in the sencond byte 
+        // of a Japanese character, for example 0x8F 0x5C is
+        // one Japanese character
+        if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+            s++;
+        } else 
+            if (*s == '\\')
+                *s = '/';
+        s++;
+    }
+#endif
+    // Escape the path with the directory mask
+    nsCAutoString tmp(ePath);
+    tmp.ReplaceChar(":", '|');
+    nsCAutoString escPath("file://");
+	escPath += tmp;
+//    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
+//    if (NS_SUCCEEDED(rv)) {
+        PRBool dir;
+        rv = IsDirectory(&dir);
+        if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+            // make sure we have a trailing slash
+            escPath += "/";
+        }
+        *aURL = escPath.ToNewCString();
+        if (*aURL == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+//    }
+
+    return rv;
+}
+
+NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
 {
