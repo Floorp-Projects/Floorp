@@ -460,12 +460,12 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
 PR_IMPLEMENT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
 static double  gammaValue = 2.2;
 
-double NS_DisplayGammaValue(void)
+extern "C" NS_GFX_(double) NS_DisplayGammaValue(void)
 {
   return gammaValue;
 }
 
-void NS_InitializeGamma(void)
+extern "C" NS_GFX_(void) NS_InitializeGamma(void)
 {
   nsresult result;
 

@@ -124,8 +124,8 @@ extern "C" NS_GFX_(void) NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,
 // Gamma correction
 PR_EXPORT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
 
-double  NS_DisplayGammaValue(void);
-void    NS_InitializeGamma(void);
+extern "C" NS_GFX_(double) NS_DisplayGammaValue(void);
+extern "C" NS_GFX_(void)   NS_InitializeGamma(void);
 
 #define NS_GAMMA_CORRECT_COMPONENT(x)          (nsGammaRamp[x])
 #define NS_INVERSE_GAMMA_CORRECT_COMPONENT(x)  (nsInverseGammaRamp[x])
