@@ -69,7 +69,7 @@ nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
 {
   if (mPos >= mLen) {
     *aReadCount = 0;
-    return -1;
+    return (nsresult)-1;
   }
   const PRUnichar* us = mString->GetUnicode();
   PRInt32 amount = mLen - mPos;
