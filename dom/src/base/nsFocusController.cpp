@@ -268,6 +268,9 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   if (!shell)
     return NS_OK;
 
+  // Make sure frames have been constructed before shifting focus, bug 273092.
+  shell->FlushPendingNotifications(Flush_Frames);
+
   // Retrieve the context
   nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
 
