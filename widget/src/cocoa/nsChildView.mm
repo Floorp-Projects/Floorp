@@ -1707,9 +1707,13 @@ nsChildView::GetQuickDrawPort()
   mGeckoChild->DispatchMouseEvent(geckoEvent);
   
   // Go up our view chain to fetch the correct menu to return.
-  return [[self superview] getContextMenu];
+  return [self getContextMenu];
 }
 
+-(NSMenu*)getContextMenu
+{
+  return [[self superview] getContextMenu];
+}
 
 //
 // initWithGeckoChild:eventSink:

@@ -94,6 +94,8 @@ class nsIEventSink;
            isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
+-(NSMenu*)getContextMenu;
+
 @end
 
 
