@@ -19,11 +19,7 @@
 #define _NAVJAVA_H_
 
 #include "lo_ele.h"
-#ifndef NSPR20
-#include "prevent.h"
-#else
 #include "plevent.h"
-#endif
 #include "jri.h"
 #include "prthread.h"
 
