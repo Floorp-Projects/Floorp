@@ -28,7 +28,7 @@ class nsINetPluginInstance : public nsISupports {
 public:
 
     NS_IMETHOD
-    Initialize(nsINetOStream* out_stream) = 0;
+    Initialize(nsINetOStream* out_stream, const char *stream_name) = 0;
 
     NS_IMETHOD
     GetMIMEOutput(const char* *result) = 0;

@@ -224,7 +224,7 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 		return NULL;
 	}
 
-	plugin_inst->Initialize(out_stream);
+	plugin_inst->Initialize(out_stream, URL_s->address);
 
 	if (NS_OK != plugin_inst->QueryInterface(kINetOStreamIID, (void **)&instance_stream))
 	{
