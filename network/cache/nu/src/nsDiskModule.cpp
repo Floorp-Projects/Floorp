@@ -499,8 +499,11 @@ char* FullFilename(const char* i_Filename)
     if (0==cacheFolderLength)
         cacheFolderLength = PL_strlen(nsCachePref::GetInstance()->DiskCacheFolder());
 #ifndef XP_MAC
-    g_FullFilename[cacheFolderLength] = PR_GetDirectorySepartor(); //spelling check later as nspr fixes it. 
-    g_FullFilename[cacheFolderLength+1] = '\0';
+	if (g_FullFilename[cacheFolderLength-1]!=PR_GetDirectorySeparator())
+	{
+		g_FullFilename[cacheFolderLength] = PR_GetDirectorySeparator(); 
+		g_FullFilename[cacheFolderLength+1] = '\0';
+	}
 #endif
     PL_strcat(g_FullFilename, i_Filename);
     return g_FullFilename;
