@@ -193,6 +193,46 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 	return rv;
 }
 
+NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL) 
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsXPIDLCString msgKey;
+  rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+	if (NS_SUCCEEDED(rv))
+	{
+    nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+		if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl;
+      nsCAutoString urlSpec;
+      rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, nsnull, urlSpec);
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
+      nsXPIDLCString currentSpec;
+      url->GetSpec(getter_Copies(currentSpec));
+      urlSpec = currentSpec;
+
+	    char hierarchySeparator = '/'; // ### fixme - should get from folder
+		  urlSpec.Append("fetch>");
+		  urlSpec.Append(uidString);
+		  urlSpec.Append(">");
+		  urlSpec.Append(hierarchySeparator);
+
+      nsCString folderName;
+      GetFolderName(folder, folderName);
+		  urlSpec.Append(folderName.GetBuffer());
+		  urlSpec.Append(">");
+		  urlSpec.Append(msgKey);
+		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
+      imapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
+    }
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
@@ -203,7 +243,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
     nsCOMPtr<nsIMsgFolder> folder;
     nsXPIDLCString msgKey;
 
-    rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+  rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
 	if (NS_SUCCEEDED(rv))
 	{
     	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
@@ -431,7 +471,7 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
                                     nsIUrlListener * aUrlListener,
                                     nsCString & urlSpec)
 {
-	nsresult rv = NS_OK;
+	  nsresult rv = NS_OK;
     char *hostname = nsnull;
     char *username = nsnull;
     

@@ -181,14 +181,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIMsgMessageService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL);
-
-	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURI ** aURL);
-
-	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
-								 nsIUrlListener *aUrlListener, nsIURI **aURL);
+  NS_DECL_NSIMSGMESSAGESERVICE
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIProtocolHandler interface 

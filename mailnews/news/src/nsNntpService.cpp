@@ -102,7 +102,7 @@ NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
     // now create a url with this uri spec
     nsCOMPtr<nsIURI> myuri;
 
-    rv = ConstructNntpUrl(uri, newsgroupName, key, nsnull, aUrlListener, getter_AddRefs(myuri));
+    rv = ConstructNntpUrl(uri, newsgroupName, key, aUrlListener, getter_AddRefs(myuri));
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(myuri);
@@ -150,7 +150,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   // now create a url with this uri spec
   nsCOMPtr<nsIURI> myuri;
 
-  rv = ConstructNntpUrl(uri, newsgroupName, key, aDisplayConsumer, aUrlListener, getter_AddRefs(myuri));
+  rv = ConstructNntpUrl(uri, newsgroupName, key, aUrlListener, getter_AddRefs(myuri));
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(myuri);
@@ -173,6 +173,26 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   }
 
   return rv;
+}
+
+NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL) 
+{
+  nsresult rv = NS_OK;
+  nsCAutoString uri(aMessageURI);
+  nsCAutoString newsgroupName;
+  nsMsgKey key = nsMsgKey_None;
+    
+  if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0)
+  {
+	  rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri, newsgroupName, &key);
+    if (NS_SUCCEEDED(rv))
+      rv = ConstructNntpUrl(uri, newsgroupName, key, nsnull, aURL);
+  }
+  else 
+    rv = NS_ERROR_UNEXPECTED;
+
+  return rv;
+
 }
 
 nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, nsCString &newsURI, nsCString &newsgroupName, nsMsgKey *key)
@@ -658,7 +678,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   return rv;
 }
 
-nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener,  nsIURI ** aUrl)
+nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIURI ** aUrl)
 {
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
@@ -774,7 +794,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
     }
     
 	nsCOMPtr<nsIURI> aUrl;
-	rv = ConstructNntpUrl(uriStr, newsgroupName, nsMsgKey_None, nsnull, aUrlListener,  getter_AddRefs(aUrl));
+	rv = ConstructNntpUrl(uriStr, newsgroupName, nsMsgKey_None, aUrlListener,  getter_AddRefs(aUrl));
 	if (NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(aUrl);
 	if (nntpUrl)
@@ -862,7 +882,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
 
   nsCAutoString newsgroupNameStr(newsgroupname);
   nsCOMPtr<nsIURI> url;
-  rv = ConstructNntpUrl(urlStr, newsgroupNameStr, key, aConsumer, aUrlListener,  getter_AddRefs(url));
+  rv = ConstructNntpUrl(urlStr, newsgroupNameStr, key, aUrlListener,  getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(url);
   if (nntpUrl)

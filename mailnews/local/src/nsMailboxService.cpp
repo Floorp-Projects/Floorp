@@ -159,6 +159,16 @@ NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFi
 	return rv;
 }
 
+NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMailboxUrl> mailboxurl;
+  rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl));
+  if (NS_SUCCEEDED(rv) && mailboxurl)
+    rv = mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
+  return rv;
+}
+
 nsresult nsMailboxService::DisplayMessageNumber(const char *url,
                                                 PRUint32 aMessageNumber,
                                                 nsISupports * aDisplayConsumer,
