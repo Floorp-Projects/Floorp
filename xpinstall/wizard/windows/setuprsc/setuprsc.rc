@@ -206,7 +206,7 @@ DLG_BROWSE_DIR DIALOGEX 147, 23, 190, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_NOPARENTNOTIFY
 CAPTION "Select a directory"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_DESTINATION,8,16,177,12,ES_AUTOHSCROLL | 
                     ES_OEMCONVERT | NOT WS_BORDER,WS_EX_CLIENTEDGE
@@ -331,6 +331,7 @@ BEGIN
     IDS_STR_FILENAME        "Filename:"
     IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
     IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
+    IDS_ERROR_XPI_INSTALL   "Error ocurred during installation"
 END
 
 #endif    // English (U.S.) resources

@@ -2,31 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
-
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Communicator client code,
- * released March 31, 1998.
- *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
- * Reserved.
- *
- * Contributors:
- *     Sean Su <ssu@netscape.com>
- */
-
 #define IDS_ERROR_DIALOG_CREATE         1
 #define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3
@@ -49,6 +24,7 @@
 #define IDS_STR_FILENAME                20
 #define IDS_MSG_SMARTUPDATE_START       21
 #define IDS_MSG_CONFIGURING             22
+#define IDS_ERROR_XPI_INSTALL           23
 #define IDI_ICON1                       105
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108

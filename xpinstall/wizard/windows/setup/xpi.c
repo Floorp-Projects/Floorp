@@ -140,6 +140,7 @@ HRESULT SmartUpdateJars()
   siC       *siCObject = NULL;
   HRESULT   hrResult;
   char      szBuf[MAX_BUF];
+  char      szEXpiInstall[MAX_BUF];
   char      szArchive[MAX_BUF];
   char      szMsgSmartUpdateStart[MAX_BUF];
 
@@ -194,7 +195,19 @@ HRESULT SmartUpdateJars()
             }
           }
         }
+
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
+        if(hrResult != WIZ_OK)
+        {
+          if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
+          {
+            wsprintf(szBuf, "%d: %s", hrResult, szEXpiInstall);
+            PrintError(szBuf, ERROR_CODE_HIDE);
+          }
+
+          /* break out of the while loop */
+          break;
+        }
 
         ++dwCurrentArchive;
         UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
@@ -215,7 +228,7 @@ HRESULT SmartUpdateJars()
 
   DeInitializeXPIStub();
 
-  return(0);
+  return(hrResult);
 }
 
 void cbXPIStart(const char *URL, const char *UIName)
