@@ -70,10 +70,11 @@ nsresult GetListItemState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retva
 #define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
 #define STATE_ENABLED  NS_ConvertASCIItoUCS2("state_enabled")
 #define STATE_ALL NS_ConvertASCIItoUCS2("state_all")
+#define STATE_ATTRIBUTE NS_ConvertASCIItoUCS2("state_attribute")
 #define STATE_BEGIN NS_ConvertASCIItoUCS2("state_begin")
 #define STATE_END NS_ConvertASCIItoUCS2("state_end")
 #define STATE_MIXED NS_ConvertASCIItoUCS2("state_mixed")
-#define STATE_STRING NS_ConvertASCIItoUCS2("state_string")
+
 
 
 nsBaseComposerCommand::nsBaseComposerCommand()
@@ -989,16 +990,8 @@ nsMultiStateCommand::DoCommandParams(nsICommandParams *aParams, nsISupports *ref
       // what format to set the paragraph to
       nsAutoString tValue;
       nsresult rv;
-      if (NS_SUCCEEDED(rv = aParams->GetStringValue(COMMAND_NAME,tValue)))
-      {
-        nsAutoString stateAttribute;    
-#if 0
-        rv = GetCommandNodeState(tValue, editor, stateAttribute);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = SetState(editor, stateAttribute);
-#endif
-      }
+      aParams->GetStringValue(STATE_ATTRIBUTE,tValue);
+      rv = SetState(editor, tValue);
   }
   
   return rv;  
@@ -1078,7 +1071,7 @@ nsParagraphStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *a
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetStringValue(STATE_STRING, outStateString);
+    aParams->SetStringValue(STATE_ATTRIBUTE, outStateString);
   }
   return rv;
 }
@@ -1143,7 +1136,7 @@ nsFontFaceStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aP
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetStringValue(STATE_STRING,outStateString);
+    aParams->SetStringValue(STATE_ATTRIBUTE,outStateString);
   }
   return rv;
 }
@@ -1247,7 +1240,7 @@ nsFontColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString&
 nsresult
 nsFontColorStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
 {
-  NS_ASSERTION(aEditor, "Need an editor shell here");
+  NS_ASSERTION(aEditor, "Need an editor here");
   
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
@@ -1258,7 +1251,7 @@ nsFontColorStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *a
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetStringValue(STATE_STRING,outStateString);
+    aParams->SetStringValue(STATE_ATTRIBUTE,outStateString);
   }
   return rv;
 }
@@ -1345,7 +1338,7 @@ nsHighlightColorStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandPara
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetStringValue(STATE_STRING,outStateString);
+    aParams->SetStringValue(STATE_ATTRIBUTE,outStateString);
   }
   return rv;
 }
@@ -1458,7 +1451,7 @@ nsBackgroundColorStateCommand::GetCurrentState(nsIEditor *aEditor, nsICommandPar
   if (NS_SUCCEEDED(rv))
   {
     aParams->SetBooleanValue(STATE_MIXED, outMixed);
-    aParams->SetStringValue(STATE_STRING, outStateString);
+    aParams->SetStringValue(STATE_ATTRIBUTE, outStateString);
   }
   return rv;
 }
@@ -1568,7 +1561,7 @@ nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
       break;
   }
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
-  aParams->SetStringValue(STATE_STRING, outStateString);
+  aParams->SetStringValue(STATE_ATTRIBUTE, outStateString);
   return NS_OK;
 }
 
