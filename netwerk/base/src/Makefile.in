@@ -46,10 +46,9 @@ MKSHLIB :=
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
+
 include $(DEPTH)/config/rules.mk
-
-
-
-
-
-

@@ -35,8 +35,8 @@ CPPSRCS =			   \
         nsHTTPResponse.cpp	   \
         $(NULL)
 
-EXPORTS=		\
-	nsHTTPCID.h	\
+EXPORTS=			\
+	nsHTTPCID.h		\
 	$(NULL)
 
 REQUIRES = xpcom netwerk raptor
@@ -44,6 +44,11 @@ REQUIRES = xpcom netwerk raptor
 MODULE = netwerk
 
 include $(topsrcdir)/config/config.mk
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
 
 TARGET = $(LIBARY)
 

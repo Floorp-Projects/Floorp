@@ -37,6 +37,11 @@ REQUIRES = xpcom netwerk raptor
 
 include $(topsrcdir)/config/config.mk
 
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
+
 TARGET = $(LIBARY)
 
 include $(DEPTH)/config/rules.mk
