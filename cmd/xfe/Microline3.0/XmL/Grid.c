@@ -312,6 +312,12 @@ static int _XmLGridCellGetHeight(XmLGridCell cell, Widget w,XmLGridRow row);
 static int _XmLGridCellGetWidth(XmLGridCell cell, Widget w,XmLGridColumn col);
 static void _XmLGridCellFreeValue(XmLGridCell cell);
 
+/*Xfe Additions*/
+static Boolean XmLGridCellDrawSort(XmLGridCell cell);
+static Boolean XmLGridCellSortAscending(XmLGridCell cell);
+static void XmLGridCellSetDrawSort(XmLGridCell cell, Boolean drawSort);
+static void XmLGridCellSetSortAscending(XmLGridCell cell, Boolean ascending);
+
 static XtActionsRec actions[] =
 	{
 	{ "XmLGridEditComplete", EditComplete },
@@ -1037,6 +1043,12 @@ static XtResource resources[] =
 		XmRBoolean, sizeof(Boolean),
 		XtOffset(XmLGridWidget, grid.colHidden),
 		XmRImmediate, (XtPointer)FALSE,
+		},
+		{
+		XmNcolumnSortType, XmCColumnSortType,
+		XmRColumnSortType, sizeof(unsigned char),
+		XtOffset(XmLGridWidget, grid.colSortType),
+		XmRImmediate, (XtPointer)XmSORT_NONE,
 		},
 		/* Cell Resources */
 		{
@@ -3183,6 +3195,19 @@ HorizLayout(XmLGridWidget g,
 			midWidth = 0;
 		else
 			midWidth = st2;
+
+        /* This assumes the show/hide buttons will be wider 
+           than the vertical scrollbar
+         */
+        if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+            {
+            if (g->grid.hideUnhideButtons)
+                midWidth += XtWidth(g->grid.hideButton) * 2;
+            else if (XtIsManaged(g->grid.vsb))
+                midWidth += XtWidth(g->grid.vsb);
+            }
+
+
 		for (i = leftNCol; i < colCount - rightNCol; i++)
 			midWidth += GetColWidth(g, i);
 		midCol = leftNCol;
@@ -3882,7 +3907,11 @@ PosIsResize(XmLGridWidget g,
                 {
                   colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, c);
                   
-                  if (colp->grid.resizable)
+                  if (colp->grid.resizable
+                      && (g->grid.hsPolicy != XmRESIZE_IF_POSSIBLE
+                          || (g->grid.visibleCols == 0
+                              || c < g->grid.visibleCols))
+                     )
                     {
                       foundResizable = True;
                       break;
@@ -5620,7 +5649,8 @@ _GetColumnValueMask(XmLGridWidget g,
 		    char *s,
 		    long *mask)
 	{
-	static XrmQuark qWidth, qSizePolicy, qUserData, qResizable, qHidden;
+	static XrmQuark qWidth, qSizePolicy, qUserData, qResizable;
+    static XrmQuark qHidden, qSortType;
 	static int quarksValid = 0;
 	XrmQuark q;
 
@@ -5631,6 +5661,7 @@ _GetColumnValueMask(XmLGridWidget g,
 		qUserData = XrmStringToQuark(XmNcolumnUserData);
 		qResizable = XrmStringToQuark(XmNcolumnResizable);
 		qHidden = XrmStringToQuark(XmNcolumnHidden);
+		qSortType = XrmStringToQuark(XmNcolumnSortType);
 		quarksValid = 1;
 		}
 	q = XrmStringToQuark(s);
@@ -5644,6 +5675,8 @@ _GetColumnValueMask(XmLGridWidget g,
 			*mask |= XmLGridColumnResizable;
 	else if (q == qHidden)
 			*mask |= XmLGridColumnHidden;
+	else if (q == qSortType)
+			*mask |= XmLGridColumnSortType;
 	}
 
 static void
@@ -5678,6 +5711,9 @@ _GetColumnValue(XmLGridWidget g,
 			break;
 		case XmLGridColumnHidden:
 			*((Boolean *)value) = col->grid.hidden;
+			break;
+		case XmLGridColumnSortType:
+			*((unsigned char *)value) = col->grid.sort;
 			break;
 
 		}
@@ -5739,6 +5775,8 @@ _SetColumnValues(XmLGridWidget g, XmLGridColumn col, long mask)
 		col->grid.resizable = g->grid.colResizable;
 	if (mask & XmLGridColumnHidden)
 		col->grid.hidden = g->grid.colHidden;
+	if (mask & XmLGridColumnSortType)
+        XmLGridSetSort((Widget)g, XmLGridColumnGetPos(col), g->grid.colSortType);
 	return needsResize;
 	}
 
@@ -7498,8 +7536,9 @@ Select(Widget w,
 	/* double click activate check */
 	if (q == qBEGIN && be)
 		{
-		if (row != -1 && col != -1 &&
-			row == g->grid.lastSelectRow && col == g->grid.lastSelectCol)
+		if (row != -1 && col != -1
+            && row == g->grid.focusRow && col == g->grid.focusCol
+            )
             {
             int doubleClickTime = XtGetMultiClickTime(dpy);
             Time timeSinceLastClick = be->time - g->grid.lastSelectTime;
@@ -8702,6 +8741,37 @@ XmLGridCellSetSelected(XmLGridCell cell,
 		cell->cell.flags ^= XmLGridCellSelectedFlag;
 	}
 
+/*Xfe Additions*/
+static Boolean
+XmLGridCellDrawSort(XmLGridCell cell)
+	{
+	if (cell->cell.flags & XmLGridCellDrawSortFlag)
+		return True;
+	return False;
+	}
+static Boolean
+XmLGridCellSortAscending(XmLGridCell cell)
+	{
+	if (cell->cell.flags & XmLGridCellSortAscendingFlag)
+		return True;
+	return False;
+	}
+static void
+XmLGridCellSetDrawSort(XmLGridCell cell, Boolean drawSort)
+	{
+	cell->cell.flags |= XmLGridCellDrawSortFlag;
+	if (drawSort != True)
+		cell->cell.flags ^= XmLGridCellDrawSortFlag;
+	}
+static void
+XmLGridCellSetSortAscending(XmLGridCell cell, Boolean ascending)
+	{
+	cell->cell.flags |= XmLGridCellSortAscendingFlag;
+	if (ascending != True)
+		cell->cell.flags ^= XmLGridCellSortAscendingFlag;
+	}
+
+
 static void
 XmLGridCellAllocIcon(XmLGridCell cell)
 	{
@@ -9108,6 +9178,29 @@ _XmLGridCellDrawValue(XmLGridCell cell,
 			ds->background, g->grid.toggleTopColor,
 			g->grid.toggleBotColor, ds->foreground,
 			&cellRect, clipRect);
+
+    if (cellRect.width > cellRect.height - 4 && XmLGridCellDrawSort(cell))
+		{
+        int arrow_direction = XmLGridCellSortAscending(cell);
+        int arrow_size = cellRect.height * 0.75;
+
+		if (arrow_size > 0)
+			{
+			XSetForeground(dpy, ds->gc, ds->background);
+					
+			_XmDrawArrow(dpy, XtWindow(w),
+						 ((XmManagerWidget)g)->manager.bottom_shadow_GC,
+						 ((XmManagerWidget)g)->manager.top_shadow_GC,
+						 ds->gc,
+						 cellRect.x + cellRect.width - arrow_size - 2,
+						 cellRect.y + (cellRect.height / 2 - arrow_size / 2),
+						 arrow_size,
+						 arrow_size,
+						 2,
+						 arrow_direction);
+			}
+		}
+
 	}
 
 /* Only to be called by XmLGridCellAction() */
@@ -11016,16 +11109,16 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
        also total how much of that can be resized */
     delta = g->core.width;
     delta -= g->manager.shadow_thickness * 2;
-#if 0
+
 	if (g->grid.hideUnhideButtons)
         {
-            delta -= 24;
-        }
-	if (XtIsManaged(g->grid.vsb))
+            delta -= g->grid.unhideButton->core.width;
+            delta -= g->grid.hideButton->core.width;
+        } 
+    else if (XtIsManaged(g->grid.vsb))
 		{
             delta -= g->grid.vsb->core.width; 
 		}
-#endif        
 
     num_columns = g->grid.colCount + g->grid.headingColCount
         + g->grid.footerColCount;
@@ -11103,6 +11196,96 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 
 	return delta;
 }
+
+
+void
+XmLGridGetSort(Widget w, int *column, unsigned char *sortType)
+{
+    XmLGridWidget g = (XmLGridWidget)w;
+    XmLGridColumn colp;
+    int num_columns = XmLArrayGetCount(g->grid.colArray);
+    int ii;
+
+    *column = 0;
+    *sortType = XmSORT_NONE;
+
+    for (ii = 0; ii < num_columns; ii ++)
+    {
+        colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
+
+        if (colp && colp->grid.sort != XmSORT_NONE)
+        {
+            *column = ii;
+            *sortType = colp->grid.sort;
+            break;
+        }
+    }
+}
+
+void
+XmLGridSetSort(Widget w, int column, unsigned char sortType)
+{
+    XmLGridWidget g = (XmLGridWidget)w;
+    XmLGridRow rowp;
+    XmLGridColumn colp;
+    XmLGridCell cellp;
+    int old_sort_column;
+    unsigned char old_sort_type;
+
+    /*printf("XmLGridSetSort: (%d,%s)\n", column,
+           sortType == XmSORT_NONE ? "none" : 
+           sortType == XmSORT_ASCENDING ? "ascending" : "descending");
+     */
+     
+    /* Clear old sort resource */
+    XmLGridGetSort(w, &old_sort_column, &old_sort_type);
+    if (old_sort_type != XmSORT_NONE)
+    {
+        colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, old_sort_column);
+        if (colp)
+            colp->grid.sort = XmSORT_NONE;
+    }
+
+    colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, column);
+    colp->grid.sort = sortType;
+
+    /* Clear any existing cell sort masks. */
+    rowp = (XmLGridRow)XmLArrayGet(g->grid.rowArray, 0);
+    if (rowp)
+    {
+        int ii, count;
+        
+        count = XmLArrayGetCount(rowp->grid.cellArray);
+        for (ii = 0; ii < count; ii++)
+        {
+            cellp = (XmLGridCell)XmLArrayGet(rowp->grid.cellArray, ii);
+
+            if (XmLGridCellDrawSort(cellp))
+            {
+                DrawArea(g, DrawCell, 0, ii);
+                XmLGridCellSetDrawSort(cellp, False);
+            }
+        }
+    }
+    
+    /* Set the cell mask of the heading cell. */
+    cellp = GetCell(g, 0, column);
+    
+    if (cellp)
+    {
+        XmLGridCellSetDrawSort(cellp, True);
+        if (sortType == XmSORT_NONE)
+            XmLGridCellSetDrawSort(cellp, False);
+        else if (sortType == XmSORT_ASCENDING)
+            XmLGridCellSetSortAscending(cellp, True);
+        else if (sortType == XmSORT_DESCENDING)
+            XmLGridCellSetSortAscending(cellp, False);
+
+		DrawArea(g, DrawCell, 0, column);
+    }
+    
+}
+
 /*----------------------------------------------------------------------*/
 static void
 GridInvokeCallbacks(Widget			w,
