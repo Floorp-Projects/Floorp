@@ -21,7 +21,7 @@
  *   L. David Baron <dbaron@fas.harvard.edu> (original author)
  */
 
-#include "../base/nsAutoPtr.h"
+#include "nsAutoPtr.h"
 #include <stdio.h>
 #include "nsCom.h"
 
@@ -303,6 +303,7 @@ int main()
                ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
     }
 
+#if 0 /* MSVC++ 6.0 can't be coaxed to accept this */
     {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
         TestRefObject * const p2 = p1;
@@ -316,6 +317,7 @@ int main()
         printf("equality %s.\n",
                ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
     }
+#endif /* Things that MSVC++ 6.0 can't be coaxed to accept */
 
     {
         nsRefPtr<const TestRefObject> p1( new TestRefObject() );
