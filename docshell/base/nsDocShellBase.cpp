@@ -96,7 +96,7 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
-  doc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDocument);
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
