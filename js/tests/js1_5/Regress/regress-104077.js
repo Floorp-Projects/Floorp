@@ -40,6 +40,9 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=104077
 * "JS crash: with/finally/return"
 *
+* Also http://bugzilla.mozilla.org/show_bug.cgi?id=120571
+* "JS crash: try/catch/continue."
+*
 * SpiderMonkey crashed on this code - it shouldn't.
 *
 * NOTE: the finally-blocks below should execute even if their try-blocks
@@ -529,6 +532,46 @@ obj = {p:43};
 actual = testObj(obj);
 expect = 999;
 captureThis();
+
+
+
+/*
+ * Next two cases are from http://bugzilla.mozilla.org/show_bug.cgi?id=120571
+ */
+function a120571()
+{
+  while(0)
+  {
+    try
+    {
+    }
+    catch(e)
+    {
+      continue;
+    }
+  }
+}
+
+print(a120571); // this caused a crash !
+
+
+
+
+function b()
+{
+  for(;;)
+  {
+    try
+    {
+    }
+    catch(e)
+    {
+      continue;
+    }
+  }
+}
+
+print(b); // this caused a crash !
 
 
 
