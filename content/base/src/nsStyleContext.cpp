@@ -2357,7 +2357,15 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       }
       // reset all font data for tables again
       if (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) {
+        // get the font-name to reset: this property we preserve
+        nsAutoString strName(mFont.mFont.name);
+        nsAutoString strMixedName(mFont.mFixedFont.name);
+
         mFont.ResetFrom(nsnull, aPresContext);
+
+        // now reset the font names back to original
+        mFont.mFont.name = strName;
+        mFont.mFixedFont.name = strMixedName;
       }
       mParent = holdParent;
     }
