@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Alec Flett <alecf@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
  */
 
 var gTotalSearchTerms=0;
