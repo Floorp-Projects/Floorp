@@ -39,6 +39,7 @@ import java.security.cert.CertificateException;
 import java.security.GeneralSecurityException;
 import org.mozilla.jss.pkcs11.PK11Cert;
 import java.util.*;
+import org.mozilla.jss.pkcs11.KeyType;
 import org.mozilla.jss.pkcs11.PK11Token;
 import org.mozilla.jss.pkcs11.PK11Module;
 import org.mozilla.jss.pkcs11.PK11SecureRandom;
@@ -52,7 +53,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.18 $ $Date: 2003/05/09 18:57:15 $
+ * @version $Revision: 1.19 $ $Date: 2003/08/15 01:00:32 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -853,12 +854,17 @@ public final class CryptoManager implements TokenSupplier
                 instance.reloadModules();
             }
         }
-        if( values.installJSSProvider ) {
-            // Force class load before we install the provider. Otherwise we get
-            // an infinite loop as the Security manager tries to instantiate the
-            // digest to verify its own JAR file.
-            JSSMessageDigestSpi mds = new JSSMessageDigestSpi.SHA1();
 
+        // Force class load before we install the provider. Otherwise we get
+        // an infinite loop as the Security manager tries to instantiate the
+        // digest to verify its own JAR file.
+        JSSMessageDigestSpi mds = new JSSMessageDigestSpi.SHA1();
+        // Force the KeyType class to load before we can install JSS as a
+        // provider.  JSS's signature provider accesses KeyType.
+        KeyType kt = KeyType.getKeyTypeFromAlgorithm(
+            SignatureAlgorithm.RSASignatureWithSHA1Digest);
+
+        if( values.installJSSProvider ) {
             int position = java.security.Security.insertProviderAt(
                             new JSSProvider(), 1);
             // This returns -1 if the provider was already installed, in which

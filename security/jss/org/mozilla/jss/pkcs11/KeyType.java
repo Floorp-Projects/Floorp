@@ -47,8 +47,14 @@ import org.mozilla.jss.crypto.EncryptionAlgorithm;
  * These are the possible types for keys in the
  * wrapper library.
  * Key types are implemented as flyweights.
+ *
+ * Although the KeyType class is public, it should
+ * be considered private. We made the KeyType class
+ * public so that we can force it to load during
+ * CryptoManager.initialize(), before we install JSS
+ * as a provider.
 **/
-final class KeyType {
+public final class KeyType {
     protected KeyType() {}
 
     protected KeyType(Algorithm[] algs, String name) {
