@@ -653,7 +653,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
                 {
                     // ruslan: some older incorrect 1.1 servers may do this
                     if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcasecmp (connectionHeader,    "close"  ))
-                        capabilities = 0;
+                        capabilities = nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES;
                     else
                     {
                         capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PIPELINING);
