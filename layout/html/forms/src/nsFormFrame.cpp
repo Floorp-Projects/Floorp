@@ -317,7 +317,6 @@ nsresult nsFormFrame::GetRadioInfo(nsIFormControlFrame* aFrame,
 
   // radio group processing
   if (hasName) { 
-    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)aFrame;
     int numGroups = mRadioGroups.Count();
     nsRadioControlGroup* group;
     for (int j = 0; j < numGroups; j++) {
