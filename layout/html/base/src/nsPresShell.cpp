@@ -5171,7 +5171,7 @@ PresShell::FlushPendingNotifications(PRBool aUpdateViews)
     ProcessReflowCommands(PR_FALSE);
 
     if (aUpdateViews && mViewManager) {
-      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
+      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     }
   }
 
