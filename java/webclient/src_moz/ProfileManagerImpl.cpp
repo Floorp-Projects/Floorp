@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileManagerImpl_nativeStartup
   (JNIEnv *env, jobject obj, jint nativeContext, 
-   jstring profileDir , jstring profileName)
+   jstring profileDir , jstring profileNameJstr)
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: entering\n"));
@@ -71,43 +71,67 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: GetProfileCount rv: %d\n", 
             rv));
-    
+
+    PRUnichar *webclientProfile = nsnull;
+    char *webclientProfileCstr = nsnull; 
+
+    if (nsnull == profileNameJstr) {
+        NS_NAMED_LITERAL_STRING(webclientStr, "webclient");
+        webclientProfile = (PRUnichar *) webclientStr.get();
+        webclientProfileCstr = "webclient";
+    }
+    else {
+        webclientProfile = (PRUnichar *)
+            ::util_GetStringChars(env, profileNameJstr);
+        webclientProfileCstr =  (char *)
+            ::util_GetStringUTFChars(env, profileNameJstr);
+    }
+
     char *argv[3];
-    int i, argc = 0;
+    int i,j;
+    PRBool hasWebclientProfile = PR_FALSE;
     argv[0] = PL_strdup(nsnull);
-    if (numProfiles > 1) {
+    argv[1] = PL_strdup("-p");
+    
+    if (0 < numProfiles) {
         PRUnichar **Names;
         PRUint32 NamesLen = 0;
         rv = profile->GetProfileList(&NamesLen, &Names);
         
-        argv[1] = PL_strdup("-p");
         if (NS_SUCCEEDED(rv)) {
             PR_ASSERT(NamesLen >= 1);
-            // PENDING(edburns): fix for 70656.  Really we should have a way
-            // for the embedding app to specify which profile to use.  
-            // For now we just get the name of the first profile.
-            char * temp = new char[100]; // de-allocated in following for loop
-            for (i = 0; Names[0][i] != '\0'; i++) {
-                temp[i] = (char) Names[0][i];
+            
+            char * temp = new char[100]; // de-allocated following for loop
+            for (i = 0; i < NamesLen; i++) {
+                for (j = 0; Names[i][j] != '\0'; j++) {
+                    temp[j] = (char) Names[i][j];
+                }
+                temp[j] = '\0';
+                if (0 == strcmp(webclientProfileCstr, temp)) {
+                    hasWebclientProfile = PR_TRUE;
+                    break;
+                }
             }
             nsMemory::Free(Names);
-            temp[i] = '\0';
-            argv[2] = temp;
-            argc = 3;
         }
-        else {
-            argv[2] = PL_strdup("default");
-        }    
+        argv[2] = PL_strdup(webclientProfileCstr);
     }
-    else {
-        argc = 1;
+    
+    if (!hasWebclientProfile) {
+        rv = profile->CreateNewProfile(webclientProfile, nsnull, nsnull, 
+                                       PR_FALSE);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
+            return;
+        }
     }
-    rv = cmdLine->Initialize(argc, argv);
+    
+    rv = cmdLine->Initialize(3, argv);
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: commandLineService initialize rv: %d\n", 
             rv));
     
-    for (i = 0; i < argc; i++) {
+    for (i = 0; i < 3; i++) {
         nsCRT::free(argv[i]);
     }
     if (NS_FAILED(rv)) {
@@ -130,7 +154,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
         ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
         return;
     }
-    
+
+    // only release if we allocated
+    if (nsnull != profileNameJstr) {
+        ::util_ReleaseStringChars(env, profileNameJstr, webclientProfile);
+        ::util_ReleaseStringUTFChars(env, profileNameJstr, 
+                                     webclientProfileCstr);
+    }
+        
     wcContext->sProfile = profile.get();
     NS_ADDREF(wcContext->sProfile);
     wcContext->sProfileInternal = profileInt.get();

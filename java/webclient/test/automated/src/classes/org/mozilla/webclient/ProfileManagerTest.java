@@ -1,5 +1,5 @@
 /*
- * $Id: ProfileManagerTest.java,v 1.2 2004/02/26 04:21:24 edburns%acm.org Exp $
+ * $Id: ProfileManagerTest.java,v 1.3 2004/11/05 06:40:27 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -50,9 +50,11 @@ public class ProfileManagerTest extends WebclientTestCase {
 	    i = 0,
 	    len = 0;
 	final String 
+	    startupProfile = "testStartupProfile",
 	    name = "testProfile",
 	    newName = "testProfile2";
 	BrowserControl firstBrowserControl = null;
+	BrowserControlFactory.setProfile(startupProfile);
 	BrowserControlFactory.setAppData(getBrowserBinDir());
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -61,6 +63,8 @@ public class ProfileManagerTest extends WebclientTestCase {
 	ProfileManager profileManager = (ProfileManager)
 	    firstBrowserControl.queryInterface(BrowserControl.PROFILE_MANAGER_NAME);
 	assertNotNull(profileManager);
+
+	assertEquals(startupProfile, profileManager.getCurrentProfile());
 	
 	// create a new profile
 	profileManager.createNewProfile(name, null, null, false);
@@ -74,6 +78,9 @@ public class ProfileManagerTest extends WebclientTestCase {
 	
 	// test that we can set the current profile to the new profile
 	profileManager.setCurrentProfile(name);
+	
+	// delete the startupProfile
+	profileManager.deleteProfile(startupProfile, true);
 	
 	// test that the current profile is the new profile
 	String currentProfile = profileManager.getCurrentProfile();

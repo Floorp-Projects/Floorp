@@ -47,6 +47,9 @@ public interface WrapperFactory {
     
     public Object newImpl(String interfaceName, 
                           BrowserControl browserControl) throws ClassNotFoundException;
+    
+    public String getProfile();
+    public void setProfile(String profileName);
 
     /**
      *

@@ -84,6 +84,11 @@ public WebclientFactoryImpl()
 // Public methods
 //
 
+
+public void setProfile(String profileName)
+{
+    getWrapperFactory().setProfile(profileName);
+}
     
 public void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {

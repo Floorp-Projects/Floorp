@@ -44,7 +44,7 @@ import java.io.FileNotFoundException;
  *  simply call through to this implemenatation instance.</p>
  *
  *
- * @version $Id: BrowserControlFactory.java,v 1.10 2004/04/01 14:54:56 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.11 2004/11/05 06:40:26 edburns%acm.org Exp $
  * 
  *
  */
@@ -73,6 +73,11 @@ private BrowserControlFactory()
 //
 // Class methods
 //
+
+public static void setProfile(String profileName) 
+{
+    getInstance().setProfile(profileName);
+}
 
 /**
  *

@@ -55,6 +55,14 @@ public interface WebclientFactory {
     public void setAppData(String absolutePathToNativeBrowserBinDir) 
 	throws FileNotFoundException, ClassNotFoundException;
 
+    /**
+     * <p>if called before {@link setAppData}, this will cause the
+     * profile used for starting up the underlying browser to be set.
+     * If not called, the default will be "webclient"</p>
+     */
+
+    public void setProfile(String profileName);
+
     public void appTerminate() throws Exception;
     
     public BrowserControl newBrowserControl() 

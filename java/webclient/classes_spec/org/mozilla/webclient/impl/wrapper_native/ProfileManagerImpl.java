@@ -47,7 +47,8 @@ public ProfileManagerImpl(WrapperFactory yourFactory)
 
 public void startup() {
     Assert.assert_it(isNativeEventThread());
-    nativeStartup(getWrapperFactory().getNativeWrapperFactory(), null, null);
+    nativeStartup(getWrapperFactory().getNativeWrapperFactory(), null, 
+		  getWrapperFactory().getProfile());
 }
 
 public void shutdown() {

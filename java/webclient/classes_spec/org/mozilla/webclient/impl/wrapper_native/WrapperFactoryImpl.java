@@ -85,6 +85,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
     // Attribute Instance Variables
     
     protected String platformCanvasClassName = null;
+    protected String profileName = "webclient";
     protected boolean initialized = false;
     protected boolean terminated = false;
     
@@ -259,6 +260,14 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	}
 	return result;
     }
+
+    public void setProfile(String profileName) {
+	this.profileName = profileName;
+    }
+
+    public String getProfile() {
+	return profileName;
+    }
     
     public void initialize(String verifiedBinDirAbsolutePath) throws SecurityException, UnsatisfiedLinkError {
 	if (initialized) {
@@ -327,6 +336,8 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	    initialized = false;
 	    System.out.println("WrapperFactoryImpl.initialize: Can't start up singleton services: " + e + " " + e.getMessage());
 	}
+
+
     }
     
     public void verifyInitialized() throws IllegalStateException
