@@ -282,31 +282,6 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   if (mStartParent) mIsPositioned = PR_TRUE;
   else mIsPositioned = PR_FALSE;
 
-#ifdef DEBUG_akkana
-  if (mIsPositioned)
-  {
-    nsString name, value;
-    char *nameS, *valueS;
-    mStartParent->GetNodeName(name);
-    mStartParent->GetNodeValue(value);
-    nameS = name.ToNewCString();
-    valueS = value.ToNewCString();
-    printf("DoSetRange: StartParent = '%s'%s', StartOffset = %d\n",
-           nameS, valueS, mStartOffset);
-    delete nameS;
-    delete valueS;
-
-    mEndParent->GetNodeName(name);
-    mEndParent->GetNodeValue(value);
-    nameS = name.ToNewCString();
-    valueS = value.ToNewCString();
-    printf("DoSetRange: EndParent = '%s'%s', StartOffset = %d\n",
-           nameS, valueS, mStartOffset);
-    delete nameS;
-    delete valueS;
-  }
-#endif /* DEBUG_akkana */
-  
   // FIX ME need to handle error cases 
   // (range lists return error, or setting only one endpoint to null)
   return NS_OK;
