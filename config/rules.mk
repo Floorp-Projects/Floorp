@@ -528,7 +528,11 @@ endif
 ifdef IS_COMPONENT
 DEPENDENT_LIBS = $(patsubst -l%,$(LIB_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS)))
 ifneq (,$(strip $(DEPENDENT_LIBS)))
-DEFINES += -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
+_BEFORE := , \"
+_AFTER := ,\"
+_DEP_DEFINES = -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
+_DEP_DEFINES := $(subst $(_BEFORE),$(_AFTER),$(_DEP_DEFINES))
+DEFINES	+= $(_DEP_DEFINES)
 endif
 endif
 
