@@ -6954,6 +6954,8 @@ server_cert_view_buttons_type=text/html
 server_cert_view_buttons_hdrs=""
 server_cert_view_buttons_content:
 <html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 </head>
 <body bgcolor="#CCCCCC" link="#6666CC" vlink="#6666CC" alink="#333399"
