@@ -1067,7 +1067,7 @@ permission_Check
 }
 
 PUBLIC nsresult
-Image_CheckForPermission(char * hostname, PRBool &permission) {
+Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permission) {
 
   /* exit if imageblocker is not enabled */
   nsresult rv;
@@ -1082,7 +1082,8 @@ Image_CheckForPermission(char * hostname, PRBool &permission) {
 
   /* try to make a decision based on pref settings */
   if ((image_GetBehaviorPref() == COOKIE_DontUse)  ||
-      (image_GetBehaviorPref() == COOKIE_DontAcceptForeign /* && foreign */)) { //???
+      (image_GetBehaviorPref() == COOKIE_DontAcceptForeign &&
+        PL_strcmp(hostname, firstHostname))) {
     permission = PR_FALSE;
     return NS_OK;
   }

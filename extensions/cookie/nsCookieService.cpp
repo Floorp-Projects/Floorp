@@ -162,8 +162,8 @@ NS_IMETHODIMP nsCookieService::Image_Block(nsAutoString imageURL) {
 }
 
 NS_IMETHODIMP nsCookieService::Image_CheckForPermission
-    (char * hostname, PRBool &permission) {
-  return ::Image_CheckForPermission(hostname, permission);
+    (char * hostname, char * firstHostname, PRBool &permission) {
+  return ::Image_CheckForPermission(hostname, firstHostname, permission);
 }
 
 

@@ -42,7 +42,8 @@ public:
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
   NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type);
   NS_IMETHOD Image_Block(nsAutoString imageURL);
-  NS_IMETHOD Image_CheckForPermission(char * hostname, PRBool &permission);
+  NS_IMETHOD Image_CheckForPermission
+    (char * hostname, char * firstHostname, PRBool &permission);
   NS_IMETHOD CookieEnabled(PRBool* aEnabled);
 
   nsCookieService();

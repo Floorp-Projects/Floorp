@@ -37,6 +37,10 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
+#include "nsIPresContext.h"
+#include "nsICookieService.h"
+#include "nsIServiceManager.h"
+
 
 PR_BEGIN_EXTERN_C
 extern int XP_MSG_IMAGE_PIXELS;
@@ -51,6 +55,8 @@ int il_debug=0;
 
 /* Global list of image group contexts. */
 static IL_GroupContext *il_global_img_cx_list = NULL;
+
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
@@ -1871,13 +1877,8 @@ il_internal_image(const char *image_url)
     return 0;
 }
 
-
-#include "nsICookieService.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-
 /* block certain hosts from loading images */
-PRBool il_PermitLoad(const char * image_url) {
+PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver) {
 
     /* convert image_url to an nsIURL so we can extract host and scheme */
     nsresult rv;
@@ -1905,25 +1906,47 @@ PRBool il_PermitLoad(const char * image_url) {
         return PR_TRUE;
     }
 
-    /* check to see if we need to block image from loading */
-    NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+    /* obtain first url from aObserver */
+
+    if (!aObserver) {
+        Recycle(host);
+        return PR_TRUE;
+    }
+
+    /* real ugly hack until I figure out the right way to get the presContext from aObserver */
+    nsIPresContext* presContext = (nsIPresContext*)(((PRInt32 *)aObserver)[3]);
+
+    nsIURI * firstUri;
+    rv = presContext->GetBaseURL(&firstUri);
+    if (NS_FAILED(rv) || !firstUri) {
+        Recycle(host);
+        return PR_TRUE;
+    }
+
+    char* firstHost = nsnull;
+    rv = firstUri->GetHost(&firstHost);
+    NS_RELEASE(firstUri);
     if (NS_FAILED(rv)) {
         Recycle(host);
         return PR_TRUE;
     }
+
+    /* check to see if we need to block image from loading */
+    NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+    if (NS_FAILED(rv)) {
+        Recycle(host);
+        Recycle(firstHost);
+        return PR_TRUE;
+    }
     PRBool permission;
-    rv = cookieservice->Image_CheckForPermission(host, permission);
+    rv = cookieservice->Image_CheckForPermission(host, firstHost, permission);
     Recycle(host);
+    Recycle(firstHost);
     if (NS_FAILED(rv)) {
       return PR_TRUE;
     }
     return permission;
 }
-
-#include "nsWeakPtr.h"
-#include "nsILoadGroup.h"
-#include "ilIURL.h"
-#include "nsIHTTPChannel.h"
 
 IL_IMPLEMENT(IL_ImageReq *)
 IL_GetImage(const char* image_url,
@@ -1932,10 +1955,11 @@ IL_GetImage(const char* image_url,
             NI_IRGB *background_color,
             PRUint32 req_width, PRUint32 req_height,
             PRUint32 flags,
-            void *opaque_cx)
+            void *opaque_cx,
+            nsIImageRequestObserver * aObserver)
 {
     /* block certain hosts from loading images */
-    if (!il_PermitLoad(image_url)) {
+    if (!il_PermitLoad(image_url, aObserver)) {
       return NULL;
     }
 
