@@ -64,7 +64,7 @@ function onLoad()
 
 function doHelpButton()
 {
-  openHelp('chrome://help/content/help.xul?new_web_cert');
+  openHelp('new_web_cert');
 }
 
 function doOK()

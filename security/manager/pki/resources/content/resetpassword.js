@@ -85,5 +85,5 @@ function resetPassword()
 
 function doHelpButton()
 {
-  openHelp('chrome://help/content/help.xul?reset_pwd');
+  openHelp('reset_pwd');
 }
