@@ -27,75 +27,105 @@
 
 NS_NAMED_LITERAL_STRING(realSOAPEnvURI,"http://schemas.xmlsoap.org/soap/envelope/");
 const nsAString& nsSOAPUtils::kSOAPEnvURI = realSOAPEnvURI;
+
 NS_NAMED_LITERAL_STRING(realSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
 const nsAString& nsSOAPUtils::kSOAPEncodingURI = realSOAPEncodingURI;
+
 NS_NAMED_LITERAL_STRING(realSOAPEnvPrefix,"SOAP-ENV");
 const nsAString& nsSOAPUtils::kSOAPEnvPrefix = realSOAPEnvPrefix;
+
 NS_NAMED_LITERAL_STRING(realSOAPEncodingPrefix,"SOAP-ENC");
 const nsAString& nsSOAPUtils::kSOAPEncodingPrefix = realSOAPEncodingPrefix;
+
 NS_NAMED_LITERAL_STRING(realXSURI,"http://www.w3.org/2001/XMLSchema");
 const nsAString& nsSOAPUtils::kXSURI = realXSURI;
+
 NS_NAMED_LITERAL_STRING(realXSIURI,"http://www.w3.org/2001/XMLSchema-instance");
 const nsAString& nsSOAPUtils::kXSIURI = realXSIURI;
+
 NS_NAMED_LITERAL_STRING(realXSDURI,"http://www.w3.org/2001/XMLSchema-datatypes");
 const nsAString& nsSOAPUtils::kXSDURI = realXSDURI;
+
 NS_NAMED_LITERAL_STRING(realXSIPrefix,"xsi");
 const nsAString& nsSOAPUtils::kXSIPrefix = realXSIPrefix;
+
 NS_NAMED_LITERAL_STRING(realXSITypeAttribute,"type");
 const nsAString& nsSOAPUtils::kXSITypeAttribute = realXSITypeAttribute;
+
 NS_NAMED_LITERAL_STRING(realXSPrefix,"xs");
 const nsAString& nsSOAPUtils::kXSPrefix = realXSPrefix;
+
 NS_NAMED_LITERAL_STRING(realXSDPrefix,"xsd");
 const nsAString& nsSOAPUtils::kXSDPrefix = realXSDPrefix;
+
 NS_NAMED_LITERAL_STRING(realEncodingStyleAttribute,"encodingStyle");
 const nsAString& nsSOAPUtils::kEncodingStyleAttribute = realEncodingStyleAttribute;
+
 NS_NAMED_LITERAL_STRING(realActorAttribute,"actor");
 const nsAString& nsSOAPUtils::kActorAttribute = realActorAttribute;
+
 NS_NAMED_LITERAL_STRING(realMustUnderstandAttribute,"mustUnderstand");
 const nsAString& nsSOAPUtils::kMustUnderstandAttribute = realMustUnderstandAttribute;
+
 NS_NAMED_LITERAL_STRING(realEnvelopeTagName,"Envelope");
 const nsAString& nsSOAPUtils::kEnvelopeTagName = realEnvelopeTagName;
+
 NS_NAMED_LITERAL_STRING(realHeaderTagName,"Header");
 const nsAString& nsSOAPUtils::kHeaderTagName = realHeaderTagName;
+
 NS_NAMED_LITERAL_STRING(realBodyTagName,"Body");
 const nsAString& nsSOAPUtils::kBodyTagName = realBodyTagName;
+
 NS_NAMED_LITERAL_STRING(realFaultTagName,"Fault");
 const nsAString& nsSOAPUtils::kFaultTagName = realFaultTagName;
+
 NS_NAMED_LITERAL_STRING(realFaultCodeTagName,"faultcode");
 const nsAString& nsSOAPUtils::kFaultCodeTagName = realFaultCodeTagName;
+
 NS_NAMED_LITERAL_STRING(realFaultStringTagName,"faultstring");
 const nsAString& nsSOAPUtils::kFaultStringTagName = realFaultStringTagName;
+
 NS_NAMED_LITERAL_STRING(realFaultActorTagName,"faultactor");
 const nsAString& nsSOAPUtils::kFaultActorTagName = realFaultActorTagName;
+
 NS_NAMED_LITERAL_STRING(realFaultDetailTagName,"detail");
+const nsAString& nsSOAPUtils::kFaultDetailTagName = realFaultDetailTagName;
 
 NS_NAMED_LITERAL_STRING(realEncodingSeparator,"#");
 const nsAString& nsSOAPUtils::kEncodingSeparator = realEncodingSeparator;
+
 NS_NAMED_LITERAL_STRING(realQualifiedSeparator,":");
 const nsAString& nsSOAPUtils::kQualifiedSeparator = realQualifiedSeparator;
 
 NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI, "htp://www.w3.org/2000/xmlns/");
 const nsAString& nsSOAPUtils::kXMLNamespaceNamespaceURI = realXMLNamespaceNamespaceURI;
+
 NS_NAMED_LITERAL_STRING(realXMLNamespaceURI, "htp://www.w3.org/XML/1998/namespace");
 const nsAString& nsSOAPUtils::kXMLNamespaceURI = realXMLNamespaceURI;
+
 NS_NAMED_LITERAL_STRING(realXMLPrefix, "xml:");
 const nsAString& nsSOAPUtils::kXMLPrefix = realXMLPrefix;
+
 NS_NAMED_LITERAL_STRING(realXMLNamespacePrefix, "xmlns:");
 const nsAString& nsSOAPUtils::kXMLNamespacePrefix = realXMLNamespacePrefix;
 
 NS_NAMED_LITERAL_STRING(realTrue, "true");
 const nsAString& nsSOAPUtils::kTrue = realTrue;
+
 NS_NAMED_LITERAL_STRING(realFalse, "false");
+const nsAString& nsSOAPUtils::kFalse = realFalse;
 
 NS_NAMED_LITERAL_STRING(realTrueA, "1");
 const nsAString& nsSOAPUtils::kTrueA = realTrueA;
+
 NS_NAMED_LITERAL_STRING(realFalseA, "0");
+const nsAString& nsSOAPUtils::kFalseA = realFalseA;
 
 void 
 nsSOAPUtils::GetSpecificChildElement(
   nsIDOMElement *aParent, 
-  const nsAReadableString& aNamespace, 
-  const nsAReadableString& aType, 
+  const nsAString& aNamespace, 
+  const nsAString& aType, 
   nsIDOMElement * *aElement)
 {
   nsCOMPtr<nsIDOMElement> sibling;
@@ -112,8 +142,8 @@ nsSOAPUtils::GetSpecificChildElement(
 void 
 nsSOAPUtils::GetSpecificSiblingElement(
   nsIDOMElement *aSibling, 
-  const nsAReadableString& aNamespace, 
-  const nsAReadableString& aType, 
+  const nsAString& aNamespace, 
+  const nsAString& aType, 
   nsIDOMElement * *aElement)
 {
   nsCOMPtr<nsIDOMElement> sibling;
@@ -178,7 +208,7 @@ nsSOAPUtils::GetNextSiblingElement(nsIDOMElement* aStart,
 
 nsresult 
 nsSOAPUtils::GetElementTextContent(nsIDOMElement* aElement, 
-                                   nsAWritableString& aText)
+                                   nsAString& aText)
 {
   nsCOMPtr<nsIDOMNode> child;
   nsAutoString rtext;
@@ -260,8 +290,8 @@ nsSOAPUtils::GetNextSibling(nsIDOMNode* aSibling, nsIDOMNode **aNext)
   NS_IF_ADDREF(*aNext);
 }
 nsresult nsSOAPUtils::GetNamespaceURI(nsIDOMElement* aScope,
-                                  const nsAReadableString & aQName, 
-                                  nsAWritableString & aURI)
+                                  const nsAString & aQName, 
+                                  nsAString & aURI)
 {
   aURI.Truncate(0);
   PRInt32 i = aQName.FindChar(':');
@@ -297,8 +327,8 @@ nsresult nsSOAPUtils::GetNamespaceURI(nsIDOMElement* aScope,
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsSOAPUtils::GetLocalName(const nsAReadableString & aQName, 
-                                  nsAWritableString & aLocalName)
+nsresult nsSOAPUtils::GetLocalName(const nsAString & aQName, 
+                                  nsAString & aLocalName)
 {
   PRInt32 i = aQName.FindChar(':');
   if (i < 0)
@@ -310,8 +340,8 @@ nsresult nsSOAPUtils::GetLocalName(const nsAReadableString & aQName,
 
 nsresult 
 nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
-                                 const nsAReadableString & aURI,
-                                 nsAWritableString & aPrefix)
+                                 const nsAString & aURI,
+                                 nsAString & aPrefix)
 {
 //  This may change for level 3 serialization, so be sure to gut this
 //  and call the standardized level 3 method when it is available.
@@ -427,8 +457,8 @@ nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
 
 nsresult 
 nsSOAPUtils::MakeNamespacePrefixFixed(nsIDOMElement* aScope,
-		                      const nsAReadableString & aURI,
-				      nsAWritableString & aPrefix)
+		                      const nsAString & aURI,
+				      nsAString & aPrefix)
 {
   if (aURI.Equals(kSOAPEncodingURI))
     aPrefix = kSOAPEncodingPrefix;
@@ -444,8 +474,8 @@ nsSOAPUtils::MakeNamespacePrefixFixed(nsIDOMElement* aScope,
   return NS_OK;
 }
 
-PRBool nsSOAPUtils::StartsWith(nsAReadableString& aSuper,
-		           nsAReadableString& aSub)
+PRBool nsSOAPUtils::StartsWith(nsAString& aSuper,
+		           nsAString& aSub)
 {
   PRUint32 c1 = aSuper.Length();
   PRUint32 c2 = aSub.Length();
@@ -462,3 +492,4 @@ PRBool nsSOAPUtils::StartsWith(nsAReadableString& aSuper,
   }
   return PR_TRUE;
 }
+

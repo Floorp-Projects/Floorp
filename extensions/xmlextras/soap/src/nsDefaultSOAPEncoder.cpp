@@ -134,10 +134,13 @@ DECLARE_ENCODER(UnsignedByte)
 #define REGISTER_ENCODER(name) \
 {\
   ns##name##Encoder *handler = new ns##name##Encoder();\
-  SetEncoder(nsSOAPUtils::kXSURI, k##name##SchemaType, handler); \
-  SetEncoder(nsSOAPUtils::kXSDURI, k##name##SchemaType, handler); \
-  SetDecoder(nsSOAPUtils::kXSURI, k##name##SchemaType, handler); \
-  SetDecoder(nsSOAPUtils::kXSDURI, k##name##SchemaType, handler); \
+  nsAutoString encodingKey;\
+  SOAPEncodingKey(nsSOAPUtils::kXSURI, k##name##SchemaType, encodingKey);\
+  SetEncoder(encodingKey, handler); \
+  SetDecoder(encodingKey, handler); \
+  SOAPEncodingKey(nsSOAPUtils::kXSDURI, k##name##SchemaType, encodingKey);\
+  SetEncoder(encodingKey, handler); \
+  SetDecoder(encodingKey, handler); \
 }
 
 nsDefaultSOAPEncoder::nsDefaultSOAPEncoder(): nsSOAPEncoding(nsSOAPUtils::kSOAPEncodingURI, nsnull, nsnull) 
@@ -151,8 +154,10 @@ nsDefaultSOAPEncoder::nsDefaultSOAPEncoder(): nsSOAPEncoding(nsSOAPUtils::kSOAPE
   REGISTER_ENCODER(AnySimpleType)
   {
     nsArrayEncoder *handler = new nsArrayEncoder();
-    SetEncoder(nsSOAPUtils::kSOAPEncodingURI, kArraySOAPType, handler); 
-    SetDecoder(nsSOAPUtils::kSOAPEncodingURI, kArraySOAPType, handler); 
+    nsAutoString encodingKey;
+    SOAPEncodingKey(nsSOAPUtils::kSOAPEncodingURI, kArraySOAPType, encodingKey);
+    SetEncoder(encodingKey, handler); 
+    SetDecoder(encodingKey, handler); 
   }
   REGISTER_ENCODER(String)
   REGISTER_ENCODER(Boolean)
@@ -169,9 +174,9 @@ nsDefaultSOAPEncoder::nsDefaultSOAPEncoder(): nsSOAPEncoding(nsSOAPUtils::kSOAPE
 }
 //  Here is the implementation of the encoders.
 static nsresult EncodeSimpleValue(
-		                          const nsAReadableString & aValue, 
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aValue, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsIDOMElement* aDestination,
 					  nsIDOMElement** _retval)
 {
@@ -199,8 +204,8 @@ static nsresult EncodeSimpleValue(
 
 NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -212,11 +217,13 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
     do {
       nsAutoString schemaType;
       nsAutoString schemaURI;
+      nsAutoString encodingKey;
       nsresult rc = lookupType->GetName(schemaType);
       if (NS_FAILED(rc)) return rc;
       rc = lookupType->GetTargetNamespace(schemaURI);
       if (NS_FAILED(rc)) return rc;
-      rc = aEncoding->GetEncoder(schemaURI, schemaType, getter_AddRefs(encoder));
+      SOAPEncodingKey(schemaURI, schemaType, encodingKey);
+      rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
       if (NS_FAILED(rc)) return rc;
       if (encoder) break;
       PRUint16 typevalue;
@@ -240,14 +247,14 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
     else {
       typevalue = nsISchemaType::SCHEMA_TYPE_COMPLEX;
     }
-    nsAutoString schemaType;
+    nsAutoString encodingKey;
     if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-      schemaType.Assign(kAnyTypeSchemaType);
+      SOAPEncodingKey(nsSOAPUtils::kXSDURI, kAnyTypeSchemaType, encodingKey);
     }
     else {
-      schemaType.Assign(kAnySimpleTypeSchemaType);
+      SOAPEncodingKey(nsSOAPUtils::kXSDURI, kAnySimpleTypeSchemaType, encodingKey);
     }
-    nsresult rc = aEncoding->GetEncoder(nsSOAPUtils::kXSDURI, schemaType, getter_AddRefs(encoder));
+    nsresult rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (encoder) {
@@ -256,10 +263,11 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -370,7 +378,9 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
   }
   if (!nativeSchemaType.IsEmpty()) {
     nsCOMPtr<nsISOAPEncoder> encoder;
-    nsresult rc = aEncoding->GetEncoder(nativeSchemaURI, nativeSchemaType, getter_AddRefs(encoder));
+    nsAutoString encodingKey;
+    SOAPEncodingKey(nativeSchemaURI, nativeSchemaType, encodingKey);
+    nsresult rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
     if (encoder) {
       nsresult rc = encoder->Encode(aEncoding, aSource, aNamespaceURI, aName, aSchemaType, aAttachments, aDestination, aReturnValue);
@@ -397,8 +407,8 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsAnySimpleTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -426,8 +436,8 @@ NS_IMETHODIMP nsAnySimpleTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -534,8 +544,8 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsStringEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -563,8 +573,8 @@ NS_IMETHODIMP nsStringEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsBooleanEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -592,8 +602,8 @@ NS_IMETHODIMP nsBooleanEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsDoubleEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -626,8 +636,8 @@ NS_IMETHODIMP nsDoubleEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsFloatEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -660,8 +670,8 @@ NS_IMETHODIMP nsFloatEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsLongEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -694,8 +704,8 @@ NS_IMETHODIMP nsLongEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsIntEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -728,8 +738,8 @@ NS_IMETHODIMP nsIntEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsShortEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -762,8 +772,8 @@ NS_IMETHODIMP nsShortEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsByteEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -796,8 +806,8 @@ NS_IMETHODIMP nsByteEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsUnsignedLongEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -830,8 +840,8 @@ NS_IMETHODIMP nsUnsignedLongEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsUnsignedIntEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -864,8 +874,8 @@ NS_IMETHODIMP nsUnsignedIntEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsUnsignedShortEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -898,8 +908,8 @@ NS_IMETHODIMP nsUnsignedShortEncoder::Encode(nsISOAPEncoding* aEncoding,
 
 NS_IMETHODIMP nsUnsignedByteEncoder::Encode(nsISOAPEncoding* aEncoding,
 		                          nsIVariant* aSource,
-		                          const nsAReadableString & aNamespaceURI, 
-		                          const nsAReadableString & aName, 
+		                          const nsAString & aNamespaceURI, 
+		                          const nsAString & aName, 
 					  nsISchemaType *aSchemaType,
 					  nsISOAPAttachments* aAttachments,
 					  nsIDOMElement* aDestination,
@@ -985,7 +995,9 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
       rc = lookupType->GetTargetNamespace(schemaURI);
       if (NS_FAILED(rc)) return rc;
-      rc = aEncoding->GetDecoder(schemaURI, schemaType, getter_AddRefs(decoder));
+      nsAutoString encodingKey;
+      SOAPEncodingKey(schemaURI, schemaType, encodingKey);
+      rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
       if (NS_FAILED(rc)) return rc;
       if (decoder) break;
       PRUint16 typevalue;
@@ -1009,14 +1021,14 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     else {
       typevalue = nsISchemaType::SCHEMA_TYPE_COMPLEX;
     }
-    nsAutoString schemaType;
+    nsAutoString encodingKey;
     if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-      schemaType.Assign(kAnyTypeSchemaType);
+      SOAPEncodingKey(nsSOAPUtils::kXSDURI, kAnyTypeSchemaType, encodingKey);
     }
     else {
-      schemaType.Assign(kAnySimpleTypeSchemaType);
+      SOAPEncodingKey(nsSOAPUtils::kXSDURI, kAnySimpleTypeSchemaType, encodingKey);
     }
-    nsresult rc = aEncoding->GetDecoder(nsSOAPUtils::kXSDURI, schemaType, getter_AddRefs(decoder));
+    nsresult rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (decoder) {

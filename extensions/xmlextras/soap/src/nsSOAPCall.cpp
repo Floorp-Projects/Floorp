@@ -52,13 +52,13 @@ NS_IMPL_QUERY_CLASSINFO(nsSOAPCall)
 NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
 
 /* attribute DOMString transportURI; */
-NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAWritableString & aTransportURI)
+NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAString & aTransportURI)
 {
   NS_ENSURE_ARG_POINTER(&aTransportURI);
   aTransportURI.Assign(mTransportURI);
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPCall::SetTransportURI(const nsAReadableString & aTransportURI)
+NS_IMETHODIMP nsSOAPCall::SetTransportURI(const nsAString & aTransportURI)
 {
   mTransportURI.Assign(aTransportURI);
   return NS_OK;

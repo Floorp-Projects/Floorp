@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS3(nsSOAPBlock,
                       nsIJSNativeInitializer)
 
 /* attribute AString namespaceURI; */
-NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAWritableString & aNamespaceURI)
+NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
 {
   NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   if (mElement) {
@@ -59,7 +59,7 @@ NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAWritableString & aNamespaceURI)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAReadableString & aNamespaceURI)
+NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAString & aNamespaceURI)
 {
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc)) return rc;
@@ -68,7 +68,7 @@ NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAReadableString & aNamespaceU
 }
 
 /* attribute AString name; */
-NS_IMETHODIMP nsSOAPBlock::GetName(nsAWritableString & aName)
+NS_IMETHODIMP nsSOAPBlock::GetName(nsAString & aName)
 {
   NS_ENSURE_ARG_POINTER(&aName);
   if (mElement) {
@@ -79,7 +79,7 @@ NS_IMETHODIMP nsSOAPBlock::GetName(nsAWritableString & aName)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPBlock::SetName(const nsAReadableString & aName)
+NS_IMETHODIMP nsSOAPBlock::SetName(const nsAString & aName)
 {
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc)) return rc;

@@ -29,39 +29,39 @@
 class nsSOAPUtils {
 public:
   static void GetSpecificChildElement(nsIDOMElement *aParent, 
-                                      const nsAReadableString& aNamespace, 
-                                      const nsAReadableString& aType, 
+                                      const nsAString& aNamespace, 
+                                      const nsAString& aType, 
                                       nsIDOMElement * *aElement);
   static void GetSpecificSiblingElement(nsIDOMElement *aSibling, 
-                                        const nsAReadableString& aNamespace, 
-                                        const nsAReadableString& aType, 
+                                        const nsAString& aNamespace, 
+                                        const nsAString& aType, 
                                         nsIDOMElement * *aElement);
   static void GetFirstChildElement(nsIDOMElement* aParent, 
                                    nsIDOMElement** aElement);
   static void GetNextSiblingElement(nsIDOMElement* aStart, 
                                     nsIDOMElement** aElement);
   static nsresult GetElementTextContent(nsIDOMElement* aElement, 
-                                    nsAWritableString& aText);
+                                    nsAString& aText);
   static PRBool HasChildElements(nsIDOMElement* aElement);
 
   static void GetNextSibling(nsIDOMNode* aSibling, 
                              nsIDOMNode **aNext);
   static nsresult MakeNamespacePrefix(nsIDOMElement* aElement,
-                                     const nsAReadableString & aURI,
-                                     nsAWritableString & aPrefix);
+                                     const nsAString & aURI,
+                                     nsAString & aPrefix);
   static nsresult MakeNamespacePrefixFixed(nsIDOMElement* aElement,
-                                     const nsAReadableString & aURI,
-                                     nsAWritableString & aPrefix);
+                                     const nsAString & aURI,
+                                     nsAString & aPrefix);
   static nsresult GetNamespaceURI(nsIDOMElement* aElement,
-                                  const nsAReadableString & aQName, 
-                                  nsAWritableString & aURI);
-  static nsresult GetLocalName(const nsAReadableString & aQName, 
-                                  nsAWritableString & aLocalName);
+                                  const nsAString & aQName, 
+                                  nsAString & aURI);
+  static nsresult GetLocalName(const nsAString & aQName, 
+                                  nsAString & aLocalName);
 
 // All those missing string functions have to come from somewhere...
 
-  static PRBool StartsWith(nsAReadableString& aSuper,
-		           nsAReadableString& aSub);
+  static PRBool StartsWith(nsAString& aSuper,
+		           nsAString& aSub);
   static const nsAString& kSOAPEnvURI;
   static const nsAString& kSOAPEncodingURI;
   static const nsAString& kSOAPEnvPrefix;
@@ -98,12 +98,12 @@ public:
 
 //  Used to support null strings.
 
-inline PRBool AStringIsNull(const nsAReadableString& aString)
+inline PRBool AStringIsNull(const nsAString& aString)
 {
   return aString.IsVoid() || aString.IsEmpty(); // Get rid of empty hack when string implementations support.
 }
 
-inline void SetAStringToNull(nsAWritableString& aString)
+inline void SetAStringToNull(nsAString& aString)
 {
   aString.Truncate();
   aString.SetIsVoid(PR_TRUE);
@@ -112,5 +112,11 @@ inline void SetAStringToNull(nsAWritableString& aString)
 #define NS_SOAP_ENSURE_ARG_STRING(arg) \
 NS_ENSURE_FALSE(AStringIsNull(arg), NS_ERROR_INVALID_ARG)
 
+inline void SOAPEncodingKey(const nsAString& aURI, const  nsAString& aType, nsAString& result)
+{
+  result.Assign(aURI);
+  result.Append(nsSOAPUtils::kEncodingSeparator);
+  result.Append(aType);
+}
 
 #endif

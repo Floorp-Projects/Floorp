@@ -78,56 +78,40 @@ interface nsISOAPEncoding : nsISupports {
 /**
   * Set an encoder in the encoding.
   *
-  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
-  *
-  * @param aSchemaType The schema type to serve as key.
+  * @param aKey The key to be associated with the encoder.
   *
   * @param aEncoder The encoder to be specified or null to eliminate
   *   the encoder.
-  *
-  * @return Old encoder registered under that type in the encoding, which
-  *   should be kept by the new encoder if it is to be called back.
   */
-  void setEncoder(in AString aSchemaNamespaceURI, in AString aSchemaType, 
-   in nsISOAPEncoder aEncoder);
+  void setEncoder(in AString aKey, in nsISOAPEncoder aEncoder);
 
 /**
   * Get an encoder from the encoding.
   *
-  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
-  *
-  * @param aSchemaType The schema type to serve as key.
+  * @param aKey The key to be used to look up the encoder.
   *
   * @return The encoder.
   */
-  nsISOAPEncoder getEncoder(in AString aSchemaNamespaceURI, in AString aSchemaType);
+  nsISOAPEncoder getEncoder(in AString aKey);
 
 /**
   * Set a decoder in the encoding.
   *
-  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
-  *
-  * @param aSchemaType The schema type to serve as key.
+  * @param aKey The key to be associated with the decoder.
   *
   * @param aDecoder The decoder to be specified or null to eliminate
   *   the decoder.
-  *
-  * @return Old decoder registered under that type in the encoding, which
-  *   should be kept by the new decoder if it is to be called back.
   */
-  void setDecoder(in AString aSchemaNamespaceURI, in AString aSchemaType, 
-   in nsISOAPDecoder aDecoder);
+  void setDecoder(in AString aKey, in nsISOAPDecoder aDecoder);
 
 /**
   * Get a decoder from the encoding.
   *
-  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
-  *
-  * @param aSchemaType The schema type to serve as key.
+  * @param aKey The key to be used to look up the decoder.
   *
   * @return The decoder.
   */
-  nsISOAPDecoder getDecoder(in AString aSchemaNamespaceURI, in AString aSchemaType);
+  nsISOAPDecoder getDecoder(in AString aKey);
 
 /**
  * The default encoder invoked by all encoding calls. Appropriate calls

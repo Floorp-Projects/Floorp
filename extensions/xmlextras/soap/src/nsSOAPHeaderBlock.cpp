@@ -50,7 +50,7 @@ nsSOAPHeaderBlock::~nsSOAPHeaderBlock()
 }
 
 /* attribute AString actorURI; */
-NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAWritableString & aActorURI)
+NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
 {
   NS_ENSURE_ARG_POINTER(&aActorURI);
   if (mElement) {
@@ -61,7 +61,7 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAWritableString & aActorURI)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPHeaderBlock::SetActorURI(const nsAReadableString & aActorURI)
+NS_IMETHODIMP nsSOAPHeaderBlock::SetActorURI(const nsAString & aActorURI)
 {
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc)) return rc;

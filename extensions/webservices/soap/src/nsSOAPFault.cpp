@@ -51,7 +51,7 @@ NS_IMETHODIMP nsSOAPFault::GetElement(nsIDOMElement * *aElement)
 }
 
 /* readonly attribute wstring faultCode; */
-NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAWritableString & aFaultCode)
+NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAString & aFaultCode)
 {
   NS_ENSURE_ARG_POINTER(&aFaultCode);
   aFaultCode.Truncate();
@@ -67,7 +67,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(nsAWritableString & aFaultCode)
 }
 
 /* readonly attribute wstring faultString; */
-NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAWritableString & aFaultString)
+NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAString & aFaultString)
 {
   NS_ENSURE_ARG_POINTER(&aFaultString);
 
@@ -82,7 +82,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(nsAWritableString & aFaultString)
 }
 
 /* readonly attribute wstring faultActor; */
-NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAWritableString & aFaultActor)
+NS_IMETHODIMP nsSOAPFault::GetFaultActor(nsAString & aFaultActor)
 {
   NS_ENSURE_ARG_POINTER(&aFaultActor);
 
