@@ -154,7 +154,7 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
     if (status == NS_BINDING_ABORTED)
         return;
 
-    if (NS_FAILED(status) && NS_FAILED(OnConnectFailure())
+    if (NS_FAILED(status) && NS_FAILED(OnConnectFailure()))
         return;
 
     if (req == mReadRequest)
