@@ -1601,7 +1601,7 @@ nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
   return buffers;
 }
 
-void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoPaint)
+void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoInvalidate)
 {
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
 
@@ -1617,10 +1617,10 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoPaint)
   // process pending updates in child view.
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
-    ProcessPendingUpdates(childView, aDoPaint);
+    ProcessPendingUpdates(childView, aDoInvalidate);
   }
 
-  if (aDoPaint && aView->HasNonEmptyDirtyRegion()) {
+  if (aDoInvalidate && aView->HasNonEmptyDirtyRegion()) {
     // Push out updates after we've processed the children; ensures that
     // damage is applied based on the final widget geometry
     NS_ASSERTION(mRefreshEnabled, "Cannot process pending updates with refresh disabled");
