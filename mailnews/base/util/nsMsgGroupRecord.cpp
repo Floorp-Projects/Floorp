@@ -26,15 +26,10 @@
 #include "nsCRT.h"
 
 /* for the XP_TO_UPPER stuff */
-#include "xp_mcom.h"
 #include "net.h"
 
-/* for linebreak, CR, LF, etc */
-#include "fe_proto.h"
-
-extern "C" {
-	extern int MK_OUT_OF_MEMORY;
-}
+// mscott: this is lame...I know....
+#define MK_OUT_OF_MEMORY  1
 
 const PRUint32 F_ISGROUP			 = 0x00000001;
 const PRUint32 F_EXPANDED			 = 0x00000002;
