@@ -503,6 +503,22 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
+
+#ifdef XP_UNIX
+    // Always leave the top level slash for absolute file paths under UNIX.
+    // The code above sometimes results in stripping all of slashes
+    // off. This only happens when a previously stripped url is asked to be
+    // parsed again. Under Win32 this is not a problem since file urls begin
+    // with a drive letter not a slash. This problem show's itself when 
+    // nested documents such as iframes within iframes are parsed.
+
+    if (PL_strcmp(mProtocol, "file") == 0) {
+      if (*cp != '/') {
+       cp--;
+      }
+    }
+#endif
+
     const char* cp0 = cp;
     if ((PL_strcmp(mProtocol, "resource") == 0) ||
         (PL_strcmp(mProtocol, "file") == 0)) {
