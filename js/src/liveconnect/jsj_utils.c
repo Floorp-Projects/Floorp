@@ -27,14 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
-
-#ifdef XP_MAC
-#include "prosdep.h"
-#endif
-
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* External LiveConnect API */
 
@@ -46,7 +38,7 @@
 PR_CALLBACK JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env)
 {
-    JSJHashNumber hash_code;
+    PRHashNumber hash_code;
     jobject java_obj;
     JNIEnv *jEnv;
 
@@ -164,7 +156,7 @@ jsj_GetJavaErrorMessage(JNIEnv *jEnv)
     jstring java_exception_jstring;
 
     exception = (*jEnv)->ExceptionOccurred(jEnv);
-    if (exception) {
+    if (exception && jlThrowable_toString) {
         java_exception_jstring =
             (*jEnv)->CallObjectMethod(jEnv, exception, jlThrowable_toString);
         java_error_msg = (*jEnv)->GetStringUTFChars(jEnv, java_exception_jstring, NULL);

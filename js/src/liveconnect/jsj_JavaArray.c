@@ -26,7 +26,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "prlog.h"
 
 #include "jsj_private.h"      /* LiveConnect internals */
 
@@ -241,7 +240,7 @@ JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     /* We don't maintain JS property attributes for Java class members */
-    if (*attrsp != JSPROP_PERMANENT|JSPROP_ENUMERATE) {
+    if (*attrsp != (JSPROP_PERMANENT|JSPROP_ENUMERATE)) {
         PR_ASSERT(0);
         return JS_FALSE;
     }

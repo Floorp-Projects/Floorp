@@ -28,14 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
-
-#ifdef XP_MAC
-#include "prosdep.h"
-#endif
-
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
 
@@ -325,8 +317,8 @@ jsj_InitJavaMethodSignature(JSContext *cx, JNIEnv *jEnv,
             
             a = arg_signatures[i] = jsj_GetJavaClassDescriptor(cx, jEnv, arg_class);
             if (!a) {
-                jsj_ReportJavaError(cx, jEnv, "Could not determine Java class "
-                                              "signature using java.lang.reflect");
+                jsj_UnexpectedJavaError(cx, jEnv, "Could not determine Java class "
+                                                  "signature using java.lang.reflect");
                 goto error;
             }
         }
@@ -370,6 +362,7 @@ add_java_method_to_class_descriptor(JSContext *cx, JNIEnv *jEnv,
                                     JSBool is_constructor)
 {
     jmethodID methodID;
+    JSFunction *fun;
     jclass java_class = class_descriptor->java_class;
 
     JavaMemberDescriptor *member_descriptor = NULL;
@@ -385,6 +378,10 @@ add_java_method_to_class_descriptor(JSContext *cx, JNIEnv *jEnv,
             member_descriptor = jsj_GetJavaStaticMemberDescriptor(cx, jEnv, class_descriptor, method_name_jstr);
         } else {
             member_descriptor = jsj_GetJavaMemberDescriptor(cx, jEnv, class_descriptor, method_name_jstr);
+            fun = JS_NewFunction(cx, jsj_JavaInstanceMethodWrapper, 0,
+                                 JSFUN_BOUND_METHOD, NULL, member_descriptor->name);
+            member_descriptor->invoke_func_obj = JS_GetFunctionObject(fun);
+            JS_AddRoot(cx, &member_descriptor->invoke_func_obj);
         }
     }
     if (!member_descriptor)
@@ -459,11 +456,6 @@ jsj_ReflectJavaMethods(JSContext *cx, JNIEnv *jEnv,
        java.lang.Class.getMethods(). */
     java_class = class_descriptor->java_class;
     joMethodArray = (*jEnv)->CallObjectMethod(jEnv, java_class, jlClass_getMethods);
-	if ((*jEnv)->ExceptionOccurred(jEnv)) {
-    	(*jEnv)->ExceptionDescribe(jEnv);
-    	(*jEnv)->ExceptionClear(jEnv);
-    	return JS_FALSE;
-    }
     if (!joMethodArray) {
         jsj_UnexpectedJavaError(cx, jEnv,
                                 "Can't determine Java object's methods "
@@ -718,7 +710,7 @@ resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *mem
 
 static jvalue *
 convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
-			            JavaMethodSpec *method, JSBool **localvp)
+                        JavaMethodSpec *method, JSBool **localvp)
 {
     jvalue *jargv;
     JSBool ok, *localv;
@@ -743,12 +735,12 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
      * JNI local reference.
      */
     localv = (JSBool *)JS_malloc(cx, sizeof(JSBool) * argc);
+    *localvp = localv;
     if (!localv) {
         JS_free(cx, jargv);
         return NULL;
     }
-    *localvp = localv;
-    
+ 
     for (i = 0; i < argc; i++) {
         int dummy_cost;
         
@@ -758,6 +750,7 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
             JS_ReportError(cx, "Internal error: can't convert JS value to Java value");
             JS_free(cx, jargv);
             JS_free(cx, localv);
+            *localvp = NULL;
             return NULL;
         }
     }
@@ -769,9 +762,9 @@ static JSBool
 invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
                    jobject java_class_or_instance,
                    JavaClassDescriptor *class_descriptor,
-		   JavaMethodSpec *method,
+           JavaMethodSpec *method,
                    JSBool is_static_method,
-		   jsval *argv, jsval *vp)
+           jsval *argv, jsval *vp)
 {
     jvalue java_value;
     jvalue *jargv;
@@ -783,7 +776,9 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     JavaSignature *return_val_signature;
     JSContext *old_cx;
     JNIEnv *jEnv;
-    JSBool *localv;
+    JSBool *localv, error_occurred;
+
+    error_occurred = JS_FALSE;
 
     methodID = method->methodID;
     signature = &method->signature;
@@ -799,11 +794,23 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         java_class = NULL;
     }
 
+    old_cx = JSJ_SetDefaultJSContextForJavaThread(cx, jsj_env);
+
+#ifdef DEBUG
+    if (old_cx && (old_cx != cx)) {
+        JS_ReportError(cx, "Java thread in simultaneous use by more than "
+                           "one JSContext ?");
+    }
+#endif
+
     jargv = NULL;
+    localv = NULL;
     if (argc) {
         jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method, &localv);
-        if (!jargv)
-            return JS_FALSE;
+        if (!jargv) {
+            error_occurred = JS_TRUE;
+            goto out;
+        }
     }
 
 #define CALL_JAVA_METHOD(type, member)                                       \
@@ -816,15 +823,10 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     if ((*jEnv)->ExceptionOccurred(jEnv)) {                                  \
         jsj_ReportJavaError(cx, jEnv, "Error calling method %s.%s()",        \
                             class_descriptor->name, method->name);           \
-        goto error;                                                          \
+        error_occurred = JS_TRUE;                                            \
+        goto out;                                                            \
     }                                                                        \
     PR_END_MACRO
-
-    old_cx = JSJ_SetDefaultJSContextForJavaThread(cx, jsj_env);
-    if (old_cx && old_cx != cx) {
-        JS_ReportError(cx, "Java thread in simultaneous use by more than "
-                           "one JSContext ?");
-    }
 
     return_val_signature = signature->return_val_signature;
     switch(return_val_signature->type) {
@@ -873,7 +875,8 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         if ((*jEnv)->ExceptionOccurred(jEnv)) {
             jsj_ReportJavaError(cx, jEnv, "Error calling method %s.%s()",
                                 class_descriptor->name, method->name);
-            goto error;
+            error_occurred = JS_TRUE;
+            goto out;
         }
         break;
         
@@ -882,26 +885,23 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         return JS_FALSE;
     }
 
-    for (i = 0; i < argc; i++) {
-        if (localv[i])
-            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
-    }
-    if (jargv)
-        JS_free(cx, jargv);
-
+out:
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
 
-    return jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
-
-error:
-    for (i = 0; i < argc; i++) {
-        if (localv[i])
-            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+    if (localv) {
+        for (i = 0; i < argc; i++) {
+            if (localv[i])
+                (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+        }
+        JS_free(cx, localv);
     }
     if (jargv)
        JS_free(cx, jargv);
-    JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
-    return JS_FALSE;
+
+    if (error_occurred)
+        return JS_FALSE;
+    else
+        return jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
 }
 
 static JSBool
@@ -973,7 +973,7 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
     JavaMemberDescriptor *member_descriptor;
     JavaObjectWrapper *java_wrapper;
     JavaClassDescriptor *class_descriptor;
-    jsid id;
+    jsint id;
     jsval idval;
     JSJavaThreadState *jsj_env;
     JNIEnv *jEnv;
@@ -1017,8 +1017,8 @@ static JSBool
 invoke_java_constructor(JSContext *cx,
                         JSJavaThreadState *jsj_env,
                         jclass java_class,
-		        JavaMethodSpec *method,
-		        jsval *argv, jsval *vp)
+                JavaMethodSpec *method,
+                jsval *argv, jsval *vp)
 {
     jvalue *jargv;
     uintN argc, i;
@@ -1028,6 +1028,7 @@ invoke_java_constructor(JSContext *cx,
     JSContext *old_cx;
     JNIEnv *jEnv;
     JSBool *localv;
+    JSBool error_occurred = JS_FALSE;
     
     methodID = method->methodID;
     signature = &method->signature;
@@ -1036,17 +1037,23 @@ invoke_java_constructor(JSContext *cx,
     jEnv = jsj_env->jEnv;
 
     jargv = NULL;
+    localv = NULL;
     if (argc) {
         jargv = convert_JS_method_args_to_java_argv(cx, jEnv, argv, method, &localv);
-        if (!jargv)
-            return JS_FALSE;
+        if (!jargv) {
+            error_occurred = JS_TRUE;
+            goto out;
+        }
     }
 
     old_cx = JSJ_SetDefaultJSContextForJavaThread(cx, jsj_env);
-    if (old_cx && old_cx != cx) {
+
+#ifdef DEBUG
+    if (old_cx && (old_cx != cx)) {
         JS_ReportError(cx, "Java thread in simultaneous use by more than "
                            "one JSContext ?");
     }
+#endif
 
     /* Call the constructor */
     java_object = (*jEnv)->NewObjectA(jEnv, java_class, methodID, jargv);
@@ -1056,26 +1063,25 @@ invoke_java_constructor(JSContext *cx,
     if (!java_object) {
         jsj_ReportJavaError(cx, jEnv, "Error while constructing instance of %s",
                             jsj_GetJavaClassName(cx, jEnv, java_class));
-        goto error;
+        error_occurred = JS_TRUE;
+        goto out;
     }
 
-    for (i = 0; i < argc; i++) {
-        if (localv[i])
-            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
-    }
-    if (jargv)
-        JS_free(cx, jargv);
-
-    return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_object, vp);
-
-error:
-    for (i = 0; i < argc; i++) {
-        if (localv[i])
-            (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+out:
+    if (localv) {
+        for (i = 0; i < argc; i++) {
+            if (localv[i])
+                (*jEnv)->DeleteLocalRef(jEnv, jargv[i].l);
+        }
+        JS_free(cx, localv);
     }
     if (jargv)
        JS_free(cx, jargv);
-    return JS_FALSE;
+        
+    if (error_occurred)
+        return JS_FALSE;
+    else
+        return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_object, vp);
 }
 
 static JSBool

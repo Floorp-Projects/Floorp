@@ -30,12 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "prtypes.h"
-#include "prprf.h"
-#include "prlog.h"
-
 #include "jsj_private.h"        /* LiveConnect internals */
-
 #include "jsj_hash.h"           /* Hash tables */
 
 /* A one-to-one mapping between all referenced java.lang.Class objects and
@@ -279,6 +274,9 @@ destroy_java_member_descriptor(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor
         jsj_DestroyMethodSpec(cx, jEnv, method);
         method = next_method;
     }
+
+    if (member_descriptor->invoke_func_obj)
+        JS_RemoveRoot(cx, &member_descriptor->invoke_func_obj);
 }
 
 static void
@@ -328,7 +326,7 @@ new_class_descriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 
     java_class = (*jEnv)->NewGlobalRef(jEnv, java_class);
     if (!java_class) {
-        jsj_ReportJavaError(cx, jEnv, "Unable to reference Java class");
+        jsj_UnexpectedJavaError(cx, jEnv, "Unable to reference Java class");
         goto error;
     }
     class_descriptor->java_class = java_class;
@@ -357,9 +355,14 @@ enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
 {
     JNIEnv *jEnv = (JNIEnv*)arg;
     jclass java_class;
+    JavaClassDescriptor *class_descriptor;
 
-    java_class = (jclass)he->key;
+    class_descriptor = (JavaClassDescriptor*)he->value;
+
+    java_class = class_descriptor->java_class;
     (*jEnv)->DeleteGlobalRef(jEnv, java_class);
+    class_descriptor->java_class = NULL;
+
     return HT_ENUMERATE_REMOVE;
 }
 

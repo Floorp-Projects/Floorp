@@ -26,11 +26,17 @@
  * been renamed from their original NSPR names to protect the innocent.
  */
 
-#include "jsj_hash.h"
-#include "prtypes.h"
-#include "prlog.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "jsj_hash.h"
+#include "prtypes.h"
+#ifdef NSPR20
+#    include "prlog.h"
+#    include "prbit.h"
+#else
+#    include "prassert.h"
+#endif
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    (1 << (JSJ_HASH_BITS - (ht)->shift))
@@ -114,7 +120,7 @@ JSJ_NewHashTable(PRUint32 n, JSJHashFunction keyHash,
 
     ht = (*allocOps->allocTable)(allocPriv, sizeof *ht);
     if (!ht)
-	return 0;
+    return 0;
     memset(ht, 0, sizeof *ht);
     ht->shift = JSJ_HASH_BITS - n;
     n = 1 << n;
@@ -248,7 +254,7 @@ JSJ_HashTableRawAdd(JSJHashTable *ht, JSJHashEntry **hep,
     /* Make a new key value entry */
     he = (*ht->allocOps->allocEntry)(ht->allocPriv, key);
     if (!he)
-	return 0;
+    return 0;
     he->keyHash = keyHash;
     he->key = key;
     he->value = value;

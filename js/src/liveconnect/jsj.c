@@ -27,13 +27,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prlog.h"
-#include "prprf.h"
-
-#ifdef XP_MAC
-#include "prosdep.h"
-#endif
 
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
@@ -136,6 +129,7 @@ jfieldID njJSException_filename;        /* netscape.javascript.JSException.filen
     {                                                                        \
         jclass _##class = (*jEnv)->FindClass(jEnv, #qualified_name);         \
         if (_##class == 0) {                                                 \
+            (*jEnv)->ExceptionClear(jEnv);                                   \
             report_java_initialization_error(jEnv,                           \
                 "Can't load class " #qualified_name);                        \
             return JS_FALSE;                                                 \
@@ -279,25 +273,26 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
 
 static JSObject_RegisterNativeMethods(JNIEnv* jEnv)
 {
-	// Manually load the required native methods.
-	static JNINativeMethod nativeMethods[] = {
-		"initClass", "()V", (void*)&Java_netscape_javascript_JSObject_initClass,
-		"getMember", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getMember,
-		"getSlot", "(I)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getSlot,
-		"setMember", "(Ljava/lang/String;Ljava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setMember,
-		"setSlot", "(ILjava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setSlot,
-		"removeMember", "(Ljava/lang/String;)V", (void*)&Java_netscape_javascript_JSObject_removeMember,
-		"call", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_call,
-		"eval", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_eval,
-		
-		"toString", "()Ljava/lang/String;", (void*)&Java_netscape_javascript_JSObject_toString,
-		"getWindow", "(Ljava/applet/Applet;)Lnetscape/javascript/JSObject;", (void*)&Java_netscape_javascript_JSObject_getWindow,
-		"finalize", "()V", (void*)&Java_netscape_javascript_JSObject_finalize,
-	};
-	(*jEnv)->RegisterNatives(jEnv, njJSObject, nativeMethods, sizeof(nativeMethods) / sizeof(JNINativeMethod));
-	
-	// call the initClass method, since we nailed the static initializer for testing.
-	Java_netscape_javascript_JSObject_initClass(jEnv, njJSObject);
+    // Manually load the required native methods.
+    static JNINativeMethod nativeMethods[] = {
+        "initClass", "()V", (void*)&Java_netscape_javascript_JSObject_initClass,
+        "getMember", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getMember,
+        "getSlot", "(I)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_getSlot,
+        "setMember", "(Ljava/lang/String;Ljava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setMember,
+        "setSlot", "(ILjava/lang/Object;)V", (void*)&Java_netscape_javascript_JSObject_setSlot,
+        "removeMember", "(Ljava/lang/String;)V", (void*)&Java_netscape_javascript_JSObject_removeMember,
+        "call", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_call,
+        "eval", "(Ljava/lang/String;)Ljava/lang/Object;", (void*)&Java_netscape_javascript_JSObject_eval,
+        
+        "toString", "()Ljava/lang/String;", (void*)&Java_netscape_javascript_JSObject_toString,
+        "getWindow", "(Ljava/applet/Applet;)Lnetscape/javascript/JSObject;", (void*)&Java_netscape_javascript_JSObject_getWindow,
+        "finalize", "()V", (void*)&Java_netscape_javascript_JSObject_finalize,
+        "equals", "(Ljava/lang/Object;)Z", (void*)&Java_netscape_javascript_JSObject_equals
+    };
+    (*jEnv)->RegisterNatives(jEnv, njJSObject, nativeMethods, sizeof(nativeMethods) / sizeof(JNINativeMethod));
+    
+    // call the initClass method, since we nailed the static initializer for testing.
+    Java_netscape_javascript_JSObject_initClass(jEnv, njJSObject);
 }
 
 #endif
@@ -311,7 +306,7 @@ init_netscape_java_classes(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
 
 #if XP_MAC
-	JSObject_RegisterNativeMethods(jEnv);
+    JSObject_RegisterNativeMethods(jEnv);
 #endif
 
     LOAD_CONSTRUCTOR(netscape.javascript.JSObject,
@@ -366,11 +361,18 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
             free(jsjava_vm);
             return NULL;
         }
-    } else if ( JSJ_callbacks->get_java_vm != NULL ) {
+    } else if ( JSJ_callbacks && JSJ_callbacks->get_java_vm != NULL ) {
         char* err_msg = NULL;
         java_vm = JSJ_callbacks->get_java_vm(&err_msg);
         PR_ASSERT( java_vm );
-        if (java_vm && (*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0) {
+        if (!java_vm) {
+            free(jsjava_vm);
+            if (err_msg)
+                free(err_msg);
+            return NULL;
+        }
+
+        if ((*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0) {
             jsj_LogError("Failed to attach to Java VM thread\n");
             free(jsjava_vm);
             return NULL;
@@ -387,7 +389,11 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
         
         /* Prepend the classpath argument to the default JVM classpath */
         if (user_classpath) {
+#ifdef XP_UNIX
+            const char *full_classpath = PR_smprintf("%s:%s", user_classpath, vm_args.classpath);
+#else
             const char *full_classpath = PR_smprintf("%s;%s", user_classpath, vm_args.classpath);
+#endif
             if (!full_classpath) {
                 free(jsjava_vm);
                 return NULL;
@@ -471,6 +477,9 @@ JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
     if (!jsj_init_JavaArray(cx, global_obj))
         return JS_FALSE;
 
+    if (!jsj_init_JavaMember(cx, global_obj))
+        return JS_FALSE;
+    
     return JS_TRUE;
 }
 
@@ -492,6 +501,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
 {
     JNIEnv *jEnv;
     JavaVM *java_vm;
+    JSJavaVM *j, **jp;
     
     java_vm = jsjava_vm->java_vm;
     (*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL);
@@ -518,6 +528,18 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
         UNLOAD_CLASS(netscape/javascript/JSException, njJSException);
         UNLOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
     }
+
+
+    /* Remove this VM from the list of all JSJavaVM objects. */
+    for (jp = &jsjava_vm_list; (j = *jp) != NULL; jp = &j->next) {
+        if (j == jsjava_vm) {
+            *jp = jsjava_vm->next;
+            break;
+        }
+    }
+    PR_ASSERT(j);
+    
+    free(jsjava_vm);
 }
 
 static JSJavaThreadState *thread_list = NULL;
@@ -703,8 +725,7 @@ JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp)
     if (!jEnv)
         return JS_FALSE;
 
-    jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
-    return JS_TRUE;
+    return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
 }
 
 /*===========================================================================*/
@@ -731,7 +752,7 @@ default_map_js_context_to_jsj_thread(JSContext *cx, char **errp)
 
 /* Trivial implementation of callback function */
 static JSContext *
-default_map_jsj_thread_to_js_context(JNIEnv *jEnv, char **errp)
+default_map_jsj_thread_to_js_context(JSJavaThreadState *jsj_env, JNIEnv *jEnv, char **errp)
 {
     return the_cx;
 }
@@ -777,7 +798,7 @@ JSJ_SimpleInit(JSContext *cx, JSObject *global_obj, JavaVM *java_vm, const char 
     the_jsj_thread = JSJ_AttachCurrentThreadToJava(the_jsj_vm, "main thread", &jEnv);
     if (!the_jsj_thread)
         goto error;
-
+    JSJ_SetDefaultJSContextForJavaThread(cx, the_jsj_thread);
     return JS_TRUE;
 
 error:
