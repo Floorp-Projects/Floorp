@@ -26,6 +26,10 @@
 NS_IMPL_ADDREF(nsComboBox);
 NS_IMPL_RELEASE(nsComboBox);
 
+#define DASH					'-'
+#define OPTION_DASH		'Ð'
+
+
 //-------------------------------------------------------------------------
 //
 // nsComboBox constructor
@@ -35,7 +39,7 @@ nsComboBox::nsComboBox() : nsMacControl(), nsIListWidget(), nsIComboBox()
 {
 	NS_INIT_REFCNT();
 	strcpy(gInstanceClassName, "nsComboBox");
-	SetControlType(kControlPopupButtonProc);
+	SetControlType(kControlPopupButtonProc + kControlPopupFixedWidthVariant);
 
 	mMenuHandle	= nsnull;
 	mMenuID		=  -12345;	// so that the control doesn't look for a menu in resource
@@ -144,16 +148,31 @@ nsresult nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 	Str255 pString;
 	StringToStr255(aItem, pString);
 
-	StartDraw();
-	if (aPosition == -1)
-		::MacAppendMenu(mMenuHandle, pString);
-	else
+	// Mac hacks: a menu item should not be an empty string
+	// (otherwise a new item is not appended to the menu)
+	// and it should not contain a dash '-' as first character
+	// (otherwise it is considered as a menu separator even though
+	// we are doing a 2-step initialization with MacInsertMenuItem()
+	// and SetMenuItemText()).
+	if (pString[0] == 0)
 	{
-		::MacInsertMenuItem(mMenuHandle, "\p ", aPosition + 1);
-		::SetMenuItemText(mMenuHandle, aPosition + 1, pString);
+		pString[0] = 1;
+		pString[1] = ' ';
+	}
+	else if (pString[1] == DASH) {
+		pString[1] = OPTION_DASH;
 	}
 
+	StartDraw();
+
 	short menuItems = GetItemCount();
+	if (aPosition == -1 || aPosition > menuItems) {
+		aPosition = menuItems;
+	}
+	::MacInsertMenuItem(mMenuHandle, "\p ", aPosition);
+	::SetMenuItemText(mMenuHandle, aPosition + 1, pString);
+
+	menuItems = GetItemCount();
 	::SetControlMinimum(mControl, (menuItems ? 1 : 0));
 	::SetControlMaximum(mControl, (menuItems ? menuItems : 0));
 	EndDraw();
@@ -172,22 +191,15 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 		return -1;
 
 	PRInt32 index = -1;
-	short itemCount = CountMenuItems(mMenuHandle);
-
-	if (aStartPos <= itemCount)
+	short itemCount = GetItemCount();
+	for (short i = aStartPos; i < itemCount; i ++)
 	{
-		Str255 searchStr;
-		StringToStr255(aItem, searchStr);
-
-		for (short i = aStartPos + 1; i <= itemCount; i ++)
+		nsString temp;
+		GetItemAt(temp, i);
+		if (aItem == temp)
 		{
-			Str255	itemStr;
-			::GetMenuItemText(mMenuHandle, i, itemStr);
-			if (::EqualString(itemStr, searchStr, FALSE, FALSE))
-			{
-				index = i;
-				break;
-			}
+			index = i;
+			break;
 		}
 	}
 	return index;
@@ -203,7 +215,7 @@ PRInt32  nsComboBox::GetItemCount()
 	if (! mMenuHandle)
 		return 0;
 
-	return CountMenuItems(mMenuHandle);
+	return ::CountMenuItems(mMenuHandle);
 }
 
 //-------------------------------------------------------------------------
@@ -235,7 +247,7 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 
 //-------------------------------------------------------------------------
 //
-//  Removes an Item at a specified location
+//  Returns an Item at a specified location
 //
 //-------------------------------------------------------------------------
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
@@ -250,6 +262,8 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 
 	Str255	itemStr;
 	::GetMenuItemText(mMenuHandle, aPosition + 1, itemStr);
+	if (itemStr[1] == OPTION_DASH)	// see AddItemAt() for more info
+		itemStr[1] = DASH;
 	Str255ToString(itemStr, anItem);
 
   return PR_TRUE;
@@ -260,19 +274,9 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-nsresult nsComboBox::GetSelectedItem(nsString& aItem)
+nsresult nsComboBox::GetSelectedItem(nsString& anItem)
 {
-	if (! mMenuHandle)
-	{
-		aItem = "";
-		return PR_FALSE;
-	}
-
-	Str255	itemStr;
-	::GetMenuItemText(mMenuHandle, ::GetControlValue(mControl), itemStr);
-	Str255ToString(itemStr, aItem);
-
-  return PR_TRUE;
+	return GetItemAt(anItem, GetSelectedIndex());
 }
 
 //-------------------------------------------------------------------------
