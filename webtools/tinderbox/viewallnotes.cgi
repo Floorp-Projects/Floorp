@@ -47,6 +47,8 @@ sub str2timeAndCheck {
     return 0;
 }
 
+my $header = "<table border=1><th>Build time</th><th>Build name</th><th>Who</th><th>Note time</th><th>Note</th>";
+
 if (defined $tree && defined $start && defined $end) {
     my $first = str2timeAndCheck($start);
     my $last = str2timeAndCheck($end);
@@ -56,6 +58,7 @@ if (defined $tree && defined $start && defined $end) {
                 time2str($TIMEFORMAT, $first) . " to " .
                     time2str($TIMEFORMAT, $last) . "</H3></center>\n";
             my %stats;
+	    print "$header\n";
             while (<IN>) {
                 chop;
     		my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note)
