@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.34 2001/02/14 15:14:20 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.35 2001/03/02 03:40:48 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.34 $ $Date: 2001/02/14 15:14:20 $
+ * @version $Revision: 1.35 $ $Date: 2001/03/02 03:40:48 $
 **/
 
 /**
@@ -1773,6 +1773,11 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
      //- Process root of XML source document -/
     //---------------------------------------/
     process(sourceNode, sourceNode, ps);
+
+    // XXX Hack, ProcessorState::addToResultTree should do the right thing
+    // for adding several consecutive text nodes
+    // Normalize the result document 
+    aOutputDoc->Normalize();    
 
     if (aObserver) {
         nsresult res = NS_OK;
