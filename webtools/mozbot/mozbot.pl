@@ -32,6 +32,7 @@
 #                 Risto Kotalampi <risto@kotalampi.com>
 #                 Josh Soref <timeless@bemail.org>
 #                 Ian Hickson <mozbot@hixie.ch>
+#                 Ken Coar <ken.coar@golux.com>
 #
 # mozbot.pl harrison@netscape.com 1998-10-14
 # "irc bot for the gang on #mozilla"
@@ -363,6 +364,7 @@ sub connect {
     &debug(" + channel handlers");
     $bot->add_handler('msg', \&on_private); # /msg bot hello
     $bot->add_handler('public', \&on_public);  # hello
+    $bot->add_handler('notice', \&on_noticemsg); # notice messages
     $bot->add_handler('join', \&on_join); # when someone else joins
     $bot->add_handler('part', \&on_part); # when someone else leaves
     $bot->add_handler('topic', \&on_topic); # when topic changes in a channel
@@ -638,6 +640,14 @@ sub on_public {
     }
 }
 
+# on_noticemsg: notice messages from the server, some service, or another
+# user.  beware!  it's generally Bad Juju to respond to these, but for
+# some things (like opn's NickServ) it's appropriate.
+sub on_noticemsg {
+    my ($self, $event) = @_;
+    &do($self, $event, 'Noticed');
+}
+
 sub on_private {
     my ($self, $event) = @_;
     my $data = join(' ', $event->args);
@@ -717,8 +727,8 @@ sub on_cpong {
 sub on_gender {
     my ($self, $event) = @_;
     my $nick = $event->nick;
-    $self->ctcp_reply($nick, 'neuter');
-} # well, close enough...
+    $self->ctcp_reply($nick, 'female'); # changed to female by special request
+}
 
 # simple handler for when users do various things and stuff
 sub on_join { &do(@_, 'SpottedJoin'); }
@@ -1365,6 +1375,8 @@ sub do {
         return $self->Heard($e, $e->{'data'});
     } elsif ($type eq 'Baffled') {
         return $self->Baffled($e, $e->{'data'});
+    } elsif ($type eq 'Noticed') {
+        return $self->Noticed($e, $e->{'data'});
     } elsif ($type eq 'Felt') {
         return $self->Felt($e, $e->{'data'});
     } elsif ($type eq 'Saw') {
@@ -1957,6 +1969,13 @@ sub Baffled {
 
 # Told - Called for messages prefixed by the bot's nick
 sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    return 1;
+}
+
+# Noticed - Called for notice messages
+sub Noticed {
     my $self = shift;
     my ($event, $message) = @_;
     return 1;

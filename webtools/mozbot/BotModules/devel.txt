@@ -257,6 +257,26 @@ set to 1. This won't be a problem if your module only returns 1
  implementation of Heard() does).
  
 
+*** Noticed($event, $message)
+
+ Called for all 'notice' messages, whether aimed directly at the bot
+ or not. Don't use this message to trigger responses! Doing so is a
+ violation of the IRC protocol.
+
+ To quote RFC 1459: 
+
+ # [...] automatic replies must never be sent in response to a NOTICE
+ # message. [...] The object of this rule is to avoid loops between a
+ # client automatically sending something in response to something it
+ # received. This is typically used by automatons (clients with either
+ # an AI or other interactive program controlling their actions) which
+ # are always seen to be replying lest they end up in a loop with
+ # another automaton.
+
+ Return 1 if you can't do anything (this is all the default
+ implementation of Noticed() does).
+ 
+
 *** Felt($event, $message)
 
  Called for all emotes containing bot's nick.
