@@ -39,6 +39,7 @@
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
 #include "nsILanguageAtomService.h"
+#include "nsIFontPackageService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -55,6 +56,10 @@ NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 // for language atoms
 //
 NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
+//
+// for font package service
+//
+NS_DEFINE_CID(kFontPackageServiceCID, NS_FONTPACKAGESERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -229,6 +234,16 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
     "nsLocaleTest: Register LanguageAtomService failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
+  //
+  // register the font package service
+  //
+  rv = compMgr->RegisterComponent(kFontPackageServiceCID,
+    "Font Package Service", NS_FONTPACKAGESERVICE_CONTRACTID, path, PR_TRUE,
+    PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+    "nsLocaleTest: Register FontPackageService failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -272,6 +287,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 	rv = compMgr->UnregisterComponent(kLanguageAtomServiceCID, path);
 	if (NS_FAILED(rv)) goto done;
 
+	rv = compMgr->UnregisterComponent(kFontPackageServiceCID, path);
+	if (NS_FAILED(rv)) goto done;
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
