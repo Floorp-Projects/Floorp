@@ -448,13 +448,7 @@ public:
      * Attempts to shrink the heap.
      */
     NS_IMETHOD
-    HeapMinimize(void);
-
-    NS_IMETHOD
-    RegisterObserver(nsIMemoryPressureObserver *obs) { return NS_OK; }
-
-    NS_IMETHOD
-    UnregisterObserver(nsIMemoryPressureObserver *obs) { return NS_OK; }
+    HeapMinimize(PRBool aImmediate);
 
 private:
 	nsILiveconnect* mLiveconnect;
@@ -2065,7 +2059,7 @@ CPluginManager::Free(void* ptr)
 }
 
 NS_METHOD
-CPluginManager::HeapMinimize()
+CPluginManager::HeapMinimize(PRBool aImmediate)
 {
 #ifdef XP_MAC
 	::NPN_MemFlush(1024);
