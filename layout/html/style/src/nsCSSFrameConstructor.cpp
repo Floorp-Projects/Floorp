@@ -117,6 +117,11 @@
 #include "nsPolygonFrame.h"
 #include "nsPolylineFrame.h"
 
+
+#ifdef DEBUG_mjudge
+#define DEBUG_NEWFRAME 1 
+#endif
+
 nsresult
 NS_NewSVGContainerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot );
 
@@ -3854,7 +3859,11 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
       aNewFrame = nsnull;
     }
     if (aNewFrame)
+    {
+#ifndef DEBUG_NEWFRAME
       ((nsGfxTextControlFrame*)aNewFrame)->SetFrameConstructor(this);
+#endif
+    }
   }
   if (!aNewFrame)
   {
@@ -5176,6 +5185,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   // only these tags types can have anonymous content. We do this check for performance
   // reasons. If we did a query interface on every tag it would be very inefficient.
   if (aTag !=  nsHTMLAtoms::input &&
+      aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
       aTag !=  nsXULAtoms::slider &&
       aTag !=  nsXULAtoms::splitter &&
