@@ -1222,7 +1222,7 @@ nsMsgKeySet::ToMsgKeyArray(nsMsgKeyArray **aArray)
         if (from <= last_art) from = last_art + 1;
         if (from <= to) {
             if (from < to) {
-                for (PRInt32 i = from; i < to ; ++i ) {
+                for (PRInt32 i = from; i <= to ; ++i ) {
                     array->Add(i);
                 }
             } else {
