@@ -168,10 +168,10 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
           nsAutoString ret;
           PRBool isUndefined;
 
-          if (script_context->EvaluateString(nsString(what),
+          if (NS_SUCCEEDED(script_context->EvaluateString(nsString(what),
                                              nsnull, 0,
                                              ret,
-                                             &isUndefined)) {
+                                             &isUndefined))) {
             JSContext *cx = (JSContext *)script_context->GetNativeContext();
             // Find out if it can be converted into a string
             if (!isUndefined) {

@@ -38,11 +38,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD_(PRBool)       EvaluateString(const nsString& aScript, 
-                                           const char *aURL,
-                                           PRUint32 aLineNo,
-                                           nsString& aRetValue,
-                                           PRBool* aIsUndefined);
+  NS_IMETHOD       EvaluateString(const nsString& aScript, 
+                                  const char *aURL,
+                                  PRUint32 aLineNo,
+                                  nsString& aRetValue,
+                                  PRBool* aIsUndefined);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
   NS_IMETHOD_(void*)                     GetNativeContext();
   NS_IMETHOD     InitClasses();

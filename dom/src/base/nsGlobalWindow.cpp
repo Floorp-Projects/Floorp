@@ -66,6 +66,7 @@
 #include "nsHistory.h"
 #include "nsBarProps.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIJSContextStack.h"
 #ifndef NECKO
 #include "nsINetService.h"
 #else
@@ -1623,6 +1624,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     PRInt64 now;
     jsval result;
     nsITimer *timer;
+    nsresult rv;
 
     /* Make sure that the window or the script context don't go away as 
        a result of running timeouts */
@@ -1680,6 +1682,16 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       HoldTimeout(timeout);
       mRunningTimeout = timeout;
 
+      NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(temp);
+        NS_RELEASE(tempContext);
+        return PR_TRUE;
+      }
+
+      rv = stack->Push(cx);
+      // XXX Should check for rv. If failed, then what?
+
       if (timeout->expr) {
         /* Evaluate the timeout expression. */
 #if 0
@@ -1716,6 +1728,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       }
 
       tempContext->ScriptEvaluated();
+      rv = stack->Pop(nsnull);
 
       mRunningTimeout = nsnull;
       /* If the temporary reference is the only one that is keeping

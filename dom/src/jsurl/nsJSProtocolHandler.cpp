@@ -105,11 +105,11 @@ public:
 
         nsAutoString ret;
         PRBool isUndefined;
-        PRBool ok;
+        nsresult ok;
         ok = scriptContext->EvaluateString(nsString(jsExpr),
                                            nsnull, 0, ret, &isUndefined);
         nsCRT::free(jsExpr);
-        if (ok) {
+        if (NS_SUCCEEDED(ok)) {
 //            JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
             // Find out if it can be converted into a string
             if (!isUndefined) {

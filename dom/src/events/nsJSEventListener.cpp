@@ -18,6 +18,8 @@
 #include "nsJSEventListener.h"
 #include "nsString.h"
 #include "nsIScriptEventListener.h"
+#include "nsIServiceManager.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -67,6 +69,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   JSObject *mEventObj;
   char* mEventChars;
   nsString mEventString;
+  nsresult rv;
 
   if (NS_OK != aEvent->GetType(mEventString)) {
     //JS can't handle this event yet or can't handle it at all
@@ -93,15 +96,28 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = stack->Push(mContext);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   argv[0] = OBJECT_TO_JSVAL(mEventObj);
-  if (PR_TRUE == JS_CallFunctionValue(mContext, mJSObj, funval, 1, argv, &result)) {
-    mScriptCX->ScriptEvaluated();
+  PRBool ok = JS_CallFunctionValue(mContext, mJSObj, funval, 1, argv, &result);
+
+  mScriptCX->ScriptEvaluated();
+  rv = stack->Pop(nsnull);
+
+  if (PR_TRUE == ok) {
 	  if (JSVAL_IS_BOOLEAN(result) && JSVAL_TO_BOOLEAN(result) == JS_FALSE) {
       aEvent->PreventDefault();
     }
     return NS_OK;
   }
-  mScriptCX->ScriptEvaluated();
 
   return NS_ERROR_FAILURE;
 }
