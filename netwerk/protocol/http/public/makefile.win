@@ -21,6 +21,7 @@ DEPTH = ..\..\..\..
 
 XPIDLSRCS =                  \
         .\nsIHTTPChannel.idl \
+	.\nsIHttpNotify.idl  \
         $(NULL)
 
 EXPORTS =                   \
