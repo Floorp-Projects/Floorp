@@ -175,6 +175,31 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         //return NS_OK to allow page scrolling.
         return NS_OK;
       	break;
+
+      case nsIDOMUIEvent::VK_TAB:
+      {
+        PRUint32 flags=0;
+        mEditor->GetFlags(&flags);
+        if (! (flags & TEXT_EDITOR_FLAG_SINGLELINE))
+        {
+          PRBool ctrlKey, altKey, metaKey;
+          uiEvent->GetCtrlKey(&ctrlKey);
+          uiEvent->GetAltKey(&altKey);
+          uiEvent->GetMetaKey(&metaKey);
+          if (metaKey || altKey)
+            return NS_OK;	// don't consume
+          // else we insert the tab straight through  
+ 		      nsAutoString key;
+          key += keyCode;
+ 		      mEditor->InsertText(key);
+          return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
+        }
+        else {
+          return NS_OK;
+        }
+        break;
+      }
+
       default:
         return NS_OK; // this indicates that we have not handled the keyDown event in any way.
       }
@@ -233,6 +258,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
  	if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
       (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
  	{
+    if (nsIDOMUIEvent::VK_TAB==character) {
+      return NS_OK; // ignore tabs here, they're handled in keyDown if at all
+    }
  		key += character;
  		mEditor->InsertText(key);
  	}
@@ -1450,16 +1478,29 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (ps)
       {
         ps->SetCaretEnabled(PR_FALSE);
-      }
-      nsCOMPtr<nsIDOMDocument>domDoc;
-      editor->GetDocument(getter_AddRefs(domDoc));
-      if (domDoc)
-      {
-        nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-        if (doc)
+
+        nsCOMPtr<nsIDOMDocument>domDoc;
+        editor->GetDocument(getter_AddRefs(domDoc));
+        if (domDoc)
         {
-          doc->SetDisplaySelection(PR_FALSE);
+          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+          if (doc)
+          {
+            doc->SetDisplaySelection(PR_FALSE);
+          }
         }
+// begin hack repaint
+        nsCOMPtr<nsIViewManager> viewmgr;
+        ps->GetViewManager(getter_AddRefs(viewmgr));
+        if (viewmgr) 
+        {
+          nsIView* view;
+          viewmgr->GetRootView(view);			// views are not refCounted
+          if (view) {
+            viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+          }
+        }
+// end hack repaint
       }
     }
   }
