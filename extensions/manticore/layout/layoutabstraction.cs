@@ -188,6 +188,7 @@ namespace Silverstone.Manticore.Layout
     {
       AddProgressListener();
       AddTitleChangeListener();
+      AddStatusChangeListener();
     }
 
     private bool mProgressChangeGecko = false;
@@ -233,6 +234,29 @@ namespace Silverstone.Manticore.Layout
     {
       mBrowserWindow.OnTitleChange(e.text);
     }
+
+    private bool mStatusChangeGecko = false;
+    private bool mStatusChangeTrident = false;
+    private void AddStatusChangeListener()
+    {
+      if (gecko != null && !mStatusChangeGecko) {
+        gecko.StatusTextChange += new AxMOZILLACONTROLLib.DWebBrowserEvents2_StatusTextChangeEventHandler(OnStatusChangeGecko);
+        mStatusChangeGecko = true;
+      }
+      else if (trident != null && !mStatusChangeTrident) {
+        trident.StatusTextChange += new AxSHDocVw.DWebBrowserEvents2_StatusTextChangeEventHandler(OnStatusChangeTrident);
+        mStatusChangeTrident = true;
+      }
+    }
+    public void OnStatusChangeGecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_StatusTextChangeEvent e)
+    {
+      mBrowserWindow.OnStatusTextChange(e.text);
+    }
+    public void OnStatusChangeTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_StatusTextChangeEvent e)
+    {
+      mBrowserWindow.OnStatusTextChange(e.text);
+    }
+
   }
 }
 

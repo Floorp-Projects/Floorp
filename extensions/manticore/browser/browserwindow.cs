@@ -54,6 +54,7 @@ namespace Silverstone.Manticore.Browser
 
     private StatusBar mStatusBar;
     private StatusBarPanel mProgressMeter;
+    private StatusBarPanel mStatusPanel;
     protected internal ManticoreApp mApplication;
 
     public BrowserWindow(ManticoreApp app)
@@ -97,17 +98,17 @@ namespace Silverstone.Manticore.Browser
       mStatusBar = new StatusBar();
       
       StatusBarPanel docStatePanel = new StatusBarPanel();
-      StatusBarPanel statusPanel = new StatusBarPanel();
+      mStatusPanel = new StatusBarPanel();
       mProgressMeter = new StatusBarPanel();
       StatusBarPanel zonePanel = new StatusBarPanel();
 
       docStatePanel.Text = "X";
       zonePanel.Text = "Internet Region";
-      statusPanel.Text = "Document Done";
-      statusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
+      mStatusPanel.Text = "Document Done";
+      mStatusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
       
 
-      mStatusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, mProgressMeter, zonePanel});
+      mStatusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, mStatusPanel, mProgressMeter, zonePanel});
       mStatusBar.ShowPanels = true;
       
       mWebBrowser = new WebBrowser(this);
@@ -171,8 +172,12 @@ namespace Silverstone.Manticore.Browser
 
     public void OnTitleChange(String aTitle)
     {
-      Console.WriteLine("title change to " + aTitle);
       this.Text = aTitle + " - Manticore";
+    }
+
+    public void OnStatusTextChange(String aStatusText)
+    {
+      mStatusPanel.Text = aStatusText;
     }
   
     public void DoCommand(String s) 
