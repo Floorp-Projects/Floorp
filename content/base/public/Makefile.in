@@ -60,7 +60,6 @@ $(NULL)
 
 XPIDLSRCS	= \
 		nsIContentPolicy.idl        \
-		nsIDiskDocument.idl         \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \

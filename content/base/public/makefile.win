@@ -55,7 +55,6 @@ XPIDL_MODULE=content_base
 
 XPIDLSRCS=					\
 		.\nsIContentPolicy.idl		\
-		.\nsIDiskDocument.idl		\
 		.\nsISelectionController.idl	\
 		.\nsISelectionDisplay.idl	\
 		.\nsISelectionListener.idl	\
