@@ -3718,171 +3718,110 @@ done
 
 
 
-echo $ac_n "checking for pthread_attr_init in -lpthreads""... $ac_c" 1>&6
-echo "configure:3723: checking for pthread_attr_init in -lpthreads" >&5
-ac_lib_var=`echo pthreads'_'pthread_attr_init | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-lpthreads  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 3731 "configure"
-#include "confdefs.h"
-/* Override any gcc2 internal prototype to avoid an error.  */
-/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char pthread_attr_init();
 
-int main() {
-pthread_attr_init()
-; return 0; }
-EOF
-if { (eval echo configure:3742: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
 
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads"
-else
-  echo "$ac_t""no" 1>&6
-echo $ac_n "checking for pthread_attr_init in -lpthread""... $ac_c" 1>&6
-echo "configure:3761: checking for pthread_attr_init in -lpthread" >&5
-ac_lib_var=`echo pthread'_'pthread_attr_init | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-lpthread  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 3769 "configure"
-#include "confdefs.h"
-/* Override any gcc2 internal prototype to avoid an error.  */
-/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char pthread_attr_init();
 
-int main() {
-pthread_attr_init()
-; return 0; }
-EOF
-if { (eval echo configure:3780: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
-
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
-else
-  echo "$ac_t""no" 1>&6
-echo $ac_n "checking for pthread_attr_init in -lc_r""... $ac_c" 1>&6
-echo "configure:3799: checking for pthread_attr_init in -lc_r" >&5
-ac_lib_var=`echo c_r'_'pthread_attr_init | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-lc_r  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 3807 "configure"
-#include "confdefs.h"
-/* Override any gcc2 internal prototype to avoid an error.  */
-/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char pthread_attr_init();
-
-int main() {
-pthread_attr_init()
-; return 0; }
-EOF
-if { (eval echo configure:3818: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
-
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
-else
-  echo "$ac_t""no" 1>&6
-echo $ac_n "checking for pthread_attr_init in -lc""... $ac_c" 1>&6
-echo "configure:3837: checking for pthread_attr_init in -lc" >&5
-ac_lib_var=`echo c'_'pthread_attr_init | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-lc  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 3845 "configure"
-#include "confdefs.h"
-/* Override any gcc2 internal prototype to avoid an error.  */
-/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char pthread_attr_init();
-
-int main() {
-pthread_attr_init()
-; return 0; }
-EOF
-if { (eval echo configure:3856: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
-
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1
+echo $ac_n "checking for pthread_create in -lpthreads""... $ac_c" 1>&6
+echo "configure:3726: checking for pthread_create in -lpthreads" >&5
+echo "
+    #include <pthread.h> 
+    void *foo(void *v) { int a = 1;  } 
+    int main() { 
+        pthread_t t;
+        if (!pthread_create(&t, 0, &foo, 0)) {
+            pthread_join(t, 0);
+        }
+        exit(0);
+    }" > dummy.c ;
+    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS" 1>&5;
+    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS 2>&5;
+    _res=$? ;
+    rm -f dummy.c dummy${ac_exeext} ;
+    if test "$_res" = "0"; then
+        echo "$ac_t""yes" 1>&6
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads"
+    else
+        echo "$ac_t""no" 1>&6
+        
+echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
+echo "configure:3748: checking for pthread_create in -lpthread" >&5
+echo "
+    #include <pthread.h> 
+    void *foo(void *v) { int a = 1;  } 
+    int main() { 
+        pthread_t t;
+        if (!pthread_create(&t, 0, &foo, 0)) {
+            pthread_join(t, 0);
+        }
+        exit(0);
+    }" > dummy.c ;
+    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS" 1>&5;
+    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS 2>&5;
+    _res=$? ;
+    rm -f dummy.c dummy${ac_exeext} ;
+    if test "$_res" = "0"; then
+        echo "$ac_t""yes" 1>&6
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
+    else
+        echo "$ac_t""no" 1>&6
+        
+echo $ac_n "checking for pthread_create in -lc_r""... $ac_c" 1>&6
+echo "configure:3770: checking for pthread_create in -lc_r" >&5
+echo "
+    #include <pthread.h> 
+    void *foo(void *v) { int a = 1;  } 
+    int main() { 
+        pthread_t t;
+        if (!pthread_create(&t, 0, &foo, 0)) {
+            pthread_join(t, 0);
+        }
+        exit(0);
+    }" > dummy.c ;
+    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS" 1>&5;
+    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS 2>&5;
+    _res=$? ;
+    rm -f dummy.c dummy${ac_exeext} ;
+    if test "$_res" = "0"; then
+        echo "$ac_t""yes" 1>&6
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
+    else
+        echo "$ac_t""no" 1>&6
+        
+echo $ac_n "checking for pthread_create in -lc""... $ac_c" 1>&6
+echo "configure:3792: checking for pthread_create in -lc" >&5
+echo "
+    #include <pthread.h> 
+    void *foo(void *v) { int a = 1;  } 
+    int main() { 
+        pthread_t t;
+        if (!pthread_create(&t, 0, &foo, 0)) {
+            pthread_join(t, 0);
+        }
+        exit(0);
+    }" > dummy.c ;
+    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS" 1>&5;
+    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS 2>&5;
+    _res=$? ;
+    rm -f dummy.c dummy${ac_exeext} ;
+    if test "$_res" = "0"; then
+        echo "$ac_t""yes" 1>&6
+        _HAVE_PTHREADS=1
             
-else
-  echo "$ac_t""no" 1>&6
-fi
+    else
+        echo "$ac_t""no" 1>&6
+        
+    fi
 
         
-fi
+    fi
 
     
-fi
+    fi
 
 
-fi
+    fi
 
-
+                        
 # Check whether --with-pthreads or --without-pthreads was given.
 if test "${with_pthreads+set}" = set; then
   withval="$with_pthreads"
@@ -3999,7 +3938,7 @@ if test -n "$USE_PTHREADS"; then
       rm -f conftest*
    ac_cv_have_dash_pthread=no
    echo $ac_n "checking whether ${CC-cc} accepts -pthread""... $ac_c" 1>&6
-echo "configure:4003: checking whether ${CC-cc} accepts -pthread" >&5
+echo "configure:3942: checking whether ${CC-cc} accepts -pthread" >&5
    echo 'int main() { return 0; }' | cat > conftest.c
    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
    if test $? -eq 0; then
@@ -4015,7 +3954,7 @@ echo "configure:4003: checking whether ${CC-cc} accepts -pthread" >&5
 			    ac_cv_have_dash_pthreads=no
     if test "$ac_cv_have_dash_pthread" = "no"; then
 	    echo $ac_n "checking whether ${CC-cc} accepts -pthreads""... $ac_c" 1>&6
-echo "configure:4019: checking whether ${CC-cc} accepts -pthreads" >&5
+echo "configure:3958: checking whether ${CC-cc} accepts -pthreads" >&5
     	echo 'int main() { return 0; }' | cat > conftest.c
 	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
     	if test $? -eq 0; then
@@ -4186,12 +4125,12 @@ OS_LIBS="$_PTHREAD_LDFLAGS $OS_LIBS"
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 echo $ac_n "checking for dlopen""... $ac_c" 1>&6
-echo "configure:4190: checking for dlopen" >&5
+echo "configure:4129: checking for dlopen" >&5
 if eval "test \"`echo '$''{'ac_cv_func_dlopen'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4195 "configure"
+#line 4134 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen(); below.  */
@@ -4214,7 +4153,7 @@ dlopen();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4218: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4157: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_dlopen=yes"
 else
@@ -4233,7 +4172,7 @@ else
   echo "$ac_t""no" 1>&6
 
     echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:4237: checking for dlopen in -ldl" >&5
+echo "configure:4176: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4241,7 +4180,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4245 "configure"
+#line 4184 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4252,7 +4191,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:4256: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4195: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
