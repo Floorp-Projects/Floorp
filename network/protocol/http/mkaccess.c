@@ -2247,7 +2247,6 @@ net_IntSetCookieString(MWContext * context,
 		 * the choice to accept it or not
 		 */
 		char * new_string=0;
-		char * tmp_host = NET_ParseURL(cur_url, GET_HOST_PART);
 #if defined(CookieManagement)
 		int count;
 		char * remember_string = 0;
@@ -2263,31 +2262,26 @@ net_IntSetCookieString(MWContext * context,
 		if (prev_cookie) {
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHES_MODIFY),
-			tmp_host ? tmp_host : "");
+			host_from_header ? host_from_header : "");
 		} else if (count>1) {
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHESN),
-			tmp_host ? tmp_host : "",
+			host_from_header ? host_from_header : "",
 			count);
 		} else if (count==1){
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHES1),
-			tmp_host ? tmp_host : "");
+			host_from_header ? host_from_header : "");
 		} else {
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHES0),
-			tmp_host ? tmp_host : "");
+			host_from_header ? host_from_header : "");
 		}
-		PR_Free(tmp_host);
 #else
-        StrAllocCopy(new_string, XP_GetString(MK_ACCESS_COOKIES_THE_SERVER));
-        StrAllocCat(new_string, tmp_host ? tmp_host : "");
-        StrAllocCat(new_string, XP_GetString(MK_ACCESS_COOKIES_WISHES));
-
+		char * tmp_host = NET_ParseURL(cur_url, GET_HOST_PART);
 		StrAllocCopy(new_string, XP_GetString(MK_ACCESS_COOKIES_THE_SERVER));
 		StrAllocCat(new_string, tmp_host ? tmp_host : "");
 		StrAllocCat(new_string, XP_GetString(MK_ACCESS_COOKIES_WISHES));
-
 		PR_Free(tmp_host);
 
 		if(is_domain) {
