@@ -47,14 +47,15 @@ public:
 
     NS_IMETHOD GetURL(nsIURL* *result);
 
-    NS_IMETHOD LoadURL(nsIURL *url);
-
     NS_IMETHOD SetInputStreamConsumer(nsIStreamListener* aListener);
 
     NS_IMETHOD GetOutputStreamConsumer(nsIStreamListener ** aConsumer);
 
     NS_IMETHOD GetOutputStream(nsIOutputStream ** aOutputStream);
 
+	NS_IMETHOD IsTransportOpen(PRBool * aSocketOpen);
+	
+	NS_IMETHOD Open(nsIURL * aUrl);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIStreamListener:
@@ -83,9 +84,13 @@ public:
 
 protected:
 
+	// use this function to close the underlying connection....
+	nsresult CloseCurrentConnection();
+
 	// socket specific information...
 	PRUint32	m_port;
 	char	   *m_hostName;
+	PRBool	    m_socketIsOpen; // set when we have opened a socket....
 
     // the stream we write data from the socket into
     nsIInputStream * m_inputStream;  
@@ -99,7 +104,7 @@ protected:
     // through the inputStreamConsumer any socket specific data
     nsIStreamListener *m_inputStreamConsumer; 
 
-    nsIURL *m_url;
+    nsIURL *m_url;		// the url we are currently running...
     nsString* mData;
     PRFileDesc *m_ready_fd;
     nsIEventQueueService* mEventQService;

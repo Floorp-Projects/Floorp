@@ -57,29 +57,51 @@ nsSocketTransport::GetURL(nsIURL* *result)
 
 static NS_DEFINE_IID(kINetlibURLIID, NS_INETLIBURL_IID);
 
+NS_METHOD nsSocketTransport::IsTransportOpen(PRBool * aSocketOpen)
+{
+	nsresult rv = NS_OK;
+	if (aSocketOpen)
+		*aSocketOpen = m_socketIsOpen;
+	
+	return rv;
+}
 
-NS_METHOD 
-nsSocketTransport::LoadURL(nsIURL *pURL)
+/* Open means take the url and make a socket connection with the host...
+   The user will then write data to be sent to the host via our input stream...
+ */
+
+NS_METHOD nsSocketTransport::Open(nsIURL *pURL)
 {
   nsresult rv = NS_OK;
-  if (nsnull == pURL) {
-      return NS_ERROR_NULL_POINTER;
+
+  // only actually try to do anything if we aren't open for business yet...
+  if (m_socketIsOpen == PR_FALSE)
+  {
+	  m_socketIsOpen = PR_TRUE;
+
+	  if (nsnull == pURL) 
+		return NS_ERROR_NULL_POINTER;
+
+	  if (nsnull == m_inputStreamConsumer)
+		return NS_ERROR_NULL_POINTER;
+
+	  NS_IF_ADDREF(pURL);
+	  m_url = pURL;
+      pURL->SetHostPort(m_port);
+	  const char * hostName = nsnull;
+	  pURL->GetHost(&hostName);
+	  if (hostName)
+	  {
+		  PR_FREEIF(m_hostName);
+		  m_hostName = PL_strdup(hostName);
+	  }
+
+	  // running this url will cause a connection to be made on the socket.
+	  rv = NS_OpenURL(pURL, m_inputStreamConsumer);
+	  m_socketIsOpen = PR_TRUE;
   }
 
-  if (nsnull == m_inputStreamConsumer) {
-      return NS_ERROR_NULL_POINTER;
-  }
-
-  NS_IF_ADDREF(pURL);
-  m_url = pURL;
-  pURL->SetHostPort(m_port);
-
-  nsresult ns_result = NS_OpenURL(pURL, m_inputStreamConsumer);
-  if (NS_OK != ns_result) {
-    return ns_result;
-  }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_METHOD 
@@ -87,6 +109,7 @@ nsSocketTransport::SetInputStreamConsumer(nsIStreamListener* aListener)
 {
   // generates the thread safe proxy
   m_inputStreamConsumer = ns_NewStreamListenerProxy(aListener, m_evQueue);  
+  NS_IF_ADDREF(m_inputStreamConsumer);
   return NS_OK;
 }
 
@@ -94,8 +117,13 @@ nsSocketTransport::SetInputStreamConsumer(nsIStreamListener* aListener)
 NS_METHOD
 nsSocketTransport::GetOutputStreamConsumer(nsIStreamListener ** aConsumer)
 {
-  // assuming the transport layer is a nsIStreamListener 
-  *aConsumer = ns_NewStreamListenerProxy(this, m_evQueue); 
+	if (aConsumer)
+	{
+		// assuming the transport layer is a nsIStreamListener 
+		*aConsumer = ns_NewStreamListenerProxy(this, m_evQueue); 
+		// add ref bfore returning...
+		NS_IF_ADDREF(*aConsumer);
+	}
   return NS_OK;
 }
 
@@ -140,6 +168,10 @@ nsSocketTransport::OnStopBinding(nsIURL* pURL,
 				 nsresult aStatus, 
 				 const PRUnichar* aMsg)
 {
+// if the protocol instance called OnStopBinding then they are effectively asking us
+// to close the connection. But they don't want US to go away.....
+// so we need to close the underlying socket....
+  CloseCurrentConnection();
   return NS_OK;
 }
 
@@ -164,41 +196,49 @@ nsSocketTransport::OnDataAvailable(nsIURL* pURL,
    * Get the URL_s structure and pass it to sockstub protocol code to get the 
    * socket FD so that we could write the data back.
    */
-  rv = GetURLInfo(pURL, &URL_s);
 
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull != URL_s) {
-      /* Find the socket given URL_s pointer */
-      m_ready_fd = NET_GetSocketToHashTable(URL_s);
-    }
-  } else {
-    return rv;
-  }
+  NS_PRECONDITION(m_socketIsOpen, "Uhoh, you tried to write to a socket before opening it by calling open...");
+
+  if (m_socketIsOpen == PR_TRUE)  // only do something useful if we are open...
+  {
+  	  rv = GetURLInfo(pURL, &URL_s);
+
+	  if (NS_SUCCEEDED(rv)) {
+		if (nsnull != URL_s) {
+		  /* Find the socket given URL_s pointer */
+		  m_ready_fd = NET_GetSocketToHashTable(URL_s);
+		}
+	  } else {
+		return rv;
+	  }
     
-  if (m_ready_fd == NULL) {
-      return NS_ERROR_NULL_POINTER;
+	  if (m_ready_fd == NULL) {
+		  return NS_ERROR_NULL_POINTER;
+	  }
+
+	  aIStream->GetLength(&len);
+
+	  memset(m_buffer, '\0', NET_SOCKSTUB_BUF_SIZE);
+	  while (len > 0) {
+		if (len < NET_SOCKSTUB_BUF_SIZE) {
+		  lenRead = len;
+		}
+		else {
+		  lenRead = NET_SOCKSTUB_BUF_SIZE;
+		}
+
+		rv = aIStream->Read(m_buffer, 0, lenRead, &lenRead);
+		if (NS_OK != rv) {
+		  return rv;
+		}
+
+		/* XXX: We should check if the write has succeeded or not */
+		(int) NET_BlockingWrite(m_ready_fd, m_buffer, lenRead);
+		len -= lenRead;
+	  }
   }
-
-  aIStream->GetLength(&len);
-
-  memset(m_buffer, '\0', NET_SOCKSTUB_BUF_SIZE);
-  while (len > 0) {
-    if (len < NET_SOCKSTUB_BUF_SIZE) {
-      lenRead = len;
-    }
-    else {
-      lenRead = NET_SOCKSTUB_BUF_SIZE;
-    }
-
-    rv = aIStream->Read(m_buffer, 0, lenRead, &lenRead);
-    if (NS_OK != rv) {
-      return rv;
-    }
-
-    /* XXX: We should check if the write has succeeded or not */
-    (int) NET_BlockingWrite(m_ready_fd, m_buffer, lenRead);
-    len -= lenRead;
-  }
+  else
+	  rv = NS_ERROR_FAILURE; // stream was not open...
 
   return rv;
 }
@@ -226,44 +266,37 @@ nsSocketTransport::nsSocketTransport(PRUint32 aPortToUse, const char * aHostName
 
   m_outStream = NULL;
   m_outStreamSize = 0;
+  m_socketIsOpen = PR_FALSE; // initially, we have not opened the socket...
 
   /*
    * Cache the EventQueueService...
    */
   // XXX: What if this fails?
+  
   mEventQService = nsnull;
   m_evQueue = nsnull;
   nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
 					     kIEventQueueServiceIID,
 					     (nsISupports **)&mEventQService);
 
-  if (nsnull != mEventQService) {
+  if (nsnull != mEventQService) 
     mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &m_evQueue);
-  }
 }
 
 nsSocketTransport::~nsSocketTransport()
 {
   nsresult rv = NS_OK;
-  URL_Struct* URL_s;
 
   /* XXX: HACK The following is a hack. 
    * Get the URL_s structure and pass it to sockstub protocol code to delete it
    */
-  rv = GetURLInfo(m_url, &URL_s);
 
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull != URL_s) {
-      /* Release the socket given URL_s pointer */
-      int32 res = NET_FreeSocket(URL_s);
-    }
-  }
+  rv = CloseCurrentConnection();
 
-  if (m_hostName)
-	PR_Free(m_hostName);
-  
+  NS_IF_RELEASE(mEventQService);
   NS_IF_RELEASE(m_outStream);
   NS_IF_RELEASE(m_url);
+  NS_IF_RELEASE(m_inputStreamConsumer);
 }
 
 NS_IMETHODIMP 
@@ -273,7 +306,7 @@ nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
   nsINetlibURL *pNetlibURL = NULL;
 
   NS_PRECONDITION(aResult != nsnull, "invalid input argument");
-  if (aResult)
+  if (aResult && pURL)
   {
 	  *aResult = nsnull;
       if (pURL)
@@ -286,4 +319,30 @@ nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
   }
   
   return rv;
+}
+
+nsresult nsSocketTransport::CloseCurrentConnection()
+{
+	nsresult rv = NS_OK;
+	URL_Struct_ * URL_s = nsnull;
+
+	if (m_url)  // we want to interrupt this url...that will kill the underlying sockstub instance...
+	{
+		nsINetService * pNetService = nsnull;
+		rv = NS_NewINetService(&pNetService, NULL);
+		if (pNetService)
+		{
+			rv = pNetService->InterruptStream(m_url);
+			NS_RELEASE(pNetService);
+		}
+		
+	}
+
+	// now free any per socket state information...
+	m_socketIsOpen = PR_FALSE;
+
+	NS_IF_RELEASE(m_url);
+    m_url = nsnull;
+    PR_FREEIF(m_hostName);
+    return rv;
 }
