@@ -56,6 +56,37 @@ class Dim {
     static final int BREAK = 4;
     static final int EXIT = 5;
 
+    GuiCallback callback;
+
+    boolean breakFlag = false;
+
+    ScopeProvider scopeProvider;
+
+    int frameIndex = -1;
+
+    boolean isInterrupted = false;
+    boolean nonDispatcherWaiting = false;
+    int dispatcherIsWaiting = 0;
+    volatile ContextData currentContextData = null;
+
+    private Object monitor = new Object();
+    private Object swingMonitor = new Object();
+    private int returnValue = -1;
+    private boolean insideInterruptLoop;
+    private String evalRequest;
+    private StackFrame evalFrame;
+    private String evalResult;
+
+    boolean breakOnExceptions;
+    boolean breakOnEnter;
+    boolean breakOnReturn;
+
+    private final Hashtable urlToSourceInfo = new Hashtable();
+    private final Hashtable functionNames = new Hashtable();
+    private final Hashtable functionToSource = new Hashtable();
+
+    private final Debugger debuggerImpl = new DebuggerImpl();
+
     static class ContextData
     {
         static ContextData get(Context cx) {
@@ -373,7 +404,7 @@ class Dim {
         }
     }
 
-    private final Debugger debuggerImpl = new Debugger()
+    private class DebuggerImpl implements Debugger
     {
         public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript)
         {
@@ -386,36 +417,7 @@ class Dim {
         {
             onCompilationDone(cx, fnOrScript, source);
         }
-    };
-
-    GuiCallback callback;
-
-    boolean breakFlag = false;
-
-    ScopeProvider scopeProvider;
-
-    int frameIndex = -1;
-
-    boolean isInterrupted = false;
-    boolean nonDispatcherWaiting = false;
-    int dispatcherIsWaiting = 0;
-    volatile ContextData currentContextData = null;
-
-    private Object monitor = new Object();
-    private Object swingMonitor = new Object();
-    private int returnValue = -1;
-    private boolean insideInterruptLoop;
-    private String evalRequest;
-    private StackFrame evalFrame;
-    private String evalResult;
-
-    boolean breakOnExceptions;
-    boolean breakOnEnter;
-    boolean breakOnReturn;
-
-    private final Hashtable urlToSourceInfo = new Hashtable();
-    private final Hashtable functionNames = new Hashtable();
-    private final Hashtable functionToSource = new Hashtable();
+    }
 
     void enableForAllNewContexts()
     {
@@ -703,9 +705,63 @@ class Dim {
 
     /* end Debugger interface */
 
-    private Object withContext(ContextAction action)
+    void contextSwitch (int frameIndex) {
+        this.frameIndex = frameIndex;
+    }
+
+    ContextData currentContextData() {
+        return currentContextData;
+    }
+
+    void setReturnValue(int returnValue)
     {
-        return Context.call(action);
+        synchronized (monitor) {
+            this.returnValue = returnValue;
+            monitor.notify();
+        }
+    }
+
+    void go()
+    {
+        synchronized (monitor) {
+            this.returnValue = GO;
+            monitor.notifyAll();
+        }
+    }
+
+    String eval(String expr)
+    {
+        String result = "undefined";
+        if (expr == null) {
+            return result;
+        }
+        ContextData contextData = currentContextData();
+        if (contextData == null || frameIndex >= contextData.frameCount()) {
+            return result;
+        }
+        StackFrame frame = contextData.getFrame(frameIndex);
+        if (contextData.eventThreadFlag) {
+            Context cx = Context.getCurrentContext();
+            result = do_eval(cx, frame, expr);
+        } else {
+            synchronized (monitor) {
+                if (insideInterruptLoop) {
+                    evalRequest = expr;
+                    evalFrame = frame;
+                    monitor.notify();
+                    do {
+                        try {
+                            monitor.wait();
+                        } catch (InterruptedException exc) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    } while (evalRequest != null);
+                    result = evalResult;
+                }
+            }
+        }
+        return result;
     }
 
     void compileScript(final String url, final String text)
@@ -713,7 +769,7 @@ class Dim {
         withContext(new ContextAction() {
             public Object run(Context cx)
             {
-                cx.compileString(text, url, 1, null);
+                compileScriptImpl(cx, url, text);
                 return null;
             }
         });
@@ -724,25 +780,160 @@ class Dim {
         withContext(new ContextAction() {
             public Object run(Context cx)
             {
-                Scriptable scope = null;
-                if (scopeProvider != null) {
-                    scope = scopeProvider.getScope();
-                }
-                if (scope == null) {
-                    scope = new ImporterTopLevel(cx);
-                }
-                cx.evaluateString(scope, text, url, 1, null);
+                evalScriptImpl(cx, url, text);
                 return null;
             }
         });
     }
 
-    void contextSwitch (int frameIndex) {
-        this.frameIndex = frameIndex;
+    String objectToString(final Object object)
+    {
+        return (String)withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                return objectToStringImpl(cx, object);
+            }
+        });
     }
 
-    ContextData currentContextData() {
-        return currentContextData;
+    boolean stringIsCompilableUnit(final String expr)
+    {
+        Boolean boxed = (Boolean)withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                boolean flag = stringIsCompilableUnitImpl(cx, expr);
+                return flag ? Boolean.TRUE : Boolean.FALSE;
+            }
+        });
+        return boxed.booleanValue();
+    }
+
+    Object getObjectProperty(final Object object, final Object id)
+    {
+        return withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                return getObjectPropertyImpl(cx, object, id);
+            }
+        });
+    }
+
+    Object[] getObjectIds(final Object object)
+    {
+        return (Object[])withContext(new ContextAction() {
+            public Object run(Context cx)
+            {
+                return getObjectIdsImpl(cx, object);
+            }
+        });
+    }
+
+    private Object withContext(ContextAction action)
+    {
+        return Context.call(action);
+    }
+
+    void compileScriptImpl(Context cx, String url, String text)
+    {
+        cx.compileString(text, url, 1, null);
+    }
+
+    void evalScriptImpl(Context cx, String url, String text)
+    {
+        Scriptable scope = null;
+        if (scopeProvider != null) {
+            scope = scopeProvider.getScope();
+        }
+        if (scope == null) {
+            scope = new ImporterTopLevel(cx);
+        }
+        cx.evaluateString(scope, text, url, 1, null);
+    }
+
+    boolean stringIsCompilableUnitImpl(Context cx, String expr)
+    {
+        return cx.stringIsCompilableUnit(expr);
+    }
+
+    String objectToStringImpl(Context cx, Object object)
+    {
+        if (object == Undefined.instance) {
+            return "undefined";
+        }
+        if (object == null) {
+            return "null";
+        }
+        if (object instanceof NativeCall) {
+            return "[object Call]";
+        }
+        return Context.toString(object);
+    }
+
+    Object getObjectPropertyImpl(Context cx, Object object, Object id)
+    {
+        Scriptable scriptable = (Scriptable)object;
+        Object result;
+        if (id instanceof String) {
+            String name = (String)id;
+            if (name.equals("this")) {
+                result = scriptable;
+            } else if (name.equals("__proto__")) {
+                result = scriptable.getPrototype();
+            } else if (name.equals("__parent__")) {
+                result = scriptable.getParentScope();
+            } else {
+                result = ScriptableObject.getProperty(scriptable, name);
+                if (result == ScriptableObject.NOT_FOUND) {
+                    result = Undefined.instance;
+                }
+            }
+        } else {
+            int index = ((Integer)id).intValue();
+            result = ScriptableObject.getProperty(scriptable, index);
+            if (result == ScriptableObject.NOT_FOUND) {
+                result = Undefined.instance;
+            }
+        }
+        return result;
+    }
+
+    Object[] getObjectIdsImpl(Context cx, Object object)
+    {
+        if (!(object instanceof Scriptable) || object == Undefined.instance) {
+            return Context.emptyArgs;
+        }
+
+        Object[] ids;
+        Scriptable scriptable = (Scriptable)object;
+        if (scriptable instanceof DebuggableObject) {
+            ids = ((DebuggableObject)scriptable).getAllIds();
+        } else {
+            ids = scriptable.getIds();
+        }
+
+        Scriptable proto = scriptable.getPrototype();
+        Scriptable parent = scriptable.getParentScope();
+        int extra = 0;
+        if (proto != null) {
+            ++extra;
+        }
+        if (parent != null) {
+            ++extra;
+        }
+        if (extra != 0) {
+            Object[] tmp = new Object[extra + ids.length];
+            System.arraycopy(ids, 0, tmp, extra, ids.length);
+            ids = tmp;
+            extra = 0;
+            if (proto != null) {
+                ids[extra++] = "__proto__";
+            }
+            if (parent != null) {
+                ids[extra++] = "__parent__";
+            }
+        }
+
+        return ids;
     }
 
     private void interrupted(Context cx, final StackFrame frame,
@@ -873,157 +1064,6 @@ class Dim {
             }
             swingMonitor.notifyAll();
         }
-    }
-
-    void setReturnValue(int returnValue)
-    {
-        synchronized (monitor) {
-            this.returnValue = returnValue;
-            monitor.notify();
-        }
-    }
-
-    void go()
-    {
-        synchronized (monitor) {
-            this.returnValue = GO;
-            monitor.notifyAll();
-        }
-    }
-
-    boolean stringIsCompilableUnit(final String expr)
-    {
-        Boolean result = (Boolean)withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                return cx.stringIsCompilableUnit(expr)
-                    ? Boolean.TRUE : Boolean.FALSE;
-            }
-        });
-        return result.booleanValue();
-    }
-
-    String objectToString(final Object object)
-    {
-        if (object == Undefined.instance) {
-            return "undefined";
-        }
-        if (object == null) {
-            return "null";
-        }
-        if (object instanceof NativeCall) {
-            return "[object Call]";
-        }
-        String result = (String)withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                return Context.toString(object);
-            }
-        });
-        return result;
-    }
-
-    Object getObjectProperty(Object object, Object id)
-    {
-        Scriptable scriptable = (Scriptable)object;
-        Object result;
-        if (id instanceof String) {
-            String name = (String)id;
-            if (name.equals("this")) {
-                result = scriptable;
-            } else if (name.equals("__proto__")) {
-                result = scriptable.getPrototype();
-            } else if (name.equals("__parent__")) {
-                result = scriptable.getParentScope();
-            } else {
-                result = ScriptableObject.getProperty(scriptable, name);
-                if (result == ScriptableObject.NOT_FOUND) {
-                    result = Undefined.instance;
-                }
-            }
-        } else {
-            int index = ((Integer)id).intValue();
-            result = ScriptableObject.getProperty(scriptable, index);
-            if (result == ScriptableObject.NOT_FOUND) {
-                result = Undefined.instance;
-            }
-        }
-        return result;
-    }
-
-    Object[] getObjectIds(Object object)
-    {
-        if (!(object instanceof Scriptable) || object == Undefined.instance) {
-            return Context.emptyArgs;
-        }
-        final Scriptable scriptable = (Scriptable)object;
-        Object[] ids = (Object[])withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                if (scriptable instanceof DebuggableObject) {
-                    return ((DebuggableObject)scriptable).getAllIds();
-                } else {
-                    return scriptable.getIds();
-                }
-            }
-        });
-        Scriptable proto = scriptable.getPrototype();
-        Scriptable parent = scriptable.getParentScope();
-        int extra = 0;
-        if (proto != null) {
-            ++extra;
-        }
-        if (parent != null) {
-            ++extra;
-        }
-        if (extra != 0) {
-            Object[] tmp = new Object[extra + ids.length];
-            System.arraycopy(ids, 0, tmp, extra, ids.length);
-            ids = tmp;
-            extra = 0;
-            if (proto != null) {
-                ids[extra++] = "__proto__";
-            }
-            if (parent != null) {
-                ids[extra++] = "__parent__";
-            }
-        }
-        return ids;
-    }
-
-    String eval(String expr)
-    {
-        String result = "undefined";
-        if (expr == null) {
-            return result;
-        }
-        ContextData contextData = currentContextData();
-        if (contextData == null || frameIndex >= contextData.frameCount()) {
-            return result;
-        }
-        StackFrame frame = contextData.getFrame(frameIndex);
-        if (contextData.eventThreadFlag) {
-            Context cx = Context.getCurrentContext();
-            result = do_eval(cx, frame, expr);
-        } else {
-            synchronized (monitor) {
-                if (insideInterruptLoop) {
-                    evalRequest = expr;
-                    evalFrame = frame;
-                    monitor.notify();
-                    do {
-                        try {
-                            monitor.wait();
-                        } catch (InterruptedException exc) {
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
-                    } while (evalRequest != null);
-                    result = evalResult;
-                }
-            }
-        }
-        return result;
     }
 
     private static String do_eval(Context cx, StackFrame frame, String expr)

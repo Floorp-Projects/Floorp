@@ -2363,14 +2363,10 @@ class DebugGui extends JFrame implements GuiCallback
                                                    JOptionPane.ERROR_MESSAGE);
         }
 
-        ((Menubar)getJMenuBar()).updateEnabled(true);
-        toolBar.setEnabled(true);
-        // raise the debugger window
-        toFront();
+        updateEnabled(true);
 
         Dim.ContextData contextData = lastFrame.contextData();
 
-        context.enable();
         JComboBox ctx = context.context;
         Vector toolTips = context.toolTips;
         context.disableUpdate();
@@ -2563,20 +2559,32 @@ class DebugGui extends JFrame implements GuiCallback
             }
         }
         if (returnValue != -1) {
-            disableInterruptOnlyGui();
+            updateEnabled(false);
             dim.setReturnValue(returnValue);
         }
     }
 
-    private void disableInterruptOnlyGui()
+    private void updateEnabled(boolean interrupted)
     {
-        if (currentWindow != null) currentWindow.setPosition(-1);
-        ((Menubar)getJMenuBar()).updateEnabled(false);
-        context.disable();
-        boolean b = true;
+        ((Menubar)getJMenuBar()).updateEnabled(interrupted);
         for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
-            toolBar.getComponent(ci).setEnabled(b);
-            b = false;
+            boolean enableButton;
+            if (ci == 0) {
+                // Break
+                enableButton = !interrupted;
+            } else {
+                enableButton = interrupted;
+            }
+            toolBar.getComponent(ci).setEnabled(enableButton);
+        }
+        if (interrupted) {
+            toolBar.setEnabled(true);
+            // raise the debugger window
+            toFront();
+            context.enable();
+        } else {
+            if (currentWindow != null) currentWindow.setPosition(-1);
+            context.disable();
         }
     }
 
