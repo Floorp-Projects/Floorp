@@ -811,17 +811,21 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
        } 
     }
     res = iter->Next();
+#if 0
     if (NS_FAILED(res)) // a little noise here to catch bugs
     {
       NS_NOTREACHED("nsRange::PopRanges() : iterator failed to advance");
       return res;
     }
+#endif 
     res = iter->CurrentNode(getter_AddRefs(cN));
+#if 0
     if (NS_FAILED(res)) // a little noise here to catch bugs
     {
       NS_NOTREACHED("nsRange::PopRanges() : iterator failed to position");
       return res;
     }
+#endif
   }
   
   return NS_OK;
