@@ -356,6 +356,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mTerminationFunc = nsnull;
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
+  mProcessingScriptTag=PR_FALSE;
 }
 
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
@@ -1386,6 +1387,21 @@ NS_IMETHODIMP
 nsJSContext::SetScriptsEnabled(PRBool aEnabled)
 {
   mScriptsEnabled = aEnabled;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsJSContext::GetProcessingScriptTag(PRBool * aResult)
+{
+  *aResult = mProcessingScriptTag;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::SetProcessingScriptTag(PRBool aFlag) 
+{
+  mProcessingScriptTag = aFlag;
   return NS_OK;
 }
 

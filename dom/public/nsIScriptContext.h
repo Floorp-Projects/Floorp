@@ -302,6 +302,13 @@ public:
    */
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled) = 0;
   NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
+
+  /** 
+   * Called to set/get information if the script context is
+   * currently processing a script tag
+   */
+  NS_IMETHOD GetProcessingScriptTag(PRBool * aResult) =0;
+  NS_IMETHOD SetProcessingScriptTag(PRBool  aResult) =0;
 };
 
 #endif // nsIScriptContext_h__
