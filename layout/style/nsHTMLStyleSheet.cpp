@@ -1267,7 +1267,7 @@ HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
                                rootPseudoStyle);
 
       // Create a body frame to wrap the document element
-      NS_NewBodyFrame(nsnull, scrollFrame, wrapperFrame, NS_BODY_SHRINK_WRAP);
+      NS_NewBodyFrame(nsnull, scrollFrame, wrapperFrame, NS_BODY_THE_BODY|NS_BODY_SHRINK_WRAP);
       wrapperFrame->SetStyleContext(aPresContext, scrolledPseudoStyle);
 
       // Construct a frame for the document element and process its children
