@@ -32,16 +32,16 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/contentframe.css \
 	$(srcdir)/animthrob.gif \
 	$(srcdir)/animthrob_single.gif \
-	$(srcdir)/TB_Back.gif \
-	$(srcdir)/TB_Forward.gif \
-	$(srcdir)/TB_Home.gif \
-	$(srcdir)/TB_Location.gif \
-	$(srcdir)/TB_Location_mo.gif \
-	$(srcdir)/TB_Netscape.gif \
-	$(srcdir)/TB_Print.gif \
-	$(srcdir)/TB_Reload.gif \
-	$(srcdir)/TB_Search.gif \
-	$(srcdir)/TB_Stop.gif \
+	$(srcdir)/back.gif \
+	$(srcdir)/forward.gif \
+	$(srcdir)/home.gif \
+	$(srcdir)/location.gif \
+	$(srcdir)/location-hover.gif \
+	$(srcdir)/mynetscape.gif \
+	$(srcdir)/print.gif \
+	$(srcdir)/reload.gif \
+	$(srcdir)/search.gif \
+	$(srcdir)/stop.gif \
 	$(NULL)
 
 install:: 
