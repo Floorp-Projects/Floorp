@@ -260,6 +260,11 @@
   [% ELSIF error == "no_matching_lock" %]
     Attempted to unlock tables without locking them first.
 
+  [% ELSIF error == "comma_operator_deprecated" %]
+    [% title = "SQL query generator internal error" %]
+    There is an internal error in the SQL query generation code,
+    creating queries with implicit JOIN.
+
   [% ELSE %]
     [% title = "Internal error" %]
     An internal error has occured, but [% terms.Bugzilla %] doesn't know

@@ -115,32 +115,34 @@ sub init {
     
     # First, deal with all the old hard-coded non-chart-based poop.
     if (grep(/map_assigned_to/, @$fieldsref)) {
-        push @supptables, "profiles AS map_assigned_to";
-        push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
+        push @supptables, "INNER JOIN profiles AS map_assigned_to " .
+                          "ON bugs.assigned_to = map_assigned_to.userid";
     }
 
     if (grep(/map_reporter/, @$fieldsref)) {
-        push @supptables, "profiles AS map_reporter";
-        push @wherepart, "bugs.reporter = map_reporter.userid";
+        push @supptables, "INNER JOIN profiles AS map_reporter " .
+                          "ON bugs.reporter = map_reporter.userid";
     }
 
     if (grep(/map_qa_contact/, @$fieldsref)) {
-        push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
+        push @supptables, "LEFT JOIN profiles AS map_qa_contact " .
+                          "ON bugs.qa_contact = map_qa_contact.userid";
     }
 
     if (lsearch($fieldsref, 'map_products.name') >= 0) {
-        push @supptables, "products AS map_products";
-        push @wherepart, "bugs.product_id = map_products.id";
+        push @supptables, "INNER JOIN products AS map_products " .
+                          "ON bugs.product_id = map_products.id";
     }
 
     if (lsearch($fieldsref, 'map_classifications.name') >= 0) {
-        push @supptables, "classifications AS map_classifications";
-        push @wherepart, "map_products.classification_id = map_classifications.id";
+        push @supptables,
+                "INNER JOIN classifications AS map_classifications " .
+                "ON map_products.classification_id = map_classifications.id";
     }
 
     if (lsearch($fieldsref, 'map_components.name') >= 0) {
-        push @supptables, "components AS map_components";
-        push @wherepart, "bugs.component_id = map_components.id";
+        push @supptables, "INNER JOIN components AS map_components " .
+                          "ON bugs.component_id = map_components.id";
     }
 
     my $minvotes;
@@ -213,8 +215,8 @@ sub init {
     }
 
     if (lsearch($fieldsref, "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time") != -1) {
-        push(@supptables, "longdescs AS ldtime");
-        push(@wherepart, "ldtime.bug_id = bugs.bug_id");
+        push(@supptables, "INNER JOIN longdescs AS ldtime " .
+                          "ON ldtime.bug_id = bugs.bug_id");
     }
 
     foreach my $id ("1", "2") {
@@ -312,17 +314,18 @@ sub init {
             # @list won't have any elements if the only field being searched
             # is [Bug creation] (in which case we don't need bugs_activity).
             if(@list) {
-                push(@supptables, "bugs_activity actcheck");
-                push(@wherepart, "actcheck.bug_id = bugs.bug_id");
+                my $extra = "";
                 if($sql_chfrom) {
-                    push(@wherepart, "actcheck.bug_when >= $sql_chfrom");
+                    $extra .= " AND actcheck.bug_when >= $sql_chfrom";
                 }
                 if($sql_chto) {
-                    push(@wherepart, "actcheck.bug_when <= $sql_chto");
+                    $extra .= " AND actcheck.bug_when <= $sql_chto";
                 }
                 if($sql_chvalue) {
-                    push(@wherepart, "actcheck.added = $sql_chvalue");
+                    $extra .= " AND actcheck.added = $sql_chvalue";
                 }
+                push(@supptables, "INNER JOIN bugs_activity AS actcheck " .
+                                   "ON actcheck.bug_id = bugs.bug_id $extra");
             }
 
             # Now that we're done using @list to determine if there are any
@@ -400,7 +403,7 @@ sub init {
              $groupid || ThrowUserError('invalid_group_name',{name => $group});
              my @childgroups = @{$user->flatten_group_membership($groupid)};
              my $table = "user_group_map_$chartid";
-             push (@supptables, "LEFT JOIN user_group_map $table " .
+             push (@supptables, "LEFT JOIN user_group_map AS $table " .
                                 "ON $table.user_id = bugs.$f " .
                                 "AND $table.group_id IN(" .
                                 join(',', @childgroups) . ") " .
@@ -421,13 +424,13 @@ sub init {
              $term = "bugs.$f <> " . pronoun($1, $user);
           },
          "^(assigned_to|reporter),(?!changed)" => sub {
-             push(@supptables, "profiles AS map_$f");
-             push(@wherepart, "bugs.$f = map_$f.userid");
+             push(@supptables, "INNER JOIN profiles AS map_$f " .
+                               "ON bugs.$f = map_$f.userid");
              $f = "map_$f.login_name";
          },
          "^qa_contact,(?!changed)" => sub {
-             push(@supptables,
-                  "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid");
+             push(@supptables, "LEFT JOIN profiles AS map_qa_contact " .
+                               "ON bugs.qa_contact = map_qa_contact.userid");
              $f = "COALESCE(map_$f.login_name,'')";
          },
 
@@ -442,9 +445,9 @@ sub init {
                  $sequence++;
              }
              my $table = "user_group_map_$chartseq";
-             push(@supptables, "LEFT JOIN cc cc_$chartseq " .
+             push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
                                "ON bugs.bug_id = cc_$chartseq.bug_id");
-             push(@supptables, "LEFT JOIN user_group_map $table " .
+             push(@supptables, "LEFT JOIN user_group_map AS $table " .
                                 "ON $table.user_id = cc_$chartseq.who " .
                                 "AND $table.group_id IN(" .
                                 join(',', @childgroups) . ") " .
@@ -466,9 +469,9 @@ sub init {
                  $chartseq = "CC$sequence";
                  $sequence++;
              }
-             push(@supptables, "LEFT JOIN cc cc_$chartseq "
-                               . "ON bugs.bug_id = cc_$chartseq.bug_id "
-                               . "AND cc_$chartseq.who = $match");
+             push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
+                               "ON bugs.bug_id = cc_$chartseq.bug_id " .
+                               "AND cc_$chartseq.who = $match");
              $term = "cc_$chartseq.who IS NOT NULL";
          },
          "^cc,(?:notequals),(%\\w+%)" => sub {
@@ -478,9 +481,9 @@ sub init {
                  $chartseq = "CC$sequence";
                  $sequence++;
              }
-             push(@supptables, "LEFT JOIN cc cc_$chartseq "
-                               . "ON bugs.bug_id = cc_$chartseq.bug_id "
-                               . "AND cc_$chartseq.who = $match");
+             push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
+                               "ON bugs.bug_id = cc_$chartseq.bug_id " .
+                               "AND cc_$chartseq.who = $match");
              $term = "cc_$chartseq.who IS NULL";
          },
          "^cc,(anyexact|substring)" => sub {
@@ -492,12 +495,17 @@ sub init {
                  $sequence++;
              }
              if ($list) {
-                 push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id AND cc_$chartseq.who IN($list)");
+                 push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
+                                   "ON bugs.bug_id = cc_$chartseq.bug_id " .
+                                   "AND cc_$chartseq.who IN($list)");
                  $term = "cc_$chartseq.who IS NOT NULL";
              } else {
-                 push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id");
+                 push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
+                                   "ON bugs.bug_id = cc_$chartseq.bug_id");
+                 push(@supptables,
+                            "LEFT JOIN profiles AS map_cc_$chartseq " .
+                            "ON cc_$chartseq.who = map_cc_$chartseq.userid");
 
-                 push(@supptables, "LEFT JOIN profiles map_cc_$chartseq ON cc_$chartseq.who = map_cc_$chartseq.userid");
                  $ff = $f = "map_cc_$chartseq.login_name";
                  my $ref = $funcsbykey{",$t"};
                  &$ref;
@@ -509,36 +517,37 @@ sub init {
                  $chartseq = "CC$sequence";
                  $sequence++;
              }
-            push(@supptables, "LEFT JOIN cc cc_$chartseq ON bugs.bug_id = cc_$chartseq.bug_id");
+            push(@supptables, "LEFT JOIN cc AS cc_$chartseq " .
+                              "ON bugs.bug_id = cc_$chartseq.bug_id");
 
             $ff = $f = "map_cc_$chartseq.login_name";
             my $ref = $funcsbykey{",$t"};
             &$ref;
             push(@supptables, 
-                "LEFT JOIN profiles map_cc_$chartseq " .
-                       "ON (cc_$chartseq.who = map_cc_$chartseq.userid " .
-                           "AND ($term))"
+                        "LEFT JOIN profiles AS map_cc_$chartseq " .
+                        "ON (cc_$chartseq.who = map_cc_$chartseq.userid " .
+                        "AND ($term))"
                 );
             $term = "$f IS NOT NULL";
          },
 
          "^long_?desc,changedby" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              my $id = &::DBNameToIdAndCheck($v);
              $term = "$table.who = $id";
          },
          "^long_?desc,changedbefore" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              $term = "$table.bug_when < " . &::SqlQuote(SqlifyDate($v));
          },
          "^long_?desc,changedafter" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              $term = "$table.bug_when > " . &::SqlQuote(SqlifyDate($v));
          },
          "^content,matches" => sub {
@@ -551,13 +560,14 @@ sub init {
 
              # Add the longdescs table to the query so we can search comments.
              my $table = "longdescs_$chartid";
-             push(@supptables, "INNER JOIN longdescs AS $table " .
-                               "ON bugs.bug_id = $table.bug_id");
+             my $extra = "";
              if (Param("insidergroup") 
                  && !&::UserInGroup(Param("insidergroup")))
              {
-                 push(@wherepart, "$table.isprivate < 1");
+                 $extra = "AND $table.isprivate < 1";
              }
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON bugs.bug_id = $table.bug_id $extra");
 
              # Create search terms to add to the SELECT and WHERE clauses.
              # $term1 searches comments.
@@ -618,9 +628,9 @@ sub init {
              if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate < 1";
              }
-             push(@supptables, "LEFT JOIN longdescs $table "
-                               . "ON $table.bug_id = bugs.bug_id $extra "
-                               . "AND $table.who IN ($match)");
+             push(@supptables, "LEFT JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id $extra " .
+                               "AND $table.who IN ($match)");
              $term = "$table.who IS NOT NULL";
          },
          "^commenter," => sub {
@@ -637,11 +647,15 @@ sub init {
                  $extra = "AND $table.isprivate < 1";
              }
              if ($list) {
-                 push(@supptables, "LEFT JOIN longdescs $table ON $table.bug_id = bugs.bug_id $extra AND $table.who IN ($list)");
+                 push(@supptables, "LEFT JOIN longdescs AS $table " .
+                                   "ON $table.bug_id = bugs.bug_id $extra " .
+                                   "AND $table.who IN ($list)");
                  $term = "$table.who IS NOT NULL";
              } else {
-                 push(@supptables, "LEFT JOIN longdescs $table ON $table.bug_id = bugs.bug_id $extra");
-                 push(@supptables, "LEFT JOIN profiles map_$table ON $table.who = map_$table.userid");
+                 push(@supptables, "LEFT JOIN longdescs AS $table " .
+                                   "ON $table.bug_id = bugs.bug_id $extra");
+                 push(@supptables, "LEFT JOIN profiles AS map_$table " .
+                                   "ON $table.who = map_$table.userid");
                  $ff = $f = "map_$table.login_name";
                  my $ref = $funcsbykey{",$t"};
                  &$ref;
@@ -649,39 +663,40 @@ sub init {
          },
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
+             my $extra = "";
              if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
-                 push(@wherepart, "$table.isprivate < 1") ;
+                 $extra = "AND $table.isprivate < 1";
              }
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id $extra");
              $f = "$table.thetext";
          },
          "^work_time,changedby" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              my $id = &::DBNameToIdAndCheck($v);
              $term = "(($table.who = $id";
              $term .= ") AND ($table.work_time <> 0))";
          },
          "^work_time,changedbefore" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              $term = "(($table.bug_when < " . &::SqlQuote(SqlifyDate($v));
              $term .= ") AND ($table.work_time <> 0))";
          },
          "^work_time,changedafter" => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              $term = "(($table.bug_when > " . &::SqlQuote(SqlifyDate($v));
              $term .= ") AND ($table.work_time <> 0))";
          },
          "^work_time," => sub {
              my $table = "longdescs_$chartid";
-             push(@supptables, "longdescs $table");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON $table.bug_id = bugs.bug_id");
              $f = "$table.work_time";
          },
          "^percentage_complete," => sub {
@@ -703,8 +718,8 @@ sub init {
              }
              if ($oper ne "noop") {
                  my $table = "longdescs_$chartid";
-                 push(@supptables, "longdescs $table");
-                 push(@wherepart, "$table.bug_id = bugs.bug_id");
+                 push(@supptables, "INNER JOIN longdescs AS $table " .
+                                   "ON $table.bug_id = bugs.bug_id");
                  my $field = "(100*((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))/((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete_$table";
                  push(@fields, $field);
                  push(@having, 
@@ -713,18 +728,23 @@ sub init {
              $term = "0=0";
          },
          "^bug_group,(?!changed)" => sub {
-            push(@supptables, "LEFT JOIN bug_group_map bug_group_map_$chartid ON bugs.bug_id = bug_group_map_$chartid.bug_id");
+            push(@supptables,
+                    "LEFT JOIN bug_group_map AS bug_group_map_$chartid " .
+                    "ON bugs.bug_id = bug_group_map_$chartid.bug_id");
 
-            push(@supptables, "LEFT JOIN groups groups_$chartid ON groups_$chartid.id = bug_group_map_$chartid.group_id");
+            push(@supptables,
+                    "LEFT JOIN groups AS groups_$chartid " .
+                    "ON groups_$chartid.id = bug_group_map_$chartid.group_id");
             $f = "groups_$chartid.name";
          },
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
-             push(@supptables, "attachments $table");
+             my $extra = "";
              if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
-                 push(@wherepart, "$table.isprivate = 0") ;
+                 $extra = "AND $table.isprivate = 0";
              }
-             push(@wherepart, "bugs.bug_id = $table.bug_id");
+             push(@supptables, "INNER JOIN attachments AS $table " .
+                               "ON bugs.bug_id = $table.bug_id $extra");
              $f =~ m/^attachments\.(.*)$/;
              my $field = $1;
              if ($t eq "changedby") {
@@ -765,11 +785,11 @@ sub init {
              # a left join here so bugs without any flags still match 
              # negative conditions (f.e. "flag isn't review+").
              my $flags = "flags_$chartid";
-             push(@supptables, "LEFT JOIN flags $flags " . 
+             push(@supptables, "LEFT JOIN flags AS $flags " . 
                                "ON bugs.bug_id = $flags.bug_id " .
                                "AND $flags.is_active = 1");
              my $flagtypes = "flagtypes_$chartid";
-             push(@supptables, "LEFT JOIN flagtypes $flagtypes " . 
+             push(@supptables, "LEFT JOIN flagtypes AS $flagtypes " . 
                                "ON $flags.type_id = $flagtypes.id");
              
              # Generate the condition by running the operator-specific
@@ -796,19 +816,19 @@ sub init {
          },
          "^requestees.login_name," => sub {
              my $flags = "flags_$chartid";
-             push(@supptables, "LEFT JOIN flags $flags " .
+             push(@supptables, "LEFT JOIN flags AS $flags " .
                                "ON bugs.bug_id = $flags.bug_id " .
                                "AND $flags.is_active = 1");
-             push(@supptables, "LEFT JOIN profiles requestees_$chartid " .
+             push(@supptables, "LEFT JOIN profiles AS requestees_$chartid " .
                                "ON $flags.requestee_id = requestees_$chartid.userid");
              $f = "requestees_$chartid.login_name";
          },
          "^setters.login_name," => sub {
              my $flags = "flags_$chartid";
-             push(@supptables, "LEFT JOIN flags $flags " .
+             push(@supptables, "LEFT JOIN flags AS $flags " .
                                "ON bugs.bug_id = $flags.bug_id " .
                                "AND $flags.is_active = 1");
-             push(@supptables, "LEFT JOIN profiles setters_$chartid " .
+             push(@supptables, "LEFT JOIN profiles AS setters_$chartid " .
                                "ON $flags.setter_id = setters_$chartid.userid");
              $f = "setters_$chartid.login_name";
          },
@@ -878,8 +898,8 @@ sub init {
                  }
              }
              if ($term) {
-                 push(@supptables, "keywords $table");
-                 push(@wherepart, "$table.bug_id = bugs.bug_id");
+                 push(@supptables, "LEFT JOIN keywords AS $table " .
+                                   "ON $table.bug_id = bugs.bug_id");
              }
          },
 
@@ -888,7 +908,7 @@ sub init {
                 $ff = "$table.$f";
                 my $ref = $funcsbykey{",$t"};
                 &$ref;
-                push(@supptables, "LEFT JOIN dependencies $table " .
+                push(@supptables, "LEFT JOIN dependencies AS $table " .
                                   "ON $table.blocked = bugs.bug_id " .
                                   "AND ($term)");
                 $term = "$ff IS NOT NULL";
@@ -899,7 +919,7 @@ sub init {
                 $ff = "$table.$f";
                 my $ref = $funcsbykey{",$t"};
                 &$ref;
-                push(@supptables, "LEFT JOIN dependencies $table " .
+                push(@supptables, "LEFT JOIN dependencies AS $table " .
                                   "ON $table.dependson = bugs.bug_id " .
                                   "AND ($term)");
                 $term = "$ff IS NOT NULL";
@@ -929,11 +949,11 @@ sub init {
                 my $cutoff = "NOW() - " .
                              $dbh->sql_interval("$quantity $unitinterval");
                 my $assigned_fieldid = &::GetFieldID('assigned_to');
-                push(@supptables, "LEFT JOIN longdescs comment_$table " .
+                push(@supptables, "LEFT JOIN longdescs AS comment_$table " .
                                   "ON comment_$table.who = bugs.assigned_to " .
                                   "AND comment_$table.bug_id = bugs.bug_id " .
                                   "AND comment_$table.bug_when > $cutoff");
-                push(@supptables, "LEFT JOIN bugs_activity activity_$table " .
+                push(@supptables, "LEFT JOIN bugs_activity AS activity_$table " .
                                   "ON (activity_$table.who = bugs.assigned_to " .
                                   "OR activity_$table.fieldid = $assigned_fieldid) " .
                                   "AND activity_$table.bug_id = bugs.bug_id " .
@@ -1024,7 +1044,7 @@ sub init {
              if (!$fieldid) {
                  ThrowCodeError("invalid_field_name", {field => $f});
              }
-             push(@supptables, "LEFT JOIN bugs_activity $table " .
+             push(@supptables, "LEFT JOIN bugs_activity AS $table " .
                                "ON $table.bug_id = bugs.bug_id " .
                                "AND $table.fieldid = $fieldid " .
                                "AND $table.bug_when $operator " . 
@@ -1038,7 +1058,7 @@ sub init {
              if (!$fieldid) {
                  ThrowCodeError("invalid_field_name", {field => $f});
              }
-             push(@supptables, "LEFT JOIN bugs_activity $table " .
+             push(@supptables, "LEFT JOIN bugs_activity AS $table " .
                                "ON $table.bug_id = bugs.bug_id " .
                                "AND $table.fieldid = $fieldid " .
                                "AND $table.$operator = $q");
@@ -1051,7 +1071,7 @@ sub init {
                  ThrowCodeError("invalid_field_name", {field => $f});
              }
              my $id = &::DBNameToIdAndCheck($v);
-             push(@supptables, "LEFT JOIN bugs_activity $table " .
+             push(@supptables, "LEFT JOIN bugs_activity AS $table " .
                                "ON $table.bug_id = bugs.bug_id " .
                                "AND $table.fieldid = $fieldid " .
                                "AND $table.who = $id");
@@ -1291,7 +1311,7 @@ sub init {
     my @supplist = (" ");
     foreach my $str (@supptables) {
         if (!$suppseen{$str}) {
-            if ($str =~ /^(LEFT|INNER) JOIN/i) {
+            if ($str =~ /^(LEFT|INNER|RIGHT)\s+JOIN/i) {
                 $str =~ /^(.*?)\s+ON\s+(.*)$/i;
                 my ($leftside, $rightside) = ($1, $2);
                 if ($suppseen{$leftside}) {
@@ -1301,8 +1321,9 @@ sub init {
                     push @supplist, " $leftside ON ($rightside)";
                 }
             } else {
-                $suppstring .= ", $str";
-                $suppseen{$str} = 1;
+                # Do not accept implicit joins using comma operator
+                # as they are not DB agnostic
+                ThrowCodeError("comma_operator_deprecated");
             }
         }
     }
