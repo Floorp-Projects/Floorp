@@ -54,7 +54,8 @@ EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 # include $(topsrcdir)/config/config.mk
 
 OTHER_LIBRARIES = $(LIBMALLOC)
-TARGETS := $(PROGRAM) $(OTHER_LIBRARIES)
+HELPER_SCRIPTS = jprofsig
+TARGETS := $(PROGRAM) $(OTHER_LIBRARIES) $(HELPER_SCRIPTS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -62,7 +63,7 @@ include $(topsrcdir)/config/rules.mk
 all:: $(OTHER_LIBRARIES)
 
 # Make sure install depends on files that rules.mk doesn't know about.
-install:: $(OTHER_LIBRARIES)
+install:: $(OTHER_LIBRARIES) $(HELPER_SCRIPTS)
 
 # Make sure libs depends on files that rules.mk doesn't know about.
 libs:: $(OTHER_LIBRARIES)
@@ -85,3 +86,4 @@ test:
 install::
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/lib
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/bin
+	$(INSTALL) -m 555 $(HELPER_SCRIPTS)  $(DIST)/bin
