@@ -145,6 +145,16 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    *aID = mContentID;
+    return NS_OK;
+  }
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    mContentID = aID;
+    return NS_OK;
+  }
+
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {  
     return mInner.RangeAdd(aRange); 
   } 
@@ -204,6 +214,7 @@ public:
 protected:
   nsGenericXMLElement mInner;
   PRBool mIsLink;
+  PRUint32 mContentID;
 };
 
 #endif // nsXMLElement_h___

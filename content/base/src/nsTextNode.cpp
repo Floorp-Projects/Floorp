@@ -67,6 +67,7 @@ public:
 
 protected:
   nsGenericDOMDataNode mInner;
+  PRUint32 mContentID;
 };
 
 nsresult NS_NewTextNode(nsIContent** aInstancePtrResult);
@@ -89,6 +90,7 @@ nsTextNode::nsTextNode()
 {
   NS_INIT_REFCNT();
   mInner.Init(this);
+  mContentID = 0;
 }
 
 nsTextNode::~nsTextNode()
@@ -196,4 +198,18 @@ nsTextNode::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+NS_IMETHODIMP
+nsTextNode::GetContentID(PRUint32* aID)
+{
+  *aID = mContentID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextNode::SetContentID(PRUint32 aID) 
+{
+  mContentID = aID;
+  return NS_OK;
 }

@@ -151,6 +151,16 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
+
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    *aID = mContentID;
+    return NS_OK;
+  }
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    mContentID = aID;
+    return NS_OK;
+  }
+
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange){
     return mInner.RangeAdd(aRange);
   }
@@ -181,6 +191,7 @@ public:
 
 protected:
   nsGenericDOMDataNode mInner;
+  PRUint32 mContentID;
 };
 
 nsresult NS_NewCommentNode(nsIContent** aInstancePtrResult);
@@ -202,6 +213,7 @@ nsCommentNode::nsCommentNode()
 {
   NS_INIT_REFCNT();
   mInner.Init(this);
+  mContentID = 0;
 }
 
 nsCommentNode::~nsCommentNode()

@@ -69,6 +69,7 @@ public:
 
 protected:
   nsGenericDOMDataNode mInner;
+  PRUint32 mContentID;
 };
 
 nsresult
@@ -89,6 +90,7 @@ nsXMLCDATASection::nsXMLCDATASection()
 {
   NS_INIT_REFCNT();
   mInner.Init(this);
+  mContentID = 0;
 }
 
 nsXMLCDATASection::~nsXMLCDATASection()
@@ -202,4 +204,18 @@ nsXMLCDATASection::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::GetContentID(PRUint32* aID)
+{
+  *aID = mContentID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLCDATASection::SetContentID(PRUint32 aID) 
+{
+  mContentID = aID;
+  return NS_OK;
 }

@@ -229,6 +229,19 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus) = 0;
+
+  /**
+   * Get and set a unique ID for this piece of content.
+   * This ID is used as a key to store state information 
+   * about this content object and its associated frame object.
+   * The state information is stored in a dictionary that is
+   * manipulated by the frame manager (nsIFrameManager) inside layout.
+   * An opaque pointer to this dictionary is passed to the session
+   * history as a handle associated with the current document's state
+   */
+  NS_IMETHOD GetContentID(PRUint32* aID) = 0;
+  NS_IMETHOD SetContentID(PRUint32 aID) = 0;
+
 };
 
 // nsresult codes for GetAttribute

@@ -465,6 +465,8 @@ struct nsGenericDOMDataNode {
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD GetContentID(PRUint32* aID);                                  \
+  NS_IMETHOD SetContentID(PRUint32 aID);                                   \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \

@@ -56,6 +56,7 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
   NS_INIT_REFCNT();
   mInner.Init((nsIContent *)(nsIXMLContent *)this, aTag);
   mIsLink = PR_FALSE;
+  mContentID = 0;
 
   if (0 == kElementCount++) {
     kLinkAtom = NS_NewAtom("link");
