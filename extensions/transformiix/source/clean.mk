@@ -1,7 +1,5 @@
 target: clean
 
-CC = g++
-
 PROJ_PATH         = ${PWD}
 ROOT_PATH         = $(PROJ_PATH)
 XML_PATH          = $(ROOT_PATH)/xml
@@ -16,15 +14,16 @@ XMLPARSER_PATH    = $(XML_PATH)/parser
 EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
 EXPAT_TOKEN_PATH  = $(XMLPARSER_PATH)/xmltok
 
+CMDS = rm -f *.o *~; 
 clean: 
-	cd $(BASE_PATH); rm *.o; \
-	cd $(NET_PATH); rm *.o; \
-	cd $(XML_PATH); rm *.o; \
-	cd $(DOM_PATH); rm *.o; \
-	cd $(XMLPARSER_PATH); rm *.o; \
-	cd $(EXPAT_PARSER_PATH); rm *.o; \
-	cd $(EXPAT_TOKEN_PATH); rm *.o; \
-	cd $(XMLPRINTER_PATH); rm *.o; \
-	cd $(XSL_PATH); rm *.o; \
-	cd $(XSLUTIL_PATH); rm *.o; \
-	cd $(EXPR_PATH); rm *.o
+	cd $(BASE_PATH);         $(CMDS) \
+	cd $(NET_PATH);          $(CMDS) \
+	cd $(XML_PATH);          $(CMDS) \
+	cd $(DOM_PATH);          $(CMDS) \
+	cd $(XMLPARSER_PATH);    $(CMDS) \
+	cd $(EXPAT_PARSER_PATH); $(CMDS) \
+	cd $(EXPAT_TOKEN_PATH);  $(CMDS) \
+	cd $(XMLPRINTER_PATH);   $(CMDS) \
+	cd $(XSL_PATH);          $(CMDS) \
+	cd $(XSLUTIL_PATH);      $(CMDS) \
+	cd $(EXPR_PATH);         $(CMDS)

@@ -197,7 +197,7 @@ Node* NodeDefinition::insertBefore(Node* newChild,
   if ((refChild != NULL) && (pRefChild->parentNode != this))
     return NULL;
 
-  if (pNewChild->getNodeType() == Node::DOCUMENT_FRAGMENT_NODE)
+  if (newChild->getNodeType() == Node::DOCUMENT_FRAGMENT_NODE)
     {
       pCurrentNode = pNewChild->firstChild;
       while (pCurrentNode)

@@ -1,5 +1,5 @@
 
-CC = g++
+CC := $(CC) -g
 
 ROOT_PATH    = ../..
 BASE_PATH    = $(ROOT_PATH)/base
@@ -8,12 +8,12 @@ DOM_PATH     = $(XML_PATH)/dom
 XSL_PATH     = $(ROOT_PATH)/xsl
 XSLUTIL_PATH = $(XSL_PATH)/util
 
-INCLUDE_PATHS = -I . \
-                -I $(BASE_PATH) \
-                -I $(XML_PATH) \
-                -I $(DOM_PATH) \
-                -I $(XSL_PATH) \
-                -I $(XSLUTIL_PATH) \
+INCLUDE_PATHS = -I. \
+                -I$(BASE_PATH) \
+                -I$(XML_PATH) \
+                -I$(DOM_PATH) \
+                -I$(XSL_PATH) \
+                -I$(XSLUTIL_PATH) \
                 -I-
 
 OBJS = *.o \

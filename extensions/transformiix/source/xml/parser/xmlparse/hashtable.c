@@ -16,6 +16,7 @@ Portions created by James Clark are Copyright (C) 1998
 James Clark. All Rights Reserved.
 
 Contributor(s):
+ Bob Miller, Oblix Inc. changed #define XML_UNICODE section
 */
 
 #include <stdlib.h>
@@ -24,11 +25,23 @@ Contributor(s):
 #include "xmldef.h"
 #include "hashtable.h"
 
-#ifdef XML_UNICODE
+#ifdef XML_UNICODE_WCHAR_T
 #define keycmp wcscmp
+#else
+#ifdef XML_UNICODE
+   static int keycmp(KEY a, KEY b)
+   {
+       for ( ; *a || *b; a++, b++) {
+         if (*a == *b)
+             continue;
+         return *b - *a;
+       }
+       return 0;
+   }
 #else
 #define keycmp strcmp
 #endif
+#endif                                                                        
 
 #define INIT_SIZE 64
 

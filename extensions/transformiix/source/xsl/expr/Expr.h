@@ -1,36 +1,38 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ * Larry Fitzpatick, OpenText, lef@opentext.com
+ *   -- 19990806 
+ *     - changed constant short declarations in many of the classes
+ *       with enumerations, commented with //--LF
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: Expr.h,v 1.2 1999/11/15 07:13:10 nisheeth%netscape.com Exp $
  */
 
 /**
  * XSL expression class definitions.
  * Much of this code was ported from XSL:P. <BR />
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR/>
- * <PRE>
- * Modifications:
- * 19990806: Larry Fitzpatrick
- *   - changed constant short declarations in many of the classes
- *     with enumerations, commented with //--LF
- * </PRE>
- *
+ * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:10 $
 **/
 
 #ifndef MITREXSL_EXPR_H
@@ -53,8 +55,8 @@ public:
      /**
       * Returns the value of a given variable binding within the current scope
       * @param the name to which the desired variable value has been bound
-      * @return the ExprResult which has been bound to the variable with the given
-      * name
+      * @return the ExprResult which has been bound to the variable with
+      *  the given name
      **/
     virtual ExprResult* getVariable(String& name) = 0;
 
@@ -66,11 +68,18 @@ public:
 
     virtual MBool isStripSpaceAllowed(Node* node) = 0;
 
+    /**
+     * handles finding the parent of a node, since in DOM some
+     * nodes such as Attribute Nodes do not have parents
+     * @param node the Node to search for the parent of
+     * @return the parent of the given node, or null 
+    **/
+    virtual Node* findParent(Node* node) = 0;
+
 }; //-- ContextState
 
 /**
  * A Base Class for all XSL Expressions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class Expr : public MITREObject {
 
@@ -105,7 +114,6 @@ public:
 
 /**
  * A base Pattern class
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class Pattern {
 
@@ -146,7 +154,6 @@ public:
 
 /**
  * A Base class for all Expressions and Patterns
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class PatternExpr :
     public Expr,
@@ -238,10 +245,6 @@ private:
 /**
  * This class represents a NodeTestExpr as defined by the XSL
  * Working Draft
- * <PRE>
- * </PRE>
- * @author Keith Visco (kvisco@mitre.org)
- * This file was ported from XSL:P
 **/
 class NodeExpr : public PatternExpr {
 
@@ -301,8 +304,6 @@ public:
 /**
  * This class represents a AttributeExpr as defined by the XSL
  * Working Draft
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * This file was ported from XSL:P
 **/
 class AttributeExpr : public NodeExpr {
 
@@ -381,8 +382,7 @@ private:
 }; //-- AttributeExpr
 
 /**
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * This file was ported from XSL:P
+ *
 **/
 class BasicNodeExpr : public NodeExpr {
 
@@ -458,10 +458,6 @@ private:
 /**
  * This class represents a ElementExpr as defined by the XSL
  * Working Draft
- * <PRE>
- * </PRE>
- * @author Keith Visco (kvisco@mitre.org)
- * This file was ported from XSL:P
 **/
 class ElementExpr : public NodeExpr {
 
@@ -539,8 +535,6 @@ private:
 /**
  * This class represents a IdentityExpr, which only matches a node
  * if it is equal to the context node
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class IdentityExpr : public Expr {
 
@@ -574,8 +568,6 @@ public:
 /**
  * This class represents a ParentExpr, which only selects a node
  * if it is equal to the context node's parent
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class ParentExpr : public Expr {
 
@@ -609,8 +601,6 @@ public:
 
 /**
  * This class represents a TextExpr, which only matches any text node
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class TextExpr : public NodeExpr {
 
@@ -665,10 +655,6 @@ public:
 /**
  * This class represents a WildCardExpr as defined by the XSL
  * Working Draft
- * <PRE>
- * </PRE>
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class WildCardExpr : public NodeExpr {
 
@@ -724,7 +710,6 @@ public:
 /**
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class PredicateList  {
 
@@ -1021,6 +1006,7 @@ private:
     String value;
 }; //-- StringExpr
 
+
 /**
  * Represents an AdditiveExpr, a binary expression that
  * performs an additive operation between it's lvalue and rvalue:<BR/>
@@ -1076,6 +1062,59 @@ private:
     Expr* leftExpr;
     Expr* rightExpr;
 }; //-- AdditiveExpr
+
+/**
+ * Represents a BooleanExpr, a binary expression that
+ * performs a boolean operation between it's lvalue and rvalue:<BR/>
+**/
+class BooleanExpr : public Expr {
+
+public:
+
+    //-- BooleanExpr Types
+    enum _BooleanExprType { AND = 1, OR };
+
+     BooleanExpr();
+     BooleanExpr(Expr* leftExpr, Expr* rightExpr, short op);
+     ~BooleanExpr();
+
+    /**
+     * Sets the left side of this AdditiveExpr
+    **/
+    void setLeftExpr(Expr* leftExpr);
+
+    /**
+     * Sets the right side of this AdditiveExpr
+    **/
+    void setRightExpr(Expr* rightExpr);
+
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param ps the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+    /**
+     * Returns the String representation of this Expr.
+     * @param dest the String to use when creating the String
+     * representation. The String representation will be appended to
+     * any data in the destination String, to allow cascading calls to
+     * other #toString() methods for Expressions.
+     * @return the String representation of this Expr.
+    **/
+    virtual void toString(String& str);
+
+
+
+private:
+    short op;
+    Expr* leftExpr;
+    Expr* rightExpr;
+}; //-- BooleanExpr
 
 /**
  * Represents a MultiplicativeExpr, a binary expression that
@@ -1194,7 +1233,6 @@ private:
 /**
  * VariableRefExpr<BR>
  * Represents a variable reference ($refname)
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class VariableRefExpr : public Expr {
 
@@ -1236,7 +1274,6 @@ private:
 
 /**
  *  Represents a PathExpr
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class PathExpr : public PatternExpr {
 
@@ -1332,8 +1369,6 @@ private:
 
 /**
  * This class represents a RootExpr, which only matches the Document node
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class RootExpr : public PathExpr {
 
@@ -1383,7 +1418,6 @@ public:
 
 /**
  *  Represents a UnionExpr
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 class UnionExpr : public PatternExpr {
 

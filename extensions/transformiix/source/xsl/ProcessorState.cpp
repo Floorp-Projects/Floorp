@@ -1,28 +1,34 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: ProcessorState.cpp,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
- * @author <a href="kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:07 $
 **/
 
 #include "ProcessorState.h"
@@ -51,9 +57,23 @@ ProcessorState::~ProcessorState() {
   delete dfWildCardTemplate;
   delete dfTextTemplate;
   delete nodeStack;
+
   while ( ! variableSets.empty() ) {
       delete (NamedMap*) variableSets.pop();
   }
+
+  //-- delete includes
+  StringList* keys = includes.keys();
+  StringListIterator iter = keys->iterator();
+  while (iter.hasNext()) {
+      String* key = iter.next();
+      MITREObjectWrapper* objWrapper 
+          = (MITREObjectWrapper*)includes.remove(*key);
+      delete (Document*)objWrapper->object;
+      delete objWrapper;      
+  }
+  delete keys;
+
 } //-- ~ProcessorState
 
 
@@ -98,6 +118,18 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
 void ProcessorState::addErrorObserver(ErrorObserver& errorObserver) {
     errorObservers.add(&errorObserver);
 } //-- addErrorObserver
+
+/**
+ * Adds the given XSL document to the list of includes
+ * The href is used as a key for the include, to prevent
+ * including the same document more than once
+**/
+void ProcessorState::addInclude(const String& href, Document* xslDocument) {
+  MITREObjectWrapper* objWrapper = new MITREObjectWrapper();
+  objWrapper->object = xslDocument;
+  includes.put(href, objWrapper);
+} //-- addInclude
+
 
 /**
  *  Adds the given template to the list of templates to process
@@ -177,6 +209,13 @@ MBool ProcessorState::addToResultTree(Node* node) {
         case Node::COMMENT_NODE :
             current->appendChild(node);
             break;
+        case Node::DOCUMENT_FRAGMENT_NODE:
+        {
+            current->appendChild(node);
+            delete node; //-- DOM Implementation does not clean up DocumentFragments
+            break;
+
+        }
         //-- only add if not adding to document Node
         default:
             if (current != resultDocument) current->appendChild(node);
@@ -258,6 +297,54 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
 NodeSet* ProcessorState::getAttributeSet(const String& name) {
     return (NodeSet*)namedAttributeSets.get(name);
 } //-- getAttributeSet
+
+
+/**
+ * Returns the global document base for resolving relative URIs within
+ * the XSL stylesheets
+**/
+const String& ProcessorState::getDocumentBase() {
+    return documentBase;
+} //-- getDocumentBase
+
+/**
+ * Returns the href for the given XSL document by looking in the
+ * includes and imports lists
+ **/
+void ProcessorState::getDocumentHref
+    (Document* xslDocument, String& documentBase) 
+{
+
+  documentBase.clear();
+
+  //-- lookup includes
+  StringList* keys = includes.keys();
+  StringListIterator& iter = keys->iterator();
+  while (iter.hasNext()) {
+      String* key = iter.next();
+      MITREObjectWrapper* objWrapper 
+          = (MITREObjectWrapper*)includes.get(*key);
+      if (xslDocument == objWrapper->object) {
+	  documentBase.append(*key);
+          break;
+      }
+  }
+  delete &iter;
+  delete keys;
+} //-- getDocumentBase
+
+/**
+ * @return the included xsl document that was associated with the
+ * given href, or null if no document is found 
+**/
+Document* ProcessorState::getInclude(const String& href) {
+  MITREObjectWrapper* objWrapper = (MITREObjectWrapper*)includes.get(href);
+  Document* doc = 0;
+  if (objWrapper) {
+    doc = (Document*) objWrapper->object;
+  }
+  return doc;
+} //-- getInclude(String)
 
 Expr* ProcessorState::getExpr(const String& pattern) {
     Expr* expr = (Expr*)exprHash.get(pattern);
@@ -341,6 +428,12 @@ void ProcessorState::preserveSpace(String& names) {
     }
 
 } //-- preserveSpace
+/**
+ * Sets the document base for use when resolving relative URIs
+**/
+void ProcessorState::setDocumentBase(const String& documentBase) {
+     this->documentBase = documentBase;
+} //-- setDocumentBase
 
 /**
  * Adds the set of names to the Whitespace stripping element set
@@ -360,6 +453,29 @@ void ProcessorState::stripSpace(String& names) {
   //--------------------------------------------------/
  //- Virtual Methods from derived from ContextState -/
 //--------------------------------------------------/
+
+/**
+ * Returns the parent of the given Node. This method is needed 
+ * beacuse with the DOM some nodes such as Attr do not have parents
+ * @param node the Node to find the parent of
+ * @return the parent of the given Node, or null if not found
+**/
+Node* ProcessorState::findParent(Node* node) {
+    if (!node) return node;
+
+    Node* parent = 0;
+    switch(node->getNodeType()) {
+
+        //-- we need to index/hash nodes to save attr parents
+        case Node::ATTRIBUTE_NODE:
+	  //-- add later
+            break;
+        default:
+	    parent = node->getParentNode();
+            break;
+    }
+    return parent;
+} //-- findParent
 
 /**
  * Returns the Stack of context NodeSets
@@ -382,7 +498,7 @@ ExprResult* ProcessorState::getVariable(String& name) {
     while ( iter->hasNext() ) {
         NamedMap* map = (NamedMap*) iter->next();
         if ( map->get(name)) {
-            exprResult = (ExprResult*)map->get(name);
+            exprResult = ((VariableBinding*)map->get(name))->getValue();
             break;
         }
     }

@@ -1,22 +1,27 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: ProcessorState.h,v 1.2 1999/11/15 07:13:08 nisheeth%netscape.com Exp $
  */
 
 
@@ -37,10 +42,12 @@
 #include "Expr.h"
 #include "StringList.h"
 #include "Tokenizer.h"
+#include "VariableBinding.h"
 
 /**
  * Class used for keeping the current state of the XSL Processor
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:08 $
 **/
 class ProcessorState : public ContextState
 {
@@ -73,6 +80,14 @@ public:
     **/
     void addErrorObserver(ErrorObserver& errorObserver);
 
+
+    /**
+     * Adds the given XSL document to the list of includes
+     * The href is used as a key for the include, to prevent
+     * including the same document more than once
+    **/
+    void addInclude(const String& href, Document* xslDocument);
+
     /**
      *  Adds the given template to the list of templates to process
      * @param xslTemplate, the Element to add as a template
@@ -96,6 +111,23 @@ public:
     **/
     NodeSet* getAttributeSet(const String& name);
 
+
+    /**
+     * Returns the document base for resolving relative URIs
+    **/ 
+    const String& getDocumentBase();
+
+    /**
+     * Returns the href for the given xsl document by returning
+     * it's reference from the include or import list
+    **/
+    void getDocumentHref(Document* xslDocument, String& documentBase);
+
+    /**
+     * @return the included xsl document that was associated with the
+     * given href, or null if no document is found 
+    **/
+    Document* getInclude(const String& href);
 
     /**
      * Returns the template associated with the given name, or
@@ -144,6 +176,11 @@ public:
     void preserveSpace(String& names);
 
     /**
+     * Sets the document base for including and importing stylesheets
+    **/
+    void setDocumentBase(const String& documentBase);
+
+    /**
      * Adds the set of names to the Whitespace stripping element set
     **/
     void stripSpace(String& names);
@@ -152,6 +189,14 @@ public:
      //-------------------------------------/
      //- Virtual Methods from ContextState -/
      //-------------------------------------/
+
+    /**
+     * Returns the parent of the given Node. This method is needed 
+     * beacuse with the DOM some nodes such as Attr do not have parents
+     * @param node the Node to find the parent of
+     * @return the parent of the given Node, or null if not found
+    **/
+    virtual Node* findParent(Node* node);
 
      /**
       * Returns the value of a given variable binding within the current scope
@@ -191,6 +236,12 @@ private:
      * The list of ErrorObservers registered with this ProcessorState
     **/
     List  errorObservers;
+
+    /**
+     * A map for included stylesheets 
+     * (used for deletion when processing is done)
+    **/
+    NamedMap includes;
 
     /**
      * A map for named attribute sets
@@ -241,6 +292,8 @@ private:
     //-- default templates
     Element*      dfWildCardTemplate;
     Element*      dfTextTemplate;
+
+    String documentBase;
 
     /**
      * Returns the closest xml:space value for the given node

@@ -1,6 +1,6 @@
 target: TransforMiiX
 
-CC = g++
+CC := g++
 
 ROOT_PATH         = .
 XML_PATH          = $(ROOT_PATH)/xml
@@ -16,16 +16,16 @@ EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
 EXPAT_TOKEN_PATH  = $(XMLPARSER_PATH)/xmltok
 
 
-INCLUDE_PATHS = -I $(BASE_PATH) \
-                -I $(NET_PATH) \
-                -I $(DOM_PATH) \
-                -I $(XML_PATH) \
-                -I $(EXPR_PATH) \
-                -I $(XSL_PATH) \
-                -I $(XSLUTIL_PATH) \
-                -I $(XMLPARSER_PATH) \
-                -I $(XMLPRINTER_PATH) \
-                -I $(EXPAT_PARSER_PATH) -I-
+INCLUDE_PATHS = -I$(BASE_PATH) \
+                -I$(NET_PATH) \
+                -I$(DOM_PATH) \
+                -I$(XML_PATH) \
+                -I$(EXPR_PATH) \
+                -I$(XSL_PATH) \
+                -I$(XSLUTIL_PATH) \
+                -I$(XMLPARSER_PATH) \
+                -I$(XMLPRINTER_PATH) \
+                -I$(EXPAT_PARSER_PATH) -I-
 
 BASE_OBJS  = $(BASE_PATH)/*.o
 
@@ -61,7 +61,7 @@ ALL_OBJS = $(BASE_OBJS) \
 MAIN_CPP = main/transformiix.cpp
 
 TransforMiiX: $(ALL_OBJS)
-	$(CC) $(INCLUDE_PATHS) $(ALL_OBJS)  $(MAIN_CPP) -o transfrmx.exe
+	$(CC) $(INCLUDE_PATHS) -I- $(ALL_OBJS)  $(MAIN_CPP) -o transfrmx
 
 
 $(BASE_OBJS): $(BASE_PATH)/*.cpp $(BASE_PATH)/*.h

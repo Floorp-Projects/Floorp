@@ -1,22 +1,27 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: XSLProcessor.cpp,v 1.2 1999/11/15 07:13:08 nisheeth%netscape.com Exp $
  */
 
 #include "XSLProcessor.h"
@@ -28,7 +33,8 @@
 
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
- * @author Keith Visco (kvisco@mitre.org)
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:08 $
 **/
 
 /**
@@ -43,13 +49,10 @@ const String XSLProcessor::NON_TEXT_TEMPLATE_WARNING =
 **/
 XSLProcessor::XSLProcessor() {
 
-#ifdef MOZILLA
-    NS_INIT_ISUPPORTS();
-#endif
-
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v19990813]");
+    appVersion.append("1.0 [beta v19991114]");
+
 
     //-- create XSL element types
     xslTypes.setObjectDeletion(MB_TRUE);
@@ -64,9 +67,11 @@ XSLProcessor::XSLProcessor() {
     xslTypes.put(ELEMENT,         new XSLType(XSLType::ELEMENT));
     xslTypes.put(FOR_EACH,        new XSLType(XSLType::FOR_EACH));
     xslTypes.put(IF,              new XSLType(XSLType::IF));
+    xslTypes.put(INCLUDE,         new XSLType(XSLType::INCLUDE));
     xslTypes.put(MESSAGE,         new XSLType(XSLType::MESSAGE));
     xslTypes.put(NUMBER,          new XSLType(XSLType::NUMBER));
     xslTypes.put(OTHERWISE,       new XSLType(XSLType::OTHERWISE));
+    xslTypes.put(PARAM,           new XSLType(XSLType::PARAM));
     xslTypes.put(PI,              new XSLType(XSLType::PI));
     xslTypes.put(PRESERVE_SPACE,  new XSLType(XSLType::PRESERVE_SPACE));
     xslTypes.put(STRIP_SPACE,     new XSLType(XSLType::STRIP_SPACE));
@@ -75,6 +80,7 @@ XSLProcessor::XSLProcessor() {
     xslTypes.put(VALUE_OF,        new XSLType(XSLType::VALUE_OF));
     xslTypes.put(VARIABLE,        new XSLType(XSLType::VARIABLE));
     xslTypes.put(WHEN,            new XSLType(XSLType::WHEN));
+    xslTypes.put(WITH_PARAM,      new XSLType(XSLType::WITH_PARAM));
 
     //-- proprietary debug elements
     xslTypes.put("expr-debug", new XSLType(XSLType::EXPR_DEBUG));
@@ -87,35 +93,6 @@ XSLProcessor::~XSLProcessor() {
     //-- currently does nothing, but added for future use
 } //-- ~XSLProcessor
 
-#ifdef MOZILLA
-// Provide a Create method that can be called by a factory constructor:
-NS_METHOD
-XSLProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-  
-    XSLProcessor* xslp = new XSLProcessor();
-    if (xslp == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // Note that Create doesn't initialize the instance -- that has to
-    // be done by the caller since the initialization args aren't passed
-    // in here.
-
-    // AddRef before calling QI -- this makes it easier to handle the QI
-    // failure case because we'll always just Release and return
-    NS_ADDREF(xslp);
-    nsresult rv = xslp->QueryInterface(aIID, aResult);
-
-    // This will free it if QI failed:
-    NS_RELEASE(xslp);
-    return rv;
-}
-
-NS_IMPL_ISUPPORTS(XSLProcessor, nsIDocumentTransformer::GetIID());
-#endif
-
 /**
  * Registers the given ErrorObserver with this ProcessorState
 **/
@@ -123,7 +100,6 @@ void XSLProcessor::addErrorObserver(ErrorObserver& errorObserver) {
     errorObservers.add(&errorObserver);
 } //-- addErrorObserver
 
-#ifndef MOZILLA
 XMLPrinter* XSLProcessor::createPrinter(Document& xslDocument, ostream& out) {
 
     //-- check result-ns of stylesheet element
@@ -154,7 +130,6 @@ XMLPrinter* XSLProcessor::createPrinter(Document& xslDocument, ostream& out) {
     else xmlPrinter = new XMLPrinter(*target);
     return xmlPrinter;
 } //-- createPrinter
-#endif
 
 String& XSLProcessor::getAppName() {
     return appName;
@@ -164,8 +139,6 @@ String& XSLProcessor::getAppVersion() {
     return appVersion;
 } //-- getAppVersion
 
-
-#ifndef MOZILLA
 /**
  * Parses all XML Stylesheet PIs associated with the
  * given XML document. If any stylesheet PIs are found with
@@ -266,7 +239,7 @@ void XSLProcessor::parseStylesheetPI(String& data, String& type, String& href) {
 Document* XSLProcessor::process(Document& xmlDocument, String& documentBase) {
     //-- look for Stylesheet PI
     Document xslDocument; //-- empty for now
-    return process(xmlDocument, xslDocument);
+    return process(xmlDocument, xslDocument, documentBase);
 } //-- process
 
 /**
@@ -275,7 +248,8 @@ Document* XSLProcessor::process(Document& xmlDocument, String& documentBase) {
  * the given XSL input stream.
  * @return the result tree.
 **/
-Document* XSLProcessor::process(istream& xmlInput, istream& xslInput) {
+Document* XSLProcessor::process
+(istream& xmlInput, istream& xslInput, String& documentBase) {
     //-- read in XML Document
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
@@ -294,7 +268,7 @@ Document* XSLProcessor::process(istream& xmlInput, istream& xslInput) {
             delete xmlDoc;
             return 0;
     }
-    Document* result = process(*xmlDoc, *xslDoc);
+    Document* result = process(*xmlDoc, *xslDoc, documentBase);
     delete xmlDoc;
     delete xslDoc;
     return result;
@@ -337,46 +311,100 @@ Document* XSLProcessor::process(istream& xmlInput, String& documentBase) {
             delete xmlDoc;
             return 0;
     }
-    Document* result = process(*xmlDoc, *xslDoc);
+    Document* result = process(*xmlDoc, *xslDoc, documentBase);
     delete xmlDoc;
     delete xslDoc;
     return result;
 } //-- process
-#endif
 
 /**
- * Processes the given XML Document using the given XSL document
- * and returns the result tree
+ * Processes the Top level elements for an XSL stylesheet
 **/
-Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
+void XSLProcessor::processTopLevel
+   (Document* xslDocument, ProcessorState* ps) 
+{
 
-    Document* result = new Document();
-
-    //-- create a new ProcessorState
-    ProcessorState ps(xslDocument, *result);
-
-    //-- add error observers
-    ListIterator* iter = errorObservers.iterator();
-    while ( iter->hasNext()) {
-        ps.addErrorObserver(*((ErrorObserver*)iter->next()));
-    }
-    delete iter;
       //-------------------------------------------------------/
-     //- index templates and process root level xsl elements -/
+     //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
-    Element* stylesheet = xslDocument.getDocumentElement();
+
+    Element* stylesheet = xslDocument->getDocumentElement();
     NodeList* nl = stylesheet->getChildNodes();
     for (int i = 0; i < nl->getLength(); i++) {
         Node* node = nl->item(i);
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
             DOMString name = element->getNodeName();
-            switch (getElementType(name, &ps)) {
+            switch (getElementType(name, ps)) {
                 case XSLType::ATTRIBUTE_SET:
-                    ps.addAttributeSet(element);
+                    ps->addAttributeSet(element);
                     break;
+                case XSLType::PARAM :
+                {
+                    String name = element->getAttribute(NAME_ATTR);
+                    if ( name.length() == 0 ) {
+                        notifyError("missing required name attribute for xsl:param");
+                        break;
+                    }
+
+                    ExprResult* exprResult 
+                        = processVariable(node, element, ps);
+
+                    bindVariable(name, exprResult, MB_TRUE, ps);
+                    break;
+                }
+   	        case XSLType::INCLUDE :
+		{
+
+                    String href = element->getAttribute(HREF_ATTR);
+                    //-- Read in XSL document
+
+                    if (ps->getInclude(href)) {
+		        String err("stylesheet already included: ");
+                        err.append(href);
+                        notifyError(err, ErrorObserver::WARNING);
+                        break;
+		    }
+
+                    //-- get document base                    
+                    String documentBase;
+                    String currentHref; 
+                    //ps->getDocumentHref(element->getOwnerDocument(),
+		    //		currentHref);
+                    if (currentHref.length() == 0) {
+		      documentBase.append(ps->getDocumentBase());
+		    }
+                    else {                        
+		      URIUtils::getDocumentBase(currentHref, documentBase);
+		    }
+
+                    String errMsg;
+
+                    istream* xslInput 
+		      = URIUtils::getInputStream(href,documentBase,errMsg);
+		    Document* xslDoc = 0;
+                    XMLParser xmlParser;
+		    if ( xslInput ) {
+		        xslDoc = xmlParser.parse(*xslInput);
+		        delete xslInput;
+		    }
+		    if (!xslDoc) {
+		        String err("error including XSL stylesheet: ");
+                        err.append(href);
+                        err.append("; ");
+			err.append(xmlParser.getErrorString());
+			notifyError(err);
+		    }
+                    else {
+		        //-- add stylesheet to list of includes
+		        ps->addInclude(href, xslDoc);
+		        processTopLevel(xslDoc, ps);
+                    }
+                    break;
+
+	          }
                 case XSLType::TEMPLATE :
-                    ps.addTemplate(element);
+                    ps->addTemplate(element);
                     break;
                 case XSLType::VARIABLE :
                 {
@@ -385,8 +413,8 @@ Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
                         notifyError("missing required name attribute for xsl:variable");
                         break;
                     }
-                    ExprResult* exprResult = processVariable(node, element, &ps);
-                    bindVariable(name, exprResult, &ps);
+                    ExprResult* exprResult = processVariable(node, element, ps);
+                    bindVariable(name, exprResult, MB_FALSE, ps);
                     break;
                 }
                 case XSLType::PRESERVE_SPACE :
@@ -398,7 +426,7 @@ Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
                         err.append("xsl:preserve-space");
                         notifyError(err);
                     }
-                    else ps.preserveSpace(elements);
+                    else ps->preserveSpace(elements);
                     break;
                 }
                 case XSLType::STRIP_SPACE :
@@ -410,7 +438,7 @@ Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
                         err.append("xsl:strip-space");
                         notifyError(err);
                     }
-                    else ps.stripSpace(elements);
+                    else ps->stripSpace(elements);
                     break;
                 }
                 default:
@@ -419,6 +447,36 @@ Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
             }
         }
     }
+
+} //-- process(Document, ProcessorState)
+
+/**
+ * Processes the given XML Document using the given XSL document
+ * and returns the result tree
+**/
+Document* XSLProcessor::process
+   (Document& xmlDocument, Document& xslDocument, String& documentBase) 
+{
+
+    Document* result = new Document();
+
+    //-- create a new ProcessorState
+    ProcessorState ps(xslDocument, *result);
+    ps.setDocumentBase(documentBase);
+
+    //-- add error observers
+    ListIterator* iter = errorObservers.iterator();
+    while ( iter->hasNext()) {
+        ps.addErrorObserver(*((ErrorObserver*)iter->next()));
+    }
+    delete iter;
+
+      //-------------------------------------------------------/
+     //- index templates and process top level xsl elements -/
+    //-------------------------------------------------------/
+    
+    processTopLevel(&xslDocument, &ps);
+
       //----------------------------------------/
      //- Process root of XML source document -/
     //--------------------------------------/
@@ -427,14 +485,17 @@ Document* XSLProcessor::process(Document& xmlDocument, Document& xslDocument) {
     //-- return result Document
     return result;
 } //-- process
-
-#ifndef MOZILLA
 /**
  * Processes the given XML Document using the given XSL document
  * and prints the results to the given ostream argument
 **/
-void XSLProcessor::process(Document& xmlDocument, Document& xslDocument, ostream& out) {
-    Document* resultDoc = process(xmlDocument, xslDocument);
+void XSLProcessor::process
+   (  Document& xmlDocument, 
+      Document& xslDocument, 
+      ostream& out, 
+      String& documentBase  ) 
+{
+    Document* resultDoc = process(xmlDocument, xslDocument, documentBase);
     XMLPrinter* xmlPrinter = createPrinter(xslDocument, out);
     xmlPrinter->print(resultDoc);
     delete xmlPrinter;
@@ -450,7 +511,9 @@ void XSLProcessor::process(Document& xmlDocument, Document& xslDocument, ostream
  * The result tree is printed to the given ostream argument,
  * will not close the ostream argument
 **/
-void XSLProcessor::process(istream& xmlInput, String& documentBase, ostream& out) {
+void XSLProcessor::process
+   (istream& xmlInput, ostream& out, String& documentBase) 
+{
 
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
@@ -477,7 +540,7 @@ void XSLProcessor::process(istream& xmlInput, String& documentBase, ostream& out
             delete xmlDoc;
             return;
     }
-    Document* result = process(*xmlDoc, *xslDoc);
+    Document* result = process(*xmlDoc, *xslDoc, documentBase);
     XMLPrinter* xmlPrinter = createPrinter(*xslDoc, out);
     xmlPrinter->print(result);
     delete xmlPrinter;
@@ -493,7 +556,9 @@ void XSLProcessor::process(istream& xmlInput, String& documentBase, ostream& out
  * The result tree is printed to the given ostream argument,
  * will not close the ostream argument
 **/
-void XSLProcessor::process(istream& xmlInput, istream& xslInput, ostream& out) {
+void XSLProcessor::process
+   (istream& xmlInput, istream& xslInput, ostream& out, String& documentBase) 
+{
     //-- read in XML Document
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
@@ -512,7 +577,7 @@ void XSLProcessor::process(istream& xmlInput, istream& xslInput, ostream& out) {
             delete xmlDoc;
             return;
     }
-    Document* result = process(*xmlDoc, *xslDoc);
+    Document* result = process(*xmlDoc, *xslDoc, documentBase);
     XMLPrinter* xmlPrinter = createPrinter(*xslDoc, out);
     xmlPrinter->print(result);
     delete xmlPrinter;
@@ -520,10 +585,39 @@ void XSLProcessor::process(istream& xmlInput, istream& xslInput, ostream& out) {
     delete xslDoc;
     delete result;
 } //-- process
-#endif
+
   //-------------------/
  //- Private Methods -/
 //-------------------/
+
+void XSLProcessor::bindVariable
+    (String& name, ExprResult* value, MBool allowShadowing, ProcessorState* ps)
+{
+    NamedMap* varSet = (NamedMap*)ps->getVariableSetStack()->peek();
+    //-- check for duplicate variable names
+    VariableBinding* current = (VariableBinding*) varSet->get(name);
+    VariableBinding* binding = 0;
+    if (current) {
+        binding = current;
+        if (current->isShadowingAllowed() ) {
+            current->setShadowValue(value);
+        }
+        else {
+            //-- error cannot rebind variables
+            String err("error cannot rebind variables: ");
+            err.append(name);
+            err.append(" already exists in this scope.");
+            notifyError(err);
+        }
+    }
+    else {
+        binding = new VariableBinding(name, value);
+        varSet->put((const String&)name, binding);
+    }
+    if ( allowShadowing ) binding->allowShadowing();
+    else binding->disallowShadowing();
+
+} //-- bindVariable
 
 /**
  * Returns the type of Element represented by the given name
@@ -548,25 +642,6 @@ short XSLProcessor::getElementType(String& name, ProcessorState* ps) {
     else return xslType->type;
 
 } //-- getElementType
-
-void XSLProcessor::bindVariable
-    (String& name, ExprResult* exprResult, ProcessorState* ps)
-{
-    NamedMap* varSet = (NamedMap*)ps->getVariableSetStack()->peek();
-    //-- check for duplicate variable names
-    ExprResult* current = (ExprResult*) varSet->get(name);
-    if ( current ) {
-        //-- error cannot rebind variables
-        String err("error cannot rebind variables: ");
-        err.append(name);
-        err.append(" already exists in this scope.");
-        notifyError(err);
-    }
-    else {
-        varSet->put((const String&)name, exprResult);
-    }
-
-} //-- bindVariable
 
 /**
  * Gets the Text value of the given DocumentFragment. The value is placed
@@ -699,7 +774,7 @@ void XSLProcessor::processAction
                 Attr* modeAttr = actionElement->getAttributeNode(MODE_ATTR);
                 if ( modeAttr ) mode = new String(modeAttr->getValue());
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
-                if ( selectAtt.length() == 0 ) selectAtt = "*";
+                if ( selectAtt.length() == 0 ) selectAtt = "* | text()";
                 pExpr = ps->getPatternExpr(selectAtt);
                 ExprResult* exprResult = pExpr->evaluate(node, ps);
                 NodeSet* nodeSet = 0;
@@ -766,7 +841,14 @@ void XSLProcessor::processAction
                 if ( templateName.length() > 0 ) {
                     Element* xslTemplate = ps->getNamedTemplate(templateName);
                     if ( xslTemplate ) {
+                        NamedMap params;
+                        params.setObjectDeletion(MB_TRUE);
+                        Stack* bindings = ps->getVariableSetStack();
+                        bindings->push(&params);
+                        processTemplateParams(xslTemplate, node, ps);
+                        processParameters(actionElement, node, ps);
                         processTemplate(node, xslTemplate, ps);
+                        bindings->pop();
                     }
                 }
                 else {
@@ -820,9 +902,21 @@ void XSLProcessor::processAction
                 if ( ! ps->addToResultTree(comment) ) delete comment;
                 break;
             }
+            //-- xsl:copy
             case XSLType::COPY:
                 xslCopy(node, actionElement, ps);
                 break;
+            //-- xsl:copy-of
+            case XSLType::COPY_OF:
+            {
+                DOMString selectAtt = actionElement->getAttribute(SELECT_ATTR);
+                Expr* expr = ps->getExpr(selectAtt);
+                ExprResult* exprResult = expr->evaluate(node, ps);
+                xslCopyOf(exprResult, ps);
+                delete exprResult;
+                break;
+
+            }
             case XSLType::ELEMENT:
             {
                 Attr* attr = actionElement->getAttributeNode(NAME_ATTR);
@@ -903,6 +997,7 @@ void XSLProcessor::processAction
 
                 break;
             }
+            //-- xsl:message
             case XSLType::MESSAGE :
             {
                 String message;
@@ -911,9 +1006,12 @@ void XSLProcessor::processAction
                 cout << "xsl:message - "<< message << endl;
                 break;
             }
-            //xsl:number
+            //-- xsl:number
             case XSLType::NUMBER :
             {
+                String result;
+                Numbering::doNumbering(actionElement, result, node, ps);
+                ps->addToResultTree(resultDoc->createTextNode(result));
                 break;
             }
             //-- xsl:processing-instruction
@@ -1028,7 +1126,7 @@ void XSLProcessor::processAction
                     break;
                 }
                 ExprResult* exprResult = processVariable(node, actionElement, ps);
-                bindVariable(name, exprResult, ps);
+                bindVariable(name, exprResult, MB_FALSE, ps);
                 break;
             }
             //-- literal
@@ -1041,9 +1139,9 @@ void XSLProcessor::processAction
                 if ( atts ) {
                     String xsltNameSpace = ps->getXSLNamespace();
                     NodeSet nonXSLAtts(atts->getLength());
-                    int i;
                     //-- process special XSL attributes first
-                    for ( i = 0; i < atts->getLength(); i++ ) {
+                    int i;
+                    for (i = 0; i < atts->getLength(); i++ ) {
                         Attr* attr = (Attr*) atts->item(i);
                         //-- filter attributes in the XSLT namespace
                         String attrNameSpace;
@@ -1072,7 +1170,8 @@ void XSLProcessor::processAction
                 }
                 //-- process children
                 NodeList* nl = xslAction->getChildNodes();
-                for (int i = 0; i < nl->getLength(); i++) {
+                int i;
+                for ( i = 0; i < nl->getLength(); i++) {
                     processAction(node, nl->item(i),ps);
                 }
                 ps->getNodeStack()->pop();
@@ -1122,6 +1221,41 @@ void XSLProcessor::processAttrValueTemplate
 
 } //-- processAttributeValueTemplate
 
+/**
+ * Processes the xsl:with-param elements of the given xsl action
+ * Only processes xsl:with-params that have a corresponding
+ * xsl:param already in the current VariableSet
+**/
+void XSLProcessor::processParameters(Element* xslAction, Node* context, ProcessorState* ps)
+{
+    if ( !xslAction ) return;
+
+    //-- handle xsl:with-param elements
+    NodeList* nl = xslAction->getChildNodes();
+    Stack* bindings = ps->getVariableSetStack();
+    NamedMap* current = (NamedMap*)bindings->peek();
+    for (int i = 0; i < nl->getLength(); i++) {
+        Node* tmpNode = nl->item(i);
+        int nodeType = tmpNode->getNodeType();
+        if ( nodeType == Node::ELEMENT_NODE ) {
+            Element* action = (Element*)tmpNode;
+            String actionName = action->getNodeName();
+            short xslType = getElementType(actionName, ps);
+            if ( xslType == XSLType::WITH_PARAM ) {
+                String name = action->getAttribute(NAME_ATTR);
+                if ( name.length() == 0 ) {
+                    notifyError("missing required name attribute for xsl:with-param");
+                }
+                else {
+                    if ( current->get(name) ) {
+                        ExprResult* exprResult = processVariable(context, action, ps);
+                        bindVariable(name, exprResult, MB_FALSE, ps);
+                    }
+                }
+            }
+        }
+    }
+} //-- processParameters
 
 /**
  *  Processes the set of nodes using the given context, and ProcessorState
@@ -1132,12 +1266,54 @@ void XSLProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorState
         //-- do default?
     }
     else {
+        Stack* bindings = ps->getVariableSetStack();
+        NamedMap localBindings;
+        localBindings.setObjectDeletion(MB_TRUE);
+        bindings->push(&localBindings);
         NodeList* nl = xslTemplate->getChildNodes();
-        for (int i = 0; i < nl->getLength(); i++) {
+        for (int i = 0; i < nl->getLength(); i++)
             processAction(node, nl->item(i), ps);
-        }
+        bindings->pop();
     }
 } //-- processTemplate
+
+/**
+ *  Processes the set of nodes using the given context, and ProcessorState
+**/
+void XSLProcessor::processTemplateParams
+    (Node* xslTemplate, Node* context, ProcessorState* ps) {
+
+    if ( xslTemplate ) {
+        NodeList* nl = xslTemplate->getChildNodes();
+        int i = 0;
+        //-- handle params
+        for (i = 0; i < nl->getLength(); i++) {
+            Node* tmpNode = nl->item(i);
+            int nodeType = tmpNode->getNodeType();
+            if ( nodeType == Node::ELEMENT_NODE ) {
+                Element* action = (Element*)tmpNode;
+                String actionName = action->getNodeName();
+                short xslType = getElementType(actionName, ps);
+                if ( xslType == XSLType::PARAM ) {
+                    String name = action->getAttribute(NAME_ATTR);
+                    if ( name.length() == 0 ) {
+                        notifyError("missing required name attribute for xsl:param");
+                    }
+                    else {
+                        ExprResult* exprResult = processVariable(context, action, ps);
+                        bindVariable(name, exprResult, MB_TRUE, ps);
+                    }
+                }
+                else break;
+            }
+            else if (nodeType == Node::TEXT_NODE) {
+                if (!XMLUtils::isWhitespace(((Text*)tmpNode)->getData())) break;
+            }
+            else break;
+        }
+    }
+} //-- processTemplateParams
+
 
 /**
  *  processes the xslVariable parameter as an xsl:variable using the given context,
@@ -1155,8 +1331,8 @@ ExprResult* XSLProcessor::processVariable
         return new StringResult("unable to process variable");
     }
 
-    //-- check for EXPR_ATTR
-    Attr* attr = xslVariable->getAttributeNode(EXPR_ATTR);
+    //-- check for select attribute
+    Attr* attr = xslVariable->getAttributeNode(SELECT_ATTR);
     if ( attr ) {
         Expr* expr = ps->getExpr(attr->getValue());
         return expr->evaluate(node, ps);
@@ -1175,7 +1351,7 @@ ExprResult* XSLProcessor::processVariable
         nodeSet->add(node);
         return nodeSet;
     }
-} //-- processTemplate
+} //-- processVariable
 
 /**
  * Performs the xsl:copy action as specified in the XSL Working Draft
@@ -1190,14 +1366,6 @@ void XSLProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             //-- just process children
             processTemplate(node, action, ps);
             break;
-        case Node::ATTRIBUTE_NODE:
-        {
-            Attr* attr = (Attr*) node;
-            Attr* copyAtt = resultDoc->createAttribute(attr->getName());
-            copyAtt->setValue(attr->getValue());
-            copy = copyAtt;
-            break;
-        }
         case Node::ELEMENT_NODE:
         {
             Element* element = (Element*)node;
@@ -1211,47 +1379,43 @@ void XSLProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             ps->getNodeStack()->pop();
             return;
         }
-        case Node::CDATA_SECTION_NODE:
-        {
-            CDATASection* cdata = (CDATASection*)node;
-            copy = resultDoc->createCDATASection(cdata->getData());
-            break;
-        }
-        case Node::TEXT_NODE:
-        {
-            Text* text = (Text*)node;
-            copy = resultDoc->createTextNode(text->getData());
-            break;
-        }
-        case Node::PROCESSING_INSTRUCTION_NODE:
-        {
-            ProcessingInstruction* pi = (ProcessingInstruction*)node;
-            copy = resultDoc->createProcessingInstruction(pi->getTarget(), pi->getData());
-            break;
-        }
-        case Node::COMMENT_NODE:
-        {
-            Comment* comment = (Comment*)node;
-            copy = resultDoc->createComment(comment->getData());
-            break;
-        }
+        //-- just copy node, xsl:copy template does not get processed
         default:
+            copy = XMLDOMUtils::copyNode(node, resultDoc);
             break;
     }
     if ( copy ) ps->addToResultTree(copy);
 } //-- xslCopy
 
+/**
+ * Performs the xsl:copy-of action as specified in the XSL Working Draft
+**/
+void XSLProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 
-#ifdef MOZILLA
-NS_IMETHODIMP
-XSLProcessor::TransformDocument(nsIDOMElement* aSourceDOM, 
-                               nsIDOMElement* aStyleDOM,
-                               nsIDOMDocument* aOutputDoc,
-                               nsIObserver* aObserver)
-{
-  return NS_OK;
-}
-#endif
+    if ( !exprResult ) return;
+
+    Document* resultDoc = ps->getResultDocument();
+
+    switch ( exprResult->getResultType() ) {
+        case  ExprResult::NODESET:
+        {
+            NodeSet* nodes = (NodeSet*)exprResult;
+            for (int i = 0; i < nodes->size();i++) {
+                Node* node = nodes->get(i);
+                ps->addToResultTree(XMLDOMUtils::copyNode(node, resultDoc));
+            }
+            break;
+        }
+        default:
+        {
+            String value;
+            exprResult->stringValue(value);
+            ps->addToResultTree(resultDoc->createTextNode(value));
+            break;
+        }
+
+    }
+} //-- xslCopyOf
 
 XSLType::XSLType() {
     this->type = LITERAL;

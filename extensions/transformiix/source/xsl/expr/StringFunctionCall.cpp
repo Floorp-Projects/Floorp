@@ -1,28 +1,34 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ *    
+ * $Id: StringFunctionCall.cpp,v 1.2 1999/11/15 07:13:13 nisheeth%netscape.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:13 $
 **/
 
 #include "FunctionLib.h"
@@ -31,7 +37,7 @@
  * Creates a default StringFunctionCall. The string() function
  * is the default
 **/
-StringFunctionCall::StringFunctionCall() : FunctionCall(STRING_FN) {
+StringFunctionCall::StringFunctionCall() : FunctionCall(XPathNames::STRING_FN) {
     type = STRING;
 } //-- StringFunctionCall
 
@@ -42,31 +48,31 @@ StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
         case CONCAT:
-            FunctionCall::setName(CONCAT_FN);
+            FunctionCall::setName(XPathNames::CONCAT_FN);
             break;
         case CONTAINS:
-            FunctionCall::setName(CONTAINS_FN);
+            FunctionCall::setName(XPathNames::CONTAINS_FN);
             break;
         case STARTS_WITH:
-            FunctionCall::setName(STARTS_WITH_FN);
+            FunctionCall::setName(XPathNames::STARTS_WITH_FN);
             break;
         case STRING_LENGTH:
-            FunctionCall::setName(STRING_LENGTH_FN);
+            FunctionCall::setName(XPathNames::STRING_LENGTH_FN);
             break;
         case SUBSTRING:
-            FunctionCall::setName(SUBSTRING_FN);
+            FunctionCall::setName(XPathNames::SUBSTRING_FN);
             break;
         case SUBSTRING_AFTER:
-            FunctionCall::setName(SUBSTRING_AFTER_FN);
+            FunctionCall::setName(XPathNames::SUBSTRING_AFTER_FN);
             break;
         case SUBSTRING_BEFORE:
-            FunctionCall::setName(SUBSTRING_BEFORE_FN);
+            FunctionCall::setName(XPathNames::SUBSTRING_BEFORE_FN);
             break;
         case TRANSLATE:
-            FunctionCall::setName(TRANSLATE_FN);
+            FunctionCall::setName(XPathNames::TRANSLATE_FN);
             break;
         default:
-            FunctionCall::setName(STRING_FN);
+            FunctionCall::setName(XPathNames::STRING_FN);
             break;
     }
 } //-- StringFunctionCall
@@ -197,11 +203,12 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 char* chars = new char[size+1];
                 src.toChar(chars);
                 src.clear();
-                Int32 newIdx = 0;                
-                for (Int32 i = 0; i < size; i++) {
+                Int32 newIdx = 0;
+                Int32 i;
+                for (i = 0; i < size; i++) {
                     Int32 idx = oldChars.indexOf(chars[i]);
                     if (idx >= 0) {
-                        UNICODE_CHAR nchar = newChars.charAt(idx);
+                        char nchar = newChars.charAt(idx);
                         if (nchar != -1) src.append(nchar);
                     }
                     else src.append(chars[i]);

@@ -1,6 +1,6 @@
 target: xslp
 
-CC = g++
+CC := $(CC) -g
 
 #ifndef PROJ_PATH
 ROOT_PATH         = ..
@@ -17,19 +17,21 @@ EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
 EXPAT_TOKEN_PATH  = $(XMLPARSER_PATH)/xmltok
 #endif
 
-INCLUDE_PATHS = -I $(BASE_PATH) \
-                -I $(NET_PATH) \
-                -I $(DOM_PATH) \
-                -I $(EXPR_PATH) \
-                -I $(XSL_PATH) \
-                -I $(XSLUTIL_PATH) \
-                -I $(XML_PATH) \
-                -I $(XMLPARSER_PATH) \
-                -I $(XMLPRINTER_PATH) \
-                -I $(EXPAT_PARSER_PATH) -I-
+INCLUDE_PATHS = -I$(BASE_PATH) \
+                -I$(NET_PATH) \
+                -I$(DOM_PATH) \
+                -I$(EXPR_PATH) \
+                -I$(XSL_PATH) \
+                -I$(XSLUTIL_PATH) \
+                -I$(XML_PATH) \
+                -I$(XMLPARSER_PATH) \
+                -I$(XMLPRINTER_PATH) \
+                -I$(EXPAT_PARSER_PATH) -I-
 
 XSL_OBJS = Names.o \
+           Numbering.o \
            ProcessorState.o \
+           VariableBinding.o \
            XSLProcessor.o
 
 ######################
@@ -41,8 +43,14 @@ xslp: $(XSL_OBJS)
 Names.o: Names.cpp Names.h
 	$(CC) -I . -I $(BASE_PATH) -c Names.cpp
 
+Numbering.o: Numbering.cpp Numbering.h
+	$(CC) $(INCLUDE_PATHS) -c Numbering.cpp
+
 ProcessorState.o: ProcessorState.cpp ProcessorState.h
 	$(CC) $(INCLUDE_PATHS) -c ProcessorState.cpp
- 
+
+VariableBinding.o: VariableBinding.h VariableBinding.cpp
+	$(CC) $(INCLUDE_PATHS) -c VariableBinding.cpp
+
 XSLProcessor.o: XSLProcessor.cpp XSLProcessor.h
 	$(CC) -c XSLProcessor.cpp -D __cplusplus $(INCLUDE_PATHS)

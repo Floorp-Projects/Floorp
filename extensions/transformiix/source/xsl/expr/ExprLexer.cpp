@@ -1,27 +1,37 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ *   -- fixed bug with '<=' and '>=' reported by Bob Miller
+ * 
+ * Bob Miller, Oblix Inc., kbob@oblix.com
+ *   -- fixed bug with single quotes inside double quotes
+ *    
+ * $Id: ExprLexer.cpp,v 1.2 1999/11/15 07:13:11 nisheeth%netscape.com Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:11 $
 **/
 
 #include <iostream.h>
@@ -92,9 +102,14 @@ const String ExprLexer::NODE    = "node";
 const String ExprLexer::PI      = "processing-instruction";
 const String ExprLexer::TEXT    = "text";
 
+//-- boolean
+const String ExprLexer::AND     = "and";
+const String ExprLexer::OR      = "or";
+
 //-- multiplicative operators
 const String ExprLexer::MODULUS = "mod";
 const String ExprLexer::DIVIDE  = "div";
+
 
 /**
  * The set of a XSL Expression Tokens
@@ -106,12 +121,16 @@ const Token ExprLexer::TOKENS[] = {
     Token(ExprLexer::NODE,          Token::NODE),
     Token(ExprLexer::PI,            Token::PI),
     Token(ExprLexer::TEXT,          Token::TEXT),
+    //-- boolean operators
+    Token(ExprLexer::AND,           Token::AND_OP),
+    Token(ExprLexer::OR,            Token::OR_OP),
+
     //-- multiplicative operators
     Token(ExprLexer::MODULUS,       Token::MODULUS_OP),
     Token(ExprLexer::DIVIDE,        Token::DIVIDE_OP)
 };
 
-const short ExprLexer::NUMBER_OF_TOKENS  = 6;
+const short ExprLexer::NUMBER_OF_TOKENS  = 8;
 
   //---------------/
  //- Contructors -/
@@ -276,6 +295,9 @@ MBool ExprLexer::isValidQName(String& name) {
 MBool ExprLexer::isOperatorToken(Token* token) {
     if ( !token ) return MB_FALSE;
     switch ( token->type ) {
+        //-- boolean operators
+        case Token::AND_OP:
+        case Token::OR_OP:
         //-- relational operators
         case Token::EQUAL_OP:
         case Token::NOT_EQUAL_OP:
@@ -317,6 +339,12 @@ MBool ExprLexer::matchDelimiter(UNICODE_CHAR ch) {
             break;
         case R_BRACKET :
             tokenType = Token::R_BRACKET;
+            break;
+        case L_ANGLE :
+            tokenType = Token::LESS_THAN_OP;
+            break;
+        case R_ANGLE :
+            tokenType = Token::GREATER_THAN_OP;
             break;
         case COMMA :
             tokenType = Token::COMMA;
@@ -470,7 +498,7 @@ void ExprLexer::parse(const String& pattern) {
 
 
     String tokenBuffer;
-    MBool inLiteral = MB_FALSE;
+    UNICODE_CHAR inLiteral = '\0';
     MBool inNumber  = MB_FALSE;
 
     Int32 currentPos = 0;
@@ -491,8 +519,8 @@ void ExprLexer::parse(const String& pattern) {
 
         if ( inLiteral ) {
             //-- look for end of literal
-            if ( ch == S_QUOTE ) {
-                inLiteral = MB_FALSE;
+            if ( ch == inLiteral ) {
+                inLiteral = '\0';
                 addToken(new Token(tokenBuffer, Token::LITERAL));
                 tokenBuffer.clear();
             }
@@ -532,8 +560,9 @@ void ExprLexer::parse(const String& pattern) {
                 case LF:
                     break;
                 case S_QUOTE :
+	        case D_QUOTE :
                     matchToken(tokenBuffer, ch);
-                    inLiteral = MB_TRUE;
+                    inLiteral = ch;
                     break;
                 case PERIOD:
                     if ( inNumber ) tokenBuffer.append(ch);
@@ -562,11 +591,26 @@ void ExprLexer::parse(const String& pattern) {
                 case BANG : //-- used as previous...see EQUAL
                     break;
                 case EQUAL:
+                    switch ( prevCh ) {
+                        case BANG:
+                            prevToken->type = Token::NOT_EQUAL_OP;
+                            break;
+                        case L_ANGLE:
+                            prevToken->type = Token::LESS_OR_EQUAL_OP;
+                            break;
+                        case R_ANGLE:
+                            prevToken->type = Token::GREATER_OR_EQUAL_OP;
+                            break;
+                        default:
+                            matchToken(tokenBuffer, ch);
+                            matchDelimiter(ch);
+                            break;
+                    }
+                    break;
+                case L_ANGLE :
+                case R_ANGLE :
                     matchToken(tokenBuffer, ch);
                     matchDelimiter(ch);
-                    if ( prevCh == BANG ) {
-                        prevToken->type = Token::NOT_EQUAL_OP;
-                    }
                     break;
                 case HYPHEN :
                     if ( isValidQName(tokenBuffer) ) tokenBuffer.append(ch);

@@ -8,8 +8,8 @@ PARSER_PATH  = .
 EXPAT_PARSER_PATH = xmlparse
 EXPAT_TOKEN_PATH = xmltok
 
-INCLUDE_PATH = -I $(PARSER_PATH) -I $(BASE_PATH) -I $(DOM_PATH) \
-               -I $(EXPAT_TOKEN_PATH) -I $(EXPAT_PARSER_PATH) -I-
+INCLUDE_PATH = -I$(PARSER_PATH) -I$(BASE_PATH) -I$(DOM_PATH) \
+               -I$(EXPAT_TOKEN_PATH) -I$(EXPAT_PARSER_PATH) -I-
 
 BASE_OBJS = $(BASE_PATH)/String.o
 
@@ -40,7 +40,7 @@ PARSER_OBJS = $(PARSER_PATH)/XMLParser.o
 ALL_OBJS = $(BASE_OBJS) $(DOM_OBJS) $(EXPAT_OBJS) $(PARSER_OBJS)
 
 
-CC = g++ -D XML_UNICODE -D __cplusplus
+CC := $(CC) -D XML_UNICODE -D __cplusplus
 
 xml_parser: $(ALL_OBJS)
 

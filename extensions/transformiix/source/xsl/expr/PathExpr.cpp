@@ -1,29 +1,34 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ *    
+ * $Id: PathExpr.cpp,v 1.2 1999/11/15 07:13:13 nisheeth%netscape.com Exp $
  */
 
 #include "Expr.h"
 
-  //-------------/
+  //------------/
  //- PathExpr -/
-//-----------/
+//------------/
 
 
 /**
@@ -137,6 +142,7 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
         if ( nodes->size() == 0 ) break;
     }
     delete iter;
+
     return nodes;
 } //-- evaluate
 
@@ -190,9 +196,60 @@ double PathExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs)
  * the given context
 **/
 MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
-    NodeSet* nodeSet = (NodeSet*) evaluate(context, cs);
-    MBool result = nodeSet->contains(node);
-    delete nodeSet;
+
+    if ( (!node)  || (expressions.getLength() == 0))
+       return MB_FALSE;
+
+    MBool result = MB_FALSE;
+
+    NodeSet nodes;
+    nodes.add(node);
+    
+
+    ListIterator* iter = expressions.iterator();
+    iter->reverse();
+
+    NodeSet tmpNodes;
+    while ( iter->hasNext() ) {
+
+        PathExprItem* pxi = (PathExprItem*)iter->next();
+        for (int i = 0; i < nodes.size(); i++) {
+            Node* tnode = nodes.get(i);
+            if (pxi->pExpr->matches(tnode, context, cs)) {
+
+	        //-- if this is the last expression we are done              
+	        if (!iter->hasNext()) {
+		   result = MB_TRUE;
+                   break;
+                }
+
+	        //-- select node's parent or ancestors
+	        switch (pxi->ancestryOp) {
+		    case ANCESTOR_OP:
+		    {
+                        Node* parent = tnode;
+                        while (parent = cs->findParent(parent)) 
+			    tmpNodes.add(parent);
+			break;
+		    }
+		    case PARENT_OP:
+		    {
+		        Node* parent = cs->findParent(tnode);
+                        if (parent) tmpNodes.add(parent);
+                        break; 
+		    }
+                
+	        }
+            }
+        } //-- for
+        nodes.clear();
+        tmpNodes.copyInto(nodes);
+        tmpNodes.clear();
+    }
+
+    if (!result) result = (MBool)(nodes.size() > 0);
+
+    delete iter;
     return result;
 } //-- matches
 

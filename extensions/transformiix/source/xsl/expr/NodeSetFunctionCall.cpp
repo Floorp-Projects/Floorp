@@ -1,28 +1,34 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ *    
+ * $Id: NodeSetFunctionCall.cpp,v 1.2 1999/11/15 07:13:12 nisheeth%netscape.com Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:12 $
 **/
 
 #include "FunctionLib.h"
@@ -31,7 +37,7 @@
  * Creates a default NodeSetFunctionCall. The Position function
  * is the default
 **/
-NodeSetFunctionCall::NodeSetFunctionCall() : FunctionCall(POSITION_FN) {
+NodeSetFunctionCall::NodeSetFunctionCall() : FunctionCall(XPathNames::POSITION_FN) {
     type = POSITION;
 } //-- NodeSetFunctionCall
 
@@ -42,22 +48,22 @@ NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
         case COUNT :
-            FunctionCall::setName(COUNT_FN);
+            FunctionCall::setName(XPathNames::COUNT_FN);
             break;
         case LAST :
-            FunctionCall::setName(LAST_FN);
+            FunctionCall::setName(XPathNames::LAST_FN);
             break;
-        case LOCAL_PART:
-            FunctionCall::setName(LOCAL_PART_FN);
+        case LOCAL_NAME:
+            FunctionCall::setName(XPathNames::LOCAL_NAME_FN);
             break;
         case NAME:
-            FunctionCall::setName(NAME_FN);
+            FunctionCall::setName(XPathNames::NAME_FN);
             break;
-        case NAMESPACE:
-            FunctionCall::setName(NAMESPACE_FN);
+        case NAMESPACE_URI:
+            FunctionCall::setName(XPathNames::NAMESPACE_URI_FN);
             break;
         default:
-            FunctionCall::setName(POSITION_FN);
+            FunctionCall::setName(XPathNames::POSITION_FN);
             break;
     }
 } //-- NodeSetFunctionCall
@@ -100,9 +106,9 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
             if ( nodeSet ) result = new NumberResult((double)nodeSet->size());
             else result = new NumberResult(0.0);
             break;
-        case LOCAL_PART:
+        case LOCAL_NAME:
         case NAME:
-        case NAMESPACE :
+        case NAMESPACE_URI :
         {
             String name;
             Node* node = 0;
@@ -126,10 +132,10 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                 if ( !node ) node = context;
 
                 switch ( type ) {
-                    case LOCAL_PART :
+                    case LOCAL_NAME :
                         XMLUtils::getLocalPart(node->getNodeName(),name);
                         break;
-                    case NAMESPACE :
+                    case NAMESPACE_URI :
                         XMLUtils::getNameSpace(node->getNodeName(),name);
                         break;
                     default:
