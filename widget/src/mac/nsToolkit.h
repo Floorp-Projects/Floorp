@@ -64,8 +64,11 @@ public:
     
   NS_IMETHOD  	Init(PRThread *aThread);
   
-	// Appearance Mgr
-	static bool 	HasAppearanceManager();
+  // Appearance Mgr
+  static bool 	HasAppearanceManager();
+
+protected:
+  bool          mInited;
 };
 
 
