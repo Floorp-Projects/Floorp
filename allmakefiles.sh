@@ -1075,7 +1075,8 @@ for extension in $MOZ_EXTENSIONS; do
 	    ;;
  	help ) MAKEFILES_extensions="$MAKEFILES_extensions
  	    extensions/help/resources/Makefile
- 	    " ;;
+	    extensions/help/Makefile
+            " ;;
  
     esac
 done
