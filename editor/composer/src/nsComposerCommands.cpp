@@ -23,6 +23,7 @@
  *   Ryan Cassin <rcassin@supernova.org>
  *   Daniel Glazman <glazman@netscape.com>
  *   Charles Manske <cmanske@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -69,18 +70,16 @@ nsresult RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
                             const PRUnichar *attr);
 nsresult SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
                          const PRUnichar *attr, const PRUnichar *value);
-nsresult GetListItemState(nsIEditor *aEditor, PRBool *aMixed,
-                          PRUnichar **_retval);
 
 
 //defines
-#define COMMAND_NAME "cmd_name"
 #define STATE_ENABLED  "state_enabled"
 #define STATE_ALL "state_all"
-#define STATE_ATTRIBUTE "state_attribute"
+#define STATE_ANY "state_any"
+#define STATE_MIXED "state_mixed"
 #define STATE_BEGIN "state_begin"
 #define STATE_END "state_end"
-#define STATE_MIXED "state_mixed"
+#define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
 
 
@@ -100,8 +99,6 @@ NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
 nsBaseStateUpdatingCommand::nsBaseStateUpdatingCommand(const char* aTagName)
 : nsBaseComposerCommand()
 , mTagName(aTagName)
-, mGotState(PR_FALSE)
-, mState(PR_FALSE)
 {
 }
 
@@ -137,14 +134,7 @@ nsBaseStateUpdatingCommand::DoCommandParams(const char *aCommandName,
                                             nsICommandParams *aParams,
                                             nsISupports *refCon)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) 
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsresult rv = ToggleState(editor, mTagName);
-  if (NS_FAILED(rv)) return rv;
-  
-  return NS_OK;
+  return DoCommand(aCommandName, refCon);
 }
 
 NS_IMETHODIMP
@@ -198,11 +188,7 @@ nsPasteNoFormattingCommand::DoCommandParams(const char *aCommandName,
                                             nsICommandParams *aParams, 
                                             nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
-  if (!htmlEditor)
-    return NS_ERROR_NOT_IMPLEMENTED;
-  
-  return htmlEditor->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
+  return DoCommand(aCommandName, refCon);
 }
 
 NS_IMETHODIMP
@@ -231,32 +217,6 @@ nsStyleUpdatingCommand::nsStyleUpdatingCommand(const char* aTagName)
 nsresult
 nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor, 
                                         const char* aTagName,
-                                        PRBool& outStyleSet)
-{
-  NS_ASSERTION(aEditor, "Need editor here");
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsresult rv = NS_OK;
-
-  PRBool firstOfSelectionHasProp = PR_FALSE;
-  PRBool anyOfSelectionHasProp = PR_FALSE;
-  PRBool allOfSelectionHasProp = PR_FALSE;
-
-  nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(aTagName);
-  rv = htmlEditor->GetInlineProperty(styleAtom, NS_LITERAL_STRING(""), 
-                                     NS_LITERAL_STRING(""),
-                                     &firstOfSelectionHasProp,
-                                     &anyOfSelectionHasProp, 
-                                     &allOfSelectionHasProp);
-  outStyleSet = allOfSelectionHasProp;			// change this to alter the behaviour
-
-  return rv;
-}
- 
-nsresult
-nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor, 
-                                        const char* aTagName,
                                         nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
@@ -275,11 +235,14 @@ nsStyleUpdatingCommand::GetCurrentState(nsIEditor *aEditor,
                                      &firstOfSelectionHasProp, 
                                      &anyOfSelectionHasProp, 
                                      &allOfSelectionHasProp);
+
+  aParams->SetBooleanValue(STATE_ENABLED, NS_SUCCEEDED(rv));
   aParams->SetBooleanValue(STATE_ALL, allOfSelectionHasProp);
-  aParams->SetBooleanValue(STATE_BEGIN, firstOfSelectionHasProp);
-  aParams->SetBooleanValue(STATE_END, allOfSelectionHasProp);//not completely accurate
+  aParams->SetBooleanValue(STATE_ANY, anyOfSelectionHasProp);
   aParams->SetBooleanValue(STATE_MIXED, anyOfSelectionHasProp
            && !allOfSelectionHasProp);
+  aParams->SetBooleanValue(STATE_BEGIN, firstOfSelectionHasProp);
+  aParams->SetBooleanValue(STATE_END, allOfSelectionHasProp);//not completely accurate
   return NS_OK;
 }
 
@@ -342,25 +305,6 @@ nsListCommand::nsListCommand(const char* aTagName)
 
 nsresult
 nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
-                               PRBool& outInList)
-{
-  NS_ASSERTION(aEditor, "Need editor here");
-
-  PRBool bMixed;
-  PRUnichar *tagStr;
-  nsresult rv = GetListState(aEditor, &bMixed, &tagStr);
-  if (NS_FAILED(rv)) return rv;
-
-  // Need to use mTagName????
-  outInList = (0 == nsCRT::strcmp(tagStr,
-                                  NS_ConvertASCIItoUCS2(mTagName).get()));
-  if (tagStr) nsCRT::free(tagStr);
-
-  return NS_OK;
-}
-
-nsresult
-nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
                                nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
@@ -375,6 +319,7 @@ nsListCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
                    NS_ConvertASCIItoUCS2(mTagName).get()));
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
+  aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
   if (tagStr) nsCRT::free(tagStr);
   return NS_OK;
 }
@@ -392,18 +337,21 @@ nsListCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
       do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
   if (NS_FAILED(rv) || !params)
     return rv;
+
   rv = GetCurrentState(aEditor, mTagName, params);
   rv = params->GetBooleanValue(STATE_ALL,&inList);
   if (NS_FAILED(rv)) 
     return rv;
 
   nsAutoString listType; listType.AssignWithConversion(mTagName);
-  nsString empty;
   if (inList)
     rv = editor->RemoveList(listType);    
   else
+  {
+    nsString empty;
     rv = editor->MakeOrChangeList(listType, PR_FALSE, empty);
-    
+  }
+  
   return rv;
 }
 
@@ -418,40 +366,28 @@ nsListItemCommand::nsListItemCommand(const char* aTagName)
 
 nsresult
 nsListItemCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
-                                   PRBool& outInList)
-{
-  NS_ASSERTION(aEditor, "Need editor here");
-
-  PRBool bMixed;
-  PRUnichar *tagStr;
-  nsresult rv = GetListItemState(aEditor, &bMixed, &tagStr);
-  if (NS_FAILED(rv)) return rv;
-
-  outInList = (0 == nsCRT::strcmp(tagStr,
-                                  NS_ConvertASCIItoUCS2(mTagName).get()));
-
-  if (tagStr) nsCRT::free(tagStr);
-
-  return NS_OK;
-}
-
-nsresult
-nsListItemCommand::GetCurrentState(nsIEditor *aEditor, const char* aTagName,
                                    nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need editor here");
+  // 39584
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(aEditor);
+  if (!htmlEditor)
+    return NS_NOINTERFACE;
 
-  PRBool bMixed;
-  PRUnichar *tagStr;
-  nsresult rv = GetListItemState(aEditor,&bMixed, &tagStr);
+  PRBool bMixed, bLI, bDT, bDD;
+  nsresult rv = htmlEditor->GetListItemState(&bMixed, &bLI, &bDT, &bDD);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool inList = 
-      (0 == nsCRT::strcmp(tagStr, NS_ConvertASCIItoUCS2(mTagName).get()));
+  PRBool inList = PR_FALSE;
+  if (!bMixed)
+  {
+    if (bLI) inList = (0 == nsCRT::strcmp(mTagName, "li"));
+    else if (bDT) inList = (0 == nsCRT::strcmp(mTagName, "dt"));
+    else if (bDD) inList = (0 == nsCRT::strcmp(mTagName, "dd"));
+  }
+
   aParams->SetBooleanValue(STATE_ALL, !bMixed && inList);
   aParams->SetBooleanValue(STATE_MIXED, bMixed);
-
-  if (tagStr) nsCRT::free(tagStr);
 
   return NS_OK;
 }
@@ -523,10 +459,7 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName,
     nsresult rv = GetListState(editor, &bMixed, &tagStr);
     if (NS_FAILED(rv)) return rv;
 
-    if (bMixed)
-      *outCmdEnabled = PR_TRUE;
-    else
-      *outCmdEnabled = (tagStr && *tagStr);
+    *outCmdEnabled = bMixed ? PR_TRUE : (tagStr && *tagStr);
     
     if (tagStr) nsCRT::free(tagStr);
   }
@@ -578,14 +511,8 @@ NS_IMETHODIMP
 nsIndentCommand::IsCommandEnabled(const char * aCommandName,
                                   nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    *outCmdEnabled = PR_TRUE;     // can always indent (I guess)
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-
+  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -598,9 +525,7 @@ nsIndentCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
   nsresult rv = NS_OK;
   if (editor)
   {
-    NS_NAMED_LITERAL_STRING(indentStr, "indent");
-    nsAutoString aIndent(indentStr);
-    rv = editor->Indent(aIndent);
+    rv = editor->Indent(NS_LITERAL_STRING("indent"));
   }
   
   return rv;  
@@ -611,17 +536,7 @@ nsIndentCommand::DoCommandParams(const char *aCommandName,
                                  nsICommandParams *aParams,
                                  nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor)
-  {
-    NS_NAMED_LITERAL_STRING(indentStr, "indent");
-    nsAutoString aIndent(indentStr);
-    rv = editor->Indent(aIndent);
-  }
-  
-  return rv;  
+  return DoCommand(aCommandName, refCon);  
 }
 
 NS_IMETHODIMP
@@ -659,19 +574,11 @@ nsOutdentCommand::IsCommandEnabled(const char * aCommandName,
 NS_IMETHODIMP
 nsOutdentCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor)
-  {
-    NS_NAMED_LITERAL_STRING(indentStr, "outdent");
-    nsAutoString aIndent(indentStr);
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-    if (htmlEditor)
-      rv = htmlEditor->Indent(aIndent);
-  }
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
+  if (htmlEditor)
+    return htmlEditor->Indent(NS_LITERAL_STRING("outdent"));
   
-  return rv;  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
@@ -679,19 +586,7 @@ nsOutdentCommand::DoCommandParams(const char *aCommandName,
                                   nsICommandParams *aParams, 
                                   nsISupports *refCon)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor)
-  {
-    NS_NAMED_LITERAL_STRING(indentStr, "outdent");
-    nsAutoString aIndent(indentStr);
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-    if (htmlEditor)
-      rv = htmlEditor->Indent(aIndent);
-  }
-  
-  return rv;  
+  return DoCommand(aCommandName, refCon);  
 }
 
 NS_IMETHODIMP
@@ -711,7 +606,6 @@ nsOutdentCommand::GetCommandStateParams(const char *aCommandName,
 
 nsMultiStateCommand::nsMultiStateCommand()
 : nsBaseComposerCommand()
-, mGotState(PR_FALSE)
 {
 }
 
@@ -727,14 +621,8 @@ nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
                                       PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    // should be disabled sometimes, like if the current selection is an image
-    *outCmdEnabled = PR_TRUE;
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-
+  // should be disabled sometimes, like if the current selection is an image
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK; 
 }
 
@@ -742,15 +630,12 @@ nsMultiStateCommand::IsCommandEnabled(const char * aCommandName,
 NS_IMETHODIMP
 nsMultiStateCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
 #ifdef DEBUG
   printf("who is calling nsMultiStateCommand::DoCommand \
           (no implementation)? %s\n", aCommandName);
 #endif
   
-  return rv;  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
@@ -763,7 +648,6 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
   nsresult rv = NS_OK;
   if (editor)
   {
-      nsresult rv;
       nsXPIDLCString s;
       aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
       nsAutoString tString;
@@ -798,18 +682,6 @@ nsParagraphStateCommand::nsParagraphStateCommand()
 }
 
 nsresult
-nsParagraphStateCommand::GetCurrentState(nsIEditor *aEditor, 
-                                         nsString& outStateString,
-                                         PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
-  return htmlEditor->GetParagraphState(&outMixed, outStateString);
-}
-
-nsresult
 nsParagraphStateCommand::GetCurrentState(nsIEditor *aEditor,
                                          nsICommandParams *aParams)
 {
@@ -817,6 +689,7 @@ nsParagraphStateCommand::GetCurrentState(nsIEditor *aEditor,
   
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
+
   PRBool outMixed;
   nsAutoString outStateString;
   nsresult rv = htmlEditor->GetParagraphState(&outMixed, outStateString);
@@ -835,7 +708,6 @@ nsresult
 nsParagraphStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-  
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
@@ -853,25 +725,12 @@ nsFontFaceStateCommand::nsFontFaceStateCommand()
 
 nsresult
 nsFontFaceStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                        nsString& outStateString,
-                                        PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
-
-  return htmlEditor->GetFontFaceState(&outMixed, outStateString);
-}
-
-nsresult
-nsFontFaceStateCommand::GetCurrentState(nsIEditor *aEditor,
                                         nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-  
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
+
   nsAutoString outStateString;
   PRBool outMixed;
   nsresult rv = htmlEditor->GetFontFaceState(&outMixed, outStateString);
@@ -890,13 +749,10 @@ nsresult
 nsFontFaceStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-  
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
   
   nsresult rv;
-  
-  
   nsCOMPtr<nsIAtom> ttAtom = do_GetAtom("tt");
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
@@ -933,15 +789,17 @@ nsFontSizeStateCommand::nsFontSizeStateCommand()
 {
 }
 
+//  nsCAutoString tOutStateString;
+//  tOutStateString.AssignWithConversion(outStateString);
 nsresult
 nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                        nsString& outStateString,
-                                        PRBool& outMixed)
+                                        nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_INVALID_ARG;
 
+  nsAutoString outStateString;
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
   PRBool firstHas, anyHas, allHas;
   nsresult rv = htmlEditor->GetInlinePropertyWithAttrValue(fontAtom,
@@ -953,24 +811,10 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
 
   nsCAutoString tOutStateString;
   tOutStateString.AssignWithConversion(outStateString);
-  outMixed = anyHas && !allHas;
-  return NS_OK;
-}
+  aParams->SetBooleanValue(STATE_MIXED, anyHas && !allHas);
+  aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+  aParams->SetBooleanValue(STATE_ENABLED, PR_TRUE);
 
-nsresult
-nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                        nsICommandParams *aParams)
-{
-  nsAutoString outStateString;
-  PRBool outMixed = PR_FALSE;
-  nsresult rv = GetCurrentState(aEditor, outStateString, outMixed);
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCAutoString tOutStateString;
-    tOutStateString.AssignWithConversion(outStateString);
-    aParams->SetBooleanValue(STATE_MIXED, outMixed);
-    aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
-  }
   return rv;
 }
 
@@ -1026,19 +870,6 @@ nsFontColorStateCommand::nsFontColorStateCommand()
 
 nsresult
 nsFontColorStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                         nsString& outStateString,
-                                         PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
-
-  return htmlEditor->GetFontColorState(&outMixed, outStateString);
-}
-
-nsresult
-nsFontColorStateCommand::GetCurrentState(nsIEditor *aEditor,
                                          nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
@@ -1063,13 +894,10 @@ nsresult
 nsFontColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-  
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
   
   nsresult rv;
-  
-  
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
   if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
@@ -1093,23 +921,9 @@ nsHighlightColorStateCommand::nsHighlightColorStateCommand()
 
 nsresult
 nsHighlightColorStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                              nsString& outStateString,
-                                              PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
-
-  return htmlEditor->GetHighlightColorState(&outMixed, outStateString);
-}
-
-nsresult
-nsHighlightColorStateCommand::GetCurrentState(nsIEditor *aEditor,
                                               nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-  
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
@@ -1130,15 +944,14 @@ nsresult
 nsHighlightColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
-
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
 
   nsresult rv;
-
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
-  if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+  if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+//    rv = RemoveOneProperty(htmlEditor, NS_LITERAL_STRING("font"), NS_LITERAL_STRING("bgcolor"));
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"));
   } else {
     rv = htmlEditor->SetCSSInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"),
@@ -1154,13 +967,7 @@ nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName,
                                                PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(refCon);
-  if (htmlEditor)
-  {
-    *outCmdEnabled = PR_TRUE;
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-
+  *outCmdEnabled = htmlEditor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -1172,19 +979,6 @@ nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName,
 nsBackgroundColorStateCommand::nsBackgroundColorStateCommand()
 : nsMultiStateCommand()
 {
-}
-
-nsresult
-nsBackgroundColorStateCommand::GetCurrentState(nsIEditor *aEditor,
-                                               nsString& outStateString,
-                                               PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
-
-  return htmlEditor->GetBackgroundColorState(&outMixed, outStateString);
 }
 
 nsresult
@@ -1230,41 +1024,6 @@ nsAlignCommand::nsAlignCommand()
 }
 
 nsresult
-nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsString& outStateString,
-                                PRBool& outMixed)
-{
-  NS_ASSERTION(aEditor, "Need an editor here");
-  
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
-  if (!htmlEditor) return NS_ERROR_FAILURE;
- 
-  nsIHTMLEditor::EAlignment firstAlign;
-  nsresult rv = htmlEditor->GetAlignment(&outMixed, &firstAlign);
-  if (NS_FAILED(rv)) return rv;
-  switch (firstAlign)
-  {
-    default:
-    case nsIHTMLEditor::eLeft:
-      outStateString.Assign(NS_LITERAL_STRING("left"));
-      break;
-      
-    case nsIHTMLEditor::eCenter:
-      outStateString.Assign(NS_LITERAL_STRING("center"));
-      break;
-      
-    case nsIHTMLEditor::eRight:
-      outStateString.Assign(NS_LITERAL_STRING("right"));
-      break;
-
-    case nsIHTMLEditor::eJustify:
-      outStateString.Assign(NS_LITERAL_STRING("justify"));
-      break;
-  }
-  
-  return NS_OK;
-}
-
-nsresult
 nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
 {
   NS_ASSERTION(aEditor, "Need an editor here");
@@ -1274,12 +1033,12 @@ nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
  
   nsIHTMLEditor::EAlignment firstAlign;
   PRBool outMixed;
-  nsAutoString outStateString;
   nsresult rv = htmlEditor->GetAlignment(&outMixed, &firstAlign);
   
   if (NS_FAILED(rv)) 
     return rv;
   
+  nsAutoString outStateString;
   switch (firstAlign)
   {
     default:
@@ -1328,14 +1087,8 @@ nsRemoveStylesCommand::IsCommandEnabled(const char * aCommandName,
                                         PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    // test if we have any styles?
-    *outCmdEnabled = PR_TRUE;
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-
+  // test if we have any styles?
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -1351,7 +1104,6 @@ nsRemoveStylesCommand::DoCommand(const char *aCommandName,
   if (editor)
   {
     rv = editor->RemoveAllInlineProperties();
-    if (NS_FAILED(rv)) return rv;
   }
   
   return rv;  
@@ -1385,14 +1137,8 @@ nsIncreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
                                             PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    // test if we have any styles?
-    *outCmdEnabled = PR_TRUE;
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-
+  // test if we have any styles?
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -1417,15 +1163,7 @@ nsIncreaseFontSizeCommand::DoCommandParams(const char *aCommandName,
                                            nsICommandParams *aParams,
                                            nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor)
-  {
-    rv = editor->IncreaseFontSize();
-  }
-  
-  return rv;  
+  return DoCommand(aCommandName, refCon);
 }
 
 NS_IMETHODIMP
@@ -1448,14 +1186,8 @@ nsDecreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName,
                                             PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor)
-  {
-    // test if we are at min size?
-    *outCmdEnabled = PR_TRUE;
-  }
-  else
-    *outCmdEnabled = PR_FALSE;
-  
+  // test if we are at min size?
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -1480,15 +1212,7 @@ nsDecreaseFontSizeCommand::DoCommandParams(const char *aCommandName,
                                            nsICommandParams *aParams,
                                            nsISupports *refCon)
 {
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editor)
-  {
-    rv = editor->DecreaseFontSize();
-  }
-  
-  return rv;  
+  return DoCommand(aCommandName, refCon);
 }
 
 NS_IMETHODIMP
@@ -1513,7 +1237,6 @@ nsInsertHTMLCommand::IsCommandEnabled(const char * aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
   *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
-
   return NS_OK;
 }
 
@@ -1584,7 +1307,6 @@ nsInsertTagCommand::IsCommandEnabled(const char * aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
   *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
-
   return NS_OK;
 }
 
@@ -1677,7 +1399,6 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
-
   return NS_OK;
 }
 
@@ -1713,8 +1434,8 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
       return editor->IncrementModificationCount(1);
     else 
       return editor->ResetModificationCount();
-
   }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1797,7 +1518,6 @@ nsDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   // Always return false to discourage callers from using DoCommand()
   *outCmdEnabled = PR_FALSE;
-
   return NS_OK;
 }
 
@@ -1888,7 +1608,7 @@ GetListState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retval)
   *_retval = nsnull;
   *aMixed = PR_FALSE;
 
-  nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(aEditor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   nsresult err = NS_ERROR_NO_INTERFACE;
   if (htmlEditor)
   {
@@ -1942,7 +1662,6 @@ RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
   // OK, I'm really hacking now. This is just so that 
   //     we can accept 'all' as input.  
   nsAutoString  allStr(prop);
-  nsAutoString  aAttr(attr);
   
   ToLowerCase(allStr);
   PRBool    doingAll = (allStr.Equals(NS_LITERAL_STRING("all")));
@@ -1955,6 +1674,7 @@ RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
   else
   {
     nsAutoString  aProp(prop);
+    nsAutoString  aAttr(attr);
     err = RemoveOneProperty(editor,aProp, aAttr);
   }
   
@@ -1970,8 +1690,6 @@ SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
   //static initialization 
   static const PRUnichar sEmptyStr = PRUnichar('\0');
   
-  nsresult  err = NS_NOINTERFACE;
-
   if (!aEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -1979,7 +1697,8 @@ SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
   nsCOMPtr<nsIAtom> styleAtom = do_GetAtom(prop);
   if (! styleAtom) 
     return NS_ERROR_OUT_OF_MEMORY;
- 
+
+  nsresult  err = NS_NOINTERFACE;
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor,&err);
   if (htmlEditor)
@@ -1987,34 +1706,5 @@ SetTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
                                 nsDependentString(attr?attr:&sEmptyStr),
                                 nsDependentString(value?value:&sEmptyStr));
 
-  return err;
-}
-
-nsresult
-GetListItemState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval || !aEditor) 
-    return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(aEditor);
-  if (htmlEditor)
-  {
-    PRBool bLI,bDT,bDD;
-    err = htmlEditor->GetListItemState(aMixed, &bLI, &bDT, &bDD);
-    if (NS_SUCCEEDED(err))
-    {
-      if (!*aMixed)
-      {
-        nsAutoString tagStr;
-        if (bLI) tagStr.Assign(NS_LITERAL_STRING("li"));
-        else if (bDT) tagStr.Assign(NS_LITERAL_STRING("dt"));
-        else if (bDD) tagStr.Assign(NS_LITERAL_STRING("dd"));
-        *_retval = ToNewUnicode(tagStr);
-      }
-    }  
-  }
   return err;
 }

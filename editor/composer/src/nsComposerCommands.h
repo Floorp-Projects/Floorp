@@ -95,9 +95,6 @@ public:
 protected:
 
   // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, PRBool& outStateSet) = 0;
-
-  // get the current state (on or off) for this style or block format
   virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams) = 0;
   
   // add/remove the style
@@ -106,9 +103,6 @@ protected:
 protected:
 
   const char* mTagName;
-  
-  PRPackedBool  mGotState;    // do we know the state yet?
-  PRPackedBool  mState;       // is this style "on" ?
 };
 
 
@@ -121,9 +115,6 @@ public:
             nsStyleUpdatingCommand(const char* aTagName);
            
 protected:
-
-  // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, PRBool& outStateSet);
 
   // get the current state (on or off) for this style or block format
   virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
@@ -158,9 +149,6 @@ public:
             nsListCommand(const char* aTagName);
 
 protected:
-  
-  // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, PRBool& outStateSet);
 
   // get the current state (on or off) for this style or block format
   virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
@@ -176,9 +164,6 @@ public:
             nsListItemCommand(const char* aTagName);
 
 protected:
-  
-  // get the current state (on or off) for this style or block format
-  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, PRBool& outStateSet);
 
   // get the current state (on or off) for this style or block format
   virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
@@ -200,15 +185,9 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed) = 0;
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams) =0;
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState) = 0;
   
-protected:
-
-  PRPackedBool  mGotState;
-//  nsString      mStateString;
-
 };
 
 
@@ -219,7 +198,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
@@ -231,7 +209,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
@@ -242,9 +219,7 @@ public:
                    nsFontSizeStateCommand();
 
 protected:
-  virtual nsresult GetCurrentState(nsIEditor *aEditor,
-                                   nsString& outStateString,
-                                   PRBool& outMixed);
+
   virtual nsresult GetCurrentState(nsIEditor *aEditor,
                                    nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
@@ -257,7 +232,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
@@ -271,7 +245,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
@@ -283,7 +256,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
@@ -295,7 +267,6 @@ public:
 
 protected:
 
-  virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
