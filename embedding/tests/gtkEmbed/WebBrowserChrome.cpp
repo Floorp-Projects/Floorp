@@ -32,6 +32,7 @@
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
 #include "nsIWebBrowserSetup.h"
+#include "gtkEmbed.h"
 #include "WebBrowserChrome.h"
 
 nsVoidArray WebBrowserChrome::sBrowserList;
@@ -112,23 +113,16 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 }
 
 
-// in winEmbed.cpp
-extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
-
-NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
-    PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
+NS_IMETHODIMP WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
+                                              PRInt32 aCX, PRInt32 aCY,
+                                              nsIWebBrowser **aWebBrowser)
 {
-   static int gCount = 0;
-
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
 
-   if (++gCount > 1)
-     return NS_OK;
-
     mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
-    
-	if (!mWebBrowser)
+
+    if (!mWebBrowser)
         return NS_ERROR_FAILURE;
 
     mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
@@ -138,7 +132,7 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
 
     
     mBaseWindow = do_QueryInterface(mWebBrowser);
-    mNativeWindow = CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    mNativeWindow = ::CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     if (!mNativeWindow)
         return NS_ERROR_FAILURE;
@@ -152,8 +146,29 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
     webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_FALSE);
 
-    NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
+    *aWebBrowser = mWebBrowser;
+    NS_ADDREF(*aWebBrowser);
     return NS_OK;
+}
+
+
+NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
+    PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
+{
+  NS_ENSURE_ARG_POINTER(aWebBrowser);
+  *aWebBrowser = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowserChrome> parent;
+  nsCOMPtr<nsIWebBrowserChrome> newChrome;
+
+  if (chromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT)
+    parent = dont_QueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+  rv = ::CreateBrowserWindow(chromeMask, parent, getter_AddRefs(newChrome));
+
+  if (NS_SUCCEEDED(rv) && newChrome)
+    newChrome->GetWebBrowser(aWebBrowser);
+  return rv;
 }
 
 

@@ -7,12 +7,16 @@
 
 #include <gtk/gtk.h>
  
+#include "gtkEmbed.h"
+
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
 #include "WebBrowserChrome.h"
+#include "WindowCreator.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIWindowWatcher.h"
 
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
@@ -21,6 +25,7 @@
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static gint  io_identifier = 0;
+static char *sWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
 typedef struct
 {
@@ -35,6 +40,8 @@ typedef struct
 
 void destroy( GtkWidget *widget, MyBrowser*   data )
 {  
+  PRBool dontQuit;
+
   printf("Destroying created widgets\n");
   gtk_widget_destroy( data->window );
   gtk_widget_destroy( data->urlEntry );
@@ -42,8 +49,17 @@ void destroy( GtkWidget *widget, MyBrowser*   data )
   gtk_widget_destroy( data->memUsageDumpBtn );
   //  gtk_widget_destroy( data->view );
   free (data);
-  
-  gtk_main_quit();
+
+  dontQuit = PR_FALSE;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWatcherContractID));
+  if (wwatch) {
+    nsCOMPtr<nsISimpleEnumerator> list;
+    wwatch->GetWindowEnumerator(getter_AddRefs(list));
+    if (list)
+      list->HasMoreElements(&dontQuit);
+  }
+  if (!dontQuit)
+    gtk_main_quit();
 }
 
 gint delete_event( GtkWidget *widget, GdkEvent  *event, MyBrowser* data )
@@ -93,16 +109,43 @@ handle_event_queue(gpointer data, gint source, GdkInputCondition condition)
 }
 
 
-nsresult OpenWebPage(char* url)
+/* InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This will be used by Gecko C++ code
+   (never JS) to create new windows when no previous window is handy
+   to begin with. This is done in a few exceptional cases, like PSM code.
+   Failure to set this callback will only disable the ability to create
+   new windows under these circumstances. */
+nsresult InitializeWindowCreator()
+{
+  // create an nsWindowCreator and give it to the WindowWatcher service
+  WindowCreator *creatorCallback = new WindowCreator();
+  if (creatorCallback) {
+    nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+    if (windowCreator) {
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWatcherContractID));
+      if (wwatch) {
+        wwatch->SetWindowCreator(windowCreator);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
+                             nsIWebBrowserChrome *aParent,
+                             nsIWebBrowserChrome **aNewWindow)
 {
     WebBrowserChrome * chrome = new WebBrowserChrome();
     if (!chrome)
         return NS_ERROR_FAILURE;
-  
-    NS_ADDREF(chrome); // native window will hold the addref.
 
+    CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome *, chrome), aNewWindow);
+
+    // chrome->SetChromeFlags(aChromeFlags);
+  
     nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->CreateBrowserWindow(0, -1, -1, -1, -1, getter_AddRefs(newBrowser));
+    chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
     if (!newBrowser)
         return NS_ERROR_FAILURE;
 
@@ -118,18 +161,29 @@ nsresult OpenWebPage(char* url)
 
     GtkWidget *widget;
     baseWindow->GetParentNativeWindow((void**)&widget);
- 
 
     gtk_widget_show (widget); // should this function do this?
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-
-    if (!webNav)
-	  return NS_ERROR_FAILURE;
-
-    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    return NS_OK;
 }   
 
+
+nsresult OpenWebPage(char* url)
+{
+    nsresult                      rv;
+    nsCOMPtr<nsIWebBrowserChrome> chrome;
+
+    rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull,
+                             getter_AddRefs(chrome));
+
+    if (NS_SUCCEEDED(rv)) {
+      // Start loading a page
+      nsCOMPtr<nsIWebBrowser> newBrowser;
+      chrome->GetWebBrowser(getter_AddRefs(newBrowser));
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
+      return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    }
+    return rv;
+}   
 
 
 nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
@@ -144,6 +198,7 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
    browser->view = gtk_event_box_new();
    browser->memUsageDumpBtn = gtk_button_new_with_label("Dump Memory Usage");
    browser->chrome = chrome;  // take ownership!
+   NS_ADDREF(chrome);         // no, really take it! (released in delete_event)
 
    if (!browser->window || !browser->urlEntry || !browser->box || 
        !browser->view   || !browser->memUsageDumpBtn)
@@ -190,7 +245,7 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
    gtk_widget_show (browser->box);
    gtk_widget_show (browser->view);
    gtk_widget_show (browser->window);
-   
+
   return browser->view;
 }
 
@@ -209,6 +264,8 @@ int main( int  argc,  char *argv[] )
       loadURLStr = "http://www.mozilla.org/projects/embedding";
 
   NS_InitEmbedding(nsnull, nsnull);
+
+  InitializeWindowCreator();
 
   // set up the thread event queue
   nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID);
