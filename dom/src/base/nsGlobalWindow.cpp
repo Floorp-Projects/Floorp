@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
 #include "nscore.h"
 #include "nsRect.h"
@@ -1633,6 +1634,12 @@ GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
                               PRInt32 aXPos, PRInt32 aYPos, 
                               const nsString& aPopupType, const nsString& aPopupAlignment)
 {
+  // Pass this off to the parent.
+  nsCOMPtr<nsIWebShellContainer> webShellContainer = do_QueryInterface(mWebShell);
+  if (webShellContainer) {
+    webShellContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
+                                   aPopupAlignment);
+  }
   return NS_OK;
 }
 
