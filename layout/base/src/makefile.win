@@ -28,6 +28,7 @@ CPPSRCS =				\
 	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
+	nsPrintContext.cpp	\
 	nsPrintPreviewContext.cpp	\
 	nsSelection.cpp			\
 	nsSelectionPoint.cpp		\
@@ -54,6 +55,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
+	.\$(OBJDIR)\nsPrintContext.obj	\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsSelectionPoint.obj	\

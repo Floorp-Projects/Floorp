@@ -29,6 +29,7 @@ void XXXNeverCalled()
   nsIPresContext* cx;
   NS_NewGalleyContext(&cx);
   NS_NewPrintPreviewContext(&cx);
+  NS_NewPrintContext(&cx);
   nsIStyleSet* ss;
   NS_NewStyleSet(&ss);
   nsIDocument* doc;
