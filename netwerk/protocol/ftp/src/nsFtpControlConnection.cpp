@@ -193,6 +193,9 @@ nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContex
     if (!mListener)
         return NS_OK;
     
+    // In case our listener tries to remove itself via SetStreamListener(nsnull),
+    // we need to keep an extra reference to it on the stack.
+    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
     return mListener->OnStartRequest(request, aContext);
 }
 
@@ -206,6 +209,9 @@ nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext
     if (!mListener)
         return NS_OK;
 
+    // In case our listener tries to remove itself via SetStreamListener(nsnull),
+    // we need to keep an extra reference to it on the stack.
+    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
     return mListener->OnStopRequest(request, aContext, aStatus);
 }
 
@@ -222,6 +228,9 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
     if (!mListener)
         return NS_OK;
 
+    // In case our listener tries to remove itself via SetStreamListener(nsnull),
+    // we need to keep an extra reference to it on the stack.
+    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
     return mListener->OnDataAvailable(request, aContext, aInStream,
                                       aOffset,  aCount);
 }
