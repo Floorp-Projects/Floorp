@@ -234,7 +234,7 @@ public:
   NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
                          nsGUIEvent*     aEvent,
-                         nsIFrame *      aNewFrame,
+                         nsIContent **      aNewContent,
                          PRUint32&       aActualContentOffset,
                          PRInt32&        aOffset);
 
@@ -967,12 +967,12 @@ nsresult
 nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
                                nsIRenderingContext* aRendContext,
                                nsGUIEvent* aEvent,
-                               nsIFrame* aNewFrame,
+                               nsIContent** aNewContent,
                                PRUint32& aAcutalContentOffset,
                                PRInt32& aOffset)
 
 {
-  if (!aRendContext || !aEvent || !aNewFrame) {
+  if (!aRendContext || !aEvent || !aNewContent) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -1083,6 +1083,9 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   if (ip != indicies) {
     delete [] ip;
   }
+  *aNewContent = mContent;
+  if (*aNewContent)
+    (*aNewContent)->AddRef();
   return NS_OK;
 }
 
@@ -1701,7 +1704,7 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
   TextStyle ts(&aPresContext, *aRendContext, mStyleContext);
   if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
 
-    nsresult result = GetPositionSlowly(aPresContext, aRendContext, aEvent, aNewFrame,
+    nsresult result = GetPositionSlowly(aPresContext, aRendContext, aEvent, aNewContent,
                              aActualContentOffset, aOffset);
     aOffsetEnd = aOffset;
     return result;
