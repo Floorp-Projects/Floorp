@@ -757,11 +757,7 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
-  if (NS_FAILED(rv))
-  {
-    nsMemory::Free(*aKey);
-    return rv;
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to generate a raw sort key, see bug #121868");
   return NS_OK;
 }
 
