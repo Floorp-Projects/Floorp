@@ -272,6 +272,13 @@ public:
   nsDequeIterator(const nsDequeIterator& aCopy);
 
   /**
+   * Moves iterator to first element in deque
+   * @update	gess4/18/98
+   * @return  this
+   */
+  nsDequeIterator& First(void);
+
+  /**
    * Standard assignment operator for deque
    * @update	gess4/18/98
    * @param 

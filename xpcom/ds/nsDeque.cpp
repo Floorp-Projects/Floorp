@@ -20,6 +20,9 @@
 #include "nsDeque.h"
 #include "nsCRT.h"
 
+//#define _SELFTEST_DEQUE 1
+#undef _SELFTEST_DEQUE 
+
 /**
  * Standard constructor
  * @update	gess4/18/98
@@ -133,9 +136,12 @@ void* nsDeque::Pop() {
     result=mData[mOrigin];
     mData[mOrigin++]=0;     //zero it out for debugging purposes.
     mSize--;
+    if(mCapacity==mOrigin)  //you popped off the end, so cycle back around...
+      mOrigin=0;
     if(0==mSize)
       mOrigin=0;
   }
+  NS_ASSERTION(mOrigin<mCapacity,"Error: Bad origin");
   return result;
 }
 
@@ -294,6 +300,16 @@ nsDequeIterator::nsDequeIterator(const nsDequeIterator& aCopy) : mIndex(aCopy.mI
 }
 
 /**
+ * Moves iterator to first element in deque
+ * @update	gess4/18/98
+ * @return  this
+ */
+nsDequeIterator& nsDequeIterator::First(void){
+  mIndex=0;
+  return *this;
+}
+
+/**
  * Standard assignment operator for dequeiterator
  *
  * @update	gess4/18/98
@@ -430,6 +446,22 @@ const void* nsDequeIterator::FirstThat(nsDequeFunctor& aFunctor) const{
   return mDeque.FirstThat(aFunctor);
 }
 
+#ifdef  _SELFTEST_DEQUE
+/**************************************************************
+  Now define the token deallocator class...
+ **************************************************************/
+class _SelfTestDeallocator: public nsDequeFunctor{
+public:
+  _SelfTestDeallocator::_SelfTestDeallocator() {
+    nsDeque::SelfTest();
+  }
+  virtual void* operator()(void* anObject) {
+    return 0;
+  }
+};
+static _SelfTestDeallocator gDeallocator;
+#endif
+
 /**
  * conduct automated self test for this class
  *
@@ -438,36 +470,43 @@ const void* nsDequeIterator::FirstThat(nsDequeFunctor& aFunctor) const{
  * @return
  */
 void nsDeque::SelfTest(void) {
-#undef  _SELFTEST_DEQUE
 #ifdef  _SELFTEST_DEQUE
-#include <iostream.h>
 
   {
-    nsDeque theDeque(PR_FALSE); //construct a simple one...
+    nsDeque theDeque(gDeallocator); //construct a simple one...
     
-    int ints[10]={100,200,300,400,500,600,700,800,900,1000};
+    int ints[200];
     int count=sizeof(ints)/sizeof(int);
-
     int i=0;
-    for(i=0;i<count;i++){
+
+    for(i=0;i<count;i++){ //initialize'em
+      ints[i]=10*(1+i);
+    }
+
+    for(i=0;i<70;i++){
       theDeque.Push(&ints[i]);
     }
 
-    int* temp1=(int*)theDeque.Pop(); //should have popped 100
-    int* temp2=(int*)theDeque.Pop(); //should have popped 200
-
-    theDeque.Push(temp1); //these should now become
-    theDeque.Push(temp2); //the last 2 items in deque.
-
-    nsDequeIterator iter1=theDeque.Begin();
-    nsDequeIterator iter2=theDeque.End();
-    while(iter1!=iter2) {
-      temp1=(int*)(iter1++);
-      cout << *temp1 << endl;
+    for(i=0;i<56;i++){
+      int* temp=(int*)theDeque.Pop();
     }
 
-    //now, afll thru and watch the deque dtor run...
-    cout << "done" << endl;
+    for(i=0;i<55;i++){
+      theDeque.Push(&ints[i]);
+    }
+
+    for(i=0;i<35;i++){
+      int* temp=(int*)theDeque.Pop();
+    }
+
+    for(i=0;i<35;i++){
+      theDeque.Push(&ints[i]);
+    }
+
+    for(i=0;i<38;i++){
+      int* temp=(int*)theDeque.Pop();
+    }
+
   }
 
   int x;
