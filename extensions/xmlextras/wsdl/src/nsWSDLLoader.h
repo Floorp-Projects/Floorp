@@ -204,10 +204,11 @@ protected:
   nsCOMPtr<nsIWSDLLoadListener> mListener;
   nsCOMPtr<nsIXMLHttpRequest> mRequest;
   nsCOMPtr<nsISchemaLoader> mSchemaLoader;
-
+  nsCOMPtr<nsIWSDLPort> mPort;
+  nsCOMArray<nsIURI> mImportList;
+  
   PRPackedBool mIsSync;
 
-  nsCOMPtr<nsIWSDLPort> mPort;
   nsString mPortName;
   nsString mBindingName;
   nsString mBindingNamespace;

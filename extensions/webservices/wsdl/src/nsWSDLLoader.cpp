@@ -834,6 +834,23 @@ nsWSDLLoadRequest::ProcessImportElement(nsIDOMElement* aElement,
     return rv;
   }
 
+  // Fix ( bug 202478 ) a potential stack overflow by 
+  // preventing the wsdl file from loading if it was  
+  // already loaded via the import element.
+  PRUint32 count = mImportList.Count();
+  PRUint32 i;
+  for (i = 0; i < count; i++) {
+    PRBool equal;  
+    mImportList[i]->Equals(uri, &equal);
+    if (equal) {
+      // Looks like this uri has already been loaded.
+      // Loading it again will end up in an infinite loop.
+      return NS_ERROR_WSDL_RECURSIVE_IMPORT;
+    }
+  }
+
+  mImportList.AppendObject(uri);
+  
   nsCAutoString spec;
   uri->GetSpec(spec);
 
