@@ -291,7 +291,7 @@ public:
                          PRBool* aIsAlternate);
 
 protected:
-  PRBool GetAttrValue(const char *aAttr, nsString& aValue);
+  PRBool GetAttrValue(const nsAString& aAttr, nsAString& aValue);
 
   // XXX Processing instructions are currently implemented by using
   // the generic CharacterData inner object, even though PIs are not
@@ -367,47 +367,62 @@ nsXMLProcessingInstruction::SetData(const nsAReadableString& aData)
 }
 
 PRBool
-nsXMLProcessingInstruction::GetAttrValue(const char *aAttr, nsString& aValue)
+nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr, nsAString& aValue)
 {
   nsAutoString data;
 
   mInner.GetData(data);
+  aValue.Truncate();
+  nsAString::const_iterator start, end;
+  data.BeginReading(start);
+  data.EndReading(end);
+  nsAString::const_iterator iter(end);
 
-  while (1) {
-    aValue.Truncate();
+  while (start != end) {
 
-    PRInt32 pos = data.Find(aAttr);
+    if (FindInReadable(aAttr, start, iter)) {
+      // walk past any whitespace
+      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+        ++iter;
+      }
 
-    if (pos < 0)
-      return PR_FALSE;
+      if (iter == end)
+        break;
+      
+      // valid name="value" pair?
+      if (*iter != '=') {
+        start = iter;
+        iter = end;
+        continue;
+      }
+      // move past the =
+      ++iter;
 
-    // Cut off data up to the end of the attr string
-    data.Cut(0, pos + nsCRT::strlen(aAttr));
-    data.CompressWhitespace();
+      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+        ++iter;
+      }
+      
+      if (iter == end)
+        break;
 
-    if (data.First() != '=')
-      continue;
+      PRUnichar q = *iter;
+      if (q != '"' && q != '\'') {
+        start = iter;
+        iter = end;
+        continue;
+      }
 
-    // Cut off the '='
-    data.Cut(0, 1);
-    data.CompressWhitespace();
+      // point to the first char of the value
+      ++iter;
+      start = iter;
+      if (FindCharInReadable(q, iter, end)) {
+        aValue = Substring(start, iter);
+        return PR_TRUE;
+      }
 
-    PRUnichar q = data.First();
-
-    if (q != '"' && q != '\'')
-      continue;
-
-    // Cut off the first quote character
-    data.Cut(0, 1);
-
-    pos = data.FindChar(q);
-
-    if (pos < 0)
-      return PR_FALSE;
-
-    data.Left(aValue, pos);
-
-    return PR_TRUE;
+      // we've run out of string.  Just return...
+      break;
+    }
   }
 
   return PR_FALSE;
@@ -588,17 +603,17 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
 
   nsAutoString href, title, type, media, alternate;
 
-  GetAttrValue("href", href);
+  GetAttrValue(NS_LITERAL_STRING("href"), href);
   if (href.IsEmpty()) {
     // if href is empty then just bail
     return;
   }
 
-  GetAttrValue("title", title);
+  GetAttrValue(NS_LITERAL_STRING("title"), title);
   title.CompressWhitespace();
   aTitle.Assign(title);
 
-  GetAttrValue("alternate", alternate);
+  GetAttrValue(NS_LITERAL_STRING("alternate"), alternate);
 
   // if alternate, does it have title?
   if (alternate.Equals(NS_LITERAL_STRING("yes"))) {
@@ -609,11 +624,11 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
     }
   }
 
-  GetAttrValue("media", media);
+  GetAttrValue(NS_LITERAL_STRING("media"), media);
   aMedia.Assign(media);
   ToLowerCase(aMedia); // case sensitivity?
 
-  GetAttrValue("type", type);
+  GetAttrValue(NS_LITERAL_STRING("type"), type);
 
   nsAutoString mimeType;
   nsAutoString notUsed;
