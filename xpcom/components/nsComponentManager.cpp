@@ -831,6 +831,12 @@ nsresult nsComponentManagerImpl::Init(void)
     return NS_OK;
 }
 
+PRIntn PR_CALLBACK AutoRegEntryDestroy(nsHashKey *aKey, void *aData, void* aClosure)
+{
+    delete (AutoRegEntry*)aData;
+    return kHashEnumerateNext;
+}
+
 nsresult nsComponentManagerImpl::Shutdown(void) 
 {
     PR_ASSERT(mShuttingDown == NS_SHUTDOWN_NEVERHAPPENED);
@@ -855,11 +861,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
         }
     }    
 
-    for (i = mAutoRegEntries.Count() - 1; i >= 0; i--) {
-        AutoRegEntry* entry = NS_STATIC_CAST(AutoRegEntry*, mAutoRegEntries[i]);
-        delete entry;
-        mAutoRegEntries.RemoveElementAt(i);
-    }
+    mAutoRegEntries.Reset(AutoRegEntryDestroy);
 
     // Release all cached factories
     if (mContractIDs.ops) {
@@ -1130,7 +1132,8 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (parts == 3)
             entry->SetOptionalData(values[2]);
 
-        mAutoRegEntries.AppendElement(entry);
+        nsCStringKey key((const char*)values[0]);
+        mAutoRegEntries.Put(&key, entry);
     }
 
     if (ReadSectionHeader(reader, "CLASSIDS"))
@@ -1318,11 +1321,11 @@ ClassIDWriter(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-AutoRegEntryWriter(void* aElement, void *aData)
+PRIntn PR_CALLBACK
+AutoRegEntryWriter(nsHashKey *aKey, void *aData, void* aClosure)
 {
-    PRFileDesc* fd = (PRFileDesc*) aData;
-    AutoRegEntry* entry = (AutoRegEntry*) aElement;
+    PRFileDesc* fd = (PRFileDesc*) aClosure;
+    AutoRegEntry* entry = (AutoRegEntry*) aData;
 
     const char* extraData = entry->GetOptionalData();
     const char *fmt;
@@ -1438,7 +1441,7 @@ nsComponentManagerImpl::WritePersistentRegistry()
     if (!PR_fprintf(fd, "\n[COMPONENTS]\n"))
         goto out;
 
-    mAutoRegEntries.EnumerateForwards(AutoRegEntryWriter, (void*)fd);
+    mAutoRegEntries.Enumerate(AutoRegEntryWriter, (void*)fd);
 
     PersistentWriterArgs args;
     args.mFD = fd;
@@ -3465,19 +3468,13 @@ nsComponentManagerImpl::HasFileChanged(nsIFile *file, const char *loaderString, 
     if (NS_FAILED(rv))
         return rv;
 
-    PRInt32 count = mAutoRegEntries.Count();
-    for (PRInt32 i = 0; i<count; i++)
-    {
-        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
-        NS_ASSERTION(entry, "bad entry in array");
+    nsCStringKey key(registryName);
+    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
+    if (entry)
+        *_retval = entry->Modified(&modDate);
+    else
+        *_retval = PR_TRUE;
 
-        if (!strcmp(registryName.get(), entry->GetName()))
-        {
-            // Found in our array.
-            *_retval = entry->Modified(&modDate);
-            return NS_OK;
-        }
-    }
     return NS_OK;
 }
 
@@ -3491,25 +3488,20 @@ nsComponentManagerImpl::SaveFileInfo(nsIFile *file, const char *loaderString, PR
         return rv;
 
     // check to see if exists in the array before adding it so that we don't have dups.
-    PRInt32 count = mAutoRegEntries.Count();
-    for (PRInt32 i = 0; i<count; i++)
-    {
-        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
-        NS_ASSERTION(entry, "bad entry in array");
+    nsCStringKey key(registryName);
+    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
 
-        if (!strcmp(registryName.get(), entry->GetName()))
-        {
-            entry->SetDate(&modDate);
-            return NS_OK;
-        }
+    if (entry)
+    {
+        entry->SetDate(&modDate);
+        return NS_OK;
     }
 
-    AutoRegEntry *entry = new AutoRegEntry(registryName, &modDate);
-
+    entry = new AutoRegEntry(registryName, &modDate);
     if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mAutoRegEntries.AppendElement(entry);
+    mAutoRegEntries.Put(&key, entry);
     return NS_OK;
 }
 
@@ -3522,19 +3514,11 @@ nsComponentManagerImpl::RemoveFileInfo(nsIFile *file, const char *loaderString)
     if (NS_FAILED(rv))
         return rv;
 
-    PRInt32 count = mAutoRegEntries.Count();
-    for (PRInt32 i = 0; i<count; i++)
-    {
-        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
-        NS_ASSERTION(entry, "bad entry in array");
+    nsCStringKey key(registryName);
+    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Remove(&key);
+    if (entry)
+        delete entry;
 
-        if (!strcmp(registryName.get(), entry->GetName()))
-        {
-            mAutoRegEntries.RemoveElementAt(i);
-            delete entry;
-            return NS_OK;
-        }
-    }
     return NS_OK;
 }
 
@@ -3548,25 +3532,18 @@ nsComponentManagerImpl::GetOptionalData(nsIFile *file,
     if (NS_FAILED(rv))
         return rv;
 
-    PRInt32 count = mAutoRegEntries.Count();
-    for (PRInt32 i = 0; i<count; i++)
-    {
-        AutoRegEntry* entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
-        NS_ASSERTION(entry, "bad entry in array");
-
-        if (!strcmp(registryName.get(), entry->GetName()))
-        {
-            const char* opData = entry->GetOptionalData();
-    
-            if (opData)
-                *_retval = ToNewCString(nsDependentCString(opData));
-            else
-                *_retval = nsnull;
-            return NS_OK;
-        }
+    nsCStringKey key(registryName);
+    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
+    if (!entry) {
+        return NS_ERROR_NOT_INITIALIZED;
     }
-
-    return NS_ERROR_NOT_INITIALIZED;
+    const char* opData = entry->GetOptionalData();
+    
+    if (opData)
+        *_retval = ToNewCString(nsDependentCString(opData));
+    else
+        *_retval = nsnull;
+    return NS_OK;
  }
 
 NS_IMETHODIMP
@@ -3579,25 +3556,16 @@ nsComponentManagerImpl::SetOptionalData(nsIFile *file,
     if (NS_FAILED(rv))
         return rv;
 
-    AutoRegEntry* entry = nsnull;
-    PRInt32 count = mAutoRegEntries.Count();
-    for (PRInt32 i = 0; i<count; i++)
-    {
-        entry = (AutoRegEntry*) mAutoRegEntries.ElementAt(i);
-        NS_ASSERTION(entry, "bad entry in array");
+    nsCStringKey key(registryName);
+    AutoRegEntry* entry = (AutoRegEntry*)mAutoRegEntries.Get(&key);
 
-        if (!strcmp(registryName.get(), entry->GetName()))
-        {
-            break;
-        }
-    }
     if (!entry) {
         PRInt64 zero = LL_Zero();
         entry = new AutoRegEntry(registryName, &zero);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         
-        mAutoRegEntries.AppendElement(entry);
+        mAutoRegEntries.Put(&key, entry);
     }
 
     entry->SetOptionalData(data);
