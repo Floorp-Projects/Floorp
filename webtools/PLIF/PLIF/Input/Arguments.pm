@@ -46,7 +46,7 @@ sub getArgument {
     my $self = shift;
     my($argument) = @_;
     if (not defined($self->{"argument $argument"})) {
-        $self->createArgument($argument);
+        $self->createArgument(@_);
     }
     if (wantarray) {
         return @{$self->{"argument $argument"}};
@@ -106,7 +106,7 @@ sub addArgument {
 sub setArgument {
     my $self = shift;
     my($argument, @value) = @_;
-    $self->{"argument $argument"} = [@value];
+    $self->{"argument $argument"} = \@value;
 }
 
 # modifies the last value for this argument to the new value
@@ -139,8 +139,8 @@ sub setCommandArgument {
 
 sub createArgument {
     my $self = shift;
-    my($argument) = @_;
-    $self->{"argument $argument"} = [];
+    my($argument, @default) = @_;
+    $self->{"argument $argument"} = \@default;
 }
 
 sub propertyExists {

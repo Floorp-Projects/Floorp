@@ -79,21 +79,32 @@ sub splitArguments {
 
 sub createArgument {
     my $self = shift;
+    # @_ also contains @default, but to save copying it about we don't
+    # use it directly in this method
     my($argument) = @_;
     if ($argument eq 'batch') {
+        # if --batch was not set, then we assume that means that
+        # we are not in --batch mode... no point asking the user,
+        # cos if we are, he won't reply, and if he isn't, we know
+        # he'd say we aren't! :-)
         $self->setArgument($argument, 0);
     } else {
         if ($self->getArgument('batch')) {
-            $self->SUPER::createArgument($argument);
+            $self->SUPER::createArgument(@_);
         } else {
             $self->warn(5, "going to request '$argument' from user!");
             $self->app->output->request($argument);
-            # get input from user :-)
+            # get input from user
             my $term = Term::ReadLine->new($self->app->name);
             my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
             # if we cached the input device:
             # $term->addhistory($value);
-            $self->setArgument($argument, $value);
+            if ($value eq '') {
+                # use default
+                $self->setArgument(@_);
+            } else {
+                $self->setArgument($argument, $value);
+            }
         }
     }
 }
