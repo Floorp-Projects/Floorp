@@ -160,7 +160,9 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 #ifdef XP_PC
     // XXX For now, all resources are relative to the .exe file
     resourceBase = (char *)PR_Malloc(_MAX_PATH);
-    DWORD mfnLen = GetModuleFileName(g_hInst, resourceBase, _MAX_PATH);
+    nsSpecialSystemDirectory *registryLocation = 
+        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
+    PL_strcpy(resourceBase, registryLocation->GetCString());
     // Truncate the executable name from the rest of the path...
     char* cp = strrchr(resourceBase, '\\');
     if (nsnull != cp) {
