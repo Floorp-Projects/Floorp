@@ -61,7 +61,7 @@ enum eFieldType {
 // I think this will be an abstract implementation class.
 // The classes that implement the outliner support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener
 {
 public:
   nsMsgDBView();
@@ -71,6 +71,7 @@ public:
   NS_DECL_NSIMSGDBVIEW
   NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSIMSGCOPYSERVICELISTENER
 
 protected:
   static nsrefcnt gInstanceCount;
@@ -106,7 +107,8 @@ protected:
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   PRUint32 mNumSelectedRows; // we cache this to determine when to push command status notifications.
   PRBool   mSupressMsgDisplay; // set when the message pane is collapsed
-
+  PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to supress msg loading.
+                        // during delete/move operations.
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
@@ -174,9 +176,10 @@ protected:
 	virtual nsresult GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db);
   virtual nsresult GetFolders(nsISupportsArray **folders);
 
-  nsresult	ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex viewIndex, PRUint32 *pNumListed);
-  nsresult	ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed);
-  PRInt32   FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex);
+  nsresult ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex viewIndex, PRUint32 *pNumListed);
+  nsresult ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed);
+  PRInt32  FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex);
+  nsresult ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey parentKey, PRInt32 level, nsMsgViewIndex *viewIndex, PRUint32 *pNumListed);
 	PRInt32	  GetSize(void) {return(m_keys.GetSize());}
 
   // notification api's
@@ -243,6 +246,8 @@ protected:
   void InitializeAtomsAndLiterals();
   PRInt32 GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
+  nsresult UpdateDisplayMessage(nsMsgKey aMsgKey);
+
 
   void FreeAll(nsVoidArray *ptrs);
   void ClearHdrCache();
@@ -258,6 +263,11 @@ protected:
   // we need to store the message key for the message we are currenty displaying to ensure we
   // don't try to redisplay the same message just because the selection changed (i.e. after a sort)
   nsMsgKey                m_currentlyDisplayedMsgKey;
+  // if we're deleting messages, we want to hold off loading messages on selection changed until the delete is done
+  // and we want to batch notifications.
+  PRBool                  m_deletingMsgs;
+  // used for batching deletes
+  nsUInt32Array           m_removedIndices;
 
   nsCOMPtr <nsIMsgFolder> m_folder;
   PRBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.

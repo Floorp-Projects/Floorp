@@ -27,17 +27,16 @@
 #include "nsIMsgSearchNotify.h"
 #include "nsIMsgCopyServiceListener.h"
 
-class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgSearchNotify, public nsIMsgCopyServiceListener
+class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgSearchNotify
 {
 public:
-	nsMsgSearchDBView();
-	virtual ~nsMsgSearchDBView();
+  nsMsgSearchDBView();
+  virtual ~nsMsgSearchDBView();
 
-	NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIMSGSEARCHNOTIFY
-    NS_DECL_NSIMSGCOPYSERVICELISTENER
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIMSGSEARCHNOTIFY
 
-	virtual const char * GetViewName(void) {return "SearchView"; }
+  virtual const char * GetViewName(void) {return "SearchView"; }
   NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, 
         nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount);
   NS_IMETHOD Close();
@@ -48,6 +47,10 @@ public:
   NS_IMETHOD GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue);
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
+
+  // override to chain move/copies from next folder in search results
+  NS_IMETHOD OnStopCopy(nsresult aStatus);
+
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
 protected:
   nsresult FetchLocation(PRInt32 aRow, PRUnichar ** aLocationString);

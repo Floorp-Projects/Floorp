@@ -80,6 +80,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgCopyServiceListener)
 NS_INTERFACE_MAP_END
 
 nsMsgDBView::nsMsgDBView()
@@ -96,7 +97,8 @@ nsMsgDBView::nsMsgDBView()
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
-
+  m_deletingMsgs = PR_FALSE;
+  mRemovingRow = PR_FALSE;
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
   {
@@ -539,6 +541,27 @@ NS_IMETHODIMP nsMsgDBView::ReloadMessage()
   return NS_OK;
 }
 
+nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgKey aMsgKey)
+{
+  nsresult rv;
+  if (mCommandUpdater)
+  {
+    // get the subject and the folder for the message and inform the front end that
+    // we changed the message we are currently displaying.
+    nsMsgViewIndex viewPosition = FindViewIndex(aMsgKey);
+    if (viewPosition != nsMsgViewIndex_None)
+    {
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      rv = GetMsgHdrForViewIndex(viewPosition, getter_AddRefs(msgHdr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      nsXPIDLString subject;
+      FetchSubject(msgHdr, m_flags[viewPosition], getter_Copies(subject));
+      mCommandUpdater->DisplayMessageChanged(m_folder, subject);
+    } // if view position is valid
+  } // if we have an updater
+  return NS_OK;
+}
+
 // given a msg key, we will load the message for it.
 NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
 {
@@ -552,26 +575,12 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
     NS_ENSURE_SUCCESS(rv,rv);
     mMessengerInstance->OpenURL(uri);
     m_currentlyDisplayedMsgKey = aMsgKey;
-    
-    if (mCommandUpdater)
-    {
-      // get the subject and the folder for the message and inform the front end that
-      // we changed the message we are currently displaying.
-      nsMsgViewIndex viewPosition = FindViewIndex(aMsgKey);
-      if (viewPosition != nsMsgViewIndex_None)
-      {
-        nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        rv = GetMsgHdrForViewIndex(viewPosition, getter_AddRefs(msgHdr));
-        NS_ENSURE_SUCCESS(rv,rv);
-        nsXPIDLString subject;
-        FetchSubject(msgHdr, m_flags[viewPosition], getter_Copies(subject));
-        mCommandUpdater->DisplayMessageChanged(m_folder, subject);
-      } // if view position is valid
-    } // if we have an updater
+    UpdateDisplayMessage(aMsgKey);
   }
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 {
@@ -580,7 +589,7 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   GetNumSelected(&numSelected);
 
   // if only one item is selected then we want to display a message
-  if (numSelected == 1 && !mSupressMsgDisplay)
+  if (numSelected == 1)
   {
     PRInt32 startRange;
     PRInt32 endRange;
@@ -591,7 +600,13 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
     {
       // get the msgkey for the message
       nsMsgKey msgkey = m_keys.GetAt(startRange);
-      LoadMessageByMsgKey(msgkey);
+      if (!mRemovingRow)
+      {
+        if (!mSupressMsgDisplay)
+          LoadMessageByMsgKey(msgkey);
+        else
+          UpdateDisplayMessage(msgkey);
+      }
     }
   }
 
@@ -1381,7 +1396,8 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     if (msgHdr)
       messageArray->AppendElement(msgHdr);
   }
-  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, nsnull /* listener */, PR_FALSE /* isFolder */);
+  m_deletingMsgs = isMove;
+  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, this /* listener */, PR_FALSE /* isFolder */);
   return rv;
 }
 
@@ -1535,7 +1551,8 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       messageArray->AppendElement(msgHdr);
 
   }
-  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull);
+  m_deletingMsgs = PR_TRUE;
+  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, this);
   return rv;
 }
 
@@ -2758,6 +2775,8 @@ nsresult nsMsgDBView::GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThrea
 {
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
 
+  NS_ENSURE_TRUE(m_db, NS_ERROR_NULL_POINTER);
+
   nsresult rv = m_db->GetMsgHdrForKey(m_keys[index], getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
   return m_db->GetThreadContainingMsgHdr(msgHdr, resultThread);
@@ -3048,47 +3067,89 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
   }
 }
 
-nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
+nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey parentKey, PRInt32 level, nsMsgViewIndex *viewIndex, PRUint32 *pNumListed)
 {
-  NS_ENSURE_ARG(threadHdr);
-	// these children ids should be in thread order.
-	PRUint32 i;
-  nsMsgViewIndex viewIndex = startOfThreadViewIndex + 1;
-	*pNumListed = 0;
-
-  PRUint32 numChildren;
-  threadHdr->GetNumChildren(&numChildren);
-	for (i = 1; i < numChildren; i++)
-	{
-		nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    threadHdr->GetChildHdrAt(i, getter_AddRefs(msgHdr));
-		if (msgHdr != nsnull)
-		{
+  nsCOMPtr <nsISimpleEnumerator> msgEnumerator;
+  threadHdr->EnumerateMessages(parentKey, getter_AddRefs(msgEnumerator));
+  // skip the first one.
+  PRBool hasMore;
+  nsCOMPtr <nsISupports> supports;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsresult rv;
+  while (NS_SUCCEEDED(rv = msgEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+  {
+    rv = msgEnumerator->GetNext(getter_AddRefs(supports));
+    if (NS_SUCCEEDED(rv) && supports)
+    {
+      msgHdr = do_QueryInterface(supports);
       nsMsgKey msgKey;
       PRUint32 msgFlags, newFlags;
       msgHdr->GetMessageKey(&msgKey);
       msgHdr->GetFlags(&msgFlags);
-			PRBool isRead = PR_FALSE;
-			m_db->IsRead(msgKey, &isRead);
-			// just make sure flag is right in db.
-			m_db->MarkHdrRead(msgHdr, isRead, nsnull);
-//				if (isRead)
-//					msgHdr->m_flags |= MSG_FLAG_READ;
-//				else
-//					msgHdr->m_flags &= ~MSG_FLAG_READ;
-			m_keys.InsertAt(viewIndex, msgKey);
+      PRBool isRead = PR_FALSE;
+      m_db->IsRead(msgKey, &isRead);
+      // just make sure flag is right in db.
+      m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+      m_keys.InsertAt(*viewIndex, msgKey);
       // ### TODO - how about hasChildren flag?
-			m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
+      m_flags.InsertAt(*viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
+      // ### TODO this is going to be tricky - might use enumerators
+      m_levels.InsertAt(*viewIndex, level); 
+      // turn off thread or elided bit if they got turned on (maybe from new only view?)
+      msgHdr->AndFlags(~(MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED), &newFlags);
+      (*pNumListed)++;
+      (*viewIndex)++;
+      ListIdsInThreadOrder(threadHdr, msgKey, level + 1, viewIndex, pNumListed);
+    }
+  }
+  return NS_OK; // we don't want to return the rv from the enumerator when it reaches the end, do we?
+}
+
+nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
+{
+  NS_ENSURE_ARG(threadHdr);
+  // these children ids should be in thread order.
+  PRUint32 i;
+  nsMsgViewIndex viewIndex = startOfThreadViewIndex + 1;
+  *pNumListed = 0;
+
+  if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+  {
+    nsMsgKey parentKey = m_keys[startOfThreadViewIndex];
+
+    return ListIdsInThreadOrder(threadHdr, parentKey, 1, &viewIndex, pNumListed);
+  }
+  // if we're not threaded, just list em out in db order
+
+  PRUint32 numChildren;
+  threadHdr->GetNumChildren(&numChildren);
+  for (i = 1; i < numChildren; i++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    threadHdr->GetChildHdrAt(i, getter_AddRefs(msgHdr));
+    if (msgHdr != nsnull)
+    {
+      nsMsgKey msgKey;
+      PRUint32 msgFlags, newFlags;
+      msgHdr->GetMessageKey(&msgKey);
+      msgHdr->GetFlags(&msgFlags);
+      PRBool isRead = PR_FALSE;
+      m_db->IsRead(msgKey, &isRead);
+      // just make sure flag is right in db.
+      m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+      m_keys.InsertAt(viewIndex, msgKey);
+      // ### TODO - how about hasChildren flag?
+      m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
       // ### TODO this is going to be tricky - might use enumerators
       PRInt32 level = FindLevelInThread(msgHdr, startOfThreadViewIndex);
-			m_levels.InsertAt(viewIndex, level); 
-			// turn off thread or elided bit if they got turned on (maybe from new only view?)
-			if (i > 0)	
-				msgHdr->AndFlags(~(MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED), &newFlags);
-			(*pNumListed)++;
+      m_levels.InsertAt(viewIndex, level); 
+      // turn off thread or elided bit if they got turned on (maybe from new only view?)
+      if (i > 0)	
+        msgHdr->AndFlags(~(MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED), &newFlags);
+      (*pNumListed)++;
       viewIndex++;
-		}
-	}
+    }
+  }
   return NS_OK;
 }
 
@@ -3311,7 +3372,10 @@ void	nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged
       mOutliner->InvalidateRange(firstLineChanged, firstLineChanged + numChanged - 1);
       break;
     case nsMsgViewNotificationCode::insertOrDelete:
+      if (numChanged < 0)
+        mRemovingRow = PR_TRUE;
       mOutliner->RowCountChanged(firstLineChanged, numChanged);
+      mRemovingRow = PR_FALSE;
     case nsMsgViewNotificationCode::all:
       ClearHdrCache();
       break;
@@ -4121,6 +4185,42 @@ nsMsgDBView::GetURIForFirstSelectedMessage(char **uri)
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
+
+// nsIMsgCopyServiceListener methods
+NS_IMETHODIMP
+nsMsgDBView::OnStartCopy()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+// believe it or not, these next two are msgcopyservice listener methods!
+NS_IMETHODIMP
+nsMsgDBView::SetMessageKey(PRUint32 aMessageKey)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::GetMessageId(nsCString* aMessageId)
+{
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsMsgDBView::OnStopCopy(nsresult aStatus)
+{
+  m_deletingMsgs = PR_FALSE;
+  m_removedIndices.RemoveAll();
+  return NS_OK;
+}
+// end nsIMsgCopyServiceListener methods
+
 
 nsresult
 nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)

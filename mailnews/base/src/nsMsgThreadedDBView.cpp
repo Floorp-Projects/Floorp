@@ -69,7 +69,7 @@ nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
 	nsMsgKey startMsg = 0; 
 	do
 	{
-		const PRInt32 kIdChunkSize = 200;
+		const PRInt32 kIdChunkSize = 400;
 		PRInt32			numListed = 0;
 		nsMsgKey	idArray[kIdChunkSize];
 		PRInt32		flagArray[kIdChunkSize];
@@ -125,78 +125,80 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 
 NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
-    nsresult rv;
-
-    nsMsgKeyArray preservedSelection;
-    SaveSelection(&preservedSelection);
-
-    PRInt32 rowCountBeforeSort = GetSize();
-
-	// if the client wants us to forget our cached id arrays, they
-	// should build a new view. If this isn't good enough, we
-	// need a method to do that.
-	if (sortType != m_sortType || !m_sortValid)
-	{
-		if (sortType == nsMsgViewSortType::byThread)
-		{
-			m_sortType = sortType;
-            m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
-			if ( m_havePrevView)
-			{
-				// restore saved id array and flags array
-				m_keys.RemoveAll();
-				m_keys.InsertAt(0, &m_prevKeys);
-				m_flags.RemoveAll();
-				m_flags.InsertAt(0, &m_prevFlags);
-				m_levels.RemoveAll();
-				m_levels.InsertAt(0, &m_prevLevels);
-//				m_messageDB->SetSortInfo(sortType, sortOrder);
-				m_sortValid = PR_TRUE;
-
-                // the sort may have changed the number of rows
-                // before we restore the selection, tell the outliner
-                // do this before we call restore selection
-                // this is safe when there is no selection.
-                rv = AdjustRowCount(rowCountBeforeSort, GetSize());
-
-                RestoreSelection(&preservedSelection);
-                if (mOutliner) mOutliner->Invalidate();
-				return NS_OK;
-			}
-			else
-			{
-				// set sort info in anticipation of what Init will do.
-				InitThreadedView(nsnull);	// build up thread list.
-				if (sortOrder != nsMsgViewSortOrder::ascending)
-					Sort(sortType, sortOrder);
-
-                // the sort may have changed the number of rows
-                // before we update the selection, tell the outliner
-                // do this before we call restore selection
-                // this is safe when there is no selection.
-                rv = AdjustRowCount(rowCountBeforeSort, GetSize());
-
-                RestoreSelection(&preservedSelection);
-                if (mOutliner) mOutliner->Invalidate();
-				return NS_OK;
-			}
-		}
-		else if (sortType  != nsMsgViewSortType::byThread && m_sortType == nsMsgViewSortType::byThread /* && !m_havePrevView*/)
-		{
-		// going from SortByThread to non-thread sort - must build new key, level,and flags arrays 
-			m_prevKeys.RemoveAll();
-			m_prevKeys.InsertAt(0, &m_keys);
-			m_prevFlags.RemoveAll();
-			m_prevFlags.InsertAt(0, &m_flags);
-			m_prevLevels.RemoveAll();
-			m_prevLevels.InsertAt(0, &m_levels);
-			ExpandAll();
-//			m_idArray.RemoveAll();
-//			m_flags.RemoveAll();
-			m_havePrevView = PR_TRUE;
-            m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
-		}
-	}
+  nsresult rv;
+  
+  nsMsgKeyArray preservedSelection;
+  SaveSelection(&preservedSelection);
+  
+  PRInt32 rowCountBeforeSort = GetSize();
+  
+  // if the client wants us to forget our cached id arrays, they
+  // should build a new view. If this isn't good enough, we
+  // need a method to do that.
+  if (sortType != m_sortType || !m_sortValid)
+  {
+    if (sortType == nsMsgViewSortType::byThread)
+    {
+      m_sortType = sortType;
+      m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+      if ( m_havePrevView)
+      {
+        // restore saved id array and flags array
+        m_keys.RemoveAll();
+        m_keys.InsertAt(0, &m_prevKeys);
+        m_flags.RemoveAll();
+        m_flags.InsertAt(0, &m_prevFlags);
+        m_levels.RemoveAll();
+        m_levels.InsertAt(0, &m_prevLevels);
+        //				m_messageDB->SetSortInfo(sortType, sortOrder);
+        m_sortValid = PR_TRUE;
+        
+        // the sort may have changed the number of rows
+        // before we restore the selection, tell the outliner
+        // do this before we call restore selection
+        // this is safe when there is no selection.
+        rv = AdjustRowCount(rowCountBeforeSort, GetSize());
+        
+        RestoreSelection(&preservedSelection);
+        if (mOutliner) mOutliner->Invalidate();
+        return NS_OK;
+      }
+      else
+      {
+        // set sort info in anticipation of what Init will do.
+        InitThreadedView(nsnull);	// build up thread list.
+        if (sortOrder != nsMsgViewSortOrder::ascending)
+          Sort(sortType, sortOrder);
+        
+        // the sort may have changed the number of rows
+        // before we update the selection, tell the outliner
+        // do this before we call restore selection
+        // this is safe when there is no selection.
+        rv = AdjustRowCount(rowCountBeforeSort, GetSize());
+        
+        RestoreSelection(&preservedSelection);
+        if (mOutliner) mOutliner->Invalidate();
+        return NS_OK;
+      }
+    }
+    else if (sortType  != nsMsgViewSortType::byThread && m_sortType == nsMsgViewSortType::byThread /* && !m_havePrevView*/)
+    {
+      // going from SortByThread to non-thread sort - must build new key, level,and flags arrays 
+      m_prevKeys.RemoveAll();
+      m_prevKeys.InsertAt(0, &m_keys);
+      m_prevFlags.RemoveAll();
+      m_prevFlags.InsertAt(0, &m_flags);
+      m_prevLevels.RemoveAll();
+      m_prevLevels.InsertAt(0, &m_levels);
+      // do this before we sort, so that we'll use the cheap method
+      // of expanding.
+      m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
+      ExpandAll();
+      //			m_idArray.RemoveAll();
+      //			m_flags.RemoveAll();
+      m_havePrevView = PR_TRUE;
+    }
+  }
   // call the base class in case we're not sorting by thread
   rv = nsMsgDBView::Sort(sortType, sortOrder);
 
@@ -217,30 +219,30 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
 									 PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders)
 {
-	nsresult rv = NS_OK;
-	// N.B..don't ret before assigning numListed to *pNumListed
-	PRInt32	numListed = 0;
-
-	if (*startMsg > 0)
-	{
-		NS_ASSERTION(m_threadEnumerator != nsnull, "where's our iterator?");	// for now, we'll just have to rely on the caller leaving
-									// the iterator in the right place.
-	}
-	else
-	{
+  nsresult rv = NS_OK;
+  // N.B..don't ret before assigning numListed to *pNumListed
+  PRInt32	numListed = 0;
+  
+  if (*startMsg > 0)
+  {
+    NS_ASSERTION(m_threadEnumerator != nsnull, "where's our iterator?");	// for now, we'll just have to rely on the caller leaving
+    // the iterator in the right place.
+  }
+  else
+  {
     NS_ASSERTION(m_db, "no db");
     if (!m_db) return NS_ERROR_UNEXPECTED;
     rv = m_db->EnumerateThreads(getter_AddRefs(m_threadEnumerator));
     NS_ENSURE_SUCCESS(rv, rv);
-	}
-
-	PRBool hasMore = PR_FALSE;
-
+  }
+  
+  PRBool hasMore = PR_FALSE;
+  
   nsCOMPtr <nsIMsgThread> threadHdr ;
-	PRInt32	threadsRemoved = 0;
-	for (numListed = 0; numListed < numToList
+  PRInt32	threadsRemoved = 0;
+  for (numListed = 0; numListed < numToList
     && NS_SUCCEEDED(rv = m_threadEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE);)
-	{
+  {
     nsCOMPtr <nsISupports> supports;
     rv = m_threadEnumerator->GetNext(getter_AddRefs(supports));
     if (!NS_SUCCEEDED(rv))
@@ -257,18 +259,18 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
       threadHdr->GetNumUnreadChildren(&numChildren);
     else
       threadHdr->GetNumChildren(&numChildren);
-		PRUint32 threadFlags;
+    PRUint32 threadFlags;
     threadHdr->GetFlags(&threadFlags);
-		if (numChildren != 0)	// not empty thread
-		{
-			if (pTotalHeaders)
-				*pTotalHeaders += numChildren;
-    	if (unreadOnly)
-				rv = threadHdr->GetFirstUnreadChild(getter_AddRefs(msgHdr));
-			else
-				rv = threadHdr->GetChildAt(0, getter_AddRefs(msgHdr));
-			if (NS_SUCCEEDED(rv) && msgHdr != nsnull && WantsThisThread(threadHdr))
-			{
+    if (numChildren != 0)	// not empty thread
+    {
+      if (pTotalHeaders)
+        *pTotalHeaders += numChildren;
+      if (unreadOnly)
+        rv = threadHdr->GetFirstUnreadChild(getter_AddRefs(msgHdr));
+      else
+        rv = threadHdr->GetChildAt(0, getter_AddRefs(msgHdr));
+      if (NS_SUCCEEDED(rv) && msgHdr != nsnull && WantsThisThread(threadHdr))
+      {
         PRUint32 msgFlags;
         PRUint32 newMsgFlags;
         nsMsgKey msgKey;
@@ -276,49 +278,49 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
         msgHdr->GetFlags(&msgFlags);
         // turn off high byte of msg flags - used for view flags.
         msgFlags &= ~MSG_VIEW_FLAGS;
-				pOutput[numListed] = msgKey;
-				pLevels[numListed] = 0;
-				// DMB TODO - This will do for now...Until we decide how to
-				// handle thread flags vs. message flags, if we do decide
-				// to make them different.
-				msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
-				PRBool	isRead = PR_FALSE;
-
-				// make sure DB agrees with newsrc, if we're news.
-				m_db->IsRead(msgKey, &isRead);
-				m_db->MarkHdrRead(msgHdr, isRead, nsnull);
-				// try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
-				pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
-				if (numChildren > 1)
-					pFlags[numListed] |= MSG_VIEW_FLAG_HASCHILDREN;
-
-				numListed++;
-			}
-//      else
-//        NS_ASSERTION(NS_SUCCEEDED(rv) && msgHdr, "couldn't get header for some reason");
-		}
-		else if (threadsRemoved < 10 && !(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED)))
-		{
-			// ### remove thread.
-			threadsRemoved++;	// don't want to remove all empty threads first time
-								// around as it will choke preformance for upgrade.
+        pOutput[numListed] = msgKey;
+        pLevels[numListed] = 0;
+        // DMB TODO - This will do for now...Until we decide how to
+        // handle thread flags vs. message flags, if we do decide
+        // to make them different.
+        msgHdr->OrFlags(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newMsgFlags);
+        PRBool	isRead = PR_FALSE;
+        
+        // make sure DB agrees with newsrc, if we're news.
+        m_db->IsRead(msgKey, &isRead);
+        m_db->MarkHdrRead(msgHdr, isRead, nsnull);
+        // try adding in MSG_VIEW_FLAG_ISTHREAD flag for unreadonly view.
+        pFlags[numListed] = msgFlags | MSG_VIEW_FLAG_ISTHREAD | threadFlags;
+        if (numChildren > 1)
+          pFlags[numListed] |= MSG_VIEW_FLAG_HASCHILDREN;
+        
+        numListed++;
+      }
+      else
+        NS_ASSERTION(NS_SUCCEEDED(rv) && msgHdr, "couldn't get header for some reason");
+    }
+    else if (threadsRemoved < 10 && !(threadFlags & (MSG_FLAG_WATCHED | MSG_FLAG_IGNORED)))
+    {
+      // ### remove thread.
+      threadsRemoved++;	// don't want to remove all empty threads first time
+      // around as it will choke preformance for upgrade.
 #ifdef DEBUG_bienvenu
-			printf("removing empty non-ignored non-watched thread\n");
+      printf("removing empty non-ignored non-watched thread\n");
 #endif
-		}
-	}
-
-	if (hasMore && threadHdr)
-	{
+    }
+  }
+  
+  if (hasMore && threadHdr)
+  {
     threadHdr->GetThreadKey(startMsg);
-	}
-	else
-	{
-		*startMsg = nsMsgKey_None;
-		m_threadEnumerator = nsnull;
-	}
+  }
+  else
+  {
+    *startMsg = nsMsgKey_None;
+    m_threadEnumerator = nsnull;
+  }
   *pNumListed = numListed;
-	return rv;
+  return rv;
 }
 
 nsresult	nsMsgThreadedDBView::ExpandAll()

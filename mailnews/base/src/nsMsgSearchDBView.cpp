@@ -50,7 +50,6 @@ NS_IMPL_ADDREF_INHERITED(nsMsgSearchDBView, nsMsgDBView)
 NS_IMPL_RELEASE_INHERITED(nsMsgSearchDBView, nsMsgDBView)
 NS_IMPL_QUERY_HEAD(nsMsgSearchDBView)
     NS_IMPL_QUERY_BODY(nsIMsgSearchNotify)
-	NS_IMPL_QUERY_BODY(nsIMsgCopyServiceListener)
 NS_IMPL_QUERY_TAIL_INHERITING(nsMsgDBView)
 
 
@@ -341,28 +340,7 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
 
 }
 
-// nsIMsgCopyServiceListener methods
-nsresult
-nsMsgSearchDBView::OnStartCopy()
-{
-#ifdef NS_DEBUG
-    printf("nsIMsgCopyServiceListener::OnStartCopy()\n");
-#endif
-
-    return NS_OK;
-}
-
-nsresult
-nsMsgSearchDBView::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
-{
-#ifdef NS_DEBUG
-    printf("nsIMsgCopyServiceListener::OnProgress() - COPY\n");
-#endif
-
-    return NS_OK;
-}
-  
-nsresult
+NS_IMETHODIMP
 nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 {
     nsresult rv = NS_OK;
@@ -378,19 +356,6 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 
     return rv;
 }
-
-nsresult
-nsMsgSearchDBView::SetMessageKey(PRUint32 aMessageKey)
-{
-	return NS_OK;
-}
-
-nsresult
-nsMsgSearchDBView::GetMessageId(nsCString* aMessageId)
-{
-	return NS_OK;
-}
-// end nsIMsgCopyServiceListener methods
 
 nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 {
