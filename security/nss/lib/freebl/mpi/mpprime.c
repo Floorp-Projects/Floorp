@@ -459,7 +459,7 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
   res = mpp_sieve(start, prime_tab + 1, prime_tab_size - 1, 
 			 sieve, sizeof sieve);
   if (res != MP_OKAY) goto loser;
-#ifdef DEBUG
+#ifdef DEBUG_SIEVE
   res = 0;
   for (i = 0; i < sizeof sieve; ++i) {
     if (!sieve[i])
