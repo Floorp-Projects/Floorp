@@ -38,6 +38,7 @@
 #include <UnicodeConverter.h>
 #include <Fonts.h>
 #include <Sound.h>
+#include <Balloons.h>
 
 #include "nsDynamicMDEF.h"
 
@@ -112,6 +113,7 @@ nsMenu::nsMenu() : nsIMenu()
   
   mMacMenuID = 0;
   mMacMenuHandle = nsnull;
+  mIsHelpMenu    = PR_FALSE;
   mListener      = nsnull;
   mConstructed   = nsnull;
   
@@ -146,7 +148,7 @@ nsMenu::~nsMenu()
   NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	 
    
   // Don't destroy the 4 Golden Hierarchical Menu
-  if((mMacMenuID > 5) || (mMacMenuID < 2)) {
+  if((mMacMenuID > 5) || (mMacMenuID < 2) && !mIsHelpMenu) {
     //printf("WARNING: DeleteMenu called!!! \n");
     ::DeleteMenu(mMacMenuID);
   }
@@ -222,6 +224,30 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     //mMacMenuHandle = NSStringNewChildMenu(mMacMenuID, mLabel);
     mMacMenuHandle = ::GetMenuHandle(mMacMenuID);
   } else {
+    // Look at the label and figure out if it is the "Help" menu
+    if(mLabel == "Help"){
+      mIsHelpMenu = PR_TRUE;
+      ::HMGetHelpMenuHandle(&mMacMenuHandle);
+      mMacMenuID = kHMHelpMenuID;
+      
+      if(mMacMenuHandle) {   
+        SInt8 state = ::HGetState((Handle)mMacMenuHandle); 
+        ::HLock((Handle)mMacMenuHandle);
+        //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
+        (**mMacMenuHandle).menuProc = gMDEF;
+        (**mMacMenuHandle).menuWidth = -1;
+        (**mMacMenuHandle).menuHeight = -1;
+        ::HSetState((Handle)mMacMenuHandle, state);
+      }
+      
+      int numHelpItems = ::CountMItems(mMacMenuHandle);
+      for(int i=0; i<numHelpItems; ++i) {
+        mMenuItemVoidArray.AppendElement(nsnull);
+      }
+     
+      return NS_OK;
+    }
+  
     mMacMenuHandle = NSStringNewMenu(mMacMenuIDCount, mLabel);
     mMacMenuID = mMacMenuIDCount;
 #if DEBUG_saari
@@ -232,10 +258,11 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     mMacMenuIDCount++;
     // Replace standard MDEF with our stub MDEF
     if(mMacMenuHandle) {    
+      SInt8 state = ::HGetState((Handle)mMacMenuHandle);
       ::HLock((Handle)mMacMenuHandle);
       //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
       (**mMacMenuHandle).menuProc = gMDEF;
-      ::HUnlock((Handle)mMacMenuHandle);
+      ::HSetState((Handle)mMacMenuHandle, state);
     }
   }
   
@@ -448,6 +475,13 @@ NS_METHOD nsMenu::RemoveAll()
 NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
   *aData = mMacMenuHandle;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetNativeData(void * aData)
+{
+  mMacMenuHandle = (MenuHandle) aData;
   return NS_OK;
 }
 
@@ -705,8 +739,10 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   
   nsIDocument * tmp = nsnull;
   contentNode->GetDocument(tmp);
-  if(tmp)
+  if(tmp) {
     domElement->RemoveAttribute("open");
+    NS_RELEASE(tmp);
+  }
   
   return nsEventStatus_eIgnore;
 }

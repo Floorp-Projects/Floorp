@@ -31,7 +31,7 @@
 
 #include <Menus.h>
 #include <TextUtils.h>
-
+#include <Balloons.h>
 #include <Traps.h>
 #include <Resources.h>
 #include "nsMacResources.h"
@@ -176,8 +176,71 @@ nsEventStatus nsMenuBar::MenuConstruct(
     NS_ADDREF(mWebShell);
 	mDOMNode  = (nsIDOMNode*)menubarNode;
 	NS_ADDREF(mDOMNode);
-
+    
     nsIMenuBar * pnsMenuBar = this;
+    
+    if(gFirstMenuBar){
+	        gFirstMenuBar = false;
+	        // Add the 4 Golden Hierarchical Menus to the MenuList        
+				
+	        MenuHandle macMenuHandle = ::NewMenu(2, "\psubmenu");
+	        if(macMenuHandle) { 
+	          gLevel2HierMenu = macMenuHandle;
+	          SInt8 state = ::HGetState((Handle)macMenuHandle);
+	          ::HLock((Handle)macMenuHandle);
+			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
+			  (**macMenuHandle).menuProc = gMDEF;
+			  (**macMenuHandle).menuWidth = -1;
+			  (**macMenuHandle).menuHeight = -1;
+			  ::HSetState((Handle)macMenuHandle, state);
+			  ::InsertMenu(macMenuHandle, hierMenu);
+			}
+			
+	        macMenuHandle = ::NewMenu(3, "\psubmenu");
+	        if(macMenuHandle) { 
+	          gLevel3HierMenu = macMenuHandle;
+	          SInt8 state = ::HGetState((Handle)macMenuHandle);
+	          ::HLock((Handle)macMenuHandle);
+			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
+			  (**macMenuHandle).menuProc = gMDEF;
+			  (**macMenuHandle).menuWidth = -1;
+			  (**macMenuHandle).menuHeight = -1;
+			  ::HSetState((Handle)macMenuHandle, state);
+			  ::InsertMenu(macMenuHandle, hierMenu);
+			}
+			
+	        macMenuHandle = ::NewMenu(4, "\psubmenu");
+	        if(macMenuHandle) { 
+	          gLevel4HierMenu = macMenuHandle;
+	          SInt8 state = ::HGetState((Handle)macMenuHandle);
+	          ::HLock((Handle)macMenuHandle);
+			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
+			  (**macMenuHandle).menuProc = gMDEF;
+			  (**macMenuHandle).menuWidth = -1;
+			  (**macMenuHandle).menuHeight = -1;
+			  ::HSetState((Handle)macMenuHandle, state);
+			  ::InsertMenu(macMenuHandle, hierMenu);
+			}
+			
+	        macMenuHandle = ::NewMenu(5, "\psubmenu");
+	        if(macMenuHandle) { 
+	          gLevel5HierMenu = macMenuHandle; 
+	          SInt8 state = ::HGetState((Handle)macMenuHandle);
+	          ::HLock((Handle)macMenuHandle);
+			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
+			  (**macMenuHandle).menuProc = gMDEF;
+			  (**macMenuHandle).menuWidth = -1;
+			  (**macMenuHandle).menuHeight = -1;
+			  ::HSetState((Handle)macMenuHandle, state);
+			  ::InsertMenu(macMenuHandle, hierMenu);
+			}
+		} else {
+		  ::InsertMenu(gLevel2HierMenu, hierMenu);
+		  ::InsertMenu(gLevel3HierMenu, hierMenu);
+		  ::InsertMenu(gLevel4HierMenu, hierMenu);
+		  ::InsertMenu(gLevel5HierMenu, hierMenu);
+		}
+    
     nsresult rv;
     //nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
     //if (NS_OK == rv) {
@@ -246,64 +309,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
         aParentWindow->SetMenuBar(pnsMenuBar);
       
         // HACK: force a paint for now
-        pnsMenuBar->Paint();
-        
-        if(gFirstMenuBar){
-	        gFirstMenuBar = false;
-	        // Add the 4 Golden Hierarchical Menus to the MenuList        
-	        MenuHandle macMenuHandle = ::NewMenu(2, "\psubmenu");
-	        if(macMenuHandle) { 
-	          gLevel2HierMenu = macMenuHandle;
-	          ::HLock((Handle)macMenuHandle);
-			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
-			  (**macMenuHandle).menuProc = gMDEF;
-			  (**macMenuHandle).menuWidth = -1;
-			  (**macMenuHandle).menuHeight = -1;
-			  ::HUnlock((Handle)macMenuHandle);
-			  ::InsertMenu(macMenuHandle, hierMenu);
-			}
-			
-	        macMenuHandle = ::NewMenu(3, "\psubmenu");
-	        if(macMenuHandle) { 
-	          gLevel3HierMenu = macMenuHandle;
-	          ::HLock((Handle)macMenuHandle);
-			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
-			  (**macMenuHandle).menuProc = gMDEF;
-			  (**macMenuHandle).menuWidth = -1;
-			  (**macMenuHandle).menuHeight = -1;
-			  ::HUnlock((Handle)macMenuHandle);
-			  ::InsertMenu(macMenuHandle, hierMenu);
-			}
-			
-	        macMenuHandle = ::NewMenu(4, "\psubmenu");
-	        if(macMenuHandle) { 
-	          gLevel4HierMenu = macMenuHandle;
-	          ::HLock((Handle)macMenuHandle);
-			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
-			  (**macMenuHandle).menuProc = gMDEF;
-			  (**macMenuHandle).menuWidth = -1;
-			  (**macMenuHandle).menuHeight = -1;
-			  ::HUnlock((Handle)macMenuHandle);
-			  ::InsertMenu(macMenuHandle, hierMenu);
-			}
-			
-	        macMenuHandle = ::NewMenu(5, "\psubmenu");
-	        if(macMenuHandle) { 
-	          gLevel5HierMenu = macMenuHandle; 
-	          ::HLock((Handle)macMenuHandle);
-			  gSystemMDEFHandle = (**macMenuHandle).menuProc;
-			  (**macMenuHandle).menuProc = gMDEF;
-			  (**macMenuHandle).menuWidth = -1;
-			  (**macMenuHandle).menuHeight = -1;
-			  ::HUnlock((Handle)macMenuHandle);
-			  ::InsertMenu(macMenuHandle, hierMenu);
-			}
-		} else {
-		  ::InsertMenu(gLevel2HierMenu, hierMenu);
-		  ::InsertMenu(gLevel3HierMenu, hierMenu);
-		  ::InsertMenu(gLevel4HierMenu, hierMenu);
-		  ::InsertMenu(gLevel5HierMenu, hierMenu);
-		}
+        //pnsMenuBar->Paint();
 		
         #ifdef XP_MAC
         Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
@@ -343,8 +349,13 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
-  mMacMBarHandle = ::GetMenuBar(); // Get a copy of the menu list
-  ::ClearMenuBar(); // Clear the copy
+  
+  Handle tmp = ::GetMenuBar();
+  ::SetMenuBar(tmp);
+  this->SetNativeData((void*)tmp);
+  
+  ::ClearMenuBar(); 
+  gMacMenubar = this;
 }
 
 //-------------------------------------------------------------------------
@@ -487,6 +498,28 @@ NS_METHOD nsMenuBar::SetNativeData(void* aData)
 NS_METHOD nsMenuBar::Paint()
 {
   gMacMenubar = this;
+  ::SetMenuBar(mMacMBarHandle);
+  // Now we have blown away the merged Help menu, so we have to rebuild it
+  for(int i = mMenuVoidArray.Count()-1; i>=0; --i) {
+    nsString label;
+    ((nsIMenu*)mMenuVoidArray[i])->GetLabel(label);
+    // Look at the label and figure out if it is the "Help" menu
+    if(label == "Help"){
+      MenuHandle helpMenuHandle;
+      ::HMGetHelpMenuHandle(&helpMenuHandle);
+      ((nsIMenu*)mMenuVoidArray[i])->SetNativeData((void*)helpMenuHandle);
+      
+      if(helpMenuHandle) {    
+        SInt8 state = ::HGetState((Handle)helpMenuHandle);
+        ::HLock((Handle)helpMenuHandle);
+        //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
+        (**helpMenuHandle).menuProc = gMDEF;
+        (**helpMenuHandle).menuWidth = -1;
+        (**helpMenuHandle).menuHeight = -1;
+        ::HSetState((Handle)helpMenuHandle, state);
+      }
+    }
+  }
   ::DrawMenuBar();
   return NS_OK;
 }
