@@ -46,12 +46,11 @@ static PRTime mLockTime, mUnlockTime;
  
 nsDrawingSurfaceBeOS :: nsDrawingSurfaceBeOS()
 {
-  mView = NULL;
-
+  mView = nsnull;
   mBitmap = nsnull;
   mWidth = 0; 
   mHeight = 0; 
-  
+  mLockBitmap = nsnull;  
   mLockWidth = 0; 
   mLockHeight = 0;
   mLockFlags = 0;
@@ -66,10 +65,13 @@ nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
   {
     // Deleting mBitmap will also remove and delete any child views
     mBitmap->Unlock();
-	delete mBitmap;
-	mView = NULL;
-	mBitmap = NULL;
+    delete mBitmap;
+    mView = nsnull;
+    mBitmap = nsnull;
   }
+  if (mLockBitmap)
+    delete mLockBitmap;
+  mLockBitmap = nsnull;  
 }
 
 /** 
@@ -94,71 +96,74 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
-  mLockTime = PR_Now(); 
-  //  MOZ_TIMER_RESET(mLockTime); 
-  //  MOZ_TIMER_START(mLockTime); 
-#endif 
-
-  if (mLocked)
-  {
-    NS_ASSERTION(0, "nested lock attempt");
-    return NS_ERROR_FAILURE;
-  }
-  mLocked = PR_TRUE;
-
   mLockX = aX; 
   mLockY = aY; 
   mLockWidth = aWidth; 
   mLockHeight = aHeight; 
   mLockFlags = aFlags;
 
-  // Obtain an ximage from the pixmap.  ( I think this copy the bitmap ) 
-       // FIX ME !!!!  We need to copy the part locked into the mImage 
+  if (mBitmap &&   !mLocked)
+  {
 
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
-  //  MOZ_TIMER_STOP(mLockTime); 
-  //  MOZ_TIMER_LOG(("Time taken to lock: ")); 
-  //  MOZ_TIMER_PRINT(mLockTime); 
-  printf("Time taken to lock:   %d\n", PR_Now() - mLockTime);
-#endif
-
+    if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
+      mBitmap->LockBits();
+    // we use for BeOS surfaces 32-bit bitmaps only
+    mLockBitmap = new BBitmap(BRect(mLockX, mLockY, mLockX + mLockWidth - 1,
+                              mLockY + mLockHeight -1 ),B_RGB32,false);
+    if (mLockBitmap && mLockBitmap->IsValid())
+    {
+      if (!(mLockFlags & NS_LOCK_SURFACE_WRITE_ONLY))
+      {
+        uint32 srcstride = mBitmap->BytesPerRow();
+        uint32 deststride = mLockBitmap->BytesPerRow();
+        uint8 *src = (uint8 *)mBitmap->Bits() + mLockX*4 + mLockY*srcstride;
+        uint8 *dest=(uint8 *)mLockBitmap->Bits();
+        for (uint32 i = 0; i < mLockHeight; ++i)
+        {
+          memcpy(dest, src, deststride);
+          src += srcstride;
+          dest += deststride;
+        }
+      }
+      *aBits = mLockBitmap->Bits();
+      *aStride = mLockBitmap->BytesPerRow();
+      *aWidthBytes = aWidth*4;
+      mLocked = PR_TRUE;
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
 {
 
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
-  mUnlockTime = PR_Now(); 
-#endif 
-
-  //  g_print("nsDrawingSurfaceGTK::UnLock() called\n"); 
-  if (!mLocked) 
+  if (mBitmap && mLocked)
   {
-    NS_ASSERTION(0, "attempting to unlock an DS that isn't locked"); 
-    return NS_ERROR_FAILURE;
-  }
-
-  // If the lock was not read only, put the bits back on the pixmap
-        if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
+    if (mLockBitmap)
+    {
+      if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
+      {
+        uint32 deststride = mBitmap->BytesPerRow();
+        uint32 srcstride = mLockBitmap->BytesPerRow();
+        uint8 *dest = (uint8 *)mBitmap->Bits() + mLockX*4 + mLockY*deststride;
+        uint8 *src=(uint8 *)mLockBitmap->Bits();
+        for (uint32 i = 0; i < mLockHeight; ++i)
         {
-    // FIX ME!!! 
-    // Now draw the image ... 
+          memcpy(dest, src, srcstride);
+          src += srcstride;
+          dest += deststride;
         }
-
-  // FIX ME!!! 
-  // Destroy mImage 
-
-
-  mLocked = PR_FALSE; 
- 
- 
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
-  printf("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
-#endif
+      }
+      delete mLockBitmap;
+      mLockBitmap = nsnull;
+      mLocked = PR_FALSE; 
+      if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
+        mBitmap->UnlockBits();
+    }
+  }
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 {
@@ -183,13 +188,12 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: IsPixelAddressable(PRBool *aAddressable)
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetPixelFormat(nsPixelFormat *aFormat)
 {
   *aFormat = mPixFormat;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
 {
-  if(aView->LockLooper()) 
+  if (aView->LockLooper()) 
   { 
     //remember dimensions 
     BRect r = aView->Bounds();
@@ -227,19 +231,19 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
 
 //if((aFlags & NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS) &&
 //  (aWidth > 0) && (aHeight > 0))
-  if(aWidth > 0 && aHeight > 0)
+  if (aWidth > 0 && aHeight > 0)
   {
     ///creating offscreen BBitmap
     mBitmap = new BBitmap(r, B_RGBA32, true);
     if (!mBitmap)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    if (mBitmap->InitCheck()!=B_OK) {
+    if (mBitmap->InitCheck()!=B_OK)
+    {
       //for some reason, the bitmap isn't valid - delete the
       //bitmap object, then indicate failure
       delete mBitmap;
       mBitmap=NULL;
-      
       return NS_ERROR_FAILURE;
     }
     
@@ -249,22 +253,25 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
     mBitmap->Lock();
     //Setting ViewColor transparent noticeably decreases AppServer load in DrawBitmp()
     //Applicable here, because Mozilla paints backgrounds explicitly, with images or filling areas.
-	mView->SetViewColor(B_TRANSPARENT_32_BIT);
+    mView->SetViewColor(B_TRANSPARENT_32_BIT);
     mBitmap->AddChild(mView);
   }
+  if (mLockBitmap)
+  	delete mLockBitmap;
+  mLockBitmap = nsnull;
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireView(BView **aView) 
 {
   *aView = mView;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireBitmap(BBitmap **aBitmap)
 {
-  if(mBitmap && mView)
+  if (mBitmap && mView)
   {
     mView->Sync();
   }
