@@ -325,10 +325,6 @@ function NewEditorFromDraft()
 {
   dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
 }
-function NewEditorFromDraft()
-{
-  dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
-}
 
 
 function helpMenuCreate()
@@ -354,4 +350,19 @@ function SendPage()
                      "chrome,all,dialog=no", 
                      "attachment='" + pageUrl + "',body='" + pageUrl +
                      "',subject='" + pageTitle + "',bodyislink=true");
+}
+
+function FillInTooltip ( tipElement )
+{
+  var retVal = false;
+  var button = document.getElementById('replaceMe');
+  if ( button ) {  
+    var tipText = tipElement.getAttribute('tooltiptext');
+    if ( tipText != "" ) {
+      button.setAttribute('value', tipText);
+      retVal = true;
+    }
+  }
+  
+  return retVal;
 }
