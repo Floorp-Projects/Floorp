@@ -1340,8 +1340,8 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
 
       // Find one of '\n' or '\r' using iterators since nsAReadableString
       // doesn't have the old FindCharInSet function.
-      nsAReadableString::const_iterator iter;           aString.BeginReading(iter);
-      nsAReadableString::const_iterator done_searching; aString.EndReading(done_searching);
+      nsAString::const_iterator iter;           aString.BeginReading(iter);
+      nsAString::const_iterator done_searching; aString.EndReading(done_searching);
       iter.advance(bol); 
       PRInt32 new_newline = bol;
       newline = kNotFound;
