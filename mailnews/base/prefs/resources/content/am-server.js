@@ -195,7 +195,11 @@ function setupMailOnServerUI()
 
 function setupLimitMessageSizeUI()
 {
-   var checked = document.getElementById("server.limitMessageSize").checked;
+   var broadcaster = document.getElementById("broadcaster_limitMessageSize");
 
-   document.getElementById("server.maxMessageSize").setAttribute("disabled", !checked);
+   var checked = document.getElementById("server.limitMessageSize").checked;
+   if (checked)
+     broadcaster.removeAttribute("disabled");
+   else
+     broadcaster.setAttribute("disabled", "true");
 }
