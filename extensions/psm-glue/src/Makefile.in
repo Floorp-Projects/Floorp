@@ -48,6 +48,8 @@ CSRCS = \
 	nsPSMShimLayer.c	\
 	$(NULL)
 
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lcmt -lxpcom -lprotocol
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
