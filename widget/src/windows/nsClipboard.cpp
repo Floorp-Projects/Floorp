@@ -53,15 +53,13 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsIURL.h"
 #include "nsImageClipboard.h"
-#include "nsIFileChannel.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 
 #include "nsVoidArray.h"
-#include "nsFileSpec.h"
+#include "nsNetUtil.h"
 
 #include "nsIImage.h"
 
@@ -672,8 +670,8 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
         if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
-        nsXPIDLCString urlSpec; 
-        file->GetURL( getter_Copies(urlSpec) );
+        nsXPIDLCString urlSpec;
+        NS_GetURLSpecFromFile(file, getter_Copies(urlSpec));
 
           // convert it to unicode and pass it out
           nsMemory::Free(*outData);

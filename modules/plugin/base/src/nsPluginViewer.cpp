@@ -1081,7 +1081,7 @@ NS_IMETHODIMP pluginInstanceOwner::GetURL(const char *aURL, const char *aTarget,
     if (isFile) {
       // convert file:///c:/ to c: if needed
       nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-      if (NS_SUCCEEDED(aFile->SetURL(dataToPost)) &&
+      if (NS_SUCCEEDED(NS_InitFileFromURLSpec(aFile,dataToPost)) &&
           NS_SUCCEEDED(aFile->GetPath(getter_Copies(filename))))
           dataToPost = filename;
     }

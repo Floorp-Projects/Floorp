@@ -96,7 +96,7 @@ nsResURL::GetFile(nsIFile **result)
             do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = localFile->SetURL(spec);
+    rv = NS_InitFileFromURLSpec(localFile, spec);
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(localFile, result);

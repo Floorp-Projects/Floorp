@@ -149,7 +149,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
         
         nsXPIDLCString url;
-        rv = file->GetURL(getter_Copies(url));
+        rv = NS_GetURLSpecFromFile(file, getter_Copies(url));
         if (NS_FAILED(rv)) return rv;
         baseUri.Assign(url);
         
@@ -157,7 +157,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = file->GetParent(getter_AddRefs(parent));
         if (NS_FAILED(rv)) return rv;
         if (parent) {
-            rv = parent->GetURL(getter_Copies(url));
+            NS_GetURLSpecFromFile(parent, getter_Copies(url));
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
         }

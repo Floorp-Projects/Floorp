@@ -644,8 +644,8 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         SetDocumentBase(aDocument, mCurrentBaseURI);
 
         // create a uri for aFile
-        char *urlString = nsnull;
-        nsresult rv = aFile->GetURL(&urlString);
+        nsXPIDLCString urlString;
+        nsresult rv = NS_GetURLSpecFromFile(aFile, getter_Copies(urlString));
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), urlString);
         if (NS_FAILED(rv)) return rv;
@@ -1293,7 +1293,7 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
             else
             {
                 nsXPIDLCString fileurl;
-                file->GetURL(getter_Copies(fileurl));
+                NS_GetURLSpecFromFile(file, getter_Copies(fileurl));
                 newValue.AssignWithConversion(fileurl);
             }
             if (data->mIsSubFrame)
