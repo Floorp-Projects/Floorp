@@ -245,30 +245,33 @@ const int kDefaultExpireDays = 9;
     return;
   
   // make a ICFileSpec out of our path and shove it into IC. This requires
-  // creating an FSSpec and an alias.
+  // creating an FSSpec and an alias. We can't just bail on error because
+  // we have to make sure we call ICStop() below.
+  BOOL noErrors = NO;
   FSRef fsRef;
   Boolean isDir;
   AliasHandle alias = nil;
   FSSpec fsSpec;
   error = ::FSPathMakeRef((UInt8 *)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
-  if (error != noErr)
-    return;
-  error = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nil, nil, &fsSpec, nil);
-  if (error != noErr)
-    return;
-  error = ::FSNewAlias(nil, &fsRef, &alias);
-  if (error != noErr)
-    return;
+  if (!error) {
+    error = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nil, nil, &fsSpec, nil);
+    if (!error) {
+      error = ::FSNewAlias(nil, &fsRef, &alias);
+      if (!error)
+        noErrors = YES;
+    }
+  }
   
   // copy the data out of our variables into the ICFileSpec and hand it to IC.
-  long headerSize = offsetof(ICFileSpec, alias);
-  long aliasSize = ::GetHandleSize((Handle)alias);
-  ICFileSpec* realbuffer = (ICFileSpec*) calloc(headerSize + aliasSize, 1);
-  realbuffer->fss = fsSpec;
-  memcpy(&realbuffer->alias, *alias, aliasSize);
-  error = ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, headerSize + aliasSize);
-  NSLog(@"error is %d", error);
-  free(realbuffer);
+  if (noErrors) {
+    long headerSize = offsetof(ICFileSpec, alias);
+    long aliasSize = ::GetHandleSize((Handle)alias);
+    ICFileSpec* realbuffer = (ICFileSpec*) calloc(headerSize + aliasSize, 1);
+    realbuffer->fss = fsSpec;
+    memcpy(&realbuffer->alias, *alias, aliasSize);
+    ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, headerSize + aliasSize);
+    free(realbuffer);
+  }
   
   ::ICStop(icInstance);
 }
