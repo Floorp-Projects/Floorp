@@ -387,16 +387,22 @@
              parentNode.currentItem = t.parentNode.parentNode;
            }
            else {
-             parentNode.suppressOnSelect = true;
              var selectedItems = parentNode.selectedItems;
+             var didSuppressSelect = false;
              var i = 0;
              while (i < selectedItems.length) {
-               if (selectedItems[i] != t.parentNode.parentNode)
+               if (selectedItems[i] != t.parentNode.parentNode) {
+                 if (!didSuppressSelect) {
+                   parentNode.suppressOnSelect = true;
+                   didSuppressSelect = true;
+                 }
                  parentNode.removeItemFromSelection(selectedItems[i]);
+               }
                else
                  i++;
              }
-             parentNode.suppressOnSelect = false;
+             if (didSuppressSelect)
+               parentNode.suppressOnSelect = false;
            }
          }
       ]]>
