@@ -24,7 +24,12 @@
 
 class nsIWebBrowserChrome;
 
-// a little ooky, but new windows gotta come from somewhere
-nsresult CreateBrowserWindow(PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent,
-                             nsIWebBrowserChrome **aNewWindow);
+namespace AppCallbacks {
+  nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
+             nsIWebBrowserChrome *aParent,
+             nsIWebBrowserChrome **aNewWindow);
 
+  void     EnableChromeWindow(nsIWebBrowserChrome *aWindow, PRBool aEnabled);
+
+  PRUint32 RunEventLoop(PRBool &aRunCondition);
+}
