@@ -60,6 +60,7 @@ function HistoryCommonInit()
     else
       document.getElementById("byday").setAttribute("checked", "true");
     gHistoryTree.focus();
+    SortInNewDirection(find_sort_direction(find_sort_column()));
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
@@ -162,14 +163,25 @@ function GroupBy(groupingType)
         break;
     case "site":
         // xxx for now
-        gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
+        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+        SortBy("name");
         break;
     case "dayandsite":
         gHistoryTree.setAttribute("ref", "NC:HistoryByDateAndSite");
+        SortBy("dayandsite");
+        break;
+    case "visited":
+        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+        SortBy("visited");
+        break;
+    case "lastvisited":
+        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+        SortBy("lastvisited");
         break;
     case "day":
     default:
         gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
+        SortBy("day");
         break;
     }
     gSearchBox.value = "";
@@ -254,5 +266,5 @@ function searchHistory(aInput)
 
 function onUnload()
 {
-  GroupBy(gHistoryGrouping);
+  return;
 }
