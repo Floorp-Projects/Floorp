@@ -761,6 +761,7 @@ $table{longdescs} =
     thetext mediumtext,
 
     index(bug_id),
+    index(who),
     index(bug_when)';
 
 
@@ -2183,6 +2184,16 @@ if (-d 'shadow') {
 }
 DropField("profiles", "emailnotification");
 DropField("profiles", "newemailtech");
+
+#
+# 2001-06-06 justdave@syndicomm.com:
+# There was no index on the 'who' column in the long descriptions table.
+# This caused queries by who posted comments to take a LONG time.
+#   http://bugzilla.mozilla.org/show_bug.cgi?id=57350
+if (!defined GetIndexDef('longdescs','who')) {
+    print "Adding index for who column in longdescs table...\n";
+    $dbh->do('ALTER TABLE longdescs ADD INDEX (who)');
+}
 
 # 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
 # truncates re http://bugzilla.mozilla.org/show_bug.cgi?id=9352
