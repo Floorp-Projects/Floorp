@@ -85,7 +85,7 @@ nsWindow::nsWindow()
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mBorderStyle = GTK_WINDOW_TOPLEVEL;
-  mIsDestroying = PR_FALSE;
+  mIsDestroyingWindow = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
 }
@@ -97,7 +97,7 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  mIsDestroying = PR_TRUE;
+  mIsDestroyingWindow = PR_TRUE;
   if (nsnull != mShell) {
     Destroy();
   }
@@ -152,7 +152,7 @@ NS_METHOD nsWindow::Destroy()
   // knows about the close so that if this is the main application
   // window, for example, the application will exit as it should.
 
-  if (mIsDestroying == PR_TRUE) {
+  if (mIsDestroyingWindow == PR_TRUE) {
     nsBaseWidget::Destroy();
     if (PR_FALSE == mOnDestroyCalled)
         nsWidget::OnDestroy();
@@ -246,8 +246,10 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mShell), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-    // this is done in CreateWidget now...
-    //mIsToplevel = PR_TRUE;
+
+    // Distinguish top-level windows from child windows
+    mIsToplevel = PR_TRUE;
+
     gtk_signal_connect(GTK_OBJECT(mShell),
                      "delete_event",
                      GTK_SIGNAL_FUNC(handle_delete_event),
@@ -262,7 +264,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
-  mIsToplevel = PR_TRUE;
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
   return NS_OK;
@@ -616,4 +617,11 @@ ChildWindow::ChildWindow()
 PRBool ChildWindow::IsChild() const
 {
   return PR_TRUE;
+}
+
+NS_METHOD ChildWindow::Destroy()
+{
+  // Skip over baseclass Destroy method which doesn't do what we want;
+  // instead make sure widget destroy method gets invoked.
+  return nsWidget::Destroy();
 }

@@ -111,6 +111,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   GtkAllocation *old_size = NULL;
   if (!mIsDestroying) {
     nsBaseWidget::Destroy();
+    NS_IF_RELEASE(mParent);
   }
   if (mWidget) {
     // see if we need to destroy the old size information
@@ -155,7 +156,6 @@ void nsWidget::OnDestroy()
 
 nsIWidget* nsWidget::GetParent(void)
 {
-//  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
   if (nsnull != mParent) {
     NS_ADDREF(mParent);
   }
