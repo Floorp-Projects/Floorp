@@ -664,10 +664,12 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         return NS_OK;
     }
     nsresult rv;
-    nsAutoString dataSourceName = uri;
-    PRInt32 pos = dataSourceName.Find(':');
+	nsAutoString rdfName = uri;
+    nsAutoString dataSourceName;
+    PRInt32 pos = rdfName.Find(':');
     if (pos < 0) return NS_ERROR_FAILURE;       // bad URI
-    dataSourceName.Right(dataSourceName, pos + 1);
+
+    rdfName.Right(dataSourceName, rdfName.Length() - (pos + 1));
     char* name = dataSourceName.ToNewCString();
     if (name == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
