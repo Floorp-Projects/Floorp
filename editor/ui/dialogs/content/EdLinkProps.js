@@ -333,6 +333,7 @@ function doEnabling()
   var enable = insertNew ? (TrimString(gDialog.hrefInput.value).length > 0) : true;
 
   SetElementEnabledById( "ok", enable);
+  SetElementEnabledById( "AdvancedEditButton1", enable);
 }
 
 var gClearListSelections = true;

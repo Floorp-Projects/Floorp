@@ -99,7 +99,9 @@ function ChangeName()
 
 function DoEnabling()
 {
-  SetElementEnabledById( "ok", nameInput.value.length > 0 );
+  var enable = nameInput.value.length > 0;
+  SetElementEnabledById("ok",  enable);
+  SetElementEnabledById("AdvancedEditButton1", enable);
 }
 
 function AnchorNameExists(name)
