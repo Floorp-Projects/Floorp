@@ -220,3 +220,28 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     padding               : 2px;
   }
 
+#print-button {
+	list-style-image:url("chrome://global/skin/print.gif");
+}
+
+#print-button 
+  {
+    list-style-image      : url("chrome://global/skin/print.gif");
+  }
+
+#print-button[disabled="true"],
+#print-button[disabled="true"][buttonover="true"],
+#print-button[disabled="true"][buttondown="true"]
+  {
+    list-style-image      : url("chrome://global/skin/print-disabled.gif");
+  }
+
+#print-button[buttonover="true"]
+  {
+    list-style-image      : url("chrome://global/skin/print-hover.gif");
+  }
+
+#print-button[buttondown="true"]
+  {
+    list-style-image      : url("chrome://global/skin/print-hover-active.gif");
+  }
