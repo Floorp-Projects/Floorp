@@ -51,6 +51,7 @@ public class FileLocator {
 	static final Hashtable fileTables = new Hashtable();
 	static final RevisionTable revisionTable = new RevisionTable();
 	static final BlameTable blameTable = new BlameTable();
+    static final Hashtable addr2LineTable = new Hashtable();
 
     public static String getFileLocation(byte[] line) throws IOException {
         return getFileLocation(new String(line));
@@ -95,15 +96,30 @@ public class FileLocator {
             lineNumber = 1 + table.getLine(offset);
             lineAnchor = lineNumber;
         } else {
-            // Linux format: unmangled_symbol[unix_path:line_number]
-            int colon = line.indexOf(':', leftBracket + 1);
-            fullPath = line.substring(leftBracket + 1, colon);
-            try {
-                lineNumber = Integer.parseInt(line.substring(colon + 1, rightBracket));
-            } catch (NumberFormatException nfe) {
-                return line;
+            int space = line.indexOf(' ', leftBracket + 1);
+            if (space != -1) {
+                // Raw Linux format: mangled_symbol[library +address]
+                String library = line.substring(leftBracket + 1, space);
+                String address = line.substring(space + 1, rightBracket);
+                Addr2Line addr2line = (Addr2Line) addr2LineTable.get(library);
+                if (addr2line == null) {
+                    System.out.println("new Addr2Line["+library+"]");
+                    addr2line = new Addr2Line(library);
+                    addr2LineTable.put(library, addr2line);
+                }
+                line = addr2line.getLine(address);
+                return getFileLocation(line);
+            } else {
+                // Linux format: unmangled_symbol[unix_path:line_number]
+                int colon = line.indexOf(':', leftBracket + 1);
+                fullPath = line.substring(leftBracket + 1, colon);
+                try {
+                    lineNumber = Integer.parseInt(line.substring(colon + 1, rightBracket));
+                } catch (NumberFormatException nfe) {
+                    return line;
+                }
+                lineAnchor = lineNumber;
             }
-            lineAnchor = lineNumber;
         }
         
 		// compute the URL of the file.
