@@ -652,6 +652,9 @@ MKICON_GetImage(char *file)
   URL_Struct *url;
   NET_StreamClass *stream;
   MWContext cx;
+#ifdef __hpux
+  void *imptr;
+#endif
 
   memset (&cx, 0, sizeof(cx));
   
@@ -840,13 +843,29 @@ MKICON_GetImage(char *file)
 
   url->address[0] = counter++;
 
+#ifdef __hpux
+  /* Expression expansion to avoid HP 10.X ANSI C compiler bug */
+  if (strstr (file, ".gif")) imptr = (void *) IL_GIF;
+  else
+  if (strstr (file, ".jpg") || strstr (file,".jpeg"))
+    imptr = (void *) IL_JPEG;
+  else
+  if (strstr (file, ".xbm")) imptr = (void *) IL_XBM;
+  else imptr = (void *) IL_GIF;
+#endif
+
+
   /* Create a stream and decode the image. */
   stream = IL_NewStream (FO_PRESENT,
+#ifdef __hpux
+                         imptr,
+#else
 			 (strstr (file, ".gif") ? (void *) IL_GIF :
 			  strstr (file, ".jpg") ? (void *) IL_JPEG :
 			  strstr (file, ".jpeg") ? (void *) IL_JPEG :
 			  strstr (file, ".xbm") ? (void *) IL_XBM :
 			  (void *) IL_GIF),
+#endif
 			 url, &cx);
   stream->put_block (stream, file_data, size);
   stream->complete (stream);
