@@ -191,7 +191,9 @@
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul" value="&cookies.label;"/> 
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul"
+                      value="&cookies.label;" valueWithImages="&cookies.labelWithImages;"
+                      id="cookiesCell"/> 
           </treerow>
         </treeitem>
         <treeitem>
