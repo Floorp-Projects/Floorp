@@ -152,6 +152,9 @@ private:
     static nsIAtom* kRefAtom;
     static nsIAtom* kTemplateAtom;
     static nsIAtom* kXMLNSAtom;
+
+    static nsIAtom* kAllowNegativeAssertionsAtom;
+    static nsIAtom* kCoalesceDuplicateArcsAtom;
     
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
@@ -248,6 +251,9 @@ nsIAtom*        RDFXULBuilderImpl::kRefAtom;
 nsIAtom*        RDFXULBuilderImpl::kTemplateAtom;
 nsIAtom*        RDFXULBuilderImpl::kXMLNSAtom;
 
+nsIAtom*        RDFXULBuilderImpl::kAllowNegativeAssertionsAtom;
+nsIAtom*        RDFXULBuilderImpl::kCoalesceDuplicateArcsAtom;
+
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_child;
@@ -313,7 +319,10 @@ RDFXULBuilderImpl::Init()
         kRefAtom                  = NS_NewAtom("ref");
         kTemplateAtom             = NS_NewAtom("template");
         kXMLNSAtom                = NS_NewAtom("xmlns");
-        
+
+	kAllowNegativeAssertionsAtom = NS_NewAtom("allownegativeassertions");
+	kCoalesceDuplicateArcsAtom   = NS_NewAtom("coalesceduplicatearcs");
+
         rv = nsServiceManager::GetService(kRDFServiceCID,
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
@@ -388,6 +397,9 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kTemplateAtom);
         NS_IF_RELEASE(kXMLNSAtom);
+
+	NS_IF_RELEASE(kAllowNegativeAssertionsAtom);
+	NS_IF_RELEASE(kCoalesceDuplicateArcsAtom);
     }
 }
 
@@ -1318,6 +1330,24 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         NS_ERROR("unable to construct new composite data source");
         return rv;
     }
+
+        nsAutoString	allowNegativeAssertionsStr;
+        rv = aElement->GetAttribute(kNameSpaceID_None,
+                                    kAllowNegativeAssertionsAtom,
+                                    allowNegativeAssertionsStr);
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (allowNegativeAssertionsStr.Equals("false")))
+        {
+		db->SetAllowNegativeAssertions(PR_FALSE);
+	}
+
+        nsAutoString	coalesceDuplicateArcsStr;
+        rv = aElement->GetAttribute(kNameSpaceID_None,
+                                    kCoalesceDuplicateArcsAtom,
+                                    coalesceDuplicateArcsStr);
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (coalesceDuplicateArcsStr.Equals("false")))
+        {
+		db->SetCoalesceDuplicateArcs(PR_FALSE);
+	}
 
     // Add the local store as the first data source in the db. Note
     // that we _might_ not be able to get a local store if we haven't

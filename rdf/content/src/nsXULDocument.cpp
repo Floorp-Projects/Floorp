@@ -2061,6 +2061,9 @@ XULDocumentImpl::EndLoad()
         NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create composite datasource");
         if (NS_FAILED(rv)) return rv;
 
+	db->SetAllowNegativeAssertions(PR_FALSE);
+	db->SetCoalesceDuplicateArcs(PR_FALSE);
+
         // Create a XUL content model builder
         rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
                                                 nsnull,
