@@ -1724,6 +1724,7 @@ COOKIE_Write() {
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(strm),
                                    dirSpec);
   if (NS_FAILED(rv)) {
+    NS_ERROR("failed to open cookies.txt for writing");
     return rv;
   }
 
