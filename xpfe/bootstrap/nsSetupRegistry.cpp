@@ -89,25 +89,19 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 
 nsresult NS_AutoregisterComponents()
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
   nsIFileSpec* spec = NS_LocateFileOrDirectory(
   							nsSpecialFileSpec::App_UserProfileDirectory50);
   if (!spec)
   	return NS_ERROR_FAILURE;
 
-  nsFileSpec sysdir;
-  rv = spec->GetFileSpec(&sysDir);
-  NS_RELEASE(spec);
+  char *componentsDirPath;
+  nsresult rv = spec->GetNSPRPath(&componentsDirPath);
   if (NS_FAILED(rv))
     return rv;
 
-  nsNSPRPath componentsDir(sysdir);
-  const char *componentsDirPath = (const char *) componentsDir;
-  if (componentsDirPath != NULL)
-  {
+  if (componentsDirPath)
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
-  }
+  NS_RELEASE(spec);
   return rv;
 }
 

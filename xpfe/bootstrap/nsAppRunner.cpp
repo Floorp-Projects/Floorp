@@ -33,6 +33,7 @@
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsIFileLocator.h"
 #include "nsIPrefWindow.h"
 #include "nsFileLocations.h"
@@ -328,9 +329,12 @@ int main(int argc, char* argv[])
 					return NS_ERROR_FAILURE;
 				
 				// Get current profile, make the new one a sibling...
-				rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &currProfileDirSpec);
-				if (NS_FAILED(rv))
+				nsIFileSpec* spec;
+				rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &spec);
+				if (NS_FAILED(rv) || !spec)
 					return NS_ERROR_FAILURE;
+				spec->GetFileSpec(&currProfileDirSpec);
+				NS_RELEASE(spec);
 				currProfileDirSpec.SetLeafName(currProfileName);
 
 				if (locator)
