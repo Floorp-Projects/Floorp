@@ -575,15 +575,18 @@ CalendarEventDataSource.prototype.orderToDosByDueDate = function calEvent_orderT
 CalendarEventDataSource.prototype.orderEventsByDisplayDate = function calEvent_orderEventsByDisplayDate( eventA, eventB )
 {
    var r=eventA.displayDate - eventB.displayDate;
-   if (r==0)
-   {
-      if ( eventA.title < eventB.title ) r=-1;
-      if ( eventA.title > eventB.title ) r=1;
+   if (r==0) {
+     var titleA = eventTitleOrEmpty(eventA);
+     var titleB = eventTitleOrEmpty(eventB);
+     return ( titleA < titleB ? -1 : 
+              titleA > titleB ?  1 : 0);
    }
-  
    return(r);
 }
 
+function eventTitleOrEmpty(event) {
+  return ("title" in event && event.title != null) ? event.title : "";
+}
 
 /** PACKAGE STATIC
 *   CalendarEvent orderRawEventsByDate.
