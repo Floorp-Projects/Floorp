@@ -104,7 +104,6 @@ public:
 protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
-    nsresult FinishedResponseHeaders();
 
     nsresult ParseStatusLine(nsIBufferInputStream* in, PRUint32 aLength,
                              PRUint32 *aBytesRead);
