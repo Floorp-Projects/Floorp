@@ -337,7 +337,6 @@ MimeMultCMS_sig_init (void *crypto_closure,
 						MimeHeaders *signature_hdrs)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
-  MimeDisplayOptions *opts = multipart_object->options;
   char *ct;
   int status = 0;
   nsresult rv;

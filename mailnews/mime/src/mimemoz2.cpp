@@ -526,7 +526,6 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
   MimeObject            *obj;
   MimeContainer         *cobj;
   PRInt32               n;
-  PRBool                isAlternativeOrRelated = PR_FALSE;
   PRBool                isAnInlineMessage;
 
   if (!data) 
@@ -705,13 +704,6 @@ SetMailCharacterSetToMsgWindow(MimeObject *obj, const char *aCharacterSet)
   }
 
   return rv;
-}
-
-static char *
-mime_reformat_date(const char *date, void *stream_closure)
-{
-  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
-  return nsCRT::strdup(date);
 }
 
 static char *

@@ -74,11 +74,12 @@ extern int SEC_ERROR_CERT_ADDR_MISMATCH;
 static int
 MimeEncryptedCMSClassInitialize(MimeEncryptedCMSClass *clazz)
 {
+#ifdef DEBUG
   MimeObjectClass    *oclass = (MimeObjectClass *)    clazz;
-  MimeEncryptedClass *eclass = (MimeEncryptedClass *) clazz;
-
   NS_ASSERTION(!oclass->class_initialized, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
+#endif
 
+  MimeEncryptedClass *eclass = (MimeEncryptedClass *) clazz;
   eclass->crypto_init          = MimeCMS_init;
   eclass->crypto_write         = MimeCMS_write;
   eclass->crypto_eof           = MimeCMS_eof;
@@ -260,7 +261,7 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_FROM, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		int n = ParseRFC822Addresses(s, getter_Copies(from_name), getter_Copies(from_addr));
+		ParseRFC822Addresses(s, getter_Copies(from_name), getter_Copies(from_addr));
 		PR_FREEIF(s);
 	  }
 
@@ -268,7 +269,7 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_SENDER, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		int n = ParseRFC822Addresses(s, getter_Copies(sender_name), getter_Copies(sender_addr));
+		ParseRFC822Addresses(s, getter_Copies(sender_name), getter_Copies(sender_addr));
 		PR_FREEIF(s);
 	  }
   }
