@@ -32,6 +32,8 @@
 #include <string>
 #include <map>
 
+using namespace std;
+
 /**
  * Represents the CGI argument list as an STL map<string, string>.
  */
@@ -263,9 +265,10 @@ struct ButtonInfo {
     ThemeButtonDrawInfo& drawInfo;
 };
 
-static void drawTitle(const Rect *bounds, ThemeButtonKind kind,
-                      const ThemeButtonDrawInfo *info, UInt32 userData,
-                      SInt16 depth, Boolean isColorDev)
+static DEFINE_API(void)
+drawTitle(const Rect *bounds, ThemeButtonKind kind,
+          const ThemeButtonDrawInfo *info, UInt32 userData,
+          SInt16 depth, Boolean isColorDev)
 {
     ButtonInfo* buttonInfo = reinterpret_cast<ButtonInfo*>(userData);
     const char* title = buttonInfo->title;
@@ -292,8 +295,29 @@ static void drawTitle(const Rect *bounds, ThemeButtonKind kind,
     }
 }
 
-static RoutineDescriptor drawTitleDescriptor = BUILD_ROUTINE_DESCRIPTOR(uppThemeButtonDrawProcInfo, &drawTitle);
-static ThemeButtonDrawUPP drawTitleUPP = ThemeButtonDrawUPP(&drawTitleDescriptor);
+/**
+ * A mechanism to provide component scoped UPPs that are
+ * automatically disposed when the library is unloaded. If only
+ * one could pass expressions as template parameters, this could
+ * be a shade simpler.
+ */
+template <class UPP_factory> class auto_upp {
+    typedef UPP_factory::PROC_t PROC_t;
+    typedef UPP_factory::UPP_t UPP_t;
+    UPP_t mUPP;
+public:
+    auto_upp(PROC_t proc) : mUPP(UPP_factory::NewUPP(proc)) {}
+    ~auto_upp() { if (mUPP) UPP_factory::DisposeUPP(mUPP); }
+    operator UPP_t () { return mUPP; }
+};
+
+class ThemeButtonDrawUPP_factory {
+    typedef ThemeButtonDrawProcPtr PROC_t;
+    typedef ThemeButtonDrawUPP UPP_t;
+public:
+    static UPP_t NewUPP(PROC_t proc) { return NewThemeButtonDrawUPP(proc); }
+    static void DisposeUPP(UPP_t upp) { return DisposeThemeButtonDrawUPP(upp); }
+};
 
 static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
@@ -334,6 +358,8 @@ static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputS
         ButtonInfo buttonInfo = {
             title, buttonBounds, drawInfo
         };
+
+        static auto_upp<ThemeButtonDrawUPP_factory> drawTitleUPP(drawTitle);
         
         status = ::DrawThemeButton(&buttonBounds, kind, &drawInfo,
                                    NULL, NULL, drawTitleUPP,
@@ -436,7 +462,12 @@ static nsresult drawThemeScrollbarThumb(TempGWorld& world, ThemeTrackDrawInfo& d
     RgnHandle thumbRgn = ::NewRgn();
     if (thumbRgn != NULL) {
         OSStatus status = ::GetThemeTrackThumbRgn(&drawInfo, thumbRgn);
-        Rect srcBounds = (**thumbRgn).rgnBBox;
+        Rect srcBounds;
+#if TARGET_CARBON
+        GetRegionBounds(thumbRgn, &srcBounds);
+#else
+        srcBounds = (**thumbRgn).rgnBBox;
+#endif
         Rect thumbBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
         ::OffsetRgn(thumbRgn, -srcBounds.left, -srcBounds.top);
         TempGWorld thumbWorld(thumbBounds);
