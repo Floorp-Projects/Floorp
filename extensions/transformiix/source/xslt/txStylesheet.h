@@ -42,10 +42,8 @@
 #include "txOutputFormat.h"
 #include "txExpandedNameMap.h"
 #include "List.h"
-#include "Expr.h"
-#include "txXSLTPatterns.h"
-#include "txInstructions.h"
 #include "XSLTFunctions.h"
+#include "nsVoidArray.h"
 
 class txInstruction;
 class txToplevelItem;

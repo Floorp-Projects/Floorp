@@ -38,8 +38,10 @@
 
 #include "txMozillaTextOutput.h"
 #include "nsContentCID.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMText.h"

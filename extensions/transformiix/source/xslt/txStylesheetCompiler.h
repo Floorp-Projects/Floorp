@@ -46,7 +46,6 @@
 #include "Expr.h"
 #include "XMLUtils.h"
 #include "txIXPathContext.h"
-#include "txNamespaceMap.h"
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
 #include "TxLog.h"
@@ -55,6 +54,7 @@ class txHandlerTable;
 class txElementContext;
 class txInstructionContainer;
 class txInstruction;
+class txNamespaceMap;
 class txToplevelItem;
 class txPushNewContext;
 class txStylesheetCompiler;
