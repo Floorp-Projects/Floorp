@@ -64,11 +64,11 @@ class nsICharsetAlias : public nsISupports
 public:
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
 
-   NS_IMETHOD GetPreferred(const nsString& aAlias, nsString& aResult) = 0;
+   NS_IMETHOD GetPreferred(const nsAString& aAlias, nsAString& aResult) = 0;
    NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** aResult) = 0;
    NS_IMETHOD GetPreferred(const char* aAlias, char* aResult, PRInt32 aBufLength) = 0;
 
-   NS_IMETHOD Equals(const nsString& aCharset1, const nsString& aCharset2, PRBool* aResult) = 0;
+   NS_IMETHOD Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* aResult) = 0;
    NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* aResult) = 0;
    NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* aResult) = 0;
 

@@ -60,9 +60,9 @@ public:
 
   // XXX these 2 methods will be subsumed by the ones from 
   // nsIProperties once we figure this all out
-  NS_IMETHOD GetStringProperty(const nsString& aKey, nsString& aValue);
-  NS_IMETHOD SetStringProperty(const nsString& aKey, nsString& aNewValue,
-                         nsString& aOldValue);
+  NS_IMETHOD GetStringProperty(const nsAString& aKey, nsAString& aValue);
+  NS_IMETHOD SetStringProperty(const nsAString& aKey, nsAString& aNewValue,
+                               nsAString& aOldValue);
 
   // nsPersistentProperties methods:
   PRInt32 Read();

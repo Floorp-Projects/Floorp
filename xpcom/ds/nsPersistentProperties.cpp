@@ -48,6 +48,7 @@
 #include "nsProperties.h"
 #include "pratom.h"
 #include "nsEnumeratorUtils.h"
+#include "nsReadableUtils.h"
 
 static PLHashNumber
 HashKey(const PRUnichar *aString)
@@ -226,8 +227,8 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewValue,
-  nsString& aOldValue)
+nsPersistentProperties::SetStringProperty(const nsAString& aKey, nsAString& aNewValue,
+  nsAString& aOldValue)
 {
 #if 0
   cout << "will add " << NS_LossyConvertUCS2toASCII(aKey).get() << "=" << NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
@@ -236,7 +237,8 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
     return NS_ERROR_FAILURE;
   }
 
-  const PRUnichar *key = aKey.get();  // returns internal pointer (not a copy)
+  const nsPromiseFlatString& keyStr = PromiseFlatString(aKey);
+  const PRUnichar *key = keyStr.get();
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashCode(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
@@ -244,9 +246,8 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
   if (he) {
     // XXX should we copy the old value to aOldValue, and then remove it?
 #ifdef NS_DEBUG
-    char buf[128];
-    aKey.ToCString(buf, sizeof(buf));
-    printf("warning: property %s already exists\n", buf);
+    printf("warning: property %s already exists\n",
+           NS_ConvertUCS2toUTF8(aKey).get());
 #endif
     return NS_OK;
   }
@@ -273,12 +274,13 @@ nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::GetStringProperty(const nsString& aKey, nsString& aValue)
+nsPersistentProperties::GetStringProperty(const nsAString& aKey, nsAString& aValue)
 {
   if (!mTable)
      return NS_ERROR_FAILURE;
 
-  const PRUnichar *key = aKey.get();
+  const nsPromiseFlatString& keyStr = PromiseFlatString(aKey);
+  const PRUnichar *key = keyStr.get();
 
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashCode(key, &len);
