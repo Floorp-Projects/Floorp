@@ -1103,7 +1103,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
                                   nsReflowStatus&           aStatus)
 {
   nsFrameState  frameState;
-  nsresult      rv;
+  nsresult      rv = NS_OK;
   PRBool sizeSet = PR_FALSE;
   // See if the caption frame is dirty. This would be because of a newly
   // inserted caption
