@@ -71,7 +71,7 @@
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
-#include "nsIWebShellWindow.h" // TODO remove later
+#include "nsIXULWindow.h" // TODO remove later
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -2809,7 +2809,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
       if(NS_SUCCEEDED(rv)) 
       {
-        nsCOMPtr<nsIWebShellWindow>     webshellwindow;
+        nsCOMPtr<nsIXULWindow>          webshellwindow;
         nsCOMPtr<nsIWebShellContainer>  topLevelWindow;
         nsIWebShell                     *webShell;
 
