@@ -194,6 +194,7 @@ bin\defaults\profile\*
 bin\plugins\*
 bin\res\html.css
 bin\res\ua.css
+bin\res\arrow.gif
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\entityTables\*
