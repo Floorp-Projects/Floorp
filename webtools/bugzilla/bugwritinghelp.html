@@ -1,281 +1,391 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content=
+"text/html;charset=iso-8859-1">
+<title>Bug Writing Guidelines</title>
+</head>
+<body>
+<center>
+<h1>Bug Writing Guidelines</h1>
+</center>
 
-<HEAD>
-	<META NAME="GENERATOR" Content="Symantec Visual Page 1.0">
-	<META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
-	<TITLE>Bug Writing Guidelines</TITLE>
-</HEAD>
+<h3>Why You Should Read This</h3>
 
-<BODY TEXT="#000000" BGCOLOR="#FFFFFF" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+<blockquote>
+<p>Simply put, the more effectively you report a bug, the more
+likely an engineer will actually fix it.</p>
 
-<H1 ALIGN="CENTER">bug writing guidelines</H1>
-<P ALIGN="CENTER"><FONT SIZE="2"><B>(Please send feedback/update requests to </B></FONT><A
-HREF="mailto:eli@prometheus-music.com"><FONT SIZE="2"><B>Eli Goldberg</B></FONT></A><FONT
-SIZE="2"><B>)</B></FONT></P>
-<P><FONT SIZE="4"><B><BR>
-Why You Should Read This</B></FONT>
+<p>These guidelines are a general
+tutorial to teach novice and intermediate bug reporters how to compose effective bug reports. Not every sentence may precisely apply to
+your software project.</p>
+</blockquote>
+
+<h3>How to Write a Useful Bug Report</h3>
+
+<blockquote>
+<p>Useful bug reports are ones that get bugs fixed. A useful bug
+report normally has two qualities:</p>
+
+<ol>
+<li><b>Reproducible.</b> If an engineer can't see the bug herself to prove that it exists, she'll probably stamp your bug report "WORKSFORME" or "INVALID" and move on to the next bug. Every detail you can provide helps.<br>
+<br>
+</li>
+
+<li><b>Specific.</b> The quicker the engineer can isolate the bug
+to a specific area, the more likely she'll expediently fix it. 
+(If a programmer or tester has to decypher a bug, they may spend
+more time cursing the submitter than solving the problem.)
+<br>
+<br>
+[ <a href="#tips" name="Anchor">Tell Me More</a> ]
+</li>
+</ol>
+
+<p>Let's say the application you're testing is a web browser. You
+crash at foo.com, and want to write up a bug report:</p>
+
+<blockquote>
+<p><b>BAD:</b> "My browser crashed. I think I was on www.foo.com. I play golf with Bill Gates, so you better fix this problem, or I'll report you to him. By the way, your Back icon looks like a squashed rodent. UGGGLY. And my grandmother's home page is all messed up in your browser. Thx 4 UR help."
+</p>
+
+<p>
+ <b>GOOD:</b> "I crashed each time I went to www.foo.com, using
+the 2002-02-25 build on a Windows 2000 system. I also
+rebooted into Linux, and reproduced this problem using the 2002-02-24
+Linux build.
+</p>
+
+<p>
+ It again crashed each time upon drawing the Foo banner at the top
+of the page. I broke apart the page, and discovered that the
+following image link will crash the application reproducibly,
+unless you remove the "border=0" attribute:
+</p>
+
+<p>
+ <tt>&lt;IMG SRC="http://www.foo.com/images/topics/topicfoos.gif"
+width="34" height="44" border="0" alt="News"&gt;</tt>
+</p>
+</blockquote>
+</blockquote>
+
+<h3>How to Enter your Useful Bug Report into Bugzilla:</h3>
+
+<blockquote>
+<p>Before you enter your bug, use Bugzilla's 
+<a href="query.cgi">search page</a> to determine whether the defect you've discovered is a known, already-reported bug. If your bug is the 37th duplicate of a known issue, you're more likely to annoy the engineer. (Annoyed
+engineers fix fewer bugs.)
+</p>
+
+<p>
+Next, be sure to reproduce your bug using a recent
+build. Engineers tend to be most interested in problems affecting
+the code base that they're actively working on. After all, the bug you're reporting
+may already be fixed.
+
+</p>
+
+<p>
+ If you've discovered a new bug using a current build, report it in
+Bugzilla:
+</p>
+
+<ol>
+<li>From your Bugzilla main page, choose 
+"<a href="enter_bug.cgi">Enter a new bug</a>".</li>
+
+<li>Select the product that you've found a bug in.</li>
+
+<li>Enter your e-mail address, password, and press the "Login"
+button. (If you don't yet have a password, leave the password field empty, 
+and press the "E-mail me a password" button instead.
+You'll quickly receive an e-mail message with your password.)</li>
+</ol>
+
+<p>Now, fill out the form. Here's what it all means:</p>
+
+<p><b>Where did you find the bug?</b></p>
+
+<blockquote>
+<p><b>Product: In which product did you find the bug?</b><br>
+ You just specified this on the last page, so you can't edit it here.</p>
+
+<p><b>Version: In which product version did you find the
+bug?</b><br>
+ (If applicable)</p>
+
+<p><b>Component: In which component does the bug exist?</b><br>
+Bugzilla requires that you select a component to enter a bug. (Not sure which to choose? 
+Click on the Component link. You'll see a description of each component, to help you make the best choice.)</p>
+
+<p><b>OS: On which Operating System (OS) did you find this bug?</b>
+(e.g. Linux, Windows 2000, Mac OS 9.)<br>
+ If you know the bug happens on all OSs, choose 'All'. Otherwise,
+select the OS that you found the bug on, or "Other" if your OS
+isn't listed.</p>
+</blockquote>
+
+<p><b>How important is the bug?</b></p>
+
+<blockquote>
+<p><b>Severity: How damaging is the bug?</b><br>
+ This item defaults to 'normal'. If you're not sure what severity your bug deserves, click on the Severity link.
+ You'll see a description of each severity rating. <br>
+</p>
+</blockquote>
+
+<p><b>Who will be following up on the bug?</b></p>
+
+<blockquote>
+<p><b>Assigned To: Which engineer should be responsible for fixing
+this bug?</b><br>
+ Bugzilla will automatically assign the bug to a default engineer
+upon submitting a bug report. If you'd prefer to directly assign the bug to
+someone else, enter their e-mail address into this field. (To see the list of
+default engineers for each component, click on the Component
+link.)</p>
+
+<p><b>Cc: Who else should receive e-mail updates on changes to this
+bug?</b><br>
+ List the full e-mail addresses of other individuals who should
+receive an e-mail update upon every change to the bug report. You
+can enter as many e-mail addresses as you'd like, separated by spaces or commas, as long as those
+people have Bugzilla accounts.</p>
+</blockquote>
+
+<p><b>What else can you tell the engineer about the bug?</b></p>
+
+<blockquote>
+
+<p><b>Summary:</b> <b>How would you describe the bug, in
+approximately 60 or fewer characters?</b><br>
+ A good summary should <b>quickly and uniquely identify a bug
+report</b>. Otherwise, an engineer cannot meaningfully identify
+your bug by its summary, and will often fail to pay attention to
+your bug report when skimming through a 10 page bug list.<br>
+<br>
+ A useful summary might be 
+ "<tt>PCMCIA install fails on Tosh Tecra 780DVD w/ 3c589C</tt>". 
+ "<tt>Software fails</tt>" or "<tt>install problem</tt>" would be
+examples of a bad summary.<br>
+<br>
+ [ <a href="#summary">Tell Me More</a> ]<br>
+<br>
+ <b>Description: </b><br>
+ Please provide a detailed problem report in this field.
+Your bug's recipients will most likely expect the following information:</p>
+
+<blockquote>
+<p><b>Overview Description:</b> More detailed expansion of
+summary.</p>
+
+<blockquote>
+<pre>
+Drag-selecting any page crashes Mac builds in NSGetFactory
+</pre>
+</blockquote>
+
+<p><b>Steps to Reproduce:</b> Minimized, easy-to-follow steps that will
+trigger the bug. Include any special setup steps.</p>
+
+<blockquote>
+<pre>
+1) View any web page. (I used the default sample page,
+resource:/res/samples/test0.html)
+                          
+2) Drag-select the page. (Specifically, while holding down 
+the mouse button, drag the mouse pointer downwards from any 
+point in the browser's content region to the bottom of the 
+browser's content region.)                   
+</pre>
+</blockquote>
+
+ <b>Actual Results:</b> What the application did after performing
+the above steps. 
+
+<blockquote>
+<pre>
+The application crashed. Stack crawl appended below from MacsBug.
+</pre>
+</blockquote>
+
+<p><b>Expected Results:</b> What the application should have done,
+were the bug not present.</p>
+
+<blockquote>
+<pre>
+The window should scroll downwards. Scrolled content should be selected. 
+(Or, at least, the application should not crash.)
+</pre>
+</blockquote>
+
+<p><b>Build Date &amp; Platform:</b> Date and platform of the build
+that you first encountered the bug in.</p>
+
+<blockquote>
+<pre>
+Build 2002-03-15 on Mac OS 9.0
+</pre>
+</blockquote>
+
+<p><b>Additional Builds and Platforms:</b> Whether or not the bug
+takes place on other platforms (or browsers, if applicable).</p>
+
+<blockquote>
+<pre>
+- Also Occurs On        
+    Mozilla (2002-03-15 build on Windows NT 4.0) 
+                                    
+- Doesn't Occur On        
+    Mozilla (2002-03-15 build on Red Hat Linux; feature not supported)        
+    Internet Explorer 5.0 (shipping build on Windows NT 4.0)        
+    Netscape Communicator 4.5 (shipping build on Mac OS 9.0)
+</pre>
+</blockquote>
+
+<p><b>Additional Information:</b> Any other debugging information.
+For crashing bugs:</p>
+
+<ul>
+<li><b>Win32:</b> if you receive a Dr. Watson error, please note
+the type of the crash, and the module that the application crashed
+in. (e.g. access violation in apprunner.exe)</li>
+
+<li><b>Mac OS:</b> if you're running MacsBug, please provide the
+results of a <b>how</b> and an <b>sc</b>:</li>
+</ul>
+
+<blockquote>
+<pre>
+*** MACSBUG STACK CRAWL OF CRASH (Mac OS)
+Calling chain using A6/R1 links 
+    Back chain  ISA  Caller 
+    00000000    PPC  0BA85E74   
+    03AEFD80    PPC  0B742248   
+    03AEFD30    PPC  0B50FDDC  NSGetFactory+027FC
+PowerPC unmapped memory exception at 0B512BD0 NSGetFactory+055F0
+</pre>
+</blockquote>
+</blockquote>
+</blockquote>
+
+<p>You're done!<br>
+<br>
+ After double-checking your entries for any possible errors, press
+the "Commit" button, and your bug report will now be in the
+Bugzilla database.<br>
+</p>
+</blockquote>
+
+<hr>
+<h3>More Information on Writing Good Bugs</h3>
+
+<blockquote>
+<p><b><a name="tips"></a> 1. General Tips for a Useful Bug
+Report</b>
+</p>
+
+<blockquote>
+<p>
+ <b>Use an explicit structure, so your bug reports are easy to
+skim.</b> Bug report users often need immediate access to specific
+sections of your bug. If your Bugzilla installation supports the
+Bugzilla Helper, use it.
+</p>
+
+<p>
+ <b>Avoid cuteness if it costs clarity.</b> Nobody will be laughing
+at your funny bug title at 3:00 AM when they can't remember how to
+find your bug.
+</p>
+
+<p>
+ <b>One bug per report.</b> Completely different people typically
+fix, verify, and prioritize different bugs. If you mix a handful of
+bugs into a single report, the right people probably won't discover
+your bugs in a timely fashion, or at all. Certain bugs are also
+more important than others. It's impossible to prioritize a bug
+report when it contains four different issues, all of differing
+importance.
+</p>
+
+<p>
+ <b>No bug is too trivial to report.</b> Unless you're reading the
+source code, you can't see actual software bugs, like a dangling
+pointer -- you'll see their visible manifestations, such as the
+segfault when the application finally crashes. Severe software
+problems can manifest themselves in superficially trivial ways.
+File them anyway.<br>
+</blockquote>
+
+<p><b><a name="summary"></a>2. How and Why to Write Good Bug Summaries</b>
+</p>
+
+<blockquote>
+<p><b>You want to make a good first impression on the bug
+recipient.</b> Just like a New York Times headline guides readers
+towards a relevant article from dozens of choices, will your bug summary
+suggest that your bug report is worth reading from dozens or hundreds of
+choices?
+</p>
+
+<p>
+ Conversely, a vague bug summary like <tt>install problem</tt> forces anyone
+reviewing installation bugs to waste time opening up your bug to
+determine whether it matters.
+</p>
+
+<p>
+ <b>Your bug will often be searched by its summary.</b> Just as
+you'd find web pages with Google by searching by keywords through
+intuition, so will other people locate your bugs. Descriptive bug
+summaries are naturally keyword-rich, and easier to find.
+</p>
+
+<p>
+ For example, you'll find a bug titled "<tt>Dragging icons from List View to
+gnome-terminal doesn't paste path</tt>" if you search on "List",
+"terminal", or "path". Those search keywords wouldn't have found a
+bug titled "<tt>Dragging icons
+doesn't paste</tt>".
+</p>
+
+<p>
+ Ask yourself, "Would someone understand my bug from just this
+summary?" If so, you've written a fine summary.
+</p>
+
+<p><b>Don't write titles like these:</b></p>
+
+<ol>
+ <li>"Can't install" - Why can't you install? What happens when you
+try to install?</li>
+<li>"Severe Performance Problems" - ...and they occur when you do
+what?</li>
+<li>"back button does not work" - Ever? At all?</li>
+</ol>
+
+<p><b>Good bug titles:</b></p>
+<ol>
+<li>"1.0 upgrade installation fails if Mozilla M18 package present"
+- Explains problem and the context.</li>
+<li>"RPM 4 installer crashes if launched on Red Hat 6.2 (RPM 3)
+system" - Explains what happens, and the context.</li>
+</ol>
 
 
-<BLOCKQUOTE>
-	<P>Simply put, the more effectively you report a bug, the more likely an engineer
-	will actually fix it. <BR>
-	<A HREF="http://bugzilla.mozilla.org"><BR>
-	</A>These bug writing guidelines are an attempt at a general tutorial on writing
-	effective bug reports for novice bug writers; not every sentence may precisely apply
-	to your software project.
 
-</BLOCKQUOTE>
+</blockquote>
+</blockquote>
 
-<P><FONT SIZE="4"><B><BR>
-How to Write a Useful Bug Report</B></FONT>
+<p>(Written and maintained by 
+<a href="http://www.prometheus-music.com/eli">Eli Goldberg</a>. Claudius
+Gayle, Gervase Markham, Peter Mock, Chris Pratt, Tom Schutter and Chris Yeh also
+contributed significant changes. Constructive 
+<a href="mailto:eli@prometheus-music.com">suggestions</a> welcome.)</p>
 
+</body>
+</html>
 
-<BLOCKQUOTE>
-	<P>Useful bug reports are ones that get bugs fixed. A useful bug report normally
-	has two qualities:
-
-	<OL>
-	<LI><B>Reproducible.</B> If an engineer can't see it or conclusively prove that it
-	exists, the engineer will probably stamp it &quot;WORKSFORME&quot; or &quot;INVALID&quot;,
-	and move on to the next bug. Every detail you can provide helps. <BR>
-	<BR>
-	
-	<LI><B>Specific.</B> The quicker the engineer can isolate the issue to a specific
-	problem, the more likely it'll be expediently fixed.<B> </B>(If a programmer or tester
-	has to decypher a bug, they spend more time cursing the submitter than fixing or
-	testing the problem.)
-	</OL>
-
-	<P>Let's say the application you're testing is a web browser. You crash at foo.com,
-	and want to write up a bug report:
-
-	<BLOCKQUOTE>
-		<P><B>BAD:</B> &quot;My browser crashed. I think I was on foo.com. My computer uses
-		Windows. I think that this is a really bad problem and you should fix it now. By
-		the way, your icons really suck. Nobody will use your software if you keep those
-		ugly icons. Oh, and my grandmother's home page doesn't look right, either, it's all
-		messed up. Good luck.&quot;<BR>
-		<BR>
-		<B>GOOD: </B>&quot;I crashed each time when I went to foo.com, using the 10.28.99
-		build on a Win NT 4.0 (Service Pack 5) system. I also rebooted into Linux, and reproduced
-		this problem using the 10.28.99 Linux build.<BR>
-		<BR>
-		It again crashed each time upon drawing the Foo banner at the top of the page. I
-		broke apart the page, and discovered that the following image link will crash the
-		application reproducibly, unless you remove the &quot;border=0&quot; attribute:<BR>
-		<BR>
-		<FONT SIZE="2"><TT>&lt;IMG SRC=&quot;http://foo.com/images/topics/topicfoos.gif&quot;
-		width=34 height=44 border=0 alt=&quot;News&quot;&gt;</TT>&quot;</FONT>
-
-	</BLOCKQUOTE>
-
-</BLOCKQUOTE>
-
-<P><FONT SIZE="4"><B><BR>
-<BR>
-How to Enter your Useful Bug Report into Bugzilla</B>:</FONT>
-
-
-<BLOCKQUOTE>
-	<P>Before you enter your bug, use the Bugzilla Query Page to determine whether the
-	defect you've discovered is a known bug, and has already been reported. (If your
-	bug is the 37th duplicate of a known issue, you're more likely to annoy the engineer.
-	Annoyed engineers fix fewer bugs.)<BR>
-	<BR>
-	Next, be sure that you've reproduced your bug using a recent build. (Engineers tend
-	to be most interested in problems afflicting the code base that they're actively
-	working on, rather than those in a code base that's hundreds of bug fixes obsolete.)<BR>
-	<BR>
-	If you've discovered a new bug using a current build, report it in Bugzilla:
-
-</BLOCKQUOTE>
-
-
-<OL>
-	<OL>
-		<LI>From your Bugzilla main page, choose &quot;Enter a new bug&quot;.
-		<LI>Select the product that you've found a bug in.
-		<LI>Enter your E-mail address, Password, and press the &quot;Login&quot; button.
-		(If you don't yet have a password, leave the password text box empty, and press the
-		&quot;E-mail me a password&quot; button instead. You'll receive an E-mail message
-		with your password shortly.)
-	</OL>
-	<P>Now, fill out the form. Here's what it all means:
-</OL>
-
-
-
-<BLOCKQUOTE>
-	<P><B>Where did you find the bug?</B>
-
-	<BLOCKQUOTE>
-		<P><B>Product: In which product did you find the bug?</B><BR>
-		You just filled this out on the last page.</P>
-		<P><B>Version: In which product version did you find the bug?</B><BR>
-		If applicable.</P>
-		<P><B>Component: In which component does the bug exist?</B><BR>
-		Bugzilla requires that you select a component to enter a bug. (If they all look meaningless,
-		click on the Component link, which links to descriptions of each component, to help
-		you make the best choice.)</P>
-		<P><B>Platform:&#160;On which hardware platform did you find this bug?</B><FONT SIZE="2"><B>
-		</B>(e.g. Macintosh, SGI, Sun, PC.) </FONT><BR>
-		If you know the bug happens on all hardware platforms, choose 'All'. Otherwise, select
-		the platform that you found the bug on, or &quot;Other&quot; if your platform isn't
-		listed.</P>
-		<P><B>OS: On which Operating System (OS) did you find this bug?</B> <FONT SIZE="2">(e.g.
-		Linux, Windows NT, Mac OS 8.5.)</FONT><BR>
-		If you know the bug happens on all OSs, choose 'All'. Otherwise, select the OS that
-		you found the bug on, or &quot;Other&quot; if your OS isn't listed.</P>
-
-	</BLOCKQUOTE>
-	<P><B><BR>
-	How important is the bug?</B>
-
-	<BLOCKQUOTE>
-		<P><B>Severity: How damaging is the bug?</B><BR>
-		This item defaults to 'normal'. (To determine the most appropriate severity for a
-		particular bug, click on the Severity link for a full explanation of each choice,
-		from Critical to Enhancement.)
-
-	</BLOCKQUOTE>
-	<P><B><BR>
-	Who will be following up on the bug?</B>
-
-	<BLOCKQUOTE>
-		<P><B>Assigned To: Which engineer should be responsible for fixing this bug?</B><BR>
-		Bugzilla will automatically assign the bug to a default engineer upon submitting
-		a bug report; the text box exists to allow you to manually assign it to a different
-		engineer. (To see the list of default engineers for each component, click on the
-		Component link.)</P>
-		<P><B>Cc: Who else should receive e-mail updates on changes to this bug? </B><BR>
-		List the full e-mail addresses of other individuals who should receive an e-mail
-		update upon every change to the bug report. You can enter as many e-mail addresses
-		as you'd like; e-mail addresses must be separated by commas, with no spaces between
-		the addresses.
-
-	</BLOCKQUOTE>
-	<P><B><BR>
-	What else can you tell the engineer about the bug?</B></P>
-
-	<BLOCKQUOTE>
-		<P><B>URL: On what URL did you discover this bug?</B><BR>
-		If you encountered the bug on a particular URL, please provide it (or, them) here.
-		If you've isolated the bug to a specific HTML snippet, please also provide a URL
-		for that, too.</P>
-
-		<P><B>Summary:</B> <B>How would you describe the bug, in approximately 60 or fewer
-		characters?</B><BR>
-		A good summary should <U>quickly and uniquely identify a bug report</U>. Otherwise,
-		developers cannot meaningfully query by bug summary, and will often fail to pay attention
-		to your bug report when reviewing a 10 page bug list.<BR>
-		<BR>
-		A summary of &quot;PCMCIA install fails on Tosh Tecra 780DVD w/ 3c589C&quot; is a
-		useful title. &quot;Software fails&quot; or &quot;install problem&quot; would be
-		examples of a bad title.</P>
-
-		<P><BR>
-		<B>Description: What else can you tell the engineer about this bug? </B><BR>
-		Please provide as detailed of a problem diagnosis in this field as possible. <BR>
-		<BR>
-		Where applicable, using the following bug report template will help ensure that all
-		relevant information comes through:
-
-		<BLOCKQUOTE>
-			<P><B>Overview Description:</B> More detailed expansion of summary.
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2">Drag-selecting any page crashes Mac builds in NSGetFactory</FONT></PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Steps to Reproduce: </B>The minimal set of steps necessary to trigger the bug.
-			Include any special setup steps. 
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2">1) View any web page. (I used the default sample page, 
-   resource:/res/samples/test0.html)
-2) Drag-select the page. (Specifically, while holding down the 
-   mouse button, drag the mouse pointer downwards from any point in 
-   the browser's content region to the bottom of the browser's 
-   content region.)</FONT></PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Actual Results:</B> What the application did after performing the above steps.
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2">The application crashed. Stack crawl appended below from MacsBug.</FONT></PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Expected Results:</B> What the application should have done, were the bug not
-			present.
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2">The window should scroll downwards. Scrolled content should 
-be selected. (Or, at least, the application should not crash.)</FONT></PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Build Date &amp; Platform:</B> Date and platform of the build that you first
-			encountered the bug in.
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2">11/2/99 build on Mac OS (Checked Viewer &amp; Apprunner)</FONT></PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Additional Builds and Platforms:</B> Whether or not the bug takes place on
-			other platforms or browsers.
-
-			<BLOCKQUOTE>
-				<PRE><FONT SIZE="2"> - Occurs On
-        Seamonkey (11/2/99 build on Windows NT 4.0)
-
- - Doesn't Occur On
-        Seamonkey (11/4/99 build on Red Hat Linux; feature not supported)
-        Internet Explorer 5.0 (RTM build on Windows NT 4.0)
-        Netscape Communicator 4.5 (RTM build on Mac OS)</FONT>
-</PRE>
-
-			</BLOCKQUOTE>
-			<P><B>Additional Information:</B> Any other debugging information. For crashing bugs:
-
-			<UL>
-	<LI><B>Win32:</B> if you receive a Dr. Watson error, please note the type of the
-	crash, and the module that the application crashed in. (e.g. access violation in
-	apprunner.exe)
-	<LI><B>Mac OS:</B> if you're running MacsBug, please provide the results of a <B><TT>how</TT></B>
-	and an <B><TT>sc</TT></B>.
-	<LI><B>Unix: </B>please provide a minimized stack trace, which can be generated by
-	typing <B><TT>gdb apprunner core</TT></B> into a shell prompt.
-			</UL>
-
-
-			<BLOCKQUOTE>
-				<P>
-				<PRE><FONT SIZE="2">*** MACSBUG STACK CRAWL OF CRASH (Mac OS)
-
-Calling chain using A6/R1 links
- Back chain  ISA  Caller
- 00000000    PPC  0BA85E74  
- 03AEFD80    PPC  0B742248  
- 03AEFD30    PPC  0B50FDDC  NSGetFactory+027FC
-PowerPC unmapped memory exception at 0B512BD0 NSGetFactory+055F0</FONT></PRE>
-
-			</BLOCKQUOTE>
-
-		</BLOCKQUOTE>
-
-	</BLOCKQUOTE>
-	<P>You're done! <BR>
-	<BR>
-	After double-checking your entries for any possible errors, press the &quot;Commit&quot;
-	button, and your bug report will now be in the Bugzilla database.<BR>
-	<I><BR>
-	<BR>
-	</I><FONT SIZE="2">(Thanks to Claudius Gayle, Peter Mock, Chris Pratt, Tom Schutter,
-	and Chris Yeh for contributing to this document. Constructive </FONT><A HREF="mailto:eli@prometheus-music.com"><FONT
-	SIZE="2">suggestions</FONT></A><FONT SIZE="2"> welcome.)</FONT>
-	</BLOCKQUOTE>
-
-
-</BODY>
-
-</HTML>
