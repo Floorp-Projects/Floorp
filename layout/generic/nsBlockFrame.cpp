@@ -3567,13 +3567,14 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         return rv;
       }
 
-      // Mark next line dirty in case SplitLine didn't end up
-      // pushing any frames.
-      nsLineBox* next = aLine->mNext;
-      if ((nsnull != next) && !next->IsBlock()) {
-        next->MarkDirty();
+      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
+        // Mark next line dirty in case SplitLine didn't end up
+        // pushing any frames.
+        nsLineBox* next = aLine->mNext;
+        if ((nsnull != next) && !next->IsBlock()) {
+          next->MarkDirty();
+        }
       }
-
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
