@@ -66,7 +66,7 @@ TypeInState::~TypeInState()
 {
 }
 
-NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
+NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *,short)
 { 
   Reset(); 
   return NS_OK;

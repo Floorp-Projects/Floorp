@@ -48,7 +48,7 @@ public:
   void Reset();
   virtual ~TypeInState();
 
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel);
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
 
   nsresult SetProp(nsIAtom *aProp);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);
