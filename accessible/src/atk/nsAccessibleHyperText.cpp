@@ -391,7 +391,7 @@ NS_IMETHODIMP nsAccessibleHyperText::RemoveSelection(PRInt32 aSelectionNum)
   PRInt32 caretOffset;
   mTextChildren->Count(&count);
   for (index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(mTextChildren, index));
     nsCOMPtr<nsIDOMNode> parentNode;
     nsCOMPtr<nsILink> link = nsnull;
     domNode->GetParentNode(getter_AddRefs(parentNode));
@@ -422,7 +422,7 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
   PRUint32 index, count, linkCount = 0;
   mTextChildren->Count(&count);
   for (index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(mTextChildren, index));
     nsCOMPtr<nsIDOMNode> parentNode;
 
     // text node maybe a child (or grandchild, ...) of a link node
@@ -491,11 +491,11 @@ NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLink
   if (count <= 0)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> curNode(do_QueryInterface(mTextChildren->ElementAt(0)));
+  nsCOMPtr<nsIDOMNode> curNode(do_QueryElementAt(mTextChildren, 0));
 
   PRUint32 index, linkCount = 0;
   for (index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(mTextChildren, index));
     nsCOMPtr<nsIDOMNode> parentNode;
     nsCOMPtr<nsILink> link;
     do {
