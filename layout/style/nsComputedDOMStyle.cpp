@@ -216,6 +216,7 @@ private:
   nsresult GetDisplay(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetPosition(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetClip(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetOverflow(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
 
@@ -237,6 +238,7 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_right,
   eCSSProperty_bottom,
   eCSSProperty_clip,
+  eCSSProperty_overflow,
 
   eCSSProperty_color,
   eCSSProperty_font_family,
@@ -249,6 +251,7 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_background_image,
 
   eCSSProperty_display,
+  eCSSProperty_visibility,
   eCSSProperty_position,
   eCSSProperty_binding,
   eCSSProperty_float,
@@ -576,6 +579,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
       // Clip
     case eCSSProperty_clip:
       rv = GetClip(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_overflow:
+      rv = GetOverflow(frame, *getter_AddRefs(val)); break;
     default :
       break;
   }
@@ -1869,6 +1874,29 @@ nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
     return rv;
   }
   
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOverflow(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleDisplay* display=nsnull;
+  GetStyleData(eStyleStruct_Display,(const nsStyleStruct*&)display,aFrame);
+
+  if (display && display->mOverflow != NS_STYLE_OVERFLOW_AUTO) {
+    const nsAFlatCString& overflow =
+      nsCSSProps::SearchKeywordTable(display->mOverflow,
+                                     nsCSSProps::kOverflowKTable);
+    val->SetString(overflow);
+  }
+  else {
+    val->SetString(NS_LITERAL_STRING("auto"));
+  }
+
   return CallQueryInterface(val, &aValue);
 }
 
