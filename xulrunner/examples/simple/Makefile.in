@@ -43,7 +43,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= simple
-export XPI_NAME	= simple
+XPI_NAME	= simple
+
+DIRS		= components
 
 PREF_JS_EXPORTS	= $(srcdir)/simple-prefs.js
 DIST_FILES	= application.ini
