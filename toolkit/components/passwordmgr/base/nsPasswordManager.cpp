@@ -357,15 +357,17 @@ nsPasswordManager::AddUser(const nsACString& aHost,
       FindPasswordEntryInternal(hashEnt->head, aUser, empty, empty, &entry);
       if (entry) {
         // Just change the password
-        EncryptDataUCS2(aPassword, entry->passValue);
-        return NS_OK;
+        return EncryptDataUCS2(aPassword, entry->passValue);
       }
     }
   }
 
   SignonDataEntry* entry = new SignonDataEntry();
-  EncryptDataUCS2(aUser, entry->userValue);
-  EncryptDataUCS2(aPassword, entry->passValue);
+  if (NS_FAILED(EncryptDataUCS2(aUser, entry->userValue)) ||
+      NS_FAILED(EncryptDataUCS2(aPassword, entry->passValue))) {
+    delete entry;
+    return NS_ERROR_FAILURE;
+  }
 
   AddSignonData(aHost, entry);
   WriteSignonFile();
@@ -872,7 +874,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                 return NS_ERROR_FAILURE;
 
               if (!buffer.Equals(passValue)) {
-                EncryptDataUCS2(passValue, entry->passValue);
+                if (NS_FAILED(EncryptDataUCS2(passValue, entry->passValue)))
+                  return NS_ERROR_FAILURE;
+
                 WriteSignonFile();
               }
 
@@ -904,8 +908,11 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         SignonDataEntry* entry = new SignonDataEntry();
         entry->userField.Assign(userFieldName);
         entry->passField.Assign(passFieldName);
-        EncryptDataUCS2(userValue, entry->userValue);
-        EncryptDataUCS2(passValue, entry->passValue);
+        if (NS_FAILED(EncryptDataUCS2(userValue, entry->userValue)) ||
+            NS_FAILED(EncryptDataUCS2(passValue, entry->passValue))) {
+          delete entry;
+          return NS_ERROR_FAILURE;
+        }
 
         AddSignonData(realm, entry);
         WriteSignonFile();
@@ -1019,7 +1026,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       if (changeEntry) {
         nsAutoString newValue;
         passFields.ObjectAt(1)->GetValue(newValue);
-        EncryptDataUCS2(newValue, changeEntry->passValue);
+        if (NS_FAILED(EncryptDataUCS2(newValue, changeEntry->passValue)))
+          return NS_ERROR_FAILURE;
+
         WriteSignonFile();
       }
     }
