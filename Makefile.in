@@ -328,7 +328,9 @@ distclean::
 	rm -f unallmakefiles $(DIST_GARBAGE)
 
 # Temporary hack for NSS 3.4 landing (bug 116334, wtc@netscape.com)
+ifdef MOZ_PSM
 ifdef COMPILER_DEPEND
 depend::
 	$(MAKE) -C security/manager depend
+endif
 endif
