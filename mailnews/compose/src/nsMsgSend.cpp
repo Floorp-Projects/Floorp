@@ -114,7 +114,6 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
@@ -3235,7 +3234,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
  
 
   nsCOMPtr<nsIAbAddressCollecter> addressCollecter = 
-           do_GetService(kCAddressCollecter, &rv);
+           do_GetService(NS_ABADDRESSCOLLECTER_CONTRACTID, &rv);
 
   if (NS_FAILED(rv))
     addressCollecter = nsnull;
