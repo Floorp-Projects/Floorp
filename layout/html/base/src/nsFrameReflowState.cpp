@@ -287,21 +287,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     if (width > 0) {
       // XXX If the size constraint is a fixed content width then we also
       // need to set the max width as well, but then we bust tables...
-#if 0
-      minWidth = maxSize.width = width;
-#else
       minWidth = width;
-#endif
       widthConstraint = eHTMLFrameConstraint_FixedContent;
     }
     if (height > 0) {
       // XXX If the size constraint is a fixed content width then we also
       // need to set the max height as well...
-#if 0
-      minHeight = maxSize.height = height;
-#else
       minHeight = height;
-#endif
       heightConstraint = eHTMLFrameConstraint_FixedContent;
     }
   }
