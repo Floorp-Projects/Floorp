@@ -227,8 +227,25 @@ function (aURI)
     temChannel.cancel(Components.results.NS_BINDING_ABORTED);
     temChannel = null;
 
-    var newChannel = ioServ.newChannel("chrome://xmlterm/content/xmlterm.html",
-                                       null);
+    // Get current process directory
+    var dscontractid = "@mozilla.org/file/directory_service;1";
+    var ds = Components.classes[dscontractid].getService();
+
+    var dsprops = ds.QueryInterface(Components.interfaces.nsIProperties);
+    var file = dsprops.get("CurProcD", Components.interfaces.nsIFile);
+
+    file.append("chrome");
+    file.append("xmlterm.jar");
+
+    dump("file="+file.path+"\n");
+
+    // Contruct JAR URI spec for xmlterm.html
+    // Use file: rather than resource: or chrome: scheme to allow
+    // xmlterm to load other file URLs without failing the security check
+
+    var jarURI = "jar:file:"+file.path+"!/content/xmlterm/xmlterm.html";
+
+    var newChannel = ioServ.newChannel(jarURI, null);
 
     dump(newChannel+"\n");
 
