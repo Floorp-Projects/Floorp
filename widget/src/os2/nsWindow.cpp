@@ -2634,10 +2634,7 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
 
       if( rc < 0xFF)
       {
-         // Need nls-correct way of doing this...
-         if( isalnum( rc))
-            rc = toupper( rc); // no lower case
-         else switch( rc)
+         switch( rc)
          {
             case ';':  rc = NS_VK_SEMICOLON;     break;
             case '=':  rc = NS_VK_EQUALS;        break;
