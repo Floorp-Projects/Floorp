@@ -618,7 +618,7 @@ init_crypto(PRBool create, PRBool readOnly)
 
 	/* Open/create key database */
 	rv = NSS_Initialize(SECU_ConfigDirectory(NULL), dbprefix, dbprefix,
-	               "secmod.db", readOnly);
+	               "secmod.db", readOnly, nocertdb, PR_FALSE, PR_FALSE);
 	if (rv != SECSuccess) {
 	    SECU_PrintPRandOSError(progName);
 	    retval=NSS_INITIALIZE_FAILED_ERR;
