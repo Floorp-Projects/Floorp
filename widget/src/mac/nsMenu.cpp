@@ -29,14 +29,11 @@
 #include <ToolUtils.h>
 #endif
 
-//#include <Xm/CascadeBG.h>
-//#include <Xm/SeparatoG.h>
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
-//NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
 
-PRInt16 nsMenu::mMacMenuIDCount = 256;
+const PRInt16 kMacMenuID = 1;
+PRInt16 nsMenu::mMacMenuIDCount = kMacMenuID;
 
 nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -94,62 +91,6 @@ nsMenu::~nsMenu()
   NS_IF_RELEASE(mMenuParent);
 }
 
-#ifdef MOTIF
-//-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-void nsMenu::Create(Widget aParent, const nsString &aLabel)
-{
-  /*
-  if (NULL == aParent) {
-    return;
-  }
-  mLabel = aLabel;
-
-  char * labelStr = mLabel.ToNewCString();
-
-  char wName[512];
-
-  sprintf(wName, "__pulldown_%s", labelStr);
-  mMenu = XmCreatePulldownMenu(aParent, wName, NULL, 0);
-
-  Widget casBtn;
-  XmString str;
-
-  str = XmStringCreateLocalized(labelStr);
-  casBtn = XtVaCreateManagedWidget(labelStr,
-                                   xmCascadeButtonGadgetClass, aParent,
-                                   XmNsubMenuId, mMenu,
-                                   XmNlabelString, str,
-                                   NULL);
-  XmStringFree(str);
-
-
-  delete[] labelStr;
-  */
-}
-
-
-//-------------------------------------------------------------------------
-Widget nsMenu::GetNativeParent()
-{
-
-  void * voidData; 
-  if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
-  } else if (nsnull != mMenuBarParent) {
-    mMenuBarParent->GetNativeData(voidData);
-  } else {
-    return NULL;
-  }
-  return (Widget)voidData;
-
-}
-
-#endif
-
 //-------------------------------------------------------------------------
 //
 // Create the proper widget
@@ -159,11 +100,6 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
 {
   mMenuBarParent = aParent;
   NS_ADDREF(mMenuBarParent);
-
-  //Create(GetNativeParent(), aLabel);
-
-
-  //aParent->AddMenu(this);
     
   return NS_OK;
 }
@@ -173,9 +109,6 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
 {
   mMenuParent = aParent;
   NS_ADDREF(mMenuParent);
-
-  //Create(GetNativeParent(), aLabel);
-  //aParent->AddMenu(this);
 
   return NS_OK;
 }
@@ -207,17 +140,11 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
    mLabel = aText;
    
   mMacMenuHandle = nsnull;
-  mMacMenuID = GetUniqueMenuID();
-  mMacMenuHandle = ::NewMenu(mMacMenuID, c2pstr(mLabel.ToNewCString()) );
-  
-  ::InsertMenu(mMacMenuHandle, 0);
-  /*
-  Str255 test;
-  strcpy((char*)&test, "test");
-  c2pstr((char*)test);
-  mMacMenuHandle = ::NewMenu(500, test);
-  */
-  
+
+  mMacMenuHandle = ::NewMenu(mMacMenuIDCount, c2pstr(mLabel.ToNewCString()));
+  mMacMenuID = mMacMenuIDCount;
+  mMacMenuIDCount++;
+
   return NS_OK;
 }
 
@@ -230,31 +157,40 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
-  // XXX add aMenuItem to internal data structor list
   NS_IF_ADDREF(aMenuItem);
   mMenuItemVoidArray.AppendElement(aMenuItem);
   
   nsString label;
   aMenuItem->GetLabel(label);
-  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems );
   mNumMenuItems++;
+  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems );
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
-
-  // XXX add aMenu to internal data structor list
-
+  // Add a submenu
+  NS_IF_ADDREF(aMenu);
+  mMenuItemVoidArray.AppendElement(aMenu);
+  
+  // We have to add it as a menu item and then associate it with the item
+  nsString label;
+  aMenu->GetLabel(label);
+  mNumMenuItems++;
+  ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mNumMenuItems);
+  
+  void * menuHandle;
+  aMenu->GetNativeData(menuHandle);
+  ::InsertMenu((MenuHandle)menuHandle, hierMenu);
+  ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --mMacMenuIDCount);
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  // HACK - This is nasty. We're not really appending an nsMenuItem but it 
+  // HACK - We're not really appending an nsMenuItem but it 
   // needs to be here to make sure that event dispatching isn't off by one.
   mMenuItemVoidArray.AppendElement(nsnull);
   ::InsertMenuItem(mMacMenuHandle, "\p(-", mNumMenuItems );
@@ -301,7 +237,7 @@ NS_METHOD nsMenu::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetNativeData(void *& aData)
 {
-  aData = (void *)mMacMenuHandle;
+  aData = (void*) mMacMenuHandle;
   return NS_OK;
 }
 
