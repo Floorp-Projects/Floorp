@@ -63,6 +63,7 @@ my $realname = trim($::FORM{'realname'});
 if (defined($login)) {
     # We've been asked to create an account.
     CheckEmailSyntax($login);
+    trick_taint($login);
     $vars->{'login'} = $login;
     
     if (!ValidateNewUser($login)) {
