@@ -203,9 +203,9 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 
 nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
 {
-	createNode((const PRUnichar*)NS_LITERAL_STRING("true"),
+	createNode((const PRUnichar*)NS_LITERAL_STRING("true").get(),
              getter_AddRefs(kTrueLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("false"),
+	createNode((const PRUnichar*)NS_LITERAL_STRING("false").get(),
              getter_AddRefs(kFalseLiteral), rdf);
   
 	return NS_OK;

@@ -225,7 +225,7 @@ nsresult nsMsgMessageDataSource::Init()
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 {
 	PRUnichar *prustr = nsnull;
-	createNode((const PRUnichar*)NS_LITERAL_STRING(" "), getter_AddRefs(kEmptyStringLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING(" ").get(), getter_AddRefs(kEmptyStringLiteral), rdf);
 
   //
   // internal strings - not to be localized - usually reflected into the DOM
@@ -233,69 +233,69 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
   //
   
   // priority stuff
-	createNode((const PRUnichar*)NS_LITERAL_STRING("lowest"), getter_AddRefs(kLowestLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("low"), getter_AddRefs(kLowLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("high"), getter_AddRefs(kHighLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("highest"),getter_AddRefs(kHighestLiteral),rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("4"), getter_AddRefs(kLowestSortLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("3"), getter_AddRefs(kLowSortLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("2"), getter_AddRefs(kNormalSortLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("1"), getter_AddRefs(kHighSortLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("0"), getter_AddRefs(kHighestSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("lowest").get(), getter_AddRefs(kLowestLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("low").get(), getter_AddRefs(kLowLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("high").get(), getter_AddRefs(kHighLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("highest").get(),getter_AddRefs(kHighestLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("4").get(), getter_AddRefs(kLowestSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("3").get(), getter_AddRefs(kLowSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("2").get(), getter_AddRefs(kNormalSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("1").get(), getter_AddRefs(kHighSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("0").get(), getter_AddRefs(kHighestSortLiteral), rdf);
 
   // message status - 
-	createNode((const PRUnichar*)NS_LITERAL_STRING("flagged"),getter_AddRefs(kFlaggedLiteral),rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("unflagged"), getter_AddRefs(kUnflaggedLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("replied"),getter_AddRefs(kRepliedLiteral),rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("new"), getter_AddRefs(kNewLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("read"), getter_AddRefs(kReadLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("fowarded"), getter_AddRefs(kForwardedLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("flagged").get(),getter_AddRefs(kFlaggedLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("unflagged").get(), getter_AddRefs(kUnflaggedLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("replied").get(),getter_AddRefs(kRepliedLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("new").get(), getter_AddRefs(kNewLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("read").get(), getter_AddRefs(kReadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("fowarded").get(), getter_AddRefs(kForwardedLiteral), rdf);
 
   // other useful strings
-	createNode((const PRUnichar*)NS_LITERAL_STRING("true"), getter_AddRefs(kTrueLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("false"), getter_AddRefs(kFalseLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("news"), getter_AddRefs(kNewsLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("mail"), getter_AddRefs(kMailLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("news").get(), getter_AddRefs(kNewsLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("mail").get(), getter_AddRefs(kMailLiteral), rdf);
 
 	//strings for the thread column.
-	createNode((const PRUnichar*)NS_LITERAL_STRING("noThread"), getter_AddRefs(kNoThreadLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("thread"), getter_AddRefs(kThreadLiteral), rdf);
-	createNode((const PRUnichar*)NS_LITERAL_STRING("threadWithUnread"), getter_AddRefs(kThreadWithUnreadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("noThread").get(), getter_AddRefs(kNoThreadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("thread").get(), getter_AddRefs(kThreadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("threadWithUnread").get(), getter_AddRefs(kThreadWithUnreadLiteral), rdf);
   //
   // localized strings - some of the above strings need to be displayed
   // to the user
 
   // priority
-	prustr = GetString(NS_LITERAL_STRING("priorityHighest"));
+	prustr = GetString(NS_LITERAL_STRING("priorityHighest").get());
 	createNode(prustr, getter_AddRefs(kHighestLiteralDisplayString), rdf);
   Recycle(prustr);
 
-	prustr = GetString(NS_LITERAL_STRING("priorityHigh"));
+	prustr = GetString(NS_LITERAL_STRING("priorityHigh").get());
 	createNode(prustr, getter_AddRefs(kHighLiteralDisplayString), rdf);
   Recycle(prustr);
 
-	prustr = GetString(NS_LITERAL_STRING("priorityLow"));
+	prustr = GetString(NS_LITERAL_STRING("priorityLow").get());
 	createNode(prustr, getter_AddRefs(kLowLiteralDisplayString), rdf);
   Recycle(prustr);
 	
-	prustr = GetString(NS_LITERAL_STRING("priorityLowest"));
+	prustr = GetString(NS_LITERAL_STRING("priorityLowest").get());
 	createNode(prustr, getter_AddRefs(kLowestLiteralDisplayString), rdf);
   Recycle(prustr);
 
   // message status
-	prustr = GetString(NS_LITERAL_STRING("new"));
+	prustr = GetString(NS_LITERAL_STRING("new").get());
 	createNode(prustr, getter_AddRefs(kNewLiteralDisplayString), rdf);
   Recycle(prustr);
 	
-	prustr = GetString(NS_LITERAL_STRING("read"));
+	prustr = GetString(NS_LITERAL_STRING("read").get());
 	createNode(prustr, getter_AddRefs(kReadLiteralDisplayString), rdf);
   Recycle(prustr);
 	
-	prustr = GetString(NS_LITERAL_STRING("forwarded"));
+	prustr = GetString(NS_LITERAL_STRING("forwarded").get());
 	createNode(prustr, getter_AddRefs(kForwardedLiteralDisplayString), rdf);
   Recycle(prustr);
 	
-	prustr = GetString(NS_LITERAL_STRING("replied"));
+	prustr = GetString(NS_LITERAL_STRING("replied").get());
 	createNode(prustr, getter_AddRefs(kRepliedLiteralDisplayString), rdf);
   Recycle(prustr);
 
@@ -1531,22 +1531,22 @@ nsMsgMessageDataSource::createPriorityString(nsMsgPriorityValue priority, nsAuto
 			break;
 		case nsMsgPriority::lowest:
 			//priorityStr = "Lowest";
-			prustr = GetString(NS_LITERAL_STRING("Lowest"));
+			prustr = GetString(NS_LITERAL_STRING("Lowest").get());
 			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::low:
 			//priorityStr = "Low";
-			prustr = GetString(NS_LITERAL_STRING("Low"));
+			prustr = GetString(NS_LITERAL_STRING("Low").get());
 			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::high:
 			//priorityStr = "High";
-			prustr = GetString(NS_LITERAL_STRING("High"));
+			prustr = GetString(NS_LITERAL_STRING("High").get());
 			priorityStr.Assign(prustr);
 			break;
 		case nsMsgPriority::highest:
 			//priorityStr = "Highest";
-			prustr = GetString(NS_LITERAL_STRING("Highest"));
+			prustr = GetString(NS_LITERAL_STRING("Highest").get());
 			priorityStr.Assign(prustr);
 			break;
 	}
