@@ -1434,7 +1434,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         }
     }
     }
- 
+
     HWND parent;
     if (nsnull != aParent) { // has a nsIWidget parent
       parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
@@ -1446,6 +1446,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
       SetWindowType(aInitData->mWindowType);
       SetBorderStyle(aInitData->mBorderStyle);
     }
+
+    mContentType = aInitData? aInitData->mContentType: eContentTypeInherit;
 
     DWORD style = WindowStyle();
     DWORD extendedStyle = WindowExStyle();
@@ -1521,9 +1523,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
    }*/
 
-    mContentType = aInitData? aInitData->mContentType: eContentTypeInherit;
-    SetWin32ContentType();
-
     // call the event callback to notify about creation
 
     DispatchStandardEvent(NS_CREATE);
@@ -1549,27 +1548,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     }
 
     return(NS_OK);
-}
-
-PRBool nsWindow::SetWin32ContentType()
-{
-  // Show mContentType in GWL_ID
-  // This way 3rd part apps can check if a window is UI (0) or content (1)
-  // Return true if control id changed
-
-  nsContentType newContentType = mContentType;
-
-  if (newContentType == eContentTypeInherit) {
-    HWND parentWnd = mWnd;
-    newContentType = eContentTypeUI; // default if we're the root
-    if ((parentWnd = ::GetParent(parentWnd)) != 0) {
-      newContentType = (nsContentType)nsToolkit::mGetWindowLong(parentWnd, GWL_ID);
-    }
-  }
-  nsContentType oldContentType = (nsContentType)nsToolkit::mGetWindowLong(mWnd, GWL_ID);
-  nsToolkit::mSetWindowLong(mWnd, GWL_ID, (PRInt32)newContentType);
-
-  return oldContentType != newContentType;
 }
 
 //-------------------------------------------------------------------------
@@ -1683,8 +1661,6 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
     HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
     NS_ASSERTION(newParent, "Parent widget has a null native window handle");
     ::SetParent(mWnd, newParent);
-    PRBool isChanged = mContentType == eContentTypeInherit && SetWin32ContentType();
-    NS_ASSERTION(!isChanged, "SetParent won't expose a new content type when decendents use eContentTypeInherit.");
 
     return NS_OK;
   }
@@ -4128,8 +4104,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
 #ifdef ACCESSIBILITY
-        if (nsWindow::gIsAccessibilityOn && !mRootAccessible &&
-            mIsTopWidgetWindow)
+        if (nsWindow::gIsAccessibilityOn)
           CreateRootAccessible();
 #endif
         break;
@@ -4374,8 +4349,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       {
         nsWindow::gIsAccessibilityOn = TRUE;
         LRESULT lAcc = 0;
-        if (mIsTopWidgetWindow && !mRootAccessible) 
-          CreateRootAccessible();
+        CreateRootAccessible();
         if (mRootAccessible) {
           IAccessible *msaaAccessible = NULL;
           if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
@@ -4620,8 +4594,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
 LPCWSTR nsWindow::WindowClassW()
 {
-    const LPCWSTR className = L"MozillaWindowClass";
-    
     if (!nsWindow::sIsRegistered) {
         WNDCLASSW wc;
 
@@ -4635,15 +4607,32 @@ LPCWSTR nsWindow::WindowClassW()
         wc.hCursor          = NULL;
         wc.hbrBackground    = mBrush;
         wc.lpszMenuName     = NULL;
-        wc.lpszClassName    = className;
-    
+        wc.lpszClassName    = kWClassNameHidden;
         nsWindow::sIsRegistered = nsToolkit::mRegisterClass(&wc);
+
+        wc.lpszClassName    = kWClassNameContent;
+        nsWindow::sIsRegistered &= nsToolkit::mRegisterClass(&wc);
+
+        wc.lpszClassName    = kWClassNameGeneral;
+        nsWindow::sIsRegistered = nsToolkit::mRegisterClass(&wc);
+
+        wc.lpszClassName    = kWClassNameUI;
+        nsWindow::sIsRegistered &= nsToolkit::mRegisterClass(&wc);
+
         // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
         if(nsToolkit::gAIMMApp)
           nsToolkit::gAIMMApp->FilterClientWindows((ATOM*)&nsWindow::sIsRegistered,1);
     }
-    
-    return className;
+    if (mWindowType == eWindowType_invisible) {
+      return kWClassNameHidden;
+    }
+    if (mContentType == eContentTypeContent) {
+      return kWClassNameContent;
+    }
+    if (mContentType == eContentTypeUI) {
+      return kWClassNameUI;
+    }
+    return kWClassNameGeneral;
 }
 
 LPCWSTR nsWindow::WindowPopupClassW()
@@ -4679,11 +4668,21 @@ LPCTSTR nsWindow::WindowClass()
 {
   // Call into the wide version to make sure things get
   // registered properly.
-  WindowClassW();
+  LPCWSTR classNameW = WindowClassW();
 
   // XXX: The class name used here must be kept in sync with
   //      the classname used in WindowClassW();
-  return "MozillaWindowClass";
+
+  if (classNameW == kWClassNameHidden) {
+    return kClassNameHidden;
+  }
+  if (classNameW == kWClassNameUI) {
+    return kClassNameUI;
+  }
+  if (classNameW == kWClassNameContent) {
+    return kClassNameContent;
+  }
+  return kClassNameGeneral;
 }
 
 LPCTSTR nsWindow::WindowPopupClass()

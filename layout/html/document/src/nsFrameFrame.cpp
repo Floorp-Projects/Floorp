@@ -730,9 +730,7 @@ nsSubDocumentFrame::CreateViewAndWidget()
   initData.clipChildren = PR_TRUE;
   initData.clipSiblings = PR_TRUE;
 
-  return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
-                                 GetContent()->IsContentOfType(nsIContent::eXUL)
-                                   ? eContentTypeUI : eContentTypeContent);
+  return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE);
 }
 
 // load a new url
