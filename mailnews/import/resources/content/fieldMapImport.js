@@ -34,6 +34,7 @@ function OnLoadFieldMapImport()
 
   // childNodes includes the listcols and listhead
   gListbox.selectedItem = gListbox.childNodes[2];
+  window.sizeToContent();
 }
 
 function IndexInMap( index)

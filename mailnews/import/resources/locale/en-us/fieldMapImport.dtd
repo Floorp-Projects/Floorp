@@ -20,7 +20,6 @@ Rights Reserved.
 
 <!ENTITY fieldMapImport.title "Import Address Book">
 <!ENTITY fieldMapImport.width "440">
-<!ENTITY fieldMapImport.height "360">
 <!ENTITY fieldMapImport.recordNumber "Imported data for Record: ">
 <!ENTITY fieldMapImport.next "Next">
 <!ENTITY fieldMapImport.next.accesskey "N">

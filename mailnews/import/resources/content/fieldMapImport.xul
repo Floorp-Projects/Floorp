@@ -32,7 +32,6 @@ Rights Reserved.
         title="&fieldMapImport.title;"
         class="dialog"
         width="&fieldMapImport.width;"
-        height="&fieldMapImport.height;"
         onload="OnLoadFieldMapImport()">
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
