@@ -192,6 +192,11 @@ public:
   virtual void SelectAll() = 0;
 
   /**
+    * Finds text in content
+   */
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
+
+  /**
     * Copies all text from the selection
    */
   virtual void GetSelectionText(nsString & aText) = 0;
