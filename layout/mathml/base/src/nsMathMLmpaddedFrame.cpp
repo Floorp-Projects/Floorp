@@ -206,8 +206,9 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
   aPseudoUnit = NS_MATHML_PSEUDO_UNIT_UNSPECIFIED;
   if (i == stringLength) { // no explicit pseudo-unit ...
-    nsCSSUnit unit = aCSSValue.GetUnit();
-    if (eCSSUnit_Null == unit) { // ... and no CSS unit either
+    if (eCSSUnit_Number == aCSSValue.GetUnit() && 
+        0.0f != aCSSValue.GetFloatValue()) {
+      // ... and no explicit CSS unit either
 
       // In this case, the MathML REC suggests taking ems for
       // h-unit (width, lspace) or exs for v-unit (height, depth).
@@ -225,12 +226,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
       return PR_FALSE;
     }
 
-    if (aSign != NS_MATHML_SIGN_UNSPECIFIED || // incremental value
-        eCSSUnit_Percent == unit || // percentage
-       (eCSSUnit_Number == unit && 0.0f == aCSSValue.GetFloatValue()) ) // nil
-    { 
-      aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
-    }
+    aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
     return PR_TRUE;
   }
 
