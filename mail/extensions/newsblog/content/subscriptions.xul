@@ -1,0 +1,72 @@
+<?xml-stylesheet href="edittree.css" type="text/css"?>
+
+<window id="subscriptionsDialog"
+        title="News &amp; Blog Feeds"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="400"
+        height="400"
+        persist="width height"
+        onload="doLoad();"
+        flex="1"
+        windowtype="mail:3pane">
+
+<script type="application/x-javascript" src="utils.js" />
+<script type="application/x-javascript" src="file-utils.js" />
+<script type="application/x-javascript" src="debug-utils.js" />
+<script type="application/x-javascript" src="subscriptions.js" />
+<script type="application/x-javascript" src="Feed.js" />
+<script type="application/x-javascript" src="FeedItem.js" />
+
+<!-- The global Mozilla scripts that implement drag-and-drop support -->
+<!--
+<script src="chrome://global/content/nsDragAndDrop.js"/>
+<script src="chrome://global/content/nsTransferable.js"/>
+-->
+
+<hbox flex="1">
+  <tree id="subscriptions" flex="1" seltype="single"
+          datasources="rdf:null"
+          style="width: 100%"
+          ref="urn:forumzilla:root"
+          onselect="this.treeBoxObject.view.selectionChanged();"
+          ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
+          ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
+          ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
+      <template>
+          <rule>
+              <conditions>
+                  <content uri="?root" />
+                  <triple subject="?root" predicate="urn:forumzilla:feeds" object="?feeds" />
+                  <member container="?feeds" child="?feed" />
+              </conditions>
+              <bindings>
+                  <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title" />
+                  <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url" />
+              </bindings>
+              <action>
+                  <treechildren flex="1">
+                      <treeitem uri="?feed">
+                          <treerow>
+                              <treecell src="" label="?title"/>
+                              <treecell src="" label="?url"/>
+                          </treerow>
+                      </treeitem>
+                  </treechildren>
+              </action>
+          </rule>
+      </template>
+      <treecols>
+          <treecol id="subs-name-column" flex="1" label="Name" primary="true" />
+          <treecol id="subs-url-column" flex="1" label="Location" hidden="false" />
+      </treecols>
+  </tree>
+  <vbox>
+      <button label="Add" oncommand="doAdd();" />
+      <button label="Edit" oncommand="doEdit();" />
+      <button label="Remove" oncommand="doRemove();" />
+      <spring flex="1"/>
+      <button label="Done" oncommand="window.close();" />
+  </vbox>
+</hbox>
+
+</window>

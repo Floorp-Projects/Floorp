@@ -1,0 +1,6 @@
+#button-newsandblogs {
+  -moz-box-orient:vertical;
+  /* from http://www.aaa-clipart.com/data/icons/mail/mail1.gif */
+  list-style-image: url("chrome://forumzilla/content/icon.gif");
+}
+

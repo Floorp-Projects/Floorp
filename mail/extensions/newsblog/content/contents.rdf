@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+  <!-- list all the packages being supplied by this jar -->
+  <RDF:Seq about="urn:mozilla:package:root">
+    <RDF:li resource="urn:mozilla:package:messenger-newsblog"/>
+  </RDF:Seq>
+
+  <!-- package information -->
+  <RDF:Description about="urn:mozilla:package:messenger-newsblog"
+        chrome:displayName="News and Blog Feed Support"
+        chrome:author="Team Thunderbird"
+        chrome:name="messenger-newsblog"
+        chrome:description="This extension adds the ability to read news and blog feeds to Mozilla Thunderbird." 
+        chrome:extension="true"
+		    >
+  </RDF:Description>
+
+  <!-- overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://messenger/content/messenger.xul"/>
+    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/messenger.xul">
+    <RDF:li>chrome://messenger-newsblog/content/forumzilla.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+    <RDF:li>chrome://messenger-newsblog/content/toolbar-icon.xul</RDF:li>
+  </RDF:Seq>
+
+</RDF:RDF>

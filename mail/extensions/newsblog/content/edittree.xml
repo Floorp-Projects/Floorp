@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+
+<bindings id="treeEditBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="edittree" extends="chrome://global/content/bindings/tree.xml#tree">
+    <content>
+      <children includes="treecols"/>
+      <xul:stack flex="1">
+        <xul:treerows class="tree-rows" flex="1">
+          <children/>
+        </xul:treerows>
+        <xul:textbox ileattr="text" left="0" top="0" hidden="true"/>
+      </xul:stack>
+    </content>
+    <implementation>
+      <field name="_editOriginalValue">0</field>
+      <field name="_editRow">-1</field>
+      <field name="_editCol">null</field>
+      <field name="onAccept">null</field>
+      <method name="setEditMode">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <parameter name="val"/>
+        <body>
+        <![CDATA[
+          var txt = document.getAnonymousElementByAttribute(this, "ileattr", "text");
+          if (val){
+            if (x < 0) return;
+
+            var originalValue = this.view.getCellText(x,y);
+            var cellnode = this.getCellNodeAt(x,y);
+            if (!(cellnode || this.view.isEditable(x,y))) return;
+
+            if (this._editRow >= 0) this._assignValueToCell(txt.value,true);
+
+            if (cellnode && cellnode.getAttribute("readonly")) return;
+            txt.removeAttribute("hidden");
+
+            var treeBox = this.treeBoxObject;
+            var outx = {}, outy = {}, outwidth = {}, outheight = {};
+            var coords = treeBox.getCoordsForCellItem(x,y,"cell",outx,outy,outwidth,outheight);
+
+            this._editRow = x;
+            this._editCol = y;
+
+            txt.setAttribute("left",outx.value-3);
+            txt.setAttribute("top",outy.value-3);
+            txt.setAttribute("height",outheight.value);
+
+            txt.setAttribute("width",outwidth.value - outy.value);
+
+            this._editOriginalValue = originalValue;
+            if (cellnode) cellnode.setAttribute("label","");
+            this.view.setCellText(x,y,"");
+
+            txt.value = originalValue;
+            txt.select();
+            this.setAttribute("editing","true");
+
+            txt.addEventListener("keypress", this.fieldKeyDown, false);
+            txt.addEventListener("blur", this.fieldChange, true);
+          }
+          else {
+            this.removeAttribute("editing");
+
+            txt.setAttribute("hidden","true");
+            txt.removeEventListener("keypress", this.fieldKeyDown, false);
+            txt.removeEventListener("blur", this.fieldChange, true);
+            txt.blur();
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="getCellNodeAt">
+        <parameter name="row"/>
+        <parameter name="col"/>
+        <body>
+          var view;
+          try {
+            view = this.contentView;
+          } catch (ex){}
+          if (view){
+            var elem = view.getItemAtIndex(row);
+            if (elem){
+              var pos = ((document.getElementById(col).ordinal - 1) >> 1);
+              return elem.firstChild.childNodes[pos];
+            }
+          }
+          return null;
+        </body>
+      </method>
+      <method name="fieldKeyDown">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var tree = aEvent.target;
+          while (tree && tree.tagName != "tree") tree = tree.parentNode;
+          if (aEvent.keyCode == 13){
+            tree._assignValueToCell(this.value,true);
+          }
+          if (aEvent.keyCode == 27){
+            tree._assignValueToCell(tree._editOriginalValue,false);
+          }
+          aEvent.preventBubble();
+        ]]>
+        </body>
+      </method>
+      <method name="_assignValueToCell">
+        <parameter name="value"/>
+        <parameter name="acceptMode"/>
+        <body>
+        <![CDATA[
+          var rdf = Components
+              .classes["@mozilla.org/rdf/rdf-service;1"]
+                .getService(Components.interfaces.nsIRDFService);
+          if (this._editRow == -1) return;
+          if (acceptMode && this.onAccept &&
+              this.onAccept(this._editRow,this._editCol,this._editOriginalValue,value))
+            return;
+
+          var cellnode = this.getCellNodeAt(this._editRow,this._editCol);
+          if (cellnode) {
+              cellnode.setAttribute("label", value);
+
+              var item = cellnode;
+              while (item && item.tagName != "treeitem")
+                  item = item.parentNode;
+  
+              if (this._editCol == "subs-name-column") {
+                  updateTitle(item.id, value);
+              }
+              else if (this._editCol == "subs-url-column") {
+                  updateURL(item.id, value);
+              }
+          }
+
+          this.view.setCellText(this._editRow,this._editCol,value);
+          this.treeBoxObject.invalidateCell(this._editRow,this._editCol);
+          this._editRow = -1;
+          this._editCol = null;
+          this.builder.rebuild();
+
+          this.setEditMode("normal");
+        ]]>
+        </body>
+      </method>
+      <method name="fieldChange">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var tree = aEvent.target;
+          while (tree && tree.tagName != "tree") tree = tree.parentNode;
+          tree._assignValueToCell(this.value,true);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="click" clickcount="2" phase="capturing">
+      <![CDATA[
+        var treeBox = this.treeBoxObject;
+        var row = {};
+        var col = {};
+        var obj = {};
+        if(row.value != -1) {
+          event.preventBubble();
+          treeBox.getCellAt(event.clientX,event.clientY,row,col,obj);
+          this.setEditMode(row.value,col.value,true);
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>
