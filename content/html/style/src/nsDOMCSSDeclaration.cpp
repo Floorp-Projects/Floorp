@@ -179,7 +179,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
   }
 
   if ((NS_OK == result) && isImportant) {
-    aReturn.Assign(NS_LITERAL_STRING("!important"));    
+    aReturn.Assign(NS_LITERAL_STRING("important"));    
   }
   else {
     aReturn.SetLength(0);
@@ -201,7 +201,7 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
   }
 
   return ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
-                          aValue + aPriority,
+                          aValue + NS_LITERAL_STRING("!") + aPriority,
                           PR_TRUE, PR_FALSE);
 }
 
