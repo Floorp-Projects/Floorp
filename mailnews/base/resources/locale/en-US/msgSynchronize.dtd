@@ -9,6 +9,6 @@
 <!ENTITY sendMessage.label "Send Unsent messages">
 <!ENTITY workOffline.label "Work offline once download and/or sync is complete">
 <!ENTITY selectButton.label "Select...">
-<!ENTITY MsgSelectDesc.label "Select the mail folders and newsgroups you would like to download for offline use.">
+<!ENTITY MsgSelectDesc.label "Choose mail folders and newsgroups for offline use.">
 <!ENTITY MsgSelectInd.label "Download">
 <!ENTITY MsgSelectItems.label "Folders and Newsgroups">
