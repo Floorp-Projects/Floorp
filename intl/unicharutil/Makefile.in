@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src tools
+DIRS	= public src
 
 ifdef ENABLE_TESTS
 DIRS += tests 
