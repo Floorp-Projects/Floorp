@@ -732,7 +732,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			if (!*okayValue) // if the user pressed cancel, just return NULL;
 			{
 				*aPassword = nsnull;
-				return rv;
+				return NS_MSG_PASSWORD_PROMPT_CANCELLED;
 			}
 
 			// we got a password back...so remember it
