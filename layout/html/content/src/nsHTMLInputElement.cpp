@@ -58,8 +58,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsICheckboxControlFrame.h"
-#include "nsIRadioControlFrame.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -809,51 +807,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  // When a user clicks on a checkbox the value needs to be set after the onmouseup
-  // and before the onclick event is processed via script. The EVM always lets script
-  // get first crack at the processing, and script can cancel further processing of 
-  // the event by return null.
-  //
-  // This means the checkbox needs to have it's new value set before it goes to script 
-  // to process the onclick and then if script cancels the event it needs to be set back.
-  // In Nav and IE there is a flash of it being set and then unset
-  // 
-  // We have added this extra method to the checkbox to tell it to temporarily return the
-  // opposite value while processing the click event. This way script gets the correct "future"
-  // value of the checkbox, but there is no visual updating until after script is done processing.
-  // That way if the event is cancelled then the checkbox will not flash.
-  //
-  // So get the Frame for the checkbox and tell it we are processing an onclick event
-//#define BUG_FIX_
-#ifdef BUG_FIX_
-  nsIFormControlFrame* formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
-  nsCOMPtr<nsICheckboxControlFrame> chkBx;
-  nsCOMPtr<nsIRadioControlFrame> radio;
-  if (NS_SUCCEEDED(rv)) {
-    chkBx = do_QueryInterface(formControlFrame);
-    if (!chkBx) {
-      radio = do_QueryInterface(formControlFrame);
-    }
-  }
-  if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    if (chkBx) chkBx->SetIsInClickEvent(PR_TRUE);
-    if (radio) radio->SetIsInClickEvent(PR_TRUE);
-  }
-#endif
   // Try script event handlers first if its not a focus/blur event
   //we dont want the doc to get these
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-
-  // Script is done processing, now tell the checkbox we are no longer doing an onclick
-  // and if it was cancelled the checkbox will get the propriate value via the DOM listener
-#ifdef BUG_FIX_
-  if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    if (chkBx) chkBx->SetIsInClickEvent(PR_FALSE);
-    if (radio) radio->SetIsInClickEvent(PR_FALSE);
-  }
-#endif
 
   // Finish the special file control processing...
   if (type == NS_FORM_INPUT_FILE) {
