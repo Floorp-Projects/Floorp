@@ -234,17 +234,17 @@ sub print_delta {
   # this function rounds off, and prints bad (> min) values in red
 
   my $worse = ($value - $min) > 1000;    # heuristic -- allow 1k of noise
-  my $units = " b";
+  my $units = "b";
   if ($value >= 1000000) {
       $value = int($value / 1000000);
       $min = int($min / 1000000);
-      $units = " M";
+      $units = "M";
   }
   else {
       if ($value >= 1000) {
           $value = int($value / 1000);
           $min = int($min / 1000);
-          $units = " K";
+          $units = "K";
       }
   }
 
