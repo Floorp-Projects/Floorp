@@ -129,6 +129,7 @@ public:
     NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar); 
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD            DispatchEvent(nsGUIEvent* event);
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
@@ -136,7 +137,6 @@ public:
      // Utility methods
     void SetBounds(const nsRect &aRect);
     PRBool ConvertStatus(nsEventStatus aStatus);
-    PRBool DispatchEvent(nsGUIEvent* event);
     virtual PRBool OnPaint(nsPaintEvent &event);
     void OnDestroy();
     PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);

@@ -368,7 +368,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                                     XmNrecomputeSize, False,
                                     XmNuserData, this,
 				    nsnull);
-
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
@@ -617,7 +616,6 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
-  return NS_OK;
 }
 
 
@@ -628,7 +626,6 @@ void nsWindow::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::RemoveChild(nsIWidget* aChild)
 {
-  return NS_OK;
 }
 
 
@@ -756,7 +753,7 @@ NS_METHOD nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetBounds(const nsRect &aRect)
 {
- mBounds = aRect;
+  Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
@@ -971,6 +968,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
   if (mWidget == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!XtIsRealized(mWidget)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1226,7 +1227,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //
 //-------------------------------------------------------------------------
 
-PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
   event->widgetSupports = (nsISupports*)((nsObject*)this);
@@ -1236,11 +1237,10 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
   }
     // Dispatch to event listener if event was not consumed
   if ((result != PR_TRUE) && (nsnull != mEventListener)) {
-    return ConvertStatus(mEventListener->ProcessEvent(*event));
+    result = ConvertStatus(mEventListener->ProcessEvent(*event));
   }
-  else {
-    return(result); 
-  }
+
+  return (result ? NS_OK : NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
@@ -1258,7 +1258,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-    result = DispatchEvent(&aEvent);
+    result = DispatchEvent(&aEvent) == NS_OK;
 
     return result;
   }
@@ -1325,14 +1325,13 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    
     if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
 					      (void **)&event.renderingContext))
       {
         event.renderingContext->Init(mContext, this);
-        result = DispatchEvent(&event);
+        result = DispatchEvent(&event) == NS_OK;
         NS_RELEASE(event.renderingContext);
       }
     else 
@@ -1369,7 +1368,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
-    return(DispatchEvent(&aEvent));
+    return(DispatchEvent(&aEvent) == NS_OK);
   }
   return FALSE;
 }
@@ -1377,7 +1376,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(aEvent));
+    return(DispatchEvent(aEvent) == NS_OK);
   }
   else
    return FALSE;
@@ -1387,7 +1386,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEven
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
   if (mEventCallback) {
-    return(DispatchEvent(&aEvent));
+    return(DispatchEvent(&aEvent) == NS_OK);
   }
 
  return FALSE;
@@ -1565,7 +1564,8 @@ NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;
   aHeight = mPreferredHeight;
-  return NS_ERROR_FAILURE;
+  return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE; 
+  //return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)

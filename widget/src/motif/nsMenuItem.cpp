@@ -18,15 +18,21 @@
 
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
-#include "nsIMenu.h"
+#include "nsIMenuBar.h"
+#include "nsIWidget.h"
 
 #include "nsStringUtil.h"
+#include "nsXtEventHandler.h"
 
 #include "nsIPopUpMenu.h"
 #include <Xm/CascadeBG.h>
 
-static NS_DEFINE_IID(kMenuItemIID, NS_IMENUITEM_IID);
-NS_IMPL_ISUPPORTS(nsMenuItem, kMenuItemIID)
+static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
+static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
 
 //-------------------------------------------------------------------------
@@ -40,6 +46,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenu        = nsnull;
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
+  mTarget      = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -51,18 +58,24 @@ nsMenuItem::~nsMenuItem()
 {
   NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mPopUpParent);
+  NS_IF_RELEASE(mTarget);
 }
 
 //-------------------------------------------------------------------------
-void nsMenuItem::Create(Widget aParent, const nsString &aLabel, PRUint32 aCommand)
+void nsMenuItem::Create(nsIWidget      *aMBParent, 
+                        Widget          aParent, 
+                        const nsString &aLabel, 
+                        PRUint32        aCommand)
 {
+  mTarget  = aMBParent;
   mCommand = aCommand;
   mLabel   = aLabel;
 
-  if (NULL == aParent) {
+  if (NULL == aParent || nsnull == aMBParent) {
     return;
   }
 
+  mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
 
   Widget parentMenuHandle = GetNativeParent();
@@ -71,10 +84,8 @@ void nsMenuItem::Create(Widget aParent, const nsString &aLabel, PRUint32 aComman
                                           parentMenuHandle,
                                           NULL);
 
-  /*MenuCallbackStruct * cbs = new MenuCallbackStruct();
-  cbs->mCallback = aCallback;
-  cbs->mId       = aID;
-  XtAddCallback(widget, XmNactivateCallback, nsXtWidget_Menu_Callback, cbs);*/
+  XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
+                (nsIMenuItem *)this);
 
   delete[] nameStr;
 
@@ -96,25 +107,88 @@ Widget nsMenuItem::GetNativeParent()
 
 }
 
+
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
+nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 {
+  nsIWidget    * widget  = nsnull; // MenuBar's Parent
+  nsIMenu      * menu    = nsnull;
+  nsIMenuBar   * menuBar = nsnull;
+  nsIPopUpMenu * popup   = nsnull;
+  nsISupports  * parent  = aParent;
+
+  while (1) {
+    if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
+      NS_RELEASE(parent);
+      if (NS_OK != menu->GetParent(parent)) {
+        NS_RELEASE(menu);
+        return nsnull;
+      }
+      NS_RELEASE(menu);
+
+    } else if (NS_OK == parent->QueryInterface(kIPopUpMenuIID,(void**)&popup)) {
+      if (NS_OK != popup->GetParent(widget)) {
+        widget =  nsnull;
+      } 
+      NS_RELEASE(parent);
+      NS_RELEASE(popup);
+      return widget;
+
+    } else if (NS_OK == parent->QueryInterface(kIMenuBarIID,(void**)&menuBar)) {
+      if (NS_OK != menuBar->GetParent(widget)) {
+        widget =  nsnull;
+      } 
+      NS_RELEASE(parent);
+      NS_RELEASE(menuBar);
+      return widget;
+    } else {
+      NS_RELEASE(parent);
+      return nsnull;
+    }
+  }
+  return nsnull;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
+                             const nsString &aLabel, 
+                             PRUint32       aCommand)
+                            
+{
+  if (nsnull == aParent) {
+    return NS_ERROR_FAILURE;
+  }
+
   mMenuParent = aParent;
   NS_ADDREF(mMenuParent);
 
-  Create(GetNativeParent(), aLabel, aCommand);
+  nsIWidget   * widget  = nsnull; // MenuBar's Parent
+  nsISupports * sups;
+  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
+    widget = GetMenuBarParent(sups);
+    NS_RELEASE(sups);
+  }
+
+  Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddItem(this);
 
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
+NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent, 
+                             const nsString &aLabel,  
+                             PRUint32        aCommand)
 {
   mPopUpParent = aParent;
   NS_ADDREF(mPopUpParent);
 
-  Create(GetNativeParent(), aLabel, aCommand);
+  nsIWidget * widget = nsnull;
+  if (NS_OK != aParent->GetParent(widget)) {
+    widget = nsnull;
+  }
+
+  Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddItem(this);
 
   return NS_OK;
@@ -131,6 +205,13 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   aCommand = mCommand;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
+{
+  aTarget = mTarget;
   return NS_OK;
 }
 
