@@ -996,55 +996,21 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     return;
   }
 
-  if (aState.mComputeMaxElementSize) {
-    nscoord maxWidth, maxHeight;
-    if (aState.mNoWrap) {
-      // When no-wrap is true the max-element-size.width is the
-      // width of the widest line plus the right border. Note that
-      // aState.mKidXMost already has the left border factored into
-      // it
-      // XXX Make this be our entire width instead of this computation
-      maxWidth = aState.mKidXMost + borderPadding.right;
-    }
-    else {
-      // Add in border and padding dimensions to already computed
-      // max-element-size values.
-      maxWidth = aState.mMaxElementSize.width +
-        borderPadding.left + borderPadding.right;
-    }
-    maxHeight = aState.mMaxElementSize.height +
-      borderPadding.top + borderPadding.bottom;
-
-    // Store away the final value
-    aMetrics.maxElementSize->width = maxWidth;
-    aMetrics.maxElementSize->height = maxHeight;
-#ifdef DEBUG_kipp
-    if ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height)) {
-      ListTag(stdout);
-      printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-             aState.mReflowState.availableWidth,
-             aState.mReflowState.availableHeight);
-    }
-#endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    ListTag(stdout);
-    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-           aState.mReflowState.availableWidth,
-           aState.mReflowState.availableHeight);
-#endif
-  }
-
   // Compute final width
+  nscoord maxWidth = 0, maxHeight = 0;
   if (!aState.mUnconstrainedWidth && aReflowState.HaveFixedContentWidth()) {
     // Use style defined width
     aMetrics.width = borderPadding.left + aReflowState.computedWidth +
       borderPadding.right;
+
+    // When style defines the width use it for the max-element-size
+    // because we can't shrink any smaller.
+    maxWidth = aMetrics.width;
   }
   else {
     nscoord computedWidth = aState.mKidXMost + borderPadding.right;
     PRBool compact = PR_FALSE;
+#if 0
     if (NS_STYLE_DISPLAY_COMPACT == aReflowState.mStyleDisplay->mDisplay) {
       // If we are display: compact AND we have no lines or we have
       // exactly one line and that line is not a block line AND that
@@ -1058,6 +1024,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         compact = PR_TRUE;
       }
     }
+#endif
 
     // There are two options here. We either shrink wrap around our
     // contents or we fluff out to the maximum block width. Note:
@@ -1073,45 +1040,103 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       computedWidth = maxWidth;
     }
     else if (aState.mComputeMaxElementSize) {
+      if (aState.mNoWrap) {
+        // When no-wrap is true the max-element-size.width is the
+        // width of the widest line plus the right border. Note that
+        // aState.mKidXMost already has the left border factored in
+        maxWidth = aState.mKidXMost + borderPadding.right;
+      }
+      else {
+        // Add in border and padding dimensions to already computed
+        // max-element-size values.
+        maxWidth = aState.mMaxElementSize.width +
+          borderPadding.left + borderPadding.right;
+      }
+
       // See if our max-element-size width is larger than our
       // computed-width. This happens when we are impacted by a
       // floater. When this does happen, our desired size needs to
       // include room for the floater.
-      if (computedWidth < aMetrics.maxElementSize->width) {
+      if (computedWidth < maxWidth) {
 #ifdef DEBUG_kipp
         ListTag(stdout);
         printf(": adjusting width from %d to %d\n", computedWidth,
-               aMetrics.maxElementSize->width);
+               maxWidth);
 #endif
-        computedWidth = aMetrics.maxElementSize->width;
+        computedWidth = maxWidth;
+      }
+    }
+
+    // Apply min/max values
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
+      nscoord computedMaxWidth = aReflowState.mComputedMaxWidth +
+        borderPadding.left + borderPadding.right;
+      if (computedWidth > computedMaxWidth) {
+        computedWidth = aReflowState.mComputedMaxWidth;
+      }
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinWidth) {
+      nscoord computedMinWidth = aReflowState.mComputedMinWidth +
+        borderPadding.left + borderPadding.right;
+      if (computedWidth < computedMinWidth) {
+        computedWidth = computedMinWidth;
       }
     }
     aMetrics.width = computedWidth;
   }
-#ifdef DEBUG_kipp
-  NS_ASSERTION((aMetrics.width > -200000) && (aMetrics.width < 200000), "oy");
-#endif
 
   // Compute final height
   if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
     // Use style defined height
     aMetrics.height = borderPadding.top + aReflowState.computedHeight +
       borderPadding.bottom;
+
+    // When style defines the height use it for the max-element-size
+    // because we can't shrink any smaller.
+    maxHeight = aMetrics.height;
   }
   else {
+    nscoord autoHeight = aState.mY;
+
     // Shrink wrap our height around our contents.
     if (aState.mIsMarginRoot) {
       // When we are a margin root make sure that our last childs
       // bottom margin is fully applied.
       // XXX check for a fit
-      aState.mY += aState.mPrevBottomMargin;
+      autoHeight += aState.mPrevBottomMargin;
     }
-    aState.mY += borderPadding.bottom;
-    aMetrics.height = aState.mY;
+    autoHeight += borderPadding.bottom;
+
+    // Apply min/max values
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
+      nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
+        borderPadding.top + borderPadding.bottom;
+      if (autoHeight > computedMaxHeight) {
+        autoHeight = computedMaxHeight;
+      }
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinHeight) {
+      nscoord computedMinHeight = aReflowState.mComputedMinHeight +
+        borderPadding.top + borderPadding.bottom;
+      if (autoHeight < computedMinHeight) {
+        autoHeight = computedMinHeight;
+      }
+    }
+    aMetrics.height = autoHeight;
+
+    if (aState.mComputeMaxElementSize) {
+      maxHeight = aState.mMaxElementSize.height +
+        borderPadding.top + borderPadding.bottom;
+    }
   }
-#ifdef DEBUG_kipp
-  NS_ASSERTION((aMetrics.height > -200000) && (aMetrics.height < 200000), "oy");
-#endif
+
+  aMetrics.ascent = aMetrics.height;
+  aMetrics.descent = 0;
+  if (aState.mComputeMaxElementSize) {
+    // Store away the final value
+    aMetrics.maxElementSize->width = maxWidth;
+    aMetrics.maxElementSize->height = maxHeight;
+  }
 
   // Return top and bottom margin information
   if (aState.mIsMarginRoot) {
@@ -1123,8 +1148,27 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   }
 
-  aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = 0;
+#ifdef DEBUG_kipp
+  NS_ASSERTION((aMetrics.width > -200000) && (aMetrics.width < 200000) &&
+               (aMetrics.height > -200000) && (aMetrics.height < 200000), "?");
+  if (aState.mComputeMaxElementSize &&
+      ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
+    ListTag(stdout);
+    printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.mReflowState.availableWidth,
+           aState.mReflowState.availableHeight);
+  }
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  if (aState.mComputeMaxElementSize) {
+    ListTag(stdout);
+    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.mReflowState.availableWidth,
+           aState.mReflowState.availableHeight);
+  }
+#endif
 
   // Compute the combined area of our children
   // XXX take into account the overflow->clip property!
@@ -2238,12 +2282,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsIFrame* frame = aLine->mFirstChild;
 
   // Prepare the inline reflow engine
-  nsBlockFrame* compactWithFrame;
   nscoord compactMarginWidth = 0;
   PRBool isCompactFrame = PR_FALSE;
   const nsStyleDisplay* display;
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&) display);
+#if 0
+  nsBlockFrame* compactWithFrame;
   switch (display->mDisplay) {
   case NS_STYLE_DISPLAY_COMPACT:
     compactWithFrame = FindFollowingBlockFrame(frame);
@@ -2263,6 +2308,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
     break;
   }
+#endif
 
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
                            aState.mComputeMaxElementSize);
@@ -2953,21 +2999,30 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 // the impact of floaters on this line or the preceeding lines.
 void
 nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
-                                         nsLineBox* aLine,
-                                         nsSize* aMaxElementSize)
+                                        nsLineBox* aLine,
+                                        nsSize* aMaxElementSize)
 {
   nscoord maxWidth, maxHeight;
   aState.mCurrentBand.GetMaxElementSize(&maxWidth, &maxHeight);
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  ListTag(stdout);
+  printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
+#endif
 
   // Add in the maximum width of any floaters in the band because we
   // always place some non-floating content with a floater.
   aMaxElementSize->width += maxWidth;
 
-  // If the maximum-height of the tallest floater is larger than the
-  // maximum-height of the content then update the max-element-size
-  // height
-  if (maxHeight > aMaxElementSize->height) {
-    aMaxElementSize->height = maxHeight;
+  // Only update the max-element-size's height value if the floater is
+  // part of the current line.
+  if ((nsnull != aLine->mFloaters) &&
+      (0 != aLine->mFloaters->Count())) {
+    // If the maximum-height of the tallest floater is larger than the
+    // maximum-height of the content then update the max-element-size
+    // height
+    if (maxHeight > aMaxElementSize->height) {
+      aMaxElementSize->height = maxHeight;
+    }
   }
 }
 
