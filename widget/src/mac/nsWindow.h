@@ -38,7 +38,7 @@
 // =============================================================================
 
 /**
- * Native Motif window wrapper. 
+ * Native Macintosh window wrapper. 
  */
 
 class nsWindow : public nsIWidget
@@ -116,7 +116,7 @@ public:
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
     virtual PRBool          DispatchEvent(nsGUIEvent* event);
-    virtual PRBool          DispatchMouseEvent(nsMouseEvent aEvent);
+    virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
     virtual void            OnDestroy();
     virtual PRBool          OnPaint(nsPaintEvent &event);
@@ -138,7 +138,9 @@ public:
     void GetResizeRect(nsRect* aRect);
     PRBool GetResized();
     
-    nsWindow* FindWidgetHit(Point);
+    nsWindow* FindWidgetHit(Point aThePoint);
+    ptInWindow(PRInt32 aX,PRInt32 aY);
+    
 
     char gInstanceClassName[256];
 protected:
@@ -209,7 +211,7 @@ protected:
 	// keep the list of children
 	class Enumerator
 	{
-	    nsWindow   	**mChildrens;
+	    nsIWidget  	**mChildrens;
 	    PRInt32     mCurrentPosition;
 	    PRInt32     mArraySize;
 
@@ -217,11 +219,13 @@ protected:
 	    Enumerator();
 	    ~Enumerator();
 
+			nsIWidget* Previous();
 	    nsIWidget* Next();
 	    void Reset();
+	    void ResetToLast();
 
-	    void Append(nsWindow* aWidget);
-	    void Remove(nsWindow* aWidget);
+	    void Append(nsIWidget* aWidget);
+	    void Remove(nsIWidget* aWidget);
 
 	private:
 	    void GrowArray();
@@ -253,8 +257,7 @@ private:
 	WindowPtr			mWindowPtr;
 	PRBool				mWindowMadeHere;			// if main window and we created, true
 	PRBool				mIsMainWindow;				// top level Mac window
-	RgnHandle			mWindowRegion;				// the region defining this window			
-	
+	RgnHandle			mWindowRegion;				// the region defining this window
 	
 };
 
@@ -345,7 +348,7 @@ public: \
     virtual void            BeginResizingChildren(void); \
     virtual void            EndResizingChildren(void); \
     virtual PRBool          DispatchEvent(nsGUIEvent* event); \
-    virtual PRBool          DispatchMouseEvent(nsMouseEvent aEvent); \
+    virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent); \
     virtual void            OnDestroy(); \
     virtual PRBool          OnPaint(nsPaintEvent & event); \
     virtual PRBool          OnResize(nsSizeEvent &aEvent); \
@@ -557,7 +560,7 @@ public: \
     { \
       return GET_OUTER()->DispatchEvent(event); \
     } \
-    PRBool _classname::_aggname::DispatchMouseEvent(nsMouseEvent event) \
+    PRBool _classname::_aggname::DispatchMouseEvent(nsMouseEvent &event) \
     { \
       return GET_OUTER()->DispatchMouseEvent(event); \
     } \

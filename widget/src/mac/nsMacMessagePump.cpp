@@ -111,6 +111,7 @@ WindowPtr			whichwindow;
 					break;
 				case activateEvt:
 					whichwindow = (WindowPtr)theevent.message;
+					SetPort(whichwindow);
 					if(theevent.modifiers & activeFlag)
 						{
 						::BringToFront(whichwindow);
@@ -197,22 +198,28 @@ nsMouseEvent	mevent;
 
 	if(whichwindow!=0)
 		{
+		SelectWindow(whichwindow);
 		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
-		thewindow = thewindow->FindWidgetHit(aTheEvent->where);
-		
+			
+		if(thewindow != nsnull)
+			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+
 		switch(partcode)
 			{
 			case inSysWindow:
 				break;
 			case inContent:
-				// mousedown inside the content region
-				mevent.time = 1000;
-				mevent.isShift = FALSE;
-				mevent.isControl = FALSE;
-				mevent.isAlt = FALSE;
-				mevent.clickCount = 1;
-				mevent.eventStructType = NS_MOUSE_EVENT;
-				thewindow->DispatchMouseEvent(mevent);
+				if(thewindow)
+					{
+					// mousedown inside the content region
+					mevent.time = 1000;
+					mevent.isShift = FALSE;
+					mevent.isControl = FALSE;
+					mevent.isAlt = FALSE;
+					mevent.clickCount = 1;
+					mevent.eventStructType = NS_MOUSE_EVENT;
+					thewindow->DispatchMouseEvent(mevent);
+					}
 				break;
 			case inDrag:
 				therect = qd.screenBits.bounds;
@@ -243,7 +250,14 @@ nsMouseEvent	mevent;
 				break;
 			case inGoAway:
 				if(TrackGoAway(whichwindow,aTheEvent->where))
-					mRunning = PR_FALSE;
+					if(thewindow)
+						{
+						thewindow->Destroy();
+						mRunning = PR_FALSE;
+						}
+					else
+						{
+						}
 				break;
 			case inZoomIn:
 			case inZoomOut:

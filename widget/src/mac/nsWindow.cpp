@@ -75,6 +75,9 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
   mClientData = nsnull;
+  mWindowRegion = nsnull;
+  mChildren      = NULL;
+
 }
 
 
@@ -85,6 +88,13 @@ nsWindow::nsWindow(nsISupports *aOuter):
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+
+	if(mWindowRegion!=nsnull)
+		{
+		DisposeRgn(mWindowRegion);
+		mWindowRegion = nsnull;	
+		}
+
 
   //XtDestroyWidget(mWidget);
   //if (nsnull != mGC) {
@@ -112,7 +122,6 @@ void nsWindow::Create(nsIWidget *aParent,
 	  aParent->AddChild(this);
 	  
 	// now create our stuff
-	
 	if (0==aParent)
     CreateMainWindow(0, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
   else
@@ -121,7 +130,7 @@ void nsWindow::Create(nsIWidget *aParent,
 
 //-------------------------------------------------------------------------
 //
-// This creates a nsWindow using the passed in nsNativeWidget(windowptr) no matter what
+// Creates a main nsWindow using the native platforms window or widget
 //
 //-------------------------------------------------------------------------
 void nsWindow::Create(nsNativeWidget aParent,
@@ -142,8 +151,8 @@ void nsWindow::Create(nsNativeWidget aParent,
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::InitToolkit(nsIToolkit *aToolkit,
-                           nsIWidget  *aWidgetParent) 
+void 
+nsWindow::InitToolkit(nsIToolkit *aToolkit,nsIWidget  *aWidgetParent) 
 {
   if (nsnull == mToolkit) { 
     if (nsnull != aToolkit) {
@@ -151,19 +160,16 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
       mToolkit->AddRef();
     }
     else {
-      if (nsnull != aWidgetParent) {
+      if (nsnull != aWidgetParent) 
+      	{
         mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
-      }
-      // it's some top level window with no toolkit passed in.
-      // Create a default toolkit with the current thread
-      else {
+      	}
+      else 
+      	{				// it's some top level window with no toolkit passed in.
         mToolkit = new nsToolkit();
         mToolkit->AddRef();
         mToolkit->Init(PR_GetCurrentThread());
-
-        // Create a shared GC for all widgets
-        //((nsToolkit *)mToolkit)->SetSharedGC((GC)GetNativeData(NS_NATIVE_GRAPHIC));
-      }
+      	}
     }
   }
 
@@ -175,7 +181,8 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
 // Create a new windowptr since we do not have a main window yet
 //
 //-------------------------------------------------------------------------
-void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
+void 
+nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
                       nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -184,42 +191,49 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+Rect		bounds;
+
   mBounds = aRect;
   mAppShell = aAppShell;
-  Rect		bounds;
+	
+	InitToolkit(aToolkit, aWidgetParent);
+	
+	// save the event callback function
+  mEventCallback = aHandleEventFunction;
 
-	bounds.top = aRect.x;
-	bounds.left = aRect.y;
-	bounds.bottom = aRect.y+aRect.height;
-	bounds.right = aRect.x+aRect.width;
 	
 	// build the main native window
-	mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
-	mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
-	mWindowMadeHere = PR_TRUE;
-	
-	
-	
-	
-  //InitToolkit(aToolkit, aWidgetParent);
-  
-  // save the event callback function
-  //mEventCallback = aHandleEventFunction;
+	if(0==aNativeParent)
+		{
+		bounds.top = aRect.x;
+		bounds.left = aRect.y;
+		bounds.bottom = aRect.y+aRect.height;
+		bounds.right = aRect.x+aRect.width;
+		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
+		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
+		
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,bounds.left,bounds.top,bounds.right,bounds.bottom);
 
+		mWindowMadeHere = PR_TRUE;
+		mIsMainWindow = PR_TRUE;
+		}
+	else
+		{
+		mWindowRecord = (WindowRecord*)aNativeParent;
+		mWindowPtr = (WindowPtr)aNativeParent;
+		mWindowMadeHere = PR_FALSE;
+		mIsMainWindow = PR_TRUE;		
+		}
+	
   //InitDeviceContext(aContext, (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  
-  //Widget frameParent = 0;
-
-  //mWidget = frame ;
-    
- 	//if (aWidgetParent) 
-  	//{
-    //aWidgetParent->AddChild(this);
-  	//}
-
 }
 
-
+//-------------------------------------------------------------------------
+//
+// Create a nsWindow, a WindowPtr will not be created here
+//
+//-------------------------------------------------------------------------
 void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent, 
                       nsIWidget *aWidgetParent,
                       const nsRect &aRect,
@@ -229,24 +243,27 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+
+	// bounds of this child
   mBounds = aRect;
   mAppShell = aAppShell;
+  mIsMainWindow = PR_FALSE;
+  mWindowMadeHere = PR_TRUE;
 
   InitToolkit(aToolkit, aWidgetParent);
   
-  // save the event callback function
+	// save the event callback function
   mEventCallback = aHandleEventFunction;
   
+  // add this new nsWindow to the parents list
+	if (aWidgetParent) 
+		{
+		aWidgetParent->AddChild(this);
+		mWindowRecord = (WindowRecord*)aNativeParent;
+		mWindowPtr = (WindowPtr)aNativeParent;
+		}
+  
   //InitDeviceContext(aContext, (Widget)aNativeParent);
-
-	//mWidget = ::XtVaCreateManagedWidget("frame",xmDrawingAreaWidgetClass,(Widget)aNativeParent,
-				    //XmNwidth, aRect.width,XmNheight, aRect.height,XmNmarginHeight, 0,XmNmarginWidth, 0, XmNrecomputeSize, False, nsnull);
-
-
-  if (aWidgetParent) 
-  	{
-    //aWidgetParent->AddChild(this);
-  	}
 
   // Force cursor to default setting
   mCursor = eCursor_select;
@@ -262,12 +279,17 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 void nsWindow::Destroy()
 {
 
-	if (mWindowMadeHere==PR_TRUE)
+	if (mWindowMadeHere==PR_TRUE && mIsMainWindow==PR_TRUE)
 		{
 		CloseWindow(mWindowPtr);
 		delete mWindowRecord;
 		}
-		
+	
+	if(mWindowRegion!=nsnull)
+		{
+		DisposeRgn(mWindowRegion);
+		mWindowRegion = nsnull;	
+		}
 }
 
 //-------------------------------------------------------------------------
@@ -295,7 +317,8 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-  return nsnull;
+   
+   return (0);
 }
 
 
@@ -306,7 +329,7 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsWindow::GetChildren()
 {
-    return nsnull;
+	return NULL;
 }
 
 
@@ -317,8 +340,11 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
-}
+	if (!mChildren)
+		mChildren = new Enumerator();
 
+	mChildren->Append(aChild);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -327,8 +353,9 @@ void nsWindow::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::RemoveChild(nsIWidget* aChild)
 {
+	if (mChildren)
+    mChildren->Remove(aChild);
 }
-
 
 //-------------------------------------------------------------------------
 //
@@ -337,15 +364,24 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::Show(PRBool bState)
 {
+	// set the state
   mShown = bState;
-  if (bState) {
-    //XtManageChild(mWidget);
-  }
-  //else
-    //XtUnmanageChild(mWidget);
-
-//  UpdateVisibilityFlag();
-//  UpdateDisplay();
+  
+  // if its a main window, do the thing
+  if (bState) 
+  	{		// visible
+  	if(mIsMainWindow)			// mac WindowPtr
+  		{
+  		}
+  	}
+  else
+  	{		// hidden
+  	if(mIsMainWindow)			// mac WindowPtr
+  		{
+  		}  	
+  	}
+    	
+  // update the change
 }
 
 //-------------------------------------------------------------------------
@@ -357,10 +393,14 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
-//  UpdateVisibilityFlag();
-//  UpdateDisplay();
-  //XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
-  //XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+  
+  // if its a main window, move the window,
+  
+  // else is a child, so change its relative position
+  
+  
+  // update this change
+  
 }
 
 //-------------------------------------------------------------------------
@@ -604,19 +644,14 @@ void nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-  switch(aDataType) {
-
+  switch(aDataType) 
+  	{
+		case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
-      //return (void*)XtWindow(mWidget);
     case NS_NATIVE_DISPLAY:
-      //return (void*)XtDisplay(mWidget);
-    case NS_NATIVE_WIDGET:
-      //return (void*)(mWidget);
     case NS_NATIVE_GRAPHIC:
-      {
-        void *res = NULL;
-        return res;
-      }
+      return (void*)mWindowPtr;
+    	break;
     case NS_NATIVE_COLORMAP:
     default:
       break;
@@ -635,8 +670,8 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
 {
   nsIRenderingContext * ctx = nsnull;
 
-  if (GetNativeData(NS_NATIVE_WIDGET)) {
-
+  if (GetNativeData(NS_NATIVE_WIDGET)) 
+  	{
     nsresult  res;
     
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
@@ -648,7 +683,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
       ctx->Init(mContext, this);
     
     NS_ASSERTION(NULL != ctx, "Null rendering context");
-  }
+  	}
   
   return ctx;
 
@@ -782,7 +817,7 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
+PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
@@ -800,17 +835,21 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
   if (nsnull != mMouseListener) {
     switch (aEvent.message) {
       case NS_MOUSE_MOVE: {
-        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
+        result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
         nsRect rect;
         GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
-          if (mCurrentWindow == NULL || mCurrentWindow != this) {
-            //printf("Mouse enter");
-            mCurrentWindow = this;
-          }
-        } else {
-          //printf("Mouse exit");
-        }*/
+        if (rect.Contains(aEvent.point.x, aEvent.point.y)) 
+        	{
+          //if (mWindowPtr == NULL || mWindowPtr != this) 
+          	//{
+            printf("Mouse enter");
+            //mCurrentWindow = this;
+          	//}
+        	} 
+        else 
+        	{
+          printf("Mouse exit");
+        	}
 
       } break;
 
@@ -1016,7 +1055,8 @@ void nsWindow::GetResizeRect(nsRect* aRect)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetResized(PRBool aResized)
+void 
+nsWindow::SetResized(PRBool aResized)
 {
   mResized = aResized;
 }
@@ -1026,9 +1066,29 @@ void nsWindow::SetResized(PRBool aResized)
 // 
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::GetResized()
+PRBool 
+nsWindow::GetResized()
 {
   return(mResized);
+}
+
+//-------------------------------------------------------------------------
+//
+// Is the point in this window
+//
+//-------------------------------------------------------------------------
+PRBool
+nsWindow::ptInWindow(PRInt32 aX,PRInt32 aY)
+{
+PRBool	result = PR_FALSE;
+Point		hitpt;
+
+	hitpt.h = aX;
+	hitpt.v = aY;
+	
+	if( PtInRgn( hitpt,mWindowRegion) )
+		result = TRUE;
+	return(result);
 }
 
 //-------------------------------------------------------------------------
@@ -1036,11 +1096,30 @@ PRBool nsWindow::GetResized()
 // find the widget that was hit
 //
 //-------------------------------------------------------------------------
-nsWindow* nsWindow::FindWidgetHit(Point)
+nsWindow* 
+nsWindow::FindWidgetHit(Point aThePoint)
 {
-nsWindow*	thewindow = NULL;
+nsWindow	*thewindow = this;
+nsWindow	*deeperwindow;
 
-	
+	// traverse through all the nsWindows to find out who got hit, lowest level of course
+	if (mChildren) 
+		{
+    mChildren->ResetToLast();
+    while(thewindow)
+    	{
+	    if (thewindow->ptInWindow(aThePoint.h,aThePoint.v) ) 
+	    	{
+	    	// go down this windows list
+	    	deeperwindow = thewindow->FindWidgetHit(aThePoint);
+	    	if (deeperwindow)
+	    		return(deeperwindow);
+	    	else
+	    		return(thewindow);
+	    	}
+	    thewindow = (nsWindow*)mChildren->Previous();	
+	    }
+		}
 
 	return(thewindow);
 }
@@ -1242,7 +1321,7 @@ void nsWindow::RemoveTooltips()
 nsWindow::Enumerator::Enumerator()
 {
     mArraySize = INITIAL_SIZE;
-    mChildrens = (nsWindow**)new PRInt32[mArraySize];
+    mChildrens = (nsIWidget**)new PRInt32[mArraySize];
     memset(mChildrens, 0, sizeof(PRInt32) * mArraySize);
     mCurrentPosition = 0;
 }
@@ -1269,13 +1348,23 @@ nsWindow::Enumerator::~Enumerator()
 nsIWidget* nsWindow::Enumerator::Next()
 {
 	if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
-		{
 		return mChildrens[mCurrentPosition++];
-		}
 
   return NULL;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get enumeration previous element. Return null at the beginning
+//
+//-------------------------------------------------------------------------
+nsIWidget* nsWindow::Enumerator::Previous()
+{
+	if ((mCurrentPosition >=0) && (mCurrentPosition < mArraySize) && (mChildrens[mCurrentPosition])) 
+		return mChildrens[mCurrentPosition--];
+
+  return NULL;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1287,13 +1376,22 @@ void nsWindow::Enumerator::Reset()
     mCurrentPosition = 0;
 }
 
+//-------------------------------------------------------------------------
+//
+// Reset enumerator internal pointer to the end
+//
+//-------------------------------------------------------------------------
+void nsWindow::Enumerator::ResetToLast()
+{
+    mCurrentPosition = mArraySize-1;
+}
 
 //-------------------------------------------------------------------------
 //
 // Append an element 
 //
 //-------------------------------------------------------------------------
-void nsWindow::Enumerator::Append(nsWindow* aWinWidget)
+void nsWindow::Enumerator::Append(nsIWidget* aWinWidget)
 {
 PRInt32	pos;
 
@@ -1312,7 +1410,7 @@ PRInt32	pos;
 // Remove an element 
 //
 //-------------------------------------------------------------------------
-void nsWindow::Enumerator::Remove(nsWindow* aWinWidget)
+void nsWindow::Enumerator::Remove(nsIWidget* aWinWidget)
 {
     int pos;
     for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++);
@@ -1331,7 +1429,7 @@ void nsWindow::Enumerator::Remove(nsWindow* aWinWidget)
 void nsWindow::Enumerator::GrowArray()
 {
     mArraySize <<= 1;
-    nsWindow **newArray = (nsWindow**)new PRInt32[mArraySize];
+    nsIWidget **newArray = (nsIWidget**)new PRInt32[mArraySize];
     memset(newArray, 0, sizeof(PRInt32) * mArraySize);
     memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(PRInt32));
     mChildrens = newArray;
