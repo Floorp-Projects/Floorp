@@ -1,5 +1,4 @@
 <?xml version="1.0"?> 
-
 #
 #  The contents of this file are subject to the Netscape Public
 #  License Version 1.1 (the "License"); you may not use this file
@@ -23,7 +22,6 @@
 #    Ben Goodger <ben@netscape.com>
 #    Michael Lowe <michael.lowe@bigfoot.com> 
 #
-
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE dialog [
