@@ -41,11 +41,11 @@ public:
   NS_IMETHOD            Init(PRThread *aThread);
   
 public:
-  NS_IMETHOD_(GdkGC) GetSharedGC();
-  NS_IMETHOD_(void) SetSharedGC(GdkGC aGC);
+  NS_IMETHOD_(GdkGC*) GetSharedGC();
+  NS_IMETHOD_(void) SetSharedGC(GdkGC *aGC);
 
 private:
-  GdkGC mSharedGC;
+  GdkGC *mSharedGC;
 
 };
 
