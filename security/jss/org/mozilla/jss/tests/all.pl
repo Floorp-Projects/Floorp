@@ -241,7 +241,7 @@ $result and die "Convert PKCS11 to PKCS12 returned $result";
 # Start both JSS and JSSE servers
 #
 print STDERR "============= Start JSSE server tests\n";
-$result=system("./startJsseServ.$scriptext $jss_classpath $testdir");
+$result=system("./startJsseServ.$scriptext $jss_classpath $testdir $java");
 $result >>=8;
 $result and die "JSSE servers returned $result";
 
@@ -258,7 +258,7 @@ $result and die "JSS client returned $result";
 # Start both JSS and JSSE servers
 #
 print STDERR "============= Start JSS server tests\n";
-$result=system("./startJssServ.$scriptext $jss_classpath $testdir");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $java");
 $result >>=8;
 $result and die "JSS servers returned $result";
 
