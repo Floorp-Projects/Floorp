@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\ucgendat.exe
-PROGRAMS = $(PROG1)
+#PROGRAMS = $(PROG1)
 CTYPE_DATA = .\data\ctype.dat
 CASE_DATA = .\data\case.dat
 DATA = $(CTYPE_DATA) $(CASE_DATA)
@@ -30,11 +30,11 @@ UCGENFLAGS= -o data
 TABLESRC = .\UnicodeData-Latest.txt  .\MUTTUCData.txt
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS) $(DATA)
-  -for %d in ($(DATA)) do $(MAKE_INSTALL) %d $(DIST)\bin\res\unicharutil
+#install:: $(PROGRAMS) $(DATA)
+#  -for %d in ($(DATA)) do $(MAKE_INSTALL) %d $(DIST)\bin\res\unicharutil
 
-clobber::
-  -for %p in ($(PROGRAMS)) do $(RM) %p
+#clobber::
+#  -for %p in ($(PROGRAMS)) do $(RM) %p
 
 # Move this into config/obj.inc when it's allowed
 .c{.\$(OBJDIR)\}.exe:
