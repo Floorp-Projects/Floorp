@@ -395,16 +395,23 @@ const long kMinSearchPaneHeight = 80;
 
   // if we're NOT visible, set the selection to this bookmark's new parent folder
   // to ensure a selection exists. The next time we use the UI to add a bookmark, it will
-  // use this parent as the suggested location in the UI.
+  // use this parent as the suggested location in the UI. If the parent is a top-level
+  // container (bookmark menu, toolbar bookmarks, etc), clear the item panel's selection entirely,
+  // which will fall back to checking the selected container panel's selection. If 
+  // the manager is visible, don't muck with the selection.
   if (![mBrowserWindowController bookmarksAreVisible:NO]) {
     [self displayBookmarkInOutlineView:parentFolder];
-    // if |parentFolder| is one of the toplevel containers (bookmark menu, toolbar bookmarks,
-    // etc), calling |-rowForItem:| will return |-1| and the selection change would get
-    // ignored. In this case, ensure a valid selection in this container by selecting first item.
-    long parentRow = [mItemPane rowForItem:parentFolder];
-    if (parentRow < 0)
-      parentRow = 0;
-    [mItemPane selectRow:parentRow byExtendingSelection:NO];
+    long parentRow = [mItemPane rowForItem:parentFolder];   // will be -1 if top-level container
+    if (parentRow >= 0)
+      [mItemPane selectRow:parentRow byExtendingSelection:NO];
+    else {
+      // clear selection, next 'add bookmark' will subsequently use the container
+      // panel's selection.
+      NSEnumerator* iter = [mItemPane selectedRowEnumerator];
+      NSNumber* row = nil;
+      while ( (row = [iter nextObject]) )
+        [mItemPane deselectRow:[row intValue]];
+    }
   }
 }
 
