@@ -502,3 +502,13 @@ NOFRAMES {
   background-color: inherit;
 }
 
+:TABLE {
+  display: table;
+  border-style: inherit;
+  border-color: inherit;
+  cell-spacing: inherit;
+  cell-padding: inherit;
+  margin-top: inherit;
+  margin-bottom: inherit;
+  background: inherit;
+}
