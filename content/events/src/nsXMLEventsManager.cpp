@@ -233,12 +233,8 @@ nsXMLEventsListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMEventTarget> target;
     aEvent->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIStyledContent> targetEl(do_QueryInterface(target));
-    if (targetEl) {
-      nsCOMPtr<nsIAtom> id;
-      targetEl->GetID(getter_AddRefs(id));
-      if (id == mTarget) 
+    if (targetEl && targetEl->GetID() == mTarget) 
         targetMatched = PR_TRUE;
-    }
   }
   if (!targetMatched)
     return NS_OK;

@@ -1039,6 +1039,17 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   }
   content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
+  // Set the ID attribute atom on the node info object for this node
+  // This must occur before the attributes are added so the name
+  // of the id attribute is known.
+  if (aIndex != -1 && NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
+
+    if (IDAttr) {
+      nodeInfo->SetIDAttributeAtom(IDAttr);
+    }
+  }
+  
   // Set the attributes on the new content element
   result = AddAttributes(aAtts, content);
 
@@ -1052,15 +1063,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     }
 
     PushContent(content);
-  }
-
-  // Set the ID attribute atom on the node info object for this node
-  if (aIndex != -1 && NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
-
-    if (IDAttr) {
-      nodeInfo->SetIDAttributeAtom(IDAttr);
-    }
   }
 
 #ifdef MOZ_XTF

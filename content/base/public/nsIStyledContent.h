@@ -60,7 +60,7 @@ public:
   // corresponds to the attribute nsHTMLAtoms::id and that the Class
   // corresponds to the attribute nsHTMLAtoms::kClass.  If this becomes
   // incorrect, then new methods need to be added here.
-  NS_IMETHOD GetID(nsIAtom** aResult) const = 0;
+  virtual nsIAtom* GetID() const = 0;
   virtual const nsAttrValue* GetClasses() const = 0;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 

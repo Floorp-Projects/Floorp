@@ -85,9 +85,6 @@ public:
   
   virtual nsresult SetBindingParent(nsIContent* aParent);
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-
-  // nsIStyledContent
-  NS_IMETHOD GetID(nsIAtom** aResult) const;
   
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);

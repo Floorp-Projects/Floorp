@@ -69,9 +69,6 @@ public:
   // nsIXMLContent
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
 
-  // nsIStyledContent
-  NS_IMETHOD GetID(nsIAtom** aResult) const;
-
   // nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)

@@ -437,22 +437,3 @@ nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
 
 NS_IMPL_DOM_CLONENODE(nsXMLElement)
 
-// nsIStyledContent implementation
-
-NS_IMETHODIMP
-nsXMLElement::GetID(nsIAtom** aResult) const
-{
-  nsIAtom* atom = GetIDAttributeName();
-
-  *aResult = nsnull;
-  nsresult rv = NS_OK;
-  if (atom) {
-    nsAutoString value;
-    rv = nsGenericElement::GetAttr(kNameSpaceID_None, atom, value);
-    if (NS_SUCCEEDED(rv)) {
-      *aResult = NS_NewAtom(value);
-    }
-  }
-
-  return rv;
-}

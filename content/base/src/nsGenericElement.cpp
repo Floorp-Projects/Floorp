@@ -2114,12 +2114,32 @@ nsGenericElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetID(nsIAtom** aResult) const
+nsIAtom*
+nsGenericElement::GetID() const
 {
-  *aResult = nsnull;
+  nsIAtom* IDName = GetIDAttributeName();
+  if (IDName) {
+    const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(IDName);
+    if (attrVal){
+      if (attrVal->Type() == nsAttrValue::eAtom) {
+        return attrVal->GetAtomValue();
+      }
+      if(attrVal->IsEmptyString()){
+        return nsnull;
+      }
+      // Check if the ID has been stored as a string.
+      // This would occur if the ID attribute name changed after 
+      // the ID was parsed. 
+      if (attrVal->Type() == nsAttrValue::eString) {
+        nsAutoString idVal(attrVal->GetStringValue());
 
-  return NS_OK;
+        // Create an atom from the value and set it into the attribute list. 
+        NS_CONST_CAST(nsAttrValue*, attrVal)->ParseAtom(idVal);
+        return attrVal->GetAtomValue();
+      }
+    }
+  }
+  return nsnull;
 }
 
 const nsAttrValue*
@@ -3370,8 +3390,18 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
   nsresult rv;
   if (aNamespaceID == kNameSpaceID_None) {
-    rv = mAttrsAndChildren.SetAttr(aName, aValue);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aName == GetIDAttributeName() && !aValue.IsEmpty()) {
+      // Store id as atom. id="" means that the element has no id, not that it has
+      // an emptystring as the id.
+      nsAttrValue attrValue;
+      attrValue.ParseAtom(aValue);
+      rv = mAttrsAndChildren.SetAndTakeAttr(aName, attrValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      rv = mAttrsAndChildren.SetAttr(aName, aValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   else {
     nsCOMPtr<nsINodeInfo> ni;
@@ -3564,7 +3594,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(IsInDoc(), "bad content");
 
-  PRInt32 index;
+  PRUint32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   nsAutoString buf;
@@ -3593,7 +3623,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
   fputs("\n", out);
-  PRInt32 kids = GetChildCount();
+  PRUint32 kids = GetChildCount();
 
   for (index = 0; index < kids; index++) {
     nsIContent *kid = GetChildAt(index);

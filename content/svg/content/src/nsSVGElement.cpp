@@ -202,8 +202,11 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
   else if (aName == nsSVGAtoms::style && aNamespaceID == kNameSpaceID_None) {
     nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, attrValue);
   }
+  // We don't have an nsISVGValue attribute.
+  else if (aName == nsSVGAtoms::id && aNamespaceID == kNameSpaceID_None){
+    attrValue.ParseAtom(aValue);
+  } 
   else {
-    // We don't have an nsISVGValue attribute.
     attrValue.SetTo(aValue);
   }
 
@@ -277,21 +280,6 @@ nsSVGElement::IsContentOfType(PRUint32 aFlags) const
 
 //----------------------------------------------------------------------
 // nsIStyledContent methods
-
-NS_IMETHODIMP
-nsSVGElement::GetID(nsIAtom** aId)const
-{
-  nsAutoString value;
-  
-  nsresult rv = NS_CONST_CAST(nsSVGElement*,this)->
-                    GetAttribute(NS_LITERAL_STRING("id"), value);
-  if (NS_SUCCEEDED(rv))
-    *aId = NS_NewAtom(value);
-  else
-    *aId = nsnull;
-  
-  return rv;
-}
 
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
