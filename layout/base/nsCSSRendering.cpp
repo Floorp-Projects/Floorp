@@ -707,9 +707,14 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                      const nsStyleColor& aColor)
 {
   if (0 < aColor.mBackgroundImage.Length()) {
-
-    // First lookup the image
-    nsIImage* image = aPresContext.LoadImage(aColor.mBackgroundImage, aForFrame);
+    // Lookup the image
+    PRInt32 loadStatus;
+    nsImageError loadError;
+    nsIImage* image = nsnull;
+    nsSize imageSize;
+    nsresult rv = aPresContext.LoadImage(aColor.mBackgroundImage,
+                                         aForFrame, loadStatus, loadError,
+                                         imageSize, image);
     if (nsnull == image) {
       // Redraw will happen later
       if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
@@ -731,8 +736,8 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
     // Convert image dimensions into nscoord's
     float p2t = aPresContext.GetPixelsToTwips();
-    nscoord tileWidth = nscoord(p2t * image->GetWidth());
-    nscoord tileHeight = nscoord(p2t * image->GetHeight());
+    nscoord tileWidth = nscoord(p2t * imageSize.width);
+    nscoord tileHeight = nscoord(p2t * imageSize.height);
 
     PRIntn repeat = aColor.mBackgroundRepeat;
     PRIntn xcount, ycount;
