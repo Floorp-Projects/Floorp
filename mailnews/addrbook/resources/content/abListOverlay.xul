@@ -77,7 +77,7 @@ Rights Reserved.
                   minResultsForPopup="3"
                   ontextcommand="awRecipientTextCommand(eventParam, this)"
                   onkeypress="handleKeyPress(this, event);"
-                  onkeydown="awRecipientKeyDown(event, this, 1);"
+                  onkeydown="awRecipientKeyDown(event, this);"
                   onclick="awNotAnEmptyArea(event);">
           <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
         </textbox>

@@ -40,6 +40,8 @@ var inputElementType = "";
 var selectElementType = "";
 var selectElementIndexTable = null;
 
+var gNumberOfCols = 0;
+
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
 
@@ -63,6 +65,20 @@ catch (ex) {}
 function awGetMaxRecipients()
 {
   return top.MAX_RECIPIENTS;
+}
+
+function awGetNumberOfCols()
+{
+  if (gNumberOfCols == 0)
+  {
+    var listbox = document.getElementById('addressingWidget');
+    var listCols = listbox.getElementsByTagName('listcol');
+    gNumberOfCols = listCols.length;
+    if (!gNumberOfCols)
+      gNumberOfCols = 1;  /* if no cols defined, that means we have only one! */
+  }
+
+  return gNumberOfCols;
 }
 
 function awInputElementName()
@@ -320,26 +336,27 @@ function awTestRowSequence()
     return true;
 
   /* debug code to verify the sequence still good */
-  var body = document.getElementById('addressWidgetBody');
-  var treeitems = body.getElementsByTagName('treeitem');
-  if (treeitems.length == top.MAX_RECIPIENTS )
+
+  var listbox = document.getElementById('addressingWidget');
+  var listitems = listbox.getElementsByTagName('listitem');
+  if (listitems.length >= top.MAX_RECIPIENTS )
   {
-    for (var i = 1; i <= treeitems.length; i ++)
+    for (var i = 1; i <= listitems.length; i ++)
     {
-      var item = treeitems[i - 1];
+      var item = listitems [i - 1];
       var inputID = item.getElementsByTagName(awInputElementName())[0].getAttribute("id").split("#")[1];
       var popupID = item.getElementsByTagName(awSelectElementName())[0].getAttribute("id").split("#")[1];
       if (inputID != i || popupID != i)
       {
         dump("#ERROR: sequence broken at row " + i + ", inputID=" + inputID + ", popupID=" + popupID + "\n");
-        break;
+        return false;
       }
+      dump("---SEQUENCE OK---\n");
+      return true;
     }
-    dump("---SEQUENCE OK---\n");
-    return true;
   }
   else
-    dump("#ERROR: treeitems.length(" + treeitems.length + ") != top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
+    dump("#ERROR: listitems.length(" + listitems.length + ") < top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
 
   return false;
 }
@@ -376,19 +393,16 @@ function awCleanupRows()
   awTestRowSequence();
 }
 
-function awDeleteRow(rowToDelete, cols)
+function awDeleteRow(rowToDelete)
 {
   /* When we delete a row, we must reset the id of others row in order to not break the sequence */
   var maxRecipients = top.MAX_RECIPIENTS;
+  awRemoveRow(rowToDelete);
 
-  awRemoveRow(rowToDelete, cols);
-
+  var numberOfCols = awGetNumberOfCols();
   for (var row = rowToDelete + 1; row <= maxRecipients; row ++)
-  {
-    for (var col = 0; col < cols; col++) {
-      awGetElementByCol(row, col+1).setAttribute("id", "addressCol" + (col+1) + "#" + (row-1));
-    }
-  }
+    for (var col = 1; col <= numberOfCols; col++)
+      awGetElementByCol(row, col).setAttribute("id", "addressCol" + (col) + "#" + (row-1));
 
   awTestRowSequence();
 }
@@ -433,7 +447,7 @@ function awReturnHit(inputElement)
   }
 }
 
-function awDeleteHit(inputElement, cols)
+function awDeleteHit(inputElement)
 {
   var row = awGetRowByInputElement(inputElement);
 
@@ -453,7 +467,7 @@ function awDeleteHit(inputElement, cols)
                                           /* therefore the row number still the same! */
 
   /* 3. Delete the row */
-  awDeleteRow(row, cols);
+  awDeleteRow(row);
 }
 
 function awInputChanged(inputElement)
@@ -588,12 +602,12 @@ function awCopyNode(node, parentNode, beforeNode)
 
 // remove row
 
-function awRemoveRow(row, cols)
+function awRemoveRow(row)
 {
   var listbox = document.getElementById('addressingWidget');
 
   awRemoveNodeAndChildren(listbox, awGetListItem(row));
-  awFitDummyRows(cols);
+  awFitDummyRows();
 
   top.MAX_RECIPIENTS --;
 }
@@ -800,7 +814,7 @@ function awRecipientKeyPress(event, element)
   }
 }
 
-function awRecipientKeyDown(event, element, cols)
+function awRecipientKeyDown(event, element)
 {
   switch(event.keyCode) {
   case 46:
@@ -809,7 +823,7 @@ function awRecipientKeyDown(event, element, cols)
        alter it value while doing some internal cleanup, instead, query the value through the first child
     */
     if (!element.value)
-      awDeleteHit(element, cols);
+      awDeleteHit(element);
     event.preventBubble();  //We need to stop the event else the listbox will receive it and the function
                             //awKeyDown will be executed!
     break;
@@ -827,7 +841,7 @@ function awKeyDown(event, listboxElement)
     for (var i = 1; i <= length; i++) {
       var inputs = listboxElement.selectedItems[0].getElementsByTagName(awInputElementName());
       if (inputs && inputs.length == 1)
-        awDeleteHit(inputs[0], 2);
+        awDeleteHit(inputs[0]);
     }
     break;
   }
@@ -838,13 +852,13 @@ function awKeyDown(event, listboxElement)
 var gAWContentHeight = 0;
 var gAWRowHeight = 0;
 
-function awFitDummyRows(cols)
+function awFitDummyRows()
 {
   awCalcContentHeight();
-  awCreateOrRemoveDummyRows(cols);
+  awCreateOrRemoveDummyRows();
 }
 
-function awCreateOrRemoveDummyRows(cols)
+function awCreateOrRemoveDummyRows()
 {
   var listbox = document.getElementById("addressingWidget");
   var listboxHeight = listbox.boxObject.height;
@@ -861,7 +875,7 @@ function awCreateOrRemoveDummyRows(cols)
   // add rows to fill space
   if (gAWRowHeight) {
     while (gAWContentHeight+gAWRowHeight < listboxHeight) {
-      awCreateDummyItem(listbox, cols);
+      awCreateDummyItem(listbox);
       gAWContentHeight += gAWRowHeight;
     }
   }
@@ -885,14 +899,14 @@ function awCalcContentHeight()
   }
 }
 
-function awCreateDummyItem(aParent, cols)
+function awCreateDummyItem(aParent)
 {
   var titem = document.createElement("listitem");
   titem.setAttribute("_isDummyRow", "true");
   titem.setAttribute("class", "dummy-row");
 
-  awCreateDummyCell(titem);
-  awCreateDummyCell(titem);
+  for (var i = awGetNumberOfCols(); i > 0; i--)
+    awCreateDummyCell(titem);
 
   if (aParent)
     aParent.appendChild(titem);
