@@ -258,6 +258,7 @@ struct nsTableCreator {
   virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
+  virtual PRBool IsTreeCreator() { return PR_FALSE; };
 };
 
 nsresult
@@ -296,6 +297,8 @@ nsTableCreator::CreateTableCellFrame(nsIFrame** aNewFrame) {
 struct nsTreeCreator: public nsTableCreator {
   nsresult CreateTableFrame(nsIFrame** aNewFrame);
   nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
+
+  PRBool IsTreeCreator() { return PR_TRUE; };
 };
 
 nsresult
@@ -1143,6 +1146,13 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*          aPresCo
     rv = ConstructTableGroupFrameOnly(aPresContext, aState, aContent, aParentFrame,
                                       styleContext, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
                                       aTableCreator, contentDisplayIsGroup);
+  } else if (aTableCreator.IsTreeCreator() && 
+             parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
+    // We're a tree view. We want to allow nested row groups.
+    // only process the group's children if we're called from above
+    rv = ConstructTableGroupFrameOnly(aPresContext, aState, aContent, aParentFrame,
+                                      styleContext, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
+                                      aTableCreator, contentDisplayIsGroup);
   } else { // construct anonymous frames
     NS_WARNING("a non table contains a table row or col group child. \n");
     nsIFrame* innerFrame;
@@ -1696,6 +1706,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::widget          == tag.get())  ||
         (nsXULAtoms::tree            == tag.get())  ||
         (nsXULAtoms::treechildren    == tag.get())  ||
+        (nsXULAtoms::treebody        == tag.get())  ||
         (nsXULAtoms::treeitem        == tag.get())  ||
         (nsXULAtoms::treecell        == tag.get())  ||
         (nsXULAtoms::treeindentation == tag.get())  ||
@@ -2653,6 +2664,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // The following code is used to construct a tree view from the XUL content
     // model.  It has to take the hierarchical tree content structure and build a flattened
     // table row frame structure.
+    else if (aTag == nsXULAtoms::treebody) {
+      nsIFrame* newTopFrame;
+      rv = ConstructTableGroupFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext,
+                                    PR_TRUE, newTopFrame, newFrame, treeCreator, nsnull);
+      aFrameItems.AddChild(newFrame);
+      return rv;
+    }
     else if (aTag == nsXULAtoms::tree)
     {
       nsIFrame* geometricParent = aParentFrame;
