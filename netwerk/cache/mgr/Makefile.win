@@ -20,44 +20,26 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+
 include <$(DEPTH)/config/config.mak>
 
-MODULE=cachemgr
+MODULE = nkcache
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=cachemgr
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME = nkcachemgr_s
 
-LLIBS= $(LLIBS) \
-	$(LIBNSPR)				\
-	$(DIST)\lib\xpcom.lib	\
+CPP_OBJS =                                   \
+	.\$(OBJDIR)\nsCacheManager.obj       \
+	.\$(OBJDIR)\nsCachedNetData.obj      \
+	.\$(OBJDIR)\nsReplacementPolicy.obj  \
+	.\$(OBJDIR)\nsCacheEntryChannel.obj  \
 	$(NULL)
-
-CPP_OBJS=                                  \
-	.\$(OBJDIR)\nsCacheManager.obj     \
-	.\$(OBJDIR)\nsMonitorable.obj      \
-	.\$(OBJDIR)\nsCacheBkgThd.obj	   \
-	.\$(OBJDIR)\nsBkgThread.obj        \
-	$(NULL)
-
-LOCAL_INCLUDES=	-I. \
-	  	-I..\public \
-		-I..\include \
-
-INCLUDES = $(LOCAL_INCLUDES)
-
-REQUIRES = nspr
-
-INCS = $(INCS)                  \
-	-I..\include 		\
-        -I..\public 		\
-        -I$(DEPTH)\dist\include \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -rf $(OBJDIR)
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

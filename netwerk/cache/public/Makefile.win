@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-MODULE = netcache
+MODULE = nkcache
 
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>

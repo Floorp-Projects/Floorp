@@ -26,22 +26,26 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= cachemgr
-LIBRARY_NAME	= cachemgr
-IS_COMPONENT	= 1
+MODULE		= nkcache 
+LIBRARY_NAME	= nkcachemgr_s
 
 REQUIRES	= nspr
 
 CPPSRCS		= \
-		nsCacheManager.cpp \
-		nsMonitorable.cpp \
-		nsCacheBkgThd.cpp \
-		nsBkgThread.cpp \
+        nsCacheManager.cpp \
+        nsCachedNetData.cpp \
+        nsReplacementPolicy.cpp \
+        nsCacheEntryChannel.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public -I$(srcdir)/../include
 
 EXTRA_LIBS	= $(NSPR_LIBS)
+
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
