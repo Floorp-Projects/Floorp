@@ -111,6 +111,21 @@ void         gtk_moz_embed_set_chrome_mask  (GtkMozEmbed *embed,
 					     guint32 flags);
 guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
 
+/* enum types */
+#define GTK_TYPE_MOZ_EMBED_PROGRESS_FLAGS \
+             (gtk_moz_embed_progress_flags_get_type())
+#define GTK_TYPE_MOZ_EMBED_STATUS_ENUMS \
+             (gtk_moz_embed_status_enums_get_type())
+#define GTK_TYPE_MOZ_EMBED_RELOAD_FLAGS \
+             (gtk_moz_embed_reload_flags_get_type())
+#define GTK_TYPE_MOZ_EMBED_CHROME_FLAGS \
+             (gtk_moz_embed_chrome_flags_get_type())
+
+GtkType      gtk_moz_embed_progress_flags_get_type (void);
+GtkType      gtk_moz_embed_status_enums_get_type (void);
+GtkType      gtk_moz_embed_reload_flags_get_type (void);
+GtkType      gtk_moz_embed_chrome_flags_get_type (void);
+
 /* These are straight out of nsIWebProgressListener.h */
 
 typedef enum
