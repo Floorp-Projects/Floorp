@@ -242,6 +242,10 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
     return NS_OK;
   }
+    
+  NS_ASSERTION(aStartOffset >= 0, "Negative start offset for text fragment!");
+  if ( aStartOffset < 0 )
+    return NS_ERROR_INVALID_ARG;
 
   NS_ENSURE_ARG(aText);
 
@@ -256,7 +260,14 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   content->GetText(&frag);
 
   if (frag) {
-    length = ((aEndOffset == -1) ? frag->GetLength() : aEndOffset) - aStartOffset;
+    PRInt32 endoffset = (aEndOffset == -1) ? frag->GetLength() : aEndOffset;
+    NS_ASSERTION(aStartOffset <= endoffset, "A start offset is beyond the end of the text fragment!");
+
+    length = endoffset - aStartOffset;
+    if (length <= 0) {
+      return NS_OK;
+    }
+
     if (frag->Is2b()) {
       textstr.Assign(frag->Get2b() + aStartOffset, length);
     }
