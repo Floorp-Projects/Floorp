@@ -140,7 +140,7 @@
       { name = 'Other',       
         description = 'Any field not mentioned above changes' } ] %]
     <tr>
-      [% FOREACH role = [ "Owner", "Reporter", "QAcontact", "CClist", "Voter" ] 
+      [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ] 
        %]
         <td align="center">
           <input type="checkbox" name="email[% role %][% reason.name %]" value="on"
