@@ -1338,6 +1338,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       }
     }
   }
+  if (!found && child)
+    child->SetMsgDatabase(nsnull); // close the db, so we don't hold open all the .msf files for new folders
   return NS_OK;
 }
 
