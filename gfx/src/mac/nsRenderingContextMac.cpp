@@ -1447,16 +1447,6 @@ nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextMac::GetGraphics(nsIGraphics* *aGraphics)
-{
-	NS_ASSERTION((aGraphics != nsnull), "aGraphics is NULL");
-	nsCOMPtr<nsIGraphics> graphics = new nsGraphicsImpl(this);
-	if (graphics)
-		return graphics->QueryInterface(NS_GET_IID(nsIGraphics), (void**)aGraphics);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
 #ifdef MOZ_MATHML
 
 NS_IMETHODIMP
