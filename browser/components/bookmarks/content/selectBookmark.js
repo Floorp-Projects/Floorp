@@ -47,7 +47,7 @@ function Startup()
   gOK = document.documentElement.getButton("accept");
   gBookmarkTree = document.getElementById("bookmarks-view");  
   gBookmarkTree.treeBoxObject.selection.select(0);
-  gBookmarkTree.tree.focus();
+  gBookmarkTree.focus();
 }
 
 function onDblClick()

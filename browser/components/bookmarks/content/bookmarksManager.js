@@ -62,7 +62,7 @@ function Startup()
   windowNode.setAttribute("title", titleString);
 
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
-  bookmarksView.tree.focus();
+  bookmarksView.focus();
 
   BMSVC.transactionManager.AddListener(BookmarkEditMenuTxnListener);
 
