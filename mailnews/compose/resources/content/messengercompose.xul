@@ -178,6 +178,7 @@ Rights Reserved.
   <!-- Options Menu -->
 	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
 	<broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
+	<!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
 
 	<broadcaster id="broadcaster_throbber" busy="false"/>
 </broadcasterset>
@@ -337,7 +338,7 @@ Rights Reserved.
     <menupopup>	
 		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
         <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>	
+		<!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
 		<menuitem value="&editRewrapCmd.label;" oncommand="editorShell.Rewrap(false)"/>
 	  <menuseparator/>
 	    
@@ -426,15 +427,15 @@ Rights Reserved.
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
 	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" observes="cmd_sendNow"/>
-            <separator/>
+      <separator/>
 	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" observes="cmd_selectAddress"/>
 	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" observes="cmd_attachFile"/>
-	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') QuoteMessage()"/>
-            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
-            <separator/>
+	 		<!--button class="button-toolbar-2 top" id="button-quote" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  observes="cmd_quoteMessage"/-->
+      <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
+      <separator/>
 	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" observes="cmd_saveDefault"/>
 	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') Stop()"/>
-	    	<spring flex="100%"/>
+	    <spring flex="100%"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("compose.throbber.url")'>
       <observes element="broadcaster_throbber" attribute="busy"/>
