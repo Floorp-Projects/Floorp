@@ -468,7 +468,7 @@ nsNativeAppSupportMac::ReOpen()
         nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
         if (!rv)
           {
-            PRBool openedAWindow;
+            //PRBool openedAWindow;
             // uncomment when bug 109811 is fixed
             //appShell->DoCommandLines(cmdLineArgs, true, &openedAWindow);
           }

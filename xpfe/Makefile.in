@@ -28,5 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= appshell browser components communicator global
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+DIRS		:= bootstrap/appleevents $(DIRS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
