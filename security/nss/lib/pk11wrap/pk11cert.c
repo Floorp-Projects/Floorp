@@ -684,8 +684,9 @@ CERTCertificate *
 PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey)
 {
     PK11SlotInfo *slot = privKey->pkcs11Slot;
+    CK_OBJECT_HANDLE handle = privKey->pkcs11ID;
     CK_OBJECT_HANDLE certID = 
-		PK11_MatchItem(slot,privKey->pkcs11ID,CKO_CERTIFICATE);
+		PK11_MatchItem(slot,handle,CKO_CERTIFICATE);
     SECStatus rv;
     CERTCertificate *cert;
 
@@ -693,7 +694,7 @@ PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey)
 	/* couldn't find it on the card, look in our data base */
 	SECItem derSubject;
 
-	rv = PK11_ReadAttribute(slot, privKey->pkcs11ID, CKA_SUBJECT, NULL,
+	rv = PK11_ReadAttribute(slot, handle, CKA_SUBJECT, NULL,
 					&derSubject);
 	if (rv != SECSuccess) {
 	    PORT_SetError(SSL_ERROR_NO_CERTIFICATE);
@@ -714,12 +715,12 @@ PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey)
  * this function also frees the privKey structure.
  */
 SECStatus
-PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey)
+PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey, PRBool force)
 {
     CERTCertificate *cert=PK11_GetCertFromPrivateKey(privKey);
 
     /* found a cert matching the private key?. */
-    if (cert != NULL) {
+    if (!force  && cert != NULL) {
 	/* yes, don't delete the key */
         CERT_DestroyCertificate(cert);
 	SECKEY_DestroyPrivateKey(privKey);
@@ -728,6 +729,22 @@ PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey)
     /* now, then it's safe for the key to go away */
     PK11_DestroyTokenObject(privKey->pkcs11Slot,privKey->pkcs11ID);
     SECKEY_DestroyPrivateKey(privKey);
+    return SECSuccess;
+}
+
+/*
+ * destroy a private key if there are no matching certs.
+ * this function also frees the privKey structure.
+ */
+SECStatus
+PK11_DeleteTokenPublicKey(SECKEYPublicKey *pubKey)
+{
+    /* now, then it's safe for the key to go away */
+    if (pubKey->pkcs11Slot == NULL) {
+	return SECFailure;
+    }
+    PK11_DestroyTokenObject(pubKey->pkcs11Slot,pubKey->pkcs11ID);
+    SECKEY_DestroyPublicKey(pubKey);
     return SECSuccess;
 }
 
@@ -751,7 +768,7 @@ PK11_DeleteTokenCertAndKey(CERTCertificate *cert,void *wincx)
 	/* For 3.4, utilize the generic cert delete function */
 	SEC_DeletePermCertificate(cert);
 #endif
-	PK11_DeleteTokenPrivateKey(privKey);
+	PK11_DeleteTokenPrivateKey(privKey, PR_FALSE);
     }
     if ((pubKey != CK_INVALID_HANDLE) && (slot != NULL)) { 
     	PK11_DestroyTokenObject(slot,pubKey);
@@ -932,7 +949,6 @@ pk11_DoKeys(PK11SlotInfo *slot, CK_OBJECT_HANDLE keyHandle, void *arg)
     return rv;
 }
 
-
 /* Traverse slots callback */
 typedef struct pk11TraverseSlotStr {
     SECStatus (*callback)(PK11SlotInfo *,CK_OBJECT_HANDLE, void *);
@@ -1098,12 +1114,16 @@ PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
     pk11KeyCallback perKeyCB;
     pk11TraverseSlot perObjectCB;
     CK_OBJECT_CLASS privkClass = CKO_PRIVATE_KEY;
-    CK_ATTRIBUTE theTemplate[1];
-    int templateSize = 1;
+    CK_BBOOL ckTrue = CK_TRUE;
+    CK_ATTRIBUTE theTemplate[2];
+    int templateSize = 2;
 
     theTemplate[0].type = CKA_CLASS;
     theTemplate[0].pValue = &privkClass;
     theTemplate[0].ulValueLen = sizeof(privkClass);
+    theTemplate[1].type = CKA_TOKEN;
+    theTemplate[1].pValue = &ckTrue;
+    theTemplate[1].ulValueLen = sizeof(ckTrue);
 
     if(slot==NULL) {
         return SECSuccess;
@@ -3487,8 +3507,14 @@ static SECStatus
 listCertsCallback(CERTCertificate* cert, void*arg)
 {
     CERTCertList *list = (CERTCertList*)arg;
+    char *nickname = NULL;
 
-    return CERT_AddCertToListTail(list, CERT_DupCertificate(cert));
+    if (cert->nickname) {
+	nickname = PORT_ArenaStrdup(list->arena,cert->nickname);
+    }
+
+    return CERT_AddCertToListTailWithData(list, 
+				CERT_DupCertificate(cert),nickname);
 }
 
 CERTCertList *
@@ -3515,7 +3541,6 @@ static SECStatus
 privateKeyListCallback(SECKEYPrivateKey *key, void *arg)
 {
     SECKEYPrivateKeyList *list = (SECKEYPrivateKeyList*)arg;
-
     return SECKEY_AddPrivateKeyToListTail(list, SECKEY_CopyPrivateKey(key));
 }
 
@@ -3537,6 +3562,94 @@ PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot)
     }
 
     return keys;
+}
+
+SECKEYPublicKeyList*
+PK11_ListPublicKeysInSlot(PK11SlotInfo *slot, char *nickname)
+{
+    CK_ATTRIBUTE findTemp[4];
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL ckTrue = CK_TRUE;
+    CK_OBJECT_CLASS keyclass = CKO_PUBLIC_KEY;
+    int tsize = 0;
+    int objCount = 0;
+    CK_OBJECT_HANDLE *key_ids;
+    SECStatus status;
+    SECKEYPublicKeyList *keys;
+    int i,len;
+
+
+    attrs = findTemp;
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyclass, sizeof(keyclass)); attrs++;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &ckTrue, sizeof(ckTrue)); attrs++;
+    if (nickname) {
+	len = PORT_Strlen(nickname)-1;
+	PK11_SETATTRS(attrs, CKA_LABEL, nickname, len); attrs++;
+    }
+    tsize = attrs - findTemp;
+    PORT_Assert(tsize <= sizeof(findTemp)/sizeof(CK_ATTRIBUTE));
+
+    key_ids = pk11_FindObjectsByTemplate(slot,findTemp,tsize,&objCount);
+    if (key_ids == NULL) {
+	return NULL;
+    }
+    keys = SECKEY_NewPublicKeyList();
+    if (keys == NULL) {
+	PORT_Free(key_ids);
+    }
+
+    for (i=0; i < objCount ; i++) {
+	SECKEYPublicKey *pubKey = 
+				PK11_ExtractPublicKey(slot,nullKey,key_ids[i]);
+	SECKEY_AddPublicKeyToListTail(keys, pubKey);
+   }
+
+   PORT_Free(key_ids);
+   return keys;
+}
+
+SECKEYPrivateKeyList*
+PK11_ListPrivKeysInSlot(PK11SlotInfo *slot, char *nickname, void *wincx)
+{
+    CK_ATTRIBUTE findTemp[4];
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL ckTrue = CK_TRUE;
+    CK_OBJECT_CLASS keyclass = CKO_PRIVATE_KEY;
+    int tsize = 0;
+    int objCount = 0;
+    CK_OBJECT_HANDLE *key_ids;
+    SECStatus status;
+    SECKEYPrivateKeyList *keys;
+    int i,len;
+
+
+    attrs = findTemp;
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyclass, sizeof(keyclass)); attrs++;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &ckTrue, sizeof(ckTrue)); attrs++;
+    if (nickname) {
+	len = PORT_Strlen(nickname)-1;
+	PK11_SETATTRS(attrs, CKA_LABEL, nickname, len); attrs++;
+    }
+    tsize = attrs - findTemp;
+    PORT_Assert(tsize <= sizeof(findTemp)/sizeof(CK_ATTRIBUTE));
+
+    key_ids = pk11_FindObjectsByTemplate(slot,findTemp,tsize,&objCount);
+    if (key_ids == NULL) {
+	return NULL;
+    }
+    keys = SECKEY_NewPrivateKeyList();
+    if (keys == NULL) {
+	PORT_Free(key_ids);
+    }
+
+    for (i=0; i < objCount ; i++) {
+	SECKEYPrivateKey *privKey = 
+		PK11_MakePrivKey(slot,nullKey,PR_TRUE,key_ids[i],wincx);
+	SECKEY_AddPrivateKeyToListTail(keys, privKey);
+   }
+
+   PORT_Free(key_ids);
+   return keys;
 }
 
 /*

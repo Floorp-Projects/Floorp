@@ -209,7 +209,9 @@ SECKEY_DestroyPublicKey(SECKEYPublicKey *pubk)
 {
     if (pubk) {
 	if (pubk->pkcs11Slot) {
-	    PK11_DestroyObject(pubk->pkcs11Slot,pubk->pkcs11ID);
+	    if (!PK11_IsPermObject(pubk->pkcs11Slot,pubk->pkcs11ID)) {
+		PK11_DestroyObject(pubk->pkcs11Slot,pubk->pkcs11ID);
+	    }
 	    PK11_FreeSlot(pubk->pkcs11Slot);
 	}
     	if (pubk->arena) {
@@ -1072,8 +1074,14 @@ SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
 
 	copyk->arena = arena;
 	copyk->keyType = pubk->keyType;
-	copyk->pkcs11Slot = NULL;	/* go get own reference */
-	copyk->pkcs11ID = CK_INVALID_HANDLE;
+	if (pubk->pkcs11Slot && 
+			PK11_IsPermObject(pubk->pkcs11Slot,pubk->pkcs11ID)) {
+	    copyk->pkcs11Slot = PK11_ReferenceSlot(pubk->pkcs11Slot);
+	    copyk->pkcs11ID = pubk->pkcs11ID;
+	} else {
+	    copyk->pkcs11Slot = NULL;	/* go get own reference */
+	    copyk->pkcs11ID = CK_INVALID_HANDLE;
+	}
 	switch (pubk->keyType) {
 	  case rsaKey:
 	    rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
@@ -1504,7 +1512,7 @@ SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
     CERTSignedData sd;
     SECItem sig;
     SECKEYPublicKey *pubKey = NULL;
-    int len;
+    unsigned int len;
     
     signedItem.data = NULL;
     
@@ -1812,6 +1820,83 @@ SECKEY_AddPrivateKeyToListTail( SECKEYPrivateKeyList *list,
 
     node = (SECKEYPrivateKeyListNode *)PORT_ArenaZAlloc(list->arena,
                 sizeof(SECKEYPrivateKeyListNode));
+    if ( node == NULL ) {
+        goto loser;
+    }
+
+    PR_INSERT_BEFORE(&node->links, &list->list);
+    node->key = key;
+    return(SECSuccess);
+
+loser:
+    return(SECFailure);
+}
+
+
+SECKEYPublicKeyList*
+SECKEY_NewPublicKeyList(void)
+{
+    PRArenaPool *arena = NULL;
+    SECKEYPublicKeyList *ret = NULL;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if ( arena == NULL ) {
+        goto loser;
+    }
+
+    ret = (SECKEYPublicKeyList *)PORT_ArenaZAlloc(arena,
+                sizeof(SECKEYPublicKeyList));
+    if ( ret == NULL ) {
+        goto loser;
+    }
+
+    ret->arena = arena;
+
+    PR_INIT_CLIST(&ret->list);
+
+    return(ret);
+
+loser:
+    if ( arena != NULL ) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    return(NULL);
+}
+
+void
+SECKEY_DestroyPublicKeyList(SECKEYPublicKeyList *keys)
+{
+    while( !PR_CLIST_IS_EMPTY(&keys->list) ) {
+        SECKEY_RemovePublicKeyListNode(
+            (SECKEYPublicKeyListNode*)(PR_LIST_HEAD(&keys->list)) );
+    }
+
+    PORT_FreeArena(keys->arena, PR_FALSE);
+
+    return;
+}
+
+
+void
+SECKEY_RemovePublicKeyListNode(SECKEYPublicKeyListNode *node)
+{
+    PR_ASSERT(node->key);
+    SECKEY_DestroyPublicKey(node->key);
+    node->key = NULL;
+    PR_REMOVE_LINK(&node->links);
+    return;
+
+}
+
+SECStatus
+SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
+                                SECKEYPublicKey *key)
+{
+    SECKEYPublicKeyListNode *node;
+
+    node = (SECKEYPublicKeyListNode *)PORT_ArenaZAlloc(list->arena,
+                sizeof(SECKEYPublicKeyListNode));
     if ( node == NULL ) {
         goto loser;
     }

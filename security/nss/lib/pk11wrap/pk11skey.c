@@ -471,13 +471,14 @@ PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     return symKey;
 }
 
+
 /*
  * turn key bits into an appropriate key object
  */
 PK11SymKey *
 PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
      PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key,
-     CK_FLAGS flags, void *wincx)
+     CK_FLAGS flags, PRBool isPerm, void *wincx)
 {
     PK11SymKey *    symKey;
     unsigned int    templateCount = 0;
@@ -489,6 +490,9 @@ PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 
     PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
     PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
+    if (isPerm) {
+	PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(keyType) ); attrs++;
+    }
     templateCount = attrs - keyTemplate;
     templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
     PR_ASSERT(templateCount+1 <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
@@ -496,6 +500,9 @@ PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     keyType = PK11_GetKeyType(type,key->len);
     symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
     					templateCount, key, wincx);
+    if (isPerm) {
+	symKey->owner = PR_FALSE;
+    }
     return symKey;
 }
 
@@ -655,6 +662,47 @@ PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *keyID,
 		 				PR_FALSE, wincx);
 }
 
+PK11SymKey *
+PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname, void *wincx)
+{
+    CK_ATTRIBUTE findTemp[4];
+    CK_ATTRIBUTE *attrs;
+    CK_BBOOL ckTrue = CK_TRUE;
+    CK_OBJECT_CLASS keyclass = CKO_SECRET_KEY;
+    int tsize = 0;
+    int objCount = 0;
+    CK_OBJECT_HANDLE *key_ids;
+    PK11SymKey *nextKey = NULL;
+    PK11SymKey *topKey = NULL;
+    int i,len;
+
+    attrs = findTemp;
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyclass, sizeof(keyclass)); attrs++;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &ckTrue, sizeof(ckTrue)); attrs++;
+    if (nickname) {
+	len = PORT_Strlen(nickname)-1;
+	PK11_SETATTRS(attrs, CKA_LABEL, nickname, len); attrs++;
+    }
+    tsize = attrs - findTemp;
+    PORT_Assert(tsize <= sizeof(findTemp)/sizeof(CK_ATTRIBUTE));
+
+    key_ids = pk11_FindObjectsByTemplate(slot,findTemp,tsize,&objCount);
+    if (key_ids == NULL) {
+	return NULL;
+    }
+
+    for (i=0; i < objCount ; i++) {
+	nextKey = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive, 
+			CKM_INVALID_MECHANISM, key_ids[i], PR_FALSE, wincx);
+	if (nextKey) {
+	    nextKey->next = topKey;
+	    topKey = nextKey;
+	}
+   }
+   PORT_Free(key_ids);
+   return topKey;
+}
+
 void *
 PK11_GetWindow(PK11SymKey *key)
 {
@@ -679,6 +727,17 @@ PK11_ExtractKeyValue(PK11SymKey *symKey)
 
     return PK11_ReadAttribute(symKey->slot,symKey->objectID,CKA_VALUE,NULL,
 				&symKey->data);
+}
+
+SECStatus
+PK11_DeleteTokenSymKey(PK11SymKey *symKey)
+{
+    if (!PK11_IsPermObject(symKey->slot, symKey->objectID)) {
+	return SECFailure;
+    }
+    PK11_DestroyTokenObject(symKey->slot,symKey->objectID);
+    symKey->objectID = CK_INVALID_HANDLE;
+    return SECSuccess;
 }
 
 SECItem *
@@ -3590,7 +3649,7 @@ PK11_SaveContext(PK11Context *cx,unsigned char *save,int *len, int saveLength)
 							PR_FALSE,PR_FALSE);
         PK11_ExitContextMonitor(cx);
 	if (data) *len = length;
-    } else if (saveLength >= cx->savedLength) {
+    } else if ((unsigned) saveLength >= cx->savedLength) {
 	data = (unsigned char*)cx->savedData;
 	if (cx->savedData) {
 	    PORT_Memcpy(save,cx->savedData,cx->savedLength);
@@ -4795,4 +4854,42 @@ PK11_CopySymKeyForSigning(PK11SymKey *originalKey, CK_MECHANISM_TYPE mech)
 {
     return pk11_CopyToSlot(PK11_GetSlotFromKey(originalKey), mech, CKA_SIGN,
 			originalKey);
+}
+
+char *
+PK11_GetSymKeyNickname(PK11SymKey *symKey)
+{
+    return PK11_GetObjectNickname(symKey->slot,symKey->objectID);
+}
+
+char *
+PK11_GetPrivateKeyNickname(SECKEYPrivateKey *privKey)
+{
+    return PK11_GetObjectNickname(privKey->pkcs11Slot,privKey->pkcs11ID);
+}
+
+char *
+PK11_GetPublicKeyNickname(SECKEYPublicKey *pubKey)
+{
+    return PK11_GetObjectNickname(pubKey->pkcs11Slot,pubKey->pkcs11ID);
+}
+
+SECStatus
+PK11_SetSymKeyNickname(PK11SymKey *symKey, const char *nickname)
+{
+    return PK11_SetObjectNickname(symKey->slot,symKey->objectID,nickname);
+}
+
+SECStatus
+PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey, const char *nickname)
+{
+    return PK11_SetObjectNickname(privKey->pkcs11Slot,
+					privKey->pkcs11ID,nickname);
+}
+
+SECStatus
+PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey, const char *nickname)
+{
+    return PK11_SetObjectNickname(pubKey->pkcs11Slot,
+					pubKey->pkcs11ID,nickname);
 }
