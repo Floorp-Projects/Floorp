@@ -35,8 +35,7 @@
 */
 //TODO turnon the proxy stuff as well. 
 
-#include "nsIHTTPHandler.h"
-#include "nsIProtocolHandler.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
@@ -46,7 +45,7 @@
 class nsHashtable;
 class nsIChannel;
 
-class nsHTTPHandler : public nsIHTTPHandler
+class nsHTTPHandler : public nsIHTTPProtocolHandler
 		//, public nsIProxy 
 {
 
@@ -89,7 +88,7 @@ public:
     NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,
                                     nsIURI **_retval);
 
-    //Functions from nsIHTTPHandler
+    //Functions from nsIHTTPProtocolHandler
 
 #if 0
     //Functions from nsIProxy
@@ -118,16 +117,20 @@ public:
         return pHandler;
     };
 
-    // Functions from nsIHTTPHandler
+    // Functions from nsIHTTPProtocolHandler
     /* 
         Pull out an existing transport from the hashtable, or if none exists
         create one. 
     */
-    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* *o_pTrans);
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32 i_Port, nsIChannel* *o_pTrans);
     /*
         Remove this transport from the hashtable.
     */
-    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* i_pTrans);
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32 i_Port, nsIChannel* i_pTrans);
+
+    NS_IMETHOD NewEncodeStream(nsIInputStream *rawStream, nsIInputStream **_retval);
+    NS_IMETHOD NewDecodeStream(nsIInputStream *encodedStream, nsIInputStream **_retval);
+    NS_IMETHOD NewPostDataStream(PRBool isFile, const char *data, nsIInputStream **_retval);
 
 protected:
     // None

@@ -29,6 +29,9 @@
 #include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIHttpEventSink.h"
+#include "nsIFileStream.h" 
+#include "nsIStringStream.h" 
+#include "nsHTTPEncodeStream.h" 
 
 #if defined(PR_LOGGING)
 //
@@ -49,7 +52,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
-NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler)
+NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
 {
 #if defined(PR_LOGGING)
     //
@@ -177,8 +180,8 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPHandler>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIHTTPHandler*)this);
+    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPProtocolHandler>::GetIID())) {
+        *aInstancePtr = (void*) ((nsIHTTPProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -242,7 +245,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_METHOD
 nsHTTPHandler::GetTransport(const char* i_Host, 
-                            PRUint32& i_Port, 
+                            PRUint32 i_Port, 
                             nsIChannel** o_pTrans)
 {
 #if 0
@@ -280,7 +283,7 @@ nsHTTPHandler::GetTransport(const char* i_Host,
 
 NS_METHOD
 nsHTTPHandler::ReleaseTransport(const char* i_Host, 
-                                PRUint32& i_Port, 
+                                PRUint32 i_Port, 
                                 nsIChannel* i_pTrans)
 {
 #if 0
@@ -300,3 +303,47 @@ nsHTTPHandler::FollowRedirects(PRBool bFollow)
     //m_bFollowRedirects = bFollow;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, nsIInputStream **result)
+{
+    return nsHTTPEncodeStream::Create(rawStream, result);
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, nsIInputStream **result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data,
+                                 nsIInputStream **result)
+{
+    nsresult rv;
+    if (isFile) {
+        nsISupports* in;
+        nsFileSpec spec(data);
+        rv = NS_NewTypicalInputFileStream(&in, spec);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIInputStream* rawStream;
+        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)&rawStream);
+        NS_RELEASE(in);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = NewEncodeStream(rawStream, result);
+        NS_RELEASE(rawStream);
+        return rv;
+    }
+    else {
+        nsISupports* in;
+        rv = NS_NewStringInputStream(&in, data);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)result);
+        NS_RELEASE(in);
+        return rv;
+    }
+}
+
