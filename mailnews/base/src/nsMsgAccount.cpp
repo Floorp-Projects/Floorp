@@ -167,6 +167,8 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     PR_FREEIF(serverKey);
   }
   
+  if (!m_incomingServer) return NS_ERROR_UNEXPECTED;
+  
   *aIncomingServer = m_incomingServer;
 
   // addref for the caller
