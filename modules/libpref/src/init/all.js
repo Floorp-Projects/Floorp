@@ -83,6 +83,8 @@ pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
 
 pref("browser.helperApps.alwaysAsk.force",  false);
+pref("browser.helperApps.neverAsk.saveToDisk", "");
+pref("browser.helperApps.neverAsk.openFile", "");
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.usetexttospeech", "");
@@ -93,7 +95,7 @@ pref("accessibility.accesskeycausesactivation", true);
 pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
 
-pref("browser.download.progressDnldDialog.keepAlive", false); // keep the dnload progress dialog up after dnload is complete
+pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
