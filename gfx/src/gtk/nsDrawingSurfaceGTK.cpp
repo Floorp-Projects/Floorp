@@ -155,6 +155,11 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   // Obtain an ximage from the pixmap.
   mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
 
+  if (!mImage) {
+    mLocked = PR_FALSE;
+    return NS_ERROR_FAILURE;
+  }
+
   *aBits = GDK_IMAGE_XIMAGE(mImage)->data;
 
   *aWidthBytes = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
@@ -302,7 +307,7 @@ nsresult nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
     gdk_image_destroy(mImage);
   mImage = nsnull;
 
-  return NS_OK;
+  return mPixmap ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* inline */

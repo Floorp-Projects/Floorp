@@ -1217,12 +1217,17 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
       nsRect damageRectInPixels = damageRect;
       damageRectInPixels *= mTwipsToPixels;
       if (damageRectInPixels.width > 0 && damageRectInPixels.height > 0) {
-        mBlender->Blend(damageRectInPixels.x, damageRectInPixels.y,
-                        damageRectInPixels.width, damageRectInPixels.height,
-                        mBlackCX, mOffScreenCX,
-                        damageRectInPixels.x, damageRectInPixels.y,
-                        opacity, mWhiteCX,
-                        NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
+        nsresult rv = mBlender->Blend(damageRectInPixels.x, damageRectInPixels.y,
+                                      damageRectInPixels.width, damageRectInPixels.height,
+                                      mBlackCX, mOffScreenCX,
+                                      damageRectInPixels.x, damageRectInPixels.y,
+                                      opacity, mWhiteCX,
+                                      NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Blend failed!");
+          // let's paint SOMETHING. Paint opaquely
+          PaintView(view, *mOffScreenCX, viewX, viewY, damageRect);
+        }
       }
  
       // Set the contexts back to their default colors
@@ -1318,7 +1323,7 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
       aRC.DestroyDrawingSurface(gBlack);
       gBlack = nsnull;
     }
-    aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlack);
+    rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlack);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1326,7 +1331,7 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
       aRC.DestroyDrawingSurface(gWhite);
       gWhite = nsnull;
     }
-    aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gWhite);
+    rv = aRC.CreateDrawingSurface(&offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gWhite);
     if (NS_FAILED(rv))
       return rv;
 
