@@ -63,6 +63,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/message-icon.gif \
 	$(srcdir)/question-icon.gif \
 	$(srcdir)/return.gif \
+	$(srcdir)/print.gif \
+	$(srcdir)/stop.gif \
 	$(srcdir)/grippy-horizontal-after.gif \
 	$(srcdir)/grippy-horizontal-before.gif \
 	$(srcdir)/grippy-vertical-after.gif \
