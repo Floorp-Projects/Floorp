@@ -395,40 +395,47 @@ NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 
 void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s) 
 {
-    nsresult rv;
-    nsIRefreshUrl* IRefreshURL=nsnull;
-    nsString refreshURL(URL_s->refresh_url);
-    nsConnectionInfo* pConn;
+  nsresult rv;
+  nsIRefreshUrl* IRefreshURL=nsnull;
+  nsString refreshURL(URL_s->refresh_url);
+  nsConnectionInfo* pConn;
 
-    NS_PRECONDITION((URL_s != nsnull), "Null pointer...");
-    NS_PRECONDITION((pContext != nsnull), "Null pointer...");
-    NS_PRECONDITION((pContext->modular_data != nsnull), "Null pointer...");
-    NS_PRECONDITION((pContext->modular_data->fe_data != nsnull), "Null pointer...");
+  NS_PRECONDITION((URL_s != nsnull), "Null pointer...");
+  NS_PRECONDITION((pContext != nsnull), "Null pointer...");
+  NS_PRECONDITION((pContext->modular_data != nsnull), "Null pointer...");
+  NS_PRECONDITION((pContext->modular_data->fe_data != nsnull), "Null pointer...");
 
-    // Get the nsConnectionInfo out of the context.
-    // modular_data points to a URL_Struct.
-    pConn = (nsConnectionInfo*) pContext->modular_data->fe_data;
+  // Get the nsConnectionInfo out of the context.
+  // modular_data points to a URL_Struct.
+  pConn = (nsConnectionInfo*) pContext->modular_data->fe_data;
 
-    NS_PRECONDITION((pConn != nsnull), "Null pointer...");
+  NS_PRECONDITION((pConn != nsnull), "Null pointer...");
 
-    if (pConn) {
-        /* Get the pointer to the nsIRefreshURL from the nsISupports
-         * of the nsIContentViewerContainer the nsConnnectionInfo holds.
-         */
-        rv = pConn->pContainer->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
+  if (nsnull != pConn) {
+    /* Get the pointer to the nsIRefreshURL from the nsISupports
+     * of the nsIContentViewerContainer the nsConnnectionInfo holds.
+     */
+    if (nsnull != pConn->pURL) {
+      nsISupports* container;
 
-        if(rv == NS_OK) {
-            nsIURL* aURL;
-            rv = NS_NewURL(&aURL, refreshURL);
-            if (rv == NS_OK) {
-                rv = IRefreshURL->RefreshURL(aURL, URL_s->refresh*1000, FALSE);
-                NS_RELEASE(IRefreshURL);
-                NS_RELEASE(aURL);
-            }
+      container = pConn->pURL->GetContainer();
+      if (nsnull != container) {
+        rv = container->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
+        if(NS_SUCCEEDED(rv)) {
+          nsIURL* newURL;
+
+          rv = NS_NewURL(&newURL, refreshURL);
+          if (NS_SUCCEEDED(rv)) {
+            rv = IRefreshURL->RefreshURL(newURL, URL_s->refresh*1000, FALSE);
+            NS_RELEASE(newURL);
+          }
+          NS_RELEASE(IRefreshURL);
         }
+        NS_RELEASE(container);
+      }
     }
-
-    MOZ_FUNCTION_STUB;
+  }
+  MOZ_FUNCTION_STUB;
 }
 
 
@@ -875,8 +882,7 @@ xpJSCookieFilters
 xpFileToPost
 xpMimeTypes
 xpHTTPCookie
-xpHTTPCookiePermission
-*/
+xpHTTPCookiePermission*/
 
 // Caller is repsonsible for freeing string.
 
@@ -906,7 +912,7 @@ char *xpFileTypeToName(XP_FileType type) {
             break;
         case (xpHTTPCookie):
             return PL_strdup("%USER%%COOKIE_F%");
-	case (xpHTTPCookiePermission):
+        case (xpHTTPCookiePermission):
             return PL_strdup("%USER%%COOKIE_PERMISSION_F%");
 
         default:
@@ -1800,6 +1806,7 @@ ET_PostCheckConfirmBox(MWContext* context,
     }
     return result;
 }
+
 
 /*
  * Tell the backend about a new load event.
