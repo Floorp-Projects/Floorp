@@ -82,6 +82,7 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
     return;
   }
   *aResult = mProps->Load(in);
+  NS_RELEASE(in);
 }
 
 nsStringBundle::~nsStringBundle()
