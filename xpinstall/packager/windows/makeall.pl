@@ -372,10 +372,10 @@ sub MakeExeZip
 
   $saveCwdir = cwd();
   chdir($aSrcDir);
-  if(system("$ENV{MOZ_TOOLS}\\bin\\zip $inDistPath\\xpi\\$aZipFile $aExeFile"))
+  if(system("zip $inDistPath\\xpi\\$aZipFile $aExeFile"))
   {
     chdir($saveCwdir);
-    die "\n Error: $ENV{MOZ_TOOLS}\\bin\\zip $inDistPath\\xpi\\$aZipFile $aExeFile";
+    die "\n Error: zip $inDistPath\\xpi\\$aZipFile $aExeFile";
   }
   chdir($saveCwdir);
 }
