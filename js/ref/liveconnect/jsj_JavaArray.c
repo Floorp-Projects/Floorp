@@ -30,6 +30,47 @@
 
 #include "jsj_private.h"      /* LiveConnect internals */
 
+/* Shorthands for ASCII (7-bit) decimal and hex conversion. */
+#define JS7_ISDEC(c)    (((c) >= '0') && ((c) <= '9'))
+#define JS7_UNDEC(c)    ((c) - '0')
+
+/*
+ * Convert any jsval v to an integer jsval if ToString(v)
+ * contains a base-10 integer that fits into 31 bits.
+ * Otherwise return v.
+ */
+try_convert_to_jsint(JSContext *cx, jsval idval)
+{
+    const jschar *cp;
+    JSString *jsstr;
+    
+    jsstr = JS_ValueToString(cx, idval);
+    if (!jsstr)
+        return idval;
+
+    cp = JS_GetStringChars(jsstr);
+    if (JS7_ISDEC(*cp)) {
+        jsuint index = JS7_UNDEC(*cp++);
+        jsuint oldIndex = 0;
+        jsuint c;
+        if (index != 0) {
+            while (JS7_ISDEC(*cp)) {
+                oldIndex = index;
+                c = JS7_UNDEC(*cp);
+                index = 10*index + c;
+                cp++;
+            }
+        }
+        if (*cp == 0 &&
+            (oldIndex < (JSVAL_INT_MAX / 10) ||
+            (oldIndex == (JSVAL_INT_MAX / 10) && c < (JSVAL_INT_MAX % 10)))) {
+            return INT_TO_JSVAL(index);
+        }
+    }
+    return idval;
+}
+
+
 static JSBool
 access_java_array_element(JSContext *cx,
                           JNIEnv *jEnv,
@@ -66,6 +107,9 @@ access_java_array_element(JSContext *cx,
     PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_ARRAY);
 
     JS_IdToValue(cx, id, &idval);
+
+    if (!JSVAL_IS_INT(idval))
+        idval = try_convert_to_jsint(cx, idval);
 
     if (!JSVAL_IS_INT(idval)) {
         /*
@@ -210,6 +254,8 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
 
+    *vp = JSVAL_FALSE;
+    
     if (!JSVERSION_IS_ECMA(version)) {
         JS_ReportError(cx, "Properties of JavaArray objects may not be deleted");
         return JS_FALSE;
