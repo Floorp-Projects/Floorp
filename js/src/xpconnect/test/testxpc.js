@@ -56,8 +56,16 @@ print("echo tests...");
 var reciever = new Object();
 reciever.SetReciever = function() {};
 reciever.SendOneString = function(str) {reciever_results[0] = str;};
+reciever.SendManyTypes = function() 
+    {
+        for(var i = 0; i < arguments.length; i++)
+            reciever_results[i] = arguments[i];
+    };
 
 echo.SetReciever(reciever);
+
+////////////////////
+// SendOneString
 
 var test_string = "some string";
 var reciever_results = new Object();
@@ -66,9 +74,15 @@ print("SendOneString - "+(
        reciever_results[0] == test_string
        ? "passed" : "failed"));
 
+////////////////////
+// In2OutOneInt
+
 print("In2OutOneInt - "+(
        echo.In2OutOneInt(102) == 102
        ? "passed" : "failed"));
+
+////////////////////
+// In2OutAddTwoInts
 
 var in_out_results1 = new Object();
 var in_out_results2 = new Object();
@@ -87,13 +101,47 @@ print("In2OutOneString - "+(
        ? "passed" : "failed"));
 
 
+////////////////////
+// SendManyTypes
+
+var reciever_results = new Object();
+var send_params = [-1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
+echo.SendManyTypes(send_params[0],
+                   send_params[1], 
+                   send_params[2], 
+                   send_params[3], 
+                   send_params[4], 
+                   send_params[5], 
+                   send_params[6], 
+                   send_params[7], 
+                   send_params[8], 
+                   send_params[9], 
+                   send_params[10], 
+                   send_params[11], 
+                   send_params[12], 
+                   send_params[13], 
+                   send_params[14], 
+                   send_params[15], 
+                   send_params[16], 
+                   send_params[17]);
+
+var all_ok = true;
+for(i = 0; i < 16; i++) {
+    if((""+reciever_results[i]) != (""+send_params[i])) {
+        if(all_ok)
+            print("SendManyTypes - failed...");
+        all_ok = false;
+        print("    param number "+i+" diff: "+send_params[i]+" -> "+reciever_results[i])
+    }
+}
+if(all_ok)
+    print("SendManyTypes - passed");
 
 
 print(".......................................");
 print("simple speed tests...");
 
-var iterations = 10000;
-
+var iterations = 1000;
 
 var reciever2 = new Object();
 reciever2.SetReciever = function() {};
