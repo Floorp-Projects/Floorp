@@ -58,7 +58,8 @@ sub BreakBig {
 
 
 if (exists($::FORM{'person'})) {
-     $title = $head = "Checkins for $::FORM{'person'}";
+     my $escaped_person = html_quote($::FORM{'person'});
+     $title = $head = "Checkins for $escaped_person";
 
      foreach $checkin (@::CheckInList) {
           $info = eval("\\\%$checkin");

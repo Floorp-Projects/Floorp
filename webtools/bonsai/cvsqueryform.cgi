@@ -96,7 +96,8 @@ else {
     if( $bMultiRepos ){
         print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
     }
-    print "<OPTION SELECTED VALUE='$::FORM{module}'>$::FORM{module}\n";
+    my $escaped_module = html_quote($::FORM{module});
+    print "<OPTION SELECTED VALUE='$escaped_module'>$escaped_module\n";
 }
 
 #
