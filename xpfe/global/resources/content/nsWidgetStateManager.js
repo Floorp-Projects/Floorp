@@ -118,7 +118,15 @@ nsWidgetStateManager.prototype =
                 var elements = [];
                 for( var i = 0; i < this.contentArea._elementIDs.length; i++ )
                   {
-                    elements[elements.length] = this.contentArea.document.getElementById( this.contentArea._elementIDs[i] );
+                    var elt = this.contentArea.document.getElementById( this.contentArea._elementIDs[i] );
+                    if (elt) {
+                      elements[elements.length] = elt;
+                    } else {
+                      // see bug #40329. People forget this too often, and it breaks Prefs
+                      dump("*** FIX ME: '_elementIDs' in '" + this.contentArea.location.href.split('/').pop() +
+                           "' contains a reference to a non-existent element ID '" + 
+                           this.contentArea._elementIDs[i] + "'.\n");
+                    }
                   }
               }
             else 
