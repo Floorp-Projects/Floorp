@@ -104,13 +104,18 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
 
     while (nRetries < 2) {
         srv = sqlite3_prepare (db, nsPromiseFlatCString(aSQLStatement).get(), aSQLStatement.Length(), &mDBStatement, NULL);
-        if (srv != SQLITE_OK || (srv == SQLITE_SCHEMA && nRetries > 0)) {
+        if ((srv == SQLITE_SCHEMA && nRetries != 0) ||
+            (srv != SQLITE_SCHEMA && srv != SQLITE_OK))
+        {
 #ifdef PR_LOGGING
             PR_LOG(gStorageLog, PR_LOG_ERROR, ("Sqlite statement prepare error: %d '%s'", srv, sqlite3_errmsg(db)));
             PR_LOG(gStorageLog, PR_LOG_ERROR, ("Statement was: '%s'", nsPromiseFlatCString(aSQLStatement).get()));
 #endif
             return NS_ERROR_FAILURE;
         }
+
+        if (srv == SQLITE_OK)
+            break;
 
         nRetries++;
     }
@@ -374,15 +379,18 @@ mozStorageStatement::Execute()
 #endif
             mExecuting = PR_FALSE;
             return NS_ERROR_FAILURE; // XXX error code
-        }
-
-        if (srv != SQLITE_SCHEMA)
+        } else if (srv == SQLITE_SCHEMA) {
+            nRetries++;
+            sqlite3_reset (mDBStatement);
+        } else {
             break;
-
-        nRetries++;
+        }
     }
 
-    return Reset();
+    if (nRetries >= 2)
+        return NS_ERROR_FAILURE;
+    else
+        return Reset();
 }
 
 /* mozIStorageDataSet executeDataSet (); */
@@ -406,7 +414,11 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
         int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
-        if ((srv != SQLITE_ROW && srv != SQLITE_DONE) || (srv == SQLITE_SCHEMA && nRetries > 0)) {
+        if ((srv == SQLITE_SCHEMA && nRetries != 0) ||
+            (srv != SQLITE_SCHEMA &&
+             srv != SQLITE_ROW &&
+             srv != SQLITE_DONE))
+        {
             nsCAutoString errStr;
             mDBConnection->GetLastErrorString(errStr);
             PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
@@ -430,13 +442,23 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
         {
             mExecuting = PR_FALSE;
             return NS_ERROR_FAILURE;
+        } else if (srv == SQLITE_SCHEMA) {
+            // if we're already mid-execute, we can't do much
+            // to fix SQLITE_SCHEMA errors, so we just pass them
+            // back.
+            if (mExecuting == PR_TRUE) {
+                mExecuting = PR_FALSE;
+                return NS_ERROR_FAILURE;
+            }
+
+            // otherwise, we reset the statement and try again
+            sqlite3_reset (mDBStatement);
+            nRetries++;
         } else if (srv != SQLITE_SCHEMA) {
             // something that shouldn't happen happened
             NS_ERROR ("sqlite3_step returned an error code we don't know about!");
-        }
-
-        nRetries++;
-    }
+        } 
+      }
 
     // shouldn't get here
     return NS_ERROR_FAILURE;
