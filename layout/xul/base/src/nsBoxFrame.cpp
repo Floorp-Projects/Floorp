@@ -97,6 +97,12 @@
 #include "nsIWidget.h"
 #include "nsITheme.h"
 
+// Needed for Print Preview
+#include "nsIDocument.h"
+#include "nsIPrintPreviewContext.h"
+#include "nsIURI.h"
+
+
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 //define DEBUG_REDRAW
@@ -844,6 +850,38 @@ static void printSize(char * aDesc, nscoord aSize)
 }
 #endif
 
+/**
+  * Returns PR_TRUE when the reflow reason is "Initial" and doing Print Preview
+  *         when returning PR_FALSE aIsChrome's value is indeterminate
+  * aIsChrome - Returns PR_TRUE when document is chrome, otherwise PR_FALSE
+  */
+PRBool
+nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState, 
+                                           PRBool& aIsChrome)
+{
+  aIsChrome = PR_FALSE;
+  const nsHTMLReflowState* reflowState = aState.GetReflowState();
+  if (reflowState->reason == eReflowReason_Initial) {
+    // See if we are doing Print Preview
+    nsCOMPtr<nsIPrintPreviewContext> ppContent(do_QueryInterface(aState.GetPresContext()));
+    if (ppContent) {
+      // Now, get the current URI to see of we doing chrome
+      nsCOMPtr<nsIPresShell> presShell;
+      aState.GetPresContext()->GetShell(getter_AddRefs(presShell));
+      if (!presShell) return PR_FALSE;
+      nsCOMPtr<nsIDocument> doc;
+      presShell->GetDocument(getter_AddRefs(doc));
+      if (!doc) return PR_FALSE;
+      nsCOMPtr<nsIURI> uri;
+      doc->GetDocumentURL(getter_AddRefs(uri));
+      if (!uri) return PR_FALSE;
+      uri->SchemeIs("chrome", &aIsChrome);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -957,8 +995,17 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
-  if (!(mState & NS_STATE_IS_ROOT)) 
-     GetAscent(state, ascent);
+  if (!(mState & NS_STATE_IS_ROOT)) {
+    // Only call GetAscent when not doing Initial reflow while in PP
+    // or when it is Initial reflow while in PP and a chrome doc
+    // If called again with initial reflow it crashes because the 
+    // frames are fully constructed (I think).
+    PRBool isChrome;
+    PRBool isInitialPP = IsInitialReflowForPrintPreview(state, isChrome);
+    if (!isInitialPP || (isInitialPP && isChrome)) {
+      GetAscent(state, ascent);
+    }
+  }
 
   aDesiredSize.width  = r.width;
   aDesiredSize.height = r.height;

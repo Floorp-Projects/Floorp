@@ -205,6 +205,9 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
+  // returns true if it is an Initial Reflow and doing Print Preview
+  static PRBool IsInitialReflowForPrintPreview(nsBoxLayoutState& aState, PRBool& aIsChrome);
+
 protected:
     virtual void GetBoxName(nsAutoString& aName);
 
