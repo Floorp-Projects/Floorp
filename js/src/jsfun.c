@@ -223,6 +223,10 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *argsobj;
 
+    /* Skip eval and debugger frames. */
+    while (fp->flags & JSFRAME_SPECIAL)
+        fp = fp->down;
+
     /* Create an arguments object for fp only if it lacks one. */
     argsobj = fp->argsobj;
     if (argsobj)
