@@ -30,7 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/nsPrefWindow.js \
 		$(srcdir)/pref.xul \
 		$(srcdir)/pref-advanced.xul \
-		$(srcdir)/pref-advanced-imageblocking.xul \
+		$(srcdir)/pref-imageblocking.xul \
 		$(srcdir)/pref-appearance.xul \
 		$(srcdir)/pref-applications.xul \
 		$(srcdir)/pref-cache.xul \
