@@ -737,8 +737,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 	goto loser;
     }
 
-    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, 
-                     SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC)
+    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, SEC_OID_SHA1)
        != SECSuccess) {
 	SECU_PrintError(progName,"PKCS12 add password integrity failed");
 	pk12uErrno = PK12UERR_PK12ADDPWDINTEG;
