@@ -757,7 +757,13 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
     if (result != PREF_NOERROR)
         return _convertRes(result);
 
+	PRBool valid;
     (*value)->SetPersistentDescriptorString(encodedString);
+    (*value)->IsValid(&valid);
+    if (! valid)
+    	/* if the ecodedString wasn't a valid persitent descriptor, it might be a valid native path*/
+    	(*value)->SetNativePath(encodedString);
+    
     PR_Free(encodedString); // Allocated by PREF_CopyCharPref
     return NS_OK;
 }
