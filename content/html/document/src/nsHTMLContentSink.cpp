@@ -889,29 +889,30 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
     } else {
       // Revese map id to name to get the correct character case in
       // the tag name.
-
-      const PRUnichar *name_str = nsnull;
-      const PRUnichar *tag = nsnull;
-
-      parserService->HTMLIdToStringTag(id, &tag);
-      NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
-
-      name->GetUnicode(&name_str);
-      NS_ASSERTION(name_str, "What? No string in atom?!?");
-
+      
       nsCOMPtr<nsINodeInfo> kungFuDeathGrip;
-      nsINodeInfo *new_name = aNodeInfo;
+      nsINodeInfo *nodeInfo = aNodeInfo;
 
-      if (nsCRT::strcmp(tag, name_str) != 0) {
-        nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag)));
+      if (nsHTMLTag(id) != eHTMLTag_userdefined) {
+        const PRUnichar *tag = nsnull;
+        parserService->HTMLIdToStringTag(id, &tag);
+        NS_ASSERTION(tag, "What? Reverse mapping of id to string broken!!!");
 
-        rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
-        NS_ENSURE_SUCCESS(rv, rv);
+        const PRUnichar *name_str = nsnull;
+        name->GetUnicode(&name_str);
+        NS_ASSERTION(name_str, "What? No string in atom?!?");
 
-        new_name = kungFuDeathGrip;
+        if (nsCRT::strcmp(tag, name_str) != 0) {
+          nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(tag)));
+
+          rv = aNodeInfo->NameChanged(atom, *getter_AddRefs(kungFuDeathGrip));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nodeInfo = kungFuDeathGrip;
+        }
       }
 
-      rv = MakeContentObject(nsHTMLTag(id), new_name, nsnull, nsnull, aResult);
+      rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, nsnull, aResult);
     }
   }
 
