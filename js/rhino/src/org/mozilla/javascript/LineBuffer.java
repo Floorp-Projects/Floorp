@@ -100,7 +100,6 @@ final class LineBuffer {
             if (c < 128 || !formatChar(c)) {
                 return c;
             }
-            hadCFSinceStringStart = true;
         }
     }
 
@@ -129,25 +128,20 @@ final class LineBuffer {
     private void skipFormatChar() {
         if (checkSelf && !formatChar(buffer[offset])) Context.codeBug();
 
-        if (stringStart >= 0 || stringSoFar != null) {
-            hadCFSinceStringStart = true;
+        // swap prev character with format one so possible call to
+        // startString can assume that previous non-format char is at
+        // offset - 1. Note it causes getLine to return not exactly the
+        // source LineBuffer read, but it is used only in error reporting
+        // and should not be a problem.
+        if (offset != 0) {
+            char tmp = buffer[offset];
+            buffer[offset] = buffer[offset - 1];
+            buffer[offset - 1] = tmp;
         }
-        else {
-            // swap prev character with format one so possible call to
-            // startString can assume that previous non-format char is at
-            // offset - 1. Note it causes getLine to return not exactly the
-            // source LineBuffer read, but it is used only in error reporting
-            // and should not be a problem.
-            if (offset != 0) {
-                char tmp = buffer[offset];
-                buffer[offset] = buffer[offset - 1];
-                buffer[offset - 1] = tmp;
-            }
-            else if (otherEnd != 0) {
-                char tmp = buffer[offset];
-                buffer[offset] = otherBuffer[otherEnd - 1];
-                otherBuffer[otherEnd - 1] = tmp;
-            }
+        else if (otherEnd != 0) {
+            char tmp = buffer[offset];
+            buffer[offset] = otherBuffer[otherEnd - 1];
+            otherBuffer[otherEnd - 1] = tmp;
         }
 
         ++offset;
@@ -199,37 +193,24 @@ final class LineBuffer {
 
     // Reconstruct a source line from the buffers.  This can be slow...
     String getLine() {
-        StringBuffer result = new StringBuffer();
-
-        int start = lineStart;
-        if (start >= offset) {
-            // the line begins somewhere in the other buffer; get that first.
-            if (otherStart < otherEnd)
-                // if a line ending was seen in the other buffer... otherwise
-                // just ignore this strange case.
-                result.append(otherBuffer, otherStart,
-                              otherEnd - otherStart);
-            start = 0;
-        }
-
-        // get the part of the line in the current buffer.
-        result.append(buffer, start, offset - start);
-
-        // Get the remainder of the line.
+        // Look for line end in the unprocessed buffer
         int i = offset;
         while(true) {
-            if (i == buffer.length) {
-                // we're out of buffer, let's just expand it.  We do
+            if (i == end) {
+                // if we're out of buffer, let's just expand it.  We do
                 // this instead of reading into a StringBuffer to
                 // preserve the stream for later reads.
-                char[] newBuffer = new char[buffer.length * 2];
-                System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
-                buffer = newBuffer;
+                if (end == buffer.length) {
+                    char[] tmp = new char[buffer.length * 2];
+                    System.arraycopy(buffer, 0, tmp, 0, end);
+                    buffer = tmp;
+                }
                 int charsRead = 0;
                 try {
                     charsRead = in.read(buffer, end, buffer.length - end);
                 } catch (IOException ioe) {
                     // ignore it, we're already displaying an error...
+                    break;
                 }
                 if (charsRead < 0)
                     break;
@@ -241,127 +222,31 @@ final class LineBuffer {
             i++;
         }
 
-        result.append(buffer, offset, i - offset);
-        return result.toString();
+        int start = lineStart;
+        if (lineStart < 0) {
+            // the line begins somewhere in the other buffer; get that first.
+            StringBuffer sb = new StringBuffer(otherEnd - otherStart + i);
+            sb.append(otherBuffer, otherStart, otherEnd - otherStart);
+            sb.append(buffer, 0, i);
+            return sb.toString();
+        } else {
+            return new String(buffer, lineStart, i - lineStart);
+        }
     }
 
     // Get the offset of the current character, relative to
     // the line that getLine() returns.
     int getOffset() {
-        if (lineStart >= offset)
+        if (lineStart < 0)
             // The line begins somewhere in the other buffer.
             return offset + (otherEnd - otherStart);
         else
             return offset - lineStart;
     }
 
-    // Set a mark to indicate that the reader should begin
-    // accumulating characters for getString().  The string begins
-    // with the last character read.
-    void startString() {
-        char c;
-        if (offset == 0) {
-            // We can get here if startString is called after a peek()
-            // or failed match() with offset past the end of the
-            // buffer.
-
-            // We're at the beginning of the buffer, and the previous character
-            // (which we want to include) is at the end of the last one, so
-            // we just go to StringBuffer mode.
-            stringSoFar = new StringBuffer();
-
-            stringStart = -1; // Set sentinel value.
-            c = otherBuffer[otherEnd - 1];
-            stringSoFar.append(c);
-        } else {
-            // Support restarting strings
-            stringSoFar = null;
-            stringStart = offset - 1;
-            c = buffer[stringStart];
-        }
-        hadCFSinceStringStart = (c >= 128 && formatChar(c));
-    }
-
-    // Get a string consisting of the characters seen since the last
-    // startString.
-    String getString() {
-        // No calls to getString without previous startString
-        if (Context.check && !(stringStart >= 0 || stringSoFar != null))
-            Context.codeBug();
-        String result;
-
-        /*
-         * There's one strange case here:  If the character offset currently
-         * points to (which we never want to include in the string) is
-         * a newline, then if the previous character is a carriage return,
-         * we probably want to exclude that as well.  If the offset is 0,
-         * then we hope that fill() handled excluding it from stringSoFar.
-         */
-        int loseCR = (offset > 0 &&
-                      buffer[offset] == '\n' && buffer[offset - 1] == '\r') ?
-            1 : 0;
-
-        if (stringStart >= 0) {
-            // String mark is valid, and in this buffer.
-
-            result = new String(buffer, stringStart,
-                                offset - stringStart - loseCR);
-        } else {
-            // Exclude cr as well as nl of newline.  If offset is 0, then
-            // hopefully fill() did the right thing.
-            result = (stringSoFar.append(buffer, 0, offset - loseCR)).toString();
-        }
-
-        stringStart = -1;
-        stringSoFar = null;
-
-        if (hadCFSinceStringStart) {
-            char c[] = result.toCharArray();
-            StringBuffer x = null;
-            for (int i = 0; i < c.length; i++) {
-                if (formatChar(c[i])) {
-                    if (x == null) {
-                        x = new StringBuffer();
-                        x.append(c, 0, i);
-                    }
-                }
-                else
-                    if (x != null) x.append(c[i]);
-            }
-            if (x != null) result = x.toString();
-        }
-
-        return result;
-    }
-
     private boolean fill() throws IOException {
         // fill should be caled only for emty buffer
         if (checkSelf && !(end == offset)) Context.codeBug();
-
-        // If there's a string currently being accumulated, save
-        // off the progress.
-
-        /*
-         * Exclude an end-of-buffer carriage return.  NOTE this is not
-         * fully correct in the general case, because we really only
-         * want to exclude the carriage return if it's followed by a
-         * linefeed at the beginning of the next buffer.  But we fudge
-         * because the scanner doesn't do this.
-         */
-        int loseCR = (offset > 0 && lastWasCR) ? 1 : 0;
-
-        if (stringStart != -1) {
-            // The mark is in the current buffer, save off from the mark to the
-            // end.
-            stringSoFar = new StringBuffer();
-
-            stringSoFar.append(buffer, stringStart, end - stringStart - loseCR);
-            stringStart = -1;
-        } else if (stringSoFar != null) {
-            // the string began prior to the current buffer, so save the
-            // whole current buffer.
-            stringSoFar.append(buffer, 0, end - loseCR);
-        }
 
         // swap buffers
         char[] tempBuffer = buffer;
@@ -374,12 +259,18 @@ final class LineBuffer {
         }
 
         // buffers have switched, so move the newline marker.
-        otherStart = lineStart;
+        if (lineStart >= 0) {
+            otherStart = lineStart;
+        } else {
+            // discard beging of the old line
+            otherStart = 0;
+        }
+
         otherEnd = end;
 
         // set lineStart to a sentinel value, unless this is the first
         // time around.
-        prevStart = lineStart = (otherBuffer == null) ? 0 : buffer.length + 1;
+        prevStart = lineStart = (otherBuffer == null) ? 0 : -1;
 
         offset = 0;
         end = in.read(buffer, 0, buffer.length);
@@ -446,10 +337,6 @@ final class LineBuffer {
 
     private boolean lastWasCR = false;
     private boolean hitEOF = false;
-
-    private int stringStart = -1;
-    private StringBuffer stringSoFar = null;
-    private boolean hadCFSinceStringStart = false;
 
 // Rudimentary support for Design-by-Contract
     private static final boolean checkSelf = Context.check && true;
