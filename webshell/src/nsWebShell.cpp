@@ -202,8 +202,8 @@ public:
 
   NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
   NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
-  NS_IMETHOD GetContainingChromeShell(nsIWebShell** aResult);
-  NS_IMETHOD SetContainingChromeShell(nsIWebShell* aChromeShell);
+  NS_IMETHOD GetContainingChromeElement(nsIContent** aResult);
+  NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement);
 
   NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
@@ -447,7 +447,8 @@ protected:
   nsVoidArray mRefreshments;
 
   nsWebShellType mWebShellType;
-  nsIWebShell* mChromeShell; // Weak reference.
+  nsIContent* mChromeElement; // Weak reference.
+
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
   void ReleaseChildren();
@@ -612,7 +613,7 @@ nsWebShell::nsWebShell()
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
   mWebShellType = nsWebShellContent;
-  mChromeShell = nsnull;
+  mChromeElement = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
   mFailedToLoadHistoryService = PR_FALSE;
@@ -1722,18 +1723,18 @@ nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetContainingChromeShell(nsIWebShell** aResult)
+nsWebShell::GetContainingChromeElement(nsIContent** aResult)
 {
-  NS_IF_ADDREF(mChromeShell);
-  *aResult = mChromeShell;
+  NS_IF_ADDREF(mChromeElement);
+  *aResult = mChromeElement;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::SetContainingChromeShell(nsIWebShell* aChromeShell)
+nsWebShell::SetContainingChromeElement(nsIContent* aChromeElement)
 {
   // Weak reference. Don't addref.
-  mChromeShell = aChromeShell;
+  mChromeElement = aChromeElement;
   return NS_OK;
 }
 
@@ -1960,7 +1961,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                       nsLoadFlags aType,
                       const PRUint32 aLocalIP,
                       const PRUnichar* aReferrer)
-
 {
   if (!aUri)
     return NS_ERROR_NULL_POINTER;
@@ -3710,11 +3710,10 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
     // Replace the top most history entry with the new url
     mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
   }
-  
+
   if (newURL) delete newURL;
   if (historyURL) delete historyURL;
   
-
   return NS_OK;
 }
 
