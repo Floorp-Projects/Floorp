@@ -351,7 +351,6 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                 this);
 
 
-
   /*XtAddCallback(mWidget,
                 XmNexposeCallback,
                 nsXtWidget_Expose_Callback,
@@ -434,6 +433,7 @@ void nsWindow::InitCallbacks(char * aName)
 		    PR_TRUE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
+
 
   /*XtAddEventHandler(mWidget, 
                     ResizeRedirectMask,
@@ -706,6 +706,7 @@ nscolor nsWindow::GetBackgroundColor(void)
 void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   mBackground = aColor ;
+  //XtVaSetValues(mWidget, 
 }
 
     
@@ -781,6 +782,28 @@ void nsWindow::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 void nsWindow::Invalidate(PRBool aIsSynchronous)
 {
+  if (mWidget == nsnull) {
+    return;
+  }
+
+  Window  win      = XtWindow(mWidget);
+  Display *display = XtDisplay(mWidget);
+
+
+  XEvent evt;
+  evt.xgraphicsexpose.type       = GraphicsExpose;
+  evt.xgraphicsexpose.send_event = False;
+  evt.xgraphicsexpose.display    = display;
+  evt.xgraphicsexpose.drawable   = win;
+  evt.xgraphicsexpose.x          = 0;
+  evt.xgraphicsexpose.y          = 0;
+  evt.xgraphicsexpose.width      = mBounds.width;
+  evt.xgraphicsexpose.height     = mBounds.height;
+  evt.xgraphicsexpose.count      = 0;
+  XSendEvent(display, win, False, ExposureMask, &evt);
+  XFlush(display);
+
+  
 }
 
 
@@ -1120,8 +1143,12 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
 }
 
 
-PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
+PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
+  if (mEventCallback) {
+    return(DispatchEvent(&aEvent));
+  }
+
  return FALSE;
 }
 

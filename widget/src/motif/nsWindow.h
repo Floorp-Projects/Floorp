@@ -120,7 +120,7 @@ public:
     virtual PRBool          OnResize(nsSizeEvent &aEvent);
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
 
-    virtual PRBool          DispatchFocus(PRUint32 aEventType);
+    virtual PRBool          DispatchFocus(nsGUIEvent &aEvent);
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
 
     virtual void            SetIgnoreResize(PRBool aIgnore);
@@ -274,7 +274,7 @@ public: \
     virtual PRBool          OnPaint(nsPaintEvent & event); \
     virtual PRBool          OnResize(nsSizeEvent &aEvent); \
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode); \
-    virtual PRBool          DispatchFocus(PRUint32 aEventType); \
+    virtual PRBool          DispatchFocus(nsGUIEvent &aEvent); \
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos); 
 
 
@@ -495,9 +495,9 @@ public: \
     { \
       return GET_OUTER()->OnKey(aEventType, aKeyCode); \
     } \
-    PRBool _classname::_aggname::DispatchFocus(PRUint32 aEventType) \
+    PRBool _classname::_aggname::DispatchFocus(nsGUIEvent &aEvent) \
     { \
-      return GET_OUTER()->DispatchFocus(aEventType); \
+      return GET_OUTER()->DispatchFocus(aEvent); \
     } \
     PRBool _classname::_aggname::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos) \
     { \

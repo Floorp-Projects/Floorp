@@ -90,6 +90,16 @@ void nsTextWidget::Create(nsIWidget *aParent,
 
   InitCallbacks("nsTextWidget");
 
+  XtAddCallback(mWidget,
+                XmNfocusCallback,
+                nsXtWidget_Focus_Callback,
+                this);
+
+  XtAddCallback(mWidget,
+                XmNlosingFocusCallback,
+                nsXtWidget_Focus_Callback,
+                this);
+
   if (mMakeReadOnly) {
     SetReadOnly(PR_TRUE);
   }
