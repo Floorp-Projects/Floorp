@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+pref("mailnews.logComposePerformance", false);
 pref("mail.showMessengerPerformance", false);
 
 pref("mail.wrap_long_lines",                true);
