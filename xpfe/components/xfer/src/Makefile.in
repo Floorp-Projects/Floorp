@@ -40,6 +40,12 @@ EXTRA_DSO_LDOPTS = \
 		$(NSPR_LIBS) \
 		$(NULL)
 
+ifdef NECKO
+SHARED_LIBRARY_LIBS= \
+	$(DIST)/lib/libneckoutil_s.a \
+	$(NULL)
+endif
+
 ifndef NECKO
 EXTRA_DSO_LDOPTS += \
 		-lnetlib \
