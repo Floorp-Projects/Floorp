@@ -238,7 +238,7 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString value;
-    if (NS_FAILED(xpAccessible->GetValue(value)))
+    if (NS_FAILED(xpAccessible->GetFinalValue(value)))
       return S_FALSE;
 
     *pszValue = ::SysAllocString(value.get());
@@ -279,7 +279,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
     return E_FAIL;
 
   PRUint32 role = 0;
-  if (NS_FAILED(xpAccessible->GetRole(&role)))
+  if (NS_FAILED(xpAccessible->GetFinalRole(&role)))
     return E_FAIL;
 
   // -- Try enumerated role
@@ -336,7 +336,7 @@ STDMETHODIMP nsAccessibleWrap::get_accState(
     return E_FAIL;
 
   PRUint32 state;
-  if (NS_FAILED(xpAccessible->GetState(&state)))
+  if (NS_FAILED(xpAccessible->GetFinalState(&state)))
     return E_FAIL;
 
   pvarState->lVal = state;

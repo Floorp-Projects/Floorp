@@ -189,18 +189,23 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
       GetParent(getter_AddRefs(parentAccessible));
       if (parentAccessible) {
         PRUint32 orState = 0;
-        parentAccessible->GetState(&orState);
+        parentAccessible->GetFinalState(&orState);
         *aState |= orState;
       }
     }
   }
 
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  if (docAccessible) {
-    PRBool isEditable;
-    docAccessible->GetIsEditable(&isEditable);
-    if (isEditable) {
-      *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
+  if (!mLinkContent->IsFocusable()) {
+   *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
+  }
+  else {
+    nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+    if (docAccessible) {
+      PRBool isEditable;
+      docAccessible->GetIsEditable(&isEditable);
+      if (isEditable) {
+        *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
+      }
     }
   }
   return NS_OK;
@@ -338,26 +343,7 @@ NS_IMETHODIMP nsGenericAccessible::TakeFocus()
 
 NS_IMETHODIMP nsGenericAccessible::GetRole(PRUint32 *aRole)
 {
-  // XXX todo: use DHTML role attribs to fill in accessible role
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE; // Node already shut down
-  }
-
   *aRole = ROLE_NOTHING;
-
-  nsAutoString role;
-  if (content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role) != NS_CONTENT_ATTR_HAS_VALUE) {
-    return NS_OK;
-  }
-
-  if (role.EqualsLiteral("button")) {
-    *aRole = ROLE_PUSHBUTTON;
-  }
-  else if (role.EqualsLiteral("checkbox")) {
-    *aRole = ROLE_CHECKBUTTON;
-  }
-
   return NS_OK;
 }
 

@@ -56,6 +56,28 @@ class nsIAtom;
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
 
+struct nsStateMapEntry
+{
+  const char* attributeName;  // magic value of nsnull means last entry in map
+  const char* attributeValue; // magic value of nsnull means any value
+  PRUint32 state;       // OR state with this
+};
+
+struct nsRoleMapEntry
+{
+  const char *roleString; // such as "button"
+  PRUint32 role;   // use this role
+  PRUint32 state;  // always OR state with this
+  // For this role with a DOM attribute/value match definined in
+  // nsStateMapEntry.attributeName && .attributeValue, OR accessible state with
+  // nsStateMapEntry.state
+  // Currently you can have up to 3 DOM attributes with accessible state mappings.
+  // A variable sized array would not allow use of C++'s struct initialization feature.
+  nsStateMapEntry attributeMap1;
+  nsStateMapEntry attributeMap2;
+  nsStateMapEntry attributeMap3;
+};
+
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
                      public nsPIAccessible
@@ -74,7 +96,12 @@ public:
   NS_DECL_NSPIACCESSIBLE
 
   // nsIAccessNode
+  NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
+
+  // Support GetFinalState(), GetFinalValue()
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetValue(nsAString & aValue);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   static nsresult GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
@@ -86,6 +113,7 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
 protected:
+  PRUint32 MappedAttrState(nsIContent *aContent, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
@@ -111,7 +139,12 @@ protected:
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
   nsIAccessible *mFirstChild, *mNextSibling;
+  nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
+
+  static nsRoleMapEntry gWAIRoleMap[];
+  static nsStateMapEntry gDisabledStateMap;
 };
+
 
 #endif  
 

@@ -94,7 +94,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   PRUint32 parentState = 0;
   nsCOMPtr<nsIAccessible> parentAccessible;
   GetParent(getter_AddRefs(parentAccessible));
-  parentAccessible->GetState(&parentState);
+  parentAccessible->GetFinalState(&parentState);
   *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
   *_retval |= (parentState & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
 
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::DoAction(PRUint8 index)
         nsCOMPtr<nsIAccessible> buttonAccessible;
         parentAccessible->GetPreviousSibling(getter_AddRefs(buttonAccessible));
         PRUint32 state;
-        buttonAccessible->GetState(&state);
+        buttonAccessible->GetFinalState(&state);
         if (state & STATE_PRESSED)
           buttonAccessible->DoAction(eAction_Click);
       }

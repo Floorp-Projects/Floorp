@@ -50,6 +50,7 @@
 #include "nsIWidget.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -100,7 +101,7 @@
 NS_IMPL_ISUPPORTS_INHERITED2(nsAccessible, nsAccessNode, nsIAccessible, nsPIAccessible)
 
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAccessNodeWrap(aNode, aShell), 
-  mParent(nsnull), mFirstChild(nsnull), mNextSibling(nsnull)
+  mParent(nsnull), mFirstChild(nsnull), mNextSibling(nsnull), mRoleMapEntry(nsnull)
 {
 #ifdef NS_DEBUG_X
    {
@@ -220,6 +221,41 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 {
   mNextSibling = aNextSibling? aNextSibling: DEAD_END_ACCESSIBLE;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessible::Init()
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsAutoString roleString;
+  if (content &&
+      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
+                                                    nsAccessibilityAtoms::role, 
+                                                    roleString)) {
+    // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
+    // time there is a role attribute, because the prefixe to namespace mappings
+    // can change within any subtree via the xmlns attribute
+    nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(content));
+    if (dom3Node) {
+      nsAutoString prefix;
+      NS_NAMED_LITERAL_STRING(kRolesWAI_Namespace, "http://www.w3.org/wai/pf/GUIRoleTaxonomy#");
+      dom3Node->LookupPrefix(kRolesWAI_Namespace, prefix);
+      prefix += ':';
+      if (StringBeginsWith(roleString, prefix)) {
+        roleString.Cut(0, prefix.Length());
+        nsCString utf8Role = NS_ConvertUCS2toUTF8(roleString); // For easy comparison
+        for (PRUint32 index = 0; gWAIRoleMap[index].roleString; index ++) {
+          if (utf8Role.Equals(gWAIRoleMap[index].roleString)) {
+            break; // The dynamic role attribute maps to an entry in our table
+          }
+        }
+        // Always use some entry if there is a role string
+        // If no match, we use the last entry which maps to ROLE_NOTHING
+        mRoleMapEntry = &gWAIRoleMap[index];
+      }
+    }
+  }
+
+  return nsAccessNodeWrap::Init();
 }
 
 NS_IMETHODIMP nsAccessible::Shutdown()
@@ -613,7 +649,7 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
   while (child) {
     child->GetBounds(&x, &y, &w, &h);
     if (tx >= x && tx < x + w && ty >= y && ty < y + h) {
-      child->GetState(&state);
+      child->GetFinalState(&state);
       if ((state & (STATE_OFFSCREEN|STATE_INVISIBLE)) == 0) {   // Don't walk into offscreen items
         NS_ADDREF(*aAccessible = child);
         return NS_OK;
@@ -893,7 +929,7 @@ NS_IMETHODIMP nsAccessible::TakeFocus()
   if (!content) {
     return NS_ERROR_FAILURE;
   }
-  content->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
+  content->SetFocus(GetPresContext());
 
   return NS_OK;
 }
@@ -1253,6 +1289,118 @@ NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTa
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsRoleMapEntry nsAccessible::gWAIRoleMap[] = 
+{
+  // This list of WAI-defined roles are currently hardcoded.
+  // Eventually we will most likely be loading an RDF resource that contains this information
+  // Using RDF will also allow for role extensibility.
+  // XXX Should we store attribute names in this table as atoms instead of strings?
+  // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
+  {"button", ROLE_PUSHBUTTON, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"checkbox", ROLE_CHECKBUTTON, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
+  {"checkbox-tristate", ROLE_CHECKBUTTON, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
+  {"icon", ROLE_ICON, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menu", ROLE_MENUPOPUP, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menubar", ROLE_MENUBAR, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menuitem", ROLE_MENUITEM, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"menuitem-checkbox", ROLE_MENUITEM, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
+  {"progress-meter", ROLE_PROGRESSBAR, STATE_READONLY, {"valuenow", "unknown", STATE_MIXED}, {0, 0, 0}, {0, 0, 0}},
+  {"grid", ROLE_TABLE, 0, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"gridcell", ROLE_CELL, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"option", ROLE_LISTITEM, 0, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {"secret-text", ROLE_PASSWORD_TEXT, STATE_PROTECTED, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
+  {"select", ROLE_LIST, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"slider", ROLE_SLIDER, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}},
+  {"submit", ROLE_PUSHBUTTON, STATE_DEFAULT, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"textarea", ROLE_TEXT, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_MULTI_LINE
+  {"textfield", ROLE_TEXT, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
+  {"toolbar-icon", ROLE_PUSHBUTTON, 0, {"checked", "true", STATE_PRESSED}, {0, 0, 0}, {0, 0, 0}},
+  {"tree", ROLE_OUTLINE, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"treeitem", ROLE_OUTLINEITEM, 0, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
+  {nsnull, ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+};
+
+// XHTML 2 roles
+// These don't need a mapping - they are exposed either through DOM or via MSAA role string
+// {"banner", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"contentinfo", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"main", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"navigation", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"note", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"search", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"secondary", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+// {"seealso", ROLE_NOTHING, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+
+nsStateMapEntry nsAccessible::gDisabledStateMap = {"disabled", 0, STATE_UNAVAILABLE };
+// Possibly split into 2 kinds of roles -- those that hold data and those that don't
+// These states only apply to items that can hold data
+//nsStateMapEntry nsAccessible::gInvalidStateMap = {"invalid", 0, STATE_INVALID }; // XXX wait until extended states fix lands
+//nsStateMapEntry nsAccessible::gRequiredStateMap = {"required", 0, STATE_REQUIRED }; // XXX no MSAA or ATK mapping
+
+
+NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
+{
+  if (mRoleMapEntry) {
+    *aRole = mRoleMapEntry->role;
+    if (*aRole != ROLE_NOTHING) {
+      return NS_OK;
+    }
+  }
+  return GetRole(aRole);
+}
+
+PRUint32 nsAccessible::MappedAttrState(nsIContent *aContent, nsStateMapEntry *aStateMapEntry)
+{
+  if (!aStateMapEntry->attributeName) {
+    return 0;
+  }
+
+  nsAutoString attribValue;
+  nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+                                                     attribAtom,
+                                                     attribValue) &&
+      (!aStateMapEntry->attributeValue || 
+        NS_ConvertUCS2toUTF8(attribValue).Equals(aStateMapEntry->attributeValue))) {
+    return aStateMapEntry->state;
+  }
+
+  return 0;
+}
+
+NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
+{
+  nsresult rv = GetState(aState);
+  if (NS_FAILED(rv) || !mRoleMapEntry) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content) {
+    *aState |= mRoleMapEntry->state |
+               MappedAttrState(content, &mRoleMapEntry->attributeMap1) |
+               MappedAttrState(content, &mRoleMapEntry->attributeMap2) | 
+               MappedAttrState(content, &mRoleMapEntry->attributeMap3) |
+               MappedAttrState(content, &gDisabledStateMap); // Anything can be disabled/unavailable
+
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
+{
+  if (mRoleMapEntry) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    if (content &&
+        NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
+                                                      nsAccessibilityAtoms::valuenow,
+                                                      aValue)) {
+      return NS_OK;
+    }
+  }
+  return GetValue(aValue);
 }
 
 // Not implemented by this class
