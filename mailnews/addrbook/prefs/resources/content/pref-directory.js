@@ -342,7 +342,7 @@ function newDirectory()
 {
   window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
                     "addDirectory", "chrome,modal=yes,resizable=no");
-  if(gNewServer && gNewServerString) {
+  if(gUpdate && gNewServer && gNewServerString) {
     var tree = document.getElementById("directoriesTree_root");
     var item = document.createElement('treeitem');
     var row  = document.createElement('treerow');
@@ -381,8 +381,7 @@ function editDirectory()
     var cell =  row.firstChild; 
     cell.setAttribute('label', gNewServer); 
     cell.setAttribute('string', gNewServerString);
-    // set gUpdate to false since we have updated the server name in the list.
-    gUpdate = false;
+    
     // window.opener is either global pref window or 
     // mail/news account settings window.
     // set window.opener.gRefresh to true such that the 

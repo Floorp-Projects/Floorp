@@ -297,5 +297,6 @@ function onOK()
 
 function onCancel()
 {
+  window.opener.gUpdate = false;
   window.close();
 }
