@@ -566,7 +566,7 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
   *aServer = server;
   NS_IF_ADDREF(*aServer);
 
-  return NS_OK;
+  return (server) ? NS_OK : NS_ERROR_NULL_POINTER;
 }
 
 #ifdef MSG_FASTER_URI_PARSING
