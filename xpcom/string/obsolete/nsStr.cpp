@@ -34,7 +34,7 @@
 
 #include "nsStr.h"
 #include "bufferRoutines.h"
-#include "stdio.h"  //only used for printf
+#include <stdio.h>  //only used for printf
 #include "nsCRT.h"
 #include "nsDeque.h"
 
