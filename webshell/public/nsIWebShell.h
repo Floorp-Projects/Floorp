@@ -31,7 +31,7 @@
 #include "nsIScrollableView.h"
 #include "nsIParser.h" // for nsCharsetSource only
 #include "nsISessionHistory.h"
-
+#include "nsIUrlDispatcher.h"
 
 class nsIDOMElement;
 class nsIDOMWindow;
@@ -451,6 +451,10 @@ public:
   /* Set & Get Session History details */
   NS_IMETHOD SetIsInSHist(PRBool aIsFrame)       = 0;
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame)      = 0;
+
+    /* Get and set the URL Dispatcher for the webshell */
+  NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver) = 0;
+  NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult)=0;
 
 };
 
