@@ -958,7 +958,6 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
     parentFolder = root;
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
-  printf("*** before CopySmartKeywords\n");
   CopySmartKeywords(bms, bundle, parentFolder);
 #endif
 
@@ -1165,7 +1164,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                              nsIBookmarksService* aBMS)
 {
   static PRInt32 callCount = 0;
-  printf("*** Entering ParseBookmarksFolder %d\n", ++callCount);
   nsresult rv;
   PRBool moreData = PR_FALSE;
   nsAutoString buffer;
