@@ -637,6 +637,7 @@ PRInt32 nsZipArchive::FindFree( nsZipFind* aFind )
 //      nsZipArchive  --  private implementation
 //***********************************************************
 
+#define BR_BUF_SIZE 1024 /* backward read buffer size */
 
 //---------------------------------------------
 //  nsZipArchive::BuildFileList
@@ -647,10 +648,11 @@ PRInt32 nsZipArchive::BuildFileList()
   PRUint32  sig = 0L;
   PRUint32  namelen, extralen, commentlen;
   PRUint32  hash;
-  PRUint32  size;
+  PRUint8   buf[BR_BUF_SIZE];
 
   ZipLocal   Local;
   ZipCentral Central;
+  ZipEnd     *End;
 
   nsZipItem*  item;
 
@@ -658,51 +660,66 @@ PRInt32 nsZipArchive::BuildFileList()
   // skip to the central directory
   //-----------------------------------------------------------------------
   PRInt32  pos = 0L;
-  while ( status == ZIP_OK )
+  PRInt32  bufsize = 0;
+
+  //-- get archive size using end pos
+  pos = PR_Seek(mFd, 0, PR_SEEK_END);
+#ifndef STANDALONE
+  if (pos <= 0)
+#else
+  if (pos || ((pos = ftell(mFd)) <= 0))
+#endif
+    status = ZIP_ERR_CORRUPT;
+
+  while (status == ZIP_OK)
   {
+    //-- read backwards in 1K-sized chunks (unless file is less than 1K)
+    pos > BR_BUF_SIZE ? bufsize = BR_BUF_SIZE : bufsize = pos;
+    pos -= bufsize;
+
 #ifndef STANDALONE 
     if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != (PRInt32)pos )
 #else
-    // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
-    // if successfull, otherwise a non-zero.
     if ( PR_Seek( mFd, pos, PR_SEEK_SET ) != 0 )
 #endif
     {
-      //-- couldn't seek to next position
       status = ZIP_ERR_CORRUPT;
       break;
     }
 
-    if ( PR_Read( mFd, (char*)&Local, sizeof(ZipLocal) ) != sizeof(ZipLocal) ) 
+    //-- scan for ENDSIG
+    if ( PR_Read( mFd, buf, bufsize ) != (READTYPE)bufsize ) 
     {
-      //-- file ends prematurely
       status = ZIP_ERR_CORRUPT;
       break;
     }
 
-    //-- check if we hit the central directory
-    sig = xtolong( Local.signature );
-    if ( sig == LOCALSIG )
-    {
-        //-- check length of this file and its metadata so we can skip over it
-        namelen = xtoint( Local.filename_len );
-        extralen = xtoint( Local.extrafield_len );
-        size = xtolong( Local.size );
+    PRUint8 *endp = buf + bufsize;
+    PRUint32 endsig;
+    PRBool bEndsigFound = PR_FALSE;
 
-        //-- reposition file mark to next expected local header
-        pos += sizeof(ZipLocal) + namelen + extralen + size;
-    }
-    else if ( sig == CENTRALSIG ) 
+    for (endp -= sizeof(ZipEnd); endp >= buf; endp--)
     {
-      // file mark set to start of central directory
+		endsig = xtolong(endp);
+		if (endsig == ENDSIG)
+      {
+        bEndsigFound = PR_TRUE;
+        break;
+      }
+    }
+
+    if (bEndsigFound)
+    {
+      End = (ZipEnd *) endp;
+        
+      //-- set pos to start of central directory
+      pos = xtolong(End->offset_central_dir);
       break;
     }
-    else
-    {
-      //-- otherwise expected to find a local header
-      status = ZIP_ERR_CORRUPT;
-      break;
-    }
+
+    //-- backward read must overlap ZipEnd length
+    pos += sizeof(ZipEnd);
+
   } /* while reading local headers */
 
   //-------------------------------------------------------

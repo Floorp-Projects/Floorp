@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 #include <stdio.h>
@@ -88,6 +89,7 @@ typedef unsigned char       PRUint8;
 
 #define PR_RDONLY     "rb"
 #define PR_SEEK_SET   SEEK_SET
+#define PR_SEEK_END   SEEK_END
 
 #define XP_RegExpValid(a)       NON_SXP
 #define XP_RegExpMatch(a,b,c)   PR_FALSE
