@@ -191,7 +191,10 @@ function OpenURL(event, node, root)
         return false;
 
     var url = node.id;
-    
-    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+    if (event.metaKey)
+        // if metaKey is down, open in a new browser window
+        window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
+    else 
+        openTopWin(url);
     return true;
 }
