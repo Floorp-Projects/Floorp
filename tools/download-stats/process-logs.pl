@@ -210,8 +210,8 @@ sub process_log {
         $file =~ /^(.*)\/([^\/]*)$/;
         ($path, $filename) = ($1, $2);
 
-        # Only deal with releases, webtools, and language packs at this point.
-	next if $path !~ /releases/ && $path !~ /webtools/ && $path !~ /mozilla\/l10n\/lang/;
+        # Only deal with releases, extensions, webtools, and language packs at this point.
+	next if $path !~ /releases/ && $path !~ /extensions/ && $path !~ /webtools/ && $path !~ /mozilla\/l10n\/lang/;
 
         # Strip the URL query string, if any, from the filename.
         $filename = (split(/\?/, $filename))[0];
