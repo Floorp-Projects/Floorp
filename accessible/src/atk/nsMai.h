@@ -50,7 +50,6 @@
 
 extern PRLogModuleInfo *gMaiLog;
 
-/*
 #ifdef MAI_LOGGING
 #define MAI_LOG(level, args) \
 PR_BEGIN_MACRO \
@@ -67,8 +66,6 @@ PR_END_MACRO
 #define MAI_LOG_DEBUG(args) MAI_LOG(PR_LOG_DEBUG, args)
 #define MAI_LOG_WARNING(args) MAI_LOG(PR_LOG_WARNING, args)
 #define MAI_LOG_ERROR(args) MAI_LOG(PR_LOG_ERROR, args)
-*/
-#define MAI_LOG_DEBUG(a)  printf a
 
 #define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
 #define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
