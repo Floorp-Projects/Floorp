@@ -150,6 +150,9 @@ sub SyncAnyPendingShadowChanges {
                 return;
             } elsif (defined $pid) {
                 # child process code runs here
+                my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
+                open STDOUT,">$redir";
+                open STDERR,">$redir";
                 exec("./syncshadowdb","--") or die "Unable to exec syncshadowdb: $!";
                 # the idea was that passing the second parameter tricks it into
                 # using execvp instead of running a shell. Not really necessary since
