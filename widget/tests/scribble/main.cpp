@@ -48,3 +48,15 @@ void main(int argc, char **argv)
 }
 #endif
 
+#ifdef XP_MAC
+int main(int argc, char **argv)
+{
+  int argC = argc;
+
+  return(CreateApplication(&argC, argv));
+	
+	return 0;
+}
+#endif
+
+
