@@ -94,7 +94,7 @@ STATIC_EXTRA_LIBS	+= $(MOZ_XINERAMA_LIBS)
 endif
 
 ifdef MOZ_CALENDAR
-STATIC_EXTRA_LIBS	+= -lical -licalss
+STATIC_EXTRA_LIBS	+= -lmozical -lmozicalss
 endif
 
 # Component Makefile always brings in this.
