@@ -519,8 +519,35 @@
       <separator />
       <menuitem name="About Communicator Prototype" 
 	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
-      
     </menu>
+
+    // Menu for testing.
+    <menu name="Debug">
+
+	  <menu name="Viewer">  // Viewer tests.
+        <menuitem name="Demo #0"  onclick="window.frames[0].location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="Demo #1"  onclick="window.frames[0].location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="Demo #2"  onclick="window.frames[0].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="Demo #3"  onclick="window.frames[0].location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="Demo #4"  onclick="window.frames[0].location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="Demo #5"  onclick="window.frames[0].location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="Demo #6"  onclick="window.frames[0].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="Demo #7"  onclick="window.frames[0].location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="Demo #8"  onclick="window.frames[0].location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="Demo #9"  onclick="window.frames[0].location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="Demo #10" onclick="window.frames[0].location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="Demo #11" onclick="window.frames[0].location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="Demo #12" onclick="window.frames[0].location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="Demo #13" onclick="window.frames[0].location.href='resource:/res/samples/test13.html'"/>
+      </menu>
+
+      <menu name="XPToolkit"> // XPToolkit tests.
+        <menuitem name="Toolbar" onclick="window.frames[0].location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem name="Tree" onclick="window.frames[0].location.href='resource:/res/samples/treeTest1.xul'"/>
+      </menu>
+
+    </menu>
+
   </menubar>
   
   <html:div id="header">
