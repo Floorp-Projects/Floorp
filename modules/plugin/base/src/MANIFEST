@@ -21,3 +21,4 @@
 
 nsPluginsCID.h
 nsIPluginHost.h
+nsIPluginInstanceOwner.h
