@@ -22,7 +22,6 @@ MODULE = shell
 EXPORTS =			\
 	nsIApplicationShell.h	\
 	nsIShellInstance.h	\
-	nsIWebWidget.h		\
 	nsshell.h			\
 	$(NULL)
 

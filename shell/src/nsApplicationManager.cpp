@@ -22,7 +22,7 @@
 #include "windows.h"
 #endif
 
-#include "NSApplicationManager.h"
+#include "nsApplicationManager.h"
 #include "nsString.h"
 
 nsHashtable * NSApplicationManager::applications = NULL;

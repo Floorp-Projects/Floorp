@@ -17,13 +17,21 @@
 
 DEPTH = ../..
 
+DIRS = unix 
+
 MODULE=shell
 
-DEFINES = -D_IMPL_NS_WEB
+LIBRARY_NAME = shell
 
-EXPORTS = \
-     nsApplicationManager.h			\
-	$(NULL)
+DEFINES = -D_IMPL_NS_SHELL
+
+LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
+      -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/shell
+
+EXPORTS =				\
+ nsApplicationManager.h			\
+ nsShellInstance.h			\
+ $(NULL)
 
 CPPSRCS=				\
  nsApplicationManager.cpp			\
@@ -36,7 +44,5 @@ CPP_OBJS=				\
  $(NULL)
 
 include $(DEPTH)/config/config.mk
-
-TARGETS = $(LIBRARY)
 
 include $(DEPTH)/config/rules.mk
