@@ -151,9 +151,11 @@ nsresult nsAppShell::Run()
    NS_ADDREF_THIS();
    int  keepGoing = 1;
   
+#if 0
    nsresult rv;
    NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
    if (NS_FAILED(rv)) return rv;
+#endif
 
    // Process messages
    do {
@@ -239,9 +241,11 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 {
    PRBool gotMessage = PR_FALSE;
 
+#if 0
    nsresult rv;
    NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
    if (NS_FAILED(rv)) return rv;
+#endif
 
    do {
       // Give priority to system messages (in particular keyboard, mouse,
