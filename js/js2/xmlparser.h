@@ -25,7 +25,7 @@ public:
     
     void addAttribute(String name, String value)    { mAttributeList.insert(AttributeValue(name, value) ); }
     bool getValue(const String &name, String &value);
-    bool hasAttribute(String &name)                 { return (mAttributeList.find(name) != mAttributeList.end()); }
+    bool hasAttribute(const String &name)                 { return (mAttributeList.find(name) != mAttributeList.end()); }
 
     String &name()      { return mName; }
 
@@ -74,7 +74,7 @@ public:
 
     bool getValue(const String &name, String &value)
                                     { return mTag->getValue(name, value); }
-    bool hasAttribute(String &name) { return mTag->hasAttribute(name); }
+    bool hasAttribute(const String &name) { return mTag->hasAttribute(name); }
 
 
     void print(Formatter& f) const
