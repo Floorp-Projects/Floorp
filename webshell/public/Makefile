@@ -19,12 +19,14 @@ DEPTH = ../..
 
 MODULE = raptor
 
-EXPORTS =			\
-	nsIDocumentLoader.h	\
-	nsIDocumentWidget.h	\
-	nsILinkHandler.h	\
-	nsIWebWidget.h		\
-	nsweb.h			\
+EXPORTS =					\
+        nsIContentViewer.h			\
+        nsIContentViewerContainer.h		\
+        nsIDocumentLoader.h			\
+        nsIDocumentViewer.h			\
+	nsILinkHandler.h			\
+	nsIWebShell.h				\
+	nsweb.h					\
 	$(NULL)
 
 include $(DEPTH)/config/config.mk
