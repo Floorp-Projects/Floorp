@@ -37,15 +37,18 @@ interface nsISubscribableServer : nsISupports {
 	void setIncomingServer(in nsIMsgIncomingServer server);
 	void setDelimiter(in char delimiter);
 	void populateSubscribeDatasource(in nsIMsgWindow aMsgWindow, in boolean forceToServer);
+	void populateSubscribeDatasourceWithName(in nsIMsgWindow aMsgWindow, in boolean forceToServer, in string name);
 	attribute nsISubscribeListener subscribeListener;
 	void startPopulatingSubscribeDS();
   	void stopPopulatingSubscribeDS();
   	void findAndAddParentToSubscribeDS(in string uri, in string serverUri, in string aName, in nsIRDFResource aChildResource);
-  	void setPropertiesInSubscribeDS(in string uri, in wstring aName, in nsIRDFResource aResource);
-	void addToSubscribeDS(in string aName);
+  	void setPropertiesInSubscribeDS(in string uri, in wstring aName, in nsIRDFResource aResource, in boolean subscribed, in boolean changeIfExists);
+	void addToSubscribeDS(in string aName, in boolean addAsSubscribed, in boolean changeIfExists);
 	void setAsSubscribedInSubscribeDS(in string aURI);
 	void updateSubscribedInSubscribeDS();
 	void subscribe(in wstring name);
 	void unsubscribe(in wstring name);
+	void setShowFullName(in boolean showFullName);
+	void subscribeCleanup();
 };
 

@@ -38,6 +38,9 @@
 #define DEBUG_SUBSCRIBE 1
 #endif
 
+#define TRUE_LITERAL_STR "true"
+#define FALSE_LITERAL_STR "false"
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -47,6 +50,7 @@ nsSubscribableServer::nsSubscribableServer(void)
 {
   NS_INIT_REFCNT();
   mDelimiter = '.';
+  mShowFullName = PR_TRUE;
 }
 
 nsSubscribableServer::~nsSubscribableServer(void)
@@ -85,12 +89,22 @@ nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aURI)
     if(NS_FAILED(rv)) return rv;
     if (!mSubscribeDatasource) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIRDFNode> oldLiteral;
-    rv = mSubscribeDatasource->GetTarget(resource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldLiteral));
+    nsCOMPtr<nsIRDFNode> oldNode;
+    rv = mSubscribeDatasource->GetTarget(resource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldNode));
     if(NS_FAILED(rv)) return rv;
 
-    rv = mSubscribeDatasource->Change(resource, kNC_Subscribed, oldLiteral, kTrueLiteral);
+	//check if literal is already true
+	nsCOMPtr<nsIRDFLiteral> oldLiteral = do_QueryInterface(oldNode);
+	if (!oldLiteral) return NS_ERROR_FAILURE;
+	const PRUnichar *subscribedLiteralStr;
+	rv = oldLiteral->GetValueConst(&subscribedLiteralStr);
     if(NS_FAILED(rv)) return rv;
+
+	// if it was already "true", do nothing
+	if (nsCRT::strcmp(subscribedLiteralStr,TRUE_LITERAL_STR)) {
+		rv = mSubscribeDatasource->Change(resource, kNC_Subscribed, oldNode, kTrueLiteral);
+		if(NS_FAILED(rv)) return rv;
+	}
 
     return NS_OK;
 }
@@ -148,7 +162,7 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
   return (convertedString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 NS_IMETHODIMP
-nsSubscribableServer::AddToSubscribeDS(const char *aName)
+nsSubscribableServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
 {
 	nsresult rv;
 
@@ -156,7 +170,7 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 	if (!aName) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_SUBSCRIBE
-	printf("AddToSubscribeDS(%s)\n",aName);
+	printf("AddToSubscribeDS(%s,%d,%d)\n",aName,addAsSubscribed,changeIfExists);
 #endif
 	nsXPIDLCString serverUri;
 
@@ -176,7 +190,7 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 	rv = CreateUnicodeStringFromUtf7(aName, getter_Copies(unicodeName));
 	if (NS_FAILED(rv)) return rv;
 
-	rv = SetPropertiesInSubscribeDS((const char *) uri, (const PRUnichar *)unicodeName, resource);
+	rv = SetPropertiesInSubscribeDS((const char *) uri, (const PRUnichar *)unicodeName, resource, addAsSubscribed, changeIfExists);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = FindAndAddParentToSubscribeDS((const char *) uri, (const char *)serverUri, aName, resource);
@@ -186,23 +200,96 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
+nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
 {
 	nsresult rv;
 
 #ifdef DEBUG_SUBSCRIBE
-	printf("SetPropertiesInSubscribeDS(%s,??,??)\n",uri);
+	printf("SetPropertiesInSubscribeDS(%s,??,??,%d,%d)\n",uri,subscribed,changeIfExists);
 #endif
 		
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
 	rv = mRDFService->GetLiteral(aName, getter_AddRefs(nameLiteral));
 	if(NS_FAILED(rv)) return rv;
 
-	rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
+	PRBool nameExists = PR_TRUE;
+	nsCOMPtr <nsIRDFNode> nameNode;
+	// should be HasAssertion(), since we don't need to get at the literal
+	rv = mSubscribeDatasource->GetTarget(aResource, kNC_Name, PR_TRUE, getter_AddRefs(nameNode));
 	if(NS_FAILED(rv)) return rv;
+	if ((!nameNode) && (rv == NS_RDF_NO_VALUE)) {
+		nameExists = PR_FALSE;
+	}
 
-	rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kFalseLiteral, PR_TRUE);
+	if (!nameExists) {
+		rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
+		if(NS_FAILED(rv)) return rv;
+
+		if (mShowFullName) {
+			rv = mSubscribeDatasource->Assert(aResource, kNC_LeafName, nameLiteral, PR_TRUE);
+			if(NS_FAILED(rv)) return rv;
+		}
+		else {
+			nsAutoString leafStr(aName);
+			PRInt32 leafPos = leafStr.RFindChar(mDelimiter,PR_TRUE);
+			if (leafPos != -1) {
+				leafStr.Cut(0,leafPos + 1);
+			}
+
+			nsCOMPtr<nsIRDFLiteral> leafLiteral;
+			rv = mRDFService->GetLiteral(leafStr.GetUnicode(), getter_AddRefs(leafLiteral));
+			if(NS_FAILED(rv)) return rv;
+
+			rv = mSubscribeDatasource->Assert(aResource, kNC_LeafName, leafLiteral, PR_TRUE);
+			if(NS_FAILED(rv)) return rv;
+		}
+	}
+
+	PRBool subscribedExists = PR_TRUE;
+	nsCOMPtr <nsIRDFNode> subscribedNode;
+	rv = mSubscribeDatasource->GetTarget(aResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(subscribedNode));
 	if(NS_FAILED(rv)) return rv;
+	if ((!subscribedNode) && (rv == NS_RDF_NO_VALUE)) {
+		subscribedExists = PR_FALSE;
+	}
+
+	if (subscribed) {
+		if (!subscribedExists) {
+			rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kTrueLiteral, PR_TRUE);
+			if(NS_FAILED(rv)) return rv;
+		}
+		else if (changeIfExists) {
+			nsCOMPtr<nsIRDFLiteral> subscribedLiteral = do_QueryInterface(subscribedNode);
+			if (!subscribedLiteral) return NS_ERROR_FAILURE;
+			const PRUnichar *subscribedLiteralStr;
+			rv = subscribedLiteral->GetValueConst(&subscribedLiteralStr);
+			if(NS_FAILED(rv)) return rv;
+
+			if (nsCRT::strcmp(subscribedLiteralStr,TRUE_LITERAL_STR)) {
+				rv = mSubscribeDatasource->Change(aResource, kNC_Subscribed, subscribedNode, kTrueLiteral);
+				if(NS_FAILED(rv)) return rv;
+			}
+		}
+	}
+	else {
+		if (!subscribedExists) {
+			rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kFalseLiteral, PR_TRUE);
+			if(NS_FAILED(rv)) return rv;
+		}
+		else if (changeIfExists) {
+			nsCOMPtr<nsIRDFLiteral> subscribedLiteral = do_QueryInterface(subscribedNode);
+			if (!subscribedLiteral) return NS_ERROR_FAILURE;
+			const PRUnichar *subscribedLiteralStr;
+			rv = subscribedLiteral->GetValueConst(&subscribedLiteralStr);
+			if(NS_FAILED(rv)) return rv;
+
+			if (nsCRT::strcmp(subscribedLiteralStr,FALSE_LITERAL_STR)) {
+				rv = mSubscribeDatasource->Change(aResource, kNC_Subscribed, subscribedNode, kFalseLiteral);
+				if(NS_FAILED(rv)) return rv;
+			}
+		}
+	}
+
 
 	return rv;
 }
@@ -258,7 +345,7 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 			rv = CreateUnicodeStringFromUtf7((const char *)nameCStr, getter_Copies(unicodeName));
 			if (NS_FAILED(rv)) return rv;
 
-			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const PRUnichar *)unicodeName, parentResource);
+			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const PRUnichar *)unicodeName, parentResource, PR_FALSE, PR_FALSE /* change if exists */);
 			if(NS_FAILED(rv)) return rv;
 		}
 
@@ -291,6 +378,7 @@ nsSubscribableServer::StopPopulatingSubscribeDS()
 	mRDFService = nsnull;
 	mSubscribeDatasource = nsnull;
 	kNC_Name = nsnull;
+	kNC_LeafName = nsnull;
 	kNC_Child = nsnull;
 	kNC_Subscribed = nsnull;
 	
@@ -313,6 +401,10 @@ nsSubscribableServer::StartPopulatingSubscribeDS()
   NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Name,"no name resource");
   if (NS_FAILED(rv)) return rv;
 
+  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#LeafName", getter_AddRefs(kNC_LeafName));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_LeafName,"no leaf name resource");
+  if (NS_FAILED(rv)) return rv;
+
   rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
   NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Child,"no child resource");
   if (NS_FAILED(rv)) return rv;
@@ -322,12 +414,12 @@ nsSubscribableServer::StartPopulatingSubscribeDS()
   if (NS_FAILED(rv)) return rv;
  
   nsAutoString trueString; 
-  trueString.AssignWithConversion("true");
+  trueString.AssignWithConversion(TRUE_LITERAL_STR);
   rv = mRDFService->GetLiteral(trueString.GetUnicode(), getter_AddRefs(kTrueLiteral));
   if(NS_FAILED(rv)) return rv;
 
   nsAutoString falseString; 
-  falseString.AssignWithConversion("false");
+  falseString.AssignWithConversion(FALSE_LITERAL_STR);
   rv = mRDFService->GetLiteral(falseString.GetUnicode(), getter_AddRefs(kFalseLiteral));
   if(NS_FAILED(rv)) return rv;
 
@@ -337,7 +429,6 @@ nsSubscribableServer::StartPopulatingSubscribeDS()
 NS_IMETHODIMP
 nsSubscribableServer::SetSubscribeListener(nsISubscribeListener *aListener)
 {
-	if (!aListener) return NS_ERROR_NULL_POINTER;
 	mSubscribeListener = aListener;
 	return NS_OK;
 }
@@ -351,6 +442,20 @@ nsSubscribableServer::GetSubscribeListener(nsISubscribeListener **aListener)
 			NS_ADDREF(*aListener);
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::SubscribeCleanup()
+{
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *name)
+{
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -372,4 +477,11 @@ nsSubscribableServer::Unsubscribe(const PRUnichar *aName)
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::SetShowFullName(PRBool showFullName)
+{
+	mShowFullName = showFullName;
+	return NS_OK;
 }

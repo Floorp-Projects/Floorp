@@ -1503,6 +1503,7 @@ NS_IMETHODIMP
 nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
                                 nsIMsgFolder* aImapMailFolder,
                                 nsIUrlListener* aUrlListener,
+								const char *folderName,
                                 nsIURI** aURL)
 {
     NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
@@ -1523,15 +1524,13 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            nsXPIDLCString folderName;
-            GetFolderName(aImapMailFolder, getter_Copies(folderName));
-            if (nsCRT::strlen(folderName) > 0)
+            if (folderName && (nsCRT::strlen(folderName) > 0))
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
 
                 urlSpec.Append("/discoverchildren>");
 				urlSpec.AppendWithConversion(hierarchySeparator);
-                urlSpec.Append((const char *) folderName);
+                urlSpec.Append(folderName);
     			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
 				// compiler that is preventing in string parameters from showing up as
 				// const char *. hopefully they will fix it soon.
@@ -1554,6 +1553,7 @@ NS_IMETHODIMP
 nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                                      nsIMsgFolder* aImapMailFolder,
                                      nsIUrlListener* aUrlListener,
+									 const char *folderName,
                                      PRInt32 level,
                                      nsIURI** aURL)
 {
@@ -1574,15 +1574,13 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            nsXPIDLCString folderName;
-            GetFolderName(aImapMailFolder, getter_Copies(folderName));
-            if (nsCRT::strlen(folderName) > 0)
+            if (folderName && (nsCRT::strlen(folderName) > 0))
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
                 urlSpec.Append("/discoverlevelchildren>");
                 urlSpec.AppendInt(level);
                 urlSpec.AppendWithConversion(hierarchySeparator); // hierarchySeparator "/"
-                urlSpec.Append((const char *) folderName);
+                urlSpec.Append(folderName);
 
 				rv = uri->SetSpec((char *) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
@@ -2757,6 +2755,43 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     // don't point to folders on the server.  they'll point to the one on "Local Folders"
    	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::BuildSubscribeDatasourceWithName(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow, const char *folderName)
+{
+	nsresult rv;
+
+#ifdef DEBUG_sspitzer
+	printf("BuildSubscribeDatasourceWithName(%s)\n",folderName);
+#endif
+	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
+	if (!server) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+    rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!rootMsgFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIUrlListener> listener = do_QueryInterface(aServer, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!listener) return NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIEventQueue> queue;
+    // get the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+
+	rv = DiscoverChildren(queue, rootMsgFolder, listener, folderName, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP

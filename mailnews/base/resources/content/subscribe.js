@@ -2,6 +2,7 @@ var gSubscribeTree = null;
 var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
+var gSubscribableServer = null;
 var RDF = null;
 var gSubscribeDS = null;
 var gStatusBar = null;
@@ -46,7 +47,7 @@ function SetServerTypeSpecificTextValues()
     element = document.getElementById("foldersheaderlabel");
 	element.setAttribute('value',stringval);
 
-	// XXX todo, fix this hack
+	// xxx todo, fix this hack
 	// qi the server to get a nsISubscribable server
 	// and ask it for the delimiter
 	if (serverType == "nntp") {
@@ -90,8 +91,17 @@ function SetUpServerMenu()
 
 var MySubscribeListener = {
 	OnStopPopulating: function() {
-		//dump("root subscribe tree at: "+ gServerURI +"\n");
-		gSubscribeTree.setAttribute('ref',gServerURI);
+		// only re-root the tree, if it is null.
+		// otherwise, we are in here because we are populating
+		// a part of the tree
+
+		var refValue = gSubscribeTree.getAttribute('ref');
+		//dump("ref = " + refValue + refValue.length + "\n");
+		if (refValue == "null") {
+			dump("root subscribe tree at: "+ gServerURI +"\n");
+			gSubscribeTree.setAttribute('ref',gServerURI);
+		}
+
 		// Turn progress meter off.
       	gStatusBar.setAttribute("mode","normal");	
 	}
@@ -110,14 +120,14 @@ function SetUpTree(forceToServer)
 	var server = folder.server;
 
 	try {
-		subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+		gSubscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
-		subscribableServer.subscribeListener = MySubscribeListener;
+		gSubscribableServer.subscribeListener = MySubscribeListener;
 
 		// Turn progress meter on.
       	gStatusBar.setAttribute("mode","undetermined");	
 
-		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */, forceToServer);
+		gSubscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */, forceToServer);
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");
@@ -128,7 +138,7 @@ function SubscribeOnLoad()
 {
 	//dump("SubscribeOnLoad()\n");
 	
-  gSubscribeTree = document.getElementById('subscribetree');
+    gSubscribeTree = document.getElementById('subscribetree');
 	gStatusBar = document.getElementById('statusbar-icon');
 	gNameField = document.getElementById('namefield');
 
@@ -153,11 +163,12 @@ function SubscribeOnLoad()
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
 		try {
-			subscribableServer = folder.server.QueryInterface(Components.interfaces.nsISubscribableServer);
+			gSubscribableServer = folder.server.QueryInterface(Components.interfaces.nsISubscribableServer);
 			gServerURI = folder.server.serverURI;
 		}
 		catch (ex) {
 			dump("not a subscribable server\n");
+			gSubscribableServer = null;
 			gServerURI = null;
 		}
 	}
@@ -191,6 +202,9 @@ function subscribeOK()
 	if (top.okCallback) {
 		top.okCallback(top.gServerURI,top.gChangeTable);
 	}
+	if (gSubscribableServer) {
+		gSubscribableServer.subscribeCleanup();
+	}
 	return true;
 }
 
@@ -198,6 +212,9 @@ function subscribeCancel()
 {
 	//dump("in subscribeCancel()\n");
 	Stop();
+	if (gSubscribableServer) {
+		gSubscribableServer.subscribeCleanup();
+	}
 	return true;
 }
 
@@ -207,6 +224,7 @@ function SetState(uri,name,state,stateStr)
 	if (!uri || !stateStr) return;
 
 	try {
+		// xxx should we move this code into nsSubscribableServer.cpp?
 		var src = RDF.GetResource(uri, true);
 		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
 		var oldLiteral = gSubscribeDS.GetTarget(src, prop, true);
@@ -306,7 +324,20 @@ function SubscribeOnClick(event)
 	}
 	else {
  		var targetclass = event.target.getAttribute('class');
-		if (targetclass != 'tree-cell-twisty') {
+		if (targetclass == 'tree-cell-twisty') {
+        	var treeitem = event.target.parentNode.parentNode.parentNode;
+			var open = treeitem.getAttribute('open');
+			if(open == "true") {
+				var name = treeitem.getAttribute("name");	
+				dump("do twisty for " + name +"\n");
+
+				// Turn progress meter on.
+				gStatusBar.setAttribute("mode","undetermined");	
+
+				gSubscribableServer.populateSubscribeDatasourceWithName(null /* eventually, a nsIMsgWindow */, true /* force to server */, name);
+			}
+		}
+		else {
 			var name = event.target.parentNode.parentNode.getAttribute('name');
 			gNameField.setAttribute('value',name);
 		}

@@ -72,4 +72,6 @@ interface nsIImapIncomingServer : nsISupports {
   void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
   void ResetConnection(in string folderName);
   void CreatePRUnicharStringFromUTF7(in string aSourceString, out wstring aUnicodeStr);
+
+  attribute boolean doingLsub;
 };

@@ -5350,16 +5350,24 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
                     secondLevelPattern += delimiter;
                     secondLevelPattern += '%';
 				}
+
+				nsresult rv;
+    			nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(m_server, &rv);
+				if (NS_FAILED(rv) || !imapServer) return;
+
 				if (allPattern.Length())
 				{
+					imapServer->SetDoingLsub(PR_TRUE);
 					Lsub(allPattern, PR_TRUE);	// LSUB all the subscribed
 				}
 				if (topLevelPattern.Length())
 				{
+					imapServer->SetDoingLsub(PR_FALSE);
 					List(topLevelPattern, PR_TRUE);	// LIST the top level
 				}
 				if (secondLevelPattern.Length())
 				{
+					imapServer->SetDoingLsub(PR_FALSE);
 					List(secondLevelPattern, PR_TRUE);	// LIST the second level
 				}
 			}

@@ -91,6 +91,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 	m_waitingForConnectionInfo = PR_FALSE;
 	m_redirectedLogonRetries = 0;
 	mDoingSubscribeDialog = PR_FALSE;
+	mDoingLsub = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -630,6 +631,15 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
     return rv;
 }
 
+NS_IMETHODIMP 
+nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
+{
+#ifdef DEBUG_jefft
+	printf("jefft, implement me\n");
+#endif
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 {
 	nsresult rv;
@@ -685,7 +695,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
 	if (mDoingSubscribeDialog) {
-		rv = AddToSubscribeDS(folderPath);
+		rv = AddToSubscribeDS(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
 		return rv;
 	}
 
@@ -1829,6 +1839,29 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 }
 
 NS_IMETHODIMP
+nsImapIncomingServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *name)
+{
+	nsresult rv;
+#ifdef DEBUG_sspitzer
+	printf("in PopulateSubscribeDatasourceWithName(%s)\n",name);
+#endif
+	mDoingSubscribeDialog = PR_TRUE;	
+
+	// xxx todo can we do: rv = mInner->StartPopulatingSubscribeDS(); ?
+    rv = StartPopulatingSubscribeDS();
+    if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!imapService) return NS_ERROR_FAILURE;
+
+    rv = imapService->BuildSubscribeDatasourceWithName(this, aMsgWindow, name);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/)
 {
 	nsresult rv;
@@ -1881,6 +1914,14 @@ nsImapIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 }
 
 NS_IMETHODIMP
+nsImapIncomingServer::SetShowFullName(PRBool showFullName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetShowFullName(showFullName);
+}
+
+NS_IMETHODIMP
 nsImapIncomingServer::SetDelimiter(char aDelimiter)
 {
 	NS_ASSERTION(mInner,"not initialized");
@@ -1906,20 +1947,20 @@ nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::AddToSubscribeDS(const char *aName)
+nsImapIncomingServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed,PRBool changeIfExists)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->AddToSubscribeDS(aName);
+	return mInner->AddToSubscribeDS(aName, addAsSubscribed, changeIfExists);
 }
 
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
+nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource);
+	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource,subscribed,changeIfExists);
 }
 
 NS_IMETHODIMP
@@ -1948,7 +1989,20 @@ nsImapIncomingServer::StopPopulatingSubscribeDS()
 	rv = mInner->StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
-	mInner = nsnull;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsImapIncomingServer::SubscribeCleanup()
+{
+	nsresult rv;
+	if (mInner) {
+		rv = mInner->SetSubscribeListener(nsnull);
+		if (NS_FAILED(rv)) return rv;
+
+		mInner = nsnull;
+	}
 	return NS_OK;
 }
 
@@ -1964,6 +2018,9 @@ nsImapIncomingServer::StartPopulatingSubscribeDS()
     if (NS_FAILED(rv)) return rv;
 
     rv = SetDelimiter('/');		// is this aways the case?  need to talk to jefft
+    if (NS_FAILED(rv)) return rv;
+
+	rv = SetShowFullName(PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
 	return mInner->StartPopulatingSubscribeDS();
@@ -2036,5 +2093,21 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
 	}
 
 	if (NS_FAILED(rv)) return rv;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetDoingLsub(PRBool doingLsub)
+{
+	mDoingLsub = doingLsub;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetDoingLsub(PRBool *doingLsub)
+{
+	if (!doingLsub) return NS_ERROR_NULL_POINTER;
+
+	*doingLsub = mDoingLsub;
 	return NS_OK;
 }

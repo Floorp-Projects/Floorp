@@ -45,12 +45,14 @@ private:
   nsCOMPtr <nsIRDFDataSource> mSubscribeDatasource;
   nsCOMPtr <nsIRDFService> mRDFService;
   nsCOMPtr <nsIRDFResource> kNC_Name;
+  nsCOMPtr <nsIRDFResource> kNC_LeafName;
   nsCOMPtr <nsIRDFResource> kNC_Child;
   nsCOMPtr <nsIRDFResource> kNC_Subscribed;
   nsCOMPtr <nsIRDFLiteral> kTrueLiteral;
   nsCOMPtr <nsIRDFLiteral> kFalseLiteral; 
   nsCOMPtr <nsIMsgIncomingServer> mIncomingServer;
   char mDelimiter;
+  PRBool mShowFullName;
 };
 
 #endif // nsSubscribableServer_h__

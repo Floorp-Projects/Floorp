@@ -692,7 +692,7 @@ addGroupFunction(nsCString &aElement, void *aData)
 	nsNntpIncomingServer *server;
 	server = (nsNntpIncomingServer *)aData;
 	
-	rv = server->AddToSubscribeDS((const char *)aElement);
+	rv = server->AddToSubscribeDS((const char *)aElement, PR_FALSE, PR_TRUE);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"AddToSubscribeDS failed");
 	return PR_TRUE;
 }
@@ -815,6 +815,34 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 }
 
 NS_IMETHODIMP
+nsNntpIncomingServer::PopulateSubscribeDatasourceWithName(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *name)
+{
+	nsresult rv;
+
+#ifdef DEBUG_sspitzer
+	printf("PopulateSubscribeDatasourceWithName(%s)\n",name);
+#endif
+
+	rv = StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SubscribeCleanup()
+{
+	nsresult rv;
+	if (mInner) {
+		rv = mInner->SetSubscribeListener(nsnull);
+		if (NS_FAILED(rv)) return rv;
+
+		mInner = nsnull;
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
 {
   nsresult rv;
@@ -859,7 +887,7 @@ nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
 	// since this comes from the server, append it to the list
 	mGroupsOnServer.AppendCString(aName);
 
-	rv = AddToSubscribeDS(aName);
+	rv = AddToSubscribeDS(aName, PR_FALSE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
@@ -870,6 +898,14 @@ nsNntpIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
 	return mInner->SetIncomingServer(aServer);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetShowFullName(PRBool showFullName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetShowFullName(showFullName);
 }
 
 NS_IMETHODIMP
@@ -927,19 +963,19 @@ nsNntpIncomingServer::UpdateSubscribedInSubscribeDS()
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddToSubscribeDS(const char *aName)
+nsNntpIncomingServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->AddToSubscribeDS(aName);
+	return mInner->AddToSubscribeDS(aName,addAsSubscribed,changeIfExists);
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
+nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource);
+	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource,subscribed,changeIfExists);
 }
 
 NS_IMETHODIMP
@@ -968,7 +1004,8 @@ nsNntpIncomingServer::StopPopulatingSubscribeDS()
 	rv = mInner->StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
-	mInner = nsnull;
+	//xxx todo when do I set this to null?
+	//mInner = nsnull;
 	return NS_OK;
 }
 
@@ -984,6 +1021,9 @@ nsNntpIncomingServer::StartPopulatingSubscribeDS()
     if (NS_FAILED(rv)) return rv;
 
     rv = SetDelimiter('.');
+    if (NS_FAILED(rv)) return rv;
+
+	rv = SetShowFullName(PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
 	return mInner->StartPopulatingSubscribeDS();

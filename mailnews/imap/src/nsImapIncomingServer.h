@@ -59,6 +59,7 @@ public:
 	NS_DECL_NSIURLLISTENER
 
 	NS_IMETHOD PerformBiff();
+	NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
 	NS_IMETHOD CloseCachedConnections();
 
 protected:
@@ -92,6 +93,7 @@ private:
 	
 	// subscribe dialog stuff
 	PRBool	mDoingSubscribeDialog;
+	PRBool	mDoingLsub;
 	nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
 	nsCOMPtr <nsISubscribableServer> mInner;
 };
