@@ -32,6 +32,9 @@
 
 #include "csid.h"
 
+
+int16 fe_LocaleCharSetID = CS_LATIN1;
+
 /*
 ** FE_StrfTime - format a struct tm to a character string, depending
 ** on the value of the format parameter.
@@ -105,4 +108,27 @@ INTL_DefaultDocCharSetID(MWContext *cxt)
 void
 INTL_Relayout(MWContext *pContext)
 {
+}
+
+
+INTLCharSetID
+FE_GetCharSetID(INTL_CharSetID_Selector selector)
+{
+  INTLCharSetID charsetID = CS_DEFAULT;
+  
+  switch (selector)
+    {
+    case INTL_FileNameCsidSel:
+    case INTL_DefaultTextWidgetCsidSel:
+      charsetID = (INTLCharSetID) fe_LocaleCharSetID;
+      break;
+    case INTL_OldBookmarkCsidSel:
+      charsetID = (INTLCharSetID) INTL_DocToWinCharSetID(fe_LocaleCharSetID);
+      break;
+    default:
+      break;
+    }
+  XP_ASSERT(CS_DEFAULT != charsetID);
+  
+  return charsetID;
 }

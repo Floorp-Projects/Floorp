@@ -61,37 +61,53 @@ extern GdkVisual *gnomefe_visual;
 static MWContext *last_documented_context;
 static LO_Element *last_documented_element;
 
-static void
+static gint
 html_view_realize_handler(GtkWidget *widget,
 			  void *data)
 {
   MozHTMLView *view = (MozHTMLView*)data;
   MWContext *context = MOZ_VIEW(view)->context;
-
+  
   /* Tell the image library to only ever return us depth 1 il_images.
      We will still enlarge these to visual-depth when displaying them. */
   if (!context->color_space)
-    context->color_space = IL_CreateGreyScaleColorSpace(1, 1);
-
+    {
+      context->color_space = IL_CreateGreyScaleColorSpace(1, 1);
+      printf("No cs in html_view_realize_handler. Created one\n");
+    }
+  printf("Got cs for %p (%p)\n", context, context->color_space);
 
   IL_AddRefToColorSpace(context->color_space);
 
   context->compositor = moz_html_view_create_compositor(view);
 
   moz_html_view_add_image_callbacks(view);
+  {
+    IL_DisplayData dpy_data;
+    uint32 display_prefs;
+    
+    
+    dpy_data.color_space = context->color_space;
+    dpy_data.progressive_display = 0;
+    display_prefs = IL_COLOR_SPACE | IL_PROGRESSIVE_DISPLAY | IL_DITHER_MODE;
+    
+    IL_SetDisplayMode (context->img_cx, display_prefs, &dpy_data);
+  }
+  return TRUE;
 }
 
-static void
+static gint
 html_view_handle_pointer_motion_part2(MWContext *context, LO_Element *element, int32 event,
 				      void *closure, ETEventStatus status)
 {
 #ifdef WANT_SPEW
   printf ("MADE IT HERE.\n");
 #endif
+  return TRUE;
 }
 
 
-void
+gint
 html_view_handle_pointer_motion_for_layer(MozHTMLView *view,
 					  CL_Layer *layer,
 					  CL_Event *layer_event)
@@ -143,9 +159,10 @@ html_view_handle_pointer_motion_for_layer(MozHTMLView *view,
 
   if (cursor)
     gdk_cursor_destroy(cursor);
+  return TRUE;
 }
 
-static void
+static gint
 html_view_handle_pointer_motion(MozHTMLView *view,
 				GdkEvent *event)
 {
@@ -172,6 +189,7 @@ html_view_handle_pointer_motion(MozHTMLView *view,
 						NULL,
 						&layer_event);
     }
+  return TRUE;
 }
 
 void
@@ -325,7 +343,7 @@ html_view_handle_button_release(MozHTMLView *view,
       }
 }
 
-static void
+static gint
 html_view_event_handler(GtkWidget *widget,
 			GdkEvent *event,
 			void *data)
@@ -370,6 +388,7 @@ html_view_event_handler(GtkWidget *widget,
     default:
       break;
     }
+  return TRUE;
 }
 
 void 
@@ -439,6 +458,7 @@ MozHTMLView *
 moz_html_view_create_grid_child(MozHTMLView *parent_htmlview,
 				MWContext *context)
 {
+  XP_ASSERT(0);
   if (GTK_IS_FIXED(MOZ_VIEW(parent_htmlview)->subview_parent))
     {
     }
@@ -1183,4 +1203,5 @@ void
 moz_html_view_display_table(MozHTMLView *view,
 			    LO_TableStruct *table)
 {
+  XP_ASSERT(0);
 }

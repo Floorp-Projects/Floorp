@@ -32,12 +32,14 @@ FE_LoadGridCellFromHistory(MWContext *context,
 			   void *hist,
 			   NET_ReloadMethod force_reload)
 {
+  XP_ASSERT(0);
 }
 
 void*
 FE_FreeGridWindow(MWContext *context,
 		  XP_Bool save_history)
 {
+  XP_ASSERT(0);
 }
 
 void
@@ -47,6 +49,7 @@ FE_RestructureGridWindow(MWContext *context,
 			 int32 width,
 			 int32 height)
 {
+  XP_ASSERT(0);
 }
 
 MWContext *
@@ -63,6 +66,7 @@ FE_MakeGridWindow(MWContext *old_context,
 		  NET_ReloadMethod force_reload,
 		  Bool no_edge)
 {
+  XP_ASSERT(0);
 }
 
 void
@@ -70,10 +74,12 @@ FE_GetFullWindowSize(MWContext *context,
 		     int32 *width,
 		     int32 *height)
 {
+  XP_ASSERT(0);
 }
 
 void
 FE_GetEdgeMinSize(MWContext *context,
 		  int32 *size)
 {
+  XP_ASSERT(0);
 }

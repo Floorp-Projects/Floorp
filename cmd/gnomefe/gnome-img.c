@@ -37,7 +37,7 @@
 JMC_PUBLIC_API(void)
 _IMGCB_init(struct IMGCB* self, JMCException* *exception)
 {
-  printf ("_IMGCB_init\n");
+  printf ("_IMGCB_init (nothing to do)\n");
 }
 
 JMC_PUBLIC_API(void*)
@@ -45,7 +45,7 @@ _IMGCB_getBackwardCompatibleInterface(struct IMGCB* self,
 				      const JMCInterfaceID* iid,
 				      JMCException* *exception)
 {
-  printf ("_IMGCB_getBackwardCompatibleInterface\n");
+  printf ("_IMGCB_getBackwardCompatibleInterface (nothing to do)\n");
 }
 
 JMC_PUBLIC_API(void)

@@ -63,6 +63,7 @@ moz_paned_view_create_horizontal(MozFrame *parent_frame,
   if (view == NULL) return NULL;
 
   moz_paned_view_init(view, parent_frame, context, TRUE);
+  return view;
 }
 
 MozPanedView*
