@@ -1555,51 +1555,39 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
     // find URIs are special
     if (IsFindResource(aSource)) {
-      if (aProperty == kNC_Name || aProperty == kNC_NameSort) {
-
-        // for sorting, we sort by uri, so just return the URI as a literal
-        if (aProperty == kNC_NameSort) {
-          nsCOMPtr<nsIRDFLiteral> uriLiteral;
-          rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri).get(),
-                                       getter_AddRefs(uriLiteral));
-          if (NS_FAILED(rv))    return(rv);
-
-          *aTarget = uriLiteral;
-          NS_ADDREF(*aTarget);
-          return NS_OK;
-        }
-        else 
-          return GetFindUriName(uri, aTarget);
-      } else if (aProperty == kNC_DayFolderIndex) {
+      if (aProperty == kNC_Name)
+        return GetFindUriName(uri, aTarget);
+		
+		  if (aProperty == kNC_NameSort) {
         // parse out the 'text' token
         nsVoidArray tokenList;
         FindUrlToTokenList(uri, tokenList);
 
-        nsCOMPtr<nsIRDFInt> intLiteral;
+        nsCOMPtr<nsIRDFLiteral> literal; 
 
         for (PRInt32 i = 0; i < tokenList.Count(); ++i) {
           tokenPair* token = NS_STATIC_CAST(tokenPair*, tokenList[i]);
-          if (!strcmp(token->tokenName, "text")) {
-            rv = gRDFService->GetIntLiteral(atoi(token->tokenValue),
-                                            getter_AddRefs(intLiteral));
-            break;
+
+          if (!strncmp(token->tokenName, "text", token->tokenNameLength)) {
+            rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(Substring(token->tokenValue, token->tokenValue + token->tokenValueLength)).get(),
+                                         getter_AddRefs(literal));
+            // We don't break out of the loop here because there could be other text tokens in the string.
+            // The last one is the most specific so wait and see if we've got one...
           }
         }
 
         FreeTokenList(tokenList);
-
-        if (intLiteral && NS_SUCCEEDED(rv)) {
-          *aTarget = intLiteral;
+  
+        if (literal && NS_SUCCEEDED(rv)) {
+          *aTarget = literal;
           NS_ADDREF(*aTarget);
           return NS_OK;
-        } else {
-          *aTarget = nsnull;
-          return rv;
         }
+        *aTarget = nsnull;
+        return rv;
       }
-    } else if (aProperty == kNC_DayFolderIndex)
-      return NS_RDF_NO_VALUE;
-
+    }
+    
     // ok, we got this far, so we have to retrieve something from
     // the row in the database
     nsCOMPtr<nsIMdbRow> row;

@@ -59,8 +59,12 @@ function HistoryCommonInit()
       document.getElementById("bydayandsite").setAttribute("checked", "true");
     else
       document.getElementById("byday").setAttribute("checked", "true");
+    
+    // XXXBlake we should persist the last search value
+    // If it's empty, this will do the right thing and just group by the old grouping.
+    searchHistory(gSearchBox.value);
+    
     gHistoryTree.focus();
-    SortInNewDirection(find_sort_direction(find_sort_column()));
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
@@ -150,10 +154,8 @@ function OpenURL(aWhere, event)
 
 function SortBy(sortKey)
 {
-  // XXXBlake Welcome to the end of the world of Lame.
-  // You can go no further. You are standing on the edge -- teetering, even.
-  // Look on the bright side: you can rest assured that no code you see in the future
-  // will even come close to the lameness of the code below.
+  // We set the sortDirection to the one before we actually want it to be in the
+  // cycle list, since cycleHeader cycles it forward before doing the sort.
 
   var sortDirection;
   switch(sortKey) {
@@ -162,16 +164,12 @@ function SortBy(sortKey)
       sortDirection = "ascending";
       break;
     case "name":
-      sortKey = "rdf:http://home.netscape.com/NC-rdf#Name";
+      sortKey = "rdf:http://home.netscape.com/NC-rdf#Name?sort=true";
       sortDirection = "natural";
       break;
     case "lastvisited":
       sortKey = "rdf:http://home.netscape.com/NC-rdf#Date";
       sortDirection = "ascending";
-      break;
-    case "day":
-      sortKey = "rdf:http://home.netscape.com/NC-rdf#DayFolderIndex";
-      sortDirection = "natural";
       break;
     default:
       return;    
@@ -182,37 +180,55 @@ function SortBy(sortKey)
   gHistoryTree.treeBoxObject.view.cycleHeader(sortKey, col);
 }
 
+function IsFindResource(uri)
+{
+  return (uri.substr(0, 5) == "find:");
+}
+    
 function GroupBy(groupingType)
 {
+  var isFind = IsFindResource(groupingType);
+  if (!isFind) {
     gHistoryGrouping = groupingType;
-    switch(groupingType) {
-    case "none":
-        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
-        break;
-    case "site":
-        // xxx for now
-        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
-        SortBy("name");
-        break;
-    case "dayandsite":
-        gHistoryTree.setAttribute("ref", "NC:HistoryByDateAndSite");
-        SortBy("dayandsite");
-        break;
-    case "visited":
-        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
-        SortBy("visited");
-        break;
-    case "lastvisited":
-        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
-        SortBy("lastvisited");
-        break;
-    case "day":
-    default:
-        gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
-        SortBy("day");
-        break;
-    }
     gSearchBox.value = "";
+  }
+  switch(groupingType) {
+    case "site":
+      gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+      break;
+    case "dayandsite":
+      gHistoryTree.setAttribute("ref", "NC:HistoryByDateAndSite");
+      break;
+    case "visited":
+      gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+      break;
+    case "lastvisited":
+      gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
+      break;
+    case "day":
+      gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
+      break;
+    default:
+      gHistoryTree.setAttribute("ref", groupingType);
+  }
+  Sort(isFind? gHistoryGrouping : groupingType);
+}
+
+function Sort(groupingType)
+{
+  switch(groupingType) {
+    case "site":
+    case "dayandsite":
+    case "day":
+      SortBy("name");
+      break;
+    case "lastvisited":
+      SortBy("lastvisited");
+      break;
+    case "visited":
+      SortBy("visited");
+      break;
+  }
 }
 
 function historyAddBookmarks()
@@ -293,14 +309,11 @@ function buildContextMenu()
 
 function searchHistory(aInput)
 {
-   if (!aInput) 
+   if (aInput == "") {
      GroupBy(gHistoryGrouping);
-   else
-     gHistoryTree.setAttribute("ref",
-                               "find:datasource=history&match=Name&method=contains&text=" + encodeURIComponent(aInput));
+     return;
+   }
+   
+   GroupBy("find:datasource=history&match=Name&method=contains&text=" + encodeURIComponent(aInput));     
  }
 
-function onUnload()
-{
-  return;
-}
