@@ -59,47 +59,6 @@ Contributor(s):
         </radiogroup>
       </row>
 
-      <row>
-        <label value="&paperGroup.label;"/>
-        <radiogroup id="paperGroup">
-          <radio id="letterRadio" label="&letterRadio.label;"/>
-          <radio id="legalRadio" label="&legalRadio.label;"/>
-          <radio id="exectiveRadio" label="&exectiveRadio.label;"/>
-          <radio id="a4Radio" label="&a4Radio.label;"/>
-          <radio id="a3Radio" label="&a3Radio.label;"/>
-        </radiogroup>
-      </row>
-
-      <row>
-        <label value="&orientationGroup.label;"/>
-        <radiogroup id="orientationGroup" orient="horizontal">
-          <radio id="portraitRadio" label="&portraitRadio.label;"/>
-          <radio id="landscapeRadio" label="&landscapeRadio.label;"/>
-        </radiogroup>
-      </row>
-
-      <row>
-        <label value="&marginInput.label;"/>
-        <hbox>
-          <hbox align="center">
-            <label id="topLabel" control="topInput" value="&topInput.label;"/>
-            <textbox id="topInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
-            <textbox id="bottomInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
-            <textbox id="leftInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
-            <textbox id="rightInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
-          </hbox>
-        </hbox>
-      </row>
-
     </rows>
   </grid>
 

@@ -38,69 +38,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var dialog;
-var printSettings = null;
-var stringBundle  = null;
-var paperArray;
+var gDialog;
+var gPrintSettings = null;
+var gStringBundle  = null;
+var gPaperArray;
 
 var gPrintSettingsInterface = Components.interfaces.nsIPrintSettings;
-var doDebug            = false;
+var gDoDebug = false;
 
 //---------------------------------------------------
 function initDialog()
 {
-  dialog = new Object;
+  gDialog = new Object;
 
-  dialog.paperList       = document.getElementById("paperList");
-  dialog.paperGroup      = document.getElementById("paperGroup");
+  gDialog.paperList       = document.getElementById("paperList");
+  gDialog.paperGroup      = document.getElementById("paperGroup");
   
-  dialog.orientation     = document.getElementById("orientation");
-  dialog.printBGColors   = document.getElementById("printBGColors");
-  dialog.printBGImages   = document.getElementById("printBGImages");
+  gDialog.orientation     = document.getElementById("orientation");
+  gDialog.printBGColors   = document.getElementById("printBGColors");
+  gDialog.printBGImages   = document.getElementById("printBGImages");
 
-  dialog.topInput        = document.getElementById("topInput");
-  dialog.bottomInput     = document.getElementById("bottomInput");
-  dialog.leftInput       = document.getElementById("leftInput");
-  dialog.rightInput      = document.getElementById("rightInput");
+  gDialog.topInput        = document.getElementById("topInput");
+  gDialog.bottomInput     = document.getElementById("bottomInput");
+  gDialog.leftInput       = document.getElementById("leftInput");
+  gDialog.rightInput      = document.getElementById("rightInput");
 
-  dialog.hLeftInput      = document.getElementById("hLeftInput");
-  dialog.hCenterInput    = document.getElementById("hCenterInput");
-  dialog.hRightInput     = document.getElementById("hRightInput");
+  gDialog.hLeftInput      = document.getElementById("hLeftInput");
+  gDialog.hCenterInput    = document.getElementById("hCenterInput");
+  gDialog.hRightInput     = document.getElementById("hRightInput");
 
-  dialog.fLeftInput      = document.getElementById("fLeftInput");
-  dialog.fCenterInput    = document.getElementById("fCenterInput");
-  dialog.fRightInput     = document.getElementById("fRightInput");
+  gDialog.fLeftInput      = document.getElementById("fLeftInput");
+  gDialog.fCenterInput    = document.getElementById("fCenterInput");
+  gDialog.fRightInput     = document.getElementById("fRightInput");
 
-  dialog.scalingInput    = document.getElementById("scalingInput");
+  gDialog.scalingInput    = document.getElementById("scalingInput");
 
-  dialog.enabled         = false;
+  gDialog.enabled         = false;
+
 }
 
 //---------------------------------------------------
-function checkValid(elementID)
+function checkDouble(element)
 {
-  var editField = document.getElementById( elementID );
-  if ( !editField )
-    return;
-  var stringIn = editField.value;
-  if (stringIn && stringIn.length > 0)
-  {
-    stringIn = stringIn.replace(/[^\.|^0-9]/g,"");
-    if (!stringIn) stringIn = "";
-    editField.value = stringIn;
+  var value = element.value;
+  if (value && value.length > 0) {
+    value = value.replace(/[^\.|^0-9]/g,"");
+    if (!value) value = "";
+    element.value = value;
   }
 }
 
 //---------------------------------------------------
-function stripTrailingWhitespace(element)
-{
-  var stringIn = element.value;
-  stringIn = stringIn.replace(/\s+$/,"");
-  element.value = stringIn;
-}
-
-//---------------------------------------------------
-function getDoubleStr( val, dec )
+function getDoubleStr(val, dec)
 {
   var str = val.toString();
   var inx = str.indexOf(".");
@@ -108,7 +97,7 @@ function getDoubleStr( val, dec )
 }
 
 //---------------------------------------------------
-function listElement( aListElement )
+function listElement(aListElement)
   {
     this.listElement = aListElement;
   }
@@ -119,24 +108,24 @@ listElement.prototype =
       function ()
         {
           // remove the menupopup node child of the menulist.
-          this.listElement.removeChild( this.listElement.firstChild );
+          this.listElement.removeChild(this.listElement.firstChild);
         },
 
     appendPaperNames: 
-      function ( aDataObject ) 
+      function (aDataObject) 
         { 
-          var popupNode = document.createElement( "menupopup" ); 
+          var popupNode = document.createElement("menupopup"); 
           for (var i=0;i<aDataObject.length;i++)  {
             var paperObj = aDataObject[i];
-            var itemNode = document.createElement( "menuitem" );
+            var itemNode = document.createElement("menuitem");
             try {
-              var label = stringBundle.GetStringFromName(paperObj.name)
-              itemNode.setAttribute( "label", label );
-              itemNode.setAttribute( "value", i );
-              popupNode.appendChild( itemNode );
+              var label = gStringBundle.GetStringFromName(paperObj.name)
+              itemNode.setAttribute("label", label);
+              itemNode.setAttribute("value", i);
+              popupNode.appendChild(itemNode);
             } catch (e) {}
           }
-          this.listElement.appendChild( popupNode ); 
+          this.listElement.appendChild(popupNode); 
         } 
   };
 
@@ -148,8 +137,10 @@ function createPaperArray()
   var paperWidths  = [8.5, 8.5, 7.25, 210.0, 287.0];
   var paperHeights = [11.0, 14.0, 10.5, 297.0, 420.0];
   var paperInches  = [true, true, true, false, false];
+  // this is deprecated
+  var paperEnums  = [0, 1, 2, 3, 4];
 
-  paperArray = new Array();
+  gPaperArray = new Array();
 
   for (var i=0;i<paperNames.length;i++) {
     var obj    = new Object();
@@ -157,25 +148,26 @@ function createPaperArray()
     obj.width  = paperWidths[i];
     obj.height = paperHeights[i];
     obj.inches = paperInches[i];
-    paperArray[i] = obj;
+    obj.paperSize = paperEnums[i]; // deprecated
+    gPaperArray[i] = obj;
   }
 }
 
 //---------------------------------------------------
-function createPaperSizeList( selectedInx )
+function createPaperSizeList(selectedInx)
 {
-  stringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
+  gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
 
-  var selectElement = new listElement(dialog.paperList);
+  var selectElement = new listElement(gDialog.paperList);
   selectElement.clearList();
 
-  selectElement.appendPaperNames(paperArray);
+  selectElement.appendPaperNames(gPaperArray);
 
   if (selectedInx > -1) {
     selectElement.listElement.selectedIndex = selectedInx;
   }
 
-  //dialog.paperList = selectElement;
+  //gDialog.paperList = selectElement;
 }   
 
 //---------------------------------------------------
@@ -191,20 +183,20 @@ function loadDialog()
   var print_margin_bottom = 0.5;
   var print_margin_right  = 0.5;
 
-  if (printSettings) {
-    print_paper_type   = printSettings.paperSizeType;
-    print_paper_unit   = printSettings.paperSizeUnit;
-    print_paper_width  = printSettings.paperWidth;
-    print_paper_height = printSettings.paperHeight;
-    print_orientation  = printSettings.orientation;
+  if (gPrintSettings) {
+    print_paper_type   = gPrintSettings.paperSizeType;
+    print_paper_unit   = gPrintSettings.paperSizeUnit;
+    print_paper_width  = gPrintSettings.paperWidth;
+    print_paper_height = gPrintSettings.paperHeight;
+    print_orientation  = gPrintSettings.orientation;
 
-    print_margin_top    = printSettings.marginTop;
-    print_margin_left   = printSettings.marginLeft;
-    print_margin_right  = printSettings.marginRight;
-    print_margin_bottom = printSettings.marginBottom;
+    print_margin_top    = gPrintSettings.marginTop;
+    print_margin_left   = gPrintSettings.marginLeft;
+    print_margin_right  = gPrintSettings.marginRight;
+    print_margin_bottom = gPrintSettings.marginBottom;
   }
 
-  if (doDebug) {
+  if (gDoDebug) {
     dump("paperSizeType "+print_paper_unit+"\n");
     dump("paperWidth    "+print_paper_width+"\n");
     dump("paperHeight   "+print_paper_height+"\n");
@@ -219,39 +211,39 @@ function loadDialog()
   createPaperArray();
 
   var selectedInx = 0;
-  for (var i=0;i<paperArray.length;i++) {
-    if (print_paper_width == paperArray[i].width && print_paper_height == paperArray[i].height) {
+  for (var i=0;i<gPaperArray.length;i++) {
+    if (print_paper_width == gPaperArray[i].width && print_paper_height == gPaperArray[i].height) {
       selectedInx = i;
       break;
     }
   }
   createPaperSizeList(selectedInx);
 
-  dialog.printBGColors.checked = printSettings.printBGColors;
-  dialog.printBGImages.checked = printSettings.printBGImages;
+  gDialog.printBGColors.checked = gPrintSettings.printBGColors;
+  gDialog.printBGImages.checked = gPrintSettings.printBGImages;
 
 
-  if ( print_orientation == gPrintSettingsInterface.kPortraitOrientation ) {
-    dialog.orientation.selectedIndex = 0;
+  if (print_orientation == gPrintSettingsInterface.kPortraitOrientation) {
+    gDialog.orientation.selectedIndex = 0;
 
-  } else if ( print_orientation == gPrintSettingsInterface.kLandscapeOrientation ) {
-    dialog.orientation.selectedIndex = 1;
+  } else if (print_orientation == gPrintSettingsInterface.kLandscapeOrientation) {
+    gDialog.orientation.selectedIndex = 1;
   }
 
-  dialog.topInput.value    = getDoubleStr(print_margin_top, 1);
-  dialog.bottomInput.value = getDoubleStr(print_margin_bottom, 1);
-  dialog.leftInput.value   = getDoubleStr(print_margin_left, 1);
-  dialog.rightInput.value  = getDoubleStr(print_margin_right, 1);
+  gDialog.topInput.value    = getDoubleStr(print_margin_top, 1);
+  gDialog.bottomInput.value = getDoubleStr(print_margin_bottom, 1);
+  gDialog.leftInput.value   = getDoubleStr(print_margin_left, 1);
+  gDialog.rightInput.value  = getDoubleStr(print_margin_right, 1);
 
-  dialog.hLeftInput.value   = printSettings.headerStrLeft;
-  dialog.hCenterInput.value = printSettings.headerStrCenter;
-  dialog.hRightInput.value  = printSettings.headerStrRight;
+  gDialog.hLeftInput.value   = gPrintSettings.headerStrLeft;
+  gDialog.hCenterInput.value = gPrintSettings.headerStrCenter;
+  gDialog.hRightInput.value  = gPrintSettings.headerStrRight;
 
-  dialog.fLeftInput.value   = printSettings.footerStrLeft;
-  dialog.fCenterInput.value = printSettings.footerStrCenter;
-  dialog.fRightInput.value  = printSettings.footerStrRight;
+  gDialog.fLeftInput.value   = gPrintSettings.footerStrLeft;
+  gDialog.fCenterInput.value = gPrintSettings.footerStrCenter;
+  gDialog.fRightInput.value  = gPrintSettings.footerStrRight;
 
-  dialog.scalingInput.value  = getDoubleStr(printSettings.scaling * 100.0, 3);
+  gDialog.scalingInput.value  = getDoubleStr(gPrintSettings.scaling * 100.0, 3);
 
 }
 
@@ -260,19 +252,19 @@ var param;
 //---------------------------------------------------
 function onLoad()
 {
-  // Init dialog.
+  // Init gDialog.
   initDialog();
 
   if (window.arguments[0] != null) {
-    printSettings = window.arguments[0].QueryInterface(Components.interfaces.nsIPrintSettings);
-  } else if (doDebug) {
+    gPrintSettings = window.arguments[0].QueryInterface(Components.interfaces.nsIPrintSettings);
+  } else if (gDoDebug) {
     alert("window.arguments[0] == null!");
   }
 
-  if (printSettings) {
+  if (gPrintSettings) {
     loadDialog();
-  } else if (doDebug) {
-    alert("Could initialize dialog, PrintSettings is null!");
+  } else if (gDoDebug) {
+    alert("Could initialize gDialog, PrintSettings is null!");
   }
 }
 
@@ -284,72 +276,64 @@ function onAccept()
   var print_paper_width  = 8.5;
   var print_paper_height = 11.0;
 
-  if (printSettings) {
-    var selectedInx = dialog.paperList.selectedIndex;
-    if (paperArray[selectedInx].inches) {
+  if (gPrintSettings) {
+    var selectedInx = gDialog.paperList.selectedIndex;
+    if (gPaperArray[selectedInx].inches) {
       print_paper_unit = gPrintSettingsInterface.kPaperSizeInches;
     } else {
       print_paper_unit = gPrintSettingsInterface.kPaperSizeMillimeters;
     }
-    print_paper_width  = paperArray[selectedInx].width;
-    print_paper_height = paperArray[selectedInx].height;
+    print_paper_width  = gPaperArray[selectedInx].width;
+    print_paper_height = gPaperArray[selectedInx].height;
+    gPrintSettings.paperSize = gPaperArray[selectedInx].paperSize; // deprecated
 
+    gPrintSettings.paperSizeType = print_paper_type;
+    gPrintSettings.paperSizeUnit = print_paper_unit;
+    gPrintSettings.paperWidth    = print_paper_width;
+    gPrintSettings.paperHeight   = print_paper_height;
 
-    printSettings.paperSizeType = print_paper_type;
-    printSettings.paperSizeUnit = print_paper_unit;
-    printSettings.paperWidth    = print_paper_width;
-    printSettings.paperHeight   = print_paper_height;
-
-    printSettings.orientation = dialog.orientation.selectedIndex;
+    gPrintSettings.orientation = gDialog.orientation.selectedIndex;
 
     // save these out so they can be picked up by the device spec
-    printSettings.marginTop    = dialog.topInput.value;
-    printSettings.marginLeft   = dialog.leftInput.value;
-    printSettings.marginBottom = dialog.bottomInput.value;
-    printSettings.marginRight  = dialog.rightInput.value;
+    gPrintSettings.marginTop    = gDialog.topInput.value;
+    gPrintSettings.marginLeft   = gDialog.leftInput.value;
+    gPrintSettings.marginBottom = gDialog.bottomInput.value;
+    gPrintSettings.marginRight  = gDialog.rightInput.value;
 
 
-    printSettings.headerStrLeft   = dialog.hLeftInput.value;
-    printSettings.headerStrCenter = dialog.hCenterInput.value;
-    printSettings.headerStrRight  = dialog.hRightInput.value;
+    gPrintSettings.headerStrLeft   = gDialog.hLeftInput.value;
+    gPrintSettings.headerStrCenter = gDialog.hCenterInput.value;
+    gPrintSettings.headerStrRight  = gDialog.hRightInput.value;
 
-    printSettings.footerStrLeft   = dialog.fLeftInput.value;
-    printSettings.footerStrCenter = dialog.fCenterInput.value;
-    printSettings.footerStrRight  = dialog.fRightInput.value;
+    gPrintSettings.footerStrLeft   = gDialog.fLeftInput.value;
+    gPrintSettings.footerStrCenter = gDialog.fCenterInput.value;
+    gPrintSettings.footerStrRight  = gDialog.fRightInput.value;
 
-    printSettings.printBGColors = dialog.printBGColors.checked;
-    printSettings.printBGImages = dialog.printBGImages.checked;
+    gPrintSettings.printBGColors = gDialog.printBGColors.checked;
+    gPrintSettings.printBGImages = gDialog.printBGImages.checked;
 
     var scaling = document.getElementById("scalingInput").value;
     if (scaling < 50.0 || scaling > 100.0) {
       scaling = 100.0;
     }
     scaling /= 100.0;
-    printSettings.scaling = scaling;
+    gPrintSettings.scaling = scaling;
 
-    if (doDebug) {
+    if (gDoDebug) {
       dump("******* Page Setup Accepting ******\n");
+      dump("paperSize     "+gPrintSettings.paperSize+" (deprecated)\n");
       dump("paperSizeType "+print_paper_type+" (should be 1)\n");
       dump("paperSizeUnit "+print_paper_unit+"\n");
       dump("paperWidth    "+print_paper_width+"\n");
       dump("paperHeight   "+print_paper_height+"\n");
 
-      dump("print_margin_top    "+dialog.topInput.value+"\n");
-      dump("print_margin_left   "+dialog.leftInput.value+"\n");
-      dump("print_margin_right  "+dialog.bottomInput.value+"\n");
-      dump("print_margin_bottom "+dialog.rightInput.value+"\n");
+      dump("print_margin_top    "+gDialog.topInput.value+"\n");
+      dump("print_margin_left   "+gDialog.leftInput.value+"\n");
+      dump("print_margin_right  "+gDialog.bottomInput.value+"\n");
+      dump("print_margin_bottom "+gDialog.rightInput.value+"\n");
     }
-
-  } else {
-    dump("************ printSettings: "+printSettings+"\n");
   }
 
-  return true;
-}
-
-//---------------------------------------------------
-function onCancel()
-{
   return true;
 }
 

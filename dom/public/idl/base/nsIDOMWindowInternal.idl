@@ -44,6 +44,7 @@ interface nsISidebar;
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
+interface nsIPrintSettings;
 
 
 [scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
@@ -130,8 +131,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   void                      home();
   void                      stop();
 
-  void                      print();
-  void                      printPreview();
+  void                      print(in nsIPrintSettings aPrintSettings);
+  void                      printPreview(in nsIPrintSettings aPrintSettings);
 
   void                      moveTo(in long xPos, in long yPos);
   void                      moveBy(in long xDif, in long yDif);

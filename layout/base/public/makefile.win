@@ -71,7 +71,6 @@ EXPORTS =				\
 
 XPIDLSRCS=					\
 		.\nsIChromeEventHandler.idl	\
-		.\nsIPrintListener.idl          \
 		$(NULL)
 
 

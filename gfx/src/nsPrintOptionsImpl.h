@@ -50,6 +50,8 @@ protected:
 
   nsresult ReadPrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
   nsresult WritePrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
+  nsresult ReadPrefDouble(nsIPref * aPref, const char * aPrefId, double& aVal);
+  nsresult WritePrefDouble(nsIPref * aPref, const char * aPrefId, double aVal);
 
   typedef enum {
     eHeader,
@@ -71,6 +73,7 @@ protected:
   PRBool        mPrintBGColors;  // print background colors
   PRBool        mPrintBGImages;  // print background images
 
+  PRInt16       mPrintFrameTypeUsage;
   PRInt16       mPrintFrameType;
   PRBool        mHowToEnableFrameUI;
   PRBool        mIsCancelled;
@@ -83,15 +86,25 @@ protected:
   nsString      mHeaderStrs[3];
   nsString      mFooterStrs[3];
 
+  nsIPrintSettings* mPrintSettingsObj; //weak ref, hold address only
+
+  PRInt16       mPaperData;
+  PRInt16       mPaperSizeType;
+  double        mPaperWidth;
+  double        mPaperHeight;
+  PRInt16       mPaperSizeUnit;
+
+  PRInt32       mPaperSize;    // this has been deprecated
   PRBool        mPrintReversed;
   PRBool        mPrintInColor; // a false means grayscale
-  PRInt32       mPaperSize;    // see page size consts
   PRInt32       mOrientation;  // see orientation consts
   nsString      mPrintCommand;
   PRInt32       mNumCopies;
   nsString      mPrinter;
   PRBool        mPrintToFile;
   nsString      mToFileName;
+
+  PRBool        mIsExtendedInfo;
 
   static nsFont* sDefaultFont;
 };

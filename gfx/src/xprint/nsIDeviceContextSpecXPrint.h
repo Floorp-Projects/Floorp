@@ -120,7 +120,7 @@ public:
    * @param aPrinter --
    * @return 
    **/
-   NS_IMETHOD GetPrinter ( char **aPrinter ) = 0;   
+   NS_IMETHOD GetPrinterName ( char **aPrinter ) = 0;   
 
   /*
    * Get width and height based on user page size choice, e.g., 8.5 x 11.0 

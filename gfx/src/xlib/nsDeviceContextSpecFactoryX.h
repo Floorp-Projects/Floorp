@@ -52,6 +52,7 @@ public:
 
   NS_IMETHOD Init(void);
   NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
+                                     nsIPrintSettings* aPrintSettings,
                                      nsIDeviceContextSpec *&aNewSpec,
                                      PRBool aQuiet);
 

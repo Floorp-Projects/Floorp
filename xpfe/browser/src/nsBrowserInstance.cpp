@@ -128,7 +128,6 @@
 // Stuff to implement file download dialog.
 #include "nsIDocumentObserver.h"
 #include "nsIContent.h"
-#include "nsIContentViewerFile.h"
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 

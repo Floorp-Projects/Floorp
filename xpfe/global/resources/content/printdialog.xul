@@ -43,14 +43,6 @@ Contributor(s):
   <groupbox>
     <caption label="&printer.label;"/>
 
-    <hbox align="center">
-      <label value="&printTo.label;"/>
-      <radiogroup id="destGroup" orient="horizontal">
-        <radio id="printerRadio" label="&printerRadio.label;" onclick="doPrintToFile( false );"/>
-        <radio id="fileRadio" label="&fileRadio.label;" onclick="doPrintToFile( true );"/>
-      </radiogroup>
-    </hbox>
-
     <grid>
       <columns>
         <column/>
@@ -60,14 +52,27 @@ Contributor(s):
 
       <rows>
         <row align="center">
-          <label id="printerLabel" value="&printerInput.label;"/>
+          <hbox align="center" pack="end">
+            <label value="&printTo.label;"/>
+          </hbox>
+          <radiogroup id="destGroup" orient="horizontal">
+            <radio id="printerRadio" label="&printerRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(false);"/>
+            <radio id="fileRadio" label="&fileRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(true);"/>
+          </radiogroup>
+        </row>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label id="printerLabel" value="&printerInput.label;"/>
+          </hbox>
           <menulist id="printerList" flex ="1">
             <menupopup/>
           </menulist>
           <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
         </row>
         <row align="center">
-          <label id="fileLabel" control="fileInput" value="&fileInput.label;"/>
+          <hbox align="center" pack="end">
+            <label id="fileLabel" control="fileInput" value="&fileInput.label;"/>
+          </hbox>
           <textbox id="fileInput" flex="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" label="&chooseButton.label;" oncommand="onChooseFile()"/>
         </row>
@@ -81,15 +86,15 @@ Contributor(s):
       <caption label="&printrangeGroup.label;"/>
 
       <radiogroup id="printrangeGroup">
-        <radio id="allpagesRadio" label="&allpagesRadio.label;" onclick="doPrintRange(0)"/>
+        <radio id="allpagesRadio" label="&allpagesRadio.label;" oncommand="doPrintRange(0)"/>
         <hbox align="center">
-          <radio id="rangeRadio" label="&rangeRadio.label;" onclick="doPrintRange(1)"/>
+          <radio id="rangeRadio" label="&rangeRadio.label;" oncommand="doPrintRange(1)"/>
           <label id="frompageLabel" control="frompageInput" value="&frompageInput.label;" />
-          <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+          <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
           <label id="topageLabel" control="topageInput" value="&topageInput.label;" />
-          <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+          <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
         </hbox>
-        <radio id="selectionRadio" label="&selectionRadio.label;" onclick = "doPrintRange(2)"/>
+        <radio id="selectionRadio" label="&selectionRadio.label;" oncommand = "doPrintRange(2)"/>
       </radiogroup>
     </groupbox>
 
@@ -97,7 +102,7 @@ Contributor(s):
       <caption label="&copies.label;"/>
       <hbox align="center">
         <label control="numCopiesInput" value="&numCopies.label;"/>  
-        <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+        <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this)"/>
       </hbox>
     </groupbox>
   </hbox>

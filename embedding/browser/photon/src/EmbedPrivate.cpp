@@ -156,7 +156,7 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 	// and initialize it.  It is assumed that this print listener
 	// will be destroyed when we go out of scope.
 	mPrint = new EmbedPrintListener();
-	mPrintGuard = NS_STATIC_CAST(nsIPrintListener *, mPrint);
+	mPrintGuard = NS_STATIC_CAST(nsIWebProgressListener *, mPrint);
 	mPrint->Init(this);
 
     m_PrintSettings = (nsIPrintSettings*)new nsPrintSettings();

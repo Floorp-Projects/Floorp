@@ -31,6 +31,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 
+class nsIPrintSettings;
 
 #define NS_IPRINTCONTEXT_IID   \
 { 0xa05e0e40, 0xe1bf, 0x11d4, \
@@ -41,9 +42,11 @@
 class nsIPrintContext : public nsISupports {
 
 public:
-NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTCONTEXT_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTCONTEXT_IID)
 
-
+  // Set and Get nsIPrintSettings
+  NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS) = 0;
+  NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS) = 0;
 
 };
 

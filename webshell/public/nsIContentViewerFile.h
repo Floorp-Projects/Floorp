@@ -9,9 +9,10 @@
 #include "nsrootidl.h"
 #include "nsIWebShell.h"
 #include "nsIDOMWindow.h"
-#include "nsIPrintListener.h"
 
 class nsIDeviceContext;
+class nsIPrintSettings;
+class nsIWebProgressListener;
 
 /* starting interface:    nsIContentViewerFile */
 
@@ -31,18 +32,35 @@ class nsIContentViewerFile : public nsISupports {
   /* readonly attribute boolean saveable; */
   NS_IMETHOD GetSaveable(PRBool *aSaveable) = 0;
 
-  /* void Print (); 
-  
-  */
   /**
    * Print the current document
-   * @param aSilent -- if true, the print settings dialog will be suppressed
-   * @param aFileName -- a file pointer to output regression tests or print to a file
+   * @param aSilent         -- if true, the print settings dialog will be suppressed
+   * @param aPrintSettings  -- PrintSettings used during print
+   * @param aProgressListener  -- Listens to the progress of printing
    * @return error status
    */
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener = nsnull) = 0;
+  NS_IMETHOD Print(PRBool            aSilent,
+                   nsIPrintSettings* aPrintSettings,
+                   nsIWebProgressListener * aProgressListener) = 0;
+#ifdef NS_DEBUG
+  /**
+   * Print the current document
+   * @param aSilent        -- if true, the print settings dialog will be suppressed
+   * @param aDebugFile     -- Regression testing debug file
+   * @param aPrintSettings -- PrintSettings used during print
+   * @return error status
+   */
+  NS_IMETHOD Print(PRBool            aSilent,
+                   FILE *            aDebugFile, 
+                   nsIPrintSettings* aPrintSettings = nsnull) = 0;
+#endif
 
-  NS_IMETHOD PrintPreview() = 0;
+  /**
+   * PrintPreview the current document
+   * @param aPrintSettings  -- PrintSettings used during print
+   * @return error status
+   */
+  NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings) = 0;
 
   /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext, in nsIDOMWindow aDOMWin, PRBool aIsSubDoc); */
   NS_IMETHOD PrintContent(nsIWebShell *      aParent,
@@ -54,23 +72,25 @@ class nsIContentViewerFile : public nsISupports {
   NS_IMETHOD GetPrintable(PRBool *aPrintable) = 0;
 };
 
+#ifdef NS_DEBUG
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICONTENTVIEWERFILE \
   NS_IMETHOD Save(void); \
   NS_IMETHOD GetSaveable(PRBool *aSaveable); \
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener); \
-  NS_IMETHOD PrintPreview(); \
+  NS_IMETHOD Print(PRBool aSilent, nsIPrintSettings* aPrintSettings, nsIWebProgressListener * aProgressListener); \
+  NS_IMETHOD Print(PRBool aSilent, FILE * aDebugFile, nsIPrintSettings* aPrintSettings); \
+  NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings); \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc); \
   NS_IMETHOD GetPrintable(PRBool *aPrintable); 
-
-/* Use this macro to declare functions that forward the behavior of this interface to another object. */
-#define NS_FORWARD_NSICONTENTVIEWERFILE(_to) \
-  NS_IMETHOD Save(void) { return _to ## Save(); } \
-  NS_IMETHOD GetSaveable(PRBool *aSaveable) { return _to ## GetSaveable(aSaveable); } \
-  NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener) { return _to ## Print(); } \
-  NS_IMETHOD PrintPreview() { return _to ## Print(); } \
-  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc) { return _to ## PrintContent(parent, DContext, aDOMWin, aIsSubDoc); } \
-  NS_IMETHOD GetPrintable(PRBool *aPrintable) { return _to ## GetPrintable(aPrintable); } 
-
+#else
+/* Use this macro when declaring classes that implement this interface. */
+#define NS_DECL_NSICONTENTVIEWERFILE \
+  NS_IMETHOD Save(void); \
+  NS_IMETHOD GetSaveable(PRBool *aSaveable); \
+  NS_IMETHOD Print(PRBool aSilent, nsIPrintSettings* aPrintSettings, nsIWebProgressListener * aProgressListener); \
+  NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings); \
+  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc); \
+  NS_IMETHOD GetPrintable(PRBool *aPrintable); 
+#endif
 
 #endif /* __gen_nsIContentViewerFile_h__ */

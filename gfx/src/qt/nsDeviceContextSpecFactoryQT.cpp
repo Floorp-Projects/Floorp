@@ -97,6 +97,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
  */
 NS_IMETHODIMP
 nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                      nsIPrintSettings* aPrintSettings,
                                                       nsIDeviceContextSpec *&aNewSpec,
                                                       PRBool aQuiet)
 {
@@ -108,7 +109,7 @@ nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
                                        (void **)&devSpec);
 
     if (nsnull != devSpec) {
-        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aQuiet)) {
+        if (NS_OK == ((nsDeviceContextSpecQT*)devSpec)->Init(aPrintSettings, aQuiet)) {
             aNewSpec = devSpec;
             rv = NS_OK;
         }

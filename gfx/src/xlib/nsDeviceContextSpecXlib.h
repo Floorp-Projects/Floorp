@@ -41,7 +41,8 @@
 #define nsDeviceContextSpecXlib_h___
 
 #include "nsIDeviceContextSpec.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintOptions.h" 
 #include "nsVoidArray.h"
 #include "nsIDeviceContextSpecPS.h"
 #ifdef USE_XPRINT
@@ -67,11 +68,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(PRBool        aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool        aQuiet);
   NS_IMETHOD ClosePrintManager(); 
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
-  NS_IMETHOD GetPrinter ( char **aPrinter );
+  NS_IMETHOD GetPrinterName ( char **aPrinter );
   NS_IMETHOD GetCopies ( int &aCopies );
   NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
   NS_IMETHOD GetGrayscale(PRBool &aGrayscale);   
@@ -88,10 +89,6 @@ public:
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod); 
   virtual ~nsDeviceContextSpecXlib();
   
-  static nsStringArray *globalPrinterList;
-  static int globalNumPrinters;
-  int InitializeGlobalPrinters();
-  void FreeGlobalPrinters();
 protected:
   UnixPrData mPrData;
 };

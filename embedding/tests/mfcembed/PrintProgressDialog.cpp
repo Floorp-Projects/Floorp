@@ -17,14 +17,14 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
 
-class CDlgPrintListener : public nsIPrintListener
+class CDlgPrintListener : public nsIWebProgressListener
 {
 // Construction
 public:
 	CDlgPrintListener(CPrintProgressDialog* aDlg); 
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   void ClearDlg() { m_PrintDlg = NULL; } // weak reference
 
@@ -37,8 +37,8 @@ NS_IMPL_ADDREF(CDlgPrintListener)
 NS_IMPL_RELEASE(CDlgPrintListener)
 
 NS_INTERFACE_MAP_BEGIN(CDlgPrintListener)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintListener)
-    NS_INTERFACE_MAP_ENTRY(nsIPrintListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END
 
 
@@ -49,35 +49,52 @@ CDlgPrintListener::CDlgPrintListener(CPrintProgressDialog* aDlg) :
   //NS_ADDREF_THIS();
 }
 
-/* void OnStartPrinting (); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
-CDlgPrintListener::OnStartPrinting()
+CDlgPrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
   if (m_PrintDlg) {
-    return m_PrintDlg->OnStartPrinting();
+    if (aStateFlags == (nsIWebProgressListener::STATE_START|nsIWebProgressListener::STATE_IS_DOCUMENT)) {
+      return m_PrintDlg->OnStartPrinting();
+
+    } else if (aStateFlags == (nsIWebProgressListener::STATE_STOP|nsIWebProgressListener::STATE_IS_DOCUMENT)) {
+      return m_PrintDlg->OnEndPrinting(aStatus);
+    }
   }
   return NS_OK;
 }
 
-/* void OnProgressPrinting (in PRUint32 aProgress, in PRUint32 aProgressMax); */
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
-CDlgPrintListener::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
+CDlgPrintListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
   if (m_PrintDlg) {
-    return m_PrintDlg->OnProgressPrinting(aProgress, aProgressMax);
+    return m_PrintDlg->OnProgressPrinting(aCurSelfProgress, aMaxSelfProgress);
   }
   return NS_OK;
 }
 
-/* void OnEndPrinting (in PRUint32 aStatus); */
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
-CDlgPrintListener::OnEndPrinting(PRUint32 aStatus)
+CDlgPrintListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-  if (m_PrintDlg) {
-    return m_PrintDlg->OnEndPrinting(aStatus);
-  }
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP 
+CDlgPrintListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP 
+CDlgPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
@@ -180,7 +197,8 @@ int CPrintProgressDialog::DoModal( )
     m_PrintListener = new CDlgPrintListener(this); // constructor addrefs
     if (m_PrintListener) {
       // doModal will be set to false if the print job was cancelled
-      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, m_PrintSettings, m_PrintListener)) == PR_TRUE;
+      nsIWebProgressListener * wpl = NS_STATIC_CAST(nsIWebProgressListener*, m_PrintListener);
+      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, m_PrintSettings, wpl)) == PR_TRUE;
     }
   }
 
@@ -203,6 +221,8 @@ CPrintProgressDialog::OnStartPrinting()
 NS_IMETHODIMP 
 CPrintProgressDialog::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
 {
+  if (m_wndProgress.m_hWnd == NULL) return NS_OK;
+
   // Initialize the progress meter we we get the "zero" progress
   // which also tells us the max progress
   if (aProgress == 0) {

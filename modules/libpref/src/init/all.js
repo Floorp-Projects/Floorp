@@ -213,6 +213,14 @@ pref("print.print_headerright", "&U");
 pref("print.print_footerleft", "&PT");
 pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
+pref("print.show_print_progress", true);
+
+// When this is set to false it means each window has its PrintSettings
+// and a change in one browser window does not efect the others
+pref("print.use_global_printsettings", false);
+
+// This indeicates whether it should use the native dialog or the XP Dialog50
+pref("print.use_native_print_dialog", false);
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing

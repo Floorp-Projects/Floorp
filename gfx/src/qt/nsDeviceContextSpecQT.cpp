@@ -40,21 +40,17 @@
 #include "nsDeviceContextSpecQT.h"
 #include "nsRenderingContextQT.h"
 
-#include "nsCOMPtr.h"
-#include "nsReadableUtils.h"
-#include "nsIServiceManager.h"
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsIDOMWindowInternal.h"
+#include "nsIServiceManager.h" 
 #include "nsIDialogParamBlock.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+#include "nsReadableUtils.h"
+#include "nsISupportsArray.h"
 
 #include <qapplication.h>
 
@@ -134,15 +130,15 @@ NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID,
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
  */
-NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
   nsresult  rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
- 
+  NS_ASSERTION(aPS, "Must have a PrintSettings!");
+
   // if there is a current selection then enable the "Selection" radio button
-  if (NS_SUCCEEDED(rv) && printService) {
+  if (aPS) {
     PRBool isOn;
-    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB,
+    aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
                                   &isOn);
     nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && pPrefs) {
@@ -153,7 +149,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
   PRBool reversed = PR_FALSE;
   PRBool color = PR_FALSE;
   PRBool tofile = PR_FALSE;
-  PRInt16 printRange = nsIPrintOptions::kRangeAllPages;
+  PRInt16 printRange = nsIPrintSettings::kRangeAllPages;
   PRInt32 paper_size = NS_LETTER_SIZE;
   PRInt32 orientation    = NS_PORTRAIT;
   PRInt32 fromPage = 1;
@@ -166,52 +162,59 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
   double dbottom = 0.5;
 
   rv = NS_ERROR_FAILURE;
+  // create a nsISupportsArray of the parameters 
+  // being passed to the window
+  nsCOMPtr<nsISupportsArray> array;
+  NS_NewISupportsArray(getter_AddRefs(array));
+  if (!array) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPrintSettings> ps = aPS;
+  nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
+  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+  array->AppendElement(psSupports);
+
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (ioParamBlock) {
+    ioParamBlock->SetInt(0, 0);
+    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+    NS_ASSERTION(blkSupps, "IOBlk must be a supports");
 
-  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-  if (ioParamBlock)
-    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-  if (paramBlockWrapper) {
-    paramBlockWrapper->SetData(ioParamBlock);
-    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+    array->AppendElement(blkSupps);
+    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+    NS_ASSERTION(array, "array must be a supports");
 
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
     if (wwatch) {
-
-      nsCOMPtr<nsIDOMWindowInternal> parent;
       nsCOMPtr<nsIDOMWindow> active;
-      wwatch->GetActiveWindow(getter_AddRefs(active));
-      if (active) {
-        active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(parent));
-      }
+      wwatch->GetActiveWindow(getter_AddRefs(active));    
+      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
 
       nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-		    "_blank", "chrome,modal", paramBlockWrapper,
-		    getter_AddRefs(newWindow));
+      rv = wwatch->OpenWindow(parent, aChromeURL,
+            "_blank", "chrome,modal,centerscreen", array,
+            getter_AddRefs(newWindow));
     }
   }
 
   if (NS_SUCCEEDED(rv)) {
     PRInt32 buttonPressed = 0;
     ioParamBlock->GetInt(0, &buttonPressed);
-    if (buttonPressed == 0) {
-      if (printService) {
-	printService->GetPrintReversed(&reversed);
-	printService->GetPrintInColor(&color);
-	printService->GetPaperSize(&paper_size);
-        printService->GetOrientation(&orientation);
-	printService->GetPrintCommand(&command);
-	printService->GetPrintRange(&printRange);
-	printService->GetToFileName(&printfile);
-	printService->GetPrintToFile(&tofile);
-	printService->GetStartPageRange(&fromPage);
-	printService->GetEndPageRange(&toPage);
-	printService->GetMarginTop(&dtop);
-	printService->GetMarginLeft(&dleft);
-	printService->GetMarginBottom(&dbottom);
-	printService->GetMarginRight(&dright);
+    if (buttonPressed == 1) {
+      if (aPS) {
+	aPS->GetPrintReversed(&reversed);
+	aPS->GetPrintInColor(&color);
+	aPS->GetPaperSize(&paper_size);
+        aPS->GetOrientation(&orientation);
+	aPS->GetPrintCommand(&command);
+	aPS->GetPrintRange(&printRange);
+	aPS->GetToFileName(&printfile);
+	aPS->GetPrintToFile(&tofile);
+	aPS->GetStartPageRange(&fromPage);
+	aPS->GetEndPageRange(&toPage);
+	aPS->GetMarginTop(&dtop);
+	aPS->GetMarginLeft(&dleft);
+	aPS->GetMarginBottom(&dbottom);
+	aPS->GetMarginRight(&dright);
 
 	if (command != nsnull && printfile != nsnull) {
 	  // convert Unicode strings to cstrings
@@ -275,7 +278,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetToPrinter(PRBool &aToPrinter)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecQT::GetPrinter (char **aPrinter)
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPrinterName (char **aPrinter)
 {
    *aPrinter = &mPrData.printer[0];
    return NS_OK;

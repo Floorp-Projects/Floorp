@@ -52,6 +52,7 @@
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;
+class nsIPrintSettings;
 
 class nsPromptService: public nsIPromptService,
                        public nsPIPromptService {
@@ -69,7 +70,6 @@ public:
 
 private:
   nsresult GetLocaleString(const char *aKey, PRUnichar **aResult);
-
 
   nsCOMPtr<nsIWindowWatcher> mWatcher;
 };

@@ -286,7 +286,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
          */
         char *envvar;
         /* get printer name */
-        aSpec->GetPrinter(&buf);
+        aSpec->GetPrinterName(&buf);
         
         /* do not set the ${MOZ_PRINTER_NAME} env var if we want the default 
          * printer */

@@ -8,20 +8,3 @@
 <!ENTITY grayRadio.label "GrayScale">
 <!ENTITY colorRadio.label "Color">
 
-<!ENTITY paperGroup.label "Paper Size:">
-<!ENTITY letterRadio.label "Letter (8 1/2 x 11 in.)">
-<!ENTITY legalRadio.label  "Legal (8 1/2 x 14 in.)">
-<!ENTITY exectiveRadio.label "Executive (7 1/2 x 10 in.)">
-<!ENTITY a4Radio.label "A4 (210 x 297 mm)">
-<!ENTITY a3Radio.label "A3 (297 x 420 mm)">
-
-<!ENTITY orientationGroup.label "Orientation:">
-<!ENTITY portraitRadio.label "Portrait">
-<!ENTITY landscapeRadio.label "Landscape">
-
-<!ENTITY marginInput.label "Margins(inches):">
-<!ENTITY topInput.label "Top:">
-<!ENTITY bottomInput.label "Bottom:">
-<!ENTITY leftInput.label "Left:">
-<!ENTITY rightInput.label "Right:">
-

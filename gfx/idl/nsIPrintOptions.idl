@@ -42,7 +42,6 @@
 #include "nsIPrintSettings.idl"
 
 %{ C++
-#include "nsMargin.h"
 #include "nsFont.h"
 %}
 
@@ -51,7 +50,6 @@ interface nsISimpleEnumerator;
 /**
  * Native types
  */
-  [ref] native nsNativeMarginRef(nsMargin);
   [ref] native nsNativeFontRef(nsFont);
   [ref] native nsNativeStringRef(nsString);
 
@@ -81,13 +79,31 @@ interface nsIPrintOptions : nsISupports
   const long kJustRight  = 2;
 
   /**
-   * Page Size Constants
+   * Page Size Constants (NOTE: These have been deprecated!);
    */
   const short kLetterPaperSize    = 0;
   const short kLegalPaperSize     = 1;
   const short kExecutivePaperSize = 2;
   const short kA4PaperSize        = 3;
   const short kA3PaperSize        = 4;
+
+  /**
+   * FrameSet Default Type Constants
+   */
+  const short kUseInternalDefault     = 0;
+  const short kUseSettingWhenPossible = 1;
+
+  /**
+   * Page Size Type Constants
+   */
+  const short kPaperSizeNativeData  = 0;
+  const short kPaperSizeDefined     = 1;
+
+  /**
+   * Page Size Unit Constants
+   */
+  const short kPaperSizeInches      = 0;
+  const short kPaperSizeMillimeters = 1;
 
   /**
    * Orientation Constants
@@ -103,6 +119,9 @@ interface nsIPrintOptions : nsISupports
   const short kSelectedFrame = 2;
   const short kEachFrameSep  = 3;
 
+  /**
+   * How to Enable Frame Set Printing Constants
+   */
   const short kFrameEnableNone        = 0;
   const short kFrameEnableAll         = 1;
   const short kFrameEnableAsIsAndEach = 2;
@@ -138,6 +157,17 @@ interface nsIPrintOptions : nsISupports
   void WritePrefs();
 
   /**
+   * Creates a new PrintSettnigs Object
+   * and initializes it from prefs
+   */
+  nsIPrintSettings CreatePrintSettings();
+
+  /**
+   * Initialize the values in the PrintSettings from Prefs
+   */
+  void InitPrintSettingsFromPrefs(in nsIPrintSettings aPO);
+
+  /**
    * Data Members
    */
   attribute long    startPageRange;    
@@ -166,20 +196,29 @@ interface nsIPrintOptions : nsISupports
   attribute wstring footerStrRight;
 
   attribute short   howToEnableFrameUI;
-  attribute short   printFrameType;
   attribute boolean isCancelled;
-  attribute boolean PrintSilent;	/* print without putting up the dialog */
+  attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not*/
+  attribute short   printFrameType;
+  attribute boolean printSilent;	/* print without putting up the dialog */
 
-  attribute nsIPrintSettings printSettings;
+  attribute nsIPrintSettings printSettingsValues; /* used copy the values to/from the settings obj*/
+  attribute nsIPrintSettings printSettings;       /* used to set and get the current object */
 
   /* Additional XP Related */
+  attribute short   paperSizeType; /* use native data or is defined here */
+  attribute short   paperData;     /* native data value */
+  attribute double  paperWidth;    /* width of the paper in inches or mm */
+  attribute double  paperHeight;   /* height of the paper in inches or mm */
+  attribute short   paperSizeUnit; /* paper is in inches or mm */
+
+  attribute long    paperSize;     /*  This has been deprecated */
+
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
-  attribute long    paperSize;     /*  see page size consts */
   attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
   attribute long    numCopies;
-  attribute wstring printer;
+  attribute wstring printerName;
   attribute boolean printToFile;
   attribute wstring toFileName;
 
@@ -197,15 +236,25 @@ interface nsIPrintOptions : nsISupports
   /* Purposely made this an "in" arg */
   [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
 
+  [noscript] void GetPageSizeInTwips(out long aWidth, out long aHeight);
+
   /**
    * available Printers
    */
   nsISimpleEnumerator availablePrinters ();
+
+  /**
+   * Indicates whether the list of printers contains the extended
+   * information. i.e. That there are "pairs" of values returned. Where the second
+   * value is either "FILE", "PRINTER", "BOTH"
+   * 
+   */
+  readonly attribute boolean isExtended;
   
   /**
    * display Printer Job Properties dialog
    */
-   void displayJobProperties (in wstring aPrinter, out boolean aDisplayed);
+   void displayJobProperties (in wstring aPrinter, in nsIPrintSettings aPrintSettings, out boolean aDisplayed);
 
   /**
    * Native data constants
@@ -219,7 +268,7 @@ interface nsIPrintOptions : nsISupports
 interface nsIPrinterEnumerator : nsISupports
 {
   /**
-   * Return an array of the names of all installed printers.
+   * Returns an array of the names of all installed printers.
    *
    * @param  aCount     returns number of printers returned
    * @param  aResult    returns array of names
@@ -227,9 +276,29 @@ interface nsIPrinterEnumerator : nsISupports
    */
   void enumeratePrinters(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
 
+  /**
+   * Returns an array of "pairs" of strings
+   * The first string in the pair is the printer name 
+   * the second string in the pair is can be "FILE", "PRINTER", or "BOTH"
+   *    which indicates whether the printer driver associated with this printer
+   *    ALWAYS "spools" to a file or to a printer.
+   * 
+   * If this type of information is not available, it should return zero items
+   *
+   * Note: On some platforms any given driveris able to spool to either
+   *
+   * @param  aCount     returns number of printers AND info strings returned
+   *                    i.e If there are 5 printers define the 
+   *                    "count" returned will be 10
+   * @param  aResult    returns array of names
+   * @return void
+   */
+  void enumeratePrintersExtended(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
+
   /*  takes printer selected and will display job properties dlg for that printer
    *  returns true if dialog displays
    */
-  void displayPropertiesDlg(in wstring aPrinter);
+  void displayPropertiesDlg(in wstring aPrinter, in nsIPrintSettings aPrintSettings);
+
 };
 

@@ -56,7 +56,6 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIClipboardCommands.h"
 #include "nsIProfile.h"
-#include "nsIPrintListener.h"
 #include "nsIPrintOptions.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
@@ -96,12 +95,12 @@ static const TCHAR *c_szUninitialized = _T("Method called while control is unini
 #define RETURN_E_UNEXPECTED() \
     RETURN_ERROR(c_szUninitialized, E_UNEXPECTED);
 
-class PrintListener : public nsIPrintListener
+class PrintListener : public nsIWebProgressListener
 {
     PRBool mComplete;
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIPRINTLISTENER
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
     PrintListener();
     virtual ~PrintListener();
@@ -1451,8 +1450,8 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     if (window)
     {
         PrintListener *listener = new PrintListener;
-        nsCOMPtr<nsIPrintListener> printListener = do_QueryInterface(listener);
-        browserAsPrint->Print(window, nsnull, printListener);
+        nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
+        browserAsPrint->Print(window, nsnull, nsnull);
         listener->WaitForComplete();
     }
 
@@ -3252,7 +3251,7 @@ HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, con
 // PrintListener implementation
 
 
-NS_IMPL_ISUPPORTS1(PrintListener, nsIPrintListener)
+NS_IMPL_ISUPPORTS1(PrintListener, nsIWebProgressListener)
 
 PrintListener::PrintListener() : mComplete(PR_FALSE)
 {
@@ -3300,21 +3299,35 @@ void PrintListener::WaitForComplete()
     ::CloseHandle(hFakeEvent);
 }
 
-/* void OnStartPrinting (); */
-NS_IMETHODIMP PrintListener::OnStartPrinting()
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+NS_IMETHODIMP PrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
-    return NS_OK;
-}
-
-/* void OnProgressPrinting (in PRUint32 aProgress, in PRUint32 aProgressMax); */
-NS_IMETHODIMP PrintListener::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
-{
-    return NS_OK;
-}
-
-/* void OnEndPrinting (in PRUint32 aStatus); */
-NS_IMETHODIMP PrintListener::OnEndPrinting(PRUint32 aStatus)
-{
+  if (aStatus == nsIWebProgressListener::STATE_STOP) {
     mComplete = PR_TRUE;
-    return NS_OK;
+  }
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP PrintListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP PrintListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP PrintListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP PrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

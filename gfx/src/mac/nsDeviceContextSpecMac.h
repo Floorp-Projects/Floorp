@@ -42,6 +42,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintingContext.h"
 #include "nsDeviceContextMac.h"
+#include "nsIPrintSettings.h"
 #include <Printing.h>
 
 class nsDeviceContextSpecMac : public nsIDeviceContextSpec, public nsIPrintingContext {
@@ -64,8 +65,9 @@ public:
  *        printer).
  * @return error status
  */
-  NS_IMETHOD Init(PRBool	aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool	aQuiet);
   
+    
 /**
  * This will tell if the printmanager is currently open
  * @update   dc 12/03/98
@@ -100,8 +102,11 @@ protected:
   virtual ~nsDeviceContextSpecMac();
 
 protected:
-	THPrint		mPrtRec;									// the print record
-	PRBool		mPrintManagerOpen;				// tells if the print manager is open
+	THPrint						mPrtRec;									// the print record
+	PRBool						mPrintManagerOpen;				// tells if the print manager is open
+	nsIPrintSettings	*mPrintSettings;
+	
+	
 #if !TARGET_CARBON
 // pinkerton - obsolete APIs. Doesn't exist in carbon
 	TPrPort*	mPrinterPort;

@@ -25,6 +25,8 @@ comm.jar:
     content/communicator/askViewZoom.xul                 (resources/content/askViewZoom.xul)
     content/communicator/askViewZoom.js                  (resources/content/askViewZoom.js)
     content/communicator/findUtils.js                    (resources/content/findUtils.js)
+    content/communicator/printPageSetup.js               (resources/content/printPageSetup.js)
+    content/communicator/printPageSetup.xul              (resources/content/printPageSetup.xul)
 
 en-US.jar:
         locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
@@ -40,6 +42,8 @@ en-US.jar:
         locale/en-US/communicator/askViewZoom.dtd                   (resources/locale/en-US/askViewZoom.dtd)
         locale/en-US/communicator/viewZoomOverlay.dtd               (resources/locale/en-US/viewZoomOverlay.dtd)
         locale/en-US/communicator/viewZoomOverlay.properties        (resources/locale/en-US/viewZoomOverlay.properties)
+        locale/en-US/communicator/printPageSetup.dtd                (resources/locale/en-US/printPageSetup.dtd)
+        locale/en-US/communicator/printPageSetup.properties         (resources/locale/en-US/printPageSetup.properties)
 
 US.jar:
     locale/US/communicator-region/contents.rdf   	(resources/locale/en-US/contents-region.rdf)

@@ -688,7 +688,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (NS_SUCCEEDED(res))
                 {
                     nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer); 
-                    spContentViewerFile->Print(PR_TRUE, nsnull);
+                    spContentViewerFile->Print(PR_TRUE, nsnull, (nsIWebProgressListener*)nsnull);
                 }
             }
             break;

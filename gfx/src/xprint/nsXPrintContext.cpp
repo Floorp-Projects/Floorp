@@ -95,6 +95,7 @@ nsXPrintContext::nsXPrintContext()
   mScreen      = (Screen *)nsnull;
   mVisual      = (Visual *)nsnull;
   mDrawable    = (Drawable)None;
+  mGC          = nsnull;
   mDepth       = 0;
   mIsGrayscale = PR_FALSE; /* default is color output */
   mIsAPrinter  = PR_TRUE;  /* default destination is printer */
@@ -111,8 +112,7 @@ nsXPrintContext::~nsXPrintContext()
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::~nsXPrintContext()\n"));
  
-  // end the document
-  if( mPDisplay != nsnull )
+  if (mPDisplay)
   {
     if (mGC)
     {
@@ -120,15 +120,20 @@ nsXPrintContext::~nsXPrintContext()
       mGC = nsnull;
     }
     
-    XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
-
-    // Cleanup things allocated along the way
-    xxlib_rgb_destroy_handle(mXlibRgbHandle);
-    mXlibRgbHandle = nsnull;
+    if (mPContext != None)
+    {
+      XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
+      mPContext = None;
+    }
     
+    if (mXlibRgbHandle)
+    {
+      xxlib_rgb_destroy_handle(mXlibRgbHandle);
+      mXlibRgbHandle = nsnull;
+    }
+        
     XPU_TRACE(XCloseDisplay(mPDisplay));
     
-    mPContext = nsnull;
     mPDisplay = nsnull;
   }
   
@@ -266,7 +271,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   /* get destination printer (we need this when printing to file as
    * the printer DDX in Xprt generates the data...) 
    */
-  aSpec->GetPrinter(&buf);
+  aSpec->GetPrinterName(&buf);
   
   /* Are we "printing" to a file instead to the print queue ? */
   if (!mIsAPrinter) 

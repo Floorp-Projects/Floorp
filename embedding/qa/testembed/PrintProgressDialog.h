@@ -7,10 +7,8 @@
 // PrintProgressDialog.h : header file
 //
 
-#include "nsIPrintListener.h"
 class nsIWebBrowser;
 class nsIDOMWindow;
-class nsIPrintListener;
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
@@ -28,10 +26,6 @@ public:
   // Helper
   void SetURI(const char* aTitle);
 
-  // same as nsIPrintListener
-  NS_IMETHOD OnStartPrinting(void);
-  NS_IMETHOD OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnEndPrinting(PRUint32 aStatus);
 
 // Dialog Data
 	//{{AFX_DATA(CPrintProgressDialog)
@@ -53,7 +47,7 @@ protected:
   CString                    m_URL;
   nsIWebBrowser*             m_WebBrowser;
   nsIDOMWindow*              m_DOMWin;
-  nsCOMPtr<nsIPrintListener> m_PrintListener;
+  nsCOMPtr<nsIWebProgressListener> m_PrintListener;
   BOOL                       m_InModalMode;
 
 	// Generated message map functions

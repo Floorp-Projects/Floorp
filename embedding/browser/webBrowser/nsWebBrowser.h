@@ -49,6 +49,7 @@
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWindowWatcher.h"
+#include "nsIPrintSettings.h"
 
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
@@ -126,7 +127,7 @@ protected:
     // helper function for Printing and Print Preview 
     nsresult DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 
                                    nsIPrintSettings *aThePrintSettings,
-                                   nsIPrintListener *aPrintListener,
+                                   nsIWebProgressListener* aPrgressListener,
                                    PRBool            aDoPrinting);
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
@@ -148,6 +149,8 @@ protected:
    nsIWebProgressListener    *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;
    nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
+
+   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
    // cached background color
    nscolor                       mBackgroundColor;

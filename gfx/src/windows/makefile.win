@@ -35,6 +35,8 @@ REQUIRES	= xpcom \
 			  unicharutil \
 			  locale \
 			  necko \
+			  dom \
+			  windowwatcher \
 			  content \
 			  layout \
 			  $(NULL)
@@ -96,6 +98,7 @@ WIN_LIBS=                                       \
 !if defined(NGLAYOUT_DDRAW)
          ole32.lib                              \
 !endif
+         winspool.lib                           \
          comdlg32.lib
 
 LLFLAGS = 	$(LLFLAGS)		 

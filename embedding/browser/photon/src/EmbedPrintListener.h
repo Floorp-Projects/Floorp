@@ -23,11 +23,11 @@
 #ifndef __EmbedPrintListener_h
 #define __EmbedPrintListener_h
 
-#include <nsIPrintListener.h>
+#include <nsIWebProgressListener.h>
 
 class EmbedPrivate;
 
-class EmbedPrintListener : public nsIPrintListener
+class EmbedPrintListener : public nsIWebProgressListener
 {
  public:
 
@@ -40,7 +40,7 @@ class EmbedPrintListener : public nsIPrintListener
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSIPRINTLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
  private:
 

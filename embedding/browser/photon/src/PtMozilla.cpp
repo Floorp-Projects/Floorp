@@ -25,7 +25,6 @@
 #include "nsCWebBrowser.h"
 #include "nsFileSpec.h"
 #include "nsILocalFile.h"
-#include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
 #include "nsEmbedAPI.h"
 

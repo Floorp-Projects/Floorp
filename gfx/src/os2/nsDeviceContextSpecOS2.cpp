@@ -22,12 +22,8 @@
 
 #include "nsDeviceContextSpecOS2.h"
 
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-#include "nsGfxDefs.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsArray.h"
 
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -39,10 +35,9 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
 
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-
 nsStringArray* nsDeviceContextSpecOS2::globalPrinterList = nsnull;
 int nsDeviceContextSpecOS2::globalNumPrinters = 0;
+
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
 
 /** -------------------------------------------------------
@@ -114,7 +109,7 @@ int nsDeviceContextSpecOS2::InitializeGlobalPrinters ()
 {
    globalNumPrinters = PrnDlg.GetNumPrinters();
    if (!globalNumPrinters) 
-      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE; 
+      return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 
 
    globalPrinterList = new nsStringArray();
    if (!globalPrinterList) 
@@ -161,17 +156,17 @@ void nsDeviceContextSpecOS2::FreeGlobalPrinters ()
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecOS2::Init(PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
-  NS_ASSERTION(nsnull != printService, "No print service.");
-  
+  mPrintSettings = aPS;
+  NS_ASSERTION(aPS, "Must have a PrintSettings!");
+
   // if there is a current selection then enable the "Selection" radio button
-  if (NS_SUCCEEDED(rv) && printService) {
+  if (aPS != nsnull) {
     PRBool isOn;
-    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
+    aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
     nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
@@ -181,7 +176,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(PRBool aQuiet)
   char      *path;
   PRBool     canPrint       = PR_FALSE;
   PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintOptions::kRangeAllPages;
+  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
   PRInt32    fromPage       = 1;
   PRInt32    toPage         = 1;
   PRInt32    copies         = 1;
@@ -190,39 +185,50 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(PRBool aQuiet)
 
   if( !globalPrinterList )
     if (InitializeGlobalPrinters())
-       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE;
+       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if( globalNumPrinters && !globalPrinterList->Count() ) 
      return NS_ERROR_OUT_OF_MEMORY;
  
   if ( !aQuiet ) {
     rv = NS_ERROR_FAILURE;
+    // create a nsISupportsArray of the parameters 
+    // being passed to the window
+    nsCOMPtr<nsISupportsArray> array;
+    NS_NewISupportsArray(getter_AddRefs(array));
+    if (!array) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPrintSettings> ps = aPS;
+    nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
+    NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+    array->AppendElement(psSupports);
+
     nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+    if (ioParamBlock) {
+      ioParamBlock->SetInt(0, 0);
+      nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+      NS_ASSERTION(blkSupps, "IOBlk must be a supports");
 
-    nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-    if (ioParamBlock)
-      paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-    if (paramBlockWrapper) {
-      paramBlockWrapper->SetData(ioParamBlock);
-      paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+      array->AppendElement(blkSupps);
+      nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+      NS_ASSERTION(array, "array must be a supports");
 
       nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
       if (wwatch) {
-
         nsCOMPtr<nsIDOMWindow> active;
-        wwatch->GetActiveWindow(getter_AddRefs(active));
+        wwatch->GetActiveWindow(getter_AddRefs(active));    
         nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
 
         nsCOMPtr<nsIDOMWindow> newWindow;
         rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-                      "_blank", "chrome,modal", paramBlockWrapper,
-                      getter_AddRefs(newWindow));
+              "_blank", "chrome,modal,centerscreen", array,
+              getter_AddRefs(newWindow));
       }
     }
+
     if (NS_SUCCEEDED(rv)) {
       PRInt32 buttonPressed = 0;
       ioParamBlock->GetInt(0, &buttonPressed);
-      if (buttonPressed == 0) 
+      if (buttonPressed == 1) 
         canPrint = PR_TRUE;
       else 
         {
@@ -235,14 +241,14 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(PRBool aQuiet)
   }
 
   if (canPrint) {
-    if (printService) {
-      printService->GetPrinter(&printer);
-      printService->GetPrintRange(&printRange);
-      printService->GetToFileName(&printfile);
-      printService->GetPrintToFile(&tofile);
-      printService->GetStartPageRange(&fromPage);
-      printService->GetEndPageRange(&toPage);
-      printService->GetNumCopies(&copies);
+    if (mPrintSettings) {
+      mPrintSettings->GetPrinterName(&printer);
+      mPrintSettings->GetPrintRange(&printRange);
+      mPrintSettings->GetToFileName(&printfile);
+      mPrintSettings->GetPrintToFile(&tofile);
+      mPrintSettings->GetStartPageRange(&fromPage);
+      mPrintSettings->GetEndPageRange(&toPage);
+      mPrintSettings->GetNumCopies(&copies);
 
       if ((copies == 0)  ||  (copies > 999)) {
          FreeGlobalPrinters();
@@ -288,7 +294,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetToPrinter( PRBool &aToPrinter )
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetPrinter ( char **aPrinter )
+NS_IMETHODIMP nsDeviceContextSpecOS2 :: GetPrinterName ( char **aPrinter )
 {
    *aPrinter = &mPrData.printer[0];
    return NS_OK;
@@ -335,8 +341,20 @@ nsPrinterEnumeratorOS2::nsPrinterEnumeratorOS2()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorOS2, nsIPrinterEnumerator)
 
+NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
+{
+  NS_ENSURE_ARG(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aCount = 0;
+  *aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
 {
+  NS_ENSURE_ARG(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+
   if (aCount) 
     *aCount = 0;
   else 
@@ -373,7 +391,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPrinter)
+NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
    for(int i = 0; i < nsDeviceContextSpecOS2::globalNumPrinters; i++) {
      if (!(nsDeviceContextSpecOS2::globalPrinterList->StringAt(i)->CompareWithConversion(aPrinter, TRUE, -1))) {

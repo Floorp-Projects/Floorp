@@ -43,6 +43,8 @@ toolkit.jar:
         content/global/xul.css                      (resources/content/xul.css) 
         content/global/printdialog.xul              (resources/content/printdialog.xul)
         content/global/printdialog.js               (resources/content/printdialog.js)
+        content/global/printProgress.xul            (resources/content/printProgress.xul)
+        content/global/printProgress.js             (resources/content/printProgress.js)
         content/global/build.dtd                    (build.dtd)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)
         content/global/bindings/button.xml          (resources/content/bindings/button.xml)
@@ -98,6 +100,7 @@ en-US.jar:
     locale/en-US/global/nsOutlinerSorting.properties (resources/locale/en-US/nsOutlinerSorting.properties)
     locale/en-US/global/dialog.properties           (resources/locale/en-US/dialog.properties)
     locale/en-US/global/printdialog.dtd             (resources/locale/en-US/printdialog.dtd)
+    locale/en-US/global/printProgress.dtd           (resources/locale/en-US/printProgress.dtd)
 
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 

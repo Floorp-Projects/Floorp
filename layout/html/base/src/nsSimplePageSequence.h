@@ -39,6 +39,7 @@
 
 #include "nsIPageSequenceFrame.h"
 #include "nsContainerFrame.h"
+#include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
 
 //-----------------------------------------------
@@ -65,6 +66,7 @@ public:
 
   nsStyleBackground* mBackground; //weak reference...
 
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 };
 
@@ -89,18 +91,14 @@ public:
                     nsFramePaintLayer    aWhichLayer);
 
   // nsIPageSequenceFrame
-  NS_IMETHOD  Print(nsIPresContext*         aPresContext,
-                    nsIPrintOptions*        aPrintOptions,
-                    nsIPrintStatusCallback* aStatusCallback);
   NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
 
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
-                        nsIPrintOptions* aPrintOptions);
-  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext,
-                           nsIPrintOptions* aPrintOptions);
+                        nsIPrintSettings* aPrintSettings);
+  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext);
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
   NS_IMETHOD GetNumPages(PRInt32* aNumPages);
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);

@@ -38,7 +38,7 @@
 #define nsPageFrame_h___
 
 #include "nsContainerFrame.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 
 class nsSharedPageData;
 
@@ -129,7 +129,7 @@ protected:
 
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);
 
-  nsCOMPtr<nsIPrintOptions> mPrintOptions;
+  nsCOMPtr<nsIPrintSettings> mPrintOptions;
   PRInt32     mPageNum;
   PRInt32     mTotNumPages;
   nsMargin    mMargin;

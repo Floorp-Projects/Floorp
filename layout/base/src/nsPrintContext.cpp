@@ -42,6 +42,7 @@
 #include "nsIWidget.h"
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
+#include "nsIPrintSettings.h"
 
 
 class PrintContext : public nsPresContext , nsIPrintContext{
@@ -64,8 +65,12 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
+  NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
+  NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
+
 protected:
   nsRect       mPageDim;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 PrintContext::PrintContext() :
@@ -148,6 +153,25 @@ PrintContext::SetPageDim(nsRect* aPageDim)
 {
   NS_ENSURE_ARG_POINTER(aPageDim);
   mPageDim = *aPageDim;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PrintContext::SetPrintSettings(nsIPrintSettings * aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+  mPrintSettings = aPrintSettings;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PrintContext::GetPrintSettings(nsIPrintSettings * *aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  *aPrintSettings = mPrintSettings;
+  NS_IF_ADDREF(*aPrintSettings);
+
   return NS_OK;
 }
 

@@ -60,6 +60,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::Init(void)
 }
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                                      nsIPrintSettings* aPrintSettings,
                                                                       nsIDeviceContextSpec *&aNewSpec,
                                                                       PRBool aQuiet)
 {
@@ -68,7 +69,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIWidget 
   nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ((nsDeviceContextSpecXlib *)devSpec.get())->Init(aQuiet);
+    rv = ((nsDeviceContextSpecXlib *)devSpec.get())->Init(aPrintSettings, aQuiet);
     if (NS_SUCCEEDED(rv))
     {
       aNewSpec = devSpec;

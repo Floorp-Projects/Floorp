@@ -41,7 +41,7 @@
 #include "nsRect.h"
 
 class nsIPresContext;
-class nsIPrintOptions;
+class nsIPrintSettings;
 
 // IID for the nsIPageSequenceFrame interface 
 // a6cf90d2-15b3-11d2-932e-00805f8add32
@@ -130,14 +130,9 @@ public:
    *          NS_ERROR_FAILURE if there is an error
    * @see     nsIPrintStatusCallback#OnProgress()
    */
-  NS_IMETHOD Print(nsIPresContext*         aPresContext,
-                   nsIPrintOptions*        aPrintOptions,
-                   nsIPrintStatusCallback* aStatusCallback) = 0;
-
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
-                        nsIPrintOptions* aPrintOptions) = 0;
-  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext,
-                           nsIPrintOptions* aPrintOptions) = 0;
+                        nsIPrintSettings* aPrintOptions) = 0;
+  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext) = 0;
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum) = 0;
   NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing) = 0;

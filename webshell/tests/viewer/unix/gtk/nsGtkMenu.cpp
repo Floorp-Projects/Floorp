@@ -87,7 +87,6 @@ GtkItemFactoryEntry menu_items[] =
   { "/File/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/File/Print Preview",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_ONE_COLUMN,	nsnull },
   { "/File/Print",			nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_PRINT,		nsnull },
-  { "/File/Print Setup",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_PRINT_SETUP,	nsnull },
   { "/File/sep2",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/File/_Exit",			nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_EXIT,		nsnull },
 

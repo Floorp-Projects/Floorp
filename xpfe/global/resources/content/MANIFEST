@@ -43,3 +43,7 @@ stringbundleBindings.xml
 plugins.html
 printdialog.xul
 printdialog.js
+printPageSetup.xul
+printPageSetup.js
+printProgress.xul
+printProgress.js

@@ -17,6 +17,7 @@ class CPrintSetupDialog : public CDialog
 public:
 	CPrintSetupDialog(nsIPrintSettings* aPrintSettings, CWnd* pParent = NULL);   // standard constructor
   void SetPrintSettings(nsIPrintSettings* aPrintSettings);
+  void GetPaperSizeInfo(short& aType, double& aWidth, double& aHeight);
 
 // Dialog Data
 	//{{AFX_DATA(CPrintSetupDialog)
@@ -28,8 +29,19 @@ public:
 	int		m_Scaling;
 	BOOL	m_PrintBGImages;
 	BOOL	m_PrintBGColors;
+	CString	m_PaperSize;
+	double	m_PaperHeight;
+	double	m_PaperWidth;
+	int		m_IsInches;
+	CString	m_FooterLeft;
+	CString	m_FooterMiddle;
+	CString	m_FooterRight;
+	CString	m_HeaderLeft;
+	CString	m_HeaderMiddle;
+	CString	m_HeaderRight;
 	//}}AFX_DATA
 
+	int		m_PaperSizeInx;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -42,12 +54,17 @@ public:
 protected:
   nsIPrintSettings* m_PrintSettings;
 
+  void EnableUserDefineControls(BOOL aEnable);
+  int  GetPaperSizeIndexFromData(short aType, double aW, double aH);
+  int  GetPaperSizeIndex(const CString& aStr);
+
 	// Generated message map functions
 	//{{AFX_MSG(CPrintSetupDialog)
 	virtual void OnOK();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnCustomdrawScale(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnKillfocusScaleTxt();
+	afx_msg void OnSelchangePaperSizeCbx();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

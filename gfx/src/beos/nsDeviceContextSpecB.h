@@ -42,9 +42,10 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecB.h" 
-#include "nsIPrintOptions.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextSpecPS.h" 
+#include "nsIPrintSettings.h" 
+#include "nsIPrintOptions.h" 
  
 #include "nsPrintdBeOS.h" 
  
@@ -70,7 +71,7 @@ public:
  *        printer).
  * @return error status
  */
-  NS_IMETHOD Init(PRBool	aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool	aQuiet);
   
   
 /**
@@ -82,7 +83,7 @@ public:
 
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
 
-  NS_IMETHOD GetPrinter ( char **aPrinter );
+  NS_IMETHOD GetPrinterName ( char **aPrinter );
 
   NS_IMETHOD GetCopies ( int &aCopies ); 
 

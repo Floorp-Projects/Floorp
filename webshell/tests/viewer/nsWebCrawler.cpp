@@ -245,15 +245,15 @@ nsWebCrawler::DumpRegressionData()
           switch (mPrinterTestType) {
           case 1:
             // dump print data to a file for regression testing
-            viewerFile->Print(PR_TRUE,fp);
+            viewerFile->Print(PR_TRUE, fp);
             break;
           case 2:
             // visual printing tests, all go to the printer, no printer dialog
-            viewerFile->Print(PR_TRUE,0);
+            viewerFile->Print(PR_TRUE, nsnull);
             break;
           case 3:
             // visual printing tests, all go to the printer, with a printer dialog
-            viewerFile->Print(PR_FALSE,0);
+            viewerFile->Print(PR_FALSE, nsnull);
             break;
           default:
             break;
