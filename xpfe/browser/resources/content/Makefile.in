@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= unix
+
 CHROME_DIR=packages/core
 CHROME_CONTENT_DIR=navigator/content
 

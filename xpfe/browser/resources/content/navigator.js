@@ -96,7 +96,6 @@ function savePage( url )
  **/
 function getContentAreaFrameCount()
 {
-  dump("*** check number of frames in content area \n");
   var saveFrameItem = document.getElementById("savepage");
   if (!window._content.frames.length ||
       !isDocumentFrame(document.commandDispatcher.focusedWindow))
@@ -924,7 +923,7 @@ function RevealSearchPanel()
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
 			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
       if (fp.show() == nsIFilePicker.returnOK) {
-        openNewWindowWith(fp.fileURL.spec);
+        openTopWin(fp.fileURL.spec);
       }
     } catch (ex) { }
   }
@@ -1153,10 +1152,10 @@ function BrowserEditBookmarks()
 
     try {
       appCore.loadUrl(gURLBar.value);
+      window._content.focus();
     }
     catch(e) {
     }
-    window._content.focus();
   }
 
   function readFromClipboard()

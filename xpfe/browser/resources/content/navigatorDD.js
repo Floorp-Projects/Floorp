@@ -42,8 +42,6 @@ var RDFUtils = {
   
   getTarget: function(aDS, aSourceID, aPropertyID)
     {
-      dump("*** aSourceID = " + aSourceID + "\n");
-      dump("*** aPropertyID = " + aPropertyID + "\n");
       var source = this.getResource(aSourceID);
       var property = this.getResource(aPropertyID);
       return aDS.GetTarget(source, property, true);
@@ -249,6 +247,7 @@ var contentAreaDNDObserver = {
 
   getSupportedFlavours: function ()
     {
+      dump("*** get supported flavours\n");
       var flavourList = { };
       //flavourList["moz/toolbaritem"] = { width: 2 };
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };

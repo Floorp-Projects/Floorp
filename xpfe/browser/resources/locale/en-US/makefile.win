@@ -31,6 +31,7 @@ CHROME_L10N = \
 	.\navigator.dtd \
 	.\NetSupportConfirmCheckYN.dtd \
 	.\navigator.properties \
+	.\personalToolbarOverlay.dtd \
 	$(NULL)
 
 
