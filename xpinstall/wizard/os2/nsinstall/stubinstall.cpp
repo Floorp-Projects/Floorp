@@ -210,7 +210,7 @@ void DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
       bFound = TRUE;
     while(bFound == TRUE)
     {
-      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
       {
         /* create full path */
         strcpy(szDestTemp, szDestination);
@@ -349,11 +349,11 @@ void ParseCommandLine(int argc, char *argv[])
   strcpy(szCmdLineToSetup, " ");
   while(i < argc)
   {
-    if((strcmpi(argv[i], "-ms") == 0) || (strcmpi(argv[i], "/ms") == 0))
+    if((stricmp(argv[i], "-ms") == 0) || (stricmp(argv[i], "/ms") == 0))
     {
       ulMode = SILENT;
     }
-    else if((strcmpi(argv[i], "-u") == 0) || (strcmpi(argv[i], "/u") == 0))
+    else if((stricmp(argv[i], "-u") == 0) || (stricmp(argv[i], "/u") == 0))
     {
       gbUncompressOnly = TRUE;
     }
@@ -389,7 +389,7 @@ MRESULT EXPENTRY DialogProc(HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   return WinDefDlgProc(hwndDlg, msg, mp1, mp2);
 }
 
-DeleteTempFiles(ULONG ulNumFiles)
+void DeleteTempFiles(ULONG ulNumFiles)
 {
   ULONG ulSize;
   void* pFileData;
@@ -466,7 +466,7 @@ BOOL FileExists(PSZ szFile)
      return (FALSE);
 }
 
-RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
+void RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
 {
   char                szCmdLine[MAX_BUF];
   char                szSetupFile[CCHMAXPATH];
@@ -549,11 +549,9 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   DirectoryRemove(szTempPath, TRUE);
   GetFullTempPathName(NULL, sizeof(szTempPath), szTempPath);
   DirectoryRemove(szTempPath, FALSE);
-
-  return TRUE;
 }
 
-main(int argc, char *argv[], char *envp[])
+int main(int argc, char *argv[], char *envp[])
 {
   HAB hab;
   HMQ hmq;
