@@ -305,6 +305,14 @@
         null
       </field>
 
+      <field name="focusedWindow">
+        null
+      </field>
+
+      <field name="focusedElement">
+        null
+      </field>
+
       <property name="userTypedValue"
                 onget="return this._userTypedValue;"
                 onset="this.userTypedClear = false; return this._userTypedValue = val;"/>

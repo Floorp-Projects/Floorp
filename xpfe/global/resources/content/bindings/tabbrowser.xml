@@ -82,6 +82,7 @@
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
                     tooltiptextnew="&newTabButton.tooltip;"
+                    setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     onmousedown="this.parentNode.parentNode.parentNode.updateContextTab(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
@@ -500,8 +501,11 @@
         <body>
           <![CDATA[
             var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.selectedIndex];
-            if (this.mCurrentBrowser)
+            if (this.mCurrentBrowser) {
+              this.mCurrentBrowser.focusedWindow = document.commandDispatcher.focusedWindow;
+              this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
               this.mCurrentBrowser.setAttribute("type", "content");
+            }
 
             newBrowser.setAttribute("type", "content-primary");
             this.mCurrentBrowser = newBrowser;
@@ -558,8 +562,22 @@
               }
             }
 
-            // Focus our new content area.
-            setTimeout("window._content.focus()", 0);
+            function setFocus(element) {
+              Components.lookupMethod(element, "focus").call(element);
+            }
+
+            // Focus the previously focused element or window
+            if (newBrowser.focusedElement) {
+              try {
+                setFocus(newBrowser.focusedElement);
+              } catch (e) {
+                setFocus(newBrowser.focusedWindow);
+              }
+            }
+            else if (newBrowser.focusedWindow)
+              setFocus(newBrowser.focusedWindow);
+            else // new tab, focus our new content area
+              setTimeout(setFocus, 0, window.content);
           ]]>
         </body>
       </method>
