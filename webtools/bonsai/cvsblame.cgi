@@ -95,7 +95,7 @@ if ($filename eq '')
 
 # Handle the "rev" argument
 #
-$opt_rev = $form{'rev'} if defined($form{'rev'} && $form{'rev'} ne 'HEAD');
+$opt_rev = $form{rev} if defined($form{rev} && $form{rev} ne 'HEAD');
 $browse_revtag = "HEAD";
 $browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
 $revision = '';
@@ -339,7 +339,7 @@ foreach $revision (@revision_map)
     if (defined($mark_cmd) and $mark_cmd ne 'begin') {
         chop($output);
         #if( defined($prev_revision{$file_rev})) {
-            $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
+        #    $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
         #}
         $output .= "</TD></TR><TR><TD colspan=3$row_color><PRE>";
 	$inMark = 0;
