@@ -21,8 +21,8 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef NSPOINT_H
-#define NSPOINT_H
+#ifndef NSPOINT2_H
+#define NSPOINT2_H
 
 #include "gfxtypes.h"
 
@@ -100,4 +100,4 @@ struct nsPathPoint: public nsPoint2{
 };
 
 
-#endif /* NSPOINT_H */
+#endif /* NSPOINT2_H */

@@ -21,8 +21,8 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef NSMARGIN_H
-#define NSMARGIN_H
+#ifndef NSMARGIN2_H
+#define NSMARGIN2_H
 
 #include "gfxtypes.h"
 
@@ -82,4 +82,4 @@ struct nsMargin2 {
   }
 };
 
-#endif /* NSMARGIN_H */
+#endif /* NSMARGIN2_H */

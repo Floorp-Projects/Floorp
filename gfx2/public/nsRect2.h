@@ -21,8 +21,8 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef NSRECT_H
-#define NSRECT_H
+#ifndef NSRECT2_H
+#define NSRECT2_H
 
 #include <stdio.h>
 #include "gfxtypes.h"
@@ -216,4 +216,4 @@ struct nsRect2 {
 extern NS_GFX FILE* operator<<(FILE* out, const nsRect2& rect);
 #endif
 
-#endif /* NSRECT_H */
+#endif /* NSRECT2_H */
