@@ -24,6 +24,7 @@
 #define nsXMLElement_h___
 
 #include "nsCOMPtr.h"
+#include "nsIXBLBinding.h"
 #include "nsIDOMElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
