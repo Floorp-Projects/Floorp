@@ -6345,6 +6345,7 @@ void DocumentViewerImpl::CheckForHiddenFrameSetFrames()
  */
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings, 
+                                 nsIDOMWindow *aChildDOMWin, 
                                  nsIWebProgressListener* aWebProgressListener)
 {
   if (!mPresShell) {
@@ -8322,6 +8323,15 @@ DocumentViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSet
   }
   NS_IF_ADDREF(*aCurrentPrintSettings);
   return NS_OK;
+}
+
+/* readonly attribute nsIDOMWindow currentChildDOMWindow; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow)
+{
+  NS_ENSURE_ARG_POINTER(aCurrentChildDOMWindow);
+  *aCurrentChildDOMWindow = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void cancel (); */
