@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Steve Clark (buster@netscape.com)
  */
 
 #include "nsCOMPtr.h"
@@ -56,7 +57,75 @@ static char* mEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified"
 }; 
 
-nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType) {
+/* declare static class data */
+nsDOMEvent nsDOMEvent::gEventPool;
+PRBool nsDOMEvent::gEventPoolInUse=PR_FALSE;
+
+#ifdef NS_DEBUG   // metrics for measuring event pool use
+static PRInt32 numEvents=0;
+static PRInt32 numNewEvents=0;
+static PRInt32 numDelEvents=0;
+static PRInt32 numAllocFromPool=0;
+//#define NOISY_EVENT_LEAKS   // define NOISY_EVENT_LEAKS to get metrics printed to stdout for all nsDOMEvent allocations
+#endif
+
+// allocate the memory for the object from the recycler, if possible
+// otherwise, just grab it from the heap.
+void* 
+nsDOMEvent::operator new(size_t aSize)
+{
+
+#ifdef NS_DEBUG
+  numEvents++;
+#endif
+
+  void *result = nsnull;
+
+  if (!gEventPoolInUse) {
+#ifdef NS_DEBUG
+    numAllocFromPool++;
+#endif
+    result = &gEventPool;
+    gEventPoolInUse = PR_TRUE;
+  }
+  else {
+#ifdef NS_DEBUG
+    numNewEvents++;
+#endif
+    result = ::operator new(aSize);
+  }
+  
+  if (result) {
+    nsCRT::zero(result, aSize);
+  }
+
+  return result;
+}
+
+// Overridden to prevent the global delete from being called on objects from
+// the recycler.  Otherwise, just pass through to the global delete operator.
+void 
+nsDOMEvent::operator delete(void* aPtr)
+{
+  if (aPtr==&gEventPool) {
+    gEventPoolInUse = PR_FALSE;
+  }
+  else {
+#ifdef NS_DEBUG
+    numDelEvents++;
+#endif
+    ::operator delete(aPtr);
+  }
+#if defined(NS_DEBUG) && defined(NOISY_EVENT_LEAKS)
+  printf("total events =%d, from pool = %d, concurrent live events = %d\n", 
+          numEvents, numAllocFromPool, numNewEvents-numDelEvents);
+#endif
+}
+
+
+
+nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType) 
+{
   mPresContext = aPresContext;
   if (mPresContext)
     NS_ADDREF(mPresContext);
@@ -123,7 +192,15 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
   NS_INIT_REFCNT();
 }
 
-nsDOMEvent::~nsDOMEvent() {
+nsDOMEvent::~nsDOMEvent() 
+{
+  NS_ASSERT_OWNINGTHREAD(nsDOMEvent);
+
+  nsCOMPtr<nsIPresShell> shell;
+  if (mPresContext)
+  { // we were arena-allocated, prepare to recycle myself    
+    mPresContext->GetShell(getter_AddRefs(shell));
+  }
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mCurrentTarget);
@@ -592,10 +669,6 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
     break;
   case NS_KEY_PRESS:
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-    if (0==*aCharCode)
-      printf("GetCharCode used correctly but no valid key!\n");
-#endif
     break;
   default:
     break;
@@ -1213,6 +1286,7 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsEvent *aEvent) 
 {
   nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent, aEventType);
+
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
