@@ -45,7 +45,7 @@ public:
 
 private:
 
-  nsIScreen* CreateNewScreenObject ( HDC inContext, void* inScreen ) ;
+  nsIScreen* CreateNewScreenObject ( void* inScreen ) ;
 
   PRBool mHasMultiMonitorAPIs;
   PRUint32 mNumberOfScreens;

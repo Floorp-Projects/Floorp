@@ -31,24 +31,19 @@
 class nsScreenWin : public nsIScreen
 {
 public:
-  nsScreenWin ( HDC inContext, void* inScreen );
+  nsScreenWin ( void* inScreen );
   ~nsScreenWin();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREEN
 
 private:
-
-    // are we the primary screen? Needed so we can sub out the menubar if
-    // asked.
-  //PRBool IsPrimaryScreen ( ) const { return (mScreen == ::GetMainDevice()); }
   
     // function pointers for multi-monitor API system calls that we use. Not
     // valid unless |mHasMultiMonitorAPIs| is true
   PRBool mHasMultiMonitorAPIs;
   FARPROC mGetMonitorInfoProc ;
 
-  HDC mContext;                     // the dc that represents this screen
   void* mScreen;                    // a |HMONITOR|, can't use this type in header file though.
 };
 

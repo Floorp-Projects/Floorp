@@ -107,7 +107,7 @@ NS_IMPL_ISUPPORTS(nsScreenManagerWin, NS_GET_IID(nsIScreenManager))
 //        screen. This should change when a multi-monitor impl is done.
 //
 nsIScreen* 
-nsScreenManagerWin :: CreateNewScreenObject ( HDC inContext, void* inScreen )
+nsScreenManagerWin :: CreateNewScreenObject ( void* inScreen )
 {
   nsIScreen* retScreen = nsnull;
   
@@ -121,7 +121,7 @@ nsScreenManagerWin :: CreateNewScreenObject ( HDC inContext, void* inScreen )
     }
   } // for each screen.
  
-  retScreen = new nsScreenWin(inContext, inScreen);
+  retScreen = new nsScreenWin(inScreen);
   ScreenListItem* listItem = new ScreenListItem ( (HMONITOR)inScreen, retScreen );
   mScreenList.AppendElement ( listItem );
 
@@ -144,7 +144,7 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
 {
   if ( !(inWidth || inHeight) ) {
     NS_WARNING ( "trying to find screen for sizeless window, using primary monitor" );
-    *outScreen = CreateNewScreenObject ( ::GetDC(nsnull), nsnull );    // addrefs
+    *outScreen = CreateNewScreenObject ( nsnull );    // addrefs
     return NS_OK;
   }
 
@@ -161,7 +161,7 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
   }
 #endif
 
-  *outScreen = CreateNewScreenObject ( ::GetDC(nsnull), genScreen );    // addrefs
+  *outScreen = CreateNewScreenObject ( genScreen );    // addrefs
   
   return NS_OK;
     
@@ -177,7 +177,7 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
 NS_IMETHODIMP 
 nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen) 
 {
-  *aPrimaryScreen = CreateNewScreenObject ( ::GetDC(nsnull), nsnull );    // addrefs  
+  *aPrimaryScreen = CreateNewScreenObject ( nsnull );    // addrefs  
   return NS_OK;
   
 } // GetPrimaryScreen
