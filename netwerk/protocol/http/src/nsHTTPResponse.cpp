@@ -368,7 +368,7 @@ nsresult nsHTTPResponse::ParseHeader(nsCString& aHeaderString)
     aHeaderString.Cut(0, colonOffset+1);
     aHeaderString.Trim(" ");
 
-    headerAtom = NS_NewAtom(headerKey.GetBuffer());
+    headerAtom = getter_AddRefs(NS_NewAtom(headerKey.GetBuffer()));
     if (headerAtom) {
         rv = ProcessHeader(headerAtom, aHeaderString);
     } else {
