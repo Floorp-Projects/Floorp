@@ -59,6 +59,7 @@ DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 endif
 
 REQUIRES = \
+        xpcom \
         appshell \
         xulapp \
 	$(NULL)
