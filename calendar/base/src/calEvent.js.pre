@@ -94,6 +94,10 @@ calEvent.prototype = {
         return dur;
     },
 
+    get recurrenceStartDate() {
+        return this.mStartDate;
+    },
+
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
     get attrname() { return this.varname; },      \

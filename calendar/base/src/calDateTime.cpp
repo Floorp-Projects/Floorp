@@ -113,6 +113,8 @@ calDateTime::Clone(calIDateTime **aResult)
     cdt->mWeekday = mWeekday;
     cdt->mYearday = mYearday;
 
+    cdt->mIsDate = mIsDate;
+
     cdt->mLastModified = PR_Now();
 
     // copies are always mutable
@@ -335,6 +337,24 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
     // reconstruct weekday/yearday
     mWeekday = icaltime_day_of_week(*icalt);
     mYearday = icaltime_day_of_year(*icalt);
+}
+
+NS_IMETHODIMP
+calDateTime::Compare(calIDateTime *aOther, PRInt32 *aResult)
+{
+    PRBool otherIsDate = PR_FALSE;
+    aOther->GetIsDate(&otherIsDate);
+
+    icaltimetype a, b;
+    ToIcalTime(&a);
+    aOther->ToIcalTime(&b);
+
+    if (mIsDate || otherIsDate)
+        *aResult = icaltime_compare_date_only(a,b);
+    else
+        *aResult = icaltime_compare(a, b);
+
+    return NS_OK;
 }
 
 /*

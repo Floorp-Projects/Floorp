@@ -56,7 +56,22 @@
 #define CAL_RECURRENCEINFO_CONTRACTID \
     "@mozilla.org/calendar/recurrence-info;1"
 
+#define CAL_RECURRENCERULE_CID \
+    { 0xd9560bf9, 0x3065, 0x404a, { 0x90, 0x4c, 0xc8, 0x82, 0xfc, 0x9c, 0x9b, 0x74 } }
+#define CAL_RECURRENCERULE_CONTRACTID \
+    "@mozilla.org/calendar/recurrence-rule;1"
+
+#define CAL_RECURRENCEDATESET_CID \
+    { 0x46ea7a6b, 0x01bd, 0x4ea5, { 0xb0, 0x6c, 0x90, 0xd5, 0xec, 0xcb, 0xbe, 0x3a } }
+#define CAL_RECURRENCEDATESET_CONTRACTID \
+    "@mozilla.org/calendar/recurrence-date-set;1"
+
 /* JS -- Update these from calItemModule.js */
+#define CAL_ITEM_OCCURRENCE_CID \
+    { 0xbad672b3, 0x30b8, 0x4ecd, { 0x80, 0x75, 0x71, 0x53, 0x31, 0x3d, 0x1f, 0x2c } }
+#define CAL_ITEM_OCCURRENCE_CONTRACTID \
+    "@mozilla.org/calendar/item-occurrence;1"
+
 #define CAL_EVENT_CID \
     { 0x974339d5, 0xab86, 0x4491, { 0xaa, 0xaf, 0x2b, 0x2c, 0xa1, 0x77, 0xc1, 0x2b } }
 #define CAL_EVENT_CONTRACTID \

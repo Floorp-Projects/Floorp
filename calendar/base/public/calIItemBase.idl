@@ -45,17 +45,13 @@ interface nsISimpleEnumerator;
 interface nsIVariant;
 
 interface nsIPropertyBag;
-interface nsIWritablePropertyBag;
 
 interface calICalendar;
 interface calIItemOccurrence;
-interface calIMutableItemBase;
 
 interface calIDateTime;
-interface calIMutableDateTime;
 
 interface calIRecurrenceInfo;
-interface calIMutableRecurrenceInfo;
 
 interface calIAttendee;
 
@@ -128,6 +124,7 @@ interface calIItemBase : nsISupports
   // recurrence
   //
   attribute calIRecurrenceInfo recurrenceInfo;
+  attribute calIDateTime recurrenceStartDate;
 
   // attachments
   // array of nsIMsgAttachment

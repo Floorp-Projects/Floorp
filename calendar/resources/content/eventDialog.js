@@ -160,35 +160,65 @@ function loadCalendarEventDialog()
 
     gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
 
+    if (event.recurrenceInfo) {
+        // we can only display at most one rule and one set of exceptions;
+        // nothing else.
+        var theRule = null;
+        var theExceptions = null;
 
+        var ritems = event.recurrenceInfo.getRecurrenceItems({});
+        for (i in ritems) {
+            if (ritems[i] instanceof calIRecurrenceRule) {
+                if (theRule) {
+                    dump ("XXXX eventDialog already found a calIRecurrenceRule, we can't handle multiple ones!\n");
+                } else {
+                    theRule = ritems[i].QueryInterface(calIRecurrenceRule);
+                }
+            } else if (ritems[i] instanceof calIRecurrenceDateSet) {
+                if (theExceptions) {
+                    dump ("XXXX eventDialog already found a calIRecurrenceDateSet, we can't handle multiple ones!\n");
+                } else {
+                    theExceptions = ritems[i].QueryInterface(calIRecurrenceDateSet);
+                    if (theExceptions.isNegative != true) {
+                        dump ("XXXX eventDialog found a calIRecurrenceDateSet that wasn't an exception set!\n");
+                        theExceptions = null;
+                    }
+                }
+            }
+        }
 
-    if (event.recurrenceInfo && event.recurrenceInfo.recurType != 0) {
-        setFieldValue("repeat-checkbox", true, "checked");
-        setFieldValue("repeat-length-field", event.recurrenceInfo.interval);
+        if (theRule) {
+            setFieldValue("repeat-checkbox", true, "checked");
+            setFieldValue("repeat-length-field", theRule.interval);
         
-        var typeMap = { }
-        typeMap["days"]   = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_DAILY;
-        typeMap["weeks"]  = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_WEEKLY;
-        typeMap["months"] = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_MONTHLY;
-        typeMap["years"]  = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_YEARLY;
-        // (from old code) don't put the extra "value" element here, or it won't work.
-        setFieldValue("repeat-length-units", typeMap[event.recurrenceInfo.recurType]);
-        
-        if (event.recurrenceInfo.recurCount == -1) {
-            setFieldValue("repeat-forever-radio", true, "selected");
-        }
-        else if (event.recurrenceInfo.recurCount > 0) {
-            setFieldValue("repeat-numberoftimes-radio", true, "selected");
-            setFieldValue("repeat-numberoftimes-textbox", Math.max(event.recurrenceInfo.recurCount, 1));
-        }
-        if (event.recurrenceInfo.recurEnd) {
-            setFieldValue("repeat-until-radio", true, "selected" );
-            document.getElementById("repeat-end-date-picker").value = event.recurrenceInfo.recurEnd.jsDate;
+            var typeMap = { "DAILY"   : "days",
+                            "WEEKLY"  : "weeks",
+                            "MONTHLY" : "months",
+                            "YEARLY"  : "years" };
+
+            setFieldValue("repeat-length-units", typeMap[theRule.type]);
+
+            if (theRule.count == -1) {
+                setFieldValue("repeat-forever-radio", true, "selected");
+            } else {
+                if (theRule.isByCount) {
+                    setFieldValue("repeat-numberoftimes-radio", true, "selected");
+                    setFieldValue("repeat-numberoftimes-textbox", theRule.count);
+                } else {
+                    setFieldValue("repeat-until-radio", true, "selected" );
+                    document.getElementById("repeat-end-date-picker").value = theRule.endDate.jsDate;
+                }
+            }
         }
 
-        // XXX hook up exceptions    
+        if (theExceptions) {
+            var dates = theExceptions.getDates({});
+            for (i in dates) {
+                var date = dates[i].jsDate;
+                addException(date);
+            }
+        }
     }
-
 
     //file attachments;
     /* XXX this could will work when attachments are supported by calItemBase
@@ -388,48 +418,59 @@ function onOKCommand()
     
     if (getFieldValue("repeat-checkbox", "checked")) {
         recurrenceInfo = createRecurrenceInfo();
-        dump ("RECURRENCE INFO: " + recurrenceInfo + "\n");
+        dump ("** recurrenceInfo: " + recurrenceInfo + "\n");
+        recurrenceInfo.initialize(event);
+
+        var recRule = new calRecurrenceRule();
+
         recurUnits    = getFieldValue("repeat-length-units", "value");
-        dump ("rECUR UNITS: " + recurUnits + "\n");
         recurInterval = getFieldValue("repeat-length-field");
 
-        recurrenceInfo.recurStart = event.startDate;
-        
         if (getFieldValue("repeat-forever-radio", "selected")) {
-            recurrenceInfo.recurCount = -1;
+            recRule.count = -1;
         }
         else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
-            recurrenceInfo.recurCount = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
+            recRule.count = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
         }
         else if (getFieldValue("repeat-until-radio", "selected")) {
             var recurEndDate = document.getElementById("repeat-end-date-picker").value;
-            recurrenceInfo.recurEnd = jsDateToDateTime(recurEndDate);
+            recRule.endDate = jsDateToDateTime(recurEndDate);
         }
 
-        recurrenceInfo.interval = recurInterval;
+        recRule.interval = recurInterval;
         
-        var typeMap = { "days"  : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_DAILY,
-                        "weeks"   : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_WEEKLY,
-                        "months" : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_MONTHLY,
-                        "years"  : Components.interfaces.calIRecurrenceInfo.CAL_RECUR_YEARLY
-                      }
-        recurrenceInfo.recurType = typeMap[recurUnits];
-        dump ("recurType: " + recurrenceInfo.recurType + "\n");
+        var typeMap = { "days"   : "DAILY",
+                        "weeks"  : "WEEKLY",
+                        "months" : "MONTHLY",
+                        "years"  : "YEARLY" };
+        recRule.type = typeMap[recurUnits];
+
         // XXX need to do extra work for weeks here and for months incase extra things are checked
 
+        recurrenceInfo.appendRecurrenceItem(recRule);
 
-
+        //
         // Exceptions
+        //
         var listbox = document.getElementById("exception-dates-listbox");
 
         var exceptionArray = new Array();
         for (var i = 0; i < listbox.childNodes.length; i++) {
-            var dateObj = new Date(listbox.childNodes[i].value);
-            exceptionArray.push(jsDateToDateTime(dateObj));
+            dump ("valuestr '" + listbox.childNodes[i].value + "'\n");
+            var dateObj = new Date(parseInt(listbox.childNodes[i].value));
+            var dt = jsDateToDateTime(dateObj);
+            dt.isDate = true;
+            exceptionArray.push(dt);
         }
-        if (exceptionArray.length > 0)
-            event.recurrenceInfo.setException(exceptionArray.length, exceptionArray);
 
+        if (exceptionArray.length > 0) {
+            var recExceptions = new calRecurrenceDateSet();
+            recExceptions.isNegative = true;
+            for (i in exceptionArray) {
+                recExceptions.addDate(exceptionArray[i]);
+            }
+            recurrenceInfo.appendRecurrenceItem(recExceptions);
+        }
 
         // Finally, set the recurrenceInfo
         event.recurrenceInfo = recurrenceInfo;
@@ -459,7 +500,7 @@ function onOKCommand()
 
     /* File attachments */
     /* XXX this could will work when attachments are supported by calItemBase
-    var attachmentListbox = documentgetElementById("attachmentBucket");
+    var attachmentListbox = documentgetElementById("attachmenxtBucket");
     var attachments = event.attachments.QueryInterface(Components.interfaces.nsIMutableArray);
 
     attachments.clear();

@@ -360,11 +360,10 @@ calMemoryCalendar.prototype = {
 
             if (itemStartTime <= endTime) {
                 // figure out if there are recurrences here we care about
-                if (itemReturnOccurrences && item.recurrenceInfo &&
-                    item.recurrenceInfo.recurType != calIRecurrenceInfo.CAL_RECUR_INVALID)
+                if (itemReturnOccurrences && item.recurrenceInfo)
                 {
                     // there might be some recurrences here that we need to handle
-                    var recs = item.recurrenceInfo.getOccurrencesBetween (item, aRangeStart, aRangeEnd, {});
+                    var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
                     for (var i = 0; i < recs.length; i++) {
                         itemsFound.push(recs[i]);
                     }

@@ -49,6 +49,10 @@ calEvent.prototype = {
         return dur;
     },
 
+    get recurrenceStartDate() {
+        return this.mStartDate;
+    },
+
 
 
 

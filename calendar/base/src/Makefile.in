@@ -63,6 +63,8 @@ REQUIRES = xpcom \
 CPPSRCS = calDateTime.cpp \
 	  calICSService.cpp \
 	  calRecurrenceInfo.cpp \
+	  calRecurrenceRule.cpp \
+	  calRecurrenceDateSet.cpp \
 	  $(NULL)
 
 

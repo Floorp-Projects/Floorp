@@ -39,18 +39,20 @@
 #ifndef CALRECURRENCEINFO_H_
 #define CALRECURRENCEINFO_H_
 
+#include "calIRecurrenceInfo.h"
+
+#include "calIItemBase.h"
+
+#include "calIRecurrenceItem.h"
+
 #include "nsCOMPtr.h"
 
-#include "calIRecurrenceInfo.h"
-#include "calIDateTime.h"
-
-struct icalrecurrencetype;
+#include "nsCOMArray.h"
 
 class calRecurrenceInfo : public calIRecurrenceInfo
 {
 public:
     calRecurrenceInfo();
-    ~calRecurrenceInfo();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -60,8 +62,8 @@ public:
 protected:
     PRBool mImmutable;
 
-    nsCOMPtr<calIDateTime> mRecurStart;
-    struct icalrecurrencetype *mIcalRecur;
+    nsCOMPtr<calIItemBase> mBaseItem;
+    nsCOMArray<calIRecurrenceItem> mRecurrenceItems;
 };
 
 #endif /* CALRECURRENCEINFO_H_ */

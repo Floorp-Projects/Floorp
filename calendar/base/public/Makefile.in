@@ -53,6 +53,9 @@ XPIDLSRCS	= calIAttendee.idl   \
 		  calIICSService.idl \
 		  calIItemBase.idl   \
 		  calIRecurrenceInfo.idl \
+		  calIRecurrenceDateSet.idl \
+		  calIRecurrenceItem.idl \
+		  calIRecurrenceRule.idl \
 		  calITodo.idl       \
 		  $(NULL)
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,44 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "nsISupports.idl"
 
-#include "calDateTime.h"
-#include "calICSService.h"
-#include "calRecurrenceInfo.h"
-#include "calRecurrenceRule.h"
-#include "calRecurrenceDateSet.h"
+#include "calIRecurrenceItem.idl"
 
-#include "calBaseCID.h"
+interface calIItemBase;
+interface calIDateTime;
+interface calIItemOccurrence;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
+interface calIIcalProperty;
 
-static const nsModuleComponentInfo components[] =
+// an interface implementing a RDATE or exception date
+
+[scriptable, uuid(b4e6fade-22cc-4b8c-a521-77375f47fb33)]
+interface calIRecurrenceDateSet : calIRecurrenceItem
 {
-    { "Calendar DateTime Object",
-      CAL_DATETIME_CID,
-      CAL_DATETIME_CONTRACTID,
-      calDateTimeConstructor },
-    { "ICS parser/serializer",
-      CAL_ICSSERVICE_CID,
-      CAL_ICSSERVICE_CONTRACTID,
-      calICSServiceConstructor },
-    { "Calendar Recurrence Object",
-      CAL_RECURRENCEINFO_CID,
-      CAL_RECURRENCEINFO_CONTRACTID,
-      calRecurrenceInfoConstructor },
-    { "Calendar Recurrence Rule",
-      CAL_RECURRENCERULE_CID,
-      CAL_RECURRENCERULE_CONTRACTID,
-      calRecurrenceRuleConstructor },
-    { "Calendar Recurrence Date Set",
-      CAL_RECURRENCEDATESET_CID,
-      CAL_RECURRENCEDATESET_CONTRACTID,
-      calRecurrenceDateSetConstructor }
-};
+  //
+  // recurrence date set
+  //
+  void getDates (out unsigned long aCount,
+                 [array,size_is(aCount),retval] out calIDateTime aDates);
+  void setDates (in unsigned long aCount,
+                 [array,size_is(aCount)] in calIDateTime aDates);
 
-NS_IMPL_NSGETMODULE(calBaseModule, components)
+  void addDate (in calIDateTime aDate);
+};

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,44 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "nsISupports.idl"
 
-#include "calDateTime.h"
-#include "calICSService.h"
-#include "calRecurrenceInfo.h"
-#include "calRecurrenceRule.h"
-#include "calRecurrenceDateSet.h"
+#include "calIRecurrenceItem.idl"
 
-#include "calBaseCID.h"
+interface calIItemBase;
+interface calIDateTime;
+interface calIItemOccurrence;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
+// an interface implementing a RRULE
 
-static const nsModuleComponentInfo components[] =
+[scriptable, uuid(c8a953ac-0864-4128-ab3f-b5ba8473fa53)]
+interface calIRecurrenceRule : calIRecurrenceItem
 {
-    { "Calendar DateTime Object",
-      CAL_DATETIME_CID,
-      CAL_DATETIME_CONTRACTID,
-      calDateTimeConstructor },
-    { "ICS parser/serializer",
-      CAL_ICSSERVICE_CID,
-      CAL_ICSSERVICE_CONTRACTID,
-      calICSServiceConstructor },
-    { "Calendar Recurrence Object",
-      CAL_RECURRENCEINFO_CID,
-      CAL_RECURRENCEINFO_CONTRACTID,
-      calRecurrenceInfoConstructor },
-    { "Calendar Recurrence Rule",
-      CAL_RECURRENCERULE_CID,
-      CAL_RECURRENCERULE_CONTRACTID,
-      calRecurrenceRuleConstructor },
-    { "Calendar Recurrence Date Set",
-      CAL_RECURRENCEDATESET_CID,
-      CAL_RECURRENCEDATESET_CONTRACTID,
-      calRecurrenceDateSetConstructor }
-};
+  //
+  // rule-based recurrence
+  //
 
-NS_IMPL_NSGETMODULE(calBaseModule, components)
+  // null/"", "SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY",
+  // "MONTHLY", "YEARLY"
+  attribute AUTF8String type;
+
+  // repeat every N of type
+  attribute long interval;
+
+  // These two are mutually exclusive; whichever is set
+  // invalidates the other.  It's only valid to read the one
+  // that was set; the other will throw NS_ERROR_FAILURE.  Use
+  // isByCount to figure out whether count or endDate is valid.
+  // Setting count to -1 or endDate to null indicates infinite
+  // recurrence.
+  attribute long count;
+  attribute calIDateTime endDate;
+
+  // if this isn't infinite recurrence, this flag indicates whether
+  // it was set by count or not
+  readonly attribute boolean isByCount;
+
+  // the components defining the recurrence
+  // "BYSECOND", "BYMINUTE", "BYHOUR", "BYDAY",
+  // "BYMONTHDAY", "BYYEARDAY", "BYWEEKNO", "BYMONTH",
+  // "BYSETPOST"
+  void getComponent (in AUTF8String aComponentType,
+                     out unsigned long aCount, [array,size_is(aCount),retval] out short aValues);
+  void setComponent (in AUTF8String aComponentType,
+                     in unsigned long aCount, [array,size_is(aCount)] in short aValues);
+
+};

@@ -677,6 +677,18 @@ function newToDoCommand()
   newToDo( null, null ); // new task button defaults to undated todo
 }
 
+var calIDateTime = Components.interfaces.calIDateTime;
+
+var calIEvent = Components.interfaces.calIEvent;
+var calITodo = Components.interfaces.calITodo;
+
+var calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
+var calIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
+var calIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
+
+var calRecurrenceInfo = Components.Constructor("@mozilla.org/calendar/recurrence-info;1", calIRecurrenceInfo);
+var calRecurrenceRule = Components.Constructor("@mozilla.org/calendar/recurrence-rule;1", calIRecurrenceRule);
+var calRecurrenceDateSet = Components.Constructor("@mozilla.org/calendar/recurrence-date-set;1", calIRecurrenceDateSet);
 
 function createEvent()
 {
@@ -748,6 +760,7 @@ function jsDateToDateTime(date)
 {
     newDate = createDateTime();
     newDate.jsDate = date;
+    dump ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
     return newDate;
 }
 

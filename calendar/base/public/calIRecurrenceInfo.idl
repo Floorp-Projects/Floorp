@@ -42,6 +42,8 @@ interface calIItemBase;
 interface calIDateTime;
 interface calIItemOccurrence;
 
+interface calIRecurrenceItem;
+
 interface calIIcalProperty;
 
 [scriptable, uuid(a6a458cf-052c-45d1-bee7-b700ad21109a)]
@@ -58,69 +60,41 @@ interface calIRecurrenceInfo : nsISupports
   // clone always returns a mutable event
   calIRecurrenceInfo clone();
 
+  // initialize this with the item for which this recurrence
+  // applies, so that the start date can be tracked
+  void initialize (in calIItemBase aItem);
+  readonly attribute calIItemBase item;
+
   //
-  // recurrence
+  // set of recurrence items; the order of these matters.
   //
 
-  const long CAL_RECUR_INVALID = 0;
-  const long CAL_RECUR_SECONDLY = 1;
-  const long CAL_RECUR_MINUTELY = 2;
-  const long CAL_RECUR_HOURLY = 3;
-  const long CAL_RECUR_DAILY = 4;
-  const long CAL_RECUR_WEEKLY = 5;
-  const long CAL_RECUR_MONTHLY = 6;
-  const long CAL_RECUR_YEARLY = 7;
+  void getRecurrenceItems (out unsigned long aCount, [array,size_is(aCount),retval] out calIRecurrenceItem aItems);
+  void setRecurrenceItems (in unsigned long aCount, [array,size_is(aCount)] in calIRecurrenceItem aItems);
 
-  attribute long recurType;
+  unsigned long countRecurrenceItems ();
+  calIRecurrenceItem getRecurrenceItemAt (in unsigned long aIndex);
+  void appendRecurrenceItem (in calIRecurrenceItem aItem);
+  void deleteRecurrenceItemAt (in unsigned long aIndex);
+  // inserts the item at the given index, pushing the item that was previously there forward
+  void insertRecurrenceItemAt (in calIRecurrenceItem aItem, in unsigned long aIndex);
 
-  attribute calIDatetime recurStart;
-
-  // setting either of these attributes calculates the other.
-  // recurCount of -1 or null recurEnd means "forever"
-  attribute long recurCount;
-  attribute calIDateTime recurEnd;
-
-  // skip every N 
-  attribute long interval;
-
-  // the components defining the recurrence
-  const long CAL_RECUR_BYSECOND = 8;
-  const long CAL_RECUR_BYMINUTE = 9;
-  const long CAL_RECUR_BYHOUR = 10;
-  const long CAL_RECUR_BYDAY = 11;
-  const long CAL_RECUR_BYMONTHDAY = 12;
-  const long CAL_RECUR_BYYEARDAY = 13;
-  const long CAL_RECUR_BYWEEKNO = 14;
-  const long CAL_RECUR_BYMONTH = 15;
-  const long CAL_RECUR_BYSETPOS = 16;
-
-  void getComponent (in long aComponentType,
-                     out unsigned long aCount, [array,size_is(aCount),retval] out short aValues);
-  void setComponent (in long aComponentType,
-                     in unsigned long aCount, [array,size_is(aCount)] in short aValues);
-
-  // exceptions
-  void getExceptions (out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
-  void setExceptions (in unsigned long aCount, [array, size_is(aCount)] in calIDateTime aDates);
+  //
+  // recurrence calculation
+  //
 
   // return the next display item for the event,
   // where the start time is >= aStartTime
-  calIItemOccurrence getNextOccurrence (in calIItemBase aItem, in calIDateTime aStartTime);
+  calIItemOccurrence getNextOccurrence (in calIDateTime aOccurrenceTime);
 
   // return array of calIItemOccurrence representing all
   // occurrences of this event between start and end.
-  void getOccurrencesBetween (in calIItemBase aItem,
-                              in calIDateTime aStartTime,
-                              in calIDateTime aEndTime,
-                              out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
-
-  // return array of calIItemOccurrence representing all occurrences
-  // of this event, starting at the given time.  if aMaxCount is not
-  // 0, a max of aMaxCount occurrences is returned
-  void getOccurrences (in calIItemBase aItem,
-                       in calIDateTime aStartTime,
+  void getOccurrences (in calIDateTime aRangeStart,
+                       in calIDateTime aRangeEnd,
                        in unsigned long aMaxCount,
                        out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
 
+  // get a calIIcalProperty corresponding to the full
+  // recurrence specification (including all the items)
   attribute calIIcalProperty icalProperty;
 };

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "calBaseCID.h"
+
 #include "calRecurrenceInfo.h"
 #include "calDateTime.h"
 #include "calIItemBase.h"
@@ -45,25 +47,11 @@
 
 #include "nsCOMArray.h"
 
-extern "C" {
-    #include "ical.h"
-}
-
-
 NS_IMPL_ISUPPORTS1(calRecurrenceInfo, calIRecurrenceInfo)
 
 calRecurrenceInfo::calRecurrenceInfo()
     : mImmutable(PR_FALSE)
 {
-    mIcalRecur = new struct icalrecurrencetype;
-
-    icalrecurrencetype_clear(mIcalRecur);
-}
-
-calRecurrenceInfo::~calRecurrenceInfo()
-{
-    if (mIcalRecur)
-        delete mIcalRecur;
 }
 
 NS_IMETHODIMP
@@ -88,499 +76,328 @@ calRecurrenceInfo::MakeImmutable()
 NS_IMETHODIMP
 calRecurrenceInfo::Clone(calIRecurrenceInfo **aResult)
 {
-    calRecurrenceInfo *rec = new calRecurrenceInfo;
-
-    rec->mImmutable = PR_FALSE;
-    rec->mRecurStart = mRecurStart;
-    *(rec->mIcalRecur) = *mIcalRecur;
-
-    NS_ADDREF (*aResult = rec);
-
-    return NS_OK;
-}
-
-/* attribute long recurType; */
-NS_IMETHODIMP
-calRecurrenceInfo::GetRecurType(PRInt32 *aRecurType)
-{
-    NS_ENSURE_ARG_POINTER(aRecurType);
-
-    switch (mIcalRecur->freq) {
-#define RECUR_HELPER(x) \
-        case ICAL_##x##_RECURRENCE: *aRecurType = CAL_RECUR_##x; break
-        RECUR_HELPER(SECONDLY);
-        RECUR_HELPER(MINUTELY);
-        RECUR_HELPER(HOURLY);
-        RECUR_HELPER(DAILY);
-        RECUR_HELPER(WEEKLY);
-        RECUR_HELPER(MONTHLY);
-        RECUR_HELPER(YEARLY);
-#undef RECUR_HELPER
-        default:
-            *aRecurType = CAL_RECUR_INVALID;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetRecurType(PRInt32 aRecurType)
-{
-    switch (aRecurType) {
-#define RECUR_HELPER(x) \
-        case CAL_RECUR_##x: mIcalRecur->freq = ICAL_##x##_RECURRENCE; break
-        RECUR_HELPER(SECONDLY);
-        RECUR_HELPER(MINUTELY);
-        RECUR_HELPER(HOURLY);
-        RECUR_HELPER(DAILY);
-        RECUR_HELPER(WEEKLY);
-        RECUR_HELPER(MONTHLY);
-        RECUR_HELPER(YEARLY);
-#undef RECUR_HELPER
-        case CAL_RECUR_INVALID:
-            mIcalRecur->freq = ICAL_NO_RECURRENCE;
-            break;
-        default:
-            return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-}
-
-/* attribute long recurCount; */
-NS_IMETHODIMP
-calRecurrenceInfo::GetRecurCount(PRInt32 *aRecurCount)
-{
-    NS_ENSURE_ARG_POINTER(aRecurCount);
-
-    if (mIcalRecur->count == 0 && icaltime_is_null_time(mIcalRecur->until)) {
-        *aRecurCount = -1;
-    } else if (mIcalRecur->count) {
-        *aRecurCount = mIcalRecur->count;
-    } else if (mRecurStart) {
-        icalrecur_iterator* recur_iter;
-        struct icaltimetype dtstart;
-        mRecurStart->ToIcalTime(&dtstart);
-        recur_iter = icalrecur_iterator_new (*mIcalRecur, dtstart);
-        if (!recur_iter)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        struct icaltimetype next = icalrecur_iterator_next(recur_iter);
-        // initialize to 1, not 0; we seem to always be 1 off here,
-        // need to figure out if iterator_next returns the "first" or not.
-        int count = 1;
-        while (!icaltime_is_null_time(next)) {
-            count++;
-            next = icalrecur_iterator_next(recur_iter);
-        }
-
-        *aRecurCount = count;
-    } else {
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetRecurCount(PRInt32 aRecurCount)
-{
-    if (aRecurCount != -1) {
-        mIcalRecur->count = aRecurCount;
-    }
-    mIcalRecur->until = icaltime_null_time();
-
-    return NS_OK;
-}
-
-/* attribute calIDateTime recurStart; */
-NS_IMETHODIMP
-calRecurrenceInfo::GetRecurStart(calIDateTime * *aRecurStart)
-{
-    NS_ENSURE_ARG_POINTER(aRecurStart);
-
-    NS_IF_ADDREF(*aRecurStart = mRecurStart);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetRecurStart(calIDateTime *aRecurStart)
-{
-    NS_ENSURE_ARG_POINTER(aRecurStart);
-
-    mRecurStart = aRecurStart;
-    return NS_OK;
-}
-
-/* attribute calIDateTime recurEnd; */
-NS_IMETHODIMP
-calRecurrenceInfo::GetRecurEnd(calIDateTime * *aRecurEnd)
-{
-    NS_ENSURE_ARG_POINTER(aRecurEnd);
-
-    if (!icaltime_is_null_time(mIcalRecur->until)) {
-        calDateTime *cdt = new calDateTime(&mIcalRecur->until);
-        if (!cdt)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_ADDREF (*aRecurEnd = cdt);
-    } else if (mRecurStart && mIcalRecur->count != 0) {
-        icalrecur_iterator* recur_iter;
-        struct icaltimetype dtstart;
-        mRecurStart->ToIcalTime(&dtstart);
-        recur_iter = icalrecur_iterator_new (*mIcalRecur, dtstart);
-        if (!recur_iter)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        struct icaltimetype next = icalrecur_iterator_next(recur_iter);
-        struct icaltimetype last = next;
-        while (!icaltime_is_null_time(next)) {
-            last = next;
-            next = icalrecur_iterator_next(recur_iter);
-        }
-
-        if (icaltime_is_null_time(last)) {
-            *aRecurEnd = nsnull;
-            return NS_OK;
-        }
-
-        calDateTime *cdt = new calDateTime(&last);
-        NS_ADDREF(*aRecurEnd = cdt);
-    } else {
-        *aRecurEnd = nsnull;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetRecurEnd(calIDateTime * aRecurEnd)
-{
-    if (aRecurEnd) {
-        struct icaltimetype itt;
-        aRecurEnd->ToIcalTime(&itt);
-
-        mIcalRecur->until = itt;
-    } else {
-        mIcalRecur->until = icaltime_null_time();
-    }
-
-    mIcalRecur->count = 0;
-
-    return NS_OK;
-}
-
-/* attribute long interval; */
-NS_IMETHODIMP
-calRecurrenceInfo::GetInterval(PRInt32 *aInterval)
-{
-    NS_ENSURE_ARG_POINTER(aInterval);
-    *aInterval = mIcalRecur->interval;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetInterval(PRInt32 aInterval)
-{
-    mIcalRecur->interval = aInterval;
-    return NS_OK;
-}
-
-/* void getComponent (in long aComponentType, out unsigned long aCount, [array, size_is (aCount), retval] out long aValues); */
-NS_IMETHODIMP
-calRecurrenceInfo::GetComponent(PRInt32 aComponentType, PRUint32 *aCount, PRInt16 **aValues)
-{
-    NS_ENSURE_ARG_POINTER(aCount);
-    NS_ENSURE_ARG_POINTER(aValues);
-
-    // This little ugly macro counts the number of real entries
-    // we have in the relevant array, and then clones it to the result.
-#define HANDLE_COMPONENT(_comptype,_icalvar,_icalmax)                   \
-    if (aComponentType == _comptype) {                                  \
-        int count;                                                      \
-        for (count = 0; count < _icalmax; count++) {                    \
-            if (mIcalRecur->_icalvar[count] == ICAL_RECURRENCE_ARRAY_MAX) \
-                break;                                                  \
-        }                                                               \
-        if (count) {                                                    \
-            *aValues = (PRInt16*) nsMemory::Clone(mIcalRecur->_icalvar, \
-                                                  count * sizeof(PRInt16)); \
-            if (!*aValues) return NS_ERROR_OUT_OF_MEMORY;               \
-        } else {                                                        \
-            *aValues = nsnull;                                          \
-        }                                                               \
-        *aCount = count;                                                \
-    }
-
-    HANDLE_COMPONENT(CAL_RECUR_BYSECOND, by_second, ICAL_BY_SECOND_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYMINUTE, by_minute, ICAL_BY_MINUTE_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYHOUR, by_hour, ICAL_BY_HOUR_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYDAY, by_day, ICAL_BY_DAY_SIZE) // special
-    else HANDLE_COMPONENT(CAL_RECUR_BYMONTHDAY, by_month_day, ICAL_BY_MONTHDAY_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYYEARDAY, by_year_day, ICAL_BY_YEARDAY_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYWEEKNO, by_week_no, ICAL_BY_WEEKNO_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYMONTH, by_month, ICAL_BY_MONTH_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYSETPOS, by_set_pos, ICAL_BY_SETPOS_SIZE)
-    else {
-        // invalid component; XXX - error code
-        return NS_ERROR_FAILURE;
-    }
-#undef HANDLE_COMPONENT
-
-    return NS_OK;
-}
-
-/* void setComponent (in long aComponentType, in unsigned long aCount, [array, size_is (aCount)] in long aValues); */
-NS_IMETHODIMP
-calRecurrenceInfo::SetComponent(PRInt32 aComponentType, PRUint32 aCount, PRInt16 *aValues)
-{
-    NS_ENSURE_ARG_POINTER(aValues);
-
-    // Copy the passed-in array into the ical structure array
-#define HANDLE_COMPONENT(_comptype,_icalvar,_icalmax)                   \
-    if (aComponentType == _comptype) {                                  \
-        if (aCount > _icalmax)                                          \
-            return NS_ERROR_FAILURE;                                    \
-        memcpy(mIcalRecur->_icalvar, aValues, aCount * sizeof(PRInt16)); \
-        if (aCount < _icalmax)                                          \
-            mIcalRecur->_icalvar[aCount] = ICAL_RECURRENCE_ARRAY_MAX;    \
-    }
-
-    HANDLE_COMPONENT(CAL_RECUR_BYSECOND, by_second, ICAL_BY_SECOND_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYMINUTE, by_minute, ICAL_BY_MINUTE_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYHOUR, by_hour, ICAL_BY_HOUR_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYDAY, by_day, ICAL_BY_DAY_SIZE) // special
-    else HANDLE_COMPONENT(CAL_RECUR_BYMONTHDAY, by_month_day, ICAL_BY_MONTHDAY_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYYEARDAY, by_year_day, ICAL_BY_YEARDAY_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYWEEKNO, by_week_no, ICAL_BY_WEEKNO_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYMONTH, by_month, ICAL_BY_MONTH_SIZE)
-    else HANDLE_COMPONENT(CAL_RECUR_BYSETPOS, by_set_pos, ICAL_BY_SETPOS_SIZE)
-    else {
-        // invalid component; XXX - error code
-        return NS_ERROR_FAILURE;
-    }
-#undef HANDLE_COMPONENT
-
-    return NS_OK;
-}
-
-/* void getExceptions (out unsigned long aCount, [array, size_is (aCount), retval] out calIDateTime aDates); */
-NS_IMETHODIMP
-calRecurrenceInfo::GetExceptions(PRUint32 *aCount, calIDateTime ***aDates)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void setExceptions (in unsigned long aCount, [array, size_is (aCount)] in calIDateTime aDates); */
-NS_IMETHODIMP
-calRecurrenceInfo::SetExceptions(PRUint32 aCount, calIDateTime **aDates)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* calIItemOccurrence getNextOccurrence (in calIItemBase aItem, in calIDateTime aStartTime); */
-NS_IMETHODIMP
-calRecurrenceInfo::GetNextOccurrence(calIItemBase *aItem, calIDateTime *aStartTime, calIItemOccurrence **_retval)
-{
-    NS_ENSURE_ARG_POINTER(aStartTime);
-    NS_ENSURE_ARG_POINTER(_retval);
-
     nsresult rv;
 
-    struct icaltimetype dtstart;
-    aStartTime->ToIcalTime(&dtstart);
-
-    icalrecur_iterator* recur_iter;
-    recur_iter = icalrecur_iterator_new (*mIcalRecur,
-                                         dtstart);
-    if (!recur_iter)
+    calRecurrenceInfo *cri = new calRecurrenceInfo;
+    if (!cri)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    struct icaltimetype next = icalrecur_iterator_next(recur_iter);
-    if (!icaltime_is_null_time(next)) {
-        nsCOMPtr<calIDateTime> cdt = new calDateTime(&next);
+    cri->mBaseItem = mBaseItem;
 
-        if (!cdt) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            nsCOMPtr<calIItemOccurrence> item = do_CreateInstance("@mozilla.org/calendar/item-occurrence;1");
-            if (!item) {
-                rv = NS_ERROR_FAILURE;
-            } else {
-                nsCOMPtr<calIEvent> event = do_QueryInterface(item);
-                if (event) {
-                    nsCOMPtr<calIDateTime> duration;
-                    rv = event->GetDuration(getter_AddRefs(duration));
-                    if (NS_FAILED(rv)) return rv;
+    for (int i = 0; i < mRecurrenceItems.Count(); i++) {
+        nsCOMPtr<calIRecurrenceItem> item;
+        rv = mRecurrenceItems[i]->Clone(getter_AddRefs(item));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-                    nsCOMPtr<calIDateTime> endt = new calDateTime(&next);
-                    rv = endt->AddDuration(duration);
-                    if (NS_FAILED(rv)) return rv;
-
-                    rv = item->Initialize(aItem, cdt, endt);
-                } else {
-                    rv = item->Initialize(aItem, cdt, cdt);
-                }
-
-                if (NS_SUCCEEDED(rv))
-                    NS_ADDREF (*_retval = item);
-            }
-        }
-    } else {
-        *_retval = nsnull;
-        rv = NS_OK;
+        cri->mRecurrenceItems.AppendObject(item);
     }
 
-    icalrecur_iterator_free(recur_iter);
-
-    return rv;
+    NS_ADDREF(*aResult = cri);
+    return NS_OK;
 }
 
-/* void getOccurrencesBetween (in calIItemBase aItem, in calIDateTime aStartTime, in calIDateTime aEndTime, out unsigned long aCount, [array, size_is (aCount), retval] out calIItemOccurrence aItems); */
 NS_IMETHODIMP
-calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
-                                         calIDateTime *aStartTime,
-                                         calIDateTime *aEndTime,
-                                         PRUint32 *aCount, calIItemOccurrence ***aItems)
+calRecurrenceInfo::Initialize(calIItemBase *aItem)
 {
-    NS_ENSURE_ARG_POINTER(aStartTime);
-    NS_ENSURE_ARG_POINTER(aCount);
-    NS_ENSURE_ARG_POINTER(aItems);
+    // should it be an error to initialize an already-initialized objet?
+    mBaseItem = aItem;
+    return NS_OK;
+}
 
-    // make sure there's sanity
-    //if (!aEndTime && 
+NS_IMETHODIMP
+calRecurrenceInfo::GetItem(calIItemBase **aResult)
+{
+    NS_IF_ADDREF(*aResult = mBaseItem);
+    return NS_OK;
+}
 
-    nsCOMArray<calIItemOccurrence> items;
+//
+// Recurrence Item set munging
+//
 
-    char* ss = icalrecurrencetype_as_string(mIcalRecur);
-    nsCAutoString tst, tend;
-    mRecurStart->ToString(tst);
-    aEndTime->ToString(tend);
-    fprintf (stderr, "RULE: [%s -> %s, %d]: %s\n", tst.get(), tend.get(), mIcalRecur->count, ss);
-
-    struct icaltimetype rangestart, dtstart, dtend;
-    aStartTime->ToIcalTime(&rangestart);
-    mRecurStart->ToIcalTime(&dtstart);
-    if (aEndTime)
-        aEndTime->ToIcalTime(&dtend);
-
-    if (icaltime_compare (rangestart, dtend) > 0) {
+NS_IMETHODIMP
+calRecurrenceInfo::GetRecurrenceItems (PRUint32 *aCount, calIRecurrenceItem ***aItems)
+{
+    if (mRecurrenceItems.Count() == 0) {
         *aItems = nsnull;
         *aCount = 0;
         return NS_OK;
     }
 
-    icalrecur_iterator* recur_iter;
-    recur_iter = icalrecur_iterator_new (*mIcalRecur,
-                                         dtstart);
-    if (!recur_iter)
+    calIRecurrenceItem **items = (calIRecurrenceItem**) nsMemory::Alloc (sizeof(calIRecurrenceItem*) * mRecurrenceItems.Count());
+    if (!items)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint32 count = 0;
-
-    struct icaltimetype next = icalrecur_iterator_next(recur_iter);
-    while (!icaltime_is_null_time(next)) {
-        if (*aCount && *aCount < count)
-            break;
-
-        if (icaltime_compare(next, rangestart) < 0) {
-            next = icalrecur_iterator_next(recur_iter);
-            continue;
-        }
-
-        if (aEndTime && icaltime_compare(next, dtend) > 0)
-            break;
-
-        nsresult rv = NS_OK;
-        nsCOMPtr<calIDateTime> cdt = new calDateTime(&next);
-
-        if (!cdt) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            nsCOMPtr<calIItemOccurrence> item = do_CreateInstance("@mozilla.org/calendar/item-occurrence;1");
-            if (!item) {
-                rv = NS_ERROR_FAILURE;
-            } else {
-                nsCOMPtr<calIEvent> event = do_QueryInterface(aItem);
-                if (event) {
-                    nsCOMPtr<calIDateTime> duration;
-                    rv = event->GetDuration(getter_AddRefs(duration));
-                    if (NS_FAILED(rv)) return rv;
-
-                    nsCOMPtr<calIDateTime> endt = new calDateTime(&next);
-                    rv = endt->AddDuration(duration);
-                    if (NS_FAILED(rv)) return rv;
-
-                    rv = item->Initialize(aItem, cdt, endt);
-                } else {
-                    rv = item->Initialize(aItem, cdt, cdt);
-                }
-
-                if (NS_SUCCEEDED(rv)) {
-                    items.AppendObject(item);
-                }
-            }
-        }
-
-        if (!NS_SUCCEEDED(rv)) {
-            icalrecur_iterator_free(recur_iter);
-            return rv;
-        }
-
-        next = icalrecur_iterator_next(recur_iter);
+    for (PRInt32 i = 0; i < mRecurrenceItems.Count(); i++) {
+        NS_IF_ADDREF (items[i] = mRecurrenceItems[i]);
     }
 
-    icalrecur_iterator_free(recur_iter);
+    *aItems = items;
+    *aCount = mRecurrenceItems.Count();
+    return NS_OK;
+}
 
-    *aCount = items.Count();
-    if (*aCount) {
-        calIItemOccurrence **itemArray = (calIItemOccurrence **) nsMemory::Alloc(sizeof(calIItemOccurrence*) * items.Count());
-        for (int i = 0; i < items.Count(); i++) {
-            itemArray[i] = items[i];
-            NS_ADDREF(itemArray[i]);
-        }
-        *aItems = itemArray;
-    } else {
-        *aItems = nsnull;
+NS_IMETHODIMP
+calRecurrenceInfo::SetRecurrenceItems (PRUint32 aCount, calIRecurrenceItem **aItems)
+{
+    if (mImmutable) {
+        return NS_ERROR_FAILURE; // XXX different error
     }
+
+    mRecurrenceItems.Clear();
+    for (PRUint32 i = 0; i < aCount; i++)
+        mRecurrenceItems.AppendObject(aItems[i]);
 
     return NS_OK;
 }
 
-/* void getOccurrences (in calIItemBase aItem, in calIDateTime aStartTime, in long aMaxCount, out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems); */
 NS_IMETHODIMP
-calRecurrenceInfo::GetOccurrences(calIItemBase *aItem, calIDateTime *aStartTime, PRUint32 aMaxCount,
-                                  PRUint32 *aCount, calIItemOccurrence ***aItems)
+calRecurrenceInfo::CountRecurrenceItems (PRUint32 *aCount)
+{
+    *aCount = mRecurrenceItems.Count();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::GetRecurrenceItemAt (PRUint32 aIndex, calIRecurrenceItem **aItem)
+{
+    NS_IF_ADDREF(*aItem = mRecurrenceItems[aIndex]);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::AppendRecurrenceItem (calIRecurrenceItem *aItem)
+{
+    if (mImmutable) {
+        return NS_ERROR_FAILURE; // XXX different error
+    }
+
+    mRecurrenceItems.AppendObject(aItem);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::DeleteRecurrenceItemAt (PRUint32 aIndex)
+{
+    if (!mRecurrenceItems.RemoveObjectAt(aIndex))
+        return NS_ERROR_INVALID_ARG;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::InsertRecurrenceItemAt (calIRecurrenceItem *aItem, PRUint32 aIndex)
+{
+    if (!mRecurrenceItems.InsertObjectAt(aItem, aIndex))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+//
+// recurrence calculation
+//
+
+NS_IMETHODIMP
+calRecurrenceInfo::GetNextOccurrence (calIDateTime *aOccurrenceTime, calIItemOccurrence **aItem)
+{
+    NS_ENSURE_ARG_POINTER(aOccurrenceTime);
+    NS_ENSURE_ARG_POINTER(aItem);
+
+    NS_ASSERTION (mBaseItem, "RecurrenceInfo not initialized");
+
+    PRInt32 i, j;
+    PRInt32 result;
+    nsresult rv;
+
+    nsCOMArray<calIDateTime> dates;
+    nsCOMPtr<calIDateTime> date;
+
+    nsCOMPtr<calIDateTime> startDate;
+    rv = mBaseItem->GetRecurrenceStartDate(getter_AddRefs(startDate));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (i = 0; i < mRecurrenceItems.Count(); i++) {
+        rv = mRecurrenceItems[i]->GetNextOccurrence (startDate, aOccurrenceTime, getter_AddRefs(date));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // if there is no next occurrence, continue.
+        if (!date)
+            continue;
+
+        PRBool isNegative = PR_FALSE;
+        rv = mRecurrenceItems[i]->GetIsNegative(&isNegative);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isNegative) {
+            // if this is negative, we look for this date in the existing set, and remove it if its there
+            for (j = dates.Count() - 1; j >= 0; j--) {
+                if (NS_SUCCEEDED(dates[j]->Compare(date, &result)) && result == 0)
+                    dates.RemoveObjectAt(j);
+            }
+        } else {
+            // if positive, we just add the date to the existing set
+            dates.AppendObject(date);
+        }
+    }
+
+    // no next date found
+    if (dates.Count() == 0) {
+        *aItem = nsnull;
+        return NS_OK;
+    }
+
+    // find the earliest date in the set
+    date = dates[0];
+    for (i = 0; i < dates.Count(); i++) {
+        if (NS_SUCCEEDED(date->Compare(dates[i], &result)) && result > 0)
+            date = dates[i];
+    }
+    nsCOMPtr<calIDateTime> enddate;
+    date->Clone(getter_AddRefs(enddate));
+
+    nsCOMPtr<calIEvent> event = do_QueryInterface(mBaseItem);
+    if (event) {
+        nsCOMPtr<calIDateTime> duration;
+        rv = event->GetDuration(getter_AddRefs(duration));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        enddate->AddDuration(duration);
+    }
+
+    nsCOMPtr<calIItemOccurrence> occ = do_CreateInstance(CAL_ITEM_OCCURRENCE_CONTRACTID);
+    occ->Initialize(mBaseItem, date, enddate);
+    NS_ADDREF(*aItem = occ);
+    return NS_OK;
+}
+
+static int PR_CALLBACK
+calDateTimeComparator (calIDateTime *aElement1,
+                       calIDateTime *aElement2,
+                       void *aData)
+{
+    PRInt32 result;
+    aElement1->Compare(aElement2, &result);
+    return result;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::GetOccurrences (calIDateTime *aRangeStart,
+                                   calIDateTime *aRangeEnd,
+                                   PRUint32 aMaxCount,
+                                   PRUint32 *aCount, calIItemOccurrence ***aItems)
+{
+    NS_ENSURE_ARG_POINTER(aRangeStart);
+    NS_ENSURE_ARG_POINTER(aCount);
+    NS_ENSURE_ARG_POINTER(aItems);
+
+    NS_ASSERTION (mBaseItem, "RecurrenceInfo not initialized");
+
+    PRInt32 i, j, k;
+    PRInt32 result;
+    nsresult rv;
+
+    nsCOMArray<calIDateTime> dates;
+
+    nsCOMPtr<calIDateTime> startDate;
+    rv = mBaseItem->GetRecurrenceStartDate(getter_AddRefs(startDate));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (i = 0; i < mRecurrenceItems.Count(); i++) {
+        calIDateTime **cur_dates = nsnull;
+        PRUint32 num_cur_dates = 0;
+
+        // if both range start and end are specified, we ask for all of the occurrences,
+        // to make sure we catch all possible exceptions.  If aRangeEnd isn't specified,
+        // then we have to ask for aMaxCount, and hope for the best.
+        if (aRangeStart && aRangeEnd)
+            rv = mRecurrenceItems[i]->GetOccurrences (startDate, aRangeStart, aRangeEnd, 0, &num_cur_dates, &cur_dates);
+        else
+            rv = mRecurrenceItems[i]->GetOccurrences (startDate, aRangeStart, aRangeEnd, aMaxCount, &num_cur_dates, &cur_dates);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // if there are no occurrences, continue.
+        if (num_cur_dates == 0)
+            continue;
+
+        PRBool isNegative = PR_FALSE;
+        rv = mRecurrenceItems[i]->GetIsNegative(&isNegative);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isNegative) {
+            // if this is negative, we look for any of the given dates
+            // in the existing set, and remove them if they're
+            // present.
+            for (j = dates.Count() - 1; j >= 0; j--) {
+                for (k = 0; k < (int) num_cur_dates; k++) {
+                    if (NS_SUCCEEDED(dates[j]->Compare(cur_dates[k], &result)) && result == 0) {
+                        dates.RemoveObjectAt(j);
+                        break;
+                    }
+                }
+            }
+        } else {
+            // if positive, we just add these date to the existing set,
+            // but only if they're not already there
+            for (j = 0; j < (int) num_cur_dates; j++) {
+                PRBool isFound = PR_FALSE;
+                for (k = 0; k < dates.Count(); k++) {
+                    if (NS_SUCCEEDED(dates[k]->Compare(cur_dates[j], &result)) && result == 0) {
+                        isFound = PR_TRUE;
+                        break;
+                    }
+                }
+
+                if (!isFound)
+                    dates.AppendObject(cur_dates[j]);
+            }
+        }
+    }
+
+    // now sort the resulting list
+    dates.Sort(calDateTimeComparator, nsnull);
+
+    nsCOMPtr<calIDateTime> duration;
+    nsCOMPtr<calIEvent> event = do_QueryInterface(mBaseItem);
+    if (event) {
+        rv = event->GetDuration(getter_AddRefs(duration));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    PRUint32 count = aMaxCount;
+    if (!count)
+        count = dates.Count();
+    if (count) {
+        calIItemOccurrence **occArray = (calIItemOccurrence **) nsMemory::Alloc(sizeof(calIItemOccurrence*) * count);
+        for (int i = 0; i < (int) count; i++) {
+            nsCOMPtr<calIItemOccurrence> occ = do_CreateInstance (CAL_ITEM_OCCURRENCE_CONTRACTID);
+
+            nsCOMPtr<calIDateTime> endDate;
+            dates[i]->Clone(getter_AddRefs(endDate));
+
+            if (event) {
+                endDate->AddDuration(duration);
+            }
+                
+            occ->Initialize (mBaseItem, dates[i], endDate);
+
+            NS_ADDREF(occArray[i] = occ);
+        }
+
+        *aItems = occArray;
+    } else {
+        *aItems = nsnull;
+    }
+    *aCount = count;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::GetIcalProperty(calIIcalProperty **aProp)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-calRecurrenceInfo::GetIcalProperty(calIIcalProperty **prop)
+calRecurrenceInfo::SetIcalProperty(calIIcalProperty *aProp)
 {
-    icalproperty* rrule = icalproperty_new_rrule(*mIcalRecur);
-    if (!rrule)
-        return NS_ERROR_OUT_OF_MEMORY; // XXX map error code
-    *prop = new calIcalProperty(rrule, nsnull);
-    if (!*prop) {
-        icalproperty_free(rrule);
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ADDREF(*prop);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calRecurrenceInfo::SetIcalProperty(calIIcalProperty *prop)
-{
-    nsCAutoString propName;
-    if (NS_FAILED(prop->GetPropertyName(propName)))
-        return NS_ERROR_FAILURE; // hahahahaha
-    if (!propName.EqualsLiteral("RRULE"))
-        return NS_ERROR_INVALID_ARG;
-    icalproperty* rrule = ((calIcalProperty *)prop)->getIcalProperty();
-    if (!rrule)
-        return NS_ERROR_INVALID_ARG;
-    *mIcalRecur = icalproperty_get_rrule(rrule);
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -128,6 +128,10 @@ interface calIDateTime : nsISupports
   // this item
   void addDuration (in calIDateTime aDuration);
 
+  // returns -1, 0, 1 to indicate this < aOtherDate,
+  // this == aOtherDate, or this > aOtherDate.
+  long compare (in calIDateTime aOtherDate);
+
   //
   // Some helper getters for calculating useful ranges
   //

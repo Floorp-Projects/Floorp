@@ -92,6 +92,10 @@ calTodo.prototype = {
         this.makeItemBaseImmutable();
     },
 
+    get recurrenceStartDate() {
+        return this.mEntryDate;
+    },
+
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
     get attrname() { return this.varname; },      \

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,44 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#ifndef CALRECURRENCERULE_H_
+#define CALRECURRENCERULE_H_
 
-#include "calDateTime.h"
-#include "calICSService.h"
-#include "calRecurrenceInfo.h"
-#include "calRecurrenceRule.h"
-#include "calRecurrenceDateSet.h"
+#include "nsCOMPtr.h"
 
-#include "calBaseCID.h"
+#include "calIRecurrenceRule.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calICSService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceRule)
-NS_GENERIC_FACTORY_CONSTRUCTOR(calRecurrenceDateSet)
+struct icalrecurrencetype;
 
-static const nsModuleComponentInfo components[] =
+class calRecurrenceRule : public calIRecurrenceRule
 {
-    { "Calendar DateTime Object",
-      CAL_DATETIME_CID,
-      CAL_DATETIME_CONTRACTID,
-      calDateTimeConstructor },
-    { "ICS parser/serializer",
-      CAL_ICSSERVICE_CID,
-      CAL_ICSSERVICE_CONTRACTID,
-      calICSServiceConstructor },
-    { "Calendar Recurrence Object",
-      CAL_RECURRENCEINFO_CID,
-      CAL_RECURRENCEINFO_CONTRACTID,
-      calRecurrenceInfoConstructor },
-    { "Calendar Recurrence Rule",
-      CAL_RECURRENCERULE_CID,
-      CAL_RECURRENCERULE_CONTRACTID,
-      calRecurrenceRuleConstructor },
-    { "Calendar Recurrence Date Set",
-      CAL_RECURRENCEDATESET_CID,
-      CAL_RECURRENCEDATESET_CONTRACTID,
-      calRecurrenceDateSetConstructor }
+public:
+    calRecurrenceRule();
+    ~calRecurrenceRule();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_CALIRECURRENCEITEM
+
+    NS_DECL_CALIRECURRENCERULE
+protected:
+    PRBool mImmutable;
+    PRBool mIsNegative;
+
+    PRBool mIsByCount;
+    struct icalrecurrencetype *mIcalRecur;
 };
 
-NS_IMPL_NSGETMODULE(calBaseModule, components)
+#endif

@@ -48,6 +48,10 @@ calTodo.prototype = {
         this.makeItemBaseImmutable();
     },
 
+    get recurrenceStartDate() {
+        return this.mEntryDate;
+    },
+
 
 
 
