@@ -114,11 +114,17 @@ function IsEditorContentHTML()
   return (editorShell.contentsMIMEType == "text/html");
 }
 
+function IsInHTMLSourceMode()
+{
+  return (gEditorDisplayMode == DisplayModeSource);
+}
+
 // are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
 function IsEditingRenderedHTML()
 {
-    return IsEditorContentHTML() && (gEditorDisplayMode != DisplayModeSource);
+    return IsEditorContentHTML() && !IsInHTMLSourceMode();
 }
+
 
 // This is called when the real editor document is created,
 // before it's loaded.

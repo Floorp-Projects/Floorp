@@ -140,7 +140,7 @@
   <!-- edit menu commands. These get updated by code in globalOverlay.js -->
   <commandset id="composerEditMenuItems"
           commandupdater="true"
-          events="create"
+          events="create, mode_switch"
           oncommandupdate="goUpdateComposerMenuItems(this)"
   >
     <command id="cmd_undo"/>

@@ -570,7 +570,7 @@ var nsFindCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null);
+    return (window.editorShell && !IsInHTMLSourceMode());
   },
 
   doCommand: function(aCommand)
@@ -586,7 +586,7 @@ var nsFindNextCommand =
   {
     // we can only do this if the search pattern is non-empty. Not sure how
     // to get that from here
-    return (window.editorShell != null);
+    return (window.editorShell && !IsInHTMLSourceMode());
   },
 
   doCommand: function(aCommand)
@@ -600,7 +600,7 @@ var nsReplaceCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null);
+    return (window.editorShell && !IsInHTMLSourceMode());
   },
 
   doCommand: function(aCommand)
@@ -614,7 +614,7 @@ var nsSpellingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null) && IsSpellCheckerInstalled();
+    return (window.editorShell != null) && !IsInHTMLSourceMode() && IsSpellCheckerInstalled();
   },
 
   doCommand: function(aCommand)
