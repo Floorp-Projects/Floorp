@@ -108,7 +108,7 @@ RoamingPrefs.prototype =
   //       | + BaseURL (string)
   //       | + Username (string)
   //       | + SavePW (int, really bool)
-  //       | + Password (string, encrypted)
+  //       | + Password (string, encrypted?)
   //       + Copy (tree)
   //         + RemoteDir (string)
 
