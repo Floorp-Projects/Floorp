@@ -84,22 +84,6 @@
 			&sendAddFtpCheck.label;
 		</html:label>
 	</html:div>
-	<html:div >
-	  <html:input type="checkbox" id="signonRememberSignons"
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="signon.rememberSignons" />
-		<html:label for="signonRememberSignons" accesskey="&remSignCheck.accesskey;" tabindex="0">
-			&remSignCheck.label; 
-		</html:label>
-	</html:div>
-	<html:div >
-	  <html:input type="checkbox" id="walletCaptureForms"
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="wallet.captureForms" />
-		<html:label id="walletCaptureFormsLabel" for="walletCaptureForms" accesskey="&remWalletCheck.label;" tabindex="0">
-			&remWalletCheck.label; 
-		</html:label>
-	</html:div>
 	</titledbox>
 
 </window>
