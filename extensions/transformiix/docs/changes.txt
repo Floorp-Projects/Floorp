@@ -2,6 +2,15 @@ TransforMiiX (TM)
 (C) Copyright The MITRE Corporation 1999, Keith Visco.  All rights reserved.
 
 
+Build 20000222
+-- Added Attribute parent mapping since DOM 1.0 doesn't support it
+-- Added default sorting of NodeSet by DocumentOrder
+   -- yes this is a hint that xsl:sort is will be available soon
+
+Build 20000218
+-- Fixed bug reported by Thiery Le Bouil, xsl:param was getting
+   processed, and then treated as a literal element
+
 Build 20000217
 
 -- Changed StringList#iterator to return a pointer instead of a reference
