@@ -87,7 +87,6 @@ nsPopupBoxObject::QueryInterface(REFNSIID iid, void** aResult)
   
 nsPopupBoxObject::nsPopupBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPopupBoxObject::~nsPopupBoxObject()

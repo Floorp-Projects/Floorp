@@ -78,7 +78,6 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuListener, nsIDOMKeyListener, nsIDOMFocusListener,
 
 nsMenuListener::nsMenuListener(nsIMenuParent* aMenuParent) 
 {
-  NS_INIT_ISUPPORTS();
   mMenuParent = aMenuParent;
 }
 

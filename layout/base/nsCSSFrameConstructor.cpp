@@ -1272,8 +1272,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mDocElementContainingBlock(nsnull),
     mGfxScrollFrame(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef DEBUG
   static PRBool gFirstTime = PR_TRUE;
   if (gFirstTime) {

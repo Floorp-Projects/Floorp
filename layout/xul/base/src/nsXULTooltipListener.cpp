@@ -74,7 +74,6 @@ nsXULTooltipListener::nsXULTooltipListener()
   , mNeedTitletip(PR_FALSE)
   , mLastTreeRow(-1)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXULTooltipListener::~nsXULTooltipListener()

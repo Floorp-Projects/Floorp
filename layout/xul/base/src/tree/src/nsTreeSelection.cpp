@@ -254,7 +254,6 @@ struct nsTreeRange
 
 nsTreeSelection::nsTreeSelection(nsITreeBoxObject* aTree)
 {
-  NS_INIT_ISUPPORTS();
   mTree = aTree;
   mSuppressed = PR_FALSE;
   mFirstRange = nsnull;

@@ -115,7 +115,6 @@ public:
 
 nsListScrollSmoother::nsListScrollSmoother(nsListBoxBodyFrame* aOuter)
 {
-  NS_INIT_ISUPPORTS();
   mDelta = 0;
   mOuter = aOuter;
 }

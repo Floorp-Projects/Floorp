@@ -769,8 +769,6 @@ nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
 
 nsDummyLayoutRequest::nsDummyLayoutRequest(nsIPresShell* aPresShell)
 {
-  NS_INIT_ISUPPORTS();
-
   if (gRefCnt++ == 0) {
       nsresult rv;
       rv = NS_NewURI(&gURI, "about:layout-dummy-request", nsnull);
@@ -1519,7 +1517,6 @@ PresShell::PresShell():
   mEnablePrefStyleSheet(PR_TRUE),
   mScrollingEnabled(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
@@ -7218,7 +7215,6 @@ NS_IMPL_ISUPPORTS2(PresShellViewEventListener, nsIScrollPositionListener, nsICom
 
 PresShellViewEventListener::PresShellViewEventListener()
 {
-  NS_INIT_ISUPPORTS();
   mPresShell  = 0;
   mWasVisible = PR_FALSE;
   mCallCount  = 0;

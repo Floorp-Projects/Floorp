@@ -76,7 +76,6 @@ nsIFrameBoxObject::QueryInterface(REFNSIID iid, void** aResult)
   
 nsIFrameBoxObject::nsIFrameBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsIFrameBoxObject::~nsIFrameBoxObject()

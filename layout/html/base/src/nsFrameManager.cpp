@@ -454,7 +454,6 @@ NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 
 FrameManager::FrameManager()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 FrameManager::~FrameManager()

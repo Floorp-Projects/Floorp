@@ -2313,7 +2313,6 @@ NS_IMPL_ISUPPORTS2(nsImageListener, imgIDecoderObserver, imgIContainerObserver)
 nsImageListener::nsImageListener(nsImageFrame *aFrame) :
   mFrame(aFrame)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsImageListener::~nsImageListener()

@@ -2057,7 +2057,6 @@ NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
@@ -2114,8 +2113,6 @@ nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
-  NS_INIT_ISUPPORTS();
-
   // create nsPluginNativeWindow object, it is derived from nsPluginWindow
   // struct and allows to manipulate native window procedure
   nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);

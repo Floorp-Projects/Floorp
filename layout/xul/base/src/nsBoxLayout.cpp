@@ -57,7 +57,6 @@
 
 nsBoxLayout::nsBoxLayout()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 void

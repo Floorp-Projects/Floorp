@@ -83,7 +83,6 @@ nsListBoxObject::QueryInterface(REFNSIID iid, void** aResult)
   
 nsListBoxObject::nsListBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsListBoxObject::~nsListBoxObject()

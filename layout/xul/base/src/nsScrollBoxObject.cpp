@@ -75,7 +75,6 @@ NS_IMPL_RELEASE_INHERITED(nsScrollBoxObject, nsBoxObject)
 
 nsScrollBoxObject::nsScrollBoxObject()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

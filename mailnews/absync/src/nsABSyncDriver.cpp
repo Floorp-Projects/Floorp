@@ -51,7 +51,6 @@ static NS_DEFINE_CID(kAbSync, NS_ABSYNC_SERVICE_CID);
 
 nsAbSyncDriver::nsAbSyncDriver()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 
   mTransactionID = -1;

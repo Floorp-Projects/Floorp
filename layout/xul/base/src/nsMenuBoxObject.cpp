@@ -75,7 +75,6 @@ nsMenuBoxObject::QueryInterface(REFNSIID iid, void** aResult)
   
 nsMenuBoxObject::nsMenuBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMenuBoxObject::~nsMenuBoxObject()

@@ -252,7 +252,6 @@ public:
       : mPresContext(nsnull), mDelay(0), mHasBeenNotified(PR_FALSE), 
         mItemsAdded(PR_FALSE), mItemsRemoved(PR_FALSE), mItemsInxSet(PR_FALSE)
   {
-    NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsSelectUpdateTimer();
@@ -3631,7 +3630,6 @@ NS_IMPL_RELEASE(nsListEventListener)
 
 nsListEventListener::nsListEventListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsListEventListener::~nsListEventListener()

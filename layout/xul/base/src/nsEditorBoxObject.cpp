@@ -69,7 +69,6 @@ nsEditorBoxObject::SetDocument(nsIDocument* aDocument)
   
 nsEditorBoxObject::nsEditorBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsEditorBoxObject::~nsEditorBoxObject()

@@ -140,7 +140,6 @@ class nsComboButtonListener: public nsIDOMMouseListener
   nsComboButtonListener(nsComboboxControlFrame* aCombobox) 
   { 
     mComboBox = aCombobox; 
-    NS_INIT_ISUPPORTS(); 
   }
 
   virtual ~nsComboButtonListener() {}

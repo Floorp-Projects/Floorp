@@ -756,7 +756,6 @@ void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 nsImageMap::nsImageMap()
 {
-  NS_INIT_ISUPPORTS();
   mDocument = nsnull;
   mContainsBlockContents = PR_FALSE;
 }

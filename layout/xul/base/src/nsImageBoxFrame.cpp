@@ -815,7 +815,6 @@ NS_IMPL_ISUPPORTS2(nsImageBoxListener, imgIDecoderObserver, imgIContainerObserve
 
 nsImageBoxListener::nsImageBoxListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsImageBoxListener::~nsImageBoxListener()

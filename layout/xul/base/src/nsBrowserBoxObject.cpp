@@ -77,7 +77,6 @@ nsBrowserBoxObject::QueryInterface(REFNSIID iid, void** aResult)
 nsBrowserBoxObject::nsBrowserBoxObject()
 :mSrcURL(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBrowserBoxObject::~nsBrowserBoxObject()
