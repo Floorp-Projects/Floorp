@@ -454,7 +454,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetParameter(const char* name, const cha
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl::GetDocumentBase(char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetDocumentBase(const char* *result)
 {
   if (nsnull != mOwner)
   {

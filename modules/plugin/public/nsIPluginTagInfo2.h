@@ -87,7 +87,7 @@ public:
     GetParameter(const char* name, const char* *result) = 0;
     
     NS_IMETHOD
-    GetDocumentBase(char* *result) = 0;
+    GetDocumentBase(const char* *result) = 0;
     
     // Return an encoding whose name is specified in:
     // http://java.sun.com/products/jdk/1.1/docs/guide/intl/intl.doc.html#25303

@@ -109,7 +109,7 @@ public:
 
   NS_IMETHOD GetParameter(const char* name, const char* *result);
   
-  NS_IMETHOD GetDocumentBase(char* *result);
+  NS_IMETHOD GetDocumentBase(const char* *result);
   
   NS_IMETHOD GetDocumentEncoding(const char* *result);
   
@@ -166,9 +166,10 @@ private:
   PRInt32           mNumParams;
   char              **mParamNames;
   char              **mParamVals;
+  char              *mDocumentBase;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
-  nsITimer			    *mPluginTimer;
+  nsITimer		    *mPluginTimer;
   nsIPluginHost     *mPluginHost;
 };
 
@@ -1736,6 +1737,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mNumParams = 0;
   mParamNames = nsnull;
   mParamVals = nsnull;
+  mDocumentBase = nsnull;
   mPluginTimer = nsnull;
   mPluginHost = nsnull;
 }
@@ -1813,6 +1815,12 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   {
     PR_Free(mParamVals);
     mParamVals = nsnull;
+  }
+
+  if (nsnull != mDocumentBase)
+  {
+    nsCRT::free(mDocumentBase);
+    mDocumentBase = nsnull;
   }
 
   NS_IF_RELEASE(mWidget);
@@ -2343,10 +2351,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* 
   return NS_OK;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 {
-  if (nsnull != mContext)
-  {
+  nsresult rv = NS_OK;
+  if (nsnull == mDocumentBase) {
+    if (nsnull == mContext) {
+      *result = nsnull;
+      return NS_ERROR_FAILURE;
+    }
+    
     nsCOMPtr<nsIPresShell> shell;
     mContext->GetShell(getter_AddRefs(shell));
 
@@ -2356,25 +2369,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(char* *result)
     nsCOMPtr<nsIURI> docURL( dont_AddRef(doc->GetDocumentURL()) );
 
 #ifdef NECKO
-    nsresult rv = docURL->GetSpec(result);
+    rv = docURL->GetSpec(&mDocumentBase);
 #else
     const char* spec;
-    nsresult rv = docURL->GetSpec(&spec);
-    if (NS_FAILED(rv)) return rv;
-    *result = nsCRT::strdup(spec);
-    if (*result == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
+    rv = docURL->GetSpec(&spec);
+    if (rv == NS_OK) {
+      mDocumentBase = nsCRT::strdup(spec);
+      if (*result == nsnull)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
 #endif
-
-    return rv;
   }
-  else
-  {
-    *result = "";
-    return NS_ERROR_FAILURE;
-  }
+  if (rv == NS_OK)
+    *result = mDocumentBase;
+  return rv;
 }
-  
+
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
 {
 printf("instance owner getdocumentencoding called\n");
