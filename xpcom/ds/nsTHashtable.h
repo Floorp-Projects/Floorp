@@ -236,8 +236,6 @@ public:
 protected:
   PLDHashTable mTable;
 
-  static PLDHashTableOps sOps;
-
   static const void* PR_CALLBACK s_GetKey(PLDHashTable    *table,
                                           PLDHashEntryHdr *entry);
 
@@ -314,8 +312,23 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
     return PR_TRUE;
   }
 
+  static PLDHashTableOps sOps = 
+  {
+    ::PL_DHashAllocTable,
+    ::PL_DHashFreeTable,
+    s_GetKey,
+    s_HashKey,
+    s_MatchEntry,
+    ::PL_DHashMoveEntryStub,
+    s_ClearEntry,
+    ::PL_DHashFinalizeStub,
+    s_InitEntry
+  };
+
   if (!EntryType::ALLOW_MEMMOVE)
+  {
     sOps.moveEntry = s_CopyEntry;
+  }
   
   if (!PL_DHashTableInit(&mTable, &sOps, nsnull, sizeof(EntryType), initSize))
   {
@@ -328,21 +341,6 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
 }
 
 // static definitions
-
-template<class EntryType>
-PLDHashTableOps
-nsTHashtable<EntryType>::sOps =
-{
-  ::PL_DHashAllocTable,
-  ::PL_DHashFreeTable,
-  s_GetKey,
-  s_HashKey,
-  s_MatchEntry,
-  PL_DHashMoveEntryStub,
-  s_ClearEntry,
-  ::PL_DHashFinalizeStub,
-  s_InitEntry
-};
 
 template<class EntryType>
 const void*
