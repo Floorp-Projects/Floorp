@@ -30,7 +30,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="320"
   width="460"
   onload="onLoad();"
 >
@@ -41,7 +40,7 @@
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 
-<vbox style="margin: 5px;" flex="1">
+<vbox style="margin: 5px;" flex="100%">
 
   <!--  Let 'em know what they're doing -->
   <vbox>
@@ -56,7 +55,7 @@
      -  * trust for email
      -  * trust for object signing
     -->
-  <vbox>
+  <hbox orient = "vertical" flex="100%">
     <html id="message2"/>
     <checkbox label="&downloadCert.trustSSL;" checked="false" 
      id="trustSSL"/>
@@ -64,7 +63,7 @@
      id="trustEmail"/>
     <checkbox label="&downloadCert.trustObjSign;" checked="false" 
      id="trustObjSign"/>
-  </vbox>
+  </hbox>
 
   <separator />
 
@@ -73,7 +72,7 @@
      -  <>  view cert
      -  <>  view policy
     -->
-  <vbox>
+  <vbox flex="100%">
     <html>&downloadCert.message3;</html>
     <separator />
     <grid>
@@ -111,6 +110,8 @@
     <button id="help-button" class="dialog" label="&help.label;"
          style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?new_ca');" /> 
   </hbox>
+
+  <separator />
 
 </vbox>
 
