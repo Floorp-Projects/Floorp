@@ -41,6 +41,7 @@
 #include "nsUnicodeBlock.h"
 #include "nsDebug.h"
 #include "nscore.h"
+#include "nsIPref.h"
 
 class nsUnicodeFontMappingCache;
 class nsString;
@@ -89,6 +90,7 @@ public:
 	
   ScriptCode MapLangGroupToScriptCode(const char* aLangGroup);
 	static nsUnicodeMappingUtil* GetSingleton();
+	static void FreeSingleton();
 	nsString *mGenericFontMapping[smPseudoTotalScripts][kUknownGenericFontName];
 	
 protected:
@@ -106,6 +108,7 @@ private:
 	short 	 mScriptFontMapping[smPseudoTotalScripts];
 	PRInt8   mBlockToScriptMapping[kUnicodeBlockSize];
 	nsUnicodeFontMappingCache*	mCache;
+	nsCOMPtr<nsIPref> mPref;
 	
 	static nsUnicodeMappingUtil* gSingleton;
 

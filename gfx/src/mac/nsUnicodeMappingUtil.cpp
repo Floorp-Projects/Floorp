@@ -36,7 +36,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIPref.h"
+
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsUnicodeMappingUtil.h"
@@ -51,8 +51,9 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nsUnicodeMappingUtil *nsUnicodeMappingUtil::gSingleton = nsnull;
 //--------------------------------------------------------------------------
 
-static nsIPref* gPref = nsnull;
+#ifdef DEBUG
 static int gUnicodeMappingUtilCount = 0;
+#endif
 
 int PR_CALLBACK nsUnicodeMappingUtil::PrefChangedCallback( const char* aPrefName, void* instance_data)
 {
@@ -61,9 +62,16 @@ int PR_CALLBACK nsUnicodeMappingUtil::PrefChangedCallback( const char* aPrefName
 	return 0;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsUnicodeMappingUtil)
+
 nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 {
 	Init();
+	MOZ_COUNT_CTOR(nsUnicodeMappingUtil);
+#ifdef DEBUG
+	++gUnicodeMappingUtilCount;
+	NS_ASSERTION(gUnicodeMappingUtilCount == 1, "not singleton");
+#endif
 }
 void nsUnicodeMappingUtil::Reset()
 {
@@ -78,7 +86,6 @@ void nsUnicodeMappingUtil::Init()
 	InitScriptFontMapping();
 	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
 	mCache = new nsUnicodeFontMappingCache();
-	++gUnicodeMappingUtilCount;
 }
 void nsUnicodeMappingUtil::CleanUp()
 {
@@ -101,10 +108,11 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 {
 	CleanUp();
 
-	if(0 == --gUnicodeMappingUtilCount) {
-		gPref->UnregisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
-		NS_IF_RELEASE(gPref);
-	}
+#ifdef DEBUG
+	--gUnicodeMappingUtilCount;
+#endif
+	mPref->UnregisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
+	MOZ_COUNT_DTOR(nsUnicodeMappingUtil);
 }
 
 //--------------------------------------------------------------------------
@@ -288,9 +296,8 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 #define FACESIZE 255 // font name is Str255 in Mac script code
 void PR_CALLBACK
 nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
-{
-	
-	nsUnicodeMappingUtil* Self = (nsUnicodeMappingUtil*)aClosure;
+{	
+  nsUnicodeMappingUtil* Self = (nsUnicodeMappingUtil*)aClosure;
   nsCAutoString curPrefName(aName);
   
   PRInt32 p1 = curPrefName.RFindChar('.', PR_TRUE);
@@ -324,7 +331,7 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   	return;
   	
   char* valueInUTF8 = nsnull;
-  gPref->CopyCharPref(aName, &valueInUTF8);
+  Self->mPref->CopyCharPref(aName, &valueInUTF8);
   if((nsnull == valueInUTF8) || (PL_strlen(valueInUTF8) == 0))
   {
 	  Recycle(valueInUTF8);
@@ -357,15 +364,13 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
 }
 void nsUnicodeMappingUtil::InitFromPref()
 {
-  if (!gPref) {
-    nsServiceManager::GetService(kPrefCID,
-      NS_GET_IID(nsIPref), (nsISupports**) &gPref);
-    if (!gPref) {
+  if (!mPref) {
+    mPref = do_GetService(kPrefCID);
+    if (!mPref)
       return;
-    }
-    gPref->RegisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
-  }	  
-  gPref->EnumerateChildren("font.name.", nsUnicodeMappingUtil::PrefEnumCallback, this);
+    mPref->RegisterCallback("font.name.", nsUnicodeMappingUtil::PrefChangedCallback, (void*) nsnull);
+  }
+  mPref->EnumerateChildren("font.name.", nsUnicodeMappingUtil::PrefEnumCallback, this);
   
 }
 //--------------------------------------------------------------------------
@@ -388,7 +393,7 @@ void nsUnicodeMappingUtil::InitScriptFontMapping()
 
 			char	*valueInUTF8 = nsnull;
 
-			gPref->CopyCharPref (theNeededPreference,&valueInUTF8);
+			mPref->CopyCharPref (theNeededPreference,&valueInUTF8);
 
 			if ((nsnull == valueInUTF8) || (PL_strlen (valueInUTF8) == 0))
 				Recycle (valueInUTF8);
@@ -497,4 +502,12 @@ nsUnicodeMappingUtil* nsUnicodeMappingUtil::GetSingleton()
 		gSingleton = new nsUnicodeMappingUtil();
 	return gSingleton;
 }
+
+/* static */ void
+nsUnicodeMappingUtil::FreeSingleton()
+{
+    delete gSingleton;
+    gSingleton = nsnull;
+}
+
 //--------------------------------------------------------------------------
