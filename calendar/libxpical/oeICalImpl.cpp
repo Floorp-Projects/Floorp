@@ -133,8 +133,8 @@ oeEventEnumerator::GetNext(nsISupports **_retval)
     {
         nsCOMPtr<nsISupports> event;
         mEventVector->QueryElementAt( mCurrentIndex, NS_GET_IID(nsISupports), getter_AddRefs(event));
-        event->AddRef();
         *_retval = event;
+        NS_ADDREF( *_retval );
         ++mCurrentIndex;
     }
     
