@@ -61,7 +61,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener);
+NS_IMPL_ISUPPORTS_INHERITED2(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener, nsIDBChangeListener);
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
@@ -131,6 +131,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 				nsCOMPtr <nsIFileSpec> dbFileSpec;
 				NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
 				rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+                                if (m_mailDB)
+                                  m_mailDB->AddListener(this);
 			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 #ifdef DEBUG_mscott
@@ -152,6 +154,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
 
+        if (m_mailDB)
+          m_mailDB->RemoveListener(this);
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one....
 #ifdef DEBUG1
@@ -197,6 +201,46 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
 	return NS_OK;
 
 }
+
+
+
+/* void OnKeyChange (in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void OnKeyDeleted (in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void OnKeyAdded (in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void OnParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator)
+{
+    return NS_OK;
+}
+
+/* void OnAnnouncerGoingAway (in nsIDBChangeAnnouncer instigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
+{
+    m_mailDB = nsnull; // what else do we need to do here?
+    return NS_OK;
+}
+
+/* void OnReadChanged (in nsIDBChangeListener instigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnReadChanged(nsIDBChangeListener *instigator)
+{
+    return NS_OK;
+}
+
 
 nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 {

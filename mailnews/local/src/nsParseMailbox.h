@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsTime.h"
 #include "nsFileSpec.h"
-
+#include "nsIDBChangeListener.h"
 
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
@@ -143,7 +143,7 @@ inline int	nsParseMailMessageState::msg_UnHex(char C)
 }
 
 // This class is part of the mailbox parsing state machine 
-class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler 
+class nsMsgMailboxParser : public nsIStreamListener, public nsParseMailMessageState, public nsMsgLineBuffer, public nsMsgLineBufferHandler, public nsIDBChangeListener
 {
 public:
 	nsMsgMailboxParser();
@@ -157,6 +157,8 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIDBCHANGELISTENER
+
 
 	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = dont_QueryInterface(mailDB); }
 
