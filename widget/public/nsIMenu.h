@@ -42,16 +42,10 @@ class nsIMenu : public nsISupports {
     static const nsIID& GetIID() { static nsIID iid = NS_IMENU_IID; return iid; }
 
   /**
-    * Creates the Menu and adds it the MenuBar
+    * Creates the Menu
     *
     */
-    NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel) = 0;
-    
-  /**
-    * Creates the Menu and adds it another Menu
-    *
-    */
-    NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel) = 0;
+    NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel) = 0;
 
    /**
     * Get the Menu's Parent
@@ -69,35 +63,23 @@ class nsIMenu : public nsISupports {
     * Set the Menu label
     *
     */
-    NS_IMETHOD SetLabel(nsString &aText) = 0;
+    NS_IMETHOD SetLabel(const nsString &aText) = 0;
 
    /**
     * Adds a Menu Item
     *
     */
-    NS_IMETHOD AddItem(const nsString &aText) = 0;
-    
+    NS_IMETHOD AddItem(nsISupports* aItem) = 0;
+
    /**
-    * Adds a Menu Item
-    *
-    */
-    NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem) = 0;
-    
-   /**
-    * Adds a Cascading Menu 
-    *
-    */
-    NS_IMETHOD AddMenu(nsIMenu * aMenu) = 0;
-    
-   /**
-    * Adds Separator
+    * Adds a separator
     *
     */
     NS_IMETHOD AddSeparator() = 0;
 
    /**
     * Returns the number of menu items
-    *
+    * This does count separators as items
     */
     NS_IMETHOD GetItemCount(PRUint32 &aCount) = 0;
 
@@ -112,12 +94,6 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem) = 0;
-
-   /**
-    * Creates and inserts a Separator at a specified Index
-    *
-    */
-    NS_IMETHOD InsertSeparator(const PRUint32 aPos) = 0;
 
    /**
     * Removes an Menu Item from a specified Index
@@ -135,16 +111,16 @@ class nsIMenu : public nsISupports {
     * Gets Native MenuHandle
     *
     */
-    NS_IMETHOD  GetNativeData(void*& aData) = 0;
+    NS_IMETHOD  GetNativeData(void** aData) = 0;
 
    /**
-    * Adds menu listener
+    * Adds menu listener for dynamic construction
     *
     */
     NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener) = 0;
 
    /**
-    * Removes menu listener
+    * Removes menu listener for dynamic construction
     *
     */
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;

@@ -28,10 +28,6 @@
 class nsIMenuBar;
 class nsIMenuListener;
 
-/**
- * Native Motif Menu wrapper
- */
-
 class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
@@ -45,27 +41,25 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
   
-  NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
-  NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
-
   // nsIMenu Methods
+  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetLabel(nsString &aText);
-  NS_IMETHOD AddItem(const nsString &aText);
-  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
-  NS_IMETHOD AddMenu(nsIMenu * aMenu);
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD AddItem(nsISupports* aText);
   NS_IMETHOD AddSeparator();
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
   NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
   NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
-  NS_IMETHOD InsertSeparator(const PRUint32 aPos);
   NS_IMETHOD RemoveItem(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
-  NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD GetNativeData(void** aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
+  // 
+  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
+  NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
   // MacSpecific
   static PRInt16	GetUniqueMenuID() {
@@ -75,9 +69,6 @@ public:
   						}
 
 protected:
-  //void   Create(Widget aParent, const nsString &aLabel);
- //Widget GetNativeParent();
-
   nsString     mLabel;
   PRUint32     mNumMenuItems;
   nsVoidArray  mMenuItemVoidArray;
@@ -88,7 +79,7 @@ protected:
   // MacSpecific
   PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
-  nsIMenuListener * mListener;
+  nsIMenuListener *   mListener;
 
 private:
   static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
