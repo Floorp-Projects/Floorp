@@ -847,11 +847,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 	display: none !important;
 }
 
-/* ::::: close button ::::: */.tabs-closebutton {
+/* ::::: close button ::::: */
+
+.tabs-closebutton {
   padding-right: 4px;
   list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
   list-style-image: none;
-  border: none;}
+  border: none;
+}
 
 .tabs-closebutton:hover > .toolbarbutton-icon {
 	background-image: none !important;
