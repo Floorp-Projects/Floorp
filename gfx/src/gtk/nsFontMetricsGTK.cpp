@@ -4252,8 +4252,6 @@ if (gAllowDoubleByteSpecialChars) {
       }
     }
     if (!mDocConverterType) {
-      NS_ASSERTION(mDocConverterType!=nsnull, "failed to get converter type");
-      FIND_FONT_PRINTF(("failed to get converter type for %s", atomToName(mLangGroup)));
       mDocConverterType = SingleByteConvert;
     }
     if (mDocConverterType == SingleByteConvert) {
