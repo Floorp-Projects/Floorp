@@ -621,7 +621,7 @@ class CSSStyleSheetImpl : public nsICSSStyleSheet,
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr, size_t size);
+  void operator delete(void* ptr);
 
   CSSStyleSheetImpl();
 
@@ -753,7 +753,7 @@ void* CSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
   return (void*) rv;
 }
 
-void CSSStyleSheetImpl::operator delete(void* ptr, size_t size)
+void CSSStyleSheetImpl::operator delete(void* ptr)
 {
   CSSStyleSheetImpl* sheet = (CSSStyleSheetImpl*) ptr;
   if (nsnull != sheet) {

@@ -620,7 +620,7 @@ class CSSDeclarationImpl : public nsICSSDeclaration {
 public:
   void* operator new(size_t size);
 
-  void operator delete(void* ptr, size_t size);
+  void operator delete(void* ptr);
   
   CSSDeclarationImpl(void);
   virtual ~CSSDeclarationImpl(void);
@@ -694,7 +694,7 @@ void* CSSDeclarationImpl::operator new(size_t size)
   return result;
 }
 
-void CSSDeclarationImpl::operator delete(void* ptr, size_t size)
+void CSSDeclarationImpl::operator delete(void* ptr)
 {
   ::operator delete(ptr);
 }

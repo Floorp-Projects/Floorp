@@ -36,7 +36,7 @@ public:
     return rv;
   }
 
-  void operator delete(void* ptr, size_t size) {
+  void operator delete(void* ptr) {
     ::operator delete(ptr);
   }
 
