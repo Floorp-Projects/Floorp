@@ -18,21 +18,21 @@
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
 <!ENTITY alwaysHandle.label     "Always perform this action when handling files of this type">
-<!ENTITY alwaysHandle.accesskey "a">
+<!ENTITY alwaysHandle.accesskey "A">
 
 <!ENTITY saveToDisk.label      "Save it to disk">
-<!ENTITY saveToDisk.accesskey  "s">
+<!ENTITY saveToDisk.accesskey  "S">
 
 <!ENTITY useSystemDefault.label        "Open it with the default application (#1)">
 <!ENTITY useSystemDefault.noDesc.label "Open it with the default application">
-<!ENTITY useSystemDefault.accesskey    "o">
+<!ENTITY useSystemDefault.accesskey    "O">
 
 <!-- LOCALIZATION NOTE:  do not localize "#1" -->
 <!ENTITY openUsing.label       "Open it with">
 <!ENTITY openUsing.accesskey   "w">
 
 <!ENTITY chooseApp.label       "Choose...">
-<!ENTITY chooseApp.accesskey   "c">
+<!ENTITY chooseApp.accesskey   "C">
 
 <!ENTITY chooseAppFilePickerTitle "Choose Helper Application">
 
