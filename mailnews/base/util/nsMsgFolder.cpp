@@ -86,6 +86,7 @@ nsMsgFolder::nsMsgFolder(void)
     mFlags(0),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
+  	mNotifyCountChanges(PR_TRUE),
     mExpungedBytes(0),
     mInitializedFromCache(PR_FALSE),
     mBiffState(nsMsgBiffState_NoMail),
@@ -94,8 +95,7 @@ nsMsgFolder::nsMsgFolder(void)
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE),
     mDeleteIsMoveToTrash(PR_TRUE),
-    mBaseMessageURI(nsnull),
-	mNotifyCountChanges(PR_TRUE)
+    mBaseMessageURI(nsnull)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 

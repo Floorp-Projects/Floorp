@@ -773,7 +773,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 
 NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 {
-	PRInt32 numTotalMessages;
+	//PRInt32 numTotalMessages;
 
 	if (!retval)
 		return NS_ERROR_NULL_POINTER;
