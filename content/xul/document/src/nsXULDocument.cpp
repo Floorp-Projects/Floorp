@@ -1281,22 +1281,26 @@ nsXULDocument::SetRootContent(nsIContent* aRoot)
 NS_IMETHODIMP
 nsXULDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-    NS_NOTREACHED("nsXULDocument::ChildAt");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (aIndex != 0 || !mRootContent) {
+        aResult = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+    NS_ADDREF(aResult = mRootContent);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 {
-    NS_NOTREACHED("nsXULDocument::IndexOf");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aIndex = (aPossibleChild == mRootContent && mRootContent)? 0 : -1;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::GetChildCount(PRInt32& aCount)
 {
-    NS_NOTREACHED("nsXULDocument::GetChildCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aCount = (mRootContent != nsnull);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
