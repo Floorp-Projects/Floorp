@@ -16,10 +16,10 @@
  * Reserved.
  */
 
-#define XP_MAC 1
-#define EDITOR
 
-#define OTUNIXERRORS 1
+/* See the long commend in xpstring.xps for how this whole thing works */
+
+/* the prefix file should have already defined OTUNIXERRORS at this stage */
 #include <OpenTransport.h>
 
 #pragma export on
