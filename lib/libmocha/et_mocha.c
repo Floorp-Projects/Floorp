@@ -39,7 +39,9 @@
 #include "pa_tags.h"
 #include "css.h"
 #include "pa_parse.h"
+#ifdef JAVA_OR_OJI
 #include "jsjava.h"
+#endif
 #include "intl_csi.h"
 /* #include "netcache.h" */
 

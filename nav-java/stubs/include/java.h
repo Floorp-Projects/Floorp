@@ -29,7 +29,9 @@
 
 /* for Mocha glue */
 #include "jsapi.h"
+#ifdef JAVA_OR_OJI
 #include "jsjava.h"
+#endif
 
 XP_BEGIN_PROTOS
 

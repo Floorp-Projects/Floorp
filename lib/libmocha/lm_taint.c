@@ -35,7 +35,9 @@
 #include "nsLoadZig.h"
 #include "nsCaps.h"
 #include "jri.h"
+#ifdef JAVA_OR_OJI
 #include "jsjava.h"
+#endif
 #ifdef JAVA
 #include "java.h"
 #endif

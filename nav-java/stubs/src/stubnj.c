@@ -31,7 +31,9 @@
 
 /* for Mocha glue */
 #include "jsapi.h"
+#ifdef JAVA_OR_OJI
 #include "jsjava.h"
+#endif
 
 #if !defined (XP_MAC)
 #include "netscape_plugin_composer_PluginManager.h"
