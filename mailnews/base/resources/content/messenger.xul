@@ -321,7 +321,7 @@ Rights Reserved.
 			  accesskey=""
 			  oncommand="MsgFolderProperties();"/>
 	</popup>
-  <popup id="emailAddressPopup"  popupanchor="bottomleft">
+  <popup id="emailAddressPopup"  oncreate="return fillEmailAddressMenu(document.popupNode);" popupanchor="bottomleft">
       <menuitem value="&AddToAddressBook.label;"
                 oncommand="AddNodeToAddressBook(document.popupNode)"/>
       <menuitem value="&SendMailTo.label;"

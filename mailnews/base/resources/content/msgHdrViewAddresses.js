@@ -43,3 +43,11 @@ function NotifyClearAddresses()
 function FinishEmailProcessing()
 {
 }
+
+// the on create handler for the email address popup.
+// for now, we aren't doing any enabling or disabling so we can just
+// return true.
+function fillEmailAddressMenu(node)
+{
+  return true;
+}
