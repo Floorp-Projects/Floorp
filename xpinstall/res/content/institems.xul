@@ -35,7 +35,7 @@ Contributor(s):
         align = "vertical"
 > 
 
-    <html:script language="javascript" src="institems.js"/>
+    <html:script language="javascript" src="chrome://xpinstall/content/institems.js"/>
     
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">
