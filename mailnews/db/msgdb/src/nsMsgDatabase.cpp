@@ -40,6 +40,21 @@ static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
 
 const int kMsgDBVersion = 1;
 
+//Temporary function to create a URI so that nsMsgHdr functions with RDF.
+//This will get removed.
+static char* CreateURI(nsFilePath path, nsMsgKey key)
+{
+	nsString uri = "mailbox_message://";
+	uri+=path;
+
+	char keyBuffer[50];
+	PR_snprintf(keyBuffer, 50, "%u", key);
+
+	uri+=keyBuffer;
+	return uri.ToNewCString();
+
+}
+
 nsDBChangeAnnouncer::nsDBChangeAnnouncer()
 {
 }
@@ -549,6 +564,11 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **pmsgHdr)
 			if (err == NS_OK)
 			{
 				*pmsgHdr = new nsMsgHdr(this, hdrRow);
+				char *uri = CreateURI(m_dbName, key);
+				((nsRDFResource*)(*pmsgHdr))->Init(uri);
+
+				if(uri)
+					delete[] uri;
 				(*pmsgHdr)->AddRef();
 			}
 			rowCursor->Release();
@@ -1144,6 +1164,16 @@ nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
 	if (err == NS_OK && hdrRow)
 		*pResultHdr = new nsMsgHdr(this, hdrRow);
 
+	if(*pResultHdr)
+	{
+
+		//currently GetMessageKey isn't working so just use rowPos
+		char *uri = CreateURI(m_dbName, rowPos);
+		((nsRDFResource*)(*pResultHdr))->Init(uri);
+		if(uri)
+			delete[] uri;
+	}
+
 	return err;
 }
 
@@ -1226,6 +1256,12 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 	if (err == NS_OK)
 	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+
+		char *uri = CreateURI(m_dbName, key);
+		((nsRDFResource*)(*pnewHdr))->Init(uri);
+		if(uri)
+			delete[] uri;
+
 		(*pnewHdr)->AddRef();
 	}
 	return err;
@@ -1303,6 +1339,11 @@ nsresult nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, MessageHdrStru
 	if (err == NS_OK)
 	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+		char *uri = CreateURI(m_dbName, hdrStruct->m_messageKey);
+		((nsRDFResource*)(*pnewHdr))->Init(uri);
+		if(uri)
+			delete[] uri;
+
 		(*pnewHdr)->AddRef();
 	}
 
