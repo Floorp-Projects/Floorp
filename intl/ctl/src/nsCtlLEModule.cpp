@@ -35,7 +35,6 @@
 #include "nsUnicodeToTIS620.h"
 #include "nsUnicodeToSunIndic.h"
 #include "nsUnicodeToThaiTTF.h"
-#include "nsUnicodeToSunIndicTTF.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
