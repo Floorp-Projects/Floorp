@@ -413,6 +413,13 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
       nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
                                           kidReflowState);
       if (gsDebug) printf ("%p RR: desired=%d\n", this, desiredSize.width);
+#ifdef NS_DEBUG
+      if (desiredSize.width > availWidth)
+      {
+        printf("WARNING: cell returned desired width %d given avail width %d\n",
+                desiredSize.width, availWidth);
+      }
+#endif
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
 
       if (gsDebug)
@@ -476,6 +483,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
+    if (nsnull==kidFrame && cellColSpan>1)
+      aState.x += cellSpacing;
   }
 
   SetMaxChildHeight(aState.maxCellHeight,maxCellTopMargin, maxCellBottomMargin);  // remember height of tallest child who doesn't have a row span
@@ -488,7 +497,14 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
   if (gsDebug)
     printf("rr -- row %p width = %d from maxSize %d\n", 
            this, aDesiredSize.width, aState.reflowState.maxSize.width);
-
+  
+  if (aDesiredSize.width > aState.reflowState.maxSize.width) 
+  {
+    printf ("%p error case, desired width = %d, maxSize=%d\n",
+            this, aDesiredSize.width, aState.reflowState.maxSize.width);
+    fflush (stdout);
+  }
+  NS_ASSERTION(aDesiredSize.width <= aState.reflowState.maxSize.width, "row calculated to be too wide.");
   return NS_OK;
 }
 
@@ -964,13 +980,13 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
-      printf("nsTableRowFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
-              NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
+      printf("%p: Row::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
+              this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
               aDesiredSize.width, aDesiredSize.height,
               aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
     else
-      printf("nsTableRowFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
-             NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
+      printf("%p: Row::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
+             this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
              aDesiredSize.width, aDesiredSize.height);
   }
 

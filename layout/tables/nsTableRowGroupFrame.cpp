@@ -257,7 +257,6 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 #endif
 #endif
   NS_PRECONDITION(nsnull != mFirstChild, "no children");
-if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
   PRInt32   childCount = 0;
   nsIFrame* prevKidFrame = nsnull;
 
@@ -269,7 +268,7 @@ if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
-
+  PRInt32   debugCounter=0;
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsSize                  kidAvailSize(aState.availSize);
     if (0>=kidAvailSize.height)
@@ -307,7 +306,11 @@ if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
                                  eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     kidFrame->MoveTo(kidMargin.left, aState.y + topMargin);
+    if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
+                        this, debugCounter, kidFrame, kidAvailSize.width);
     status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+    if (gsDebug) printf("%p RG child %d (frame=%p) returned desired width = %d\n",
+                        this, debugCounter, kidFrame, desiredSize.width);
 
     // Did the child fit?
     if ((kidFrame != mFirstChild) &&
@@ -410,7 +413,7 @@ if (gsDebug) printf("\n\nREFLOWMAPPED FOR ROW GROUP FRAME\n");
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
-
+    debugCounter++;
   }
 
   // Update the child count
