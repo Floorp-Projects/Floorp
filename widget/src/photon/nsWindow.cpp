@@ -218,79 +218,66 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative (%p) - parent = %p IsChild=<%d> \n", this, parentWidget, IsChild()));
 
-  PtArg_t arg[20];
+  PtArg_t   arg[20];
+  int       arg_count = 0;
   PhPoint_t pos;
-  PhDim_t dim;
-  unsigned long render_flags;
-  nsresult result = NS_ERROR_FAILURE;
+  PhDim_t   dim;
+  unsigned  long render_flags;
+  nsresult  result = NS_ERROR_FAILURE;
 
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-  // REVISIT
-  //printf( "Must check thread here...\n" );  
 
   pos.x = mBounds.x;
   pos.y = mBounds.y;
   dim.w = mBounds.width;
   dim.h = mBounds.height;
 
-  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative - bounds = %lu,%lu.\n", mBounds.width, mBounds.height ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative - bounds = (%lu,%lu,%lu,%lu)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
 
+#ifdef DEBUG
   switch( mWindowType )
   {
+  case eWindowType_popup :
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\twindow type = popup\n" ));
+    mIsToplevel = PR_TRUE;
+    break;
   case eWindowType_toplevel :
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = toplevel\n" ));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\twindow type = toplevel\n" ));
+    mIsToplevel = PR_TRUE;
     break;
   case eWindowType_dialog :
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = dialog\n" ));
-    break;
-  case eWindowType_popup :
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = popup\n" ));
-    break;
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\twindow type = dialog\n" ));
+    mIsToplevel = PR_TRUE;
+	break;
   case eWindowType_child :
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = child\n" ));
-    break;
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\twindow type = child\n" ));
+    mIsToplevel = PR_FALSE;
+	break;
   }
+#endif
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  border style = %X\n", mBorderStyle ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\tborder style = %X\n", mBorderStyle ));
 
-//  if ( (IsChild()) && ( mWindowType != eWindowType_popup ) )
-  if ( IsChild() )
+  if ( mWindowType == eWindowType_child )
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Child window class\n" ));
-
-    if ( ( mWindowType == eWindowType_dialog ) || 
-	     ( mWindowType == eWindowType_toplevel ) )
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Trying to creata a child window w/ wrong window type.\n" ));
-      return result;
-    }
-
-    PtSetArg( &arg[0], Pt_ARG_POS, &pos, 0 );
-    PtSetArg( &arg[1], Pt_ARG_DIM, &dim, 0 );
-    PtSetArg( &arg[2], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
-    PtSetArg( &arg[3], Pt_ARG_FLAGS, 0 /*Pt_HIGHLIGHTED*/, Pt_HIGHLIGHTED );
-    PtSetArg( &arg[4], Pt_ARG_BORDER_WIDTH, 0, 0 );
-    PtSetArg( &arg[5], Pt_ARG_TOP_BORDER_COLOR, Pg_RED, 0 );
-    PtSetArg( &arg[6], Pt_ARG_BOT_BORDER_COLOR, Pg_RED, 0 );
-    PtSetArg( &arg[7], RDC_DRAW_FUNC, RawDrawFunc, 0 );
-    mWidget = PtCreateWidget( PtRawDrawContainer, parentWidget, 8, arg );
+    arg_count = 0;
+    PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
+    PtSetArg( &arg[arg_count++], Pt_ARG_DIM, &dim, 0 );
+    PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
+    PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0 /*Pt_HIGHLIGHTED*/, Pt_HIGHLIGHTED );
+    PtSetArg( &arg[arg_count++], Pt_ARG_BORDER_WIDTH, 0, 0 );
+    //PtSetArg( &arg[arg_count++], Pt_ARG_TOP_BORDER_COLOR, Pg_RED, 0 );
+    //PtSetArg( &arg[arg_count++], Pt_ARG_BOT_BORDER_COLOR, Pg_RED, 0 );
+    PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
+    mWidget = PtCreateWidget( PtRawDrawContainer, parentWidget, arg_count, arg );
   }
   else
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Top-level window class\n" ));
-
     // No border or decorations is the default
     render_flags = 0;
 
     if( mWindowType == eWindowType_popup )
     {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Creating a pop-up (no decorations).\n" ));
-    }
-    else if( mWindowType == eWindowType_child )
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Trying to creata a normal window as a child.\n" ));
-      return result;
     }
     else
     {
@@ -305,7 +292,9 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
 
       if( mBorderStyle & eBorderStyle_all )
+	  {
         render_flags = PH_BORDER_STYLE_ALL;
+      }
       else
       {
         if( mBorderStyle & eBorderStyle_border )
@@ -329,47 +318,61 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         if( mBorderStyle & eBorderStyle_maximize )
           render_flags |= Ph_WM_RENDER_MAX;
       }
+
+      // Remember frame size for later use...
+      PtFrameSize( render_flags, 0, &mFrameLeft, &mFrameTop, &mFrameRight, &mFrameBottom );
     }
 
-    PtSetArg( &arg[0], Pt_ARG_POS, &pos, 0 );
-    PtSetArg( &arg[1], Pt_ARG_DIM, &dim, 0 );
-    PtSetArg( &arg[2], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
-    PtSetArg( &arg[3], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
-
-    // Remember frame size for later use...
-    PtFrameSize( render_flags, 0, &mFrameLeft, &mFrameTop, &mFrameRight, &mFrameBottom );
+    arg_count = 0;
+    PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
+    PtSetArg( &arg[arg_count++], Pt_ARG_DIM, &dim, 0 );
+    PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
+    PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, 0xFFFFFFFF );
 
     if( parentWidget )
 	{
-      mWidget = PtCreateWidget( PtWindow, parentWidget, 4, arg );
+      mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
 	}
     else
     {
       PtSetParentWidget( nsnull );
-      mWidget = PtCreateWidget( PtWindow, nsnull, 4, arg );
+      mWidget = PtCreateWidget( PtWindow, nsnull, arg_count, arg );
     }
     
     // Must also create the client-area widget
     if( mWidget )
     {
-      PtSetArg( &arg[0], Pt_ARG_DIM, &dim, 0 );
-      PtSetArg( &arg[1], Pt_ARG_ANCHOR_FLAGS, Pt_LEFT_ANCHORED_LEFT |
-        Pt_RIGHT_ANCHORED_RIGHT | Pt_TOP_ANCHORED_TOP | Pt_BOTTOM_ANCHORED_BOTTOM, 0xFFFFFFFF );
-      PtSetArg( &arg[2], Pt_ARG_BORDER_WIDTH, 0 , 0 );
-      PtSetArg( &arg[3], Pt_ARG_MARGIN_WIDTH, 0 , 0 );
-      PtSetArg( &arg[4], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED );
-      PtSetArg( &arg[5], Pt_ARG_FILL_COLOR, Pg_GREY, 0 );
+      arg_count = 0;
+      PtSetArg( &arg[arg_count++], Pt_ARG_DIM, &dim, 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_ANCHOR_FLAGS, Pt_LEFT_ANCHORED_LEFT |
+                                   Pt_RIGHT_ANCHORED_RIGHT | Pt_TOP_ANCHORED_TOP | 
+								   Pt_BOTTOM_ANCHORED_BOTTOM, 0xFFFFFFFF );
+      PtSetArg( &arg[arg_count++], Pt_ARG_BORDER_WIDTH, 0 , 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_MARGIN_WIDTH, 0 , 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_GREY, 0 );
       PhRect_t anch_offset = { 0, 0, 0, 0 };
-      PtSetArg( &arg[6], Pt_ARG_ANCHOR_OFFSETS, &anch_offset, 0 );
+      PtSetArg( &arg[arg_count++], Pt_ARG_ANCHOR_OFFSETS, &anch_offset, 0 );
 
-      mClientWidget = PtCreateWidget( PtContainer, mWidget, 7, arg );
-
+      if( mWindowType == eWindowType_popup )
+	  {
+        PtSetArg( &arg[arg_count++], RDC_DRAW_FUNC, RawDrawFunc, 0 );
+        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DISJOINT, (Pt_HIGHLIGHTED | Pt_DISJOINT));
+        mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
+	  }
+	  else
+	  {  
+        PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED );
+        mClientWidget = PtCreateWidget( PtContainer, mWidget,arg_count, arg );
+	  }
+	  
       // Create a region that is opaque to draw events and place behind
       // the client widget.
       if( !mClientWidget )
       {
         PtDestroyWidget( mWidget );
         mWidget = nsnull;
+		NS_ASSERTION(0,"nsWindow::CreateNative Error creating Client Widget\n");
+		abort();
       }
     }
   }
@@ -382,10 +385,11 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
     if( mClientWidget )
       SetInstance( mClientWidget, this );
-
-    mIsToplevel = PR_FALSE;
-
-    if( IsChild())
+ 
+    if  ( (mWindowType == eWindowType_popup) ||
+	      (mWindowType == eWindowType_child) )
+ 
+    if (mWindowType == eWindowType_child)
     {
       PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddEventHandler( mWidget,
@@ -402,11 +406,29 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 		callback.data = this;
 		PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
 		PtSetResources( mWidget, 1, &arg );
-		
     }
-    else if( !parentWidget )
+    else if (mWindowType == eWindowType_popup)
+	{
+      PtAddEventHandler( mClientWidget,
+        Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
+        Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY
+//		| Ph_EV_WM | Ph_EV_EXPOSE
+        , RawEventHandler, this );
+
+      PtArg_t arg;
+      PtRawCallback_t callback;
+		
+		callback.event_mask = ( Ph_EV_KEY ) ;
+		callback.event_f = RawEventHandler;
+		callback.data = this;
+		PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
+		PtSetResources( mClientWidget, 1, &arg );
+			
+      PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
+      PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this );	
+	}
+    else 
     {
-      mIsToplevel = PR_TRUE;
       PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddCallback(mWidget, Pt_CB_WINDOW_CLOSING, WindowCloseHandler, this ); 
     }
@@ -439,33 +461,15 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_WINDOW ) - mWidget is NULL!\n"));
     return (void *)mWidget;
 
-  case NS_NATIVE_DISPLAY:
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_DISPLAY ) - Not Implemented.\n"));
-    return nsnull;
-
   case NS_NATIVE_WIDGET:
-    if( IsChild() )
-    {
-      if( !mWidget )
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_WIDGET ) this=%p IsChild=TRUE - mWidget is NULL!\n", this ));
-      return (void *)mWidget;
-    }
-    else
-    {
-      if( !mClientWidget )
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_WIDGET ) this=%p IsChild=FALSE - mClientWidget is NULL!\n", this ));
-      return (void *)mClientWidget;
-    }
-
-  case NS_NATIVE_GRAPHIC:
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_GRAPHIC ) - Not Implemented.\n"));
-    return nsnull;
-
-  default:
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData - Unknown Request.\n"));
-    break;
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetNativeData( NS_NATIVE_WIDGET ) - this=<%p> mWidget=<%p> mClientWidget=<%p>\n", this, mWidget, mClientWidget));
+    if (mClientWidget)
+	  return (void *) mClientWidget;
+	else
+	  return (void *) mWidget;
   }
-  return nsnull;
+  	  	
+  return nsWidget::GetNativeData(aDataType);
 }
 
 //-------------------------------------------------------------------------
@@ -503,10 +507,17 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   PtWidget_t *widget;
 
+#if 1
+  if (mClientWidget)
+    widget = mClientWidget;
+  else
+    widget = mWidget;
+#else
   if( IsChild() )
     widget = mWidget;
   else
     widget = mClientWidget;
+#endif
 
   if( !aDx && !aDy )
     return NS_OK;
@@ -732,7 +743,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
   if( mWidget )
   {
-    if( !IsChild() )
+    if (mWindowType == eWindowType_dialog)
     {
       dim.w -= mFrameLeft + mFrameRight;
       dim.h -= mFrameTop + mFrameBottom;
@@ -779,7 +790,8 @@ NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow(%p)::SetMenuBar(%p)\n", this, aMenuBar ));
 
-  if( !IsChild() )
+  if  ( (mWindowType == eWindowType_toplevel) ||
+        (mWindowType == eWindowType_dialog) )
   {
     mMenuBar = aMenuBar;
     res = NS_OK;
@@ -900,7 +912,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   if ( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted due to hold-off!\n"));
-    printf("nsWindow::RawDrawFunc aborted due to Resize holdoff\n");
+    //printf("nsWindow::RawDrawFunc aborted due to Resize holdoff\n");
     return;
   }
 
@@ -1007,7 +1019,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,
       pev.renderingContext = pWin->GetRenderingContext();
       if (pev.renderingContext)
       {
-#if 0
+#if 1
         if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
         {
           PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
@@ -1078,7 +1090,7 @@ void nsWindow::ScreenToWidget( PhPoint_t &pt )
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ScreenToWidget 1 pt=(%d,%d)\n", pt.x, pt.y));
 
-  if( IsChild())
+  if( mWindowType == eWindowType_child )
   {
     PtGetAbsPosition( mWidget, &x, &y );
   }
@@ -1173,19 +1185,25 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
   PtWidget_t *w;
   PhArea_t   *area;
   PtArg_t    arg;
-
+  PtWidget_t *aWidget = GetNativeData(NS_NATIVE_WIDGET);
+  
   clip_tiles = last = nsnull;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetWindowClipping  this=<%p> damage=<%p> offset=(%d,%d) mClipChildren=<%d> mClipSiblings=<%d>\n", this, damage, offset.x, offset.y, mClipChildren, mClipSiblings));
 
   if ( mClipChildren )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clipping children...\n"));
 
-    for( w=PtWidgetChildFront( mWidget ); w; w=PtWidgetBrotherBehind( w )) 
+    for( w=PtWidgetChildFront( aWidget ); w; w=PtWidgetBrotherBehind( w )) 
     { 
       if( PtWidgetIsRealized( w ))
       {
         PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
         PtGetResources( w, 1, &arg );
+
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetWindowClipping  clipping children w=<%p> area=<%d,%d,%d,%d>\n", w, area->pos.x, area->pos.y, area->size.w, area->size.h));
+
         tile = PhGetTile();
         if( tile )
         {
@@ -1201,13 +1219,19 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
           last = tile;
         }
       }
+	  else
+      {
+	      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetWindowClipping Widget isn't realized %p\n", w));
+      }
     }
   }
 
   if ( mClipSiblings )
   {
-    PtWidget_t *node = mWidget;
+    PtWidget_t *node = aWidget;
     PhPoint_t  origin = { 0, 0 };
+
+   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clipping siblings...\n"));
     
     while( node )
     {
@@ -1249,6 +1273,8 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
   PhRect_t *rects;
   PhTile_t *dmg;
   
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetWindowClipping damage=<%p> damage->next=<%p>  clip_tiles=<%p>\n", damage, damage->next,  clip_tiles));
+
   if( damage->next )
     dmg = PhCopyTiles( damage->next );
   else
@@ -1263,6 +1289,8 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
 
     PhFreeTiles( clip_tiles );
   }  
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetWindowClipping after children clipping dmg=<%p>\n", dmg ));
 
   if( dmg )
   {
@@ -1455,11 +1483,11 @@ void nsWindow::RemoveResizeWidget()
 static int count=100;
 int nsWindow::ResizeWorkProc( void *data )
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeWorkProc\n" ));
-  //printf ("kedl: resize work proc running %p %d\n",nsWindow::mResizeQueue,count);
-
 if (count) {count--; return Pt_CONTINUE;}
 count=100;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeWorkProc data=<%p>\n", data ));
+  //printf ("kedl: resize work proc running %p %d\n",nsWindow::mResizeQueue,count);
   
   if( mResizeQueueInited )
   {
@@ -1500,7 +1528,8 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
   aRect.width = mBounds.width;
   aRect.height = mBounds.height;
 
-  if( !IsChild() )
+  if  ( (mWindowType == eWindowType_toplevel) ||
+        (mWindowType == eWindowType_dialog) )
   {
     int  h = GetMenuBarHeight();
 
@@ -1525,7 +1554,36 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+#if 1
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
+  //printf ("kedl: nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType);
+
+  PtWidget_t *top = PtWidgetParent( mWidget );
+  PhArea_t   *area;
+  PtArg_t    arg;
+  PhPoint_t  *pos;
+  int found=0;
+
+	while(top)
+	{
+		PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+		if( PtGetResources( top, 1, &arg ) == 0 )
+		{
+			//printf ("kedl: %p %d %d %d %d\n",top,area->pos.x, area->pos.y, area->size.w, area->size.h );
+			found=1;
+			top = PtWidgetParent(top);
+		}
+		else top=0;
+	}
+
+	if (found && mWindowType==eWindowType_popup)
+	{
+		aX += area->pos.x;
+		aY += area->pos.y;
+		aX += 6;		//kedl, window border
+		aY += 28 ;		//kedl, window border
+	}   
 
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
@@ -1540,5 +1598,22 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   }
 
   return res;
+#else
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move (%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n", this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
+
+  /* Call my base class */
+  nsresult res = nsWidget::Move(aX, aY);
+
+  /* If I am a top-level window my origin shoudl always be 0,0 */
+  if ( (mWindowType == eWindowType_dialog) ||
+       (mWindowType == eWindowType_popup) ||
+	   (mWindowType == eWindowType_toplevel) )
+  {
+    //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
+    mBounds.x = mBounds.y = 0;
+  }
+
+  return res;
+#endif
 }
 
