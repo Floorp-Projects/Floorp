@@ -59,6 +59,7 @@ XPIDLSRCS = oeIICal.idl
 
 CPPSRCS		= \
 		oeICalEventImpl.cpp \
+		oeICalTodoImpl.cpp \
 		oeICalFactory.cpp \
 		oeICalImpl.cpp \
 		oeDateTimeImpl.cpp \

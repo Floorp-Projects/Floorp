@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ *                 Chris Charabaruk <ccharabaruk@meldstar.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,6 +99,14 @@ interface oeIICalEvent : nsISupports
 	void removeAllExceptions();
     void setSnoozeTime( in PRTime exdate );
     oeIICalEvent clone();
+};
+
+[scriptable, uuid(d44987b4-1dd1-11b2-9783-8a78ed685caf)]
+interface oeIICalTodo : oeIICalEvent
+{
+    readonly attribute oeIDateTime due;
+    readonly attribute oeIDateTime completed;
+    attribute short percent;
 };
 
 [scriptable, uuid(b8584baa-1507-40d4-b542-5a2758e1c86d)]
