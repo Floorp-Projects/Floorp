@@ -22,25 +22,16 @@
  */
 
 #include <stdio.h>
-
 #include "stdafx.h"
+#include "Windows.h"
 #include "resource.h"
 
-class nsIWebBrowser;
 
-#include "nsIDocShell.h"
-#include "nsIWebNavigation.h"
-#include "nsIEditorShell.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
-
+#include "nsEmbedAPI.h"
 #include "WebBrowser.h"
-WebBrowser *mozBrowser = nsnull;
 
-extern nsresult NS_InitEmbedding(const char *aPath);
-extern nsresult NS_TermEmbedding();
+nsresult CreateWebBrowser(WebBrowser **outBrowser);
 
-extern nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser);
 
 
 #define MAX_LOADSTRING 100
@@ -53,32 +44,10 @@ TCHAR szWindowClass[MAX_LOADSTRING];								// The title bar text
 // Foward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK	OpenURI(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK	GetURI(HWND, UINT, WPARAM, LPARAM);
 
 
-
-ConvertDocShellToDOMWindow(nsIDocShell* aDocShell, nsIDOMWindow** aDOMWindow)
-{
-  if (!aDOMWindow)
-    return NS_ERROR_FAILURE;
-
-  *aDOMWindow = nsnull;
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aDocShell));
-
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObject));
-  if (!domWindow)
-    return NS_ERROR_FAILURE;
-
-  *aDOMWindow = domWindow.get();
-  NS_ADDREF(*aDOMWindow);
-
-  return NS_OK;
-}
-
-
-#define RUN_EDITOR 1
-nsCOMPtr<nsIEditorShell> editor;
+char gLastURI[100];
 
 int main ()
 {
@@ -93,37 +62,17 @@ int main ()
 	LoadString(hInstance, IDC_WINEMBED, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
-    NS_InitEmbedding(nsnull);
+// Init Embedding APIs
+    NS_InitEmbedding("");
 
-    nsCOMPtr<nsIWebBrowser> theBrowser;
-
-	CreateNativeWindowWidget(getter_AddRefs(theBrowser));
-
-
-#ifndef RUN_EDITOR
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(theBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2("http://people.netscape.com/dougt").GetUnicode());
-    
-#else
-
-    nsresult rv;
-    editor = do_CreateInstance("component://netscape/editor/editorshell", &rv);
-    
-	if (NS_FAILED(rv))
+// put up at lease on browser window ....
+/////////////////////////////////////////////////////////////
+    WebBrowser* newBrowser;
+	CreateWebBrowser(&newBrowser);
+    if (!newBrowser) 
         return -1;
-    
-    nsCOMPtr <nsIDocShell> rootDocShell;
-    theBrowser->GetDocShell(getter_AddRefs(rootDocShell));
-
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    ConvertDocShellToDOMWindow(rootDocShell, getter_AddRefs(domWindow));
-   
-    editor->Init();
-    editor->SetEditorType(NS_ConvertASCIItoUCS2("html").GetUnicode());
-    editor->SetWebShellWindow(domWindow);
-    editor->SetContentWindow(domWindow);
-    editor->LoadUrl(NS_ConvertASCIItoUCS2("http://lxr.mozilla.org/").GetUnicode());
-#endif
+    newBrowser->GoTo("http://people.netscape.com/dougt");
+/////////////////////////////////////////////////////////////
 
 
 	// Main message loop:
@@ -132,12 +81,8 @@ int main ()
 	    TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-    
-#ifdef RUN_EDITOR
-    PRBool duh;
-    editor->SaveDocument(PR_FALSE, PR_FALSE, &duh);
-#endif
 
+// Close down Embedding APIs
     NS_TermEmbedding();
 
 	return msg.wParam;
@@ -181,7 +126,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 
 
-nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser)
+nsresult CreateWebBrowser(WebBrowser **outBrowser)
 {
 
     STARTUPINFO StartupInfo;
@@ -192,9 +137,13 @@ nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser)
     int nCmdShow = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT;
 
 
-   HWND hWnd;
+    WebBrowser *browser = new WebBrowser();
+    if (! browser)
+        return NS_ERROR_FAILURE;
 
-   hWnd = CreateWindow( szWindowClass, 
+    HWND hWnd;
+
+    hWnd = CreateWindow( szWindowClass, 
                         szTitle, 
                         WS_OVERLAPPEDWINDOW,
                         0, 
@@ -204,33 +153,30 @@ nsresult CreateNativeWindowWidget(nsIWebBrowser **outBrowser)
                         NULL, 
                         NULL, 
                         hInstance, 
-                        NULL);
+                        NULL); 
 
-   if (!hWnd)
-   {
+    if (!hWnd)
+    {
       return NS_ERROR_FAILURE;
-   }
+    }
+    
+    SetWindowLong( hWnd, GWL_USERDATA, (LONG)browser);  // save the browser LONG_PTR.
 
-    mozBrowser = new WebBrowser();
-    if (! mozBrowser)
-        return NS_ERROR_FAILURE;
 
-    NS_ADDREF(mozBrowser);
 
-    if ( NS_FAILED( mozBrowser->Init(hWnd) ) )
+    if ( NS_FAILED( browser->Init(hWnd) ) )  // this will own hWnd
         return NS_ERROR_FAILURE;
 
     RECT rect;
     GetClientRect(hWnd, &rect);
     rect.top += 32;
 
-    mozBrowser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, true);
+    browser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    if (outBrowser) 
-        mozBrowser->GetIWebBrowser(outBrowser);
+    *outBrowser = browser;
 
     return NS_OK;
 }
@@ -252,6 +198,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	TCHAR szHello[MAX_LOADSTRING];
 	LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
+    WebBrowser *browser = (WebBrowser *) GetWindowLong(hWnd, GWL_USERDATA);
 
 	switch (message) 
 	{
@@ -262,19 +209,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (wmId)
 			{
                 case IDM_EXIT:
-				   DestroyWindow(hWnd);
+                    if (browser)
+                        delete browser;
+                    DestroyWindow(hWnd);
 				   break;
-                
+
+                case MOZ_NewBrowser:
+                    gLastURI[0] = 0;
+                    if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
+                    {
+                        WebBrowser* newBrowser;
+	                    CreateWebBrowser(&newBrowser);
+                        if (!newBrowser)
+                            break;
+                        newBrowser->GoTo(gLastURI);
+                    }
+                    break;
+
+                case MOZ_NewEditor:
+                    gLastURI[0] = 0;
+                    if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
+                    {
+                        WebBrowser* newBrowser;
+	                    CreateWebBrowser(&newBrowser);
+                        if (!newBrowser)
+                            break;
+                        newBrowser->Edit(gLastURI);
+                    }
+                    break;
+
                 case MOZ_Open:
-                   DialogBox(hInst, (LPCTSTR)MOZ_OpenURI, hWnd, (DLGPROC)OpenURI);
-				   break;
+                    gLastURI[0] = 0;
+                    if (browser && DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
+                    {
+                        browser->GoTo(gLastURI);
+                    }
+                    break;
 				
                 case MOZ_Print:
-                    //if (mozBrowser)
-                    //    mozBrowser->Print();
-                    editor->SetTextProperty(NS_ConvertASCIItoUCS2("font").GetUnicode(),
-                                            NS_ConvertASCIItoUCS2("color").GetUnicode(),
-                                            NS_ConvertASCIItoUCS2("BLUE").GetUnicode());
+                    
+                    if (browser)
+                        browser->Print();
+                 //   editor->SetTextProperty(NS_ConvertASCIItoUCS2("font").GetUnicode(),
+                 //                           NS_ConvertASCIItoUCS2("color").GetUnicode(),
+                 //                           NS_ConvertASCIItoUCS2("BLUE").GetUnicode());
                     break;
 
                 default:
@@ -286,8 +264,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RECT rect;
             GetClientRect(hWnd, &rect);
             rect.top += 32;
-            if (mozBrowser)
-                mozBrowser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, true);
+            if (browser)
+                browser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
             break;
         
 		case WM_PAINT:
@@ -308,7 +286,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
 		case WM_DESTROY:
-			PostQuitMessage(0);
+            PostQuitMessage(0);
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
@@ -317,7 +295,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // Mesage handler for about box.
-LRESULT CALLBACK OpenURI(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK GetURI(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -327,19 +305,13 @@ LRESULT CALLBACK OpenURI(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_COMMAND:
 			if (LOWORD(wParam) == IDOK)
             {
-                char szBuf[1000];
-                GetDlgItemText(hDlg, MOZ_EDIT_URI, szBuf, 1000);
+                GetDlgItemText(hDlg, MOZ_EDIT_URI, gLastURI, 100);
                 EndDialog(hDlg, LOWORD(wParam));
-                
-                mozBrowser->GoTo(szBuf);
-                
                 return TRUE;
-
             }
             else if (LOWORD(wParam) == IDNO) 
             {
                 EndDialog(hDlg, LOWORD(wParam));
-                return TRUE;
             }
                 
 			break;

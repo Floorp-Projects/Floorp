@@ -8,6 +8,7 @@
 #define IDS_APP_TITLE                   103
 #define IDM_ABOUT                       104
 #define MOZ_OpenURI                     104
+#define MOZ_GetURI                      104
 #define IDM_EXIT                        105
 #define IDS_HELLO                       106
 #define IDI_WINEMBED                    107
@@ -17,6 +18,8 @@
 #define MOZ_EDIT_URI                    1001
 #define MOZ_Open                        32771
 #define MOZ_Print                       32772
+#define MOZ_NewBrowser                  32773
+#define MOZ_NewEditor                   32774
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -24,7 +27,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32773
+#define _APS_NEXT_COMMAND_VALUE         32775
 #define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

@@ -43,7 +43,9 @@ IDC_WINEMBED MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Open URL...",                 MOZ_Open
+        MENUITEM "New Browser...",              MOZ_NewBrowser
+        MENUITEM "New Editor...",               MOZ_NewEditor
+        MENUITEM "Change Current URL...",       MOZ_Open
         MENUITEM "Print Page",                  MOZ_Print
         MENUITEM "E&xit",                       IDM_EXIT
     END
@@ -55,9 +57,9 @@ END
 // Dialog
 //
 
-MOZ_OpenURI DIALOG DISCARDABLE  22, 17, 230, 75
+MOZ_GetURI DIALOG DISCARDABLE  22, 17, 230, 75
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Open URL"
+CAPTION "Enter A URL"
 FONT 8, "System"
 BEGIN
     ICON            IDI_WINEMBED,IDC_MYICON,8,4,20,20

@@ -24,49 +24,31 @@
 #ifndef __WebBrowser__
 #define __WebBrowser__
 
-// Helper Classes
 #include "nsCOMPtr.h"
-
-// Interfaces Needed
 #include "nsIWidget.h"
-
-#include "nsIWebBrowser.h"
-#include "nsIWebBrowserChrome.h"
 #include "nsIBaseWindow.h"
-#include "nsIWebProgressListener.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIPrompt.h"
+#include "nsIWebBrowser.h"
+#include "nsIEditorShell.h"
 
-class WebBrowser : public nsIWebBrowserChrome,
-                           public nsIWebProgressListener,
-                           public nsIBaseWindow,
-                           public nsIPrompt,
-                           public nsIInterfaceRequestor
+class WebBrowser
 {
-
 public:
- 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIWEBBROWSERCHROME
-   NS_DECL_NSIWEBPROGRESSLISTENER
-   NS_DECL_NSIBASEWINDOW
-   NS_DECL_NSIPROMPT
-   NS_DECL_NSIINTERFACEREQUESTOR
-    
    nsresult Init(nsNativeWidget widget);
+   nsresult SetPositionAndSize(int x, int y, int cx, int cy);
    nsresult GoTo(char* url);
+   nsresult Edit(char* url);
    nsresult Print(void);
    nsresult GetIWebBrowser(nsIWebBrowser **outBrowser);
-
+   
    WebBrowser();
    virtual ~WebBrowser();
 
 protected:
-    
-    nsCOMPtr<nsIWidget>     mWindow;
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIBaseWindow> mBaseWindow;
 
+    //for editing
+    nsCOMPtr<nsIEditorShell> mEditor;
 };
 
 #endif /* __WebBrowser__ */
