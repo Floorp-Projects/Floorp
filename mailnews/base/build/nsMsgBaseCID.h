@@ -160,6 +160,18 @@
 #define NS_MSGSEARCHSESSION_PROGID \
   "component://netscape/messenger/searchSession"
 
+
+//
+// nsMsgSearchValidityManager
+//
+/* 1510faee-ad1a-4194-8039-33de32d5a882 */
+#define NS_MSGSEARCHVALIDITYMANAGER_CID \
+  {0x1510faee, 0xad1a, 0x4194, \
+    { 0x80, 0x39, 0x33, 0xde, 0x32, 0xd5, 0xa8, 0x82 }}
+
+#define NS_MSGSEARCHVALIDITYMANAGER_PROGID \
+  "component://netscape/messenger/search/validityManager"
+
 //
 // nsMsgMailSession
 //
