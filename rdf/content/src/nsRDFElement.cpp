@@ -219,6 +219,11 @@ public:
     nsresult GetResource(nsIRDFResource** aResource);
     nsresult EnsureContentsGenerated(void) const;
 
+    static nsresult
+    GetElementsByTagName(nsIDOMNode* aNode,
+                         const nsString& aTagName,
+                         nsRDFDOMNodeList* aElements);
+
 
 private:
     // pseudo-constants
@@ -796,8 +801,21 @@ RDFElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 NS_IMETHODIMP
 RDFElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsRDFDOMNodeList* elements;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
+        NS_ERROR("unable to create node list");
+        return rv;
+    }
+
+    nsIDOMNode* domElement;
+    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::IID(), (void**) &domElement))) {
+        rv = GetElementsByTagName(domElement, aName, elements);
+        NS_RELEASE(domElement);
+    }
+
+    *aReturn = elements;
+    return NS_OK;
 }
 
 
@@ -1869,5 +1887,67 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
     }
 
     *aResource = nsnull;
+    return NS_OK;
+}
+
+
+nsresult
+RDFElementImpl::GetElementsByTagName(nsIDOMNode* aNode,
+                                     const nsString& aTagName,
+                                     nsRDFDOMNodeList* aElements)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMNodeList> children;
+    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
+        NS_ERROR("unable to get node's children");
+        return rv;
+    }
+
+    // no kids: terminate the recursion
+    if (! children)
+        return NS_OK;
+
+    PRUint32 length;
+    if (NS_FAILED(children->GetLength(&length))) {
+        NS_ERROR("unable to get node list's length");
+        return rv;
+    }
+
+    for (PRUint32 i = 0; i < length; ++i) {
+        nsCOMPtr<nsIDOMNode> child;
+        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
+            NS_ERROR("unable to get child from list");
+            return rv;
+        }
+
+        if (aTagName.Equals("*")) {
+            if (NS_FAILED(rv = aElements->AppendNode(child))) {
+                NS_ERROR("unable to append element to node list");
+                return rv;
+            }
+        }
+        else {
+            nsAutoString name;
+            if (NS_FAILED(rv = child->GetNodeName(name))) {
+                NS_ERROR("unable to get node name");
+                return rv;
+            }
+
+            if (aTagName.Equals(name)) {
+                if (NS_FAILED(rv = aElements->AppendNode(child))) {
+                    NS_ERROR("unable to append element to node list");
+                    return rv;
+                }
+            }
+        }
+
+        // Now recursively look for children
+        if (NS_FAILED(rv = GetElementsByTagName(child, aTagName, aElements))) {
+            NS_ERROR("unable to recursively get elements by tag name");
+            return rv;
+        }
+    }
+
     return NS_OK;
 }

@@ -543,7 +543,7 @@ public:
 
     void SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMNode** aReturn);
 
-    nsresult
+    static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
                          const nsString& aTagName,
                          nsRDFDOMNodeList* aElements);
@@ -1718,8 +1718,9 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     // character.
     if ((index = uri.RFind('#')) < 0) {
         if ((index = uri.RFind('/')) < 0) {
-            NS_ERROR("make this smarter!");
-            return NS_ERROR_FAILURE;
+            *aNameSpaceID = kNameSpaceID_None;
+            *aTag = NS_NewAtom(uri);
+            return NS_OK;
         }
     }
 
@@ -1955,8 +1956,18 @@ XULDocumentImpl::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 NS_IMETHODIMP
 XULDocumentImpl::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull == aDocumentElement) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult res = NS_ERROR_FAILURE;
+
+  if (nsnull != mRootContent) {
+    res = mRootContent->QueryInterface(nsIDOMElement::IID(), (void**)aDocumentElement);
+    NS_ASSERTION(NS_OK == res, "Must be a DOM Element");
+  }
+  
+  return res;
 }
 
 
