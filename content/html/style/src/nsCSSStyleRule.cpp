@@ -604,15 +604,31 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 }
 
-nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet ) const
+// pseudo-elements are stored in the selectors' chain using fictional elements;
+// these fictional elements have mTag starting with a colon
+static PRBool IsPseudoElement(nsIAtom* aAtom)
+{
+  if (aAtom) {
+    const PRUnichar *str;
+    aAtom->GetUnicode(&str);
+    return str && (*str == ':');
+  }
+
+  return PR_FALSE;
+}
+
+nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet, PRBool aIsPseudoElem ) const
 {
   const PRUnichar* temp;
 
   // selectors are linked from right-to-left, so the next selector in the linked list
   // actually precedes this one in the resulting string
-  if (mNext) {
-    mNext->ToString(aString, aSheet);
-    aString.Append(PRUnichar(' '));
+ if (mNext) {
+    mNext->ToString(aString, aSheet, IsPseudoElement(mTag));
+    if (!IsPseudoElement(mTag)) {
+      // don't add a leading whitespace if we have a pseudo-element
+      aString.Append(PRUnichar(' '));
+    }
   }
 
   // append the namespace prefix
@@ -706,7 +722,7 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
     }
   }
   // Append the operator
-  if (mOperator) {
+  if (mOperator && !aIsPseudoElem) {
     aString.Append(PRUnichar(' '));
     aString.Append(mOperator);
   }
@@ -1396,7 +1412,7 @@ void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
 
 void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
 {
-  mSelector.ToString( aSelectorText, mSheet );
+  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag) );
 }
 
 PRUint32 CSSStyleRuleImpl::GetLineNumber(void) const
@@ -3467,7 +3483,7 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
-  mSelector.ToString( aCssText, mSheet );
+  mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag) );
   if (mDeclaration)
   {
     nsAutoString   tempString;
@@ -3503,7 +3519,7 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
 {
-  mSelector.ToString( aSelectorText, mSheet );
+  mSelector.ToString( aSelectorText, mSheet, IsPseudoElement(mSelector.mTag) );
   return NS_OK;
 }
 
