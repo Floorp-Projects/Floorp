@@ -13,6 +13,6 @@
 <!ENTITY fullnameLabel.label "Your Name:">
 
 <!ENTITY emailDesc.label "Enter your email address. This is the address others will use to send email to you.">
-<!-- LOCALIZATION NOTE (fullnameDesc.label) : do not translate "&quot;test@netscape.net&quot;" in below line -->
-<!ENTITY emailExample.label "(For example, &quot;test@netscape.net&quot;)">
+<!-- LOCALIZATION NOTE (fullnameDesc.label) : do not translate "&quot;example@netscape.net&quot;" in below line -->
+<!ENTITY emailExample.label "(For example, &quot;example@netscape.net&quot;)">
 <!ENTITY emailLabel.label "Email Address:">
