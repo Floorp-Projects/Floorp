@@ -112,12 +112,13 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     //
     // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     //
-    // Right now, the majority of these colors are just guesses since they are
-    // modeled word for word after the win32 system colors and don't have any 
+    // It's really hard to effectively map these to the Appearance Manager properly,
+    // since they are modeled word for word after the win32 system colors and don't have any 
     // real counterparts in the Mac world. I'm sure we'll be tweaking these for 
     // years to come. 
     //
-    // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values ;)
+    // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values that form the defaults
+    //	if querying the Appearance Manager fails ;)
     //
     
     case eColor_buttontext:
@@ -149,7 +150,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		//but Aqua *has* no border!
     	res = GetMacBrushColor(kThemeBrushBlack, aColor, NS_RGB(0x00,0x00,0x00));
 	    break;
-   case eColor_appworkspace:
+   	case eColor_appworkspace:
         // NOTE: this is an MDI color and does not exist on macOS.
 		//used the closest match, which will likely be white.
     	res = GetMacBrushColor(kThemeBrushDocumentWindowBackground, aColor, NS_RGB(0x63,0x63,0xCE));
@@ -231,6 +232,25 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_field:
 		aColor = NS_RGB(0xff,0xff,0xff);
         break;
+    case eColor__moz_dragtargetzone:
+		//default to lavender if not available
+		res = GetMacBrushColor(kThemeBrushDragHilite, aColor, NS_RGB(0x63,0x63,0xCE));
+	    break;
+	case eColor__moz_mac_focusring:
+		//default to lavender if not available
+		res = GetMacBrushColor(kThemeBrushFocusHighlight, aColor, NS_RGB(0x63,0x63,0xCE));
+	    break;
+	case eColor__moz_mac_menuselect:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x63,0x63,0xCE));
+	    break;
+	case eColor__moz_mac_menushadow:
+		res = GetMacBrushColor(kThemeBrushBevelActiveDark, aColor, NS_RGB(0x88,0x88,0x88));
+	    break;	        
+	case eColor__moz_mac_menutextselect:
+		//default to white, which is what Platinum uses, if not available		
+		res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
+	    break;	    
     default:
         NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
         aColor = NS_RGB(0xff,0xff,0xff);
@@ -269,6 +289,52 @@ NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & 
 		aColor = aDefaultColor;
 	return NS_OK;
 	
+}
+
+NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(	const nsMacAccentColorOffset aAccent, 
+												nscolor & aColor,
+												const nscolor & aDefaultColor)
+{
+	nsresult res = NS_OK;
+	OSStatus err = noErr;
+	ColorTable colourTable;
+	CTabPtr ctPointer = &colourTable;
+	CTabHandle ctHandle = &ctPointer;
+	CTabHandle *colors = &ctHandle;
+	RGBColor *macColor;		
+
+	err = ::GetThemeAccentColors(colors);
+	if (err == themeHasNoAccentsErr) {
+		//fine, theme doesn't support accents, use default
+		res = NS_OK;
+		aColor = aDefaultColor;
+	} else if (err != noErr || ! colors) {
+		res = NS_ERROR_FAILURE;
+		aColor = aDefaultColor;
+	} else {
+		if ((**colors)->ctSize == 
+				(eColorOffset_mac_accentdarkestshadow - eColorOffset_mac_accentlightesthighlight +1)) {
+			//if the size is 7 then its likely to be a standard Platinum variation, so lets use it
+			macColor = &((**colors)->ctTable[aAccent].rgb);
+			aColor = NS_RGB(macColor->red>>8, macColor->green>>8, macColor->blue>>8);
+			res = NS_OK;		
+		} else if ((**colors)->ctSize == -1) {
+			//this is probably the high contrast Black & White Platinum variation
+			//so lets be high contrast
+			res = NS_OK;
+			if (aAccent <= eColorOffset_mac_accentface) {
+				aColor = NS_RGB(0xFF,0xFF,0xFF);
+			} else {
+				aColor = NS_RGB(0x00,0x00,0x00);
+			}
+		//else if ( ?? )  // add aqua support here?
+		} else {
+			//some other size we've never heard of, no idea what to do with it
+			res = NS_ERROR_FAILURE;
+			aColor = aDefaultColor;
+		}
+	}
+	return res;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
