@@ -337,13 +337,18 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 }
 
 nsresult
-nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, nsMsgKeySet **set)
+nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr)
 {
 	if (!child)
 		return NS_ERROR_NULL_POINTER;
 
-  if (!set || !*set)
+  if (!setStr)
     return NS_ERROR_NULL_POINTER;
+  
+#ifdef DEBUG_NEWS
+  nsString nameStr(name,eOneByte);
+  printf("AddSubfolder(%s,??,%s)\n",nameStr.GetBuffer(),setStr);
+#endif
   
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
@@ -366,20 +371,29 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, nsMsgKeyS
 	if (NS_FAILED(rv))
 		return rv;        
 
-	folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
+	rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
+  if (NS_FAILED(rv))
+    return rv;        
   
-  /* folder->SetMsgKeySet(set); */
-  if (set && *set) {
-    char *setstr = nsnull;
-    setstr = (*set)->Output();
-    if (setstr) {
-#ifdef DEBUG_seth
-      printf("one more time = %s\n", setstr);
-#endif
-      delete [] setstr;
-    }
+  nsCOMPtr<nsIMsgNewsFolder> newsFolder(do_QueryInterface(res, &rv));
+  if (NS_FAILED(rv))
+    return rv;        
+  
+  rv = newsFolder->SetMsgKeySetStr(setStr);
+  if (NS_FAILED(rv))
+    return rv;
+  
+#ifdef DEBUG_NEWS
+  char *testStr = nsnull;
+  rv = newsFolder->GetMsgKeySetStr(&testStr);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  printf("set str = %s\n",testStr);
+  if (testStr) {
+    delete [] testStr;
+    testStr = nsnull;
   }
-  
+#endif
+ 
 	mSubFolders->AppendElement(folder);
 	*child = folder;
 	NS_ADDREF(*child);
@@ -700,40 +714,34 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	nsCOMPtr<nsIMsgDatabase> newsDBFactory;
 
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
-	if (NS_SUCCEEDED(rv) && newsDBFactory)
-	{
-        nsIMsgDatabase *unusedDB = nsnull;
+	if (NS_SUCCEEDED(rv) && newsDBFactory) {
+    nsIMsgDatabase *unusedDB = nsnull;
 		rv = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
-
-        if (NS_SUCCEEDED(rv) && unusedDB)
-        {
-			//need to set the folder name
+    
+    if (NS_SUCCEEDED(rv) && unusedDB) {
+      //need to set the folder name
 			nsCOMPtr <nsIDBFolderInfo> folderInfo;
 			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-			if(NS_SUCCEEDED(rv))
-			{
+			if(NS_SUCCEEDED(rv)) {
 				//folderInfo->SetNewsgroupName(leafNameFromUser);
 			}
-
+      
 			//Now let's create the actual new folder
 			nsAutoString folderNameStr(folderName);
-			rv = AddSubfolder(folderName, getter_AddRefs(child));
-            unusedDB->SetSummaryValid(PR_TRUE);
-            unusedDB->Close(PR_TRUE);
-        }
-        else
-        {
+			rv = AddSubfolder(folderName, getter_AddRefs(child), "");
+      unusedDB->SetSummaryValid(PR_TRUE);
+      unusedDB->Close(PR_TRUE);
+    }
+    else {
 			path.Delete(PR_FALSE);
-            rv = NS_MSG_CANT_CREATE_FOLDER;
-        }
+      rv = NS_MSG_CANT_CREATE_FOLDER;
+    }
 	}
-	if(NS_SUCCEEDED(rv) && child)
-	{
+	if(NS_SUCCEEDED(rv) && child) {
 		nsCOMPtr <nsISupports> folderSupports;
-
+    
 		rv = child->QueryInterface(kISupportsIID, getter_AddRefs(folderSupports));
-		if(NS_SUCCEEDED(rv))
-		{
+		if(NS_SUCCEEDED(rv)) {
 			NotifyItemAdded(folderSupports);
 		}
 	}
@@ -1100,6 +1108,20 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 		return NS_OK;
   }
 
+#ifdef DEBUG_seth
+  char *setStr = nsnull;
+  // caller needs to use delete [] to free
+  rv = GetMsgKeySetStr(&setStr);
+  if (NS_FAILED(rv)) return rv;
+  if (setStr) {
+    printf("GetNewMessage with setStr = %s\n", setStr);
+  }
+  if (setStr) {
+    delete [] setStr;
+    setStr = nsnull;
+  }
+#endif
+  
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
@@ -1212,7 +1234,8 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 		return RememberLine(line);
 	}
 
-	char *s;
+	char *s = nsnull;
+  char *setStr = nsnull;
 	char *end = line + line_size;
 
 	for (s = line; s < end; s++)
@@ -1223,20 +1246,12 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 		/* What is this?? Well, don't just throw it away... */
 		return RememberLine(line);
 	}
-
-  nsMsgKeySet *set = nsnull;
-  set = nsMsgKeySet::Create(s+1 /* , this */);
-  if (!set) return -1;
     
 	PRBool subscribed = (*s == ':');
+  setStr = s+1;
 	*s = '\0';
-
-	if (PL_strlen(line) == 0)
-	{
-    if (set) {
-      delete set;
-      set = nsnull;
-    }
+  
+	if (PL_strlen(line) == 0) {
 		return 0;
 	}
  
@@ -1271,28 +1286,12 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
     printf("subscribed: %s\n", line);
 #endif
 
-#ifdef DEBUG_seth
-    if (set) {
-      char *setstr = nsnull;
-      setstr = set->Output();
-      if (setstr) {
-        printf("set string for %s = %s\n", line, setstr);
-        delete [] setstr;
-      }
-    }
-#endif /* DEBUG_seth */
-    
     // we're subscribed, so add it
     nsCOMPtr <nsIMsgFolder> child;
     nsAutoString currentFolderNameStr(line);
     
-    nsresult rv = AddSubfolder(currentFolderNameStr,getter_AddRefs(child), &set);
+    nsresult rv = AddSubfolder(currentFolderNameStr,getter_AddRefs(child), setStr);
     
-    if (set) {
-      delete set;
-      set = nsnull;
-    }
-
     if (NS_FAILED(rv)) return -1;
   }
   else {
@@ -1382,5 +1381,45 @@ nsresult nsMsgNewsFolder::ForgetLine()
 {
   PR_FREEIF(mOptionLines);
   mOptionLines = nsnull;
+  return NS_OK;
+}
+
+// caller needs to use delete [] to free
+NS_IMETHODIMP nsMsgNewsFolder::GetMsgKeySetStr(char * *aMsgKeySetStr)
+{
+  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
+  
+  NS_ASSERTION(mSet, "mSet is null");
+  if (!mSet) return NS_ERROR_FAILURE;
+
+  *aMsgKeySetStr = mSet->Output();
+
+  if (!*aMsgKeySetStr) return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::SetMsgKeySetStr(char * aMsgKeySetStr)
+{
+  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
+
+  NS_ASSERTION(!mSet, "mSet is not null");
+  if (mSet) {
+    delete mSet;
+    mSet = nsnull;
+  }
+
+  mSet = nsMsgKeySet::Create(aMsgKeySetStr /* , this */);
+  if (!mSet) return NS_ERROR_OUT_OF_MEMORY;
+
+#ifdef DEBUG_NEWS
+  char *setStr = nsnull;
+  setStr = mSet->Output();
+  if (setStr) {
+    printf("here's the setStr = %s\n", setStr);
+    delete [] setStr;
+  }
+#endif
+  
   return NS_OK;
 }

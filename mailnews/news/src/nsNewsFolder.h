@@ -94,6 +94,9 @@ public:
 
 	// nsIMsgNewsFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
+  
+  NS_IMETHOD GetMsgKeySetStr(char * *aMsgKeySetStr);
+  NS_IMETHOD SetMsgKeySetStr(char * aMsgKeySetStr);
 
 protected:
 	nsresult ParseFolder(nsFileSpec& path);
@@ -105,7 +108,7 @@ protected:
 
 	//Creates a subfolder with the name 'name' and adds it to the list of children.
 	//Returns the child as well.
-	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, nsMsgKeySet **set);
+	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr);
 
   PRBool isNewsHost(void);
   nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
@@ -130,6 +133,8 @@ protected:
 	nsISupportsArray *mMessages;
   char      *mOptionLines;
   char      *mHostname;
+
+private:
   nsMsgKeySet *mSet;
 };
 

@@ -28,6 +28,7 @@
 #include "nsITransactionManager.h"
 #include "nsIMsgDatabase.h"
 %}
+
 interface nsISupportsArray;
 interface nsIMessage;
 interface nsITransactionManager;
@@ -41,10 +42,10 @@ interface nsIMsgFolder : nsIFolder {
   /*	void SetName(in string name); */
 
 
-        /* XXX should these 2 go on nsIFolder or nsICollection? */
-        void AddUnique(in nsISupports element);
-        void ReplaceElement(in nsISupports element, in nsISupports newElement);
-
+  /* XXX should these 2 go on nsIFolder or nsICollection? */
+  void AddUnique(in nsISupports element);
+  void ReplaceElement(in nsISupports element, in nsISupports newElement);
+  
 	nsIEnumerator GetMessages();
 	nsIEnumerator GetThreads();
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
@@ -145,7 +146,7 @@ interface nsIMsgLocalMailFolder : nsISupports {
 
 [scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
 interface nsIMsgNewsFolder : nsISupports {
-
+  attribute string msgKeySetStr;
 };
 
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
