@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLIIDs.h"
@@ -40,10 +41,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
-                         nscoord         aXCoord,
-                         nsIContent **   aNewContent,
-                         PRInt32&        aContentOffset,
-                         PRInt32&        aContentOffsetEnd);
+                         nscoord aXCoord,
+                         nsIContent** aNewContent,
+                         PRInt32& aContentOffset,
+                         PRInt32& aContentOffsetEnd);
 
 protected:
   virtual ~BRFrame();
@@ -68,7 +69,7 @@ BRFrame::~BRFrame()
 {
 }
 
-NS_METHOD
+NS_IMETHODIMP
 BRFrame::Paint(nsIPresContext& aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect& aDirtyRect,
@@ -90,7 +91,7 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus& aStatus)
 {
-  if (nsnull != aMetrics.maxElementSize) {
+  if (aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = 0;
     aMetrics.maxElementSize->height = 0;
   }
@@ -114,11 +115,31 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
       const nsStyleFont* font = (const nsStyleFont*)
         mStyleContext->GetStyleData(eStyleStruct_Font);
       aReflowState.rendContext->SetFont(font->mFont);
-      nsIFontMetrics* fm;
-      aReflowState.rendContext->GetFontMetrics(fm);
-      fm->GetHeight(aMetrics.height);
-      NS_RELEASE(fm);
-      aMetrics.ascent = aMetrics.height;
+      nsCOMPtr<nsIFontMetrics> fm;
+      aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+      if (fm) {
+        fm->GetHeight(aMetrics.height);
+        aMetrics.ascent = aMetrics.height;
+      }
+      else {
+        aMetrics.ascent = aMetrics.height = 0;
+      }
+
+      // XXX temporary until I figure out a better solution; see the
+      // code in nsLineLayout::VerticalAlignFrames that zaps minY/maxY
+      // if the width is zero.
+      // XXX This also fixes bug 10036!
+      aMetrics.width = 1;
+
+      // Update max-element-size to keep us honest
+      if (aMetrics.maxElementSize) {
+        if (aMetrics.width > aMetrics.maxElementSize->width) {
+          aMetrics.maxElementSize->width = aMetrics.width;
+        }
+        if (aMetrics.height > aMetrics.maxElementSize->height) {
+          aMetrics.maxElementSize->height = aMetrics.height;
+        }
+      }
     }
 
     // Return our reflow status
