@@ -747,6 +747,25 @@ function printAttachmentAttachment(contentType, url, displayName, messageUri)
   // messenger.printAttachment(contentType, url, displayName, messageUri);
 }
 
+function onShowAttachmentContextMenu()
+{
+  // if no attachments are selected, disable the Open and Save...
+  var attachmentTree = document.getElementById('attachmentTree');
+  var selectedAttachments = attachmentTree.selectedItems;
+  var openMenu = document.getElementById('context-openAttachment');
+  var saveMenu = document.getElementById('context-saveAttachment');
+  if (selectedAttachments.length > 0)
+  {
+    openMenu.removeAttribute('disabled');
+    saveMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    openMenu.setAttribute('disabled', true);
+    saveMenu.setAttribute('disabled', true);
+  }
+}
+
 // this is our onclick handler for the attachment tree. 
 // A double click in a tree cell simulates "opening" the attachment....
 function attachmentTreeClick(event)
@@ -756,14 +775,14 @@ function attachmentTreeClick(event)
 
     if (event.detail == 2) // double click
     {
-        var target = event.originalTarget;
-        var item = target.parentNode.parentNode;
-		if (item.localName == "treeitem")
-    {
-			var commandStringSuffix = item.getAttribute("commandSuffix");
-      var openString = 'openAttachment' + commandStringSuffix;
-      eval(openString);
-    }
+      var target = event.originalTarget;
+      var item = target.parentNode.parentNode;
+      if (item.localName == "treeitem")
+      {
+	    var commandStringSuffix = item.getAttribute("commandSuffix");
+        var openString = 'openAttachment' + commandStringSuffix;
+        eval(openString);
+      }
     }
 }
 
