@@ -129,14 +129,7 @@ EX_LIBS = \
 	-lraptorplugin \
 	$(NULL)
 
-ifeq ($(OS_ARCH),Linux)
-EX_LIBS += \
-	-lpwcac \
-	-ldbm \
-	$(NULL)
-endif
-
-ifeq ($(OS_ARCH),SunOS)
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
 	-lpwcac \
 	-ldbm \
