@@ -173,6 +173,11 @@ public:
    */
   NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction)=0;
 
+  /** 
+   * InsertFromDrop looks for a dragsession and inserts the relevant data in response to a drop.
+   */
+  NS_IMETHOD InsertFromDrop()=0;
+
   /**
    * Insert a break into the content model.<br>
    * The interpretation of a break is up to the rule system:
