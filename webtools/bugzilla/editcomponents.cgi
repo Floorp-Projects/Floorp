@@ -45,6 +45,9 @@ if (!UserInGroup("editcomponents")) {
 PutHeader("Edit Components");
 
 print "This lets you edit the program components of bugzilla.\n";
+print "<hr>";
+print "<a href=addcomponent.cgi>Add new component.</a><br>\n";
+print "<hr>";
 
 print "<form method=post action=doeditcomponents.cgi>\n";
 
