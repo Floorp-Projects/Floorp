@@ -52,7 +52,8 @@ var gFilterBundle;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
-
+var gFilterEditorMsgWindow=null;
+     
 function filterEditorOnLoad()
 {
     initializeSearchWidgets();
@@ -295,7 +296,8 @@ function GetFirstSelectedMsgFolder()
 function SearchNewFolderOkCallback(name,uri)
 {
     var msgFolder = GetMsgFolderFromUri(uri);
-    msgFolder.createSubfolder(name, null);
+    var msgWindow = GetFilterEditorMsgWindow();
+    msgFolder.createSubfolder(name, msgWindow);
 
     var curFolder = uri+"/"+name;
     SetFolderPicker(curFolder, gActionTargetElement.id);
@@ -304,4 +306,16 @@ function SearchNewFolderOkCallback(name,uri)
 function UpdateAfterCustomHeaderChange()
 {
   updateSearchAttributes();
+}
+//if you use msgWindow, please make sure that destructor gets called when you close the "window"
+function GetFilterEditorMsgWindow()
+{
+  if (!gFilterEditorMsgWindow)
+  {
+    var msgWindowContractID = "@mozilla.org/messenger/msgwindow;1";
+    var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
+    gFilterEditorMsgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
+    gFilterEditorMsgWindow.SetDOMWindow(window); 
+  }
+  return gFilterEditorMsgWindow;
 }
