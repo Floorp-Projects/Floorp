@@ -65,8 +65,10 @@ PRLogModuleInfo* nsRDFLog = nsnull;
 
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // CompositeDataSourceImpl
+//
 
 class CompositeDataSourceImpl : public nsIRDFCompositeDataSource,
                                 public nsIRDFObserver
@@ -102,9 +104,7 @@ protected:
 	virtual				~CompositeDataSourceImpl(void);
 };
 
-
-
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 //
 // CompositeEnumeratorImpl
 //
@@ -158,11 +158,6 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
 
 CompositeEnumeratorImpl::~CompositeEnumeratorImpl(void)
 {
-#ifdef DEBUG_REFS
-	--gInstanceCount;
-	fprintf(stdout, "%d - RDF: CompositeEnumeratorImpl\n", gInstanceCount);
-#endif
-
 	if (mCoalesceDuplicateArcs == PR_TRUE)
 	{
 		for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i)
@@ -341,7 +336,7 @@ CompositeEnumeratorImpl::GetNext(nsISupports** aResult)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 //
 // CompositeArcsInOutEnumeratorImpl
 //
@@ -391,11 +386,6 @@ CompositeArcsInOutEnumeratorImpl::CompositeArcsInOutEnumeratorImpl(
 
 CompositeArcsInOutEnumeratorImpl::~CompositeArcsInOutEnumeratorImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: CompositeArcsInOutEnumeratorImpl\n", gInstanceCount);
-#endif
-
     NS_RELEASE(mNode);
 }
 
@@ -425,7 +415,7 @@ CompositeArcsInOutEnumeratorImpl::HasNegation(
 }
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 //
 // CompositeAssertionEnumeratorImpl
 //
@@ -482,11 +472,6 @@ CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
 
 CompositeAssertionEnumeratorImpl::~CompositeAssertionEnumeratorImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: CompositeAssertionEnumeratorImpl\n", gInstanceCount);
-#endif
-
     NS_IF_RELEASE(mSource);
     NS_RELEASE(mProperty);
     NS_IF_RELEASE(mTarget);
@@ -552,14 +537,12 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 
 CompositeDataSourceImpl::~CompositeDataSourceImpl(void)
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: CompositeDataSourceImpl\n", gInstanceCount);
-#endif
 }
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsISupports interface
+//
 
 NS_IMPL_ADDREF(CompositeDataSourceImpl);
 
@@ -620,8 +603,10 @@ CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsIRDFDataSource interface
+//
 
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetURI(char* *uri)
@@ -1367,6 +1352,24 @@ CompositeDataSourceImpl::RemoveDataSource(nsIRDFDataSource* aDataSource)
         NS_RELEASE(aDataSource);
     }
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::GetDataSources(nsISimpleEnumerator** _result)
+{
+    nsresult rv;
+
+    // Create an nsISupportsArray, copy the datasources into it, then
+    // use that to create an array enumerator.
+    nsCOMPtr<nsISupportsArray> temp;
+    rv = NS_NewISupportsArray(getter_AddRefs(temp));
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < mDataSources.Count(); ++i)
+        temp->AppendElement(NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]));
+
+    return NS_NewArrayEnumerator(_result, temp);
 }
 
 NS_IMETHODIMP

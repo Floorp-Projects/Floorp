@@ -448,6 +448,11 @@ NS_IMETHODIMP nsMessageViewDataSource::RemoveDataSource(nsIRDFDataSource* source
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMessageViewDataSource::GetDataSources(nsISimpleEnumerator** _result)
+{
+  return NS_NewSingletonEnumerator(_result, mDataSource);
+}
+
 NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
 						nsIRDFResource* predicate,
 						nsIRDFNode* object)
