@@ -32,6 +32,7 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mFontMetrics = nsnull;
   mContext = nsnull;
   mScriptObject = nsnull;
+  mCurrentFont = 0;
 }
 
 nsRenderingContextXlib::~nsRenderingContextXlib()
@@ -268,13 +269,26 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(const nsFont& aFont)
 {
   printf("nsRenderingContextXlib::SetFont()\n");
-  return NS_OK;
+  NS_IF_RELEASE(mFontMetrics);
+  mContext->GetMetricsFor(aFont, mFontMetrics);
+  return SetFont(mFontMetrics);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
 {
   printf("nsRenderingContextXlib::SetFont()\n");
+  NS_IF_RELEASE(mFontMetrics);
+  mFontMetrics = aFontMetrics;
+  NS_IF_ADDREF(mFontMetrics);
+
+  if (mFontMetrics)
+  {
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    mCurrentFont = (Font)fontHandle;
+    XSetFont(gDisplay, mRenderingSurface->GetGC(), mCurrentFont);
+  }
   return NS_OK;
 }
 
@@ -282,6 +296,8 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
   printf("nsRenderingContextXlib::GetFontMetrics()\n");
+  NS_IF_ADDREF(mFontMetrics);
+  aFontMetrics = mFontMetrics;
   return NS_OK;
 }
 
