@@ -282,19 +282,20 @@ function DropOnFolderTree(row, orientation)
     if (dropMessage) {
         var sourceMsgHdr = list.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgDBHdr);
         sourceFolder = sourceMsgHdr.folder;
+        sourceResource = sourceFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         sourceServer = sourceFolder.server;
 
         try {
             if (isSourceNews) {
                 // news to pop or imap is always a copy
-                messenger.CopyMessages(sourceFolder, targetFolder, list, false);
+                messenger.CopyMessages(GetFolderDatasource(), sourceResource, targetResource, list, false);
             }
             else {
                 var dragAction = dragSession.dragAction;
                 if (dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
-                    messenger.CopyMessages(sourceFolder, targetFolder, list, false);
+                    messenger.CopyMessages(GetFolderDatasource(), sourceResource, targetResource, list, false);
                 else if (dragAction == nsIDragService.DRAGDROP_ACTION_MOVE)
-                    messenger.CopyMessages(sourceFolder, targetFolder, list, true);
+                    messenger.CopyMessages(GetFolderDatasource(), sourceResource, targetResource, list, true);
             }
         }
         catch (ex) {

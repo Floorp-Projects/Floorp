@@ -127,11 +127,12 @@ Rights Reserved.
    <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
    <commandset id="viewZoomCommands"/>
 </commandset>
-<command id="cmd_newMessage" oncommand="MsgNewMessage(null);"/>
+
 <commandset id="mailEditMenuItems"
             commandupdater="true"
             events="create-menu-edit"
             oncommandupdate="goUpdateMailMenuItems(this)">
+
   <command id="cmd_undo"
          valueDeleteMsg="&undoDeleteMsgCmd.label;"
          valueMoveMsg="&undoMoveMsgCmd.label;"
@@ -171,6 +172,7 @@ Rights Reserved.
          valueGeneric="&folderPropsCmd.label;"/>
   <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
   <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+  <command id="cmd_findPrev"  oncommand="goDoCommand('cmd_findPrev')"  disabled="true"/>
   <command id="cmd_stop" oncommand="MsgStop();"/>
 </commandset>
 
@@ -227,6 +229,7 @@ Rights Reserved.
   <command id="button_next"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
+  <command id="button_junk"/>
 </commandset>
 
 
@@ -264,7 +267,9 @@ Rights Reserved.
     <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
 </commandset>
 
+<commandset id="tasksCommands">
   <command id="cmd_searchMsgs" oncommand="MsgSearchMessages();"/>
+</commandset>
 
 <keyset id="mailKeys">
     <key id="space" key=" " oncommand="SpaceHit()"/>
@@ -312,9 +317,12 @@ Rights Reserved.
              modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
+  <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="accel, shift"/>
+  <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
+  <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="shift"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
   <keyset id="viewZoomKeys"/>
-  <key id="key_newMessage"   key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
+
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
@@ -900,13 +908,16 @@ Rights Reserved.
           <menuitem label="&newNewMsgCmd.label;"
                     accesskey="&newNewMsgCmd.accesskey;"
                     key="key_newMessage"
-                    command="cmd_newMessage"/>
+                    oncommand="MsgNewMessage(null);"/>
           <menuitem id="menu_newFolder" label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
           <menuitem id="newAccountMenuItem" label="&newAccountCmd.label;"
                      accesskey="&newAccountCmd.accesskey;"
                      oncommand="MsgAccountWizard();"/>
+          <menuseparator/>
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newEditor"/>
         </menupopup>
       </menu>
       <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
@@ -1019,6 +1030,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+      <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
       <menuseparator/>
       <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                 accesskey="&folderPropsCmd.accesskey;"
@@ -1068,6 +1080,9 @@ Rights Reserved.
           <menuitem id="sortByThreadMenuitem" type="radio" name="sortby" label="&sortByThreadCmd.label;"  accesskey="&sortByThreadCmd.accesskey;" oncommand="MsgSortByThread()"/>
           <menuitem id="sortByUnreadMenuitem" type="radio" name="sortby" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
           <menuitem id="sortByLabelMenuitem" type="radio" name="sortby" label="&sortByLabelCmd.label;" accesskey="&sortByLabelCmd.accesskey;" oncommand="MsgSortByLabel()"/>
+<!-- not ready yet
+          <menuitem id="sortByScoreMenuitem" type="radio" name="sortby" label="&sortByScoreCmd.label;" accesskey="&sortByScoreCmd.accesskey;" oncommand="MsgSortByScore()"/>
+-->
           <menuseparator/>
           <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="MsgSortAscending()"/>
           <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="MsgSortDescending()"/>
@@ -1396,8 +1411,8 @@ Rights Reserved.
   </menupopup>
 </menu>
 
-<menu id="toolsMenu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
-  <menupopup>
+<menu id="tasksMenu">
+  <menupopup id="taskPopup">
     <menuitem label="&searchMailCmd.label;" 
               key="key_searchMail" 
               accesskey="&searchMailCmd.accesskey;" 
@@ -1408,12 +1423,30 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
+<!-- not ready yet
+    <menuitem label="&junkMailCmd.label;" 
+              accesskey="&junkMailCmd.accesskey;" 
+              oncommand="MsgJunkMail()"/>
+    <menuseparator/>
+    <menuitem label="Mark All Messages In Folder As Junk" oncommand="markFolderAsJunk(true);"/>
+    <menuitem label="Mark All Messages In Folder As Not Junk" oncommand="markFolderAsJunk(false);"/>
+    <menuitem label="Analyze Folder" oncommand="analyzeFolder();"/>
+    <menuitem label="Analyze Messages" oncommand="analyzeMessages();"/>
+    <menuitem label="Write DB" oncommand="writeHash();"/>
+    <menuseparator/>
+
+-->
+
+    <menuitem label="&filtersApply.label;"
+              accesskey="&filtersApply.accesskey;"
+              oncommand="MsgApplyFilters(null);"/>
     <menuitem label="&importCmd.label;" 
               accesskey="&importCmd.accesskey;" 
               oncommand="toImport();"/>
     <menuseparator/>
   </menupopup>
 </menu>
+<menu id="windowMenu"/>
 <menu id="menu_Help"/>
 <spacer flex="100%"/>
 </menubar>
@@ -1523,6 +1556,9 @@ Rights Reserved.
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
+<!-- not ready yet
+      <toolbarbutton class="toolbarbutton-1" id="button-junk" label="&junkButton.label;" tooltiptext="&junkButton.tooltip;" observes="button_junk" oncommand="goDoCommand('button_junk')"/>
+-->
       <toolbarbutton type="menu-button" id="button-mark" class="toolbarbutton-1" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   observes="button_mark" tooltiptext="&markButton.tooltip;">  
             <menupopup onpopupshowing="InitMessageMark()">
@@ -1551,7 +1587,7 @@ Rights Reserved.
 <hbox id="searchBox" persist="collapsed" align="center">
   <label id="searchCriteria" value="&SearchSubjectOrSender.label;" control="searchInput" 
          accesskey="&SearchSubjectOrSender.accesskey;"/>
-  <textbox id="searchInput" flex="1" onfocus="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
+  <textbox id="searchInput" flex="5" onfocus="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
   <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" 
           accesskey="&clearButton.accesskey;"/>
   <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"

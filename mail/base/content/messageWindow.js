@@ -175,6 +175,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	var folderUri = folderResource.Value;
 	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
+    gDBView.onDeleteCompleted(true);
     gCurrentMessageIsDeleted = false;
     if (gNextMessageViewIndexAfterDelete != nsMsgKey_None) 
     {
@@ -201,6 +202,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
      return;
 
   var folderUri = folderResource.Value;
+  gDBView.onDeleteCompleted(false);
   if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
   {
     gCurrentMessageIsDeleted = false;
@@ -210,7 +212,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
-  	AddMailOfflineObserver();
+  AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts(null);
@@ -557,6 +559,7 @@ var MessageWindowController =
       case "cmd_killThread":
       case "cmd_watchThread":
 			case "button_delete":
+      case "button_junk":
 			case "cmd_shiftDelete":
       case "button_print":
 			case "cmd_print":
@@ -571,6 +574,7 @@ var MessageWindowController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+			case "cmd_findPrev":
       case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
@@ -619,7 +623,9 @@ var MessageWindowController =
 			case "button_delete":
 			case "cmd_shiftDelete":
         var loadedFolder = GetLoadedMsgFolder();
-        return gCurrentMessageUri && loadedFolder && loadedFolder.canDeleteMessages; 
+        return gCurrentMessageUri && loadedFolder && (loadedFolder.canDeleteMessages || isNewsURI(gCurrentFolderUri));
+      case "button_junk":
+        return (!isNewsURI(gCurrentFolderUri));
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -676,6 +682,7 @@ var MessageWindowController =
 			case "cmd_previousUnreadMsg":
 				return true;
 			case "cmd_findAgain":
+			case "cmd_findPrev":
 				return MsgCanFindAgain();
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
@@ -753,6 +760,9 @@ var MessageWindowController =
 			case "cmd_shiftDelete":
 				MsgDeleteMessageFromMessageWindow(true, false);
 				break;
+      case "button_junk":
+        MsgJunk();
+        break;
 			case "button_delete":
 				MsgDeleteMessageFromMessageWindow(false, true);
 				break;
@@ -778,7 +788,10 @@ var MessageWindowController =
 				MsgFind();
 				break;
 			case "cmd_findAgain":
-				MsgFindAgain();
+				MsgFindAgain(false);
+				break;
+			case "cmd_findPrev":
+				MsgFindAgain(true);
 				break;
       case "cmd_search":
         MsgSearchMessages();

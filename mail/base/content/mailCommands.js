@@ -221,7 +221,7 @@ function NewMessageToSelectedAddresses(type, format, identity) {
     if (composeFields) {
       var addressList = "";
       for (var i = 0; i < addresses.Count(); i++) {
-        addressList = addressList + (i > 0 ? ",":"") + addresses.GetElementAt(i).QueryInterface(Components.interfaces.nsISupportsCString).data;
+        addressList = addressList + (i > 0 ? ",":"") + addresses.QueryElementAt(i,Components.interfaces.nsISupportsString).data;
       }
       composeFields.to = addressList;
       params.composeFields = composeFields;
@@ -359,22 +359,12 @@ function SaveAsTemplate(uri, folder)
 
 function MarkSelectedMessagesRead(markRead)
 {
-    if (markRead) {
-        gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
-    }
-    else {
-        gDBView.doCommand(nsMsgViewCommandType.markMessagesUnread);
-    }
+  gDBView.doCommand(markRead ? nsMsgViewCommandType.markMessagesRead : nsMsgViewCommandType.markMessagesUnread);
 }
 
 function MarkSelectedMessagesFlagged(markFlagged)
 {
-    if (markFlagged) {
-        gDBView.doCommand(nsMsgViewCommandType.flagMessages);
-    }
-    else {
-        gDBView.doCommand(nsMsgViewCommandType.unflagMessages);
-    }
+  gDBView.doCommand(markFlagged ? nsMsgViewCommandType.flagMessages : nsMsgViewCommandType.unflagMessages);
 }
 
 function MarkAllMessagesRead(compositeDataSource, folder)
@@ -398,10 +388,6 @@ function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
 
 function ViewPageSource(messages)
 {
-	var url;
-	var uri;
-	var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
-
 	var numMessages = messages.length;
 
 	if (numMessages == 0)
@@ -410,38 +396,237 @@ function ViewPageSource(messages)
 		return false;
 	}
 
-	// First, get the mail session
-	var mailSession = Components.classes[mailSessionContractID].getService();
-	if (!mailSession)
-		return false;
+    try {
+        // First, get the mail session
+        const mailSessionContractID = "@mozilla.org/messenger/services/session;1";
+        const nsIMsgMailSession = Components.interfaces.nsIMsgMailSession;
+        var mailSession = Components.classes[mailSessionContractID].getService(nsIMsgMailSession);
 
-	mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-	if (!mailSession)
-		return false;
+        var mailCharacterSet = "charset=" + msgWindow.mailCharacterSet;
 
-	for(var i = 0; i < numMessages; i++)
-	{
-		uri = messages[i];
-  
-		// Now, we need to get a URL from a URI
-		url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
-		if (url) {
-            // XXX what if there already is a "?", like "?part=0"
-            // XXX shouldn't this be "&header=src" in that case?
-			url += "?header=src";
+        for (var i = 0; i < numMessages; i++)
+        {
+            // Now, we need to get a URL from a URI
+            var url = mailSession.ConvertMsgURIToMsgURL(messages[i], msgWindow);
+
+            window.openDialog( "chrome://navigator/content/viewSource.xul",
+                               "_blank",
+                               "scrollbars,resizable,chrome,dialog=no",
+                               url,
+                               mailCharacterSet);
         }
-    
-		// Use a browser window to view source
-		window.openDialog( getBrowserURL(),
-						   "_blank",
-						   "scrollbars,resizable,chrome,dialog=no",
-							url,
-							"view-source" );
-	}
         return true;
+    } catch (e) {
+        // Couldn't get mail session
+        return false;
+    }
 }
 
 function doHelpButton() 
 {
     openHelp("mail-offline-items");
+}
+
+// XXX The following junkmail code might be going away or changing
+
+var gJunkmailComponent;
+
+function getJunkmailComponent()
+{
+    if (!gJunkmailComponent) {
+        gJunkmailComponent = Components.classes['@mozilla.org/messenger/filter-plugin;1?name=junkmail']
+                .getService(Components.interfaces.nsISupports).wrappedJSObject;
+        gJunkmailComponent.initComponent();
+    }
+}
+
+function analyze(aMessage, aNextFunction)
+{
+    function callback(aScore) {
+    }
+
+    callback.prototype = 
+        {
+            onMessageScored: function processNext(aScore)
+            {
+                if (aMessage) {
+                    //if (aScore == -1) debugger;
+                    if (aScore == 0) {
+                        aMessage.setStringProperty("score", "0");
+                    }
+                    else if (aScore == 1) {
+                        aMessage.setStringProperty("score", "100");
+                    }
+                }
+                aNextFunction();
+            }
+        };
+
+
+    // XXX TODO jumping through hoops here.
+    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
+    gJunkmailComponent.calculate(messageURL, new callback);
+}
+
+function analyzeFolder()
+{
+    function processNext()
+    {
+        if (messages.hasMoreElements()) {
+            // XXX TODO jumping through hoops here.
+            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            while (!message.isRead) {
+                if (!messages.hasMoreElements()) {
+                    gJunkmailComponent.batchUpdate = false;
+                    return;
+                }
+                message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            }
+            analyze(message, processNext);
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var folder = GetFirstSelectedMsgFolder();
+    var messages = folder.getMessages(msgWindow);
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
+}
+
+function analyzeMessages()
+{
+    function processNext()
+    {
+        if (counter < messages.length) {
+            // XXX TODO jumping through hoops here.
+            var messageUri = messages[counter];
+            var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+
+            ++counter;
+            while (!message.isRead) {
+                if (counter == messages.length) {
+                    gJunkmailComponent.mBatchUpdate = false;
+                    return;
+                }
+                messageUri = messages[counter];
+                message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+                ++counter;
+            }
+            analyze(message, processNext);
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var messages = GetSelectedMessages();
+    var counter = 0;
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
+}
+
+function writeHash()
+{
+    getJunkmailComponent();
+    gJunkmailComponent.mTable.writeHash();
+}
+
+function mark(aMessage, aSpam, aNextFunction)
+{
+    // XXX TODO jumping through hoops here.
+    var score = aMessage.getStringProperty("score");
+
+    var action;
+    if (aSpam) {
+        if (score == "100") {
+            // Marking a spam message as spam does nothing
+            return;
+        }
+
+        if (score == "0") {
+            // Marking a non-spam message as spam
+            action = Components.interfaces.nsIMsgFilterPlugin.hamToSpam;
+        }
+        else 
+            action = Components.interfaces.nsIMsgFilterPlugin.unknownToSpam;
+
+    }
+    else {
+        if (score == "0") {
+            // Marking a non-spam message as non-spam does nothing
+            return;
+        }
+
+        if (score == "100") {
+            // Marking a spam message as non-spam
+            action = Components.interfaces.nsIMsgFilterPlugin.spamToHam;
+        }
+        else
+            action = Components.interfaces.nsIMsgFilterPlugin.unknownToHam;
+    }
+
+    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
+    gJunkmailComponent.mark(messageURL, action, aNextFunction);
+}
+
+function JunkSelectedMessages(setAsJunk)
+{
+    getJunkmailComponent();
+    var messages = GetSelectedMessages();
+
+    // start the batch of messages
+    //
+    gJunkmailComponent.batchUpdate = true;
+
+    // mark each one
+    //
+    for ( var msg in messages ) {
+        var message = messenger.messageServiceFromURI(messages[msg])
+            .messageURIToMsgHdr(messages[msg]);
+        mark(message, setAsJunk, null);
+    }
+
+    // end the batch (tell the component to write out its data)
+    //
+    gJunkmailComponent.batchUpdate = false;
+
+    // this actually sets the score on the selected messages
+    // so we need to call it after we call mark()
+    gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
+                      : nsMsgViewCommandType.unjunk);
+}
+
+// temporary
+function markFolderAsJunk(aSpam)
+{
+    function processNext()
+    {
+        if (messages.hasMoreElements()) {
+            // Pffft, jumping through hoops here.
+            var message = messages.getNext().QueryInterface(Components.interfaces.nsIMsgDBHdr);
+            mark(message, aSpam, processNext);
+
+            // now set the score
+            // XXX TODO invalidate the row
+            if (aSpam)
+              message.setStringProperty("score","100");
+            else
+              message.setStringProperty("score","0");
+        }
+        else {
+            gJunkmailComponent.batchUpdate = false;
+        }
+    }
+
+    getJunkmailComponent();
+    var folder = GetFirstSelectedMsgFolder();
+    var messages = folder.getMessages(msgWindow);
+    gJunkmailComponent.batchUpdate = true;
+    processNext();
 }

@@ -42,10 +42,11 @@ var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
+var gCollectOutgoing = false;
 var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
 var gCollectAddressTimer = null;
-var gCollectAddess = null;
+var gCollectAddress = null;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
@@ -55,10 +56,11 @@ var gOpenLabelAccesskey;
 var gSaveLabel;
 var gSaveLabelAccesskey;
 var gMessengerBundle;
+var gProfileDirURL;
+var gIconFileURL;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
-
 
 // other components may listen to on start header & on end header notifications for each message we display
 // to do that you need to add yourself to our gMessageListeners array with object that has two properties:
@@ -203,6 +205,7 @@ function OnLoadMsgHeaderPane()
   gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
   gCollectIncoming = pref.getBoolPref("mail.collect_email_address_incoming");
   gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
+  gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   initializeHeaderViewTables();
 
@@ -237,7 +240,7 @@ var messageHeaderSink = {
       // clear out any pending collected address timers...
       if (gCollectAddressTimer)
       {
-        gCollectAddess = "";        
+        gCollectAddress = "";        
         clearTimeout(gCollectAddressTimer);
         gCollectAddressTimer = null;
       }
@@ -316,11 +319,21 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
-          if (foo.headerValue && abAddressCollector && ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-          {
-            gCollectAddess = foo.headerValue;
-            gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddess);', 2000);
-          }
+          if (foo.headerValue && abAddressCollector) {
+            if ((gCollectIncoming && !dontCollectAddress) || 
+                (gCollectNewsgroup && dontCollectAddress))
+            {
+              gCollectAddress = foo.headerValue;
+              // collect, and add card if doesn't exist
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true);', 2000);
+            }
+            else if (gCollectOutgoing) 
+            {
+              // collect, but only update existing cards
+              gCollectAddress = foo.headerValue;
+              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false);', 2000);
+            }
+          } 
         }
        
         index++;
@@ -501,7 +514,7 @@ function updateHeaderValue(headerEntry, headerValue)
 
 function updateHeaderValueInTextNode(headerEntry, headerValue)
 {
-  headerEntry.textNode.setAttribute("value", headerValue);
+  headerEntry.textNode.value = headerValue;
 }
 
 function createNewHeaderView(headerName)
@@ -510,8 +523,9 @@ function createNewHeaderView(headerName)
   var newHeader = document.createElement("mail-headerfield");
   newHeader.setAttribute('id', idName);
   newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
+  // all mail-headerfield elements are keyword related
+  newHeader.setAttribute('keywordrelated','true');
   newHeader.collapsed = true;
-
 
   // this new element needs to be inserted into the view...
   var topViewNode = document.getElementById('expandedHeaders');
@@ -670,12 +684,54 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
                                fullNames.value[index], names.value[index], headerEntry.useShortView);
       }
 
+      if (headerEntry.enclosingBox.getAttribute("id") == "expandedfromBox") {
+        setFromBuddyIcon(addresses.value[index]);
+      }
+
       index++;
     }
     
     if (headerEntry.useToggle)
       headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
   } // if msgheader parser
+}
+
+function setFromBuddyIcon(email)
+{
+   var fromBuddyIcon = document.getElementById("fromBuddyIcon");
+
+   try {
+     // better to cache this?
+     var myScreenName = pref.getCharPref("aim.session.screenname");
+
+     var card = abAddressCollector.getCardFromAttribute("PrimaryEmail", email);
+
+     if (myScreenName && card && card.aimScreenName) {
+       if (!gProfileDirURL) {
+         // lazily create these file urls, and keep them around
+         gIconFileURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+         gProfileDirURL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
+
+         var profile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
+         gProfileDirURL.file = profile.getProfileDir(profile.currentProfile);
+       }
+
+       // if we did have a buddy icon on disk for this screenname, this would be the file url spec for it
+       var iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
+
+       // check if the file exists
+       // is this a perf hit?  (how expensive is stat()?)
+       gIconFileURL.spec = iconURLStr;
+       if (gIconFileURL.file.exists()) {
+         fromBuddyIcon.setAttribute("src", iconURLStr);
+         return;
+       }
+     }
+   }
+   catch (ex) {
+     // can get here if no screenname
+   }
+   fromBuddyIcon.setAttribute("src", "");
 }
 
 function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, displayName, useShortView)

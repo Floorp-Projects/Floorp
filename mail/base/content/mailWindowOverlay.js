@@ -31,12 +31,9 @@ var gOfflinePromptsBundle;
 var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
-var gPrefs = null;
+var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gPrintSettings = null;
 
-var gTimelineEnabled = false;
-
-/*
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
 if (gTimelineEnabled) {
@@ -52,7 +49,6 @@ if (gTimelineEnabled) {
     gTimelineEnabled = false;
   }
 }
-*/
 
 var disallow_classes_no_html = 1; /* the user preference,
      if HTML is not allowed. I assume, that the user could have set this to a
@@ -78,29 +74,18 @@ function menu_new_init()
     newAccountItem.setAttribute("disabled","true");
 
   // Change "New Folder..." menu according to the context
-  var startIndex = {};
-  var endIndex = {};
-  var folderTree = GetFolderTree();
-  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-  if (startIndex.value < 0)
-    return false;
-  var numSelected = endIndex.value - startIndex.value + 1;
-  var folderResource = GetFolderResource(folderTree, startIndex.value);
-  var specialFolder = GetFolderAttribute(folderTree, folderResource,
-    "SpecialFolder");
-  var isServer = GetFolderAttribute(folderTree, folderResource,
-    "IsServer") == 'true';
-  var serverType = GetFolderAttribute(folderTree, folderResource,
-    "ServerType");
-  var canCreateNew = GetFolderAttribute(folderTree, folderResource,
-    "CanCreateSubfolders") == "true";
-  var isInbox = specialFolder == "Inbox";
-  var isIMAPFolder = GetFolderAttribute(folderTree, folderResource,
-    "ServerType") == "imap";
+  var folderArray = GetSelectedMsgFolders();
+  if (folderArray.length == 0)
+    return;
+  var msgFolder = folderArray[0];
+  var isServer = msgFolder.isServer;
+  var serverType = msgFolder.server.type;
+  var canCreateNew = msgFolder.canCreateSubfolders;
+  var isInbox = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_INBOX);
+  var isIMAPFolder = serverType == "imap";
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                          .getService(Components.interfaces.nsIIOService);
-  var showNew = ((numSelected <=1) && (serverType != 'nntp') &&
-    canCreateNew) || isInbox;
+  var showNew = ((serverType != 'nntp') && canCreateNew) || isInbox;
   ShowMenuItem("menu_newFolder", showNew);
   EnableMenuItem("menu_newFolder", !isIMAPFolder || !ioService.offline);
   if (showNew)
@@ -212,6 +197,7 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortByThreadMenuitem", (sortType == nsMsgViewSortType.byThread));
     setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
     setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
+    setSortByMenuItemCheckState("sortByScoreMenuitem", (sortType == nsMsgViewSortType.byScore));
  
     // the Sender / Recipient menu is dynamic
     setSortByMenuItemCheckState("sortBySenderOrRecipientMenuitem", (sortType == nsMsgViewSortType.byAuthor) || (sortType == nsMsgViewSortType.byRecipient));
@@ -547,6 +533,19 @@ function SelectedMessagesAreDeleted()
     }
 }
 
+function SelectedMessagesAreJunk()
+{
+    var isJunk;
+    try {
+        var score = gDBView.hdrForFirstSelectedMessage.getStringProperty("score");
+        isJunk =  ((score != "") && (score != "0"));
+    }
+    catch (ex) {
+        isJunk = false;
+    }
+    return isJunk;
+}
+
 function SelectedMessagesAreRead()
 {
     var isRead;
@@ -866,8 +865,6 @@ function MsgReplyToAllMessage(event)
 
 function MsgForwardMessage(event)
 {
-  if (!gPrefs)
-    gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   var forwardType = 0;
   try {
     forwardType = gPrefs.getIntPref("mail.forward_message_mode");
@@ -1124,6 +1121,11 @@ function CloseMailWindow()
     window.close();
 }
 
+function MsgJunk()
+{
+  JunkSelectedMessages(!SelectedMessagesAreJunk());
+}
+
 function MsgMarkMsgAsRead(markRead)
 {
     if (!markRead) {
@@ -1178,10 +1180,10 @@ function MsgFind()
   findInPage(getMessageBrowser(), contentWindow, contentWindow)
 }
 
-function MsgFindAgain()
+function MsgFindAgain(reverse)
 {
   var contentWindow = window.top._content;
-  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow)
+  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow, reverse)
 }
 
 function MsgCanFindAgain()
@@ -1195,7 +1197,8 @@ function MsgFilters(emailAddress)
     var args;
     if (emailAddress)
     {
-      /* we have to do prefill filter so we are going to launch the filterEditor dialog
+      /* we have to do prefill filter so we are going to 
+         launch the filterEditor dialog
          and prefill that with the emailAddress */
          
       var curFilterList = preselectedFolder.getFilterList(msgWindow);
@@ -1204,28 +1207,56 @@ function MsgFilters(emailAddress)
       window.openDialog("chrome://messenger/content/FilterEditor.xul", "", 
                         "chrome, modal, resizable,centerscreen,dialog=yes", args);
 
-      /* if the user hits ok in the filterEditor dialog we set args.refresh=true there
+      /* if the user hits ok in the filterEditor dialog we set 
+         args.refresh=true there
          we check this here in args to show filterList dialog */
-
       if ("refresh" in args && args.refresh)
       {
-         args = { folder: preselectedFolder };
-         window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                        "chrome,modal,resizable,centerscreen,dialog=yes", args);
+         args = { refresh: true, folder: preselectedFolder };
+         MsgFilterList(args);
       }
     }
-    else  //just launch filterList dialog
+    else  // just launch filterList dialog
     {
-      args = { folder: preselectedFolder };
-      window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                       "chrome,modal,resizable,centerscreen,dialog=yes", args);
+      args = { refresh: false, folder: preselectedFolder };
+      MsgFilterList(args);
     }
+}
+
+function MsgApplyFilters()
+{
+  var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
+
+  var preselectedFolder = GetFirstSelectedMsgFolder();
+  var selectedFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  selectedFolders.AppendElement(preselectedFolder);
+         
+  var curFilterList = preselectedFolder.getFilterList(msgWindow);
+  // create a new filter list and copy over the enabled filters to it.
+  // We do this instead of having the filter after the fact code ignore
+  // disabled filters because the Filter Dialog filter after the fact
+  // code would have to clone filters to allow disabled filters to run,
+  // and we don't support cloning filters currently.
+  var tempFilterList = filterService.getTempFilterList(preselectedFolder);
+  var numFilters = curFilterList.filterCount;
+  // make sure the temp filter list uses the same log stream
+  tempFilterList.logStream = curFilterList.logStream;
+  tempFilterList.loggingEnabled = curFilterList.loggingEnabled;
+  var newFilterIndex = 0;
+  for (var i = 0; i < numFilters; i++)
+  {
+    var curFilter = curFilterList.getFilterAt(i);
+    if (curFilter.enabled)
+    {
+      tempFilterList.insertFilterAt(newFilterIndex, curFilter);
+      newFilterIndex++;
+    }
+  }
+  filterService.applyFiltersToFolders(tempFilterList, selectedFolders, msgWindow);
 }
 
 function MsgViewAllHeaders()
 {
-    if (!gPrefs)
-      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",2);
     MsgReload();
     return true;
@@ -1233,8 +1264,6 @@ function MsgViewAllHeaders()
 
 function MsgViewNormalHeaders()
 {
-    if (!gPrefs)
-      Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",1);
     MsgReload();
     return true;
@@ -1242,8 +1271,6 @@ function MsgViewNormalHeaders()
 
 function MsgViewBriefHeaders()
 {
-    if (!gPrefs)
-      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",0);
     MsgReload();
     return true;
@@ -1251,8 +1278,6 @@ function MsgViewBriefHeaders()
 
 function MsgBodyAllowHTML()
 {
-    if (!gPrefs)
-      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
     gPrefs.setIntPref("mailnews.display.html_as", 0);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", 0);
@@ -1262,8 +1287,6 @@ function MsgBodyAllowHTML()
 
 function MsgBodySanitized()
 {
-    if (!gPrefs)
-      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
     gPrefs.setIntPref("mailnews.display.html_as", 3);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
@@ -1274,8 +1297,6 @@ function MsgBodySanitized()
 
 function MsgBodyAsPlaintext()
 {
-    if (!gPrefs)
-      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", true);
     gPrefs.setIntPref("mailnews.display.html_as", 1);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
@@ -1792,347 +1813,46 @@ function OnMsgLoaded(folder, msgURI)
 
 function MsgSearchMessages()
 {
-    var preselectedFolder = null;
-    if ("GetFirstSelectedMsgFolder" in window)
-      preselectedFolder = GetFirstSelectedMsgFolder();
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-    var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
+  var preselectedFolder = null;
+  if ("GetFirstSelectedMsgFolder" in window)
+    preselectedFolder = GetFirstSelectedMsgFolder();
 
-    if (searchWindow)
-        searchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
+  var args = { folder: preselectedFolder };
+  OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
+}
+
+function MsgJunkMail()
+{
+  var preselectedFolder = null;
+  if ("GetFirstSelectedMsgFolder" in window)
+    preselectedFolder = GetFirstSelectedMsgFolder();
+
+  var args = { folder: preselectedFolder };
+  OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
 function MsgSearchAddresses()
 {
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-    var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
-
-    if (abSearchWindow)
-        abSearchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
+  var args = { directory: null };
+  OpenOrFocusWindow(args, "mailnews:absearch", "chrome://messenger/content/ABSearchDialog.xul");
+}
+ 
+function MsgFilterList(args)
+{
+  OpenOrFocusWindow(args, "mailnews:filterlist", "chrome://messenger/content/FilterListDialog.xul");
 }
 
-var gLastMessageUriToLoad = null;
-var gThreadPaneCommandUpdater = null;
-
-function ThreadPaneOnClick(event)
+function OpenOrFocusWindow(args, windowType, chromeURL)
 {
-    // we only care about button 0 (left click) events
-    if (event.button != 0) return;
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
+  var desiredWindow = windowManager.getMostRecentWindow(windowType);
 
-    // we are already handling marking as read and flagging
-    // in nsMsgDBView.cpp
-    // so all we need to worry about here is double clicks
-    // and column header.
-    //
-    // we get in here for clicks on the "treecol" (headers)
-    // and the "scrollbarbutton" (scrollbar buttons)
-    // we don't want those events to cause a "double click"
-
-    var t = event.originalTarget;
-
-    if (t.localName == "treecol") {
-       HandleColumnClick(t.id);
-    }
-    else if (event.detail == 2 && t.localName == "treechildren") {
-       var row = new Object;
-       var colID = new Object;
-       var childElt = new Object;
-
-       var tree = GetThreadTree();
-       // figure out what cell the click was in
-       tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-       if (row.value == -1)
-         return;
-
-       // if the cell is in a "cycler" column
-       // or if the user double clicked on the twisty,
-       // don't open the message in a new window
-       var col = document.getElementById(colID.value);
-       if (col && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
-         ThreadPaneDoubleClick();
-         // double clicking should not toggle the open / close state of the 
-         // thread.  this will happen if we don't prevent the event from
-         // bubbling to the default handler in tree.xml
-	 event.preventBubble();
-       }
-    }
-}
-
-function nsMsgDBViewCommandUpdater()
-{}
-
-nsMsgDBViewCommandUpdater.prototype = 
-{
-  updateCommandStatus : function()
-    {
-      // the back end is smart and is only telling us to update command status
-      // when the # of items in the selection has actually changed.
-      UpdateMailToolbar("dbview driven, thread pane");
-    },
-
-  displayMessageChanged : function(aFolder, aSubject, aKeywords)
-  {
-    setTitleFromFolder(aFolder, aSubject);
-    gHaveLoadedMessage = true;
-    SetKeywords(aKeywords);
-  },
-
-  QueryInterface : function(iid)
-   {
-     if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
-	    return this;
-	  
-     throw Components.results.NS_NOINTERFACE;
-     return null;
-    }
-}
-
-function HandleColumnClick(columnID)
-{
-  var sortType = ConvertColumnIDToSortType(columnID);
-
-  // if sortType is 0, this is an unsupported sort type
-  // return, since we can't sort by that column.
-  if (sortType == 0) {
-    return;
+  if (desiredWindow) {
+    desiredWindow.focus();
+    if ("refresh" in args && args.refresh)
+      desiredWindow.refresh();
   }
-
-  var dbview = GetDBView();
-  if (sortType == nsMsgViewSortType.byThread)  
-  {  //do not allow sorting by thread in search view.
-    if (dbview && dbview.isSearchView) return;
-  } 
-  if (dbview.sortType == sortType) {
-    MsgReverseSortThreadPane();
-  }
-  else {
-    MsgSortThreadPane(sortType);
-  }
-}
-
-function MsgComposeDraftMessage()
-{
-    var loadedFolder = GetLoadedMsgFolder();
-    var messageArray = GetSelectedMessages();
-
-    ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
-}
-
-function ThreadPaneDoubleClick()
-{
-  if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
-    MsgComposeDraftMessage();
-  }
-  else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
-    var loadedFolder = GetLoadedMsgFolder();
-    var messageArray = GetSelectedMessages();
-    ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
-  }
-  else {
-    MsgOpenSelectedMessages();
-  }
-}
-
-function ThreadPaneKeyPress(event)
-{
-    if (event.keyCode == 13)
-      ThreadPaneDoubleClick();
-}
-
-function MsgSortByDate()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byDate);
-}
-
-function MsgSortBySenderOrRecipient()
-{
-    if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) {
-      MsgSortThreadPane(nsMsgViewSortType.byRecipient);
-    }
-    else {
-      MsgSortThreadPane(nsMsgViewSortType.byAuthor);
-    }
-}
-
-function MsgSortByStatus()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byStatus);
-}
-
-function MsgSortByLabel()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byLabel);
-}
-
-function MsgSortBySubject()
-{
-    MsgSortThreadPane(nsMsgViewSortType.bySubject);
-}
-
-function MsgSortByLocation()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byLocation);
-}
-
-
-function MsgSortByFlagged() 
-{
-    MsgSortThreadPane(nsMsgViewSortType.byFlagged);
-}
-
-function MsgSortByPriority()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byPriority);
-}
-
-function MsgSortBySize() 
-{
-    MsgSortThreadPane(nsMsgViewSortType.bySize);
-}
-
-function MsgSortByUnread()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byUnread);
-}
-
-function MsgSortByOrderReceived()
-{
-    MsgSortThreadPane(nsMsgViewSortType.byId);
-}
-
-function MsgSortByTotal()
-{
-    dump("XXX fix MsgSortByTotal\n");
-    //MsgSortThreadPane(nsMsgViewSortType.byTotal);
-}
-
-function MsgSortByThread()
-{
-  var dbview = GetDBView();
-  if(dbview && dbview.isSearchView)  //do not allow sorting by thread in search view.
-    return;
-  MsgSortThreadPane(nsMsgViewSortType.byThread);
-}
-
-function MsgSortThreadPane(sortType)
-{
-    var dbview = GetDBView();
-    dbview.sort(sortType, nsMsgViewSortOrder.ascending);
-    UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
-}
-
-function MsgReverseSortThreadPane()
-{
-  var dbview = GetDBView();
-  if (dbview.sortOrder == nsMsgViewSortOrder.ascending) {
-    MsgSortDescending();
-  }
-  else {
-    MsgSortAscending();
-  }
-}
-
-function MsgSortAscending()
-{
-  var dbview = GetDBView();
-  dbview.sort(dbview.sortType, nsMsgViewSortOrder.ascending);
-  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.ascending);
-}
-
-function MsgSortDescending()
-{
-  var dbview = GetDBView();
-  dbview.sort(dbview.sortType, nsMsgViewSortOrder.descending);
-  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.descending);
-}
-
-function UpdateSortIndicators(sortType, sortOrder)
-{
-  var colID = ConvertSortTypeToColumnID(sortType);
-  var sortedColumn;
-
-  // set the sort indicator on the column we are sorted by
-  if (colID) {
-    sortedColumn = document.getElementById(colID);
-    if (sortedColumn) {
-      if (sortOrder == nsMsgViewSortOrder.ascending) {
-        sortedColumn.setAttribute("sortDirection","ascending");
-      }
-      else {
-        sortedColumn.setAttribute("sortDirection","descending");
-      }
-
-      // remove the sort indicator from all the columns
-      // except the one we are sorted by
-      var currCol = sortedColumn.parentNode.firstChild;
-      while (currCol) {
-        if (currCol != sortedColumn && currCol.localName == "treecol")
-          currCol.removeAttribute("sortDirection");
-        currCol = currCol.nextSibling;
-      }
-    }
-  }
-}
-
-function IsSpecialFolderSelected(flags)
-{
-  var selectedFolder = GetThreadPaneFolder();
-  return IsSpecialFolder(selectedFolder, flags);
-}
-
-function GetThreadTree()
-{
-  if (gThreadTree) return gThreadTree;
-	gThreadTree = document.getElementById('threadTree');
-	return gThreadTree;
-}
-
-function GetThreadPaneFolder()
-{
-  try {
-    return gDBView.msgFolder;
-  }
-  catch (ex) {
-    return null;
-  }
-}
-
-function EnsureRowInThreadTreeIsVisible(index)
-{
-  if (index < 0)
-    return;
-
-  var tree = GetThreadTree();
-  tree.treeBoxObject.ensureRowIsVisible(index); 
-}
-
-function ThreadPaneOnLoad()
-{
-  var tree = GetThreadTree();
-
-  tree.addEventListener("click",ThreadPaneOnClick,true);
-
-  // The mousedown event listener below should only be added in the thread
-  // pane of the mailnews 3pane window, not in the advanced search window.
-  if(tree.parentNode.id == "searchResultListBox")
-    return;
-
-  tree.addEventListener("mousedown",TreeOnMouseDown,true);
-}
-
-function ThreadPaneSelectionChanged()
-{
-  var treeBoxObj = GetThreadTree().treeBoxObject;
-  var treeSelection = treeBoxObj.selection;
-  if (!gRightMouseButtonDown)
-    treeBoxObj.view.selectionChanged();
+  else
+    window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
 }
 

@@ -107,6 +107,8 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.accesskey "J">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
+<!ENTITY filtersApply.label "Run Filters on Selected Folder">
+<!ENTITY filtersApply.accesskey "R">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
@@ -157,6 +159,8 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.accesskey "u">
 <!ENTITY sortByLabelCmd.label "Label">
 <!ENTITY sortByLabelCmd.accesskey "L">
+<!ENTITY sortByScoreCmd.label "Junk Score">
+<!ENTITY sortByScoreCmd.accesskey "C">
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->
@@ -228,6 +232,11 @@ Rights Reserved.
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.key "g">
+<!ENTITY findAgainCmd.key2 "VK_F3">
+<!ENTITY findPrevCmd.label "Find Previous">
+<!ENTITY findPrevCmd.accesskey "v">
+<!ENTITY findPrevCmd.key "g">
+<!ENTITY findPrevCmd.key2 "VK_F3">
 <!-- LOCALIZATION NOTE (searchCurrentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
 <!ENTITY searchCurrentCmd.accesskey "">
@@ -387,6 +396,7 @@ Rights Reserved.
 <!ENTITY markButton.label "Mark">
 <!ENTITY printButton.label "Print">
 <!ENTITY stopButton.label "Stop">
+<!ENTITY junkButton.label "Junk">
 
 <!--Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
@@ -405,6 +415,7 @@ Rights Reserved.
 <!ENTITY printButton.tooltip "Print this message">
 <!ENTITY stopButton.tooltip "Stop the current transfer">
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
+<!ENTITY junkButton.tooltip "Mark the selected messages as junk (or not junk)">
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Done">
@@ -499,40 +510,6 @@ Rights Reserved.
 
 <!ENTITY searchAddressesCmd.label "Search Addresses...">
 <!ENTITY searchAddressesCmd.accesskey "S">
-<!ENTITY toolsMenu.label "Tools">
-<!ENTITY toolsMenu.accesskey "T">
 
-<!ENTITY threadColumn.label "Thread">
-<!ENTITY senderColumn.label "Sender">
-<!ENTITY subjectColumn.label "Subject">
-<!ENTITY dateColumn.label "Date">
-<!ENTITY priorityColumn.label "Priority">
-<!ENTITY labelColumn.label "Label">
-<!ENTITY statusColumn.label "Status">
-<!ENTITY sizeColumn.label "Size">
-<!ENTITY linesColumn.label "Lines">
-<!ENTITY unreadColumn.label "Unread">
-<!ENTITY totalColumn.label "Total">
-<!ENTITY orderReceivedColumn.label "Order Received">
-<!ENTITY readColumn.label "Read">
-<!ENTITY flagColumn.label "Flag">
-<!ENTITY locationColumn.label "Location">
-
-<!--Tooltips-->
-<!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 
-<!ENTITY columnChooser.tooltip "Click to select columns to display"> 
-<!ENTITY nameColumn.label   "Name"> 
-<!ENTITY unreadColumn.label "Unread"> 
-<!ENTITY totalColumn.label "Total"> 
-<!ENTITY accounts.label "Accounts">
-<!-- LOCALIZATION NOTE (accounts.img) : DONT_TRANSLATE -->
-<!ENTITY accounts.img "chrome://messenger/skin/local-mailhost.gif">
-<!ENTITY  newMessageCmd.key               "M">
-<!ENTITY textZoomEnlargeCmd.label       "Increase Text Size">
-<!ENTITY textZoomEnlargeCmd.accesskey   "I">
-<!ENTITY textZoomEnlargeCmd.commandkey  "+">
-<!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
-
-<!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
-<!ENTITY textZoomReduceCmd.accesskey    "D">
-<!ENTITY textZoomReduceCmd.commandkey   "-">
+<!ENTITY junkMailCmd.label "Junk Mail Controls...">
+<!ENTITY junkMailCmd.accesskey "J">

@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Jan Varga (varga@utcru.sk)
  *   Håkan Waara (hwaara@chello.se)
+ *   Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 /* This is where functions related to the 3 pane window are kept */
@@ -37,12 +38,6 @@ var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
 var gTotalCount = null;
 
-// cache these services
-var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService().QueryInterface(Components.interfaces.nsIRDFService);
-var gDragService = null;
-var nsIDragService = Components.interfaces.nsIDragService;
-
-
 var gCurrentLoadingFolderURI;
 var gCurrentFolderToReroot;
 var gCurrentLoadingFolderSortType = 0;
@@ -57,6 +52,7 @@ var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
+var gSearchEmailAddress = null;
 var gRightMouseButtonDown = false;
 // Global var to keep track of which row in the thread pane has been selected
 // This is used to make sure that the row with the currentIndex has the selection
@@ -72,6 +68,8 @@ var gThreadPaneDeleteOrMoveOccurred = false;
 var gHaveLoadedMessage;
 
 var gDisplayStartupPage = false;
+
+var gNotifyDefaultInboxLoadedOnStartup = false;
 
 // the folderListener object
 var folderListener = {
@@ -116,6 +114,7 @@ var folderListener = {
            if(resource) {
              var uri = resource.Value;
              if(uri == gCurrentFolderToReroot) {
+               gQSViewIsDirty = true;
                gCurrentFolderToReroot="";
                var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if(msgFolder) {
@@ -179,12 +178,46 @@ var folderListener = {
                  // don't select it though
                  scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
                     
-                 // if we failed to find a new message, scroll to the top
+                 // if we failed to find a new message, 
+                 // scroll to the newest, which might be the top or the bottom
+                 // depending on our sort order and sort type
                  if (!scrolled) {
-                   EnsureRowInThreadTreeIsVisible(0);
+                   if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
+                     switch (gDBView.sortType) {
+                       case nsMsgViewSortType.byDate: 
+                       case nsMsgViewSortType.byId: 
+                       case nsMsgViewSortType.byThread: 
+                         scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+                         break;
+                     }
+                   }
                  }
+
+                 if (!scrolled)
+                   EnsureRowInThreadTreeIsVisible(0);
                }
                SetBusyCursor(window, false);
+             }
+             if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))
+             {
+                var defaultAccount = accountManager.defaultAccount;
+                defaultServer = defaultAccount.incomingServer;
+                var inboxFolder = GetInboxFolder(defaultServer);
+                if (inboxFolder && inboxFolder.URI == folder.URI)
+                {
+                  NotifyObservers(null,"defaultInboxLoadedOnStartup",null);
+                  gNotifyDefaultInboxLoadedOnStartup = false;
+                }
+             }
+             //folder loading is over, now issue quick search if there is an email address
+             if (gSearchEmailAddress)
+             {
+               Search(gSearchEmailAddress);
+               gSearchEmailAddress = null;
+             } 
+             else if (gDefaultSearchViewTerms)
+             {
+               Search("");
              }
            }
          }
@@ -223,7 +256,7 @@ var folderListener = {
          SelectFolder(folder.URI);
        }
        else if (eventType == "msgLoaded") {
-        OnMsgLoaded(folder, gCurrentDisplayedMessage);
+        OnMsgLoaded(folder, gDBView.URIForFirstSelectedMessage);
        }
     }
 }
@@ -362,8 +395,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         // XXX I think there is a bug in the suppression code above.
         // what if I have two rows selected, and I hit delete, and so we load the next row.
         // what if I have commands that only enable where exactly one row is selected?
-        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-        observerService.notifyObservers(window, "mail:updateToolbarItems", null);
+        NotifyObservers(window, "mail:updateToolbarItems", null);
       }
     }
       gNextMessageViewIndexAfterDelete = -2;  
@@ -494,10 +526,6 @@ var gThreePaneIncomingServerListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-  setTimeout(delayedLoad, 0);
-}
-
-function delayedLoad() {
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
@@ -506,7 +534,6 @@ function delayedLoad() {
   HideAccountCentral();
   loadStartPage();
   InitMsgWindow();
-
   messenger.SetWindow(window, msgWindow);
 
   InitializeDataSources();
@@ -520,16 +547,19 @@ function delayedLoad() {
   //set up correctly.
   // argument[0] --> folder uri
   // argument[1] --> optional message key
-
+  // argument[2] --> optional email address; //will come from aim; needs to show msgs from buddy's email address  
   if ("arguments" in window && window.arguments[0])
   {
     gStartFolderUri = window.arguments[0];
     gStartMsgKey = window.arguments[1];
+    gSearchEmailAddress = window.arguments[2];
+
   }
   else
   {
     gStartFolderUri = null;
     gStartMsgKey = -1;
+    gSearchEmailAddress = null;
   }
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
@@ -539,7 +569,16 @@ function delayedLoad() {
 
   gHaveLoadedMessage = false;
 
-  ThreadPaneOnLoad();
+  gNotifyDefaultInboxLoadedOnStartup = true;
+
+  // fix for #168937.  now that we don't have a sidebar
+  // users who haven't moved the splitter will
+  // see it jump around
+  var messengerBox = document.getElementById("messengerBox");
+  if (!messengerBox.getAttribute("width")) {
+    messengerBox.setAttribute("width","500px");
+  }
+
 
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
@@ -554,6 +593,13 @@ function OnUnloadMessenger()
 
   OnMailWindowUnload();
 }
+
+function NotifyObservers(aSubject, aTopic, aData)
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(aSubject, aTopic, aData);
+}
+
 
 function Create3PaneGlobals()
 {
@@ -1023,7 +1069,7 @@ function FolderPaneOnClick(event)
     else if (event.detail == 2) {
       FolderPaneDoubleClick(row.value, event);
     }
-    else if (gDBView && gDBView.isSearchView)
+    else if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
     {
       onClearSearch();
     }
@@ -1157,8 +1203,12 @@ function GetSelectedMessages()
   try {
     var messageArray = {}; 
     var length = {};
-    gDBView.getURIsForSelection(messageArray,length);
-    return messageArray.value;
+    var view = GetDBView();
+    view.getURIsForSelection(messageArray,length);
+    if (length.value)
+      return messageArray.value;
+    else 
+      return null;
   }
   catch (ex) {
     dump("ex = " + ex + "\n");
@@ -1313,1507 +1363,4 @@ function GetFolderAttribute(tree, source, attribute)
         target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     return target;
 }
-
-// Controller object for folder pane
-var FolderPaneController =
-{
-   supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_delete":
-			case "button_delete":
-			case "cmd_selectAll":
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return true;
-				
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-    if (IsFakeAccount()) 
-      return false;
-
-		switch ( command )
-		{
-			case "cmd_selectAll":
-                                // the folder pane (currently)
-                                // only handles single selection
-                                // so we forward select all to the thread pane
-                                // if there is no DBView
-                                // don't bother sending to the thread pane
-                                // this can happen when we've selected a server
-                                // and account central is displayed
-                                return (gDBView != null);
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return false;
-			case "cmd_delete":
-			case "button_delete":
-			if ( command == "cmd_delete" )
-				goSetMenuValue(command, 'valueFolder');
-      var folderTree = GetFolderTree();
-      var startIndex = {};
-      var endIndex = {};
-      folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-      if (startIndex.value >= 0) {
-        var canDeleteThisFolder;
-				var specialFolder = null;
-				var isServer = null;
-				var serverType = null;
-				try {
-          var folderResource = GetFolderResource(folderTree, startIndex.value);
-          specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
-          isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
-          serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
-          if (serverType == "nntp") {
-			     	if ( command == "cmd_delete" ) {
-					      goSetMenuValue(command, 'valueNewsgroup');
-				    	  goSetAccessKey(command, 'valueNewsgroupAccessKey');
-            }
-          }
-				}
-				catch (ex) {
-					//dump("specialFolder failure: " + ex + "\n");
-				} 
-        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" || specialFolder == "Sent" || specialFolder == "Templates" || specialFolder == "Unsent Messages" || isServer == "true")
-          canDeleteThisFolder = false;
-        else
-          canDeleteThisFolder = true;
-        return canDeleteThisFolder && isCommandEnabled(command);
-      }
-			else
-				return false;
-
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-    // if the user invoked a key short cut then it is possible that we got here for a command which is
-    // really disabled. kick out if the command should be disabled.
-    if (!this.isCommandEnabled(command)) return;
-
-		switch ( command )
-		{
-			case "cmd_delete":
-			case "button_delete":
-				MsgDeleteFolder();
-				break;
-			case "cmd_selectAll":
-                                // the folder pane (currently)
-                                // only handles single selection
-                                // so we forward select all to the thread pane
-                                SendCommandToThreadPane(command);
-                                break;
-		}
-	},
-	
-	onEvent: function(event)
-	{
-		// on blur events set the menu item texts back to the normal values
-		if ( event == 'blur' )
-        {
-			goSetMenuValue('cmd_delete', 'valueDefault');
-        }
-	}
-};
-
-
-// Controller object for thread pane
-var ThreadPaneController =
-{
-   supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return true;
-				
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-				return true;
-			
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return false;
-
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-    // if the user invoked a key short cut then it is possible that we got here for a command which is
-    // really disabled. kick out if the command should be disabled.
-    if (!this.isCommandEnabled(command)) return;
-    if (!gDBView) return;
-
-		switch ( command )
-		{
-			case "cmd_selectAll":
-                // if in threaded mode, the view will expand all before selecting all
-                gDBView.doCommand(nsMsgViewCommandType.selectAll)
-                if (gDBView.numSelected != 1) {
-                    setTitleFromFolder(gDBView.msgFolder,null);
-                    ClearMessagePane();
-                }
-                break;
-		}
-	},
-	
-	onEvent: function(event)
-	{
-	}
-};
-
-// DefaultController object (handles commands when one of the trees does not have focus)
-var DefaultController =
-{
-   supportsCommand: function(command)
-	{
-
-		switch ( command )
-		{
-      case "cmd_createFilterFromPopup":
-			case "cmd_close":
-			case "cmd_reply":
-			case "button_reply":
-			case "cmd_replySender":
-			case "cmd_replyGroup":
-			case "cmd_replyall":
-			case "button_replyall":
-			case "cmd_forward":
-			case "button_forward":
-			case "cmd_forwardInline":
-			case "cmd_forwardAttachment":
-			case "cmd_editAsNew":
-      case "cmd_createFilterFromMenu":
-			case "cmd_delete":
-			case "button_delete":
-			case "cmd_shiftDelete":
-			case "cmd_nextMsg":
-      case "button_next":
-			case "cmd_nextUnreadMsg":
-			case "cmd_nextFlaggedMsg":
-			case "cmd_nextUnreadThread":
-			case "cmd_previousMsg":
-			case "cmd_previousUnreadMsg":
-			case "cmd_previousFlaggedMsg":
-			case "cmd_viewAllMsgs":
-			case "cmd_viewUnreadMsgs":
-      case "cmd_viewThreadsWithUnread":
-      case "cmd_viewWatchedThreadsWithUnread":
-      case "cmd_viewIgnoredThreads":
-      case "cmd_undo":
-      case "cmd_redo":
-			case "cmd_expandAllThreads":
-			case "cmd_collapseAllThreads":
-			case "cmd_renameFolder":
-			case "cmd_sendUnsentMsgs":
-			case "cmd_openMessage":
-      case "button_print":
-			case "cmd_print":
-			case "cmd_printSetup":
-			case "cmd_saveAsFile":
-			case "cmd_saveAsTemplate":
-            case "cmd_properties":
-			case "cmd_viewPageSource":
-			case "cmd_setFolderCharset":
-			case "cmd_reload":
-      case "button_getNewMessages":
-			case "cmd_getNewMessages":
-      case "cmd_getMsgsForAuthAccounts":
-			case "cmd_getNextNMessages":
-			case "cmd_find":
-			case "cmd_findAgain":
-      case "cmd_search":
-      case "button_mark":
-			case "cmd_markAsRead":
-			case "cmd_markAllRead":
-			case "cmd_markThreadAsRead":
-			case "cmd_markAsFlagged":
-      case "cmd_label0":
-      case "cmd_label1":
-      case "cmd_label2":
-      case "cmd_label3":
-      case "cmd_label4":
-      case "cmd_label5":
-      case "button_file":
-			case "cmd_file":
-			case "cmd_emptyTrash":
-			case "cmd_compactFolder":
-			case "cmd_sortByThread":
-  	  case "cmd_settingsOffline":
-      case "cmd_close":
-      case "cmd_selectThread":
-				return true;
-      case "cmd_downloadFlagged":
-      case "cmd_downloadSelected":
-      case "cmd_synchronizeOffline":
-        return(CheckOnline());
-
-      case "cmd_watchThread":
-      case "cmd_killThread":
-        return(isNewsURI(GetFirstSelectedMessage()));
-
-			default:
-				return false;
-		}
-	},
-
-  isCommandEnabled: function(command)
-  {
-    var enabled = new Object();
-    enabled.value = false;
-    var checkStatus = new Object();
-
-    if (IsFakeAccount()) 
-      return false;
-
-    // note, all commands that get fired on a single key need to check MailAreaHasFocus() as well
-    switch ( command )
-    {
-      case "cmd_delete":
-        UpdateDeleteCommand();
-        // fall through
-      case "button_delete":
-        if (gDBView)
-          gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
-        return enabled.value;
-      case "cmd_shiftDelete":
-        if (gDBView)
-          gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
-        return enabled.value;
-      case "cmd_killThread":
-        return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
-      case "cmd_watchThread":
-        if (MailAreaHasFocus() && (GetNumSelectedMessages() == 1) && gDBView)
-          gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
-        return enabled.value;
-      case "cmd_createFilterFromPopup":
-        var loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
-          return false;
-      case "cmd_createFilterFromMenu":
-        loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
-          return false;
-      case "cmd_reply":
-      case "button_reply":
-      case "cmd_replySender":
-      case "cmd_replyGroup":
-      case "cmd_replyall":
-      case "button_replyall":
-      case "cmd_forward":
-      case "button_forward":
-      case "cmd_forwardInline":
-      case "cmd_forwardAttachment":
-      case "cmd_editAsNew":
-      case "cmd_openMessage":
-      case "button_print":
-      case "cmd_print":
-      case "cmd_saveAsFile":
-      case "cmd_saveAsTemplate":
-      case "cmd_viewPageSource":
-      case "cmd_reload":
-	      if ( GetNumSelectedMessages() > 0)
-        {
-          if (gDBView)
-          {
-             gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
-              return enabled.value;
-          }
-        }
-        return false;
-      case "cmd_printSetup":
-        return true;
-      case "cmd_markAsFlagged":
-      case "button_file":
-      case "cmd_file":
-        return (GetNumSelectedMessages() > 0 );
-      case "button_mark":
-      case "cmd_markAsRead":
-      case "cmd_markThreadAsRead":
-      case "cmd_label0":
-      case "cmd_label1":
-      case "cmd_label2":
-      case "cmd_label3":
-      case "cmd_label4":
-      case "cmd_label5":
-        return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
-      case "button_next":
-        return IsViewNavigationItemEnabled();
-      case "cmd_nextMsg":
-      case "cmd_nextUnreadMsg":
-      case "cmd_nextUnreadThread":
-      case "cmd_previousMsg":
-      case "cmd_previousUnreadMsg":
-        return (MailAreaHasFocus() && IsViewNavigationItemEnabled());
-      case "cmd_markAllRead":
-        return (MailAreaHasFocus() && IsFolderSelected());
-      case "cmd_find":
-      case "cmd_findAgain":
-        return IsMessageDisplayedInMessagePane();
-        break;
-      case "cmd_search":
-        return IsCanSearchMessagesEnabled();
-      // these are enabled on when we are in threaded mode
-      case "cmd_selectThread":
-        if (GetNumSelectedMessages() <= 0) return false;
-      case "cmd_expandAllThreads":
-      case "cmd_collapseAllThreads":
-        if (!gDBView) return false;
-          return (gDBView.sortType == nsMsgViewSortType.byThread);
-        break;
-      case "cmd_nextFlaggedMsg":
-      case "cmd_previousFlaggedMsg":
-        return IsViewNavigationItemEnabled();
-      case "cmd_viewAllMsgs":
-      case "cmd_sortByThread":
-      case "cmd_viewUnreadMsgs":
-      case "cmd_viewThreadsWithUnread":
-      case "cmd_viewWatchedThreadsWithUnread":
-      case "cmd_viewIgnoredThreads":
-      case "cmd_stop":
-        return true;
-      case "cmd_undo":
-      case "cmd_redo":
-          return SetupUndoRedoCommand(command);
-      case "cmd_renameFolder":
-        return IsRenameFolderEnabled();
-      case "cmd_sendUnsentMsgs":
-        return IsSendUnsentMsgsEnabled(null);
-      case "cmd_properties":
-        return IsPropertiesEnabled(command);
-      case "button_getNewMessages":
-      case "cmd_getNewMessages":
-      case "cmd_getMsgsForAuthAccounts":
-        return IsGetNewMessagesEnabled();
-      case "cmd_getNextNMessages":
-        return IsGetNextNMessagesEnabled();
-      case "cmd_emptyTrash":
-        return IsEmptyTrashEnabled();
-      case "cmd_compactFolder":
-        return IsCompactFolderEnabled();
-      case "cmd_setFolderCharset":
-        return IsFolderCharsetEnabled();
-      case "cmd_close":
-        return true;
-      case "cmd_downloadFlagged":
-        return(CheckOnline());
-      case "cmd_downloadSelected":
-        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
-      case "cmd_synchronizeOffline":
-        return CheckOnline() && IsAccountOfflineEnabled();       
-      case "cmd_settingsOffline":
-        return (MailAreaHasFocus() && IsAccountOfflineEnabled());
-      default:
-        return false;
-    }
-    return false;
-  },
-
-	doCommand: function(command)
-	{
-    // if the user invoked a key short cut then it is possible that we got here for a command which is
-    // really disabled. kick out if the command should be disabled.
-    if (!this.isCommandEnabled(command)) return;
-   
-		switch ( command )
-		{
-			case "cmd_close":
-				CloseMailWindow();
-				break;
-      case "button_getNewMessages":
-			case "cmd_getNewMessages":
-				MsgGetMessage();
-				break;
-      case "cmd_getMsgsForAuthAccounts":
-        MsgGetMessagesForAllAuthenticatedAccounts();
-        break;
-			case "cmd_getNextNMessages":
-				MsgGetNextNMessages();
-				break;
-			case "cmd_reply":
-				MsgReplyMessage(null);
-				break;
-			case "cmd_replySender":
-				MsgReplySender(null);
-				break;
-			case "cmd_replyGroup":
-				MsgReplyGroup(null);
-				break;
-			case "cmd_replyall":
-				MsgReplyToAllMessage(null);
-				break;
-			case "cmd_forward":
-				MsgForwardMessage(null);
-				break;
-			case "cmd_forwardInline":
-				MsgForwardAsInline(null);
-				break;
-			case "cmd_forwardAttachment":
-				MsgForwardAsAttachment(null);
-				break;
-			case "cmd_editAsNew":
-				MsgEditMessageAsNew();
-				break;
-      case "cmd_createFilterFromMenu":
-        MsgCreateFilter();
-        break;        
-      case "cmd_createFilterFromPopup":
-        break;// This does nothing because the createfilter is invoked from the popupnode oncommand.
-			case "button_delete":
-			case "cmd_delete":
-        SetNextMessageAfterDelete();
-        gDBView.doCommand(nsMsgViewCommandType.deleteMsg);
-				break;
-			case "cmd_shiftDelete":
-        SetNextMessageAfterDelete();
-        gDBView.doCommand(nsMsgViewCommandType.deleteNoTrash);
-				break;
-      case "cmd_killThread":
-        /* kill thread kills the thread and then does a next unread */
-      	GoNextMessage(nsMsgNavigationType.toggleThreadKilled, true);
-        break;
-      case "cmd_watchThread":
-        gDBView.doCommand(nsMsgViewCommandType.toggleThreadWatched);
-        break;
-      case "button_next":
-			case "cmd_nextUnreadMsg":
-				MsgNextUnreadMessage();
-				break;
-			case "cmd_nextUnreadThread":
-				MsgNextUnreadThread();
-				break;
-			case "cmd_nextMsg":
-				MsgNextMessage();
-				break;
-			case "cmd_nextFlaggedMsg":
-				MsgNextFlaggedMessage();
-				break;
-			case "cmd_previousMsg":
-				MsgPreviousMessage();
-				break;
-			case "cmd_previousUnreadMsg":
-				MsgPreviousUnreadMessage();
-				break;
-			case "cmd_previousFlaggedMsg":
-				MsgPreviousFlaggedMessage();
-				break;
-			case "cmd_sortByThread":
-				MsgSortByThread();
-				break;
-			case "cmd_viewAllMsgs":
-      case "cmd_viewThreadsWithUnread":
-      case "cmd_viewWatchedThreadsWithUnread":
-			case "cmd_viewUnreadMsgs":
-      case "cmd_viewIgnoredThreads":
-				SwitchView(command);
-				break;
-			case "cmd_undo":
-				messenger.Undo(msgWindow);
-				break;
-			case "cmd_redo":
-				messenger.Redo(msgWindow);
-				break;
-			case "cmd_expandAllThreads":
-                gDBView.doCommand(nsMsgViewCommandType.expandAll);
-				break;
-			case "cmd_collapseAllThreads":
-                gDBView.doCommand(nsMsgViewCommandType.collapseAll);
-				break;
-			case "cmd_renameFolder":
-				MsgRenameFolder();
-				return;
-			case "cmd_sendUnsentMsgs":
-				MsgSendUnsentMsgs();
-				return;
-			case "cmd_openMessage":
-                MsgOpenSelectedMessages();
-				return;
-			case "cmd_printSetup":
-			  goPageSetup();
-			  return;
-			case "cmd_print":
-				PrintEnginePrint();
-				return;
-			case "cmd_saveAsFile":
-				MsgSaveAsFile();
-				return;
-			case "cmd_saveAsTemplate":
-				MsgSaveAsTemplate();
-				return;
-			case "cmd_viewPageSource":
-				MsgViewPageSource();
-				return;
-			case "cmd_setFolderCharset":
-				MsgSetFolderCharset();
-				return;
-			case "cmd_reload":
-				MsgReload();
-				return;
-			case "cmd_find":
-				MsgFind();
-				return;
-			case "cmd_findAgain":
-				MsgFindAgain();
-				return;
-            case "cmd_properties":
-                MsgFolderProperties();
-                return;
-      case "cmd_search":
-        MsgSearchMessages();
-      case "button_mark":
-			case "cmd_markAsRead":
-				MsgMarkMsgAsRead(null);
-				return;
-			case "cmd_markThreadAsRead":
-				MsgMarkThreadAsRead();
-				return;
-			case "cmd_markAllRead":
-                gDBView.doCommand(nsMsgViewCommandType.markAllRead);
-				return;
-      case "cmd_stop":
-        MsgStop();
-        return;
-			case "cmd_markAsFlagged":
-				MsgMarkAsFlagged(null);
-				return;
-      case "cmd_label0":
-        gDBView.doCommand(nsMsgViewCommandType.label0);
- 				return;
-      case "cmd_label1":
-        gDBView.doCommand(nsMsgViewCommandType.label1);
-        return; 
-      case "cmd_label2":
-        gDBView.doCommand(nsMsgViewCommandType.label2);
-        return; 
-      case "cmd_label3":
-        gDBView.doCommand(nsMsgViewCommandType.label3);
-        return; 
-      case "cmd_label4":
-        gDBView.doCommand(nsMsgViewCommandType.label4);
-        return; 
-      case "cmd_label5":
-        gDBView.doCommand(nsMsgViewCommandType.label5);
-        return; 
-			case "cmd_emptyTrash":
-				MsgEmptyTrash();
-				return;
-			case "cmd_compactFolder":
-				MsgCompactFolder(true);
-				return;
-            case "cmd_downloadFlagged":
-                MsgDownloadFlagged();
-                break;
-            case "cmd_downloadSelected":
-                MsgDownloadSelected();
-                break;
-            case "cmd_synchronizeOffline":
-                MsgSynchronizeOffline();
-                break;
-            case "cmd_settingsOffline":
-                MsgSettingsOffline();
-                break;
-            case "cmd_selectThread":
-                gDBView.doCommand(nsMsgViewCommandType.selectThread);
-                break;
-		}
-	},
-	
-	onEvent: function(event)
-	{
-		// on blur events set the menu item texts back to the normal values
-		if ( event == 'blur' )
-        {
-			goSetMenuValue('cmd_delete', 'valueDefault');
-            goSetMenuValue('cmd_undo', 'valueDefault');
-            goSetMenuValue('cmd_redo', 'valueDefault');
-        }
-	}
-};
-
-function MailAreaHasFocus()
-{
-  //Input and TextAreas should get access to the keys that cause these commands.
-  //Currently if we don't do this then we will steal the key away and you can't type them
-  //in these controls. This is a bug that should be fixed and when it is we can get rid of
-  //this.
-  var focusedElement = top.document.commandDispatcher.focusedElement;
-  if (focusedElement) 
-  {
-    var name = focusedElement.localName.toLowerCase();
-    return ((name != "input") && (name != "textarea"));
-  }
-
-  // check if the message pane has focus 
-  // see bug #129988
-  if (GetMessagePane() == WhichPaneHasFocus())
-    return true;
-
-  // if there is no focusedElement,
-  // and the message pane doesn't have focus
-  // then a mail area can't be focused
-  // see bug #128101
-  return false;
-}
-
-function GetNumSelectedMessages()
-{
-    try {
-        return gDBView.numSelected;
-    }
-    catch (ex) {
-        return 0;
-    }
-}
-
-var gLastFocusedElement=null;
-
-function FocusRingUpdate_Mail()
-{
-  // WhichPaneHasFocus() uses on top.document.commandDispatcher.focusedElement
-  // to determine which pane has focus
-  // if the focusedElement is null, we're here on a blur.
-  // nsFocusController::Blur() calls nsFocusController::SetFocusedElement(null), 
-  // which will update any commands listening for "focus".
-  // we really only care about nsFocusController::Focus() happens, 
-  // which calls nsFocusController::SetFocusedElement(element)
-  var currentFocusedElement = WhichPaneHasFocus();
-  if (!currentFocusedElement)
-    return;
-      
-	if (currentFocusedElement != gLastFocusedElement) {
-    currentFocusedElement.setAttribute("focusring", "true");
-    
-    if (gLastFocusedElement)
-      gLastFocusedElement.removeAttribute("focusring");
-
-    gLastFocusedElement = currentFocusedElement;
-
-    // since we just changed the pane with focus we need to update the toolbar to reflect this
-    UpdateMailToolbar("focus");
-  }
-}
-
-function WhichPaneHasFocus()
-{
-  var threadTree = GetThreadTree();
-  var searchInput = GetSearchInput();
-  var folderTree = GetFolderTree();
-  var messagePane = GetMessagePane();
-    
-  if (top.document.commandDispatcher.focusedWindow == GetMessagePaneFrame())
-    return messagePane;
-
-	var currentNode = top.document.commandDispatcher.focusedElement;	
-	while (currentNode) {
-    if (currentNode === threadTree ||
-        currentNode === searchInput || 
-        currentNode === folderTree ||
-        currentNode === messagePane)
-      return currentNode;
-    			
-		currentNode = currentNode.parentNode;
-  }
-	
-	return null;
-}
-
-function SetupCommandUpdateHandlers()
-{
-	var widget;
-	
-	// folder pane
-	widget = GetFolderTree();
-	if ( widget )
-		widget.controllers.appendController(FolderPaneController);
-	
-	// thread pane
-	widget = GetThreadTree();
-	if ( widget )
-        widget.controllers.appendController(ThreadPaneController);
-		
-	top.controllers.insertControllerAt(0, DefaultController);
-}
-
-function IsSendUnsentMsgsEnabled(folderResource)
-{
-  var identity;
-
-  if (messenger.sendingUnsentMsgs) // if we're currently sending unsent msgs, disable this cmd.
-    return false;
-  try {
-    if (folderResource) {
-      // if folderResource is non-null, it is
-      // resource for the "Unsent Messages" folder
-      // we're here because we've done a right click on the "Unsent Messages"
-      // folder (context menu)
-      var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-      return (msgFolder.getTotalMessages(false) > 0);
-    }
-    else {
-      var folders = GetSelectedMsgFolders();
-      if (folders.length > 0) {
-        identity = getIdentityForServer(folders[0].server);
-      }
-    }
-  }
-  catch (ex) {
-    dump("ex = " + ex + "\n");
-    identity = null;
-  }
-
-  try {
-    if (!identity) {
-      var am = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-      identity = am.defaultAccount.defaultIdentity;
-    }
-
-    var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"].getService(Components.interfaces.nsIMsgSendLater);
-    var unsentMsgsFolder = msgSendlater.getUnsentMessagesFolder(identity);
-    return (unsentMsgsFolder.getTotalMessages(false) > 0);
-  }
-  catch (ex) {
-    dump("ex = " + ex + "\n");
-  }
-  return false;
-}
-
-function IsRenameFolderEnabled()
-{
-    var folderTree = GetFolderTree();
-    var selection = folderTree.treeBoxObject.selection;
-    if (selection.count == 1)
-    {
-        var startIndex = {};
-        var endIndex = {};
-        selection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderTree, startIndex.value);
-        var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
-        return canRename && isCommandEnabled("cmd_renameFolder");
-    }
-    else
-        return false;
-}
-
-function IsCanSearchMessagesEnabled()
-{
-  var folderURI = GetSelectedFolderURI();
-  var server = GetServer(folderURI);
-  return server.canSearchMessages;
-}
-function IsFolderCharsetEnabled()
-{
-  return IsFolderSelected();
-}
-
-function IsPropertiesEnabled(command)
-{
-   try 
-   {
-      var serverType;
-      var folderTree = GetFolderTree();
-      var folderResource = GetSelectedFolderResource();
-      
-      serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
-   
-      switch (serverType)
-      {
-        case "none":
-        case "imap":
-        case "pop3":
-          goSetMenuValue(command, 'valueFolder');
-          break;
-        case "nntp":
-          goSetMenuValue(command, 'valueNewsgroup');
-          break
-        default:
-          goSetMenuValue(command, 'valueGeneric');
-      }
-   }
-   catch (ex) 
-   {
-      //properties menu failure
-   }
-  return IsFolderSelected();
-  
-}
-
-function IsViewNavigationItemEnabled()
-{
-	return IsFolderSelected();
-}
-
-function IsFolderSelected()
-{
-    var folderTree = GetFolderTree();
-    var selection = folderTree.treeBoxObject.selection;
-    if (selection.count == 1)
-    {
-        var startIndex = {};
-        var endIndex = {};
-        selection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderTree, startIndex.value);
-        return GetFolderAttribute(folderTree, folderResource, "IsServer") != "true";
-    }
-    else
-        return false;
-}
-
-function IsMessageDisplayedInMessagePane()
-{
-	return (!IsThreadAndMessagePaneSplitterCollapsed() && (GetNumSelectedMessages() > 0));
-}
-
-function MsgDeleteFolder()
-{
-    var folderTree = GetFolderTree();
-    var selectedFolders = GetSelectedMsgFolders();
-    for (var i = 0; i < selectedFolders.length; i++)
-    {
-        var selectedFolder = selectedFolders[i];
-        var folderResource = selectedFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-        var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
-        if (specialFolder != "Inbox" && specialFolder != "Trash")
-        {
-            var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + selectedFolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-
-            // do not allow deletion of special folders on imap accounts
-            if ((specialFolder == "Sent" || 
-                specialFolder == "Drafts" || 
-                specialFolder == "Templates") &&
-                !protocolInfo.specialFoldersDeletionAllowed)
-            {
-                var messengerBundle = document.getElementById("bundle_messenger");
-                var errorMessage = messengerBundle.getFormattedString("specialFolderDeletionErr",
-                                                    [specialFolder]);
-                var specialFolderDeletionErrTitle = gMessengerBundle.getString("specialFolderDeletionErrTitle");
-                var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-                promptService.alert(window, specialFolderDeletionErrTitle, errorMessage);
-                continue;
-            }   
-            else if (isNewsURI(folderResource.Value))
-            {
-                var unsubscribe = ConfirmUnsubscribe(selectedFolder);
-                if (unsubscribe)
-                    UnSubscribe(selectedFolder);
-            }
-            else
-            {
-                var parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
-                messenger.DeleteFolders(GetFolderDatasource(), parentResource, folderResource);
-            }
-        }
-    }
-}
-
-function SetFocusThreadPaneIfNotOnMessagePane()
-{
-  var focusedElement = WhichPaneHasFocus();
-
-  if((focusedElement != GetThreadTree()) &&
-     (focusedElement != GetMessagePane()))
-     SetFocusThreadPane();
-}
-
-// 3pane related commands.  Need to go in own file.  Putting here for the moment.
-function MsgNextMessage()
-{
-	GoNextMessage(nsMsgNavigationType.nextMessage, false );
-}
-
-function MsgNextUnreadMessage()
-{
-	GoNextMessage(nsMsgNavigationType.nextUnreadMessage, true);
-}
-function MsgNextFlaggedMessage()
-{
-	GoNextMessage(nsMsgNavigationType.nextFlagged, true);
-}
-
-function MsgNextUnreadThread()
-{
-	//First mark the current thread as read.  Then go to the next one.
-	MsgMarkThreadAsRead();
-	GoNextMessage(nsMsgNavigationType.nextUnreadThread, true);
-}
-
-function MsgPreviousMessage()
-{
-    GoNextMessage(nsMsgNavigationType.previousMessage, false);
-}
-
-function MsgPreviousUnreadMessage()
-{
-	GoNextMessage(nsMsgNavigationType.previousUnreadMessage, true);
-}
-
-function MsgPreviousFlaggedMessage()
-{
-	GoNextMessage(nsMsgNavigationType.previousFlagged, true);
-}
-
-function GetFolderNameFromUri(uri, tree)
-{
-	var folderResource = RDF.GetResource(uri);
-
-	var db = tree.database;
-
-	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
-
-	var nameResult;
-	try {
-		nameResult = db.GetTarget(folderResource, nameProperty , true);
-	}
-	catch (ex) {
-		return "";
-	}
-
-	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	return nameResult.Value;
-}
-
-/* XXX hiding the search bar while it is focus kills the keyboard so we focus the thread pane */
-function SearchBarToggled()
-{
-  var searchBox = document.getElementById('searchBox');
-  if (searchBox)
-  {
-    var attribValue = searchBox.getAttribute("hidden") ;
-    if (attribValue == "true")
-    {
-      /*come out of quick search view */
-      if (gDBView && gDBView.isSearchView)
-        onClearSearch();
-    }
-    else
-    {
-      /*we have to initialize searchInput because we cannot do it when searchBox is hidden */
-      var searchInput = GetSearchInput();
-      searchInput.value="";
-    }
-  }
-
-  for (var currentNode = top.document.commandDispatcher.focusedElement; currentNode; currentNode = currentNode.parentNode) {
-    if (currentNode.getAttribute("hidden") == "true") {
-      SetFocusThreadPane();
-      return;
-    }
-  }
-}
-
-function SwitchPaneFocus(event)
-{
-  var focusedElement = WhichPaneHasFocus();
-  var folderTree = GetFolderTree();
-  var threadTree = GetThreadTree();
-  var searchInput = GetSearchInput();
-  var messagePane = GetMessagePane();
-
-  if (event && event.shiftKey)
-  {
-    if (focusedElement == threadTree && searchInput.parentNode.getAttribute('hidden') != 'true')
-      searchInput.focus();
-    else if ((focusedElement == threadTree || focusedElement == searchInput) && !IsFolderPaneCollapsed())
-      folderTree.focus();
-    else if (focusedElement != messagePane && !IsThreadAndMessagePaneSplitterCollapsed())
-      SetFocusMessagePane();
-    else 
-      threadTree.focus();
-  }
-  else
-  {
-    if (focusedElement == searchInput)
-      threadTree.focus();
-    else if (focusedElement == threadTree && !IsThreadAndMessagePaneSplitterCollapsed())
-      SetFocusMessagePane();
-    else if (focusedElement != folderTree && !IsFolderPaneCollapsed())
-      folderTree.focus();
-    else if (searchInput.parentNode.getAttribute('hidden') != 'true')
-      searchInput.focus();
-    else
-      threadTree.focus();
-  }
-}
-
-function SetFocusFolderPane()
-{
-    var folderTree = GetFolderTree();
-    folderTree.focus();
-}
-
-function SetFocusThreadPane()
-{
-    var threadTree = GetThreadTree();
-    threadTree.focus();
-}
-
-function SetFocusMessagePane()
-{
-    var messagePaneFrame = GetMessagePaneFrame();
-    messagePaneFrame.focus();
-}
-
-function is_collapsed(element) 
-{
-  return (element.getAttribute('state') == 'collapsed');
-}
-
-function isCommandEnabled(cmd)
-{
-  var selectedFolders = GetSelectedMsgFolders();
-  var numFolders = selectedFolders.length;
-  if(numFolders !=1)
-    return false;
-
-  var folder = selectedFolders[0];
-  if (!folder)
-    return false;
-  else
-    return folder.isCommandEnabled(cmd);
-
-}
-
-function IsFakeAccount() {
-  try {
-    var folderResource = GetSelectedFolderResource();
-    return (folderResource.Value == "http://home.netscape.com/NC-rdf#PageTitleFakeAccount");
-  }
-  catch(ex) {
-  }
-  return false;
-}
-
-function SendCommandToThreadPane(command)
-{
-  ThreadPaneController.doCommand(command);
-
-  // if we are sending the command so the thread pane
-  // we should focus the thread pane
-  SetFocusThreadPane();
-}
-
-function debugDump(msg)
-{
-  // uncomment for noise
-  //dump(msg+"\n");
-}
-
-function CanDropOnFolderTree(index)
-{
-    if (!gDragService)
-      gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService)
-    var dragSession = null;
-    var dragFolder = false;
-
-    dragSession = gDragService.getCurrentSession();
-    if (! dragSession)
-        return false;
-
-    var flavorSupported = dragSession.isDataFlavorSupported("text/x-moz-message") || dragSession.isDataFlavorSupported("text/x-moz-folder");
-
-    var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    if (! trans)
-        return false;
-
-    trans.addDataFlavor("text/x-moz-message");
-    trans.addDataFlavor("text/x-moz-folder");
- 
-    var folderTree = GetFolderTree();
-    var targetResource = GetFolderResource(folderTree, index);
-    var targetUri = targetResource.Value;
-    var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var targetServer = targetFolder.server;
-    var sourceServer;
-    var sourceResource;
-   
-    for (var i = 0; i < dragSession.numDropItems; i++)
-    {
-        dragSession.getData (trans, i);
-        var dataObj = new Object();
-        var dataFlavor = new Object();
-        var len = new Object();
-        try
-        {
-            trans.getAnyTransferData (dataFlavor, dataObj, len );
-        }
-        catch (ex)
-        {
-            continue;   //no data so continue;
-        }
-        if (dataObj)
-            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-        if (! dataObj)
-            continue;
-
-        // pull the URL out of the data object
-        var sourceUri = dataObj.data.substring(0, len.value);
-        if (! sourceUri)
-            continue;
-        if (dataFlavor.value == "text/x-moz-message")
-        {
-            sourceResource = null;
-            var isServer = GetFolderAttribute(folderTree, targetResource, "IsServer");
-            if (isServer == "true")
-            {
-                debugDump("***isServer == true\n");
-                return false;
-            }
-            // canFileMessages checks no select, and acl, for imap.
-            var canFileMessages = GetFolderAttribute(folderTree, targetResource, "CanFileMessages");
-            if (canFileMessages != "true")
-            {
-                debugDump("***canFileMessages == false\n");
-                return false;
-            }
-            var hdr = messenger.messageServiceFromURI(sourceUri).messageURIToMsgHdr(sourceUri);
-            if (hdr.folder == targetFolder)
-                return false;
-            break;
-        }
-
-        // we should only get here if we are dragging and dropping folders
-        dragFolder = true;
-        sourceResource = RDF.GetResource(sourceUri);
-        var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        sourceServer = sourceFolder.server;
-
-        if (targetUri == sourceUri)	
-            return false;
-
-        //don't allow drop on different imap servers.
-        if (sourceServer != targetServer && targetServer.type == "imap")
-            return false;
-
-        //don't allow immediate child to be dropped to it's parent
-        if (targetFolder.URI == sourceFolder.parent.URI)
-        {
-            debugDump(targetFolder.URI + "\n");
-            debugDump(sourceFolder.parent.URI + "\n");     
-            return false;
-        }
-
-        var isAncestor = sourceFolder.isAncestorOf(targetFolder);
-        // don't allow parent to be dropped on its ancestors
-        if (isAncestor)
-            return false;
-    }
-
-    if (dragFolder)
-    {
-        //first check these conditions then proceed further
-        debugDump("***isFolderFlavor == true \n");
-
-        // no copy for folder drag
-        if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
-            return false;
-
-        var canCreateSubfolders = GetFolderAttribute(folderTree, targetResource, "CanCreateSubfolders");
-        // if cannot create subfolders then a folder cannot be dropped here     
-        if (canCreateSubfolders == "false")
-        {
-            debugDump("***canCreateSubfolders == false \n");
-            return false;
-        }
-        var serverType = GetFolderAttribute(folderTree, targetResource, "ServerType");
-
-        // if we've got a folder that can't be renamed
-        // allow us to drop it if we plan on dropping it on "Local Folders"
-        // (but not within the same server, to prevent renaming folders on "Local Folders" that
-        // should not be renamed)
-        var srcCanRename = GetFolderAttribute(folderTree, sourceResource, "CanRename");
-        if (srcCanRename == "false") {
-            if (sourceServer == targetServer)
-                return false;
-            if (serverType != "none")
-                return false;
-        }
-    }
-
-    //message or folder
-    if (flavorSupported)
-    {
-        dragSession.canDrop = true;
-        return true;
-    }
-	
-    return false;
-}
-
-function CanDropBeforeAfterFolderTree(index, before)
-{
-    return false;
-}
-
-function DropOnFolderTree(row, orientation)
-{
-    if (orientation != Components.interfaces.nsITreeView.inDropOn)
-        return false;
-
-    var folderTree = GetFolderTree();
-    var targetResource = GetFolderResource(folderTree, row);
-
-    var targetUri = targetResource.Value;
-    debugDump("***targetUri = " + targetUri + "\n");
-
-    if (!gDragService)
-      gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
-    var dragSession = gDragService.getCurrentSession();
-    if (! dragSession )
-        return false;
-
-    var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    trans.addDataFlavor("text/x-moz-message");
-    trans.addDataFlavor("text/x-moz-folder");
-
-    var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-
-    var dropMessage;
-    var sourceUri;
-    var sourceResource;
-    var sourceFolder;
-    var sourceServer;
-	
-    for (var i = 0; i < dragSession.numDropItems; i++)
-    {
-        dragSession.getData (trans, i);
-        var dataObj = new Object();
-        var flavor = new Object();
-        var len = new Object();
-        trans.getAnyTransferData(flavor, dataObj, len);
-        if (dataObj)
-            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-        if (! dataObj)
-            continue;
-
-        // pull the URL out of the data object
-        sourceUri = dataObj.data.substring(0, len.value);
-        if (! sourceUri)
-            continue;
-
-        debugDump("    Node #" + i + ": drop " + sourceUri + " to " + targetUri + "\n");
-        
-        // only do this for the first object, either they are all messages or they are all folders
-        if (i == 0) 
-        {
-          if (flavor.value == "text/x-moz-folder") 
-          {
-            sourceResource = RDF.GetResource(sourceUri);
-            sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-            dropMessage = false;  // we are dropping a folder
-          }
-          else if (flavor.value == "text/x-moz-message")
-            dropMessage = true;
-        }
-        else {
-           if (!dropMessage)
-             dump("drag and drop of multiple folders isn't supported\n");
-        }
-
-        if (dropMessage) {
-            // from the message uri, get the appropriate messenger service
-            // and then from that service, get the msgDbHdr
-            list.AppendElement(messenger.messageServiceFromURI(sourceUri).messageURIToMsgHdr(sourceUri));
-        }
-        else {
-            // Prevent dropping of a node before, after, or on itself
-            if (sourceResource == targetResource)	
-                continue;
-
-            list.AppendElement(sourceResource);
-        }
-    }
-
-    if (list.Count() < 1)
-       return false;
-
-    var isSourceNews = false;
-    isSourceNews = isNewsURI(sourceUri);
-    
-    var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var targetServer = targetFolder.server;
-
-    if (dropMessage) {
-        var sourceMsgHdr = list.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgDBHdr);
-        sourceFolder = sourceMsgHdr.folder;
-        sourceServer = sourceFolder.server;
-
-        try {
-            if (isSourceNews) {
-                // news to pop or imap is always a copy
-                messenger.CopyMessages(sourceFolder, targetFolder, list, false);
-            }
-            else {
-                var dragAction = dragSession.dragAction;
-                if (dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
-                    messenger.CopyMessages(sourceFolder, targetFolder, list, false);
-                else if (dragAction == nsIDragService.DRAGDROP_ACTION_MOVE)
-                    messenger.CopyMessages(sourceFolder, targetFolder, list, true);
-            }
-        }
-        catch (ex) {
-            dump("failed to copy messages: " + ex + "\n");
-        }
-    }
-    else {
-        sourceServer = sourceFolder.server;
-        try 
-        {
-            messenger.CopyFolders(GetFolderDatasource(), targetResource, list, (sourceServer == targetServer));
-        }
-        catch(ex)
-        {
-            dump ("Exception : CopyFolders " + ex + "\n");
-        }
-    }
-    return true;
-}
-
-function BeginDragFolderTree(event)
-{
-    debugDump("BeginDragFolderTree\n");
-
-    if (event.originalTarget.localName != "treechildren")
-      return false;
-
-    var folderTree = GetFolderTree();
-    var row = {};
-    var col = {};
-    var elt = {};
-    folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
-    if (row.value == -1)
-      return false;
-
-    var folderResource = GetFolderResource(folderTree, row.value);
-
-    if (GetFolderAttribute(folderTree, folderResource, "IsServer") == "true")
-    {
-      debugDump("***IsServer == true\n");
-      return false;
-    }
-
-    // do not allow the drag when news is the source
-    if (GetFolderAttribute(folderTree, folderResource, "ServerType") == "nntp") 
-    {
-      debugDump("***ServerType == nntp\n");
-      return false;
-    }
-
-    var selectedFolders = GetSelectedFolders();
-    return BeginDragTree(event, folderTree, selectedFolders, "text/x-moz-folder");
-}
-
-function BeginDragThreadPane(event)
-{
-    debugDump("BeginDragThreadPane\n");
-
-    var threadTree = GetThreadTree();
-    var selectedMessages = GetSelectedMessages();
-
-    //A message can be dragged from one window and dropped on another window
-    //therefore setNextMessageAfterDelete() here 
-    //no major disadvantage even if it is a copy operation
-
-    SetNextMessageAfterDelete();
-    return BeginDragTree(event, threadTree, selectedMessages, "text/x-moz-message");
-}
-
-function BeginDragTree(event, tree, selArray, flavor)
-{
-    var dragStarted = false;
-
-    var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    if ( !transArray ) 
-      return false;
-
-    // let's build the drag region
-    var region = null;
-    try {
-      region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
-      region.init();
-      var obo = tree.treeBoxObject;
-      var bo = obo.treeBody.boxObject;
-      var obosel= obo.selection;
-
-      var rowX = bo.x;
-      var rowY = bo.y;
-      var rowHeight = obo.rowHeight;
-      var rowWidth = bo.width;
-
-      //add a rectangle for each visible selected row
-      for (var i = obo.getFirstVisibleRow(); i <= obo.getLastVisibleRow(); i ++)
-      {
-        if (obosel.isSelected(i))
-          region.unionRect(rowX, rowY, rowWidth, rowHeight);
-        rowY = rowY + rowHeight;
-      }
-      
-      //and finally, clip the result to be sure we don't spill over...
-      if(!region.isEmpty())
-        region.intersectRect(bo.x, bo.y, bo.width, bo.height);
-    } catch(ex) {
-      dump("Error while building selection region: " + ex + "\n");
-      region = null;
-    }
-    
-    var count = selArray.length;
-    debugDump("selArray.length = " + count + "\n");
-    for (i = 0; i < count; ++i ) {
-        var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-        if (!trans) 
-          return false;
-
-        var genTextData = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
-        if (!genTextData) 
-          return false;
-
-        trans.addDataFlavor(flavor);
-
-        // get id (url)
-        var id = selArray[i];
-        genTextData.data = id;
-        debugDump("    ID #" + i + " = " + id + "\n");
-
-        trans.setTransferData ( flavor, genTextData, id.length * 2 );  // doublebyte byte data
-
-        // put it into the transferable as an |nsISupports|
-        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-        transArray.AppendElement(genTrans);
-    }
-
-    if (!gDragService)
-      gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
-    gDragService.invokeDragSession ( event.target, transArray, region, nsIDragService.DRAGDROP_ACTION_COPY +
-    nsIDragService.DRAGDROP_ACTION_MOVE );
-
-    dragStarted = true;
-
-    return(!dragStarted);  // don't propagate the event if a drag has begun
-}
-
-
 

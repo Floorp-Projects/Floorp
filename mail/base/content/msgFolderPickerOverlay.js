@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -80,38 +81,41 @@ function MsgFolderPickerOnLoad(pickerID)
 
 function PickedMsgFolder(selection,pickerID)
 {
-	var selectedUri = selection.getAttribute('id');
-	SetFolderPicker(selectedUri,pickerID);
+  var selectedUri = selection.getAttribute('id');
+  SetFolderPicker(selectedUri,pickerID);
 }     
 
 function SetFolderPicker(uri,pickerID)
 {
-  if (!gMessengerBundle)
-    gMessengerBundle = document.getElementById("bundle_messenger");
+  var picker = document.getElementById(pickerID);
+  var msgfolder = GetMsgFolderFromUri(uri, true);
 
-	var picker = document.getElementById(pickerID);
-	var msgfolder = GetMsgFolderFromUri(uri, true);
+  if (!msgfolder) 
+    return;
 
-	if (!msgfolder) return;
+  var selectedValue = null;
+  var serverName;
 
-	var selectedValue = null;
-	var serverName;
+  if (msgfolder.isServer)
+    selectedValue = msgfolder.name;
+  else {
+    if (msgfolder.server)
+      serverName = msgfolder.server.prettyName;
+    else {
+     dump("Can't find server for " + uri + "\n");
+     serverName = "???";
+    }
+ 
+    if (pickerID == "runFiltersFolder") 
+      selectedValue = msgfolder.name;
+    else {
+      if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
+      selectedValue = gMessengerBundle.getFormattedString("verboseFolderFormat",
+        [msgfolder.name, serverName]);
+    }
+  }
 
-	if (msgfolder.isServer)
-		selectedValue = msgfolder.name;
-	else {
-		if (msgfolder.server)
-			serverName = msgfolder.server.prettyName;
-		else {
-			dump("Cant' find server for " + uri + "\n");
-			serverName = "???";
-		}
-
-		selectedValue = gMessengerBundle.getFormattedString("verboseFolderFormat",
-															[msgfolder.name,
-															serverName]);
-	}
-
-	picker.setAttribute("label",selectedValue);
-	picker.setAttribute("uri",uri);
+  picker.setAttribute("label",selectedValue);
+  picker.setAttribute("uri",uri);
 }

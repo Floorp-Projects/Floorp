@@ -110,14 +110,8 @@ function setTitleFromFolder(msgfolder, subject)
     else
       title = "";
 
-    if (msgfolder.isServer)
-    {
-      if (server.type == "none")
-        title += server.prettyName;
-      else
-       // <hostname>
-        title += server.hostName;
-    }
+    if (msgfolder.isServer) 
+      title += server.prettyName;
     else {
         var middle;
         var end;
@@ -329,12 +323,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
         oldFolder.setMsgDatabase(null);
   }
   // that should have initialized gDBView, now re-root the thread pane
-  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-  if (treeView)
-  {
-    var tree = GetThreadTree();
-    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
-  }
+  RerootThreadPane();
 
   SetUpToolbarButtons(uri);
 
@@ -489,6 +478,9 @@ function ConvertColumnIDToSortType(columnID)
     case "labelCol":
       sortKey = nsMsgViewSortType.byLabel;
       break;
+    case "scoreCol":
+      sortKey = nsMsgViewSortType.byScore;
+      break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
@@ -544,6 +536,9 @@ function ConvertSortTypeToColumnID(sortKey)
       // there is no orderReceivedCol, so return null
       columnID = null;
       break;
+    case nsMsgViewSortType.byScore:
+      columnID = "scoreCol";
+      break;
     default:
       dump("unsupported sort key: " + sortKey + "\n");
       columnID = null;
@@ -574,6 +569,9 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
   viewType = viewType - 0;
 
   switch (viewType) {
+      case nsMsgViewType.eShowQuickSearchResults:
+          dbviewContractId += "quicksearch";
+          break;
       case nsMsgViewType.eShowThreadsWithUnread:
           dbviewContractId += "threadswithunread";
           break;
@@ -658,22 +656,38 @@ function GetSelectedFolderResource()
     return GetFolderResource(folderTree, startIndex.value);
 }
 
+function NotifyChangedMessagePaneVisibility(now_hidden)
+{
+  var event = document.createEvent('Events');
+  if (now_hidden) {
+    event.initEvent('messagepane-hide', false, true);
+  }
+  else {
+    event.initEvent('messagepane-unhide', false, true);
+  }
+  document.getElementById("messengerWindow").dispatchEvent(event);
+}
+
 function OnMouseUpThreadAndMessagePaneSplitter()
-  {
+{
+  // the collapsed state is the state after we released the mouse 
+  // so we take it as it is
+  var now_hidden = IsThreadAndMessagePaneSplitterCollapsed();
   if (gDBView) {
-    // the collapsed state is the state after we released the mouse 
-    // so we take it as it is
-    gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+    gDBView.suppressMsgDisplay = now_hidden;
   }
-  }
+  NotifyChangedMessagePaneVisibility(now_hidden);
+}
 
 function OnClickThreadAndMessagePaneSplitterGrippy()
-  {
+{
+  // the collapsed state is the state when we clicked on the grippy
+  // not when afterwards, so we need to reverse this value
+  var now_hidden = !IsThreadAndMessagePaneSplitterCollapsed();
   if (gDBView) {
-    // the collapsed state is the state when we clicked on the grippy
-    // not when afterwards, so we need to reverse this value
-    gDBView.suppressMsgDisplay = !IsThreadAndMessagePaneSplitterCollapsed();
-   }
+    gDBView.suppressMsgDisplay = now_hidden;
+  }
+  NotifyChangedMessagePaneVisibility(now_hidden);
 }
 
 function FolderPaneSelectionChange()
@@ -734,14 +748,23 @@ function FolderPaneSelectionChange()
                 dump("failed to get view & sort values.  ex = " + ex +"\n");
               }
             }
-            if (gDBView && gDBView.isSearchView)
+            if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
             {
-              gDBView.isSearchView = false;  //reset the search input on folder switch
-              var searchInput = document.getElementById("searchInput");
+              if (gPreQuickSearchView) //close cached view before quick search
+              {
+                gPreQuickSearchView.close();
+                gPreQuickSearchView = null;  
+              }
+              var searchInput = document.getElementById("searchInput");  //reset the search input on folder switch
               if (searchInput) 
                 searchInput.value = "";
             }
             ClearMessagePane();
+
+            if (gSearchEmailAddress || gDefaultSearchViewTerms)
+              viewType = nsMsgViewType.eShowQuickSearchResults;
+            else if (viewType == nsMsgViewType.eShowQuickSearchResults)
+              viewType = nsMsgViewType.eShowAllThreads;  //override viewType - we don't want to start w/ quick search
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }
     }

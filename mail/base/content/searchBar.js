@@ -24,7 +24,8 @@
  * 
  */
 
-var gSearchSession;
+var gSearchSession = null;
+var gPreQuickSearchView = null;
 var gSearchTimer = null;
 var gViewSearchListener;
 var gNumOfSearchHits = 0;
@@ -33,6 +34,8 @@ var gStatusBar = null;
 var gSearchInProgress = false;
 var gSearchInput = null;
 var gClearButton = null;
+var gDefaultSearchViewTerms = null;
+var gQSViewIsDirty = false;
 
 // nsIMsgSearchNotify object
 var gSearchNotificationListener =
@@ -94,11 +97,35 @@ function removeListeners()
   gSearchSession.unregisterListener(gViewSearchListener);
 }
 
+function removeGlobalListeners()
+{
+  removeListeners();
+  gSearchSession.removeFolderListener(folderListener);
+  gSearchSession.unregisterListener(gSearchNotificationListener); 
+}
+
+function initializeGlobalListeners()
+{
+  gSearchSession.addFolderListener(folderListener);
+  // Setup the javascript object as a listener on the search results
+  gSearchSession.registerListener(gSearchNotificationListener);
+    
+}
+
+function createQuickSearchView()
+{
+  if(gDBView.viewType != nsMsgViewType.eShowQuickSearchResults)  //otherwise we are already in quick search view
+  {
+    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);  //clear selection
+    treeView.selection.clearSelection();
+    gPreQuickSearchView = gDBView;
+    CreateDBView(gDBView.msgFolder, nsMsgViewType.eShowQuickSearchResults, nsMsgViewFlagsType.kNone, gDBView.sortType, gDBView.sortOrder);
+  }
+}
+
 function initializeSearchBar()
 {
-   if (!gDBView) 
-     return;
-
+   createQuickSearchView();
    if (!gSearchSession)
    {
      getDocumentElements();
@@ -115,56 +142,100 @@ function initializeSearchBar()
      }
      removeListeners();
    }
-
    addListeners();
 }
 
 function onEnterInSearchBar()
 {
-   initializeSearchBar();
-
    if (gSearchInput.value == "") 
    {
-     var searchView = gDBView.isSearchView;
-     if (searchView)
+     if (gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
      {
        statusFeedback.showStatusString("");
        disableQuickSearchClearButton();
-       gDBView.reloadFolderAfterQuickSearch(); // that should have initialized gDBView
+
+       if (gDefaultSearchViewTerms)
+       {
+         if (gQSViewIsDirty)
+         {
+           initializeSearchBar();
+           onSearch(gDefaultSearchViewTerms);
+         }
+       }
+       else
+        restorePreSearchView();
      }
+     
+     gQSViewIsDirty = false;
      return;
    }
-   else
-     gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
+
+   initializeSearchBar();
+
+   gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
 
    ClearThreadPaneSelection();
    ClearMessagePane();
 
    onSearch(null);
+   gQSViewIsDirty = false;
 }
 
-function initializeGlobalListeners()
+function restorePreSearchView()
 {
-  gSearchSession.addFolderListener(folderListener);
-  // Setup the javascript object as a listener on the search results
-  gSearchSession.registerListener(gSearchNotificationListener);
-    
+  var selectedHdr = null;
+  //save selection
+  try 
+  {
+    selectedHdr = gDBView.hdrForFirstSelectedMessage;
+  }
+  catch (ex)
+  {}
+
+  //we might have to sort the view coming out of quick search
+  var sortType = gDBView.sortType;
+  var sortOrder = gDBView.sortOrder;
+  var viewFlags = gDBView.viewFlags;
+  var folder = gDBView.msgFolder;
+
+  gDBView.close();
+  gDBView = null; 
+
+  if (gPreQuickSearchView)
+  {
+    gDBView = gPreQuickSearchView;
+
+    if (sortType != gDBView.sortType || sortOrder != gDBView.sortOrder)
+    {
+      gDBView.sort(sortType, sortOrder);
+      UpdateSortIndicators(sortType, sortOrder);
+    }
+
+    gPreQuickSearchView = null;    
+  }
+  else //create default view type
+    CreateDBView(folder, nsMsgViewType.eShowAllThreads, viewFlags, sortType, sortOrder);
+
+  RerootThreadPane();
+   
+  //now restore selection
+  if (selectedHdr)
+  {
+    gDBView.selectMsgByKey(selectedHdr.messageKey);
+    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+    var selectedIndex = treeView.selection.currentIndex;
+    if (selectedIndex >= 0)  //scroll
+      EnsureRowInThreadTreeIsVisible(selectedIndex);
+    else
+      ClearMessagePane();
+  }
+  else
+    ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
 }
 
-function removeGlobalListeners()
-{
-  removeListeners();
-  gSearchSession.removeFolderListener(folderListener);
-  gSearchSession.unregisterListener(gSearchNotificationListener); 
-}
 function onSearch(aSearchTerms)
 {
-    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-    if (treeView)
-    {
-      var tree = GetThreadTree();
-      tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
-    }
+    RerootThreadPane();
 
     if (aSearchTerms)
       createSearchTermsWithList(aSearchTerms);
@@ -197,17 +268,10 @@ function createSearchTermsWithList(aTermsArray)
   gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
 
   // add each item in termsArray to the search session
-  var isupports = null;
-  var searchTerm; 
 
   var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
   for (var i = 0; i < termsArray.Count(); i++)
-  {
-    isupports = termsArray.GetElementAt(i);
-    searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
-    gSearchSession.appendTerm(searchTerm);
-  }
-
+    gSearchSession.appendTerm(termsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm));
 }
 
 function createSearchTerms()
@@ -245,6 +309,21 @@ function createSearchTerms()
   term.op = nsMsgSearchOp.Contains; 
   term.booleanAnd = false;
   searchTermsArray.AppendElement(term);
+
+  // now append the default view criteria to the quick search so we don't lose any default
+  // view information
+  if (gDefaultSearchViewTerms)
+  {
+    var isupports = null;
+    var searchTerm; 
+    var termsArray = gDefaultSearchViewTerms.QueryInterface(Components.interfaces.nsISupportsArray);
+    for (var i = 0; i < termsArray.Count(); i++)
+    {
+      isupports = termsArray.GetElementAt(i);
+      searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
+      searchTermsArray.AppendElement(searchTerm);
+    }
+  }
   
   createSearchTermsWithList(searchTermsArray);
   
@@ -289,13 +368,22 @@ function onSearchInput(returnKeyHit)
 
 function onClearSearch()
 {
-  if (gSearchInput) 
-    gSearchInput.value ="";  //on input does not get fired for some reason
-  onSearchInput(true);
+  Search("");
 }
 
 function disableQuickSearchClearButton()
 {
  if (gClearButton)
    gClearButton.setAttribute("disabled", true); //going out of search disable clear button
+}
+
+function Search(str)
+{
+  GetSearchInput();
+
+  if (str != gSearchInput.value)
+    gQSViewIsDirty = true; 
+
+  gSearchInput.value = str;  //on input does not get fired for some reason
+  onSearchInput(true);
 }

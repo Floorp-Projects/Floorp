@@ -55,9 +55,9 @@ var FolderPaneController =
 			case "cmd_selectAll":
                                 // the folder pane (currently)
                                 // only handles single selection
-                                // so we forward select all to the thread pane
-                                // if there is no DBView
-                                // don't bother sending to the thread pane
+                                // so we forward cmd_selectAll to the thread pane
+                                // if there is no gDBView,
+                                // don't bother sending the command to the thread pane
                                 // this can happen when we've selected a server
                                 // and account central is displayed
                                 return (gDBView != null);
@@ -223,6 +223,7 @@ var DefaultController =
       case "cmd_createFilterFromMenu":
 			case "cmd_delete":
 			case "button_delete":
+      case "button_junk":
 			case "cmd_shiftDelete":
 			case "cmd_nextMsg":
       case "button_next":
@@ -259,6 +260,7 @@ var DefaultController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+			case "cmd_findPrev":
       case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
@@ -317,6 +319,10 @@ var DefaultController =
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
         return enabled.value;
+      case "button_junk":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.junk, enabled, checkStatus);
+        return enabled.value;
       case "cmd_killThread":
         return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
       case "cmd_watchThread":
@@ -330,6 +336,10 @@ var DefaultController =
       case "cmd_createFilterFromMenu":
         loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
+          return false;
+      case "cmd_saveAsFile":
+      case "cmd_saveAsTemplate":
+	      if ( GetNumSelectedMessages() > 1)
           return false;
       case "cmd_reply":
       case "button_reply":
@@ -345,8 +355,6 @@ var DefaultController =
       case "cmd_openMessage":
       case "button_print":
       case "cmd_print":
-      case "cmd_saveAsFile":
-      case "cmd_saveAsTemplate":
       case "cmd_viewPageSource":
       case "cmd_reload":
 	      if ( GetNumSelectedMessages() > 0)
@@ -386,6 +394,7 @@ var DefaultController =
         return (MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
+      case "cmd_findPrev":
         return IsMessageDisplayedInMessagePane();
         break;
       case "cmd_search":
@@ -395,8 +404,9 @@ var DefaultController =
         if (GetNumSelectedMessages() <= 0) return false;
       case "cmd_expandAllThreads":
       case "cmd_collapseAllThreads":
-        if (!gDBView) return false;
-          return (gDBView.sortType == nsMsgViewSortType.byThread);
+        if (!gDBView || !gDBView.supportsThreading) 
+          return false;
+        return (gDBView.sortType == nsMsgViewSortType.byThread);
         break;
       case "cmd_nextFlaggedMsg":
       case "cmd_previousFlaggedMsg":
@@ -590,7 +600,10 @@ var DefaultController =
 				MsgFind();
 				return;
 			case "cmd_findAgain":
-				MsgFindAgain();
+				MsgFindAgain(false);
+				return;
+			case "cmd_findPrev":
+				MsgFindAgain(true);
 				return;
             case "cmd_properties":
                 MsgFolderProperties();
@@ -607,6 +620,9 @@ var DefaultController =
 			case "cmd_markAllRead":
                 gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
+      case "button_junk":
+        MsgJunk();
+        return;
       case "cmd_stop":
         MsgStop();
         return;
@@ -1016,7 +1032,7 @@ function SearchBarToggled()
     if (attribValue == "true")
     {
       /*come out of quick search view */
-      if (gDBView && gDBView.isSearchView)
+      if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
         onClearSearch();
     }
     else
