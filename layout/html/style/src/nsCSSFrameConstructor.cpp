@@ -5215,7 +5215,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       return rv;
 
     // Load the bindings.
-    xblService->LoadBindings(aParent, ui->mBehavior);
+    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE);
   
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsISupportsArray> anonymousItems;
@@ -5433,7 +5433,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
       return rv;
 
     // Load the bindings.
-    xblService->LoadBindings(aParent, ui->mBehavior);
+    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE);
   
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsIContent> childElement;
@@ -7405,7 +7405,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
         return rv;
 
       // Load the bindings.
-      xblService->LoadBindings(aContent, ui->mBehavior);
+      xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE);
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;

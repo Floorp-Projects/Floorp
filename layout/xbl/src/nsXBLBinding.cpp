@@ -147,6 +147,9 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetBindingElement(nsIContent** aResult);
   NS_IMETHOD SetBindingElement(nsIContent* aElement);
 
+  NS_IMETHOD GetBoundElement(nsIContent** aResult);
+  NS_IMETHOD SetBoundElement(nsIContent* aElement);
+
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
@@ -161,6 +164,12 @@ class nsXBLBinding: public nsIXBLBinding
   
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult);
   NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints);
+
+  NS_IMETHOD IsStyleBinding(PRBool* aResult) { *aResult = mIsStyleBinding; return NS_OK; };
+  NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; return NS_OK; };
+
+  NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult);
+  NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult);
 
 public:
   nsXBLBinding();
@@ -198,6 +207,7 @@ public:
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kURIAtom;
+  static nsIAtom* kAttachToAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
@@ -238,6 +248,8 @@ protected:
      
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
+  PRBool mIsStyleBinding;
+
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
   nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.
 };
@@ -268,6 +280,7 @@ nsIAtom* nsXBLBinding::kSetterAtom = nsnull;
 nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 nsIAtom* nsXBLBinding::kURIAtom = nsnull;
+nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -324,7 +337,8 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
 : mAttributeTable(nsnull),
-  mInsertionPointTable(nsnull)
+  mInsertionPointTable(nsnull),
+  mIsStyleBinding(PR_TRUE)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -352,6 +366,7 @@ nsXBLBinding::nsXBLBinding(void)
     kNameAtom = NS_NewAtom("name");
     kReadOnlyAtom = NS_NewAtom("readonly");
     kURIAtom = NS_NewAtom("uri");
+    kAttachToAtom = NS_NewAtom("attachto");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -392,6 +407,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kReadOnlyAtom);
     NS_RELEASE(kURIAtom);
+    NS_RELEASE(kAttachToAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -474,11 +490,25 @@ nsXBLBinding::SetBindingElement(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
+nsXBLBinding::GetBoundElement(nsIContent** aResult)
+{
+  *aResult = mBoundElement;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::SetBoundElement(nsIContent* aElement)
+{
+  mBoundElement = aElement;
+  if (mNextBinding)
+    mNextBinding->SetBoundElement(aElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
-  // Set our bound element.
-  mBoundElement = aBoundElement;
-
   // Fetch the content element for this binding.
   nsCOMPtr<nsIContent> content;
   GetImmediateChild(kContentAtom, getter_AddRefs(content));
@@ -566,9 +596,11 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
       BuildInsertionTable();
   }
   
+  /* XXX Handle selective decision to build anonymous content.
   if (mNextBinding) {
     return mNextBinding->GenerateAnonymousContent(aBoundElement);
   }
+  */
 
   return NS_OK;
 }
@@ -607,7 +639,21 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
           PRBool xul = IsXULHandler(type);
 
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-            
+          nsAutoString attachType;
+          child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
+          if (attachType.EqualsWithConversion("document") || 
+              attachType.EqualsWithConversion("window"))
+          {
+            nsCOMPtr<nsIDocument> boundDoc;
+            mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+            if (attachType.EqualsWithConversion("window")) {
+              nsCOMPtr<nsIScriptGlobalObject> global;
+              boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
+              receiver = do_QueryInterface(global);
+            }
+            else receiver = do_QueryInterface(boundDoc);
+          }
+
           if (mouse || key || focus || xul) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
@@ -634,6 +680,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
           }
           else {
             // Call AddScriptEventListener for other IID types
+            // XXX Want this to all go away!
             nsAutoString value;
             child->GetAttribute(kNameSpaceID_None, kValueAtom, value);
             if (value.IsEmpty())
@@ -1041,7 +1088,9 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     if (mNextBinding)
       mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
 
-     if (aOldDocument) {
+    // Only style bindings get their prototypes unhooked.
+    // XXX Stay in sync! What if a layered binding has an <interface>?!
+    if (!aNewDocument && !mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
       nsCOMPtr<nsIContent> interfaceElement;
       GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
@@ -1069,11 +1118,11 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       }
     }
 
-    // Kill the anonymous content.
+    // Update the anonymous content.
     nsCOMPtr<nsIContent> anonymous;
     GetAnonymousContent(getter_AddRefs(anonymous));
     if (anonymous)
-      anonymous->SetDocument(nsnull, PR_TRUE, AllowScripts());
+      anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts());
   }
 
   return NS_OK;
@@ -1582,6 +1631,34 @@ nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleIns
   }
   return NS_OK;  
 }
+
+NS_IMETHODIMP
+nsXBLBinding::GetRootBinding(nsIXBLBinding** aResult)
+{
+  if (mNextBinding)
+    return mNextBinding->GetRootBinding(aResult);
+
+  *aResult = this;
+  NS_ADDREF(this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetFirstStyleBinding(nsIXBLBinding** aResult)
+{
+  if (mIsStyleBinding) {
+    *aResult = this;
+    NS_ADDREF(this);
+    return NS_OK;
+  }
+  else if (mNextBinding)
+    return mNextBinding->GetFirstStyleBinding(aResult);
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

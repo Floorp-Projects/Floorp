@@ -57,6 +57,9 @@ public:
   NS_IMETHOD GetBindingElement(nsIContent** aResult) = 0;
   NS_IMETHOD SetBindingElement(nsIContent* aElement) = 0;
 
+  NS_IMETHOD GetBoundElement(nsIContent** aResult) = 0;
+  NS_IMETHOD SetBoundElement(nsIContent* aElement) = 0;
+
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement) = 0;
@@ -72,6 +75,12 @@ public:
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult) = 0;
   NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints) = 0;
+
+  NS_IMETHOD IsStyleBinding(PRBool* aResult) = 0;
+  NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) = 0;
+
+  NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult) = 0;
+  NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult) = 0;
 };
 
 extern nsresult

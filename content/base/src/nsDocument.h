@@ -28,6 +28,7 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMEventReceiver.h"
@@ -131,6 +132,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentEvent,
                    public nsIDOMDocumentStyle,
                    public nsIDOMDocumentView,
+                   public nsIDOMDocumentXBL,
                    public nsIDiskDocument,
                    public nsIJSScriptObject,
                    public nsSupportsWeakReference,
@@ -395,13 +397,15 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth);
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
   NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
-  NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult);
                      
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
 
   // nsIDOMDocumentView
   NS_DECL_IDOMDOCUMENTVIEW
+
+  // nsIDOMDocumentXBL
+  NS_DECL_IDOMDOCUMENTXBL
 
   // nsIDOMDocumentEvent
   NS_DECL_IDOMDOCUMENTEVENT

@@ -42,10 +42,10 @@ class nsXBLService: public nsIXBLService
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL);
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag);
 
   // This function clears out the bindings on a given content node.
-  NS_IMETHOD FlushBindings(nsIContent* aContent);
+  NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
 
   // This function clears out the binding doucments in our cache.
   NS_IMETHOD FlushBindingDocuments();

@@ -69,6 +69,9 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
                                      PRBool* aMultipleInsertionPoints);
 
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL);
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL);
+
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable;
@@ -174,6 +177,58 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
   if (binding)
     return binding->GetSingleInsertionPoint( aResult, aMultipleInsertionPoints);
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsString& aURL)
+{
+  // First we need to load our binding.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  if (!xblService)
+    return rv;
+
+  // Load the bindings.
+  xblService->LoadBindings(aContent, aURL, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL)
+{
+  /*
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aParent, getter_AddRefs(binding));
+  
+  nsCOMPtr<nsIXBLBinding> prevBinding;
+    
+  while (binding) {
+    nsCOMPtr<nsIXBLBinding> nextBinding;
+    binding->GetBaseBinding(getter_AddRefs(nextBinding));
+
+    PRBool style;
+    binding->IsStyleBinding(&style);
+    if (!style) {
+       // Remove only our binding.
+      if (prevBinding) {
+        prevBinding->SetBaseBinding(nextBinding);
+
+        // XXX Unhooking the binding should kill event handlers and
+        // fix up the prototype chain.
+        // e.g., binding->UnhookEventHandlers(); 
+        //       binding->FixupPrototypeChain();
+        // or maybe just binding->Unhook();
+
+      }
+      else SetBinding(aContent, nextBinding);
+    }
+
+    prevBinding = binding;
+    binding = nextBinding;
+  }
+*/
   return NS_OK;
 }
 

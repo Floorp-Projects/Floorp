@@ -64,6 +64,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
+#include "nsIDOMDocumentXBL.h"
 #include "nsGenericElement.h"
 
 #include "nsICSSStyleSheet.h"
@@ -753,6 +754,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMDocumentView))) {
+    nsIDOMDocumentView* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentXBL))) {
     nsIDOMDocumentView* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -2217,6 +2224,27 @@ nsDocument::CreateElementWithNameSpace(const nsString& aTagName,
 {
   *aReturn = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::AddBinding(nsIDOMElement* aContent, const nsString& aURL)
+{
+  nsCOMPtr<nsIBindingManager> bm;
+  GetBindingManager(getter_AddRefs(bm));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
+
+  return bm->AddLayeredBinding(content, aURL);
+}
+
+NS_IMETHODIMP
+nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsString& aURL)
+{
+  if (mBindingManager) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));
+    return mBindingManager->RemoveLayeredBinding(content, aURL);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
