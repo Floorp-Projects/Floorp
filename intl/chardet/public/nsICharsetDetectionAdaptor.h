@@ -41,6 +41,6 @@ public:
      Initialize it by setup the nsICharsetDetector and the 
      nsIWebShell
    */
-  NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector) = 0;
+  NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector, const char* aCommand=nsnull) = 0;
 };
 #endif /* nsICDETAdaptor_h__ */
