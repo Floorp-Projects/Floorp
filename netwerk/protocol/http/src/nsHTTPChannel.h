@@ -52,7 +52,7 @@ public:
     ~nsHTTPChannel();
 
     // Functions from nsISupports
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
     NS_IMETHOD Cancel();
