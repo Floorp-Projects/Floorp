@@ -81,6 +81,7 @@
     [%+ INCLUDE "global/help-header.html.tmpl" %]
 
     <link href="skins/standard/global.css" rel="stylesheet" type="text/css">
+    <link href="skins/custom/global.css" rel="stylesheet" type="text/css">
 
     [% IF style %]
       <style type="text/css">
@@ -91,6 +92,10 @@
     [% IF style_urls %]
       [% FOREACH style_url = style_urls %]
         <link href="[% style_url FILTER html %]" rel="stylesheet" type="text/css">
+        [% IF style_url.match('^skins/standard/') %]
+          <link href="[% style_url.replace('^skins/standard/', 'skins/custom/')
+                         FILTER html %]" rel="stylesheet" type="text/css">
+        [% END %]
       [% END %]
     [% END %]
 
