@@ -25,7 +25,6 @@ CPU_ARCH		:= x86
 else
 CPU_ARCH		:= $(OS_TEST)
 endif
-CPU_ARCH_TAG		= _$(CPU_ARCH)
 
 DEFAULT_COMPILER		= gcc
 CC				= gcc
