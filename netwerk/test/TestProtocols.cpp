@@ -45,7 +45,7 @@
 #include "nsIChannel.h"
 #include "nsIURL.h"
 #include "nsIHTTPChannel.h"
-#include "nsIHttpEventSink.h" 
+#include "nsIHTTPEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
 #include "nsIDNSService.h" 
 
@@ -111,13 +111,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTTPEventSink interface...
-  NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context);
 
   NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
-
-  NS_IMETHOD      OnProgress(nsISupports* i_Context, 
-                             PRUint32 i_Progress, 
-                             PRUint32 i_ProgressMax);
 
   // OnRedirect gets fired only if you have set FollowRedirects on the handler!
   NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
@@ -135,13 +130,6 @@ TestHTTPEventSink::~TestHTTPEventSink()
 
 
 NS_IMPL_ISUPPORTS(TestHTTPEventSink,NS_GET_IID(nsIHTTPEventSink));
-
-NS_IMETHODIMP
-TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
-{
-    printf("\n+++ TestHTTPEventSink::OnAwaitingInput +++\n");
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
@@ -228,13 +216,6 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
             }
         }
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-TestHTTPEventSink::OnProgress(nsISupports* context, PRUint32 i_Progress, PRUint32 i_ProgressMax)
-{
-    printf("\n+++ TestHTTPEventSink::OnProgress +++\n");
     return NS_OK;
 }
 
