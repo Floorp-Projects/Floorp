@@ -184,7 +184,7 @@ public:
   virtual PRInt32 GetWeight(void) const = 0;
   virtual void SetWeight(PRInt32 aWeight) = 0;
 
-  virtual nsIStyleRule* GetImportantRule(void) = 0;
+  virtual already_AddRefed<nsIStyleRule> GetImportantRule(void) = 0;
 
   // Hook for inspector.
   virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;

@@ -2535,20 +2535,18 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (nsHTMLAtoms::style == aAttribute) {
     if (eHTMLUnit_ISupports == aValue.GetUnit()) {
-      nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
-      if (rule) {
-        nsICSSStyleRule*  cssRule;
-        if (NS_OK == rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule)) {
-          nsCSSDeclaration* decl = cssRule->GetDeclaration();
-          if (nsnull != decl) {
-            decl->ToString(aResult);
-          }
-          NS_RELEASE(cssRule);
+      nsCOMPtr<nsISupports> rule = aValue.GetISupportsValue();
+      nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(rule);
+      if (cssRule) {
+        nsCSSDeclaration* decl = cssRule->GetDeclaration();
+        if (decl) {
+          decl->ToString(aResult);
+        } else {
+          aResult.Truncate();
         }
-        else {
-          aResult.Assign(NS_LITERAL_STRING("Unknown rule type"));
-        }
-        NS_RELEASE(rule);
+      }
+      else {
+        aResult.Assign(NS_LITERAL_STRING("Unknown rule type"));
       }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

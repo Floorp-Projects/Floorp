@@ -125,35 +125,30 @@ nsresult
 nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                                 PRBool aAllocate)
 {
-  nsHTMLValue val;
-  nsIStyleRule* rule;
-  nsICSSStyleRule*  cssRule;
   nsresult result = NS_OK;
 
   *aDecl = nsnull;
-  if (nsnull != mContent) {
+  if (mContent) {
+    nsHTMLValue val;
     mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
     if (eHTMLUnit_ISupports == val.GetUnit()) {
-      rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
-      if (NS_OK == result) {
+      nsCOMPtr<nsISupports> rule = val.GetISupportsValue();
+      nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(rule, &result);
+      if (cssRule) {
         *aDecl = cssRule->GetDeclaration();
-        NS_RELEASE(cssRule);
       }
-      NS_RELEASE(rule);
     }
-    else if (PR_TRUE == aAllocate) {
+    else if (aAllocate) {
       result = NS_NewCSSDeclaration(aDecl);
       if (NS_OK == result) {
-        result = NS_NewCSSStyleRule(&cssRule, nsCSSSelector());
+        nsCOMPtr<nsICSSStyleRule> cssRule;
+        result = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsCSSSelector());
         if (NS_OK == result) {
           cssRule->SetDeclaration(*aDecl);
           cssRule->SetWeight(0x7fffffff);
-          rule = (nsIStyleRule *)cssRule;
           result = mContent->SetHTMLAttribute(nsHTMLAtoms::style,
                                               nsHTMLValue(cssRule),
                                               PR_FALSE);
-          NS_RELEASE(cssRule);
         }
         else {
           (*aDecl)->RuleAbort();
@@ -169,21 +164,17 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 nsresult
 nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration *aDecl)
 {
-  nsHTMLValue val;
-  nsIStyleRule* rule;
-  nsICSSStyleRule*  cssRule;
   nsresult result = NS_OK;
 
-  if (nsnull != mContent) {
+  if (mContent) {
+    nsHTMLValue val;
     mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
     if (eHTMLUnit_ISupports == val.GetUnit()) {
-      rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
-      if (NS_OK == result) {
+      nsCOMPtr<nsISupports> rule = val.GetISupportsValue();
+      nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(rule, &result);
+      if (cssRule) {
         cssRule->SetDeclaration(aDecl);
-        NS_RELEASE(cssRule);
       }
-      NS_RELEASE(rule);
     }
   }
 
