@@ -31,13 +31,13 @@ XPIDLSRCS =                       \
 	nsIWindowMediator.idl     \
 	nsICommonDialogs.idl  \
 	nsIDialogParamBlock.idl \
+	nsICmdLineService.idl	\
 	$(NULL)
 
 EXPORTS = \
 	nsIWebShellWindow.h	          \
 	nsAppShellCIDs.h		\
 	nsBuildID.h			\
-	nsICmdLineService.h	          \
 	nsIXULWindowCallbacks.h       \
 	nsFileLocations.h             \
 	nsIDOMXPConnectFactory.h      \

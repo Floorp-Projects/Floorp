@@ -5,7 +5,6 @@
 nsAppleEvents.h
 nsAppShellCIDs.h
 nsBuildID.h
-nsICmdLineService.h
 nsIWebShellWindow.h
 nsFileLocations.h
 nsIXULWindowCallbacks.h
