@@ -75,8 +75,6 @@ NS_IMPL_RELEASE(nsDeviceContextGTK)
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
-  NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
-  
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
   
