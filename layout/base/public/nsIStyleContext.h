@@ -139,5 +139,14 @@ extern NS_EXPORT nsresult
                      nsRuleNode* aRuleNode,
                      nsIPresContext* aPresContext);
 
+// typesafe way to access style data.  See nsStyleStruct.h and also
+// overloaded function in nsIFrame.h.
+template <class T>
+inline void
+GetStyleData(nsIStyleContext* aStyleContext, const T** aStyleStruct)
+{
+    *aStyleStruct = NS_STATIC_CAST(const T*,
+                         aStyleContext->GetStyleData(NS_GET_STYLESTRUCTID(T)));
+}
 
 #endif /* nsIStyleContext_h___ */
