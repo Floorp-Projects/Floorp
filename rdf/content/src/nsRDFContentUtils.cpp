@@ -54,6 +54,13 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
 
+/* sspitzer: temporary */
+#ifdef XP_UNIX
+#include "nsIPref.h"
+#define PREF_TEST_10412_FIX "test.10412.fix"
+static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
+#endif
+
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
@@ -286,64 +293,67 @@ nsresult
 nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 {
     nsresult		rv;
-    nsIRDFResource	*resource;
-    nsIRDFLiteral	*literal;
-    nsIRDFDate		*dateLiteral;
-    nsIRDFInt		*intLiteral;
+    nsCOMPtr <nsIRDFResource>	resource;
+    nsCOMPtr <nsIRDFLiteral>	literal;
+    nsCOMPtr <nsIRDFDate>	dateLiteral;
+    nsCOMPtr <nsIRDFInt>	intLiteral;
 
     if (! aNode) {
         aResult.Truncate();
         rv = NS_OK;
     }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFResourceIID, getter_AddRefs(resource)))) {
         nsXPIDLCString p;
         if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(p) ))) {
             aResult = p;
         }
-        NS_RELEASE(resource);
     }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, (void**) &dateLiteral))) {
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, getter_AddRefs(dateLiteral)))) {
 	PRInt64		theDate;
         if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
-/* sspitzer:  don't switch off until #10412 is fixed.  this causes crashers on UNIX.  I'm investigating */
-#if 1
-		PRExplodedTime	dateData;
-		PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
-		char		dateBuf[128];
-		PR_FormatTime(dateBuf, sizeof(dateBuf)-1, "%c", &dateData);
-		aResult = dateBuf;
-#else
-		// XXX can we catch this somehow instead of creating/destroying it all the time?
-		nsIDateTimeFormat	*aDateTimeFormat;
-		rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-		              nsIDateTimeFormat::GetIID(), (void **) &aDateTimeFormat);
-		if (NS_SUCCEEDED(rv) && (aDateTimeFormat))
-		{
-			if (NS_SUCCEEDED(rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong,
-				kTimeFormatSeconds, (PRTime)theDate, aResult)))
-			{
-			}
-			NS_RELEASE(aDateTimeFormat);
+/* sspitzer:  temporary code until I can verify my fix for #10412.  I can't reproduce the bug on my box, so I can't be 100% certain I fixed the problem until jay or ester test it.  This way, they can test the fix in a release build by setting a pref. this temporary code will go away soon. */
+		PRBool test_10412_fix = PR_FALSE;
+#ifdef XP_UNIX
+		NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+		if (NS_FAILED(rv) || !prefs) return rv;
+		rv = prefs->GetBoolPref(PREF_TEST_10412_FIX, &test_10412_fix);
+		if (NS_FAILED(rv)) { test_10412_fix = PR_FALSE; rv = NS_OK;}
+#endif /* XP_UNIX */
+		
+		if (!test_10412_fix) {
+			PRExplodedTime	dateData;
+			PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
+			char		dateBuf[128];
+			PR_FormatTime(dateBuf, sizeof(dateBuf)-1, "%c", &dateData);
+			aResult = dateBuf;
 		}
-#endif
-
+		else {
+			// XXX can we cache this somehow instead of creating/destroying it all the time?
+			nsCOMPtr <nsIDateTimeFormat> aDateTimeFormat;
+			rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+				      nsIDateTimeFormat::GetIID(), getter_AddRefs(aDateTimeFormat));
+			if (NS_SUCCEEDED(rv) && aDateTimeFormat)
+			{
+				rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong, kTimeFormatSeconds, (PRTime)theDate, aResult);
+				if (NS_FAILED(rv)) {
+					aResult.Truncate();
+				}
+			}
+		}
         }
-        NS_RELEASE(dateLiteral);
     }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFIntIID, (void**) &intLiteral))) {
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFIntIID, getter_AddRefs(intLiteral)))) {
 	PRInt32		theInt;
 	aResult.Truncate();
         if (NS_SUCCEEDED(rv = intLiteral->GetValue( &theInt ))) {
         	aResult.Append(theInt, 10);
         }
-        NS_RELEASE(intLiteral);
     }
-    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, getter_AddRefs(literal)))) {
         nsXPIDLString p;
         if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(p) ))) {
             aResult = p;
         }
-        NS_RELEASE(literal);
     }
     else {
         NS_ERROR("not a resource or a literal");
