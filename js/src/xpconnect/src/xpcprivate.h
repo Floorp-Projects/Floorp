@@ -2253,7 +2253,7 @@ private:
 
 /***************************************************************************/
 
-// class to export a JSString as an nsAReadableString, including refcounting
+// class to export a JSString as an const nsAString, including refcounting
 class XPCReadableJSStringWrapper : public nsDependentString
 {
 public:
@@ -2359,7 +2359,7 @@ class XPCStringConvert
 public:
 
     static JSString *ReadableToJSString(JSContext *cx,
-                                        const nsAReadableString &readable);
+                                        const nsAString &readable);
 
     static XPCReadableJSStringWrapper *JSStringToReadable(JSString *str);
 

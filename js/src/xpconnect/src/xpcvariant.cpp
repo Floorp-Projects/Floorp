@@ -692,13 +692,13 @@ NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID *retval)
 }
 
 /* AString getAsAString (); */
-NS_IMETHODIMP XPCVariant::GetAsAString(nsAWritableString & _retval)
+NS_IMETHODIMP XPCVariant::GetAsAString(nsAString & _retval)
 {
     return nsVariant::ConvertToAString(mData, _retval);
 }
 
 /* DOMString getAsDOMString (); */
-NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAWritableString & _retval)
+NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAString & _retval)
 {
     // A DOMString maps to an AString internally, so we can re-use
     // ConvertToAString here.

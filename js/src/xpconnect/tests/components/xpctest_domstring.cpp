@@ -64,7 +64,7 @@ xpcTestDOMString::~xpcTestDOMString()
 }
 
 NS_IMETHODIMP
-xpcTestDOMString::HereHaveADOMString(const nsAReadableString &str)
+xpcTestDOMString::HereHaveADOMString(const nsAString &str)
 {
     const nsSharedBufferHandle<PRUnichar> *handle;
     handle = str.GetSharedBufferHandle();
@@ -79,7 +79,7 @@ xpcTestDOMString::HereHaveADOMString(const nsAReadableString &str)
 }
 
 NS_IMETHODIMP
-xpcTestDOMString::DontKeepThisOne(const nsAReadableString &str)
+xpcTestDOMString::DontKeepThisOne(const nsAString &str)
 {
     nsCString c; c.AssignWithConversion(str);
     fprintf(stderr, "xpcTestDOMString::DontKeepThisOne: \"%s\"\n", c.get());
@@ -94,7 +94,7 @@ xpcTestDOMString::GiveDOMStringTo(nsIXPCTestDOMString *recv)
 }
 
 NS_IMETHODIMP
-xpcTestDOMString::PassDOMStringThroughTo(const nsAReadableString &str,
+xpcTestDOMString::PassDOMStringThroughTo(const nsAString &str,
                                          nsIXPCTestDOMString *recv)
 {
     return recv->HereHaveADOMString(str);

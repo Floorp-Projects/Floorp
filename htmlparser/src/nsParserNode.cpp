@@ -197,8 +197,8 @@ const nsString& nsCParserNode::GetName() const {
  *  @param   
  *  @return  string ref of text from internal token
  */
-const nsAReadableString& nsCParserNode::GetText() const {
-  return (mToken) ? mToken->GetStringValue() : NS_STATIC_CAST(const nsAReadableString&,GetEmptyString());
+const nsAString& nsCParserNode::GetText() const {
+  return (mToken) ? mToken->GetStringValue() : NS_STATIC_CAST(const nsAString&,GetEmptyString());
 }
 
 /**
@@ -283,7 +283,7 @@ PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text key
  */
-const nsAReadableString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
+const nsAString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
   PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
   if((PRInt32)anIndex<theCount) {
     CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);

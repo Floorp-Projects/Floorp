@@ -103,7 +103,7 @@ public:
   NS_IMETHOD WillResume(void) { return NS_OK; }
   NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
@@ -249,7 +249,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
       // Get upper-cased key
-      const nsAReadableString& key = aNode.GetKeyAt(i);
+      const nsAString& key = aNode.GetKeyAt(i);
       k.Assign(key);
       ToLowerCase(k);
       if (k.Equals(NS_LITERAL_STRING("href"))) {

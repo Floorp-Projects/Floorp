@@ -68,7 +68,7 @@ public:
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode);
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode);
 
-  NS_IMETHOD GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aResult);
+  NS_IMETHOD GetControllerForCommand(const nsAString& aCommand, nsIController** aResult);
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt);
@@ -81,7 +81,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
 
 protected:
-  NS_IMETHOD UpdateCommands(const nsAReadableString& aEventName);
+  NS_IMETHOD UpdateCommands(const nsAString& aEventName);
 
 public:
   static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindowInternal** aWindow);

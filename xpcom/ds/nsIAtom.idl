@@ -26,10 +26,9 @@
 interface nsISizeOfHandler;
 
 %{C++
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsCOMPtr.h"
 %}
-[ref] native nsStringRef(nsAWritableString);
 
 /*
  * Should this really be scriptable?  Using atoms from script or proxies
@@ -43,7 +42,7 @@ interface nsIAtom : nsISupports
   /**
    * Translate the unicode string into the stringbuf.
    */
-  [noscript] void ToString(in nsStringRef aString); 
+  [noscript] AString toString(); 
 	
   /**
    * Return a pointer to a zero terminated unicode string.
@@ -102,12 +101,12 @@ inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* unicode)
 /**
  * Find an atom that matches the given string.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const nsAReadableString& aString);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAReadableString& aString);
+extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aString);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aString);
 
-inline already_AddRefed<nsIAtom> do_GetAtom(const nsAReadableString& aString)
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aString)
     { return NS_NewAtom(aString); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAReadableString& aString)
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAString& aString)
     { return NS_NewPermanentAtom(aString); }
 
 /**

@@ -399,7 +399,7 @@ nsHTMLTags::CaseSensitiveLookupTag(const PRUnichar* aTagName)
 
 // static
 nsHTMLTag
-nsHTMLTags::LookupTag(const nsAReadableString& aTagName)
+nsHTMLTags::LookupTag(const nsAString& aTagName)
 {
   PRUint32 length = aTagName.Length();
 
@@ -409,7 +409,7 @@ nsHTMLTags::LookupTag(const nsAReadableString& aTagName)
 
   static PRUnichar buf[NS_HTMLTAG_NAME_MAX_LENGTH + 1];
 
-  nsAReadableString::const_iterator iter;
+  nsAString::const_iterator iter;
   PRUint32 i = 0;
   PRUnichar c;
 

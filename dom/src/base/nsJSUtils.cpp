@@ -132,7 +132,7 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
 }
 
 void 
-nsJSUtils::ConvertJSValToString(nsAWritableString& aString,
+nsJSUtils::ConvertJSValToString(nsAString& aString,
                                 JSContext* aContext, jsval aValue)
 {
   JSString *jsstring;

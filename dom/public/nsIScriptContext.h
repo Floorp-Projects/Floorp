@@ -84,16 +84,16 @@ public:
    * @return NS_OK if the script was valid and got executed
    *
    **/
-  NS_IMETHOD EvaluateString(const nsAReadableString& aScript,
+  NS_IMETHOD EvaluateString(const nsAString& aScript,
                             void *aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             const char* aVersion,
-                            nsAWritableString& aRetValue,
+                            nsAString& aRetValue,
                             PRBool* aIsUndefined) = 0;
 
-  NS_IMETHOD EvaluateStringWithValue(const nsAReadableString& aScript,
+  NS_IMETHOD EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
                                      const char *aURL,
@@ -145,7 +145,7 @@ public:
    */
   NS_IMETHOD ExecuteScript(void* aScriptObject,
                            void* aScopeObject,
-                           nsAWritableString* aRetValue,
+                           nsAString* aRetValue,
                            PRBool* aIsUndefined) = 0;
 
   /**
@@ -172,7 +172,7 @@ public:
    */
   NS_IMETHOD CompileEventHandler(void* aTarget,
                                  nsIAtom* aName,
-                                 const nsAReadableString& aBody,
+                                 const nsAString& aBody,
                                  PRBool aShared,
                                  void** aHandler) = 0;
 
@@ -216,7 +216,7 @@ public:
                              const nsCString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
-                             const nsAReadableString& aBody,
+                             const nsAString& aBody,
                              const char* aURL,
                              PRUint32 aLineNo,
                              PRBool aShared,

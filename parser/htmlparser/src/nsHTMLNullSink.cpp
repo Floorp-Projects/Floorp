@@ -70,7 +70,7 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
   NS_IMETHOD FlushPendingNotifications() {return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) {return NS_OK;}
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) {return NS_OK;}
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   // nsIHTMLContentSink
@@ -149,7 +149,7 @@ nsHTMLNullSink::~nsHTMLNullSink() {
 }
 
 #ifdef VERBOSE_DEBUG
-static void DebugDump(const char* str1,const nsAReadableString& str2,PRInt32 tabs) {
+static void DebugDump(const char* str1,const nsAString& str2,PRInt32 tabs) {
   for(PRInt32 i=0;i<tabs;i++) {
     PR_fprintf(PR_STDOUT, " "); //add some tabbing to debug output...
   }

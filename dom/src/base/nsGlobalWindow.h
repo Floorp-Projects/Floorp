@@ -155,10 +155,10 @@ public:
   NS_DECL_NSIDOMJSWINDOW
 
   // nsIDOMEventTarget
-  NS_IMETHOD AddEventListener(const nsAReadableString& aType,
+  NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
@@ -211,9 +211,9 @@ protected:
   void GetParentInternal(nsIDOMWindowInternal **parent);
 
   // Window Control Functions
-  NS_IMETHOD OpenInternal(const nsAReadableString& aUrl,
-                          const nsAReadableString& aName,
-                          const nsAReadableString& aOptions,
+  NS_IMETHOD OpenInternal(const nsAString& aUrl,
+                          const nsAString& aName,
+                          const nsAString& aOptions,
                           PRBool aDialog, jsval *argv, PRUint32 argc,
                           nsISupports *aExtraArgument, nsIDOMWindow **aReturn);
   static void CloseWindow(nsISupports* aWindow);
@@ -246,7 +246,7 @@ protected:
   void MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritableString &aOutTitle);
 
   // Helper for window.find()
-  nsresult FindInternal(nsAReadableString& aStr, PRBool caseSensitive,
+  nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
                        PRBool backwards, PRBool wrapAround, PRBool wholeWord, 
                        PRBool searchInFrames, PRBool showDialog, 
                        PRBool *aReturn);
@@ -414,9 +414,9 @@ protected:
   nsresult GetURI(nsIURI** aURL);
   nsresult GetWritableURI(nsIURI** aURL);
   nsresult SetURI(nsIURI* aURL);
-  nsresult SetHrefWithBase(const nsAReadableString& aHref, nsIURI* aBase,
+  nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                            PRBool aReplace);
-  nsresult SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
+  nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                               PRBool aReplace);
 
   nsresult GetSourceURL(JSContext* cx, nsIURI** sourceURL);

@@ -231,11 +231,11 @@ class nsIParser : public nsISupports {
     
     virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult  Parse(nsIInputStream& aStream, const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsACString& aMimeType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult  Parse(const nsAString& aSourceBuffer,void* aKey,const nsACString& aMimeType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     
     virtual nsresult  Terminate(void) = 0;
 
-    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,
+    virtual nsresult  ParseFragment(const nsAString& aSourceBuffer,
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,

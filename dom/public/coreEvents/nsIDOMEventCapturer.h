@@ -41,7 +41,7 @@
 #define nsIDOMEventCapturer_h__
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMEventReceiver.h"
 
@@ -54,21 +54,21 @@ class nsIDOMEventCapturer : public nsIDOMEventReceiver {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTCAPTURER_IID; return iid; }
 
-  NS_IMETHOD    CaptureEvent(const nsAReadableString& aType)=0;
+  NS_IMETHOD    CaptureEvent(const nsAString& aType)=0;
 
-  NS_IMETHOD    ReleaseEvent(const nsAReadableString& aType)=0;
+  NS_IMETHOD    ReleaseEvent(const nsAString& aType)=0;
 };
 
 
 #define NS_DECL_IDOMEVENTCAPTURER   \
-  NS_IMETHOD    CaptureEvent(const nsAReadableString& aType);  \
-  NS_IMETHOD    ReleaseEvent(const nsAReadableString& aType);  \
+  NS_IMETHOD    CaptureEvent(const nsAString& aType);  \
+  NS_IMETHOD    ReleaseEvent(const nsAString& aType);  \
 
 
 
 #define NS_FORWARD_IDOMEVENTCAPTURER(_to)  \
-  NS_IMETHOD    CaptureEvent(const nsAReadableString& aType) { return _to CaptureEvent(aType); }  \
-  NS_IMETHOD    ReleaseEvent(const nsAReadableString& aType) { return _to ReleaseEvent(aType); }  \
+  NS_IMETHOD    CaptureEvent(const nsAString& aType) { return _to CaptureEvent(aType); }  \
+  NS_IMETHOD    ReleaseEvent(const nsAString& aType) { return _to ReleaseEvent(aType); }  \
 
 
 #endif // nsIDOMEventCapturer_h__

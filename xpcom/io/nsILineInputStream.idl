@@ -22,7 +22,7 @@
 #include "nsISupports.idl"
 
 %{ C++
-#include "nsString.h" // needed for AString -> nsAWritableString, unfortunately
+#include "nsString.h" // needed for AString -> nsAString, unfortunately
 %}
 
 interface nsILineInputStream;

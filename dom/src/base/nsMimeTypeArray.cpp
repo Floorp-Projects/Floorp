@@ -101,7 +101,7 @@ MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 }
 
 NS_IMETHODIMP
-MimeTypeArrayImpl::NamedItem(const nsAReadableString& aName,
+MimeTypeArrayImpl::NamedItem(const nsAString& aName,
                              nsIDOMMimeType** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -225,7 +225,7 @@ NS_IMPL_RELEASE(MimeTypeElementImpl)
 
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetDescription(nsAWritableString& aDescription)
+MimeTypeElementImpl::GetDescription(nsAString& aDescription)
 {
 	return mMimeType->GetDescription(aDescription);
 }
@@ -239,13 +239,13 @@ MimeTypeElementImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
 }
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetSuffixes(nsAWritableString& aSuffixes)
+MimeTypeElementImpl::GetSuffixes(nsAString& aSuffixes)
 {
 	return mMimeType->GetSuffixes(aSuffixes);
 }
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetType(nsAWritableString& aType)
+MimeTypeElementImpl::GetType(nsAString& aType)
 {
 	return mMimeType->GetType(aType);
 }

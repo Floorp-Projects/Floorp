@@ -69,7 +69,7 @@ public:
 
 private:
     nsresult WriteTag(PRInt32 tagType,
-                      const nsAReadableString &aText,
+                      const nsAString &aText,
                       PRInt32 attrCount,
                       PRBool aNewlineRequired);
     

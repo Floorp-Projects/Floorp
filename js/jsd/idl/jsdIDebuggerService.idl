@@ -37,7 +37,7 @@
 
 %{ C++
 #include "jsdebug.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 %}
     
 [ptr] native JSDContext(JSDContext);

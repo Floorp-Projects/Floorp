@@ -1240,7 +1240,7 @@ public:
  *
  * @return  ptr to new token (or 0).
  */
-CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAReadableString& aString) {
+CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAString& aString) {
 
   CToken* result=0;
 

@@ -36,12 +36,12 @@ public:
 
   NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
 
-  NS_IMETHOD HTMLStringTagToId(const nsAReadableString &aTagName,
+  NS_IMETHOD HTMLStringTagToId(const nsAString &aTagName,
                                PRInt32* aId) const;
 
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, const PRUnichar **aTagName) const;
   
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAReadableString& aEntity, 
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
                                         PRInt32* aUnicode) const;
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const;

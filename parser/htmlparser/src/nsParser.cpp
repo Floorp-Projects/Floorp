@@ -501,7 +501,7 @@ void nsParser::SetDocumentCharset(const nsAString& aCharset, PRInt32 aCharsetSou
      mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
 }
 
-void nsParser::SetSinkCharset(nsAWritableString& aCharset)
+void nsParser::SetSinkCharset(nsAString& aCharset)
 {
   if (mSink) {
     mSink->SetDocumentCharset(aCharset);
@@ -1531,7 +1531,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRB
  * @param   aMimeType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
+nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
                          const nsACString& aMimeType,
                          PRBool aVerifyEnabled, PRBool aLastCall,
                          nsDTDMode aMode){ 
@@ -1641,7 +1641,7 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
+nsresult nsParser::ParseFragment(const nsAString& aSourceBuffer,
                                  void* aKey,
                                  nsVoidArray& aTagStack,
                                  PRUint32 anInsertPos,

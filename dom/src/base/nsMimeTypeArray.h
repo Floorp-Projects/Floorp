@@ -54,7 +54,7 @@ public:
 
 	NS_IMETHOD GetLength(PRUint32* aLength);
 	NS_IMETHOD Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);
-	NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn);
+	NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn);
 	nsresult   Refresh();
 
 private:
@@ -75,10 +75,10 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-	NS_IMETHOD GetDescription(nsAWritableString& aDescription);
+	NS_IMETHOD GetDescription(nsAString& aDescription);
 	NS_IMETHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin);
-	NS_IMETHOD GetSuffixes(nsAWritableString& aSuffixes);
-	NS_IMETHOD GetType(nsAWritableString& aType);
+	NS_IMETHOD GetSuffixes(nsAString& aSuffixes);
+	NS_IMETHOD GetType(nsAString& aType);
 
 protected:
 	nsIDOMPlugin* mPlugin;

@@ -97,7 +97,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess5/11/98
      * @return  string containing node text
      */
-    virtual const nsAReadableString& GetText() const =0;  //get plain text if available
+    virtual const nsAString& GetText() const =0;  //get plain text if available
 
     /**
      * Retrieve skipped context from node
@@ -133,7 +133,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsAReadableString& GetKeyAt(PRUint32 anIndex) const =0;
+    virtual const nsAString& GetKeyAt(PRUint32 anIndex) const =0;
 
     /**
      * Retrieve the value (of key/value pair) at given index

@@ -144,7 +144,7 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 }
 
 NS_IMETHODIMP 
-nsDOMWindowList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aReturn)
+nsDOMWindowList::NamedItem(const nsAString& aName, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 

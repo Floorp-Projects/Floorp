@@ -115,7 +115,7 @@ PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 }
 
 NS_IMETHODIMP
-PluginArrayImpl::NamedItem(const nsAReadableString& aName,
+PluginArrayImpl::NamedItem(const nsAString& aName,
                            nsIDOMPlugin** aReturn)
 {
   NS_PRECONDITION(nsnull != aReturn, "null arg");
@@ -313,19 +313,19 @@ NS_IMPL_RELEASE(PluginElementImpl)
 
 
 NS_IMETHODIMP
-PluginElementImpl::GetDescription(nsAWritableString& aDescription)
+PluginElementImpl::GetDescription(nsAString& aDescription)
 {
   return mPlugin->GetDescription(aDescription);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::GetFilename(nsAWritableString& aFilename)
+PluginElementImpl::GetFilename(nsAString& aFilename)
 {
   return mPlugin->GetFilename(aFilename);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::GetName(nsAWritableString& aName)
+PluginElementImpl::GetName(nsAString& aName)
 {
   return mPlugin->GetName(aName);
 }
@@ -354,7 +354,7 @@ PluginElementImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 }
 
 NS_IMETHODIMP
-PluginElementImpl::NamedItem(const nsAReadableString& aName,
+PluginElementImpl::NamedItem(const nsAString& aName,
                              nsIDOMMimeType** aReturn)
 {
   if (mMimeTypeArray == nsnull) {

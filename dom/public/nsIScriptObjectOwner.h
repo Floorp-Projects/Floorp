@@ -41,7 +41,7 @@
 
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 
 #define NS_ISCRIPTOBJECTOWNER_IID \
 { /* 8f6bca7e-ce42-11d1-b724-00600891d8c9 */ \
@@ -117,7 +117,7 @@ public:
   NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
                                  void* aTarget,
                                  nsIAtom *aName,
-                                 const nsAReadableString& aBody,
+                                 const nsAString& aBody,
                                  void** aHandler) = 0;
 
   /**

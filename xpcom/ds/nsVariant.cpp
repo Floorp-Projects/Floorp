@@ -833,7 +833,7 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
 
 /* static */ nsresult
 nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
-                            nsAWritableString & _retval)
+                            nsAString & _retval)
 {
     nsCAutoString tempCString;
     nsresult rv;
@@ -1442,7 +1442,7 @@ nsVariant::SetFromID(nsDiscriminatedUnion* data, const nsID & aValue)
     DATA_SETTER(data, VTYPE_ID, mIDValue, aValue)
 }
 /* static */ nsresult
-nsVariant::SetFromAString(nsDiscriminatedUnion* data, const nsAReadableString & aValue)
+nsVariant::SetFromAString(nsDiscriminatedUnion* data, const nsAString & aValue)
 {
     DATA_SETTER_PROLOGUE(data);
     if(!(data->u.mAStringValue = new nsString(aValue)))
@@ -1784,13 +1784,13 @@ NS_IMETHODIMP_(nsresult) nsVariant::GetAsID(nsID *retval)
 }
 
 /* AString getAsAString (); */
-NS_IMETHODIMP nsVariant::GetAsAString(nsAWritableString & _retval)
+NS_IMETHODIMP nsVariant::GetAsAString(nsAString & _retval)
 {
     return nsVariant::ConvertToAString(mData, _retval);
 }
 
 /* DOMString getAsDOMString (); */
-NS_IMETHODIMP nsVariant::GetAsDOMString(nsAWritableString & _retval)
+NS_IMETHODIMP nsVariant::GetAsDOMString(nsAString & _retval)
 {
     // A DOMString maps to an AString internally, so we can re-use
     // ConvertToAString here.
@@ -1971,7 +1971,7 @@ NS_IMETHODIMP nsVariant::SetAsID(const nsID & aValue)
 }
 
 /* void setAsAString (in AString aValue); */
-NS_IMETHODIMP nsVariant::SetAsAString(const nsAReadableString & aValue)
+NS_IMETHODIMP nsVariant::SetAsAString(const nsAString & aValue)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetFromAString(&mData, aValue);

@@ -130,7 +130,7 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 
 
 NS_IMETHODIMP
-nsFocusController::UpdateCommands(const nsAReadableString& aEventName)
+nsFocusController::UpdateCommands(const nsAString& aEventName)
 {
   if (mCurrentWindow) {
     mCurrentWindow->UpdateCommands(aEventName);
@@ -344,7 +344,7 @@ nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOM
 }
 
 NS_IMETHODIMP
-nsFocusController::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
+nsFocusController::GetControllerForCommand(const nsAString& aCommand, nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);	
   *_retval = nsnull;

@@ -273,7 +273,7 @@ public:
 
                   nsTokenAllocator();
   virtual         ~nsTokenAllocator();
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAReadableString& aString);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAString& aString);
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
 
   nsFixedSizeAllocator& GetArenaPool() { return mArenaPool; }
@@ -498,7 +498,7 @@ inline PRBool BufferContainsHTML(const nsString& aBuffer,
     PRInt32 theCount = 0;
     PRInt32 theTagCount = 0;
 
-    nsAReadableString::const_iterator iter, end;
+    nsAString::const_iterator iter, end;
     aBuffer.BeginReading(iter);
     aBuffer.EndReading(end);
 
@@ -516,7 +516,7 @@ inline PRBool BufferContainsHTML(const nsString& aBuffer,
 
       ++iter; // step over the '<' character
 
-      nsAReadableString::const_iterator tag_end(iter);
+      nsAString::const_iterator tag_end(iter);
 
       aBuffer.EndReading(end);
 

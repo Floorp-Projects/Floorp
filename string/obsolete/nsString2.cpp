@@ -171,7 +171,7 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
 void nsString::SetLength(PRUint32 anIndex) {
   if ( anIndex > GetCapacity() )
     SetCapacity(anIndex);
-    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAString.h),
     //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
   nsStrPrivate::StrTruncate(*this,anIndex);
 }
@@ -1321,7 +1321,7 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
 
     // Grow the buffer if we need to.
     SetCapacity(count);
-      // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+      // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAString.h),
       //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
 
     // All ready? Time to convert

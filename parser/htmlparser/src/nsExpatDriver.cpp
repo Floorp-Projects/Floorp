@@ -1007,7 +1007,7 @@ nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
 }
 
 NS_IMETHODIMP 
-nsExpatDriver::StringTagToIntTag(const nsAReadableString &aTag, PRInt32* aIntTag) const
+nsExpatDriver::StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const
 {
   return NS_OK;
 }
@@ -1019,7 +1019,7 @@ nsExpatDriver::IntTagToStringTag(PRInt32 aIntTag) const
 }
 
 NS_IMETHODIMP 
-nsExpatDriver::ConvertEntityToUnicode(const nsAReadableString& aEntity, PRInt32* aUnicode) const
+nsExpatDriver::ConvertEntityToUnicode(const nsAString& aEntity, PRInt32* aUnicode) const
 {
   return NS_OK;
 }

@@ -39,7 +39,7 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
-#include "nsAReadableString.h"
+#include "nsAString.h"
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -70,7 +70,7 @@ public:
   static nsresult AddRefTable(void);
   static void ReleaseTable(void);
 
-  static nsHTMLTag LookupTag(const nsAReadableString& aTagName);
+  static nsHTMLTag LookupTag(const nsAString& aTagName);
   static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName);
   static const PRUnichar *GetStringValue(nsHTMLTag aEnum);
 };

@@ -66,7 +66,7 @@
 #include "nsICharsetConverterManager2.h"
 
 
-static nsresult EscapeNonAsciiInURI(nsAReadableString& aHref, nsAWritableCString& aEscapedHref)
+static nsresult EscapeNonAsciiInURI(const nsAString& aHref, nsACString& aEscapedHref)
 {
   aEscapedHref.Truncate(0);
 
@@ -280,7 +280,7 @@ LocationImpl::SetURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHash(nsAWritableString& aHash)
+LocationImpl::GetHash(nsAString& aHash)
 {
   aHash.SetLength(0);
 
@@ -307,7 +307,7 @@ LocationImpl::GetHash(nsAWritableString& aHash)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHash(const nsAReadableString& aHash)
+LocationImpl::SetHash(const nsAString& aHash)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -335,7 +335,7 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHost(nsAWritableString& aHost)
+LocationImpl::GetHost(nsAString& aHost)
 {
   aHost.SetLength(0);
 
@@ -358,7 +358,7 @@ LocationImpl::GetHost(nsAWritableString& aHost)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHost(const nsAReadableString& aHost)
+LocationImpl::SetHost(const nsAString& aHost)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -374,7 +374,7 @@ LocationImpl::SetHost(const nsAReadableString& aHost)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHostname(nsAWritableString& aHostname)
+LocationImpl::GetHostname(nsAString& aHostname)
 {
   aHostname.SetLength(0);
 
@@ -397,7 +397,7 @@ LocationImpl::GetHostname(nsAWritableString& aHostname)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHostname(const nsAReadableString& aHostname)
+LocationImpl::SetHostname(const nsAString& aHostname)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -413,7 +413,7 @@ LocationImpl::SetHostname(const nsAReadableString& aHostname)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHref(nsAWritableString& aHref)
+LocationImpl::GetHref(nsAString& aHref)
 {
   aHref.SetLength(0);
 
@@ -436,7 +436,7 @@ LocationImpl::GetHref(nsAWritableString& aHref)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHref(const nsAReadableString& aHref)
+LocationImpl::SetHref(const nsAString& aHref)
 {
   nsAutoString oldHref;
   nsresult rv = NS_OK;
@@ -473,7 +473,7 @@ LocationImpl::SetHref(const nsAReadableString& aHref)
 }
 
 nsresult
-LocationImpl::SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
+LocationImpl::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                                  PRBool aReplace)
 {
   nsCOMPtr<nsIURI> base;
@@ -489,7 +489,7 @@ LocationImpl::SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
 }
 
 nsresult
-LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
+LocationImpl::SetHrefWithBase(const nsAString& aHref,
                               nsIURI* aBase, PRBool aReplace)
 {
   nsresult result;
@@ -557,7 +557,7 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 }
 
 NS_IMETHODIMP
-LocationImpl::GetPathname(nsAWritableString& aPathname)
+LocationImpl::GetPathname(nsAString& aPathname)
 {
   aPathname.SetLength(0);
 
@@ -581,7 +581,7 @@ LocationImpl::GetPathname(nsAWritableString& aPathname)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetPathname(const nsAReadableString& aPathname)
+LocationImpl::SetPathname(const nsAString& aPathname)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -597,7 +597,7 @@ LocationImpl::SetPathname(const nsAReadableString& aPathname)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetPort(nsAWritableString& aPort)
+LocationImpl::GetPort(nsAString& aPort)
 {
   aPort.SetLength(0);
 
@@ -621,7 +621,7 @@ LocationImpl::GetPort(nsAWritableString& aPort)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetPort(const nsAReadableString& aPort)
+LocationImpl::SetPort(const nsAString& aPort)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -651,7 +651,7 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetProtocol(nsAWritableString& aProtocol)
+LocationImpl::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.SetLength(0);
 
@@ -675,7 +675,7 @@ LocationImpl::GetProtocol(nsAWritableString& aProtocol)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
+LocationImpl::SetProtocol(const nsAString& aProtocol)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -691,7 +691,7 @@ LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetSearch(nsAWritableString& aSearch)
+LocationImpl::GetSearch(nsAString& aSearch)
 {
   aSearch.SetLength(0);
 
@@ -716,7 +716,7 @@ LocationImpl::GetSearch(nsAWritableString& aSearch)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetSearch(const nsAReadableString& aSearch)
+LocationImpl::SetSearch(const nsAString& aSearch)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -793,7 +793,7 @@ LocationImpl::Reload()
 }
 
 NS_IMETHODIMP
-LocationImpl::Replace(const nsAReadableString& aUrl)
+LocationImpl::Replace(const nsAString& aUrl)
 {
   nsresult rv = NS_OK;
 
@@ -825,7 +825,7 @@ LocationImpl::Replace(const nsAReadableString& aUrl)
 }
 
 NS_IMETHODIMP
-LocationImpl::Assign(const nsAReadableString& aUrl)
+LocationImpl::Assign(const nsAString& aUrl)
 {
   nsAutoString oldHref;
   nsresult result = NS_OK;
@@ -846,7 +846,7 @@ LocationImpl::Assign(const nsAReadableString& aUrl)
 }
 
 NS_IMETHODIMP
-LocationImpl::ToString(nsAWritableString& aReturn)
+LocationImpl::ToString(nsAString& aReturn)
 {
   return GetHref(aReturn);
 }
