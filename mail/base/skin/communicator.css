@@ -66,16 +66,7 @@ toolbar[printpreview="true"] {
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/throbber.gif");
-}
-
-toolbar[iconsize="small"] #navigator-throbber,
-toolbar[mode="text"] #navigator-throbber {
-  list-style-image: url("chrome://messenger/skin/icons/throbber-small.png");
-}
-toolbar[iconsize="small"] #navigator-throbber[busy="true"],
-toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/Loading.gif");
 }
 
 /* ::::: online/offline icons ::::: */
@@ -90,24 +81,4 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 #offline-status {
   list-style-image: url("chrome://communicator/skin/icons/online.png");
-}
-
-/* ::::: directional button icons ::::: */
-
-.up {
-  min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
-}
-
-.up[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-dis.gif");
-}
-
-.down {
-  min-width: 0px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.down[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
