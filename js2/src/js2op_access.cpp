@@ -31,11 +31,23 @@
 * file under either the NPL or the GPL.
 */
 
-
-        case eLexicalRead: {
+        case eMultiname: {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             mn->addNamespace(meta->cxt);
+        }
+        break;
+
+        case eQualifiedMultiname: {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            mn->addNamespace(meta->cxt);
+        }
+        break;
+
+        case eLexicalRead: {
+            js2val n = pop();
+            ASSERT(JS2VAL_IS_OBJECT(n));
             meta->env.lexicalRead(meta, mn, phase);
 	}
         break;

@@ -547,6 +547,15 @@ namespace MetaData {
                 bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value);
             }
             break;
+        case ExprNode::qualify:
+            {
+                QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
+                const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
+                const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
+
+                returnRef = new LexicalReference(i->name, cxt.strict);
+            }
+            break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
@@ -591,6 +600,11 @@ namespace MetaData {
         case ExprNode::dot:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                if (b->op2->getKind() == ExprNode::identifier) {
+                }
+                else {
+                if (b->op2->getKind() == ExprNode::qualify) {
+                }
             }
             break;
         default:

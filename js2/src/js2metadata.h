@@ -401,6 +401,7 @@ class LexicalReference : public Reference {
 // q::a.
 public:
     LexicalReference(const StringAtom &name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
+    LexicalReference(const StringAtom &name, const StringAtom &qualifiedName, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
     LexicalReference(Multiname *vm, Environment *env, bool strict) : variableMultiname(vm), env(env), strict(strict) { }
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
