@@ -93,7 +93,10 @@ if ($prod eq "Communicator") {
     $version = "other";
 }
 
-    
+if ($prod eq "NSS") {
+  $version = "unspecified";
+}
+
 # Validate fields, and whine about things that we apparently couldn't remap
 # into something legal.
 
