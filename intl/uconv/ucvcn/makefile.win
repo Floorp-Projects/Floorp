@@ -28,14 +28,26 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
 	nsBIG5ToUnicode.cpp		\
+	nsEUCTWToUnicode.cpp		\
+	nsGB2312ToUnicode.cpp		\
+	nsEUCKRToUnicode.cpp		\
 	nsUnicodeToBIG5.cpp		\
+	nsUnicodeToEUCTW.cpp		\
+	nsUnicodeToGB2312.cpp		\
+	nsUnicodeToEUCKR.cpp		\
 	nsUCvCnSupport.cpp		\
 	nsUCvCnDll.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsBIG5ToUnicode.obj 		\
+	.\$(OBJDIR)\nsEUCTWToUnicode.obj 		\
+	.\$(OBJDIR)\nsGB2312ToUnicode.obj 		\
+	.\$(OBJDIR)\nsEUCKRToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToBIG5.obj			\
+	.\$(OBJDIR)\nsUnicodeToEUCTW.obj		\
+	.\$(OBJDIR)\nsUnicodeToGB2312.obj		\
+	.\$(OBJDIR)\nsUnicodeToEUCKR.obj		\
 	.\$(OBJDIR)\nsUCvCnSupport.obj			\
 	.\$(OBJDIR)\nsUCvCnDll.obj 			\
 	$(NULL)
