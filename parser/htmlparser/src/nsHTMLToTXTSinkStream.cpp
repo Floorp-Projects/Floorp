@@ -204,7 +204,9 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
 {
-  NS_WARN_IF_FALSE(mCurrentLine.Length() == 0, "Buffer not flushed! Probably illegal input to class.");
+  if (mCurrentLine.Length() > 0)
+    FlushLine(); // We have some left over text in current line. flush it out.
+  // This means we didn't have a body or html node -- probably a text control.
 
   if(mBuffer) 
     delete[] mBuffer;
@@ -244,6 +246,15 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
     result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
   }
 
+  // Turn on caching if we are wrapping or we want formatting.
+  // We need this even when flags indicate preformatted,
+  // in order to wrap textareas with wrap=hard.
+  if((mFlags & nsIDocumentEncoder::OutputFormatted) ||
+     (mFlags & nsIDocumentEncoder::OutputWrap))
+  {
+    mCacheLine = PR_TRUE;
+  }
+    
   return result;
 }
 
@@ -462,7 +473,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
         (mFlags & nsIDocumentEncoder::OutputWrap))) {
       mCacheLine = PR_TRUE;
     }
-    
+
     // Try to figure out here whether we have a
     // preformatted style attribute.
     //
