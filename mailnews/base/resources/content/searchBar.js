@@ -208,8 +208,8 @@ function restorePreSearchView()
     if (sortType != gDBView.sortType || sortOrder != gDBView.sortOrder)
     {
       gDBView.sort(sortType, sortOrder);
-      UpdateSortIndicators(sortType, sortOrder);
     }
+    UpdateSortIndicators(sortType, sortOrder);
 
     gPreQuickSearchView = null;    
   }

@@ -191,7 +191,7 @@ nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
     EnsureTree();
     if (mTree)
       mTree->Invalidate();
-  } else if (aAttribute == nsXULAtoms::ordinal) {
+  } else if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
     InvalidateColumnCache(aPresContext);
   }
 

@@ -36,7 +36,7 @@ Rights Reserved.
     onselect="ThreadPaneSelectionChanged();">
   <treecols>
     <treecol id="threadCol" display="&threadColumn.label;" class="treecol-image threadColumnHeader" currentView="unthreaded" cycler="true" persist="hidden ordinal" fixed="true" />
-    <treecol id="subjectCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="7" label="&subjectColumn.label;" primary="true"/>
+    <treecol id="subjectCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="7" label="&subjectColumn.label;" ignoreincolumnpicker="true"/>
     <splitter class="tree-splitter"/>
     <treecol id="senderOrRecipientCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="4" label="&senderColumn.label;"/>
     <splitter class="tree-splitter"/>

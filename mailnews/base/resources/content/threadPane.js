@@ -258,27 +258,28 @@ function MsgSortDescending()
 
 function UpdateSortIndicators(sortType, sortOrder)
 {
-  var colID = ConvertSortTypeToColumnID(sortType);
-  var sortedColumn;
+  // show the twisties if the view is threaded
+  var currCol = document.getElementById("subjectCol");
+  var primary = (sortType == nsMsgViewSortType.byThread) && gDBView.supportsThreading;
+  currCol.setAttribute("primary", primary);
+
+  // remove the sort indicator from all the columns
+  currCol = document.getElementById("threadCol");
+  while (currCol) {
+    currCol.removeAttribute("sortDirection");
+    currCol = currCol.nextSibling;
+  }
 
   // set the sort indicator on the column we are sorted by
+  var colID = ConvertSortTypeToColumnID(sortType);
   if (colID) {
-    sortedColumn = document.getElementById(colID);
+    var sortedColumn = document.getElementById(colID);
     if (sortedColumn) {
       if (sortOrder == nsMsgViewSortOrder.ascending) {
         sortedColumn.setAttribute("sortDirection","ascending");
       }
       else {
         sortedColumn.setAttribute("sortDirection","descending");
-      }
-
-      // remove the sort indicator from all the columns
-      // except the one we are sorted by
-      var currCol = sortedColumn.parentNode.firstChild;
-      while (currCol) {
-        if (currCol != sortedColumn && currCol.localName == "treecol")
-          currCol.removeAttribute("sortDirection");
-        currCol = currCol.nextSibling;
       }
     }
   }
