@@ -40,75 +40,6 @@
 #include "nsJAR.h"
 #include "nsJARInputStream.h"
 
-/* XPCOM includes */
-//#include "nsIComponentManager.h"
-
-
-/*********************************
- * Begin XPCOM-related functions
- *********************************/
-
-/*-----------------------------------------------------------------
- * XPCOM-related Globals
- *-----------------------------------------------------------------*/
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-static NS_DEFINE_IID(kIJAR_IID, NS_IJAR_IID);
-static NS_DEFINE_IID(kJAR_CID,  NS_JAR_CID);
-
-static NS_DEFINE_IID(kIZip_IID, NS_IZIP_IID);
-static NS_DEFINE_IID(kZip_CID,  NS_ZIP_CID);
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_CID(kJARInputStreamCID, NS_JARINPUTSTREAM_CID);
-
-/*---------------------------------------------
- *  nsJAR::QueryInterface implementation
- *--------------------------------------------*/
-NS_IMETHODIMP 
-nsJAR::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL)
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(kIZip_IID) )
-  {
-    *aInstancePtr = (void*)(nsIZip*)this;
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(kIJAR_IID) )
-  {
-   *aInstancePtr = (void*)(nsIJAR*)this;
-    AddRef();
-    return NS_OK;
-  }
-  else if ( aIID.Equals(kISupportsIID) )
-  {
-   *aInstancePtr = (void*)(nsISupports*)this;
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-/* AddRef macro */
-NS_IMPL_ADDREF(nsJAR)
-
-/* Release macro */
-NS_IMPL_RELEASE(nsJAR)
-
-
-/*----------------------------------------------------------
- * After all that stuff we finally get to what nsJAR is 
- * all about
- *---------------------------------------------------------*/
 nsJAR::nsJAR()
 {
     NS_INIT_REFCNT();
@@ -121,18 +52,19 @@ nsJAR::~nsJAR()
   NS_IF_RELEASE(mInputStream);
 }
 
+NS_IMPL_ISUPPORTS2(nsJAR, nsIZip, nsIJAR);
 
 NS_IMETHODIMP
 nsJAR::Open(const char *aZipFileName, PRInt32 *_retval)
 {
-  *_retval = zip.OpenArchive(aZipFileName);
+  *_retval = mZip.OpenArchive(aZipFileName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJAR::Extract(const char *aFilename, const char *aOutname, PRInt32 *_retval)
 {
-  *_retval = zip.ExtractFile(aFilename, aOutname);
+  *_retval = mZip.ExtractFile(aFilename, aOutname);
   return NS_OK;
 }
 
@@ -142,7 +74,7 @@ nsJAR::Find(const char *aPattern, nsISimpleEnumerator **_retval)
     if (!_retval)
       return NS_ERROR_INVALID_POINTER;
     
-    nsZipFind *find = zip.FindInit(aPattern);
+    nsZipFind *find = mZip.FindInit(aPattern);
     if (!find)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -160,10 +92,10 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **_retval)
 {
   nsresult rv;
   nsJARInputStream* is = nsnull;
-  rv = nsJARInputStream::Create(nsnull, kIInputStreamIID, (void**)&is);
+  rv = nsJARInputStream::Create(nsnull, NS_GET_IID(nsIInputStream), (void**)&is);
   if (!is) return NS_ERROR_FAILURE;
 
-  rv = is->Init(&zip, aFilename);
+  rv = is->Init(&mZip, aFilename);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   NS_IF_RELEASE(mInputStream);
