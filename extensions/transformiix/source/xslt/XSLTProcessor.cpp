@@ -1504,11 +1504,18 @@ void XSLTProcessor::processAttrValueTemplate
 {
     AttributeValueTemplate* avt = 0;
     avt = exprParser.createAttributeValueTemplate(attValue);
+    if (!avt) {
+        return;
+    }
+
     ExprResult* exprResult = avt->evaluate(context,ps);
+    if (!exprResult) {
+        return;
+    }
+
     exprResult->stringValue(result);
     delete exprResult;
     delete avt;
-
 } //-- processAttributeValueTemplate
 
 /**
