@@ -103,6 +103,7 @@ nsRangeListIterator::nsRangeListIterator(nsRangeList *aList)
     return;
   }
   mRangeList = aList;
+  NS_INIT_REFCNT();
 }
 
 
@@ -236,6 +237,7 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsRangeList::nsRangeList()
 :mCount(0),mRangeArray(NULL),mBufferSize(0)
 {
+  NS_INIT_REFCNT();
 }
 
 
