@@ -83,7 +83,7 @@ struct nsReadableFragment
     void
     SetID( void* id )
       {
-        mFragmentidentifier = id;
+        mFragmentIdentifier = id;
       }
 
     void
