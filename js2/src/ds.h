@@ -328,7 +328,7 @@ namespace JavaScript
         // Construct a BitSet out of an array of alternating low (inclusive)
         // and high (exclusive) ends of ranges of set bits.
         // The array is terminated by a 0,0 range.
-        template<typename In> explicit BitSet(In a) {
+        template<typename In> explicit BitSet(const In *a) {
             clear();
             size_t low, high;
             while (low = *a++, (high = *a++) != 0) setRange(low, high);
