@@ -267,6 +267,20 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     nsXULTreeOuterGroupFrame* outer = (nsXULTreeOuterGroupFrame*) frame;
     nsTreeLayoutState state = outer->GetTreeLayoutState();
 
+    // Always ensure an accurate scrollview position
+    // This is an edge case that was caused by the row height
+    // changing after a scroll had occurred.  (Bug #51084)
+    PRInt32 index;
+    outer->GetIndexOfFirstVisibleRow(&index);
+    if (index > 0) {
+      nscoord pos = outer->GetYPosition();
+      PRInt32 rowHeight = outer->GetRowHeightTwips();
+      if (pos != (rowHeight*index)) {
+        outer->VerticalScroll(rowHeight*index);
+        outer->Redraw(aState, nsnull, PR_FALSE);
+      }
+    }
+
     nsresult rv = LayoutInternal(aBox, aState);
     if (NS_FAILED(rv)) return rv;
     state = outer->GetTreeLayoutState();
