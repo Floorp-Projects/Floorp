@@ -52,6 +52,8 @@ static NS_DEFINE_IID(kIViewIID,               NS_IVIEW_IID);
 static NS_DEFINE_IID(kViewCID,                NS_VIEW_CID);
 static NS_DEFINE_IID(kWidgetCID,              NS_CHILD_CID);
 
+static NS_DEFINE_IID(kCCalCanvasCID,          NS_CAL_CANVAS_CID);
+
 // hardcode names of dll's
 #ifdef NS_WIN32
   #define CALUI_DLL   "calui10.dll"
@@ -577,6 +579,7 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCCalComponentCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalTimebarContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalMonthContextControllerCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalToolkitCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);

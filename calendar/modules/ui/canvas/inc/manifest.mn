@@ -23,6 +23,7 @@ PRIVATE_EXPORTS = \
 	nsCalTimebarTimeHeading.h \
 	nsCalTimebarScale.h \
 	nsCalMultiDayViewCanvas.h \
+    nsCalCanvas.h \
 	nsCalDayViewCanvas.h \
     events.h \
 	$(NULL)

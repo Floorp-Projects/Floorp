@@ -55,6 +55,7 @@ static NS_DEFINE_IID(kICalTimeContext, NS_ICAL_TIME_CONTEXT_IID);
 static NS_DEFINE_IID(kICalContextController, NS_ICAL_CONTEXT_CONTROLLER_IID);
 
 static NS_DEFINE_IID(kCCalTimebarCanvas, NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kCCalCanvas, NS_CAL_CANVAS_CID);
 static NS_DEFINE_IID(kCCalStatusCanvas, NS_CAL_STATUSCANVAS_CID);
 static NS_DEFINE_IID(kCCalCommandCanvas, NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kCCalTimebarComponentCanvas, NS_CAL_TIMEBARCOMPONENTCANVAS_CID);
@@ -183,6 +184,10 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCCalTimebarCanvas)) {
     nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalTimebarCanvas(aOuter);
+    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+  }
+  else if (mClassID.Equals(kCCalCanvas)) {
+    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsCalCanvas(aOuter);
     canvas->QueryInterface(kISupportsIID,(void **)&inst);
   }
   else if (mClassID.Equals(kCCalStatusCanvas)) {

@@ -24,7 +24,7 @@ static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
 #define LOCAL_INSET 1
 
-nsCalTimebarCanvas :: nsCalTimebarCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
+nsCalTimebarCanvas :: nsCalTimebarCanvas(nsISupports* outer) : nsCalCanvas(outer)
 {
   NS_INIT_REFCNT();
   mTimeContext = nsnull;
@@ -52,7 +52,7 @@ nsresult nsCalTimebarCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
-  return (nsXPFCCanvas::QueryInterface(aIID, aInstancePtr));
+  return (nsCalCanvas::QueryInterface(aIID, aInstancePtr));
 }
 
 NS_IMPL_ADDREF(nsCalTimebarCanvas)
@@ -156,7 +156,7 @@ nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsIRenderingContext& aRender
    */
 
   nsRect rect;
-  nsXPFCCanvas::PaintBackground(aRenderingContext,aDirtyRect);
+  nsCalCanvas::PaintBackground(aRenderingContext,aDirtyRect);
 
   /*
    * Now paint the TimeContext over the base canvas background
@@ -230,6 +230,6 @@ nsresult nsCalTimebarCanvas::PaintInterval(nsIRenderingContext& aRenderingContex
 
 nsresult nsCalTimebarCanvas :: SetParameter(nsString& aKey, nsString& aValue)
 {
-  return (nsXPFCCanvas::SetParameter(aKey, aValue));
+  return (nsCalCanvas::SetParameter(aKey, aValue));
 }
 

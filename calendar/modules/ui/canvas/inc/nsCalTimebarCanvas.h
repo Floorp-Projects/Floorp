@@ -23,8 +23,9 @@
 
 #include "nsXPFCCanvas.h"
 #include "nsICalTimeContext.h"
+#include "nsCalCanvas.h"
 
-class nsCalTimebarCanvas : public nsXPFCCanvas
+class nsCalTimebarCanvas : public nsCalCanvas
 
 {
 public:
