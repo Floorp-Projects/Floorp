@@ -322,7 +322,7 @@ public class ClassFileWriter {
                          lineNumberTableLength +
                          variableTableLength;
 
-        byte codeAttribute[] = new byte[attrLength];
+        byte[] codeAttribute = new byte[attrLength];
         int index = 0;
         int codeAttrIndex = itsConstantPool.addUtf8("Code");
         index = putInt16(codeAttrIndex, codeAttribute, index);
@@ -425,7 +425,7 @@ public class ClassFileWriter {
      *
      * @param theOpCode the opcode of the bytecode
      */
-    public void add(byte theOpCode) {
+    public void add(int theOpCode) {
         if (opcodeCount(theOpCode) != 0)
             throw new IllegalArgumentException("Unexpected operands");
         int newStack = itsStackTop + stackChange(theOpCode);
@@ -447,7 +447,7 @@ public class ClassFileWriter {
      * @param theOpCode the opcode of the bytecode
      * @param theOperand the operand of the bytecode
      */
-    public void add(byte theOpCode, int theOperand) {
+    public void add(int theOpCode, int theOperand) {
         if (DEBUGCODE) {
             System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+Integer.toHexString(theOperand));
@@ -524,7 +524,7 @@ public class ClassFileWriter {
                 if (!(0 <= theOperand && theOperand < 256))
                     throw new IllegalArgumentException("out of range index");
                 addToCodeBuffer(theOpCode);
-                addToCodeBuffer((byte)theOperand);
+                addToCodeBuffer(theOperand);
                 break;
 
             case ByteCode.GETFIELD :
@@ -552,7 +552,7 @@ public class ClassFileWriter {
                     addToCodeInt16(theOperand);
                 } else {
                     addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)theOperand);
+                    addToCodeBuffer(theOperand);
                 }
                 break;
 
@@ -576,7 +576,7 @@ public class ClassFileWriter {
                 }
                 else {
                     addToCodeBuffer(theOpCode);
-                    addToCodeBuffer((byte)theOperand);
+                    addToCodeBuffer(theOperand);
                 }
                 break;
 
@@ -645,7 +645,7 @@ public class ClassFileWriter {
      * @param theOperand1 the first operand of the bytecode
      * @param theOperand2 the second operand of the bytecode
      */
-    public void add(byte theOpCode, int theOperand1, int theOperand2) {
+    public void add(int theOpCode, int theOperand1, int theOperand2) {
         if (DEBUGCODE) {
             System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+Integer.toHexString(theOperand1)
@@ -669,8 +669,8 @@ public class ClassFileWriter {
             else {
                 addToCodeBuffer(ByteCode.WIDE);
                 addToCodeBuffer(ByteCode.IINC);
-                addToCodeBuffer((byte)theOperand1);
-                addToCodeBuffer((byte)theOperand2);
+                addToCodeBuffer(theOperand1);
+                addToCodeBuffer(theOperand2);
             }
         }
         else if (theOpCode == ByteCode.MULTIANEWARRAY) {
@@ -681,7 +681,7 @@ public class ClassFileWriter {
 
             addToCodeBuffer(ByteCode.MULTIANEWARRAY);
             addToCodeInt16(theOperand1);
-            addToCodeBuffer((byte)theOperand2);
+            addToCodeBuffer(theOperand2);
         }
         else {
             throw new IllegalArgumentException(
@@ -696,7 +696,7 @@ public class ClassFileWriter {
 
     }
 
-    public void add(byte theOpCode, String className) {
+    public void add(int theOpCode, String className) {
         if (DEBUGCODE) {
             System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+className);
@@ -727,7 +727,7 @@ public class ClassFileWriter {
     }
 
 
-    public void add(byte theOpCode, String className, String fieldName,
+    public void add(int theOpCode, String className, String fieldName,
                     String fieldType)
     {
         if (DEBUGCODE) {
@@ -765,16 +765,7 @@ public class ClassFileWriter {
         }
     }
 
-    /**
-     * @deprecated Use {@link #addInvoke} instead
-     */
-    public void add(byte theOpCode, String className, String methodName,
-                    String parametersType, String returnType)
-    {
-        addInvoke(theOpCode, className, methodName, parametersType+returnType);
-    }
-
-    public void addInvoke(byte theOpCode, String className, String methodName,
+    public void addInvoke(int theOpCode, String className, String methodName,
                           String methodType)
     {
         if (DEBUGCODE) {
@@ -802,8 +793,8 @@ public class ClassFileWriter {
                                                className, methodName,
                                                methodType);
                         addToCodeInt16(ifMethodRefIndex);
-                        addToCodeBuffer((byte)(parameterCount + 1));
-                        addToCodeBuffer((byte)0);
+                        addToCodeBuffer(parameterCount + 1);
+                        addToCodeBuffer(0);
                     }
                     else {
                         short methodRefIndex = itsConstantPool.addMethodRef(
@@ -1054,20 +1045,20 @@ public class ClassFileWriter {
         add(ByteCode.ALOAD_0);
     }
 
-    private void xop(byte shortOp, byte op, int local)
+    private void xop(int shortOp, int op, int local)
     {
         switch (local) {
           case 0:
             add(shortOp);
             break;
           case 1:
-            add((byte)(shortOp + 1));
+            add(shortOp + 1);
             break;
           case 2:
-            add((byte)(shortOp + 2));
+            add(shortOp + 2);
             break;
           case 3:
-            add((byte)(shortOp + 3));
+            add(shortOp + 3);
             break;
           default:
             add(op, local);
@@ -1091,7 +1082,7 @@ public class ClassFileWriter {
 
         int N = addReservedCodeSpace(1 + padSize + 4 * (1 + 2 + entryCount));
         int switchStart = N;
-        itsCodeBuffer[N++] = ByteCode.TABLESWITCH;
+        itsCodeBuffer[N++] = (byte)ByteCode.TABLESWITCH;
         while (padSize != 0) {
             itsCodeBuffer[N++] = 0;
             --padSize;
@@ -1152,7 +1143,7 @@ public class ClassFileWriter {
                 switchStart+" is outside a possible range of tableswitch"
                 +" in already generated code");
         }
-        if (!(itsCodeBuffer[switchStart] == ByteCode.TABLESWITCH)) {
+        if ((0xFF & itsCodeBuffer[switchStart]) != ByteCode.TABLESWITCH) {
             throw new IllegalArgumentException(
                 switchStart+" is not offset of tableswitch statement");
         }
@@ -1289,10 +1280,10 @@ public class ClassFileWriter {
         }
     }
 
-    private void addToCodeBuffer(byte b)
+    private void addToCodeBuffer(int b)
     {
         int N = addReservedCodeSpace(1);
-        itsCodeBuffer[N] = b;
+        itsCodeBuffer[N] = (byte)b;
     }
 
     private void addToCodeInt16(int value)
@@ -2292,7 +2283,7 @@ public class ClassFileWriter {
         throw new IllegalArgumentException("Bad opcode: "+opcode);
     }
 */
-    private static String bytecodeStr(byte code)
+    private static String bytecodeStr(int code)
     {
         if (DEBUGSTACK || DEBUGCODE) {
             switch (code) {
@@ -2534,7 +2525,7 @@ public class ClassFileWriter {
     private int itsLineNumberTable[];   // pack start_pc & line_number together
     private int itsLineNumberTableTop;
 
-    private byte itsCodeBuffer[] = new byte[256];
+    private byte[] itsCodeBuffer = new byte[256];
     private int itsCodeBufferTop;
 
     private ConstantPool itsConstantPool;

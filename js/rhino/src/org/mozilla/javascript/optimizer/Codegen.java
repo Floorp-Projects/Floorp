@@ -566,9 +566,9 @@ public class Codegen extends Interpreter
 
     private void generateFunctionConstructor(ClassFileWriter cfw)
     {
-        final byte SCOPE_ARG = 1;
-        final byte CONTEXT_ARG = 2;
-        final byte ID_ARG = 3;
+        final int SCOPE_ARG = 1;
+        final int CONTEXT_ARG = 2;
+        final int ID_ARG = 3;
 
         cfw.startMethod("<init>", FUNCTION_CONSTRUCTOR_SIGNATURE,
                         ClassFileWriter.ACC_PUBLIC);
@@ -3089,7 +3089,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                               || (type == Token.MUL);
     }
 
-    private void visitArithmetic(Node node, byte opCode, Node child,
+    private void visitArithmetic(Node node, int opCode, Node child,
                                  Node parent)
     {
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
@@ -3339,7 +3339,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             }
             generateExpression(child, node);
             if (type == Token.SHEQ || type == Token.SHNE) {
-                byte testCode = (type == Token.SHEQ)
+                int testCode = (type == Token.SHEQ)
                                 ? ByteCode.IFNULL : ByteCode.IFNONNULL;
                 cfw.add(testCode, trueGOTO);
             } else {
@@ -3392,7 +3392,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             generateExpression(rChild, node);
 
             String name;
-            byte testCode;
+            int testCode;
             switch (type) {
               case Token.EQ:
                 name = "eq";
@@ -3892,7 +3892,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.markLabel(beyond);
     }
 
-    private void addGoto(Node.Target target, byte jumpcode)
+    private void addGoto(Node.Target target, int jumpcode)
     {
         int targetLabel = getTargetLabel(target);
         cfw.add(jumpcode, targetLabel);
