@@ -56,7 +56,7 @@ LINCS=	\
 !endif
   -I$(PUBLIC)\pref \
 !ifdef MOZ_FULLCIRCLE
-  -I$(PUBLIC)\fullsoft \
+  -I$(PUBLIC)\fulls32 \
 !endif
   $(NULL)
 
@@ -78,7 +78,7 @@ MYLIBS=                         \
 !endif
  comdlg32.lib                   \
 !ifdef MOZ_FULLCIRCLE
- $(DIST)\lib\fullsoft.lib \
+ $(DIST)\lib\fulls32.lib \
 !endif
  $(NULL)
 
