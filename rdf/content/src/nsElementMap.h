@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 /*
@@ -57,13 +70,13 @@ private:
         nsCOMPtr<nsIContent> mContent;
     };
 
-    static PLHashNumber
+    static PLHashNumber PR_CALLBACK
     Hash(const void* akey);
 
-    static PRIntn
+    static PRIntn PR_CALLBACK
     Compare(const void* aLeft, const void* aRight);
 
-    static PRIntn
+    static PRIntn PR_CALLBACK
     ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure);
 
 public:
@@ -94,7 +107,7 @@ private:
         void*                  mClosure;
     };
         
-    static PRIntn
+    static PRIntn PR_CALLBACK
     EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure);
 };
 

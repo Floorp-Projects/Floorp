@@ -19,6 +19,19 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 /*
@@ -429,7 +442,7 @@ IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 ////////////////////////////////////////////////////////////////////////
 // RDFServiceImpl
 
-static PLHashNumber
+static PLHashNumber PR_CALLBACK
 rdf_HashWideString(const void* key)
 {
     PLHashNumber result = 0;
@@ -438,7 +451,7 @@ rdf_HashWideString(const void* key)
     return result;
 }
 
-static PRIntn
+static PRIntn PR_CALLBACK
 rdf_CompareWideStrings(const void* v1, const void* v2)
 {
     return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, v1), NS_STATIC_CAST(const PRUnichar*, v2));

@@ -20,6 +20,19 @@
  * Contributor(s): 
  *   Robert John Churchill <rjc@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 /*
@@ -172,7 +185,7 @@ typedef struct {
 	PRBool checkedNode2;
 } contentSortInfo;
 
-int		inplaceSortCallback(const void *data1, const void *data2, void *privateData);
+int		PR_CALLBACK inplaceSortCallback(const void *data1, const void *data2, void *privateData);
 int		testSortCallback(const void * data1, const void *data2, void *privateData);
 
 

@@ -19,6 +19,19 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 /*
@@ -1882,7 +1895,6 @@ nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 }
 
 
-
 //----------------------------------------------------------------------
 // nsIScriptObjectOwner interface
 
@@ -1894,7 +1906,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     if (! mScriptObject) {
         // The actual script object that we create will depend on our
         // tag...
-        nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
+        nsresult (*PR_CALLBACK fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
         nsCOMPtr<nsIAtom> tag;
         GetBaseTag(getter_AddRefs(tag));
