@@ -57,6 +57,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIFrame.h"
@@ -464,6 +465,24 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLGroupboxAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLGroupboxAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
@@ -582,6 +601,11 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
       if (theChar == NBSP)
         return NS_ERROR_FAILURE;
     }
+    nsCOMPtr<nsIDOMNode> parentNode;
+    node->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(parentNode));
+    if (legend)  // Expose <legend> as the name in a groupbox, not as a ROLE_TEXT accessible
+      return NS_ERROR_FAILURE; 
   }
     
   *_retval = new nsHTMLTextAccessible(node, weakShell);
