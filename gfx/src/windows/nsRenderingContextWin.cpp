@@ -2838,7 +2838,7 @@ PRInt32 canRaster;
     if (PR_TRUE == gIsWIN95) {
       // windows 98
       if((aWidth<8)&&(aHeight<8)){
-        return PR_TRUE;
+        return PR_FALSE;    // this does not seem to work on win 98
       }else{
         return PR_FALSE;
       }
