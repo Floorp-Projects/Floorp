@@ -682,6 +682,11 @@ param {
   background-color: inherit;
 }
 
+/* XXX Temporary until @page is supported... */
+:-moz-page {
+  background: none;
+}
+
 :root {
   display: block;
   background-color: inherit;

@@ -47,6 +47,7 @@ nsIAtom* nsLayoutAtoms::floaterList;
 nsIAtom* nsLayoutAtoms::commentTagName;
 nsIAtom* nsLayoutAtoms::textTagName;
 nsIAtom* nsLayoutAtoms::viewportPseudo;
+nsIAtom* nsLayoutAtoms::pagePseudo;
 
 // frame types
 nsIAtom* nsLayoutAtoms::areaFrame;
@@ -84,6 +85,7 @@ void nsLayoutAtoms::AddrefAtoms()
     commentTagName = NS_NewAtom("__moz_comment");
     textTagName = NS_NewAtom("__moz_text");
     viewportPseudo = NS_NewAtom(":-moz-viewport");
+    pagePseudo = NS_NewAtom(":-moz-page");
 
     areaFrame = NS_NewAtom("AreaFrame");
     pageFrame = NS_NewAtom("PageFrame");
@@ -122,6 +124,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(commentTagName);
     NS_RELEASE(textTagName);
     NS_RELEASE(viewportPseudo);
+    NS_RELEASE(pagePseudo);
     
     NS_RELEASE(areaFrame);
     NS_RELEASE(pageFrame);
