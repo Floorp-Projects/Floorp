@@ -594,7 +594,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
 
   // Get metrics for fixed font
   nsCOMPtr<nsIFontMetrics> fontMetrics;
-  result = presContext->GetMetricsFor(defaultFixedFont,
+  result = presContext->GetMetricsFor(*defaultFixedFont,
                                       getter_AddRefs(fontMetrics));
   if (NS_FAILED(result) || !fontMetrics)
     return result;
