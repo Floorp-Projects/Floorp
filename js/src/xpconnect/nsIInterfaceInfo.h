@@ -137,6 +137,7 @@ public:
     NS_IMETHOD MethodWithNative(int p1, void* p2) = 0;
 
     NS_IMETHOD ReturnCode(int code) = 0;
+    NS_IMETHOD FailInJSTest(int fail) = 0;
 };
 
 /***************************************************************************/

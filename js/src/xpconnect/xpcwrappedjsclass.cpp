@@ -402,11 +402,17 @@ pre_call_clean_up:
     if(!InConversionsDone)
         goto done;
 
-    // do the function call
+    // do the function call - set the error reporter aside - note exceptions
 
     older = JS_SetErrorReporter(cx, NULL);
+    JS_ClearPendingException(cx);
     success = JS_CallFunctionName(cx, wrapper->GetJSObject(), info->GetName(),
                                   argc, argv, &result);
+    if(JS_IsExceptionPending(cx))
+    {
+        JS_ClearPendingException(cx);
+        success = JS_FALSE;
+    }
     JS_SetErrorReporter(cx, older);
     if(!success)
         goto done;
