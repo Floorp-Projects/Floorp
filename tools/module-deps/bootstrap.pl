@@ -187,6 +187,10 @@ sub FindMakefiles {
   # Yank modules we know we don't want.
   $modules_string =~ s/mozldap //; # no ldap.
 
+  ###
+  ###  Ordering could go here.
+  ###
+
   @modules = split(' ', $modules_string);
   $num_modules = $#modules + 1;
   print "modules = $num_modules\n";
