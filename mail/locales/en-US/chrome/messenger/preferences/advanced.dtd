@@ -1,0 +1,51 @@
+<!ENTITY itemGeneral.label       "General">
+<!ENTITY itemUpdate.label        "Update">
+<!ENTITY itemSecurity.label      "Security">
+
+<!-- General Settings -->
+
+<!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book">
+<!ENTITY showCondensedAddresses.accesskey "S">
+
+<!-- LOCALIZATION NOTE (markAsRead.label): This will concatenate with
+     "xxx seconds before marking a message as read", using a number and
+     (markAsReadEnd.label). -->
+<!ENTITY markAsRead.label              "Wait">
+<!ENTITY markAsRead.accesskey          "W">
+<!ENTITY markAsReadEnd.label           "seconds before marking a message as read">
+<!ENTITY markAsReadEnd.accesskey       "d">
+<!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane">
+<!ENTITY showFolderColumns.accesskey   "h">
+<!ENTITY rememberLastMsg.label         "Remember the last selected message">
+<!ENTITY rememberLastMsg.accesskey     "e">
+<!ENTITY reuseExp.label                "Open new messages in:">
+<!ENTITY reuseExpRadio0.label          "A new message window">
+<!ENTITY reuseExpRadio0.accesskey      "n">
+<!ENTITY reuseExpRadio1.label          "An existing message window">
+<!ENTITY reuseExpRadio1.accesskey      "x">
+<!ENTITY showConnections.label         "Connection Settings...">
+<!ENTITY showConnections.accesskey     "C">
+<!ENTITY proxiesInfo.label             "Determine how &brandShortName; connects to the Internet.">
+<!ENTITY connectionsInfo.caption       "Connection">
+
+<!-- Update -->
+<!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">
+<!ENTITY enableSmartUpdate.label        "&brandShortName;">
+<!ENTITY enableSmartUpdate.accesskey    "T">
+<!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
+<!ENTITY enableExtensionUpdate.accesskey "y">
+<!ENTITY checkNow.label                 "Check Now...">
+<!ENTITY appCheckNow.accesskey          "k">
+<!ENTITY extensionsCheckNow.accesskey   "o">
+
+<!-- Security -->
+<!ENTITY certificates.label             "Certificates">
+<!ENTITY certificatesInfo.label         "Manage certificates, revocation lists, certificate verification and security devices">
+<!ENTITY viewCertificates.label         "View Certificates">
+<!ENTITY viewCertificates.accesskey     "i">
+<!ENTITY viewCRLs.label                 "Revocation Lists">
+<!ENTITY viewCRLs.accesskey             "R">
+<!ENTITY viewOCSP.label                 "Verification">
+<!ENTITY viewOCSP.accesskey             "V">
+<!ENTITY viewSecurityDevices.label      "Security Devices">
+<!ENTITY viewSecurityDevices.accesskey  "u">

@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Thunderbird Preferences System. 
+# 
+# The Initial Developer of the Original Code is Scott MacGregor.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % composeDTD SYSTEM "chrome://messenger/locale/preferences/compose.dtd">
+%brandDTD;
+%composeDTD;
+]>
+
+<overlay id="ComposePaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:nc="http://home.netscape.com/NC-rdf#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+           
+  <prefpane id="paneCompose" onpaneload="gComposePane.init();">
+    <script type="application/x-javascript" src="chrome://messenger/content/preferences/compose.js"/>
+
+    <preferences>
+      <preference id="mail.preferences.compose.selectedTabIndex" name="mail.preferences.compose.selectedTabIndex" type="int"/>
+      <preference id="mail.forward_message_mode" name="mail.forward_message_mode" type="int"/>     
+      <preference id="mail.SpellCheckBeforeSend" name="mail.SpellCheckBeforeSend" type="bool"/>
+      <preference id="mail.spellcheck.inline" name="mail.spellcheck.inline" type="bool"/>
+      <preference id="mail.strictly_mime" name="mail.strictly_mime" type="bool"/>
+      <preference id="mail.warn_on_send_accel_key" name="mail.warn_on_send_accel_key" type="bool"/>
+      <preference id="mail.compose.autosave" name="mail.compose.autosave" type="bool"/>
+      <preference id="mail.compose.autosaveinterval" name="mail.compose.autosaveinterval" type="int"/>
+      <preference id="mailnews.wraplength" name="mailnews.wraplength" type="int"/>
+      <preference id="mail.enable_autocomplete" name="mail.enable_autocomplete" type="bool"/>
+      <preference id="ldap_2.autoComplete.useDirectory" name="ldap_2.autoComplete.useDirectory" type="bool"/>
+      <preference id="ldap_2.autoComplete.directoryServer" name="ldap_2.autoComplete.directoryServer" type="string"/>
+      <preference id="mail.collect_email_address_outgoing" name="mail.collect_email_address_outgoing" type="bool"/>
+      <preference id="mail.collect_addressbook" name="mail.collect_addressbook" type="string"/>
+    </preferences>
+
+    <tabbox id="composePrefs" flex="1" onselect="gComposePane.tabSelectionChanged();">
+      <tabs>
+        <tab label="&itemGeneral.label;"/>
+        <tab label="&itemAutoComplete.label;"/>
+        <tab label="&itemSpellCheck.label;"/>
+      </tabs>
+
+      <tabpanels flex="1">
+         <tabpanel orient="vertical">
+            <hbox align="center">
+              <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;" control="forwardMessageMode"/>
+              <menulist id="forwardMessageMode" preference="mail.forward_message_mode">
+                <menupopup>
+                  <menuitem value="2" label="&inline.label;" accesskey="&inline.accesskey;"/>
+                  <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+
+            <checkbox id="strictlyMime" label="&useMIME.label;"
+                      preference="mail.strictly_mime"
+                      accesskey="&useMIME.accesskey;"/>
+
+            <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+                      preference="mail.warn_on_send_accel_key"
+                      accesskey="&warnOnSendAccelKey.accesskey;"/>
+
+              <hbox align="center" pack="start">
+                <checkbox id="autoSave" label="&autoSave.label;" preference="mail.compose.autosave"
+                          accesskey="&autoSave.accesskey;"/>
+                <textbox  id="autoSaveInterval" size="2" preference="mail.compose.autosaveinterval"/>
+                <label value="&autoSaveEnd.label;" accesskey="&autoSaveEnd.accesskey;" control="autoSaveInterval"/>
+              </hbox>
+  
+            <hbox align="center">
+              <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
+              <textbox id="wrapLength" size="3" preference="mailnews.wraplength"/>
+              <label value="&char.label;"/>
+            </hbox>
+  
+            <hbox align="center">
+              <description flex="1">&sendOptionsDescription.label;</description>
+              <button label="&sendOptions.label;" 
+                      accesskey="&sendOptions.accesskey;"
+                      oncommand="gComposePane.sendOptionsDialog();"/>
+            </hbox>
+
+            <hbox align="center">
+              <description flex="1">&htmlComposeDescription.label;</description>
+              <button label="&htmlCompose.label;" 
+                      accesskey="&htmlCompose.accesskey;"
+                      oncommand="gComposePane.htmlComposeDialog();"/>
+            </hbox>
+           
+            <hbox align="center">
+              <description flex="1">&returnReceiptsInfo.label;</description>
+              <button label="&showReturnReceipts.label;"
+                      accesskey="&showReturnReceipts.accesskey;"
+                      oncommand="gComposePane.showReturnReceipts();"/>
+            </hbox> 
+         </tabpanel>
+
+         <tabpanel orient="vertical">
+           <groupbox>
+              <!-- Address Autocomplete -->
+              <caption label="&addressingTitle.label;"/>
+
+              <description>&autocompleteText.label;</description>
+
+              <hbox align="center">
+                <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
+                          preference="mail.enable_autocomplete"
+                          accesskey="&addressingEnable.accesskey;"/>
+              </hbox>
+    
+              <hbox align="center">
+                <checkbox id="autocompleteLDAP" label="&directories.label;" 
+                          preference="ldap_2.autoComplete.useDirectory" 
+                          oncommand="gComposePane.enableAutocomplete();"
+                          accesskey="&directories.accesskey;"/>
+                <menulist id="directoriesList" flex="1"
+                          preference="ldap_2.autoComplete.directoryServer">
+                  <menupopup id="directoriesListPopup">
+                  </menupopup>
+                </menulist>
+                <button id="editButton" label="&editDirectories.label;" 
+                        preference="pref.ldap.disable_button.edit_directories" 
+                        oncommand="gComposePane.editDirectories();"
+                        accesskey="&editDirectories.accesskey;"/>
+              </hbox>
+            </groupbox>
+            
+            <separator class="thin"/>
+
+            <hbox align="center" pack="start">
+              <checkbox id="emailCollectionOutgoing" label="&emailCollectionPicker.label;" 
+                        accesskey="&emailCollectionPicker.accesskey;" preference="mail.collect_email_address_outgoing"/>
+              <menulist id="localDirectoriesList" preference="mail.collect_addressbook" flex="1">
+                <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory" sortActive="true"
+                           sortDirection="ascending" sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+                  <template>
+                    <rule nc:IsWriteable="false"/>
+                    <rule nc:IsMailList="false">
+                      <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#DirName" value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                    </rule>
+                  </template>
+                </menupopup>
+              </menulist>
+            </hbox>   
+         </tabpanel>
+
+         <tabpanel orient="vertical">
+            <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
+                      preference="mail.SpellCheckBeforeSend"
+                      accesskey="&spellCheck.accesskey;"/>
+
+            <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
+                      preference="mail.spellcheck.inline"
+                      accesskey="&spellCheckInline.accesskey;"/>
+         </tabpanel>
+       </tabpanels>
+    </tabbox>  
+    <separator/>
+  </prefpane>
+</overlay>

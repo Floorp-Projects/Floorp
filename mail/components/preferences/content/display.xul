@@ -1,0 +1,269 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Thunderbird Preferences System. 
+# 
+# The Initial Developer of the Original Code is Scott MacGregor.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % displayDTD SYSTEM "chrome://messenger/locale/preferences/display.dtd" >
+%brandDTD;
+%displayDTD;
+]>
+
+<overlay id="DisplayPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:nc="http://home.netscape.com/NC-rdf#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+           
+  <prefpane id="paneDisplay" onpaneload="gDisplayPane.init();">
+    <script type="application/x-javascript" src="chrome://messenger/content/preferences/display.js"/>
+
+    <preferences>
+      <preference id="mail.preferences.display.selectedTabIndex" name="mail.preferences.display.selectedTabIndex" type="int"/>
+      <preference id="mail.wrap_long_lines" name="mail.wrap_long_lines" type="bool"/>
+      <preference id="mail.display_glyph" name="mail.display_glyph" type="bool"/>
+      <preference id="mail.fixed_width_messages" name="mail.fixed_width_messages" type="bool"/>
+      <preference id="mail.quoted_style" name="mail.quoted_style" type="int"/>
+      <preference id="mail.quoted_size" name="mail.quoted_size" type="int"/>
+      <preference id="mail.citation_color" name="mail.citation_color" type="string"/>
+      <preference id="browser.display.foreground_color" name="browser.display.foreground_color" type="string"/>     
+      <preference id="browser.display.background_color" name="browser.display.background_color" type="string"/>
+      <preference id="mailnews.labels.description.1" name="mailnews.labels.description.1" type="wstring"/>
+      <preference id="mailnews.labels.color.1" name="mailnews.labels.color.1" type="string"/>
+      <preference id="mailnews.labels.description.2" name="mailnews.labels.description.2" type="wstring"/>
+      <preference id="mailnews.labels.color.2" name="mailnews.labels.color.2" type="string"/>                
+      <preference id="mailnews.labels.description.3" name="mailnews.labels.description.3" type="wstring"/>
+      <preference id="mailnews.labels.color.3" name="mailnews.labels.color.3" type="string"/>
+      <preference id="mailnews.labels.description.4" name="mailnews.labels.description.4" type="wstring"/>
+      <preference id="mailnews.labels.color.4" name="mailnews.labels.color.4" type="string"/>
+      <preference id="mailnews.labels.description.5" name="mailnews.labels.description.5" type="wstring"/>
+      <preference id="mailnews.labels.color.5" name="mailnews.labels.color.5" type="string"/>
+      <preference id="mailnews.send_default_charset" name="mailnews.send_default_charset" type="wstring"/>
+      <preference id="mailnews.view_default_charset" name="mailnews.view_default_charset" type="wstring"/>
+      <preference id="mailnews.force_charset_override" name="mailnews.force_charset_override" type="bool"/>
+      <preference id="mailnews.reply_in_default_charset" name="mailnews.reply_in_default_charset" type="bool"/>
+    </preferences>
+
+    <tabbox id="displayPrefs" flex="1" onselect="gDisplayPane.tabSelectionChanged();">
+      <tabs>
+        <tab label="&itemFormatting.label;"/>
+        <tab label="&itemLabels.label;"/>
+        <tab label="&itemFonts.label;"/>
+      </tabs>
+      
+      <tabpanels flex="1">
+
+        <!-- Plain Text and HTML Formatting --> 
+        <tabpanel orient="vertical">
+          <groupbox>
+            <caption label="&displayWidth.label;"/>
+            <description>&viewingPlainText.label;</description>
+            <vbox class="indent" align="start">
+              <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
+                        preference="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
+              <checkbox id="displayGlyph" label="&convertEmoticons.label;"
+                        preference="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
+            </vbox>
+    
+            <separator class="thin"/>
+    
+            <hbox align="center"> 
+              <description>&plainText.label;</description>
+    
+              <radiogroup id="mailFixedWidthMessages" orient="horizontal" class="indent"
+                          preference="mail.fixed_width_messages">
+                <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
+                <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+              </radiogroup>
+            </hbox>
+
+            <separator class="thin"/>
+
+            <description>&displayText.label;</description>
+            <hbox class="indent" align="center">
+              <label value="&style.label;" accesskey="&style.accesskey;" control="mailQuotedStyle"/>
+              <menulist id="mailQuotedStyle" preference="mail.quoted_style">
+                <menupopup>
+                  <menuitem value="0" label="&regularStyle.label;"/>
+                  <menuitem value="1" label="&bold.label;"/>
+                  <menuitem value="2" label="&italic.label;"/>
+                  <menuitem value="3" label="&boldItalic.label;"/>
+                </menupopup>
+              </menulist>
+              <label value="&size.label;" accesskey="&size.accesskey;" control="mailQuotedSize"/>
+              <menulist id="mailQuotedSize" preference="mail.quoted_size">
+                <menupopup>
+                  <menuitem value="0" label="&regularSize.label;"/>
+                  <menuitem value="1" label="&bigger.label;"/>
+                  <menuitem value="2" label="&smaller.label;"/>
+                </menupopup>
+              </menulist>
+              <label value="&color.label;" accesskey="&color.accesskey;" control="citationmenu"/>
+              <colorpicker type="button" id="citationmenu" palettename="standard" preference="mail.citation_color"/>
+            </hbox>    
+          </groupbox>
+
+          <groupbox>
+            <caption label="&htmlColors.label;"/>
+            <description>&overrideSender.label;</description>
+            <hbox align="center" class="indent">
+              <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
+
+              <colorpicker type="button" id="foregroundtextmenu" palettename="standard" preference="browser.display.foreground_color"/> 
+              <spacer style="width: 25px"/>
+              <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
+              <colorpicker type="button" id="backgroundmenu" palettename="standard" preference="browser.display.background_color"/> 
+            </hbox>
+          </groupbox>
+        </tabpanel>
+
+        <tabpanel orient="vertical">
+          <groupbox>
+            <caption label="&labelsSettings.label;"/> 
+            <description>&displayLabelsText.label;</description>
+            <hbox align="top">
+              <vbox>
+                <!-- label color: 1 (default red) -->
+                <hbox class="indent" align="center">
+                  <textbox id="label1TextBox" preference="mailnews.labels.description.1" />
+                  <colorpicker class="small-margin" type="button" id="labelColorPicker1"
+                               palettename="standard" preference="mailnews.labels.color.1"/>
+                </hbox>    
+
+                <!-- label color: 2 (default orange) -->
+                <hbox class="indent" align="center">
+                  <textbox id="label2TextBox" preference="mailnews.labels.description.2" />
+                  <colorpicker class="small-margin" type="button" id="labelColorPicker2"
+                               palettename="standard" preference="mailnews.labels.color.2"/>
+                </hbox>    
+
+                <!-- label color: 3 (default green) -->
+                <hbox class="indent" align="center">
+                  <textbox id="label3TextBox" preference="mailnews.labels.description.3" />
+                  <colorpicker class="small-margin" type="button" id="labelColorPicker3"
+                               palettename="standard" preference="mailnews.labels.color.3"/>
+                </hbox>  
+              </vbox>
+
+              <vbox>
+                <!-- label color: 4 (default blue) -->
+                <hbox class="indent" align="center">
+                  <textbox id="label4TextBox" preference="mailnews.labels.description.4" />
+                  <colorpicker class="small-margin" type="button" id="labelColorPicker4"
+                               palettename="standard" preference="mailnews.labels.color.4"/>
+                </hbox>    
+
+                <!-- label color: 5 (default purple) -->
+                <hbox class="indent" align="center">
+                  <textbox id="label5TextBox" preference="mailnews.labels.description.5" />
+                  <colorpicker class="small-margin" type="button" id="labelColorPicker5"
+                               palettename="standard" preference="mailnews.labels.color.5"/>
+                </hbox>   
+              </vbox>
+            </hbox>
+                <hbox pack="end">
+                  <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" 
+                          oncommand="gDisplayPane.restoreDefaultLabels();"/>
+                </hbox> 
+          </groupbox>
+        </tabpanel>
+
+        <tabpanel orient="vertical">
+          <groupbox>
+            <caption label="&fontsCaption.label;"/> 
+            <hbox align="center">
+              <description flex="1">&fontsDescription.label;</description>
+              <button label="&fontOptions.label;" 
+                      accesskey="&fontOptions.accesskey;"
+                      oncommand="gDisplayPane.fontOptionsDialog();"/>
+            </hbox>
+          </groupbox>
+
+          <groupbox align="start">
+            <caption label="&languagesTitle.label;"/>
+
+            <label value="&composingDescription.label;"/>
+
+            <separator class="thin"/>
+            <grid>
+              <columns>
+                <column/>
+                <column flex="1"/>
+              </columns>
+
+              <rows>
+                <row align="center" class="indent">
+                  <label control="sendDefaultCharsetList"
+                         value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
+                  <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+                            preference="mailnews.send_default_charset">
+                    <template>
+                      <menupopup>
+                        <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+                      </menupopup>
+                    </template>
+                  </menulist>
+                </row> 
+        
+                <row align="center" class="indent">
+                  <label control="viewDefaultCharsetList"
+                         value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
+                  <menulist id="viewDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                            preference="mailnews.view_default_charset">
+                    <template>
+                      <menupopup>
+                        <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+                      </menupopup>
+                    </template>
+                  </menulist>
+                </row>
+              </rows>
+            </grid> 
+    
+            <separator class="thin"/>
+
+            <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
+                      preference="mailnews.force_charset_override"
+                      accesskey="&forceCharsetOverride.accesskey;"/>
+            <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
+                      preference="mailnews.reply_in_default_charset"
+                      accesskey="&replyInDefaultCharset.accesskey;"/>
+          </groupbox> 
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
+    <separator/>
+  </prefpane>
+</overlay>

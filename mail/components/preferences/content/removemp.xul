@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % removempDTD SYSTEM "chrome://messenger/locale/preferences/removemp.dtd" >
+%brandDTD;
+%removempDTD;
+]>
+
+<dialog id="removemp" title="&removePassword.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        style="width: 35em;" 
+        ondialogaccept="gRemovePasswordDialog.removePassword();" 
+        onload="gRemovePasswordDialog.init()">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/preferences/removemp.js"/>
+
+  <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
+
+  <description>&removeWarning1.label;</description>
+  <description class="header">&removeWarning2.label;</description>
+  
+  <separator class="thin"/>
+    
+  <groupbox>
+    <caption label="&removeInfo.label;"/>
+
+    <hbox align="center">
+      <label value="&setPassword.oldPassword.label;"/> 
+      <textbox id="password" type="password" oninput="gRemovePasswordDialog.validateInput();"/>
+    </hbox>
+  </groupbox>
+  
+  <separator/>
+
+</dialog>

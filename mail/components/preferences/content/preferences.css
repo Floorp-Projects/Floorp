@@ -1,0 +1,5 @@
+
+filefield {
+  -moz-binding: url("chrome://messenger/content/preferences/preferences.xml#fileField");
+}
+

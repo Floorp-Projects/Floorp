@@ -1,0 +1,43 @@
+<!ENTITY generalSettings.caption            "Default Settings">
+<!ENTITY generalSettings.label             "Make &brandShortName; the default application for:">
+<!ENTITY setDefaultMailClient.label        "Mail">
+<!ENTITY setDefaultMailClient.accesskey    "M">
+<!ENTITY setDefaultNewsClient.label        "News">
+<!ENTITY setDefaultNewsClient.accesskey    "N">
+<!ENTITY checkNow.label                    "Check Now">
+<!ENTITY checkNow.accesskey                "N">
+<!ENTITY whenStartingCheck.label           "When starting, &brandShortName; should check to see if it is the default application for">
+<!ENTITY mailApplication.label             "Mail">
+<!ENTITY checkDefaultMail.accesskey        "d">
+<!ENTITY newsApplication.label             "News">
+<!ENTITY checkDefaultNews.accesskey        "D">
+
+<!ENTITY windowSettings.label             "Window Configuration">
+<!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">
+<!ENTITY selectWindowLayout.accesskey     "S">
+
+<!ENTITY messengerStartPage.label         "&brandShortName; Start Page">
+<!ENTITY enableStartPage.label            "When &brandShortName; launches, show the Start Page in the message area">
+<!ENTITY enableStartPage.accesskey        "W">
+<!ENTITY location.label                   "Location:">
+<!ENTITY location.accesskey               "L">
+<!ENTITY useDefault.label                 "Restore Default">
+<!ENTITY useDefault.accesskey             "R">
+
+<!ENTITY bounceSystemDockIcon.label "Animate the dock icon">
+<!ENTITY bounceSystemDockIcon.accesskey "A">
+
+<!ENTITY newMessagesArrive.label          "When new messages arrive:">
+<!ENTITY playSound.label                  "Play a sound">
+<!ENTITY playSound.accesskey              "P">
+<!ENTITY showAnimatedAlert.label          "Show an alert">
+<!ENTITY showAnimatedAlert.accesskey      "S">
+<!ENTITY preview.label                    "Preview">
+<!ENTITY preview.accesskey                "v">
+<!ENTITY systemsound.label                "System New Mail Sound">
+<!ENTITY systemsound.accesskey            "y">
+<!ENTITY customsound.label                "Custom .wav file">
+<!ENTITY customsound.accesskey            "C">
+<!ENTITY browse.label                     "Browse...">
+<!ENTITY browse.accesskey                 "B">
+<!ENTITY browse.title                     "Choose file">

@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Thunderbird Preferences System. 
+# 
+# The Initial Developer of the Original Code is Scott MacGregor.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % privacyDTD SYSTEM "chrome://messenger/locale/preferences/privacy.dtd">
+%brandDTD;
+%privacyDTD;
+]>
+
+<overlay id="PrivacyPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:nc="http://home.netscape.com/NC-rdf#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+           
+  <prefpane id="panePrivacy" onpaneload="gPrivacyPane.init();">
+    <script type="application/x-javascript" src="chrome://messenger/content/preferences/privacy.js"/>
+
+    <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
+
+    <preferences>
+      <preference id="mail.preferences.privacy.selectedTabIndex"
+                  name="mail.preferences.privacy.selectedTabIndex" type="int"/>
+      <preference id="mailnews.message_display.disable_remote_image"
+                  name="mailnews.message_display.disable_remote_image"
+                  type="bool"/>
+      <preference id="mailnews.message_display.disable_remote_images.useWhitelist"
+                  name="mailnews.message_display.disable_remote_images.useWhitelist"
+                  type="bool"/>
+      <preference id="mailnews.message_display.disable_remote_images.whiteListAbURI"
+                  name="mailnews.message_display.disable_remote_images.whiteListAbURI"
+                  type="string"/>
+      <preference id="javascript.allow.mailnews"
+                  name="javascript.allow.mailnews" inverted="true"
+                  type="bool"/>
+      <preference id="mail.phishing.detection.enabled"
+                  name="mail.phishing.detection.enabled"
+                  type="bool"/>  
+      <preference id="wallet.crypto"
+                  name="wallet.crypto"
+                  type="bool"/>
+      <preference id="pref.privacy.disable_button.view_passwords"
+                  name="pref.privacy.disable_button.view_passwords"
+                  type="bool"/>
+    </preferences>
+
+    <tabbox id="privacyPrefs" flex="1" onselect="gPrivacyPane.tabSelectionChanged();">
+      <tabs>
+        <tab label="&itemGeneral.label;"/>
+        <tab label="&itemPhishing.label;"/>
+        <tab label="&itemPasswords.label;"/>
+      </tabs>
+      
+      <tabpanels flex="1">
+        <!-- General --> 
+        <tabpanel orient="vertical">
+          <checkbox id="networkImageDisableImagesInMailNews" 
+                    label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
+                    preference="mailnews.message_display.disable_remote_image"
+                    oncommand="gPrivacyPane.updateRemoteImagesState();"/>
+          <hbox class="indent">
+            <checkbox id="useWhiteList"
+                      preference="mailnews.message_display.disable_remote_images.useWhitelist"                       
+                      label="&allowRemoteImagesForFriends.label;" accesskey="&allowRemoteImagesForFriends.accesskey;"/> 
+
+            <menulist id="whiteListAbURI" flex="1"
+                      preference="mailnews.message_display.disable_remote_images.whiteListAbURI">
+              <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
+                           datasources="rdf:addressdirectory"
+                           sortActive="true"
+                           sortDirection="ascending"
+                           sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+                <template>
+                  <rule nc:IsWriteable="false"/>
+                  <rule nc:IsMailList="false">
+                    <menuitem uri="..."
+                              label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                              value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                  </rule>
+                </template>
+              </menupopup>
+            </menulist>  
+          </hbox>  
+             
+          <separator class="thin"/>
+
+          <checkbox id="javascriptAllowMailNews"
+                    label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
+                    preference="javascript.allow.mailnews"/>
+                                                      
+        </tabpanel>
+        
+        <!-- Phishing Detector --> 
+        <tabpanel orient="vertical">
+          <description>&phishingDetector.intro;</description>
+          <class separator="thin"/>
+          <checkbox id="enablePhishingDetector"
+                    label="&enablePhishingDetector.label;" accesskey="&enablePhishingDetector.accesskey;"
+                    preference="mail.phishing.detection.enabled"/>
+
+        </tabpanel>
+        
+        <!-- Password --> 
+
+        <tabpanel orient="vertical"> 
+          <description>&savedPasswords.intro;</description>
+          <checkbox id="encryptEnabled" label="&encryptEnabled.label;" accesskey="&encryptEnabled.accesskey;"
+                    preference="wallet.crypto" oncommand="gPrivacyPane.initReencryptCallback();"/>
+          <separator/>
+          <hbox align="start">
+            <description flex="1">&masterPassword.intro;</description>
+            <vbox>
+              <button id="setMasterPassword" 
+                      label="&setMasterPassword.label;" accesskey="&setMasterPassword.accesskey;"
+                      oncommand="gPrivacyPane.changeMasterPassword();"/>
+              <button id="removeMasterPassword"
+                      label="&removeMasterPassword.label;" accesskey="&removeMasterPassword.accesskey;"
+                      oncommand="gPrivacyPane.removeMasterPassword();"/>
+            </vbox>
+          </hbox>
+          <separator flex="1"/>
+          <hbox>
+            <button label="&viewPasswords.label;" accesskey="&viewPasswords.accesskey;"
+                    oncommand="gPrivacyPane.viewPasswords();"
+                    preference="pref.privacy.disable_button.view_passwords"/>
+          </hbox>
+        </tabpanel>
+
+      </tabpanels>
+    </tabbox>
+
+    <separator/>
+
+  </prefpane>
+</overlay>

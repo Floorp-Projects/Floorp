@@ -1,0 +1,23 @@
+<!ENTITY dialog.title                  "Return Receipts">
+<!ENTITY receiptSettings.label         "Return Receipts">
+<!ENTITY requestReceipt.label          "When sending messages, always request a return receipt">
+<!ENTITY requestReceipt.accesskey      "W">
+<!ENTITY receiptArrive.label           "When a receipt arrives:">
+<!ENTITY leaveIt.label                 "Leave it in my Inbox">
+<!ENTITY leaveIt.accesskey             "i">
+<!ENTITY moveToSent.label              "Move it to my &quot;Sent&quot; folder">
+<!ENTITY moveToSent.accesskey          "m">
+<!ENTITY requestMDN.label              "When I receive a request for a return receipt:">
+<!ENTITY never.label                   "Never send a return receipt">
+<!ENTITY never.accesskey               "n">
+<!ENTITY returnSome.label              "Allow return receipts for some messages">
+<!ENTITY returnSome.accesskey          "r">
+<!ENTITY notInToCc.label               "If I'm not in the To or Cc of the message:">
+<!ENTITY notInToCc.accesskey           "f">
+<!ENTITY outsideDomain.label           "If the sender is outside my domain:">
+<!ENTITY outsideDomain.accesskey       "t">
+<!ENTITY otherCases.label              "In all other cases:">
+<!ENTITY otherCases.accesskey          "a">
+<!ENTITY askMe.label                   "Ask me">
+<!ENTITY alwaysSend.label              "Always send">
+<!ENTITY neverSend.label               "Never send">

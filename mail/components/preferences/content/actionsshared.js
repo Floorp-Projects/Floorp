@@ -1,26 +1,26 @@
-#
-# ***** BEGIN LICENSE BLOCK *****
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
+# 
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
 # http://www.mozilla.org/MPL/
-#
+# 
 # Software distributed under the License is distributed on an "AS IS" basis,
 # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 # for the specific language governing rights and limitations under the
 # License.
-#
-# The Original Code is mozilla.org code.
-#
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# 
+# The Original Code is the Download Actions Manager.
+# 
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are 
+# Copyright (C) 2000, 2001, 2003, 2005
 # the Initial Developer. All Rights Reserved.
-#
+# 
 # Contributor(s):
-#
+#   Ben Goodger <ben@mozilla.org>
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -32,25 +32,32 @@
 # and other provisions required by the GPL or the LGPL. If you do not delete
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
-#
+# 
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+const FILEACTION_SAVE_TO_DISK     = 1;
+const FILEACTION_OPEN_INTERNALLY  = 2;
+const FILEACTION_OPEN_DEFAULT     = 3;
+const FILEACTION_OPEN_CUSTOM      = 4;
+const FILEACTION_OPEN_PLUGIN      = 5;
+function FileAction ()
+{
+}
+FileAction.prototype = {
+  type        : "",
+  extension   : "",
+  hasExtension: true,
+  editable    : true,
+  smallIcon   : "",
+  bigIcon     : "",
+  typeName    : "",
+  action      : "",
+  mimeInfo    : null,
+  customHandler       : "",
+  handleMode          : false,
+  pluginAvailable     : false,
+  pluginEnabled       : false,
+  handledOnlyByPlugin : false
+};
 
-include $(DEPTH)/config/autoconf.mk
-
-DIRS    = compose preferences addrbook migration
-
-ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
-DIRS += gnome
-endif
-
-DIRS += build
-
-EXTRA_PP_COMPONENTS = nsMailDefaultHandler.js
-
-include $(topsrcdir)/config/rules.mk
 

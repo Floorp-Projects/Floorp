@@ -1,0 +1,28 @@
+<!ENTITY itemGeneral.label       "General">
+<!ENTITY itemPhishing.label      "E-mail Scams">
+<!ENTITY itemPasswords.label     "Passwords">
+
+<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages">
+<!ENTITY disableImageInMailNews.accesskey "B">
+<!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
+<!ENTITY allowRemoteImagesForFriends.accesskey "A">
+<!ENTITY enbJsCheckMailNews.label      "Block JavaScript in mail messages">
+<!ENTITY enbJsCheckMailNews.accesskey  "J">
+
+<!-- Phishing Detector -->
+<!ENTITY phishingDetector.intro      "&brandShortName; can analyze messages for possible email scams by looking for common techniques used to deceive you.">
+<!ENTITY enablePhishingDetector.label    "Check mail messages for email scams">
+<!ENTITY enablePhishingDetector.accesskey  "C">
+
+<!-- Passwords -->
+<!ENTITY savedPasswords.intro         "&brandShortName; can remember password information for all of your accounts so you do not need to re-enter your login details.">
+<!ENTITY  encryptEnabled.label        "Use a master password to encrypt stored passwords">
+<!ENTITY  encryptEnabled.accesskey    "s">
+<!ENTITY  masterPassword.intro        "When set, the Master Password protects all your passwords - but you must enter it once per session.">
+<!ENTITY  setMasterPassword.label     "Master Password">
+<!ENTITY  setMasterPassword.accesskey "M">
+<!ENTITY  removeMasterPassword.label  "Remove Master Password...">
+<!ENTITY  removeMasterPassword.accesskey "R">
+<!ENTITY  viewPasswords.label         "View Saved Passwords">
+<!ENTITY  viewPasswords.accesskey     "V">
+

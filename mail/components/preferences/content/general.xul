@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Thunderbird Preferences System. 
+# 
+# The Initial Developer of the Original Code is Scott MacGregor.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % generalDTD SYSTEM "chrome://messenger/locale/preferences/general.dtd" >
+%generalDTD;
+]>
+
+<overlay id="GeneralPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+           
+  <prefpane id="paneGeneral" onpaneload="gGeneralPane.init();">
+    <script type="application/x-javascript" src="chrome://messenger/content/preferences/general.js"/>
+
+    <preferences>
+      <preference id="mail.checkDefaultMail"
+                  name="mail.checkDefaultMail"
+                  onchange="return gGeneralPane.onWriteDefaultMailPref();"
+                  type="bool"/>
+      <preference id="mail.checkDefaultNews"
+                  name="mail.checkDefaultNews"
+                  onchange="return gGeneralPane.onWriteDefaultNewsPref();"
+                  type="bool"/>
+      <preference id="mail.pane_config.dynamic" name="mail.pane_config.dynamic" type="int"/>
+      <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
+      <preference id="mailnews.start_page.enabled" name="mailnews.start_page.enabled" type="bool"/>
+      <preference id="mailnews.start_page.url" name="mailnews.start_page.url" type="wstring"/>
+      <preference id="mail.biff.show_alert" name="mail.biff.show_alert" type="bool"/>
+      <preference id="mail.biff.play_sound" name="mail.biff.play_sound" type="bool"/>
+      <preference id="mail.biff.play_sound.type" name="mail.biff.play_sound.type" type="int"/>
+      <preference id="mail.biff.play_sound.url" name="mail.biff.play_sound.url" type="string"/>  
+#ifdef XP_MACOSX
+      <preference id="mail.biff.animate_dock_icon" name="mail.biff.animate_dock_icon" type="bool"/>
+#endif
+    </preferences>
+    
+    <stringbundle id="mapiBundle" src="chrome://messenger-mapi/locale/mapi.properties"/>
+    <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
+
+    <groupbox align="start">
+      <caption label="&generalSettings.caption;"/>
+    
+#ifdef XP_WIN
+      <label value="&generalSettings.label;"/>
+      <hbox class="indent">
+        <checkbox id="defaultMailClient" label="&setDefaultMailClient.label;"
+                  accesskey="&setDefaultMailClient.accesskey;" 
+                  preference="mail.checkDefaultMail"/>
+
+        <checkbox id="defaultNewsClient" label="&setDefaultNewsClient.label;"
+                  preference="mail.checkDefaultNews"                
+                  accesskey="&setDefaultNewsClient.accesskey;"/>
+      </hbox>
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+      <vbox align="left" id="defaultClientBox">
+        <label value="&whenStartingCheck.label;"/>
+        <grid flex="1" style="margin-left: 20px;">
+          <columns>
+            <column/>
+            <column flex="1" align="left"/>
+          </columns>
+          <rows>
+            <row>
+              <checkbox id="checkDefaultMail" preference="mail.checkDefaultMail"
+                        label="&mailApplication.label;"
+                        accesskey="&checkDefaultMail.accesskey;"/>
+              <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                       oncommand="gGeneralPane.checkDefaultMailNow(false)"/>
+            </row>
+            <row>
+              <checkbox id="checkDefaultNews" preference="mail.checkDefaultNews"
+                        label="&newsApplication.label;"
+                        accesskey="&checkDefaultNews.accesskey;"/>
+              <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                      oncommand="gGeneralPane.checkDefaultMailNow(true)"/>
+            </row>
+          </rows>
+        </grid>
+      </vbox>
+      
+      <separator class="thin"/>
+#endif
+    
+    </groupbox>
+
+<!--
+    <groupbox>
+      <caption label="&windowSettings.label;"/>
+      <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
+      <hbox align="center" class="indent">
+        <radiogroup id="mailPaneConfig" preference="mail.pane_config.dynamic" orient="horizontal">
+          <radio class="mailPaneConfigIcon" value="0" id="classic"/>
+          <radio class="mailPaneConfigIcon" value="1" id="wide"/>
+          <radio class="mailPaneConfigIcon" value="2" id="vertical"/>
+        </radiogroup>
+      </hbox> 
+    </groupbox>
+
+-->
+
+    <groupbox>
+      <caption label="&messengerStartPage.label;"/>
+        <hbox align="start">
+          <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
+                    preference="mailnews.start_page.enabled" oncommand="gGeneralPane.startPageCheck();"
+                    accesskey="&enableStartPage.accesskey;"/>
+        </hbox>
+        <hbox align="center">
+          <label value="&location.label;" accesskey="&location.accesskey;" control="mailnewsStartPageUrl"/>
+          <textbox id="mailnewsStartPageUrl" flex="1" preference="mailnews.start_page.url"/>
+          <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
+                  oncommand="gGeneralPane.setHomePageToDefaultPage();">
+            <observes element="mailnewsStartPageUrl" attribute="disabled"/>
+          </button>
+        </hbox>
+    </groupbox>
+
+
+    <groupbox align="start">
+      <caption label="&newMessagesArrive.label;"/>
+
+      <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
+                preference="mail.biff.show_alert"
+                accesskey="&showAnimatedAlert.accesskey;"/>
+#ifdef XP_MACOSX
+      <checkbox id="newMailNotificationBounce" label="&bounceSystemDockIcon.label;"
+                preference="mail.biff.animate_dock_icon"
+                accesskey="&bounceSystemDockIcon.accesskey;"/>
+#endif
+      <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
+           preference="mail.biff.play_sound" label="&playSound.label;"
+           oncommand="gGeneralPane.playSoundCheck();"/>
+
+      <hbox>
+        <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical">
+          <radio value="0" oncommand="gGeneralPane.playSoundCheck();" label="&systemsound.label;" 
+                 accesskey="&systemsound.accesskey;" id="system"/>
+          <radio value="1" oncommand="gGeneralPane.playSoundCheck();" label="&customsound.label;" 
+                 accesskey="&customsound.accesskey;" id="custom"/>
+        </radiogroup>
+
+        <vbox>
+          <spacer flex="1"/>
+          <hbox align="center">
+            <textbox readonly="true" flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl"
+                     preference="mail.biff.play_sound.url"/>
+            <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
+                    accesskey="&browse.accesskey;" oncommand="gGeneralPane.browseForSoundFile();"/>
+            <button id="preview" label="&preview.label;"
+                    accesskey="&preview.accesskey;" oncommand="gGeneralPane.previewSound();"/>
+          </hbox>
+        </vbox>
+      </hbox>
+    </groupbox>
+
+    <separator/>
+
+  </prefpane>
+</overlay>

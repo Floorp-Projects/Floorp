@@ -140,17 +140,18 @@ function CheckOnline()
 
 function openOptionsDialog(containerID, paneURL, itemID)
 {
-  //check for an existing pref window and focus it; it's not application modal
-  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
-  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
-  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
-  var lastPrefWindow = kWindowMediator.getMostRecentWindow("Mail:Options");
+  // var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
+  var instantApply = false;
+  var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
+
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+           .getService(Components.interfaces.nsIWindowMediator);
   
-  if (lastPrefWindow)
-    lastPrefWindow.focus();
+  var win = wm.getMostRecentWindow("Mail:Preferences");
+  if (win)
+    win.focus();
   else 
-    openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
-               "chrome,titlebar,resizable,modal", paneURL, containerID, itemID);
+    openDialog("chrome://messenger/content/preferences/preferences.xul","Preferences", features);
 }
 
 function openExtensions(aOpenMode)
