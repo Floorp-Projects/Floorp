@@ -5,3 +5,4 @@
 <!ENTITY finishButton.label "Finish">
 <!ENTITY cancelButton.label "Cancel">
 <!ENTITY instructions.label "Click next to continue entering information.">
+<!ENTITY windowTitle.label "Account Wizard">
