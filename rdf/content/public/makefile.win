@@ -29,11 +29,12 @@ EXPORTS	= \
 	nsIXULParentDocument.h		\
 	nsIXULChildDocument.h		\
 	nsIXULDocumentInfo.h		\
-	nsIXULPopupListener.h \
-	nsIDOMXULCommandDispatcher.h \
-	nsIXULCommandDispatcher.h \
-	nsIStreamLoadableDocument.h  \
-	nsIXULKeyListener.h  \
+	nsIXULPopupListener.h           \
+	nsIDOMXULCommandDispatcher.h    \
+	nsIXULCommandDispatcher.h       \
+        nsIXULContentUtils.h            \
+	nsIStreamLoadableDocument.h     \
+	nsIXULKeyListener.h             \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
