@@ -557,11 +557,11 @@ public class Interpreter
 
             case Token.GETPROP : {
                 iCodeTop = generateICode(child, iCodeTop);
-                String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
-                if (s != null) {
-                    if (s.equals("__proto__")) {
+                int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+                if (special != 0) {
+                    if (special == Node.SPECIAL_PROP_PROTO) {
                         iCodeTop = addIcode(Icode_GETPROTO, iCodeTop);
-                    } else if (s.equals("__parent__")) {
+                    } else if (special == Node.SPECIAL_PROP_PARENT) {
                         iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
                     } else {
                         badTree(node);
@@ -624,11 +624,11 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
-                String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
-                if (s != null) {
-                    if (s.equals("__proto__")) {
+                int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+                if (special != 0) {
+                    if (special == Node.SPECIAL_PROP_PROTO) {
                         iCodeTop = addIcode(Icode_SETPROTO, iCodeTop);
-                    } else if (s.equals("__parent__")) {
+                    } else if (special == Node.SPECIAL_PROP_PARENT) {
                         iCodeTop = addIcode(Icode_SETPARENT, iCodeTop);
                     } else {
                         badTree(node);

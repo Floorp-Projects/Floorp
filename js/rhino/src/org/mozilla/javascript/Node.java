@@ -396,6 +396,10 @@ public class Node implements Cloneable {
 
         SPECIALCALL_PROP  = 17;
 
+    public static final int    // this value of the SPECIAL_PROP_PROP specifies
+        SPECIAL_PROP_PROTO  = 1,
+        SPECIAL_PROP_PARENT = 2;
+
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types
         LEFT = 1,
@@ -633,25 +637,67 @@ public class Node implements Cloneable {
                 sb.append(" [");
                 sb.append(propToString(type));
                 sb.append(": ");
+                String value;
                 switch (type) {
-                    case FIXUPS_PROP : // can't add this as it recurses
-                        sb.append("fixups property");
+                  case FIXUPS_PROP : // can't add this as it recurses
+                    value = "fixups property";
+                    break;
+                  case TARGETBLOCK_PROP : // can't add this as it recurses
+                    value = "target block property";
+                    break;
+                  case LASTUSE_PROP :     // can't add this as it is dull
+                    value = "last use property";
+                    break;
+                  case SPECIAL_PROP_PROP:
+                    switch (x.intValue) {
+                      case SPECIAL_PROP_PROTO:
+                        value = "__proto__";
                         break;
-                    case TARGETBLOCK_PROP : // can't add this as it recurses
-                        sb.append("target block property");
+                      case SPECIAL_PROP_PARENT:
+                        value = "__parent__";
                         break;
-                    case LASTUSE_PROP :     // can't add this as it is dull
-                        sb.append("last use property");
+                      default:
+                        throw Kit.codeBug();
+                    }
+                    break;
+                  case ISNUMBER_PROP:
+                    switch (x.intValue) {
+                      case BOTH:
+                        value = "both";
                         break;
-                    default :
-                        Object obj = x.objectValue;
-                        if (obj != null) {
-                            sb.append(obj.toString());
-                        } else {
-                            sb.append(x.intValue);
-                        }
+                      case RIGHT:
+                        value = "right";
                         break;
+                      case LEFT:
+                        value = "left";
+                        break;
+                      default:
+                        throw Kit.codeBug();
+                    }
+                    break;
+                  case SPECIALCALL_PROP:
+                    switch (x.intValue) {
+                      case SPECIALCALL_EVAL:
+                        value = "eval";
+                        break;
+                      case SPECIALCALL_WITH:
+                        value = "with";
+                        break;
+                      default:
+                        // NON_SPECIALCALL should not be stored
+                        throw Kit.codeBug();
+                    }
+                    break;
+                  default :
+                    Object obj = x.objectValue;
+                    if (obj != null) {
+                        value = obj.toString();
+                    } else {
+                        value = String.valueOf(x.intValue);
+                    }
+                    break;
                 }
+                sb.append(value);
                 sb.append(']');
             }
             return sb.toString();

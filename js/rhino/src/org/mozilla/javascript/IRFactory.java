@@ -804,9 +804,20 @@ public class IRFactory {
             nodeType = Token.GETPROP;
             right.setType(Token.STRING);
             String id = right.getString();
-            if (id.equals("__proto__") || id.equals("__parent__")) {
+            int idlength = id.length();
+            int special = 0;
+            if (idlength == 9) {
+                if (id.equals("__proto__")) {
+                    special = Node.SPECIAL_PROP_PROTO;
+                }
+            } else if (idlength == 10) {
+                if (id.equals("__parent__")) {
+                    special = Node.SPECIAL_PROP_PARENT;
+                }
+            }
+            if (special != 0) {
                 Node result = new Node(nodeType, left);
-                result.putProp(Node.SPECIAL_PROP_PROP, id);
+                result.putIntProp(Node.SPECIAL_PROP_PROP, special);
                 return result;
             }
             break;
@@ -972,10 +983,10 @@ public class IRFactory {
             int type;
             if (nodeType == Token.GETPROP) {
                 type = Token.SETPROP;
-                String special = (String) left.getProp(Node.SPECIAL_PROP_PROP);
-                if (special != null) {
+                int special = left.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+                if (special != 0) {
                     Node result = new Node(Token.SETPROP, obj, right);
-                    result.putProp(Node.SPECIAL_PROP_PROP, special);
+                    result.putIntProp(Node.SPECIAL_PROP_PROP, special);
                     return result;
                 }
             } else {

@@ -3569,17 +3569,17 @@ class BodyCodegen
 
     private void visitGetProp(Node node, Node child)
     {
-        String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
-        if (s != null) {
+        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+        if (special != 0) {
             while (child != null) {
                 generateCodeFromNode(child, node);
                 child = child.getNext();
             }
             cfw.addALoad(variableObjectLocal);
             String runtimeMethod = null;
-            if (s.equals("__proto__")) {
+            if (special == Node.SPECIAL_PROP_PROTO) {
                 runtimeMethod = "getProto";
-            } else if (s.equals("__parent__")) {
+            } else if (special == Node.SPECIAL_PROP_PARENT) {
                 runtimeMethod = "getParent";
             } else {
                 Codegen.badTree();
@@ -3635,17 +3635,17 @@ class BodyCodegen
 
     private void visitSetProp(Node node, Node child)
     {
-        String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
-        if (s != null) {
+        int special = node.getIntProp(Node.SPECIAL_PROP_PROP, 0);
+        if (special != 0) {
             while (child != null) {
                 generateCodeFromNode(child, node);
                 child = child.getNext();
             }
             cfw.addALoad(variableObjectLocal);
             String runtimeMethod = null;
-            if (s.equals("__proto__")) {
+            if (special == Node.SPECIAL_PROP_PROTO) {
                 runtimeMethod = "setProto";
-            } else if (s.equals("__parent__")) {
+            } else if (special == Node.SPECIAL_PROP_PARENT) {
                 runtimeMethod = "setParent";
             } else {
                 Codegen.badTree();
