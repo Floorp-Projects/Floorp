@@ -25,7 +25,6 @@
 #include "nsIJVMPrefsWindow.h"
 #include "ProxyJNI.h"
 #include "lcglue.h"
-#include "libmocha.h"
 #include "nsCSecurityContext.h"
 #include "nsISecurityContext.h"
 
