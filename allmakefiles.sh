@@ -75,6 +75,7 @@ dom/src/jsurl/Makefile
 dom/tools/Makefile
 editor/Makefile
 editor/public/Makefile
+editor/idl/Makefile
 editor/txmgr/Makefile
 editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
