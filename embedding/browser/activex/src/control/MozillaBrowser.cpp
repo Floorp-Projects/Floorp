@@ -541,7 +541,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 		// Save the file.
         nsAutoString useDocCharset;
-		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, mimeType, useDocCharset, 0);
+		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, mimeType, useDocCharset, 0, 72);
 	}
 
 	return hr;
