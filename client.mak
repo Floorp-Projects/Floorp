@@ -113,6 +113,19 @@ PSM_CO_FLAGS=-r SECURITY_CLIENT_BRANCH
 
 CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS) -P
 
+#//------------------------------------------------------------------------
+#// Figure out how to pull LDAP C SDK client libs.
+#// If no LDAPCSDK_CO_TAG is specified, use the default tag
+#//------------------------------------------------------------------------
+
+!if "$(LDAPCSDK_CO_TAG)" != ""
+LDAPCSDK_CO_FLAGS=-r $(LDAPSDK_CO_TAG)
+!else
+LDAPCSDK_CO_FLAGS=-r LDAPCSDK_40_BRANCH
+!endif
+
+CVSCO_LDAPCSDK = cvs -q $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) -P
+
 ## The master target
 ############################################################
 
@@ -124,7 +137,7 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_nspr pull_psm pull_seamonkey
+pull_all: pull_nspr pull_psm pull_ldapcsdk pull_seamonkey
 
 pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
@@ -133,6 +146,10 @@ pull_nspr: pull_clientmak
 pull_psm:
 	cd $(MOZ_SRC)\.
 	$(CVSCO_PSM) mozilla/security
+
+pull_ldapcsdk:
+	cd $(MOZ_SRC)\.
+	$(CVSCO_LDAPCSDK) mozilla/directory/c-sdk
 
 # pull either layout only or seamonkey the browser
 pull_layout:
@@ -187,7 +204,7 @@ build_nspr:
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
-		
+
 build_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
