@@ -495,15 +495,15 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     const char* currLine = lines.get();
     while (*currLine) {
-        const char* eol = strstr(currLine, CRLF);
+        const char* eol = strchr(currLine, nsCRT::LF);
         if (!eol) {
             mControlReadCarryOverBuf.Assign(currLine);
             break;
         }
 
-        // Append the current segment, including the CRLF
+        // Append the current segment, including the LF
         nsCAutoString line;
-        line.Assign(currLine, eol - currLine + 2);
+        line.Assign(currLine, eol - currLine + 1);
         
         // Does this start with a response code?
         PRBool startNum = (line.Length() >= 3 &&
@@ -542,7 +542,7 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
             if (NS_FAILED(rv)) return rv;
         }
 
-        currLine = eol+2; // CR+LF
+        currLine = eol+1;   // +LF 
     }
 
     return NS_OK;
@@ -981,8 +981,8 @@ return rv;
 ///////////////////////////////////
 nsresult
 nsFtpState::S_user() {
-    // some servers on connect send us a 421.  (84525)
-    if (mResponseCode == 421)
+    // some servers on connect send us a 421 or 521.  (84525) (141784)
+    if ((mResponseCode == 421) || (mResponseCode == 521))
         return NS_ERROR_FAILURE;
 
     nsresult rv;
