@@ -93,6 +93,13 @@ public:
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
 
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+                                           const nsPoint&  aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd,
+                                           PRBool&         aBeginFrameContent);
+
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
 

@@ -1230,9 +1230,23 @@ NS_IMETHODIMP nsScrollPortView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
 NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeight) const
 {
-  GetDimensions(aWidth, aHeight);
+  if (!aWidth || !aHeight)
+    return NS_ERROR_NULL_POINTER;
 
-  return NS_OK;
+  *aWidth  = 0;
+  *aHeight = 0;
+
+  nsIView *scrolledView = 0;
+
+  nsresult result = GetScrolledView(scrolledView);
+
+  if (NS_FAILED(result))
+    return result;
+  
+  if (!scrolledView)
+    return NS_ERROR_FAILURE;
+
+  return scrolledView->GetDimensions(aWidth, aHeight);
 }
 
 NS_IMETHODIMP nsScrollPortView::ShowQuality(PRBool aShow)
