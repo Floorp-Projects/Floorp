@@ -465,7 +465,10 @@ PR_IMPLEMENT(void)
 PL_ProcessPendingEvents(PLEventQueue* self)
 {
     PRInt32 count;
+
+#ifdef XP_UNIX
     PRCList* node;
+#endif
 
     if (self == NULL)
       return;
