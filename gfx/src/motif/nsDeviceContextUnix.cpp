@@ -245,7 +245,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPi
     
   } // switch(mDepth)
   
-  aColor = newcolor;
+  aPixel = newcolor;
   return NS_OK;
 }
 
