@@ -180,6 +180,8 @@ protected:
 
     struct InlineMatches;
     friend struct InlineMatches;
+    union _stor_elements;
+    friend union _stor_elements;
 
     /**
      * If the set is currently
@@ -207,10 +209,10 @@ protected:
      * Instrumentation (#define NSTEMPLATEMATCHSET_METER) shows that
      * almost all of the match sets contain fewer than seven elements.
      */
-    union {
+    union _stor_elements {
         PLDHashTable  mTable;
         InlineMatches mInlineMatches;
-    };
+    } mStorageElements;
 
     static PLDHashTableOps gOps;
 
@@ -245,7 +247,7 @@ public:
         };
 
         nsTemplateMatch* get() const {
-            return mSet->mInlineMatches.mCount > PRUint32(kMaxInlineMatches)
+            return mSet->mStorageElements.mInlineMatches.mCount > PRUint32(kMaxInlineMatches)
                 ? mTableEntry->mMatch
                 : *mInlineEntry; }
 

@@ -90,7 +90,7 @@ nsTemplateMatchRefSet::Init()
 #ifdef NSTEMPLATEMATCHREFSET_METER
     ++gCount;
 #endif
-    mInlineMatches.mCount = 0;
+    mStorageElements.mInlineMatches.mCount = 0;
 }
 
 void
@@ -114,11 +114,11 @@ nsTemplateMatchRefSet::Finish()
     }
 #endif
 
-    if (mInlineMatches.mCount > kMaxInlineMatches)
+    if (mStorageElements.mInlineMatches.mCount > kMaxInlineMatches)
         // It's a hashtable, so finish the table properly
-        PL_DHashTableFinish(&mTable);
+        PL_DHashTableFinish(&mStorageElements.mTable);
 
-    mInlineMatches.mCount = 0;
+    mStorageElements.mInlineMatches.mCount = 0;
 }
 
 void
@@ -132,20 +132,20 @@ nsTemplateMatchRefSet::CopyFrom(const nsTemplateMatchRefSet& aSet)
 PRBool
 nsTemplateMatchRefSet::Empty() const
 {
-    PRUint32 count = mInlineMatches.mCount;
+    PRUint32 count = mStorageElements.mInlineMatches.mCount;
     if (count <= kMaxInlineMatches)
         return count == 0;
 
-    return mTable.entryCount == 0;
+    return mStorageElements.mTable.entryCount == 0;
 }
 
 PRBool
 nsTemplateMatchRefSet::Contains(const nsTemplateMatch* aMatch) const
 {
-    PRUint32 count = mInlineMatches.mCount;
+    PRUint32 count = mStorageElements.mInlineMatches.mCount;
     if (count <= kMaxInlineMatches) {
         while (PRInt32(--count) >= 0) {
-            if (*(mInlineMatches.mEntries[count]) == *aMatch)
+            if (*(mStorageElements.mInlineMatches.mEntries[count]) == *aMatch)
                 return PR_TRUE;
         }
 
@@ -153,7 +153,7 @@ nsTemplateMatchRefSet::Contains(const nsTemplateMatch* aMatch) const
     }
 
     PLDHashEntryHdr* hdr =
-        PL_DHashTableOperate(NS_CONST_CAST(PLDHashTable*, &mTable), aMatch,
+        PL_DHashTableOperate(NS_CONST_CAST(PLDHashTable*, &mStorageElements.mTable), aMatch,
                              PL_DHASH_LOOKUP);
 
     return PL_DHASH_ENTRY_IS_BUSY(hdr);
@@ -165,20 +165,20 @@ nsTemplateMatchRefSet::Add(const nsTemplateMatch* aMatch)
     // Cast away const, we assume shared ownership.
     nsTemplateMatch* match = NS_CONST_CAST(nsTemplateMatch*, aMatch);
 
-    PRUint32 count = mInlineMatches.mCount;
+    PRUint32 count = mStorageElements.mInlineMatches.mCount;
     if (count < kMaxInlineMatches) {
         // There's still room in the inline matches.
 
         // Check for duplicates
         for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-            if (*(mInlineMatches.mEntries[i]) == *aMatch)
+            if (*(mStorageElements.mInlineMatches.mEntries[i]) == *aMatch)
                 return PR_FALSE;
         }
 
         // Nope. Add it!
-        mInlineMatches.mEntries[count] = match;
+        mStorageElements.mInlineMatches.mEntries[count] = match;
 
-        ++mInlineMatches.mCount;
+        ++mStorageElements.mInlineMatches.mCount;
         return PR_TRUE;
     }
 
@@ -190,15 +190,15 @@ nsTemplateMatchRefSet::Add(const nsTemplateMatch* aMatch)
 
         // Copy pointers to a safe place
         for (i = count - 1; i >= 0; --i)
-            temp[i] = mInlineMatches.mEntries[i];
+            temp[i] = mStorageElements.mInlineMatches.mEntries[i];
 
         // Clobber the union; we'll treat it as a hashtable now.
-        PL_DHashTableInit(&mTable, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
+        PL_DHashTableInit(&mStorageElements.mTable, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
 
         // Now that we've table-ized this thing, mCount better be a
         // big freaking number, since it's sharing space with a
         // pointer to the PLDHashTable's ops.
-        NS_ASSERTION(mInlineMatches.mCount > kMaxInlineMatches,
+        NS_ASSERTION(mStorageElements.mInlineMatches.mCount > kMaxInlineMatches,
                      "wow, I thought it'd be bigger than _that_");
 
         // Copy the pointers into the hashtable.
@@ -213,7 +213,7 @@ PRBool
 nsTemplateMatchRefSet::AddToTable(nsTemplateMatch* aMatch)
 {
     PLDHashEntryHdr* hdr =
-        PL_DHashTableOperate(&mTable, aMatch, PL_DHASH_ADD);
+        PL_DHashTableOperate(&mStorageElements.mTable, aMatch, PL_DHASH_ADD);
 
     if (hdr) {
         Entry* entry = NS_REINTERPRET_CAST(Entry*, hdr);
@@ -232,12 +232,12 @@ nsTemplateMatchRefSet::Remove(const nsTemplateMatch* aMatch)
 {
     PRBool found = PR_FALSE;
 
-    PRUint32 count = mInlineMatches.mCount;
+    PRUint32 count = mStorageElements.mInlineMatches.mCount;
     if (count <= kMaxInlineMatches) {
         nsTemplateMatch** last;
 
         for (PRUint32 i = 0; i < count; ++i) {
-            nsTemplateMatch** entry = &mInlineMatches.mEntries[i];
+            nsTemplateMatch** entry = &mStorageElements.mInlineMatches.mEntries[i];
             nsTemplateMatch* match = *entry;
 
             if (*match == *aMatch) {
@@ -250,17 +250,17 @@ nsTemplateMatchRefSet::Remove(const nsTemplateMatch* aMatch)
         }
 
         if (found)
-            --mInlineMatches.mCount;
+            --mStorageElements.mInlineMatches.mCount;
     }
     else {
         PLDHashEntryHdr* hdr =
-            PL_DHashTableOperate(&mTable, aMatch, PL_DHASH_LOOKUP);
+            PL_DHashTableOperate(&mStorageElements.mTable, aMatch, PL_DHASH_LOOKUP);
 
         found = PL_DHASH_ENTRY_IS_BUSY(hdr);
 
         if (found)
             // Remove the match. N.B., we never demote back to a list.
-            PL_DHashTableOperate(&mTable, aMatch, PL_DHASH_REMOVE);
+            PL_DHashTableOperate(&mStorageElements.mTable, aMatch, PL_DHASH_REMOVE);
     }
 
     return found;
@@ -276,12 +276,12 @@ nsTemplateMatchRefSet::Remove(const nsTemplateMatch* aMatch)
 nsTemplateMatchRefSet::ConstIterator
 nsTemplateMatchRefSet::First() const
 {
-    if (mInlineMatches.mCount <= kMaxInlineMatches)
+    if (mStorageElements.mInlineMatches.mCount <= kMaxInlineMatches)
         // XXX C-style cast to avoid gcc-2.7.2.3. bustage
-        return ConstIterator(this, (nsTemplateMatch**) mInlineMatches.mEntries);
+        return ConstIterator(this, (nsTemplateMatch**) mStorageElements.mInlineMatches.mEntries);
 
-    Entry* entry = NS_REINTERPRET_CAST(Entry*, mTable.entryStore);
-    Entry* limit = entry + PR_BIT(mTable.sizeLog2);
+    Entry* entry = NS_REINTERPRET_CAST(Entry*, mStorageElements.mTable.entryStore);
+    Entry* limit = entry + PR_BIT(mStorageElements.mTable.sizeLog2);
     for ( ; entry < limit; ++entry) {
         if (ENTRY_IS_LIVE(entry))
             break;
@@ -293,26 +293,26 @@ nsTemplateMatchRefSet::First() const
 nsTemplateMatchRefSet::ConstIterator
 nsTemplateMatchRefSet::Last() const
 {
-    PRUint32 count = mInlineMatches.mCount;
+    PRUint32 count = mStorageElements.mInlineMatches.mCount;
     if (count <= kMaxInlineMatches) {
         // XXX C-style cast to avoid gcc-2.7.2.3 bustage
-        nsTemplateMatch** first = (nsTemplateMatch**) mInlineMatches.mEntries;
+        nsTemplateMatch** first = (nsTemplateMatch**) mStorageElements.mInlineMatches.mEntries;
         nsTemplateMatch** limit = first + count;
         return ConstIterator(this, limit);
     }
 
-    Entry* limit = NS_REINTERPRET_CAST(Entry*, mTable.entryStore);
-    limit += PR_BIT(mTable.sizeLog2);
+    Entry* limit = NS_REINTERPRET_CAST(Entry*, mStorageElements.mTable.entryStore);
+    limit += PR_BIT(mStorageElements.mTable.sizeLog2);
     return ConstIterator(this, limit);
 }
 
 void
 nsTemplateMatchRefSet::ConstIterator::Next()
 {
-    if (mSet->mInlineMatches.mCount <= kMaxInlineMatches)
+    if (mSet->mStorageElements.mInlineMatches.mCount <= kMaxInlineMatches)
         ++mInlineEntry;
     else {
-        const PLDHashTable& table = mSet->mTable;
+        const PLDHashTable& table = mSet->mStorageElements.mTable;
         Entry* limit = NS_REINTERPRET_CAST(Entry*, table.entryStore);
         limit += PR_BIT(table.sizeLog2);
         while (++mTableEntry < limit) {
@@ -325,10 +325,10 @@ nsTemplateMatchRefSet::ConstIterator::Next()
 void
 nsTemplateMatchRefSet::ConstIterator::Prev()
 {
-    if (mSet->mInlineMatches.mCount <= kMaxInlineMatches)
+    if (mSet->mStorageElements.mInlineMatches.mCount <= kMaxInlineMatches)
         --mInlineEntry;
     else {
-        const PLDHashTable& table = mSet->mTable;
+        const PLDHashTable& table = mSet->mStorageElements.mTable;
         Entry* limit = NS_REINTERPRET_CAST(Entry*, table.entryStore);
         while (--mTableEntry > limit) {
             if (ENTRY_IS_LIVE(mTableEntry))
@@ -343,7 +343,7 @@ nsTemplateMatchRefSet::ConstIterator::operator==(const ConstIterator& aConstIter
     if (mSet != aConstIterator.mSet)
         return PR_FALSE;
 
-    PRUint32 count = mSet->mInlineMatches.mCount;
+    PRUint32 count = mSet->mStorageElements.mInlineMatches.mCount;
     if (count <= kMaxInlineMatches)
         return mInlineEntry == aConstIterator.mInlineEntry;
 
