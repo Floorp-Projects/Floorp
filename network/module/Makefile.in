@@ -35,6 +35,8 @@ CPPSRCS			= \
 			  nsStubContext.cpp   \
 			  nsNetStubs.cpp      \
 			  nsNetIDs.cpp        \
+              nsLoadAttribs.cpp   \
+              nsNetFactory.cpp    \
 			  $(NULL)
 
 REQUIRES		= raptor js dbm nspr security pref xpcom util img \
@@ -50,7 +52,8 @@ EXPORTS = nsIStreamListener.h           \
           nsIHttpUrl.h                  \
           nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
-	  nsIConnectionInfo.h		\
+	      nsIConnectionInfo.h		\
+          nsILoadAttribs.h          \
           $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -30,7 +30,8 @@ LIBRARY_NAME=raptorplugin
 
 EXPORTS =	\
     nsPluginsCID.h  \
-	nsIPluginHost.h
+	nsIPluginHost.h \
+	nsIPluginInstanceOwner.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
@@ -51,6 +52,6 @@ LCFLAGS =-D_IMPL_NS_PLUGIN
 
 TARGETS = $(LIBRARY)
 
-INCLUDES += -I$(srcdir)/.
+INCLUDES += -I$(srcdir)/
 
 include $(topsrcdir)/config/rules.mk
