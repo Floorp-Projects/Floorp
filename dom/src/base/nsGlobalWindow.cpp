@@ -2451,10 +2451,13 @@ GlobalWindowImpl::ReallyCloseWindow()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  treeOwnerAsWin->Destroy();
-  CleanUp();
+  // If there's no treeOwnerAsWin, this window must already be closed.
+
+  if (treeOwnerAsWin) {
+    treeOwnerAsWin->Destroy();
+    CleanUp();
+  }
 
   return NS_OK;
 }
@@ -4003,7 +4006,15 @@ nsresult
 GlobalWindowImpl::GetTreeOwner(nsIDocShellTreeOwner **aTreeOwner)
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+  // If there's no docShellAsItem, this window must have been closed,
+  // in that case there is no tree owner.
+
+  if (!docShellAsItem) {
+    *aTreeOwner = nsnull;
+
+    return NS_OK;
+  }
 
   return docShellAsItem->GetTreeOwner(aTreeOwner);
 }
@@ -4012,10 +4023,15 @@ nsresult
 GlobalWindowImpl::GetTreeOwner(nsIBaseWindow **aTreeOwner)
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+  // If there's no docShellAsItem, this window must have been closed,
+  // in that case there is no tree owner.
+
+  if (docShellAsItem) {
+    docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  }
+
   if (!treeOwner) {
     *aTreeOwner = nsnull;
     return NS_OK;
