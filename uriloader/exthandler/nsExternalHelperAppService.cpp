@@ -242,16 +242,14 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     if (url)
     {
       url->GetFileExtension(getter_Copies(fileExtension));    
-      nsCOMPtr<nsIMIMEInfo> tempMIMEObject;
-      GetFromExtension(fileExtension, getter_AddRefs(tempMIMEObject));
-      // only over write mimeInfo if we got a non-null temp mime info object.
-      if (tempMIMEObject)
+      GetFromExtension(fileExtension, getter_AddRefs(mimeInfo));
+      // only over write mimeInfo if we got a non-null mime info object.
+      if (mimeInfo)
       {
-        mimeInfo = tempMIMEObject;
         // The OS might have thought this extension was a different mime type.
         // We must reset this to match the actual mime type.  Otherwise, we
         // won't use this MIMEInfo when we see the real mime type next time.
-        //mimeInfo->SetMIMEType(aMimeContentType);
+        mimeInfo->SetMIMEType(aMimeContentType);
       }
     }
   }
@@ -1410,8 +1408,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
  
   nsCStringKey key(fileExt.get());
 
-  *_retval = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
-  NS_IF_ADDREF(*_retval);
+  nsIMIMEInfo *cachedInfo = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
+  if (cachedInfo) {
+    cachedInfo->Clone(_retval);
+  }
 
   // if we don't have a match in our hash table, then query the user provided
   // data source
@@ -1433,8 +1433,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
 
   nsCStringKey key(MIMEType.get());
 
-  *_retval = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
-  NS_IF_ADDREF(*_retval);
+  nsIMIMEInfo *cachedInfo = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
+  if (cachedInfo) {
+    cachedInfo->Clone(_retval);
+  }
 
   // if we don't have a match in our hash table, then query the user provided
   // data source containing additional content types...
