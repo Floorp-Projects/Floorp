@@ -41,13 +41,17 @@ const kStorageServiceIID = Components.interfaces.mozIStorageService;
 
 const kMozStorageStatementWrapperContractID = "@mozilla.org/storage/statement-wrapper;1";
 const kMozStorageStatementWrapperIID = Components.interfaces.mozIStorageStatementWrapper;
-const MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
+var MozStorageStatementWrapper = null;
 
 function createStatement (dbconn, sql) {
     var stmt = dbconn.createStatement(sql);
     var wrapper = MozStorageStatementWrapper();
     wrapper.initialize(stmt);
     return wrapper;
+}
+
+function onCalCalendarManagerLoad() {
+    MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
 }
 
 function calCalendarManager() {

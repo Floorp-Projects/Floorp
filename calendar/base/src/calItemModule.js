@@ -44,12 +44,14 @@ const componentData =
     {cid: null,
      contractid: null,
      script: "calItemBase.js",
-     constructor: null},
+     constructor: null,
+     onComponentLoad: "onCalItemBaseLoad()"},
 
     {cid: Components.ID("{f42585e7-e736-4600-985d-9624c1c51992}"),
      contractid: "@mozilla.org/calendar/manager;1",
      script: "calCalendarManager.js",
-     constructor: "calCalendarManager"},
+     constructor: "calCalendarManager",
+     onComponentLoad: "onCalCalendarManagerLoad()"},
 
     {cid: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
      contractid: "@mozilla.org/calendar/event;1",
@@ -165,9 +167,13 @@ var calItemModule = {
             this.loadScripts();
 
         for (var i = 0; i < componentData.length; i++) {
-            if (cid.equals(componentData[i].cid))
+            if (cid.equals(componentData[i].cid)) {
+                if (componentData[i].onComponentLoad) {
+                    eval(componentData[i].onComponentLoad);
+                }
                 // eval to get usual scope-walking
                 return this.makeFactoryFor(eval(componentData[i].constructor));
+            }
         }
 
         throw Components.results.NS_ERROR_NO_INTERFACE;
