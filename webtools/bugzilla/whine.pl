@@ -523,8 +523,9 @@ sub reset_timer {
     # whine.pl -- there are legitimate circumstances that can cause this, like
     # a set of whines that take a very long time to execute, so it's done
     # quietly.
-    if (grep(/^$schedule_id$/, @seen_schedules)) {
+    if (grep($_ == $schedule_id, @seen_schedules)) {
         null_schedule($schedule_id);
+        return;
     }
     push @seen_schedules, $schedule_id;
 
@@ -652,7 +653,7 @@ sub get_next_date {
     else { # it's a number, so we set it for that calendar day
         $add_days = $day - $now_day;
         # If it's already beyond that day this month, set it to the next one
-        if ($add_days < 0) {
+        if ($add_days <= 0) {
             $add_days += $daysinmonth[$now_month];
         }
     }
