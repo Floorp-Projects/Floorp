@@ -35,11 +35,8 @@
 
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://search/content/search-panel.js" />
-  
-  <deck id="advancedDeck" flex="100%" style="border:none;">
-      
-      <!-- results panel -->
-      <box class="searchpanel-outerbox" align="vertical" flex="100%">
+
+      <box align="vertical" flex="100%">
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
           <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog toolbar-non-iconic"/>
@@ -59,13 +56,28 @@
         	</template>
         	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
         		sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
+        		onmousedown="return switchTab(1);"
         		onchange="return chooseCategory(this)" >
         		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
         	</html:select>
         </box>
+      </box>
+
+  <deck id="advancedDeck" flex="100%" style="border:none;">
+      
+      <!-- results panel -->
         
-        <box flex="1">
+        <box align="vertical" class="searchpanel-outerbox" flex="1">
+
+        <box orient="horizontal" align="center">
+          <text value="&useResults.label;" class="indented-label"/>
+        </box>
+        <spring style="height: 2px;"/>
+
         <tree id="Tree" ref="NC:LastSearchRoot"
+          rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
+          rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+          sortDirection="ascending" sortActive="true"
           class="inset"
           flex="100%"
           datasources="rdf:internetsearch"
@@ -101,31 +113,21 @@
             </rule>
           </template>
       
-          <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+          <treecol rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
       
         </tree>
-        </box>
-		<spring style="height: 2px;"/>
-		<titledbutton id="btn.Advanced" value="&search.advanced.tab;" crop="right" onclick="switchTab(1);" class="push"/>
-		<spring style="height: 2px;"/>
       </box>
       
       <!-- advanced panel -->
-      <box align="vertical" class="searchpanel-outerbox" >
+      <box align="vertical" class="searchpanel-outerbox" flex="1">
       
-        <box orient="horizontal" align="center">
-          <text value="&whenSearching.label;" class="indented-label"/><text value="&within.label;"/>
-        </box>
-        <box orient="horizontal" align="center" style="font-weight: bold;" class="indented-label">
-          <text id="categoryNameText"/>
-        </box>
         <box orient="horizontal" align="center">
           <text value="&useTheseProviders.label;" class="indented-label"/>
         </box>
         <spring style="height: 2px;"/>
 
         <tree align="horizontal" id="searchengines" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" class="inset">
-          <treecol id="CheckboxColumn" />
+          <treecol id="CheckboxColumn" class="checkboxColumn" />
           <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
           <template>
             <treechildren>
@@ -144,15 +146,10 @@
           <treehead>
             <treerow>
               <treecell value="&checkbox.column.label;" style="width: 23px;"/>
-              <treecell observes="NameColumn" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" flex="1"/>
+              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" flex="1"/>
             </treerow>
           </treehead>
         </tree>
-		<spring style="height: 2px;"/>
-		<html:div>&explain.label;</html:div>
-		<spring style="height: 2px;"/>
-		<titledbutton value="&search.results.tab;" default="true" onclick="switchTab(0);" class="push"/>
-		<spring style="height: 2px;"/>
       </box>
   </deck>
 </window>
