@@ -1352,6 +1352,8 @@ NET_GetCookie(MWContext * context, char * address)
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
 */
+PR_PUBLIC_API(void) RDF_AddCookieResource(char* name, char* path, char* host, char* expires) ;
+
 PRIVATE void
 net_IntSetCookieString(MWContext * context, 
 					char * cur_url,
@@ -1791,7 +1793,7 @@ net_IntSetCookieString(MWContext * context,
 			if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
 				XP_ListInsertObject(net_cookie_list, tmp_cookie_ptr, prev_cookie);
                 RDF_AddCookieResource(tmp_cookie_ptr->name, tmp_cookie_ptr->path, 
-                                      tmp_cookie_ptr->host, tmp_cookie_ptr->expires) ;
+                                      tmp_cookie_ptr->host, "" /* tmp_cookie_ptr->expires */ ) ;
 				net_unlock_cookie_list();
 				cookies_changed = TRUE;
 				return;
@@ -1799,7 +1801,7 @@ net_IntSetCookieString(MWContext * context,
 		  }
 		/* no shorter strings found in list */
         RDF_AddCookieResource(prev_cookie->name, prev_cookie->path, 
-                              prev_cookie->host, prev_cookie->expires);		
+                              prev_cookie->host, "" /* prev_cookie->expires */);		
 		XP_ListAddObjectToEnd(net_cookie_list, prev_cookie);
 	  }
 
@@ -2075,7 +2077,7 @@ NET_InitRDFCookieResources (void) {
   net_CookieStruct * item=NULL;
   net_lock_cookie_list();
   while ( (item=XP_ListNextObject(tmpList)) ) {
-    RDF_AddCookieResource(item->name, item->path, item->host, item->expires) ;
+    RDF_AddCookieResource(item->name, item->path, item->host, "" /* item->expires */) ;
   }
   net_unlock_cookie_list();
 }
