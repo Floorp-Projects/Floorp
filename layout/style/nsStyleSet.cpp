@@ -55,7 +55,7 @@ nsStyleSet::nsStyleSet()
   : mRuleTree(nsnull),
     mRuleWalker(nsnull),
     mDestroyedCount(0),
-    mBatching(PR_FALSE),
+    mBatching(0),
     mInShutdown(PR_FALSE),
     mDirty(0)
 {
@@ -70,8 +70,10 @@ nsStyleSet::Init(nsIPresContext *aPresContext)
     NS_ENSURE_TRUE(gQuirkURI, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  if (!BuildDefaultStyleData(aPresContext))
-    return NS_ERROR_FAILURE;
+  if (!BuildDefaultStyleData(aPresContext)) {
+    mDefaultStyleData.Destroy(0, aPresContext);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
   if (!mRuleTree) {
@@ -195,10 +197,8 @@ nsStyleSet::ReplaceSheets(sheetType aType,
                           const nsCOMArray<nsIStyleSheet> &aNewSheets)
 {
   mSheets[aType].Clear();
-  for (PRInt32 i = 0; i < aNewSheets.Count(); ++i) {
-    if (!mSheets[aType].AppendObject(aNewSheets.ObjectAt(i)))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+  if (!mSheets[aType].AppendObjects(aNewSheets))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   if (!mBatching)
     return GatherRuleProcessors(aType);
@@ -212,7 +212,7 @@ nsStyleSet::ReplaceSheets(sheetType aType,
 nsresult
 nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
-  NS_PRECONDITION((nsnull != aSheet) && (nsnull != aDocument), "null arg");
+  NS_PRECONDITION(aSheet && aDocument, "null arg");
   CHECK_APPLICABLE;
 
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
@@ -248,21 +248,26 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 void
 nsStyleSet::BeginUpdate()
 {
-  mBatching = 1;
+  ++mBatching;
 }
 
 nsresult
 nsStyleSet::EndUpdate()
 {
+  NS_ASSERTION(mBatching > 0, "Unbalanced EndUpdate");
+  if (--mBatching) {
+    // We're not completely done yet.
+    return NS_OK;
+  }
+
   for (int i = 0; i < eSheetTypeCount; ++i) {
-    if (mDirty & 1 << i) {
+    if (mDirty & (1 << i)) {
       nsresult rv = GatherRuleProcessors(i);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
   mDirty = 0;
-  mBatching = 0;
   return NS_OK;
 }
 
@@ -721,7 +726,7 @@ nsStyleSet::NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
 #endif
       mRuleTree->Sweep();
 
-    NS_ASSERTION(deleted, "Root not must not be gc'd");
+    NS_ASSERTION(!deleted, "Root node must not be gc'd");
   }
 }
 

@@ -1644,9 +1644,7 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(PR_FALSE);
 
-  result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                              NS_GET_IID(nsIFrameSelection),
-                                              getter_AddRefs(mSelection));
+  mSelection = do_CreateInstance(kFrameSelectionCID, &result);
   if (NS_FAILED(result))
     return result;
 
@@ -3541,6 +3539,9 @@ PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #ifdef DEBUG
   mUpdateCount++;
 #endif
+  if (aUpdateType & UPDATE_STYLE)
+    mStyleSet->BeginUpdate();
+
   return NS_OK;
 }
 
@@ -3551,6 +3552,9 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
   NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
   --mUpdateCount;
 #endif
+
+  if (aUpdateType & UPDATE_STYLE)
+    mStyleSet->EndUpdate();
 
   if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE))
     return ReconstructStyleData();
@@ -7097,7 +7101,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsStyleSet *newSet;
+  nsAutoPtr<nsStyleSet> newSet;
   rv = CloneStyleSet(mStyleSet, &newSet);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);

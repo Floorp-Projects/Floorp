@@ -1519,7 +1519,9 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     }
   } else {
     // We still need to notify the style set of the state change, because
-    // this will invalidate some of the rule processor data.
+    // this will invalidate some of the rule processor data.  We do this
+    // here instead of in the pres shell because we _don't_ want to do this
+    // for document style sheets.
 
     PRInt32 count = mPresShells.Count();
     PRInt32 indx;
@@ -1647,14 +1649,6 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
-  if (aUpdateType & UPDATE_STYLE) {
-    PRInt32 shellCount = mPresShells.Count();
-    for (PRInt32 j = 0; j < shellCount; ++j) {
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(j))->StyleSet()->
-        BeginUpdate();
-    }
-  }
-
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
@@ -1665,14 +1659,6 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
-  if (aUpdateType & UPDATE_STYLE) {
-    PRInt32 shellCount = mPresShells.Count();
-    for (PRInt32 j = 0; j < shellCount; ++j) {
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(j))->StyleSet()->
-        EndUpdate();
-    }
-  }
-
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];

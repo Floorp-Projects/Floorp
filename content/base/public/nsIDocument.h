@@ -53,7 +53,6 @@
 #include "nsILoadGroup.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include <stdio.h>   // for FILE definition
 
 class nsIAtom;
 class nsIContent;
