@@ -16,8 +16,10 @@
  * Communications, Inc.  Portions created by Netscape are
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
+ * Original Author:
+ *   Scott Collins <scc@mozilla.org>
+ * 
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -92,7 +94,7 @@ typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
  */
 extern NS_COM
 nsIWeakReference*
-NS_GetWeakReference( nsISupports* , nsresult* aResult = 0);
+NS_GetWeakReference( nsISupports* , nsresult* aResult=0 );
 
 
 /**
@@ -111,21 +113,21 @@ CallQueryReferent( nsIWeakReference* aSource, T** aDestination )
 
 
 class NS_EXPORT nsQueryReferent : public nsCOMPtr_helper
-	{
-		public:
-			nsQueryReferent( nsIWeakReference* aWeakPtr, nsresult* error )
-					: mWeakPtr(aWeakPtr),
-						mErrorPtr(error)
-				{
-					// nothing else to do here
-				}
+  {
+    public:
+      nsQueryReferent( nsIWeakReference* aWeakPtr, nsresult* error )
+          : mWeakPtr(aWeakPtr),
+            mErrorPtr(error)
+        {
+          // nothing else to do here
+        }
 
-			virtual nsresult operator()( const nsIID& aIID, void** ) const;
+      virtual nsresult operator()( const nsIID& aIID, void** ) const;
 
-		private:
-			nsIWeakReference*	mWeakPtr;
-			nsresult*					mErrorPtr;
-	};
+    private:
+      nsIWeakReference*  mWeakPtr;
+      nsresult*          mErrorPtr;
+  };
 
 inline
 const nsQueryReferent
