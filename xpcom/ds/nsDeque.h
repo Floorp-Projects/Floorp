@@ -166,7 +166,7 @@ friend class nsDequeIterator;
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const void ForEach(nsDequeFunctor& aFunctor) const;
+  void ForEach(nsDequeFunctor& aFunctor) const;
 
   /**
    * Call this method when you wanto to iterate all the
@@ -374,7 +374,7 @@ public:
    * @param   aFunctor object to call for each member
    * @return  *this
    */
-  const void ForEach(nsDequeFunctor& aFunctor) const;
+  void ForEach(nsDequeFunctor& aFunctor) const;
   
   /**
    * Call this method when you wanto to iterate all the
