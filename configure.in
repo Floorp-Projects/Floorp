@@ -1562,7 +1562,7 @@ freebsd*)
     ;;
 esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h)
+AC_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
 AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
 AC_CHECK_HEADERS(X11/XKBlib.h)
 
