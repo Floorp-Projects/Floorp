@@ -60,6 +60,7 @@ var gIgnoreClick = false;
 var gToolbarMode = "icons";
 var gIconSize = "";
 var gMustLoadSidebar = false;
+var gURIFixup = null;
 
 var gPrefService = null;
 
@@ -537,9 +538,6 @@ function onGoMenuHidden()
 }
 
 function destroyGoMenuItems(goMenu) {
-  var history = document.getElementById("hiddenHistoryTree");
-  history.removeAttribute("ref");
-  
   var startSeparator = document.getElementById("startHistorySeparator");
   var endSeparator = document.getElementById("endHistorySeparator");
   endSeparator.hidden = true;
@@ -563,6 +561,9 @@ function destroyGoMenuItems(goMenu) {
 
 function updateGoMenu(goMenu)
 {
+  // In case the timer didn't fire.
+  destroyGoMenuItems(goMenu);
+
   var history = document.getElementById("hiddenHistoryTree");
   if (history.hidden)
     history.hidden = false;
