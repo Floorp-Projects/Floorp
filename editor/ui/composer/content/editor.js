@@ -2556,7 +2556,8 @@ function EditorSetDefaultPrefsAndDoctype()
     // Default image is independent of Custom colors???
     try {
       var background_image = gPrefs.getCharPref("editor.default_background_image");
-      editor.setAttributeOrEquivalent(bodyelement, "background", background_image, true);
+      if (background_image)
+        editor.setAttributeOrEquivalent(bodyelement, "background", background_image, true);
     } catch (e) {dump("BACKGROUND EXCEPTION: "+e+"\n"); }
 
   }
