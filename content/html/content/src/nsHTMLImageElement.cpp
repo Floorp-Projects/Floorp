@@ -542,10 +542,12 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
             if (NS_FAILED(result)) return result;
 
             char *absUrlStr = nsnull;
-            const char *urlSpec = aSrc.GetBuffer();
+            char *urlSpec = aSrc.ToNewCString();
+            if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
             result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
             NS_RELEASE(baseUri);
             url = absUrlStr;
+            nsCRT::free(urlSpec);
             delete [] absUrlStr;
 #endif // NECKO
             if (NS_FAILED(result)) {
@@ -567,6 +569,7 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
           result = context->StartLoadImage(url, nsnull, specifiedSize,
                                            nsnull, nsnull, nsnull,
                                            nsnull);
+
           NS_RELEASE(context);
         }
         

@@ -719,10 +719,12 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   if (NS_FAILED(result)) return;
 
   char *absUrlStr = nsnull;
-  const char *urlSpec = aRelURL.GetBuffer();
+  char *urlSpec = aRelURL.ToNewCString();
+  if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
   result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
   NS_RELEASE(baseUri);
   aAbsURL= absUrlStr;
+  nsCRT::free(urlSpec);
   delete [] absUrlStr;
 #endif // NECKO
   NS_IF_RELEASE(baseURL);
