@@ -284,6 +284,18 @@ layout/xbl/public/Makefile
 layout/xbl/src/Makefile
 "
 
+MAKEFILES_appfilelocprovider="
+modules/appfilelocprovider/Makefile
+modules/appfilelocprovider/public/Makefile
+modules/appfilelocprovider/src/Makefile
+"
+
+MAKEFILES_mpfilelocprovider="
+modules/mpfilelocprovider/Makefile
+modules/mpfilelocprovider/public/Makefile
+modules/mpfilelocprovider/src/Makefile
+"
+
 MAKEFILES_libimg="
 modules/libimg/Makefile
 modules/libimg/public/Makefile
@@ -675,9 +687,6 @@ xpfe/browser/resources/content/unix/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/browser/resources/locale/en-US/unix/Makefile
-xpfe/appfilelocprovider/Makefile
-xpfe/appfilelocprovider/public/Makefile
-xpfe/appfilelocprovider/src/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
 xpfe/global/resources/content/Makefile
@@ -952,6 +961,8 @@ $MAKEFILES_libimg
 $MAKEFILES_libjar
 $MAKEFILES_libpref
 $MAKEFILES_libutil
+$MAKEFILES_appfilelocprovider
+$MAKEFILES_mpfilelocprovider
 $MAKEFILES_liveconnect
 $MAKEFILES_mailnews
 $MAKEFILES_oji

@@ -1540,6 +1540,9 @@ sub BuildClientDist()
 	# APPFILELOCPROVIDER
     _InstallFromManifest(":mozilla:modules:appfilelocprovider:public:MANIFEST",     "$distdirectory:appfilelocprovider:");
 
+	# MPFILELOCPROVIDER
+    _InstallFromManifest(":mozilla:modules:mpfilelocprovider:public:MANIFEST",      "$distdirectory:mpfilelocprovider:");
+
     #SUN_JAVA
     _InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",                "$distdirectory:sun-java:");
     _InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",                 "$distdirectory:sun-java:");
@@ -2219,11 +2222,11 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",                            "DBM$D.o", 0, 0, 0);
 
     #// Static libraries
-    # Static Lib
+    # Static Libs
     BuildOneProject(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider.mcp", "appfilelocprovider$D.o", 0, 0, 0);
     MakeAlias(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider$D.o", ":mozilla:dist:appfilelocprovider:");
-
-
+    BuildOneProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.mcp", "mpfilelocprovider$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
     
     print("--- Common projects complete ----\n");
 }
