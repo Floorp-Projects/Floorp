@@ -669,6 +669,19 @@ PK11Object * pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey,
 						CK_OBJECT_HANDLE handle);
 PK11TokenObject *pk11_convertSessionToToken(PK11Object *so);
 
+/****************************************
+ * implement TLS Pseudo Random Function (PRF)
+ */
+
+extern SECStatus
+pk11_PRF(const SECItem *secret, const char *label, SECItem *seed, 
+         SECItem *result, PRBool isFIPS);
+
+extern CK_RV
+pk11_TLSPRFInit(PK11SessionContext *context, 
+		  PK11Object *        key, 
+		  CK_KEY_TYPE         key_type);
+
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */

@@ -77,4 +77,5 @@ CSRCS = \
 	rawhash.c \
 	rsawrapr.c  \
 	softkver.c  \
+	tlsprf.c   \
 	$(NULL)
