@@ -289,6 +289,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
 
 	nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
 		kIXULSortServiceIID, (nsISupports**) &XULSortService);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL Sort service");
     }
     ++gRefCnt;
 
@@ -411,10 +412,10 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 								if (NS_FAILED(rv = grandChild->GetNameSpaceID(nameSpaceID)))	continue;
 								if (nameSpaceID == kNameSpaceID_XUL)
 								{
-									nsCOMPtr<nsIAtom> tag;
-									if (NS_FAILED(rv = grandChild->GetTag(*getter_AddRefs(tag))))
+									nsCOMPtr<nsIAtom> grandChildTag;
+									if (NS_FAILED(rv = grandChild->GetTag(*getter_AddRefs(grandChildTag))))
 										continue;
-									if (tag.get() == kTreeChildrenAtom)
+									if (grandChildTag.get() == kTreeChildrenAtom)
 									{
 										rv = UpdateContainer(grandChild);
 									}
