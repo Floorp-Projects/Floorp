@@ -1078,7 +1078,7 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   uniqueID.Append('/');
   uniqueID.Append((char*)fingerprint.data);
   nsXPIDLCString uniqueIDChar;
-  uniqueIDChar = uniqueID.ToNewCString();
+  uniqueIDChar = uniqueID.GetBuffer();
   if (!uniqueIDChar) return NS_ERROR_OUT_OF_MEMORY;
 
   //-- Get a principal
@@ -1117,7 +1117,7 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     commonName.Append(orgUnitPos, orgUnitLen);
   }
   nsXPIDLCString commonChar;
-  commonChar = commonName.ToNewCString();
+  commonChar = commonName.GetBuffer();
   if (!commonChar) return NS_ERROR_OUT_OF_MEMORY;
   rv = certificate->SetCommonName(commonChar);
   return rv;
