@@ -280,7 +280,8 @@ CrossCheck("products", "id",
            ["components", "product_id", "name"],
            ["milestones", "product_id", "value"],
            ["versions", "product_id", "value"],
-           ["flagtypes", "product_id", "name"]);
+           ["flaginclusions", "product_id", "type_id"],
+           ["flagexclusions", "product_id", "type_id"]);
 
 DateCheck("groups", "last_changed");
 DateCheck("profiles", "refreshed_when");
