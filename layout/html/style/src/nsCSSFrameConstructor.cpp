@@ -541,11 +541,18 @@ nsTreeCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
 
 // Structure used when creating MathML mtable frames
 struct nsMathMLmtableCreator: public nsTableCreator {
-  nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
   nsMathMLmtableCreator(nsIPresShell* aPresShell)
     :nsTableCreator(aPresShell) {};
 };
+
+nsresult
+nsMathMLmtableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
+{
+  return NS_NewMathMLmtableOuterFrame(mPresShell, aNewFrame);
+}
 
 nsresult
 nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
@@ -5953,8 +5960,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
   if (aTag == nsMathMLAtoms::mi_)
      rv = NS_NewMathMLmiFrame(aPresShell, &newFrame);
-  else if (aTag == nsMathMLAtoms::mn_)
-     rv = NS_NewMathMLmnFrame(aPresShell, &newFrame);
+  else if (aTag == nsMathMLAtoms::mtext_ ||
+           aTag == nsMathMLAtoms::mn_)
+     rv = NS_NewMathMLmtextFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mo_)
      rv = NS_NewMathMLmoFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfrac_)
@@ -5992,7 +6000,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
   else if (aTag == nsMathMLAtoms::maction_)
      rv = NS_NewMathMLmactionFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mrow_   ||
-           aTag == nsMathMLAtoms::mtext_  ||
            aTag == nsMathMLAtoms::merror_ ||
            aTag == nsMathMLAtoms::none_   ||
            aTag == nsMathMLAtoms::mprescripts_ )
