@@ -39,7 +39,7 @@ my $busted = 0;
 my $info;
 
 if (!exists $::FORM{'id'}) {
-    set busted 1
+    $busted = 1;
 } else {
     $info = eval("\\%" . $::FORM{'id'});
     
