@@ -23,12 +23,8 @@ then
     echo "rebuilding newsbot file"
     /opt/newsbot/newsbot.pl /var/mail/newsbot /opt/newsbot/newsbot.rdf > /opt/newsbot/newsbot.html
 
-    # wrap file and place in /e/doc (the live web site) 
+    # wrap file and place in newsbot directory
     /opt/newsbot/wrapnews.pl
-
-    # copy raw html file to stage dir so it doesn't disappear the next
-    # time the tree is updated.
-    cp /opt/newsbot/newsbot.html /e/stage-docs/mozilla-org/html/newsbot/index.html
 
     # copy the wrappped file into the live web site.
     cp /opt/newsbot/wrapped.html /e/docs/newsbot/index.html
