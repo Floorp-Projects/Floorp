@@ -33,6 +33,11 @@ EXPORTS		= $(ICONS_GEN_HDR) $(srcdir)/icondata.h
 
 REQUIRES	= img java jtools layer nspr util xp xpcom
 
+REQUIRES	+= \
+			$(XFE_JPEG_REQUIRES) \
+			$(XFE_PNG_REQUIRES) \
+			$(XFE_ZLIB_REQUIRES)
+
 LOCAL_INCLUDES	= -I$(srcdir)/. -I$(OBJDIR)
 
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
@@ -165,7 +170,7 @@ MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OS_LIBS) -lm
 # XXX We need to reach into the Image Library modules's source directory to 
 # get the file if.h
 $(MKICONS_EXE): mkicons.cpp $(MKICONS_LIB)
-	$(CCC) $(CFLAGS) -o $@ -I$(topsrcdir)/modules/libimg/src $< $(MKICONS_LIB) $(MKICONS_EXTRA)
+	$(CCC) $(CFLAGS) -o $@ -I$(topsrcdir)/modules/libimg/src $< $(XFE_MKICONS_BIN_LDPATH) $(MKICONS_LIB) $(MKICONS_EXTRA)
 
 $(ICONLIST): $(ICONS)
 	@echo Adding icons to $@

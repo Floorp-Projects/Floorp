@@ -28,6 +28,11 @@ EXPORTS		= $(ICONS_GEN_HDR) icondata.h
 
 REQUIRES	= img java jtools layer nspr util xp xpcom
 
+REQUIRES	+= \
+			$(XFE_JPEG_REQUIRES) \
+			$(XFE_PNG_REQUIRES) \
+			$(XFE_ZLIB_REQUIRES)
+
 LOCAL_INCLUDES	= -I. -I$(OBJDIR)
 
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
@@ -140,17 +145,17 @@ else
 JAVA_JMC = $(DIST)/lib/libstubsj.a
 endif
 
-MKICONS_LIB	=  \
-		  $(DIST)/lib/libimg.a \
-		  $(JAVA_JMC) \
-		  $(XFE_PNG_LDFLAGS) \
-		  $(XFE_ZLIB_MKICONS_LDFLAGS) \
-		  $(DIST)/lib/libnspr21.a \
-		  $(XFE_JPEG_LDFLAGS) \
-		  $(DIST)/lib/libutil.a \
-		  $(DIST)/lib/libxp.a \
-		  $(DIST)/lib/libplc21.a \
-		  $(DIST)/lib/libxpcom.a
+MKICONS_LIB	= \
+			$(DIST)/lib/libimg.a \
+			$(JAVA_JMC) \
+			$(XFE_PNG_LDFLAGS) \
+			$(XFE_ZLIB_MKICONS_LDFLAGS) \
+			$(DIST)/lib/libnspr21.a \
+			$(XFE_JPEG_LDFLAGS) \
+			$(DIST)/lib/libutil.a \
+			$(DIST)/lib/libxp.a \
+			$(DIST)/lib/libplc21.a \
+			$(DIST)/lib/libxpcom.a
 
 GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONS_GEN_HDR) \
@@ -167,7 +172,7 @@ MKICONS_EXTRA	= $(OS_LIBS) -lm
 # XXX We need to reach into the Image Library modules's source directory to 
 # get the file if.h
 $(MKICONS_EXE): mkicons.cpp $(MKICONS_LIB)
-	$(CCC) $(CFLAGS) -o $@ -I$(DEPTH)/modules/libimg/src $< $(MKICONS_LIB) $(MKICONS_EXTRA)
+	$(CCC) $(CFLAGS) -o $@ -I$(DEPTH)/modules/libimg/src $< $(XFE_MKICONS_BIN_LDPATH) $(MKICONS_LIB) $(MKICONS_EXTRA)
 
 $(ICONLIST): $(ICONS)
 	@echo Adding icons to $@
