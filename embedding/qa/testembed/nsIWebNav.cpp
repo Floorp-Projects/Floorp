@@ -129,6 +129,9 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 		case ID_INTERFACES_NSIWEBNAV_GETCURRENTURI :
 			GetCurrentURITest(2);
 			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETREFERINGURI:
+			GetReferingURITest(2);
+			break;
 		case ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY :
 			GetSHTest(2);
 			break ;
@@ -186,6 +189,7 @@ void CNsIWebNav::RunAllTests()
    
    // uri test
    GetCurrentURITest(1);
+   GetReferingURITest(1);
 
    // session history test
    SetSHTest(1);
@@ -421,10 +425,10 @@ void CNsIWebNav::GetDocumentTest(PRInt16 displayMode)
 
 void CNsIWebNav::GetCurrentURITest(PRInt16 displayMode)
 {
-   nsCOMPtr<nsIURI> theUri;
+   nsCOMPtr<nsIURI> theURI;
 
-   rv =  qaWebNav->GetCurrentURI(getter_AddRefs(theUri));
-   if (!theUri) {
+   rv =  qaWebNav->GetCurrentURI(getter_AddRefs(theURI));
+   if (!theURI) {
       QAOutput("We didn't get the URI. Test failed.", 2);
 	  return;
    }
@@ -432,7 +436,36 @@ void CNsIWebNav::GetCurrentURITest(PRInt16 displayMode)
 	  RvTestResult(rv, "GetCurrentURI() test", displayMode);
 
    nsCAutoString uriString;
-   rv = theUri->GetSpec(uriString);
+   rv = theURI->GetSpec(uriString);
+   RvTestResult(rv, "nsIURI::GetSpec() for nsIWebNav test", 1);
+
+   FormatAndPrintOutput("the nsIWebNav uri = ", uriString, displayMode);
+}
+
+void CNsIWebNav::GetReferingURITest(PRInt16 displayMode)
+{
+   nsCOMPtr<nsIURI> theURI;
+   nsCAutoString uriString;
+   CUrlDialog myDialog;
+   if (myDialog.DoModal() == IDOK)
+   {
+	  uriString = myDialog.m_urlfield;
+	  rv = NS_NewURI(getter_AddRefs(theURI), uriString);
+	  if (theURI)
+		 QAOutput("We GOT the URI.", 1);
+	  else
+		 QAOutput("We DIDN'T GET the URI.", 1);
+	  rv = qaWebNav->GetReferingURI(getter_AddRefs(theURI));
+	  RvTestResult(rv, "GetReferingURI() test", displayMode);
+//	  rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+//								myDialog.m_flagvalue, theURI, nsnull, nsnull);
+   }
+   if (!theURI) {
+      QAOutput("We didn't get the URI. Test failed.", 2);
+	  return;
+   }
+
+   rv = theURI->GetSpec(uriString);
    RvTestResult(rv, "nsIURI::GetSpec() for nsIWebNav test", 1);
 
    FormatAndPrintOutput("the nsIWebNav uri = ", uriString, displayMode);
