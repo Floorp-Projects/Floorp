@@ -63,7 +63,7 @@
 #include "nsISupportsArray.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
-#include "nsRDFContentUtils.h"
+#include "nsIXULContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleSheet.h"
@@ -127,6 +127,7 @@ static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,      NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
@@ -412,6 +413,7 @@ private:
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
     static nsINameSpaceManager* gNameSpaceManager;
+    static nsIXULContentUtils*  gXULUtils;
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
     static nsIAtom*             kIdAtom;
@@ -464,6 +466,7 @@ private:
 nsrefcnt             RDFElementImpl::gRefCnt;
 nsIRDFService*       RDFElementImpl::gRDFService;
 nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
+nsIXULContentUtils*  RDFElementImpl::gXULUtils;
 nsIAtom*             RDFElementImpl::kIdAtom;
 nsIAtom*             RDFElementImpl::kRefAtom;
 nsIAtom*             RDFElementImpl::kClassAtom;
@@ -592,16 +595,22 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         }
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                          nsnull,
-                                          kINameSpaceManagerIID,
-                                          (void**) &gNameSpaceManager);
+                                                nsnull,
+                                                kINameSpaceManagerIID,
+                                                (void**) &gNameSpaceManager);
 
-        NS_VERIFY(NS_SUCCEEDED(rv), "unable to create namespace manager");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
 
         if (gNameSpaceManager) {
             gNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
             gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
         }
+
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          (nsISupports**) &gXULUtils);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
     }
 }
 
@@ -670,6 +679,11 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
+
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -2497,7 +2511,7 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                   // a possibly-absolute URI into a relative ID attribute.
                     NS_ASSERTION(mDocument != nsnull, "not initialized");
                     if (nsnull != mDocument) {
-                        nsRDFContentUtils::MakeElementID(mDocument, attr->mValue, aResult);
+                        gXULUtils->MakeElementID(mDocument, attr->mValue, aResult);
                     }
                 }
 #endif
@@ -3061,7 +3075,7 @@ RDFElementImpl::GetIdResource(nsIRDFResource** aResource)
             const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName == kIdAtom)) {
-                return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue, aResource);
+                return gXULUtils->MakeElementResource(mDocument, attr->mValue, aResource);
             }
         }
     }
@@ -3088,7 +3102,7 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
             if (attr->mName != kRefAtom)
                 continue;
 
-            return nsRDFContentUtils::MakeElementResource(mDocument, attr->mValue, aResource);
+            return gXULUtils->MakeElementResource(mDocument, attr->mValue, aResource);
         }
     }
 

@@ -42,6 +42,7 @@
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
+#include "nsIXULContentUtils.h"
 #include "nsIXULSortService.h"
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULPopupListener.h"
@@ -70,6 +71,7 @@ static NS_DEFINE_CID(kRDFServiceCID,                      NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,                NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,                   NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,                 NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
@@ -282,12 +284,17 @@ NSGetFactory(nsISupports* aServiceMgr,
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
+    nsIGenericFactory::ConstructorProcPtr constructor = nsnull;
+
+    // Classes that use generic factories
     if (aClass.Equals(kRDFInMemoryDataSourceCID)) {
-        nsIGenericFactory::ConstructorProcPtr constructor;
-
         constructor = NS_NewRDFInMemoryDataSource;
+    }
+    else if (aClass.Equals(kXULContentUtilsCID)) {
+        constructor = NS_NewXULContentUtils;
+    }
 
-        // XXX Factor this part out if we get more of these
+    if (constructor) {
         nsresult rv;
         NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, kComponentManagerCID, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -307,6 +314,7 @@ NSGetFactory(nsISupports* aServiceMgr,
         NS_ADDREF(*aFactory);
     }
     else {
+        // everyone else.
         RDFFactoryImpl* factory = new RDFFactoryImpl(aClass, aClassName, aProgID);
         if (factory == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -454,6 +462,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          NS_RDF_PROGID "/xul-command-dispatcher",
                                          aPath, PR_TRUE, PR_TRUE);
 
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kXULContentUtilsCID,
+                                         "XUL Content Utilities",
+                                         NS_RDF_PROGID "/xul-content-utils",
+                                         aPath, PR_TRUE, PR_TRUE);
+
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
@@ -510,7 +524,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULPopupListenerCID,       aPath);
     if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kXULCommandDispatcherCID,        aPath);
+    rv = compMgr->UnregisterComponent(kXULCommandDispatcherCID,   aPath);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kXULContentUtilsCID,        aPath);
 
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

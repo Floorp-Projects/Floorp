@@ -67,7 +67,7 @@
 #include "nsIXULContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
-#include "nsRDFContentUtils.h"
+#include "nsIXULContentUtils.h"
 #include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
@@ -121,6 +121,7 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kXULContentUtilsCID,       NS_XULCONTENTUTILS_CID);
 
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
@@ -175,6 +176,8 @@ public:
 protected:
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
+
+    static nsIXULContentUtils*  gXULUtils;
 
     // pseudo-constants
     PRInt32 kNameSpaceID_XUL; // XXX per-instance member variable
@@ -270,6 +273,7 @@ protected:
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
 nsIRDFService*       XULContentSinkImpl::gRDFService = nsnull;
+nsIXULContentUtils*  XULContentSinkImpl::gXULUtils = nsnull;
 
 nsIRDFResource*      XULContentSinkImpl::kRDF_child;
 nsIRDFResource*      XULContentSinkImpl::kRDF_instanceOf;
@@ -320,6 +324,12 @@ XULContentSinkImpl::XULContentSinkImpl()
             gRDFService->GetResource(XUL_NAMESPACE_URI "#tag",       &kXUL_tag);
             gRDFService->GetResource("position",                     &kPosition);
         }
+
+        rv = nsServiceManager::GetService(kXULContentUtilsCID,
+                                          nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+                                          (nsISupports**) &gXULUtils);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
     }
 
 #ifdef PR_LOGGING
@@ -443,12 +453,21 @@ XULContentSinkImpl::~XULContentSinkImpl()
     PR_FREEIF(mText);
 
     if (--gRefCnt == 0) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
+
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kXUL_tag);
         NS_IF_RELEASE(kXUL_element);
         NS_IF_RELEASE(kPosition);
+
+        if (gXULUtils) {
+            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+            gXULUtils = nsnull;
+        }
     }
 
   // Delete all the elements from our overlay array
@@ -1270,7 +1289,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         nsRDFParserUtils::StripAndConvert(id);
 
         nsCAutoString uri;
-        nsRDFContentUtils::MakeElementURI(mDocument, id, uri);
+        gXULUtils->MakeElementURI(mDocument, id, uri);
 
         return gRDFService->GetResource(uri, aResource);
     }
@@ -1353,7 +1372,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         //if (nameSpaceID == kNameSpaceID_HTML)
         //    attr.ToLowerCase(); // Not our problem. You'd better be lowercase.
         nsCOMPtr<nsIRDFResource> property;
-        rv = nsRDFContentUtils::GetResource(nameSpaceID, attr, getter_AddRefs(property));
+        rv = gXULUtils->GetResource(nameSpaceID, attr, getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFLiteral> value;
@@ -1422,7 +1441,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     // Convert the container's namespace/tag pair to a fully qualified
     // URI so that we can specify it as an RDF resource.
     nsCOMPtr<nsIRDFResource> tagResource;
-    rv = nsRDFContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(tagResource));
+    rv = gXULUtils->GetResource(nameSpaceID, tag, getter_AddRefs(tagResource));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct resource from namespace/tag pair");
     if (NS_FAILED(rv)) return rv;
 

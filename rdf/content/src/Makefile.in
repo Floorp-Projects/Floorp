@@ -31,12 +31,12 @@ CPPSRCS =				\
 	nsJSXULElement.cpp		\
 	nsJSXULCommandDispatcher.cpp		\
 	nsJSXULTreeElement.cpp		\
-	nsRDFContentUtils.cpp           \
 	nsRDFDOMNodeList.cpp		\
 	nsRDFElement.cpp		\
 	nsRDFGenericBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
 	nsXULAttributes.cpp		\
+	nsXULContentUtils.cpp           \
 	nsXULDocument.cpp               \
 	nsXULSortService.cpp            \
 	nsXULDocumentInfo.cpp		\
