@@ -1794,6 +1794,7 @@ function CIRCChanMode (parent)
     this.publicMessages = true;
     this.publicTopic = true;
     this.invite = false;
+    this.secret = false;
     this.pvt = false;
     
 }
