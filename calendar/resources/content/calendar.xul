@@ -400,7 +400,7 @@
                <hbox>
                   <box align="center">
                      <menulist id="event-filter-menulist" persist="value">
-                         <menupopup id="event-filter-menupopup" oncommand="unifinderDoFilterEvents( event );">
+                         <menupopup id="event-filter-menupopup" oncommand="changeEventFilter( event );">
                              <menuitem id="event-filter-all" label="&calendar.events.filter.all.label;" value="all"/>
                              <menuitem id="event-filter-today" label="&calendar.events.filter.today.label;" value="today"/>
                              <menuitem id="event-filter-week" label="&calendar.events.filter.week.label;" value="week"/>
@@ -414,7 +414,7 @@
                   
                   <box align="center" flex="1">
                      <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
-                     <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
+                     <textbox id="unifinder-search-field" onkeypress="searchKeyPress( this, event )" flex="1"/>
                   </box>
                </hbox>
                <tree id="unifinder-search-results-listbox" flex="1" 

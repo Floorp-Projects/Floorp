@@ -248,7 +248,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    {
       var calendarEventDisplay = monthEventList[ eventIndex ];
       
-      var eventDate = calendarEventDisplay.displayDate;
+      var eventDate = new Date( calendarEventDisplay.displayDate );
       // get the day box for the calendarEvent's day
       var eventDayInMonth = eventDate.getDate();
       

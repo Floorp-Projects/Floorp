@@ -892,7 +892,7 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    }
 
    var DateHtml = document.createElement( "description" );
-   var startDate = new Date( calendarEventDisplay.displayDate.getTime() );
+   var startDate = new Date( calendarEventDisplay.displayDate );
    var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );

@@ -146,7 +146,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefresh();
+            refreshEventTree( false );
         }
    },
    
@@ -156,7 +156,7 @@ var unifinderEventDataSourceObserver =
     
    onEndBatch   : function()
    {
-        unifinderRefresh();
+        refreshEventTree( false );
    },
     
    onAddItem : function( calendarEvent )
@@ -165,7 +165,7 @@ var unifinderEventDataSourceObserver =
         {
             if( calendarEvent )
             {
-                unifinderRefresh();
+                refreshEventTree( false );
             }
         }
    },
@@ -174,7 +174,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefresh();
+            refreshEventTree( false );
         }
    },
 
@@ -182,7 +182,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-           unifinderRefresh();
+           refreshEventTree( false );
         }
    },
 
@@ -235,18 +235,6 @@ function formatUnifinderEventTime( time )
 {
    return( gCalendarWindow.dateFormater.getFormatedTime( time ) );
 }
-
-/**
-*   Called by event observers to update the display
-*/
-
-function unifinderRefresh()
-{
-   eventTable = getEventTable();
-
-   unifinderSearchKeyPress( document.getElementById( 'unifinder-search-field' ), null );
-}
-
 
 /**
 *  This is attached to the ondblclik attribute of the events shown in the unifinder
@@ -344,7 +332,7 @@ function unifinderToDoHasFocus()
 */
 var gSearchTimeout = null;
 
-function unifinderSearchKeyPress( searchTextItem, event )
+function searchKeyPress( searchTextItem, event )
 {
    // 13 == return
    if (event && event.keyCode == 13) 
@@ -378,9 +366,9 @@ function doSearch( )
 
    var searchText = document.getElementById( "unifinder-search-field" ).value;
    
-   if ( searchText == '' ) 
+   if ( searchText.length <= 0 ) 
    {
-      eventTable = getEventTable();
+      eventTable = getEventTable( false );
    }
    else if ( searchText == " " ) 
    {
@@ -405,18 +393,21 @@ function doSearch( )
 }
 
 
-function getEventTable( )
+function getEventTable( Refresh )
 {
+   if( Refresh == false )
+   {
+      return( gEventSource.currentEvents );
+   }
+
    var Today = new Date();
    //do this to allow all day events to show up all day long
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    
-   gEventSource.onlyFutureEvents = false;
-   
    switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
       case "all":
-         eventTable = gEventSource.getCurrentEvents();
+         eventTable = gEventSource.getAllEvents();
          break;
    
       case "today":
@@ -436,8 +427,7 @@ function getEventTable( )
          eventTable = gEventSource.getEventsForRange( StartDate, EndDate );
          break;
       case "future":
-         gEventSource.onlyFutureEvents = true;
-         eventTable = gEventSource.getCurrentEvents();
+         eventTable = gEventSource.getAllFutureEvents();
          break;
       case "current":
          var SelectedDate = gCalendarWindow.getSelectedDate();
@@ -454,9 +444,11 @@ function getEventTable( )
    return( eventTable );
 }
 
-function unifinderDoFilterEvents( event )
+function changeEventFilter( event )
 {
    refreshEventTree( false );
+
+   doSearch();
 
    /* The following isn't exactly right. It should actually reload after the next event happens. */
 
@@ -653,11 +645,9 @@ function refreshEventTree( eventArray )
 {
    if( eventArray === false )
    {
-      eventArray = getEventTable();
+      eventArray = getEventTable( true );
    }
    
-   gEventArray = new Array();
-
    gEventArray = eventArray;
 
    treeView.rowCount = gEventArray.length;
