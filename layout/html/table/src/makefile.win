@@ -52,7 +52,6 @@ CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsTableRowGroupFrame.obj \
     .\$(OBJDIR)\BasicTableLayoutStrategy.obj \
     .\$(OBJDIR)\FixedTableLayoutStrategy.obj \
-    .\$(OBJDIR)\nsTableBorderCollapser.obj \
     $(NULL)
 
 LINCS=-I..\..\base\src -I..\..\style\src -I..\..\content\src \
