@@ -142,7 +142,7 @@ XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::RootString()
     {
         // Indicate that we've rooted the string by storing it as a 
         // string-tagged jsval
-        mStr = STRING_TO_JSVAL(NS_REINTERPRET_CAST(jsval, mStr));
+        mStr = STRING_TO_JSVAL((jsval) mStr);
     }
     return ok;
 }
