@@ -73,12 +73,12 @@ DIRS		= \
 		  Microline3.0/XmL \
 		  $(NULL)
 
-REQUIRES	=\
-			XfeWidgets \
-			XfeBm \
-			XfeToolBar \
-			XfeToolTip \
-			Microline \
+REQUIRES	= \
+		  XfeWidgets \
+		  XfeBm \
+		  XfeToolBar \
+		  XfeToolTip \
+		  Microline \
 		  addr \
 		  applet \
 		  xpcom \
@@ -109,36 +109,29 @@ REQUIRES	=\
 		  $(NULL)
 
 ifdef MOZ_LDAP
-REQUIRES += \
-		  ldap \
-		  $(NULL)
+REQUIRES	+= ldap
 endif
 
 ifdef MOZ_MAIL_NEWS
-REQUIRES += \
-		  msg \
-		  $(NULL)
+REQUIRES	+= msg
 else
 ifdef MOZ_MAIL_COMPOSE
-REQUIRES += \
-		  mailto \
-		  $(NULL)
+REQUIRES	+= mailto
 endif
 endif
 
-REQUIRES += \
+REQUIRES	+= \
 		  xfeicons \
 		  progress \
 		  privacy \
 		  $(NULL)
 
 ifdef MOZ_FULLCIRCLE
-REQUIRES       += fullsoft
+REQUIRES	+= fullsoft
 endif
 
 ifdef OJI
-REQUIRES       += oji \
-		  ojiimpl
+REQUIRES	+= oji ojiimpl
 endif
 
 CSRCS		= \
@@ -211,7 +204,7 @@ GUESS_CONFIG	:= $(shell $(DEPTH)/config/config.guess | sed 's/i[23456]86/x86/')
 CCLD		= $(CCC)
 LDFLAGS		= $(CFLAGS)
 NOMD_LDFLAGS	= $(NOMD_CFLAGS)
-BASIC_DSOS      = -L$(DIST)/bin
+BASIC_DSOS	= -L$(DIST)/bin
 
 ifdef MOZILLA_GPROF
 CSRCS		+= gmon.c
@@ -273,7 +266,7 @@ else
 ifdef FULL_STATIC_BUILD
 NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
 else
-BASIC_DSOS     += -lplds21 -lplc21 -lnspr21
+BASIC_DSOS	+= -lplds21 -lplc21 -lnspr21
 endif
 endif
 
@@ -333,7 +326,7 @@ BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif
 
 ifdef JAVA_OR_NSJVM
-JAVA_JMC = $(DIST)/lib/libjmc.a      # XXX To be removed...
+JAVA_JMC	= $(DIST)/lib/libjmc.a	# XXX To be removed...
 endif
 
 BASIC_LIBS	+= \
@@ -357,34 +350,26 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
 
-
 # jwz: link in libmime all the time.
 # but it needs to be before libnetutil, and I don't know how to do that,
 # so just link against libnetutil twice.
 
 BASIC_LIBS	+= \
-		  $(DIST)/lib/libmime.a		\
-		  $(DIST)/lib/libnetutil.a      \
+		  $(DIST)/lib/libmime.a \
+		  $(DIST)/lib/libnetutil.a \
 		  $(NULL)
-
 
 ifdef MOZ_MAIL_NEWS
 ifdef MOZ_SECURITY
-BASIC_LIBS	+= \
-		  $(DIST)/lib/libns_mime.a \
-		  $(NULL)
+BASIC_LIBS	+= $(DIST)/lib/libns_mime.a
 endif
-BASIC_LIBS_2	+= \
-		  $(DIST)/lib/libldap.a \
-		  $(NULL)
+BASIC_LIBS_2	+= $(DIST)/lib/libldap.a
 endif
 
 # Do we need libns_mime.a here if MOZ_MAIL_COMPOSE and MOZ_SECURITY?
 #ifdef MOZ_MAIL_COMPOSE
 #ifdef MOZ_SECURITY
-#BASIC_LIBS	+= \
-#		  $(DIST)/lib/libns_mime.a \
-#		  $(NULL)
+#BASIC_LIBS	+= $(DIST)/lib/libns_mime.a
 #endif
 #endif
 
@@ -490,9 +475,7 @@ BASIC_LIBS	+= \
 		  $(NULL)
 
 ifdef MOZ_SMARTUPDATE
-BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a \
-		   $(DIST)/lib/libprgrss.a \
-		   $(NULL)
+BASIC_LIBS	+= $(DIST)/lib/libsoftupdate.a $(DIST)/lib/libprgrss.a
 endif
 
 ifdef MOZ_SECURITY
@@ -510,10 +493,9 @@ else # !MOZ_JAVA
 #
 # OJI
 #
-
 ifdef MOZ_OJI
 
-BASIC_LIBS      += $(DIST)/lib/liboji.a
+BASIC_LIBS	+= $(DIST)/lib/liboji.a
 
 ifdef NSJVM
 
@@ -527,8 +509,7 @@ BASIC_LIBS	+= \
 		  $(NULL)
 endif # !NSJVM
 
-BASIC_LIBS      += $(DIST)/lib/libprgrss.a \
-		   $(NULL)
+BASIC_LIBS	+= $(DIST)/lib/libprgrss.a
 
 else  # !MOZ_OJI
 # No Monolithic Java, no OJI, just stubs.
@@ -545,20 +526,20 @@ endif  # !MOZ_JAVA
 ifdef FULL_STATIC_BUILD
 BASIC_LIBS	+= $(DIST)/lib/libzlib.a
 else
-BASIC_DSOS      += -lzlib
+BASIC_DSOS	+= -lzlib
 endif
 
 ifndef NO_MOCHA
 # XXX To a DSO...
 ifdef FULL_STATIC_BUILD
-BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
+BASIC_LIBS	+= $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
 else
-BASIC_DSOS      += -ljs -ljsj
+BASIC_DSOS	+= -ljs -ljsj
 endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 ifdef DOM
 # the DOM code calls back into layout.
-BASIC_LIBS      += $(DIST)/lib/liblay.a
+BASIC_LIBS	+= $(DIST)/lib/liblay.a
 endif
 endif
 
@@ -740,7 +721,7 @@ FRANCE_LDFLAGS	+= $(AIX_NSPR_LINK)
 EXTRA_REL_FILES	+= $(AIX_NSPR)
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 endif
@@ -754,31 +735,25 @@ endif
 ########################################
 # NetBSD
 ifeq ($(OS_ARCH),NetBSD)
-OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
-endif
 
-########################################
-# NetBSD
 # Work around linker semantics that will never find our own libutil on 1.3.x
-ifeq ($(OS_ARCH),NetBSD)
-ifeq ($(OS_MINOR),3)
+ifeq ($(shell uname -r | cut -f2 -d.),3)
 FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
 endif
+
 ifdef LIBRUNPATH
 OS_LIBS		+= -R$(LIBRUNPATH)
 endif
+
 OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+
 endif
 
 ########################################
 # OpenBSD
 # Copied from NetBSD...
 ifeq ($(OS_ARCH),OpenBSD)
-#ifeq ($(OS_MINOR),3)
-#FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
-#DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
-#endif
 ifdef LIBRUNPATH
 OS_LIBS		+= -R$(LIBRUNPATH)
 endif
@@ -805,14 +780,14 @@ endif
 ifeq ($(OS_ARCH),HP-UX)
 
 ifeq ($(OS_RELEASE),A.09)
-HPUX_XLIBS      = -L/usr/lib/X11R5 -L/usr/contrib/X11R5/lib -L/usr/lib/Motif1.2
+HPUX_XLIBS	= -L/usr/lib/X11R5 -L/usr/contrib/X11R5/lib -L/usr/lib/Motif1.2
 endif
 ifeq ($(OS_RELEASE),B.10)
-INCLUDES      += -I.
-HPUX_XLIBS      = -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif1.2_R6 -L/usr/lib/Motif1.2
+INCLUDES	+= -I.
+HPUX_XLIBS	= -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif1.2_R6 -L/usr/lib/Motif1.2
 endif
 ifeq ($(OS_RELEASE),B.11)
-HPUX_XLIBS      = -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif2.1
+HPUX_XLIBS	= -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif2.1
 endif
 
 HPUX_RESOURCE_HACK	= -Wp,-H16384
@@ -822,7 +797,7 @@ OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 ifdef MOZ_EDITOR
 
 ifdef NS_USE_GCC
-CCLD          = $(CCC)
+CCLD		= $(CCC)
 else
 EXPORT_DEPLIBS	+= cxxlink-filter
 US_DEPLIBS	+= cxxlink-filter
@@ -875,7 +850,7 @@ endif
 endif
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 endif
@@ -891,44 +866,38 @@ else
 OS_LIBS			= -lm -ldl
 endif
 
-XFE_MOTIF_LDFLAGS	=\
-					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
-					$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
-					$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
+XFE_MOTIF_LDFLAGS	= \
+			$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
+			$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
+			$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
 
-XFE_X11_LDFLAGS		=\
-					$(MOZILLA_XFE_X11_DYNAMIC_PATHS) \
-					-lXt \
-					-lXmu \
-					$(MOZILLA_XFE_MOTIF_XPM_FLAGS) \
-					$(MOZILLA_XFE_X11_DYNAMIC_FLAGS) \
-					-lXext \
-					$(MOZILLA_XFE_X11_SM_FLAGS)
+XFE_X11_LDFLAGS		= \
+			$(MOZILLA_XFE_X11_DYNAMIC_PATHS) \
+			-lXt \
+			-lXmu \
+			$(MOZILLA_XFE_MOTIF_XPM_FLAGS) \
+			$(MOZILLA_XFE_X11_DYNAMIC_FLAGS) \
+			-lXext \
+			$(MOZILLA_XFE_X11_SM_FLAGS)
 
-OTHER_LIBS			=\
-					$(XFE_MOTIF_LDFLAGS) \
-					$(XFE_X11_LDFLAGS) \
-					$(OS_LIBS)
+OTHER_LIBS		= $(XFE_MOTIF_LDFLAGS) $(XFE_X11_LDFLAGS) $(OS_LIBS)
 
 # Dynamic motif binary
 ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
 
-XFE_DYN_MOTIF_LDFLAGS =\
-					$(MOTIFPATCH_LIB) \
-					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
-					$(MOZILLA_XFE_MOTIF_DYNAMIC_PATHS) \
-					$(MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS) \
-					$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
+XFE_DYN_MOTIF_LDFLAGS	= \
+			$(MOTIFPATCH_LIB) \
+			$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
+			$(MOZILLA_XFE_MOTIF_DYNAMIC_PATHS) \
+			$(MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS) \
+			$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
 
 EXTRA_EXPORT_OBJS	= $(OBJDIR)/$(XFE_PROGNAME)-motif-export
 EXTRA_EXPORT_BINARY	= $(EXTRA_EXPORT_OBJS)
 
-PLUGIN_DSO	+= $(DIST)/bin/libnullplugin-dynMotif.so
+PLUGIN_DSO		+= $(DIST)/bin/libnullplugin-dynMotif.so
 
-OTHER_DYN_MOTIF_LIBS =\
-					$(XFE_DYN_MOTIF_LDFLAGS) \
-					$(XFE_X11_LDFLAGS) \
-					$(OS_LIBS)
+OTHER_DYN_MOTIF_LIBS	= $(XFE_DYN_MOTIF_LDFLAGS) $(XFE_X11_LDFLAGS) $(OS_LIBS)
 
 endif
 
@@ -936,7 +905,7 @@ endif
 ifeq ($(OS_RELEASE)$(CPU_ARCH),2.0x86)
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 endif
@@ -1001,7 +970,7 @@ OTHER_LIBS	= -L$(MOTIF)/lib $(MOTIF)/lib/libXm.a $(MOTIF)/lib/libXmu.a $(MOTIF)/
 		  $(MOTIF)/lib/libXext.a $(MOTIF)/lib/libX11.a
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 ifdef MOZ_EDITOR
@@ -1048,7 +1017,7 @@ MCS_CMD		= mcs -d
 ifeq ($(CPU_ARCH),sparc)
 OTHER_LIBS	= $(MOTIFPATCH_LIB) $(MOTIFLIB) -lXt -lXmu -lXext -lX11 $(OS_LIBS) -lgen -lresolv -lm
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 else
 OTHER_LIBS	= $(MOTIFLIB) -lXt -lXmu -lXext -lX11 $(OS_LIBS) -lm
@@ -1173,7 +1142,7 @@ $(OBJDIR)/e_kit.o:	e_kit.c e_kit_resources.h
 e_kit_resources.h: e_kit.ad
 	@echo 'char* fe_ekitDefaultDatabase = ' > $@
 	cat $< | tr '[\001-\272]' '[\106-\377]' | \
-        od -b | sed 's/^[0-7][0-7]* *\(.*\)/\\\1/; \
+	od -b | sed 's/^[0-7][0-7]* *\(.*\)/\\\1/; \
 		s/ /\\/g;s/\(.*\)/ "\1"/;s/^ *"\\"$$//' >> $@
 	@echo ';' >> $@
 
