@@ -133,9 +133,9 @@ function toDoUnifinderRefresh()
       gICalLib.resetFilter()
    }
 
-   var eventTable = gEventSource.getAllToDos();
+   var taskTable = gEventSource.getAllToDos();
    
-   refreshToDoTree( eventTable );
+   refreshToDoTree( taskTable );
 }
 
 function unifinderToDoHasFocus()
@@ -412,7 +412,7 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
 function refreshToDoTree( eventArray )
 {
    if( !eventArray )
-      eventArray = gEventSource.getAllToDos();
+      eventArray = getTaskTable();
 
    // get the old tree children item and remove it
    
@@ -439,6 +439,28 @@ function refreshToDoTree( eventArray )
 
       tree.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
    }  
+}
+
+
+function getTaskTable( )
+{
+   var taskTable;
+
+   if( document.getElementById( "only-completed-checkbox" ).getAttribute( "checked" ) == "true" )
+   {
+      var now = new Date();
+
+      gICalLib.filter.completed.setTime( now );
+      
+   }
+   else
+   {
+      gICalLib.resetFilter()
+   }
+
+   var taskTable = gEventSource.getAllToDos();
+   
+   return( taskTable );
 }
 
 
