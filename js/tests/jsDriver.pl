@@ -807,7 +807,7 @@ sub expand_user_test_list {
     my ($list_file) = @_;
     my @retval = ();
 
-    if ($list_file =~ /\.js$/ || -d $list_file) {
+    if ($list_file =~ /\.js$/ || -d $opt_suite_path . $list_file) {
 
         push (@retval, &expand_test_list_entry($list_file));
 
@@ -839,7 +839,7 @@ sub expand_user_test_list {
 #
 sub expand_test_list_entry {
     my ($entry) = @_;
-    my $isFile = -f $entry;
+    my $isFile = -f $opt_suite_path . $entry;
     my @retval;
 
     #
