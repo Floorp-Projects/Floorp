@@ -1629,7 +1629,6 @@ nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNo
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
   InternalInsertStyleSheetAt(aSheet, aIndex);
 
-  NS_ADDREF(aSheet);
   aSheet->SetOwningDocument(this);
 
   PRBool enabled = PR_TRUE;
