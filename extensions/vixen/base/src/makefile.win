@@ -23,6 +23,14 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=vixen_s 
 MODULE=vixen
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  layout \
+		  content \
+		  dom \
+		  widget \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

@@ -30,6 +30,19 @@ MODULE         = accessproxy
 XPIDL_MODULE   = accessproxy
 LIBRARY_NAME   = accessproxy
 MODULE_NAME = nsAccessProxy
+REQUIRES        = xpcom \
+                  string \
+                  docshell \
+                  dom \
+                  widget \
+                  gfx \
+                  layout \
+                  content \
+                  uriloader \
+                  locale \
+                  mozcomps \
+                  pref \
+                  $(NULL)
 
 XPIDLSRCS= .\nsIAccessProxy.idl \
   $(NULL)
