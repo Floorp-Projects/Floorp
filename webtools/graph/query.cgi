@@ -224,7 +224,8 @@ sub show_graph {
   print "</li>\n";
 
   print "<li>\n";
-  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">Other tests that $TBOX is running</a>";
+  print "Other $TBOX tests: (<a href=\"query.cgi?tbox=$TBOX&testname=startup&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">startup</a>, <a href=\"query.cgi?tbox=$TBOX&testname=xulwinopen&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">xulwinopen</a>, <a href=\"query.cgi?tbox=$TBOX&testname=pageload&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">pageload</a>, 
+<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">show all tests</a>)";
   print "</li>\n";
 
   print "<li>\n";
