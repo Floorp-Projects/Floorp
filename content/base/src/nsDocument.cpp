@@ -3268,57 +3268,50 @@ PRBool  nsDocument::InternalRegisterCompileEventHandler(JSContext* aContext, jsv
 }
 #endif
 
-NS_IMETHODIMP
-nsDocument::InitDiskDocument(nsIFile *aFile)
-{
-  // aFile may be nsnull here
-  mFileSpec = nsnull;   // delete if we have one
- 
-  if (aFile)
-  {
-    // we clone the nsIFile here, rather than just holding onto a ref,
-    // in case the caller does something to aFile later
-    nsresult rv = aFile->Clone(getter_AddRefs(mFileSpec));
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  mModCount = 0;
-  return NS_OK;
-}
-
-
 
 NS_IMETHODIMP
-nsDocument::SaveFile( nsIFile*          aFile,
-                      PRBool            aReplaceExisting,
+nsDocument::SaveFile( nsIURI*           aLocation,
+                      PRBool            aReplaceExisting, // only used for local file locations
                       PRBool            aSaveCopy,
                       const PRUnichar*  aFileType,     // MIME type of file to save
                       const PRUnichar*  aFileCharset,
                       PRUint32          aSaveFlags,
                       PRUint32          aWrapColumn)
 {
-  NS_ENSURE_ARG_POINTER(aFile);
+  NS_ENSURE_ARG_POINTER(aLocation);
   NS_ENSURE_ARG_POINTER(aFileType);
   NS_ENSURE_ARG_POINTER(aFileCharset);
     
   nsresult  rv = NS_OK;
 
-  // if we're not replacing an existing file but the file
-  // exists, somethine is wrong
-  PRBool  fileExists;
-  rv = aFile->Exists(&fileExists);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (!aReplaceExisting && fileExists)
-    return NS_ERROR_FAILURE;        // where are the file I/O errors?
-  
-  
-  nsCOMPtr<nsIFileOutputStream> outputStream(do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = outputStream->Init(aFile, -1, -1);
-  if (NS_FAILED(rv)) return rv;
-    
+  nsCOMPtr<nsIOutputStream> outputStream;
+  nsCOMPtr<nsIFileURL> localFileLocation( do_QueryInterface(aLocation) );
+  if (localFileLocation)
+  {
+    nsCOMPtr<nsIFile>localFile;
+    rv = localFileLocation->GetFile(getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) return rv;
+
+    // if we're not replacing an existing file but the file
+    // exists, something is wrong
+    // note:  right now, we can only check if local files exist
+    //        remote files need to be checked asynchronously :-(
+    PRBool  fileExists;
+    rv = localFile->Exists(&fileExists);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!aReplaceExisting && fileExists)
+      return NS_ERROR_FAILURE;        // where are the file I/O errors?
+
+    nsCOMPtr<nsIFileOutputStream> fileOutputStream(do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileOutputStream->Init(localFile, -1, -1);
+    if (NS_FAILED(rv)) return rv;
+
+    outputStream = do_QueryInterface(fileOutputStream);
+  }
+
   // Get a document encoder instance
   nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
   contractID.AppendWithConversion(aFileType);
@@ -3350,34 +3343,12 @@ nsDocument::SaveFile( nsIFile*          aFile,
   if (NS_SUCCEEDED(rv))
   {
     // if everything went OK and we're not just saving off a copy,
-    // store the new fileSpec in the doc
+    // reset the modCount to mark the document as clean
     if (!aSaveCopy)
-    {
-      // we clone the nsIFile here, rather than just holding onto a ref,
-      // in case the caller does something to aFile later
-      rv = aFile->Clone(getter_AddRefs(mFileSpec));
-
-      if (NS_SUCCEEDED(rv))
-      {
-        // and mark the document as clean
-        ResetModificationCount();
-      }
-    }
+      ResetModificationCount();
   }
   
   return rv;
-}
-
-NS_IMETHODIMP
-nsDocument::GetFileSpec(nsIFile * *aFileSpec)
-{
-  NS_ENSURE_ARG_POINTER(aFileSpec);
-  
-  if (!mFileSpec)
-    return NS_ERROR_NOT_INITIALIZED;
-    
-  NS_IF_ADDREF(*aFileSpec = mFileSpec);
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
