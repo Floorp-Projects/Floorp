@@ -484,11 +484,6 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement)
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
             do_QueryInterface(aElement);
         if (ssle) {
-            // XXX Trick nsCSSLoader into blocking/notifying us?
-            //     We would need to implement nsIParser and
-            //     pass ourselves as first parameter to
-            //     InitStyleLinkElement. We would then be notified
-            //     of stylesheet loads/load failures.
             ssle->InitStyleLinkElement(nsnull, PR_FALSE);
             ssle->SetEnableUpdates(PR_FALSE);
         }
