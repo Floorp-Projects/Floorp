@@ -523,6 +523,32 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
+static jsuword
+GetThreadStackLimit()
+{
+  // Store the thread stack limit in a static local to ensure that all
+  // contexts get the same stack limit (they're all on the same thread
+  // anyways), and this also helps prevent returning a stack limit
+  // that is beyond the end of the stack if this method is called way
+  // deep on the stack.
+
+  static jsuword sThreadStackLimit;
+
+  if (sThreadStackLimit == 0) {
+    int stackDummy;
+    jsuword currentStackAddr = (jsuword)&stackDummy;
+
+    // We assume here that the stack grows down, and that a stack
+    // limit of 512k below the current stack addr is ok. If this is
+    // not the case on some platforms, #ifdef's are needed for those
+    // platforms.
+    sThreadStackLimit = currentStackAddr +
+      (0x80000 * JS_STACK_GROWTH_DIRECTION);
+  }
+
+  return sThreadStackLimit;
+}
+
 nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 {
 
@@ -546,16 +572,17 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   if (mContext) {
     ::JS_SetContextPrivate(mContext, NS_STATIC_CAST(nsIScriptContext *, this));
 
+    ::JS_SetThreadStackLimit(mContext, GetThreadStackLimit());
+
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Check for the JS strict option, which enables extra error checks
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
-      (void) prefs->RegisterCallback(js_options_dot_str,
-                                     JSOptionChangedCallback,
-                                     this);
-      (void) JSOptionChangedCallback(js_options_dot_str, this);
+      prefs->RegisterCallback(js_options_dot_str, JSOptionChangedCallback,
+                              this);
+      JSOptionChangedCallback(js_options_dot_str, this);
     }
 
     ::JS_SetBranchCallback(mContext, DOMBranchCallback);
