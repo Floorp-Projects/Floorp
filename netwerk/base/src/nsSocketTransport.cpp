@@ -1034,25 +1034,30 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
   //
   // The write operation has completed...
   //
-  if ((NS_SUCCEEDED(rv) && (0 == totalBytesWritten)) ||
-      (GetFlag(eSocketWrite_Async) && (0 == mWriteCount))) {
+  if ((NS_SUCCEEDED(rv) && (0 == totalBytesWritten)) ||         // eof, or
+      (GetFlag(eSocketWrite_Async) && (0 == mWriteCount))) {    // wrote everything
     mSelectFlags &= (~PR_POLL_WRITE);
     rv = NS_OK;
   }
-  else if (NS_SUCCEEDED(rv) || (NS_BASE_STREAM_WOULD_BLOCK == rv)) {
+  else if (NS_SUCCEEDED(rv)) {
+    // We wrote something, so loop and try again.
+    // return WOULD_BLOCK to keep the transport on the select list...
+    rv = NS_BASE_STREAM_WOULD_BLOCK;
+  }
+  else if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
     //
     // If the buffer is empty, then notify the reader and stop polling
     // for write until there is data in the buffer.  See the OnWrite()
     // notification...
     //
-    if ((0 == totalBytesWritten) ||
-        (GetFlag(eSocketWrite_Sync) && (0 == mWriteCount))) {
+    NS_ASSERTION((0 == totalBytesWritten), "returned NS_BASE_STREAM_WOULD_BLOCK and a writeCount");
+    if (GetFlag(eSocketWrite_Sync)) {
+      // We can only wait if we created the stream (a pipe -- created in the synchronous 
+      // OpenOutputStream case). If we didn't create it, we couldn't have been the buffer
+      // observer, so we won't get any notification when more data becomes available. 
       SetFlag(eSocketWrite_Wait);
       mSelectFlags &= (~PR_POLL_WRITE);
     }
-
-    // return WOULD_BLOCK to keep the transport on the select list...
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
@@ -1307,32 +1312,44 @@ nsSocketTransport::Resume(void)
   return rv;
 }
 
-//
-// --------------------------------------------------------------------------
-// nsIPipeObserver implementation...
-// --------------------------------------------------------------------------
-//
-NS_IMETHODIMP
-nsSocketTransport::OnFull(nsIPipe* aPipe)
-{
+// 
+// -------------------------------------------------------------------------- 
+// nsIPipeObserver implementation... 
+// -------------------------------------------------------------------------- 
+// 
+// The pipe observer is used by the following methods: 
+//    AsyncRead(...) 
+//    OpenInputStream(...) 
+//    OpenOutputStream(...). 
+// 
+NS_IMETHODIMP 
+nsSocketTransport::OnFull(nsIPipe* aPipe) 
+{ 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnFull() [this=%x] nsIPipe=%x.\n", 
-         this, aPipe));
+          this, aPipe));
 
+  // 
+  // The socket transport has filled up the pipe.  Remove the 
+  // transport from the select list until the consumer can 
+  // make room... 
+  // 
   nsCOMPtr<nsIBufferInputStream> in;
   nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
-  if (NS_SUCCEEDED(rv) && in == mReadPipeIn)
-  {
+  if (NS_SUCCEEDED(rv) && in == mReadPipeIn) {
     // Enter the socket transport lock...
     nsAutoLock aLock(mLock);
 
-    NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!");
+    NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!"); 
 
     SetFlag(eSocketRead_Wait);
     mSelectFlags &= (~PR_POLL_READ);
+    return NS_OK;
   }
 
-  return NS_OK;
+  // Else, since we might get an OnFull without an intervening OnWrite
+  // try the OnWrite case to see if we need to resume the blocking write operation:
+  return OnWrite(aPipe, 0);
 }
 
 
@@ -1345,19 +1362,20 @@ nsSocketTransport::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
          ("nsSocketTransport::OnWrite() [this=%x]. nsIPipe=%x Count=%d\n", 
          this, aPipe, aCount));
 
-  nsCOMPtr<nsIBufferOutputStream> out;
-  rv = aPipe->GetOutputStream(getter_AddRefs(out));
-  if (NS_SUCCEEDED(rv) && out == mWritePipeOut)
-  {
+  // 
+  // The consumer has written some data into the pipe... If the transport 
+  // was waiting to write some data to the network, then add it to the 
+  // select list... 
+  // 
+  nsCOMPtr<nsIBufferInputStream> in;
+  rv = aPipe->GetInputStream(getter_AddRefs(in));
+  if (NS_SUCCEEDED(rv) && in == mWritePipeIn) {
     // Enter the socket transport lock...
     nsAutoLock aLock(mLock);
 
-    if (mWriteCount >= 0) {
-      mWriteCount += aCount;
-    }
-    if (GetFlag(eSocketWrite_Wait)) {
-      ClearFlag(eSocketWrite_Wait);
-      mSelectFlags |= PR_POLL_WRITE;
+    if (GetFlag(eSocketWrite_Wait)) { 
+      ClearFlag(eSocketWrite_Wait); 
+      mSelectFlags |= PR_POLL_WRITE; 
 
       // Start the crank.
       mOperation = eSocketOperation_ReadWrite;
@@ -1378,13 +1396,16 @@ nsSocketTransport::OnEmpty(nsIPipe* aPipe)
          ("nsSocketTransport::OnEmpty() [this=%x] nsIPipe=%x.\n", 
          this, aPipe));
 
+  // 
+  // The consumer has emptied the pipe...  If the transport was waiting 
+  // for room in the pipe, then put it back on the select list... 
+  // 
   nsCOMPtr<nsIBufferInputStream> in;
   rv = aPipe->GetInputStream(getter_AddRefs(in));
-  if (NS_SUCCEEDED(rv) && in == mReadPipeIn)
-  {
-    // Enter the socket transport lock...
-    nsAutoLock aLock(mLock);
-
+  if (NS_SUCCEEDED(rv) && in == mReadPipeIn) {
+    // Enter the socket transport lock... 
+    nsAutoLock aLock(mLock); 
+  
     if (GetFlag(eSocketRead_Wait)) {
       ClearFlag(eSocketRead_Wait);
       mSelectFlags |= PR_POLL_READ;
