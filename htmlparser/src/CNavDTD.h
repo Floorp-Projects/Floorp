@@ -85,7 +85,7 @@
 #include "nsIDTD.h"
 #include "nsISupports.h"
 #include "nsIParser.h"
-#include "nsHTMLTokens.h"
+#include "nsHTMLTags.h"
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"

@@ -83,8 +83,6 @@ enum eHTMLCategory {
 };
 
 
-#define eHTMLTags nsHTMLTag
-
 nsresult      ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
 nsresult      ConsumeAttributeText(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
 const char*   GetTagName(PRInt32 aTag);

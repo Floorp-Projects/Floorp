@@ -46,7 +46,6 @@
 #include "nsHTMLTags.h"
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
-#include "nsHTMLTokens.h"  // for eHTMLTags
 
 class nsIDTD;
 
