@@ -41,7 +41,8 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                                      Widget parent, XFE_View *parent_view,
                                      MWContext *context)
 
-  : XFE_View(toplevel_component, parent_view, context)
+  : XFE_View(toplevel_component, parent_view, context),
+    XFE_RDFBase()
 {
   m_viewType = VIEW_NAVCENTER;
 
