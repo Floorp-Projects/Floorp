@@ -23,6 +23,7 @@
 #include "vobject.h"
 #include "libi18n.h"
 #include "mimecth.h"
+#include "mimexpcom.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -162,7 +163,10 @@ MIME_CreateContentTypeHandlerClass(const char *content_type,
   /*
    * Must set the superclass by hand.
    */
-  class->superclass = (MimeObjectClass *)MIME_GetmimeInlineTextClass();
+  if (!COM_GetmimeInlineTextClass())
+    return NULL;
+
+  class->superclass = (MimeObjectClass *)COM_GetmimeInlineTextClass();
   initStruct->force_inline_display = PR_TRUE;
   return class;
 }
@@ -186,7 +190,7 @@ static int
 MimeInlineTextVCard_parse_begin (MimeObject *obj)
 {
 //    int status = ((MimeObjectClass*)&mimeLeafClass)->parse_begin(obj);
-  int status = ((MimeObjectClass*)MIME_GetmimeLeafClass())->parse_begin(obj);
+  int status = ((MimeObjectClass*)COM_GetmimeLeafClass())->parse_begin(obj);
   MimeInlineTextVCardClass *class;
     if (status < 0) return status;
 
@@ -217,7 +221,7 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
     if (!obj->output_p) return 0;
     if (!obj->options || !obj->options->output_fn) return 0;
     if (!obj->options->write_html_p) {
-		return MIME_MimeObject_write(obj, line, length, PR_TRUE);
+		return COM_MimeObject_write(obj, line, length, PR_TRUE);
     }
 
 	linestring = (char *) PR_MALLOC (length + 1);
@@ -243,7 +247,7 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 
     /* Run parent method first, to flush out any buffered data. */
 //    status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
-    status = ((MimeObjectClass*)MIME_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
+    status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
     if (status < 0) return status;
 
 	if (!class->vCardString) return 0;
@@ -287,7 +291,7 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
 	{
 		htmlLine[0] = '\0';
 		PL_strcat (htmlLine, line);
-	    status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+	    status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
@@ -347,7 +351,7 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 
 			PL_strcat (htmlLine, ">");
 
-			status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -416,7 +420,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 
 			PL_strcat (htmlLine, ">");
 
-			status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -464,7 +468,7 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 
 			PL_strcat (htmlLine, ">");
 
-			status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -1205,7 +1209,7 @@ static int EndVCard (MimeObject *obj)
 	/* Scribble HTML-ending stuff into the stream */
 	char htmlFooters[32];
 	PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", LINEBREAK, LINEBREAK);
-	status = MIME_MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), PR_FALSE);
+	status = COM_MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), PR_FALSE);
 
 	if (status < 0) return status;
 
@@ -1237,7 +1241,7 @@ static int BeginVCard (MimeObject *obj)
     
 	unique++;
 	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", LINEBREAK, LINEBREAK);
-    status = MIME_MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), PR_TRUE);
+    status = COM_MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), PR_TRUE);
 
 	if (status < 0) return status;
 
@@ -1738,7 +1742,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 		PL_strcat (htmlLine, "<DT>");
 		PL_strcat (htmlLine, line);
                 PL_strcat (htmlLine, "</DT>");
-	        status = MIME_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+	        status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
