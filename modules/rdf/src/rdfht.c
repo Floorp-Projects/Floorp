@@ -80,8 +80,13 @@ RDF_Init(RDF_InitParams params)
   gBookmarkURL      = copyString(params->bookmarksURL);
   gGlobalHistoryURL = copyString(params->globalHistoryURL);
 
-  PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/navcntr.rdf");
+  PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
+  if (!strchr(navCenterURL, ':')) {
+    navCenterURL = makeDBURL(navCenterURL);
+  } else {
+    copyString(navCenterURL);
+  }
   *(gNavCenterDataSources + 1) = copyString(navCenterURL);
   gNCDB = newNavCenterDB();
   freeMem(navCenterURL);

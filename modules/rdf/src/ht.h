@@ -201,8 +201,11 @@ typedef struct	_htmlElement	{
 
 typedef struct _HT_URLSiteMapAssoc {
 	uint8				siteToolType;
+    uint8               origin;
 	char				*url;
 	RDF_Resource			sitemap;
+    char*               name;
+    char*               sitemapUrl;
 	struct _HT_URLSiteMapAssoc	*next;
 } HT_URLSiteMapAssoc;
 
@@ -284,14 +287,14 @@ HT_DropAction			copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitl
 HT_DropAction			uploadLFSURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			uploadRDFFileURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			esfsCopyMoveContentURL (HT_Resource dropTarget, char* objURL);
-HT_URLSiteMapAssoc *		makeNewSMP (char* pUrl, RDF_Resource u);
+HT_URLSiteMapAssoc *		makeNewSMP (HT_Pane htPane, char* pUrl, RDF_Resource u);
 void				populateSBProviders (HT_Pane htPane);
 SBProvider			SBProviderOfNode (HT_Resource node);
 PRBool				implicitDomainURL (char* url);
 PRBool				domainMatches (char *dom, char *url);
 void				nextDomain (char* dom, size_t *n);
 PRBool				relatedLinksEnabledURL (char* url);
-
+void ExitPageInt (HT_Pane htPane, char *pUrl, PRBool guessp) ;
 XP_END_PROTOS
 
 #endif

@@ -278,7 +278,7 @@ remoteStoreGetSlotValue (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType
     }
     nextAs = (inversep ? nextAs->invNext : nextAs->next);
   }
-  possiblyAccessFile(mcf, u, s, inversep);
+  if (s == gCoreVocab->RDF_parent) possiblyAccessFile(mcf, u, s, inversep);
   return null;
 }
 
