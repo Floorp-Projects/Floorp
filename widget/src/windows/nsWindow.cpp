@@ -3245,15 +3245,23 @@ static nsresult HeapDump(const char *filename, const char *heading)
   for (DWORD i = 0; i < nheap; i++) {
     // Dump each heap
     PROCESS_HEAP_ENTRY ent = {0};
-    n = PR_snprintf(buf, sizeof buf, "Processing heap %d : %p\n", i+1, heapHandle[i]);
+    n = PR_snprintf(buf, sizeof buf, "BEGIN heap %d : 0x%p\n", i+1, heapHandle[i]);
     PR_Write(prfd, buf, n);
     ent.lpData = NULL;
     while ((*heapWalkP)(heapHandle[i], &ent)) {
-      n = PR_snprintf(buf, sizeof buf, "%6s block at %08p of size %6d overhead %2d\n",
-                      (ent.wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE) ? "FREE" : "USED",
-                      ent.lpData, ent.cbData, ent.cbOverhead);
+      if (ent.wFlags & PROCESS_HEAP_REGION)
+        n = PR_snprintf(buf, sizeof buf, "REGION %08p : overhead %d committed %d uncommitted %d firstblock %08p lastblock %08p\n",
+                        ent.lpData, ent.cbOverhead,
+                        ent.Region.dwCommittedSize, ent.Region.dwUnCommittedSize,
+                        ent.Region.lpFirstBlock, ent.Region.lpLastBlock);
+      else
+        n = PR_snprintf(buf, sizeof buf, "%s %08p : %6d overhead %2d\n",
+                        (ent.wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE) ? "----" : ((ent.wFlags & PROCESS_HEAP_ENTRY_BUSY) ? "USED" : "FREE"),
+                        ent.lpData, ent.cbData, ent.cbOverhead);
       PR_Write(prfd, buf, n);
     }
+    n = PR_snprintf(buf, sizeof buf, "END heap %d : 0x%p\n", i+1, heapHandle[i]);
+    PR_Write(prfd, buf, n);
   }
   n = PR_snprintf(buf, sizeof buf, "END HEAPDUMP : %s\n", heading);
   PR_Write(prfd, buf, n);
