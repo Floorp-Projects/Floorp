@@ -772,7 +772,6 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 static void RefreshAllContentFrames(nsIFrame* aFrame, nsIContent* aContent)
 {
   if (aFrame->GetContent() == aContent) {
-    // XXX is this necessary?
     aFrame->Invalidate(aFrame->GetOutlineRect(), PR_FALSE);
   }
 
@@ -2507,15 +2506,11 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
 }
 
 nsRect
-nsIFrame::GetOutlineRect(PRBool* aAnyOutline, nsSize *aUseSize) const
+nsIFrame::GetOutlineRect(PRBool* aAnyOutline) const
 {
   const nsStyleOutline* outline = GetStyleOutline();
   PRUint8 outlineStyle = outline->GetOutlineStyle();
   nsRect r(0, 0, mRect.width, mRect.height);
-  if (aUseSize) {
-    r.width = aUseSize->width;
-    r.height = aUseSize->height;
-  }
   PRBool anyOutline = PR_FALSE;
   if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
     nscoord width;
@@ -2555,6 +2550,11 @@ nsFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
   // invalidated)
 
   // Invalidate the entire old frame+outline if the frame has an outline
+
+  // This assumes 'outline' is painted outside the element, as CSS2 requires.
+  // Currently we actually paint 'outline' inside the element so this code
+  // isn't strictly necessary. But we're trying to get ready to switch to
+  // CSS2 compliance.
   PRBool anyOutline;
   nsRect r = GetOutlineRect(&anyOutline);
   if (anyOutline) {
@@ -4219,13 +4219,14 @@ DestroyRectFunc(nsIPresContext* aPresContext,
 }
 
 nsRect*
-nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 
+nsFrame::GetOverflowAreaProperty(nsIPresContext* aPresContext,
+                                 PRBool          aCreateIfNecessary) 
 {
   if (!((GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) || aCreateIfNecessary)) {
     return nsnull;
   }
 
-  nsFrameManager *frameManager = GetPresContext()->FrameManager();
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
   void *value =
     frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowAreaProperty,
@@ -4247,32 +4248,24 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
 }
 
 void 
-nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
-{
-  // This is now called FinishAndStoreOverflow() instead of 
-  // StoreOverflow() because frame-generic ways of adding overflow
-  // can happen here, e.g. CSS2 outline.
-  // If we find more things other than outline that need to be added,
-  // we should think about starting a new method like GetAdditionalOverflow()
-
-  PRBool hasOutline;
-  nsRect outlineRect(GetOutlineRect(&hasOutline, &aNewSize));
-
-  if (hasOutline ||
-      (aOverflowArea->x < 0) ||
-      (aOverflowArea->y < 0) ||
-      (aOverflowArea->XMost() > aNewSize.width) ||
-      (aOverflowArea->YMost() > aNewSize.height)) {
+nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
+                       nsHTMLReflowMetrics& aMetrics)
+{ 
+  if ((aMetrics.mOverflowArea.x < 0) ||
+      (aMetrics.mOverflowArea.y < 0) ||
+      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
-    nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
+    nsRect* overflowArea = GetOverflowAreaProperty(aPresContext, PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");
-    aOverflowArea->UnionRect(outlineRect, *aOverflowArea);
-    *overflowArea = *aOverflowArea;
+    if (overflowArea) {
+       *overflowArea = aMetrics.mOverflowArea;
+    }
   } 
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
-      GetPresContext()->FrameManager()->
+      aPresContext->FrameManager()->
         RemoveFrameProperty(this, nsLayoutAtoms::overflowAreaProperty);
     }
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
@@ -4289,7 +4282,7 @@ nsFrame::ConsiderChildOverflow(nsIPresContext* aPresContext,
   // don't wrap their content into a scrollable frame if overflow is specified
   if (NS_STYLE_OVERFLOW_HIDDEN != disp->mOverflow &&
       NS_STYLE_OVERFLOW_SCROLLBARS_NONE != disp->mOverflow) {
-    nsRect* overflowArea = aChildFrame->GetOverflowAreaProperty();
+    nsRect* overflowArea = aChildFrame->GetOverflowAreaProperty(aPresContext);
     if (overflowArea) {
       nsRect childOverflow(*overflowArea);
       childOverflow.MoveBy(aChildFrame->GetPosition());
@@ -5343,7 +5336,7 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
        DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
        DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
        printf("o=(%s,%s) %s x %s", x, y, width, height);
-       nsRect* storedOverflow = aFrame->GetOverflowAreaProperty();
+       nsRect* storedOverflow = aFrame->GetOverflowAreaProperty(aPresContext);
        if (storedOverflow) {
          if (aMetrics.mOverflowArea != *storedOverflow) {
            DR_state->PrettyUC(storedOverflow->x, x);

@@ -651,7 +651,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
-      FinishAndStoreOverflow(&aMetrics);
+      StoreOverflow(aPresContext, aMetrics);
 
       return NS_OK;
     }
@@ -911,7 +911,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
-  FinishAndStoreOverflow(&aMetrics);
+  StoreOverflow(aPresContext, aMetrics);
 
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
@@ -967,7 +967,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // Factor the absolutely positioned child bounds into the overflow area
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
-    FinishAndStoreOverflow(&aMetrics);
+    StoreOverflow(aPresContext, aMetrics);
   }
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead

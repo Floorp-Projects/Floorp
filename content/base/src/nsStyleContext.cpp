@@ -455,7 +455,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Content);
   DO_STRUCT_DIFFERENCE(UserInterface);
   DO_STRUCT_DIFFERENCE(Visibility);
-  DO_STRUCT_DIFFERENCE(Outline);
 #ifdef MOZ_SVG
   DO_STRUCT_DIFFERENCE(SVG);
 #endif
@@ -490,6 +489,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // UIReset
   DO_STRUCT_DIFFERENCE(Color);
   DO_STRUCT_DIFFERENCE(Background);
+  DO_STRUCT_DIFFERENCE(Outline);
   DO_STRUCT_DIFFERENCE(UIReset);
 
 #undef DO_STRUCT_DIFFERENCE

@@ -106,16 +106,6 @@ public:
   NS_IMETHOD SetScrollbarMediator(nsIScrollbarMediator* aMediator) { mScrollbarMediator = aMediator; return NS_OK; };
   NS_IMETHOD GetScrollbarMediator(nsIScrollbarMediator** aResult) { *aResult = mScrollbarMediator; return NS_OK; };
 
-  // nsBox methods
-
-  /**
-   * Treat scrollbars as clipping their children; overflowing children
-   * will not be allowed to make NS_FRAME_OUTSIDE_CHILDREN on this
-   * frame. This means that when the scroll code decides to hide a
-   * scrollframe by setting its height or width to zero, that will
-   * hide the children too.
-   */
-  virtual PRBool DoesClipChildren() { return PR_TRUE; }
 private:
   nsIScrollbarMediator* mScrollbarMediator;
 }; // class nsScrollbarFrame

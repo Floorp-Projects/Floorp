@@ -556,7 +556,7 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
     if (aOldOverflowArea) {
       damage.UnionRect(damage, *aOldOverflowArea);
     }
-    nsRect* overflowArea = GetOverflowAreaProperty();
+    nsRect* overflowArea = GetOverflowAreaProperty(aPresContext);
     if (overflowArea) {
       damage.UnionRect(damage, *overflowArea);
     }
@@ -1370,7 +1370,7 @@ nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
   if (mCaptionFrame) {
     ConsiderChildOverflow(aPresContext, aMet.mOverflowArea, mCaptionFrame);
   }
-  FinishAndStoreOverflow(&aMet);
+  StoreOverflow(aPresContext, aMet);
 }
 
 nsresult 
@@ -1541,7 +1541,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
 
   rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   nsRect* overflowStorage = nsnull;
   nsRect  overflow;
   if (oldOverflowArea) {
@@ -1599,7 +1599,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     aDesiredSize.height = innerRect.YMost() + innerMargin.bottom; 
     sizeSet = PR_TRUE;
     // Repaint the inner's entire bounds if it moved
-    nsRect* oldOverflowArea = GetOverflowAreaProperty();
+    nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
     PRBool innerMoved = (innerRect.x != innerOrigin.x) ||
                          (innerRect.y != innerOrigin.y);
     nsSize desSize(aDesiredSize.width, aDesiredSize.height);
@@ -1763,7 +1763,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   if (aOuterMet.mComputeMEW) {
     aOuterMet.mMaxElementWidth = innerMet.mMaxElementWidth;
   }
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   nsRect* overflowStorage = nsnull;
   nsRect  overflow;
   if (oldOverflowArea) {
@@ -1854,7 +1854,7 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
   rv = FinishReflowChild(mCaptionFrame, aPresContext, nsnull, captionMet,
                          captionOrigin.x, captionOrigin.y, 0);
 
-  nsRect* oldOverflowArea = GetOverflowAreaProperty();
+  nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
   nsRect* overflowStorage = nsnull;
   nsRect  overflow;
   if (oldOverflowArea) {
