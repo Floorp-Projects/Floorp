@@ -553,7 +553,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 #if 0  
 // pinkerton - we have the flavor already from above, so we don't need
 // to re-derrive it.
-  nsString *name = new nsString((const char*)gdk_atom_name(mSelectionData.type));  
+  nsString *name = new nsString((const char*)gdk_atom_name(mSelectionData.type));
   int format = GetFormat(*name);
   df->SetString((const char*)gdk_atom_name(sSelTypes[format]));
 #endif

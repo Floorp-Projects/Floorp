@@ -45,8 +45,8 @@ nsToolkit::~nsToolkit()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
-NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 void nsToolkit::CreateSharedGC(void)
 {
@@ -70,7 +70,7 @@ GdkGC *nsToolkit::GetSharedGC(void)
 //
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsToolkit::Init(PRThread *aThread)
+NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
   CreateSharedGC();
 

@@ -38,14 +38,28 @@ PRUint32 nsWidget::sWidgetCount = 0;
 //
 // Keep track of the last widget being "dragged"
 //
-nsWidget * nsWidget::sButtonMotionTarget = NULL;
+nsWidget *nsWidget::sButtonMotionTarget = NULL;
 gint nsWidget::sButtonMotionRootX = -1;
 gint nsWidget::sButtonMotionRootY = -1;
 gint nsWidget::sButtonMotionWidgetX = -1;
 gint nsWidget::sButtonMotionWidgetY = -1;
 
-//#define DBG 1
-#undef DEBUG_pavlov
+// Drag & Drop stuff.
+enum {
+  TARGET_STRING,
+  TARGET_ROOTWIN
+};
+
+static GtkTargetEntry target_table[] = {
+  { "STRING",     0, TARGET_STRING },
+  { "text/plain", 0, TARGET_STRING },
+  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
+};
+
+static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
+
+
+//#undef DEBUG_pavlov
 
 nsWidget::nsWidget()
 {
@@ -55,7 +69,7 @@ nsWidget::nsWidget()
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
                                                     nsnull,
-                                                    nsILookAndFeel::GetIID(),
+                                                    NS_GET_IID(nsILookAndFeel),
                                                     (void**)&sLookAndFeel))
       sLookAndFeel = nsnull;
   }
@@ -267,15 +281,9 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
 
   if (bState)
-    ::gtk_widget_show(mWidget);
+    gtk_widget_show(mWidget);
   else
-  {
-    ::gtk_widget_hide(mWidget);
-
-    // For some strange reason, gtk_widget_hide() does not seem to
-    // unmap the window.
-    ::gtk_widget_unmap(mWidget);
-  }
+    gtk_widget_hide(mWidget);
 
   mShown = bState;
 
@@ -288,10 +296,14 @@ NS_IMETHODIMP nsWidget::SetModal(void)
 
 	if (!mWidget)
 		return NS_ERROR_FAILURE;
-	toplevel = (GtkWindow *) ::gtk_widget_get_toplevel( mWidget );
-	if ( !toplevel )
+
+	toplevel = GTK_WINDOW(gtk_widget_get_toplevel(mWidget));
+
+	if (!toplevel)
 		return NS_ERROR_FAILURE;
-	::gtk_window_set_modal(toplevel, PR_TRUE);
+	
+  gtk_window_set_modal(toplevel, PR_TRUE);
+
 	return NS_OK;
 }
 
@@ -326,9 +338,8 @@ NS_IMETHODIMP nsWidget::CaptureMouse(PRBool aCapture)
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
-  if (mWidget) {
+  if (mWidget)
     aState = GTK_WIDGET_VISIBLE(mWidget);
-    }
   else
     aState = PR_FALSE;
 
@@ -378,10 +389,10 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
     PRInt32        x_correction = (PRInt32) ha->value;
     PRInt32        y_correction = (PRInt32) va->value;
     
-    ::gtk_layout_move(GTK_LAYOUT(layout), 
-                      mWidget, 
-                      aX + x_correction, 
-                      aY + y_correction);
+    gtk_layout_move(GTK_LAYOUT(layout), 
+                    mWidget, 
+                    aX + x_correction, 
+                    aY + y_correction);
   }
 
   return NS_OK;
@@ -396,14 +407,9 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 #endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  if (mWidget) {
-    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
-    if (aRepaint) {
-      if (GTK_WIDGET_VISIBLE (mWidget)) {
-        ::gtk_widget_queue_draw (mWidget);
-      }
-    }
-  }
+
+  if (mWidget)
+    gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
   return NS_OK;
 }
@@ -411,8 +417,8 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 NS_IMETHODIMP nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                            PRInt32 aHeight, PRBool aRepaint)
 {
+  Move(aX, aY);
   Resize(aWidth,aHeight,aRepaint);
-  Move(aX,aY);
   return NS_OK;
 }
 
@@ -476,9 +482,9 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 {
-  if (mWidget) {
-    ::gtk_widget_set_sensitive(mWidget, bState);
-  }
+  if (mWidget)
+   gtk_widget_set_sensitive(mWidget, bState);
+
   return NS_OK;
 }
 
@@ -489,9 +495,9 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
-  if (mWidget) {
-    ::gtk_widget_grab_focus(mWidget);
-  }
+  if (mWidget)
+    gtk_widget_grab_focus(mWidget);
+
   return NS_OK;
 }
 
@@ -651,17 +657,14 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
-  if (mWidget == nsnull) {
+  if (mWidget == nsnull)
     return NS_OK; // mWidget will be null during printing. 
-  }
 
-  if (!GTK_IS_WIDGET (mWidget)) {
+  if (!GTK_IS_WIDGET (mWidget))
     return NS_ERROR_FAILURE;
-  }
 
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget)))
     return NS_ERROR_FAILURE;
-  }
 
   if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, NULL);
@@ -676,28 +679,28 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  if (mWidget == nsnull) {
+  if (mWidget)
     return NS_OK;  // mWidget is null during printing
-  }
 
-  if (!GTK_IS_WIDGET (mWidget)) {
+  if (!GTK_IS_WIDGET (mWidget))
     return NS_ERROR_FAILURE;
-  }
 
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget)))
     return NS_ERROR_FAILURE;
+
+
+  if (aIsSynchronous)
+  {
+    GdkRectangle nRect;
+    NSRECT_TO_GDKRECT(aRect, nRect);
+    gtk_widget_draw(mWidget, &nRect);
   }
-
-
-  if ( aIsSynchronous) {
-      GdkRectangle nRect;
-      NSRECT_TO_GDKRECT(aRect, nRect);
-      ::gtk_widget_draw(mWidget, &nRect);
-  } else {
-      mUpdateArea.UnionRect(mUpdateArea, aRect);
-      ::gtk_widget_queue_draw_area(mWidget,
-                                   aRect.x, aRect.y,
-                                   aRect.width, aRect.height);
+  else
+  {
+    mUpdateArea.UnionRect(mUpdateArea, aRect);
+    gtk_widget_queue_draw_area(mWidget,
+                               aRect.x, aRect.y,
+                               aRect.width, aRect.height);
   }
 
   return NS_OK;
@@ -829,9 +832,9 @@ NS_IMETHODIMP nsWidget::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 
 NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
-    mPreferredWidth  = aWidth;
-    mPreferredHeight = aHeight;
-    return NS_OK;
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
@@ -875,9 +878,9 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   gtk_widget_push_visual(gdk_rgb_get_visual());
 
   nsIWidget *baseParent = aInitData &&
-               (aInitData->mWindowType == eWindowType_dialog ||
-                aInitData->mWindowType == eWindowType_toplevel) ?
-                nsnull : aParent;
+    (aInitData->mWindowType == eWindowType_dialog ||
+     aInitData->mWindowType == eWindowType_toplevel) ?
+    nsnull : aParent;
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
   mParent = aParent;
@@ -926,6 +929,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   InstallEnterNotifySignal(mWidget);
   InstallLeaveNotifySignal(mWidget);
+
+  // Initialize this window instance as a drag target.
+  gtk_drag_dest_set (mWidget,
+                     GTK_DEST_DEFAULT_ALL,
+                     target_table, n_targets - 1, /* no rootwin */
+                     GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
 
 
   // Drag & Drop events.
@@ -1014,49 +1023,49 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
-    event.widget = this;
+  event.widget = this;
 
-    GdkEventConfigure *ge;
-    ge = (GdkEventConfigure*)gtk_get_current_event();
+  GdkEventConfigure *ge;
+  ge = (GdkEventConfigure*)gtk_get_current_event();
 
-    if (aPoint == nsnull) {     // use the point from the event
-      // get the message position in client coordinates and in twips
+  if (aPoint == nsnull) {     // use the point from the event
+    // get the message position in client coordinates and in twips
 
-      if (ge != nsnull) {
- //       ::ScreenToClient(mWnd, &cpos);
-        event.point.x = PRInt32(ge->x);
-        event.point.y = PRInt32(ge->y);
-      } else { 
-        event.point.x = 0;
-        event.point.y = 0;
-      }  
-    }    
-    else {                      // use the point override if provided
-      event.point.x = aPoint->x;
-      event.point.y = aPoint->y;
-    }
+    if (ge != nsnull) {
+      //       ::ScreenToClient(mWnd, &cpos);
+      event.point.x = PRInt32(ge->x);
+      event.point.y = PRInt32(ge->y);
+    } else { 
+      event.point.x = 0;
+      event.point.y = 0;
+    }  
+  }    
+  else {                      // use the point override if provided
+    event.point.x = aPoint->x;
+    event.point.y = aPoint->y;
+  }
 
-    event.time = gdk_event_get_time((GdkEvent*)ge);
-    event.message = aEventType;
+  event.time = gdk_event_get_time((GdkEvent*)ge);
+  event.message = aEventType;
 
-//    mLastPoint.x = event.point.x;
-//    mLastPoint.y = event.point.y;
+  //    mLastPoint.x = event.point.x;
+  //    mLastPoint.y = event.point.y;
 }
 
 PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 {
   switch(aStatus) {
-    case nsEventStatus_eIgnore:
-      return(PR_FALSE);
-    case nsEventStatus_eConsumeNoDefault:
-      return(PR_TRUE);
-    case nsEventStatus_eConsumeDoDefault:
-      return(PR_FALSE);
-    default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-      break;
+  case nsEventStatus_eIgnore:
+    return(PR_FALSE);
+  case nsEventStatus_eConsumeNoDefault:
+    return(PR_TRUE);
+  case nsEventStatus_eConsumeDoDefault:
+    return(PR_FALSE);
+  default:
+    NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+    break;
   }
-  return(PR_FALSE);
+  return PR_FALSE;
 }
 
 PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
@@ -1083,9 +1092,9 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 
 PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 {
-  if (mEventCallback) {
+  if (mEventCallback)
     return DispatchWindowEvent(&aEvent);
-  }
+
   return PR_FALSE;
 }
 
@@ -1509,6 +1518,17 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
     OnDragEnterSignal(aGdkDragContext, x, y, time);
   }
 
+
+  GtkWidget *source_widget;
+  source_widget = gtk_drag_get_source_widget (aGdkDragContext);
+  g_print("motion, source %s\n", source_widget ?
+	    gtk_type_name (GTK_OBJECT (source_widget)->klass->type) :
+	    "unknown");
+
+  gdk_drag_status (aGdkDragContext, aGdkDragContext->suggested_action, time);
+
+
+
   nsMouseEvent event;
 
   event.message = NS_DRAGDROP_OVER;
@@ -1703,55 +1723,55 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   // Switch on single, double, triple click.
   switch (aGdkButtonEvent->type) 
   {
-	// Single click.
-  case GDK_BUTTON_PRESS:   
-	
+    // Single click.
+  case GDK_BUTTON_PRESS:
+
     switch (aGdkButtonEvent->button)  // Which button?
-	{
-	case 1:
-	  eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
-	  break;
-	  
-	case 2:
-	  eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-	  break;
+    {
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
 
-	case 3:
-	  eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
-	  break;
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+      break;
 
-	  // Single-click default.
-	default:
-	  eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
-	  break;
-	}
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+      break;
+
+      // Single-click default.
+    default:
+      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
+    }
     break;
 
-	// Double click.
+    // Double click.
   case GDK_2BUTTON_PRESS:
 
     switch (aGdkButtonEvent->button)  // Which button?
-	{
-	case 1:
-	  eventType = NS_MOUSE_LEFT_DOUBLECLICK;
-	  break;
+    {
+    case 1:
+      eventType = NS_MOUSE_LEFT_DOUBLECLICK;
+      break;
+      
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_DOUBLECLICK;
+      break;
 
-	case 2:
-	  eventType = NS_MOUSE_MIDDLE_DOUBLECLICK;
-	  break;
+    case 3:
+      eventType = NS_MOUSE_RIGHT_DOUBLECLICK;
+      break;
 
-	case 3:
-	  eventType = NS_MOUSE_RIGHT_DOUBLECLICK;
-	  break;
-
-	default:
-	  // Double-click default.
-	  eventType = NS_MOUSE_LEFT_DOUBLECLICK;
-	  break;
-	}
+    default:
+      // Double-click default.
+      eventType = NS_MOUSE_LEFT_DOUBLECLICK;
+      break;
+    }
     break;
 
-	// Triple click.
+    // Triple click.
   case GDK_3BUTTON_PRESS:
     // Unhandled triple click.
     break;
@@ -1786,27 +1806,27 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   PRUint32 eventType = 0;
 
   switch (aGdkButtonEvent->button)
-	{
-    case 1:
-      eventType = NS_MOUSE_LEFT_BUTTON_UP;
-      break;
+  {
+  case 1:
+    eventType = NS_MOUSE_LEFT_BUTTON_UP;
+    break;
 	  
-    case 2:
-      eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
-      break;
+  case 2:
+    eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+    break;
 	  
-    case 3:
-      eventType = NS_MOUSE_RIGHT_BUTTON_UP;
-      break;
+  case 3:
+    eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+    break;
 
-    default:
-      eventType = NS_MOUSE_LEFT_BUTTON_UP;
-      break;
+  default:
+    eventType = NS_MOUSE_LEFT_BUTTON_UP;
+    break;
 	}
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-  if (nsnull != sButtonMotionTarget)
+  if (sButtonMotionTarget)
   {
     sButtonMotionTarget = nsnull;
 
@@ -1940,7 +1960,7 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
 //////////////////////////////////////////////////////////////////
 PRBool
 nsWidget::DropEvent(GtkWidget * aWidget, 
-					GdkWindow * aEventWindow) 
+                    GdkWindow * aEventWindow) 
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aEventWindow, "event window is null");
@@ -1950,24 +1970,24 @@ nsWidget::DropEvent(GtkWidget * aWidget,
 
   if (GTK_IS_LAYOUT(aWidget))
   {
-	GtkLayout * layout = GTK_LAYOUT(aWidget);
+    GtkLayout * layout = GTK_LAYOUT(aWidget);
 
-	printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
-		   count++,
-		   this,
-		   aWidget,
-		   aEventWindow,
-		   aWidget->window,
-		   layout->bin_window);
+    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
+           count++,
+           this,
+           aWidget,
+           aEventWindow,
+           aWidget->window,
+           layout->bin_window);
   }
   else
   {
-	printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
-		   count++,
-		   this,
-		   aWidget,
-		   aEventWindow,
-		   aWidget->window);
+    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
+           count++,
+           this,
+           aWidget,
+           aEventWindow,
+           aWidget->window);
   }
 #endif
 
@@ -1978,12 +1998,12 @@ nsWidget::DropEvent(GtkWidget * aWidget,
   // drop the event.
   if (GTK_IS_LAYOUT(aWidget))
   {
-	GtkLayout * layout = GTK_LAYOUT(aWidget);
+    GtkLayout * layout = GTK_LAYOUT(aWidget);
 
-	if (aEventWindow != layout->bin_window)
-	{
-	  return PR_TRUE;
-	}
+    if (aEventWindow != layout->bin_window)
+    {
+      return PR_TRUE;
+    }
   }
 
   return PR_FALSE;
@@ -2125,7 +2145,7 @@ nsWidget::LeaveNotifySignal(GtkWidget *        aWidget,
 
   if (widget->DropEvent(aWidget, aGdkCrossingEvent->window))
   {
-	return PR_TRUE;
+    return PR_TRUE;
   }
 
   widget->OnLeaveNotifySignal(aGdkCrossingEvent);
@@ -2149,7 +2169,7 @@ nsWidget::ButtonPressSignal(GtkWidget *      aWidget,
 
   if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
   {
-	return PR_TRUE;
+    return PR_TRUE;
   }
 
   widget->OnButtonPressSignal(aGdkButtonEvent);
@@ -2173,7 +2193,7 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
 
   if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
   {
-	return PR_TRUE;
+    return PR_TRUE;
   }
 
   widget->OnButtonReleaseSignal(aGdkButtonEvent);

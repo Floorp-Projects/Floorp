@@ -132,10 +132,10 @@ nsAppShell::~nsAppShell()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsAppShell, nsIAppShell::GetIID());
+NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
+NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
   return NS_OK;
@@ -192,7 +192,7 @@ HandleColormapPrefs( void )
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Create(int *bac, char **bav)
+NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
   gchar *home=nsnull;
   gchar *path=nsnull;
@@ -241,7 +241,7 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
 // Spinup - do any preparation necessary for running a message loop
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::Spinup()
+NS_IMETHODIMP nsAppShell::Spinup()
 {
   return NS_OK;
 }
@@ -251,7 +251,7 @@ NS_METHOD nsAppShell::Spinup()
 // Spindown - do any cleanup necessary for finishing a message loop
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::Spindown()
+NS_IMETHODIMP nsAppShell::Spindown()
 {
   return NS_OK;
 }
@@ -261,7 +261,7 @@ NS_METHOD nsAppShell::Spindown()
 // PushThreadEventQueue
 //
 //-------------------------------------------------------------------------
-NS_METHOD
+NS_IMETHODIMP
 nsAppShell::PushThreadEventQueue()
 {
   nsresult      rv;
@@ -293,7 +293,7 @@ nsAppShell::PushThreadEventQueue()
 // PopThreadEventQueue
 //
 //-------------------------------------------------------------------------
-NS_METHOD
+NS_IMETHODIMP
 nsAppShell::PopThreadEventQueue()
 {
   nsresult      rv;
@@ -319,7 +319,7 @@ nsAppShell::PopThreadEventQueue()
 // Run
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsAppShell::Run()
+NS_IMETHODIMP nsAppShell::Run()
 {
   NS_ADDREF_THIS();
   nsresult   rv = NS_OK;
@@ -381,7 +381,7 @@ done:
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsAppShell::Exit()
+NS_IMETHODIMP nsAppShell::Exit()
 {
   gtk_main_quit ();
 
@@ -403,7 +403,7 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
+NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
   GdkEvent *event;
 
@@ -420,17 +420,17 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
   return NS_OK;
 }
 
-NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
+NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
 	if ( aRealEvent == PR_TRUE )
     g_main_iteration (PR_TRUE);
 	return NS_OK;
 }
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
-                                            void *aEvent,
-                                            nsIWidget *aWidget,
-                                            PRBool *aForWindow)
+NS_IMETHODIMP nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
+                                                void *aEvent,
+                                                nsIWidget *aWidget,
+                                                PRBool *aForWindow)
 {
   PRBool isInWindow, isMouseEvent;
   GdkEventAny *msg = (GdkEventAny *) aEvent;

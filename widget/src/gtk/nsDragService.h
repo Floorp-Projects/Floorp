@@ -46,7 +46,16 @@ public:
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
+  NS_IMETHOD StartDragSession();
+  NS_IMETHOD EndDragSession();
+    
+
+  GtkTargetList *RegisterDragItemsAndFlavors(nsISupportsArray *inArray);
+
 protected:
+
+  PRBool DoConvert(GdkAtom type);
+
   static PRBool gHaveDrag;
 
   static void DragLeave(GtkWidget      *widget,
@@ -83,6 +92,14 @@ protected:
   static void  DragDataDelete(GtkWidget          *widget,
 			                        GdkDragContext     *context,
 			                        gpointer            data);
+
+private:
+  GdkDragAction mActionType;
+  PRUint32 mNumFlavors;
+  GtkWidget *mWidget;
+  GdkDragContext *mDragContext;
+  GtkSelectionData mSelectionData;
+  PRBool mBlocking;
 };
 
 #endif // nsDragService_h__
