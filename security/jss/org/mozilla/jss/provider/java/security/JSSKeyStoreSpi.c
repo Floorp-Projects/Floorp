@@ -220,7 +220,7 @@ traverseTokenObjects
 
         certList = PK11_ListCertsInSlot(slot);
         if( certList == NULL ) {
-            JSS_throwMsg(env, TOKEN_EXCEPTION,
+            JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
                 "Failed to list certificates on token");
             goto finish;
         }
@@ -700,9 +700,22 @@ getKeyByCertNickCallback
     return travStat;
 }
         
-
+/*
+ * This is only here for backward compatibility.
+ */
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineGetKey
+    (JNIEnv *env, jobject this, jstring alias, jcharArray password)
+{
+    PR_ASSERT(0);
+    JSS_throwMsg(env, "java/lang/RuntimeException", 
+        "Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engine"
+        "GetKey not implemented");
+    return NULL;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineGetKeyNative
     (JNIEnv *env, jobject this, jstring alias, jcharArray password)
 {
     PK11SlotInfo *slot=NULL;
@@ -874,7 +887,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
         SECKEYPrivateKey *privk;
 
         if( JSS_PK11_getPrivKeyPtr(env, keyObj, &privk) != PR_SUCCESS ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to extract NSS key from private key object");
             goto finish;
         }
@@ -886,7 +899,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
             goto finish;
         }
         if( PK11_SetPrivateKeyNickname(tokenPrivk, nickname) != SECSuccess ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to set alias of copied private key");
             goto finish;
         }
@@ -894,20 +907,20 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNati
         PK11SymKey *symk;
 
         if( JSS_PK11_getSymKeyPtr(env, keyObj, &symk) != PR_SUCCESS ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to extract NSS key from symmetric key object");
             goto finish;
         }
 
-        if( PK11_SetSymKeyNickname(symk, nickname) != SECSuccess ) {
-            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
-                "Failed to set alias of symmetric key");
-            goto finish;
-        }
         tokenSymk = PK11_ConvertSessionSymKeyToTokenSymKey(symk, NULL);
         if( tokenSymk == NULL ) {
             JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
                 "Failed to copy symmetric key to permanent token object");
+            goto finish;
+        }
+        if( PK11_SetSymKeyNickname(tokenSymk, nickname) != SECSuccess ) {
+            JSS_throwMsgPrErr(env, KEYSTORE_EXCEPTION,
+                "Failed to set alias of symmetric key");
             goto finish;
         }
     } else {
