@@ -131,6 +131,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     {
 
         NativeRegExp proto = new NativeRegExp();
+        proto.re = compileRE(cx, scope, "", null, false);
         proto.prototypeFlag = true;
         proto.setMaxId(MAX_PROTOTYPE_ID);
         proto.setParentScope(scope);
@@ -153,67 +154,8 @@ public class NativeRegExp extends IdScriptable implements Function {
     public NativeRegExp(Context cx, Scriptable scope, String source,
                         String global, boolean flat)
     {
-        init(cx, scope, source, global, flat);
-    }
-
-    public void init(Context cx, Scriptable scope, String str,
-                     String global, boolean flat)
-    {
-        this.source = str.toCharArray();
-        int length = str.length();
-        flags = 0;
-        if (global != null) {
-            for (int i = 0; i < global.length(); i++) {
-                char c = global.charAt(i);
-                if (c == 'g') {
-                    flags |= JSREG_GLOB;
-                } else if (c == 'i') {
-                    flags |= JSREG_FOLD;
-                } else if (c == 'm') {
-                    flags |= JSREG_MULTILINE;
-                } else {
-                    reportError(cx, scope,
-                                "msg.invalid.re.flag", String.valueOf(c));
-                }
-            }
-        }
-
-        CompilerState state = new CompilerState(this.source, length, flags, cx, scope);
-        if (flat && length > 0) {
-if (debug) {
-System.out.println("flat = \"" + str + "\"");
-}
-            state.result = new RENode(REOP_FLAT);
-            state.result.chr = state.cpbegin[0];
-            state.result.length = length;
-            state.result.flatIndex = 0;
-            state.progLength += 5;
-        }
-        else
-            if (!parseDisjunction(state))
-                return;
-
-        this.program = new byte[state.progLength + 1];
-        if (state.classCount != 0) {
-            this.classList = new RECharSet[state.classCount];
-            for (int i = 0; i < state.classCount; i++)
-                this.classList[i] = new RECharSet();
-            this.classCount = state.classCount;
-        }
-        int endPC = emitREBytecode(state, this, 0, state.result);
-        this.program[endPC++] = REOP_END;
-
-if (debug) {
-System.out.println("Prog. length = " + endPC);
-for (int i = 0; i < endPC; i++) {
-    System.out.print(program[i]);
-    if (i < (endPC - 1)) System.out.print(", ");
-}
-System.out.println();
-}
-        this.parenCount = state.parenCount;
+        this.re = compileRE(cx, scope, source, global, flat);
         this.lastIndex = 0;
-
         scope = getTopLevelScope(scope);
         setPrototype(getClassPrototype(scope, "RegExp"));
         setParentScope(scope);
@@ -232,7 +174,7 @@ System.out.println();
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
     {
-        return (Scriptable) call(cx, scope, null, args);
+        return (Scriptable)execSub(cx, scope, args, MATCH);
     }
 
     Scriptable compile(Context cx, Scriptable scope, Object[] args)
@@ -246,18 +188,16 @@ System.out.println();
                                                   scope);
             }
             NativeRegExp thatObj = (NativeRegExp) args[0];
-            source = thatObj.source;
-            lastIndex = thatObj.lastIndex;
-            parenCount = thatObj.parenCount;
-            flags = thatObj.flags;
-            program = thatObj.program;
+            this.re = thatObj.re;
+            this.lastIndex = thatObj.lastIndex;
             return this;
         }
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
         String global = args.length > 1 && args[1] != Undefined.instance
             ? ScriptRuntime.toString(args[1])
             : null;
-        init(cx, scope, s, global, false);
+        this.re = compileRE(cx, scope, s, global, false);
+        this.lastIndex = 0;
         return this;
     }
 
@@ -265,13 +205,13 @@ System.out.println();
     {
         StringBuffer buf = new StringBuffer();
         buf.append('/');
-        if (source != null) buf.append(source);
+        buf.append(re.source);
         buf.append('/');
-        if ((flags & JSREG_GLOB) != 0)
+        if ((re.flags & JSREG_GLOB) != 0)
             buf.append('g');
-        if ((flags & JSREG_FOLD) != 0)
+        if ((re.flags & JSREG_FOLD) != 0)
             buf.append('i');
-        if ((flags & JSREG_MULTILINE) != 0)
+        if ((re.flags & JSREG_MULTILINE) != 0)
             buf.append('m');
         return buf.toString();
     }
@@ -296,7 +236,7 @@ System.out.println();
         } else {
             str = ScriptRuntime.toString(args[0]);
         }
-        double d = ((flags & JSREG_GLOB) != 0) ? lastIndex : 0;
+        double d = ((re.flags & JSREG_GLOB) != 0) ? lastIndex : 0;
 
         Object rval;
         if (d < 0 || str.length() < d) {
@@ -305,14 +245,77 @@ System.out.println();
         }
         else {
             int indexp[] = { (int)d };
-            rval = executeRegExp(cx, scopeObj,
-                                        reImpl, str, indexp, matchType);
-            if ((flags & JSREG_GLOB) != 0) {
+            rval = executeRegExp(cx, scopeObj, reImpl, str, indexp, matchType);
+            if ((re.flags & JSREG_GLOB) != 0) {
                 lastIndex = (rval == null || rval == Undefined.instance)
                             ? 0 : indexp[0];
             }
         }
         return rval;
+    }
+
+    private static RECompiled
+    compileRE(Context cx, Scriptable scope,
+              String str, String global, boolean flat)
+    {
+        RECompiled regexp = new RECompiled();
+        regexp.source = str.toCharArray();
+        int length = str.length();
+
+        int flags = 0;
+        if (global != null) {
+            for (int i = 0; i < global.length(); i++) {
+                char c = global.charAt(i);
+                if (c == 'g') {
+                    flags |= JSREG_GLOB;
+                } else if (c == 'i') {
+                    flags |= JSREG_FOLD;
+                } else if (c == 'm') {
+                    flags |= JSREG_MULTILINE;
+                } else {
+                    reportError(cx, scope,
+                                "msg.invalid.re.flag", String.valueOf(c));
+                }
+            }
+        }
+        regexp.flags = flags;
+
+        CompilerState state = new CompilerState(regexp.source, length, flags, cx, scope);
+        if (flat && length > 0) {
+if (debug) {
+System.out.println("flat = \"" + str + "\"");
+}
+            state.result = new RENode(REOP_FLAT);
+            state.result.chr = state.cpbegin[0];
+            state.result.length = length;
+            state.result.flatIndex = 0;
+            state.progLength += 5;
+        }
+        else
+            if (!parseDisjunction(state))
+                return null;
+
+        regexp.program = new byte[state.progLength + 1];
+        if (state.classCount != 0) {
+            regexp.classList = new RECharSet[state.classCount];
+            for (int i = 0; i < state.classCount; i++)
+                regexp.classList[i] = new RECharSet();
+            regexp.classCount = state.classCount;
+        }
+        int endPC = emitREBytecode(state, regexp, 0, state.result);
+        regexp.program[endPC++] = REOP_END;
+
+if (debug) {
+System.out.println("Prog. length = " + endPC);
+for (int i = 0; i < endPC; i++) {
+    System.out.print(regexp.program[i]);
+    if (i < (endPC - 1)) System.out.print(", ");
+}
+System.out.println();
+}
+        regexp.parenCount = state.parenCount;
+
+        return regexp;
     }
 
     static char getEscape(char c)
@@ -1156,7 +1159,7 @@ System.out.println();
     private static final int ARG_LEN =            OFFSET_LEN;
 
     private static int
-    emitREBytecode(CompilerState state, NativeRegExp re, int pc, RENode t)
+    emitREBytecode(CompilerState state, RECompiled re, int pc, RENode t)
     {
         RENode nextAlt;
         int nextAltFixup, nextTermFixup;
@@ -2441,7 +2444,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     private static final int INITIAL_BACKTRACK = 20;
 
     private static REMatchState
-    initMatch(REGlobalData gData, NativeRegExp re, boolean multiline)
+    initMatch(REGlobalData gData, RECompiled re, boolean multiline)
     {
         REMatchState result = new REMatchState(re.parenCount);
         int i;
@@ -2474,7 +2477,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     {
         REGlobalData gData = new REGlobalData();
         REMatchState x;
-        NativeRegExp re = this;
 
         int start = indexp[0];
         char[] charArray = str.toCharArray();
@@ -2613,9 +2615,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return result;
     }
 
-    public byte getFlags()
+    int getFlags()
     {
-        return flags;
+        return re.flags;
     }
 
     private static void
@@ -2653,13 +2655,13 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             case Id_lastIndex:
                 return wrap_double(lastIndex);
             case Id_source:
-                return new String(source);
+                return new String(re.source);
             case Id_global:
-                return wrap_boolean((flags & JSREG_GLOB) != 0);
+                return wrap_boolean((re.flags & JSREG_GLOB) != 0);
             case Id_ignoreCase:
-                return wrap_boolean((flags & JSREG_FOLD) != 0);
+                return wrap_boolean((re.flags & JSREG_FOLD) != 0);
             case Id_multiline:
-                return wrap_boolean((flags & JSREG_MULTILINE) != 0);
+                return wrap_boolean((re.flags & JSREG_MULTILINE) != 0);
         }
         return super.getIdValue(id);
     }
@@ -2816,15 +2818,20 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 // #/string_id_map#
     private boolean prototypeFlag;
 
-    private char []source;          /* locked source string, sans // */
+    RECompiled re;
     private double lastIndex;          /* index after last match, for //g iterator */
-    private int parenCount;         /* number of parenthesized submatches */
-    private byte flags;             /* flags  */
-    private byte[] program;         /* regular expression bytecode */
-    private int classCount;         /* count [...] bitmaps */
-    private RECharSet[] classList;  /* list of [...] bitmaps */
 
 };       // class NativeRegExp
+
+class RECompiled
+{
+    char []source;          /* locked source string, sans // */
+    int parenCount;         /* number of parenthesized submatches */
+    int flags;              /* flags  */
+    byte[] program;         /* regular expression bytecode */
+    int classCount;         /* count [...] bitmaps */
+    RECharSet[] classList;  /* list of [...] bitmaps */
+}
 
 class RENode {
 
@@ -2970,7 +2977,7 @@ class REBackTrackData {
 
 class REGlobalData {
     boolean multiline;
-    NativeRegExp regexp;                /* the RE in execution */
+    RECompiled regexp;              /* the RE in execution */
     int lastParen;                  /* highest paren set so far */
     boolean ok;                     /* runtime error (out_of_memory only?) */
     int start;                      /* offset to start at */
