@@ -23,6 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#include "nsIPref.h"
 
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
@@ -72,6 +73,9 @@ static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
 static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
+
+static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
+
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -233,7 +237,23 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   if (nsnull != docLoader) {
     docLoader->AddObserver((nsIDocumentLoaderObserver *)this);
   }
-///  webShell->SetPrefs(aPrefs);
+
+  /*
+   * XXX:  How should preferences be supplied to the nsWebShellWindow?
+   *       Should there be the notion of a global preferences service?
+   *       Or should there be many preferences components based on 
+   *       the user profile...
+   */
+  // Initialize the webshell with the preferences service
+  nsIPref *prefs;
+
+  rv = nsServiceManager::GetService(kPrefCID, 
+                                    nsIPref::GetIID(), 
+                                    (nsISupports **)&prefs);
+  if (NS_SUCCEEDED(rv)) {
+    mWebShell->SetPrefs(prefs);
+    nsServiceManager::ReleaseService(kPrefCID, prefs);
+  }
 
   NS_IF_RELEASE(mCallbacks);
   mCallbacks = aCallbacks;
