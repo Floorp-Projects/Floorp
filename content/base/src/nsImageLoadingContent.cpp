@@ -74,7 +74,8 @@ nsIIOService* nsImageLoadingContent::sIOService = nsnull;
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mLoadingEnabled(PR_TRUE),
-    mImageIsBlocked(PR_FALSE)
+    mImageIsBlocked(PR_FALSE),
+    mHaveHadObserver(PR_FALSE)
 {
   if (!sImgLoader)
     mLoadingEnabled = PR_FALSE;
@@ -243,6 +244,8 @@ nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);
 
+  mHaveHadObserver = PR_TRUE;
+  
   if (!mObserverList.mObserver) {
     mObserverList.mObserver = aObserver;
     // Don't touch the linking of the list!
@@ -429,8 +432,10 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // It may be that one of our frames has replaced itself with alt text... This
   // would only have happened if our mCurrentRequest had issues, and we would
   // have set it to null by now in that case.  Have to save that information
-  // here, since LoadImage may clobber the value of mCurrentRequest.
-  PRBool mayNeedReframe = !mCurrentRequest;
+  // here, since LoadImage may clobber the value of mCurrentRequest.  On the
+  // other hand, if we've never had an observer, we know there aren't any frames
+  // that have changed to alt text on us yet.
+  PRBool mayNeedReframe = mHaveHadObserver && !mCurrentRequest;
   
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
