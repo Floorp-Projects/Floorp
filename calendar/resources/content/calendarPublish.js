@@ -45,8 +45,7 @@ var gPublishHandler = null;
 
 /* Create an instance of the given ContractID, with given interface */
 function createInstance(contractId, intf) {
-    return Components.classes[contractId]
-       .createInstance(Components.interfaces[intf]);
+    return Components.classes[contractId].createInstance(Components.interfaces[intf]);
 }
 
 
@@ -88,25 +87,26 @@ function calendarPublish(aDataString, newLocation, fileName, login, password, co
 // XXX WARNING: I DIDN'T TEST THIS!!!!!
 function calendarUploadFile(aSourceFilename, newLocation, fileName, login, password, contentType)
 {
-  try
-  {
-    var protocolChannel = get_destination_channel(newLocation, fileName, login, password);
-    if (!protocolChannel)
-    {
-      dump("failed to get a destination channel\n");
-      return;
-    }
+   try
+   {
+      var protocolChannel = get_destination_channel(newLocation, fileName, login, password);
+    
+      if (!protocolChannel)
+      {
+         dump("failed to get a destination channel\n");
+         return;
+      }
 
-    //void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
-
-    output_file_to_channel(protocolChannel, aSourceFilename, contentType);
-    protocolChannel.asyncOpen(gPublishingListener, null);
-    dump("done\n");
-  }
-  catch (e)
-  {
-    alert("an error occurred: " + e + "\n");
-  }
+       //void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
+   
+       output_file_to_channel(protocolChannel, aSourceFilename, contentType);
+       protocolChannel.asyncOpen(gPublishingListener, null);
+       dump("done\n");
+   }
+   catch (e)
+   {
+      alert("an error occurred: " + e + "\n");
+   }
 }
 
 
@@ -161,7 +161,7 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     }
     catch( e )
     {
-       alert( e );
+       //alert( e );
     }
     
     if (httpChannel) 
@@ -169,7 +169,7 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
        dump("http channel found\n");
        return httpChannel;
     }
-    var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFtpChannel);
+    var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFTPChannel);
     if (ftpChannel) dump("ftp channel found\n");
     if (ftpChannel)
       return ftpChannel;
