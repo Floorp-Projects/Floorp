@@ -47,9 +47,10 @@ require "$tree/treedata.pl";
 
 # Seach the build log for the scrape data
 #
-$fh = new FileHandle "gunzip -c $tree/$logfile |" 
+$fh = new FileHandle "gunzip -c $tree/$logfile |"
   or die "Unable to open $tree/$logfile\n";
 @scrape_data = find_scrape_data($fh);
+
 $fh->close;
 
 die "No scrape data found in log.\n" unless @scrape_data;
@@ -60,6 +61,13 @@ open SCRAPE, ">>$tree/scrape.dat" or die "Unable to open $tree/scrape.dat";
 print SCRAPE "$logfile|".join('|', @scrape_data)."\n";
 close SCRAPE;
 
+#print "scrape_data = ";
+#my $i;
+#foreach $i (@scrape_data) {
+#  print "$i ";
+#}
+#print "\n";
+
 
 # end of main
 #============================================================
@@ -67,18 +75,17 @@ close SCRAPE;
 sub find_scrape_data {
   my ($fh) = $_[0];
   local $_;
-  my $inBloatStats = 0;
-
+  my @rv;
+  my @line;
   while (<$fh>) {
-    if ($inBloatStats and /^TOTAL/) {
+    if (/TinderboxPrint,/) {
       # Line format:
-      #  TOTAL <absolute leaks> <% leaks delta> <absolute bloat> <% bloat delta>
+      #  TinderboxPrint,aaa,bbb,ccc,ddd
       chomp;
-      return (split)[1,3];
-    }
-    elsif (not $inBloatStats and /^\#* BLOAT STATISTICS/) {
-      $inBloatStats = 1;
+      @line = split(',', $_);
+      shift(@line);
+      push(@rv, @line);
     }
   }
-  return ();
+  return @rv;
 }
