@@ -52,6 +52,9 @@ NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 
+char *nsDragService::mDndEvent = NULL;
+int nsDragService::mDndEventLen;
+
 //-------------------------------------------------------------------------
 //
 // DragService constructor
@@ -79,7 +82,11 @@ nsDragService::~nsDragService()
 
 NS_IMETHODIMP nsDragService::SetNativeDndData( PtWidget_t *widget, PhEvent_t *event ) {
 	mDndWidget = widget;
-	mDndEvent = event;
+	if( !mDndEvent ) {
+		mDndEventLen = sizeof( PhEvent_t ) + event->num_rects * sizeof( PhRect_t ) + event->data_len;
+		mDndEvent = ( char * ) malloc( mDndEventLen );
+		}
+	memcpy( mDndEvent, (char*)event, mDndEventLen );
 	return NS_OK;
 	}
 
@@ -96,6 +103,26 @@ NS_IMETHODIMP nsDragService::SetDropData( char *data, PRUint32 tmpDataLen, char 
 
   return NS_OK;
   }
+
+
+/* remove this function with the one from libph.so, when it becomes available */
+int CancelDrag( PhRid_t rid, unsigned input_group )
+{
+  struct dragevent {
+      PhEvent_t hdr;
+      PhDragEvent_t drag;
+      } ev;
+  memset( &ev, 0, sizeof(ev) );
+  ev.hdr.type = Ph_EV_DRAG;
+  ev.hdr.emitter.rid = Ph_DEV_RID;
+  ev.hdr.flags = Ph_EVENT_INCLUSIVE | Ph_EMIT_TOWARD;
+  ev.hdr.data_len = sizeof( ev.drag );
+  ev.hdr.subtype = Ph_EV_DRAG_COMPLETE;
+  ev.hdr.input_group = input_group;
+  ev.drag.rid = rid;
+  return PhEmit( &ev.hdr, NULL, &ev.drag );
+} 
+
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
@@ -118,10 +145,16 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
   if ( !numItemsToDrag )
     return NS_ERROR_FAILURE;
 
+	mActionType = aActionType;
+
 	PRUint32 tmpDataLen = 0;
 	nsCOMPtr<nsISupports> genericDataWrapper;
 	char aflavorStr[100];
 	GetRawData( aArrayTransferables, getter_AddRefs( genericDataWrapper ), &tmpDataLen, aflavorStr );
+
+
+	/* cancel a previous drag ( PhInitDrag ) if one is in place */
+	CancelDrag( PtWidgetRid( mDndWidget ), ((PhEvent_t*)mDndEvent)->input_group );
 
 	void *data;
 	nsPrimitiveHelpers::CreateDataFromPrimitive ( aflavorStr, genericDataWrapper, &data, tmpDataLen );
@@ -135,7 +168,8 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
 		strcpy( dupdata+4, aflavorStr );
 		memcpy( dupdata+4+100, data, tmpDataLen );
 		PtTransportType( mNativeCtrl, "Mozilla", "dnddata", 0, Ph_TRANSPORT_INLINE, "raw", dupdata, tmpDataLen+4+100, 0 );
-		PtInitDnd( mNativeCtrl, mDndWidget, mDndEvent, NULL, 0 );
+
+		PtInitDnd( mNativeCtrl, mDndWidget, (PhEvent_t*)mDndEvent, NULL, 0 );
 		}
 
   return NS_OK;

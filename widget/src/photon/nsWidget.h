@@ -286,7 +286,7 @@ protected:
 		}
 
 #ifdef PHOTON_DND
-	void DispatchDragDropEvent( PRUint32 aEventType, PhPoint_t *pos );
+	void DispatchDragDropEvent( PhEvent_t *phevent, PRUint32 aEventType, PhPoint_t *pos );
 	void ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *pos );
 #endif
 
