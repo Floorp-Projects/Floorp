@@ -45,6 +45,8 @@ typedef void
  */
 class nsITimer : public nsISupports {
 public:  
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITIMER_IID)
+  
   /**
    * Initialize a timer to fire after the given millisecond interval.
    * This version takes a function to call and a closure to pass to
