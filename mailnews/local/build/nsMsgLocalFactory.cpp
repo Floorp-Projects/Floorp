@@ -30,6 +30,7 @@
 #include "nsLocalMailFolder.h"
 #include "nsParseMailbox.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);

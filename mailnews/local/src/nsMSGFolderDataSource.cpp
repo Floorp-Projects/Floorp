@@ -41,7 +41,7 @@
 #include "nsMsgFolder.h"
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgBaseCID.h"
-
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
