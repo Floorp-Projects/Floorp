@@ -28,9 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 DIRS=            \
 	base     \
 	dns      \
+	util     \
 	build    \
 	protocol \
-	util     \
 	test     \
 	$(NULL)
 
