@@ -1502,6 +1502,7 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   {
     nsCOMPtr<nsIDOMNode> brNode;
     PRBool bAfterBlock = PR_FALSE;
+    PRBool bBeforeBlock = PR_FALSE;
     
     if (bPlaintext)
     {
@@ -1515,17 +1516,23 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
       PRInt16 wsType;
       res = wsObj.PriorVisibleNode(node, offset, address_of(visNode), &visOffset, &wsType);
       if (NS_FAILED(res)) return res;
-      if (wsType==nsWSRunObject::eOtherBlock)
+      if (wsType & nsWSRunObject::eBlock)
         bAfterBlock = PR_TRUE;
+      res = wsObj.NextVisibleNode(node, offset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if (wsType & nsWSRunObject::eBlock)
+        bBeforeBlock = PR_TRUE;
+      
       res = wsObj.InsertBreak(address_of(node), &offset, address_of(brNode), nsIEditor::eNone);
     }
     if (NS_FAILED(res)) return res;
     res = nsEditor::GetNodeLocation(brNode, address_of(node), &offset);
     if (NS_FAILED(res)) return res;
-    if (bAfterBlock)
+    if (bAfterBlock && bBeforeBlock)
     {
-      // we just placed a br after a block.  This is the one case where we want the 
-      // selection to be before the br we just placed, as the br will be on a new line,
+      // we just placed a br between block boundaries.  
+      // This is the one case where we want the selection to be before 
+      // the br we just placed, as the br will be on a new line,
       // rather than at end of prior line.
       selPriv->SetInterlinePosition(PR_TRUE);
       res = aSelection->Collapse(node, offset);
