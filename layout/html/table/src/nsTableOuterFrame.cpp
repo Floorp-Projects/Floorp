@@ -295,6 +295,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   kidFrame->MoveTo(kidMargin.left, aState.y);
   nsReflowState kidReflowState(kidFrame, aState.reflowState, kidFrame == mInnerTableFrame ?
                                aState.innerTableMaxSize : aState.availSize);
+  mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_INCREMENTAL);
   aStatus = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState,
                         pKidMaxElementSize, aState);
 
@@ -306,6 +307,8 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   } else {
     aState.prevMaxPosBottomMargin = bottomMargin;
   }
+
+  // XXX We're not correctly dealing with maxElementSize...
 
   // Adjust the frames that follow
   return AdjustSiblingsAfterReflow(aPresContext, aState, kidFrame,
@@ -1078,8 +1081,12 @@ nsTableOuterFrame::ReflowChild( nsIFrame*              aKidFrame,
   else
   {
     if (PR_TRUE==gsDebug) printf("reflowChild called with a table body\n");
-    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aKidReflowState, 
-                                                           mMinCaptionWidth, mMaxCaptionWidth);
+    if (eReflowReason_Incremental == aKidReflowState.reason) {
+      aKidFrame->Reflow(aPresContext, aDesiredSize, aKidReflowState, status);
+    } else {
+      status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aKidReflowState, 
+                                                             mMinCaptionWidth, mMaxCaptionWidth);
+    }
   }
   if (PR_TRUE==gsDebug)
   {
