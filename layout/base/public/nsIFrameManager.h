@@ -123,8 +123,6 @@ public:
   // Mapping undisplayed content
   NS_IMETHOD GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aStyleContext)=0;
   NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext) = 0;
-  NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
-                                    nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearUndisplayedContentMap() = 0;
