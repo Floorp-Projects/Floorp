@@ -64,12 +64,6 @@ public:
 	// Deletes associated user directories
 	void		DeleteUserDirectories(const nsFileSpec& profileDir);
 
-	// Sets profile information recived from the Javascript (routed via core service) into an array
-    void		SetDataArray(nsString data);
-
-	// Gets a particular value from the DataArray
-    char*		GetValue(char *name);
-
 	// Copies all the registry keys from old profile to new profile
 	nsresult	CopyRegKey(const char *oldProfile, const char *newProfile);
 
