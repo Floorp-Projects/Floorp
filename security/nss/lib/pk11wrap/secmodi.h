@@ -65,6 +65,7 @@ SECMODModuleList * SECMOD_ReadPermDB(void);
 /* Library functions */
 SECStatus SECMOD_LoadModule(SECMODModule *);
 SECStatus SECMOD_UnloadModule(SECMODModule *);
+void SECMOD_SetInternalModule(SECMODModule *);
 
 void SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot);
 CK_RV pk11_notify(CK_SESSION_HANDLE session, CK_NOTIFICATION event,
