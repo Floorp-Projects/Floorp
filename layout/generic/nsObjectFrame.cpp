@@ -30,6 +30,9 @@
 #include "nsString.h"
 #include "nsIContentViewerContainer.h"
 #include "prmem.h"
+#include "nsHTMLAtoms.h"
+#include "nsIDocument.h"
+#include "nsIURL.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -59,9 +62,15 @@ protected:
 
   nsresult CreateWidget(nsIPresContext* aPresContext,
                         nscoord aWidth, nscoord aHeight);
+
+  nsresult SetURL(const nsString& aURLSpec);
+  nsresult SetBaseHREF(const nsString& aBaseHREF);
+
 private:
   nsPluginWindow    mPluginWindow;
   nsIPluginInstance *mInstance;
+  nsString          *mURLSpec;
+  nsString          *mBaseHREF;
 };
 
 nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -72,6 +81,18 @@ nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 nsObjectFrame::~nsObjectFrame()
 {
   NS_IF_RELEASE(mInstance);
+
+  if (nsnull != mURLSpec)
+  {
+    delete mURLSpec;
+    mURLSpec = nsnull;
+  }
+
+  if (nsnull != mBaseHREF)
+  {
+    delete mBaseHREF;
+    mBaseHREF = nsnull;
+  }
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -202,51 +223,48 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
   // XXX deal with border and padding the usual way...wrap it up!
 
-#if XXX
-  // Create view if necessary
-  nsIView* view;
-  GetView(view);
-  if (nsnull == view) {
-    nsresult rv = CreateWidget(&aPresContext, aMetrics.width,
-                               aMetrics.height);
-    if (NS_OK != rv) {
-      return rv;
-    }
+  nsIAtom* atom = mContent->GetTag();
+  if (nsnull != atom) {
+    //don't make a view for an applet since we know we can't support them yet...
+    if (atom != nsHTMLAtoms::applet) {
+      static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+      static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
-    static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
-    static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
+      nsISupports               *container;
+      nsIPluginHost             *pm;
+      nsIContentViewerContainer *cv;
+      nsresult                  rv;
 
-    nsISupports               *container;
-    nsIPluginHost             *pm;
-    nsIContentViewerContainer *cv;
-
-    rv = aPresContext.GetContainer(&container);
-
-    if (NS_OK == rv) {
-      rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
+      rv = aPresContext.GetContainer(&container);
 
       if (NS_OK == rv) {
-        rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
+        rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
 
         if (NS_OK == rv) {
-          nsAutoString  type;
-          char          *buf;
-          PRInt32       buflen;
+          rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
 
-          mContent->GetAttribute(nsString("type"), type);
-
-          buflen = type.Length();
-
-          if (buflen > 0) {
-            buf = (char *)PR_Malloc(buflen + 1);
-
-            if (nsnull != buf) {
-              type.ToCString(buf, buflen + 1);
-
-              rv = pm->InstantiatePlugin(buf, &mInstance);
-
+          if (NS_OK == rv) {
+            // Create view if necessary
+            nsIView* view;
+            GetView(view);
+            if (nsnull == view) {
+              rv = CreateWidget(&aPresContext, aMetrics.width,
+                                aMetrics.height);
               if (NS_OK == rv) {
-                mInstance->Start();
+                nsAutoString  type;
+                char          *buf = nsnull;
+                PRInt32       buflen;
+
+                mContent->GetAttribute(nsString("type"), type);
+
+                buflen = type.Length();
+
+                if (buflen > 0) {
+                  buf = (char *)PR_Malloc(buflen + 1);
+
+                  if (nsnull != buf)
+                    type.ToCString(buf, buflen + 1);
+                }
 
                 nsIView *view;
                 nsIWidget *widget;
@@ -256,6 +274,28 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
                 widget = view->GetWidget();
                 widget->GetBounds(wrect);
+
+                nsAutoString src, base, fullurl;
+
+                //stream in the object source if there is one...
+
+                if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+                  SetURL(src);
+
+                  if (eContentAttr_HasValue == mContent->GetAttribute(NS_HTML_BASE_HREF, base))
+                    SetBaseHREF(base);
+
+                  nsIPresShell  *shell = aPresContext.GetShell();
+                  nsIDocument   *doc = shell->GetDocument();
+                  nsIURL        *docURL = doc->GetDocumentURL();
+
+                  // Create an absolute URL
+                  nsresult rv = NS_MakeAbsoluteURL(docURL, base, *mURLSpec, fullurl);
+
+                  NS_RELEASE(shell);
+                  NS_RELEASE(docURL);
+                  NS_RELEASE(doc);
+                }
 
                 mPluginWindow.window = (nsPluginPort *)widget->GetNativeData(NS_NATIVE_WINDOW);
                 mPluginWindow.x = wrect.x;
@@ -269,10 +309,12 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 #ifdef XP_UNIX
                 mPluginWindow.ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
-                //this will change with support for windowless plugins?... MMP
+                //this will change with support for windowless plugins... MMP
                 mPluginWindow.type = nsPluginWindowType_Window;
 
-                mInstance->SetWindow(&mPluginWindow);
+                rv = pm->InstantiatePlugin(buf, &mInstance, &mPluginWindow, fullurl);
+
+                PR_Free((void *)buf);
 
                 //since the plugin is holding on to private data in the widget,
                 //we probably need to keep around the ref on the view and/or widget.
@@ -282,21 +324,18 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
                 NS_RELEASE(widget);
               }
             }
+            else {
+              NS_RELEASE(view);
+            }
+            NS_RELEASE(pm);
           }
-
-          NS_RELEASE(pm);
+          NS_RELEASE(cv);
         }
-
-        NS_RELEASE(cv);
+        NS_RELEASE(container);
       }
-
-      NS_RELEASE(container);
     }
+    NS_RELEASE(atom);
   }
-  else {
-    NS_RELEASE(view);
-  }
-#endif
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
@@ -352,6 +391,32 @@ NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
 {
   aFrameResult = new nsObjectFrame(aContent, aParentFrame);
   if (nsnull == aFrameResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsObjectFrame::SetURL(const nsString& aURLSpec)
+{
+  if (nsnull != mURLSpec) {
+    delete mURLSpec;
+  }
+  mURLSpec = new nsString(aURLSpec);
+  if (nsnull == mURLSpec) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsObjectFrame::SetBaseHREF(const nsString& aBaseHREF)
+{
+  if (nsnull != mBaseHREF) {
+    delete mBaseHREF;
+  }
+  mBaseHREF = new nsString(aBaseHREF);
+  if (nsnull == mBaseHREF) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
