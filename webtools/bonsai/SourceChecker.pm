@@ -19,8 +19,8 @@
 package				SourceChecker;
 require				Exporter;
 @ISA				=	qw(Exporter);
-@EXPORT			= qw(%token_dictionary, add_good_english, add_good_words, add_bad_words, add_names, tokenize_line, markup_line);
-@EXPORT_OK	=	qw($GOOD_TOKEN, $UNKNOWN_TOKEN, $BAD_TOKEN, $NAME_TOKEN, add_token, canonical_token, @markup_prefix, @markup_suffix);
+@EXPORT			= qw(%token_dictionary add_good_english add_good_words add_bad_words add_names tokenize_line markup_line);
+@EXPORT_OK	=	qw($GOOD_TOKEN $UNKNOWN_TOKEN $BAD_TOKEN $NAME_TOKEN add_token canonical_token @markup_prefix @markup_suffix);
 
 $GOOD_TOKEN			= \-1;
 $UNKNOWN_TOKEN	= \0;
