@@ -46,7 +46,7 @@ MODULE		= nkfinger
 LIBRARY_NAME	= nkfinger
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
-MODULE_NAME	= necko_finger_protocol
+MODULE_NAME	= finger
 REQUIRES	= xpcom \
 		  string \
 		  necko \
