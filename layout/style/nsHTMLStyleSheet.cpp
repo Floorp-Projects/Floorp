@@ -642,6 +642,11 @@ protected:
                                  PRBool           aIsAbsolutelyPositioned,
                                  PRBool           aIsFixedPositioned,
                                  PRBool           aCreateBlock);
+
+  nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
+                                           nsIContent* aContent,
+                                           nsIAtom* aAttribute);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -4263,72 +4268,70 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
   nsIFrame*     frame;
    
   shell->GetPrimaryFrameFor(aContent, frame);
-
-  if (nsnull != frame) {
-    PRBool  restyle = PR_FALSE;
-    PRBool  reflow  = PR_FALSE;
-    PRBool  reframe = PR_FALSE;
-    PRBool  render  = PR_FALSE;
+  
+  PRBool  restyle = PR_FALSE;
+  PRBool  reflow  = PR_FALSE;
+  PRBool  reframe = PR_FALSE;
+  PRBool  render  = PR_FALSE;
 
 #if 0
-    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-       ("HTMLStyleSheet::AttributeChanged: content=%p[%s] frame=%p",
-        aContent, ContentTag(aContent, 0), frame));
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+     ("HTMLStyleSheet::AttributeChanged: content=%p[%s] frame=%p",
+      aContent, ContentTag(aContent, 0), frame));
 #endif
 
-    // the style tag has its own interpretation based on aHint 
-    if ((nsHTMLAtoms::style != aAttribute) && (NS_STYLE_HINT_UNKNOWN == aHint)) { 
-      nsIHTMLContent* htmlContent;
-      result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-  
-      if (NS_OK == result) { 
-        // Get style hint from HTML content object. 
-        htmlContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
-        NS_RELEASE(htmlContent); 
-      } 
-      else aHint = NS_STYLE_HINT_REFLOW;
+  // the style tag has its own interpretation based on aHint 
+  if ((nsHTMLAtoms::style != aAttribute) && (NS_STYLE_HINT_UNKNOWN == aHint)) { 
+    nsIHTMLContent* htmlContent;
+    result = aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+
+    if (NS_OK == result) { 
+      // Get style hint from HTML content object. 
+      htmlContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
+      NS_RELEASE(htmlContent); 
     } 
+    else aHint = NS_STYLE_HINT_REFLOW;
+  } 
 
-    switch (aHint) {
-      default:
-      case NS_STYLE_HINT_UNKNOWN:
-      case NS_STYLE_HINT_FRAMECHANGE:
-        reframe = PR_TRUE;
-      case NS_STYLE_HINT_REFLOW:
-        reflow = PR_TRUE;
-      case NS_STYLE_HINT_VISUAL:
-        render = PR_TRUE;
-      case NS_STYLE_HINT_CONTENT:
-      case NS_STYLE_HINT_AURAL:
-        restyle = PR_TRUE;
-        break;
-      case NS_STYLE_HINT_NONE:
-        break;
+  switch (aHint) {
+    default:
+    case NS_STYLE_HINT_UNKNOWN:
+    case NS_STYLE_HINT_FRAMECHANGE:
+      reframe = PR_TRUE;
+    case NS_STYLE_HINT_REFLOW:
+      reflow = PR_TRUE;
+    case NS_STYLE_HINT_VISUAL:
+      render = PR_TRUE;
+    case NS_STYLE_HINT_CONTENT:
+    case NS_STYLE_HINT_AURAL:
+      restyle = PR_TRUE;
+      break;
+    case NS_STYLE_HINT_NONE:
+      break;
+  }
+
+  // apply changes
+  if (PR_TRUE == reframe) {
+      RecreateFramesOnAttributeChange(aPresContext, aContent, aAttribute);
+  }
+  else if (PR_TRUE == restyle) {
+    nsIStyleContext* frameContext;
+    frame->GetStyleContext(frameContext);
+    NS_ASSERTION(nsnull != frameContext, "frame must have style context");
+    if (nsnull != frameContext) {
+      nsIStyleContext*  parentContext = frameContext->GetParent();
+      frame->ReResolveStyleContext(aPresContext, parentContext);
+      NS_IF_RELEASE(parentContext);
+      NS_RELEASE(frameContext);
+    }    
+    if (PR_TRUE == reflow) {
+      StyleChangeReflow(aPresContext, frame, aAttribute);
     }
-
-    // apply changes
-    if (PR_TRUE == restyle) {
-      nsIStyleContext* frameContext;
-      frame->GetStyleContext(frameContext);
-      NS_ASSERTION(nsnull != frameContext, "frame must have style context");
-      if (nsnull != frameContext) {
-        nsIStyleContext*  parentContext = frameContext->GetParent();
-        frame->ReResolveStyleContext(aPresContext, parentContext);
-        NS_IF_RELEASE(parentContext);
-        NS_RELEASE(frameContext);
-      }
-      if (PR_TRUE == reframe) {
-        NS_NOTYETIMPLEMENTED("frame change reflow");
-      }
-      else if (PR_TRUE == reflow) {
-        StyleChangeReflow(aPresContext, frame, aAttribute);
-      }
-      else if (PR_TRUE == render) {
-        ApplyRenderingChangeToTree(aPresContext, frame);
-      }
-      else {  // let the frame deal with it, since we don't know how to
-        frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
-      }
+    else if (PR_TRUE == render) {
+      ApplyRenderingChangeToTree(aPresContext, frame);
+    }
+    else {  // let the frame deal with it, since we don't know how to
+      frame->AttributeChanged(aPresContext, aContent, aAttribute, aHint);
     }
   }
 
@@ -4422,6 +4425,40 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
   fputs("\n", out);
   delete buffer;
+}
+
+nsresult
+HTMLStyleSheetImpl::RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
+                                                    nsIContent* aContent,
+                                                    nsIAtom* aAttribute)                                   
+{
+  nsresult rv = NS_OK;
+
+  // First, remove the frames associated with the content object on which the
+  // attribute change occurred.
+
+  // XXX Right now, ContentRemoved() does not do anything with its aContainer
+  // and aIndexInContainer in parameters, so I am passing in null and 0, respectively
+  rv = ContentRemoved(aPresContext, nsnull, aContent, 0);
+
+  if (NS_OK == rv) {
+    // Now, recreate the frames associated with this content object.
+    nsIContent *container;
+    rv = aContent->GetParent(container);
+  
+    if (NS_OK == rv) {
+      PRInt32 indexInContainer;
+      rv = container->IndexOf(aContent, indexInContainer);
+
+      if (NS_OK == rv) {
+        rv = ContentInserted(aPresContext, container, aContent, indexInContainer);
+      }
+
+      NS_RELEASE(container);    
+    }    
+  }
+
+  return rv;
 }
 
 // XXX For convenience and backwards compatibility
