@@ -693,8 +693,11 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 
 	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
 						PR_FALSE,PR_FALSE,pwdata);
-	if (list) for (le = list->head; le; le = le->next) {
-	    rv = listCerts(handle,name,le->slot,raw,ascii,outfile,pwdata);
+	if (list) {
+	    for (le = list->head; le; le = le->next) {
+		rv = listCerts(handle,name,le->slot,raw,ascii,outfile,pwdata);
+	    }
+	    PK11_FreeSlotList(list);
 	}
     } else {
 	rv = listCerts(handle,name,slot,raw,ascii,outfile,pwdata);
