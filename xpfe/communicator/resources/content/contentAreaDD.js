@@ -33,6 +33,7 @@ var contentAreaDNDObserver = {
       // under the assumption that content areas won't contain
       // draggable XBL, we'll ignore the drag if we're dragging XBL
       // anonymous content nodes, like scrollbars, etc.
+      // XXX bogus
       if (aEvent.target != aEvent.originalTarget)
         throw Components.results.NS_ERROR_FAILURE;
 
@@ -68,7 +69,7 @@ var contentAreaDNDObserver = {
         }
       else 
         {
-          dump("Dragging DOM node: <" + draggedNode.localName + ">\n");
+          //dump("Dragging DOM node: <" + draggedNode.localName + ">\n");
           if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
           switch (draggedNode.localName.toUpperCase())
@@ -114,6 +115,11 @@ var contentAreaDNDObserver = {
                     // non-fatal, so catch & ignore
                     dump("Couldn't normalize selection: " + ex + "\n");
                   }
+                }
+                else {
+                  // Need to throw to indicate that the drag target should not 
+                  // allow drags.
+                  throw Components.results.NS_OK;
                 }
                 break;
             }
