@@ -35,5 +35,5 @@
 
 treechildren::-moz-tree-image(subs-name-column) {
   margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
 }
