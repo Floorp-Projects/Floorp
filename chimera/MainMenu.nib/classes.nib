@@ -17,6 +17,7 @@
                 displayPreferencesWindow = id; 
                 doReload = id; 
                 doStop = id; 
+                feedbackLink = id; 
                 findAgain = id; 
                 findInPage = id; 
                 goBack = id; 
@@ -38,7 +39,6 @@
                 smallerTextSize = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
-                toggleSmoothText = id; 
                 viewSource = id; 
             }; 
             CLASS = MainController; 

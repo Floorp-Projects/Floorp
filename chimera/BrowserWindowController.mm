@@ -721,7 +721,8 @@ static NSArray* sToolbarDefaults = nil;
 - (void)clickThrobber:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil);
-  [self loadURL:pageToLoad];
+  if (![pageToLoad isEqualToString:@"ThrobberPageDefault"])
+    [self loadURL:pageToLoad];
 }
 
 - (void)startThrobber
