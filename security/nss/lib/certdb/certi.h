@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.13 2005/02/15 19:26:28 julien.pierre.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.14 2005/02/24 00:22:59 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -125,16 +125,16 @@ struct CachedCrlStr {
 };
 
 /* constructor */
-SECStatus CachedCrl_Create(CachedCrl** returned, CERTSignedCrl* crl,
+static SECStatus CachedCrl_Create(CachedCrl** returned, CERTSignedCrl* crl,
                            CRLOrigin origin);
 /* destructor */
-SECStatus CachedCrl_Destroy(CachedCrl* crl);
+static SECStatus CachedCrl_Destroy(CachedCrl* crl);
 
 /* create hash table of CRL entries */
-SECStatus CachedCrl_Populate(CachedCrl* crlobject);
+static SECStatus CachedCrl_Populate(CachedCrl* crlobject);
 
 /* empty the cache content */
-SECStatus CachedCrl_Depopulate(CachedCrl* crl);
+static SECStatus CachedCrl_Depopulate(CachedCrl* crl);
 
 /* are these CRLs the same, as far as the cache is concerned ?
    Or are they the same token object, but with different DER ? */
@@ -193,35 +193,35 @@ struct CRLDPCacheStr {
 };
 
 /* create a DPCache object */
-SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
+static SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
                          SECItem* subject, SECItem* dp);
 
 /* destructor for CRL DPCache object */
-SECStatus DPCache_Destroy(CRLDPCache* cache);
+static SECStatus DPCache_Destroy(CRLDPCache* cache);
 
 /* add a new CRL object to the dynamic array of CRLs of the DPCache, and
    returns the cached CRL object . Needs write access to DPCache. */
-SECStatus DPCache_AddCRL(CRLDPCache* cache, CachedCrl* crl, PRBool* added);
+static SECStatus DPCache_AddCRL(CRLDPCache* cache, CachedCrl* crl, PRBool* added);
 
 /* fetch the CRL for this DP from the PKCS#11 tokens */
-SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate, void* wincx);
+static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate, void* wincx);
 
 /* check if a particular SN is in the CRL cache and return its entry */
-SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn, CERTCrlEntry** returned);
+static SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn, CERTCrlEntry** returned);
 
 /* update the content of the CRL cache, including fetching of CRLs, and
    reprocessing with specified issuer and date */
-SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate* issuer,
+static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate* issuer,
                          PRBool readlocked, PRTime vfdate, void* wincx);
 
 /* returns true if there are CRLs from PKCS#11 slots */
-PRBool DPCache_HasTokenCRLs(CRLDPCache* cache);
+static PRBool DPCache_HasTokenCRLs(CRLDPCache* cache);
 
 /* remove CRL at offset specified */
-SECStatus DPCache_RemoveCRL(CRLDPCache* cache, PRUint32 offset);
+static SECStatus DPCache_RemoveCRL(CRLDPCache* cache, PRUint32 offset);
 
 /* Pick best CRL to use . needs write access */
-SECStatus DPCache_SelectCRL(CRLDPCache* cache);
+static SECStatus DPCache_SelectCRL(CRLDPCache* cache);
 
 /*  CRL issuer cache object
     This object tracks all the distribution point caches for a given issuer.
@@ -245,7 +245,7 @@ struct CRLIssuerCacheStr {
 };
 
 /* create an issuer cache object (per CA subject ) */
-SECStatus IssuerCache_Create(CRLIssuerCache** returned,
+static SECStatus IssuerCache_Create(CRLIssuerCache** returned,
                              CERTCertificate* issuer,
                              SECItem* subject, SECItem* dp);
 
@@ -253,11 +253,11 @@ SECStatus IssuerCache_Create(CRLIssuerCache** returned,
 SECStatus IssuerCache_Destroy(CRLIssuerCache* cache);
 
 /* add a DPCache to the issuer cache */
-SECStatus IssuerCache_AddDP(CRLIssuerCache* cache, CERTCertificate* issuer,
+static SECStatus IssuerCache_AddDP(CRLIssuerCache* cache, CERTCertificate* issuer,
                             SECItem* subject, SECItem* dp, CRLDPCache** newdpc);
 
 /* get a particular DPCache object from an IssuerCache */
-CRLDPCache* IssuerCache_GetDPCache(CRLIssuerCache* cache, SECItem* dp);
+static CRLDPCache* IssuerCache_GetDPCache(CRLIssuerCache* cache, SECItem* dp);
 
 
 /*  CRL revocation cache object
