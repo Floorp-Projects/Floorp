@@ -10,11 +10,10 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  *
- * The Original Code is Mozilla Communicator client code.
- *
- * The Initial Developer of the Original Code is Christopher Blizzard.
- * Portions created by Christopher Blizzard are Copyright (C) 1999
- * Christopher Blizzard.  All Rights Reserved.
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
 #ifndef nsIMotifAppContextService_h__

@@ -96,7 +96,6 @@ NSGetFactory(nsISupports *servMgr,
 	     const char *aProgID,
 	     nsIFactory **aFactory)
 {
-  printf("NSGetFactory for xlib window service\n");
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -121,7 +120,9 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
   nsresult rv;
 
+#ifdef NS_DEBUG
   printf("*** Registering XlibWindowService\n");
+#endif
 
   nsCOMPtr<nsIServiceManager>
     serviceManager(do_QueryInterface(aServMgr, &rv));
