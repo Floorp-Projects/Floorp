@@ -5666,6 +5666,9 @@ mk_add_options MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl])
   msvc*|mks*|cygwin*|mingw*)
       MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
       ;;
+  os2*)
+      MOZ_LIBART_LIBS='-lmoz_art -lm'
+      ;;
   beos*)
       MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
       ;;
