@@ -364,7 +364,7 @@ function EditorStartLog()
 
     fs = null;
   }
-  catch(ex) { dump("Can't start logging!:\n" + ex + "\n");
+  catch(ex) { dump("Can't start logging!:\n" + ex + "\n"); }
 }
 
 function EditorStopLog()
@@ -374,7 +374,7 @@ function EditorStopLog()
     edlog.stopLogging();
     window._content.focus();
   }
-  catch(ex) { dump("Can't stop logging!:\n" + ex + "\n");
+  catch(ex) { dump("Can't stop logging!:\n" + ex + "\n"); }
 }
 
 function EditorRunLog()
