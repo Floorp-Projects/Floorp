@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.13 $';
+$Version = '$Revision: 1.14 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -124,6 +124,15 @@ sub SetupPath {
 	$NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1';
     }
 
+    if ( $OS eq 'IRIX' ) {
+	$ENV{'PATH'} = '/opt/bin:' . $ENV{'PATH'};
+	$ENV{'LD_LIBRARY_PATH'} .= ':/opt/lib';
+	$ENV{'LD_LIBRARYN32_PATH'} = $ENV{'LD_LIBRARY_PATH'};
+	$ConfigureEnvArgs = 'CC=cc CXX=CC CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
+	$Compiler = 'cc/CC';
+	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+    }
+
     if ( $OS eq 'NetBSD' ) {
 	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11R6/lib';
@@ -147,7 +156,7 @@ sub SetupPath {
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
 	$ConfigureEnvArgs = 'CC=cc CXX=cc';
-	$Compiler = 'cc/cc';
+	$Compiler = 'cc';
 	$mail = '/usr/bin/sendmail';
     }
 
@@ -266,6 +275,10 @@ sub GetSystemInfo {
     if ( $OS eq 'HP-UX' ) {
 	$ObjDir = 'obj-hppa1.1-hp-hpux' . $OSVer;
 	$ObjDir =~ s/hpux[AB]\./hpux/o;
+    }
+
+    if ( $OS eq 'IRIX' ) {
+	$ObjDir = 'obj-mips-sgi-irix' . $OSVer;
     }
 
     if ( $OS eq 'Linux' ) {
@@ -676,6 +689,9 @@ sub ParseArgs {
 	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
 	    $PrintUsage;
+	}
+	elsif ( $ARGV[$i] eq '--nocompress' ) {
+	    $CVS = 'cvs -q';
 	}
 	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
