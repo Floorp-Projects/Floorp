@@ -1578,9 +1578,6 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:content:macbuild:contentshared.mcp",              "contentshared$D.o", 0, 0, 0);
     MakeAlias(":mozilla:content:macbuild:contentshared$D.o",                    ":mozilla:dist:content:");
 
-    # Get accessiblity which depends on gfx
-    BuildAccessiblityProjects();
-
     BuildOneProject(":mozilla:content:macbuild:content.mcp",                    "content$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{mathml})
     {
@@ -2056,8 +2053,8 @@ sub BuildProjects()
     BuildSecurityProjects();
     BuildBrowserUtilsProjects();        
     BuildInternationalProjects();
-    #BuildAccessiblityProjects();   
     BuildLayoutProjects();
+    BuildAccessiblityProjects();   
     BuildEditorProjects();
     BuildEmbeddingProjects();
     BuildViewerProjects();
