@@ -222,6 +222,36 @@ nsNetService::HasActiveConnections()
 #endif
 }
 
+//////////////////////////
+//// HELPER ROUTINES
+//////////////////////////
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+
+nsresult NS_NewURL(nsIUrl** aInstancePtrResult,
+                          const char *aSpec,
+                          nsIUrl* aBaseUrl)
+{
+    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+    if (nsnull == aInstancePtrResult) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsINetService *inet = nsnull;
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = inet->NewUrl(aSpec, aBaseUrl, aInstancePtrResult);
+
+    if (NS_FAILED(rv)) return rv;
+
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+    return rv;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
     
