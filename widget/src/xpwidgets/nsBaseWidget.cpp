@@ -25,53 +25,13 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
-#ifndef LOG_ADDREF_RELEASE
-NS_IMPL_ISUPPORTS(nsBaseWidget, nsCOMTypeInfo<nsIWidget>::GetIID())
-#else
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-}
+// nsBaseWidget
+NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
 
-NS_IMPL_QUERY_INTERFACE(nsBaseWidget, nsCOMTypeInfo<nsIWidget>::GetIID())
 
-nsrefcnt nsBaseWidget::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  return ++mRefCnt;
-}
+// nsBaseWidget::Enumerator
+NS_IMPL_ISUPPORTS2(nsBaseWidget::Enumerator, nsIBidirectionalEnumerator, nsIEnumerator)
 
-nsrefcnt nsBaseWidget::Release(void)
-{
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  if (--mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-#endif
-
-NS_IMPL_ADDREF(nsBaseWidget::Enumerator);
-NS_IMPL_RELEASE(nsBaseWidget::Enumerator);
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER; 
-
-  if (aIID.Equals(nsCOMTypeInfo<nsIBidirectionalEnumerator>::GetIID()) || 
-      aIID.Equals(nsCOMTypeInfo<nsIEnumerator>::GetIID()) || 
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-    *aInstancePtr = (void*) this; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
 
 //-------------------------------------------------------------------------
 //
@@ -139,11 +99,10 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
             // it's some top level window with no toolkit passed in.
             // Create a default toolkit with the current thread
             else {
-               static NS_DEFINE_IID(kToolkitCID, NS_TOOLKIT_CID);
-               static NS_DEFINE_IID(kToolkitIID, NS_ITOOLKIT_IID);
+               static NS_DEFINE_CID(kToolkitCID, NS_TOOLKIT_CID);
 
                nsresult res;
-               res = nsComponentManager::CreateInstance(kToolkitCID, nsnull, kToolkitIID, (void **)&mToolkit);
+               res = nsComponentManager::CreateInstance(kToolkitCID, nsnull, NS_GET_IID(nsIToolkit), (void **)&mToolkit);
                if (NS_OK != res)
                   NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
                if (mToolkit)
@@ -167,10 +126,9 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     else {
       nsresult  res;
 
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+      static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&mContext);
 
       if (NS_OK == res)
         mContext->Init(nsnull);
@@ -353,11 +311,10 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
   nsIRenderingContext *renderingCtx = NULL;
   nsresult  res;
 
-  static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+  static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
   res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
-                                           kRenderingContextIID,
+                                           NS_GET_IID(nsIRenderingContext),
                                            (void **)&renderingCtx);
 
   if (NS_OK == res)
