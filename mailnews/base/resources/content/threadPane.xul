@@ -28,7 +28,6 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 >
 
-<script src="chrome://global/content/treePopups.js"/>
 <script src="chrome://messenger/content/threadPane.js"/>
 
 <outliner id="threadOutliner" flex="1" 
