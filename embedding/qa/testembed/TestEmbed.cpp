@@ -48,8 +48,6 @@
 // ExitInstance() also takes care of cleaning up of
 // multiple browser frame windows on app exit
 //
-// NS_DoIdleEmbeddingStuff(); is called in the overridden
-// OnIdle() method
 //
 // Code to handle the creation of a new browser window
 
@@ -437,8 +435,6 @@ int CTestEmbedApp::ExitInstance()
 BOOL CTestEmbedApp::OnIdle(LONG lCount)
 {
 	CWinApp::OnIdle(lCount);
-
-	NS_DoIdleEmbeddingStuff();
 
 	return FALSE;
 }
