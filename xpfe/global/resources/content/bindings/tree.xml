@@ -695,7 +695,8 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-         if ((!event.ctrlKey && !event.shiftKey && !event.metaKey) ||
+         if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
+             !event.shiftKey && !event.metaKey) ||
              this.parentNode.treeBoxObject.selection.single) {
            var row = {};
            var col = {};
