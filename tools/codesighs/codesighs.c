@@ -119,7 +119,7 @@ static Switch gMaxSize = {"--max-size", "-max", 1, NULL, "Only consider symbols 
 static Switch gMatchScope = {"--match-scope", "-msco", 1, NULL, "Only consider scopes that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify a range of scopes," DESC_NEWLINE "though PUBLIC, STATIC, and UNDEF are your only choices."};
 static Switch gMatchClass = {"--match-class", "-mcla", 1, NULL, "Only consider classes that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify a range of classes," DESC_NEWLINE "though CODE and DATA are your only choices."};
 static Switch gMatchModule = {"--match-module", "-mmod", 1, NULL, "Only consider modules that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of modules."};
-static Switch gMatchSection = {"--match-sections", "-msec", 1, NULL, "Only consider sections that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of sections."  DESC_NEWLINE "Section is considered symbol type."};
+static Switch gMatchSection = {"--match-section", "-msec", 1, NULL, "Only consider sections that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of sections."  DESC_NEWLINE "Section is considered symbol type."};
 static Switch gMatchObject = {"--match-object", "-mobj", 1, NULL, "Only consider objects that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of objects."};
 static Switch gMatchSymbol = {"--match-symbol", "-msym", 1, NULL, "Only consider symbols that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of symbols."};
 
