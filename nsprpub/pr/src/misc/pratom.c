@@ -57,6 +57,10 @@ static pthread_mutex_t atomic_lock[16] = {
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
 
+#ifdef DEBUG
+static PRInt32 hash_lock_counts[16];
+#endif
+
 #define _PR_HASH_FOR_LOCK(ptr) (((long)ptr>>4)&15)
 
 void _PR_MD_INIT_ATOMIC()
@@ -71,6 +75,9 @@ _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
 
     pthread_mutex_lock(&atomic_lock[idx]);
     rv = ++(*val);
+#ifdef DEBUG
+    hash_lock_counts[idx]++;
+#endif
     pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
@@ -83,6 +90,9 @@ _PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
 
     pthread_mutex_lock(&atomic_lock[idx]);
     rv = ((*ptr) += val);
+#ifdef DEBUG
+    hash_lock_counts[idx]++;
+#endif
     pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
@@ -95,6 +105,9 @@ _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 
     pthread_mutex_lock(&atomic_lock[idx]);
     rv = --(*val);
+#ifdef DEBUG
+    hash_lock_counts[idx]++;
+#endif
     pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
@@ -108,6 +121,9 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     pthread_mutex_lock(&atomic_lock[idx]);
     rv = *val;
     *val = newval;
+#ifdef DEBUG
+    hash_lock_counts[idx]++;
+#endif
     pthread_mutex_unlock(&atomic_lock[idx]);
     return rv;
 }
