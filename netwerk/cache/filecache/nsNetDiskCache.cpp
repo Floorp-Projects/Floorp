@@ -180,6 +180,9 @@ nsNetDiskCache::~nsNetDiskCache()
 
 NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 {
+#ifdef DEBUG_dp
+  printf("CACHE: InitCacheFolder()\n");
+#endif /* DEBUG_dp */
 
 // don't initialize if no cache folder is set. 
  if(!mDiskCacheFolder) return NS_OK ;
@@ -386,7 +389,11 @@ nsNetDiskCache::GetCachedNetData(const char* key, PRUint32 length, nsINetDataCac
   
   if ( NS_FAILED( rv ) ) 
   	DBRecovery();
-  	
+
+#ifdef DEBUG_dp
+  printf("CACHE: GetCachedNetData(%s) created nsDiskCacheRecord %p id=%d\n", key, _retval, id);
+#endif /* DEBUG_dp */
+
   return rv;
 }
 
@@ -417,8 +424,15 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     } else {
       delete newRecord; 
     }
+#ifdef DEBUG_dp
+    printf("CACHE: GetCachedNetDataByID(id=%d) created nsDiskCacheRecord %p\n", RecordID, *_retval);
+#endif /* DEBUG_dp */
     return rv;
   }
+
+#ifdef DEBUG_dp
+    printf("CACHE: GetCachedNetDataByID(id=%d) = RecordID not in DB\n", RecordID);
+#endif /* DEBUG_dp */
 
   NS_WARNING("Error: RecordID not in DB\n");
   DBRecovery();
@@ -518,6 +532,9 @@ nsNetDiskCache::GetStorageInUse(PRUint32 *aStorageInUse)
 NS_IMETHODIMP
 nsNetDiskCache::RemoveAll(void)
 {
+#ifdef DEBUG_dp
+  printf("CACHE: RemoveAll()\n");
+#endif /* DEBUG_dp */
   NS_ASSERTION(mDB, "no db.") ;
   NS_ASSERTION(mDiskCacheFolder, "no cache folder.") ;
 
@@ -689,23 +706,7 @@ nsNetDiskCache::SetSizeEntry(void)
 NS_IMETHODIMP
 nsNetDiskCache::DBRecovery(void)
 {
-  // rename all the sub cache dirs and remove them later during dtor. 
-  nsresult rv = RenameCacheSubDirs() ;
-  if(NS_FAILED(rv))
-    return rv ;
-
-  // remove corrupted db file, don't care if db->shutdown fails or not.
-  mDB->Shutdown() ;
-  
-
-  // False since we want to delete a file rather than recursively delete a directory 
-  rv = mDBFile->Delete(PR_FALSE) ;
-	if (NS_FAILED ( rv ) ) return rv;
-  
-
-  // reinitilize DB 
-  return InitDB() ;
-
+  return RemoveAll();
 }
 
 
@@ -772,6 +773,10 @@ nsNetDiskCache::fixCacheVersion (const char *cache_dir, unsigned version)
 
 	if (fVersion < version)
 	{
+    // Make sure we reset fileptr to the beginning
+    PR_Seek(vf, 0, PR_SEEK_SET);
+
+    // Write the new version number
 		sprintf  (vBuf, "%u", version);
 		if (PR_Write (vf, vBuf, sizeof (vBuf)) != sizeof (vBuf))
 		{
