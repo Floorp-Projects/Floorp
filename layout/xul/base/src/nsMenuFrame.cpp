@@ -356,7 +356,6 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
 {
-
   if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
     return NS_ERROR_FAILURE;
 
@@ -462,22 +461,6 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     }
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() && mMenuParent && !IsDisabled()) {
-    // First, flip "checked" state if we're a checkbox menu, or
-    // an un-checked radio menu
-    if (mType == eMenuType_Checkbox ||
-        (mType == eMenuType_Radio && !mChecked)) {
-      if (mChecked) {
-        mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
-                            PR_TRUE);
-      }
-      else {
-        mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, NS_LITERAL_STRING("true"),
-                          PR_TRUE);
-      }
-        
-      /* the AttributeChanged code will update all the internal state */
-    }
-
     // Execute the execute event handler.
     Execute(aEvent);
   }
@@ -1627,6 +1610,26 @@ nsMenuFrame::BuildAcceleratorText()
 void
 nsMenuFrame::Execute(nsGUIEvent *aEvent)
 {
+  if (!aEvent || (aEvent->message != NS_MOUSE_RIGHT_BUTTON_UP &&
+    aEvent->message != NS_CONTEXTMENU)) {
+    // flip "checked" state if we're a checkbox menu, or
+    // an un-checked radio menu
+    // aEvent is null if called from ::Enter(), we do want to flip our check 
+    // in that case
+    if (mType == eMenuType_Checkbox ||
+        (mType == eMenuType_Radio && !mChecked)) {
+      if (mChecked) {
+        mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+                            PR_TRUE);
+      }
+      else {
+        mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, NS_LITERAL_STRING("true"),
+                          PR_TRUE);
+      }        
+      /* the AttributeChanged code will update all the internal state */
+    }
+  }
+
   // Temporarily disable rollup events on this menu.  This is
   // to suppress this menu getting removed in the case where
   // the oncommand handler opens a dialog, etc.
