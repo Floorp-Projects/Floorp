@@ -335,17 +335,29 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
         ::GetThemeFont(fontID, sysScript, fontName, &fontSize, &fontStyle);
         fontName[fontName[0]+1] = 0;
         
+        OSStatus err;
         // the theme font could contains font name in different encoding. 
         // we need ot covert them to unicode according to the font's text encoding.
         aFont->name.Truncate(0);
         TECObjectRef converter = 0;
         TextEncoding fontEncoding = 0;
         TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
-                                                            kTextEncodingDefaultVariant,
-                                                            kTextEncodingDefaultFormat);
-        FMFontFamily fontFamily;
-        fontFamily = ::FMGetFontFamilyFromName(fontName);
-        OSStatus err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+                                                              kTextEncodingDefaultVariant,
+                                                              kTextEncodingDefaultFormat);
+                                                              
+        // MacOS 8.6 do not have FMxxx etc so we have to check
+        if (HaveFontManager90()) {       
+          FMFontFamily fontFamily;
+          fontFamily = ::FMGetFontFamilyFromName(fontName);
+          err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+        } else {
+          short	fondID;
+          ::GetFNum(fontName, &fondID);
+          ScriptCode script = ::FontToScript(fondID);
+          err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
+                                                  kTextRegionDontCare, NULL, &fontEncoding);
+
+        }
         if (err == noErr)
         {
            err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
@@ -1035,6 +1047,11 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	}
 
 	return mPixelsPerInch;
+}
+
+PRBool nsDeviceContextMac::HaveFontManager90()
+{
+  return (kUnresolvedCFragSymbolAddress != (UInt32) FMGetFontFamilyFromName);
 }
 
 
