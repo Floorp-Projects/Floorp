@@ -203,7 +203,7 @@ fi
 
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -pipe"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth"
 
     _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
