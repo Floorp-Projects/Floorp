@@ -1185,9 +1185,9 @@ Error Undefined=Error undefined
 ;*** LOCALIZE ME BABY ***
 Error Out Of Memory=Out of memory!
 ;*** LOCALIZE ME BABY ***
-Status Download=%s at %.2fKB/sec (%uKB of %uKB downloaded)
+Status Download=%s at %.2f KB/sec (%u KB of %u KB downloaded)
 ;*** LOCALIZE ME BABY ***
-Status Retry=%s at %.2fKB/sec (%uKB of %uKB downloaded)
+Status Retry=%s at %.2f KB/sec (%u KB of %u KB downloaded)
 ;*** LOCALIZE ME BABY ***
 Status File Info=%s
 ;*** LOCALIZE ME BABY ***
