@@ -39,6 +39,8 @@ public:
 
   NS_IMETHOD    Forward()=0;
 
+  NS_IMETHOD    Reload(PRInt32 aReloadType)=0;
+
   NS_IMETHOD    Stop()=0;
 
   NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
@@ -88,6 +90,7 @@ public:
 #define NS_DECL_IDOMBROWSERAPPCORE   \
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
+  NS_IMETHOD    Reload(PRInt32 aReloadType);  \
   NS_IMETHOD    Stop();  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
   NS_IMETHOD    LoadInitialPage();  \
@@ -116,6 +119,7 @@ public:
 #define NS_FORWARD_IDOMBROWSERAPPCORE(_to)  \
   NS_IMETHOD    Back() { return _to Back(); }  \
   NS_IMETHOD    Forward() { return _to Forward(); }  \
+  NS_IMETHOD    Reload(PRInt32 aReloadType) { return _to Reload(aReloadType); }  \
   NS_IMETHOD    Stop() { return _to Stop(); }  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
   NS_IMETHOD    LoadInitialPage() { return _to LoadInitialPage(); }  \
