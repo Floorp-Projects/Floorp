@@ -476,7 +476,7 @@ void CMenuTable::QapGetListInfo(PQAPLISTINFO pInfo)
 
 	// fetch vertical scrollbar Macintosh control
 	ControlHandle macVScroll = NULL;
-	LScroller *myScroller = dynamic_cast<LScroller *>(GetSuperView());
+	LScrollerView *myScroller = dynamic_cast<LScrollerView *>(GetSuperView());
 	if (myScroller != NULL)
 	{
 		if (myScroller->GetVScrollbar() != NULL)
