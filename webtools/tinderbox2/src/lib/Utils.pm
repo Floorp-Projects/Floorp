@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.34 $ 
-# $Date: 2003/04/13 14:13:40 $ 
+# $Revision: 1.35 $ 
+# $Date: 2003/04/20 19:35:28 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -321,6 +321,21 @@ sub clean_times {
     @out = sort {$b <=> $a} @out ;
     
     return @out;
+}
+
+
+# given a time we round down to nearest 5 minutes 
+
+sub round_time {
+    my ($time) = @_;
+
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime($time);
+
+    my $remainder = $min % 5;
+    $time = $time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
+
+    return $time;
 }
 
 
