@@ -101,12 +101,22 @@ sub value_encode {
 }
 
 
+BEGIN {
+  my $have_loaded_treedata = 0;
+
+  sub tb_load_treedata {
+    return if $have_loaded_treedata;
+    $have_loaded_treedata = 1;
+    require "$tree/treedata.pl" if -r "$tree/treedata.pl";
+  }
+}
+
 sub tb_load_data {
   $tree = $form{'tree'};
 
   return undef unless $tree;
   
-  require "$tree/treedata.pl" if -r "$tree/treedata.pl";
+  tb_load_treedata();
         
   $ignore_builds = {};
 

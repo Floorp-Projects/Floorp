@@ -57,14 +57,14 @@ else {
   star      => 'star.gif'
 );
 
-$tree = $form{tree};
+$::tree = $form{tree};
 
 # $rel_path is the relative path to webtools/tinderbox used for links.
 # It changes to "../" if the page is generated statically, because then
-# it is placed in tinderbox/$tree.
+# it is placed in tinderbox/$::tree.
 $rel_path = ''; 
 
-&show_tree_selector,  exit if $form{tree} eq '';
+&show_tree_selector,  exit if $::tree eq '';
 &do_quickparse,       exit if $form{quickparse};
 &do_express,          exit if $form{express};
 &do_rdf,              exit if $form{rdf};
@@ -136,7 +136,7 @@ sub do_static {
 
   foreach $pair (@pages) {
     my ($page, $call) = @{$pair};
-    my $outfile = "$form{tree}/$page";
+    my $outfile = "$::tree/$page";
 
     open(OUT,">$outfile.$$");
     select OUT;
@@ -164,14 +164,14 @@ sub print_page_head {
   # Print time in format, "HH:MM timezone"
   my $now = strftime("%H:%M %Z", localtime);
 
-  EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
-                         "tree: $tree ($now)");
+  EmitHtmlTitleAndHeader("tinderbox: $::tree", "tinderbox",
+                         "tree: $::tree ($now)");
 
   &print_javascript;
 
   # Get the message of the day only on the first pageful
-  do "$tree/mod.pl" if $nowdate eq $maxdate;
-  print "$message_of_day\n";  # from $tree/mod.pl
+  do "$::tree/mod.pl" if $nowdate eq $maxdate;
+  print "$message_of_day\n";  # from $::tree/mod.pl
 
   # Quote and Lengend
   #
@@ -218,10 +218,10 @@ sub print_page_head {
       </table>
     };
   }
-  if ($bonsai_tree) {
+  if (is_tree_state_available()) {
     print "<a NAME=\"status\"></a>";
-    print "The tree is currently <font size=+2>";
-    print (&tree_open ? 'OPEN' : 'CLOSED');
+    print "The tree is <font size=+2>";
+    print (is_tree_open() ? 'open' : 'closed');
     print "</font>\n";
   }
 }
@@ -265,12 +265,12 @@ BEGIN {
     # 
     my $query_link = '';
     my $end_query  = '';
-    my $pretty_time = &print_time($build_time_times->[$tt]);
+    my $pretty_time = print_time($build_time_times->[$tt]);
     
     ($hour) = $pretty_time =~ /(\d\d):/;
 
-    if ($lasthour ne $hour or &has_who_list($tt)) {
-      $query_link = &query_ref($td, $build_time_times->[$tt]);
+    if ($lasthour ne $hour or has_who_list($tt)) {
+      $query_link = query_ref($td, $build_time_times->[$tt]);
       $end_query  = '</a>';
     }
     if ($lasthour eq $hour) {
@@ -300,11 +300,11 @@ BEGIN {
     #
     for (my $build_index=0; $build_index < $name_count; $build_index++) {
       if (not defined($br = $build_table->[$tt][$build_index])) {
-        # No build data for this time
+        # No build data for this time (e.g. no build after this time).
         print "<td></td>\n";
         next;
       }
-      next if $br == -1;  # rowspan has covered this row
+      next if $br == -1; # Covered by rowspan
 
       my $rowspan = $br->{rowspan};
       $rowspan = $mindate_time_count - $tt + 1
@@ -338,14 +338,14 @@ BEGIN {
       # What Changed
       #
       # Only add the "C" link if there have been changes since the last build.
-      if ($br->{previousbuildtime}) {
+      if ($br->{previousstarttime}) {
         my $previous_br = $build_table->[$tt+$rowspan][$build_index];
         my $previous_rowspan = $previous_br->{rowspan};
         if (&has_who_list($tt+$rowspan,
                           $tt+$rowspan+$previous_rowspan-1)) {
           print "\n", &query_ref($br->{td}, 
-                                 $br->{previousbuildtime},
-                                 $br->{buildtime} - 1);
+                                 $br->{previousstarttime},
+                                 $br->{starttime} - 1);
           print "C</a>";
         }
       }
@@ -369,7 +369,7 @@ BEGIN {
       # Warnings
       if (defined $td->{warnings}{$logfile}) {
         my ($warning_count) = $td->{warnings}{$logfile};
-        my $warn_file = "$tree/warn$logfile";
+        my $warn_file = "$::tree/warn$logfile";
         $warn_file =~ s/\.gz$/.html/;
         print "<br><br><a href='${rel_path}$warn_file'>Warn:$warning_count</a>";
       }
@@ -411,7 +411,7 @@ sub print_table_header {
   print "</tr><tr>\n";
 
   print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
-        "since time</font></td>";
+        "since then</font></td>";
   print "<td><font size=-1>",
         "Click name to see what they did</font></td>";
 
@@ -431,7 +431,7 @@ sub print_table_footer {
       ."Show previous 24 hours</a>";
     $hours = $save_hours;
   }
-  print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>",
+  print "<p><a href='${rel_path}admintree.cgi?tree=$::tree'>",
         "Administrate Tinderbox Trees</a><br>\n";
 }
 
@@ -441,7 +441,7 @@ sub open_showbuilds_url {
         @_
   );
 
-  my $url = "${rel_path}showbuilds.cgi?tree=$form{tree}";
+  my $url = "${rel_path}showbuilds.cgi?tree=$::tree";
   $url .= "&hours=$hours" if $hours ne $default_hours;
   while (my ($key, $value) = each %args) {
     $url .= "&$key=$value" if $value ne '';
@@ -500,27 +500,47 @@ sub has_who_list {
   }
 }
 
-sub tree_open {
-  my ($line, $treestate);
-  open(BID, "<../bonsai/data/$bonsai_tree/batchid.pl")
-    or print "can't open batchid<br>";
-  $line = <BID>;
-  close(BID);
-  if ($line =~ m/'(\d+)'/) {
-      $bid = $1;
-  } else {
-      return 0;
-  }
-  open(BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}.pl")
-    or print "can't open batch-${bid}.pl<br>";
-  while ($line = <BATCH>){ 
-    if ($line =~ /^\$::TreeOpen = '(\d+)';/) {
+BEGIN {
+  # Check bonsai tree for open/close state
+
+  my $treestate = undef;
+  my $checked_state = 0;
+
+  sub _check_tree_state {
+    $checked_state = 1;
+    tb_load_treedata();
+    return unless defined $bonsai_tree and $bonsai_tree ne '';
+
+    local $_;
+    $::BatchID='';
+    eval qq(require "../bonsai/data/$bonsai_tree/batchid.pl");
+    if ($::BatchID eq '') {
+      warn "No BatchID in ../bonsai/data/$bonsai_tree/batchid.pl\n";
+      return;
+    }
+    
+    open(BATCH, "<../bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
+      or print "can't open batch-$::BatchID.pl<br>";
+    while (<BATCH>) { 
+      if (/^\$::TreeOpen = '(\d+)';/) {
         $treestate = $1;
         last;
+      }
     }
+    return;
   }
-  close(BATCH);
-  return $treestate;
+
+  sub is_tree_state_available {
+    return 1 if defined $treestate;
+    return 0 if $checked_state;
+    _check_tree_state();
+    return is_tree_state_available();
+  }
+
+  sub is_tree_open {
+    _check_tree_state() unless $checked_state;
+    return $treestate;
+  }
 }
 
 sub print_javascript {
@@ -707,12 +727,12 @@ __ENDJS
     print "\"$ss\";\n";
   }
   for ($ii=0; $ii < $name_count; $ii++) {
-    if (defined($br = $build_table->[0][$ii]) and $br != -1) {
+    if (defined($br = $build_table->[0][$ii])) {
       my $bn = $build_names->[$ii];
       print "builds[$ii]='$bn';\n";
     }
   }
-  print "buildtree = '$form{tree}';\n";
+  print "buildtree = '$::tree';\n";
 
   # Use JavaScript to refresh the page every 15 minutes
   print "setTimeout('location.reload()',900000);\n" if $nowdate eq $maxdate;
@@ -735,14 +755,18 @@ sub do_express {
   print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
   my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
 
   my @keys = sort keys %build;
   my $keycount = @keys;
   my $tm = &print_time(time);
   print "<table border=1 cellpadding=1 cellspacing=1><tr>";
   print "<th align=left colspan=$keycount>";
-  print &open_showbuilds_href."$tree as of $tm</a></tr><tr>\n";
+  print &open_showbuilds_href."$::tree";
+  if (is_tree_state_available()) {
+    print (is_tree_open() ? ' is open' : ' is closed');
+  }
+  print ", $tm</a></tr><tr>\n";
   foreach my $buildname (@keys) {
     print "<td bgcolor='$colormap{$build{$buildname}}'>$buildname</td>";
   }
@@ -754,7 +778,7 @@ sub do_panel {
   print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
   my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
   
   print q(
     <head>
@@ -770,17 +794,15 @@ sub do_panel {
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
   # Hack the panel link for now.
-  print "<a target='_content' href='http://tinderbox.mozilla.org/seamonkey/'>$tree";
+  print "<a target='_content' href='http://tinderbox.mozilla.org/seamonkey/'>$::tree";
   
-  $bonsai_tree = '';
-  require "$tree/treedata.pl";
-  if ($bonsai_tree ne '') {
-    print " is ", tree_open() ? "OPEN" : "CLOSED";
+  if (is_tree_state_available()) {
+    print " is ", is_tree_open() ? 'open' : 'closed';
   }
   # Add the current time
   my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
   my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
-  print " as of $tm</a><br>";
+  print ", $tm</a><br>";
   
   print "<table border=0 cellpadding=1 cellspacing=1>";
   while (my ($name, $status) = each %build) {
@@ -793,7 +815,7 @@ sub do_flash {
   print "Content-type: text/rdf\n\n" unless $form{static};
 
   my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
 
   my ($mac,$unix,$win) = (0,0,0);
 
@@ -840,7 +862,7 @@ sub do_flash {
       <NC:child>
         <RDF:Description ID='flash'>
           <NC:type resource='http://www.mozilla.org/RDF#TinderboxFlash' />
-          <NC:source>$tree</NC:source>
+          <NC:source>$::tree</NC:source>
           <NC:description>$text</NC:description>
           <NC:timestamp>$tm</NC:timestamp>
         </RDF:Description>
@@ -856,12 +878,10 @@ sub do_flash {
 sub do_quickparse {
   print "Content-type: text/plain\n\n";
 
-  my @treelist = split /,/, $tree;
+  my @treelist = split /,/, $::tree;
   foreach my $t (@treelist) {
-    $bonsai_tree = "";
-    require "$t/treedata.pl";
-    if ($bonsai_tree ne "") {
-      my $state = tree_open() ? "Open" : "Close";
+    if (is_tree_state_available()) {
+      my $state = is_tree_open() ? 'open' : 'close';
       print "State|$t|$bonsai_tree|$state\n";
     }
     my (%build, %times);
@@ -876,13 +896,13 @@ sub do_quickparse {
 sub do_rdf {
   print "Content-type: text/plain\n\n";
 
-  my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$tree";
+  my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$::tree";
   my $dirurl = $mainurl;
 
   $dirurl =~ s@/[^/]*$@@;
 
   my (%build, %times);
-  tb_loadquickparseinfo($tree, \%build, \%times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
 
   my $image = "channelok.gif";
   my $imagetitle = "OK";
@@ -898,8 +918,8 @@ sub do_rdf {
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://my.netscape.com/rdf/simple/0.9/">
     <channel>
-      <title>Tinderbox - $tree</title>
-      <description>Build bustages for $tree</description>
+      <title>Tinderbox - $::tree</title>
+      <description>Build bustages for $::tree</description>
       <link>$mainurl</link>
     </channel>
     <image>
@@ -909,10 +929,8 @@ sub do_rdf {
     </image>
   };    
     
-  $bonsai_tree = '';
-  require "$tree/treedata.pl";
-  if ($bonsai_tree ne '') {
-    my $state = tree_open() ? "OPEN" : "CLOSED";
+  if (is_tree_state_available()) {
+    my $state = is_tree_open() ? 'open' : 'closed';
     print "<item><title>The tree is currently $state</title>",
           "<link>$mainurl</link></item>\n";
   }
@@ -936,23 +954,17 @@ sub do_hdml {
   };
   %state_symbols = (success=>'+',busted=>'!',testfailed=>'~');
 
-  my @treelist = split /,/, $tree;
-  foreach my $t (@treelist) {
-    $bonsai_tree = "";
-    require "$t/treedata.pl";
-    if ($bonsai_tree ne "") {
-      my $state = tree_open() ? "Open" : "Close";
-      print "<LINE>$t is $state";
-    }
-    my (%build, %times);
-    tb_loadquickparseinfo($t, \%build, \%times);
-    
-    foreach my $buildname (sort keys %build) {
-      print "<LINE>$state_symbols{$build{$buildname}} $buildname\n";
-    }
+  if (is_tree_state_available()) {
+    print "<LINE>$::tree is " . (is_tree_open() ? 'open' : 'closed');
+  }
+  my (%build, %times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
+  
+  foreach my $buildname (sort keys %build) {
+    print "<LINE>$state_symbols{$build{$buildname}} $buildname\n";
   }
 
-   print q{
+  print q{
     </display>
     <DISPLAY NAME=help>
       Legend:<BR>
