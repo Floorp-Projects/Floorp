@@ -13,4 +13,5 @@
 <!ENTITY conditions.label            "Criteria">
 <!ENTITY results.label               "Results">
 <!ENTITY fileHereMenu.label          "File Here">
+<!ENTITY fileHereMenu.accesskey      "F">
 <!ENTITY fileButton.label            "File">

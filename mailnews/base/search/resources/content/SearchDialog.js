@@ -568,29 +568,20 @@ function HandleDeleteOrMoveMessageCompleted(folder)
 
 }
 
-function SetDatasources()
-{
-    var button = document.getElementById("fileMessageButton");
-    var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=";
-    var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";
-    var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
-    var accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
-    var folderDataSource         = Components.classes[folderDSContractID].createInstance();
-    accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    button.database.AddDataSource(accountManagerDataSource);
-    button.database.AddDataSource(folderDataSource);
-    button.setAttribute('ref', 'msgaccounts:/');
-}
-
 function MoveMessageInSearch(destFolder)
 {
     try {
         // get the msg folder we're moving messages into
-        destUri = destFolder.getAttribute('id');
-        destResource = RDF.GetResource(destUri);
+        // if the id (uri) is not set, use file-uri which is set for
+        // "File Here"
+        var destUri = destFolder.getAttribute('id');
+        if (destUri.length == 0) { 
+          destUri = destFolder.getAttribute('file-uri')
+        }
+        
+        var destResource = RDF.GetResource(destUri);
 
-        destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
         // we don't move news messages, we copy them
         if (isNewsURI(gSearchView.getURIForViewIndex(0))) {
