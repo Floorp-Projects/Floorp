@@ -216,7 +216,8 @@ protected:
   nsSocketTransportService*         mService;
   PRFileDesc*                       mSocketFD;
   char*                             mSocketType;
-  PRUint32                          mSourceOffset;
+  PRUint32                          mReadOffset;
+  PRUint32                          mWriteOffset;
   nsresult                          mStatus;
   PRInt32                           mSuspendCount;
   PRInt32                           mWriteCount;
