@@ -931,17 +931,17 @@ sub BuildCommonProjects()
 
 	if ( $main::NECKO )
 	{
-		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "netwerk.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "netwerk.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 		# utils library
 		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "netwerkUtil.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 		# protocols
-		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "about.toc", 1, $main::ALIAS_SYM_FILES, 0);
-		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "file.toc", 1, $main::ALIAS_SYM_FILES, 0);
-		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "ftp.toc", 1, $main::ALIAS_SYM_FILES, 0);
-		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "http.toc", 1, $main::ALIAS_SYM_FILES, 0);
-		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "about.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "file.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "ftp.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "http.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	}
 	else
 	{
