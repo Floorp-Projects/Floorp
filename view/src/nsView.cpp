@@ -628,7 +628,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
         nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
           : nsnull;
         if (aWidgetInitData->mWindowType == eWindowType_popup) {
-          mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WINDOW), trect,
+          mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
                           ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
         } else {
           mWindow->Create(parentWidget, trect,
