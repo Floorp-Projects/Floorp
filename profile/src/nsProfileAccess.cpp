@@ -1505,7 +1505,7 @@ nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
         rv = migratedFrom->GetPersistentDescriptor(regData);
 #else
         nsAutoString path;
-        rv = resolvedLocation->GetPath(path);
+        rv = migratedFrom->GetPath(path);
         regData = NS_ConvertUCS2toUTF8(path);
 #endif
 
