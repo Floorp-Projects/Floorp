@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,21 +46,44 @@
 /**
  * A buffer which will use stack space if the requested size will
  * fit in the stack buffer and allocate from the heap if not.
+ * 
+ * Below is a usage example : 
+ * 
+ * typedef nsAutoBuffer<PRUnichar, 256> nsAutoUnicharBuffer;
+ *
+ * nsAutoUnicharBuffer buffer;
+ *
+ * if (!buffer.EnsureElemCapacity(initialLength))
+ *    return NS_ERROR_OUT_OF_MEMORY;
+ *
+ * PRUnichar *unicharPtr = buffer.get();
+ *
+ * // add PRUnichar's to the buffer pointed to by |unicharPtr| as long as
+ * // the number of PRUnichar's is less than |intialLength|
+ *    
+ * // increase the capacity
+ * if (!buffer.AddElemCapacity(extraLength))
+ *     return NS_ERROR_OUT_OF_MEMORY
+ *
+ * unicharPtr = buffer.get() + initialLength;
+ *
+ * //continue to add PRUnichar's....
  */
 
-template <class T>
+template <class T, PRInt32 sz>
 class nsAutoBuffer
 {
 public:
   nsAutoBuffer() :
     mBufferPtr(mStackBuffer),
-    mCurElemCapacity(kStackBufferNumElems)
+    mCurElemCapacity(sz)
   {
   }
 
   ~nsAutoBuffer()
   {
-    DeleteBuffer();
+    if (mBufferPtr != mStackBuffer)
+      nsMemory::Free(mBufferPtr);
   }
 
   PRBool EnsureElemCapacity(PRInt32 inElemCapacity)
@@ -67,38 +91,36 @@ public:
     if (inElemCapacity <= mCurElemCapacity)
       return PR_TRUE;
     
-    if (inElemCapacity > kStackBufferNumElems)
-    {
-      DeleteBuffer();
-      mBufferPtr = (T*)nsMemory::Alloc(inElemCapacity * sizeof(T));
-      mCurElemCapacity = inElemCapacity;
-      return (mBufferPtr != NULL);
-    }
-    
-    mCurElemCapacity = kStackBufferNumElems;
+    T* newBuffer;
+
+    if (mBufferPtr != mStackBuffer)
+      newBuffer = (T*)nsMemory::Realloc((void *)mBufferPtr, inElemCapacity * sizeof(T));
+    else 
+      newBuffer = (T*)nsMemory::Alloc(inElemCapacity * sizeof(T));
+
+    if (!newBuffer)
+      return PR_FALSE;
+
+    if (mBufferPtr != mStackBuffer)
+      nsMemory::Free(mBufferPtr);
+
+    mBufferPtr = newBuffer; 
+    mCurElemCapacity = inElemCapacity;
     return PR_TRUE;
   }
 
-  PRInt32     GetElemCapacity()   { return mCurElemCapacity;  } const
-
-  T*          get()     { return mBufferPtr;    } const
-
-protected:
-
-  void DeleteBuffer()
+  PRBool AddElemCapacity(PRInt32 inElemCapacity)
   {
-    if (mBufferPtr != mStackBuffer)
-    {
-      nsMemory::Free(mBufferPtr);
-      mBufferPtr = mStackBuffer;
-    }
+    return EnsureElemCapacity(mCurElemCapacity + inElemCapacity);
   }
 
+  T*          get()             const  { return mBufferPtr; }
+  PRInt32     GetElemCapacity() const  { return mCurElemCapacity;  }
+
 protected:
-  enum { kStackBufferNumElems = 256 };
 
   T             *mBufferPtr;
-  T             mStackBuffer[kStackBufferNumElems];
+  T             mStackBuffer[sz];
   PRInt32       mCurElemCapacity;
 };
 
