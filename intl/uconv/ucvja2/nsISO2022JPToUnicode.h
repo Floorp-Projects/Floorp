@@ -36,10 +36,14 @@
  * S1 + * -> ERR
  * S2 + 'B' -> S0; mCharset = kASCII
  * S2 + 'J' -> S0; mCharset = kJISX0201_1976
+ * S2 + 'I' -> S0; mCharset = kJISX0201_1976Kana  [Not Std ISO-2022-JP]
  * S2 + * -> ERR
  * S3 + '@' -> S0; mCharset = kJISX0208_1978
  * S3 + 'B' -> S0; mCharset = kJISX0208_1983
+ * S3 + '(' -> S4;                                [Not Std ISO-2022-JP]
  * S3 + * -> ERR
+ * S4 + 'D' -> S0; mCharset = kJISX0212_1990      [Not Std ISO-2022-JP]
+ * S4 + * -> ERR                                  [Not Std ISO-2022-JP]
  * ERR + * -> ERR
  *
  * @created         09/Feb/1998
@@ -70,7 +74,9 @@ protected:
     kASCII, 
     kJISX0201_1976,
     kJISX0208_1978,
-    kJISX0208_1983
+    kJISX0208_1983,
+    kJISX0201_1976Kana,                         // [Not Std ISO-2022-JP]
+    kJISX0212_1990                              // [Not Std ISO-2022-JP]
   };
 
   PRInt32   mState;             // current state of the state machine
