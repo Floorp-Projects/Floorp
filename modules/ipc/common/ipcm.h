@@ -59,7 +59,6 @@ enum {
     IPCM_MSG_TYPE_CLIENT_DEL_TARGET,
     IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME,
     IPCM_MSG_TYPE_QUERY_CLIENT_INFO,
-    IPCM_MSG_TYPE_QUERY_FAILED,
     IPCM_MSG_TYPE_FORWARD,
     IPCM_MSG_TYPE_UNKNOWN // unknown message type
 };
@@ -112,7 +111,9 @@ public:
 //
 // IPCM_MSG_TYPE_ERROR
 //
-// thie message may be sent from the daemon in response to a query.
+// this message may be sent from the daemon in place of an expected
+// result.  e.g., if a query fails, the daemon will send an error
+// message to indicate the failure.
 //
 class ipcmMessageError : public ipcMessage_DWORD_DWORD
 {
@@ -166,6 +167,66 @@ public:
 };
 
 //
+// IPCM_MSG_TYPE_CLIENT_INFO
+//
+
+//
+// IPCM_MSG_TYPE_CLIENT_ADD_NAME
+//
+class ipcmMessageClientAddName : public ipcMessage_DWORD_STR
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageClientAddName(const char *name)
+        : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, name) {}
+
+    const char *Name() const { return Second(); }
+};
+
+//
+// IPCM_MSG_TYPE_CLIENT_DEL_NAME
+//
+class ipcmMessageClientDelName : public ipcMessage_DWORD_STR
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageClientDelName(const char *name)
+        : ipcMessage_DWORD_STR(IPCM_TARGET, MSG_TYPE, name) {}
+
+    const char *Name() const { return Second(); }
+};
+
+//
+// IPCM_MSG_TYPE_CLIENT_ADD_TARGET
+//
+class ipcmMessageClientAddTarget : public ipcMessage_DWORD_ID
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageClientAddTarget(const nsID &target)
+        : ipcMessage_DWORD_ID(IPCM_TARGET, MSG_TYPE, target) {}
+
+    const nsID &Target() const { return Second(); }
+};
+
+//
+// IPCM_MSG_TYPE_CLIENT_DEL_TARGET
+//
+class ipcmMessageClientDelTarget : public ipcMessage_DWORD_ID
+{
+public:
+    static const PRUint32 MSG_TYPE;
+
+    ipcmMessageClientDelTarget(const nsID &target)
+        : ipcMessage_DWORD_ID(IPCM_TARGET, MSG_TYPE, target) {}
+
+    const nsID &Target() const { return Second(); }
+};
+
+//
 // IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME
 //
 // this message is sent from a client to the daemon to request the ID of the
@@ -187,7 +248,9 @@ public:
 // IPCM_MSG_TYPE_FORWARD
 //
 // this message is only sent from the client to the daemon.  the daemon
-// will forward the contained message to the specified client.
+// will forward the contained message to the specified client.  there
+// is no guarantee that the message will be forwarded, and no error will
+// be sent to the sender on failure.
 //
 class ipcmMessageForward : public ipcMessage
 {

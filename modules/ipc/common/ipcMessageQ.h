@@ -39,8 +39,8 @@
 #define ipcMessageQ_h__
 
 #include "ipcMessage.h"
-#include "ipcQueue.h"
+#include "ipcList.h"
 
-typedef ipcQueue<ipcMessage> ipcMessageQ;
+typedef ipcList<ipcMessage> ipcMessageQ;
 
 #endif // !ipcMessageQ_h__

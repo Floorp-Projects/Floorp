@@ -40,6 +40,7 @@
 
 #include "ipcIService.h"
 #include "ipcTransport.h"
+#include "ipcList.h"
 #include "ipcMessage.h"
 #include "ipcMessageQ.h"
 #include "nsIRequest.h"
@@ -90,7 +91,7 @@ public:
     nsCOMPtr<ipcIClientObserver> mObserver;
 };
 
-typedef ipcQueue<ipcClientQuery> ipcClientQueryQ;
+typedef ipcList<ipcClientQuery> ipcClientQueryQ;
 
 //----------------------------------------------------------------------------
 // ipcService

@@ -35,27 +35,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipcQueue_h__
-#define ipcQueue_h__
+#ifndef ipcList_h__
+#define ipcList_h__
 
 #include "prtypes.h"
 
 //-----------------------------------------------------------------------------
-// simple queue of objects
+// simple list of singly-linked objects.  class T must have the following
+// structure:
+//
+//   class T {
+//   ...
+//   public:
+//     T *mNext;
+//   };
+//
+// objects added to the list must be allocated with operator new.
 //-----------------------------------------------------------------------------
 
 template<class T>
-class ipcQueue
+class ipcList
 {
 public:
-    ipcQueue()
+    ipcList()
         : mHead(NULL)
         , mTail(NULL)
         { }
-   ~ipcQueue() { DeleteAll(); }
+   ~ipcList() { DeleteAll(); }
 
     //
-    // appends msg to the end of the queue.  caller loses ownership of |msg|.
+    // prepends obj at the beginning of the list.
+    //
+    void Prepend(T *obj)
+    {
+        obj->mNext = mHead;
+        mHead = obj;
+        if (!mTail)
+            mTail = mHead;
+    }
+
+    //
+    // appends obj to the end of the list.
     //
     void Append(T *obj)
     {
@@ -68,6 +88,17 @@ public:
             mTail = mHead = obj;
     }
 
+    //
+    // inserts b into the list after a.
+    //
+    void InsertAfter(T *a, T *b)
+    {
+        b->mNext = a->mNext;
+        a->mNext = b;
+        if (mTail == a)
+            mTail = b;
+    }
+
     // 
     // removes first element w/o deleting it
     //
@@ -75,6 +106,19 @@ public:
     {
         if (mHead)
             AdvanceHead();
+    }
+
+    //
+    // removes element after the given element w/o deleting it
+    //
+    void RemoveAfter(T *obj)
+    {
+        T *rej = obj->mNext;
+        if (rej) {
+            obj->mNext = rej->mNext;
+            if (rej == mTail)
+                mTail = obj;
+        }
     }
 
     //
@@ -90,6 +134,18 @@ public:
     }
 
     //
+    // deletes element after the given element
+    //
+    void DeleteAfter(T *obj)
+    {
+        T *rej = obj->mNext;
+        if (rej) {
+            RemoveAfter(obj);
+            delete rej;
+        }
+    }
+
+    //
     // deletes all elements
     //
     void DeleteAll()
@@ -99,9 +155,10 @@ public:
     }
 
     T      *First()   { return mHead; }
+    T      *Last()    { return mTail; }
     PRBool  IsEmpty() { return mHead == NULL; }
 
-private:
+protected:
     void AdvanceHead()
     {
         mHead = mHead->mNext;
@@ -113,4 +170,4 @@ private:
     T *mTail;
 };
 
-#endif // !ipcQueue_h__
+#endif // !ipcList_h__

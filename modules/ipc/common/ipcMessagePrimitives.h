@@ -90,4 +90,20 @@ public:
     }
 };
 
+class ipcMessage_DWORD_ID : public ipcMessage
+{
+public:
+    ipcMessage_DWORD_ID(const nsID &target, PRUint32 first, const nsID &second);
+
+    PRUint32 First() const
+    {
+        return ((PRUint32 *) Data())[0];
+    }
+
+    const nsID &Second() const
+    {
+        return * (const nsID *) (Data() + sizeof(PRUint32));
+    }
+};
+
 #endif // !ipcMessagePrimitives_h__
