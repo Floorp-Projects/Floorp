@@ -452,14 +452,14 @@ NS_DECLARE_ID(kUnicodeToISO885910CID,
 NS_DECLARE_ID(kUnicodeToISO885913CID, 
 0xba6151ac, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
-// Class ID for our UnicodeToUCS2 charset converter
+// Class ID for our UnicodeToUCS2BE charset converter
 // {BA6151AD-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUnicodeToUCS2CID, 
+NS_DECLARE_ID(kUnicodeToUCS2BECID, 
 0xba6151ad, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
-// Class ID for our UnicodeToUCS4 charset converter
+// Class ID for our UnicodeToUCS4BE charset converter
 // {BA6151AE-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUnicodeToUCS4CID, 
+NS_DECLARE_ID(kUnicodeToUCS4BECID, 
 0xba6151ae, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 // Class ID for our UnicodeToT61 charset converter
@@ -477,20 +477,42 @@ NS_DECLARE_ID(kISO885910ToUnicodeCID,
 NS_DECLARE_ID(kISO885913ToUnicodeCID, 
 0xba6151b1, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
-// Class ID for our UCS2ToUnicode charset converter
+// Class ID for our UCS2BEToUnicode charset converter
 // {BA6151B2-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUCS2ToUnicodeCID, 
+NS_DECLARE_ID(kUCS2BEToUnicodeCID, 
 0xba6151b2, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
-// Class ID for our UCS4ToUnicode charset converter
+// Class ID for our UCS4BEToUnicode charset converter
 // {BA6151B3-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUCS4ToUnicodeCID, 
+NS_DECLARE_ID(kUCS4BEToUnicodeCID, 
 0xba6151b3, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 // Class ID for our T61ToUnicode charset converter
 // {BA6151B4-1DFA-11d3-B3BF-00805F8A6670}
 NS_DECLARE_ID(kT61ToUnicodeCID, 
 0xba6151b4, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
+
+// Class ID for our UnicodeToUCS2LE charset converter
+// {BA6151B5-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kUnicodeToUCS2LECID, 
+0xba6151b5, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
+// Class ID for our UnicodeToUCS4LE charset converter
+// {BA6151B6-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kUnicodeToUCS4LECID, 
+0xba6151b6, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
+
+// Class ID for our UCS2LEToUnicode charset converter
+// {BA6151B7-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kUCS2LEToUnicodeCID, 
+0xba6151b7, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+
+// Class ID for our UCS4LEToUnicode charset converter
+// {BA6151B8-1DFA-11d3-B3BF-00805F8A6670}
+NS_DECLARE_ID(kUCS4LEToUnicodeCID, 
+0xba6151b8, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 
 
