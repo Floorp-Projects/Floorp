@@ -13,6 +13,11 @@
 	<menu style="border: thin solid black;" value="&subscribeclickhere.label;" uri="" id="msgSubscribeFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		ref="msgaccounts:/">
         <template>
+<!-- since we only do news subscribe (and not imap subscribe)
+	and we aren't supporting news categories yet,
+ 	we can comment out this rule, since only news servers 
+	should appear in the subscribe dialog
+
           <rule nc:CanSubscribe="true" iscontainer="true" isempty="false">
             <menupopup>
               <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
@@ -33,6 +38,7 @@
               </menu>
             </menupopup>
           </rule>
+-->
           <rule nc:CanSubscribe="true">
             <menupopup>
                         <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
