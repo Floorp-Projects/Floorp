@@ -506,7 +506,7 @@ void nsEudoraCompose::ExtractType( nsString& str)
 
 void nsEudoraCompose::CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count)
 {
-	for (PRInt32 i = 0; i < count; i++) {
+  for (PRInt32 i = 0; i < count; i++) {
     a[i].orig_url=nsnull;
     if (a[i].type)
       nsCRT::free( a[i].type);
@@ -514,9 +514,8 @@ void nsEudoraCompose::CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count)
       nsCRT::free( a[i].description);
     if (a[i].encoding)
       nsCRT::free( a[i].encoding);
-	}
-
-	delete [] a;
+  }
+  delete [] a;
 }
 
 nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
