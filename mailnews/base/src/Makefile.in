@@ -24,10 +24,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = mailnewsbase
 LIBRARY_NAME=mailnewsbase
-NO_SHARED_LIB=1
 
 EXPORTS = \
-	nsUInt32Array.h\
 	nsMsgKeyArray.h\
 	nsMsgPtrArray.h \
 	nsMsgGroupRecord.h \
@@ -35,9 +33,8 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS = \
-	nsUInt32Array.cpp\
 	nsMsgKeyArray.cpp\
-	nsMsgPtrArray.h \
+	nsMsgPtrArray.cpp \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \
