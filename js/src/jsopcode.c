@@ -1852,27 +1852,48 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
 {
     JSScope *scope, *oldscope;
     JSScopeProperty *sprop, *snext;
-    JSBool more, ok;
+    JSBool ok;
     JSAtom *atom;
     uintN indent;
+    intN i;
 
     if (newlines) {
 	js_puts(jp, "\n");
 	js_printf(jp, "\t");
     }
     js_printf(jp, "function %s(", fun->atom ? ATOM_BYTES(fun->atom) : "");
+
     if (fun->script && fun->object) {
-	scope = (JSScope *)fun->object->map;
-	for (sprop = scope->props; sprop; sprop = snext) {
-	    snext = sprop->next;
-	    if (sprop->getter != js_GetArgument)
-		continue;
-	    more = (snext && snext->getter == js_GetArgument);
-	    atom = sym_atom(sprop->symbols);
-	    js_printf(jp, "%s%s", ATOM_BYTES(atom), more ? ", " : "");
-	    if (!more)
-	    	break;
-	}
+        /* Print the parameters.
+         *
+         * This code is complicated by the need to handle duplicate parameter names.
+         * A duplicate parameter is stored as a property with id equal to the parameter
+         * number, but will not be in order in the linked list of symbols. So for each
+         * parameter we search the list of symbols for the appropriately numbered
+         * parameter, which we can then print.
+         */
+        for (i=0;;i++) {
+            jsid id;
+            atom = NULL;
+            scope = (JSScope *)fun->object->map;
+            for (sprop = scope->props; sprop; sprop = snext) {
+                snext = sprop->next;
+                if (sprop->getter != js_GetArgument)
+                    continue;
+                if (JSVAL_IS_INT(sprop->id) && JSVAL_TO_INT(sprop->id) == i) {
+                    atom = sym_atom(sprop->symbols);
+                    break;
+                }
+                id = (jsid) sym_atom(sprop->symbols);
+                if (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) == i) {
+                    atom = (JSAtom *) sprop->id;
+                    break;
+                }
+            }
+            if (atom == NULL)
+                break;
+            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));            
+        }
     }
     js_puts(jp, ") {\n");
     indent = jp->indent;
