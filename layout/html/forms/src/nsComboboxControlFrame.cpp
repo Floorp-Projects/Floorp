@@ -128,6 +128,28 @@ nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
+
+// Initialize the text string in the combobox using either the current
+// selection in the list box or the first item item in the list box.
+
+void nsComboboxControlFrame::InitTextStr()
+{
+   // Update the selected text string
+  mListControlFrame->GetSelectedItem(mTextStr);
+
+  if (mTextStr == "") {
+     // No selection so use the first item in the list box
+    nsIFormControlFrame* fcFrame = nsnull;
+    nsresult result = mListFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+    if ((NS_OK == result) && (nsnull != fcFrame)) {
+       // Set listbox selection to first item in the list box
+      fcFrame->SetProperty(nsHTMLAtoms::selectedindex, "0");
+       // Get the listbox selection as a string
+      mListControlFrame->GetSelectedItem(mTextStr);
+    }
+  }
+}
+
 //--------------------------------------------------------------
 
 void 
@@ -139,6 +161,8 @@ nsComboboxControlFrame::Reset()
   if ((NS_OK == result) && (nsnull != fcFrame)) {
     fcFrame->Reset(); 
   }
+ 
+  InitTextStr();
 }
 
 void 
@@ -279,13 +303,19 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
     // XXX Combo box should be changed to be implemented as a label and button frame.
     // This would eliminate all of this Reflow code. KMM
 
+    // add ourself as an nsIFormControlFrame
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
   if (mFirstTime) {
     ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull); // XXX This temporary
     mListFrame->ReResolveStyleContext(&aPresContext, mCurrentStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
     mFirstTime = PR_FALSE;
+    InitTextStr();
   }
 
+ 
   PRInt32 numChildren = mFrames.GetLength();
   
   if (1 == numChildren) {

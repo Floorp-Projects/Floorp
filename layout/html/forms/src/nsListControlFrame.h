@@ -32,6 +32,7 @@ class nsIDOMHTMLOptionElement;
 class nsFormFrame;
 class nsScrollFrame;
 class nsIComboboxControlFrame;
+class nsVoidArray;
 
 
 /**
@@ -83,26 +84,17 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredLayoutSize,
-                              nsSize& aDesiredWidgetSize);
-
   /*virtual nsresult Focus(nsIDOMEvent* aEvent);
-  virtual nsresult Blur(nsIDOMEvent* aEvent);
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD AddEventListener(nsIDOMNode * aNode);
-  NS_IMETHOD RemoveEventListener(nsIDOMNode * aNode);
-
-  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);*/
-
+  virtual nsresult Blur(nsIDOMEvent* aEvent); */
+ 
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
 
+// XXX the following methods are not referenced. They should be removed when it is
+//  confirmed that they are not needed 
   virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
+// XXX: End of the unreferenced methods
 
-  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
@@ -110,17 +102,18 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
+
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+
 
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
 
+
+
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
 
-  // nsIFrame
-  NS_IMETHOD  SetRect(const nsRect& aRect);
-  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
 
   /////////////////////////
   // nsHTMLContainerFrame
@@ -183,6 +176,17 @@ protected:
   void DisplaySelected(nsIContent* aContent); 
   void DisplayDeselected(nsIContent* aContent); 
   void UpdateItem(nsIContent* aContent, PRBool aSelected);
+  void ForceRedraw(nsIContent* aContent);
+  PRBool IsOptionGroup(nsIFrame* aFrame);
+  void ConstructSelectableList(nsIFrame* aFrame, nsVoidArray *aList);
+  nsIFrame* GetFirstSelectableFrame(nsVoidArray *aList, PRInt32& aPos);
+  nsIFrame* GetNextSelectableFrame(nsVoidArray *aList, PRInt32& aPos);
+  void SingleSelection();
+  void MultipleSelection(PRBool aIsShift, PRBool aIsControl);
+  void SelectIndex(PRInt32 aIndex); 
+  void ToggleSelected(PRInt32 aIndex, nsIContent *aContent);
+  void SetSelectedIndex(PRInt32 aIndex, nsIContent *aContent);
+  void SetContentSelectedAttribute(PRUint32 aIndex, PRBool aSelected);
 
   // nsHTMLContainerFrame overrides
  
@@ -202,10 +206,9 @@ protected:
                              PRBool        aDisplaySelected);
 
   // Data Members
+  nscoord      mBorderOffsetY;
   nsFormFrame* mFormFrame;
   PRInt32      mNumRows;
-//XXX: TODO: This should not be hardcoded to 64 
-//ZZZ  PRBool       mIsFrameSelected[64];
   PRInt32      mNumSelections;
   PRInt32      mMaxNumSelections;
   PRBool       mMultipleSelections;
@@ -216,13 +219,13 @@ protected:
   nsIContent * mHitContent;
   nsIFrame   * mCurrentHitFrame;
   nsIContent * mCurrentHitContent;
-  nsIFrame   * mSelectedFrame;
   nsIContent * mSelectedContent;
   PRBool       mIsInitializedFromContent;
   nsIFrame *   mContentFrame;
   PRBool       mInDropDownMode;
   nsIComboboxControlFrame * mComboboxFrame;
   nsString     mSelectionStr;
+  nsVoidArray* mSelectableFrames;
 
 };
 

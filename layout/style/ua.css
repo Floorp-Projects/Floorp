@@ -686,6 +686,7 @@ select {
   border: 1px inset #c0c0c0;
   background-color: white;
   color:black;
+  white-space:nowrap;
 }
 option {
   display:block;
@@ -707,6 +708,19 @@ option.selectedfocus {
   background-color: rgb(0,0,128);
   color: rgb(255,255,255);
 }
+
+optgroup {
+  font-style:italic;
+  font-weight:bold;
+}
+
+optgroup > option {
+  position:relative;
+  left:20px;
+  font-style:normal;
+  font-weight:normal;
+}
+
 textarea {
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
@@ -915,8 +929,6 @@ sourcetext {
 
 :-moz-dropdown-list {
  position:absolute;
- height:200px; 
- width:100px;
  background-color:white;
  border: 1px solid blue;
 } 

@@ -363,6 +363,11 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   aPresContext.GetWidgetRenderingMode(&mode);
 
   if (eWidgetRendering_Gfx == mode || NS_FORM_INPUT_IMAGE == type) {
+    // add ourself as an nsIFormControlFrame
+    if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+      nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    }
+
     nsSize ignore;
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
     nsMargin bp(0,0,0,0);
