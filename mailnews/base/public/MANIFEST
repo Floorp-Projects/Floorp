@@ -44,3 +44,5 @@ nsMsgHeaderMasks.h
 nsMsgMessageFlags.h
 nsIMsgMailNewsUrl.h
 nsIUrlListenerManager.h
+nsIMsgBiffManager.h
+
