@@ -89,7 +89,7 @@ $ops{"LOAD_STRING"} =
   {
    super  => "Instruction_2",
    rem    => "dest, immediate value (string)",
-   params => [ ("Register", "String *" ) ]
+   params => [ ("Register", "String" ) ]
   };
 $ops{"LOAD_NAME"} =
   {
