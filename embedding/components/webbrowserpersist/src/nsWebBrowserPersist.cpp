@@ -93,13 +93,15 @@ struct URIData
 struct OutputData
 {
     nsCOMPtr<nsIURI> mFile;
+    nsCOMPtr<nsIURI> mOriginalLocation;
     PRBool mCalcFileExt;
     nsCOMPtr<nsIOutputStream> mStream;
     PRInt32 mSelfProgress;
     PRInt32 mSelfProgressMax;
 
-    OutputData(nsIURI *aFile, PRBool aCalcFileExt) :
+    OutputData(nsIURI *aFile, nsIURI *aOriginalLocation, PRBool aCalcFileExt) :
         mFile(aFile),
+        mOriginalLocation(aOriginalLocation),
         mCalcFileExt(aCalcFileExt),
         mSelfProgress(0),
         mSelfProgressMax(10000)
@@ -370,7 +372,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
             // will be saved after the last one of these is saved.
             mURIMap.Enumerate(EnumPersistURIs, this);
         }
-        else
+
+        if (mOutputMap.Count() == 0)
         {
             // There are no URIs to save, so just save the document(s)
 
@@ -473,6 +476,58 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 
     mJustStartedLoading = PR_FALSE;
 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
+    nsISupportsKey key(keyPtr);
+    OutputData *data = (OutputData *) mOutputMap.Get(&key);
+
+    // NOTE: This code uses the channel as a hash key so it will not
+    //       recognize redirected channels because the key is not the same.
+    //       When that happens we remove and add the data entry to use the
+    //       new channel as the hash key.
+    if (!data)
+    {
+        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        if (!upData)
+        {
+            // Redirect? Try and fixup the output table
+            nsresult rv = FixRedirectedChannelEntry(channel);
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+            // Should be able to find the data after fixup unless redirects
+            // are disabled.
+            data = (OutputData *) mOutputMap.Get(&key);
+            if (!data)
+            {
+                return NS_ERROR_FAILURE;
+            }
+        }
+    }
+
+    if (data && data->mFile)
+    {
+        if (data->mCalcFileExt)
+        {
+            // this is the first point at which the server can tell us the mimetype
+            CalculateAndAppendFileExt(data->mFile, channel);
+        }
+
+        // compare uris and bail before we add to output map if they are equal
+        PRBool isEqual = PR_FALSE;
+        if (NS_SUCCEEDED(data->mFile->Equals(data->mOriginalLocation, &isEqual))
+            && isEqual)
+        {
+            // remove from output map
+            delete data;
+            mOutputMap.Remove(&key);
+
+            // cancel; we don't need to know any more
+            request->Cancel(NS_BINDING_ABORTED);
+        }
+    }
+
     return NS_OK;
 }
  
@@ -550,40 +605,15 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
         NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
 
-        // NOTE: This code uses the channel as a hash key so it will not
-        //       recognize redirected channels because the key is not the same.
-        //       When that happens we remove and add the data entry to use the
-        //       new channel as the hash key.
-
         nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
         nsISupportsKey key(keyPtr);
         OutputData *data = (OutputData *) mOutputMap.Get(&key);
         if (!data)
-        {
-            UploadData *upData = (UploadData *) mUploadList.Get(&key);
-            if (upData)
-                return NS_OK;
-
-            // Redirect? Try and fixup the output table
-            rv = FixRedirectedChannelEntry(channel);
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-            // Should be able to find the data after fixup unless redirects
-            // are disabled.
-            data = (OutputData *) mOutputMap.Get(&key);
-            if (!data)
-            {
-                return NS_ERROR_FAILURE;
-            }
-        }
+            return NS_OK;  // might be uploadData
 
         // Make the output stream
         if (!data->mStream)
         {
-            if (data->mCalcFileExt)
-            {
-                CalculateAndAppendFileExt(data->mFile, channel);
-            }
             rv = MakeOutputStream(data->mFile, getter_AddRefs(data->mStream));
             NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         }
@@ -866,7 +896,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     // Add the output transport to the output map with the channel as the key
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(inputChannel);
     nsISupportsKey key(keyPtr);
-    mOutputMap.Put(&key, new OutputData(aFile, aCalcFileExt));
+    mOutputMap.Put(&key, new OutputData(aFile, aURI, aCalcFileExt));
 
     // Read from the input channel
     rv = inputChannel->AsyncOpen(this, nsnull);
@@ -2258,7 +2288,7 @@ nsWebBrowserPersist::SetDocumentBase(
     nsCOMPtr<nsIDOMElement> headElement;
     nsCOMPtr<nsIDOMNodeList> headList;
     aDocument->GetElementsByTagName(
-        NS_ConvertASCIItoUCS2("head"), getter_AddRefs(headList));
+        NS_LITERAL_STRING("head"), getter_AddRefs(headList));
     if (headList)
     {
         nsCOMPtr<nsIDOMNode> headNode;
@@ -2271,7 +2301,7 @@ nsWebBrowserPersist::SetDocumentBase(
         nsCOMPtr<nsIDOMNode> firstChildNode;
         nsCOMPtr<nsIDOMNode> newNode;
         aDocument->CreateElement(
-            NS_ConvertASCIItoUCS2("head"), getter_AddRefs(headElement));
+            NS_LITERAL_STRING("head"), getter_AddRefs(headElement));
         aDocument->GetFirstChild(getter_AddRefs(firstChildNode));
         aDocument->InsertBefore(headElement, firstChildNode, getter_AddRefs(newNode));
     }
@@ -2284,7 +2314,7 @@ nsWebBrowserPersist::SetDocumentBase(
     nsCOMPtr<nsIDOMElement> baseElement;
     nsCOMPtr<nsIDOMNodeList> baseList;
     headElement->GetElementsByTagName(
-        NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseList));
+        NS_LITERAL_STRING("base"), getter_AddRefs(baseList));
     if (baseList)
     {
         nsCOMPtr<nsIDOMNode> baseNode;
@@ -2299,7 +2329,7 @@ nsWebBrowserPersist::SetDocumentBase(
         {
             nsCOMPtr<nsIDOMNode> newNode;
             aDocument->CreateElement(
-                NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseElement));
+                NS_LITERAL_STRING("base"), getter_AddRefs(baseElement));
             headElement->AppendChild(baseElement, getter_AddRefs(newNode));
         }
         if (!baseElement)
@@ -2309,7 +2339,7 @@ nsWebBrowserPersist::SetDocumentBase(
         nsXPIDLCString uriSpec;
         aBaseURI->GetSpec(getter_Copies(uriSpec));
         nsString href; href.AssignWithConversion(uriSpec);
-        baseElement->SetAttribute(NS_ConvertASCIItoUCS2("href"), href);
+        baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
     }
     else
     {
