@@ -21,7 +21,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)"
 ac_help="$ac_help
-  --with-static-motif     link motif statically if possible"
+  --with-static-motif     link Motif statically if possible"
 ac_help="$ac_help
   --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)"
 ac_help="$ac_help
@@ -3025,7 +3025,7 @@ if test "${enable_toolkit+set}" = set; then
         -o "$useRhapsody" ; then
                MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
    else
-     { echo "configure: error: Toolkit must be xlib" 1>&2; exit 1; }
+     { echo "configure: error: Toolkit must be Xlib" 1>&2; exit 1; }
    fi
 else
   if test "$useRhapsody" ; then
@@ -3042,13 +3042,13 @@ if test "$no_x" != "yes"; then
 	MOTIF_XINCS="-xif -I$x_includes"
     fi
 
-    $_detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
-    MOTIF_VERSION=`      $_detect_motif`
-    MOTIF_INCLUDES=`     $_detect_motif -if`
-    MOTIF_STATIC_FLAGS=` $_detect_motif -sf`
-    MOTIF_DYNAMIC_FLAGS=`$_detect_motif -df`
-    MOTIF_DYNAMIC_PATHS=`$_detect_motif -dp`
-    MOTIF_REQUIRES_XPM=` $_detect_motif -xpm`
+    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
+    MOTIF_VERSION=`${detect_motif}`
+    MOTIF_INCLUDES=`${detect_motif} -if`
+    MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
+    MOTIF_DYNAMIC_FLAGS=`${detect_motif} -df`
+    MOTIF_DYNAMIC_PATHS=`${detect_motif} -dp`
+    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
 
     ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
@@ -3148,7 +3148,7 @@ fi
 
     if test "$MOTIF_STATIC_LIB" = "unknown" \
          -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
-	{ echo "configure: error: "Cannot find neither dynamic nor static motif libraries."" 1>&2; exit 1; }
+	{ echo "configure: error: "Cannot find either dynamic or static Motif libraries."" 1>&2; exit 1; }
     fi
 
     # Get rid of offending error values
@@ -9028,7 +9028,7 @@ if test "$MISSING_GTK"; then
 fi
 
 if test "$MISSING_MOTIF"; then
-   { echo "configure: error:  Could not find the following motif libraries: $MISSING_MOTIF " 1>&2; exit 1; };
+   { echo "configure: error:  Could not find the following Motif libraries: $MISSING_MOTIF " 1>&2; exit 1; };
 fi
 fi # $no_x
 
