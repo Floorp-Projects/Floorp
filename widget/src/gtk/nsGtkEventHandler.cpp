@@ -245,6 +245,11 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
+  // For control chars, GDK sets string to be the actual ascii value.
+  // Map that to what nsKeyEvent wants:
+  if (aGEK->state & GDK_CONTROL_MASK)
+    return aGEK->string[0] + 'a' - 1;
+
   // For now (obviously this will need to change for IME),
   // only set a char code if the result is printable:
   if (!isprint(aGEK->string[0]))
@@ -253,7 +258,7 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
   // ALT keys in gdk give the upper case character in string,
   // but we want the lower case char in char code
   // unless shift was also pressed.
-  if (((aGEK->state & GDK_CONTROL_MASK) || (aGEK->state & GDK_MOD1_MASK))
+  if (((aGEK->state & GDK_MOD1_MASK))
       && !(aGEK->state & GDK_SHIFT_MASK)
       && isupper(aGEK->string[0]))
     return tolower(aGEK->string[0]);
@@ -300,17 +305,16 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 
   if (aGEK!=nsnull) {
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
+#define XUL_ONLY_LOOKS_AT_KEY_CODE 1
+#ifndef XUL_ONLY_LOOKS_AT_KEY_CODE
     if (anEvent.charCode == 0)
-    {
+#endif
       anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
-      anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-      anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    }
-    else
-    {
-      anEvent.isControl = PR_FALSE;
-      anEvent.isAlt = PR_FALSE;
-    }
+
+    anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    // XXX need meta, but nsKeyEvent doesn't offer it -- see bug 14465
+
 #ifdef DEBUG_pavlov
     g_print("%s\n", aGEK->string);
 #endif
