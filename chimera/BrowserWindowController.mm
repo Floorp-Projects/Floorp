@@ -100,6 +100,12 @@ static NSArray* sToolbarDefaults = nil;
     mModalSession = nil;
 }
 
+- (BOOL)isResponderGeckoView:(NSResponder*) responder
+{
+  return ([responder isKindOfClass:[NSView class]] &&
+          [(NSView*)responder isDescendantOf:[mBrowserView getBrowserView]]);
+}
+
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
   BOOL windowWithMultipleTabs = ([mTabBrowser numberOfTabViewItems] > 1);
@@ -107,6 +113,12 @@ static NSArray* sToolbarDefaults = nil;
   // on whether we have multiple tabs
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
+
+  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
+    CHBrowserView* browserView = [mBrowserView getBrowserView];
+    if (browserView)
+      [browserView setActive:YES];
+  }
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -115,6 +127,12 @@ static NSArray* sToolbarDefaults = nil;
   // to Command-W, for other windows.
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:NO];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
+
+  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
+    CHBrowserView* browserView = [mBrowserView getBrowserView];
+    if (browserView)
+      [browserView setActive:NO];
+  }
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
@@ -1401,6 +1419,15 @@ static NSArray* sToolbarDefaults = nil;
   if ( !sBrokenIcon )
     sBrokenIcon = [[NSImage imageNamed:@"security_broken"] retain];
   return sBrokenIcon;
+}
+
+- (void) focusChangedFrom:(NSResponder*) oldResponder to:(NSResponder*) newResponder
+{
+  BOOL oldResponderIsGecko = [self isResponderGeckoView:oldResponder];
+  BOOL newResponderIsGecko = [self isResponderGeckoView:newResponder];
+
+  if (oldResponderIsGecko != newResponderIsGecko)
+    [[mBrowserView getBrowserView] setActive:newResponderIsGecko];
 }
 
 @end

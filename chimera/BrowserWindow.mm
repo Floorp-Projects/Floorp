@@ -1,5 +1,6 @@
 #import "BrowserWindow.h"
 #import "CHAutoCompleteTextField.h"
+#import "BrowserWindowController.h"
 
 static const int kEscapeKeyCode = 53;
 
@@ -17,6 +18,15 @@ static const int kEscapeKeyCode = 53;
     }
   } else
     [super sendEvent:theEvent];
+}
+
+- (BOOL)makeFirstResponder:(NSResponder*)responder
+{
+  NSResponder* oldResponder = [self firstResponder];
+  BOOL madeFirstResponder = [super makeFirstResponder:responder];
+  if (madeFirstResponder && oldResponder != [self firstResponder])
+    [(BrowserWindowController*)[self delegate] focusChangedFrom:oldResponder to:[self firstResponder]];
+  return madeFirstResponder;
 }
 
 @end
