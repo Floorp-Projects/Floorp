@@ -63,12 +63,12 @@ public:
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
     NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
                                      nsRuleNode** aRuleNode);
+    static already_AddRefed<nsStyleContext>
+    GetStyleContextForContent(nsIContent* aContent, nsIAtom* aPseudo,
+                              nsIPresShell* aPresShell);
 
 private:
-    already_AddRefed<nsStyleContext>
-    GetStyleContextForContent(nsIContent* aContent, nsIPresShell* aPresShell);
-
-    nsStyleContext* GetStyleContextForFrame(nsIFrame* aFrame);
+    static nsStyleContext* GetStyleContextForFrame(nsIFrame* aFrame);
 };
 
 #endif /* nsInspectorCSSUtils_h___ */

@@ -3233,7 +3233,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                                 nsFrameConstructorState& aState,
                                                 nsIContent*              aDocElement,
                                                 nsIFrame*                aParentFrame,
-                                                nsStyleContext*          aParentStyleContext,
                                                 nsIFrame*&               aNewFrame)
 {
     // how the root frame hierarchy should look
@@ -3293,7 +3292,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   // --------- CREATE AREA OR BOX FRAME -------
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = aPresShell->StyleSet()->ResolveStyleFor(aDocElement,
-                                                         aParentStyleContext);
+                                                         nsnull);
 
   const nsStyleDisplay* display = styleContext->GetStyleDisplay();
 
@@ -7206,11 +7205,8 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
             if (NS_SUCCEEDED(rv)) {
               // Create the new document element hierarchy
               nsIFrame*                 newChild;
-              nsStyleContext* rootPseudoStyle = docParentFrame->GetStyleContext();
-          
               rv = ConstructDocElementFrame(shell, aPresContext, state, rootContent,
-                                            docParentFrame, rootPseudoStyle,
-                                            newChild);
+                                            docParentFrame, newChild);
 
               if (NS_SUCCEEDED(rv)) {
                 rv = state.mFrameManager->InsertFrames(docParentFrame, nsnull,
@@ -8647,9 +8643,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
                       // just bail here because the root will really be built later during
                       // InitialReflow.
 
-      // Get the style context of the containing block frame
-      nsStyleContext* containerStyle = mDocElementContainingBlock->GetStyleContext();
-    
       // Create frames for the document element and its child elements
       nsIFrame*               docElementFrame;
       nsFrameConstructorState state(aPresContext, mFixedContainingBlock, nsnull, nsnull, aFrameState);
@@ -8657,7 +8650,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
                                state,
                                docElement, 
                                mDocElementContainingBlock,
-                               containerStyle, 
                                docElementFrame);
     
       // Set the initial child list for the parent

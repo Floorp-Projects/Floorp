@@ -218,7 +218,6 @@ protected:
                                     nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
                                     nsIFrame*                aParentFrame,
-                                    nsStyleContext*          aParentStyleContext,
                                     nsIFrame*&               aNewFrame);
 
   nsresult ConstructDocElementTableFrame(nsIPresShell*          aPresShell, 
