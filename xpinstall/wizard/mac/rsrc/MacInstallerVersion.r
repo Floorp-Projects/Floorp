@@ -34,11 +34,11 @@ resource 'vers' (1, "XPInstall version") {
 
 resource 'vers' (2, "Mozilla Installer version") {
         1,
-        0x20,
-        beta,	// {alpha, beta, release}
+        0x30,
+        alpha,	// {alpha, beta, release}
         0,			// alpha or beta number; 0 for release
         0,			// language
-        "1.2b",		// short version string
-        "Mozilla 1.2b Installer"	// long version string
+        "1.3a",		// short version string
+        "Mozilla 1.3a Installer"	// long version string
 };
 
