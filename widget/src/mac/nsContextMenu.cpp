@@ -214,7 +214,8 @@ NS_METHOD nsContextMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  aMenuItem->GetLabel(label);
 	  char* menuLabel = label.ToNewCString();
 	  mNumMenuItems++;
-	  ::InsertMenuItem(mMacMenuHandle, c2pstr(menuLabel), mNumMenuItems);
+	  ::InsertMenuItem(mMacMenuHandle, (const unsigned char *)" ", mNumMenuItems);
+	  ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
 	  delete[] menuLabel;
 	}
   }
