@@ -347,7 +347,7 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
 
 #elif defined(XP_MAC)
 
-    err = _MD_mac_get_nonblocking_connect_error(osfd);
+    err = _MD_mac_get_nonblocking_connect_error(fd);
     if (err == -1)
         return PR_FAILURE;
 	else     

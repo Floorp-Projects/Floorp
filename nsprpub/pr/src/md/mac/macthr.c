@@ -199,7 +199,7 @@ void _MD_StartInterrupts(void)
 	gPrimaryThread = _PR_MD_CURRENT_THREAD();
 
 	if ( !gTimerCallbackUPP )
-		gTimerCallbackUPP = NewTimerProc(TimerCallback);
+		gTimerCallbackUPP = NewTimerUPP(TimerCallback);
 
 	//	Fill in the Time Manager queue element
 	

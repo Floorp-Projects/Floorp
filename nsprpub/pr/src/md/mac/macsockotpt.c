@@ -373,6 +373,8 @@ static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResul
             PR_ASSERT(err == kOTNoError);
             secret->md.exceptReady = PR_TRUE;       // XXX Check this
 
+            md->disconnectError = discon.reason;    // save for _MD_mac_get_nonblocking_connect_error
+
             // wake up waiting threads, if any
             result = -3199 - discon.reason; // obtain the negative error code
             if ((readThread = secret->md.read.thread) != NULL) {
@@ -2197,25 +2199,32 @@ ErrorExit:
 }
 
 
-int _MD_mac_get_nonblocking_connect_error(PRInt32 osfd)
+int _MD_mac_get_nonblocking_connect_error(PRFileDesc* fd)
 {
-    OTResult resultOT;
-    EndpointRef endpoint = (EndpointRef) osfd;
+    EndpointRef endpoint = (EndpointRef)fd->secret->md.osfd;
+    OTResult    resultOT = OTGetEndpointState(endpoint);
 
-    resultOT = OTGetEndpointState(endpoint);
     switch (resultOT)    {
         case T_OUTCON:
             macsock_map_error(EINPROGRESS);
             return -1;
+            
         case T_DATAXFER:
             return 0;
+            
         case T_IDLE:
+            macsock_map_error(fd->secret->md.disconnectError);
+            fd->secret->md.disconnectError = 0;
             return -1;
+
         case T_INREL:
             macsock_map_error(ENOTCONN);
             return -1;
+
         default:
             PR_ASSERT(0);
             return -1;
     }
+
+    return -1;      // not reached
 }
