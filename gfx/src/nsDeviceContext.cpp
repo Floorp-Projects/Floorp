@@ -406,12 +406,6 @@ nsresult DeviceContextImpl::CreateIconILGroupContext()
 
 NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
 {
-  // XXX synchronous image loading doesn't work on mac yet
-  // That's not true. Using necko, it is ILLEGAL to do synchronous
-  // loads like this, on any platform. You risk deadlock if you try this.
-#if defined(XP_BEOS) || defined(XP_MAC)
-  return NS_ERROR_FAILURE;
-#endif
   nsresult  result;
 
   // Initialize out parameter
