@@ -11,7 +11,7 @@ mozilla/nsprpub,        NSPRPUB_PRE_4_2_CLIENT_BRANCH
 mozilla/security/nss,   NSS_CLIENT_TAG
 mozilla/security/manager,
 mozilla/accessible,
-DirectorySDKSourceC,    ldapcsdk_50_client_branch
+mozilla/directory/c-sdk,    ldapcsdk_50_client_branch
 mozilla/lib/mac/Instrumentation
 mozilla/gfx2
 mozilla/modules/libpr0n
