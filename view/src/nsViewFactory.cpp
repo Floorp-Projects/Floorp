@@ -150,7 +150,11 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
+#ifdef XP_MAC
+extern "C" NS_VIEW nsresult NSGetFactory_VIEW_DLL(const nsCID &aClass, nsIFactory **aFactory)
+#else
 extern "C" NS_VIEW nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+#endif
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
