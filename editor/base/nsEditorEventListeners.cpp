@@ -684,6 +684,17 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
+    PRUint32 flags;
+    if (NS_SUCCEEDED(mEditor->GetFlags(&flags))
+        && ((flags & nsIPlaintextEditor::eEditorDisabledMask)
+           || (flags & nsIPlaintextEditor::eEditorReadonlyMask)) )
+    {
+      return aMouseEvent->StopPropagation(); // it was decided to "eat" the event as this is the "least surprise"
+                                      // since someone else handling it might be unintentional and the 
+                                      // user could probably re-drag to be not over the disabled/readonly 
+                                      // editfields if that is what is desired.
+    }
+
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if (dragSession)
     {
