@@ -45,8 +45,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
+#include "nsIStyleContext.h"
 
-class nsIStyleContext;
 class nsIContent;
 class nsIPresContext;
 class nsIFrame;
