@@ -21,10 +21,11 @@
  */
 
 var dialog;
-var prefs = null;
+var printService       = null;
 
-var default_command = "lpr";
-var default_file = "mozilla.ps";
+var default_command    = "lpr";
+var default_file       = "mozilla.ps";
+var gPrintOptInterface = Components.interfaces.nsIPrintOptions;
 
 function initDialog()
 {
@@ -62,6 +63,11 @@ function initDialog()
   dialog.topageInput     = document.getElementById("topageInput");
   dialog.topageLabel     = document.getElementById("topageLabel");
 
+  dialog.aslayedoutRadio      = document.getElementById("aslayedoutRadio");
+  dialog.selectedframeRadio   = document.getElementById("selectedframeRadio");
+  dialog.eachframesepRadio    = document.getElementById("eachframesepRadio");
+  dialog.printrangeGroupLabel = document.getElementById("printrangeGroupLabel");
+
   dialog.topInput        = document.getElementById("topInput");
   dialog.bottomInput     = document.getElementById("bottomInput");
   dialog.leftInput       = document.getElementById("leftInput");
@@ -92,7 +98,7 @@ function checkValid(elementID)
 
 function doPrintToFile( value )
 {
-  if (value == true ) {
+  if (value ) {
     dialog.fileLabel.removeAttribute("disabled");
     dialog.cmdLabel.setAttribute("disabled","true" );
     dialog.fileInput.removeAttribute("disabled");
@@ -109,7 +115,7 @@ function doPrintToFile( value )
 
 function doPrintRange( value )
 {
-  if ( value == true) {
+  if ( value) {
     dialog.frompageInput.removeAttribute("disabled"); 
     dialog.frompageLabel.removeAttribute("disabled"); 
     dialog.topageInput.removeAttribute("disabled"); 
@@ -122,51 +128,84 @@ function doPrintRange( value )
   }
 }
 
+function getDoubleStr( val, dec )
+{
+  var str = val.toString();
+  inx = str.indexOf(".");
+  return str.substring(0, inx+dec+1);
+}
+
 function loadDialog()
 {
-  var print_tofile = false;
-  var print_reversed = false;
-  var print_color = true;
-  var print_landscape = true;
-  var print_paper_size = 0;
-  var print_margin_top = 500;
-  var print_margin_left = 500;
-  var print_margin_bottom = 500;
-  var print_margin_right = 500;
-  var print_command = default_command;
-  var print_file = default_file;
+  var print_tofile        = false;
+  var print_reversed      = false;
+  var print_color         = true;
+  var print_paper_size    = 0;
+  var print_margin_top    = 0.5;
+  var print_margin_left   = 0.5;
+  var print_margin_bottom = 0.5;
+  var print_margin_right  = 0.5;
+  var print_command       = default_command;
+  var print_file          = default_file;
   var print_selection_radio_enabled = false;
+  var print_isFrame       = false;
+  var print_frametype     = gPrintOptInterface.kSelectedFrame;
 
   try {
-    prefs = Components.classes["@mozilla.org/preferences;1"];
-    if (prefs) {
-      prefs = prefs.getService();
-      if (prefs)
-        prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    printService = Components.classes["@mozilla.org/gfx/printoptions;1"];
+    if (printService) {
+      printService = printService.getService();
+      if (printService) {
+        printService = printService.QueryInterface(Components.interfaces.nsIPrintOptions);
+      }
     }
-  } catch(e) { }
+  } catch(e) {}
 
-  if (prefs) {
-    try { print_tofile = prefs.GetBoolPref("print.print_tofile"); } catch(e) { }
-    try { print_reversed = prefs.GetBoolPref("print.print_reversed"); } catch(e) { }
-    try { print_color = prefs.GetBoolPref("print.print_color"); } catch(e) { }
-    try { print_paper_size = prefs.GetIntPref("print.print_paper_size"); } catch(e) { }
-    //
-    // margins are set/get with the _js extention because we aren't converting them to twips
-    // the are multiplied by a 1000, i.e. 0.5 inches equals 500
-    //
-    try { print_margin_top = prefs.GetIntPref("print.print_margin_top_js"); } catch(e) { }
-    try { print_margin_left = prefs.GetIntPref("print.print_margin_left_js"); } catch(e) { }
-    try { print_margin_bottom = prefs.GetIntPref("print.print_margin_bottom_js"); } catch(e) { }
-    try { print_margin_right = prefs.GetIntPref("print.print_margin_right_js"); } catch(e) { }
+  if (printService) {
+    print_reversed   = printService.printReversed;
+    print_color      = printService.printInColor;
+    print_paper_size = printService.paperSize;
 
-    try { print_command = prefs.CopyCharPref("print.print_command"); } catch(e) { }
-    try { print_file = prefs.CopyCharPref("print.print_file"); } catch(e) { }
-    try { print_tofile = prefs.GetBoolPref("print.print_tofile"); } catch(e) { }
-    try { print_selection_radio_enabled = prefs.GetBoolPref("print.selection_radio_enabled"); } catch(e) { }
+    print_margin_top    = printService.marginTop;
+    print_margin_left   = printService.marginLeft;
+    print_margin_right  = printService.marginRight;
+    print_margin_bottom = printService.marginBottom;
+
+    print_command   = printService.printCommand;
+    print_file      = printService.toFileName;
+    print_tofile    = printService.printToFile;
+    print_frametype = printService.printFrameType;
+    print_isFrame   = printService.isPrintFrame;
+    print_selection_radio_enabled = printService.GetPrintOptions(gPrintOptInterface.kPrintOptionsEnableSelectionRB);
+  } else {
+    dump("printService is null\n");
+  }
+  dump("printReversed "+print_reversed+"\n");
+  dump("printInColor  "+print_color+"\n");
+  dump("paperSize     "+print_paper_size+"\n");
+  dump("printCommand  "+print_command+"\n");
+  dump("toFileName    "+print_file+"\n");
+  dump("printToFile   "+print_tofile+"\n");
+  dump("printToFile   "+print_tofile+"\n");
+  dump("print_frame   "+print_frametype+"\n");
+  dump("print_isFrame "+print_isFrame+"\n");
+
+  dump("selection_radio_enabled "+print_selection_radio_enabled+"\n");
+
+  dump("print_margin_top    "+print_margin_top+"\n");
+  dump("print_margin_left   "+print_margin_left+"\n");
+  dump("print_margin_right  "+print_margin_right+"\n");
+  dump("print_margin_bottom "+print_margin_bottom+"\n");
+
+  if (print_file == "") {
+    print_file = default_file;
   }
 
-  if ( print_tofile == true) {
+  if (print_command == "") {
+    print_command = default_command;
+  }
+
+  if ( print_tofile) {
     dialog.fileRadio.checked = true;
     doPrintToFile( true );
   } else {
@@ -174,30 +213,30 @@ function loadDialog()
     doPrintToFile( false );
   }
 
-  if ( print_color == true) {
+  if ( print_color) {
     dialog.colorRadio.checked = true;
   } else {
     dialog.grayRadio.checked = true;
   }
 
-  if ( print_reversed == true) {
+  if ( print_reversed) {
     dialog.lastRadio.checked = true;
   } else {
     dialog.firstRadio.checked = true;
   }
 
-  if ( print_paper_size == 0 ) {
+  if ( print_paper_size == gPrintOptInterface.kLetterPaperSize ) {
     dialog.letterRadio.checked = true;
-  } else if ( print_paper_size == 1 ) {
+  } else if ( print_paper_size == gPrintOptInterface.kLegalPaperSize ) {
     dialog.legalRadio.checked = true;
-  } else if ( print_paper_size == 2 ) {
+  } else if ( print_paper_size == gPrintOptInterface.kExecutivePaperSize ) {
     dialog.exectiveRadio.checked = true;
-  } else if ( print_paper_size == 3 ) {
+  } else if ( print_paper_size == gPrintOptInterface.kA4PaperSize ) {
     dialog.a4Radio.checked = true;
   }
 
   dialog.allpagesRadio.checked = true;
-  if ( print_selection_radio_enabled == true) {
+  if ( print_selection_radio_enabled) {
     dialog.selectionRadio.removeAttribute("disabled"); 
   } else {
     dialog.selectionRadio.setAttribute("disabled","true" );
@@ -206,17 +245,41 @@ function loadDialog()
   dialog.frompageInput.value = 1;
   dialog.topageInput.value   = 1;
 
-  // convert back to inches
-  dialog.topInput.value = print_margin_top * 0.001;
-  dialog.bottomInput.value = print_margin_bottom * 0.001;
-  dialog.leftInput.value = print_margin_left * 0.001;
-  dialog.rightInput.value = print_margin_right * 0.001;
+  dialog.topInput.value    = getDoubleStr(print_margin_top, 1);
+  dialog.bottomInput.value = getDoubleStr(print_margin_bottom, 1);
+  dialog.leftInput.value   = getDoubleStr(print_margin_left, 1);
+  dialog.rightInput.value  = getDoubleStr(print_margin_right, 1);
 
-  dialog.cmdInput.value = print_command;
-  dialog.fileInput.value = print_file;
+  dialog.cmdInput.value    = print_command;
+  dialog.fileInput.value   = print_file;
 
   dialog.print.setAttribute("value",
-             document.getElementById("printButton").getAttribute("value"));
+  document.getElementById("printButton").getAttribute("value"));
+
+  // print frame
+  if ( print_isFrame ) {
+    dialog.aslayedoutRadio.removeAttribute("disabled"); 
+    dialog.selectedframeRadio.removeAttribute("disabled"); 
+    dialog.eachframesepRadio.removeAttribute("disabled"); 
+    dialog.printrangeGroupLabel.removeAttribute("disabled"); 
+
+    if (print_frametype == gPrintOptInterface.kFramesAsIs) {
+      dialog.aslayedoutRadio.checked = true;
+
+    } else if (print_frametype == gPrintOptInterface.kSelectedFrame) {
+      dialog.selectedframeRadio.checked = true;
+
+    } else if (print_frametype == gPrintOptInterface.kEachFrameSep) {
+      dialog.eachframesepRadio.checked = true;
+    }
+  } else {
+    dialog.aslayedoutRadio.setAttribute("disabled","true" );
+    dialog.selectedframeRadio.setAttribute("disabled","true" );
+    dialog.eachframesepRadio.setAttribute("disabled","true" );
+    dialog.printrangeGroupLabel.setAttribute("disabled","true" );
+    
+  }
+
 }
 
 var param;
@@ -247,52 +310,56 @@ function onOK()
 {
   var print_paper_size = 0;
 
-  if (prefs) {
+  if (printService) {
 
-    if (dialog.fileRadio.checked == true) {
-      prefs.SetBoolPref("print.print_tofile", true);
-    } else {
-      prefs.SetBoolPref("print.print_tofile", false);
-    }
+    printService.printToFile   = dialog.fileRadio.checked;
+    printService.printReversed = dialog.lastRadio.checked;
+    printService.printInColor  = dialog.colorRadio.checked;
 
-    if (dialog.lastRadio.checked == true) {
-      prefs.SetBoolPref("print.print_reversed", true);
-    } else {
-      prefs.SetBoolPref("print.print_reversed", false);
+    if (dialog.letterRadio.checked) {
+      print_paper_size = gPrintOptInterface.kLetterPaperSize;
+    } else if (dialog.legalRadio.checked) {
+      print_paper_size = gPrintOptInterface.kLegalPaperSize;
+    } else if (dialog.exectiveRadio.checked) {
+      print_paper_size = gPrintOptInterface.kExecutivePaperSize;
+    } else if (dialog.a4Radio.checked) {
+      print_paper_size = gPrintOptInterface.kA4PaperSize;
     }
-
-    if (dialog.colorRadio.checked == true) {
-      prefs.SetBoolPref("print.print_color", true);
-    } else {
-      prefs.SetBoolPref("print.print_color", false);
-    }
-
-    if (dialog.letterRadio.checked == true) {
-      print_paper_size = 0;
-    } else if (dialog.legalRadio.checked == true) {
-      print_paper_size = 1;
-    } else if (dialog.exectiveRadio.checked == true) {
-      print_paper_size = 2;
-    } else if (dialog.a4Radio.checked == true) {
-      print_paper_size = 3;
-    }
-    prefs.SetIntPref("print.print_paper_size", print_paper_size);
+    printService.paperSize = print_paper_size;
 
     // save these out so they can be picked up by the device spec
-    prefs.SetIntPref("print.print_margin_top_js", dialog.topInput.value * 1000);
-    prefs.SetIntPref("print.print_margin_left_js", dialog.leftInput.value * 1000);
-    prefs.SetIntPref("print.print_margin_bottom_js", dialog.bottomInput.value *1000);
-    prefs.SetIntPref("print.print_margin_right_js", dialog.rightInput.value * 1000);
+    printService.marginTop    = dialog.topInput.value;
+    printService.marginLeft   = dialog.leftInput.value;
+    printService.marginBottom = dialog.bottomInput.value;
+    printService.marginRight  = dialog.rightInput.value;
 
-    prefs.SetCharPref("print.print_command", dialog.cmdInput.value);
-    prefs.SetCharPref("print.print_file", dialog.fileInput.value);
+    printService.printCommand = dialog.cmdInput.value;
+    printService.toFileName   = dialog.fileInput.value;
 
-    prefs.SetBoolPref("print.print_allpagesrange", dialog.allpagesRadio.checked);
-    prefs.SetBoolPref("print.print_pagerange", dialog.rangeRadio.checked);
-    prefs.SetBoolPref("print.print_selectionrange", dialog.selectionRadio.checked);
-    prefs.SetIntPref("print.print_frompage", dialog.frompageInput.value);
-    prefs.SetIntPref("print.print_topage", dialog.topageInput.value);
+    var printtype;
+    if (dialog.allpagesRadio.checked) {
+      printtype = gPrintOptInterface.kRangeAllPages;
+    } else if (dialog.rangeRadio.checked) {
+      printtype = gPrintOptInterface.kRangeSpecifiedPageRange;
+    } else if (dialog.selectionRadio.checked) {
+      printtype = gPrintOptInterface.kRangeSelection;
+    }
+    printService.startPageRange = dialog.frompageInput.value;
+    printService.endPageRange   = dialog.topageInput.value;
 
+    var frametype;
+    if (dialog.aslayedoutRadio.checked) {
+      frametype = gPrintOptInterface.kFramesAsIs;
+    } else if (dialog.selectedframeRadio.checked) {
+      frametype = gPrintOptInterface.kSelectedFrame;
+    } else if (dialog.eachframesepRadio.checked) {
+      frametype = gPrintOptInterface.kEachFrameSep;
+    } else {
+      frametype = gPrintOptInterface.kSelectedFrame;
+    }
+    printService.printFrameType = frametype;
+  } else {
+    dump("************ printService: "+printService+"\n");
   }
 
   if (param) {

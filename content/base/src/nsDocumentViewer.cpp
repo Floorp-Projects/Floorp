@@ -1500,12 +1500,10 @@ if (!doesContainFrameSet) {
       DumpLayoutData(cx, aDContext, rootFrame, aParent);
 #endif
 
-      nsPrintRange printRangeType = ePrintRange_AllPages;
       NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
       if (NS_SUCCEEDED(rv) && printService) {
-        PRInt32 printType;
-        printService->GetPrintRange(&printType);
-        printRangeType = (nsPrintRange)printType;
+        PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages;
+        printService->GetPrintRange(&printRangeType);
 
         // get the document title
         const nsString* docTitle = mDocument->GetDocumentTitle();
@@ -1522,11 +1520,11 @@ if (!doesContainFrameSet) {
         nsAutoString urlStr;
         urlStr.AssignWithConversion(urlCStr);
         PRUnichar * urlUStr = urlStr.ToNewUnicode();
-        printService->SetURL(urlUStr);
+        printService->SetDocURL(urlUStr);
         nsMemory::Free(urlUStr);
         nsMemory::Free(urlCStr);
 
-        if (ePrintRange_Selection == printRangeType) {
+        if (nsIPrintOptions::kRangeSelection == printRangeType) {
           cx->SetIsRenderingOnlySelection(PR_TRUE);
 
           // temporarily creating rendering context
@@ -1546,7 +1544,8 @@ if (!doesContainFrameSet) {
                                         &startFrame, startPageNum, startRect, 
                                         &endFrame, endPageNum, endRect);
           if (NS_SUCCEEDED(rv)) {
-            printService->SetPageRange(startPageNum, endPageNum);
+            printService->SetStartPageRange(startPageNum);
+            printService->SetEndPageRange(endPageNum);
             if (startPageNum == endPageNum) {
               nsIFrame * seqFrame;
               if (NS_FAILED(pageSequence->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
@@ -2285,7 +2284,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   nsresult  rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
-    printService->SetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, IsThereASelection());
+    printService->SetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, IsThereASelection());
   }
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
@@ -2304,7 +2303,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
     mPrintDC = nsnull;
     mFilePointer = aFile;
 
-    factory->CreateDeviceContextSpec(nsnull, devspec, aSilent);
+    factory->CreateDeviceContextSpec(mWindow, devspec, aSilent);
     if (nsnull != devspec) {
       mPresContext->GetDeviceContext(getter_AddRefs(dx));
       rv = dx->GetDeviceContextFor(devspec, mPrintDC); 
