@@ -25,6 +25,7 @@ DEPTH=..\..\..
 EXPORTS=prefldap.h
 
 XPIDLSRCS = \
+    .\nsIAutoConfig.idl \
     .\nsIPref.idl	\
     .\nsIPrefBranch.idl \
     .\nsIPrefBranchInternal.idl	\

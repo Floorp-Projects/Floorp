@@ -34,9 +34,27 @@ function setOfflineStatus(aToggleFlag)
   var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"]
                             .getService(Components.interfaces.nsIIOService);
   var broadcaster = document.getElementById("Communicator:WorkMode");
-  if (aToggleFlag)
-    ioService.offline = !ioService.offline;
 
+  //Checking for a preference "network.online", if it's locked, disabling 
+  // network icon and menu item
+  try {
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+      prefService = prefService.getService();
+      prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
+      
+      var prefBranch = prefService.getBranch(null);
+      
+      var offlineLocked = prefBranch.prefIsLocked("network.online"); 
+      
+      if (!offlineLocked ) {
+          if (aToggleFlag)
+              ioService.offline = !ioService.offline;
+      }
+      else {
+          broadcaster.setAttribute("disabled","true");
+      }
+  } catch(e) {
+  }
   var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
   if (ioService.offline && broadcaster)
     {
