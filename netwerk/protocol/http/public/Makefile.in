@@ -34,10 +34,10 @@ XPIDLSRCS	= \
 		nsIHTTPChannel.idl \
 		nsIHttpNotify.idl \
 		nsIHTTPProtocolHandler.idl \
+		nsIHTTPEventSink.idl \
 		$(NULL)
 
 EXPORTS		= \
-		nsIHttpEventSink.h \
 		nsHTTPEnums.h \
 		$(NULL)
 
