@@ -616,6 +616,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique)
 {
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
   NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
@@ -659,6 +660,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
   }
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
   NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
@@ -704,6 +706,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      nsIStyleContext* aParentContext,
                                                      PRBool aForceUnique)
 {
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
   NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
@@ -749,6 +752,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     }
   }
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
   NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
@@ -759,6 +763,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    nsIStyleContext* aParentContext,
                                                    PRBool aForceUnique)
 {
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
   NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
@@ -802,7 +807,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       }
     }
   }
-
+  
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
   NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
