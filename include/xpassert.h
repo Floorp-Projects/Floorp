@@ -40,6 +40,7 @@
 #ifndef _XP_Assert_
 #define _XP_Assert_
 
+#include "prtypes.h"
 #include "xp_trace.h"
 /*include <stdlib.h>*/
 
@@ -98,16 +99,16 @@
  * into the datasegment we probably couldn't build.
 */
 #ifdef WIN32
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 extern void XP_AssertAtLine( char *pFileName, int iLine );
-XP_END_PROTOS
+PR_END_EXTERN_C
 #define XP_ASSERT(X)   ( ((X)!=0)? (void)0: XP_AssertAtLine(__FILE__,__LINE__))
 
 #else  /* win16 */
 #define XP_ASSERT(X)                ( ((X)!=0)? (void)0: XP_Assert((X) != 0)  )
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 void XP_Assert(int);
-XP_END_PROTOS
+PR_END_EXTERN_C
 #endif
 
 #else
