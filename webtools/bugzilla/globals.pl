@@ -1007,7 +1007,8 @@ sub GetAttachmentLink {
 
 sub GetBugLink {
     my ($bug_num, $link_text, $comment_num) = @_;
-    detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
+    $bug_num || return "&lt;missing bug number&gt;";
+    detaint_natural($bug_num) || return "&lt;invalid bug number&gt;";
 
     # If we've run GetBugLink() for this bug number before, %::buglink
     # will contain an anonymous array ref of relevent values, if not
