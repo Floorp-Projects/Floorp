@@ -887,6 +887,7 @@ nsDocument::Reset(nsIURI *aURL)
   (void)aChannel->GetURI(&mDocumentURL);
 //  (void)aChannel->GetLoadGroup(&mDocumentLoadGroup);
   mDocumentLoadGroup = aLoadGroup;
+  NS_ADDREF(mDocumentLoadGroup);
   NS_ASSERTION(mDocumentLoadGroup, "Should have a load group now on construction.");
 #else
   mDocumentURL = aURL;
