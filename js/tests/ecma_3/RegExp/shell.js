@@ -24,7 +24,7 @@
 //-------------------------------------------------------------------------------------------------
 var statprefix = 'regexp = ';
 var statmiddle = ',  string = ';
-var statsuffix = ',  match=$';
+var statsuffix = ',  match $';
 var ERR_LENGTH = '\nERROR !!! Match arrays have different lengths:';
 var ERR_NO_MATCH = '\nregexp FAILED to match anything !!!\n';
 var ERR_UNEXP_MATCH = '\nregexp MATCHED when we expected it to fail !!!\n';
@@ -36,12 +36,10 @@ var cnBracketR =  ']';
 var cnNewLine = '\n';
 
 
-
-// Compares ouput from multiple applications of RegExp(pattern).exec(string)
 function testRegExp(patterns, strings, actualmatches, expectedmatches)
 {
-  var expectedmatch = [ ];
-  var actualmatch = [ ];
+  var expectedmatch = [];
+  var actualmatch = [];
   var lExpect = -1;
   var lActual = -1;
 
@@ -63,7 +61,8 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
           reportFailure( 
                         getStatus(i) + ERR_LENGTH +
                         cnExpect + format(expectedmatch) +
-                        cnActual + format(actualmatch) + cnNewLine
+                        cnActual + format(actualmatch) + 
+                        cnNewLine
                        );
           continue;
         }
@@ -73,11 +72,13 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
         {
           reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
         }
+
       }
       else //expectedmatch is null - that is, we did not expect a match -
       {
         reportFailure(getStatus(i) + ERR_UNEXP_MATCH);
       }
+
     }
     else // actualmatch is null
     {
@@ -97,7 +98,7 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
 
 function getStatus(i,j)
 {
-  if (j)
+  if (j != undefined)
   {
     return (statprefix + patterns[i] + statmiddle + quote(strings[i]) + statsuffix + j);
   }
