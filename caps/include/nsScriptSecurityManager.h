@@ -122,7 +122,7 @@ private:
                 nsCString &result);
 
     NS_IMETHOD
-    CheckXPCPermissions(JSContext *cx);
+    CheckXPCPermissions(JSContext *cx, nsISupports* aObj);
 
     NS_IMETHOD
     GetFramePrincipal(JSContext *cx, JSStackFrame *fp, nsIPrincipal **result);

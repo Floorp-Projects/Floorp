@@ -56,6 +56,7 @@
 #include "nsDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIZipReader.h"
+#include "nsIPluginInstance.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -1170,21 +1171,21 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext,
 {
 	if (aIID.Equals(NS_GET_IID(nsIXPCException)))
 		return NS_OK;		
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, aObj);
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext, 
                                            const nsCID &aCID)
 {
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, nsnull);
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanGetService(JSContext *aJSContext, 
                                        const nsCID &aCID)
 {
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, nsnull);
 }
 
 NS_IMETHODIMP
@@ -1195,7 +1196,7 @@ nsScriptSecurityManager::CanCallMethod(JSContext *aJSContext,
                                        PRUint16 aMethodIndex, 
                                        const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, aObj);
 }
 
 NS_IMETHODIMP
@@ -1206,7 +1207,7 @@ nsScriptSecurityManager::CanGetProperty(JSContext *aJSContext,
                                         PRUint16 aMethodIndex, 
                                         const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, aObj);
 }
 
 NS_IMETHODIMP
@@ -1217,7 +1218,7 @@ nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext,
                                         PRUint16 aMethodIndex, 
                                         const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext);
+    return CheckXPCPermissions(aJSContext, aObj);
 }
 
 ///////////////////
@@ -1417,12 +1418,32 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
+nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
+                                             nsISupports* aObj)
 {
+    NS_ASSERTION(mPrefs,"nsScriptSecurityManager::mPrefs not initialized");
     PRBool ok = PR_FALSE;
     if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &ok)))
         ok = PR_FALSE;
     if (!ok) {
+        //-- If user allows scripting of plugins by untrusted scripts, 
+        //   and the target object is a plugin, allow the access anyway.
+        if(aObj)
+        {
+            nsresult rv;
+            nsCOMPtr<nsIPluginInstance> plugin = do_QueryInterface(aObj, &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                PRBool allow = PR_FALSE;
+                mIsAccessingPrefs = PR_TRUE;
+                //XXX May want to store the value of the pref in a local,
+                //    this will help performance when dealing with plugins.
+                rv = mPrefs->GetBoolPref("security.xpconnect.plugin.unrestricted", &allow);
+                mIsAccessingPrefs = PR_FALSE;
+                if (NS_SUCCEEDED(rv) && allow) 
+                    return NS_OK;
+            }
+        }
 		static const char msg[] = "Access denied to XPConnect service.";
 		JS_SetPendingException(aJSContext, 
 			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
