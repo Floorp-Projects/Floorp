@@ -18,14 +18,6 @@ package com.netscape.javascript.qa.liveconnect;
 public class DataTypeClass {
 
     /**
-     * Constructor does nothing
-     *
-     */
-
-    public DataTypeClass() {
-    }
-
-    /**
      *  Override toNumber
      *
      */
@@ -73,25 +65,25 @@ public class DataTypeClass {
         return PUB_STATIC_BOOLEAN;
     }
     public static Boolean staticGetBooleanObject() {
-        return new Boolean(PUB_STATIC_BOOLEAN);
+        return PUB_STATIC_BOOLEAN_OBJECT;
     }
 
     public static byte staticGetByte() {
         return PUB_STATIC_BYTE;
     }
     public static Byte staticGetByteObject() {
-        return new Byte(PUB_STATIC_BYTE);
+        return PUB_STATIC_BYTE_OBJECT;
     }
 
     public static Integer staticGetIntegerObject() {
-        return new Integer(PUB_STATIC_INT);
+        return PUB_STATIC_INTEGER_OBJECT;
     }
     public static int staticGetInteger() {
         return new Integer(PUB_STATIC_INT).intValue();
     }
 
     public static Double staticGetDoubleObject() {
-        return new Double(PUB_STATIC_DOUBLE);
+        return PUB_STATIC_DOUBLE_OBJECT;
     }
 
     public static double staticGetDouble() {
@@ -99,7 +91,7 @@ public class DataTypeClass {
     }
 
     public static Float staticGetFloatObject() {
-        return new Float(PUB_STATIC_FLOAT);
+        return PUB_STATIC_FLOAT_OBJECT;
     }
 
     public static float staticGetFloat() {
@@ -107,7 +99,7 @@ public class DataTypeClass {
     }
 
     public static Long staticGetLongObject() {
-        return new Long(PUB_STATIC_LONG);
+        return PUB_STATIC_LONG_OBJECT;
     }
 
     public static long staticGetLong() {
@@ -115,7 +107,7 @@ public class DataTypeClass {
     }
 
     public static Short staticGetShortObject() {
-        return new Short(PUB_STATIC_SHORT);
+        return PUB_STATIC_SHORT_OBJECT;
     }
 
     public static short staticGetShort() {
@@ -123,7 +115,7 @@ public class DataTypeClass {
     }
 
     public static String staticGetStringObject() {
-        return new String(PUB_STATIC_STRING);
+        return PUB_STATIC_STRING;
     }
 
     public static char staticGetChar() {
@@ -147,18 +139,18 @@ public class DataTypeClass {
         return PUB_BYTE;
     }
     public Byte getByteObject() {
-        return new Byte(PUB_BYTE);
+        return PUB_BYTE_OBJECT;
     }
 
     public Integer getIntegerObject() {
-        return new Integer(PUB_INT);
+        return PUB_INTEGER_OBJECT;
     }
     public int getInteger() {
         return new Integer(PUB_INT).intValue();
     }
 
     public Double getDoubleObject() {
-        return new Double(PUB_DOUBLE);
+        return PUB_DOUBLE_OBJECT;
     }
 
     public double getDouble() {
@@ -166,7 +158,7 @@ public class DataTypeClass {
     }
 
     public Float getFloatObject() {
-        return new Float(PUB_FLOAT);
+        return PUB_FLOAT_OBJECT;
     }
 
     public float getFloat() {
@@ -174,7 +166,7 @@ public class DataTypeClass {
     }
 
     public Long getLongObject() {
-        return new Long(PUB_LONG);
+        return PUB_LONG_OBJECT;
     }
 
     public long getLong() {
@@ -182,7 +174,7 @@ public class DataTypeClass {
     }
 
     public String getStringObject() {
-        return new String(PUB_STRING);
+        return PUB_STRING;
     }
 
     public Object getObject() {
@@ -190,7 +182,7 @@ public class DataTypeClass {
     }
 
     public Short getShortObject() {
-        return new Short(PUB_SHORT);
+        return PUB_SHORT_OBJECT;
     }
 
     public short getShort() {
@@ -202,7 +194,7 @@ public class DataTypeClass {
     }
 
     public Character getCharacter() {
-        return new Character(PUB_CHAR);
+        return PUB_CHAR_OBJECT;
     }
 
 //  SETTERS
