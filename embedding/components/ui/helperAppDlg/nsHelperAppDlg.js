@@ -135,10 +135,11 @@ nsHelperAppDialog.prototype = {
         picker.appendFilters( nsIFilePicker.filterAll );
 
         // Pull in the user's preferences and get the default download directory.
-        var prefs = Components.classes[ "@mozilla.org/preferences;1" ]
-                        .getService( Components.interfaces.nsIPref );
+        var prefs = Components.classes[ "@mozilla.org/preferences-service;1" ]
+                              .getService( Components.interfaces.nsIPrefBranch );
         try {
-            var startDir = prefs.getFileXPref( "browser.download.dir" );
+            var startDir = prefs.getComplexValue("browser.download.dir",
+                                                 Components.interfaces.nsILocalFile);
             if ( startDir.exists() ) {
                 picker.displayDirectory = startDir;
             }
@@ -157,7 +158,8 @@ nsHelperAppDialog.prototype = {
 
         if ( result ) {
             var newDir = result.parent;
-            prefs.setFileXPref( "browser.download.dir", newDir );
+            prefs.setComplexValue("browser.download.dir",
+                                  Components.interfaces.nsILocalFile, newDir);
         }
         return result;
     },

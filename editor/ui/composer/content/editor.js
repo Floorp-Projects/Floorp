@@ -342,13 +342,13 @@ function GetDefaultBrowserColors()
   colors.BackgroundColor = "";
 
   var useSysColors = false;
-  try { useSysColors = gPrefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
+  try { useSysColors = gPrefs.getBoolPref("browser.display.use_system_colors"); } catch (e) {}
 
   if (!useSysColors)
   {
-    try { colors.TextColor = gPrefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+    try { colors.TextColor = gPrefs.getCharPref("browser.display.foreground_color"); } catch (e) {}
 
-    try { colors.BackgroundColor = gPrefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+    try { colors.BackgroundColor = gPrefs.getCharPref("browser.display.background_color"); } catch (e) {}
   }
   // Use OS colors for text and background if explicitly asked or pref is not set
   if (!colors.TextColor)
@@ -357,8 +357,8 @@ function GetDefaultBrowserColors()
   if (!colors.BackgroundColor)
     colors.BackgroundColor = "window";
 
-  try { colors.LinkColor = gPrefs.CopyCharPref("browser.anchor_color"); } catch (e) {}
-  try { colors.VisitedLinkColor = gPrefs.CopyCharPref("browser.visited_color"); } catch (e) {}
+  try { colors.LinkColor = gPrefs.getCharPref("browser.anchor_color"); } catch (e) {}
+  try { colors.VisitedLinkColor = gPrefs.getCharPref("browser.visited_color"); } catch (e) {}
 
   return colors;
 }
@@ -1189,7 +1189,7 @@ function SetEditMode(mode)
       var flags = gOutputEncodeEntities;
 
       try { 
-        var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
+        var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");
         if (prettyPrint)
           flags |= gOutputFormatted;
 
@@ -1471,7 +1471,7 @@ function BuildRecentMenu(savePrefs)
   var curUrl = window.editorShell.editorDocument.location;
   var newDoc = (curUrl == "about:blank");
   var historyCount = 10;
-  try { historyCount = gPrefs.GetIntPref("editor.history.url_maximum"); } catch(e) {}
+  try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
   var urlArray   = new Array(historyCount);
   var menuIndex = 1;
@@ -1528,8 +1528,11 @@ function BuildRecentMenu(savePrefs)
     }
   }
   // Force saving to file so next file opened finds these values
-  if (savePrefs)
-    gPrefs.savePrefFile(null);
+  if (savePrefs) {
+    var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefService);
+    prefsService.savePrefFile(null);
+  }
 
   // Disable menu item if no entries
   DisableItem("menu_RecentFiles", disableMenu);
@@ -1577,7 +1580,10 @@ function setUnicharPref(aPrefName, aPrefValue)
   if (!gPrefs) return;
   try
   {
-    gPrefs.SetUnicharPref(aPrefName, aPrefValue);
+    var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                        .createInstance(Components.interfaces.nsISupportsWString);
+    str.data = aPrefValue;
+    gPrefs.setComplexValue(aPrefName, Components.interfaces.nsISupportsWString, str);
   }
   catch(e)
   {
@@ -1589,7 +1595,7 @@ function  getUnicharPref(aPrefName, aDefVal)
   if (!gPrefs) return "";
   try
   {
-    return gPrefs.CopyUnicharPref(aPrefName);
+    return gPrefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString);
   }
   catch(e)
   {
@@ -1831,7 +1837,8 @@ function EditorSetDefaultPrefsAndDoctype()
     var prefCharsetString = 0;
     try
     {
-      prefCharsetString = gPrefs.getLocalizedUnicharPref("intl.charset.default");
+      prefCharsetString = gPrefs.getComplexValue("intl.charset.default",
+                                                 Components.interfaces.nsIPrefLocalizedString);
     }
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
@@ -1866,7 +1873,8 @@ function EditorSetDefaultPrefsAndDoctype()
     var prefAuthorString = 0;
     try
     {
-      prefAuthorString = gPrefs.CopyUnicharPref("editor.author");
+      prefAuthorString = gPrefs.getComplexValue("editor.author",
+                                                Components.interfaces.nsISupportsWString);
     }
     catch (ex) {}
     if ( prefAuthorString && prefAuthorString != 0)
@@ -1888,7 +1896,7 @@ function EditorSetDefaultPrefsAndDoctype()
   // Get editor color prefs
   var use_custom_colors = false;
   try {
-    use_custom_colors = gPrefs.GetBoolPref("editor.use_custom_colors");
+    use_custom_colors = gPrefs.getBoolPref("editor.use_custom_colors");
   }
   catch (ex) {}
 
@@ -1905,11 +1913,11 @@ function EditorSetDefaultPrefsAndDoctype()
       var followed_link_color;
       var background_color;
 
-      try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
-      try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
-      try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
-      try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
-      try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
+      try { text_color = gPrefs.getCharPref("editor.text_color"); } catch (e) {}
+      try { link_color = gPrefs.getCharPref("editor.link_color"); } catch (e) {}
+      try { active_link_color = gPrefs.getCharPref("editor.active_link_color"); } catch (e) {}
+      try { followed_link_color = gPrefs.getCharPref("editor.followed_link_color"); } catch (e) {}
+      try { background_color = gPrefs.getCharPref("editor.background_color"); } catch(e) {}
 
       // add the color attributes to the body tag.
       // and use them for the default text and background colors if not empty
@@ -1933,7 +1941,7 @@ function EditorSetDefaultPrefsAndDoctype()
     }
     // Default image is independent of Custom colors???
     var background_image;
-    try { background_image = gPrefs.CopyCharPref("editor.default_background_image"); } catch(e) {}
+    try { background_image = gPrefs.getCharPref("editor.default_background_image"); } catch(e) {}
 
     if (background_image)
       bodyelement.setAttribute("background", background_image);
@@ -2154,12 +2162,9 @@ function GetPrefsService()
 {
   // Store the prefs object
   try {
-    var prefsService = Components.classes["@mozilla.org/preferences;1"];
-    if (prefsService)
-      prefsService = prefsService.getService();
-    if (prefsService)
-      gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
-
+    var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefService);
+    gPrefs = prefsService.getBranch(null);
     if (!gPrefs)
       dump("failed to get prefs service!\n");
   }

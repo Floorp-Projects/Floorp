@@ -204,8 +204,7 @@ function nsButtonPrefListener()
 {
   try {
     var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    if (pbi)
-      pbi.addObserver(this.domain, this, false);
+    pbi.addObserver(this.domain, this, false);
   } catch(ex) {
     dump("Failed to observe prefs: " + ex + "\n");
   }
@@ -403,8 +402,7 @@ function Shutdown()
 
   // unregister us as a pref listener
   var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  if (pbi)
-    pbi.removeObserver(window.buttonPrefListener.domain,
+  pbi.removeObserver(window.buttonPrefListener.domain,
                        window.buttonPrefListener);
 
   window.browserContentListener.close();
@@ -575,7 +573,8 @@ function readRDFString(aDS,aRes,aProp) {
 function ensureDefaultEnginePrefs(aRDF,aDS) 
    {
 
-    mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+    mPrefs = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
     var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
 	kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
     kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");

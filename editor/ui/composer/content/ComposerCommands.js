@@ -886,7 +886,7 @@ var nsHLineCommand =
 
         if (gPrefs) {
           try {
-            var align = gPrefs.GetIntPref("editor.hrule.align");
+            var align = gPrefs.getIntPref("editor.hrule.align");
             if (align == 0 ) {
               hLine.setAttribute("align", "left");
             } else if (align == 2) {
@@ -895,17 +895,17 @@ var nsHLineCommand =
 
             //Note: Default is center (don't write attribute)
   	  
-            var width = gPrefs.GetIntPref("editor.hrule.width");
-            var percent = gPrefs.GetBoolPref("editor.hrule.width_percent");
+            var width = gPrefs.getIntPref("editor.hrule.width");
+            var percent = gPrefs.getBoolPref("editor.hrule.width_percent");
             if (percent)
               width = width +"%";
 
             hLine.setAttribute("width", width);
 
-            var height = gPrefs.GetIntPref("editor.hrule.height");
+            var height = gPrefs.getIntPref("editor.hrule.height");
             hLine.setAttribute("size", String(height));
 
-            var shading = gPrefs.GetBoolPref("editor.hrule.shading");
+            var shading = gPrefs.getBoolPref("editor.hrule.shading");
             if (shading) {
               hLine.removeAttribute("noshade");
             } else {

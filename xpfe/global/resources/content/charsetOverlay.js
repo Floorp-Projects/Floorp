@@ -74,14 +74,14 @@ function SelectDetector(event, doReload)
         prefvalue = "";
     }
 
-    var pref = Components.classes['@mozilla.org/preferences;1'];
+    var pref = Components.classes['@mozilla.org/preferences-service;1'];
     if (pref) {
         pref = pref.getService();
-        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
     }
  
     if (pref) {
-        pref.SetCharPref("intl.charset.detector", prefvalue);
+        pref.setCharPref("intl.charset.detector", prefvalue);
         if (doReload) window._content.location.reload();
     }
 }
@@ -96,14 +96,14 @@ function ComposerSelectDetector(event)
         prefvalue = "";
     }
 
-    var pref = Components.classes['@mozilla.org/preferences;1'];
+    var pref = Components.classes['@mozilla.org/preferences-service;1'];
     if (pref) {
         pref = pref.getService();
-        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
     }
 
     if (pref) {
-        pref.SetCharPref("intl.charset.detector", prefvalue);
+        pref.setCharPref("intl.charset.detector", prefvalue);
           editorShell.LoadUrl(editorShell.editorDocument.location);    
     }
 }
@@ -145,16 +145,17 @@ function UpdateCurrentMailCharset()
 
 function UpdateCharsetDetector()
 {
-    var pref = Components.classes['@mozilla.org/preferences;1'];
+    var pref = Components.classes['@mozilla.org/preferences-service;1'];
     if (pref) {
         pref = pref.getService();
-        pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
     }
  
     if (pref) {
-        prefvalue = pref.getLocalizedUnicharPref("intl.charset.detector");
+        prefvalue = pref.getComplexValue("intl.charset.detector",
+                                         Components.interfaces.nsIPrefLocalizedString);
         if (prefvalue == "") prefvalue = "off";
-dump("intl.charset.detector = "+ prefvalue + "\n");
+        dump("intl.charset.detector = "+ prefvalue + "\n");
     }
 
     var prefvalue = 'chardet.' + prefvalue;

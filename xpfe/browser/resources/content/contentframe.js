@@ -15,18 +15,13 @@ function init_sidebar(name, uri, width) {
 
   // Open/close sidebar based on saved pref.
   // This may be replaced by another system by hyatt.
-  prefs = Components.classes['@mozilla.org/preferences;1'];
-  if (prefs) {
-    prefs = prefs.getService();
-  }
-  if (prefs) {
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
+  prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch);
   if (prefs) {
     // The sidebar is closed by default, so open it only if the
     //    preference is set to true.
     try {
-	    if (prefs.GetBoolPref(sidebar_pref + '.open')) {
+	    if (prefs.getBoolPref(sidebar_pref + '.open')) {
 	      toggle_open_close();
 	    }
     }
@@ -66,7 +61,7 @@ function toggle_open_close() {
   try {
 	  // Save new open/close state in prefs
 	  if (prefs) {
-	    prefs.SetBoolPref(sidebar_pref + '.open', is_sidebar_open);
+	    prefs.setBoolPref(sidebar_pref + '.open', is_sidebar_open);
 	  }
   }
   catch (ex) {

@@ -290,7 +290,7 @@ function readRDFString(aDS,aRes,aProp) {
 function ensureDefaultEnginePrefs(aRDF,aDS) 
    {
 
-    mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+    mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
     var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
     var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
@@ -310,7 +310,7 @@ function ensureSearchPref() {
    
 
    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-   mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+   mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
    var ds = rdf.GetDataSource("rdf:internetsearch");
    kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
    try {

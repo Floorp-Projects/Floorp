@@ -304,7 +304,7 @@ function onOK()
     // Fixup table only if pref is set
     var prefs = GetPrefs();
     try {
-      if (prefs && prefs.GetBoolPref("editor.table.maintain_structure") )
+      if (prefs && prefs.getBoolPref("editor.table.maintain_structure") )
         editorShell.NormalizeTable(table);
     } catch(ex) {
       dump(ex);

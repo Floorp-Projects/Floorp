@@ -71,10 +71,10 @@
 
       // Determine if "imageBlocker.enabled" pref is set
       isPrefSet: function () {
-        var pref = gContextMenu.getService('@mozilla.org/preferences;1', 'nsIPref');
+        var pref = gContextMenu.getService('@mozilla.org/preferences-service;1', 'nsIPrefBranch');
         var result = false;
         try {
-          result = pref.GetBoolPref( "imageblocker.enabled" );
+          result = pref.getBoolPref( "imageblocker.enabled" );
         } catch(e) {
         }
         return result;

@@ -604,10 +604,10 @@ BookmarksUIElement.prototype = {
       // extra work to do - set the pref |browser.bookmarks.import_system_favorites|
       // to ensure that we don't re-import next time. 
       if (aSelection[count].getAttribute("type") == (NC_NS + "IEFavoriteFolder")) {
-        const kPrefSvcContractID = "@mozilla.org/preferences;1";
-        const kPrefSvcIID = Components.interfaces.nsIPref;
+        const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
+        const kPrefSvcIID = Components.interfaces.nsIPrefBranch;
         const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-        kPrefSvc.SetBoolPref("browser.bookmarks.import_system_favorites", false);
+        kPrefSvc.setBoolPref("browser.bookmarks.import_system_favorites", false);
       }
         
       const krParent = this.RDF.GetResource(NODE_ID(currParent));

@@ -127,7 +127,7 @@ function getComponentList()
                                  "@mozilla.org/helperapplauncherdialog;1",
                                  "@mozilla.org/file/local;1",
                                  "@mozilla.org/xpcom/observer;1",
-                                 "@mozilla.org/preferences;1",
+                                 "@mozilla.org/preferences-service;1",
                                  "@mozilla.org/gfx/fontlist;1");
 
   var interfacelist = new Array("nsIURI",
@@ -136,7 +136,7 @@ function getComponentList()
                                 "nsIHelperAppLauncherDialog",
                                 "nsILocalFile",
                                 "nsIObserver",
-                                "nsIPref",
+                                "nsIPrefBranch",
                                 "nsIFontList");
 
   for (var m=0; m<serviceinterfacelist.length; m++)

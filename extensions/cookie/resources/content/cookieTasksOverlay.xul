@@ -55,7 +55,7 @@
       alreadyCheckedForImage = true;
       // remove image functions (unless overruled by the "imageblocker.enabled" pref)
       var pref;
-      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
       try {

@@ -101,7 +101,7 @@ function InitDialog()
     // Fill in with value from editor prefs
     var prefs = GetPrefs();
     if (prefs) 
-      author = prefs.CopyCharPref("editor.author");
+      author = prefs.getCharPref("editor.author");
   }
   gDialog.AuthorInput.value = author;
   gDialog.DescriptionInput.value = descriptionElement.getAttribute("content");

@@ -1,20 +1,20 @@
 
 /**
- * nsPreferences - a wrapper around nsIPref. Provides built in
+ * nsPreferences - a wrapper around nsIPrefService. Provides built in
  *                 exception handling to make preferences access simpler.
  **/
 var nsPreferences = {
   get mPrefService()
     {
-      return Components.classes["@mozilla.org/preferences;1"]
-                       .getService(Components.interfaces.nsIPref);
+      return Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
     },
 
   setBoolPref: function (aPrefName, aPrefValue)
     {
       try 
         {
-          this.mPrefService.SetBoolPref(aPrefName, aPrefValue);
+          this.mPrefService.setBoolPref(aPrefName, aPrefValue);
         }
       catch(e)
         {
@@ -25,7 +25,7 @@ var nsPreferences = {
     {
       try
         {
-          return this.mPrefService.GetBoolPref(aPrefName);
+          return this.mPrefService.getBoolPref(aPrefName);
         }
       catch(e)
         {
@@ -38,7 +38,11 @@ var nsPreferences = {
     {
       try
         {
-          this.mPrefService.SetUnicharPref(aPrefName, aPrefValue);
+          var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                              .createInstance(Components.interfaces.nsISupportsWString);
+          str.data = aPrefValue;
+          this.mPrefService.setComplexValue(aPrefName,
+                                            Components.interfaces.nsISupportsWString, str);
         }
       catch(e)
         {
@@ -49,7 +53,8 @@ var nsPreferences = {
     {
       try
         {
-          return this.mPrefService.CopyUnicharPref(aPrefName);
+          return this.mPrefService.getComplexValue(aPrefName,
+                                                   Components.interfaces.nsISupportsWString);
         }
       catch(e)
         {
@@ -62,7 +67,7 @@ var nsPreferences = {
     {
       try
         {
-          this.mPrefService.SetIntPref(aPrefName, aPrefValue);
+          this.mPrefService.setIntPref(aPrefName, aPrefValue);
         }
       catch(e)
         {
@@ -73,7 +78,7 @@ var nsPreferences = {
     {
       try
         {
-          return this.mPrefService.GetIntPref(aPrefName);
+          return this.mPrefService.getIntPref(aPrefName);
         }
       catch(e)
         {
@@ -86,7 +91,8 @@ var nsPreferences = {
     {
       try
         {
-          return this.mPrefService.getLocalizedUnicharPref(aPrefName);
+          return this.mPrefService.getComplexValue(aPrefName,
+                                                   Components.interfaces.nsIPrefLocalizedString);
         }
       catch(e)
         {
