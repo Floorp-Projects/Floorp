@@ -1848,11 +1848,14 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
         docFileSpec->GetScheme(getter_Copies(schemeChar));
         nsXPIDLCString fileNameChar;
         url->GetFileName(getter_Copies(fileNameChar));
-        windowCaption += NS_LITERAL_STRING(" [") +
-                         NS_ConvertASCIItoUCS2(schemeChar) +
-                         NS_LITERAL_STRING(":/.../") +
-                         NS_ConvertASCIItoUCS2(fileNameChar) +
-                         NS_LITERAL_STRING("]");
+        if (fileNameChar.Length() > 0)
+        {
+          windowCaption += NS_LITERAL_STRING(" [") +
+                           NS_ConvertASCIItoUCS2(schemeChar) +
+                           NS_LITERAL_STRING(":/.../") +
+                           NS_ConvertASCIItoUCS2(fileNameChar) +
+                           NS_LITERAL_STRING("]");
+        }
       }
     }
     nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));
