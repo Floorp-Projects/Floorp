@@ -946,296 +946,440 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 	// add the row to the singleton table.
 	if (NS_SUCCEEDED(err) && cardRow)
 	{
-		nsXPIDLString pUnicodeStr;
+		PRUnichar* pUnicodeStr = nsnull;
 		PRInt32 unicharLength = 0;
 		char* pUTF8Str = nsnull;
-		card->GetFirstName(getter_Copies(pUnicodeStr));
+		card->GetFirstName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddFirstName(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddFirstName(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetLastName(getter_Copies(pUnicodeStr));
+		card->GetLastName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddLastName(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddLastName(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetDisplayName(getter_Copies(pUnicodeStr));
+		card->GetDisplayName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddDisplayName(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddDisplayName(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetNickName(getter_Copies(pUnicodeStr));
+		card->GetNickName(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddNickName(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddNickName(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetPrimaryEmail(getter_Copies(pUnicodeStr));
+		card->GetPrimaryEmail(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddPrimaryEmail(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddPrimaryEmail(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetSecondEmail(getter_Copies(pUnicodeStr));
+		card->GetSecondEmail(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			Add2ndEmail(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				Add2ndEmail(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkPhone(getter_Copies(pUnicodeStr));
+		card->GetWorkPhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkPhone(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkPhone(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomePhone(getter_Copies(pUnicodeStr));
+		card->GetHomePhone(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomePhone(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomePhone(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetFaxNumber(getter_Copies(pUnicodeStr));
+		card->GetFaxNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddFaxNumber(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddFaxNumber(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetPagerNumber(getter_Copies(pUnicodeStr));
+		card->GetPagerNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddPagerNumber(cardRow,pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddPagerNumber(cardRow,pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCellularNumber(getter_Copies(pUnicodeStr));
+		card->GetCellularNumber(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCellularNumber(cardRow,pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCellularNumber(cardRow,pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeAddress(getter_Copies(pUnicodeStr));
+		card->GetHomeAddress(&pUnicodeStr);
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeAddress(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeAddress(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeAddress2(getter_Copies(pUnicodeStr)); 
+		card->GetHomeAddress2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeAddress2(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeAddress2(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeCity(getter_Copies(pUnicodeStr)); 
+		card->GetHomeCity(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeCity(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeCity(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeState(getter_Copies(pUnicodeStr)); 
+		card->GetHomeState(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeState(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeState(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeZipCode(getter_Copies(pUnicodeStr)); 
+		card->GetHomeZipCode(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeZipCode(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeZipCode(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetHomeCountry(getter_Copies(pUnicodeStr)); 
+		card->GetHomeCountry(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddHomeCountry(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddHomeCountry(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkAddress(getter_Copies(pUnicodeStr));  
+		card->GetWorkAddress(&pUnicodeStr);  
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkAddress(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkAddress(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkAddress2(getter_Copies(pUnicodeStr)); 
+		card->GetWorkAddress2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkAddress2(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkAddress2(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkCity(getter_Copies(pUnicodeStr)); 
+		card->GetWorkCity(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkCity(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkCity(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkState(getter_Copies(pUnicodeStr)); 
+		card->GetWorkState(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkState(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkState(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkZipCode(getter_Copies(pUnicodeStr)); 
+		card->GetWorkZipCode(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkZipCode(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkZipCode(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWorkCountry(getter_Copies(pUnicodeStr)); 
+		card->GetWorkCountry(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWorkCountry(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWorkCountry(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetJobTitle(getter_Copies(pUnicodeStr)); 
+		card->GetJobTitle(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddJobTitle(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddJobTitle(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetDepartment(getter_Copies(pUnicodeStr)); 
+		card->GetDepartment(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddDepartment(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddDepartment(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCompany(getter_Copies(pUnicodeStr)); 
+		card->GetCompany(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCompany(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCompany(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWebPage1(getter_Copies(pUnicodeStr)); 
+		card->GetWebPage1(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWebPage1(cardRow,pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWebPage1(cardRow,pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetWebPage2(getter_Copies(pUnicodeStr)); 
+		card->GetWebPage2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddWebPage2(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddWebPage2(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetBirthYear(getter_Copies(pUnicodeStr)); 
+		card->GetBirthYear(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddBirthYear(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddBirthYear(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetBirthMonth(getter_Copies(pUnicodeStr)); 
+		card->GetBirthMonth(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddBirthMonth(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddBirthMonth(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetBirthDay(getter_Copies(pUnicodeStr)); 
+		card->GetBirthDay(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddBirthDay(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddBirthDay(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCustom1(getter_Copies(pUnicodeStr)); 
+		card->GetCustom1(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCustom1(cardRow,pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCustom1(cardRow,pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCustom2(getter_Copies(pUnicodeStr)); 
+		card->GetCustom2(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCustom2(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCustom2(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCustom3(getter_Copies(pUnicodeStr)); 
+		card->GetCustom3(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCustom3(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCustom3(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetCustom4(getter_Copies(pUnicodeStr)); 
+		card->GetCustom4(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddCustom4(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddCustom4(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
-		card->GetNotes(getter_Copies(pUnicodeStr)); 
+		card->GetNotes(&pUnicodeStr); 
 		unicharLength = nsCRT::strlen(pUnicodeStr);
-		INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
-		if (pUTF8Str)
+		if (pUnicodeStr && unicharLength)
 		{
-			AddNotes(cardRow, pUTF8Str);
-			PR_FREEIF(pUTF8Str);
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddNotes(cardRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+			PR_FREEIF(pUnicodeStr);
 		}
 	}
 	return NS_OK;

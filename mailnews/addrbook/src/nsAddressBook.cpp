@@ -334,6 +334,7 @@ protected:
     nsresult ParseTabFile(PRFileDesc* file);
     nsresult ParseLdifFile(PRFileDesc* file);
 	void AddTabRowToDatabase();
+	void AddLdifRowToDatabase();
 	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot);
 
 	nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos);
@@ -847,17 +848,6 @@ nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
     char buf[1024];
 	PRInt32 startPos = 0;
     PRInt32 len = 0;
-	nsIMdbRow* newRow = nsnull;
-
-	if (mDatabase)
-	{
-		mDatabase->GetNewRow(&newRow); 
-
-		if (!newRow)
-			return NS_ERROR_FAILURE;
-	}
-	else
-		return NS_ERROR_FAILURE;
 
     while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
 	{
@@ -865,36 +855,48 @@ nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
 
 		while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
 		{
-			if (mDatabase)
-			{
-				mDatabase->GetNewRow(&newRow); 
-
-				if (!newRow)
-					return NS_ERROR_FAILURE;
-			}
-			else
-				return NS_ERROR_FAILURE;
-
-			char* cursor = (char*)mLine.ToNewCString(); 
-			char* saveCursor = cursor;  /* keep for deleting */ 
-			char* line = 0; 
-			char* typeSlot = 0; 
-			char* valueSlot = 0; 
-			int length = 0;  // the length  of an ldif attribute
-			while ( (line = str_getline(&cursor)) != NULL)
-			{
-				if ( str_parse_line(line, &typeSlot, &valueSlot, &length) == 0 )
-				{
-					AddLdifColToDatabase(newRow, typeSlot, valueSlot);
-				}
-				else
-					continue; // parse error: continue with next loop iteration
-			}
-			delete [] saveCursor;
-			mDatabase->AddCardRowToDB(newRow);	
+			AddLdifRowToDatabase();
 		}
 	}
+	//last row
+	if (mLine.Length() > 0)
+		AddLdifRowToDatabase(); 
 	return NS_OK;
+}
+
+void AddressBookParser::AddLdifRowToDatabase()
+{
+	nsIMdbRow* newRow = nsnull;
+	if (mDatabase)
+	{
+		mDatabase->GetNewRow(&newRow); 
+
+		if (!newRow)
+			return;
+	}
+	else
+		return;
+
+	char* cursor = (char*)mLine.ToNewCString(); 
+	char* saveCursor = cursor;  /* keep for deleting */ 
+	char* line = 0; 
+	char* typeSlot = 0; 
+	char* valueSlot = 0; 
+	int length = 0;  // the length  of an ldif attribute
+	while ( (line = str_getline(&cursor)) != NULL)
+	{
+		if ( str_parse_line(line, &typeSlot, &valueSlot, &length) == 0 )
+		{
+			AddLdifColToDatabase(newRow, typeSlot, valueSlot);
+		}
+		else
+			continue; // parse error: continue with next loop iteration
+	}
+	delete [] saveCursor;
+	mDatabase->AddCardRowToDB(newRow);	
+
+	if (mLine.Length() > 0)
+		mLine.Truncate();
 }
 
 void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot)
@@ -1225,9 +1227,6 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	default:
 	  break; // default
 	}
-
-	if (mLine.Length() > 0)
-		mLine.Truncate();
 }
 
 NS_IMETHODIMP nsAddressBook::ImportAddressBook()
