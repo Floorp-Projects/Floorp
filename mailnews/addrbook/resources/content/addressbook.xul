@@ -112,6 +112,7 @@ Contributor(s):
 <keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
+  <key id="key_newBlankPage"/>
   <key id="key_printCard"  key="&printCardViewCmd.key;" command="cmd_printCard"  modifiers="accel"/>
   <key id="key_close"/>
   <key id="key_quit"/>
@@ -151,13 +152,11 @@ Contributor(s):
                 </menu>
                 <menuitem id="menu_close"/>
                 <menuseparator/>
-        <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
-        <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
-        <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
-                <menuseparator/>
         <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" command="cmd_printPreviewCard"/>
         <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" command="cmd_printPreviewAddressBook"/>
+              <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
+              <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
             </menupopup>
         </menu>
         

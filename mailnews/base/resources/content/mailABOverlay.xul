@@ -12,7 +12,7 @@
     <command id="cmd_newMessage" oncommand="AbNewMessage();"/>
   </commandset>
   <menupopup id="menu_NewPopup">
-    <menuitem id="menu_newMessage" position="6" label="&newMessageCmd.label;" key="key_newMessage" accesskey="&newMessageCmd.accesskey;" command="cmd_newMessage"/>
+    <menuitem id="menu_newMessage" position="7" label="&newMessageCmd.label;" key="key_newMessage" accesskey="&newMessageCmd.accesskey;" command="cmd_newMessage"/>
   </menupopup>
   <keyset id="tasksKeys">
     <key id="key_newMessage"   key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
