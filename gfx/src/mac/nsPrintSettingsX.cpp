@@ -328,7 +328,7 @@ nsresult nsPrintSettingsX::_Clone(nsIPrintSettings **_retval)
 //-------------------------------------------
 NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
 {
-  nsPrintSettingsX *printSettingsX = dynamic_cast<nsPrintSettingsX*>(aPS);
+  nsPrintSettingsX *printSettingsX = NS_STATIC_CAST(nsPrintSettingsX*, aPS);
   if (!printSettingsX)
     return NS_ERROR_UNEXPECTED;
   *this = *printSettingsX;
