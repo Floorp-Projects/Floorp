@@ -293,16 +293,19 @@
           <menu id="menu_Toolbars">
             <menupopup>
               <menuitem id="menu_showComposeToolbar"
+                        type="checkbox"
                         value="&showComposeToolbarCmd.label;"
                         observes="cmd_showComposeToolbar"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"
+                        type="checkbox"
                         value="&showFormatToolbarCmd.label;"
                         observes="cmd_showFormatToolbar"
                         accesskey="&showFormatToolbarCmd.accesskey;"
                         checked="true"/>
-              <menuitem id="menu_showTaskbar"/>
+              <menuitem id="menu_showTaskbar"
+                        type="checkbox"/>
             </menupopup>
           </menu>
           <menuseparator/>

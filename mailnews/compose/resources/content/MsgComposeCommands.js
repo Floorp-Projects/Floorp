@@ -1450,7 +1450,7 @@ function CloseWindow()
 
 function AttachFile()
 {
-	dump("AttachFile()\n");
+//  dump("AttachFile()\n");
 	currentAttachment = "";
 	//Get file using nsIFilePicker and convert to URL
     try {
@@ -1465,8 +1465,20 @@ function AttachFile()
 	catch (ex) {
 		dump("failed to get the local file to attach\n");
 	}
-	
-	AddAttachment(currentAttachment, null);
+  if (!(DuplicateFileCheck(currentAttachment)))
+	  AddAttachment(currentAttachment, null);
+  else 
+  {
+    dump("###ERROR ADDING DUPLICATE FILE \n");
+    var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
+    var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
+
+    if (commonDialogsService)
+      commonDialogsService.Alert(window, errorTitle, errorMsg);
+    else
+      window.alert(errorMsg);
+  }
+
 }
 
 function AddAttachment(attachment, prettyName)
@@ -1508,6 +1520,35 @@ function AttachPage()
 			AddAttachment(result.value, null);
         }
     }
+}
+function DuplicateFileCheck(FileUrl)
+{
+	var body = document.getElementById('bucketBody');
+	var item, row, cell, text, colon;
+
+	for (var index = 0; index < body.childNodes.length; index++)
+	{
+		item = body.childNodes[index];
+		if (item.childNodes && item.childNodes.length)
+		{
+			row = item.childNodes[0];
+			if (row.childNodes &&  row.childNodes.length)
+			{
+				cell = row.childNodes[0];
+				if (cell)
+				{
+					text = cell.getAttribute("attachment");
+					if (text.length)
+					{
+            if (FileUrl == text)
+               return true;
+          }
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 function GenerateAttachmentsString()
@@ -1764,7 +1805,21 @@ var attachmentBucketObserver = {
               prettyName = aData.substr(separator+1);
               aData = aData.substr(0,separator);
           }
-          AddAttachment(aData, prettyName);
+          if (!(DuplicateFileCheck(aData)))
+	          AddAttachment(aData, prettyName);
+          else 
+          {
+            dump("###ERROR ADDING DUPLICATE FILE \n");
+            var errorTitle = Bundle.GetStringFromName("DuplicateFileErrorDlogTitle");
+            var errorMsg = Bundle.GetStringFromName("DuplicateFileErrorDlogMessage");
+
+            if (commonDialogsService)
+              commonDialogsService.Alert(window, errorTitle, errorMsg);
+            else
+              window.alert(errorMsg);
+          }
+
+          
       }
     },
     
