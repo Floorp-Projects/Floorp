@@ -96,10 +96,10 @@ struct PK11RSAGenParamsStr {
     unsigned long pe;
 };
 
-enum PK11CertListType {
+typedef enum {
 	PK11CertListUnique = 0,
 	PK11CertListUser = 1
-};
+} PK11CertListType;
 
 /*
  * Entry into the Array which lists all the legal bits for the default flags
