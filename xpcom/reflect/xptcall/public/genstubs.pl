@@ -40,11 +40,11 @@ print OUTFILE "*  2 is Release\n";
 print OUTFILE "*/\n";
 print OUTFILE "#if !defined(__ia64) || (!defined(__hpux) && !defined(__linux__))\n";
 for($i = 0; $i < $entry_count; $i++) {
-    print OUTFILE "XPTC_EXPORT NS_IMETHOD Stub",$i+3,"();\n";
+    print OUTFILE "NS_IMETHOD Stub",$i+3,"();\n";
 }
 print OUTFILE "#else\n";
 for($i = 0; $i < $entry_count; $i++) {
-    print OUTFILE "XPTC_EXPORT NS_IMETHOD Stub",$i+3,"(PRUint64,\n";
+    print OUTFILE "NS_IMETHOD Stub",$i+3,"(PRUint64,\n";
     print OUTFILE " PRUint64,PRUint64,PRUint64,PRUint64,PRUint64,PRUint64);\n";
 
 }
@@ -53,7 +53,7 @@ print OUTFILE "#endif\n";
 print OUTFILE "\n/* declarations of sentinel stubs */\n";
 
 for($i = 0; $i < $sentinel_count; $i++) {
-    print OUTFILE "XPTC_EXPORT NS_IMETHOD Sentinel",$i,"();\n";
+    print OUTFILE "NS_IMETHOD Sentinel",$i,"();\n";
 }
 close(OUTFILE);
 
