@@ -36,6 +36,7 @@ REQUIRES    = xpcom \
 			  view \
 			  docshell \
 			  webbrowser_core \
+			  pref \
               $(NULL)
 
 DEFINES= -DWIN32_LEAN_AND_MEAN

@@ -51,10 +51,6 @@ math[mode="display"] {
   display: inline;
 }
 
-:-moz-math-table {
-  display: table;
-}
-
 /*******************************************************/
 /* attributes common to all tags                       */
 /*******************************************************/
@@ -141,7 +137,7 @@ merror {
 /* mtable and its related tags                         */
 /*******************************************************/
 
-mtable {
+:-moz-math-table, mtable {
   display: table;
   text-align: -moz-center;
   border-spacing: 0.8em 1.0ex; /* horizontal vertical */
@@ -261,12 +257,34 @@ mi {
   font-size: 566%;
 }
 
+/**************************************************************************/
+/* Style used for stretchy symbols *must* be normal to avoid misaligments */
+/* By leaving the font-family empty, the MathML engine will use the value
+   provided by the mathfont-family property in the mathfont.properties file
+   or the value of the user's pref("font.mathfont-family", "...").
 
-/* style used for stretchy symbols */
+   Authors can make elements on a document to be stretched with different 
+   fonts, e.g.,
+
+   To request the use of TeX fonts, you can do:
+   <mo mathfont="tex">...</mo> with the associated CSS declaration
+   mo[myfonts="tex"]:-moz-math-font-style-stretchy { 
+     font-family: CMSY10, CMEX10;
+   }
+ 
+   To request the use of Mathematica fonts, you can do:
+   <mo myfonts="mathematica">...</mo> with the associated CSS declaration
+   mo[mathfont="mathematica"]:-moz-math-font-style-stretchy {
+     font-family: Math1, Math2, Math4;
+   }
+
+   Note that like other fonts in the document, users can override this by
+   clicking the pref to override document fonts.
+/**************************************************************************/
 
 :-moz-math-font-style-stretchy {
   font-style: normal;
-  font-family: CMSY10, CMEX10, Math4, MT Extra, Symbol /* ,Math1, Math3, Math4, Math5 */ , serif;
+  font-family: serif;
 /*  background-color: #3C6; */
 }
 
