@@ -51,7 +51,7 @@
 
 
 
-class ostream;
+#include <iosfwd.h>
 
 class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
