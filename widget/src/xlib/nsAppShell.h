@@ -52,6 +52,10 @@ class nsAppShell : public nsIAppShell
   static void HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleExposeEvent(XEvent *event, nsWidget *aWidget);
   static void HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleKeyPressEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleFocusInEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleFocusOutEvent(XEvent *event, nsWidget *aWidget);
 
 protected:
   nsIEventQueueService * mEventQueueService;
