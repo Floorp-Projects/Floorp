@@ -53,6 +53,13 @@ LDFLAGS += \
 	-ljpeg \
 	-lraptorgfx \
 	-lraptorhtmlpars \
+	$(DIST)/lib/libraptorhtmlbase_s.a \
+	-lraptorwebwidget \
+	$(DIST)/lib/libraptorlayout_s.a \
+	$(DIST)/lib/libraptorevents_s.a \
+	$(DIST)/lib/libjsdombase_s.a \
+	$(DIST)/lib/libjsdomhtml_s.a \
+	$(DIST)/lib/libjsdomcore_s.a \
 	-lhttpurl \
 	-labouturl \
 	-lmimetype \
@@ -61,10 +68,12 @@ LDFLAGS += \
 	-lnetcache \
 	-lnetcnvts \
 	-lfileurl \
+	-ljsurl \
 	-lgophurl \
 	-lftpurl \
 	-lremoturl \
 	-lnetutil \
+	-lpwcac \
 	-lsecfree \
 	-lzlib \
 	-lxp \
