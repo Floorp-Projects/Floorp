@@ -213,6 +213,7 @@ WeekView.prototype.refreshEvents = function( )
                }
             }
             SortedOtherSpotArray = new Array();
+            //the sort must use the global variable gCalendarWindow, not this.calendarWindow
             SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
             LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
             
@@ -652,7 +653,7 @@ WeekView.prototype.hiliteTodaysDate = function( )
 */
 WeekView.prototype.clearSelectedEvent = function( )
 {
-   gCalendarWindow.EventSelection.emptySelection();
+   this.calendarWindow.EventSelection.emptySelection();
 
    //Event = gCalendarWindow.getSelectedEvent();
    
@@ -755,8 +756,7 @@ var eventStartObserver  = {
       gDayIndex = evt.target.getAttribute( "day" );
 
       var newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
-      //gCalendarWindow.setSelectedDate( newDate );
-   
+      
       gStartDate = new Date( newDate );
       gStartDate.setHours( evt.target.getAttribute( "hour" ) );
       gStartDate.setMinutes( 0 );

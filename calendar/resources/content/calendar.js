@@ -141,12 +141,10 @@ function calendarInit()
    
    gCalendarWindow = new CalendarWindow( gEventSource );
    
+   //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
    gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
 
-   gCalendarWindow.currentView.refresh( gCalendarWindow.currentView );
-
    // set up the unifinder
-   
    prepareCalendarUnifinder();
 
    prepareCalendarToDoUnifinder();
@@ -188,7 +186,7 @@ function calendarFinish()
 
 function launchPreferences()
 {
-   goPreferences( "advancedItem", "chrome://calendar/content/pref/calendarPref.xul", "calendar" );
+   goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendar" );
 }
 
 
@@ -542,9 +540,9 @@ function addEventDialogResponse( calendarEvent, Server )
 *
 */
 
-function addToDoDialogResponse( calendarToDo )
+function addToDoDialogResponse( calendarToDo, Server )
 {
-   gICalLib.addTodo( calendarToDo );
+   gICalLib.addTodo( calendarToDo, Server );
 }
 
 
@@ -608,9 +606,9 @@ function modifyEventDialogResponse( calendarEvent, Server )
 * notified of the change through their respective observers
 */
 
-function modifyToDoDialogResponse( calendarToDo )
+function modifyToDoDialogResponse( calendarToDo, Server )
 {
-   gICalLib.modifyTodo( calendarToDo );
+   gICalLib.modifyTodo( calendarToDo, Server );
 }
 
 

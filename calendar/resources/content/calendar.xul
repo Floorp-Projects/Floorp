@@ -266,7 +266,7 @@
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-<vbox id="calendar-top-box" flex="1" context="context-menu">
+<vbox id="calendar-top-box" flex="1" context="context-menu" >
 
   <!-- Calendar Controls-->
  
@@ -277,7 +277,7 @@
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                ondragover="return( false );" allowevents="true"> 
                <listcols>
-                  <listcol/>
+                  <listcol minwidth="18" maxwidth="18" width="18"/>
                   <listcol flex="1"/>
                </listcols>
             </listbox>
@@ -379,7 +379,7 @@
                       
             </deck>  <!-- End: Day/Month/Week Deck -->
             <splitter id="calendar-view-splitter" collapse="after" persist="state hidden collapsed"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical">
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
                <grippy class="sidebar-splitter-grippy"/>
             </splitter>
          
@@ -390,13 +390,49 @@
                </box>
                <box align="center">
                   <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
-                  <checkbox label="&calendar.unifinder.todayandfuture.label;" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )" persist="checked"/>
+                  <menulist id="event-filter-menulist" persist="selectedIndex">
+                      <menupopup id="event-filter-menupopup" oncommand="unifinderShowFutureEventsOnly( event );" persist="selectedIndex">
+                          <menuitem id="event-filter-all" label="All Events" value="all" persist="selected"/>
+                          <menuitem id="event-filter-today" label="Today's Events" value="today" persist="selected"/>
+                          <menuitem id="event-filter-week" label="Events This Week" value="week" persist="selected"/>
+                          <menuitem id="event-filter-2weeks" label="Events Next 2 Weeks" value="2weeks" persist="selected"/>
+                          <menuitem id="event-filter-month" label="Events In The Next Month" value="month" persist="selected"/>
+                          <menuitem id="event-filter-future" label="All Future Events" value="future" persist="selected"/>
+                      </menupopup>
+                  </menulist>
                </box>
                
-               <listbox tooltip="savetip" id="unifinder-search-results-listbox" seltype="multiple" 
-                  onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1" 
-                  ondragover="return( false );" onkeypress="if (event.keyCode == 13) unifinderEditCommand();" 
-                  onfocus="focusFirstItemIfNoSelection( );"/>
+               <tree tooltip="savetip" id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
+               <treecols id="unifinder-search-results-tree-cols">
+                  <treecol id="unifinder-search-results-tree-col-title"
+                      persist="hidden ordinal width" flex="1" 
+                      label="&calendar.unifinder.tree.title.label;" />
+                   <splitter class="tree-splitter"/>
+                   <treecol id="unifinder-search-results-tree-col-startdate"
+                      persist="hidden ordinal width" 
+                      hidden="true"
+                      flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
+                   <splitter class="tree-splitter"/>
+                   <treecol id="unifinder-search-results-tree-col-duedate"
+                      persist="hidden ordinal width" 
+                      hidden="true"
+                      flex="1" label="&calendar.unifinder.tree.enddate.label;"/>
+                   <splitter class="tree-splitter"/>
+                   <treecol id="unifinder-todo-search-results-col-categories"
+                      persist="hidden ordinal width" 
+                      hidden="true"
+                      flex="1" label="&calendar.unifinder.tree.categories.label;"/>
+                  </treecols>
+       
+                  <treechildren onmousemove="changeToolTipTextForToDo( event )" 
+                    onclick="unifinderClickEvent( event )"
+                    onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
+                    ondragover="return( false );"  
+                    ondblclick="unifinderDoubleClickEvent( event )"
+                    onfocus="focusFirstItemIfNoSelection( );"
+                    context="taskitem-context-menu">
+                 </treechildren>
+               </tree>
             </vbox>
          </vbox>
          

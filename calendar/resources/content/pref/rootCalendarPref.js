@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Preferences observer object; implements nsIObserver
 function calendarPrefObserver( CalendarPreferences )
 {
    this.CalendarPreferences = CalendarPreferences;
@@ -91,7 +90,7 @@ function calendarPreferences( CalendarWindow )
 
    this.arrayOfPrefs = new Object();
    
-   this.calendarPref = prefService.getBranch("calendar."); // preferences mozgest node
+   this.calendarPref = prefService.getBranch("calendar."); // preferences calendar node
    
    // read prefs or set Defaults on the first run
   try {

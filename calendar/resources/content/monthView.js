@@ -122,7 +122,7 @@ function MonthView( calendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         dump( "\nIn Month view, on selection changed");
+         //dump( "\nIn Month view, on selection changed");
          if( EventSelectionArray.length > 0 )
          {
             //if there are selected events.
@@ -131,19 +131,19 @@ function MonthView( calendarWindow )
 
             gCalendarWindow.monthView.clearSelectedBoxes();
             
-            dump( "\nIn Month view, eventSelectionArray.length is "+EventSelectionArray.length );
+            //dump( "\nIn Month view, eventSelectionArray.length is "+EventSelectionArray.length );
             var i = 0;
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
-               dump( "\nin Month view, going to try and get the event boxes with name 'month-view-event-box-"+EventSelectionArray[i].id+"'" );
+               //dump( "\nin Month view, going to try and get the event boxes with name 'month-view-event-box-"+EventSelectionArray[i].id+"'" );
                var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+EventSelectionArray[i].id );
-               dump( "\nIn Month view, found "+EventBoxes.length+" matches for the selected event." );
+               //dump( "\nIn Month view, found "+EventBoxes.length+" matches for the selected event." );
                for ( j = 0; j < EventBoxes.length; j++ ) 
                {
                   EventBoxes[j].setAttribute( "eventselected", "true" );
                }
             }
-            dump( "\nAll Done in Selection for Month View" );
+            //dump( "\nAll Done in Selection for Month View" );
          }
          else
          {
@@ -233,7 +233,6 @@ MonthView.prototype.refreshEvents = function( )
    this.kungFooDeathGripOnEventBoxes = new Array();
    
    // add each calendarEvent
-   
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
       var calendarEventDisplay = monthEventList[ eventIndex ];
@@ -248,7 +247,7 @@ MonthView.prototype.refreshEvents = function( )
       
       dayBoxItem.numEvents +=  1;
       
-      if( dayBoxItem.numEvents < 4 )
+      if( dayBoxItem.numEvents == 1 || dayBoxItem.numEvents < this.getNumberOfEventsToShow() )
       {
          // Make a text item to show the event title
          
@@ -752,7 +751,7 @@ MonthView.prototype.doubleClickDay = function( event )
    {
       // change the selected date and redraw it
 
-      gCalendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
+      this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
 
       this.calendarWindow.EventSelection.emptySelection();
       
@@ -787,7 +786,7 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
 
 MonthView.prototype.clearSelectedEvent = function ( )
 {
-   gCalendarWindow.EventSelection.emptySelection();
+   this.calendarWindow.EventSelection.emptySelection();
 
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
@@ -821,12 +820,14 @@ MonthView.prototype.selectBoxForEvent = function( calendarEvent )
 }
 
 /*Just calls setCalendarSize, it's here so it can be implemented on the other two views without difficulty.*/
-MonthView.prototype.doResize = function(){
-   MonthView.setCalendarSize(MonthView.getViewHeight());
+MonthView.prototype.doResize = function( )
+{
+   this.setCalendarSize(this.getViewHeight());
 }
 
 /*Takes in a height, sets the calendar's container box to that height, the grid expands and contracts to fit it.*/
-MonthView.setCalendarSize = function( height ){
+MonthView.prototype.setCalendarSize = function( height )
+{
     var offset = document.defaultView.getComputedStyle(document.getElementById("month-controls-box"), "").getPropertyValue("height");
     offset = parseInt( offset );
     height = (height-offset)+"px";
@@ -834,8 +835,28 @@ MonthView.setCalendarSize = function( height ){
 } 
 
 /*returns the height of the current view in pixels*/ 
-MonthView.getViewHeight = function( ){
-    toReturn = document.defaultView.getComputedStyle(document.getElementById("calendar-top-box"), "").getPropertyValue("height");
+MonthView.prototype.getViewHeight = function( )
+{
+    toReturn = document.defaultView.getComputedStyle(document.getElementById("month-view-box"), "").getPropertyValue("height");
     toReturn = parseInt( toReturn ); //strip off the px at the end
     return toReturn;
+}
+
+
+MonthView.prototype.getNumberOfEventsToShow = function( )
+{
+   //get the style height of the month view box.
+   var MonthViewBoxHeight = document.defaultView.getComputedStyle(document.getElementById("month-week-4-day-4-box"), "").getPropertyValue("height");
+   MonthViewBoxHeight = parseInt( MonthViewBoxHeight ); //strip off the px at the end
+   
+   //get the height of an event box.
+   var Element = document.getElementsByAttribute( "eventbox", "monthview" )[0];
+   var EventBoxHeight = document.defaultView.getComputedStyle( Element, "" ).getPropertyValue( "height" );
+   EventBoxHeight = parseInt( EventBoxHeight ); //strip off the px at the end
+
+   //calculate the number of events to show.
+   dump( "\n\n"+( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight );
+   dump( "\n"+MonthViewBoxHeight );
+   dump( "\n"+EventBoxHeight );
+   return( parseInt( ( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight ) );
 }

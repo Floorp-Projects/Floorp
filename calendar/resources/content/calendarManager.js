@@ -36,7 +36,7 @@
 
 function calendarManager( CalendarWindow )
 {
-   this.parent = CalendarWindow;
+   this.CalendarWindow = CalendarWindow;
 
    this.calendars = new Array();
 
@@ -95,15 +95,17 @@ calendarManager.prototype.launchAddCalendarDialog = function( )
 calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
 {
    var CurrentNumberOfServers = this.calendars.length;
-   
+   alert( "server added" );
    //add the information to the preferences.
-   this.parent.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".name", CalendarObject.name );
-   this.parent.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".path", CalendarObject.path );
-   this.parent.calendarPreferences.calendarPref.setBoolPref( "server"+CurrentNumberOfServers+".active", true );
-   this.parent.calendarPreferences.calendarPref.setIntPref(  "servers.count", CurrentNumberOfServers );
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".name", CalendarObject.name );
+   this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".path", CalendarObject.path );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CurrentNumberOfServers+".active", true );
+   this.CalendarWindow.calendarPreferences.calendarPref.setIntPref(  "servers.count", CurrentNumberOfServers );
    
    //add this to the global calendars array
    this.calendars[ this.calendars.length ] = CalendarObject;
+
+   this.addCalendarToListBox( CalendarObject );
 }
 
 
@@ -112,9 +114,9 @@ calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
 */
 calendarManager.prototype.addCalendar = function( CalendarObject )
 {
-   this.parent.eventSource.gICalLib.addCalendar( CalendarObject.path );
+   this.CalendarWindow.eventSource.gICalLib.addCalendar( CalendarObject.path );
 
-   this.parent.calendarPreferences.calendarPref.setBoolPref( "server"+this.getCalendarIndex( CalendarObject )+".active", true );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+this.getCalendarIndex( CalendarObject )+".active", true );
 }
 
 
@@ -123,9 +125,9 @@ calendarManager.prototype.addCalendar = function( CalendarObject )
 */
 calendarManager.prototype.removeCalendar = function( CalendarObject )
 {
-   this.parent.eventSource.gICalLib.removeCalendar( CalendarObject.path );
+   this.CalendarWindow.eventSource.gICalLib.removeCalendar( CalendarObject.path );
 
-   this.parent.calendarPreferences.calendarPref.setBoolPref( "server"+this.getCalendarIndex( CalendarObject )+".active", false );
+   this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+this.getCalendarIndex( CalendarObject )+".active", false );
 }
 
 
@@ -163,7 +165,7 @@ calendarManager.prototype.getAllCalendars = function()
    this.calendars[ this.calendars.length ] = thisCalendar;
    
    //go through the prefs file, calendars are stored in there.
-   var NumberOfCalendars = this.parent.calendarPreferences.arrayOfPrefs.numberofservers;
+   var NumberOfCalendars = this.CalendarWindow.calendarPreferences.arrayOfPrefs.numberofservers;
 
    //don't count the default server, so this starts at 1
    for( var i = 1; i < NumberOfCalendars; i++ )
@@ -172,11 +174,11 @@ calendarManager.prototype.getAllCalendars = function()
 
       try { 
       
-         thisCalendar.name = this.parent.calendarPreferences.calendarPref.getCharPref( "server"+i+".name" );
+         thisCalendar.name = this.CalendarWindow.calendarPreferences.calendarPref.getCharPref( "server"+i+".name" );
 
-         thisCalendar.path = this.parent.calendarPreferences.calendarPref.getCharPref( "server"+i+".path" );
+         thisCalendar.path = this.CalendarWindow.calendarPreferences.calendarPref.getCharPref( "server"+i+".path" );
 
-         thisCalendar.active = this.parent.calendarPreferences.calendarPref.getBoolPref( "server"+i+".active" );
+         thisCalendar.active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server"+i+".active" );
 
          this.calendars[ this.calendars.length ] = thisCalendar;
       }

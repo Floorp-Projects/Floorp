@@ -43,7 +43,6 @@ calendar.jar:
     content/calendar/converters/xml2xcs.xsl (content/converters/xml2xcs.xsl)
     content/calendar/datepicker/datepicker-overlay.xul (content/datepicker/datepicker-overlay.xul)
     content/calendar/datepicker/datepicker.js (content/datepicker/datepicker.js)
-    content/calendar/pref/calendarPref.js (content/pref/calendarPref.js)
     content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
     content/calendar/pref/calendarPrefOverlay.xul (content/pref/calendarPrefOverlay.xul)
     content/calendar/pref/rootCalendarPref.js (content/pref/rootCalendarPref.js)

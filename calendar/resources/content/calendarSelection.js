@@ -149,7 +149,7 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
 
       if( this.selectedEvents.length == 1 )
          document.getElementById( "modify_command" ).removeAttribute( "disabled" );
-	  else
+	   else
          document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
 
       if (gMailAccounts)

@@ -1141,5 +1141,5 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
 
 
 treechildren:-moz-tree-cell-text(focus, selected) {
-   color                  : HighlightText;
+   color                  : white;
 }

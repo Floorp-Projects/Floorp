@@ -261,7 +261,7 @@ function loadCalendarEventDialog()
       document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
    }
    
-   document.getElementById( "server-field" ).selectedIndex = -1;
+   document.getElementById( "server-field" ).selectedIndex = 0;
    //the next line seems to crash Mozilla
    //setFieldValue( "server-field", gEvent.parent.server );
    

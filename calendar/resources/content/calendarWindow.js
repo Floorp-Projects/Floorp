@@ -335,7 +335,7 @@ CalendarWindow.prototype.clearSelectedEvent = function( unSelectedEvent )
 {
    var undefined;
    
-   gCalendarWindow.EventSelection.emptySelection( );
+   this.EventSelection.emptySelection( );
       
    if( unSelectedEvent === undefined ||
        unSelectedEvent == null )
@@ -539,9 +539,9 @@ CalendarView.prototype.refresh = function( ShowEvent )
 {
    this.refreshDisplay( ShowEvent )
    
-   this.refreshEvents()
-
    if(this.calendarWindow.currentView.doResize)
       this.calendarWindow.currentView.doResize();
+   
+   this.refreshEvents()
 }
 
