@@ -32,7 +32,6 @@ include <$(DEPTH)\java\config\localdefs.mak>
 JDIRS = org\mozilla\dom \
 	org\mozilla\dom\events \
 	org\mozilla\dom\util \
-	org\mozilla\dom\tests \
 	$(NULL)
 
 JAVAC_PROG=$(JDKHOME)\bin\javac

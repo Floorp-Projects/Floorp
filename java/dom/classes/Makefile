@@ -30,7 +30,6 @@ NO_CAFE=1
 JDIRS = org/mozilla/dom 	\
 	org/mozilla/dom/events	\
 	org/mozilla/dom/util	\
-	org/mozilla/dom/tests	\
 	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
