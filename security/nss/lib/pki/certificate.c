@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.10 $ $Date: 2001/10/17 15:48:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.11 $ $Date: 2001/10/19 18:16:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -110,7 +110,8 @@ nssCertificate_AddRef
 }
 
 /* NSS needs access to this function, but does anyone else? */
-static NSSCertificate *
+/* XXX for the 3.4 hack anyway, yes */
+NSS_IMPLEMENT NSSCertificate *
 NSSCertificate_Create
 (
   NSSArena *arenaOpt
@@ -134,6 +135,7 @@ NSSCertificate_Create
     if (!arenaOpt) {
 	rvCert->arena = arena;
     }
+    rvCert->handle = CK_INVALID_KEY;
     return rvCert;
 loser:
     if (!arenaOpt && arena) {
@@ -156,8 +158,33 @@ nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
     }
 }
 
+static CK_OBJECT_HANDLE
+get_cert_trust_handle
+(
+  NSSCertificate *c,
+  nssSession *session
+)
+{
+    CK_ULONG tobj_size;
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_ATTRIBUTE tobj_template[] = {
+	{ CKA_CLASS,          NULL,   0 }, 
+	{ CKA_CERT_SHA1_HASH, NULL,   0 }
+    };
+    unsigned char sha1_hash[SHA1_LENGTH];
+    tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 0, tobjc);
+    /* First, use the SHA-1 hash of the cert to locate the trust object */
+    /* XXX get rid of this PK11_ call! */
+    PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
+    tobj_template[1].pValue = (CK_VOID_PTR)sha1_hash;
+    tobj_template[1].ulValueLen = (CK_ULONG)SHA1_LENGTH;
+    return nssToken_FindObjectByTemplate(c->token, session,
+                                         tobj_template, tobj_size);
+}
+
 static PRStatus
-nssCertificate_SetCertTrust
+nssCertificate_GetCertTrust
 (
   NSSCertificate *c,
   nssSession *session
@@ -165,29 +192,15 @@ nssCertificate_SetCertTrust
 {
     PRStatus nssrv;
     CK_TRUST saTrust, epTrust, csTrust;
-    CK_ULONG tobj_size, trust_size;
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_OBJECT_HANDLE tobjID;
-    CK_ATTRIBUTE tobj_template[] = {
-	{ CKA_CLASS,          NULL,   0 }, 
-	{ CKA_CERT_SHA1_HASH, NULL,   0 }
-    };
+    CK_ULONG trust_size;
     CK_ATTRIBUTE trust_template[] = {
 	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
 	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
 	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
     };
-    unsigned char sha1_hash[SHA1_LENGTH];
-    tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
     trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
-    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 0, tobjc);
-    /* First, use the SHA-1 hash of the cert to locate the trust object */
-    /* XXX get rid of this PK11_ call! */
-    PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
-    tobj_template[1].pValue = (void *)sha1_hash;
-    tobj_template[1].ulValueLen = SHA1_LENGTH;
-    tobjID = nssToken_FindObjectByTemplate(c->token, session,
-                                           tobj_template, tobj_size);
+    tobjID = get_cert_trust_handle(c, session);
     if (tobjID == CK_INVALID_KEY) {
 	return PR_FAILURE;
     }
@@ -282,11 +295,77 @@ nssCertificate_CreateFromHandle
 #ifdef NSS_3_4_CODE
     make_nss3_nickname(rvCert);
 #endif
-    nssCertificate_SetCertTrust(rvCert, session);
+    nssCertificate_GetCertTrust(rvCert, session);
     return rvCert;
 loser:
     NSSCertificate_Destroy(rvCert);
     return (NSSCertificate *)NULL;
+}
+
+static CK_OBJECT_HANDLE
+create_cert_trust_object
+(
+  NSSCertificate *c,
+  nssSession *session
+)
+{
+    CK_ULONG tobj_size;
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_ATTRIBUTE tobj_template[] = {
+	{ CKA_CLASS,          NULL,   0 }, 
+	{ CKA_CERT_SHA1_HASH, NULL,   0 }
+    };
+    unsigned char sha1_hash[SHA1_LENGTH];
+    tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 0, tobjc);
+    /* First, use the SHA-1 hash of the cert to locate the trust object */
+    /* XXX get rid of this PK11_ call! */
+    PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
+    tobj_template[1].pValue = (CK_VOID_PTR)sha1_hash;
+    tobj_template[1].ulValueLen = (CK_ULONG)SHA1_LENGTH;
+    return nssToken_ImportObject(c->token, session, tobj_template, tobj_size);
+}
+
+NSS_IMPLEMENT PRStatus
+nssCertificate_SetCertTrust
+(
+  NSSCertificate *c,
+  NSSTrust *trust
+)
+{
+    PRStatus nssrv;
+    nssSession *session;
+    CK_OBJECT_HANDLE tobjID;
+    CK_ULONG trust_size;
+    CK_ATTRIBUTE trust_template[] = {
+	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
+	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
+	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
+    };
+    trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
+    if (!c->token) {
+	/* must live on a token already */
+	return PR_FAILURE;
+    }
+    session = c->token->defaultSession;
+    tobjID = get_cert_trust_handle(c, session);
+    if (tobjID == CK_INVALID_KEY) {
+	/* trust object doesn't exist yet, create one */
+	tobjID = create_cert_trust_object(c, session);
+    }
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, trust->serverAuth);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, trust->emailProtection);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, trust->codeSigning);
+    nssrv = nssCKObject_SetAttributes(tobjID,
+                                      trust_template, trust_size,
+                                      session, c->slot);
+    if (nssrv == PR_FAILURE) {
+	return nssrv;
+    }
+    c->trust.serverAuth = trust->serverAuth;
+    c->trust.emailProtection = trust->emailProtection;
+    c->trust.codeSigning = trust->codeSigning;
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -406,7 +485,7 @@ find_issuer_cert_for_identifier(NSSCertificate *c, NSSItem *id)
 	/* walk the subject certs */
 	while ((p = subjectCerts[i++])) {
 	    dcp = nssCertificate_GetDecoding(p);
-	    if (dcp->hasThisIdentifier(dcp, id)) {
+	    if (dcp->matchIdentifier(dcp, id)) {
 		/* this cert has the correct identifier */
 		rvCert = p;
 		/* now free all the remaining subject certs */
@@ -458,11 +537,18 @@ NSSCertificate_BuildChain
 		goto finish;
 	    }
 	} else {
+#ifdef NSS_3_4_CODE
+	    PRBool tmpca = usage->nss3lookingForCA;
+	    usage->nss3lookingForCA = PR_TRUE;
+#endif
 	    c = NSSTrustDomain_FindBestCertificateBySubject(c->trustDomain,
 	                                                    &c->issuer,
 	                                                    timeOpt,
 	                                                    usage,
 	                                                    policiesOpt);
+#ifdef NSS_3_4_CODE
+	    usage->nss3lookingForCA = tmpca;
+#endif
 	    if (!c) {
 		nss_SetError(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND);
 		if (statusOpt) *statusOpt = PR_FAILURE;

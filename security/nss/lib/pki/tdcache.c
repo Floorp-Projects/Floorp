@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.5 $ $Date: 2001/10/17 14:40:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.6 $ $Date: 2001/10/19 18:16:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -94,7 +94,6 @@ static PRBool cert_compare(void *v1, void *v2)
 /* sort the subject list from newest to oldest */
 static PRIntn subject_list_sort(void *v1, void *v2)
 {
-    PRStatus rv;
     NSSCertificate *c1 = (NSSCertificate *)v1;
     NSSCertificate *c2 = (NSSCertificate *)v2;
     nssDecodedCert *dc1 = nssCertificate_GetDecoding(c1);
@@ -545,23 +544,6 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
     return rvCert;
 }
 
-/*
- * Look for a specific cert in the cache
- */
-NSS_IMPLEMENT NSSCertificate *
-nssTrustDomain_GetCertForIdentifierFromCache
-(
-  NSSTrustDomain *td,
-  NSSItem *id
-)
-{
-    NSSCertificate *rvCert;
-    PZ_Lock(td->cache->lock);
-    rvCert = (NSSCertificate *)nssHash_Lookup(td->cache->issuerAndSN, id);
-    PZ_Unlock(td->cache->lock);
-    return rvCert;
-}
-
 NSS_EXTERN NSSItem *
 STAN_GetCertIdentifierFromDER(NSSArena *arenaOpt, NSSDER *der);
 
@@ -586,6 +568,39 @@ nssTrustDomain_GetCertByDERFromCache
     }
     nss_ZFreeIf(identifier);
     return rvCert;
+}
+
+static void cert_iter(const void *k, void *v, void *a)
+{
+    nssList *certList = (nssList *)a;
+    NSSCertificate *c = (NSSCertificate *)v;
+    nssList_Add(certList, c);
+}
+
+NSS_EXTERN NSSCertificate **
+nssTrustDomain_GetCertsFromCache
+(
+  NSSTrustDomain *td,
+  nssList *certListOpt
+)
+{
+    NSSCertificate **rvArray = NULL;
+    nssList *certList;
+    if (certListOpt) {
+	certList = certListOpt;
+    } else {
+	certList = nssList_Create(NULL, PR_FALSE);
+    }
+    PZ_Lock(td->cache->lock);
+    nssHash_Iterate(td->cache->issuerAndSN, cert_iter, (void *)certList);
+    PZ_Unlock(td->cache->lock);
+    if (!certListOpt) {
+	PRUint32 count = nssList_Count(certList);
+	rvArray = nss_ZNEWARRAY(NULL, NSSCertificate *, count);
+	nssList_GetArray(certList, (void **)rvArray, count);
+	nssList_Destroy(certList);
+    }
+    return rvArray;
 }
 
 #ifdef DEBUG

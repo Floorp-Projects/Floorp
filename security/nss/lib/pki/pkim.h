@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.4 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.5 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -195,20 +195,28 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
  * Look for a specific cert in the cache.
  */
 NSS_EXTERN NSSCertificate *
-nssTrustDomain_GetCertForIdentifierFromCache
-(
-  NSSTrustDomain *td,
-  NSSItem *id
-);
-
-/*
- * Look for a specific cert in the cache.
- */
-NSS_EXTERN NSSCertificate *
 nssTrustDomain_GetCertByDERFromCache
 (
   NSSTrustDomain *td,
   NSSDER *der
+);
+
+/* Get all certs from the cache */
+/* XXX this is being included to make some old-style calls word, not to
+ *     say we should keep it
+ */
+NSS_EXTERN NSSCertificate **
+nssTrustDomain_GetCertsFromCache
+(
+  NSSTrustDomain *td,
+  nssList *certListOpt
+);
+
+NSS_EXTERN PRStatus
+nssCertificate_SetCertTrust
+(
+  NSSCertificate *c,
+  NSSTrust *trust
 );
 
 NSS_EXTERN nssDecodedCert *

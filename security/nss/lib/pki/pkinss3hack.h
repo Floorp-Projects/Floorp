@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revision: 1.2 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revision: 1.3 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -45,6 +45,14 @@ static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revi
 #include "cert.h"
 
 PR_BEGIN_EXTERN_C
+
+#define NSSITEM_FROM_SECITEM(nssit, secit)  \
+    (nssit)->data = (void *)(secit)->data;  \
+    (nssit)->size = (PRUint32)(secit)->len;
+
+#define SECITEM_FROM_NSSITEM(secit, nssit)          \
+    (secit)->data = (unsigned char *)(nssit)->data; \
+    (secit)->len  = (unsigned int)(nssit)->size;
 
 NSS_EXTERN NSSTrustDomain *
 STAN_GetDefaultTrustDomain();
@@ -66,6 +74,16 @@ STAN_GetCERTCertificate(NSSCertificate *c);
 
 NSS_EXTERN NSSCertificate *
 STAN_GetNSSCertificate(CERTCertificate *c);
+
+NSS_EXTERN PRStatus
+STAN_ChangeCertTrust(NSSCertificate *c, CERTCertTrust *trust);
+
+/* exposing this */
+NSS_EXTERN NSSCertificate *
+NSSCertificate_Create
+(
+  NSSArena *arenaOpt
+);
 
 /* This function is being put here because it is a hack for 
  * PK11_FindCertFromNickname.
@@ -93,6 +111,42 @@ nssTrustDomain_FindCertificatesByNicknameForToken
   NSSCertificate *rvOpt[],
   PRUint32 maximumOpt, /* 0 for no max */
   NSSArena *arenaOpt
+);
+
+/* CERT_TraversePermCertsForSubject */
+NSS_EXTERN PRStatus
+nssTrustDomain_TraverseCertificatesBySubject
+(
+  NSSTrustDomain *td,
+  NSSDER *subject,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
+
+/* CERT_TraversePermCertsForNickname */
+NSS_EXTERN PRStatus
+nssTrustDomain_TraverseCertificatesByNickname
+(
+  NSSTrustDomain *td,
+  NSSUTF8 *nickname,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
+
+/* SEC_TraversePermCerts */
+NSS_EXTERN PRStatus
+nssTrustDomain_TraverseCertificates
+(
+  NSSTrustDomain *td,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
+
+/* CERT_AddTempCertToPerm */
+NSS_EXTERN PRStatus
+nssTrustDomain_AddTempCertToPerm
+(
+  NSSCertificate *c
 );
 
 PR_END_EXTERN_C

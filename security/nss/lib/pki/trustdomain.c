@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.10 $ $Date: 2001/10/17 14:40:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.11 $ $Date: 2001/10/19 18:16:45 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -367,15 +367,15 @@ get_best_cert(NSSCertificate *c, void *arg)
 {
     struct get_best_cert_arg_str *best = (struct get_best_cert_arg_str *)arg;
     nssDecodedCert *dc, *bestdc;
+    dc = nssCertificate_GetDecoding(c);
     if (!best->cert) {
-	/* This is the first matching cert found, so it is the best so far */
-	best->cert = c;
+	/* usage */
+	if (best->usage->anyUsage || dc->matchUsage(dc, best->usage)) {
+	    best->cert = c;
+	}
 	return PR_SUCCESS;
     }
-    dc = nssCertificate_GetDecoding(c);
     bestdc = nssCertificate_GetDecoding(best->cert);
-    /* usage */
-    /* XXX something like NSSUsage_MatchUsage() maybe? */
     /* time */
     if (bestdc->isValidAtTime(bestdc, best->time)) {
 	/* The current best cert is valid at time */
@@ -416,17 +416,20 @@ find_best_cert_for_template
     PRStatus nssrv;
     NSSToken *tok;
     if (token) {
-	nssrv = nssToken_FindCertificatesByTemplate(token, NULL, best->cached,
-	                                            cktemplate, ctsize,
-	                                            get_best_cert, best);
+	nssrv = nssToken_TraverseCertificatesByTemplate(token, NULL, 
+                                                        best->cached,
+	                                                cktemplate, ctsize,
+	                                                get_best_cert, best);
     } else {
 	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
 	     tok != (NSSToken *)NULL;
 	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
 	{
-	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, best->cached,
-	                                                cktemplate, ctsize,
-	                                                get_best_cert, best);
+	    nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, 
+	                                                    best->cached,
+	                                                    cktemplate, ctsize,
+	                                                    get_best_cert, 
+	                                                    best);
 	}
 	nssListIterator_Finish(td->tokens);
     }
@@ -473,17 +476,18 @@ find_all_certs_for_template
     PRUint32 count;
     NSSToken *tok;
     if (token) {
-	nssrv = nssToken_FindCertificatesByTemplate(token, NULL, ca->list,
-	                                            cktemplate, ctsize,
-                                                    collect_certs, ca);
+	nssrv = nssToken_TraverseCertificatesByTemplate(token, NULL, ca->list,
+	                                                cktemplate, ctsize,
+                                                        collect_certs, ca);
     } else {
 	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
 	     tok != (NSSToken *)NULL;
 	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
 	{
-	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, ca->list,
-	                                                cktemplate, ctsize,
-                                                        collect_certs, ca);
+	    nssrv = nssToken_TraverseCertificatesByTemplate(tok, NULL, 
+                                                            ca->list,
+	                                                    cktemplate, ctsize,
+                                                            collect_certs, ca);
 	}
 	nssListIterator_Finish(td->tokens);
     }
@@ -636,6 +640,7 @@ nssTrustDomain_FindCertificatesByNicknameForToken
     nick_template[1].pValue = (CK_VOID_PTR)name;
     nick_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
     nickCerts = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, name, nickCerts);
     ca.list = nickCerts;
     ca.maximum = maximumOpt;
     ca.arena = arenaOpt;
@@ -671,6 +676,7 @@ NSSTrustDomain_FindCertificatesByNickname
     nick_template[1].pValue = (CK_VOID_PTR)name;
     nick_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
     nickCerts = nssList_Create(NULL, PR_FALSE);
+    (void)nssTrustDomain_GetCertsForNicknameFromCache(td, name, nickCerts);
     ca.list = nickCerts;
     ca.maximum = maximumOpt;
     ca.arena = arenaOpt;
