@@ -299,7 +299,7 @@ var pacUtils =
 "   pattern = pattern.replace(/\\./g, '\\\\.');\n" +
 "   pattern = pattern.replace(/\\*/g, '.*');\n" +
 "   pattern = pattern.replace(/\\?/g, '.');\n" +
-"   var newRe = new RegExp(pattern);\n" +
+"   var newRe = new RegExp('^'+pattern+'$');\n" +
 "   return newRe.test(url);\n" +
 "}\n" +
 
