@@ -10,9 +10,22 @@ ident(TreeState *state)
 static gboolean
 interface(TreeState *state)
 {
-    printf("starting interface %s\n", IDL_INTERFACE(state->tree).ident);
+    char *className =
+	IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_INTERFACE(state->tree).ident), "_", 0);
+    fprintf(state->file, "/* starting interface %s */\n",
+	    className);
+
+    fprintf(state->file, "class %s {\n", className);
+
     state->tree = IDL_INTERFACE(state->tree).body;
-    return process_node(state);
+
+    free(className);
+    if (!process_node(state))
+	return FALSE;
+
+    fprintf(state->file, "\n}\n");
+
+    return TRUE;
 }
 
 static gboolean
@@ -23,6 +36,50 @@ list(TreeState *state)
 	state->tree = IDL_LIST(iter).data;
 	if (!process_node(state))
 	    return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
+xpcom_type(TreeState *state)
+{
+    if (!state->tree) {
+	fputs("void", state->file);
+	return TRUE;
+    }
+
+    switch(IDL_NODE_TYPE(state->tree)) {
+      case IDLN_TYPE_INTEGER: {
+	  gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
+	  switch (IDL_TYPE_INTEGER(state->tree).f_type) {
+	    case IDL_INTEGER_TYPE_SHORT:
+	      fputs(sign ? "PRInt16" : "PRUint16", state->file);
+	      break;
+	    case IDL_INTEGER_TYPE_LONG:
+	      fputs(sign ? "PRInt32" : "PRUint32", state->file);
+	      break;
+	    case IDL_INTEGER_TYPE_LONGLONG:
+	      fputs(sign ? "PRInt64" : "PRUint64", state->file);
+	      break;
+	    default:
+	      g_error("Unknown integer type %d\n",
+		      IDL_TYPE_INTEGER(state->tree).f_type);
+	      return FALSE;
+	  }
+	  break;
+      }
+      case IDLN_TYPE_STRING:
+	fputs("nsString *", state->file);
+	break;
+      case IDLN_TYPE_BOOLEAN:
+	fputs("PRBool", state->file);
+	break;
+      case IDLN_IDENT:
+	fprintf(state->file, "%s *", IDL_IDENT(state->tree).str);
+	break;
+      default:
+	fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
+	break;
     }
     return TRUE;
 }
@@ -53,7 +110,7 @@ static gboolean
 type(TreeState *state)
 {
     if (!state->tree) {
-	fputs("void", stdout);
+	fputs("void", state->file);
 	return TRUE;
     }
 
@@ -61,10 +118,13 @@ type(TreeState *state)
       case IDLN_TYPE_INTEGER:
 	return type_integer(state);
       case IDLN_TYPE_STRING:
-	fputs("string", stdout);
+	fputs("string", state->file);
+	return TRUE;
+      case IDLN_TYPE_BOOLEAN:
+	fputs("boolean", state->file);
 	return TRUE;
       default:
-	printf("unknown_type_%d", IDL_NODE_TYPE(state->tree));
+	fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
 	return TRUE;
     }
 }
@@ -78,45 +138,87 @@ param_dcls(TreeState *state)
 	struct _IDL_PARAM_DCL decl = IDL_PARAM_DCL(IDL_LIST(iter).data);
 	switch(decl.attr) {
 	  case IDL_PARAM_IN:
-	    fputs("in ", stdout);
+	    fputs("in ", state->file);
 	    break;
 	  case IDL_PARAM_OUT:
-	    fputs("out ", stdout);
+	    fputs("out ", state->file);
 	    break;
 	  case IDL_PARAM_INOUT:
-	    fputs("inout ", stdout);
+	    fputs("inout ", state->file);
 	    break;
 	  default:;
 	}
 	state->tree = (IDL_tree)decl.param_type_spec;
 	if (!type(state))
 	    return FALSE;
-	fputs(" ", stdout);
+	fputs(" ", state->file);
 	state->tree = (IDL_tree)decl.simple_declarator;
 	if (!process_node(state))
 	    return FALSE;
 	if (IDL_LIST(iter).next)
-	    fputs(", ", stdout);
+	    fputs(", ", state->file);
     }
-    fputs(")", stdout);
+    fputs(")", state->file);
+    return TRUE;
+}
+
+/*
+ * An attribute declaration looks like:
+ *
+ * [ IDL_ATTR_DCL]
+ *   - param_type_spec [IDL_TYPE_* or NULL for void]
+ *   - simple_declarations [IDL_LIST]
+ *     - data [IDL_IDENT]
+ *     - next [IDL_LIST or NULL if no more idents]
+ *       - data [IDL_IDENT]
+ */
+
+#define ATTR_IDENT(tree) (IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(tree).simple_declarations).data))
+#define ATTR_TYPE_DECL(tree) (IDL_ATTR_DCL(tree).param_type_spec)
+#define ATTR_TYPE(tree) (IDL_NODE_TYPE(ATTR_TYPE_DECL(tree)))
+
+static gboolean
+attr_accessor(TreeState *state, gboolean getter)
+{
+    char *attrname = ATTR_IDENT(state->tree).str;
+    if (getter && (ATTR_TYPE(state->tree) == IDLN_TYPE_BOOLEAN)) {
+	fprintf(state->file, "  NS_IMETHOD Is%c%s(PRBool &aIs%c%s);\n",
+		toupper(attrname[0]), attrname + 1,
+		toupper(attrname[0]), attrname + 1);
+    } else {
+	IDL_tree orig = state->tree;
+	fprintf(state->file, "  NS_IMETHOD %cet%c%s(",
+		getter ? 'G' : 'S',
+		toupper(attrname[0]), attrname + 1);
+	state->tree = ATTR_TYPE_DECL(state->tree);
+	if (!xpcom_type(state))
+	    return FALSE;
+	state->tree = orig;
+	fprintf(state->file, " %sa%c%s);\n",
+		getter ? "&" : "",
+		toupper(attrname[0]), attrname + 1);
+    }
     return TRUE;
 }
 
 static gboolean
 attr_dcl(TreeState *state)
 {
+    gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
     IDL_tree orig = state->tree;
-    printf("%sattribute ", IDL_ATTR_DCL(state->tree).f_readonly ?
-	   "readonly " : "");
+    fprintf(state->file, "\n  /* %sattribute ",
+	    ro ? "readonly " : "");
     state->tree = IDL_ATTR_DCL(state->tree).param_type_spec;
     if (state->tree && !process_node(state))
 	return FALSE;
-    fputs(" ", stdout);
+    fputs(" ", state->file);
     state->tree = IDL_ATTR_DCL(orig).simple_declarations;
     if (state->tree && !process_node(state))
 	return FALSE;
-    puts(";");
-    return TRUE;
+    fputs("; */\n", state->file);
+
+    state->tree = orig;
+    return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
 }
 
 /*
@@ -128,16 +230,17 @@ op_dcl(TreeState *state)
 {
     struct _IDL_OP_DCL op = IDL_OP_DCL(state->tree);
     state->tree = op.op_type_spec;
+    fputs("\n  /* ", state->file);
     if (!type(state))
 	return FALSE;
-    fputs(" ", stdout);
+    fputs(" ", state->file);
     state->tree = op.ident;
     if (state->tree && !process_node(state))
 	return FALSE;
     state->tree = op.parameter_dcls;
     if (!param_dcls(state))
 	return FALSE;
-    fputs(";\n", stdout);
+    fputs("; */\n", state->file);
     return TRUE;
 }
 

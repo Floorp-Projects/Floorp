@@ -48,6 +48,15 @@ process_tree(TreeState *state)
     return process_node(state);
 }
 
+static int
+msg_callback(int level, int num, int line, const char *file,
+	     const char *message)
+{
+    /* XXX Mac */
+    fprintf(stderr, "%s:%d: %d/%d/%s\n", file, line, level, num, message);
+    return 1;
+}
+
 int
 xpidl_process_idl(char *filename) {
     char *basename, *tmp;
@@ -55,7 +64,7 @@ xpidl_process_idl(char *filename) {
     TreeState state;
     int rv;
 
-    rv = IDL_parse_filename(filename, NULL, NULL, &top,
+    rv = IDL_parse_filename(filename, NULL, msg_callback, &top,
 			    &state.ns, IDLF_XPIDL,
 			    enable_warnings ? IDL_WARNING1 : 0);
     if (rv != IDL_SUCCESS) {
