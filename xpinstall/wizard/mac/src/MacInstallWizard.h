@@ -195,7 +195,7 @@ if (err) 								\
 
 #define rGrayPixPattern 128
 
-#define rAlrtSelectCont	150
+#define rAlrtDelOldInst	150
 #define rAlrtOS85Reqd	160
 
 	
