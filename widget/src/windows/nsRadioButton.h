@@ -25,7 +25,6 @@
 #include "nsString.h"
 
 #include "nsIRadioButton.h"
-#include "nsIRadioGroup.h"
 
 
 /**
@@ -57,15 +56,10 @@ public:
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
     virtual void            SetState(PRBool aState);
-    virtual void            SetStateNoNotify(PRBool aState);
     virtual PRBool          GetState();
-
-    virtual nsIRadioGroup*  GetRadioGroup();
-    virtual void            SetRadioGroup(nsIRadioGroup* aGroup);
 
 protected:
     PRBool         fState;
-    nsIRadioGroup* fRadioGroup;
 
     virtual LPCTSTR         WindowClass();
     virtual DWORD           WindowStyle();

@@ -31,7 +31,6 @@
 //-------------------------------------------------------------------------
 nsRadioButton::nsRadioButton(nsISupports *aOuter) : nsWindow(aOuter)
 {
-  fRadioGroup = NULL;
 }
 
 
@@ -66,7 +65,7 @@ nsresult nsRadioButton::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// Sets the state of the nsRadioButton but it DOES notify its nsRadioGroup.
+// Sets the state of the nsRadioButton 
 //
 //-------------------------------------------------------------------------
 void nsRadioButton::SetState(PRBool aState) 
@@ -74,20 +73,6 @@ void nsRadioButton::SetState(PRBool aState)
     fState = aState;
 
     ::SendMessage(GetWindowHandle(), BM_SETCHECK, (WPARAM)(fState), 0L);
-	if (nsnull != fRadioGroup)
-      fRadioGroup->Clicked(this);
-}
-
-//-------------------------------------------------------------------------
-//
-// Sets the state of the nsRadioButton but it does not notify
-// its nsRadioGroup.
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::SetStateNoNotify(PRBool aState) 
-{
-	fState = aState;
-	::SendMessage(GetWindowHandle(), BM_SETCHECK, (WPARAM)(fState), 0L);
 }
 
 //-------------------------------------------------------------------------
@@ -98,36 +83,6 @@ void nsRadioButton::SetStateNoNotify(PRBool aState)
 PRBool nsRadioButton::GetState()
 {
   return fState;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the radio group this radio button belongs to
-//
-//-------------------------------------------------------------------------
-nsIRadioGroup* nsRadioButton::GetRadioGroup()                      
-{ 
-    if (fRadioGroup) 
-        fRadioGroup->AddRef();
-    return fRadioGroup;   
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set the radio button group
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::SetRadioGroup(nsIRadioGroup* aGroup) 
-{ 
-    if (aGroup) 
-        aGroup->AddRef();
-
-    if (fRadioGroup)
-        NS_RELEASE(fRadioGroup);
-
-    fRadioGroup = aGroup; 
-    fRadioGroup->Add(this);
 }
 
 //-------------------------------------------------------------------------
