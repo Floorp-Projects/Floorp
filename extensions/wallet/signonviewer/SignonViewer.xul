@@ -35,6 +35,7 @@
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
+        class="dialog"
         onload="Startup()">
 
   <html:script src="chrome://wallet/content/SignonViewer.js"/>
