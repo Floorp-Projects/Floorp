@@ -21,11 +21,13 @@
  */
 #include <fstream.h>
 #include "nsCRT.h"
+#include "nsIFile.h"
 #include "nsIAllocator.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "bcJavaModule.h"
 #include "bcJavaComponentFactory.h"
+
 
 NS_IMPL_ISUPPORTS(bcJavaModule,NS_GET_IID(nsIModule));
 bcJavaModule::bcJavaModule(const char *registryLocation, nsIFile *component) 

@@ -22,6 +22,7 @@
 
 #include "bcIBlackConnectInit.h"
 #include "nsIModule.h"
+#include "nsIServiceManager.h"
 #include "nsIXPIDLServiceManager.h"
 #include "bcIXPCOMWrappers.h"
 #include "bcXPCOMWrappersCID.h"

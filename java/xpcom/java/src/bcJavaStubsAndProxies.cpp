@@ -19,6 +19,9 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
+
+#include "nsIServiceManager.h"
+
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 #include "bcJavaStubsAndProxies.h"
