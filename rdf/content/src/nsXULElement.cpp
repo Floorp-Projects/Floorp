@@ -2986,6 +2986,9 @@ nsXULElement::GetAttributeCount(PRInt32& aResult) const
     else if (mPrototype) {
         aResult = mPrototype->mNumAttributes;
     }
+    else {
+        aResult = 0;
+    }
 
     return rv;
 }
