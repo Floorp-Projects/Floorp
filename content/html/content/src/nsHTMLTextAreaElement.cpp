@@ -343,7 +343,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
-NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, TabIndex, tabindex, 0)
   
 
 NS_IMETHODIMP 
@@ -520,10 +520,6 @@ nsHTMLTextAreaElement::ParseAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::rows) {
     return aResult.ParseIntWithBounds(aValue, 0);
   }
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
-  }
-
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 

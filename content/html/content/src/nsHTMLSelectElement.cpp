@@ -1578,7 +1578,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple)
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, Size, size)
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSelectElement, TabIndex, tabindex, 0)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::Blur()
@@ -1734,10 +1734,6 @@ nsHTMLSelectElement::ParseAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::size) {
     return aResult.ParseIntWithBounds(aValue, 0);
   }
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
-  }
-
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 

@@ -169,7 +169,7 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Height, height)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Standby, standby)
-NS_IMPL_INT_ATTR(nsHTMLObjectElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLObjectElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, Vspace, vspace)
@@ -203,9 +203,6 @@ nsHTMLObjectElement::ParseAttribute(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     return ParseAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
   }
   if (ParseImageAttribute(aAttribute, aValue, aResult)) {
     return PR_TRUE;

@@ -557,7 +557,7 @@ NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
-NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 //NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
@@ -1759,9 +1759,6 @@ nsHTMLInputElement::ParseAttribute(nsIAtom* aAttribute,
   }
   if (aAttribute == nsHTMLAtoms::size) {
     return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
   }
   if (aAttribute == nsHTMLAtoms::border) {
     return aResult.ParseIntWithBounds(aValue, 0);

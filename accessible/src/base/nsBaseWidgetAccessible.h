@@ -100,5 +100,23 @@ protected:
   PRPackedBool mIsLinkVisited;
 };
 
+/**
+  * A type of accessible for DOM nodes containing a non-negative tabindex
+  * (thus they're focusable), or a role attrib which defines how to expose them.
+  */
+class nsGenericAccessible : public nsAccessibleWrap
+{
+public:
+  nsGenericAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_IMETHOD TakeFocus();
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetValue(nsAString& aValue);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+};
+
 #endif  
 

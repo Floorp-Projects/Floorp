@@ -233,6 +233,7 @@ NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContent)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
  
+NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
 
 nsresult
 nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
@@ -1349,6 +1350,35 @@ IsArea(nsIContent *aContent)
 }
 
 nsresult
+nsGenericHTMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
+                                     nsEvent* aEvent,
+                                     nsIDOMEvent** aDOMEvent,
+                                     PRUint32 aFlags,
+                                     nsEventStatus* aEventStatus)
+{
+  NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+
+  // Try script event handlers first
+  nsresult ret = nsGenericElement::HandleDOMEvent(aPresContext, aEvent,
+                                                  aDOMEvent, aFlags,
+                                                  aEventStatus);
+
+  if (NS_SUCCEEDED(ret) && aPresContext && 
+      nsEventStatus_eConsumeNoDefault != *aEventStatus &&
+      !(aFlags & (NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_SYSTEM_EVENT)) && 
+      aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    // Any visible element is focusable if tabindex >= 0
+    if (NS_SUCCEEDED(Focus())) {
+      // Consume event so that element focus isn't lost by doc taking focus
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
+    }
+  }
+
+  return ret;
+}
+
+nsresult
 nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
                                                nsEvent* aEvent,
                                                nsIDOMEvent** aDOMEvent,
@@ -2164,6 +2194,10 @@ nsGenericHTMLElement::ParseAttribute(nsIAtom* aAttribute,
     aResult.ParseAtomArray(aValue);
 
     return PR_TRUE;
+  }
+
+  if (aAttribute == nsHTMLAtoms::tabindex) {
+    return aResult.ParseIntWithBounds(aValue, -32768, 32767);
   }
 
   return PR_FALSE;
@@ -3559,6 +3593,32 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   }
 
   RemoveFocus(presContext);
+}
+
+nsresult
+nsGenericHTMLElement::Blur()
+{
+  SetElementFocus(PR_FALSE);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::Focus()
+{
+  // Generic HTML elements are focusable only if 
+  // tabindex explicitly set and tabindex >= 0
+  nsAutoString tabIndexStr;
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+  if (!tabIndexStr.IsEmpty()) {
+    PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
+    if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
+      SetElementFocus(PR_TRUE);
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }
 
 void

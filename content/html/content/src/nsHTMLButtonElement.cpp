@@ -169,7 +169,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
-NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, Type, type, "submit")
 
@@ -273,9 +273,6 @@ nsHTMLButtonElement::ParseAttribute(nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
-  }
   if (aAttribute == nsHTMLAtoms::type) {
     // XXX ARG!! This is major evilness. ParseAttribute
     // shouldn't set members. Override SetAttr instead

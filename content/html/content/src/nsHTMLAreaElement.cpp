@@ -83,9 +83,6 @@ public:
   NS_IMETHOD SetLinkState(nsLinkState aState);
   NS_IMETHOD GetHrefURI(nsIURI** aURI);
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -147,7 +144,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
 NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
 NS_IMPL_BOOL_ATTR(nsHTMLAreaElement, NoHref, nohref)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Shape, shape)
-NS_IMPL_INT_ATTR(nsHTMLAreaElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAreaElement, TabIndex, tabindex, 0)
 
 NS_IMETHODIMP
 nsHTMLAreaElement::GetTarget(nsAString& aValue)
@@ -166,18 +163,6 @@ NS_IMETHODIMP
 nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
-}
-
-PRBool
-nsHTMLAreaElement::ParseAttribute(nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsAttrValue& aResult)
-{
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
-  }
-
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 nsresult

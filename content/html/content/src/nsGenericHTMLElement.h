@@ -148,6 +148,12 @@ public:
   nsresult GetClientHeight(PRInt32* aClientHeight);
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
+  nsresult Focus();
+  nsresult Blur();
+  // Declare GetTabIndex() and SetTabIndex() such that classes that inherit interfaces 
+  // with a tabIndex attribute properly override these methods
+  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
@@ -188,6 +194,12 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
+
+  nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                          nsEvent* aEvent,
+                          nsIDOMEvent** aDOMEvent,
+                          PRUint32 aFlags,
+                          nsEventStatus* aEventStatus);
 
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters

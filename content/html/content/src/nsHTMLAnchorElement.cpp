@@ -103,9 +103,6 @@ public:
                            PRBool aCompileEventHandlers);
   virtual void SetFocus(nsIPresContext* aPresContext);
   virtual void RemoveFocus(nsIPresContext* aPresContext);
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -166,7 +163,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
-NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAnchorElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 
@@ -251,18 +248,6 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
     aPresContext->EventStateManager()->SetContentState(nsnull,
                                                        NS_EVENT_STATE_FOCUS);
   }
-}
-
-PRBool
-nsHTMLAnchorElement::ParseAttribute(nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsAttrValue& aResult)
-{
-  if (aAttribute == nsHTMLAtoms::tabindex) {
-    return aResult.ParseIntWithBounds(aValue, 0, 32767);
-  }
-
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 nsresult
