@@ -181,18 +181,6 @@ NS_IMETHODIMP
 nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const
 {
-   // Maintain a separate child list for the menu contents.
-   // This is necessary because we don't want the menu contents to be included in the layout
-   // of the menu's single item because it would take up space, when it is supposed to
-   // be floating above the display.
-  /*NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  
-  *aListName = nsnull;
-  if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
-    *aListName = nsLayoutAtoms::popupList;
-    NS_ADDREF(*aListName);
-    return NS_OK;
-  }*/
   return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
@@ -331,9 +319,8 @@ PRBool nsMenuFrame::IsGenerated()
   // takes it from display: none to display: block and gives us
   // a menu forevermore.
   if (child) {
-    nsCOMPtr<nsIAtom> generated = dont_AddRef(NS_NewAtom("menugenerated"));
     nsString genVal;
-    child->GetAttribute(kNameSpaceID_None, generated, genVal);
+    child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
     if (genVal == "")
       return PR_FALSE;
   }
@@ -350,11 +337,10 @@ void nsMenuFrame::MarkAsGenerated()
   // takes it from display: none to display: block and gives us
   // a menu forevermore.
   if (child) {
-    nsCOMPtr<nsIAtom> generated = dont_AddRef(NS_NewAtom("menugenerated"));
     nsAutoString genVal;
-    child->GetAttribute(kNameSpaceID_None, generated, genVal);
+    child->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
     if (genVal == "")
-      child->SetAttribute(kNameSpaceID_None, generated, "true", PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true", PR_TRUE);
   }
 }
 
@@ -435,7 +421,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (mMenuParent)
         mMenuParent->IsMenuBar(onMenuBar);
 
-      menuPopup->SyncViewWithFrame(onMenuBar);
+      menuPopup->SyncViewWithFrame(*mPresContext, onMenuBar, this, -1, -1);
     }
 
     mMenuOpen = PR_TRUE;
@@ -541,7 +527,7 @@ nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   if (menuPopup && mMenuOpen)
-    menuPopup->SyncViewWithFrame(onMenuBar);
+    menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
 
   return nsBoxFrame::DidReflow(aPresContext, aStatus);
 }

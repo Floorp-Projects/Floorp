@@ -34,6 +34,7 @@ nsresult NS_NewMenuPopupFrame(nsIFrame** aResult) ;
 
 class nsIViewManager;
 class nsIView;
+class nsMenuPopupEntryListener;
 
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
@@ -66,8 +67,17 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-  nsresult SyncViewWithFrame(PRBool aOnMenuBar);
+  void GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult);
+
+  nsresult SyncViewWithFrame(nsIPresContext& aPresContext, PRBool aOnMenuBar, 
+                             nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
 
@@ -85,6 +95,7 @@ public:
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
+  nsMenuPopupEntryListener* mMenuPopupEntryListener;
 }; // class nsMenuPopupFrame
 
 #endif
