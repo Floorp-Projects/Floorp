@@ -82,9 +82,8 @@ nsMacMessageSink gMessageSink;
 #include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
 
-#include <unistd.h>
-
 #ifdef XP_UNIX
+#include <unistd.h>
 #include "gdksuperwin.h"
 #include "gtkmozarea.h"
 #endif
