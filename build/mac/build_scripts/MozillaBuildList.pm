@@ -1454,7 +1454,9 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",                            "RDFLibrary$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpinstall:cleanup:macbuild:XPICleanup.mcp",       "XPICleanup$D", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:xpinstall:wizard:libxpnet:macbuild:xpnet.mcp",    "xpnet$D.Lib", 0, 0, 0);
     if (!($main::PROFILE)) {
         BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", 0, 0, 0);
     }
