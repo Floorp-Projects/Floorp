@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.11 2002/09/08 16:47:57 ian.mcgreer%sun.com Exp $
+ * $Id: rijndael.c,v 1.12 2002/09/09 03:56:24 wtc%netscape.com Exp $
  */
 
 #include "prinit.h"
@@ -839,7 +839,7 @@ static SECStatus
 rijndael_encryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    unsigned int blocksize)
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *encryptor;
@@ -861,9 +861,9 @@ static SECStatus
 rijndael_encryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    unsigned int blocksize)
+                    int blocksize)
 {
-    unsigned int j;
+    int j;
     SECStatus rv;
     AESBlockFunc *encryptor;
     unsigned char *lastblock;
@@ -897,7 +897,7 @@ static SECStatus
 rijndael_decryptECB(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    unsigned int blocksize)
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
@@ -919,13 +919,13 @@ static SECStatus
 rijndael_decryptCBC(AESContext *cx, unsigned char *output,
                     unsigned int *outputLen, unsigned int maxOutputLen,
                     const unsigned char *input, unsigned int inputLen, 
-                    unsigned int blocksize)
+                    int blocksize)
 {
     SECStatus rv;
     AESBlockFunc *decryptor;
     const unsigned char *in;
     unsigned char *out;
-    unsigned int j;
+    int j;
     unsigned char newIV[RIJNDAEL_MAX_BLOCKSIZE];
 
     if (!inputLen) 
