@@ -185,6 +185,8 @@ public:
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
   NS_IMETHOD GetIsFrame(PRBool& aIsFrame);
   NS_IMETHOD SetIsFrame(PRBool aIsFrame);
+  NS_IMETHOD SetZoom(float aZoom);
+  NS_IMETHOD GetZoom(float *aZoom);
   
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
@@ -364,6 +366,8 @@ protected:
                      nsIPostData* aPostData,
                      nsURLReloadType aType,
                      const PRUint32 aLocalIP);
+
+  float mZoom;
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
@@ -1276,6 +1280,55 @@ NS_IMETHODIMP
 nsWebShell::SetIsFrame(PRBool aIsFrame)
 { 
   mIsFrame = aIsFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetZoom(float aZoom)
+{
+  mZoom = aZoom;
+
+  if (mDeviceContext)
+    mDeviceContext->SetZoom(mZoom);
+
+  if (mContentViewer) {
+    nsIDocumentViewer* docv = nsnull;
+    mContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIPresContext* cx = nsnull;
+      docv->GetPresContext(cx);
+	    if (nsnull != cx) {
+        nsIPresShell  *shell = nsnull;
+	      cx->GetShell(&shell);
+        if (nsnull != shell) {
+          nsIViewManager  *vm = nsnull;
+          shell->GetViewManager(&vm);
+          if (nsnull != vm) {
+            nsIView *rootview = nsnull;
+            nsIScrollableView *sv = nsnull;
+            vm->GetRootScrollableView(&sv);
+            if (nsnull != sv)
+              sv->ComputeScrollOffsets();
+            vm->GetRootView(rootview);
+            if (nsnull != rootview)
+              vm->UpdateView(rootview, nsnull, 0);
+    	      NS_RELEASE(vm);
+          }
+  	      NS_RELEASE(shell);
+        }
+	      NS_RELEASE(cx);
+	    }
+      NS_RELEASE(docv);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetZoom(float *aZoom)
+{
+  *aZoom = mZoom;
   return NS_OK;
 }
 

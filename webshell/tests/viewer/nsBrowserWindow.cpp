@@ -611,6 +611,17 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoImageInspector();
     break;
 
+  case VIEWER_ZOOM_500:
+  case VIEWER_ZOOM_300:
+  case VIEWER_ZOOM_200:
+  case VIEWER_ZOOM_100:
+  case VIEWER_ZOOM_070:
+  case VIEWER_ZOOM_050:
+  case VIEWER_ZOOM_030:
+  case VIEWER_ZOOM_020:
+    mWebShell->SetZoom((aID - VIEWER_ZOOM_BASE) / 10.0f);
+    break;
+
 #ifdef ClientWallet
   case PRVCY_PREFILL:
   case PRVCY_QPREFILL:
