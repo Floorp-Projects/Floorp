@@ -24,22 +24,19 @@
   Code for the Bookmarks Sidebar Panel
  */
 
-function clicked(event, target) {
-  if (target.getAttribute('container') == 'true') {
-    if (target.getAttribute('open') == 'true') {
-	  target.removeAttribute('open');
-    } else {
-      target.setAttribute('open','true');
-    }
-    return(true);
-  } else {
-    if (event.clickCount == 2 && event.button == 1) {
-      OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
-      return(true);
-    }
-  }
-  return(false);
+function clicked(event, target)
+{
+	if ((event.button != 1) || (event.clickCount != 2))
+		return(false);
+
+	if (target.getAttribute('container') == 'true')
+		return(false);
+
+	OpenBookmarkURL(target, document.getElementById('bookmarksTree').database);
+	return(true);
 }
+
+
 
 function OpenBookmarkURL(node, datasources)
 {
