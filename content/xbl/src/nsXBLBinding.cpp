@@ -324,11 +324,8 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
     aAnonParent->ChildAt(i, getter_AddRefs(child));
-    // Set the binding parent first, since setting the parent may cause
-    // relative URIs to change (due to xml:base) and |child| may need to be
-    // able to tell that it's anonymous content as it recomputes its base URI.
-    child->SetBindingParent(mBoundElement);
     child->SetParent(aElement);
+    child->SetBindingParent(mBoundElement);
 
 #ifdef MOZ_XUL
     // To make XUL templates work (and other goodies that happen when
