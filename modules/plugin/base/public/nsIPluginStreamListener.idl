@@ -53,6 +53,16 @@
 #include "nsPluginDefs.idl"
 
 /**
+ * nsIPluginStreamListener
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
+/**
  * The nsIPluginStreamListener interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
  * to determine if a plugin manager implements more specific APIs or other 

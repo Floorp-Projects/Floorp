@@ -58,6 +58,16 @@
 #include "nsIPluginStreamInfo.h"
 #include "nsIInputStream.h"
 
+/**
+ * nsIPluginStreamListener
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 #define NS_IPLUGINSTREAMLISTENER_IID                 \
 { /* df055770-5448-11d2-8164-006008119d7a */         \
     0xdf055770,                                      \

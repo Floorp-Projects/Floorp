@@ -59,6 +59,16 @@
 class nsIOutputStream;
 struct JSObject;
 
+/**
+ * nsIPluginInstancePeer
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 #define NS_IPLUGININSTANCEPEER_IID                   \
 { /* 4b7cea20-019b-11d2-815b-006008119d7a */         \
     0x4b7cea20,                                      \

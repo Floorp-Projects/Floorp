@@ -58,6 +58,16 @@
 
 class nsIDOMElement;
 
+/**
+ * nsIPluginTagInfo
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 #define NS_IPLUGINTAGINFO_IID                        \
 { /* 5f1ec1d0-019b-11d2-815b-006008119d7a */         \
     0x5f1ec1d0,                                      \

@@ -54,6 +54,16 @@
 
 interface nsIDOMElement;
 
+/**
+ * nsIPluginTagInfo2
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 [scriptable, uuid(e4003382-2dfd-11d4-8cf4-0060b0fc14a3)]
 interface nsIPluginTagInfo2 : nsIPluginTagInfo
 {

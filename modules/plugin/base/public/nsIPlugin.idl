@@ -53,6 +53,16 @@
 #include "nsPluginDefs.idl"
 #include "nsIFactory.idl"
 
+/**
+ * nsIPlugin
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 %{C++
 // {ffc63200-cf09-11d2-a5a0-bc8f7ad21dfc}
 #define NS_PLUGIN_CID \

@@ -53,6 +53,16 @@
 #include "nsIPluginInstancePeer.idl"
 
 /**
+ * nsIPluginInstancePeer2
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
+/**
  * The nsIPluginInstancePeer2 interface extends the nsIPluginInstancePeer
  * interface, providing access to functionality provided by newer browsers.
  * All functionality in nsIPluginInstancePeer can be mapped to the 4.X

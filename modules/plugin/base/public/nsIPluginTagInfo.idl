@@ -53,6 +53,16 @@
 #include "nsPluginDefs.idl"
 
 /**
+ * nsIPluginTagInfo
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
+/**
  * Plugin Tag Info Interface
  * This interface provides information about the HTML tag on the page.
  * Some day this might get superseded by a DOM API.

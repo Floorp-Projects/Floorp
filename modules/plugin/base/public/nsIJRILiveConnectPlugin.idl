@@ -52,6 +52,16 @@
 
 #include "nsPluginDefs.idl"
 
+/**
+ * nsIJRILiveConnectPlugin
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
 /** 
  * The nsIJRILiveConnectPlugin interface defines additional entry points that a
  * plugin developer needs to implement in order for the plugin to support 
