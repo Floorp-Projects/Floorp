@@ -15,15 +15,20 @@
     </content>
   
     <implementation>
-      <property name="count">
+      <field name="limit" readonly="true">
+        250
+      </field>
+
+      <property name="count" readonly="true">
         <getter>return this.mCount</getter>
       </property>
     
       <property name="mode">
         <getter>return this.mMode;</getter>
         <setter><![CDATA[
-          this.mMode = val ? val : "All";
+          this.mMode = val || "All";
           this.setAttribute("mode", this.mMode);
+          return val;
         ]]></setter>
       </property>
     
@@ -66,10 +71,7 @@
             return;
           }          
                     
-          if (this.hasAttribute("mode"))
-            this.mMode = this.getAttribute("mode");
-          else
-            this.mMode = "All";
+          this.mMode = this.getAttribute("mode") || "All";
 
           this.appendInitialItems();
         ]]></body>
@@ -91,19 +93,16 @@
           if (!messages)
             messages = [];
       
-          var i;
-          var cleared = 0;
+          var limit = messages.length - this.limit;
+          if (limit < 0) limit = 0;
         
           // Checks if console ever been cleared
-          for (i = messages.length-1; i >=0 ; --i) { 
-            if (messages[i].message == "__CLEAR__") {
-              cleared = i + 1;
+          for (var i = messages.length - 1; i >= limit; --i)
+            if (!messages[i].message)
               break;
-            }
-          }
         
-          // Populates tree with error messages after latest "clear"
-          for (i = cleared; i < messages.length; ++i)
+          // Populate with messages after latest "clear"
+          while (++i < messages.length)
             this.appendItem(messages[i]);
         ]]></body>
       </method>
@@ -111,7 +110,7 @@
       <method name="appendItem">
         <parameter name="aObject"/>
         <body><![CDATA[
-          if (aObject.message == "__CLEAR__") return;
+          if (!aObject.message) return;
 
           try {
             // Try to QI it to a script error to get more info
@@ -170,7 +169,7 @@
         <parameter name="aType"/>
         <body><![CDATA[
           var row = this.createConsoleRow();
-          row.setAttribute("type", aType ? aType : "message");
+          row.setAttribute("type", aType || "message");
           row.setAttribute("msg", aMessage);
           this.appendConsoleRow(row);
         ]]></body>
@@ -178,7 +177,7 @@
       
       <method name="clear">
         <body><![CDATA[
-          this.mCService.logStringMessage("__CLEAR__");
+          this.mCService.logStringMessage(null);
           this.mCount = 0;
           
           var newRows = this.mConsoleRowBox.cloneNode(false);
@@ -208,7 +207,7 @@
         <parameter name="aRow"/>
         <body><![CDATA[
           this.mConsoleRowBox.appendChild(aRow);
-          if (++this.mCount > 250) this.deleteFirst();
+          if (++this.mCount > this.limit) this.deleteFirst();
         ]]></body>
       </method>
             

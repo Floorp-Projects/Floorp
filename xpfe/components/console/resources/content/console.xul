@@ -146,7 +146,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   
 <vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
 
-<iframe id="Evaluator" collapsed="true"/>
+<iframe name="Evaluator" id="Evaluator" collapsed="true"/>
 
 </window>
 
