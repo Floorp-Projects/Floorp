@@ -623,7 +623,7 @@ public class ClassFileWriter {
     }
 
     /**
-     * Generate the code to leave on stack the given string even if the 
+     * Generate the code to leave on stack the given string even if the
      * string encoding exeeds the class file limit for single string constant
      *
      * @param k the constant
@@ -645,20 +645,21 @@ public class ClassFileWriter {
         add(ByteCode.NEW, SB);
         add(ByteCode.DUP);
         addPush(length);
-        addInvoke(ByteCode.INVOKESTATIC, SB, "<init>", "(I)V");
+        addInvoke(ByteCode.INVOKESPECIAL, SB, "<init>", "(I)V");
         int cursor = 0;
         for (;;) {
             add(ByteCode.DUP);
             String s = k.substring(cursor, limit);
-            addLoadConstant(k);
+            addLoadConstant(s);
             addInvoke(ByteCode.INVOKEVIRTUAL, SB, "append",
-                      "(Ljava/lang/String;)V");
+                      "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+            add(ByteCode.POP);
             if (limit == length) {
                 break;
             }
             cursor = limit;
             limit = itsConstantPool.getUtfEncodingLimit(k, limit, length);
-        } 
+        }
         addInvoke(ByteCode.INVOKEVIRTUAL, SB, "toString",
                   "()Ljava/lang/String;");
     }
