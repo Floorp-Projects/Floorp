@@ -59,6 +59,10 @@ CPPSRCS = \
 	nsXtManageWidget.cpp \
 	$(NULL)
 
+DIRS =\
+	app_context \
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 CXXFLAGS += $(TK_CFLAGS)

@@ -25,15 +25,12 @@
 // #include <limits.h>
 // #include <X11/Intrinsic.h>
 
+#include "nsIComponentManager.h"
+#include "nsIMotifAppContextService.h"
+
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-// Hack for now. This is Bad because it creates a dependency between the widget
-// library and this library. This needs to be replaced with having code 
-// to pass an interface which can be queried for the app context.
-XtAppContext gAppContext;
-
 extern void nsTimerExpired(XtPointer aCallData);
-
 
 void nsTimerMotif::FireTimeout()
 {
@@ -50,7 +47,6 @@ void nsTimerMotif::FireTimeout()
 //  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
 }
 
-
 nsTimerMotif::nsTimerMotif()
 {
   NS_INIT_REFCNT();
@@ -60,11 +56,14 @@ nsTimerMotif::nsTimerMotif()
   mTimerId = 0;
   mDelay = 0;
   mClosure = NULL;
+  mAppContext = nsnull;
 }
 
 nsTimerMotif::~nsTimerMotif()
 {
 }
+
+static NS_DEFINE_CID(kCMotifAppContextServiceCID, NS_MOTIF_APP_CONTEXT_SERVICE_CID);
 
 nsresult 
 nsTimerMotif::Init(nsTimerCallbackFunc aFunc,
@@ -76,7 +75,11 @@ nsTimerMotif::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
-    mTimerId = XtAppAddTimeOut(gAppContext, aDelay,(XtTimerCallbackProc)nsTimerExpired, this);
+    InitAppContext();
+
+    mTimerId = XtAppAddTimeOut(mAppContext, 
+                               aDelay,
+                               (XtTimerCallbackProc)nsTimerExpired, this);
 
     return Init(aDelay);
 }
@@ -89,7 +92,12 @@ nsTimerMotif::Init(nsITimerCallback *aCallback,
     mCallback = aCallback;
     // mRepeat = aRepeat;
 
-    mTimerId = XtAppAddTimeOut(gAppContext, aDelay, (XtTimerCallbackProc)nsTimerExpired, this);
+    InitAppContext();
+
+    mTimerId = XtAppAddTimeOut(mAppContext, 
+                               aDelay, 
+                               (XtTimerCallbackProc)nsTimerExpired, 
+                               this);
 
     return Init(aDelay);
 }
@@ -97,10 +105,12 @@ nsTimerMotif::Init(nsITimerCallback *aCallback,
 nsresult
 nsTimerMotif::Init(PRUint32 aDelay)
 {
-    mDelay = aDelay;
-    NS_ADDREF(this);
-
-    return NS_OK;
+  InitAppContext();
+  
+  mDelay = aDelay;
+  NS_ADDREF(this);
+  
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(nsTimerMotif, kITimerIID)
@@ -116,6 +126,46 @@ void nsTimerExpired(XtPointer aCallData)
 {
   nsTimerMotif* timer = (nsTimerMotif *)aCallData;
   timer->FireTimeout();
+}
+
+nsresult 
+nsTimerMotif::InitAppContext()
+{
+  static XtAppContext gsAppContext = nsnull;
+
+  mAppContext = nsnull;
+
+  if (nsnull == gsAppContext)
+  {
+    nsresult   rv;
+    nsIMotifAppContextService * ac_service = nsnull;
+    
+    rv = nsComponentManager::CreateInstance(kCMotifAppContextServiceCID,
+                                            nsnull,
+                                            nsIMotifAppContextService::GetIID(),
+                                            (void **)& ac_service);
+    
+    NS_ASSERTION(rv == NS_OK,"Cannot obtain app context service.");
+
+    if (ac_service)
+    {
+      printf("nsTimerMotif::InitAppContext() ac_service = %p\n",ac_service);
+
+      nsresult rv2 = ac_service->GetAppContext(&gsAppContext);
+
+      NS_ASSERTION(rv2 == NS_OK,"Cannot get the app context.");
+
+      NS_ASSERTION(nsnull != gsAppContext,"Global app context is null.");
+
+      NS_RELEASE(ac_service);
+
+      printf("nsTimerMotif::InitAppContext() gsAppContext = %p\n",gsAppContext);
+    }
+  }
+
+  mAppContext = gsAppContext;
+  
+  return NS_OK;
 }
 
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
