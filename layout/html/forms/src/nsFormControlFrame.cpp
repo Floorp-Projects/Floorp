@@ -110,9 +110,6 @@
 
 const PRInt32 kSizeNotSet = -1;
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-
 nsFormControlFrame::nsFormControlFrame()
   : nsLeafFrame()
 {

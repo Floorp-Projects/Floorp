@@ -81,9 +81,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-
 // For figuring out the "WRAP" property
 #define kTextControl_Wrap_Soft "SOFT"
 #define kTextControl_Wrap_Virtual "VIRTUAL"   // "virtual" is a synonym for "soft"
