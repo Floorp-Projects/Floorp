@@ -36,10 +36,17 @@
 EmbedProgress::EmbedProgress(void)
 {
   mOwner = nsnull;
+  mEventRegistration = nsnull;
 }
 
 EmbedProgress::~EmbedProgress()
 {
+    if (nsnull != mEventRegistration) {
+	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+	::util_DeleteGlobalRef(env, mEventRegistration);
+	mEventRegistration = nsnull;
+    }
+
 }
 
 NS_IMPL_ISUPPORTS2(EmbedProgress,
@@ -63,8 +70,16 @@ EmbedProgress::Init(NativeBrowserControl *aOwner)
 nsresult
 EmbedProgress::SetEventRegistration(jobject yourEventRegistration)
 {
-    mEventRegistration = yourEventRegistration;
-    return NS_OK;
+    nsresult rv = NS_OK;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    mEventRegistration = ::util_NewGlobalRef(env, yourEventRegistration);
+    if (nsnull == mEventRegistration) {
+        ::util_ThrowExceptionToJava(env, "Exception: EmbedProgress->SetEventRegistration(): can't create NewGlobalRef\n\tfor eventRegistration");
+	rv = NS_ERROR_FAILURE;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -73,18 +88,20 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     PRUint32        aStateFlags,
 			     nsresult        aStatus)
 {
-  // get the uri for this request
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
-  nsString tmpString;
-  tmpString.AssignWithConversion(uriString);
-
-  PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	 ("EmbedProgress::OnStateChange: URI: %s\n",
-	  (const char *) uriString));
-
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    
+    nsXPIDLCString uriString;
+    RequestToURIString(aRequest, getter_Copies(uriString));
+    jstring uriJstr = ::util_NewStringUTF(env, (const char *) uriString);
+    nsString tmpString;
+    tmpString.AssignWithConversion(uriString);
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	   ("EmbedProgress::OnStateChange: URI: %s\n",
+	    (const char *) uriString));
+    
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: interpreting flags\n"));
-
+    
     if (aStateFlags & STATE_IS_REQUEST) {
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_REQUEST\n"));
     }
@@ -97,7 +114,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     if (aStateFlags & STATE_IS_WINDOW) {
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_IS_WINDOW\n"));
     }
-
+    
     if (aStateFlags & STATE_START) {
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, ("debug: edburns: EmbedProgress::OnStateChange: STATE_START\n"));
     }
@@ -122,6 +139,12 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   if ((aStateFlags & STATE_IS_NETWORK) && 
       (aStateFlags & STATE_START))
   {
+      util_SendEventToJava(nsnull, 
+			   mEventRegistration, 
+			   DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			   DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
+			   uriJstr);
+      
       //    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
       //		    moz_embed_signals[NET_START]);
   }
@@ -151,6 +174,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     mOwner->ContentFinishedLoading();
       *********/
   }
+
+  ::util_DeleteStringUTF(env, uriJstr);
 
   return NS_OK;
 }

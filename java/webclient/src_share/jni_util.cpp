@@ -338,15 +338,14 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 	}
 } // ThrowExceptionToJava()
 
-void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
-                          jobject webclientEventListener, 
+void util_SendEventToJava(JNIEnv *yourEnv, jobject eventRegistrationImpl,
                           jstring eventListenerClassName,
                           jlong eventType, jobject eventData)
 {
 #ifdef BAL_INTERFACE
     if (nsnull != externalEventOccurred) {
-        externalEventOccurred(yourEnv, nativeEventThread,
-                              webclientEventListener, eventType, eventData);
+        externalEventOccurred(yourEnv, eventRegistrationImpl,
+                              eventType, eventData);
     }
 #else
     if (nsnull == gVm) {
@@ -365,11 +364,11 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
         env->ExceptionDescribe();
     }
 
-    jclass clazz = env->GetObjectClass(nativeEventThread);
+    jclass clazz = env->GetObjectClass(eventRegistrationImpl);
     jmethodID mid = env->GetMethodID(clazz, "nativeEventOccurred", 
-                                     "(Lorg/mozilla/webclient/WebclientEventListener;Ljava/lang/String;JLjava/lang/Object;)V");
+                                   "(Ljava/lang/String;JLjava/lang/Object;)V");
     if ( mid != nsnull) {
-        env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
+        env->CallVoidMethod(eventRegistrationImpl, mid,
                             eventListenerClassName,
                             eventType, eventData);
     } else {

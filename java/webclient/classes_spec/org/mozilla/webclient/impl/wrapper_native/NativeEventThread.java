@@ -33,14 +33,6 @@ import java.util.Enumeration;
 
 import java.util.Stack;
 
-import org.mozilla.webclient.BrowserControlCanvas;
-import org.mozilla.webclient.DocumentLoadEvent;
-import org.mozilla.webclient.DocumentLoadListener;
-import org.mozilla.webclient.NewWindowEvent;
-import org.mozilla.webclient.NewWindowListener;
-import java.awt.event.MouseListener;
-import org.mozilla.webclient.WebclientEvent;
-import org.mozilla.webclient.WebclientEventListener;
 import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.webclient.impl.WrapperFactory;
@@ -73,8 +65,6 @@ public class NativeEventThread extends Thread {
     
     private WrapperFactory wrapperFactory;
     private int nativeWrapperFactory;
-    
-    private BrowserControlCanvas browserControlCanvas;
     
     private Stack blockingRunnables;
     private Stack runnables;
@@ -259,51 +249,6 @@ public void run()
 	}
 	return result;
     }
-
-/**
-
- * This method is called from native code when an event occurrs.  This
- * method relies on the fact that all events types that the client can
- * observe descend from WebclientEventListener.  I use instanceOf to
- * determine what kind of WebclientEvent subclass to create.
-
- */
-
-void nativeEventOccurred(WebclientEventListener target,
-                         String targetClassName, long eventType,
-                         Object eventData)
-{
-    ParameterCheck.nonNull(target);
-    ParameterCheck.nonNull(targetClassName);
-
-    Assert.assert_it(-1 != nativeWrapperFactory);
-
-    WebclientEvent event = null;
-
-    if (DocumentLoadListener.class.getName().equals(targetClassName)) {
-        event = new DocumentLoadEvent(this, eventType, eventData);
-    }
-    else if (MouseListener.class.getName().equals(targetClassName)) {
-        Assert.assert_it(target instanceof WCMouseListenerImpl);
-
-        // We create a plain vanilla WebclientEvent, which the
-        // WCMouseListenerImpl target knows how to deal with.
-
-        // Also, the source happens to be the browserControlCanvas
-        // to satisfy the java.awt.event.MouseEvent's requirement
-        // that the source be a java.awt.Component subclass.
-
-        event = new WebclientEvent(browserControlCanvas, eventType, eventData);
-    }
-    else if (NewWindowListener.class.getName().equals(targetClassName)) {
-        event = new NewWindowEvent(this, eventType, eventData);
-    }
-    // else...
-
-    // PENDING(edburns): maybe we need to put this in some sort of
-    // event queue?
-    target.eventDispatched(event);
-}
 
 //
 // Native methods

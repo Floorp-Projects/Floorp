@@ -62,6 +62,10 @@ nsresult
 NativeBrowserControl::Init()
 {
 
+    if (!util_StringConstantsAreInitialized()) {
+        util_InitStringConstants();
+    }
+
     // Create our embed window, and create an owning reference to it and
     // initialize it.  It is assumed that this window will be destroyed
     // when we go out of scope.

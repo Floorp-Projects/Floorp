@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.9 2004/06/10 16:30:00 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.10 2004/06/12 05:46:48 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -65,6 +65,9 @@ public class NavigationTest extends WebclientTestCase {
 	assertNotNull(firstBrowserControl);
 	BrowserControlCanvas canvas = (BrowserControlCanvas)
 	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	final EventRegistration2 eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
 	assertNotNull(canvas);
 	Frame frame = new Frame();
 	frame.setUndecorated(true);
@@ -76,7 +79,7 @@ public class NavigationTest extends WebclientTestCase {
 	Navigation2 nav = (Navigation2) 
 	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
 	assertNotNull(nav);
-	CurrentPage2 currentPage = (CurrentPage2) 
+	final CurrentPage2 currentPage = (CurrentPage2) 
           firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
 	
 	assertNotNull(currentPage);
@@ -88,6 +91,18 @@ public class NavigationTest extends WebclientTestCase {
 	// try loading a file: url
 	//
 	System.out.println("Loading url: " + testPage.toURL().toString());
+	eventRegistration.addDocumentLoadListener(new DocumentLoadListener() {
+		public void eventDispatched(WebclientEvent event) {
+		    if (event instanceof DocumentLoadEvent) {
+			switch ((int) event.getType()) {
+			case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
+			    System.out.println("Start Document Load Event:" + 
+					       event.getEventData());
+			    break;
+			}
+		    }
+		}
+	    });
 	nav.loadURL(testPage.toURL().toString());
 	Thread.currentThread().sleep(1000);
 

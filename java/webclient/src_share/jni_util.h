@@ -241,7 +241,6 @@ void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
  */
 
 void    util_SendEventToJava(JNIEnv *env, jobject eventRegistrationImpl,
-                             jobject webclientEventListener, 
                              jstring eventListenerClassName,
                              jlong eventType,
                              jobject eventData);

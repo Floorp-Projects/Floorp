@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* 
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,7 +27,12 @@ import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
+
 import org.mozilla.webclient.BrowserControl;
+import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.EventRegistration2;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.DocumentLoadEvent;
@@ -57,19 +62,9 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
 // Relationship Instance Variables
 
-/**
+    private BrowserControlCanvas browserControlCanvas = null;
 
- * the Java thread for processing events, owned by WrapperFactoryImpl
-
- */
-
-// PENDING: Currently we rely on NativeEventThread logic to maintain the
-// list of listeners to add and to add them in a threadsafe manner.  In
-// webclient 2.0, we're going to maintain the list of listeners ourself,
-// in this class, and use the Runnable trick to make sure they get added
-// on the right thread.
-
-private NativeEventThread nativeEventThread = null;
+    private List documentLoadListeners;
 
 //
 // Constructors and Initializers
@@ -80,14 +75,19 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
 {
     super(yourFactory, yourBrowserControl);
     
-    // pull out the NativeEventThread from the WrapperFactory
-    nativeEventThread = NativeEventThread.instance;
+    try {
+	browserControlCanvas = (BrowserControlCanvas)
+	    yourBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+    }
+    catch (ClassNotFoundException e) {
+	throw new RuntimeException("EventRegistrationImpl: Can't obtain reference to BrowserControlCanvas");
+    }
+    
+    documentLoadListeners = new ArrayList();
 }
 
 public void delete()
 {
-    nativeEventThread = null;
-
     super.delete();
 }
 
@@ -103,31 +103,13 @@ public void delete()
 // Methods from EventRegistration
 //
 
-/**
-
- * We create a WCEventListenerWrapper containing the user passed
- * DocumentLoadListener, and the string obtained from
- * DocumentLoadListener.class.getName();
-
- */
-
 public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
-    ParameterCheck.nonNull(listener);
-
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(listener,
-                                   DocumentLoadListener.class.getName());
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
-    }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.addListener(listenerWrapper);
+    
+    synchronized(documentLoadListeners) {
+	documentLoadListeners.add(listener);
     }
 }
 
@@ -135,19 +117,9 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
-    ParameterCheck.nonNull(listener);
 
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(listener,
-                                   DocumentLoadListener.class.getName());
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
-    }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.removeListener(listenerWrapper);
+    synchronized(documentLoadListeners) {
+	documentLoadListeners.remove(listener);
     }
 }
 
@@ -156,7 +128,6 @@ public void addMouseListener(MouseListener listener)
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     // We have to wrap the user provided java.awt.event.MouseListener
@@ -189,7 +160,6 @@ public void removeMouseListener(MouseListener listener)
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     WCMouseListenerImpl mouseListenerWrapper =
@@ -217,7 +187,6 @@ public void addNewWindowListener(NewWindowListener listener)
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     WCEventListenerWrapper listenerWrapper =
@@ -237,7 +206,6 @@ public void removeNewWindowListener(NewWindowListener listener)
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    Assert.assert_it(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
 
     WCEventListenerWrapper listenerWrapper =
@@ -252,36 +220,51 @@ public void removeNewWindowListener(NewWindowListener listener)
     }
 }
 
+/**
 
-// ----VERTIGO_TEST_START
+ * This method is called from native code when an event occurrs.  This
+ * method relies on the fact that all events types that the client can
+ * observe descend from WebclientEventListener.  I use instanceOf to
+ * determine what kind of WebclientEvent subclass to create.
 
-//
-// Test methods
-//
+ */
 
-public static void main(String [] args)
+void nativeEventOccurred(String targetClassName, long eventType,
+                         Object eventData)
 {
-    Assert.setEnabled(true);
+    ParameterCheck.nonNull(targetClassName);
 
-    Log.setApplicationName("EventRegistrationImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.5 2004/04/17 21:25:11 edburns%acm.org Exp $");
+    WebclientEvent event = null;
+    WebclientEventListener curListener = null;
+    List listeners = null;
 
-    try {
-        org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
-    org.mozilla.webclient.BrowserControl control =
-        org.mozilla.webclient.BrowserControlFactory.newBrowserControl();
-        Assert.assert_it(control != null);
-
-    EventRegistration2 wc = (EventRegistration2)
-        control.queryInterface(org.mozilla.webclient.BrowserControl.WINDOW_CONTROL_NAME);
-    Assert.assert_it(wc != null);
+    if (DocumentLoadListener.class.getName().equals(targetClassName)) {
+        event = new DocumentLoadEvent(this, eventType, eventData);
+	listeners = documentLoadListeners;
     }
-    catch (Exception e) {
-    System.out.println("got exception: " + e.getMessage());
+    else if (MouseListener.class.getName().equals(targetClassName)) {
+        // We create a plain vanilla WebclientEvent, which the
+        // WCMouseListenerImpl target knows how to deal with.
+
+        // Also, the source happens to be the browserControlCanvas
+        // to satisfy the java.awt.event.MouseEvent's requirement
+        // that the source be a java.awt.Component subclass.
+
+        event = new WebclientEvent(browserControlCanvas, eventType, eventData);
     }
+    else if (NewWindowListener.class.getName().equals(targetClassName)) {
+        event = new NewWindowEvent(this, eventType, eventData);
+    }
+    // else...
+
+    if (null != event && null != listeners) {
+	Iterator iter = listeners.iterator();
+	while (iter.hasNext()) {
+	    curListener = (WebclientEventListener) iter.next();
+	    curListener.eventDispatched(event);
+	}
+    }
+
 }
-
-// ----VERTIGO_TEST_END
 
 } // end of class EventRegistrationImpl
