@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.3 $ $Date: 2001/10/11 16:34:46 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.4 $ $Date: 2001/10/12 15:16:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -74,7 +74,7 @@ PR_BEGIN_EXTERN_C
 
 typedef enum {
     NSSCertificateType_Unknown = 0,
-    NSSCertificateType_PKIX = 1,
+    NSSCertificateType_PKIX = 1
 } NSSCertificateType;
 
 typedef struct nssDecodedCertStr nssDecodedCert;
