@@ -364,6 +364,19 @@ DocObserver::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+nsresult
+DocObserver::LoadURL(const nsString& aURLSpec, 
+                     const char* aCommand,
+                     nsIViewerContainer* aContainer,
+                     nsIPostData* aPostData,
+                     nsISupports* aExtraInfo,
+                     nsIStreamObserver* anObserver)
+{
+  mURL = aURLSpec;
+  return mDocLoader->LoadURL(aURLSpec, aCommand, aContainer,
+                             aPostData, aExtraInfo, anObserver);
+}
+
 // Pass title information through to all of the web widgets that
 // belong to this document.
 NS_IMETHODIMP DocObserver::SetTitle(const nsString& aTitle)
@@ -464,11 +477,12 @@ NS_IMETHODIMP
 DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg)
 {
-  fputs("[progress ", stdout);
   fputs(mURL, stdout);
-  printf(" %d %d ", aProgress, aProgressMax);
-  fputs(aMsg, stdout);
-  fputs("]\n", stdout);
+  printf(": progress %d", aProgress);
+  if (0 != aProgressMax) {
+    printf(" (out of %d)", aProgressMax);
+  }
+  fputs("\n", stdout);
   return NS_OK;
 }
 
@@ -476,25 +490,21 @@ NS_IMETHODIMP
 DocObserver::OnStartBinding(const char *aContentType)
 {
   //start the throbber...
-
   if (nsnull != mViewer)
     mViewer->mUpdateThrobber = PR_TRUE;
 
-  fputs("Loading ", stdout);
   fputs(mURL, stdout);
-  fputs("\n", stdout);
+  fputs(": start\n", stdout);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
-  fputs("Done loading ", stdout);
   fputs(mURL, stdout);
-  fputs("\n", stdout);
+  fputs(": stop\n", stdout);
 
   //stop the throbber...
-
   if (nsnull != mViewer)
   {
     nsRect trect;
@@ -524,8 +534,9 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
 
   aDocViewer->QueryInterface(kIWebWidgetIID, (void**)&mWebWidget);
 
-  mWebWidget->SetContainer((nsIDocumentObserver*)this);
   rv = mWebWidget->Init(mWindowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
+
+  mWebWidget->SetContainer((nsIDocumentObserver*)this);
 
   // Associate a new document with our script global
   if (nsnull != mScriptGlobal) {
@@ -544,13 +555,6 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
   }
 
   mWebWidget->SetLinkHandler((nsILinkHandler*)this);
-
-///  nsIURL* aURL = aDoc->GetDocumentURL();
-///  if (aURL) {
-///    mURL = aURL->GetSpec();
-///  }
-///  NS_IF_RELEASE(aURL);
-
   mWebWidget->Show();
 
   return NS_OK;
@@ -589,10 +593,6 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
     if (nsnull != mViewer) {
       mViewer->GoTo(aURLSpec, nsnull, this, aPostData, nsnull, this);
     }
-///  if (nsnull != mWebWidget) {
-///    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
-///    targetWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
-///    NS_RELEASE(targetWidget);
   }
 }
 
@@ -1478,7 +1478,7 @@ void nsViewer::CleanupViewer(nsDocLoader* aDocLoader)
 void
 nsViewer::ShowHistory()
 {
-#if 0
+#ifdef SHOW_HISTORY
   PRInt32 i, n = mHistory.Count();
   for (i = 0; i < n; i++) {
     if (i == mHistoryIndex) {
@@ -1512,8 +1512,8 @@ nsViewer::Back()
     mHistoryIndex--;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-      mWD->observer->mDocLoader->LoadURL(*s, nsnull, mWD->observer,
-                                         nsnull, nsnull, mWD->observer);
+      mWD->observer->LoadURL(*s, nsnull, mWD->observer,
+                             nsnull, nsnull, mWD->observer);
     }
     ShowHistory();
   }
@@ -1537,8 +1537,8 @@ nsViewer::Forward()
     mHistoryIndex++;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-      mWD->observer->mDocLoader->LoadURL(*s, nsnull, mWD->observer,
-                                         nsnull, nsnull, mWD->observer);
+      mWD->observer->LoadURL(*s, nsnull, mWD->observer,
+                             nsnull, nsnull, mWD->observer);
     }
     ShowHistory();
   }
@@ -1575,12 +1575,12 @@ nsViewer::GoTo(const nsString& aURLSpec,
     fputs(aURLSpec, stdout);
     printf("\n");
 
-    rv = mWD->observer->mDocLoader->LoadURL(aURLSpec,       // URL string
-                                            aCommand,       // Command
-                                            aContainer,     // Container
-                                            aPostData,      // Post Data
-                                            aExtraInfo,     // Extra Info...
-                                            anObserver);    // Observer
+    rv = mWD->observer->LoadURL(aURLSpec,       // URL string
+                                aCommand,       // Command
+                                aContainer,     // Container
+                                aPostData,      // Post Data
+                                aExtraInfo,     // Extra Info...
+                                anObserver);    // Observer
   }
   return rv;
 }
@@ -1602,8 +1602,10 @@ nsViewer::GoingTo(const nsString& aURL)
   mHistory.AppendElement(url);
   mHistoryIndex++;
 
+#ifdef SHOW_HISTORY
   printf("GoingTo: new history=\n");
   ShowHistory();
+#endif
 }
 
 nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **argv)
