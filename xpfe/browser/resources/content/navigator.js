@@ -1032,9 +1032,9 @@ function BrowserEditBookmarks()
 function BrowserChangeTextSize(newSize)
   {
 
-     var oldSize = document.getElementById("menu_TextSize_Popup").getAttribute("oldsize");
-      var diff = newSize - oldSize; 
-      If (diff != 0) BrowserChangeTextZoom(diff);
+      var oldSize = document.getElementById("menu_TextSize_Popup").getAttribute("oldsize");
+      var diff = (newSize - oldSize); 
+      if (diff != 0) BrowserChangeTextZoom(diff);
       document.getElementById("menu_TextSize_Popup").setAttribute("oldsize", newSize);           
       
   }
