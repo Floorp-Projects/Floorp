@@ -147,7 +147,7 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
 }
 
 static PRBool 
-HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* parent);
+HasTextFrameDescendantOrInFlow(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
 void
 nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext, 
@@ -220,7 +220,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
   
   if (aDecorations) {
     // If this frame contains no text, we're required to ignore this property
-    if (!HasTextFrameDescendant(aPresContext, this)) {
+    if (!HasTextFrameDescendantOrInFlow(aPresContext, this)) {
       aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
     }
   }
@@ -258,6 +258,17 @@ HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
   }
   return PR_FALSE;
 }
+
+static PRBool 
+HasTextFrameDescendantOrInFlow(nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f->GetNextInFlow(&f)) {
+    if (HasTextFrameDescendant(aPresContext, f))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 
 /*virtual*/ void
 nsHTMLContainerFrame::PaintTextDecorationLines(
