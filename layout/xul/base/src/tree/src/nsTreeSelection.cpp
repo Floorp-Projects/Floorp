@@ -136,6 +136,12 @@ struct nsOutlinerRange
         mMin++;
       else if (aIndex == mMax)
         mMax--;
+      else {
+        // We have to break this range.
+        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex + 1, mMax);
+        newRange->Connect(this, mNext);
+        mMax = aIndex - 1;
+      }
     }
     else if (mNext)
       mNext->Remove(aIndex);
@@ -305,6 +311,8 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
 {
   mShiftSelectPivot = -1;
 
+  SetCurrentIndex(aIndex);
+
   if (mFirstRange) {
     PRBool alreadySelected = mFirstRange->Contains(aIndex);
 
@@ -324,8 +332,6 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
     }
   }
 
-  SetCurrentIndex(aIndex);
-  
   // Create our new selection.
   mFirstRange = new nsOutlinerRange(this, aIndex);
   mFirstRange->Invalidate();
@@ -353,9 +359,9 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
   else {
     if (!mFirstRange->Contains(aIndex))
       mFirstRange->Add(aIndex);
-    else 
+    else
       mFirstRange->Remove(aIndex);
-
+    
     mOutliner->InvalidateRow(aIndex);
 
     FireOnSelectHandler();
@@ -368,8 +374,10 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
 {
   if (!aAugment) {
     // Clear our selection.
-    mFirstRange->Invalidate();
-    delete mFirstRange;
+    if (mFirstRange) {
+        mFirstRange->Invalidate();
+        delete mFirstRange;
+    }
   }
 
   if (aStartIndex == -1) {
@@ -384,7 +392,7 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
   PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
   PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
 
-  if (aAugment) {
+  if (aAugment && mFirstRange) {
     // We need to remove all the items within our selected range from the selection,
     // and then we insert our new range into the list.
     mFirstRange->RemoveRange(start, end);
@@ -403,11 +411,29 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
+{
+  SetCurrentIndex(aEndIndex);
+
+  if (mFirstRange) {
+    PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
+    PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
+
+    mFirstRange->RemoveRange(start, end);
+
+    mOutliner->InvalidateRange(start, end);
+  }
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
 {
-  mFirstRange->Invalidate();
-  delete mFirstRange;
-  mFirstRange = nsnull;
+  if (mFirstRange) {
+    mFirstRange->Invalidate();
+    delete mFirstRange;
+    mFirstRange = nsnull;
+  }
   mShiftSelectPivot = -1;
 
   FireOnSelectHandler();
@@ -508,6 +534,12 @@ NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
   if (aIndex != -1)
     mOutliner->InvalidateRow(aIndex);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
+{
   return NS_OK;
 }
 

@@ -50,6 +50,9 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
   // else.  If augment is false, everything is cleared except for the specified range.
   void rangedSelect(in long startIndex, in long endIndex, in boolean augment);
 
+  // Clears the range.
+  void clearRange(in long startIndex, in long endIndex);
+
   // Clears the selection.
   void clearSelection();
 
@@ -62,6 +65,9 @@ interface nsIOutlinerSelection : nsISecurityCheckedComponent
   // Iterate the selection using these methods.
   long getRangeCount();
   void getRangeAt(in long i, out long min, out long max);
+
+  // Called when the row count changes to adjust selection indices.
+  void adjustSelection(in long index, in long count);
 
   // This attribute is a boolean indicating whether or not the
   // "select" event should fire when the selection is changed using

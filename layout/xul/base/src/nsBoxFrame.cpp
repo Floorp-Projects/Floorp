@@ -193,13 +193,13 @@ PRBool nsBoxFrameInner::gDebug = PR_FALSE;
 nsIBox* nsBoxFrameInner::mDebugChild = nsnull;
 
 nsresult
-NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager);
 
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -210,18 +210,14 @@ NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot,
   
 } // NS_NewBoxFrame
 
-nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal):nsContainerBox(aPresShell)
+nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsContainerBox(aPresShell)
 {
   mInner = new (aPresShell) nsBoxFrameInner(aPresShell, this);
 
   mInner->mAttributesCached = PR_FALSE;
 
-  // if not otherwise specified boxes by default are horizontal.
-  if (aIsHorizontal) {
-     mState |= NS_STATE_IS_HORIZONTAL;
-     mState |= NS_STATE_DEFAULT_HORIZONTAL;
-  }
-
+  mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
 
   if (aIsRoot) 
@@ -371,9 +367,6 @@ nsBoxFrameInner::CacheAttributes()
   mOuter->GetInitialHAlignment(mHalign);
   
   PRBool orient = PR_FALSE;
-  if (mOuter->mState & NS_STATE_DEFAULT_HORIZONTAL)
-     orient = PR_TRUE;
-
   mOuter->GetInitialOrientation(orient); 
   if (orient)
         mOuter->mState |= NS_STATE_IS_HORIZONTAL;
@@ -548,7 +541,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
 
 /* Returns true if it was set.
  */
-PRBool
+void
 nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
  // see if we are a vertical or horizontal box.
@@ -558,31 +551,33 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   GetContentOf(getter_AddRefs(content));
 
   if (!content)
-     return PR_FALSE;
+    return;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::orient, value))
-  {
-      if (value.EqualsIgnoreCase("vertical")) {
-         aIsHorizontal = PR_FALSE;
-         return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("horizontal")) {
-         aIsHorizontal = PR_TRUE;
-         return PR_TRUE;
-      }
+  // Check the style system first.
+  const nsStyleXUL* boxInfo;
+  GetStyleData(eStyleStruct_XUL,
+               (const nsStyleStruct*&)boxInfo);
+  if (boxInfo->mBoxOrient == NS_STYLE_BOX_ORIENT_HORIZONTAL)
+    aIsHorizontal = PR_TRUE;
+  else 
+    aIsHorizontal = PR_FALSE;
+
+  // Now see if we have an attribute.  The attribute overrides
+  // the style system value.
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::orient, value)) {
+    if (value.EqualsIgnoreCase("vertical"))
+      aIsHorizontal = PR_FALSE;
+    else if (value.EqualsIgnoreCase("horizontal"))
+     aIsHorizontal = PR_TRUE;
   } else {
-      // depricated, use align
-      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-          if (value.EqualsIgnoreCase("vertical")) {
-             aIsHorizontal = PR_FALSE;
-             return PR_TRUE;
-          } else if (value.EqualsIgnoreCase("horizontal")) {
-             aIsHorizontal = PR_TRUE;
-             return PR_TRUE;
-          }
-      }
-  }  
-
-  return PR_FALSE;
+    // deprecated, use align
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+      if (value.EqualsIgnoreCase("vertical"))
+        aIsHorizontal = PR_FALSE;
+      else if (value.EqualsIgnoreCase("horizontal"))
+        aIsHorizontal = PR_TRUE;
+    }
+  }
 }
 
 /* Returns true if it was set.
@@ -1164,12 +1159,12 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
           GetInitialVAlignment(mInner->mValign);
           GetInitialHAlignment(mInner->mHalign);
   
-          PRBool orient = mState & NS_STATE_DEFAULT_HORIZONTAL;
+          PRBool orient = PR_TRUE;
           GetInitialOrientation(orient); 
           if (orient)
-                mState |= NS_STATE_IS_HORIZONTAL;
-            else
-                mState &= ~NS_STATE_IS_HORIZONTAL;
+            mState |= NS_STATE_IS_HORIZONTAL;
+          else
+            mState &= ~NS_STATE_IS_HORIZONTAL;
  
           PRBool equalSize = PR_FALSE;
           GetInitialEqualSize(equalSize); 

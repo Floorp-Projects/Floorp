@@ -100,7 +100,9 @@
 #define NS_STYLE_USER_MODIFY_READ_WRITE  1
 #define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
 
-
+// box-orient
+#define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
+#define NS_STYLE_BOX_ORIENT_VERTICAL   1
 
 // Azimuth - See nsStyleAural
 #define NS_STYLE_AZIMUTH_LEFT_SIDE        0x00

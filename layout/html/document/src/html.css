@@ -416,6 +416,7 @@ noscript, noframes, param, :-moz-comment, :-moz-pi {
   background: inherit;
   padding: inherit;
   display: inherit;
+  -moz-box-orient: inherit;
 }
 
 :wrapped-frame {

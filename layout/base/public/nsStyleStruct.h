@@ -37,12 +37,15 @@ enum nsStyleStructID {
   eStyleStruct_Padding        = 12,
   eStyleStruct_Border         = 13,
   eStyleStruct_Outline        = 14,
-
+#ifdef INCLUDE_XUL
+  eStyleStruct_XUL            = 15,
+  eStyleStruct_Max            = eStyleStruct_XUL,
+  eStyleStruct_BorderPaddingShortcut = 16       // only for use in GetStyle()
+#else
   eStyleStruct_Max            = eStyleStruct_Outline,
-
   eStyleStruct_BorderPaddingShortcut = 15       // only for use in GetStyle()
+#endif
 };
-
 
 struct nsStyleStruct {
 };

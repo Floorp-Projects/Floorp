@@ -83,7 +83,7 @@ public:
 class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
                                  public nsIReflowCallback /*, public nsITimerCallback */
 {
-  nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsXULTreeOuterGroupFrame();
 
 public:
@@ -94,8 +94,7 @@ public:
   friend nsresult NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull,
-                                          PRBool aDefaultHorizontal = PR_TRUE);
+                                          nsIBoxLayout* aLayoutManager = nsnull);
   
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);

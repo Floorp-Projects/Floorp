@@ -220,13 +220,13 @@ NS_IMPL_ISUPPORTS1(nsScrollSmoother, nsITimerCallback)
 //
 nsresult
 NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
+                        nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULTreeOuterGroupFrame* it = new (aPresShell) nsXULTreeOuterGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
+  nsXULTreeOuterGroupFrame* it = new (aPresShell) nsXULTreeOuterGroupFrame(aPresShell, aIsRoot, aLayoutManager);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -237,8 +237,8 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 
 
 // Constructor
-nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
-:nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
+nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+:nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager),
  mBatchCount(0), mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mOldIndex(0),
  mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCanDropBetweenRows(PR_TRUE),
  mRowHeightWasSet(PR_FALSE), mReflowCallbackPosted(PR_FALSE), mYPosition(0), mScrolling(PR_FALSE),

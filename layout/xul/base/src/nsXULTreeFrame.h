@@ -34,8 +34,7 @@ public:
   friend nsresult NS_NewXULTreeFrame(nsIPresShell* aPresShell, 
                                      nsIFrame** aNewFrame, 
                                      PRBool aIsRoot = PR_FALSE,
-                                     nsIBoxLayout* aLayoutManager = nsnull,
-                                     PRBool aDefaultHorizontal = PR_TRUE);
+                                     nsIBoxLayout* aLayoutManager = nsnull);
 
   NS_DECL_ISUPPORTS
 
@@ -55,7 +54,7 @@ public:
   NS_IMETHOD EndBatch();
 
 protected:
-  nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsXULTreeFrame();
 
 public:

@@ -56,9 +56,8 @@ class nsHTMLInfo;
 #define NS_STATE_SET_TO_DEBUG            0x04000000
 #define NS_STATE_DEBUG_WAS_SET           0x08000000
 #define NS_STATE_IS_COLLAPSED            0x10000000
-#define NS_STATE_DEFAULT_HORIZONTAL      0x20000000
-#define NS_STATE_STYLE_CHANGE            0x40000000
-#define NS_STATE_EQUAL_SIZE              0x80000000
+#define NS_STATE_STYLE_CHANGE            0x20000000
+#define NS_STATE_EQUAL_SIZE              0x40000000
 
 class nsBoxFrame : public nsContainerFrame, public nsContainerBox
 {
@@ -67,8 +66,7 @@ public:
   friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, 
                                  nsIFrame** aNewFrame, 
                                  PRBool aIsRoot = PR_FALSE,
-                                 nsIBoxLayout* aLayoutManager = nsnull,
-                                 PRBool aDefaultHorizontal = PR_TRUE);
+                                 nsIBoxLayout* aLayoutManager = nsnull);
 
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
@@ -163,7 +161,7 @@ public:
   virtual nsresult GetContentOf(nsIContent** aContent);
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
   static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
                                    nsIFrame* aChild,
@@ -201,7 +199,7 @@ protected:
 
 
     virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
-    virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
+    virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
     virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 
     virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 

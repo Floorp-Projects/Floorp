@@ -42,11 +42,10 @@ public:
   friend nsresult NS_NewXULTreeGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
                                           PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull,
-                                          PRBool aDefaultHorizontal = PR_TRUE);
+                                          nsIBoxLayout* aLayoutManager = nsnull);
 
 protected:
-  nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsXULTreeGroupFrame();
 
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
