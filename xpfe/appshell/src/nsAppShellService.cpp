@@ -37,6 +37,7 @@
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsICmdLineService.h"
+#include "nsCRT.h"
 #ifdef NS_DEBUG
 #include "prprf.h"    
 #endif
@@ -293,6 +294,7 @@ nsAppShellService::EnumerateComponents( void (nsAppShellService::*function)( con
                         // Unable to get subkey name, ignore it.
                     }
                     // Release the node.
+                    nsCRT::free(name);
                     NS_RELEASE( node );
                 } else {
                     // Unable to convert item to registry node, ignore it.
