@@ -2727,6 +2727,28 @@ static void* _MD_Unix_mmap64(
 }  /* _MD_Unix_mmap64 */
 #endif /* defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5) */
 
+#if defined(OSF1) && defined(__GNUC__)
+
+/*
+ * On OSF1 V5.0A, <sys/stat.h> defines stat and fstat as
+ * macros when compiled under gcc, so it is rather tricky to
+ * take the addresses of the real functions the macros expend
+ * to.  A simple solution is to define forwarder functions
+ * and take the addresses of the forwarder functions instead.
+ */
+
+static int stat_forwarder(const char *path, struct stat *buffer)
+{
+    return stat(path, buffer);
+}
+
+static int fstat_forwarder(int filedes, struct stat *buffer)
+{
+    return fstat(filedes, buffer);
+}
+
+#endif
+
 static void _PR_InitIOV(void)
 {
 #if defined(SOLARIS2_5)
@@ -2771,8 +2793,13 @@ static void _PR_InitIOV(void)
 #elif defined(_PR_HAVE_LARGE_OFF_T)
     _md_iovector._open64 = open;
     _md_iovector._mmap64 = mmap;
+#if defined(OSF1) && defined(__GNUC__)
+    _md_iovector._fstat64 = fstat_forwarder;
+    _md_iovector._stat64 = stat_forwarder;
+#else
     _md_iovector._fstat64 = fstat;
     _md_iovector._stat64 = stat;
+#endif
     _md_iovector._lseek64 = lseek;
 #else
 #error "I don't know yet"
