@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Glen Nakamura <glen@imodulo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,8 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Platform specific code to invoke XPCOM methods on native objects */
-
-/* contributed by Glen Nakamura <glen.nakamura@usa.net> */
 
 #include "xptcprivate.h"
 
@@ -163,7 +162,11 @@ __asm__(
     "bis $16,$16,$1\n\t"    /* load "this" */
     "ldq $2,16($15)\n\t"    /* load "methodIndex" */
     "ldq $1,0($1)\n\t"      /* load vtable */
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+    "s8addq $2,$31,$2\n\t"  /* vtable index = "methodIndex" * 8 */
+#else /* not G++ V3 ABI */
     "s8addq $2,16,$2\n\t"   /* vtable index = "methodIndex" * 8 + 16 */
+#endif /* G++ V3 ABI */
     "addq $1,$2,$1\n\t"
     "ldq $27,0($1)\n\t"     /* load address of function */
     "jsr $26,($27),0\n\t"   /* call virtual function */
@@ -176,4 +179,3 @@ __asm__(
     "ret $31,($26),1\n\t"
     ".end XPTC_InvokeByIndex"
     );
-

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Glen Nakamura <glen@imodulo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,8 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Implement shared vtbl methods. */
-
-/* contributed by Glen Nakamura <glen.nakamura@usa.net> */
 
 #include "xptcprivate.h"
 
@@ -188,22 +187,44 @@ __asm__(
  * nsresult nsXPTCStubBase::Stub##n()
  *  Sets register $1 to "methodIndex" and jumps to SharedStub.
  */
+#define STUB_MANGLED_ENTRY(n, symbol) \
+    "#### Stub"#n" ####"      "\n\t" \
+    ".text"                   "\n\t" \
+    ".align 5"                "\n\t" \
+    ".globl " symbol          "\n\t" \
+    ".ent " symbol            "\n"   \
+symbol ":"                    "\n\t" \
+    ".frame $30,0,$26,0"      "\n\t" \
+    "ldgp $29,0($27)"         "\n"   \
+"$" symbol "..ng:"            "\n\t" \
+    ".prologue 1"             "\n\t" \
+    "lda $1,"#n               "\n\t" \
+    "br $31,$SharedStub..ng"  "\n\t" \
+    ".end " symbol
+
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+
 #define STUB_ENTRY(n) \
 __asm__( \
-    "#### Stub"#n" ####\n" \
-".text\n\t" \
-    ".align 5\n\t" \
-    ".globl Stub"#n"__14nsXPTCStubBase\n\t" \
-    ".ent Stub"#n"__14nsXPTCStubBase\n" \
-"Stub"#n"__14nsXPTCStubBase:\n\t" \
-    ".frame $30,0,$26,0\n\t" \
-    "ldgp $29,0($27)\n" \
-"$Stub"#n"__14nsXPTCStubBase..ng:\n\t" \
-    ".prologue 1\n\t" \
-    "lda $1,"#n"\n\t" \
-    "br $31,$SharedStub..ng\n\t" \
-    ".end Stub"#n"__14nsXPTCStubBase" \
+    ".if "#n" < 10"                                              "\n\t" \
+        STUB_MANGLED_ENTRY(n, "_ZN14nsXPTCStubBase5Stub"#n"Ev")  "\n\t" \
+    ".elseif "#n" < 100"                                         "\n\t" \
+        STUB_MANGLED_ENTRY(n, "_ZN14nsXPTCStubBase6Stub"#n"Ev")  "\n\t" \
+    ".elseif "#n" < 1000"                                        "\n\t" \
+        STUB_MANGLED_ENTRY(n, "_ZN14nsXPTCStubBase7Stub"#n"Ev")  "\n\t" \
+    ".else"                                                      "\n\t" \
+    ".err \"Stub"#n" >= 1000 not yet supported.\""               "\n\t" \
+    ".endif" \
     );
+
+#else /* not G++ V3 ABI */
+
+#define STUB_ENTRY(n) \
+__asm__( \
+    STUB_MANGLED_ENTRY(n, "Stub"#n"__14nsXPTCStubBase") \
+    );
+
+#endif /* G++ V3 ABI */
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
@@ -213,4 +234,3 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 }
 
 #include "xptcstubsdef.inc"
-
