@@ -197,6 +197,7 @@ struct nsMenuEvent : public nsGUIEvent {
 
 /*
  * Virtual key bindings for keyboard events
+ * NOTE: These are repeated in nsIDOMEvent.h and must be kept in sync
  */
 
 #define NS_VK_CANCEL         0x03
