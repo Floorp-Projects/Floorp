@@ -1757,9 +1757,14 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Position the window behind the given window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
+NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                nsIWidget *aWidget, PRBool aActivate)
 {
-  HWND behind = aWidget ? (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW) : HWND_TOP;
+  HWND behind = HWND_TOP;
+  if (aPlacement == eZPlacementBottom)
+    behind = HWND_BOTTOM;
+  else if (aPlacement == eZPlacementBelow && aWidget)
+    behind = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   UINT flags = SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE;
   if (!aActivate)
     flags |= SWP_NOACTIVATE;
