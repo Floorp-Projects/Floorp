@@ -25,7 +25,7 @@
 
 var gToolbarChanged = false;
 var gCurrentDragOverItem = null;
-
+var gDraggingFromPalette = false;
 function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
@@ -63,7 +63,7 @@ function buildDialog()
                                          "toolbarpaletteitem");
     
     // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
-    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
     enclosure.appendChild(newItem);
     newToolbar.appendChild(enclosure);
     toolbarItem = toolbarItem.nextSibling;
@@ -105,7 +105,7 @@ function buildDialog()
     enclosure.setAttribute("width", "0");
     enclosure.setAttribute("minheight", "0");
     enclosure.setAttribute("minwidth", "0");
-    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
  
     enclosure.appendChild(paletteItem);
     currentRow.appendChild(enclosure);
@@ -185,7 +185,7 @@ var dropObserver = {
 
     var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "toolbarpaletteitem");
-    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
     cleanUpItemForAdding(paletteItem);
     enclosure.appendChild(paletteItem);
 
@@ -209,12 +209,18 @@ var dropObserver = {
 var trashObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
+    if (gDraggingFromPalette) {
+      aDragSession.canDrop = false;
+      return;
+    }
     var trashCan = document.getElementById("trash-can");
     trashCan.setAttribute("dragactive", "true");
     aDragSession.canDrop = true;
   },
   onDrop: function (aEvent, aXferData, aDragSession)
   {
+    if (gDraggingFromPalette)
+      return;
     var buttonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
     var toolbar = document.getElementById("cloneToolbar");
     var toolbarItem = toolbar.firstChild;
