@@ -11,6 +11,10 @@
 [langenus]
 ;
 ; en-US 
+bin\chrome\en-US.jar
+bin\chrome\en-mac.jar
+bin\chrome\en-unix.jar
+bin\chrome\en-win.jar
 bin\chrome\en-US\*
 bin\chrome\en-win\*
 bin\chrome\en-unix\*
@@ -19,6 +23,7 @@ bin\chrome\en-mac\*
 [regus]
 ;
 ; US
+bin\chrome\US.jar
 bin\chrome\US\*
 bin\defaults\profile\US\*
 bin\searchplugins\*
@@ -215,6 +220,10 @@ bin\components\xmlextras.xpt
 bin\components\xmlextras.dll
 
 ; chrome stuff
+bin\chrome\comm.jar
+bin\chrome\toolkit.jar
+bin\chrome\modern.jar
+bin\chrome\classic.jar
 bin\chrome\comm\*
 bin\chrome\toolkit\*
 bin\chrome\modern\*
@@ -300,10 +309,12 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\absyncsv.dll
 bin\components\absync.xpt
+bin\chrome\messenger.jar
 bin\chrome\messenger\*
 
 [chatzilla]
 bin\components\chatzilla-service.js
+bin\chrome\chatzilla.jar
 bin\chrome\chatzilla\*
 
 [psm]
