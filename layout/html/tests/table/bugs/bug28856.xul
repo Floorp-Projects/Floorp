@@ -1,0 +1,417 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+align="vertical" style="width:100%;height:100%">
+<tree flex="1">
+  <treechildren>
+    <treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	   <treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+
+	<treeitem>
+      <treerow>
+	    <treecell value="I'm so happy being a XUL tree!"/>
+	  </treerow>
+	</treeitem>
+  </treechildren>
+  </tree>
+</window>
+

@@ -1,3 +1,4 @@
+file:///s|/mozilla/layout/html/tests/table/bugs/bug28856.xul
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10009.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1010.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10216.html
@@ -155,7 +156,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug3977.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4093.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4284.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4294.html
-file:///s|/mozilla/layout/html/tests/table/bugs/bug4382.html
+#file:///s|/mozilla/layout/html/tests/table/bugs/bug4382.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4385.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4427.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4429.html
