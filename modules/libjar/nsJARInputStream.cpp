@@ -37,10 +37,10 @@ NS_IMPL_ISUPPORTS1(nsJARInputStream, nsIInputStream);
 NS_IMETHODIMP 
 nsJARInputStream::Available(PRUint32 *_retval)
 {
-  if (mZip == 0)
+  if (Zip() == 0)
     *_retval = 0;
   else
-    *_retval = mZip->Available(mReadInfo);
+    *_retval = Zip()->Available(mReadInfo);
 
   return NS_OK;
 }
@@ -48,35 +48,38 @@ nsJARInputStream::Available(PRUint32 *_retval)
 NS_IMETHODIMP
 nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
 {
-  if (mZip == nsnull)
+  if (Zip() == nsnull)
   {
     *bytesRead = 0;
     return NS_OK;
   }
 
-  if( (mZip->Read(mReadInfo, buf, count, bytesRead)) != ZIP_OK )
-    return NS_ERROR_FAILURE;
-  else
-    return NS_OK;
+  PRInt32 err = Zip()->Read(mReadInfo, buf, count, bytesRead);
+#ifdef DEBUG_warren
+//  printf("read %d from %s\n", *bytesRead, mEntryName);
+#endif
+  return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
+  NS_RELEASE(mJAR);
   delete mReadInfo;
   return NS_OK;
 }
 
 nsresult 
-nsJARInputStream::Init(nsJAR* aJAR, nsZipArchive* aZip, const char* aFilename)
+nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
 {
-  if (!(aZip && aFilename))
+  if (!aFilename)
     return NS_ERROR_NULL_POINTER;
-  mZip = aZip;
-  mEntryName = (char*)aFilename;
+  mJAR = aJAR;
+  NS_ADDREF(mJAR);
+  mEntryName = nsCRT::strdup(aFilename);
 
   PRInt32 result; 
-  result = mZip->ReadInit(mEntryName, &mReadInfo);
+  result = Zip()->ReadInit(mEntryName, &mReadInfo);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   
@@ -104,6 +107,7 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 //----------------------------------------------
 
 nsJARInputStream::nsJARInputStream()
+  : mJAR(nsnull), mEntryName(nsnull), mReadInfo(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -111,6 +115,7 @@ nsJARInputStream::nsJARInputStream()
 nsJARInputStream::~nsJARInputStream()
 {
   Close();
+  if (mEntryName) nsCRT::free(mEntryName);
 }
 
 
