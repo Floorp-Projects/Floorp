@@ -35,7 +35,24 @@
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 #define NS_STRINGBUNDLE_CONTRACTID "@mozilla.org/intl/stringbundle;1"
+
+/** 
+ * observer needs to check if the bundle handle matches
+ */
+#define NS_STRBUNDLE_LOADED_TOPIC (NS_LITERAL_STRING("strbundle-loaded").get())
+
+/** callbacks
+ *
+ *   args: 
+ *     bundle handle
+ *     urlSpec
+ *     closure
+ */
+typedef nsresult (*PR_CALLBACK nsStrBundleLoadedFunc) (void *, const char *, void *); 
+
 %}
+
+native nsStrBundleLoadedFunc(nsStrBundleLoadedFunc);
 
 [scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundle : nsISupports
@@ -63,6 +80,15 @@ interface nsIStringBundle : nsISupports
   Implements nsISimpleEnumerator, replaces nsIEnumerator 
   */
   nsISimpleEnumerator getSimpleEnumeration();
+
+  /* stream loaded
+   */
+  attribute boolean loaded;
+
+  /* callback */
+  [noscript] void RegisterCallback(in nsStrBundleLoadedFunc callback,
+                                   in voidPtr closure);
+
 };
 
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
@@ -70,6 +96,7 @@ interface nsIStringBundleService : nsISupports
 {
   nsIStringBundle CreateBundle([const] in string aURLSpec, 
     in nsILocale aLocale);
+  nsIStringBundle CreateAsyncBundle([const] in string aURLSpec);
 
   nsIStringBundle CreateExtensibleBundle([const] in string aRegistryKey, 
     in nsILocale aLocale);
@@ -91,6 +118,7 @@ interface nsIStringBundleService : nsISupports
    * at some point, we might want to make this flush all the bundles,
    * because any bundles that are floating around when the locale changes
    * will suddenly contain bad data
+   *
    */
   void flushBundles();
 };
