@@ -126,9 +126,11 @@ function onToggleMunger()
 {
     client.munger.enabled = !client.munger.enabled;
 
+    /*
     if (client.munger.enabled)
         alert ("The munger may be broken, see " +
                "http://bugzilla.mozilla.org/show_bug.cgi?id=22048");
+    */
     
     document.getElementById("menu-munger").setAttribute ("checked",
                                                          client.munger.enabled);
