@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  unicharutil \
 		  webshell \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -71,6 +72,7 @@ CPPSRCS		= \
 		nsSVGGenericContainerFrame.cpp \
 		nsSVGGlyphFrame.cpp \
 		nsSVGGradientFrame.cpp \
+		nsSVGImageFrame.cpp \
 		nsSVGInnerSVGFrame.cpp \
 		nsSVGLineFrame.cpp \
 		nsSVGMarkerFrame.cpp \

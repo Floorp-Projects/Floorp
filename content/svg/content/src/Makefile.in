@@ -60,7 +60,8 @@ REQUIRES	= xpcom \
 		  necko \
 		  xpconnect \
 		  webshell \
-		  unicharutil
+		  unicharutil \
+		  imglib2
 
 CPPSRCS		= \
 		nsSVGAngle.cpp \

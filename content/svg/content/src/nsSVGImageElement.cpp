@@ -48,12 +48,18 @@
 #include "nsSVGCoordCtxProvider.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsSVGAnimatedPreserveAspectRatio.h"
+#include "nsSVGPreserveAspectRatio.h"
+#include "nsImageLoadingContent.h"
+#include "imgIContainer.h"
+#include "imgIDecoderObserver.h"
 
 typedef nsSVGGraphicElement nsSVGImageElementBase;
 
 class nsSVGImageElement : public nsSVGImageElementBase,
                           public nsIDOMSVGImageElement,
-                          public nsIDOMSVGURIReference
+                          public nsIDOMSVGURIReference,
+                          public nsImageLoadingContent
 {
 protected:
   friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
@@ -77,6 +83,9 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
+  // nsISVGValueObserver specializations:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue *observable);
+
 protected:
   void GetSrc(nsAString& src);
   
@@ -85,7 +94,7 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-
+  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
 };
 
 
@@ -104,6 +113,8 @@ NS_INTERFACE_MAP_BEGIN(nsSVGImageElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGImageElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 
@@ -193,6 +204,20 @@ nsSVGImageElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
+  // DOM property: preserveAspectRatio , #IMPLIED attrib: preserveAspectRatio
+  {
+    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
+    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedPreserveAspectRatio(
+                                          getter_AddRefs(mPreserveAspectRatio),
+                                          preserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+                           mPreserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
   return rv;
 }
 
@@ -243,8 +268,9 @@ NS_IMETHODIMP
 nsSVGImageElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
                                           **aPreserveAspectRatio)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *aPreserveAspectRatio = mPreserveAspectRatio;
+  NS_IF_ADDREF(*aPreserveAspectRatio);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -333,3 +359,33 @@ void nsSVGImageElement::GetSrc(nsAString& src)
   else
     src = relURIStr;
 }
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable)
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
+
+  if (s && mHref == s) {
+    nsAutoString href;
+    GetSrc(href);
+
+#ifdef DEBUG_tor
+    fprintf(stderr, "nsSVGImageElement - URI <%s>\n", ToNewCString(href));
+#endif
+
+    // If caller is not chrome and dom.disable_image_src_set is true,
+    // prevent setting image.src by exiting early
+    if (nsContentUtils::GetBoolPref("dom.disable_image_src_set") &&
+        !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+
+    ImageURIChanged(href);
+  }
+
+  return nsSVGImageElementBase::DidModifySVGObservable(aObservable);
+}
+
