@@ -336,22 +336,17 @@ void nsHTMLContent::ListAttributes(FILE* out) const
     PRInt32 count = attrs->Count();
     PRInt32 index;
     for (index = 0; index < count; index++) {
+      // name
       nsIAtom* attr = (nsIAtom*)attrs->ElementAt(index);
       nsAutoString buffer;
       attr->ToString(buffer);
-#if 0 // use nsHTMLValue api
-      nsHTMLValue value;
-      GetAttribute(attr, value);
-#else // use string api
+
+      // value
       nsAutoString value;
       GetAttribute(buffer, value);
-#endif
       buffer.Append("=");
-#if 0
-      value.AppendToString(buffer);
-#else
       buffer.Append(value);
-#endif
+
       fputs(" ", out);
       fputs(buffer, out);
       NS_RELEASE(attr);
