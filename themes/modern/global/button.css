@@ -171,3 +171,27 @@ button.plain-extended {}
     
     
     
+/**
+ * Reorder buttons 
+ **/
+   
+  .reorder-up
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-up.gif");
+    }    
+    
+  .reorder-down
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+    }    
+    
+  .reorder-up > .button-internal-box > .button-icon,
+  .reorder-down > .button-internal-box > .button-icon
+    {
+      margin              : none;
+      padding             : none;
+    }
+    
+    

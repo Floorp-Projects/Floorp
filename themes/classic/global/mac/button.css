@@ -246,3 +246,29 @@ button[default="true"][disabled="true"]:hover:active > .button-image-right,
 .button-image-right[default="true"][disabled="true"] {
 	background			: url(chrome://global/skin/button-def-disabled-right.gif) no-repeat;
 }
+
+
+/**
+ * Reorder buttons 
+ **/
+   
+  .reorder-up
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-up.gif");
+    }    
+    
+  .reorder-down
+    {
+      min-width           : 0px;
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+    }    
+    
+  .reorder-up > .button-internal-box > .button-icon,
+  .reorder-down > .button-internal-box > .button-icon
+    {
+      margin              : none;
+      padding             : none;
+    }
+    
+    
