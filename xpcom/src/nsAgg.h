@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,6 +20,37 @@
 #define nsAgg_h___
 
 #include "nsISupports.h"
+
+/**
+ * Outer objects can implement nsIOuter if they choose, allowing them to 
+ * get notification if their inner objects (children) are effectively freed.
+ * This allows them to reset any state associated with the inner object and
+ * potentially unload it.
+ */
+class nsIOuter : public nsISupports {
+public:
+
+    /**
+     * This method is called whenever an inner object's refcount is about to
+     * become zero and the inner object should be released by the outer. This
+     * allows the outer to clean up any state associated with the inner and 
+     * potentially unload the inner object. This method should call 
+     * inner->Release().
+     */
+    NS_IMETHOD
+    ReleaseInner(nsISupports* inner) = 0;
+
+};
+
+#define NS_IOUTER_IID                                \
+{ /* ea0bf9f0-3d67-11d2-8163-006008119d7a */         \
+    0xea0bf9f0,                                      \
+    0x3d67,                                          \
+    0x11d2,                                          \
+    {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Put this in your class's declaration:
 #define NS_DECL_AGGREGATED                                                  \
@@ -49,6 +80,8 @@ protected:                                                                  \
     nsISupports*        fOuter;                                             \
     Internal            fAggregated;                                        \
                                                                             \
+    nsISupports* GetInner(void) { return &fAggregated; }                    \
+                                                                            \
 public:                                                                     \
 
 
@@ -63,31 +96,41 @@ public:                                                                     \
 NS_IMETHODIMP                                                               \
 _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)              \
 {                                                                           \
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                  \
-    if (aIID.Equals(kISupportsIID)) {                                       \
-        *aInstancePtr = &fAggregated;                                       \
-        return NS_OK;                                                       \
-    }                                                                       \
-    else if (fOuter)                                                        \
+    /* try our own interfaces first before delegating to outer */           \
+    nsresult rslt = AggregatedQueryInterface(aIID, aInstancePtr);           \
+    if (rslt != NS_OK && fOuter)                                            \
         return fOuter->QueryInterface(aIID, aInstancePtr);                  \
     else                                                                    \
-        return AggregatedQueryInterface(aIID, aInstancePtr);                \
+        return rslt;                                                        \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::AddRef(void)                                                        \
 {                                                                           \
+    ++mRefCnt; /* keep track of our refcount as well as outer's */          \
     if (fOuter)                                                             \
         return fOuter->AddRef();                                            \
     else                                                                    \
-        return ++mRefCnt;                                                   \
+        return mRefCnt;                                                     \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Release(void)                                                       \
 {                                                                           \
-    if (fOuter)                                                             \
-        return fOuter->Release();                                           \
+    if (fOuter) {                                                           \
+        nsISupports* outer = fOuter;    /* in case we release ourself */    \
+        nsIOuter* outerIntf;                                                \
+        static NS_DEFINE_IID(kIOuterIID, NS_IOUTER_IID);                    \
+        if (mRefCnt == 1 &&                                                 \
+            outer->QueryInterface(kIOuterIID,                               \
+                                  (void**)&outerIntf) == NS_OK) {           \
+            outerIntf->ReleaseInner(GetInner());                            \
+            outerIntf->Release();                                           \
+        }                                                                   \
+        else                                                                \
+            --mRefCnt; /* keep track of our refcount as well as outer's */  \
+        return outer->Release();                                            \
+    }                                                                       \
     else {                                                                  \
         if (--mRefCnt == 0) {                                               \
             delete this;                                                    \
