@@ -282,8 +282,16 @@ function ConfirmShowPasswords() {
   var token = tokendb.getInternalKeyToken();
 
   // If there is no master password, still give the user a chance to opt-out of displaying passwords
-  if (token.checkPassword(""))
+  try
+  {
+    if (token.checkPassword(""))
+      return AskUserShowPasswords();
+  } catch (ex) 
+  {
+    // for some reason the call to checkPassword throws an exception for users who have never set a master
+    // password before.
     return AskUserShowPasswords();
+  }
 
   // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
   try {
