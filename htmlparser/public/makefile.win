@@ -44,7 +44,7 @@ EXPORTS =                       \
 	nsParserError.h             \
 	nsParserCIID.h              \
 	nsToken.h                   \
-!if !defined(MOZ_DISABLE_DTD_DEBUG)
+!ifdef MOZ_DEBUG
 	nsILoggingSink.h            \
 !endif
 	$(NULL)

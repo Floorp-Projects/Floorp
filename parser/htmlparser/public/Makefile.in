@@ -49,7 +49,7 @@ EXPORTS = \
 		nsToken.h                   \
 		$(NULL)
 
-ifndef MOZ_DISABLE_DTD_DEBUG
+ifdef MOZ_DEBUG
 EXPORTS += \
 		nsILoggingSink.h \
 		$(NULL)

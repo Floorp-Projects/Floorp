@@ -40,7 +40,7 @@
 #include "nsIParserService.h"
 #include "nsElementTable.h"
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
 #include "nsLoggingSink.h"
 #endif
 
@@ -148,7 +148,7 @@ nsParserService::IsBlock(PRInt32 aId, PRBool& aIsBlock) const
 
 //----------------------------------------------------------------------
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 #endif
 
@@ -162,7 +162,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 static nsModuleComponentInfo gComponents[] = {
 
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
+#ifdef NS_DEBUG
   { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },
 #endif
 

@@ -65,7 +65,7 @@ CPPSRCS = \
 		nsParserMsgUtils.cpp\
 		$(NULL)
 
-ifndef MOZ_DISABLE_DTD_DEBUG
+ifdef MOZ_DEBUG
 CPPSRCS += \
 		nsLoggingSink.cpp   \
 		nsHTMLNullSink.cpp  \
