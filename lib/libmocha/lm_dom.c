@@ -254,7 +254,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
     lo_DocState *doc = (lo_DocState *)doc_state;
     DOM_Node *node;
 
-    if (!doc->top_node) {
+    if (!TOP_NODE(doc)) {
 #if 0
         node = DOM_NewDocument(context, doc);
 #else
@@ -264,7 +264,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
             return NULL;
         node->type = NODE_TYPE_DOCUMENT;
         node->name = XP_STRDUP("#document");
-        doc->current_node = doc->top_node = node;
+        CURRENT_NODE(doc) = TOP_NODE(doc) = node;
     }
 
     if (!tag) {
@@ -272,31 +272,31 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         fprintf(stderr, "finished reflecting document\n");
         LM_Node_indent = 0;
 #endif
-        doc->current_node = doc->top_node;
-        return doc->current_node;
+        CURRENT_NODE(doc) = TOP_NODE(doc);
+        return CURRENT_NODE(doc);
     }
     
     if (tag->type == -1)
-        return doc->current_node;
+        return CURRENT_NODE(doc);
 
     if (tag->is_end) {
-        if (doc->current_node == doc->top_node) {
-            XP_ASSERT(doc->current_node->type == NODE_TYPE_DOCUMENT);
+        if (CURRENT_NODE(doc) == TOP_NODE(doc)) {
+            XP_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_DOCUMENT);
 #ifdef DEBUG_shaver
             fprintf(stderr, "not popping tag </%s> from doc-only stack\n",
                     PA_TagString(tag->type));
 #endif
-            return doc->current_node;
+            return CURRENT_NODE(doc);
         }
-        doc->current_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
-                                            (DOM_Element *)doc->current_node);
-        doc->current_node = doc->current_node->parent;
-        return doc->current_node;
+        CURRENT_NODE(doc) = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
+                                            (DOM_Element *)CURRENT_NODE(doc));
+        CURRENT_NODE(doc) = CURRENT_NODE(doc)->parent;
+        return CURRENT_NODE(doc);
     }
 
-    node = lm_NodeForTag(tag, doc->current_node, context, csid);
+    node = lm_NodeForTag(tag, CURRENT_NODE(doc), context, csid);
     if (node) {
-        if (!DOM_HTMLPushNode(node, doc->current_node)) {
+        if (!DOM_HTMLPushNode(node, CURRENT_NODE(doc))) {
             if (node->ops->destroyNode)
                 node->ops->destroyNode(context->mocha_context,
                                        node);
@@ -304,10 +304,10 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         }
         /* only elements have children (I think) */
         if (node->type == NODE_TYPE_ELEMENT)
-            doc->current_node = node;
+            CURRENT_NODE(doc) = node;
     }
-    PR_ASSERT(!doc->current_node->parent || 
-              doc->current_node->parent->type != NODE_TYPE_TEXT);
+    PR_ASSERT(!CURRENT_NODE(doc)->parent || 
+              CURRENT_NODE(doc)->parent->type != NODE_TYPE_TEXT);
 
     return node;
 }
