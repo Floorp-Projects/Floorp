@@ -60,7 +60,7 @@
 #include "rdf.h"
 #include "nsIInterfaceRequestor.h"
 #include "iostream.h"
-#include "nsIIOService.h"
+#include "nsITextToSubURI.h"
 
 //----------------------------------------------------------------------
 //
@@ -71,9 +71,9 @@
 #define NS_DIRECTORYVIEWERFACTORY_CID \
 { 0x82776710, 0x5690, 0x11d3, { 0xbe, 0x36, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kTextToSubURICID,           NS_TEXTTOSUBURI_CID);
 
 // Note: due to aggregation, the HTTPINDEX namespace should match
 // what's used in the rest of the application
@@ -106,9 +106,11 @@ protected:
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
 
 public:
-			nsHTTPIndex();
+			    nsHTTPIndex();
 	virtual		~nsHTTPIndex();
 	nsresult	Init(void);
+	nsCString   mEncoding;
+
 static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
 
 	// nsIHTTPIndex interface
@@ -601,6 +603,30 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
 
 
 
+NS_IMETHODIMP
+nsHTTPIndex::SetEncoding(const char *encoding)
+{
+    mEncoding = encoding;
+    return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+nsHTTPIndex::GetEncoding(char **encoding)
+{
+	NS_PRECONDITION(encoding != nsnull, "null ptr");
+	if (! encoding)
+		return(NS_ERROR_NULL_POINTER);
+
+	if ((*encoding = nsXPIDLCString::Copy(mEncoding)) == nsnull)
+		return(NS_ERROR_OUT_OF_MEMORY);
+
+	return(NS_OK);
+}
+
+
+
 nsresult
 nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
 {
@@ -616,7 +642,9 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
   // make sure that the mDirectoryURI ends with a '/' before
   // concatenating.
   nsresult rv;
-  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
+  NS_WITH_SERVICE(nsITextToSubURI, textToSubURI, kTextToSubURICID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get nsITextToSubURI service");
+
   nsCOMPtr<nsIURI> realbase;
 
   {
@@ -692,28 +720,61 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
       aDataStr += len;
     }
 
-    // Monkey with the nsStr, because we're bold.
-    value.mLength = nsUnescapeCount(value.mStr);
-
-    values[i].AppendWithConversion(value);
-
     Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(i));
-    if (field && field->mProperty == kHTTPIndex_Filename) {
-      filename = value.mStr;
+    if (field && field->mProperty == kHTTPIndex_Filename)
+    {
+        // don't unescape at this point, so that UnEscapeAndConvert() can
+        filename = value.mStr;
+
+        PRBool  success = PR_FALSE;
+
+        nsAutoString entryuri;
+        if (textToSubURI)
+        {
+            PRUnichar	*result = nsnull;
+            if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("EUC-JP", filename,
+                &result)) && (result) && (nsCRT::strlen(result) > 0))
+            {
+                values[i].Append(result);
+                Recycle(result);
+                success = PR_TRUE;
+            }
+            else
+            {
+                NS_WARNING("UnEscapeAndConvert error");
+            }
+        }
+
+        if (success == PR_FALSE)
+        {
+            // unescape the nsStr (in place)
+            value.mLength = nsUnescapeCount(value.mStr);
+            values[i].AppendWithConversion(value);
+        }
+
     }
-    else if (field && field->mProperty == kHTTPIndex_Filetype) {
-      filetype = value.mStr;
+    else
+    {
+        // unescape the nsStr (in place)
+        value.mLength = nsUnescapeCount(value.mStr);
+        values[i].AppendWithConversion(value);
+
+        if (field && field->mProperty == kHTTPIndex_Filetype)
+        {
+            filetype = value.mStr;
+        }
     }
   }
 
       // we found the filename; construct a resource for its entry
-      nsAutoString entryuri;
-      char* result = nsnull;
-      rv = ioServ->Escape(filename, nsIIOService::url_FileBaseName +
-                          nsIIOService::url_Forced, &result);
-      rv = NS_MakeAbsoluteURI(entryuri, NS_ConvertASCIItoUCS2(result), realbase);
-      CRTFREEIF(result);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
+
+        nsAutoString    entryuri;
+        nsXPIDLCString  encodingStr;
+
+        rv = NS_MakeAbsoluteURI(entryuri, NS_ConvertASCIItoUCS2(filename), realbase);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
+
+      // if its a directory, make sure it ends with a trailing slash
       if (filetype.EqualsIgnoreCase("directory"))
       {
             entryuri.Append(PRUnichar('/'));
@@ -885,6 +946,9 @@ nsresult
 nsHTTPIndex::Init()
 {
 	nsresult	rv;
+
+    // set initial/default encoding to ISO-8859-1 (not UTF-8)
+    mEncoding = "ISO-8859-1";
 
 	if (gRefCnt++ == 0)
 	{

@@ -48,6 +48,11 @@ interface nsIHTTPIndex : nsISupports
      * Create a stream listener that can be used to populate the HTTP index.
      */
     nsIStreamListener CreateListener();
+
+    /**
+     * The charset to use for decoding FTP filenames
+     */
+    attribute string encoding;
 };
 
 %{C++

@@ -55,8 +55,13 @@ function Init()
     }
     debug("base URL = " + baseURI + "\n");
     
+    // Note: set encoding for FTP URLs BEFORE setting "ref"
+    HTTPIndex.encoding = "ISO-8859-1";
+
+    // re-root the tree
     tree.setAttribute("ref", baseURI);
 }
+
 
 
 function OnClick(event)
