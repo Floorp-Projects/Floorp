@@ -2102,13 +2102,13 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
       }
     }
 
+    PRInt32 extraPixelsY = 0;
 #ifdef MOZ_XUL
     // Tree view special case (tree items have no frames)
     // Get the focused row and add its coordinates, which are already in pixels
     // XXX Boris, should we create a new interface so that event listener manager doesn't
     // need to know about trees? Something like nsINodelessChildCreator which
     // could provide the current focus coordinates?
-    PRInt32 extraPixelsY = 0;
     nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aCurrentEl));
     if (xulElement) {
       nsCOMPtr<nsIBoxObject> box;
