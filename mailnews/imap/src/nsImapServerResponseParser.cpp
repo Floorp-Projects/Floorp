@@ -315,7 +315,7 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
 			
 			if (!PL_strcasecmp(fetchToken, "FETCH") )
 			{
-				char *uidStringToken = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
+				char *uidStringToken = Imapstrtok_r(nil, WHITESPACE, &placeInTokenString);
 				if (!PL_strchr(uidStringToken, ',') && !PL_strchr(uidStringToken, ':'))	// , and : are uid delimiters
 				{
 					fCurrentCommandIsSingleMessageFetch = PR_TRUE;

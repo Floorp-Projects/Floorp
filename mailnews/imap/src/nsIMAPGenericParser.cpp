@@ -92,7 +92,7 @@ char *strtoken_r(char ** stringp, const char *delim, int skip)
 }
 
 
-char *nsIMAPGenericParser::Imapstrtok_r(char *s1, const char *s2, char **lasts)
+/* static */ char *nsIMAPGenericParser::Imapstrtok_r(char *s1, const char *s2, char **lasts)
 {
 	if (s1)
 		*lasts = s1;

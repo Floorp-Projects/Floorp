@@ -49,6 +49,8 @@ public:
     
     char        *CreateSyntaxErrorLine();
 
+	// used to be XP_STRTOK_R, but that's not defined anymore.
+	static char *	Imapstrtok_r(char *s1, const char *s2, char **lasts);
 protected:
 
 	// This is a pure virtual member which must be overridden in the derived class
@@ -77,8 +79,6 @@ protected:
 	void AdvanceTokenizerStartingPoint (int32 bytesToAdvance);
     void ResetLexAnalyzer();
 
-	// used to be XP_STRTOK_R, but that's not defined anymore.
-	char *	Imapstrtok_r(char *s1, const char *s2, char **lasts);
 protected:
 	// use with care
     char                     *fNextToken;

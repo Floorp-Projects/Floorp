@@ -135,19 +135,37 @@ protected:
 	char		*m_errorMessage;
 	char		*m_listOfMessageIds;
 
+	// handle the imap specific parsing
+	void		ParseImapPart(char *imapPartOfUrl);
+
 	char		GetOnlineSubDirSeparator();
+	void		SetOnlineSubDirSeparator(char onlineDirSeparator);
 	char *		AllocateServerPath(const char *canonicalPath, 
 									char onlineDelimiter = kOnlineHierarchySeparatorUnknown);
 	char *		AddOnlineDirectoryIfNecessary(const char *onlineMailboxName);
 
 	char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
+	void		ParseFolderPath(char **resultingCanonicalPath);
+	void		ParseSearchCriteriaString();
+	void		ParseChildDiscoveryDepth();
+	void		ParseUidChoice();
+	void		ParseMsgFlags();
+	void		ParseListofMessageIds();
+
+
     char        *m_sourceCanonicalFolderPathSubString;
     char        *m_destinationCanonicalFolderPathSubString;
-    char		m_onlineSubDirSeparator;	
+    char		*m_tokenPlaceHolder;
+	char		*m_urlidSubString;
+    char		m_onlineSubDirSeparator;
+	char		*m_searchCriteriaString;	// should we use m_search, or is this special?
 
-
+	PRBool					m_validUrl;
 	PRBool					m_runningUrl;
 	PRBool					m_idsAreUids;
+	PRBool					m_mimePartSelectorDetected;
+	PRInt32					m_discoveryDepth;
+
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
 	nsIImapLog  * m_imapLog;
