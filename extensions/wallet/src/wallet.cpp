@@ -1047,7 +1047,7 @@ wallet_WriteToList(
         added_to_list = PR_TRUE;
         break;
       }
-    } else if(Compare(mapElementPtr->item1,item1)>=0) {
+    } else if((mapElementPtr->item1.Compare(item1))>=0) {
       list->InsertElementAt(mapElement, i);
       added_to_list = PR_TRUE;
       break;
