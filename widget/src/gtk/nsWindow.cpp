@@ -2145,8 +2145,9 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     }
   } // if valid length
 
-  if (platformLen > 0) {
+  if (platformLen > 0 && platformText) {
     gtk_window_set_title(GTK_WINDOW(mShell), platformText);
+    nsMemory::Free(platformText);
   }
   else {
     gtk_window_set_title(GTK_WINDOW(mShell), "");
