@@ -89,27 +89,80 @@ struct mozIClassRegistry : public ISupports {
     | ncomment aResult (NULL if the request fails).  "start" specifies the     |
     | registry at which the search for an implementation of the named          |
     | interface should start.  It defaults to 0 (indicating to start at the    |
-    | head of the registry chain).                                             |            |
+    | head of the registry chain).                                             |
     --------------------------------------------------------------------------*/
     NS_IMETHOD CreateInstance( const char *anInterfaceName,
                                const nsIID &aIID,
                                void*      *aResult,
                                const char *start = 0 ) = 0;
 
-    /*--------------------------- AddRegistry ----------------------------------
-    | Adds an additional class registry to the chain.  "aRegistryName" gives   |
-    | the name by which this registry can be referenced on susequent           |
-    | CreateInstance requests.  "aRegistryFileName" specifies the name of the  |
-    | corresponding registry file that contains the information about the      |
-    | classes and shared libraries.  It defaults to 0 which indicates that     |
-    | the registry file name is the same as "aRegistryName."                   |
+    /*--------------------------- CreateEnumerator -----------------------------
+    | Creates an nsIEnumerator interface object that can be used to examine    |
+    | the contents of the registry.  "pattern" specifies either "*" or the     |
+    | name of a specific interface that you want to query.  "result" will      |
+    | be set to point to a new object (which will be freed on the last call    |
+    | to its Release() member).  See nsIEnumerator.h for details on how to     |                                          
+    | use the returned interface pointer.                                      |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD AddRegistry( const char *aRegistryName,
-                            const char *aRegistryFileName = 0 ) = 0;
-
+    NS_IMETHOD CreateEnumerator( const char     *pattern,
+                                 nsIEnumerator* *result ) = 0;
 }; // mozIClassRegistry
 
+
+/*-------------------------- mozIClassRegistryEntry ----------------------------
+| Objects of this class represent the individual elements that comprise a      |
+| mozIClassRegistry interface.  You obtain such objects by applying the        |
+| CreateEnumerator member function to the class registry and then applying     |
+| the CurrentItem member function to the resulting nsIEnumerator interface.    |
+|                                                                              |
+| Each entry can be queried for the following information:                     |
+|   o sub-registry name                                                        |
+|   o interface name                                                           |
+|   o Class ID                                                                 |
+|   o IIDs implemented                                                         |
+|                                                                              |
+| The information obtained from the entry (specifically, the const char*       |
+| strings) remains valid for the life of the entry (i.e., until you            |
+| Release() it).                                                               |
+|                                                                              |
+| Here is an example of code that uses this interface to dump the contents     |
+| of a mozIClassRegistry:                                                      |
+|                                                                              |
+|    mozIClassRegistry *reg = nsServiceManager::GetService( kIDRegistry );     |
+|    nsIEnumerator *enum;                                                      |
+|    reg->CreateEnumerator( "*", &enum );                                      |
+|    for ( enum->First(); !enum->IsDone(); enum->Next(); ) {                   |
+|       mozIClassRegistryEntry *entry;                                         |
+|       enum->CurrentItem( &entry );                                           |
+|       const char *subreg;                                                    |
+|       const char *name;                                                      |
+|       nsCID cid;                                                             |
+|       int   numIIDs;                                                         |
+|       entry->GetSubRegistryName( &subreg );                                  |
+|       entry->GetInterfaceName( &name );                                      |
+|       entry->GetClassID( &cid );                                             |
+|       entry->GetNumIIDs( &numIIDs );                                         |
+|       cout << subreg << "/" << name << " = " << cid.ToString() << endl;      |
+|       for ( int i = 0; i < numIIDs; i++ ) {                                  |
+|           nsIID iid;                                                         |
+|           entry->GetInterfaceID( i, &iid );                                  |
+|           cout << "/tIID[" << i << "] = " << iid.ToString() << endl;         |
+|       }                                                                      |
+|       entry->Release();                                                      |
+|    }                                                                         |
+|    enum->Release();                                                          |
+------------------------------------------------------------------------------*/
+struct mozIClassRegistryEntry : public nsISupports {
+    NS_IMETHOD GetSubRegistryName( const char **result ) = 0;
+    NS_IMETHOD GetInterfaceName( const char **result ) = 0;
+    NS_IMETHOD GetClassID( nsCID *result ) = 0;
+    NS_IMETHOD GetNumIIDs( int *result ) = 0;
+    NS_IMETHOD GetInterfaceID( int n, nsIID *result ) = 0;
+}; // mozIClassRegistryEntry
+
 // {5D41A440-8E37-11d2-8059-00600811A9C3}
-#define NS_ICLASSREGISTRY_IID { 0x5d41a440, 0x8e37, 0x11d2,{ 0x80, 0x59, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
+#define MOZ_ICLASSREGISTRY_IID { 0x5d41a440, 0x8e37, 0x11d2, { 0x80, 0x59, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
+// {D1B54831-AC07-11d2-805E-00600811A9C3}
+#define MOZ_ICLASSREGISTRYENTRY_IID { 0xd1b54831, 0xac07, 0x11d2, { 0x80, 0x5e, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
 
 #endif
