@@ -230,21 +230,21 @@ struct NativeCallContextData
 {
     // no ctor or dtor so we have random state at creation.
 
-    void init(nsISupports*               callee,
-              uint16                     index,
-              nsIXPConnectWrappedNative* wrapper,
-              JSContext*                 cx,
-              PRUint32                   argc,
-              jsval*                     argv,
-              jsval*                     retvalp)
+    void init(nsISupports*               acallee,
+              uint16                     aindex,
+              nsIXPConnectWrappedNative* awrapper,
+              JSContext*                 acx,
+              PRUint32                   aargc,
+              jsval*                     aargv,
+              jsval*                     aretvalp)
     {
-        this->callee  = callee;
-        this->index   = index;
-        this->wrapper = wrapper;
-        this->cx      = cx;
-        this->argc    = argc;
-        this->argv    = argv;
-        this->retvalp = retvalp;
+        this->callee  = acallee;
+        this->index   = aindex;
+        this->wrapper = awrapper;
+        this->cx      = acx;
+        this->argc    = aargc;
+        this->argv    = aargv;
+        this->retvalp = aretvalp;
         this->threw   = JS_FALSE;
     }
 

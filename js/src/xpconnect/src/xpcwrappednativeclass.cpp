@@ -271,7 +271,6 @@ nsXPCWrappedNativeClass::DestroyMemberDescriptors()
 {
     if(!mDescriptors)
         return;
-    JSRuntime* rt = mRuntime->GetJSRuntime();
     delete [] mDescriptors;
     mDescriptors = nsnull;
 }
