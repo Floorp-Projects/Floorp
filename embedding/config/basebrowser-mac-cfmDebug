@@ -10,31 +10,31 @@
 ; 
 ; NSPR:
 ; 
-Essential Files:NSPR20.shlb   
-Essential Files:NSRuntime.shlb
-Essential Files:NSStdLib.shlb
+Essential Files:NSPR20Debug.shlb   
+Essential Files:NSRuntimeDebug.shlb
+Essential Files:NSStdLibDebug.shlb
 
 ; 
 ; Javascript:
 ; 
-Essential Files:JavaScript.shlb
-Essential Files:LiveConnect.shlb
+Essential Files:JavaScriptDebug.shlb
+Essential Files:LiveConnectDebug.shlb
 
 ; 
 ; DOM:
 ; 
-Components:dom.shlb  
+Components:domDebug.shlb  
 
 ; 
 ; XPCOM:
 ; 
-Essential Files:xpcom.shlb
-Essential Files:libreg.shlb
+Essential Files:xpcomDebug.shlb
+Essential Files:libregDebug.shlb
 
 ; 
 ; Imaging:
 ; 
-Essential Files:zlib.shlb
+Essential Files:zlibDebug.shlb
 
 ; 
 ; Components: (need to trim fat)
@@ -42,31 +42,31 @@ Essential Files:zlib.shlb
 
 ; accessibility (out of process API support)
 ; see http:::www.mozilla.org:projects:ui:accessibility:vendors-win.html
-; Components:accessibility.dll     
+; Components:accessibilityDebug.dll     
 ; Components:accessibility.xpt     
 
 ; appshell 
-Components:AppShell.shlb     
+Components:AppShellDebug.shlb     
 Components:appshell.xpt     
 
 ; caps
-Components:Caps.shlb
+Components:CapsDebug.shlb
 Components:caps.xpt
 
 ; chrome
-Components:ChomeRegistry.shlb
+Components:ChomeRegistryDebug.shlb
 Components:chrome.xpt    
 
 ; cookies
-Components:Cookie.shlb
+Components:CookieDebug.shlb
 Components:cookie.xpt
 
 ; docshell
-Components:docshell.shlb
+Components:docshellDebug.shlb
 Components:docshell.xpt   
 
 ; dom
-Components:dom.shlb
+Components:domDebug.shlb
 Components:dom.xpt       
 Components:dom_base.xpt
 Components:dom_core.xpt
@@ -76,143 +76,143 @@ Components:dom_html.xpt
 Components:dom_range.xpt
 Components:dom_stylesheets.xpt
 Components:dom_traversal.xpt
-Components:dom_views.xpt125766
+Components:dom_views.xpt
 Components:dom_xbl.xpt
 Components:dom_xul.xpt
 
 ; editor
-Components:Composer.shlb
-; Components:EditorCore.shlb ; why not?
+Components:ComposerDebug.shlb
+; Components:EditorCoreDebug.shlb ; why not?
 Components:editor.xpt
-Components:htmleditor.shlb
+Components:htmleditorDebug.shlb
 
 ; embedding     
-Components:webBrowser.shlb     
+Components:webBrowserDebug.shlb     
 Components:embeddingbrowser.xpt
-Components:EmbedComponents.shlb
+Components:EmbedComponentsDebug.shlb
 Components:EmbedComponents.xpt
 Components:EmbedBase.xpt
 Components:webshell.xpt
 
 ; find functionality
 ; Optional - only if your code uses nsIWebBrowserFind
-Components:TextServices.shlb
+Components:TextServicesDebug.shlb
 Components:txtsvc.xpt
 
 ; gfx
-Essential Files:gfx.shlb
-Components:gfxComponent.shlb
+Essential Files:gfxDebug.shlb
+Components:gfxComponentDebug.shlb
 
 ; javascript
-Components:JSUrl.shlb
+Components:JSUrlDebug.shlb
 Components:jsurl.xpt
 
 ; layout
-Components:content.shlb
+Components:contentDebug.shlb
 res:dtd:*
-Components:layout.shlb
-Components:htmlparser.shlb
+Components:layoutDebug.shlb
+Components:htmlparserDebug.shlb
 Components:htmlparser.xpt
-Components:view.shlb
+Components:viewDebug.shlb
 Components:content.xpt     
 Components:layout.xpt   
 
 ; netwerk
 
-Components:Necko.shlb     
+Components:NeckoDebug.shlb     
 Components:necko.xpt     
-Components:Necko2.shlb    
-Components:Cache.shlb
+Components:Necko2Debug.shlb    
+Components:CacheDebug.shlb
 Components:cache.xpt     
 
 ; imagelib
-Components:libimg2.shlb
+Components:libimg2Debug.shlb
 Components:libimg2.xpt
-Components:gifdecoder2.shlb
-Components:jpegdecoder2.shlb
-Components:pngdecoder2.shlb
-Components:mngdecoder.shlb
-Components:gfx2.shlb
+Components:gifdecoder2Debug.shlb
+Components:jpegdecoder2Debug.shlb
+Components:pngdecoder2Debug.shlb
+Components:mngdecoderDebug.shlb
+Components:gfx2Debug.shlb
 Components:gfx2.xpt
 
 ; jar
-Components:libjar.shlb
+Components:libjarDebug.shlb
 Components:libjar.xpt
 
 ; prefs
-Components:libpref.shlb
+Components:libprefDebug.shlb
 Components:libpref.xpt
 
 ; plugins
 ; Optional - only if you need plugin support
-Components:plugin.shlb
-Components:pluginClassic.shlb
+Components:pluginDebug.shlb
+Components:pluginClassicDebug.shlb
 Components:plugin.xpt
-Components:oji.shlb
+Components:ojiDebug.shlb
 Components:oji.xpt
 
 ; profile
-Components:profile.shlb
+Components:profileDebug.shlb
 Components:profileservices.xpt
 
 ; wallet
 ; Optional - only if you need password persistence
-Components:Wallet.shlb
+Components:WalletDebug.shlb
 Components:wallet.xpt      
 
 ; psm2
 ; Optional - only if you need PSM2 support
-Components:pipboot.shlb
+Components:pipbootDebug.shlb
 Components:pipboot.xpt
-Components:PIPNSS.shlb
+Components:PIPNSSDebug.shlb
 Components:pipnss.xpt
 Chrome:pipnss.jar
-Components:PIPPKI.shlb
+Components:PIPPKIDebug.shlb
 Components:pippki.xpt
 Chrome:pippki.jar
 defaults:pref:security-prefs.js
-Essential Files:NSS3.shlb
-Essential Files:SMIME3.shlb
-Essential Files:Softoken3.shlb
-Essential Files:SSL3.shlb
+Essential Files:NSS3Debug.shlb
+Essential Files:SMIME3Debug.shlb
+Essential Files:Softoken3Debug.shlb
+Essential Files:SSL3Debug.shlb
 
 ; appcomps
 ; Optional - only if you want global history (requires mork) or
 ;   directory viewer (off by default for ftp view)
 Components:mozcomps.xpt
-Components:mork.shlb
+Components:morkDebug.shlb
 
 ; rdf
-Components:RDFLibrary.shlb
+Components:RDFLibraryDebug.shlb
 Components:rdf.xpt
 
 ; session history
-Components:shistory.shlb
+Components:shistoryDebug.shlb
 Components:shistory.xpt
 
 ; required l10n libraries
 
 Components:intl.xpt
 Components:locale.xpt
-Components:unicharutil.shlb
+Components:unicharutilDebug.shlb
 Components:unicharutil.xpt
-Components:uconv.shlb
+Components:uconvDebug.shlb
 Components:uconv.xpt
-Components:lwbrk.shlb
-Components:nslocale.shlb
+Components:lwbrkDebug.shlb
+Components:nslocaleDebug.shlb
 Components:nslocale.xpt
-Components:ucvlatin.shlb
-Components:chardet.shlb
+Components:ucvlatinDebug.shlb
+Components:chardetDebug.shlb
 Components:chardet.xpt
-Components:Universalchardet.shlb
+Components:UniversalchardetDebug.shlb
 
 ; optional - on english only systems
-; Components:ucvja.shlb for japanese 
-; Components:ucvko.shlb for korean
-; Components:ucvcn.shlb for simplified chinese
-; Components:ucvtw.shlb for traditional chinese
-; Components:ucvtw2.shlb for traditional chinese
-; Components:ucvibm.shlb for ibm
+; Components:ucvjaDebug.shlb for japanese 
+; Components:ucvkoDebug.shlb for korean
+; Components:ucvcnDebug.shlb for simplified chinese
+; Components:ucvtwDebug.shlb for traditional chinese
+; Components:ucvtw2Debug.shlb for traditional chinese
+; Components:ucvibmDebug.shlb for ibm
 
 
 res:language.properties
@@ -222,7 +222,7 @@ res:charsetalias.properties
 res:maccharset.properties
 
 ; required i18n libs
-Components:strres.shlb
+Components:strresDebug.shlb
 Components:nsIStringBundle.xpt
 
 ; required prefs files
@@ -231,16 +231,16 @@ defaults:pref:initpref.js
 defaults:pref:macprefs.js
 
 ; uriloader
-Components:uriLoader.shlb
+Components:uriLoaderDebug.shlb
 Components:uriLoader.xpt
 
 ; widget
-Essential Files:WidgetSupport.shlb
-Components:widget.shlb
+Essential Files:WidgetSupportDebug.shlb
+Components:widgetDebug.shlb
 Components:widget.xpt
 
 ; xpconnect
-Components:XPConnect.shlb
+Components:XPConnectDebug.shlb
 Components:xpconnect.xpt
 
 ; xpcom
