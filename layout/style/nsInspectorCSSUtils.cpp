@@ -76,6 +76,7 @@ NS_IMETHODIMP
 nsInspectorCSSUtils::GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule)
 {
     *aRule = aNode->GetRule();
+    NS_IF_ADDREF(*aRule);
     return NS_OK;
 }
 
