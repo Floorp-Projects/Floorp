@@ -292,7 +292,8 @@ static JSBool gClassObjectsWereKilled = JS_FALSE;
 static JSBool gClassObjectsWereInited = JS_FALSE;
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
-static nsIClassInfo* NS_CLASSINFO_NAME(nsJSIID);
+// Can't make this static. http://bugzilla.mozilla.org/show_bug.cgi?id=81436
+nsIClassInfo* NS_CLASSINFO_NAME(nsJSIID);
 static nsModuleComponentInfo CI_nsJSIID =
     {"JSIID",
      {0x26ecb8d0, 0x35c9, 0x11d5, { 0x90, 0xb2, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a }},
@@ -302,7 +303,8 @@ static nsModuleComponentInfo CI_nsJSIID =
      &NS_CLASSINFO_NAME(nsJSIID), 0};
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSCID)
-static nsIClassInfo* NS_CLASSINFO_NAME(nsJSCID);
+// Can't make this static. http://bugzilla.mozilla.org/show_bug.cgi?id=81436
+nsIClassInfo* NS_CLASSINFO_NAME(nsJSCID);
 static nsModuleComponentInfo CI_nsJSCID =
     {"JSCID",
      {0x9255b5b0, 0x35cf, 0x11d5, { 0x90, 0xb2, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a }},
