@@ -75,7 +75,7 @@ class nsICODecoder : public imgIDecoder
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODER
-  
+
   nsICODecoder();
   virtual ~nsICODecoder();
 
@@ -87,7 +87,7 @@ private:
 
   // Private helper methods
   nsresult ProcessData(const char* aBuffer, PRUint32 aCount);
-  void ProcessDirEntry();
+  void ProcessDirEntry(IconDirEntry& aTarget);
   void ProcessInfoHeader();
 
   nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
