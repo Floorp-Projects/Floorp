@@ -893,8 +893,6 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       else
 #endif // IBMBIDI
         frame->GetNextSibling(&nextFrame);
-      if (nextFrame == stoppingFrame)
-        break;
       frame->GetRect(r1);
       if (r1.width && aX > r1.x) {
         break;
@@ -914,6 +912,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
         *aXIsBeforeFirstFrame = PR_TRUE;
       }
       frame = nextFrame;
+      if (nextFrame == stoppingFrame)
+        break;
     }
   }
   else {
@@ -950,8 +950,6 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       else
 #endif // IBMBIDI
       frame->GetNextSibling(&nextFrame);
-      if (nextFrame == stoppingFrame)
-        break;
       frame->GetRect(r1);
       if (r1.width && aX < r1.XMost()) {
         break;
@@ -971,6 +969,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
         *aXIsAfterLastFrame = PR_TRUE;
       }
       frame = nextFrame;
+      if (nextFrame == stoppingFrame)
+        break;
     }
   }
 
