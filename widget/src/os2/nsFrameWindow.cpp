@@ -171,7 +171,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    fnwpDefFrame = WinSubclassWindow( hwndFrame, fnwpFrame);
    WinSetWindowPtr( hwndFrame, QWL_USER, this);
    BOOL brc = (BOOL) WinSendMsg( hwndFrame, WM_SETICON,
-                                 MPFROMLONG( gModuleData.GetFrameIcon()), 0);
+                                 MPFROMLONG( gModuleData->GetFrameIcon()), 0);
 
    // make the client the client.
    WinSetWindowUShort( mWnd, QWS_ID, FID_CLIENT);
@@ -188,7 +188,7 @@ ULONG nsFrameWindow::GetFCFlags()
 {
   ULONG style = FCF_TITLEBAR | FCF_SYSMENU | FCF_TASKLIST |
                 FCF_CLOSEBUTTON | FCF_NOBYTEALIGN |
-                (gModuleData.bIsDBCS ? FCF_DBE_APPSTAT : 0);
+                (gModuleData->bIsDBCS ? FCF_DBE_APPSTAT : 0);
 
   if (mWindowType == eWindowType_dialog) {
     style |= FCF_DIALOGBOX;
@@ -333,7 +333,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          {
             // These commented-out `-1's cancel each other out.
             POINTL ptl = { pSwp->x, pSwp->y + pSwp->cy /* - 1 */ };
-            ptl.y = gModuleData.szScreen.cy - ptl.y /* - 1*/ ;
+            ptl.y = gModuleData->szScreen.cy - ptl.y /* - 1*/ ;
             mBounds.x = ptl.x;
             mBounds.y = ptl.y;
             OnMove( ptl.x, ptl.y);

@@ -54,8 +54,12 @@
 #define KBD_CTRL KBD_CONTROL
 #endif
 
+NS_IMPL_ISUPPORTS(nsWidgetModuleData, NS_GET_IID(nsISupports))
+
 nsWidgetModuleData::nsWidgetModuleData()
-{}
+{
+   hModResources = NULLHANDLE;
+}
 
 // This is called when the first appshell is created.
 void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
@@ -98,8 +102,10 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
    //   NS_ADDREF(dragService);
 
    // keep a ref beyond the client app so we shut ourselves down properly.
+   // don't do this for embedding where the appshell pointer is nsnull
    appshell = aPrimaevalAppShell;
-   NS_ADDREF(appshell);
+   if (appshell != nsnull)
+     NS_ADDREF(appshell);
 
    converter = 0;
    supplantConverter = FALSE;
@@ -135,7 +141,9 @@ nsWidgetModuleData::~nsWidgetModuleData()
 
    // finally shut down the appshell.  No more PM.
    // (hope that gfxos2 has gone first!)
-   NS_IF_RELEASE(appshell);
+   // don't do this if appshell is nsnull for embedding
+   if (appshell != nsnull)
+     NS_IF_RELEASE(appshell);
 }
 
 HPOINTER nsWidgetModuleData::GetPointer( nsCursor aCursor)
@@ -525,5 +533,4 @@ int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pTex
   return ulSize - cplen;
 }
 
-nsWidgetModuleData gModuleData;
-
+nsWidgetModuleData *gModuleData = nsnull;
