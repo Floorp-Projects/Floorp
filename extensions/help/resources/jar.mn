@@ -13,7 +13,6 @@ help.jar:
 	locale/en-US/help/composer_help.html		(locale/en-US/composer_help.html)
 	locale/en-US/help/customize_help.html		(locale/en-US/customize_help.html)
 	locale/en-US/help/certs_help.html		(locale/en-US/certs_help.html)
-	locale/en-US/help/cert_concepts_help.html	(locale/en-US/cert_concepts_help.html)
 	locale/en-US/help/cert_dialog_help.html		(locale/en-US/cert_dialog_help.html)
 	locale/en-US/help/glossary.html			(locale/en-US/glossary.html)
 	locale/en-US/help/passwords_help.html		(locale/en-US/passwords_help.html)
