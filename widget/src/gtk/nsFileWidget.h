@@ -38,8 +38,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  PRBool		OnPaint();
-
   // nsIWidget interface
   
   NS_IMETHOD		Create(nsIWidget *aParent,

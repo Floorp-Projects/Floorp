@@ -20,7 +20,7 @@
 #define nsWidget_h__
 
 #include "nsBaseWidget.h"
-
+#include "nsIRegion.h"
 
 
 // XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
@@ -356,7 +356,7 @@ protected:
 
   // This is the composite update area (union of all the calls to
   // Invalidate)
-  nsRect mUpdateArea;
+  nsIRegion *mUpdateArea;
 
   PRBool mShown;
 

@@ -27,7 +27,7 @@
 #include "nsILookAndFeel.h"
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
-
+#include "nsGfxCIID.h"
 #include <gdk/gdkx.h>
 
 
@@ -38,7 +38,7 @@
 
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
@@ -100,7 +100,16 @@ nsWidget::nsWidget()
   mIsDragDest = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
-  mUpdateArea.SetRect(0, 0, 0, 0);
+
+  if (NS_OK == nsComponentManager::CreateInstance(kRegionCID,
+                                                  nsnull,
+                                                  NS_GET_IID(nsIRegion),
+                                                  (void**)&mUpdateArea))
+  {
+    mUpdateArea->Init();
+    mUpdateArea->SetTo(0, 0, 0, 0);
+  }
+  
   sWidgetCount++;
 
 
@@ -120,6 +129,9 @@ nsWidget::~nsWidget()
   IndentByDepth(stdout);
   printf("nsWidget::~nsWidget:%p\n", this);
 #endif
+
+  NS_IF_RELEASE(mUpdateArea);
+
   mIsDestroying = PR_TRUE;
   if (nsnull != mWidget) {
     Destroy();
@@ -467,7 +479,11 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 {
   if (mWidget)
-   gtk_widget_set_sensitive(mWidget, bState);
+  {
+    if (GTK_WIDGET_SENSITIVE(mWidget) == bState)
+      return NS_OK;
+    gtk_widget_set_sensitive(mWidget, bState);
+  }
 
   return NS_OK;
 }
@@ -655,11 +671,11 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 
   if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
-    mUpdateArea.SetRect(0, 0, 0, 0);
   } else {
     ::gtk_widget_queue_draw(mWidget);
-    mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
   }
+
+  mUpdateArea->SetTo(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
 
   return NS_OK;
 }
@@ -675,6 +691,8 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
+  mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
+
 #ifdef NS_DEBUG
   debug_DumpInvalidate(stdout,
                        this,
@@ -684,6 +702,7 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
                        debug_GetRenderXID(mWidget));
 #endif // NS_DEBUG
 
+#if 0
   if (aIsSynchronous)
   {
     GdkRectangle nRect;
@@ -693,12 +712,15 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   }
   else
   {
-    mUpdateArea.UnionRect(mUpdateArea, aRect);
+#endif
+
     gtk_widget_queue_draw_area(mWidget,
                                aRect.x, aRect.y,
                                aRect.width, aRect.height);
-  }
 
+#if 0
+  }
+#endif
   return NS_OK;
 }
 
@@ -706,8 +728,8 @@ NS_IMETHODIMP nsWidget::Update(void)
 {
   if (!mWidget)
     return NS_OK;
-
-  if (mUpdateArea.width && mUpdateArea.height) {
+#if 0
+  if (mUpdateArea->width && mUpdateArea->height) {
     if (!mIsDestroying) {
       Invalidate(mUpdateArea, PR_TRUE);
 
@@ -721,6 +743,7 @@ NS_IMETHODIMP nsWidget::Update(void)
   else {
     //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
   }
+#endif
   return NS_OK;
 }
 
