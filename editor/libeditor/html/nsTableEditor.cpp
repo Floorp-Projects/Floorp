@@ -801,25 +801,20 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
 }
 
 // Editor helper only
+// XXX Code changed for bug 217717 and now we don't need aSelection param
+//     TODO: Remove aSelection param
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection)
 {
-  if (!aTable || !aSelection) return NS_ERROR_NULL_POINTER;
+  if (!aTable) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode> tableParent;
-  PRInt32 tableOffset;
-  if(!aTable || NS_FAILED(aTable->GetParentNode(getter_AddRefs(tableParent))) || !tableParent)
-    return NS_ERROR_FAILURE;
-
-  // Save offset we need to restore the selection
-  if(NS_FAILED(GetChildOffset(aTable, tableParent, tableOffset)))
-    return NS_ERROR_FAILURE;
-
-  nsresult res = DeleteNode(aTable);
+  // Select the table
+  nsresult res = ClearSelection();
+  if (NS_SUCCEEDED(res))
+    res = AppendNodeToSelectionAsRange(aTable);
   if (NS_FAILED(res)) return res;
 
-  // Place selection just before the table
-  return aSelection->Collapse(tableParent, tableOffset);
+  return DeleteSelection(nsIEditor::eNext);
 }
 
 NS_IMETHODIMP
