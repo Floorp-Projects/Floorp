@@ -29,6 +29,7 @@ var panelAreaDNDObserver = {
 };
 
 function loadWebPanel(aURI) {
+    gLoadPlaceHolder = false;
     try {
       document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
     } catch (e) {}
@@ -36,6 +37,9 @@ function loadWebPanel(aURI) {
 
 // We do this in the onload in order to make sure that the load of this page doesn't delay the onload of
 // the sidebar itself.
+var gLoadPlaceHolder = true;
 function loadPlaceholderPage() {
-    document.getElementById('webpanels-browser').setAttribute("src", "chrome://browser/content/web-panels.xml");
+    var panelBrowser = document.getElementById('webpanels-browser');
+    if (gLoadPlaceHolder)
+        panelBrowser.setAttribute("src", "chrome://browser/content/web-panels.xml");
 }
