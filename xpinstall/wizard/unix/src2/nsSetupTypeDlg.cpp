@@ -25,6 +25,11 @@
 #include "nsSetupTypeDlg.h"
 #include "nsXInstaller.h"
 
+static GtkWidget        *sBrowseBtn;
+static gint             sBrowseBtnID;
+static GtkWidget        *sFolder;
+static GSList           *sGroup;
+
 nsSetupTypeDlg::nsSetupTypeDlg() :
     mMsg0(NULL),
     mSetupTypeList(NULL)
@@ -241,7 +246,8 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_box_pack_start(GTK_BOX(hbox), msg0, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
-                        GTK_FILL | GTK_EXPAND, GTK_FILL, 20, 20);
+                        static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			GTK_FILL, 20, 20);
         gtk_widget_show(msg0);
 
         // insert a [n x 2] heterogeneous table in the second row
@@ -250,8 +256,9 @@ nsSetupTypeDlg::Show(int aDirection)
         stTable = gtk_table_new(numSetupTypes, 4, FALSE);
         gtk_widget_show(stTable);
         gtk_table_attach(GTK_TABLE(mTable), stTable, 0, 1, 2, 3,
-                        GTK_EXPAND | GTK_FILL,
-                        GTK_EXPAND | GTK_FILL, 20, 0);
+                        static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                        static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+			20, 0);
 
         currST = GetSetupTypeList();
         if (!currST) return E_NO_SETUPTYPES;
@@ -262,8 +269,9 @@ nsSetupTypeDlg::Show(int aDirection)
                         currST->GetDescShort());
         sGroup = gtk_radio_button_group(GTK_RADIO_BUTTON(radbtns[0]));
         gtk_table_attach(GTK_TABLE(stTable), radbtns[0], 0, 1, 0, 1,
-                        GTK_FILL | GTK_EXPAND,
-                        GTK_FILL | GTK_EXPAND, 0, 0);
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+                         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			 0, 0);
         gtk_signal_connect(GTK_OBJECT(radbtns[0]), "toggled",
                            GTK_SIGNAL_FUNC(RadBtnToggled), 0);
         gtk_widget_show(radbtns[0]);
@@ -287,10 +295,11 @@ nsSetupTypeDlg::Show(int aDirection)
                             currST->GetDescShort());
             sGroup = gtk_radio_button_group(GTK_RADIO_BUTTON(radbtns[i]));
             gtk_table_attach(GTK_TABLE(stTable), radbtns[i], 0, 1, i, i+1,
-                            GTK_FILL | GTK_EXPAND,
-                            GTK_FILL | GTK_EXPAND, 0, 0);
+                static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+                static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 0, 0);
             gtk_signal_connect(GTK_OBJECT(radbtns[i]), "toggled",
-                               GTK_SIGNAL_FUNC(RadBtnToggled), i);
+                               GTK_SIGNAL_FUNC(RadBtnToggled),
+			                   reinterpret_cast<void *>(i));
             gtk_widget_show(radbtns[i]);
 
             desc[i] = gtk_label_new(currST->GetDescLong());
@@ -308,8 +317,9 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_widget_show(destTable); 
 
         gtk_table_attach(GTK_TABLE(mTable), destTable, 0, 1, 3, 4,
-                        GTK_EXPAND | GTK_FILL,
-                        GTK_EXPAND | GTK_FILL, 20, 20);
+                         static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+                         static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+			 20, 20);
         frame = gtk_frame_new(DEST_DIR);
         gtk_table_attach_defaults(GTK_TABLE(destTable), frame, 0, 2, 0, 1);
         gtk_widget_show(frame);
@@ -324,7 +334,8 @@ nsSetupTypeDlg::Show(int aDirection)
         sBrowseBtn = gtk_button_new_with_label(BROWSE);
         gtk_widget_show(sBrowseBtn);
         gtk_table_attach(GTK_TABLE(destTable), sBrowseBtn, 1, 2, 0, 1,
-                        GTK_EXPAND | GTK_FILL, GTK_SHRINK, 10, 0);
+                         static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
+			 GTK_SHRINK, 10, 0);
 
         mWidgetsInit = TRUE;
     }
@@ -372,9 +383,6 @@ nsSetupTypeDlg::Show(int aDirection)
 
     gtk_widget_hide(gCtx->back);
 
-    return err;
-
-BAIL:
     return err;
 }
 

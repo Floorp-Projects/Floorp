@@ -24,6 +24,22 @@
 
 #include "nsXIEngine.h"
 
+#define CORE_LIB_COUNT 9
+static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] = 
+{
+/*      Archive Subdir      File                            */
+/*      --------------      ----                            */
+		"bin/", 			"libjsdom.so", 
+		"bin/", 			"libmozjs.so",
+		"bin/", 			"libnspr4.so",
+		"bin/",				"libplc4.so",
+		"bin/", 			"libplds4.so",
+		"bin/",				"libxpcom.so",
+		"bin/",				"libxpistub.so",
+		"bin/components/",	"libxpinstall.so",
+		"bin/components/",	"libjar50.so"
+};
+
 nsXIEngine::nsXIEngine() :
     mTmp(NULL)
 {
@@ -100,7 +116,6 @@ nsXIEngine::Extract(nsComponent *aXPIEngine)
     char path[1024];
     char bindir[512];
     char unzipcmd[512];
-    char mvcmd[512];
     struct stat dummy;
     int i;
 
@@ -269,9 +284,6 @@ nsXIEngine::ParseURL(char *aURL, char **aHost, char **aDir)
     }
     
     return err;
-
-BAIL:
-    return err;
 }
 
 int
@@ -404,9 +416,6 @@ printf("DEBUG: XPI_Install %s returned %d\n", aXPI->GetArchive(), rv);
         err = E_INSTALL;
 
     return err;
-
-BAIL:
-    return err;
 }
 
 int
@@ -432,9 +441,6 @@ nsXIEngine::UnloadXPIStub(xpistub_t *aStub)
 		DUMP("xpistub closed");
 	}
 
-    return err;
-
-BAIL:
     return err;
 }
 

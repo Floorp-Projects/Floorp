@@ -245,7 +245,7 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
             if (*aIOValSize < nextNL - nextEq)
             {
                 mError = E_SMALL_BUF;
-                *aVal = "\0";
+                *aVal = '\0';
                 *aIOValSize = 0;
                 return mError;
             }

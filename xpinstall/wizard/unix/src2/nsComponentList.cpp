@@ -163,6 +163,7 @@ nsComponentList::AddComponent(nsComponent *aComponent)
 int
 nsComponentList::RemoveComponent(nsComponent *aComponent)
 {
+    int err = OK;
     nsComponent *curr = GetHead();
     nsComponent *last = NULL;
 
@@ -197,6 +198,8 @@ nsComponentList::RemoveComponent(nsComponent *aComponent)
             curr = GetNext();
         }
     }
+
+    return err;
 }
 
 nsComponent *

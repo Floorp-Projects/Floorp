@@ -157,8 +157,9 @@ nsLicenseDlg::Show(int aDirection)
         GdkFont *font = gdk_font_load( LICENSE_FONT );
         gtk_text_set_editable(GTK_TEXT(text), TRUE);
         gtk_table_attach(GTK_TABLE(mTable), text, 1, 2, 0, 1,
-                          GTK_FILL | GTK_EXPAND,
-                          GTK_FILL | GTK_EXPAND, 0, 0);
+                          static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+                          static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+			  0, 0);
         gtk_text_freeze(GTK_TEXT(text));
         gtk_text_insert (GTK_TEXT(text), font, &text->style->black, NULL,
                           licenseContents, -1);
@@ -168,7 +169,9 @@ nsLicenseDlg::Show(int aDirection)
         // Add a vertical scrollbar to the GtkText widget 
         GtkWidget *vscrollbar = gtk_vscrollbar_new (GTK_TEXT (text)->vadj);
         gtk_table_attach(GTK_TABLE(mTable), vscrollbar, 2, 3, 0, 1,
-                          GTK_FILL, GTK_EXPAND | GTK_SHRINK | GTK_FILL, 0, 0);
+                          GTK_FILL,
+			  static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL),
+			  0, 0);
         gtk_widget_show(vscrollbar);
 
         mWidgetsInit = TRUE;
@@ -264,7 +267,7 @@ nsLicenseDlg::GetLicenseContents()
     DUMP("license buf malloc");
 
     // read entire file into buffer
-    if (attr.st_size != fread(buf, sizeof(char), attr.st_size, fd)) 
+    if (attr.st_size != ((int) fread(buf, sizeof(char), attr.st_size, fd))) 
         XI_IF_FREE(buf);
     DUMP("license fread");
 
