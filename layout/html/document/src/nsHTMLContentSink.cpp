@@ -442,73 +442,76 @@ MakeContentObject(nsHTMLTag aNodeType,
   nsresult rv = NS_OK;
   switch (aNodeType) {
   case eHTMLTag_a:
-    rv = NS_NewHTMLAnchor(aResult, aAtom);
+    rv = NS_NewHTMLAnchorElement(aResult, aAtom);
     break;
   case eHTMLTag_applet:
-    rv = NS_NewHTMLApplet(aResult, aAtom);
+    rv = NS_NewHTMLAppletElement(aResult, aAtom);
     break;
   case eHTMLTag_area:
-    rv = NS_NewHTMLArea(aResult, aAtom);
+    rv = NS_NewHTMLAreaElement(aResult, aAtom);
     break;
   case eHTMLTag_base:
-    rv = NS_NewHTMLBase(aResult, aAtom);
+    rv = NS_NewHTMLBaseElement(aResult, aAtom);
     break;
   case eHTMLTag_basefont:
-    rv = NS_NewHTMLBaseFont(aResult, aAtom);
+    rv = NS_NewHTMLBaseFontElement(aResult, aAtom);
     break;
   case eHTMLTag_body:
     rv = NS_NewBodyPart(aResult, aAtom);
     break;
   case eHTMLTag_br:
-    rv = NS_NewHTMLBR(aResult, aAtom);
+    rv = NS_NewHTMLBRElement(aResult, aAtom);
     break;
   case eHTMLTag_caption:
-    rv = NS_NewTableCaptionPart(aResult, aAtom);
+    rv = NS_NewTableCaptionPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_col:
-    rv = NS_NewTableColPart(aResult, aAtom);
+    rv = NS_NewTableColPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_colgroup:
-    rv = NS_NewTableColGroupPart(aResult, aAtom);
+    rv = NS_NewTableColGroupPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_embed:
-    rv = NS_NewHTMLEmbed(aResult, aAtom);
+    rv = NS_NewHTMLEmbedElement(aResult, aAtom);
     break;
-//    case eHTMLTag_form:
-//      rv = NS_NewHTMLForm(aResult, aAtom);
-//      break;
+  case eHTMLTag_form:
+    rv = NS_NewHTMLFormElement(aResult, aAtom);
+    break;
   case eHTMLTag_frame:
     rv = NS_NewHTMLFrame(aResult, aAtom, aWebShell);
     break;
   case eHTMLTag_frameset:
     rv = NS_NewHTMLFrameset(aResult, aAtom, aWebShell);
     break;
+  case eHTMLTag_head:
+    rv = NS_NewHTMLHeadElement(aResult, aAtom);
+    break;
   case eHTMLTag_hr:
-    rv = NS_NewHTMLHR(aResult, aAtom);
+    rv = NS_NewHTMLHRElement(aResult, aAtom);
     break;
   case eHTMLTag_iframe:
     rv = NS_NewHTMLIFrame(aResult, aAtom, aWebShell);
     break;
   case eHTMLTag_input:
-    rv = NS_NewHTMLInput(aResult, aAtom);
+    rv = NS_NewHTMLInputElement(aResult, aAtom);
     break;
   case eHTMLTag_link:
-    rv = NS_NewHTMLLink(aResult, aAtom);
+    rv = NS_NewHTMLLinkElement(aResult, aAtom);
     break;
   case eHTMLTag_meta:
-    rv = NS_NewHTMLMeta(aResult, aAtom);
+    rv = NS_NewHTMLMetaElement(aResult, aAtom);
     break;
   case eHTMLTag_object:
-    rv = NS_NewHTMLObject(aResult, aAtom);
+    rv = NS_NewHTMLObjectElement(aResult, aAtom);
     break;
   case eHTMLTag_option:
     rv = NS_NewHTMLOption(aResult, aAtom);
     break;
   case eHTMLTag_param:
-    rv = NS_NewHTMLParam(aResult, aAtom);
+    rv = NS_NewHTMLParamElement(aResult, aAtom);
     break;
   case eHTMLTag_script:
-    rv = NS_NewHTMLScript(aResult, aAtom);
+    rv = NS_NewHTMLScriptElement(aResult, aAtom);
     break;
   case eHTMLTag_select:
     rv = NS_NewHTMLSelect(aResult, aAtom, aForm);
@@ -517,25 +520,25 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLSpacer(aResult, aAtom);
     break;
   case eHTMLTag_style:
-    rv = NS_NewHTMLStyle(aResult, aAtom);
+    rv = NS_NewHTMLStyleElement(aResult, aAtom);
     break;
   case eHTMLTag_table:
-    rv = NS_NewTablePart(aResult, aAtom);
+    rv = NS_NewTablePart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_tbody:
   case eHTMLTag_thead:
   case eHTMLTag_tfoot:
-    rv = NS_NewTableRowGroupPart(aResult, aAtom);
+    rv = NS_NewTableRowGroupPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_td:
   case eHTMLTag_th:
-    rv = NS_NewTableCellPart(aResult, aAtom);
+    rv = NS_NewTableCellPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(aResult, aAtom);
+    rv = NS_NewTableRowPart(aResult, aAtom);/* XXX */
     break;
   case eHTMLTag_wbr:
-    rv = NS_NewHTMLWordBreak(aResult, aAtom);
+    rv = NS_NewHTMLWordBreak(aResult, aAtom);/* XXX */
     break;
   default:
     rv = NS_NewHTMLContainer(aResult, aAtom);
@@ -626,7 +629,7 @@ CreateContentObject(const nsIParserNode& aNode,
         }
       }
       if (bArt)
-        rv = NS_NewHTMLEmbed(aResult, atom);
+        rv = NS_NewHTMLEmbedElement(aResult, atom);
       else
         rv = NS_NewHTMLImage(aResult, atom);
     }
@@ -1227,7 +1230,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   if (nsnull == atom) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = NS_NewHTMLHead(&mHead, atom);
+  rv = NS_NewHTMLHeadElement(&mHead, atom);
   NS_RELEASE(atom);
   if (NS_OK != rv) {
     return rv;
@@ -1997,7 +2000,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     nsIHTMLContent* it;
-    nsresult rv = NS_NewHTMLMeta(&it, atom);
+    nsresult rv = NS_NewHTMLMetaElement(&it, atom);
     NS_RELEASE(atom);
     if (NS_OK == rv) {
       // Add in the attributes and add the meta content object to the
