@@ -51,17 +51,18 @@ sub init {
 sub get {
     my $self = shift;
     my($app, $uri, $referrer) = @_;
-    my $request = HTTP::Request->new('GET', $uri);
-    if (defined($referrer)) {
-        $request->referer($referrer);
-    }
     if (not exists $self->{ua}) {
         require LWP::UserAgent; import LWP::UserAgent; # DEPENDENCY
+        require HTTP::Request; import HTTP::Request; # DEPENDENCY
         my $ua = LWP::UserAgent->new();
         $ua->agent($ua->agent . ' (' . $app->name . ')');
         $ua->timeout(5); # XXX HARDCODED CONSTANT ALERT
         $ua->env_proxy();
         $self->{ua} = $ua;
+    }
+    my $request = HTTP::Request->new('GET', $uri);
+    if (defined($referrer)) {
+        $request->referer($referrer);
     }
     my $response = $self->{ua}->request($request);
     if (wantarray) {
