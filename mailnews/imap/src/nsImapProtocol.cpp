@@ -1158,8 +1158,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     }
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
-  if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
-	&& m_imapMiscellaneousSink && m_runningUrl)
+  if (GetConnectionStatus() >= 0 && m_imapMiscellaneousSink && m_runningUrl)
   {
       m_imapMiscellaneousSink->CopyNextStreamMessage(this, m_runningUrl);
       WaitForFEEventCompletion();

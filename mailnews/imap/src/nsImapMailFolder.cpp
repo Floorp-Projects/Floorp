@@ -3886,17 +3886,20 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         case nsIImapUrl::nsImapAppendDraftFromFile:
             if (m_copyState)
             {
-              if (folderOpen)
-                UpdateFolder(aWindow);
-              else
-                UpdatePendingCounts(PR_TRUE, PR_FALSE);
+              if (NS_SUCCEEDED(aExitCode))
+              {
+                if (folderOpen)
+                  UpdateFolder(aWindow);
+                else
+                  UpdatePendingCounts(PR_TRUE, PR_FALSE);
+              }
               m_copyState->m_curIndex++;
               if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
               {
-                  if (m_transactionManager && m_copyState->m_undoMsgTxn)
-                      m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
-                  ClearCopyState(aExitCode);
-                  sendEndCopyNotification = PR_TRUE;
+                if (m_transactionManager && m_copyState->m_undoMsgTxn)
+                    m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
+                ClearCopyState(aExitCode);
+                sendEndCopyNotification = PR_TRUE;
               }
               else
                 NS_ASSERTION(PR_FALSE, "not clearing copy state");
