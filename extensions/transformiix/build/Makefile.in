@@ -48,6 +48,9 @@ REQUIRES	= xpcom \
 		  docshell \
 		  layout \
 		  uconv \
+		  windowwatcher \
+		  mimetype \
+		  intl \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
