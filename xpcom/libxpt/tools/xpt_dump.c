@@ -41,7 +41,9 @@ static char *ptype_array[18] = {"int8 *", "int16 *", "int32 *", "int64 *",
                                 "float *", "double *", "boolean *", "char *",
                                 "wchar_t *", "void *", "nsIID **", "bstr",
                                 "string", "wstring"};
-                     
+
+PRBool param_problems = PR_FALSE;
+
 PRBool
 XPT_DumpHeader(XPTHeader *header, const int indent, PRBool verbose_mode);
 
@@ -165,8 +167,19 @@ main(int argc, char **argv)
             return 1;
         }
    
+        if (param_problems) {
+            fprintf(stdout, "\nWARNING: ParamDescriptors are present with "
+                    "no in/out flag information.\nThese have been marked "
+                    "with 'XXX'.\n");
+        }
+
         XPT_DestroyXDRState(state);
         free(whole);
+
+    } else {
+        fclose(in);
+        perror("FAILED: file length <= 0");
+        return 1;
     }
 
     return 0;
@@ -292,7 +305,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
         fprintf(stdout, "%*sName:                            %s\n", 
                 indent, " ", ide->name);
         fprintf(stdout, "%*sNamespace:                       %s\n", 
-                indent, " ", ide->name_space);
+                indent, " ", ide->name_space ? ide->name_space : "none");
         fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
                 indent, " ", ide->interface_descriptor);
 
@@ -329,9 +342,19 @@ XPT_DumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent,
         return PR_TRUE;
     }
 
+    if (id->parent_interface) {
+        fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
+                id->parent_interface->name_space ? 
+                id->parent_interface->name_space : "", 
+                id->parent_interface->name);
+    }
+
     if (verbose_mode) {
-        fprintf(stdout, "%*sOffset of parent interface (in data pool): %p\n", 
-                indent, " ", id->parent_interface);
+        if (id->parent_interface) {
+            fprintf(stdout, 
+                    "%*sOffset of parent interface (in data pool): %p\n", 
+                    indent, " ", id->parent_interface);
+        }
         fprintf(stdout, "%*s# of Method Descriptors:                   %d\n", 
                 indent, " ", id->num_methods);
     } else {
@@ -460,6 +483,9 @@ XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent,
                     if (XPT_PD_IS_RETVAL(pd->flags)) {
                         fprintf(stdout, "retval ");
                     }
+                } else {
+                    param_problems = PR_TRUE;
+                    fprintf(stdout, "XXX ");
                 }
             }
             if (!XPT_GetStringForType(&pd->type, &param_type)) {
@@ -501,6 +527,11 @@ XPT_DumpParamDescriptor(XPTParamDescriptor *pd, const int indent,
                         PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
+    
+    if (!XPT_PD_IS_IN(pd->flags) && !XPT_PD_IS_OUT(pd->flags)) {
+        param_problems = PR_TRUE;
+        fprintf(stdout, "XXX\n");
+    }
 
     fprintf(stdout, "%*sIn Param?   ", indent, " ");
     if (XPT_PD_IS_IN(pd->flags))
