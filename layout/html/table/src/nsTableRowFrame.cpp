@@ -892,7 +892,10 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
-        nsHTMLReflowMetrics desiredSize(PR_FALSE);
+        // always request MEW. Since we may turn MEW on for selected cells during incremental
+        // reflow, we need to request MEW *now* so that those incremental reflows will be
+        // able to build on existing MEW data in the children.
+        nsHTMLReflowMetrics desiredSize(PR_TRUE);
   
         // If the avail width is not the same as last time we reflowed the cell or
         // the cell wants to be bigger than what was available last time or
@@ -936,8 +939,6 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
               if (NS_UNCONSTRAINEDSIZE != availCellWidth) {
                 desiredSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH; 
               }
-              // request to get the max element size 
-              desiredSize.mComputeMEW = PR_TRUE;
             }
             else {
               cellToWatch = PR_FALSE;
