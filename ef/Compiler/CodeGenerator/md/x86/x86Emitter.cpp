@@ -694,33 +694,7 @@ emit_Logic_L(Primitive& inPrimitive, x86DoubleOpDirCode insnType)
 	redefineTemporary(insnHi, vrHi, 0);
 }
 
-#if defined(WIN32)
-#  include "x86Arith64.h"
-#elif defined(LINUX) || defined(FREEBSD)
-extern "C" {
-extern void x86Mul64Bit(void);
-extern void x86Div64Bit(void);
-extern void x86Mod64Bit(void);
-extern void x86Shl64Bit(void);
-extern void x86Shr64Bit(void);
-extern void x86Sar64Bit(void);
-extern void x86ThreeWayCMP_L(void);
-extern void x86ThreeWayCMPC_L(void) {trespass("Not implemented");}
-extern void x86Extract64Bit(void);
-};
-#endif
-
-#if !defined(WIN32) && !defined(LINUX) && !defined(FREEBSD)
-static void x86Mul64Bit() {trespass("Not implemented");}
-static void x86Div64Bit() {trespass("Not implemented");}
-static void x86Mod64Bit() {trespass("Not implemented");}
-static void x86Shl64Bit() {trespass("Not implemented");}
-static void x86Shr64Bit() {trespass("Not implemented");}
-static void x86Sar64Bit() {trespass("Not implemented");}
-static void x86ThreeWayCMP_L() {trespass("Not implemented");}
-static void x86ThreeWayCMPC_L() {trespass("Not implemented");}
-static void x86Extract64Bit()	{trespass("Not implemented");}
-#endif
+#include "x86Arith64.h"
 
 void x86Emitter::
 emit_Mul_L(Primitive& inPrimitive)
