@@ -175,7 +175,7 @@ sub confirmChangePassword {
 }
 
 sub cancelChangePassword {    
-    $vars->{'message'} = "password_change_canceled";
+    $vars->{'message'} = "password_change_cancelled";
     Bugzilla::Token::Cancel($::token, $vars->{'message'});
 
     print $cgi->header();
