@@ -39,19 +39,13 @@
 #include "nsTextFragment.h"
 #include "nsWSRunObject.h"
 #include "nsIDOMNode.h"
-//#include "nsIModule.h"
 #include "nsHTMLEditor.h"
-#include "nsHTMLEditUtils.h"
 #include "nsTextEditUtils.h"
 #include "nsIContent.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMCharacterData.h"
-#include "nsEditorUtils.h"
 #include "nsCRT.h"
 
 const PRUnichar nbsp = 160;
-
-static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 
 static PRBool IsBlockNode(nsIDOMNode* node)
 {
@@ -1592,7 +1586,8 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
     {
       if (!range)
       {
-        range = do_CreateInstance(kCRangeCID);
+        range = do_CreateInstance("@mozilla.org/content/range;1");
+        if (!range) return NS_ERROR_OUT_OF_MEMORY;
         res = range->SetStart(aStartNode, aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
         res = range->SetEnd(aEndNode, aEndOffset);

@@ -56,7 +56,6 @@
 #include "nsISupportsPrimitives.h"
 
 // Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
@@ -67,15 +66,10 @@
 
 const PRUnichar nbsp = 160;
 
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
-static NS_DEFINE_CID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
-
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {
   // Create generic Transferable for getting the data
-  nsresult rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/widget/transferable;1", nsnull, 
                                           NS_GET_IID(nsITransferable), 
                                           (void**)transferable);
   if (NS_FAILED(rv))
@@ -170,8 +164,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  PRBool isAllowed = nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession);
-  if (!isAllowed)
+  if (!nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession))
     return NS_OK;
 
   // Get the nsITransferable interface for getting the data from the drop
@@ -302,8 +295,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       doPlaceCaret = PR_FALSE;
     }
     
-    PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans);
-    if (!doInsert)
+    if (!nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans))
       return NS_OK;
 
     rv = InsertTextFromTransferable(trans, newSelectionParent, newSelectionOffset, deleteSelection);
@@ -429,7 +421,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
 
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard( do_GetService( kCClipboardCID, &rv ) );
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if ( NS_FAILED(rv) )
     return rv;
     
@@ -444,8 +436,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
       // handle transferable hooks
       nsCOMPtr<nsIDOMDocument> domdoc;
       GetDocument(getter_AddRefs(domdoc));
-      PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans);
-      if (!doInsert)
+      if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
       rv = InsertTextFromTransferable(trans, nsnull, nsnull, PR_TRUE);
@@ -467,7 +458,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
     return NS_OK;
 
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
@@ -576,7 +567,7 @@ nsPlaintextEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   if (NS_FAILED(rv)) return rv;
 
   /* create html flavor transferable */
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID, &rv);
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // find out if we're a plaintext control or not
@@ -596,7 +587,7 @@ nsPlaintextEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
     rv = trans->AddDataFlavor(kHTMLMime);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
+    nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance("@mozilla.org/widget/htmlformatconverter;1");
     NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
 
     rv = trans->SetConverter(htmlConverter);

@@ -67,7 +67,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
 #include "nsIPresShell.h"
-#include "nsLayoutCID.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -83,10 +82,6 @@
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
-const static PRUnichar nbsp = 160;
-
-static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 enum
 {
@@ -274,7 +269,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   }
   
   // make a utility range for use by the listenter
-  mUtilRange = do_CreateInstance(kRangeCID);
+  mUtilRange = do_CreateInstance("@mozilla.org/content/range;1");
   if (!mUtilRange) return NS_ERROR_NULL_POINTER;
    
   // set up mDocChangeRange to be whole doc
@@ -288,7 +283,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
     nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
     if (!mDocChangeRange)
     {
-      mDocChangeRange = do_CreateInstance(kRangeCID);
+      mDocChangeRange = do_CreateInstance("@mozilla.org/content/range;1");
       if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
     }
     mDocChangeRange->SelectNode(bodyNode);
@@ -1496,7 +1491,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // the correct portion of the document.
     if (!mDocChangeRange)
     {
-      mDocChangeRange = do_CreateInstance(kRangeCID);
+      mDocChangeRange = do_CreateInstance("@mozilla.org/content/range;1");
       if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
     }
     res = mDocChangeRange->SetStart(selNode, selOffset);
@@ -5023,7 +5018,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
     PRBool nodeBefore=PR_FALSE, nodeAfter=PR_FALSE;
     
     // create a range that represents expanded selection
-    nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+    nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
     if (!range) return NS_ERROR_NULL_POINTER;
     res = range->SetStart(selStartNode, selStartOffset);
     if (NS_FAILED(res)) return res;
@@ -6104,7 +6099,7 @@ nsHTMLEditRules::GetNodesFromPoint(DOMPoint point,
   point.GetPoint(node, offset);
   
   // use it to make a range
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+  nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
   res = range->SetStart(node, offset);
   if (NS_FAILED(res)) return res;
   /* SetStart() will also set the end for this new range
@@ -7298,7 +7293,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
   temp = selNode;
   
   // use ranges and mRangeHelper to compare sel point to new block
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+  nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
   res = range->SetStart(selNode, selOffset);
   if (NS_FAILED(res)) return res;
   res = range->SetEnd(selNode, selOffset);
@@ -7644,7 +7639,6 @@ nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2
 nsresult 
 nsHTMLEditRules::RemoveEmptyNodes()
 {
-  nsCOMPtr<nsIContentIterator> iter;
   nsCOMArray<nsIDOMNode> arrayOfEmptyNodes, arrayOfEmptyCites;
   nsCOMPtr<nsISupports> isupports;
   PRInt32 nodeCount,j;
@@ -7672,7 +7666,8 @@ nsHTMLEditRules::RemoveEmptyNodes()
   // _examined_ children empty, but still not have an empty parent.
   
   // need an iterator
-  iter = do_CreateInstance(kContentIteratorCID);
+  nsCOMPtr<nsIContentIterator> iter =
+                  do_CreateInstance("@mozilla.org/content/post-content-iterator;1");
   if (!iter) return NS_ERROR_NULL_POINTER;
   
   nsresult res = iter->Init(mDocChangeRange);

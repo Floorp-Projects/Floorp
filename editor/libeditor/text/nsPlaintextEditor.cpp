@@ -70,8 +70,6 @@
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsEditorCID.h"
-#include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
@@ -79,7 +77,6 @@
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
@@ -102,20 +99,10 @@
 #include "nsInternetCiter.h"
 
 // Drag & Drop, Clipboard
-//#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-//#include "nsIDragService.h"
-//#include "nsIDOMNSUIEvent.h"
 
 const PRUnichar nbsp = 160;
-
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
-static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
 // prototype for rules creation shortcut
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
@@ -730,10 +717,8 @@ nsPlaintextEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   aOutStartOffset = 0; // default to first char in selection
   aOutEndOffset = -1;  // default to total length of text in selection
 
-  nsCOMPtr<nsIContentIterator> iter;
-  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              NS_GET_IID(nsIContentIterator), 
-                                              getter_AddRefs(iter));
+  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(
+                     "@mozilla.org/content/post-content-iterator;1", &result);
   if (NS_FAILED(result)) return result;
   if (!iter) return NS_ERROR_NULL_POINTER;
     
@@ -1453,11 +1438,11 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     if (!nsTextEditUtils::IsBody(rootElement))
     {
       // XXX Why does this use range rather than selection collapse/extend?
-      nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kCRangeCID, &rv));
+      nsCOMPtr<nsIDOMRange> range (do_CreateInstance("@mozilla.org/content/range;1", &rv));
       if (NS_FAILED(rv)) return rv;
       if (!range) return NS_ERROR_FAILURE;
-      nsCOMPtr<nsISelection> selection (do_CreateInstance(kCDOMSelectionCID,
-                                                          &rv));
+      nsCOMPtr<nsISelection> selection (do_CreateInstance(
+                                "@mozilla.org/content/dom-selection;1", &rv));
       if (NS_FAILED(rv)) return rv;
       if (!selection) return NS_ERROR_FAILURE;
 
@@ -1571,14 +1556,11 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
   // Create generic Transferable for getting the data
-  nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          NS_GET_IID(nsITransferable), 
-                                          (void**) getter_AddRefs(trans));
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   if (NS_SUCCEEDED(rv) && trans)
   {
     // We only handle plaintext pastes here
@@ -2096,20 +2078,10 @@ NS_IMETHODIMP nsPlaintextEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports 
 NS_IMETHODIMP
 nsPlaintextEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
 {
-  static char bodyTag[] = "body";
-  static char tdTag[] = "td";
-  static char thTag[] = "th";
-  static char captionTag[] = "caption";
-  if (aTag.EqualsIgnoreCase(bodyTag) ||
-      aTag.EqualsIgnoreCase(tdTag) ||
-      aTag.EqualsIgnoreCase(thTag) ||
-      aTag.EqualsIgnoreCase(captionTag) )
-  {
-    aIsTag = PR_TRUE;
-  }
-  else {
-    aIsTag = PR_FALSE;
-  }
+  aIsTag = (aTag.EqualsIgnoreCase("body") ||
+            aTag.EqualsIgnoreCase("td") ||
+            aTag.EqualsIgnoreCase("th") ||
+            aTag.EqualsIgnoreCase("caption") );
   return NS_OK;
 }
 

@@ -60,11 +60,6 @@
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsEditorCID.h"
-#include "nsLayoutCID.h"
-
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 
 NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty, 
@@ -220,10 +215,8 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         // a list of them (since doing operations on the document during
         // iteration would perturb the iterator).
 
-        nsCOMPtr<nsIContentIterator> iter;
-        res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
-                                                  NS_GET_IID(nsIContentIterator), 
-                                                  getter_AddRefs(iter));
+        nsCOMPtr<nsIContentIterator> iter =
+          do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
@@ -1089,8 +1082,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
     }
 
     // non-collapsed selection
-    nsCOMPtr<nsIContentIterator> iter;
-    iter = do_CreateInstance(kCContentIteratorCID);
+    nsCOMPtr<nsIContentIterator> iter =
+            do_CreateInstance("@mozilla.org/content/post-content-iterator;1");
     if (!iter) return NS_ERROR_NULL_POINTER;
 
     iter->Init(range);
@@ -1382,10 +1375,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
       else
       {
         // not the easy case.  range not contained in single text node. 
-        nsCOMPtr<nsIContentIterator> iter;
-        res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
-                                                  NS_GET_IID(nsIContentIterator), 
-                                                  getter_AddRefs(iter));
+        nsCOMPtr<nsIContentIterator> iter =
+          do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
@@ -1563,10 +1554,8 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       // a list of them (since doing operations on the document during
       // iteration would perturb the iterator).
 
-      nsCOMPtr<nsIContentIterator> iter;
-      res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
-                                                NS_GET_IID(nsIContentIterator), 
-                                                getter_AddRefs(iter));
+      nsCOMPtr<nsIContentIterator> iter =
+        do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
       if (NS_FAILED(res)) return res;
       if (!iter)          return NS_ERROR_FAILURE;
 

@@ -40,7 +40,6 @@
 
 #include "nsEditorSpellCheck.h"
 
-#include "nsTextServicesCID.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
 #include "nsISelection.h"
@@ -57,8 +56,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsComposeTxtSrvFilter.h"
-
-static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 
 NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck);
 
@@ -81,11 +78,8 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
   nsresult rv;
 
   // We can spell check with any editor type
-  nsCOMPtr<nsITextServicesDocument>tsDoc;
-  rv = nsComponentManager::CreateInstance(kCTextServicesDocumentCID,
-                                          nsnull,
-                                          NS_GET_IID(nsITextServicesDocument),
-                                          (void **)getter_AddRefs(tsDoc));
+  nsCOMPtr<nsITextServicesDocument>tsDoc =
+     do_CreateInstance("@mozilla.org/textservices/textservicesdocument;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!tsDoc)
