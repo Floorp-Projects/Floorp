@@ -80,18 +80,20 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIProgressEventSink.h"
-#include "nsIContent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIStreamConverterService.h"
-#include "nsIDirectoryListing.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
+
+static const int FORMAT_HTML = 2;
+static const int FORMAT_XUL = 3;
 
 //----------------------------------------------------------------------
 //
@@ -1031,12 +1033,6 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
           }
           if (NS_SUCCEEDED(rv) && (channel)) {
             channel->SetNotificationCallbacks(httpIndex);
-            nsCOMPtr<nsIDirectoryListing> dirList = do_QueryInterface(channel);
-            NS_ASSERTION(dirList, "Directory listing doesn't impl nsIDirectoryListing");
-            if (dirList) {
-              rv = dirList->SetListFormat(nsIDirectoryListing::FORMAT_HTTP_INDEX);
-              NS_ASSERTION(NS_SUCCEEDED(rv), "Could not set directory list format");
-            }
             rv = channel->AsyncOpen(httpIndex, aSource);
           }
         }
@@ -1380,25 +1376,14 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsresult rv;
 
   // OK - are we going to be using the html listing or not?
-  nsCOMPtr<nsIPref> prefSrv = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   PRBool useXUL = PR_FALSE;
   PRInt32 dirPref;
   rv = prefSrv->GetIntPref("network.dir.format", &dirPref);
-  if (NS_SUCCEEDED(rv) && dirPref == nsIDirectoryListing::FORMAT_HTTP_INDEX) {
+  if (NS_SUCCEEDED(rv) && dirPref == FORMAT_XUL) {
     useXUL = PR_TRUE;
-  }
-
-  // We need to disable html mode for file:///, at least for the moment
-  // The charset coding isn't quite right for non ASCII systems
-  // XXX - This is a temporary hack
-  nsCOMPtr<nsIURI> uri;
-  rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_SUCCEEDED(rv)) {
-    PRBool isFile;
-    if (NS_SUCCEEDED(uri->SchemeIs("file", &isFile)) && isFile)
-      useXUL = PR_TRUE;
   }
 
   PRBool viewSource = (PL_strstr(aContentType,"view-source") != 0);

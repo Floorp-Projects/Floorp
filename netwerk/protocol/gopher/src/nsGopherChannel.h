@@ -58,13 +58,11 @@
 #include "nsISocketTransport.h"
 #include "nsIProgressEventSink.h"
 #include "nsIProxyInfo.h"
-#include "nsIDirectoryListing.h"
 #include "nsIStringBundle.h"
 #include "nsIInputStreamPump.h"
 
 class nsGopherChannel : public nsIChannel,
                         public nsIStreamListener,
-                        public nsIDirectoryListing,
                         public nsITransportEventSink {
 public:
     NS_DECL_ISUPPORTS
@@ -72,7 +70,6 @@ public:
     NS_DECL_NSICHANNEL
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIDIRECTORYLISTING
     NS_DECL_NSITRANSPORTEVENTSINK
 
     // nsGopherChannel methods:
@@ -95,7 +92,6 @@ protected:
     nsCString                           mContentTypeHint;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
-    PRUint32                            mListFormat;
 
     nsXPIDLCString                      mHost;
     PRInt32                             mPort;

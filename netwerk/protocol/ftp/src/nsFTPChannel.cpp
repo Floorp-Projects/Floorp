@@ -79,7 +79,6 @@ PRTimeToSeconds(PRTime t_usec)
 nsFTPChannel::nsFTPChannel()
     : mIsPending(0),
       mLoadFlags(LOAD_NORMAL),
-      mListFormat(FORMAT_HTML),
       mSourceOffset(0),
       mAmount(0),
       mContentLength(-1),
@@ -116,7 +115,6 @@ NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
-    NS_INTERFACE_MAP_ENTRY(nsIDirectoryListing)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
 NS_INTERFACE_MAP_END
 
@@ -753,32 +751,3 @@ nsFTPChannel::GetUploadStream(nsIInputStream **stream)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFTPChannel::SetListFormat(PRUint32 format)
-{
-    // Convert the pref value
-    if (format == FORMAT_PREF) {
-        format = FORMAT_HTML; // default
-        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs) {
-            PRInt32 sFormat;
-            if (NS_SUCCEEDED(prefs->GetIntPref("network.dir.format", &sFormat)))
-                format = sFormat;
-        }
-    }
-    if (format != FORMAT_RAW &&
-        format != FORMAT_HTML &&
-        format != FORMAT_HTTP_INDEX) {
-        NS_WARNING("invalid directory format");
-        return NS_ERROR_FAILURE;
-    }
-    mListFormat = format;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::GetListFormat(PRUint32 *format)
-{
-    *format = mListFormat;
-    return NS_OK;
-}
