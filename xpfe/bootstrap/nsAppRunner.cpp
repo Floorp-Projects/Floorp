@@ -30,6 +30,7 @@
 #include "nsIPref.h"
 #include "plevent.h"
 #include "prmem.h"
+#include "prnetdb.h"
 
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
@@ -53,10 +54,13 @@
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
 #include "nsISupportsPrimitives.h"
-
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
+
+#ifndef XP_MAC
+#include "nsTimeBomb.h"
+#endif
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
@@ -66,6 +70,10 @@ static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
+
+#ifndef XP_MAC
+static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
+#endif
 
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
@@ -140,6 +148,7 @@ PRBool NS_CanRun()
 	return PR_TRUE;
 }
 #endif 
+
 /*
  * This routine translates the nsresult into a platform specific return
  * code for the application...
@@ -512,6 +521,7 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   printf("initialized appshell\n");
 #endif
 
+
   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
   if ( NS_FAILED(rv) ) return rv; 
@@ -532,6 +542,24 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
   appShell->CreateHiddenWindow();
+
+#ifndef XP_MAC
+  PRBool expired;
+  NS_WITH_SERVICE(nsITimeBomb, timeBomb, kTimeBombCID, &rv);
+  if ( NS_FAILED(rv) ) return rv; 
+    
+  rv = timeBomb->Init();
+  if ( NS_FAILED(rv) ) return rv; 
+
+  rv = timeBomb->CheckWithUI(&expired);
+  if ( NS_FAILED(rv) ) return rv; 
+    
+  if ( expired ) 
+  {
+      rv = timeBomb->LoadUpdateURL();
+      if ( NS_FAILED(rv) ) return rv; 
+  }
+#endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING  
   nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
