@@ -130,6 +130,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeStartupHandler)
 #endif
 
 
