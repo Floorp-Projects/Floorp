@@ -62,69 +62,121 @@ var nsNewsBlogFeedDownloader =
   }
 }
 
+var nsNewsBlogAcctMgrExtension = 
+{ 
+  name: "newsblog",
+  chromePackageName: "messenger-newsblog",
+  showPanel: function (server)
+  {
+    return server.type == "rss";
+  },
+  QueryInterface: function(aIID)
+  {
+    if (aIID.equals(Components.interfaces.nsIMsgAccountManagerExtension) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  }  
+}
+
 var nsNewsBlogFeedDownloaderModule =
 {
-  mClassName:     "News+Blog Feed Downloader",
-  mContractID:    "@mozilla.org/newsblog-feed-downloader;1",
-  mClassID:       Components.ID("5c124537-adca-4456-b2b5-641ab687d1f6"),
-
   getClassObject: function(aCompMgr, aCID, aIID)
   {
-    if (!aCID.equals(this.mClassID))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
     if (!aIID.equals(Components.interfaces.nsIFactory))
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
-    return this.mFactory;
+    for (var key in this.mObjects) 
+      if (aCID.equals(this.mObjects[key].CID))
+        return this.mObjects[key].factory;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  mObjects: 
+  {
+    feedDownloader: 
+    { 
+      CID: Components.ID("{5c124537-adca-4456-b2b5-641ab687d1f6}"),
+      contractID: "@mozilla.org/newsblog-feed-downloader;1",
+      className: "News+Blog Feed Downloader",
+      factory: 
+      {
+        createInstance: function (aOuter, aIID) 
+        {
+          if (aOuter != null)
+            throw Components.results.NS_ERROR_NO_AGGREGATION;
+          if (!aIID.equals(Components.interfaces.nsINewsBlogFeedDownloader) &&
+              !aIID.equals(Components.interfaces.nsISupports))
+            throw Components.results.NS_ERROR_INVALID_ARG;
+
+          // return the singleton
+          return nsNewsBlogFeedDownloader.QueryInterface(aIID);
+        }       
+      } // factory
+    }, // feed downloader
+    
+    nsNewsBlogAcctMgrExtension: 
+    { 
+      CID: Components.ID("{E109C05F-D304-4ca5-8C44-6DE1BFAF1F74}"),
+      contractID: "@mozilla.org/accountmanager/extension;1?name=newsblog",
+      className: "News+Blog Account Manager Extension",
+      factory: 
+      {
+        createInstance: function (aOuter, aIID) 
+        {
+          if (aOuter != null)
+            throw Components.results.NS_ERROR_NO_AGGREGATION;
+          if (!aIID.equals(Components.interfaces.nsIMsgAccountManagerExtension) &&
+              !aIID.equals(Components.interfaces.nsISupports))
+            throw Components.results.NS_ERROR_INVALID_ARG;
+
+          // return the singleton
+          return nsNewsBlogAcctMgrExtension.QueryInterface(aIID);
+        }       
+      } // factory
+    } // account manager extension
   },
 
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
-  {
+  {        
     if (kDebug)
       dump("*** Registering nsNewsBlogFeedDownloaderModule (a JavaScript Module)\n");
 
-    aCompMgr = aCompMgr.QueryInterface(
-                 Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName,
-      this.mContractID, aFileSpec, aLocation, aType);
+    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    for (var key in this.mObjects) 
+    {
+      var obj = this.mObjects[key];
+      aCompMgr.registerFactoryLocation(obj.CID, obj.className, obj.contractID, aFileSpec, aLocation, aType);
+    }
 
+    // we also need to do special account extension registration
+    var catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
+    catman.addCategoryEntry("mailnews-accountmanager-extensions",
+                            "newsblog account manager extension",
+                            "@mozilla.org/accountmanager/extension;1?name=newsblog", true, true);
   },
 
   unregisterSelf: function(aCompMgr, aFileSpec, aLocation)
   {
-    aCompMgr = aCompMgr.QueryInterface(
-                 Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(this.mClassID, aFileSpec);
+    aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    for (var key in this.mObjects) 
+    {
+      var obj = this.mObjects[key];
+      aCompMgr.unregisterFactoryLocation(obj.CID, aFileSpec);
+    }
 
+    // unregister the account manager extension
+    catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
+    catman.deleteCategoryEntry("mailnews-accountmanager-extensions",
+                               "@mozilla.org/accountmanager/extension;1?name=newsblog", true);
   },
 
   canUnload: function(aCompMgr)
   {
     return true;
-  },
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  //   mFactory : nsIFactory
-  //
-  //////////////////////////////////////////////////////////////////////
-  mFactory:
-  {
-    createInstance: function(aOuter, aIID)
-    {
-      if (aOuter != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      if (!aIID.equals(Components.interfaces.nsINewsBlogFeedDownloader) &&
-          !aIID.equals(Components.interfaces.nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
-
-      // return the singleton
-      return nsNewsBlogFeedDownloader.QueryInterface(aIID);
-    },
-
-    lockFactory: function(aLock)
-    {
-    }
   }
 };
 

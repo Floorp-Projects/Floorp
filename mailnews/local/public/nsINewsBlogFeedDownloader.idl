@@ -44,7 +44,7 @@ interface nsIMsgWindow;
 interface nsINewsBlogFeedDownloader : nsISupports
 {
   void downloadFeed(in string aUrl, in nsIMsgFolder aFolder,
-                     in boolean aQuickMode, in string aTitle,  
+                     in boolean aQuickMode, in wstring aTitle,  
 					in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 };
 

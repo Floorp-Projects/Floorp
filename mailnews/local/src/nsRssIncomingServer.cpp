@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,6 +93,39 @@ NS_IMETHODIMP nsRssIncomingServer::SetFlagsOnDefaultMailboxes()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsRssIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
+{
+  // do we need to do anything here besides download articles
+  // for each feed? I don't think we have a way to check a feed for new articles without actually
+  // getting the articles. Do we need to SetPerformingBiff to true for this server? 
+  nsresult rv;
+  nsCOMPtr<nsIMsgFolder> rootRSSFolder;
+  GetRootMsgFolder(getter_AddRefs(rootRSSFolder));
+
+  // enumerate over the RSS folders and ping each one
+  nsCOMPtr<nsIEnumerator> folderEnumerator;
+  rv = rootRSSFolder->GetSubFolders(getter_AddRefs(folderEnumerator));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsresult more = folderEnumerator->First();
+  nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIUrlListener> urlListener;
+
+  while (NS_SUCCEEDED(more))
+  {
+    rv = folderEnumerator->CurrentItem(getter_AddRefs(supports));
+    nsCOMPtr<nsIMsgFolder> rssFolder = do_QueryInterface(supports);
+    if (rssFolder)
+    {
+      urlListener = do_QueryInterface(rssFolder);
+      GetNewMail(aMsgWindow, urlListener, rssFolder, nsnull);
+    }
+    more = folderEnumerator->Next();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRssIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aFolder, nsIURI **_retval)
 {
   NS_ENSURE_ARG_POINTER(aFolder);
@@ -113,10 +147,13 @@ NS_IMETHODIMP nsRssIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLi
       if (folderInfo)
       {
         nsXPIDLCString url;
+        nsXPIDLString folderName;
+        aFolder->GetName(getter_Copies(folderName));
         folderInfo->GetCharPtrProperty("feedUrl", getter_Copies(url));
 
-        rv = rssDownloader->DownloadFeed(url.get(), 
-          aFolder, PR_FALSE, "Slashdot", aUrlListener, aMsgWindow);
+        if (!url.IsEmpty())
+          rv = rssDownloader->DownloadFeed(url.get(), 
+                                           aFolder, PR_FALSE, folderName.get(), aUrlListener, aMsgWindow);
       }
     }
   }
@@ -128,4 +165,24 @@ NS_IMETHODIMP nsRssIncomingServer::GetLocalStoreType(char **type)
     NS_ENSURE_ARG_POINTER(type);
     *type = strdup("mailbox");
     return NS_OK;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::GetAccountManagerChrome(nsAString& aResult)
+{
+    aResult = ToNewUnicode(NS_LITERAL_STRING("am-newsblog.xul"));
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
+{
+  NS_ENSURE_ARG_POINTER(aSupportLevel);
+  *aSupportLevel = OFFLINE_SUPPORT_LEVEL_NONE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
+{
+  NS_ENSURE_ARG_POINTER(aSupportsDiskSpace);
+  *aSupportsDiskSpace = PR_FALSE;
+  return NS_OK;
 }

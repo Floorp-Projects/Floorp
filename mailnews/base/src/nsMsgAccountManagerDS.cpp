@@ -447,19 +447,10 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
         /* if this is a server, with no identities, then we show a special panel */
         nsCOMPtr<nsIMsgIncomingServer> server;
         rv = getServerForFolderNode(source, getter_AddRefs(server));
-        if (server) {
-          PRBool hasIdentities;
-          rv = serverHasIdentities(server, &hasIdentities);
-          if (NS_SUCCEEDED(rv) && !hasIdentities) {
-            str.AssignLiteral("am-serverwithnoidentities.xul");
-          }
-          else {
-            str.AssignLiteral("am-main.xul");
-          }
-        }
-        else {
+        if (server)
+          server->GetAccountManagerChrome(str);
+        else 
           str.AssignLiteral("am-main.xul");
-        }
       }
       else {
         // allow for the accountmanager to be dynamically extended
@@ -858,7 +849,6 @@ nsMsgAccountManagerDataSource::serverHasIdentities(nsIMsgIncomingServer* aServer
 
   if (count >0)
     *aResult = PR_TRUE;
-
   return NS_OK;
 }
 

@@ -1,0 +1,8 @@
+<!ENTITY newsblogTitle.label "News &amp; Blog Settings">
+
+<!ENTITY biffStart.label "Check for new articles every ">
+<!ENTITY biffStart.accesskey "k">
+<!ENTITY biffEnd.label "minutes">
+
+<!ENTITY loginAtStartup.label "Check for new articles at startup"> 
+<!ENTITY loginAtStartup.accesskey "C">

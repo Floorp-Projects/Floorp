@@ -203,7 +203,7 @@ function getItemsDS() {
     var file = getItemsFile();
     var url = fileHandler.getURLSpecFromFile(file);
 
-    gFzItemsDS = rdf.GetDataSource(url);
+    gFzItemsDS = rdf.GetDataSourceBlocking(url);
     if (!gFzItemsDS)
         throw("can't get subscriptions data source");
 

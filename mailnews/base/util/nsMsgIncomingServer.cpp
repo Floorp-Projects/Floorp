@@ -1086,6 +1086,13 @@ nsMsgIncomingServer::GetLocalStoreType(char **aResult)
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::GetAccountManagerChrome(nsAString& aResult)
+{
+    aResult = ToNewUnicode(NS_LITERAL_STRING("am-main.xul"));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
 {
     nsresult rv;

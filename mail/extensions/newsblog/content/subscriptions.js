@@ -43,16 +43,12 @@ function doAdd() {
       debug("feedProperties.result empty\n");
       return;
     }
+    
     if (!feedProperties.feedLocation)
     {
         debug("feedProperties.feedLocation empty\n");
         return;
     }
-    const DEFAULT_FEED_TITLE = "feed title";
-    const DEFAULT_FEED_URL = "feed location";
-
-    if (!feedProperties.feedName)
-        feedProperties.feedName = DEFAULT_FEED_TITLE;
 
     var itemResource = rdf.GetResource(feedProperties.feedLocation);
     feed = new Feed(itemResource);

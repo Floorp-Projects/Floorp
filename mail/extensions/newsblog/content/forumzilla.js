@@ -24,87 +24,9 @@ var gFzPrefs =
       .getService(Components.interfaces.nsIPrefService)
         .getBranch("forumzilla.");
 
-var gFzStartupDelay;
-try      { gFzStartupDelay = gFzPrefs.getIntPref("startup.delay") }
-catch(e) { gFzStartupDelay = 2; }
-
-// Record when we started up so we can give up trying certain things
-// repetitively after some time.
-var gFzStartupTime = new Date();
-
 // Load and cache the subscriptions data source so it's available when we need it.
 getSubscriptionsDS();
 getItemsDS();
-
-function onLoad() {
-  // XXX Code to make the News & Blogs toolbar button show up automatically.
-  // Commented out because it isn't working quite right.
-  //var toolbar = document.getElementById('mail-bar');
-  //var currentset = toolbar.getAttribute('currentset');
-  //if (!currentset.search("button-newsandblogs") == -1)
-  //  toolbar.insertItem('button-newsandblogs', 'button-stop', null, true);
-  //  currentset = currentset.replace(/spring/, "button-newsandblogs,spring");
-  //if (!currentset.search("button-newsandblogs") == -1)
-  //  currentset += ",button-newsandblogs";
-  //toolbar.setAttribute('currentset', currentset);
-
-  // Make sure the subscriptions and items data source is loaded, since we'll
-  // need them for everything we do.
-  var itemsDS =
-      getItemsDS()
-          .QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-  if (!itemsDS.loaded) {
-      if (new Date() - gFzStartupTime < 30 * 1000) {
-          window.setTimeout(onLoad, 1000);
-          return;
-      }
-      else
-          throw("couldn't load the items datasource within thirty seconds");
-  }
-  // Make sure the subscriptions data source is loaded, since we'll need it
-  // for everything we do.  If it's not loaded, recheck it every second until
-  // it's been ten seconds since we started up, then give up.
-  var ds = getSubscriptionsDS();
-  var remote = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-  if (!remote.loaded) {
-    if (new Date() - gFzStartupTime < 10 * 1000)
-      window.setTimeout(onLoad, 1000);
-    else
-      throw("couldn't load the subscriptions datasource within ten seconds");
-    return;
-  }
-
-  var subs = getSubscriptionsFile();
-
-  var oldSubs = getOldSubscriptionsFile();
-  if (oldSubs.exists())
-    migrateSubscriptions(oldSubs);
-
-  getAccount();
-  ensureDatabasesAreReady();
-  downloadFeeds();
-}
-
-// Wait a few seconds before starting Forumzilla so we don't grab the UI thread
-// before the host application has a chance to display itself.  Also, starting
-// on load used to crash the host app, although that's not a problem anymore.
-//addEventListener("load", onLoad, false);
-window.setTimeout(onLoad, gFzStartupDelay * 1000);
-
-function downloadFeeds() {
-  
-    var ds = getSubscriptionsDS();
-    var feeds = getSubscriptionsList().GetElements();
-  
-    var feed;
-    while(feeds.hasMoreElements())
-        downloadFeed(feeds.getNext());
-}
-
-function downloadFeed(feed) {
-  var ds = getSubscriptionsDS();
-  new Feed(feed).download();
-}
 
 function migrateSubscriptions(oldFile) {
   var oldFile2 = new LocalFile(oldFile, MODE_RDONLY | MODE_CREATE);

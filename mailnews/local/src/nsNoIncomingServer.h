@@ -61,6 +61,7 @@ public:
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
+    NS_IMETHOD GetAccountManagerChrome(nsAString& aResult);
 };
 
 

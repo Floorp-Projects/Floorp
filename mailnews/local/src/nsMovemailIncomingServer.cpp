@@ -190,3 +190,10 @@ nsMovemailIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     *canSearchMessages = PR_TRUE;
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsMovemailIncomingServer::GetAccountManagerChrome(AString& aResult)
+{
+    aResult = ToNewUnicodeString("am-serverwithnoidentities.xul");
+    return NS_OK;
+}

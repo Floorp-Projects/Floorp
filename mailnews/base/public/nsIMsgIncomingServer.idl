@@ -105,6 +105,8 @@ interface nsIMsgIncomingServer : nsISupports {
    */
   attribute string type;
 
+  readonly attribute AString accountManagerChrome;
+
   /**
    * the schema for the local mail store, such
    * as "mailbox", "imap", or "news"
