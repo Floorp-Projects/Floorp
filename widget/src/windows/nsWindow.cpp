@@ -278,6 +278,7 @@ static HHOOK        gCallProcHook  = NULL;
 static HHOOK        gCallMouseHook = NULL;
 static PRPackedBool gProcessHook   = PR_FALSE;
 static UINT         gRollupMsgId   = 0;
+static HWND         gRollupMsgWnd  = NULL;
 static UINT         gHookTimerId   = 0;
 ////////////////////////////////////////////////////
 
@@ -1246,7 +1247,7 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
 // Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
 //
 BOOL
-nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
+nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
 {
   if ( gRollupListener && gRollupWidget) {
 
@@ -1254,7 +1255,11 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
         inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
         inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
         inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP ||
-        inMsg == WM_MENUSELECT || inMsg == WM_MOVING || inMsg == WM_SIZING || inMsg == WM_GETMINMAXINFO)
+        inMsg == WM_MENUSELECT || inMsg == WM_MOVING || inMsg == WM_SIZING ||
+        // Non-toplevel windows normally don't get WM_GETMINMAXINFO.
+        // Therefore if a non-toplevel window gets this message, we should ignore it.
+        (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
+       )
     {
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
@@ -1324,6 +1329,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
         // Tell hook to stop processing messages
         gProcessHook = PR_FALSE;
         gRollupMsgId = 0;
+        gRollupMsgWnd = NULL;
 
         // return TRUE tells Windows that the event is consumed,
         // false allows the event to be dispatched
@@ -1349,7 +1355,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   LRESULT popupHandlingResult;
-  if ( DealWithPopups(msg, wParam, lParam, &popupHandlingResult) )
+  if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
     return popupHandlingResult;
 
   // Get the window which caused the event and ask it to process the message
@@ -6933,8 +6939,9 @@ void nsWindow::ScheduleHookTimer(HWND aWnd, UINT aMsgId)
   // In some cases multiple hooks may be scheduled
   // so ignore any other requests once one timer is scheduled
   if (gHookTimerId == 0) {
-    // Remember the message ID to be used later
+    // Remember the window handle and the message ID to be used later
     gRollupMsgId = aMsgId;
+    gRollupMsgWnd = aWnd;
     // Schedule native timer for doing the rollup after
     // this event is done being processed
     gHookTimerId = ::SetTimer(NULL, 0, 0, (TIMERPROC)HookTimerForPopups);
@@ -7118,8 +7125,9 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
     // Note: DealWithPopups does the check to make sure that
     // gRollupListener and gRollupWidget are not NULL
     LRESULT popupHandlingResult;
-    DealWithPopups(gRollupMsgId, 0, 0, &popupHandlingResult);
+    DealWithPopups(gRollupMsgWnd, gRollupMsgId, 0, 0, &popupHandlingResult);
     gRollupMsgId = 0;
+    gRollupMsgWnd = NULL;
   }
 }
 
