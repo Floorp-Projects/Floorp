@@ -490,7 +490,9 @@ function OnLoadThreadPane(threadTree)
 	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	threadTree.database.AddDataSource(messageDataSource);
 
-	ShowThreads(false);
+    //FIX ME: Tempory patch for bug 24182
+    //ShowThreads(false);
+	setTimeout("ShowThreads(false);", 0);
 }
 
 /* Functions for accessing particular parts of the window*/
