@@ -643,8 +643,8 @@ nsRDFXMLSerializer::SerializeMember(nsIOutputStream* aStream,
     nsCOMPtr<nsIRDFLiteral> literal;
 
     if ((resource = do_QueryInterface(aMember)) != nsnull) {
-        nsXPIDLCString s;
-        if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
+        const char *s;
+        if (NS_SUCCEEDED(rv = resource->GetValueConst(&s))) {
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
@@ -658,8 +658,8 @@ static const char kRDFLIResource2[] = "\"/>\n";
         }
     }
     else if ((literal = do_QueryInterface(aMember)) != nsnull) {
-        nsXPIDLString value;
-        if (NS_SUCCEEDED(rv = literal->GetValue( getter_Copies(value) ))) {
+        const PRUnichar *value;
+        if (NS_SUCCEEDED(rv = literal->GetValueConst(&value))) {
 static const char kRDFLILiteral1[] = "    <RDF:li>";
 static const char kRDFLILiteral2[] = "</RDF:li>\n";
 
