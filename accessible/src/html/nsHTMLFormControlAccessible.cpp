@@ -475,7 +475,7 @@ void nsHTMLGroupboxAccessible::CacheChildren(PRBool aWalkAnonContent)
 
   if (mAccChildCount == eChildCountUninitialized) {
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
-    walker.mState.frame = GetFrame();
+    walker.mState.frameHint = GetFrame();
     mAccChildCount = 0;
     walker.GetFirstChild();
     // Check for <legend> and skip it if it's there

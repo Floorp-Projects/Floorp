@@ -163,22 +163,17 @@ NS_IMETHODIMP nsXULButtonAccessible::GetFirstChild(nsIAccessible **aResult)
 {
   if (!mFirstChild) {
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
-    walker.GetFirstChild();
-    nsCOMPtr<nsIAccessible> dropMarkerAccessible;
-    while (walker.mState.accessible) {
-      dropMarkerAccessible = walker.mState.accessible;
-      walker.GetNextSibling();
-    }
+    walker.GetLastChild();
 
     // If the anonymous tree walker can find accessible children, 
     // and the last one is a push button, then use it as the only accessible 
     // child -- because this is the scenario where we have a dropmarker child
 
-    if (dropMarkerAccessible) {    
+    if (walker.mState.accessible) {    
       PRUint32 role;
-      if (NS_SUCCEEDED(dropMarkerAccessible->GetRole(&role)) && role == ROLE_PUSHBUTTON) {
-        mFirstChild = dropMarkerAccessible;
-        nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(dropMarkerAccessible);
+      if (NS_SUCCEEDED(walker.mState.accessible->GetRole(&role)) && role == ROLE_PUSHBUTTON) {
+        mFirstChild = walker.mState.accessible;
+        nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(mFirstChild);
         privChildAcc->SetNextSibling(nsnull);
       }
     }
