@@ -50,6 +50,7 @@
 #include "nspr.h"
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
+#include "formdata.h"
 
 /*
 ** Turn on to attempt adding support for graphs on your platform.
@@ -402,6 +403,29 @@ typedef struct __struct_STCategoryMapEntry {
     const char * categoryName;
 } STCategoryMapEntry;
 
+/*
+**  Option genres.
+**
+**  This helps to determine what functionality each option effects.
+**  In specific, this will help use determine when and when not to
+**      totally recaclulate the sorted run and categories.
+*/
+typedef enum __enum_STOptionGenre
+{
+    CategoryGenre = 0,
+    DataSortGenre,
+    DataSetGenre,
+    DataSizeGenre,
+    UIGenre,
+    ServerGenre,
+    BatchModeGenre,
+
+    /*
+    **  Last one please.
+    */
+    MaxGenres
+}
+STOptionGenre;
 
 /*
 **  STOptions
@@ -410,33 +434,18 @@ typedef struct __struct_STCategoryMapEntry {
 **  The definition of these options exists in a different file.
 **  We access that definition via macros to inline our structure definition.
 */
-#define ST_CMD_OPTION_BOOL(option_name, option_help) PRBool m##option_name;
-#define ST_CMD_OPTION_STRING(option_name, default_value, option_help) char m##option_name[ST_OPTION_STRING_MAX];
-#define ST_CMD_OPTION_STRING_ARRAY(option_name, array_size, option_help) char m##option_name[array_size][ST_OPTION_STRING_MAX];
-#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_help) const char** m##option_name; PRUint32 m##option_name##Count;
-#define ST_CMD_OPTION_UINT32(option_name, default_value, multiplier, option_help) PRUint32 m##option_name;
-#define ST_CMD_OPTION_UINT64(option_name, default_value, multiplier, option_help) PRUint64 m##option_name##64;
+#define ST_CMD_OPTION_BOOL(option_name, option_genre, option_help) PRBool m##option_name;
+#define ST_CMD_OPTION_STRING(option_name, option_genre, default_value, option_help) char m##option_name[ST_OPTION_STRING_MAX];
+#define ST_CMD_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) char m##option_name[array_size][ST_OPTION_STRING_MAX];
+#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) const char** m##option_name; PRUint32 m##option_name##Count;
+#define ST_CMD_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) PRUint32 m##option_name;
+#define ST_CMD_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) PRUint64 m##option_name##64;
 
 typedef struct __struct_STOptions
 {
 #include "stoptions.h"
 }
 STOptions;
-
-/*
-**  STOptionChange
-**
-**  Generalized way to determine what options changed.
-**  Useful for flushing caches, et. al.
-*/
-typedef struct __struct_STOptionChange
-{
-    int mSet;
-    int mOrder;
-    int mGraph;
-    int mCategory;
-}
-STOptionChange;
 
 /*
 ** STRequest
@@ -456,9 +465,9 @@ typedef struct __struct_STRequest
         const char* mGetFileName;
 
         /*
-        ** The GET form data, if any.
+        **  The GET form data, if any.
         */
-        const char* mGetData;
+        const FormData* mGetData;
 
         /*
         **  Options specific to this request.
@@ -475,39 +484,39 @@ typedef struct __struct_STRequest
 */
 typedef struct __struct_STCache
 {
-        /*
-        ** Pre sorted run.
-        */
-        STRun* mSortedRun;
-   
-        /*
-        ** Category the mSortedRun belongs to. NULL if not to any category.
-        */
-        char mCategoryName[ST_OPTION_STRING_MAX];
-
-        /*
-        ** Footprint graph cache.
-        */
-        int mFootprintCached;
-        PRUint32 mFootprintYData[STGD_SPACE_X];
-
-        /*
-        ** Timeval graph cache.
-        */
-        int mTimevalCached;
-        PRUint32 mTimevalYData[STGD_SPACE_X];
-
-        /*
-        ** Lifespan graph cache.
-        */
-        int mLifespanCached;
-        PRUint32 mLifespanYData[STGD_SPACE_X];
-
-        /*
-        ** Weight graph cache.
-        */
-        int mWeightCached;
-        PRUint64 mWeightYData64[STGD_SPACE_X];
+    /*
+    ** Pre sorted run.
+    */
+    STRun* mSortedRun;
+    
+    /*
+    ** Category the mSortedRun belongs to. NULL if not to any category.
+    */
+    char mCategoryName[ST_OPTION_STRING_MAX];
+    
+    /*
+    ** Footprint graph cache.
+    */
+    int mFootprintCached;
+    PRUint32 mFootprintYData[STGD_SPACE_X];
+    
+    /*
+    ** Timeval graph cache.
+    */
+    int mTimevalCached;
+    PRUint32 mTimevalYData[STGD_SPACE_X];
+    
+    /*
+    ** Lifespan graph cache.
+    */
+    int mLifespanCached;
+    PRUint32 mLifespanYData[STGD_SPACE_X];
+    
+    /*
+    ** Weight graph cache.
+    */
+    int mWeightCached;
+    PRUint64 mWeightYData64[STGD_SPACE_X];
 } STCache;
 
 /*
@@ -604,7 +613,7 @@ extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int
 extern int recalculateAllocationCost(STRun* aRun, STAllocation* aAllocation, PRBool updateParent);
 extern void htmlHeader(STRequest* inRequest, const char* aTitle);
 extern void htmlFooter(STRequest* inRequest);
-extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget);
+extern void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, const char* aTarget, STOptions* inOptions);
 extern char *FormatNumber(PRInt32 num);
 
 /*

@@ -822,7 +822,7 @@ PRBool displayCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCa
     STCategoryNode* root = (STCategoryNode *) clientData;
     PRUint32 byteSize = 0, heapCost = 0, count = 0;
     double percent = 0;
-    char buf[256];
+    STOptions customOps;
 
     if (node->run)
     {
@@ -853,9 +853,12 @@ PRBool displayCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCa
     PR_fprintf(inRequest->mFD,
                " <tr>\n"
                "  <td>");
+
     /* a link to topcallsites report with focus on category */
-    PR_snprintf(buf, sizeof(buf), "top_callsites.html?mCategory=%s", node->categoryName);
-    htmlAnchor(inRequest, buf, node->categoryName, NULL);
+    memcpy(&customOps, &inRequest->mOptions, sizeof(customOps));
+    PR_snprintf(customOps.mCategoryName, sizeof(customOps.mCategoryName), "%s", node->categoryName);
+
+    htmlAnchor(inRequest, "top_callsites.html", node->categoryName, NULL, &customOps);
     PR_fprintf(inRequest->mFD,
                "</td>\n"
                "  <td align=right>%u</td>\n"

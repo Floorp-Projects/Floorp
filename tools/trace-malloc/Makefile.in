@@ -38,6 +38,7 @@ SIMPLE_PROGRAMS	= $(SIMPLECSRCS:.c=$(BIN_SUFFIX))
 CSRCS            = \
 		spacetrace.c \
 		spacecategory.c \
+		formdata.c \
 		$(NULL)
 
 PROGRAM		= spacetrace$(BIN_SUFFIX)
