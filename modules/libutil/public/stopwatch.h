@@ -40,7 +40,7 @@ private:
 
 public:
    Stopwatch();
-   void           Start(bool reset = true);
+   void           Start(PRBool reset = PR_TRUE);
    void           Stop();
    void           Continue();
    void           SaveState();      // record current state of stopwatch
