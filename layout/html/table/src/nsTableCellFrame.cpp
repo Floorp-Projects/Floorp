@@ -434,6 +434,15 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
+
+  // Create a continuing body frame
+  nsIFrame*         childList;
+  nsIStyleContext*  kidSC;
+
+  mFirstChild->GetStyleContext(kidSC);
+  mFirstChild->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
+  NS_RELEASE(kidSC);
+  cf->SetInitialChildList(aPresContext, nsnull, childList);
   return NS_OK;
 }
 
