@@ -185,6 +185,7 @@ NS_IMETHODIMP nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult)
 
 NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
 {
+   NS_ENSURE_STATE(mSaveLayoutState || !aState);
    mLayoutHistoryState = aState;
    return NS_OK;
 }
@@ -257,6 +258,12 @@ NS_IMETHODIMP nsSHEntry::GetSaveLayoutStateFlag(PRBool * aFlag)
 NS_IMETHODIMP nsSHEntry::SetSaveLayoutStateFlag(PRBool  aFlag)
 {
    mSaveLayoutState = aFlag;
+
+   // if we are not allowed to hold layout history state, then make sure
+   // that we are not holding it!
+   if (!mSaveLayoutState)
+      mLayoutHistoryState = nsnull;
+
    return NS_OK;
 }
 
