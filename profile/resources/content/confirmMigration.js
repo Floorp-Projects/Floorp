@@ -1,6 +1,6 @@
 var bundle;
 var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
-profile = profile.QueryInterface(Components.interfaces.nsIProfile);
+profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
 
 function handleOKButton()
 {

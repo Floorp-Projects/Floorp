@@ -26,9 +26,9 @@
 
 var selected    = null;
 var currProfile = "";
-var profile     = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
+var profile     = Components.classes["@mozilla.org/profile/manager;1"].getService();
 if (profile)
-  profile       = profile.QueryInterface(Components.interfaces.nsIProfile);
+  profile       = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
 var unset       = true;
 
 var Registry;
