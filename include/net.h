@@ -1071,6 +1071,7 @@ extern Bool NET_SupressRefererForAnonymity();
 
 #if defined(CookieManagement)
 extern void NET_DisplayCookieInfoAsHTML(MWContext *context);
+extern void NET_CookieViewerReturn();
 extern void NET_DisplayCookieInfoOfSiteAsHTML(MWContext *context, char * URLName);
 extern int NET_CookiePermission(char* URLName);
 extern int NET_CookieCount(char * URLName);
