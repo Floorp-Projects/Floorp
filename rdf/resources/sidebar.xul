@@ -104,6 +104,12 @@ function doSort(sortColName)
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
+    <xul:treeitem id="NC:HistoryByDate">
+      <xul:treecell>History By Date</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+
   </xul:treebody>
 </xul:tree>
 
