@@ -1142,6 +1142,8 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
     if (p == NULL)
       break;                          /* exit the loop because the rest are not encoded */
     *p = '\0';
+if (TAB == *begin)
+  begin++;
     /* skip strings don't need conversion */
     strncpy(output_p, begin, p - begin);
     output_p += p - begin;
