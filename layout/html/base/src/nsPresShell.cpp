@@ -143,7 +143,7 @@ static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 // This data member is initialized from the layout.reflow.timeslice pref.
 // It is used only when asynchronous reflow is enabled by setting gDoAsyncReflow to PR_TRUE.
 #define NS_MAX_REFLOW_TIME    1000000
-static PRTime gMaxRCProcessingTime = -1;
+static PRTime gMaxRCProcessingTime = (PRTime) -1;
 
 // Largest chunk size we recycle
 static const int  gMaxRecycledSize = 200;
@@ -810,9 +810,9 @@ PresShell::Init(nsIDocument* aDocument,
     result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
 
-  if (gMaxRCProcessingTime == -1) {
+  if (gMaxRCProcessingTime == (PRTime) -1) {
     // First, set the defaults
-    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
+    gMaxRCProcessingTime = (PRTime) NS_MAX_REFLOW_TIME;
     gDoAsyncReflow = PR_FALSE;
 
     // Get the prefs service
@@ -1949,7 +1949,7 @@ PresShell::ProcessReflowCommands()
         printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", this, reflowTime);
       }
 #endif            
-      mAccumulatedReflowTime = 0;
+      mAccumulatedReflowTime = (PRTime) 0;
     }
     
 #ifdef DEBUG
