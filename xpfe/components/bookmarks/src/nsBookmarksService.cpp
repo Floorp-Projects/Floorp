@@ -929,7 +929,7 @@ BookmarkParser::Unescape(nsString &text)
 
 	PRInt32		offset=0;
 
-	while((offset = text.FindChar((PRUnichar('&')), PR_FALSE, offset)) >= 0)
+	while((offset = text.FindChar((PRUnichar('&')), offset)) >= 0)
 	{
 		// XXX get max of 6 chars; change the value below if
 		// we ever start looking for longer HTML-escaped values
@@ -993,7 +993,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 	// Skip past the first double-quote
 	start += (sizeof(kHTTPEquivEquals) - 1);
 	// ...and find the next so we can chop the HTTP-EQUIV attribute
-	PRInt32 end = aLine.FindChar(PRUnichar('"'), PR_FALSE, start);
+	PRInt32 end = aLine.FindChar(PRUnichar('"'), start);
 	nsAutoString	httpEquiv;
 	aLine.Mid(httpEquiv, start, end - start);
 
@@ -1008,7 +1008,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 	// Skip past the first double-quote
 	start += (sizeof(kContentEquals) - 1);
 	// ...and find the next so we can chop the CONTENT attribute
-	end = aLine.FindChar(PRUnichar('"'), PR_FALSE, start);
+	end = aLine.FindChar(PRUnichar('"'), start);
 	nsAutoString	content;
 	aLine.Mid(content, start, end - start);
 
@@ -1145,7 +1145,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                 attrStart += nsCRT::strlen(field->mName);
 
                 // skip to terminating quote of string
-                PRInt32 termQuote = aLine.FindChar(PRUnichar('\"'), PR_FALSE, attrStart);
+                PRInt32 termQuote = aLine.FindChar(PRUnichar('\"'), attrStart);
                 if (termQuote > attrStart)
                 {
                     // process data

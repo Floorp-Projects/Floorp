@@ -698,7 +698,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   PRInt32 pos = 0;
   while(1)
   {
-    pos = name.FindChar('.', PR_FALSE, pos);
+    pos = name.FindChar('.', pos);
     if(pos == -1)
     {
       totalwords++;

@@ -781,9 +781,9 @@ PRInt32 nsStr::FindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,
   return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
-PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
-  return ::FindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+  return ::FindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aCount);
 }
 
 
@@ -817,7 +817,7 @@ PRInt32 nsStr::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   }
   return kNotFound;
 }
-PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset) {
 
   NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
   
@@ -830,7 +830,7 @@ PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   if((0<aDest.mLength) && (0<aSet.mLength)){
     while(++index<(PRInt32)aDest.mLength) {
       PRUnichar theChar=GetCharAt(aDest,index);
-      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
     } //while
@@ -1031,9 +1031,9 @@ PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase
   NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 bytes");
   return ::RFindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
-PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");
-  return ::RFindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+  return ::RFindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aCount);
 }
 
 
@@ -1067,7 +1067,7 @@ PRInt32 nsStr::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgno
   return kNotFound;
 }
 
-PRInt32 nsStr::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+PRInt32 nsStr::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset) {
 
   NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
   
@@ -1079,7 +1079,7 @@ PRInt32 nsStr::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgno
   if(0<aDest.mLength) {
     while(--index>=0) {
       PRUnichar theChar=GetCharAt(aDest,index);
-      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
     } //while

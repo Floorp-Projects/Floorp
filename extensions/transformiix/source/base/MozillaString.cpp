@@ -498,7 +498,7 @@ PRInt32 String::indexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
   PRInt32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
 
-  return ptrNSString->FindChar(data, PR_FALSE, searchIndex);
+  return ptrNSString->FindChar(data, searchIndex);
 } //-- indexOf
 
 //
@@ -575,7 +575,7 @@ PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
 **/
 PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
-  return ptrNSString->RFindChar(data, PR_FALSE, offset);
+  return ptrNSString->RFindChar(data, offset);
 } //-- lastIndexOf
 
 /**

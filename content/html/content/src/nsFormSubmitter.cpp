@@ -351,7 +351,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
       if (!theScheme.EqualsIgnoreCase("javascript")) {
 
         // Bug 42616: Trim off named anchor and save it to add later
-        PRInt32 namedAnchorPos = href.FindChar('#', PR_FALSE, 0);
+        PRInt32 namedAnchorPos = href.FindChar('#');
         nsAutoString namedAnchor;
         if (kNotFound != namedAnchorPos) {
           href.Right(namedAnchor, (href.Length() - namedAnchorPos));
@@ -1162,7 +1162,7 @@ nsFormSubmitter::GetSubmitCharset(nsIForm* form,
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
     if (NS_SUCCEEDED(rv) && calias) {
       do {
-        spPos = acceptCharsetValue.FindChar(PRUnichar(' '),PR_TRUE, offset);
+        spPos = acceptCharsetValue.FindChar(PRUnichar(' '), offset);
         PRInt32 cnt = ((-1==spPos)?(l-offset):(spPos-offset));
         if (cnt > 0) {
           nsAutoString charset;

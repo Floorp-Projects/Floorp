@@ -1444,11 +1444,11 @@ void nsWebShellWindow::LoadContentAreas() {
     for (endPos = 0; endPos < (PRInt32)searchSpec.Length(); ) {
       // extract contentAreaID and URL substrings
       begPos = endPos;
-      eqPos = searchSpec.FindChar('=', PR_FALSE,begPos);
+      eqPos = searchSpec.FindChar('=', begPos);
       if (eqPos < 0)
         break;
 
-      endPos = searchSpec.FindChar(';', PR_FALSE,eqPos);
+      endPos = searchSpec.FindChar(';', eqPos);
       if (endPos < 0)
         endPos = searchSpec.Length();
       searchSpec.Mid(contentAreaID, begPos, eqPos-begPos);

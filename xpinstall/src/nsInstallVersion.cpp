@@ -300,7 +300,7 @@ nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajo
 {
     PRInt32 errorCode;
 
-    int dot = version.FindChar('.', PR_FALSE,0);
+    int dot = version.FindChar('.', 0);
     
     if ( dot == -1 ) 
     {
@@ -313,7 +313,7 @@ nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajo
         *aMajor  = majorStr.ToInteger(&errorCode);
 
         int prev = dot+1;
-        dot = version.FindChar('.',PR_FALSE,prev);
+        dot = version.FindChar('.',prev);
         if ( dot == -1 ) 
         {
             nsString minorStr;
@@ -327,7 +327,7 @@ nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajo
             *aMinor = minorStr.ToInteger(&errorCode);
 
             prev = dot+1;
-            dot = version.FindChar('.',PR_FALSE,prev);
+            dot = version.FindChar('.',prev);
             if ( dot == -1 ) 
             {
                 nsString releaseStr;

@@ -1944,7 +1944,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 	// determine site (host name)
 	PRInt32		slashOffset1 = host.Find("://");
 	if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
-	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), slashOffset1 + 3);
 	if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
 	host.Truncate(slashOffset2 + 1);
 
@@ -2037,7 +2037,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 				// determine site (host name)
 				slashOffset1 = site.Find("://");
 				if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
-				slashOffset2 = site.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+				slashOffset2 = site.FindChar(PRUnichar('/'), slashOffset1 + 3);
 				if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
 				site.Truncate(slashOffset2 + 1);
 
@@ -2143,7 +2143,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 	nsAutoString	host(hrefStr);
 	PRInt32		slashOffset1 = host.Find("://");
 	if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
-	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), slashOffset1 + 3);
 	if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
 	host.Truncate(slashOffset2 + 1);
 
@@ -4182,7 +4182,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 			len = value.Length();
 			if ((len > 0) && (foundQuoteChar == PR_TRUE))
 			{
-				PRInt32 quoteEnd = value.FindChar(quoteChar, PR_TRUE);
+				PRInt32 quoteEnd = value.FindChar(quoteChar);
 				if (quoteEnd >= 0)
 				{
 					value.Truncate(quoteEnd);
@@ -4257,13 +4257,13 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			PRInt32	nameOffset = line.Find("name", PR_TRUE);
 			if (nameOffset >= 0)
 			{
-				PRInt32 equal = line.FindChar(PRUnichar('='), PR_TRUE, nameOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), nameOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, startQuote + 1);
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
 						if (endQuote > 0)
 						{
 							line.Mid(nameAttrib, startQuote+1, endQuote-startQuote-1);
@@ -4296,13 +4296,13 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			PRInt32	valueOffset = line.Find("value", PR_TRUE);
 			if (valueOffset >= 0)
 			{
-				PRInt32 equal = line.FindChar(PRUnichar('='), PR_TRUE, valueOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), valueOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, startQuote + 1);
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
 						if (endQuote >= 0)
 						{
 							line.Mid(valueAttrib, startQuote+1, endQuote-startQuote-1);
@@ -5277,7 +5277,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				PRInt32		ltOffset, gtOffset;
 				while ((ltOffset = dateItem.FindChar(PRUnichar('<'))) >= 0)
 				{
-					if ((gtOffset = dateItem.FindChar(PRUnichar('>'), PR_FALSE, ltOffset)) <= ltOffset)
+					if ((gtOffset = dateItem.FindChar(PRUnichar('>'), ltOffset)) <= ltOffset)
 						break;
 					dateItem.Cut(ltOffset, gtOffset - ltOffset + 1);
 				}
@@ -5645,16 +5645,16 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 	if (removeHTMLFlag == PR_TRUE)
 	{
 		// munge out anything inside of HTML "<" / ">" tags
-		while ((offset = nameStr.FindChar(PRUnichar('<'), PR_FALSE, 0)) >= 0)
+		while ((offset = nameStr.FindChar(PRUnichar('<'), 0)) >= 0)
 		{
-			PRInt32	offsetEnd = nameStr.FindChar(PRUnichar('>'), PR_FALSE, offset+1);
+			PRInt32	offsetEnd = nameStr.FindChar(PRUnichar('>'), offset+1);
 			if (offsetEnd <= offset)	break;
 			nameStr.Cut(offset, offsetEnd - offset + 1);
 		}
 	}
-	while ((ampOffset = nameStr.FindChar(PRUnichar('&'), PR_FALSE, startOffset)) >= 0)
+	while ((ampOffset = nameStr.FindChar(PRUnichar('&'), startOffset)) >= 0)
 	{
-		if ((semiOffset = nameStr.FindChar(PRUnichar(';'), PR_FALSE, ampOffset+1)) <= ampOffset)
+		if ((semiOffset = nameStr.FindChar(PRUnichar(';'), ampOffset+1)) <= ampOffset)
 			break;
 
 		nsAutoString	entityStr;

@@ -113,7 +113,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     PRInt32 location = 0, nodeLength = 0;
     nsString subString;
 
-    location = inPartialPath.FindChar('/',PR_FALSE, offset);
+    location = inPartialPath.FindChar('/', offset);
     if (location == ((PRInt32)inPartialPath.Length() - 1)) //trailing slash
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -143,7 +143,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
             mFinalFile->Append(NS_LossyConvertUCS2toASCII(subString).get());
             offset += nodeLength + 1;
             if (!finished)
-                location = inPartialPath.FindChar('/',PR_FALSE, offset);
+                location = inPartialPath.FindChar('/', offset);
         }
     }
 

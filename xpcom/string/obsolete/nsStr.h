@@ -450,10 +450,10 @@ protected:
   static PRInt32 FindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 FindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
-  static PRInt32 FindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
   
   static PRInt32 RFindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindSubstr2in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
@@ -461,10 +461,10 @@ protected:
   static PRInt32 RFindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
-  static PRInt32 RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
   
   static PRInt32 RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
-  static PRInt32 RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
 
   static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
   

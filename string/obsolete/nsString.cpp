@@ -612,7 +612,7 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar2(temp,0,PR_FALSE,0,temp.mLength);
+      PRInt32 len=nsStr::FindChar2(temp,0,PR_FALSE,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }
@@ -949,7 +949,7 @@ PRInt32 nsCString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mStr=(char*)aStringSet;
-    result=nsStr::FindCharInSet2(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::FindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }
@@ -969,7 +969,7 @@ PRInt32 nsCString::FindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
 }
 
 PRInt32 nsCString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 
@@ -1072,7 +1072,7 @@ PRInt32 nsCString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) 
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mUStr=(PRUnichar*)aStringSet;
-    result=nsStr::RFindCharInSet2(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::RFindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }
@@ -1092,7 +1092,7 @@ PRInt32 nsCString::RFindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
 }
 
 PRInt32 nsCString::RFindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 

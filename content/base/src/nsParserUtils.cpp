@@ -93,7 +93,7 @@ nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
         if (posnOfValueDelimiter != -1) {
           startOfValue = posnOfValueDelimiter + 1;
           // Find the ending quote or apostrophe
-          posnOfValueDelimiter = aSource.FindChar(delimiter, PR_FALSE, startOfValue);
+          posnOfValueDelimiter = aSource.FindChar(delimiter, startOfValue);
           // If found
           if (posnOfValueDelimiter != -1) {
             // Set the value of the attibute and exit the loop

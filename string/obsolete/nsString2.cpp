@@ -945,22 +945,6 @@ PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffs
   return result;
 }
 
-
-/**
- *  Search for a given char, starting at given offset
- *  
- *  @update  gess 3/25/98
- *  @param   aChar is the unichar to be sought
- *  @param   aIgnoreCase tells us whether or not to do caseless compare
- *  @param   anOffset tells us where in this string to start searching
- *  @param   aCount tells us how many iterations to make starting at the given offset
- *  @return  offset in string, or -1 (kNotFound)
- */
-PRInt32 nsString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindChar2(*this,aChar,aIgnoreCase,anOffset,aCount);
-  return result;
-}
-
 /**
  *  This method finds the offset of the first char in this string that is
  *  a member of the given charset, starting the search at anOffset
@@ -1002,7 +986,7 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mStr=(char*)aStringSet;
-    result=nsStr::FindCharInSet2(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::FindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }
@@ -1017,7 +1001,7 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
  *  @return  
  */
 PRInt32 nsString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 
@@ -1090,8 +1074,8 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,
  *  @param   anOffset
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindChar2(*this,aChar,aIgnoreCase,anOffset,aCount);
+PRInt32 nsString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::RFindChar2(*this,aChar,anOffset,aCount);
   return result;
 }
 
@@ -1128,7 +1112,7 @@ PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
  *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 
@@ -1156,7 +1140,7 @@ PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mUStr=(PRUnichar*)aStringSet;
-    result=nsStr::RFindCharInSet2(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::RFindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }

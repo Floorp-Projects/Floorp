@@ -1670,12 +1670,12 @@ Fix4xCookies(nsIFileSpec * profilePath) {
     /* locate expire field, skip line if it does not contain all its fields */
     int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
-    if ((isDomainIndex=inBuffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
-        (pathIndex=inBuffer.FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
-        (xxxIndex=inBuffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
-        (expiresIndex=inBuffer.FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
-        (nameIndex=inBuffer.FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
-        (cookieIndex=inBuffer.FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
+    if ((isDomainIndex=inBuffer.FindChar('\t', hostIndex)+1) == 0 ||
+        (pathIndex=inBuffer.FindChar('\t', isDomainIndex)+1) == 0 ||
+        (xxxIndex=inBuffer.FindChar('\t', pathIndex)+1) == 0 ||
+        (expiresIndex=inBuffer.FindChar('\t', xxxIndex)+1) == 0 ||
+        (nameIndex=inBuffer.FindChar('\t', expiresIndex)+1) == 0 ||
+        (cookieIndex=inBuffer.FindChar('\t', nameIndex)+1) == 0 ) {
       continue;
     }
 

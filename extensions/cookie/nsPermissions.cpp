@@ -480,7 +480,7 @@ PERMISSION_Read() {
     PRUint32 nextPermissionIndex = 0;
     hostIndex = 0;
 
-    if ((permissionIndex=buffer.FindChar('\t', PR_FALSE, hostIndex)+1) == 0) {
+    if ((permissionIndex=buffer.FindChar('\t', hostIndex)+1) == 0) {
       continue;      
     }
 
@@ -497,7 +497,7 @@ PERMISSION_Read() {
       if (nextPermissionIndex == buffer.Length()+1) {
         break;
       }
-      if ((nextPermissionIndex=buffer.FindChar('\t', PR_FALSE, permissionIndex)+1) == 0) {
+      if ((nextPermissionIndex=buffer.FindChar('\t', permissionIndex)+1) == 0) {
         nextPermissionIndex = buffer.Length()+1;
       }
       buffer.Mid(permissionString, permissionIndex, nextPermissionIndex-permissionIndex-1);
