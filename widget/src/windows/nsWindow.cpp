@@ -5074,6 +5074,13 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   }
 
   nsMouseEvent event;
+  if (aEventType == NS_CONTEXTMENU_KEY) {
+    nsPoint zero(0, 0);
+    InitEvent(event, aEventType, &zero);
+  } else {
+    InitEvent(event, aEventType, aPoint);
+  }
+
   InitEvent(event, aEventType, aPoint);
 
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
