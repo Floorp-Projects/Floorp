@@ -65,16 +65,15 @@ using namespace Interpreter;
 
 // Interactively read a line from the input stream in and put it into
 // s. Return false if reached the end of input before reading anything.
-static bool promptLine(LineReader &inReader, string &s,
-                       const char *prompt)
+static bool promptLine(LineReader &inReader, string &s, const char *prompt)
 {
     if (prompt) {
         stdOut << prompt;
-#ifdef XP_MAC_MPW
+	  #ifdef XP_MAC_MPW
         // Print a CR after the prompt because MPW grabs the entire
         // line when entering an interactive command.
         stdOut << '\n';
-#endif
+	  #endif
     }
     return inReader.readLine(s) != 0;
 }
@@ -175,7 +174,7 @@ static void readEvalPrint(FILE *in, World &world)
     String sourceLocation = widenCString("console");
     LineReader inReader(in);
         
-    while (promptLine(inReader, line, buffer.empty() ? "js> " : 0)) {
+    while (promptLine(inReader, line, buffer.empty() ? "js> " : "> ")) {
         appendChars(buffer, line.data(), line.size());
         try {
             Arena a;
@@ -192,6 +191,7 @@ static void readEvalPrint(FILE *in, World &world)
                 }
             } else {
                 ExprNode *parseTree = p.parseExpression(false);
+				p.require(false, Token::end);
                 {
                 	PrettyPrinter f(stdOut, 20);
                 	{
@@ -691,12 +691,14 @@ int main(int argc, char **argv)
   #endif
     using namespace JavaScript;
     using namespace Shell;
+  #if 0
     assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);
     assert(testProto(world, 5) == 5);
-//    testICG(world);
+    testICG(world);
 //    assert(testFunctionCall(world, 5) == 5);
     testPrint(world);
+  #endif
     readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);

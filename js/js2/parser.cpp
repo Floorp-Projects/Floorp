@@ -589,6 +589,8 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 			if (!isASCIIDecimalDigit(ch))
 				return 0x00;
 			getChar();	// Point to the next character in the error message
+			break;
+
 		  case 'b':
 			return 0x08;
 		  case 'f':
@@ -601,6 +603,7 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 			return 0x09;
 		  case 'v':
 			return 0x0B;
+
 		  case 'x':
 			nDigits = 2;
 			goto lexHex;
@@ -805,6 +808,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 		char16 ch = reader.get();
 		if (reader.getEof(ch)) {
 		  endOfInput:
+		    t.pos = reader.getPos() - 1;
 			kind = Token::end;
 		} else {
 			char16 ch2;
@@ -1245,7 +1249,6 @@ void JS::PairListExprNode::print(PrettyPrinter &f) const
 
 void JS::InvokeExprNode::print(PrettyPrinter &f) const
 {
-	ASSERT(hasKind(New) || hasKind(index));
 	if (hasKind(New))
 		f << "new ";
 	{
@@ -1469,10 +1472,8 @@ JS::PairListExprNode *JS::Parser::parseArrayLiteral(const Token &initialToken)
 		const Token &t = lexer.peek(true);
 		if (t.hasKind(Token::comma) || t.hasKind(Token::closeBracket))
 			lexer.redesignate(false);
-		else {
-			lexer.get(true);
+		else
 			element = parseAssignmentExpression(false);
-		}
 		elements += new(arena) ExprPairList(0, element);
 
 		const Token &tSeparator = lexer.get(false);
@@ -1757,6 +1758,7 @@ JS::ExprNode *JS::Parser::parseUnaryExpression()
 	  case Token::decrement:
 		eKind = ExprNode::preDecrement;
 	  getPostfixExpression:
+		lexer.get(true);
 		e = parsePostfixExpression();
 		break;
 
@@ -1783,6 +1785,7 @@ JS::ExprNode *JS::Parser::parseUnaryExpression()
 	  case Token::logicalNot:
 		eKind = ExprNode::logicalNot;
 	  getUnaryExpression:
+		lexer.get(true);
 		checkStackSize();
 		e = parseUnaryExpression();
 		break;
