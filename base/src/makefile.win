@@ -40,6 +40,7 @@ CPPSRCS =				\
 	nsVoidArray.cpp			\
 	nsFileSpec.cpp \
 	nsFileStream.cpp \
+	nsEscape.cpp				\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -59,6 +60,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsVoidArray.obj		\
 	.\$(OBJDIR)\nsFileSpec.obj \
 	.\$(OBJDIR)\nsFileStream.obj \
+	.\$(OBJDIR)\nsEscape.obj			\
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
