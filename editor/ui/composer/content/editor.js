@@ -1562,6 +1562,13 @@ function SetEditMode(mode)
     // Only rebuild document if a change was made in source window
     if (gHTMLSourceChanged)
     {
+      // Reduce the undo count so we don't use too much memory
+      //   during multiple uses of source window 
+      //   (reinserting entire doc caches all nodes)
+      try {
+        gEditor.transactionManager.maxTransactionCount = 2;
+      } catch (e) {}
+
       gEditor.beginTransaction();
       try {
         // We are comming from edit source mode,
@@ -1594,6 +1601,10 @@ function SetEditMode(mode)
       }
       gEditor.endTransaction();
 
+      // Restore unlimited undo count
+      try {
+        gEditor.transactionManager.maxTransactionCount = -1;
+      } catch (e) {}
     } else {
       // We don't need to call this again, so remove handler
       gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
