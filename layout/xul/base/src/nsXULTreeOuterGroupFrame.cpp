@@ -357,6 +357,15 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(verticalScrollbar));
   scrollbarFrame->SetScrollbarMediator(this);
 
+  nsBoxLayoutState boxLayoutState(aPresContext);
+
+  const nsStyleFont* font = (const nsStyleFont*)aContext->GetStyleData(eStyleStruct_Font);
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  nsCOMPtr<nsIFontMetrics> fm;
+  dc->GetMetricsFor(font->mFont, *getter_AddRefs(fm));
+  fm->GetHeight(mRowHeight);
+
   // Our frame's lifetime is bounded by the lifetime of the content model, so we're guaranteed
   // that the content node won't go away on us. As a result, our listener can't go away before the
   // frame is deleted. Since the content node holds owning references to our drag capturer, which
