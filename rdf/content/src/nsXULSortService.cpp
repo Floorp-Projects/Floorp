@@ -185,20 +185,23 @@ private:
 	static nsIAtom		*kIdAtom;
 	static nsIAtom		*kRDF_type;
 
-    static nsIRDFResource	*kNC_Name;
-    static nsIRDFResource	*kRDF_instanceOf;
-    static nsIRDFResource	*kRDF_Seq;
+	static nsString		trueStr;
 
-    static PRInt32		kNameSpaceID_XUL;
-    static PRInt32		kNameSpaceID_RDF;
+	static nsIRDFResource	*kNC_Name;
+	static nsIRDFResource	*kRDF_instanceOf;
+	static nsIRDFResource	*kRDF_Seq;
 
-    static nsIRDFService	*gRDFService;
-    static nsIXULContentUtils   *gXULUtils;
+	static PRInt32		kNameSpaceID_XUL;
+	static PRInt32		kNameSpaceID_RDF;
+
+	static nsIRDFService	*gRDFService;
+	static nsIXULContentUtils   *gXULUtils;
 
 PRBool		IsTreeElement(nsIContent *element);
 nsresult	FindTreeElement(nsIContent *root, nsIContent* aElement,nsIContent** aTreeElement);
 nsresult	FindTreeChildrenElement(nsIContent *tree, nsIContent **treeBody);
-nsresult	GetSortColumnIndex(nsIContent *tree, const nsString&sortResource, const nsString& sortDirection, PRBool &inbetweenSeparatorSort, PRInt32 &colIndex);
+nsresult	GetSortColumnIndex(nsIContent *tree, const nsString &sortResource, const nsString& sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRInt32 &colIndex, PRBool &found);
+nsresult	SetSortHints(nsIContent *tree, const nsString &sortResource, const nsString &sortDirection, const nsString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found);
 nsresult	NodeHasSortInfo(nsIContent *node, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRBool &found);
 nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
@@ -249,6 +252,8 @@ nsIAtom* XULSortServiceImpl::kSortSeparatorsAtom;
 nsIAtom* XULSortServiceImpl::kIdAtom;
 nsIAtom* XULSortServiceImpl::kRDF_type;
 
+nsString XULSortServiceImpl::trueStr;
+
 nsIRDFResource		*XULSortServiceImpl::kNC_Name;
 nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
 nsIRDFResource		*XULSortServiceImpl::kRDF_Seq;
@@ -278,6 +283,8 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kSortSeparatorsAtom		= NS_NewAtom("sortSeparators");
 		kIdAtom				= NS_NewAtom("id");
 		kRDF_type			= NS_NewAtom("type");
+ 
+ 		trueStr				= "true";
  
 		nsresult rv;
 
@@ -520,13 +527,13 @@ XULSortServiceImpl::FindTreeChildrenElement(nsIContent *tree, nsIContent **treeB
 
 nsresult
 XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortResource, const nsString &sortDirection,
-					PRBool &inbetweenSeparatorSort, PRInt32 &sortColIndex)
+					nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRInt32 &sortColIndex, PRBool &found)
 {
-	PRBool			found = PR_FALSE;
 	PRInt32			childIndex, colIndex = 0, numChildren, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
 	nsresult		rv;
 
+	found = PR_FALSE;
 	inbetweenSeparatorSort = PR_FALSE;
 
 	sortColIndex = 0;
@@ -540,7 +547,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 			nsCOMPtr<nsIAtom> tag;
 
 			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))
-				return rv;
+				return(rv);
 			if (tag.get() == kTreeColAtom)
 			{
 				nsAutoString	value;
@@ -553,20 +560,27 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 					{
 						sortColIndex = colIndex;
 						found = PR_TRUE;
+												
 						if (!sortDirection.EqualsIgnoreCase("natural"))
 						{
 							setFlag = PR_TRUE;
+
+							// secondary sort info is optional
+							if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_RDF, kResource2Atom,
+								sortResource2)) || (rv != NS_CONTENT_ATTR_HAS_VALUE))
+							{
+								sortResource2.Truncate();
+							}
 						}
 					}
 					if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, value))
-						&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(nsAutoString("true"))))
+						&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(trueStr)))
 					{
 						inbetweenSeparatorSort = PR_TRUE;
 					}
 
 					if (setFlag == PR_TRUE)
 					{
-						nsAutoString	trueStr("true");
 						child->SetAttribute(kNameSpaceID_None, kSortActiveAtom, trueStr, PR_TRUE);
 						child->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_TRUE);
 
@@ -583,7 +597,41 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 			}
 		}
 	}
-	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
+	SetSortHints(tree, sortResource, sortDirection, sortResource2, inbetweenSeparatorSort, found);
+	return(NS_OK);
+}
+
+
+
+nsresult
+XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource, const nsString &sortDirection,
+				const nsString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found)
+{
+	if (found == PR_TRUE)
+	{
+		// set hints on tree root node
+		tree->SetAttribute(kNameSpaceID_None, kSortActiveAtom, trueStr, PR_FALSE);
+		tree->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_FALSE);
+		tree->SetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource, PR_FALSE);
+
+		if (sortResource2.Length() > 0)
+			tree->SetAttribute(kNameSpaceID_RDF, kResource2Atom, sortDirection, PR_FALSE);
+		else	tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
+	}
+	else
+	{
+		tree->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
+		tree->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_FALSE);
+		tree->UnsetAttribute(kNameSpaceID_RDF, kResourceAtom, PR_FALSE);
+		tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
+	}
+
+	// optional hint
+	if (inbetweenSeparatorSort == PR_TRUE)
+		tree->SetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, trueStr, PR_FALSE);
+	else	tree->UnsetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, PR_FALSE);
+
+	return(NS_OK);
 }
 
 
@@ -593,23 +641,15 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 				nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRBool &found)
 {
 	nsresult	rv;
-	PRInt32		nameSpaceID;
 
 	inbetweenSeparatorSort = PR_FALSE;
 	found = PR_FALSE;
-
-	if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))		return(rv);
-	if (nameSpaceID != kNameSpaceID_XUL)				return(NS_OK);
-
-	nsCOMPtr<nsIAtom> tag;
-	if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return(rv);
-	if (tag.get() != kTreeColAtom)	return(NS_OK);
 
 	nsAutoString	value;
 	if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortActiveAtom, value))
 		&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 	{
-		if (value.EqualsIgnoreCase("true"))
+		if (value.EqualsIgnoreCase(trueStr))
 		{
 			if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_RDF, kResourceAtom,
 				sortResource)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
@@ -623,7 +663,7 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 					if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortSeparatorsAtom,
 						value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 					{
-						if (value.EqualsIgnoreCase("true"))
+						if (value.EqualsIgnoreCase(trueStr))
 						{
 							inbetweenSeparatorSort = PR_TRUE;
 						}
@@ -650,7 +690,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource,
 {
         nsCOMPtr<nsIContent>	child;
 	PRBool			found = PR_FALSE;
-	PRInt32			childIndex, numChildren;
+	PRInt32			childIndex, nameSpaceID, numChildren;
 	nsresult		rv;
 
 	if (NS_SUCCEEDED(rv = NodeHasSortInfo(tree, sortResource, sortDirection,
@@ -659,51 +699,24 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource,
 	}
 	else
 	{
-
 		if (NS_FAILED(rv = tree->ChildCount(numChildren)))	return(rv);
 		for (childIndex=0; childIndex<numChildren; childIndex++)
 		{
 			if (NS_FAILED(rv = tree->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+			if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))		return(rv);
+			if (nameSpaceID != kNameSpaceID_XUL)				continue;
+
+			nsCOMPtr<nsIAtom> tag;
+			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return(rv);
+			if (tag.get() != kTreeColAtom)	continue;
+
 			if (NS_SUCCEEDED(rv = NodeHasSortInfo(child, sortResource, sortDirection,
 				sortResource2, inbetweenSeparatorSort, found)) && (found == PR_TRUE))
 			{
 				break;
 			}
 		}
-		if (found == PR_TRUE)
-		{
-			// set hints on tree root node
-			nsAutoString	trueStr("true");
-			tree->SetAttribute(kNameSpaceID_None, kSortActiveAtom, trueStr, PR_FALSE);
-			tree->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_FALSE);
-			tree->SetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource, PR_FALSE);
-
-			// optional hints
-			if (inbetweenSeparatorSort == PR_TRUE)
-			{
-				tree->SetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, nsAutoString("true"), PR_FALSE);
-			}
-			else
-			{
-				tree->UnsetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, PR_FALSE);
-			}
-			if (sortResource2.Length() > 0)
-			{
-				tree->SetAttribute(kNameSpaceID_RDF, kResource2Atom, sortDirection, PR_FALSE);
-			}
-			else
-			{
-				tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
-			}
-		}
-		else
-		{
-			tree->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
-			tree->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_FALSE);
-			tree->UnsetAttribute(kNameSpaceID_RDF, kResourceAtom, PR_FALSE);
-			tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
-			tree->UnsetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, PR_FALSE);
-		}
+		SetSortHints(tree, sortResource, sortDirection, sortResource2, inbetweenSeparatorSort, found);
 	}
 	return((found == PR_TRUE) ? NS_OK : NS_ERROR_FAILURE);
 }
@@ -1686,8 +1699,12 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 	// get index of sort column, find tree body, and sort. The sort
 	// _won't_ send any notifications, so we won't trigger any reflows...
-	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection,
-		sortInfo.inbetweenSeparatorSort, sortInfo.colIndex)))	return(rv);
+	nsAutoString	sortResource2;
+	PRBool		found;
+	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, sortResource2,
+		sortInfo.inbetweenSeparatorSort, sortInfo.colIndex, found)))	return(rv);
+	SetSortHints(treeNode, sortResource, sortDirection, sortResource2, sortInfo.inbetweenSeparatorSort, found);
+
 	nsCOMPtr<nsIContent>	treeBody;
 	if (NS_FAILED(rv = FindTreeChildrenElement(treeNode, getter_AddRefs(treeBody))))	return(rv);
 	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, &sortInfo)))
