@@ -39,6 +39,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableFrame.h"
+#include "nsTableRowGroupFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -692,8 +693,54 @@ void DebugCheckChildSize(nsIFrame*            aChild,
   }
 }
 
-/**
-  */
+// the computed height for the cell, which descendents use for percent height calculations
+// it is the height (minus border, padding) of the cell's first in flow during its final 
+// reflow without an unconstrained height.
+static nscoord
+CalcUnpaginagedHeight(nsIPresContext*       aPresContext,
+                      nsTableCellFrame&     aCellFrame, 
+                      nsTableFrame&         aTableFrame,
+                      nscoord               aVerticalBorderPadding)
+{
+  const nsTableCellFrame* firstCellInFlow   = (nsTableCellFrame*)aCellFrame.GetFirstInFlow();
+  nsTableFrame*           firstTableInFlow  = (nsTableFrame*)aTableFrame.GetFirstInFlow();
+  nsTableRowGroupFrame*   firstRGInFlow;
+  nsTableRowFrame*        row;
+  firstCellInFlow->GetParent((nsIFrame**)&row);
+  row->GetParent((nsIFrame**)&firstRGInFlow);
+
+  PRInt32 rowIndex;
+  firstCellInFlow->GetRowIndex(rowIndex);
+  PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan(*firstCellInFlow);
+  nscoord cellSpacing = firstTableInFlow->GetCellSpacingX();
+
+  nscoord computedHeight = ((rowSpan - 1) * cellSpacing) - aVerticalBorderPadding;
+  PRInt32 rowX;
+  for (row = firstRGInFlow->GetFirstRow(), rowX = 0; row; row = row->GetNextRow(), rowX++) {
+    if (rowX > rowIndex + rowSpan - 1) {
+      break;
+    }
+    else if (rowX >= rowIndex) {
+      computedHeight += row->GetUnpaginatedHeight(aPresContext);
+    }
+  }
+  return computedHeight;
+}
+
+static nscoord
+CalcHeightOfPrevInFlows(nsTableCellFrame& aCell)
+{
+  nscoord height = 0;
+  nsIFrame* prevInFlow;
+  for (aCell.GetPrevInFlow(&prevInFlow); prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
+    nsRect rect;
+    prevInFlow->GetRect(rect);
+    height += rect.height;
+  }
+  return height;
+}
+
+
 NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
@@ -802,10 +849,21 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
 
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  nscoord computedPaginatedHeight = 0;
+
   if (aReflowState.mFlags.mSpecialTableReflow || (eReflowReason_Incremental == aReflowState.reason)) {
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }
+  else if (isPaginated) {
+    computedPaginatedHeight = CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this, *tableFrame, topInset + bottomInset);
+    if (computedPaginatedHeight > 0) {
+      ((nsHTMLReflowState&)aReflowState).mComputedHeight = computedPaginatedHeight;
+      DISPLAY_REFLOW_CHANGE();
+    }
+  }      
   else {
     SetHasPctOverHeight(PR_FALSE);
   }
@@ -947,11 +1005,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t, roundMethod); 
   }
 
-  // if the table allocated extra vertical space to row groups, rows, cells in pagination mode
-  // then use that height as the desired height unless the cell needs to split.
-  if ((NS_FRAME_COMPLETE == aStatus) && aReflowState.mFlags.mSpecialTableReflow) {
-    cellHeight = PR_MAX(cellHeight, mRect.height);
-  }
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 
@@ -1010,6 +1063,24 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     else {
       SetHasPctOverHeight(PR_FALSE);
     }
+  }
+  else if (computedPaginatedHeight > 0) {
+    nscoord height = computedPaginatedHeight + topInset + bottomInset - CalcHeightOfPrevInFlows(*this);
+    if (NS_FRAME_COMPLETE == aStatus) {
+      if (mPrevInFlow) height -= topInset;
+      height = PR_MAX(aDesiredSize.height, height);
+      if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && (height > aReflowState.availableHeight)) {
+        height = aReflowState.availableHeight;
+        aStatus = NS_FRAME_NOT_COMPLETE;
+      }
+    }
+    else {
+      height -= bottomInset;
+      if (aDesiredSize.height < height) {
+        height = aDesiredSize.height;
+      }
+    }
+    aDesiredSize.height = height;
   }
 
   // remember the desired size for this reflow
@@ -1343,75 +1414,11 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-// Destructor function for the pct over height frame property
-static void
-DestroyCoordFunc(nsIPresContext* aPresContext,
-                 nsIFrame*       aFrame,
-                 nsIAtom*        aPropertyName,
-                 void*           aPropertyValue)
-{
-  delete (nscoord*)aPropertyValue;
-}
-
-// Destructor function for the collapse offset frame property
-static void
-DestroyPointFunc(nsIPresContext* aPresContext,
-                 nsIFrame*       aFrame,
-                 nsIAtom*        aPropertyName,
-                 void*           aPropertyValue)
-{
-  delete (nsPoint*)aPropertyValue;
-}
-
-static void*
-GetCellProperty(nsIPresContext*      aPresContext,
-                nsIFrame*            aFrame,
-                nsIAtom*             aPropertyName,
-                PRBool               aCreateIfNecessary = PR_FALSE)
-{
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      void* value;
-  
-      frameManager->GetFrameProperty(aFrame, aPropertyName, 0, &value);
-      if (value) {
-        return (nsPoint*)value;  // the property already exists
-
-      } else if (aCreateIfNecessary) {
-        // The property isn't set yet, so allocate a new value, set the property,
-        // and return the newly allocated value
-        void* value;
-        NSFMPropertyDtorFunc dtorFunc;
-        if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
-          value = new nsPoint(0, 0);
-          dtorFunc = DestroyPointFunc;
-        }
-        else if (aPropertyName == nsLayoutAtoms::cellPctOverHeightProperty) {
-          value = new nscoord;
-          dtorFunc = DestroyCoordFunc;
-        }
-        if (!value) return nsnull;
-
-        frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
-        return value;
-      }
-    }
-  }
-
-  return nsnull;
-}
-
 void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
                                           nscoord         aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
 
   if (offset) {
     offset->x = aXOffset;
@@ -1422,7 +1429,7 @@ void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
                                           nscoord         aYOffset)
 {
   // Get the property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
 
   if (offset) {
     offset->y = aYOffset;
@@ -1433,7 +1440,7 @@ void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
                                          nsPoint&        aOffset)
 {
   // See if the property is set
-  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty);
+  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty);
 
   if (offset) {
     aOffset = *offset;
@@ -1446,7 +1453,7 @@ void nsTableCellFrame::SetPctOverHeightValue(nsIPresContext* aPresContext,
                                              nscoord         aValue)
 {
   // Get the property 
-  nscoord* value = (nscoord*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty, PR_TRUE);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty, PR_TRUE);
   if (value) {
     *value = aValue;
   }
@@ -1457,7 +1464,7 @@ void nsTableCellFrame::GetPctOverHeightValue(nsIPresContext* aPresContext,
 {
   aValue = 0;
   // See if the property is set
-  nscoord* value = (nscoord*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty);
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty);
   if (value) {
     aValue = *value;
   }

@@ -5057,6 +5057,74 @@ void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame*
   }
 }
 
+// Destructor function for nscoord properties
+static void
+DestroyCoordFunc(nsIPresContext* aPresContext,
+                 nsIFrame*       aFrame,
+                 nsIAtom*        aPropertyName,
+                 void*           aPropertyValue)
+{
+  delete (nscoord*)aPropertyValue;
+}
+
+// Destructor function point properties
+static void
+DestroyPointFunc(nsIPresContext* aPresContext,
+                 nsIFrame*       aFrame,
+                 nsIAtom*        aPropertyName,
+                 void*           aPropertyValue)
+{
+  delete (nsPoint*)aPropertyValue;
+}
+
+void*
+nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
+                          nsIFrame*            aFrame,
+                          nsIAtom*             aPropertyName,
+                          PRBool               aCreateIfNecessary)
+{
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      void* value;
+  
+      frameManager->GetFrameProperty(aFrame, aPropertyName, 0, &value);
+      if (value) {
+        return (nsPoint*)value;  // the property already exists
+
+      } else if (aCreateIfNecessary) {
+        // The property isn't set yet, so allocate a new value, set the property,
+        // and return the newly allocated value
+        void* value;
+        NSFMPropertyDtorFunc dtorFunc;
+        if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
+          value = new nsPoint(0, 0);
+          dtorFunc = DestroyPointFunc;
+        }
+        else if (aPropertyName == nsLayoutAtoms::cellPctOverHeightProperty) {
+          value = new nscoord;
+          dtorFunc = DestroyCoordFunc;
+        }
+        else if (aPropertyName == nsLayoutAtoms::rowUnpaginatedHeightProperty) {
+          value = new nscoord;
+          dtorFunc = DestroyCoordFunc;
+        }
+        if (!value) return nsnull;
+
+        frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
+        return value;
+      }
+    }
+  }
+
+  return nsnull;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const

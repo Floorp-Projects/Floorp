@@ -47,10 +47,11 @@ class  nsTableCellFrame;
 class nsReflowTimer;
 #endif
 
-#define NS_ROW_NEED_SPECIAL_REFLOW    0x20000000
+#define NS_ROW_NEED_SPECIAL_REFLOW          0x20000000
+#define NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT 0x40000000
+
 #define NS_ROW_FRAME_PAINT_SKIP_ROW   0x00000001
 #define NS_ROW_FRAME_PAINT_SKIP_CELLS 0x00000002
-
 /**
  * nsTableRowFrame is the frame that maps table rows 
  * (HTML tag TR). This class cannot be reused
@@ -243,6 +244,11 @@ public:
 
   nsTableRowFrame* GetNextRow() const;
 
+  PRBool  HasUnpaginatedHeight();
+  void    SetHasUnpaginatedHeight(PRBool aValue);
+  nscoord GetUnpaginatedHeight(nsIPresContext* aPresContext);
+  void    SetUnpaginatedHeight(nsIPresContext* aPresContext, nscoord aValue);
+
 protected:
 
   /** protected constructor.
@@ -408,4 +414,20 @@ inline void nsTableRowFrame::SetNeedSpecialReflow(PRBool aValue)
     mState &= ~NS_ROW_NEED_SPECIAL_REFLOW;
   }
 }
+
+inline PRBool nsTableRowFrame::HasUnpaginatedHeight()
+{
+  return (mState & NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT) ==
+         NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+}
+
+inline void nsTableRowFrame::SetHasUnpaginatedHeight(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+  } else {
+    mState &= ~NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT;
+  }
+}
+
 #endif

@@ -203,6 +203,11 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
+  static void* GetProperty(nsIPresContext*      aPresContext,
+                           nsIFrame*            aFrame,
+                           nsIAtom*             aPropertyName,
+                           PRBool               aCreateIfNecessary = PR_FALSE);
+
   static nscoord RoundToPixel(nscoord      aValue,
                               float        aPixelToTwips,
                               nsPixelRound aRound= eAlwaysRoundUp);
