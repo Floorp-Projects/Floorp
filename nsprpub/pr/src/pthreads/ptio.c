@@ -2162,7 +2162,7 @@ static PRInt32 pt_AIXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     }
 
     if (count == -1) {
-        _MD_aix_map_sendfile_error(syserrno);
+        pt_MapError(_MD_aix_map_sendfile_error, syserrno);
         return -1;
     }
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
@@ -2285,7 +2285,7 @@ static PRInt32 pt_HPUXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
     }
 
     if (count == -1) {
-        _MD_hpux_map_sendfile_error(syserrno);
+        pt_MapError(_MD_hpux_map_sendfile_error, syserrno);
         return -1;
     }
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
@@ -2415,7 +2415,7 @@ static PRInt32 pt_SolarisSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
 done:
     if (count == -1) {
-        _MD_solaris_map_sendfile_error(syserrno);
+        pt_MapError(_MD_solaris_map_sendfile_error, syserrno);
         return -1;
     }
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
@@ -2582,7 +2582,7 @@ static PRInt32 pt_LinuxSendFile(PRFileDesc *sd, PRSendFileData *sfd,
             count = pt_Continue(&op);
             syserrno = op.syserrno;
             if (count == -1) {
-                _MD_linux_map_sendfile_error(syserrno);
+                pt_MapError(_MD_linux_map_sendfile_error, syserrno);
                 goto failed;
             }
         }
