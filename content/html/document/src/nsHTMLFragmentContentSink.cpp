@@ -81,13 +81,8 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
 
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
@@ -103,22 +98,23 @@ public:
   NS_IMETHOD CloseForm();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset();
-  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
-  NS_IMETHOD CloseNoscript();
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) { return NS_OK; }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
-  
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap();
-  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-
   NS_IMETHOD DoFragment(PRBool aFlag);
+  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
+  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
 
   // nsIHTMLFragmentContentSink
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
@@ -456,18 +452,6 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::CloseMap()
 {
   return CloseContainer(eHTMLTag_map);
-}
-
-NS_IMETHODIMP 
-nsHTMLFragmentContentSink::OpenNoscript(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseNoscript()
-{
-  return CloseContainer(eHTMLTag_noscript);
 }
 
 void
