@@ -84,7 +84,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_Script(IDispatch __RPC_FAR *__RPC
 
 struct HtmlPos
 {
-    CIPtr(IHTMLElementCollection) m_cpCollection;
+    CComQIPtr<IHTMLElementCollection> m_cpCollection;
     long m_nPos;
 
     HtmlPos(IHTMLElementCollection *pCol, long nPos) :
@@ -561,8 +561,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_cookie(BSTR v)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_cookie(BSTR __RPC_FAR *p)
 {
+    if (!p)
+        return E_INVALIDARG;
     *p = NULL;
-    return E_NOTIMPL;
+
+    nsAutoString strCookie;
+    nsresult rv = mDOMDocument->GetCookie(strCookie);
+    NS_ENSURE_SUCCESS(rv,rv);
+    *p = SysAllocString(strCookie.get());
+    return (*p) ? S_OK : E_OUTOFMEMORY;
 }
 
 
