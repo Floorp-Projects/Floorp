@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/27 20:44:45 $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/08/13 19:50:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -79,7 +79,15 @@ sub load_bonsai_libs {
   # Hide the use libs from the perl compiler.  This is neccessary or
   # it will be evaluated before BONSAI_DIR is defined.
 
-  eval "use lib '$BONSAI_DIR'; require '$BONSAI_DIR/cvsquery.pl'; ";
+  eval (
+
+        "use lib '$BONSAI_DIR'; ".
+        "require '$BONSAI_DIR/cvsquery.pl'; ".
+
+        # provide the functions AdminOpenTree/AdminCloseTree
+        "require '$BONSAI_DIR/adminfuncs.pl'; ".
+
+        "");
 
   ($@) && 
     die($@);
@@ -279,6 +287,37 @@ sub get_checkin_data {
 
     return ($result,  $index);
 }
+
+
+sub save_tree_state {
+  my ($tree, $value) = @_;
+
+  my $time_now = time();
+
+  # bonsai must be both loaded and run from the bonsai dir.
+
+  chdir ($BONSAI_DIR)	||
+    die("Could not cd to /. $!\n");
+
+  # Make the code look like what is in  adminmail.pl
+  # we use functions in  adminfuncs.pl and globals.pl
+
+  LoadCheckins();
+
+  if ($value == 'Open') {
+      $clear_list_of_checkins=1;
+      AdminOpenTree($time_now, $clear_list_of_checkins);
+  } elsif ($value == 'Closed') {
+      AdminCloseTree($time_now);
+  } else {
+      die("Bonsai does not implement TreeState: $value\n");
+  }
+
+  WriteCheckins();
+
+  return ;
+}
+
 
 
 1;
