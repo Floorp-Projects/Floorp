@@ -48,11 +48,8 @@ int main() {
 
   printf("Kicking off prefs\n");
   static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-  nsIPref *prefs;
   // start up prefs
-  rv = nsServiceManager::GetService(kPrefServiceCID,
-                                    nsIPref::GetIID(),
-                                    (nsISupports**)&prefs);
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
 
   if (NS_FAILED(rv)) {
     printf("Couldn't start prefs\n");
