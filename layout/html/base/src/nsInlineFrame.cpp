@@ -481,6 +481,10 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
   ListTag(stdout);
   printf(": metrics=%d,%d ascent=%d descent=%d\n",
          aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
+  if (nsnull != aMetrics.maxElementSize) {
+    printf(" maxElementSize %d,%d\n", 
+      aMetrics.maxElementSize->width, aMetrics.maxElementSize->height);
+  }
 #endif
 
   return rv;
