@@ -87,8 +87,6 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
     char *showDlg = NULL;
     int bufsize = 0;
 
-    char *currSec = (char *) malloc(strlen(COMPONENT) + 3);
-    if (!currSec) return E_MEM;
     XI_VERIFY(gCtx);
 
     /* optional keys */
@@ -112,8 +110,11 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
     if (bufsize == 0)
             XI_IF_FREE(mTitle); 
 
+    aParser->GetStringAlloc(DLG_COMPONENTS, SUBTITLE, &mSubTitle, &bufsize);
+    if (bufsize == 0)
+      XI_IF_FREE(mSubTitle);
+
 BAIL:
-    XI_IF_FREE(currSec);
 
     return err;
 }
@@ -142,7 +143,6 @@ nsComponentsDlg::Show(int aDirection)
         mTable = gtk_table_new(5, 1, FALSE);
         gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), mTable, NULL);
         mPageNum = gtk_notebook_get_current_page(GTK_NOTEBOOK(gCtx->notebook));
-        gtk_widget_show(mTable);
 
         // 1st row: a label (msg0)
         // insert a static text widget in the first row
@@ -256,8 +256,18 @@ nsComponentsDlg::Show(int aDirection)
     else
     {
         gtk_notebook_set_page(GTK_NOTEBOOK(gCtx->notebook), mPageNum);
-        gtk_widget_show(mTable);
     }
+
+    // <b>title</b>\0
+    char *titleBuf = new char[strlen(mTitle) + 9];
+    sprintf(titleBuf, "<b>%s</b>", mTitle);
+
+    gtk_label_set_markup(GTK_LABEL(gCtx->header_title), titleBuf);
+    gtk_label_set_text(GTK_LABEL(gCtx->header_subtitle), mSubTitle);
+
+    delete[] titleBuf;
+
+    gtk_widget_show(mTable);
 
     // signal connect the buttons
     gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
