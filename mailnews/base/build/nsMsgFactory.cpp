@@ -78,6 +78,7 @@
 #include "nsSubscribeDataSource.h"
 
 #include "nsMsgPrintEngine.h"
+#include "nsMsgSearchSession.h"
 
 
 // private factory declarations for each component we know how to produce
@@ -93,6 +94,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgIdentity)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFolderDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMessageDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccountManagerDataSource)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDelegateFactory)
@@ -160,6 +162,14 @@ static nsModuleComponentInfo gComponents[] = {
     { "Mail/News Account Manager Data Source", NS_MSGACCOUNTMANAGERDATASOURCE_CID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccountmanager",
       nsMsgAccountManagerDataSourceConstructor,
+    },
+    { "Message Filter Service", NS_MSGFILTERSERVICE_CID,
+      NS_MSGFILTERSERVICE_PROGID,
+      nsMsgFilterServiceConstructor,
+    },
+    { "Message Search Session", NS_MSGSEARCHSESSION_CID,
+      NS_MSGSEARCHSESSION_PROGID,
+      nsMsgSearchSessionConstructor
     },
     { "Message Filter Service", NS_MSGFILTERSERVICE_CID,
       NS_MSGFILTERSERVICE_PROGID,
