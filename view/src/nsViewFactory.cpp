@@ -119,7 +119,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
 
 static NS_IMETHODIMP ViewManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  PRBool useNewViewManager = PR_FALSE;
+  PRBool useNewViewManager = PR_TRUE;
 
   nsCOMPtr<nsIPref> prefs( do_GetService(NS_PREF_CONTRACTID) );
   if (prefs)
