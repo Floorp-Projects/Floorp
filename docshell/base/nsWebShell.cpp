@@ -1005,7 +1005,10 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
    if(mDocLoader == loader && NS_FAILED(aStatus))
       {
       nsXPIDLCString host;
-      nsresult hostResult = aURL->GetHost(getter_Copies(host));
+      nsresult hostResult = NS_ERROR_FAILURE;
+	  if (aURL) {
+		hostResult = aURL->GetHost(getter_Copies(host));
+	  }
       if (NS_SUCCEEDED(hostResult) && host)
       {      
         CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
