@@ -170,11 +170,35 @@ function deleteCell() {
   dump("SCRIPT: deleted first CELL in first ROW\n");
 }
 
+function AddALot() {
+  dump("\nSCRIPT: starting AddALot\n");
+  var table = document.getElementsByTagName("TABLE")[0];
+  var rowGroup = document.createElement("TBODY", null);
+  var row = document.createElement("TR", null);
+  var cell1 = document.createElement("TD", null);
+  var cell2 = document.createElement("TD", null);
+  var cell3 = document.createElement("TD", null);
+  var cell4 = document.createElement("TD", null);
+  var text1 = document.createTextNode("cell1\n");
+  var text2 = document.createTextNode("cell2\n");
+  var text3 = document.createTextNode("cell3 has the most content, and will be the tallest cell in the row\n");
+  var text4 = document.createTextNode("cell4\n");
+  cell1.appendChild(text1); cell2.appendChild(text2);
+  cell3.appendChild(text3); cell4.appendChild(text4);
+  row.appendChild(cell3); 
+  row.appendChild(cell4);
+  row.insertBefore(cell2, cell3);
+  row.insertBefore(cell1, cell2);
+  rowGroup.appendChild(row);  
+  table.appendChild(rowGroup);
+  dump("SCRIPT: finished adding\n");
+}
+
+
 </SCRIPT>
 </HEAD>
-
 <BODY>
-all delete buttons currently remove the first item of <type> found
+delete removes the first object of <type> 
 <table border>
 	<tbody>
 		<tr>
@@ -210,6 +234,9 @@ all delete buttons currently remove the first item of <type> found
 <INPUT TYPE="button" NAME="Ins Cell" VALUE="InsertCell" onClick="insertCell()" width=100>
 <INPUT TYPE="button" NAME="App Cell" VALUE="AppendCell" onClick="appendCell()" width=100>
 <INPUT TYPE="button" NAME="Del Cell" VALUE="DeleteCell" onClick="deleteCell()" width=100>
+<br>
+<INPUT TYPE="button" NAME="Add a lot" VALUE="AddALot" onClick="AddALot()" width=100>
+
 </form>
 
 </BODY></HTML>
