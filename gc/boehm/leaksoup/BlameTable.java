@@ -51,11 +51,11 @@ class Blame {
 public class BlameTable {
 	private Hashtable blameTable = new Hashtable();
 	
-	public String getBlame(String path, int line) {
-		Blame blame = (Blame) blameTable.get(path);
+	public String getBlame(String bonsaiPath, int line) {
+		Blame blame = (Blame) blameTable.get(bonsaiPath);
 		if (blame == null) {
-			blame = assignBlame(path);
-			blameTable.put(path, blame);
+			blame = assignBlame(bonsaiPath);
+			blameTable.put(bonsaiPath, blame);
 		}
 		if (blame != null) {
 			String[] lines = blame.lines;
@@ -65,7 +65,7 @@ public class BlameTable {
 		return "error";
 	}
 	
-	static final String BLAME_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?data=1&file=";
+	static final String CVSBLAME_CGI = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?data=1&file=";
 
 	private static int parseInt(String str) {
 		int value = 0;
@@ -77,13 +77,38 @@ public class BlameTable {
 	}
 
 	/**
+	 * Simply replaces instances of '<' with "&LT;" and '>' with "&GT;".
+	 */
+	static String quoteTags(StringBuffer buf) {
+		int length = buf.length();
+		for (int i = 0; i < length; ++i) {
+			char ch = buf.charAt(i);
+			switch (ch) {
+			case '<':
+				buf.setCharAt(i, '&');
+				buf.insert(i + 1, "LT;");
+				i += 4;
+				length += 3;
+				break;
+			case '>':
+				buf.setCharAt(i, '&');
+				buf.insert(i + 1, "GT;");
+				i += 4;
+				length += 3;
+				break;
+			}
+		}
+		return buf.toString();
+	}
+
+	/**
 	 * Contact bonsai, and get a blame table for each line in a file.
 	 * This information can be compressed, in all likelyhood.
 	 */
-	private Blame assignBlame(String path) {
+	private Blame assignBlame(String bonsaiPath) {
 		try {
 			Vector vec = new Vector();
-			URL url = new URL(BLAME_BASE + path);
+			URL url = new URL(CVSBLAME_CGI + bonsaiPath);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
 			
 			// read revision for each line of the file. this is really slow. I asked slam to
@@ -114,7 +139,7 @@ public class BlameTable {
 				if (revision != null) {
 					if (line.equals(".")) {
 						// end of current revision record.
-						info.put(revision, buffer.toString());
+						info.put(revision, quoteTags(buffer));
 						revision = null;
 						buffer.setLength(0);
 					} else {
@@ -134,7 +159,7 @@ public class BlameTable {
 			
 			return new Blame(lines, info);
 		} catch (Exception e) {
-			System.err.println("[error assigning blame for: " + path + "]"); 
+			System.err.println("[error assigning blame for: " + bonsaiPath + "]"); 
 			e.printStackTrace(System.err);
 		}
 		return null;
