@@ -66,6 +66,7 @@ function Startup()
   loadCookies();
   loadPermissions();
   doSetOKCancel(onOK, null);
+  window.sizeToContent();
 }
 
 /*** =================== COOKIES CODE =================== ***/
@@ -137,7 +138,7 @@ function ViewCookieSelected( e )
   if( cookietree.selectedItems.length )
     document.getElementById("removeCookies").removeAttribute("disabled","true");
     
-  if( e.type == "keypress" )
+  if( e.type == "keypress" || e.type == "select" )
     cookie = cookietree.selectedItems[0];
   if( e.type == "click" ) 
     cookie = e.target.parentNode.parentNode;
