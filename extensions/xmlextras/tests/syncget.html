@@ -18,8 +18,8 @@ pre {
 function execute()
 {
   var p = new XMLHttpRequest();
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-  p.open("GET", "http://green/heikki/data.xml",false);
+  //netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  p.open("GET", "data.xml",false);
   p.send(null);
 
   var str;
