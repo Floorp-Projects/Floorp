@@ -85,7 +85,7 @@ protected:
 	void				ControlChanged(PRInt32 aNewValue);
 	void				NSStringSetControlTitle(ControlHandle theControl, nsString title);
 	void				SetupMacControlFontForScript(short theScript);
-	static void			GetFileSystemCharset(nsString & fileSystemCharset);
+	static void			GetFileSystemCharset(nsCString & fileSystemCharset);
 	
 	nsString			mLabel;
 	PRBool				mWidgetArmed;
