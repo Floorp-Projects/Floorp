@@ -40,15 +40,6 @@
 #include "nsDebug.h"
 #endif
 
-#ifndef __PRUNICHAR__
-#define __PRUNICHAR__
-  #ifdef HAVE_CPP_2BYTE_WCHAR_T
-    typedef wchar_t PRUnichar;
-  #else
-    typedef PRUint16 PRUnichar;
-  #endif
-#endif
-
 /* The preferred symbol for null. */
 #define nsnull 0
 
@@ -174,6 +165,7 @@
   #define HAVE_CPP_BOOL
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
+  #define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
   /* under VC++ (Windows), we don't have autoconf yet */
@@ -195,6 +187,17 @@
 
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
+//#define HAVE_CPP_2BYTE_WCHAR_T
+#endif
+
+
+#ifndef __PRUNICHAR__
+#define __PRUNICHAR__
+  #ifdef HAVE_CPP_2BYTE_WCHAR_T
+    typedef wchar_t PRUnichar;
+  #else
+    typedef PRUint16 PRUnichar;
+  #endif
 #endif
 
   /*
@@ -255,10 +258,12 @@
     conversions.  Also, mis-applying |NS_REINTERPRET_CAST| to cast |this| to something
     will still expand the pointer to the outer object in standards complying compilers.
   */
-#endif
 
-/* No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
-   the semantics. So if you want to dynamic_cast, then just use it
-   "straight", no macro. */
+  /*
+    No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
+    the semantics. So if you want to dynamic_cast, then just use it
+    "straight", no macro.
+  */
+#endif
 
 #endif /* nscore_h___ */
