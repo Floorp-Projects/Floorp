@@ -150,7 +150,7 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
 		// less than flen bytes.
 		flen = howmany;
 #else
-		if (howmany < flen) {
+		if (PRUint32(howmany) < flen) {
 			NS_ERROR("typelib short read");
 			goto out;
 		}
