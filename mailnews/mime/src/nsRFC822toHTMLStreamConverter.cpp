@@ -21,84 +21,17 @@
 #include "nsIStreamConverter.h"
 #include "nsRFC822toHTMLStreamConverter.h"
 
-
-/* These macros are sued to define a class IID for our component. Our 
-   object currently supports two interfaces 
-   (nsISupports and nsIMsgRFC822Parser) so we want to define constants 
-   for these two interfaces */
-
+/* 
+ * These macros are used to define a class IID for our component. Our 
+ * object currently supports the nsRFC822toHTMLStreamConverter so we want 
+ * to define constants for these two interfaces 
+ */
 static NS_DEFINE_IID(kIStreamConverter, NS_ISTREAM_CONVERTER_IID);
 
-/*
- * nsRFC822toHTMLStreamConverter definitions....
+/* 
+ * This function will be used by the factory to generate an 
+ * RFC822 Converter....
  */
-nsRFC822toHTMLStreamConverter::nsRFC822toHTMLStreamConverter()
-{
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
-}
-
-nsRFC822toHTMLStreamConverter::~nsRFC822toHTMLStreamConverter()
-{
-}
-
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsRFC822toHTMLStreamConverter)
-NS_IMPL_RELEASE(nsRFC822toHTMLStreamConverter)
-NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, kIStreamConverter); /* we need to pass in the interface ID of this interface */
-
-/* RICHIE
-NS_IMETHOD nsRFC822toHTMLStreamConverter::MethodFor-nsIStreamConverter (void)
-{
-  return NS_OK;
-  return NS_ERROR_NULL_POINTER;
-  return mime_some_fun_call();
-}
-*/
-
-nsresult nsRFC822toHTMLStreamConverter::SetOutputStream(class nsIOutputStream *) 
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::SetOutputListener(class nsIStreamListener *)
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::OnStartBinding(class nsIURL *,const char *)
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::OnProgress(class nsIURL *,unsigned int,unsigned int) 
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::OnStatus(class nsIURL *,const unsigned short *)
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::OnStopBinding(class nsIURL *,unsigned int,const unsigned short *) 
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::GetBindInfo(class nsIURL *,struct nsStreamBindingInfo *)
-{
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::OnDataAvailable(class nsIURL *,class nsIInputStream *,unsigned int) 
-{
-  return NS_OK;
-}
-
-
-
-/* this function will be used by the factory to generate an RFC822 Converter....*/
 nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
@@ -115,3 +48,80 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
 	else
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
+
+
+/* 
+ * The following macros actually implement addref, release and 
+ * query interface for our component. 
+ */
+NS_IMPL_ADDREF(nsRFC822toHTMLStreamConverter)
+NS_IMPL_RELEASE(nsRFC822toHTMLStreamConverter)
+NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, kIStreamConverter); /* we need to pass in the interface ID of this interface */
+
+/*
+ * nsRFC822toHTMLStreamConverter definitions....
+ */
+
+/* 
+ * Inherited methods for nsIStreamConverter 
+ */
+nsRFC822toHTMLStreamConverter::nsRFC822toHTMLStreamConverter()
+{
+  /* the following macro is used to initialize the ref counting data */
+  NS_INIT_REFCNT();
+}
+
+nsRFC822toHTMLStreamConverter::~nsRFC822toHTMLStreamConverter()
+{
+}
+
+#include "stdio.h"
+/* 
+ * Inherited methods for nsIStreamListener 
+ */
+nsresult nsRFC822toHTMLStreamConverter::SetOutputStream(nsIOutputStream *) 
+{
+  /* 
+  return mime_some_fun_call();
+   */
+  int x = 1;
+
+  printf("Setting that output stream!\n");
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::SetOutputListener(nsIStreamListener *)
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::OnStartBinding(nsIURL *,const char *)
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::OnProgress(nsIURL *,unsigned int,unsigned int) 
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::OnStatus(nsIURL *,const unsigned short *)
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::OnStopBinding(nsIURL *,unsigned int,const unsigned short *) 
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::GetBindInfo(nsIURL *,struct nsStreamBindingInfo *)
+{
+  return NS_OK;
+}
+
+nsresult nsRFC822toHTMLStreamConverter::OnDataAvailable(nsIURL *, nsIInputStream *,unsigned int)
+{
+  return NS_OK;
+}
+

@@ -25,16 +25,16 @@ class nsRFC822toHTMLStreamConverter : public nsIStreamConverter {
     NS_DECL_ISUPPORTS 
 
     /* Inherited methods for nsIStreamConverter */
-    NS_IMETHOD SetOutputStream(class nsIOutputStream *);
-    NS_IMETHOD SetOutputListener(class nsIStreamListener *);
+    NS_IMETHOD SetOutputStream(nsIOutputStream *);
+    NS_IMETHOD SetOutputListener(nsIStreamListener *);
 
     /* Inherited methods for nsIStreamListener */
-    NS_IMETHOD OnStartBinding(class nsIURL *,const char *);
-    NS_IMETHOD OnProgress(class nsIURL *,unsigned int,unsigned int);
-    NS_IMETHOD OnStatus(class nsIURL *,const unsigned short *);
-    NS_IMETHOD OnStopBinding(class nsIURL *,unsigned int,const unsigned short *);
-    NS_IMETHOD GetBindInfo(class nsIURL *,struct nsStreamBindingInfo *);
-    NS_IMETHOD OnDataAvailable(class nsIURL *,class nsIInputStream *,unsigned int);
+    NS_IMETHOD OnStartBinding(nsIURL *,const char *);
+    NS_IMETHOD OnProgress(nsIURL *,unsigned int,unsigned int);
+    NS_IMETHOD OnStatus(nsIURL *,const unsigned short *);
+    NS_IMETHOD OnStopBinding(nsIURL *,unsigned int,const unsigned short *);
+    NS_IMETHOD GetBindInfo(nsIURL *,struct nsStreamBindingInfo *);
+    NS_IMETHOD OnDataAvailable(nsIURL *,nsIInputStream *,unsigned int);
 }; 
 
 /* this function will be used by the factory to generate an RFC822 - HTML Converter....*/

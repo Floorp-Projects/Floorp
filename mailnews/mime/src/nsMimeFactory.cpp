@@ -19,12 +19,15 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-/* Include all of the interfaces our factory can generate components for */
-#include "nsRFC822toHTMLStreamConverter.h"
-
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID);
+static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
+
+/* 
+ * Include all of the headers/defines for interfaces the libmime factory can 
+ * generate components for 
+ */
+#include "nsRFC822toHTMLStreamConverter.h"
+static   NS_DEFINE_IID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -32,19 +35,19 @@ static NS_DEFINE_IID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERT
 
 class nsMimeFactory : public nsIFactory
 {   
-public:
-	  // nsISupports methods
-	  NS_DECL_ISUPPORTS 
-
-    nsMimeFactory(const nsCID &aClass); 
-
+  public:
+    // nsISupports methods
+    NS_DECL_ISUPPORTS 
+    
+      nsMimeFactory(const nsCID &aClass); 
+  
     // nsIFactory methods   
     NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
     NS_IMETHOD LockFactory(PRBool aLock);   
-
+  
   protected:
     virtual   ~nsMimeFactory();   
-
+  
   private:  
     nsCID     mClassID;
 };   
@@ -97,7 +100,8 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
+
+  // ADD NEW CLASSES HERE!!!	
 	// do they want an an RFC822 - HTML interface ?
 	if (mClassID.Equals(kCMimeRFC822HTMLConverterCID))
 	{

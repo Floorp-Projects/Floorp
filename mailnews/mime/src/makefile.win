@@ -48,11 +48,10 @@ DEPTH=..\..\..
 #//------------------------------------------------------------------------
 MODULE  = mime
 REQUIRES= 
-EXPORTS = 
 CSS     = mail.css
 JS      = mail.js
-# Put mime headers here!!!               	
-#	          $(NULL)
+EXPORTS = 	nsRFC822toHTMLStreamConverter.h		\
+		$(NULL)
 
 
 DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
