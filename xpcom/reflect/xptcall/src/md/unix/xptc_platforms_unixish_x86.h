@@ -61,7 +61,7 @@
 #define THUNK_BASED_THIS_ADJUST
 
 #elif defined(__bsdi__) 
-#define THUNK_BASED_THIS_ADJUST
+#define CFRONT_STYLE_THIS_ADJUST
 
 #elif defined(NTO) 
 #define CFRONT_STYLE_THIS_ADJUST
