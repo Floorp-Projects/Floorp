@@ -89,12 +89,10 @@ protected:
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
-   NS_IMETHOD GetNewWindow(PRInt32 aChromeFlags, 
-      nsIDocShellTreeItem** aDocShellTreeItem);
    NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags,
-      nsIDocShellTreeItem** aDocShellTreeItem);
+      nsIXULWindow **_retval);
    NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
-      nsIDocShellTreeItem** aDocShellTreeItem);
+      nsIXULWindow **_retval);
    NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
    void EnableParent(PRBool aEnable);

@@ -46,7 +46,7 @@
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
-
+#include "nsIInterfaceRequestor.h"
 
 #include "nsIWebBrowser.h"
 #include "nsIStreamListener.h"
@@ -83,6 +83,7 @@ class nsIContent;
  * Abstract base class for our test app's browser windows
  */
 class nsBrowserWindow : public nsIBaseWindow,
+                        public nsIInterfaceRequestor,
                         public nsIProgressEventSink,
                         public nsIWebShellContainer
 {
@@ -91,11 +92,9 @@ friend class nsWebBrowserChrome;
 public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  // nsISupports
   NS_DECL_ISUPPORTS
-
-  // nsIBaseWindow
   NS_DECL_NSIBASEWINDOW
+  NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
    void DestroyWidget(nsISupports* aWidget);

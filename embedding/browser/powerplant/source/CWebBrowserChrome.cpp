@@ -152,28 +152,6 @@ NS_IMETHODIMP CWebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
    return NS_ERROR_FAILURE;
 }
 
-
-NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
-{
-   NS_ENSURE_ARG_POINTER(aWebBrowser);
-   *aWebBrowser = nsnull;
-   
-   CBrowserWindow	*theWindow;
-   try
-   {
-      // CreateWindow can throw an we're being called from mozilla, so we need to catch
-      theWindow = CBrowserWindow::CreateWindow(chromeMask, aCX, aCY);
-   }
-   catch (...)
-   {
-      theWindow = nsnull;
-   }
-   NS_ENSURE_TRUE(theWindow, NS_ERROR_FAILURE);
-   CBrowserShell *aBrowserShell = theWindow->GetBrowserShell();
-   NS_ENSURE_TRUE(aBrowserShell, NS_ERROR_FAILURE);
-   return aBrowserShell->GetWebBrowser(aWebBrowser);    
-}
-
 NS_IMETHODIMP CWebBrowserChrome::DestroyBrowserWindow()
 {
     mInModalLoop = false;

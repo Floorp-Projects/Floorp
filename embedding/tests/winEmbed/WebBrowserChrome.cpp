@@ -178,37 +178,6 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
     return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
-                                  PRInt32 aX, PRInt32 aY,
-                                  PRInt32 aCX, PRInt32 aCY,
-                                  nsIWebBrowser **_retval)
-{
-    NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = nsnull;
-
-    // Create the chrome object. Note that it leaves this function
-    // with an extra reference so that it can released correctly during
-    // destruction (via Win32UI::Destroy)
-
-    nsresult rv;
-
-    nsIWebBrowserChrome *parent = aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT ? this : 0;
-
-    nsCOMPtr<nsIWebBrowserChrome> newChrome;
-    rv = AppCallbacks::CreateBrowserWindow(aChromeFlags, parent,
-                         getter_AddRefs(newChrome));
-    if (NS_SUCCEEDED(rv))
-    {
-        newChrome->GetWebBrowser(_retval);
-        // leave chrome windows hidden until the chrome is loaded
-        if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
-          WebBrowserChromeUI::ShowWindow(this, PR_TRUE);
-    }
-
-    return rv;
-}
-
-
 NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
 {
     WebBrowserChromeUI::Destroy(this);

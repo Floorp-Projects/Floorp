@@ -23,6 +23,7 @@ DEPTH=..\..\..
 MODULE=viewer
 REQUIRES	= xpcom \
 		  string \
+		  embed_base \
 		  webshell \
 		  widget \
 		  layout \
@@ -44,6 +45,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  wallet \
+		  windowwatcher \
 		  js \
 		  $(NULL)
 
@@ -81,6 +83,7 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsWinMain.obj           \
 	.\$(OBJDIR)\JSConsole.obj           \
 	.\$(OBJDIR)\nsWidgetSupport.obj           \
+	.\$(OBJDIR)\nsWindowCreator.obj \
 	$(NULL)
 
 LLIBS=                         \

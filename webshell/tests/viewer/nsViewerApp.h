@@ -80,6 +80,7 @@ public:
 protected:
   nsViewerApp();
 
+  nsresult InitializeWindowCreator();
   void Destroy();
   nsresult AutoregisterComponents();
 

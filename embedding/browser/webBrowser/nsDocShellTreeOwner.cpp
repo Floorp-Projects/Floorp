@@ -432,34 +432,6 @@ NS_IMETHODIMP nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return mWebBrowserChrome->SizeBrowserTo(browserCX, browserCY);
 }
 
-NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-  nsresult rv;
-
-  if(mTreeOwner)
-    return mTreeOwner->GetNewWindow(aChromeFlags, aDocShellTreeItem);
-
-  *aDocShellTreeItem = nsnull;
-
-  NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
-  aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_WITH_SIZE | nsIWebBrowserChrome::CHROME_WITH_POSITION);
-
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  rv = mWebBrowserChrome->CreateBrowserWindow(PRUint32(aChromeFlags),
-                            -1, -1, -1, -1, // this is kind of a problem
-                            getter_AddRefs(webBrowser));
-  if (NS_SUCCEEDED(rv) && webBrowser) {
-    nsCOMPtr<nsIInterfaceRequestor> asreq(do_QueryInterface(webBrowser));
-    if (asreq) {
-      nsCOMPtr<nsIDocShell> asshell(do_GetInterface(asreq));
-      if (asshell)
-        rv = CallQueryInterface(asshell, aDocShellTreeItem);
-    }
-  }
-  return rv;
-}
-
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetPersistence(PRBool aPersistPosition,
                                     PRBool aPersistSize,

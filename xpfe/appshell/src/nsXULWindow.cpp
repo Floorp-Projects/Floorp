@@ -1258,21 +1258,19 @@ NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetNewWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
+// top-level function to create a new window
+NS_IMETHODIMP nsXULWindow::CreateNewWindow(PRInt32 aChromeFlags,
+   nsIXULWindow **_retval)
 {
-   NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
+  NS_ENSURE_ARG_POINTER(_retval);
 
-   if(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-      return CreateNewChromeWindow(aChromeFlags, aDocShellTreeItem);
-   else
-      return CreateNewContentWindow(aChromeFlags, aDocShellTreeItem);
-
-   return NS_ERROR_FAILURE;
+  if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
+    return CreateNewChromeWindow(aChromeFlags, _retval);
+  return CreateNewContentWindow(aChromeFlags, _retval);
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
+   nsIXULWindow **_retval)
 {
    NS_TIMELINE_ENTER("nsXULWindow::CreateNewChromeWindow");
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
@@ -1296,16 +1294,15 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    if(browserChrome)
       browserChrome->SetChromeFlags(aChromeFlags);
 
-   nsCOMPtr<nsIDocShell> docShell;
-   newWindow->GetDocShell(getter_AddRefs(docShell));
-   CallQueryInterface(docShell, aDocShellTreeItem);
-
+   *_retval = newWindow;
+   NS_ADDREF(*_retval);
+   
    NS_TIMELINE_LEAVE("nsXULWindow::CreateNewChromeWindow done");
    return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
-   nsIDocShellTreeItem** aDocShellTreeItem)
+   nsIXULWindow **_retval)
 {
    NS_TIMELINE_ENTER("nsXULWindow::CreateNewContentWindow");
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
@@ -1398,11 +1395,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
    subShell->Spindown();
 
-   // We're out of the nested loop.
-   // During the layout of the new window, all content shells were located and placed
-   // into the new window's content shell array.  Locate the "content area" content
-   // shell.
-   newWindow->GetPrimaryContentShell(aDocShellTreeItem);
+   *_retval = newWindow;
+   NS_ADDREF(*_retval);
+
    NS_TIMELINE_LEAVE("nsXULWindow::CreateNewContentWindow");
    return NS_OK;
 }
@@ -1426,7 +1421,7 @@ NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic,
    nsCAutoString topic; topic.Assign(prefix);
    topic.Append(";");
    topic.AppendWithConversion(aTopic);
-   
+
    NS_ENSURE_SUCCESS(service->NotifyObservers(removeme, topic.get(), aData),
       NS_ERROR_FAILURE);
    return NS_OK;

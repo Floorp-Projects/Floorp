@@ -714,42 +714,6 @@ CWebBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 	return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-	PtMozillaWidget_t 		*nmoz, *moz = (PtMozillaWidget_t *)m_pOwner;
-	PtCallbackList_t 		*cb;
-	PtCallbackInfo_t 		cbinfo;
-	PtMozillaNewWindowCb_t 	nwin;
-
-	*aDocShellTreeItem = nsnull;
-
-	if (!moz->new_window_cb)
-		return NS_ERROR_FAILURE;
-
-	memset(&cbinfo, 0, sizeof(cbinfo));
-	cbinfo.cbdata = &nwin;
-	cbinfo.reason = Pt_CB_MOZ_NEW_WINDOW;
-	cb = moz->new_window_cb;
-	nwin.window_flags = aChromeFlags;
-
-	PtSetParentWidget(NULL);
-	if (PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo) == Pt_CONTINUE)
-	{
-		nmoz = (PtMozillaWidget_t *) nwin.widget;
-
-		nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(nmoz->MyBrowser->WebBrowser));
-		nsCOMPtr<nsIDocShell> docShell(do_GetInterface(webBrowserAsReq));
-		NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-		NS_ENSURE_SUCCESS(CallQueryInterface(docShell, aDocShellTreeItem),NS_ERROR_FAILURE);
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Data streaming interface
 

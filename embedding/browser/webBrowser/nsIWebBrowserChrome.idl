@@ -96,18 +96,6 @@ interface nsIWebBrowserChrome : nsISupports
     attribute unsigned long chromeFlags;
 
     /*
-        Asks the implementer of this interface to create a new webbrowser
-	object and return the nsIWebBrowser interface to it. The chrome
-	flags indicate the style of the surrounding frame window and
-	associated chrome. The position parameters should be ignored
-	unless the CHROME_WITH_POSITION chrome flags is set. The size
-	parameters should be ignored unless the CHROME_WITH_SIZE chrome flag
-	is set. 
-    */
-    nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,
-	                  in long aX, in long aY, in long aCX, in long aCY);
-
-    /*
         Asks the implementer to destroy the window associated with this
         webbrowser object.
     */
