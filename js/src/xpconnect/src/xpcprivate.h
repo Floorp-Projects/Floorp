@@ -113,6 +113,22 @@
 #include "nsIXPCToolsProfiler.h"
 #endif
 
+#ifdef XPC_IDISPATCH_SUPPORT
+#include <atlbase.h>
+#include <comdef.h>
+
+extern CComModule _Module;
+
+#include <atlcom.h>
+// MS clutters the global namespace with so many macro names :-(
+// I tried to keep these includes in the CPP's but it became too
+// convoluted
+#undef GetClassInfo
+#undef GetClassName
+#undef interface
+#undef GetMessage
+#endif
+
 /***************************************************************************/
 // Compile time switches for instrumentation and stuff....
 
@@ -364,6 +380,10 @@ private:
     static void operator delete(void* /*memory*/) {}
 };
 
+#ifdef XPC_IDISPATCH_SUPPORT
+class XPCIDispatchExtension;
+#endif
+
 /***************************************************************************
 ****************************************************************************
 *
@@ -427,6 +447,10 @@ public:
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
+#ifdef XPC_IDISPATCH_SUPPORT
+public:
+    static PRBool IsIDispatchEnabled();
+#endif
 protected:
     nsXPConnect();
 
@@ -453,6 +477,7 @@ private:
     nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
     nsCOMPtr<nsILocalFile>        mProfilerOutputFile;
 #endif
+
 };
 
 /***************************************************************************/
@@ -834,6 +859,15 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    /**
+     * Sets the IDispatch information for the context
+     * This has to be void* because of icky Microsoft macros that
+     * would be introduced if we included the DispatchInterface header
+     */
+    void SetIDispatchInfo(XPCNativeInterface* iface, void * member);
+    void* GetIDispatchMember() const { return mIDispatchMember; }
+#endif
 private:
 
     // no copy ctor or assignment allowed
@@ -899,6 +933,9 @@ private:
 
     JSBool                          mExceptionWasThrown;
     JSBool                          mReturnValueWasSet;
+#ifdef XPC_IDISPATCH_SUPPORT
+    void*                           mIDispatchMember;
+#endif
     PRUint16                        mMethodIndex;
 };
 
@@ -1640,23 +1677,33 @@ public:
 
     XPCNativeInterface* GetInterface() const {return mInterface;}
     nsISupports*        GetNative()    const {return mNative;}
-    JSObject*           GetJSObject()  const {return mJSObject;}
-
+    JSObject*           GetJSObject()  const;
     void SetInterface(XPCNativeInterface*  Interface) {mInterface = Interface;}
     void SetNative(nsISupports*  Native)              {mNative = Native;}
-    void SetJSObject(JSObject*  JSObj)                {mJSObject = JSObj;}
+    void SetJSObject(JSObject*  JSObj);
 
     void JSObjectFinalized() {mJSObject = nsnull;}
 
     XPCWrappedNativeTearOff()
         : mInterface(nsnull), mNative(nsnull), mJSObject(nsnull) {}
     ~XPCWrappedNativeTearOff()
-        {NS_ASSERTION(!(mInterface||mNative||mJSObject), "tearoff not empty in dtor");}
+        {NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObject()), "tearoff not empty in dtor");}
 
     void Mark()       {mJSObject = (JSObject*)(((jsword)mJSObject) | 1);}
     void Unmark()     {mJSObject = (JSObject*)(((jsword)mJSObject) & ~1);}
     JSBool IsMarked() const {return (JSBool)(((jsword)mJSObject) & 1);}
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    enum JSObject_flags
+    {
+        IDISPATCH_BIT = 2,
+        JSOBJECT_MASK = 3
+    };
+    void                SetIDispatch(JSContext* cx);
+    JSObject*           Get() const;
+    JSBool              IsIDispatch() const;
+    XPCDispInterface*   GetIDispatchInfo() const;
+#endif
 private:
     XPCWrappedNativeTearOff(const XPCWrappedNativeTearOff& r); // not implemented
     XPCWrappedNativeTearOff& operator= (const XPCWrappedNativeTearOff& r); // not implemented
@@ -1783,6 +1830,7 @@ public:
                  XPCNativeInterface* Interface,
                  XPCWrappedNative** wrapper);
 
+public:
     static nsresult
     GetUsedOnly(XPCCallContext& ccx,
                 nsISupports* Object,
@@ -2213,6 +2261,13 @@ public:
                                            const nsID* iid,
                                            JSObject* scope, nsresult* pErr);
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
+                                           nsIXPConnectJSObjectHolder** dest,
+                                           IDispatch* src,
+                                           JSObject* scope, nsresult* pErr);
+#endif
+
     static JSBool JSObject2NativeInterface(XPCCallContext& ccx,
                                            void** dest, JSObject* src,
                                            const nsID* iid,
@@ -2402,7 +2457,9 @@ public:
     static void Throw(nsresult rv, XPCCallContext& ccx);
     static void ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx);
     static void ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx);
-
+#ifdef XPC_IDISPATCH_SUPPORT
+    static void ThrowCOMError(JSContext* cx, HRESULT COMErrorCode);
+#endif
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}
 
@@ -3183,10 +3240,22 @@ protected:
 };
 
 /***************************************************************************/
+// Utilities
+
+JSExceptionState* xpc_DoPreScriptEvaluated(JSContext* cx);
+void xpc_DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state);
+JSBool xpc_IsReportableErrorCode(nsresult code);
+
+/***************************************************************************/
 // Inlined utilities.
 
 inline JSBool
 xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval);
+
+#ifdef XPC_IDISPATCH_SUPPORT
+// IDispatch specific classes
+#include "XPCDispPrivate.h"
+#endif
 
 /***************************************************************************/
 // Inlines use the above - include last.

@@ -156,3 +156,8 @@ XPC_MSG_DEF(NS_ERROR_CANNOT_CONVERT_DATA            , "Data conversion error")
 XPC_MSG_DEF(NS_ERROR_OBJECT_IS_IMMUTABLE            , "Can not modify immutable data container")
 XPC_MSG_DEF(NS_ERROR_LOSS_OF_SIGNIFICANT_DATA       , "Data conversion failed because significant data would be lost")
 XPC_MSG_DEF(NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   , "Data conversion succeeded but data was rounded to fit")
+
+#ifdef XPC_IDISPATCH_SUPPORT
+XPC_MSG_DEF(NS_ERROR_XPC_COM_UNKNOWN                , "Unknown COM error occured")
+XPC_MSG_DEF(NS_ERROR_XPC_COM_ERROR                  , "COM Error")
+#endif

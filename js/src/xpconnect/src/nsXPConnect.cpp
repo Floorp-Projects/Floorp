@@ -441,6 +441,10 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    // Initialize any properties IDispatch needs on the global object
+    XPCIDispatchExtension::Initialize(ccx, aGlobalJSObj);
+#endif
     return NS_OK;
 }
 

@@ -373,6 +373,15 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                                        propFlags, nsnull);
         }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+        // Check to see if there's an IDispatch tearoff     
+        if(wrapperToReflectInterfaceNames &&
+            nsXPConnect::IsIDispatchEnabled() &&
+            XPCIDispatchExtension::DefineProperty(ccx, obj, 
+                idval, wrapperToReflectInterfaceNames, propFlags, resolved))
+            return JS_TRUE;
+#endif
+        
         if(resolved)
             *resolved = JS_FALSE;
         return JS_TRUE;
@@ -600,6 +609,12 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
                 return JS_FALSE;
         }
     }
+#ifdef XPC_IDISPATCH_SUPPORT
+    if(nsXPConnect::GetXPConnect()->IsIDispatchEnabled())
+    {
+        return XPCIDispatchExtension::Enumerate(ccx, obj, wrapper);
+    }
+#endif
     return JS_TRUE;
 }
 

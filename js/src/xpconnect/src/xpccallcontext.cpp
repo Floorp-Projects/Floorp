@@ -461,3 +461,26 @@ XPCCallContext::SetReturnValueWasSet(PRBool aReturnValueWasSet)
     return NS_OK;
 }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+
+void
+XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface, 
+                                 void * member)
+{
+    // We are going straight to the method info and need not do a lookup
+    // by id.
+
+    // don't be tricked if method is called with wrong 'this'
+    if(mTearOff && mTearOff->GetInterface() != iface)
+        mTearOff = nsnull;
+
+    mSet = nsnull;
+    mInterface = iface;
+    mIDispatchMember = member;
+    mName = NS_REINTERPRET_CAST(XPCDispInterface::Member*,member)->GetName();
+
+    if(mState < HAVE_NAME)
+        mState = HAVE_NAME;
+}
+
+#endif
