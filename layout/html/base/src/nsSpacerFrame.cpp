@@ -19,7 +19,7 @@
 #include "nsIHTMLContent.h"
 #include "nsFrame.h"
 #include "nsIInlineReflow.h"
-#include "nsCSSLineLayout.h"
+#include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -41,9 +41,9 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+  NS_IMETHOD InlineReflow(nsLineLayout&        aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
 
@@ -90,7 +90,7 @@ SpacerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+SpacerFrame::InlineReflow(nsLineLayout&        aLineLayout,
                           nsReflowMetrics&     aMetrics,
                           const nsReflowState& aReflowState)
 {
@@ -165,7 +165,7 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-SpacerFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+SpacerFrame::FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();

@@ -28,7 +28,7 @@
 #include "nsSplittableFrame.h"
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
-#include "nsCSSInlineFrame.h"
+#include "nsInlineFrame.h"
 #include "nsIAtom.h"
 
 static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
@@ -187,7 +187,7 @@ void FixedSizeContent::ToHTML(nsString& out)
 ///////////////////////////////////////////////////////////////////////////////
 //
 
-class InlineFrame : public nsCSSInlineFrame
+class InlineFrame : public nsInlineFrame
 {
 public:
   InlineFrame(nsIContent* aContent,
@@ -205,7 +205,7 @@ public:
 
 InlineFrame::InlineFrame(nsIContent* aContent,
                          nsIFrame*   aParent)
-  : nsCSSInlineFrame(aContent, aParent)
+  : nsInlineFrame(aContent, aParent)
 {
 }
 

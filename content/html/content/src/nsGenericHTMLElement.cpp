@@ -53,8 +53,8 @@
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
-#include "nsCSSBlockFrame.h"
-#include "nsCSSInlineFrame.h"
+#include "nsBlockFrame.h"
+#include "nsInlineFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -1884,11 +1884,11 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
     switch (styleDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
-      rv = NS_NewCSSBlockFrame(&frame, mContent, aParentFrame);
+      rv = NS_NewBlockFrame(&frame, mContent, aParentFrame);
       break;
 
     case NS_STYLE_DISPLAY_INLINE:
-      rv = NS_NewCSSInlineFrame(&frame, mContent, aParentFrame);
+      rv = NS_NewInlineFrame(&frame, mContent, aParentFrame);
       break;
 
     default:

@@ -35,7 +35,7 @@ CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\
-  -I..\..\base\src -I..\..\style\src -I..\..\..\css\layout\src	\
+  -I..\..\base\src -I..\..\style\src				\
   -I..\..\..\base\src -I..\..\content\src
 
 LCFLAGS = \

@@ -16,17 +16,17 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsCSSBlockFrame_h___
-#define nsCSSBlockFrame_h___
+#ifndef nsBlockFrame_h___
+#define nsBlockFrame_h___
 
-#include "nsCSSContainerFrame.h"
-#include "nsCSSLineLayout.h"
-#include "nsCSSInlineLayout.h"
+#include "nsHTMLContainerFrame.h"
+#include "nsLineLayout.h"
+#include "nsInlineLayout.h"
 #include "nsVoidArray.h"
 #include "nsISpaceManager.h"
 
-class nsCSSBlockFrame;
-struct nsCSSInlineLayout;
+class nsBlockFrame;
+struct nsInlineLayout;
 class nsPlaceholderFrame;
 struct LineData;
 
@@ -36,16 +36,16 @@ struct LineData;
 
 // XXX hide this as soon as list bullet code is cleaned up
 
-struct nsCSSBlockReflowState : public nsReflowState {
-  nsCSSBlockReflowState(nsIPresContext*      aPresContext,
-                        nsISpaceManager*     aSpaceManager,
-                        nsCSSBlockFrame*     aBlock,
-                        nsIStyleContext*     aBlockSC,
-                        const nsReflowState& aReflowState,
-                        nsReflowMetrics&     aMetrics,
-                        PRBool               aComputeMaxElementSize);
+struct nsBlockReflowState : public nsReflowState {
+  nsBlockReflowState(nsIPresContext*      aPresContext,
+                     nsISpaceManager*     aSpaceManager,
+                     nsBlockFrame*        aBlock,
+                     nsIStyleContext*     aBlockSC,
+                     const nsReflowState& aReflowState,
+                     nsReflowMetrics&     aMetrics,
+                     PRBool               aComputeMaxElementSize);
 
-  ~nsCSSBlockReflowState();
+  ~nsBlockReflowState();
 
   /**
    * Update the mCurrentBand data based on the current mY position.
@@ -64,9 +64,9 @@ struct nsCSSBlockReflowState : public nsReflowState {
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
-  nsCSSBlockFrame* mBlock;
+  nsBlockFrame* mBlock;
   PRBool mBlockIsPseudo;
-  nsCSSBlockFrame* mNextInFlow;
+  nsBlockFrame* mNextInFlow;
   PRUint8 mTextAlign;
   PRUint8 mDirection;
 
@@ -96,9 +96,9 @@ struct nsCSSBlockReflowState : public nsReflowState {
 
   nsSize mMaxElementSize;
 
-  nsCSSLineLayout mLineLayout;
+  nsLineLayout mLineLayout;
 
-  nsCSSInlineLayout mInlineLayout;
+  nsInlineLayout mInlineLayout;
   PRBool mInlineLayoutPrepared;
 
   nsIFrame* mPrevChild;
@@ -140,13 +140,13 @@ struct nsCSSBlockReflowState : public nsReflowState {
 };
 
 inline void
-nsCSSLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
+nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
 {
   mBlockReflowState->AddFloater(aFrame);
 }
 
-extern nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
-                                    nsIContent* aContent,
-                                    nsIFrame*   aParent);
+extern nsresult NS_NewBlockFrame(nsIFrame**  aInstancePtrResult,
+                                 nsIContent* aContent,
+                                 nsIFrame*   aParent);
 
 #endif /* nsCSSBlockFrame_h___ */

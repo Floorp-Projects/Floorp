@@ -22,7 +22,7 @@
 #include "nsIFloaterContainer.h"
 #include "nsIRunaround.h"
 #include "nsIInlineReflow.h"
-#include "nsCSSBlockFrame.h"
+#include "nsBlockFrame.h"
 
 const nsIID kIAbsoluteItemsIID = NS_IABSOLUTE_ITEMS_IID;
 const nsIID kIAnchoredItemsIID = NS_IANCHORED_ITEMS_IID;

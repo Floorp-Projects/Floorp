@@ -20,7 +20,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIInlineReflow.h"
-#include "nsCSSLineLayout.h"
+#include "nsLineLayout.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
@@ -40,9 +40,9 @@ public:
                    const nsRect& aDirtyRect);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+  NS_IMETHOD InlineReflow(nsLineLayout&        aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
 
@@ -100,7 +100,7 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-BRFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+BRFrame::FindTextRuns(nsLineLayout&     aLineLayout,
                       nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();
@@ -108,7 +108,7 @@ BRFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
 }
 
 NS_IMETHODIMP
-BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
+BRFrame::InlineReflow(nsLineLayout&         aLineLayout,
                       nsReflowMetrics&      aMetrics,
                       const nsReflowState&  aReflowState)
 {

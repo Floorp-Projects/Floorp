@@ -1089,14 +1089,14 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       switch (styleDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
-        rv = NS_NewCSSBlockFrame(&frame, aContent, aParentFrame);
+        rv = NS_NewBlockFrame(&frame, aContent, aParentFrame);
 
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
   
       case NS_STYLE_DISPLAY_INLINE:
-        rv = NS_NewCSSInlineFrame(&frame, aContent, aParentFrame);
+        rv = NS_NewInlineFrame(&frame, aContent, aParentFrame);
 
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);

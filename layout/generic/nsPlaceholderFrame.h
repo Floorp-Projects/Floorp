@@ -41,9 +41,9 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout&  aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+  NS_IMETHOD InlineReflow(nsLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

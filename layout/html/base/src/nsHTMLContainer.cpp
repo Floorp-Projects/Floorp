@@ -23,7 +23,7 @@
 #include "nsIArena.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsCSSBlockFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
@@ -37,7 +37,7 @@
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
 
-#include "nsCSSInlineFrame.h"
+#include "nsInlineFrame.h"
 #include "nsIWebShell.h"
 
 
@@ -257,11 +257,11 @@ nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    rv = NS_NewCSSBlockFrame(&frame, this, aParentFrame);
+    rv = NS_NewBlockFrame(&frame, this, aParentFrame);
     break;
 
   case NS_STYLE_DISPLAY_INLINE:
-    rv = NS_NewCSSInlineFrame(&frame, this, aParentFrame);
+    rv = NS_NewInlineFrame(&frame, this, aParentFrame);
     break;
 
   default:

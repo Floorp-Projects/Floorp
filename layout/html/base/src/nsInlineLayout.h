@@ -16,27 +16,27 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsCSSInlineLayout_h___
-#define nsCSSInlineLayout_h___
+#ifndef nsInlineLayout_h___
+#define nsInlineLayout_h___
 
-#include "nsCSSContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsIInlineReflow.h"
-class nsCSSLineLayout;
+class nsLineLayout;
 struct nsStyleDisplay;
 struct nsStyleFont;
 struct nsStyleText;
 
 /**
  * This structure contains the horizontal layout state for line
- * layout frame placement. This is factored out of nsCSSLineLayout so
+ * layout frame placement. This is factored out of nsLineLayout so
  * that the block layout code and the inline layout code can use
- * nsCSSLineLayout to reflow and place frames.
+ * nsLineLayout to reflow and place frames.
  */
-struct nsCSSInlineLayout {
-  nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
-                    nsCSSContainerFrame* aContainerFrame,
-                    nsIStyleContext*     aContainerStyle);
-  ~nsCSSInlineLayout();
+struct nsInlineLayout {
+  nsInlineLayout(nsLineLayout&     aLineLayout,
+                 nsContainerFrame* aContainerFrame,
+                 nsIStyleContext*  aContainerStyle);
+  ~nsInlineLayout();
 
   void Init(const nsReflowState* aContainerReflowState);
 
@@ -79,8 +79,8 @@ struct nsCSSInlineLayout {
   nsresult MaybeCreateNextInFlow(nsIFrame*  aFrame,
                                  nsIFrame*& aNextInFlowResult);
 
-  nsCSSLineLayout& mLineLayout;
-  nsCSSContainerFrame* mContainerFrame;
+  nsLineLayout& mLineLayout;
+  nsContainerFrame* mContainerFrame;
   const nsStyleFont* mContainerFont;
   const nsStyleText* mContainerText;
   const nsStyleDisplay* mContainerDisplay;
@@ -109,4 +109,4 @@ struct nsCSSInlineLayout {
   nsIFrame* mNextRCFrame;
 };
 
-#endif /* nsCSSInlineLayout_h___ */
+#endif /* nsInlineLayout_h___ */

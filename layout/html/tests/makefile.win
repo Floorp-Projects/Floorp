@@ -45,7 +45,6 @@ LINCS=				\
 
 LLIBS=				\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
- $(DIST)\lib\nglcsslay_s.lib	\
  $(DIST)\lib\nglhtmlcon_s.lib	\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\

@@ -20,6 +20,7 @@
 
 #include "nsContainerFrame.h"
 class nsString;
+class nsPlaceholderFrame;
 
 // Base class for html container frames that provides common
 // functionality.
@@ -52,6 +53,12 @@ public:
                             nsIContent*     aContainer,
                             nsIContent*     aChild,
                             PRInt32         aIndexInParent);
+
+  virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext,
+                                      nsIFrame* aChild);
+
+  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFloatedFrame);
 
 protected:
   virtual ~nsHTMLContainerFrame();

@@ -16,11 +16,11 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsCSSInlineLayout.h"
-#include "nsCSSLineLayout.h"
+#include "nsInlineLayout.h"
+#include "nsLineLayout.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLIIDs.h"
-#include "nsCSSContainerFrame.h"
+#include "nsContainerFrame.h"
 
 #include "nsIFontMetrics.h"
 #include "nsIStyleContext.h"
@@ -29,8 +29,8 @@
 #include "nsIRunaround.h"
 #include "nsISpaceManager.h"
 
-nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
-                                     nsCSSContainerFrame* aContainerFrame,
+nsInlineLayout::nsInlineLayout(nsLineLayout&     aLineLayout,
+                                     nsContainerFrame* aContainerFrame,
                                      nsIStyleContext*     aContainerStyle)
   : mLineLayout(aLineLayout)
 {
@@ -50,7 +50,7 @@ nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
   mNextRCFrame = nsnull;
 }
 
-nsCSSInlineLayout::~nsCSSInlineLayout()
+nsInlineLayout::~nsInlineLayout()
 {
   if (mAscents != mAscentBuf) {
     delete [] mAscents;
@@ -58,13 +58,13 @@ nsCSSInlineLayout::~nsCSSInlineLayout()
 }
 
 void
-nsCSSInlineLayout::Init(const nsReflowState* aContainerReflowState)
+nsInlineLayout::Init(const nsReflowState* aContainerReflowState)
 {
   mContainerReflowState = aContainerReflowState;
 }
 
 nsresult
-nsCSSInlineLayout::SetAscent(nscoord aAscent)
+nsInlineLayout::SetAscent(nscoord aAscent)
 {
   PRInt32 frameNum = mFrameNum;
   if (frameNum == mMaxAscents) {
@@ -84,7 +84,7 @@ nsCSSInlineLayout::SetAscent(nscoord aAscent)
 }
 
 void
-nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth,
+nsInlineLayout::Prepare(PRBool aUnconstrainedWidth,
                            PRBool aNoWrap,
                            PRBool aComputeMaxElementSize)
 {
@@ -103,7 +103,7 @@ nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth,
 }
 
 void
-nsCSSInlineLayout::SetReflowSpace(nscoord aX, nscoord aY,
+nsInlineLayout::SetReflowSpace(nscoord aX, nscoord aY,
                                   nscoord aAvailWidth, nscoord aAvailHeight)
 {
   mAvailWidth = aAvailWidth;
@@ -117,10 +117,10 @@ nsCSSInlineLayout::SetReflowSpace(nscoord aX, nscoord aY,
 //XXX block children of inline frames needs handling *here*
 
 nsInlineReflowStatus
-nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
+nsInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
 {
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("nsCSSInlineLayout::ReflowAndPlaceFrame: frame=%p x=%d",
+               ("nsInlineLayout::ReflowAndPlaceFrame: frame=%p x=%d",
                 aFrame, mX));
 
   // If the frame is a block frame and this is not the first frame on
@@ -131,7 +131,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   const nsStylePosition* kidPosition;
   aFrame->GetStyleData(eStyleStruct_Position,
                        (const nsStyleStruct*&) kidPosition);
-  PRBool isBlock = nsCSSLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
+  PRBool isBlock = nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
   if (isBlock && !IsFirstChild()) {
     return NS_INLINE_LINE_BREAK_BEFORE(0);/* XXX indicate never-reflowed? */
   }
@@ -142,7 +142,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   nsMargin margin;
   if (!ComputeMaxSize(aFrame, margin, maxSize)) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                 ("nsCSSInlineLayout::ReflowAndPlaceFrame: break-before"));
+                 ("nsInlineLayout::ReflowAndPlaceFrame: break-before"));
     return NS_INLINE_LINE_BREAK_BEFORE(0);/* XXX indicate never-reflowed? */
   }
 
@@ -198,7 +198,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
       // We are out of room.
       // XXX mKidPrevInFlow
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                   ("nsCSSInlineLayout::ReflowAndPlaceFrame: !fit size=%d,%d",
+                   ("nsInlineLayout::ReflowAndPlaceFrame: !fit size=%d,%d",
                     metrics.width, metrics.height));
 
       // XXX if the child requested a break and we need to break too...
@@ -213,7 +213,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
 
 // XXX RTL
 PRBool
-nsCSSInlineLayout::IsFirstChild()
+nsInlineLayout::IsFirstChild()
 {
   if (mHaveBullet) {
     return mFrameNum < 2;
@@ -222,7 +222,7 @@ nsCSSInlineLayout::IsFirstChild()
 }
 
 PRBool
-nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
+nsInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
                                   nsMargin& aKidMargin,
                                   nsSize&   aResult)
 {
@@ -243,7 +243,7 @@ nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
       // XXX Make sure child is dirty for next time
       aFrame->WillReflow(*mLineLayout.mPresContext);
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-         ("nsCSSInlineLayout::ComputeMaxSize: !fit"));
+         ("nsInlineLayout::ComputeMaxSize: !fit"));
       return PR_FALSE;
     }
   }
@@ -255,7 +255,7 @@ nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
 }
 
 nsInlineReflowStatus
-nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
+nsInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
                                nsReflowMetrics&     aMetrics,
                                const nsReflowState& aReflowState,
                                PRBool&              aInlineAware)
@@ -316,19 +316,19 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetGeometricParent(parent);
-      ((nsCSSContainerFrame*)parent)->DeleteNextInFlowsFor(*mLineLayout.mPresContext,
+      ((nsHTMLContainerFrame*)parent)->DeleteNextInFlowsFor(*mLineLayout.mPresContext,
                                                            aKidFrame);
     }
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-     ("nsCSSInlineLayout::ReflowFrame: frame=%p reflowStatus=%x %saware",
+     ("nsInlineLayout::ReflowFrame: frame=%p reflowStatus=%x %saware",
       aKidFrame, rv, aInlineAware ? "" :"not "));
   return rv;
 }
 
 nsInlineReflowStatus
-nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
+nsInlineLayout::PlaceFrame(nsIFrame* aFrame,
                               nsRect& aFrameRect,
                               const nsReflowMetrics& aFrameMetrics,
                               const nsMargin& aFrameMargin,
@@ -383,7 +383,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("nsCSSInlineLayout::PlaceFrame: frame=%p {%d, %d, %d, %d}",
+               ("nsInlineLayout::PlaceFrame: frame=%p {%d, %d, %d, %d}",
                 aFrame,
                 aFrameRect.x, aFrameRect.y,
                 aFrameRect.width, aFrameRect.height));
@@ -424,7 +424,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
 }
 
 void
-nsCSSInlineLayout::AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount,
+nsInlineLayout::AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount,
                                nsRect& aBounds)
 {
   NS_PRECONDITION(aFrameCount == mFrameNum, "bogus reflow");
@@ -467,7 +467,7 @@ nsCSSInlineLayout::AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount,
 }
 
 nsresult
-nsCSSInlineLayout::MaybeCreateNextInFlow(nsIFrame*  aFrame,
+nsInlineLayout::MaybeCreateNextInFlow(nsIFrame*  aFrame,
                                          nsIFrame*& aNextInFlowResult)
 {
   aNextInFlowResult = nsnull;
@@ -491,7 +491,7 @@ nsCSSInlineLayout::MaybeCreateNextInFlow(nsIFrame*  aFrame,
     nextInFlow->SetNextSibling(nextFrame);
 
     NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsCSSInlineLayout::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
+       ("nsInlineLayout::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
         aFrame, nextInFlow));
 
     aNextInFlowResult = nextInFlow;
