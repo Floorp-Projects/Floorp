@@ -31,6 +31,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
@@ -105,12 +106,15 @@
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
       <menuseparator />
+<!-- Deprecated BEGIN
       <menu id="charsetMenu"/>
       <menu id="charsetMenu1"/>
       <menu id="charsetMenu2"/>
       <menu id="charsetMenu3"/>
       <menu id="charsetMenu4"/>
       <menu id="charsetMenu5"/>
+END of Deprecated -->
+      <menu id = "composerCharsetMenu" />
     </menupopup>
     </menu>
  
