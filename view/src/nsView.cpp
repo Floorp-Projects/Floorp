@@ -306,20 +306,20 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   // Hold a refcount to the observer. The continued existence of the observer will
   // delay deletion of this view hierarchy should the event want to cause its
   // destruction in, say, some JavaScript event handler.
-  nsIViewObserver *obs;
-  if (NS_FAILED(mViewManager->GetViewObserver(obs)))
-    obs = nsnull;
+  nsCOMPtr<nsIViewObserver> obs;
+  mViewManager->GetViewObserver(*getter_AddRefs(obs));
 
   // if accessible event pass directly to the view observer
-  if (event->eventStructType == NS_ACCESSIBLE_EVENT) {
+  if (event->eventStructType == NS_ACCESSIBLE_EVENT || event->message == NS_CONTEXTMENU_KEY) {
     if (obs)
        obs->HandleEvent((nsIView *)this, event, aStatus, aForceHandle, aHandled);
+    return NS_OK;
   }
 
   *aStatus = nsEventStatus_eIgnore;
 
   //see if any of this view's children can process the event
-  if (*aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
+  if ( !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN) ) {
     PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
@@ -373,8 +373,6 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
   }
   */
-
-  NS_IF_RELEASE(obs);
 
   return NS_OK;
 }

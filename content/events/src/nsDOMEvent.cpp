@@ -1409,6 +1409,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MUTATION_CHARACTERDATAMODIFIED:
     return mEventNames[eDOMEvents_characterdatamodified];
   case NS_CONTEXTMENU:
+  case NS_CONTEXTMENU_KEY:
     return mEventNames[eDOMEvents_contextmenu];
   default:
     break;

@@ -63,6 +63,12 @@
 #include "nsDOMCID.h"
 #include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
 #include "nsIClassInfo.h"
+#include "nsIFocusController.h"
+#include "nsIDOMElement.h"
+#include "nsIBoxObject.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIWidget.h"
+
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1366,12 +1372,55 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_CONTEXTMENU:
+    case NS_CONTEXTMENU_KEY:
       listeners = GetListenersByType(eEventArrayType_ContextMenu, nsnull, PR_FALSE);
       if (listeners) {
-        if (nsnull == *aDOMEvent) {
+               
+        // If we're here because of the key-equiv for showing context menus, we
+        // have to reset the event target to the currently focused element. Get it
+        // from the focus controller.
+        nsCOMPtr<nsIDOMEventTarget> currentTarget ( aCurrentTarget );
+        nsCOMPtr<nsIDOMElement> currentFocus;
+        nsCOMPtr<nsIDocument> doc;
+        if ( aEvent->message == NS_CONTEXTMENU_KEY ) {
+          nsCOMPtr<nsIPresShell> shell;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          shell->GetDocument(getter_AddRefs(doc));
+          if ( doc ) {
+            nsCOMPtr<nsIScriptGlobalObject> scriptObj;
+            doc->GetScriptGlobalObject(getter_AddRefs(scriptObj));
+            if ( scriptObj ) {
+              nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(scriptObj);
+              if ( privWindow ) {
+                nsCOMPtr<nsIFocusController> focusController;
+                privWindow->GetRootFocusController(getter_AddRefs(focusController));
+                if ( focusController )
+                  focusController->GetFocusedElement(getter_AddRefs(currentFocus));
+              }
+            }
+          }
+        }
+
+        if (nsnull == *aDOMEvent) {        
+          // If we're here because of the key-equiv for showing context menus, we
+          // have to twiddle with the NS event to make sure the context menu comes
+          // up in the upper left of the relevant content area before we create
+          // the DOM event. Since we never call InitMouseEvent() on the event, 
+          // the client X/Y will be 0,0. We can make use of that if the widget is null.
+          if ( aEvent->message == NS_CONTEXTMENU_KEY )
+            NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget                          
+
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
+        
         if (NS_OK == ret) {
+          // update the target
+          if ( currentFocus ) {
+            currentTarget = do_QueryInterface(currentFocus);
+            nsCOMPtr<nsIPrivateDOMEvent> pEvent ( do_QueryInterface(*aDOMEvent) );
+            pEvent->SetTarget ( currentTarget );
+          }
+          
           for (int i=0; !mListenersRemoved && listeners && i<listeners->Count(); i++) {
             nsListenerStruct *ls = (nsListenerStruct*)listeners->ElementAt(i);
 
@@ -1380,6 +1429,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               if (contextMenuListener) {
                 switch(aEvent->message) {
                   case NS_CONTEXTMENU:
+                  case NS_CONTEXTMENU_KEY:
                     ret = contextMenuListener->ContextMenu(*aDOMEvent);
                     break;
                   default:
@@ -1391,6 +1441,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_CONTEXTMENU:
+                  case NS_CONTEXTMENU_KEY:
                     subType = NS_EVENT_BITS_CONTEXT_MENU;
                     if (ls->mSubType & NS_EVENT_BITS_CONTEXT_MENU) {
                       correctSubType = PR_TRUE;
@@ -1400,7 +1451,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, currentTarget, subType, aFlags);
                 }
               }
             }
