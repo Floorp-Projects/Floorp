@@ -938,6 +938,14 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
   if (aAvailWidth) {
     availWidth = *aAvailWidth;
   }
+  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord availHeight = aOuterRS.availableHeight;
+  if (NS_UNCONSTRAINEDSIZE != availHeight) {
+    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
+  }
+
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
                             nsSize(availWidth, aOuterRS.availableHeight));
   childRS.reason = aReflowReason;
@@ -1468,15 +1476,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS);
 #endif
-
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-
-  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
-  nscoord availHeight = aOuterRS.availableHeight;
-  if (NS_UNCONSTRAINEDSIZE != availHeight) {
-    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
-  }
 
   nsresult rv = NS_OK;
   PRUint8 captionSide = GetCaptionSide();
