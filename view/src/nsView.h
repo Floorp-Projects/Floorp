@@ -66,8 +66,8 @@ public:
   NS_IMETHOD  SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  GetBounds(nsRect &aBounds) const;
-  NS_IMETHOD  SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom, PRBool &aResult) const;
+  NS_IMETHOD  SetChildClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const;
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
   NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
@@ -109,11 +109,13 @@ public:
   NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
   NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
   NS_IMETHOD  GetExtents(nsRect *aExtents);
+  NS_IMETHOD  GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const;
+
 
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore);
 
- NS_IMETHOD SynchWidgetSizePosition();
+  NS_IMETHOD SynchWidgetSizePosition();
 
 
   // Helper function to get the view that's associated with a widget
@@ -121,6 +123,9 @@ public:
 
    // Helper function to determine if the view instance is the root view
   PRBool IsRoot();
+
+   // Helper function to determine if the view point is inside of a view
+  PRBool PointIsInside(nsIView& aView, nscoord x, nscoord y) const;
 
 protected:
   virtual ~nsView();

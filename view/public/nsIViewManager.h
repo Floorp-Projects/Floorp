@@ -251,12 +251,12 @@ public:
   NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
-   * Set the clip of a view.
+   * Set the clipping of a view's children
    * The view manager generates the appopriate dirty regions.
-   * @param aView view to to clip rect on
-   * @param rect new clipping rect for view
+   * @param aView view set clip children rect on
+   * @param rect new clipping rect for view's children
    */
-  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *aRect) = 0;
+  NS_IMETHOD  SetViewChildClip(nsIView *aView, nsRect *aRect) = 0;
 
   /**
    * Set the visibility of a view.

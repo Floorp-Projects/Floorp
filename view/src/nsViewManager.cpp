@@ -1112,7 +1112,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
     NS_ASSERTION((pushcnt >= 0), "underflow");
 
-    while (pushcnt--)
+    while (pushcnt-- > 0)
     {
       NS_ASSERTION((pushcnt >= 0), "underflow");
 
@@ -2007,12 +2007,12 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
+NS_IMETHODIMP nsViewManager :: SetViewChildClip(nsIView *aView, nsRect *aRect)
 {
   NS_ASSERTION(!(nsnull == aView), "no view");
   NS_ASSERTION(!(nsnull == aRect), "no clip");
 
-  aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
+  aView->SetChildClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
 
   UpdateView(aView, *aRect, NS_VMREFRESH_NO_SYNC);
 
