@@ -1441,8 +1441,12 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       // about this problem, we pass PR_FALSE as the last argument
       // here to avoid capitalizing the input type (this is required for
       // backwards compatibility). -- jst@netscape.com
+      // Update.  The DOM spec will be changed to have input types be
+      // all-lowercase.  See
+      // http://bugzilla.mozilla.org/show_bug.cgi?id=113174#c12
+      // -- bzbarsky@mit.edu
 
-      EnumValueToString(aValue, kInputTypeTable, aResult, PR_FALSE);
+      EnumValueToString(aValue, kInputTypeTable, aResult);
 
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

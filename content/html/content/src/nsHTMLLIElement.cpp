@@ -206,10 +206,10 @@ nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
     switch (v) {
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-        EnumValueToString(aValue, kListItemTypeTable, aResult, PR_FALSE);
+        EnumValueToString(aValue, kListItemTypeTable, aResult);
         break;
       default:
-        EnumValueToString(aValue, kListItemTypeTable, aResult, PR_TRUE);
+        EnumValueToString(aValue, kListItemTypeTable, aResult);
     }
 
     return NS_CONTENT_ATTR_HAS_VALUE;

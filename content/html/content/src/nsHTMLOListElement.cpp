@@ -224,7 +224,7 @@ nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-        EnumValueToString(aValue, kOldListTypeTable, aResult, PR_FALSE);
+        EnumValueToString(aValue, kOldListTypeTable, aResult);
         break;
       default:
         EnumValueToString(aValue, kListTypeTable, aResult);
