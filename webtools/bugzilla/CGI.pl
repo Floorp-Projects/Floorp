@@ -235,7 +235,8 @@ sub ValidateBugID {
     my ($id) = @_;
 
     # Make sure the bug number is a positive integer.
-    $id =~ /^([1-9][0-9]*)$/
+    # Whitespace can be ignored because the SQL server will ignore it.
+    $id =~ /^\s*([1-9][0-9]*)\s*$/
       || DisplayError("The bug number is invalid.") 
       && exit;
 
