@@ -97,12 +97,6 @@ public:
     Node* copyNode(Node* node);
 
     /**
-     * Generates a unique ID for the given node and places the result in
-     * dest
-    **/
-    void generateId(Node* node, String& dest);
-
-    /**
      * Returns the AttributeSet associated with the given name
      * or null if no AttributeSet is found
     **/
