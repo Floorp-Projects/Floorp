@@ -587,7 +587,7 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
-#miSearchModeFind {
+#__PhoenixFindInPage {
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 

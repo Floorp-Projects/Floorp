@@ -1330,47 +1330,26 @@ function SearchBarPopupShowing(aEvent)
   
 function SearchBarPopupCommand(aEvent)
 {
-  var searchBar = document.getElementById("search-bar");
 
-  if (aEvent.target.id == "miSearchModeFind") {
-    searchBar.setAttribute("searchmode", "__PhoenixFindInPage");
-    searchBar.setAttribute("autocompletesearchparam", "__PhoenixFindInPage");
-    gPrefService.setCharPref("browser.search.defaultengine", "");
+  if (!aEvent.target.id)
+    return;  
 
-    // Clear out the search engine icon
-    searchBar.firstChild.removeAttribute("src");
-  } else if (aEvent.target.id == "miAddEngines") {
+  if (aEvent.target.id == "miAddEngines") {
     var regionBundle = document.getElementById("bundle_browser_region");
     loadURI(regionBundle.getString("searchEnginesURL"));
-  } else {
-    searchBar.setAttribute("searchmode", aEvent.target.id);
-    searchBar.setAttribute("autocompletesearchparam", "q");
-    gPrefService.setCharPref("browser.search.defaultengine", aEvent.target.id);
+    return;
   }
-  
-  searchBar.detachController();
-  focusSearchBar();
+
+  document.getElementById("search-bar").currentEngine = aEvent.target.id;
 }
 
-function handleSearchBarCommand(aEvent)
+function showSearchEnginePopup()
 {
-  var searchBar = document.getElementById("search-bar");
-
-  // Save the current value in the form history
-  if (gFormFillEnabled) {
-    if (!gFormHistory)
-      gFormHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                              .getService(Components.interfaces.nsIFormHistory);
-    gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
-  }
-
-  if (searchBar.getAttribute("searchmode") != "__PhoenixFindInPage") {
-    gURLBar.value = searchBar.searchValue;
-    BrowserLoadURL(aEvent);
-  } else {
-    quickFindInPage(searchBar.value);
-  }
+  var searchEnginePopup = document.getElementById("SearchBarPopup");
+  var searchEngineButton = document.getElementById("search-proxy-button");
+  searchEnginePopup.showPopup(searchEngineButton);
 }
+
 
 function quickFindInPage(aValue)
 {
@@ -1901,41 +1880,12 @@ var goButtonObserver = {
     }
 }
 
-function ensureDefaultEnginePrefs(aRDF,aDS) 
+function focusSearchBar()
 {
-  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename", Components.interfaces.nsIPrefLocalizedString).data;
-  var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
-  var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-  var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
-          
-  var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
-  while (arcs.hasMoreElements()) {
-    var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
-    var name = readRDFString(aDS, engineRes, kNC_Name);
-    if (name == defaultName)
-      mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
-  }
-}
-
-function readRDFString(aDS,aRes,aProp)
-{
-  var n = aDS.GetTarget(aRes, aProp, true);
-  return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
-}
-
-function ensureSearchPref()
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-  var ds = rdf.GetDataSource("rdf:internetsearch");
-  var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  var kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-  var defaultEngine;
-  try {
-    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-  } catch(ex) {
-    ensureDefaultEnginePrefs(rdf, ds);
-    defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+  var searchBar = document.getElementById("search-bar");
+  if (searchBar) {
+    searchBar.select();
+    searchBar.focus();
   }
 }
 
@@ -1943,11 +1893,12 @@ function OpenSearch(tabName, searchStr, newTabFlag)
 {
   //This function needs to be split up someday.
   //XXXnoririty I don't want any prefs switching open by tabs to window
+  //XXXpch: this routine needs to be cleaned up.
 
   var defaultSearchURL = null;
   var navigatorRegionBundle = document.getElementById("bundle_browser_region");
   var fallbackDefaultSearchURL = navigatorRegionBundle.getString("fallbackDefaultSearchURL");
-  ensureSearchPref()
+
   //Check to see if search string contains "://" or "ftp." or white space.
   //If it does treat as url and match for pattern
   
@@ -2842,15 +2793,6 @@ function updateHomeTooltip()
   }
 }
 
-function focusSearchBar()
-{
-  var searchBar = document.getElementById("search-bar");
-  if (searchBar) {
-    searchBar.select();
-    searchBar.focus();
-  }
-}
-
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
@@ -3632,74 +3574,6 @@ nsContextMenu.prototype = {
         }
       }
       return false;  
-    }
-};
-
-/*************************************************************************
- *
- *   nsDefaultEngine : nsIObserver
- *
- *************************************************************************/
-function nsDefaultEngine()
-{
-    try
-    {
-        var pb = Components.classes["@mozilla.org/preferences-service;1"].
-                   getService(Components.interfaces.nsIPrefBranch);
-        var pbi = pb.QueryInterface(
-                    Components.interfaces.nsIPrefBranchInternal);
-        pbi.addObserver(this.domain, this, false);
-
-        // reuse code by explicitly invoking initial |observe| call
-        // to initialize the |icon| and |name| member variables
-        this.observe(pb, "", this.domain);
-    }
-    catch (ex)
-    {
-    }
-}
-
-nsDefaultEngine.prototype = 
-{
-    name: "",
-    icon: "",
-    domain: "browser.search.defaultengine",
-
-    // nsIObserver implementation
-    observe: function(aPrefBranch, aTopic, aPrefName)
-    {
-        try
-        {
-            var rdf = Components.
-                        classes["@mozilla.org/rdf/rdf-service;1"].
-                        getService(Components.interfaces.nsIRDFService);
-            var ds = rdf.GetDataSource("rdf:internetsearch");
-            var defaultEngine = aPrefBranch.getCharPref(aPrefName);
-            var res = rdf.GetResource(defaultEngine);
-
-            // get engine ``pretty'' name
-            const kNC_Name = rdf.GetResource(
-                               "http://home.netscape.com/NC-rdf#Name");
-            var engineName = ds.GetTarget(res, kNC_Name, true);
-            if (engineName)
-            {
-                this.name = engineName.QueryInterface(
-                              Components.interfaces.nsIRDFLiteral).Value;
-            }
-
-            // get URL to engine vendor icon
-            const kNC_Icon = rdf.GetResource(
-                               "http://home.netscape.com/NC-rdf#Icon");
-            var iconURL = ds.GetTarget(res, kNC_Icon, true);
-            if (iconURL)
-            {
-                this.icon = iconURL.QueryInterface(
-                  Components.interfaces.nsIRDFLiteral).Value;
-            }
-        }
-        catch (ex)
-        {
-        }
     }
 }
 

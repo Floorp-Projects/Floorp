@@ -130,8 +130,11 @@ pref("browser.download.useProgressDialogs", true);
 pref("browser.download.openSidebar", false);
 pref("browser.download.useDownloadDir", false);
 
-// various default search settings
+// pointer to the default engine name
+pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
+// pointer to the Web Search url (content area context menu)
 pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
+
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
@@ -189,9 +192,6 @@ pref("browser.fixup.alternate.suffix", ".com");
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
-
-//Internet Search
-pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
 
 // Print header customization
 // Use the following codes:
