@@ -2489,7 +2489,6 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
                             PRBool xactiveFlags) {
 
     nsMsgGroupRecord     *groupRecord = nsnull;
-    nsresult rv;
     
 #ifdef DEBUG_NEWS
 	printf("nsNNTPHost::AddNewNewsgroup(%s,...)\n",name);
@@ -2523,9 +2522,14 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
     }
     if (xactiveFlags)
     {
+#ifdef CATEGORIES_SUPPORTED
         SetIsCategoryContainer(name, bIsCategoryContainer, groupRecord);
+#endif /* CATEGORIES_SUPPORTED */
         SetIsVirtualGroup(name, bIsVirtual, groupRecord);
     }
+
+#ifdef CATEGORIES_SUPPORTED
+	nsresult rv;
 
     if (status > 0) {
         // If this really is a new newsgroup, then if it's a category of a
@@ -2550,6 +2554,7 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
             delete [] containerName;
         }
     }
+#endif /* CATEGORIES_SUPPORTED */
 
     if (status <=0) return NS_ERROR_UNEXPECTED;
     
