@@ -57,8 +57,9 @@ public:
     eDOMEvents_change,
     eDOMEvents_paint,
 	  eDOMEvents_text,
-    eDOMEvents_construct,
-    eDOMEvents_destruct
+    eDOMEvents_create,
+    eDOMEvents_destroy,
+    eDOMEvents_action
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);

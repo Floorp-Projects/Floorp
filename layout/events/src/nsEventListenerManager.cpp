@@ -32,6 +32,7 @@
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMTextListener.h"
 #include "nsIDOMCompositionListener.h"
+#include "nsIDOMMenuListener.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptObjectOwner.h"
@@ -60,6 +61,7 @@ nsEventListenerManager::nsEventListenerManager()
   mPaintListeners = nsnull;
   mTextListeners = nsnull;
   mCompositionListeners = nsnull;
+  mMenuListeners = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -76,6 +78,7 @@ nsEventListenerManager::~nsEventListenerManager()
   ReleaseListeners(&mPaintListeners);
   ReleaseListeners(&mTextListeners);
   ReleaseListeners(&mCompositionListeners);
+  ReleaseListeners(&mMenuListeners);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -127,6 +130,9 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   }
   else if (aIID.Equals(kIDOMCompositionListenerIID)) {
 	return &mCompositionListeners;
+  }
+  else if (aIID.Equals(kIDOMMenuListenerIID)) {
+	return &mMenuListeners;
   }
   return nsnull;
 }
@@ -345,12 +351,16 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
   } // extened this to handle IME related events
   else if (aType == "create") {
-    aIID = kIDOMLoadListenerIID;
-    *aFlags = NS_EVENT_BITS_LOAD_CONSTRUCT;
+    aIID = kIDOMMenuListenerIID; 
+    *aFlags = NS_EVENT_BITS_MENU_CREATE;
   }
   else if (aType == "destroy") {
-    aIID = kIDOMLoadListenerIID;
-    *aFlags = NS_EVENT_BITS_LOAD_DESTRUCT;
+    aIID = kIDOMMenuListenerIID; 
+    *aFlags = NS_EVENT_BITS_MENU_DESTROY;
+  }
+  else if (aType == "action") {
+    aIID = kIDOMMenuListenerIID; 
+    *aFlags = NS_EVENT_BITS_MENU_ACTION;
   }
   else {
     return NS_ERROR_FAILURE;
@@ -902,8 +912,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 
     case NS_PAGE_LOAD:
     case NS_PAGE_UNLOAD:
-    case NS_POPUP_CONSTRUCT:
-    case NS_POPUP_DESTRUCT:
+    
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -939,16 +948,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_PAGE_UNLOAD:
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_UNLOAD) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_POPUP_CONSTRUCT:
-                    if (ls->mSubType & NS_EVENT_BITS_LOAD_CONSTRUCT) {
-                      correctSubType = PR_TRUE;
-                    }
-                    break;
-                  case NS_POPUP_DESTRUCT:
-                    if (ls->mSubType & NS_EVENT_BITS_LOAD_DESTRUCT) {
                       correctSubType = PR_TRUE;
                     }
                     break;
@@ -1042,6 +1041,67 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
       }
       break;
 
+    case NS_MENU_CREATE:
+    case NS_MENU_DESTROY:
+    case NS_MENU_ACTION:
+      if (nsnull != mMenuListeners) {
+        if (nsnull == *aDOMEvent) {
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+        }
+        if (NS_OK == ret) {
+          for (int i=0; i<mMenuListeners->Count(); i++) {
+            nsListenerStruct *ls;
+            nsIDOMMenuListener *mMenuListener;
+
+            ls = (nsListenerStruct*)mMenuListeners->ElementAt(i);
+
+            if (ls->mFlags & aFlags) {
+              if (NS_OK == ls->mListener->QueryInterface(kIDOMMenuListenerIID, (void**)&mMenuListener)) {
+                switch(aEvent->message) {
+                  case NS_MENU_CREATE:
+                    ret = mMenuListener->Create(*aDOMEvent);
+                    break;
+                  case NS_MENU_DESTROY:
+                    ret = mMenuListener->Destroy(*aDOMEvent);
+                    break;
+                  case NS_MENU_ACTION:
+                    ret = mMenuListener->Action(*aDOMEvent);
+                    break;
+                  default:
+                    break;
+                }
+                NS_RELEASE(mMenuListener);
+              }
+              else {
+                PRBool correctSubType = PR_FALSE;
+                switch(aEvent->message) {
+                  case NS_MENU_CREATE:
+                    if (ls->mSubType & NS_EVENT_BITS_MENU_CREATE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MENU_DESTROY:
+                    if (ls->mSubType & NS_EVENT_BITS_MENU_DESTROY) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MENU_ACTION:
+                    if (ls->mSubType & NS_EVENT_BITS_MENU_ACTION) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  default:
+                    break;
+                }
+                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
+                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                }
+              }
+            }
+          }
+        }
+      }
+      break;
 
     default:
       break;
