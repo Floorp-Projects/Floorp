@@ -5107,7 +5107,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAReadableString& aColor)
           if (NS_FAILED(res)) return res;
         }
       }
-      else if ((startNode == endNode) && nsTextEditUtils::IsBody(startNode) && !startOffset && !endOffset )
+      else if ((startNode == endNode) && nsTextEditUtils::IsBody(startNode) && isCollapsed)
       {
         // we have no block in the document, let's apply the background to the body 
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(startNode);
