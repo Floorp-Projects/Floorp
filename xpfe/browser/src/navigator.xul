@@ -150,10 +150,6 @@
 <!ENTITY manageHistoryCmd.label "Manage History">
 <!ENTITY chatCmd.label "Chat">
 <!ENTITY shoppingCartCmd.label "Shopping Cart">
-<!ENTITY servACmd.label "Services A">
-<!ENTITY servBCmd.label "Services B">
-<!ENTITY servCCmd.label "Services C">
-<!ENTITY servDCmd.label "Services D">
 <!ENTITY toolsMenu.label "Tools">
 <!ENTITY toolsPluginsInfoCmd.label "Plugins Info">
 <!ENTITY toolsJavaConsoleCmd.label "Java/JS Console">
@@ -512,11 +508,6 @@
       <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
       <menuitem name="&chatCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&shoppingCartCmd.label;" onclick="BrowserReload();"/>
-      <separator />
-      <menuitem name="&servACmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&servBCmd.label;" onclick="BrowserReload();" />
-      <menuitem name="&servCCmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&servDCmd.label;" onclick="BrowserReload();"/>
       <separator />
       <menu name="&toolsMenu.label;">
 	      <menuitem name="&toolsPluginsInfoCmd.label;" onclick="BrowserReload();"/>
