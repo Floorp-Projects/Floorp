@@ -30,6 +30,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
+#include "nsIDOMNode.h"
 
 #include "nsIDOMViewerElement.h"
 
