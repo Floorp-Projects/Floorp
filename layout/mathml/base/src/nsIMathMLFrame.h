@@ -24,12 +24,6 @@
 
 struct nsPresentationData;
 struct nsEmbellishData;
-typedef PRInt32 nsStretchDirection;
-
-#define NS_STRETCH_DIRECTION_UNSUPPORTED  -1
-#define NS_STRETCH_DIRECTION_DEFAULT       0
-#define NS_STRETCH_DIRECTION_HORIZONTAL    1
-#define NS_STRETCH_DIRECTION_VERTICAL      2
 
 // IID for the nsIMathMLFrame interface (the IID was taken from IIDS.h) 
 /* a6cf9113-15b3-11d2-932e-00805f8add32 */
@@ -186,34 +180,75 @@ public:
   SetPresentationData(const nsPresentationData& aPresentationData) = 0;
 
  /* UpdatePresentationData :
-  * Increments the scriptlevel of the frame, and
-  * sets its displaystyle and compression flags.
+  * Increments the scriptlevel of the frame, and updates its displaystyle and
+  * compression flags. The displaystyle flag of an environment gets updated
+  * according to the MathML specification. A frame becomes "compressed" (or
+  * "cramped") according to TeX rendering rules (TeXBook, Ch.17, p.140-141).
+  *
   * Note that <mstyle> is the only tag which allows to set
   * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
   * to reset or increment the scriptlevel in a manual way. 
   * Therefore <mstyle> has its own peculiar version of this method.
-  */ 
-  NS_IMETHOD
-  UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                         PRBool  aDisplayStyle,
-                         PRBool  aCompressed) = 0;
-
- /* UpdatePresentationDataFromChildAt :
-  * Increments the scriplevel and
-  * sets the displaystyle and compression flags on the whole tree.
-  * For child frames at: aIndex, aIndex+1, aIndex+2, etc, this method sets 
-  * their displaystyle and compressed flags, and increment their mScriptLevel
-  * with aScriptLevelIncrement. The increment is propagated down to the 
-  * subtrees of each of these child frames. Note that <mstyle> is the only
-  * tag which allows <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
-  * to reset or increment the scriptlevel in a manual way. Therefore <mstyle> 
-  * has its own peculiar version of this method.
+  *
+  * @param aScriptLevelIncrement [in]
+  *        The value with which to increment mScriptLevel in the frame.
+  *
+  * @param aFlagsValues [in]
+  *        The new values (e.g., display, compress) that are going to be
+  *        updated.
+  *
+  * @param aFlagsToUpdate [in]
+  *        The flags that are relevant to this call. Since not all calls
+  *        are meant to update all flags at once, aFlagsToUpdate is used
+  *        to distinguish flags that need to retain their existing values
+  *        from flags that need to be turned on (or turned off). If a bit
+  *        is set in aFlagsToUpdate, then the corresponding value (which
+  *        can be 0 or 1) is taken from aFlagsValues and applied to the
+  *        frame. Therefore, by setting their bits in aFlagsToUpdate, and
+  *        setting their desired values in aFlagsValues, it is possible to
+  *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                    PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle,
-                                    PRBool  aCompressed) = 0;
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aFlagsToUpdate) = 0;
+
+ /* UpdatePresentationDataFromChildAt :
+  * Increments the scriplevel and sets the displaystyle and compression flags
+  * on the whole tree. For child frames at aFirstIndex up to aLastIndex, this
+  * method sets their displaystyle and compression flags, and increment their
+  * mScriptLevel with aScriptLevelIncrement. The update is propagated down 
+  * the subtrees of each of these child frames. 
+  *
+  * Note that <mstyle> is the only tag which allows
+  * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
+  * to reset or increment the scriptlevel in a manual way.
+  * Therefore <mstyle> has its own peculiar version of this method.
+  *
+  * @param aFirstIndex [in]
+  *        Index of the first child from where the update is propagated.
+  *
+  * @param aLastIndex [in]
+  *        Index of the last child where to stop the update.
+  *        A value of -1 means up to last existing child.
+  *
+  * @param aScriptLevelIncrement [in]
+  *        The value with which to increment mScriptLevel in the whole sub-trees.
+  *
+  * @param aFlagsValues [in]
+  *        The new values (e.g., display, compress) that are going to be
+  *        assigned in the whole sub-trees.
+  *
+  * @param aFlagsToUpdate [in]
+  *        The flags that are relevant to this call. See UpdatePresentationData()
+  *        for more details about this parameter.
+  */
+  NS_IMETHOD
+  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                    PRInt32  aLastIndex,
+                                    PRInt32  aScriptLevelIncrement,
+                                    PRUint32 aFlagsValues,
+                                    PRUint32 aFlagsToUpdate) = 0;
 };
 
 // struct used by a frame to modulate its presentation
