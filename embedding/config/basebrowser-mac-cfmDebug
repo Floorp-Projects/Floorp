@@ -275,11 +275,7 @@ res:loading-image.gif
 res:broken-image.gif
 res:builtin:htmlBindings.xml
 res:builtin:platformHTMLBindings.xml
-res:entityTables:html40Latin1.properties
-res:entityTables:html40Special.properties
-res:entityTables:html40Symbols.properties
-res:entityTables:htmlEntityVersions.properties
-res:entityTables:transliterate.properties
+res:entityTables:*
 res:fonts:*
 
 ;

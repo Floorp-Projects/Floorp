@@ -25,6 +25,9 @@ comm.jar:
         content/navigator/turboDialog.xul              (resources/content/turboDialog.xul)
         content/navigator/viewsource.js                (resources/content/viewsource.js)
         content/navigator/viewSource.xul               (resources/content/viewSource.xul)
+        content/navigator/viewSourceOverlay.xul        (resources/content/viewSourceOverlay.xul)
+        content/navigator/viewPartialSource.js         (resources/content/viewPartialSource.js)
+        content/navigator/viewPartialSource.xul        (resources/content/viewPartialSource.xul)
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)

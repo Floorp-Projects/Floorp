@@ -34,6 +34,11 @@ libs::
 	$(MAKE_INSTALL) .\html40Special.properties $(DIST)\bin\res\entityTables
 	$(MAKE_INSTALL) .\transliterate.properties $(DIST)\bin\res\entityTables
 
+!ifdef MOZ_MATHML
+libs::
+	$(MAKE_INSTALL) .\mathml20.properties $(DIST)\bin\res\entityTables
+!endif
+
 
 clobber::
 	rm -fr $(DIST)\res
