@@ -231,3 +231,43 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 
 
+//==============================================================
+void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+  nsWindow * widgetWindow = (nsWindow *) p ;
+
+  char * newStr;
+  int len;
+
+  XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *) call_data;
+
+  if (cbs->reason == XmCR_ACTIVATE) {
+      printf ("Password: %s0, passwd);
+      return;
+  }
+
+  if (cbs->startPos < cbs->currInsert) {   /* backspace */
+      cbs->endPos = strlen (passwd);       /* delete from here to end */
+      passwd[cbs->startPos] = 0;           /* backspace--terminate */
+      return;
+  }
+
+  if (cbs->text->length > 1) {
+      cbs->doit = False;  /* don't allow "paste" operations */
+      return;             /* make the user *type* the password! */
+  }
+
+  newStr = XtMalloc (cbs->endPos + 2); /* new char + NULL terminator */
+  if (passwd) {
+      strcpy (newStr, passwd);
+      XtFree (passwd);
+  } else
+      newStr[0] = NULL;
+  passwd = newStr;
+  strncat (passwd, cbs->text->ptr, cbs->text->length);
+  passwd[cbs->endPos + cbs->text->length] = 0;
+
+  for (len = 0; len < cbs->text->length; len++)
+      cbs->text->ptr[len] = '*';
+}
+
