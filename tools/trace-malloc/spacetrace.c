@@ -5372,6 +5372,39 @@ int displayIndex(STRequest* inRequest)
 }
 
 /*
+**  initRequestOptions
+**
+**  Given the request, set the options that are specific to the request.
+**  These can generally be determined in the following manner:
+**      Copy over global options.
+**      If getData present, attempt to use options therein.
+**      Iff no getData, then use cookieData.
+**
+**  Other code attempt to constantly set the cookie in the client to their
+**      current option set.
+*/
+void initRequestOptions(STRequest* inRequest, const char* inGetData, const char* inCookieData)
+{
+    /*
+    **  Copy of global options.
+    */
+    memcpy(&inRequest->mOptions, &globals.mOptions, sizeof(globals.mOptions));
+
+    if(NULL != inGetData)
+    {
+        /*
+        **  Todo
+        */
+    }
+    else if(NULL != inCookieData)
+    {
+        /*
+        **  Todo
+        */
+    }
+}
+
+/*
 ** handleRequest
 **
 ** Based on what file they are asking for, perform some processing.
@@ -5379,7 +5412,7 @@ int displayIndex(STRequest* inRequest)
 **
 ** Returns !0 on error.
 */
-int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const char* aGetData)
+int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const char* aGetData, const char* inCookieData)
 {
     int retval = 0;
 
@@ -5395,6 +5428,11 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         request.mFD = aFD;
         request.mGetFileName = aFileName;
         request.mGetData = aGetData;
+
+        /*
+        **  Set local options for this request.
+        */
+        initRequestOptions(&request, aGetData, inCookieData);
 
         /*
         ** Attempt to find the file of interest.
@@ -5775,9 +5813,28 @@ void handleClient(void* inArg)
                 char* eourl = NULL;
                 char* start = &aBuffer[5];
                 char* getData = NULL;
+                char* cookieData = NULL;
                 int realFun = 0;
                 const char* crlf = "\015\012";
                 char* eoline = NULL;
+
+                /*
+                **  Find our option cookie.
+                */
+                cookieData = strstr(aBuffer, "Cookie: Options=");
+                if(NULL != cookieData)
+                {
+                    cookieData += 16;
+
+                    /*
+                    **  Truncate for cookie data.
+                    */
+                    eoline = strstr(cookieData, crlf);
+                    if(NULL != eoline)
+                    {
+                        *eoline = '\0';
+                    }
+                }
 
                 /*
                 ** Truncate the line if possible.
@@ -5829,12 +5886,22 @@ void handleClient(void* inArg)
                 **
                 ** Send that the request was OK, regardless.
                 **
+                ** If we have any get data, then it is a set of options.
+                ** Set a cookie to remember the options.
+                **
                 ** Other code will tell the user they were wrong.
                 ** If the filename contains a ".png", then send the image
                 **  mime type, otherwise, say it is text/html. 
                 */
-                PR_fprintf(aFD, "HTTP/1.0 200%s", crlf);
-                PR_fprintf(aFD, "Server: SpaceTrace/0.1%s", crlf);
+                PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
+                PR_fprintf(aFD, "Server: $Id: spacetrace.c,v 1.25 2002/05/04 01:07:16 blythe%netscape.com Exp $%s", crlf);
+                if(NULL != getData)
+                {
+                    if(NULL == cookieData || (NULL != cookieData && 0 != strcmp(getData, cookieData)))
+                    {
+                        PR_fprintf(aFD, "Set-Cookie:  Options=%s; Path=/; Expires=Fri, 20-Dec-2069 00:00:01 GMT%s", getData, crlf);
+                    }
+                }
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -5862,7 +5929,7 @@ void handleClient(void* inArg)
                 /*
                 ** Ready for the real fun.
                 */
-                realFun = handleRequest(globals.mTMR, aFD, start, getData);
+                realFun = handleRequest(globals.mTMR, aFD, start, getData, cookieData);
                 if(0 != realFun)
                 {
                     REPORT_ERROR(__LINE__, handleRequest);
@@ -6091,7 +6158,7 @@ int batchMode(void)
                 {
                     PRStatus closeRes = PR_SUCCESS;
                     
-                    handleRes = handleRequest(globals.mTMR, outFile, globals.mOptions.mBatchRequests[loop], NULL);
+                    handleRes = handleRequest(globals.mTMR, outFile, globals.mOptions.mBatchRequests[loop], NULL, NULL);
                     if(0 != handleRes)
                     {
                         failureSum += __LINE__;
