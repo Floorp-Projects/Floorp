@@ -658,6 +658,10 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",                       "$globalLocale", 0);
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",           "$globalLocale", 0);
 
+        #COMMUNICATOR
+        _InstallResources(":mozilla:xpfe:communicator:resources:content:MANIFEST",                            "$globalContent");
+        _InstallResources(":mozilla:xpfe:communicator:resources:locale:en-US:MANIFEST",                       "$globalLocale", 0);
+
         _InstallResources(":mozilla:docshell:base:MANIFEST",                                                            "$globalLocale", 0);
 
         my($layout_locale_hack_dir) = "$communicatorLocale"."layout:";
