@@ -150,16 +150,16 @@ public:
     MOZ_COUNT_CTOR(URLKey);
     mHashValue = 0;
 
-    mURL->GetSpec(mSpec);
-    if (!mSpec.IsEmpty()) {
-      mHashValue = nsCRT::HashCode(mSpec.get());
+    nsCAutoString spec;
+    mURL->GetSpec(spec);
+    if (!spec.IsEmpty()) {
+      mHashValue = nsCRT::HashCode(spec.get());
     }
   }
 
   URLKey(const URLKey& aKey)
     : mURL(aKey.mURL),
-      mHashValue(aKey.mHashValue),
-      mSpec(aKey.mSpec)
+      mHashValue(aKey.mHashValue)
   {
     MOZ_COUNT_CTOR(URLKey);
   }
@@ -177,13 +177,9 @@ public:
   virtual PRBool Equals(const nsHashKey* aKey) const
   {
     URLKey* key = (URLKey*)aKey;
-#if 0 // bug 47846
     PRBool equals = PR_FALSE;
     nsresult result = mURL->Equals(key->mURL, &equals);
     return (NS_SUCCEEDED(result) && equals);
-#else
-    return (nsCRT::strcasecmp(mSpec.get(), key->mSpec.get()) == 0);
-#endif
   }
 
   virtual nsHashKey *Clone(void) const
@@ -193,7 +189,6 @@ public:
 
   nsCOMPtr<nsIURI>  mURL;
   PRUint32          mHashValue;
-  nsSharableCString mSpec;
 };
 
 /*********************************************
