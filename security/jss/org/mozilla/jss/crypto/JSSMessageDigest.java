@@ -38,6 +38,7 @@ import java.security.InvalidKeyException;
 
 /**
  * A class for performing message digesting (hashing) and MAC operations.
+ * @deprecated Use the JCA interface instead ({@link java.security.MessageDigest})
  */
 public abstract class JSSMessageDigest {
 

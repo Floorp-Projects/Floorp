@@ -40,6 +40,7 @@ import java.io.CharConversionException;
 
 /**
  * Generates symmetric keys for encryption and decryption.
+ * @deprecated Use the JCA interface instead ({@link javax.crypto.KeyGenerator})
  */
 public interface KeyGenerator {
 

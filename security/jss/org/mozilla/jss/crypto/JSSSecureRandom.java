@@ -34,10 +34,8 @@
 package org.mozilla.jss.crypto;
 
 /**
- * An interface for secure random numbers. This should be replaced with
- * java.security.SecureRandom when we move to JDK 1.2.  In JDK 1.1,
- * SecureRandom is implemented by a Sun class. In JDK 1.2, it uses a
- * provider architecture.
+ * An interface for secure random numbers.
+ * @deprecated Use the JCA interface instead ({@link java.security.SecureRandom})
  */
 public interface JSSSecureRandom {
 

@@ -37,6 +37,9 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.PublicKey;
 import java.security.InvalidKeyException;
 
+/**
+ * @deprecated Use the JCA interface instead ({@link javax.crypto.Cipher})
+ */
 public interface KeyWrapper {
 
     public void initWrap(SymmetricKey wrappingKey,

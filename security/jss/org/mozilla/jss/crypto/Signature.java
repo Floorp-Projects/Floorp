@@ -41,6 +41,7 @@ import java.security.spec.AlgorithmParameterSpec;
  * Instances of this class can be obtain from <code>CryptoToken</code>s.
  *
  * @see org.mozilla.jss.crypto.CryptoToken#getSignatureContext
+ * @deprecated Use the JCA interface instead ({@link java.security.Signature})
  */
 public class Signature { 
 
