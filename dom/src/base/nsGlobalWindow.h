@@ -181,9 +181,9 @@ public:
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                            PRBool aPostProcess, PRBool aUseCapture);
+                            PRBool aUseCapture);
   NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                               PRBool aPostProcess, PRBool aUseCapture);
+                               PRBool aUseCapture);
 
 
 

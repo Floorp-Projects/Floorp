@@ -241,9 +241,9 @@ public:
 
     // nsIDOMEventTarget interface
     NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                PRBool aPostProcess, PRBool aUseCapture);
+                                PRBool aUseCapture);
     NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aPostProcess, PRBool aUseCapture);
+                                   PRBool aUseCapture);
 
 
     // nsIJSScriptObject
@@ -1204,13 +1204,12 @@ RDFElementImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const n
 
 NS_IMETHODIMP
 RDFElementImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                 PRBool aPostProcess, PRBool aUseCapture)
+                                 PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -1221,11 +1220,10 @@ RDFElementImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aLi
 
 NS_IMETHODIMP
 RDFElementImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                    PRBool aPostProcess, PRBool aUseCapture)
+                                    PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
@@ -1902,7 +1900,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
         // Add the popup as a listener on this element.
         nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
-        AddEventListener("mousedown", eventListener, PR_FALSE, PR_FALSE);  
+        AddEventListener("mousedown", eventListener, PR_FALSE);  
         
         NS_IF_RELEASE(popupListener);
     }
@@ -2332,6 +2330,7 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT == aFlags) {
         aDOMEvent = &domEvent;
+        aEvent->flags = NS_EVENT_FLAG_NONE;
         // In order for the event to have a proper target for menus (which have no corresponding
         // frame target in the visual model), we have to explicitly set the target of the
         // event to prevent it from trying to retrieve the target from a frame.
@@ -2371,7 +2370,8 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     }
 
     //Local handling stage
-    if (nsnull != mListenerManager) {
+    if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+        aEvent->flags = aFlags;
         mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
     }
 

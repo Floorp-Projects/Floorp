@@ -757,8 +757,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   nsIDOMEvent* domEvent = nsnull;
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
+    aEvent->flags = NS_EVENT_FLAG_NONE;
 
-    //Initiate capturing phase
     //Initiate capturing phase.  Special case first call to document
     if (nsnull != mDocument) {
       mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
@@ -774,12 +774,14 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Local handling stage
-  if (nsnull != mListenerManager) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    aEvent->flags = aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
   //Bubbling stage
-  if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mParent != nsnull) && (mDocument != nsnull)) {
+  if ((NS_EVENT_FLAG_CAPTURE != aFlags) && 
+      (mParent != nsnull) && (mDocument != nsnull)) {
     ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                   NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
@@ -1004,13 +1006,12 @@ nsGenericElement::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
 
 nsresult
 nsGenericElement::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aPostProcess, PRBool aUseCapture)
+                                   PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -1021,11 +1022,10 @@ nsGenericElement::AddEventListener(const nsString& aType, nsIDOMEventListener* a
 
 nsresult
 nsGenericElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                      PRBool aPostProcess, PRBool aUseCapture)
+                                      PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;

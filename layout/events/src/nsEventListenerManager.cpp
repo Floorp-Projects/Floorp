@@ -65,17 +65,17 @@ nsEventListenerManager::nsEventListenerManager()
 
 nsEventListenerManager::~nsEventListenerManager() 
 {
-  ReleaseListeners(mEventListeners);
-  ReleaseListeners(mMouseListeners);
-  ReleaseListeners(mMouseMotionListeners);
-  ReleaseListeners(mKeyListeners);
-  ReleaseListeners(mLoadListeners);
-  ReleaseListeners(mFocusListeners);
-  ReleaseListeners(mFormListeners);
-  ReleaseListeners(mDragListeners);
-  ReleaseListeners(mPaintListeners);
-  ReleaseListeners(mTextListeners);
-  ReleaseListeners(mCompositionListeners);
+  ReleaseListeners(&mEventListeners);
+  ReleaseListeners(&mMouseListeners);
+  ReleaseListeners(&mMouseMotionListeners);
+  ReleaseListeners(&mKeyListeners);
+  ReleaseListeners(&mLoadListeners);
+  ReleaseListeners(&mFocusListeners);
+  ReleaseListeners(&mFormListeners);
+  ReleaseListeners(&mDragListeners);
+  ReleaseListeners(&mPaintListeners);
+  ReleaseListeners(&mTextListeners);
+  ReleaseListeners(&mCompositionListeners);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -131,20 +131,21 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   return nsnull;
 }
 
-void nsEventListenerManager::ReleaseListeners(nsVoidArray* aListeners)
+void nsEventListenerManager::ReleaseListeners(nsVoidArray** aListeners)
 {
-  if (nsnull != aListeners) {
-    PRInt32 i, count = aListeners->Count();
+  if (nsnull != *aListeners) {
+    PRInt32 i, count = (*aListeners)->Count();
     nsListenerStruct *ls;
     for (i = 0; i < count; i++) {
-      ls = (nsListenerStruct*)aListeners->ElementAt(i);
+      ls = (nsListenerStruct*)(*aListeners)->ElementAt(i);
       if (ls != nsnull) {
         NS_IF_RELEASE(ls->mListener);
         PR_DELETE(ls);
       }
     }
-    delete aListeners;
+    delete *aListeners;
   }
+  *aListeners = nsnull;
 }
 
 nsresult nsEventListenerManager::GetEventListeners(nsVoidArray **aListeners, const nsIID& aIID)
@@ -587,7 +588,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -632,65 +632,63 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
       break;
 	
-	case NS_COMPOSITION_START:
-	case NS_COMPOSITION_END:
+	  case NS_COMPOSITION_START:
+	  case NS_COMPOSITION_END:
 #if DEBUG_TAGUE
-		printf("DOM: got composition event\n");
+		  printf("DOM: got composition event\n");
 #endif
-		if (nsnull != mCompositionListeners) {
-			if (nsnull == *aDOMEvent) {
-				ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
-			}
-			if (NS_OK == ret) {
-				for(int i=0;i<mTextListeners->Count();i++) {
-					nsListenerStruct *ls;
-					nsIDOMCompositionListener* mCompositionListener;
-					ls =(nsListenerStruct*)mCompositionListeners->ElementAt(i);
+		  if (nsnull != mCompositionListeners) {
+			  if (nsnull == *aDOMEvent) {
+				  ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
+			  }
+			  if (NS_OK == ret) {
+				  for(int i=0;i<mTextListeners->Count();i++) {
+					  nsListenerStruct *ls;
+					  nsIDOMCompositionListener* mCompositionListener;
+					  ls =(nsListenerStruct*)mCompositionListeners->ElementAt(i);
 
-					if (ls->mFlags & aFlags) {
-					  if (NS_OK == ls->mListener->QueryInterface(kIDOMCompositionListenerIID, (void**)&mCompositionListener)) {
-						  if (aEvent->message==NS_COMPOSITION_START) {
-							ret = mCompositionListener->HandleStartComposition(*aDOMEvent);
+					  if (ls->mFlags & aFlags) {
+					    if (NS_OK == ls->mListener->QueryInterface(kIDOMCompositionListenerIID, (void**)&mCompositionListener)) {
+						    if (aEvent->message==NS_COMPOSITION_START) {
+							    ret = mCompositionListener->HandleStartComposition(*aDOMEvent);
+						    }
+						    if (aEvent->message==NS_COMPOSITION_END) {
+							    ret = mCompositionListener->HandleEndComposition(*aDOMEvent);
+						    }
 						  }
-						  if (aEvent->message==NS_COMPOSITION_END) {
-							ret = mCompositionListener->HandleEndComposition(*aDOMEvent);
-						  }
-						}
-						NS_RELEASE(mCompositionListener);
+						  NS_RELEASE(mCompositionListener);
 					  }
 					  else {
-						PRBool correctSubType = PR_FALSE;
-						switch(aEvent->message) {
-						  case NS_COMPOSITION_START:
-							if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_START) {
-							  correctSubType = PR_TRUE;
-							}
-							break;
-						  case NS_COMPOSITION_END:
-							if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
-							  correctSubType = PR_TRUE;
-							}
-							break;
-						  default:
-							break;
-						}
-						if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-						  ret = ls->mListener->HandleEvent(*aDOMEvent);
-						}
+						  PRBool correctSubType = PR_FALSE;
+						  switch(aEvent->message) {
+						    case NS_COMPOSITION_START:
+							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_START) {
+							      correctSubType = PR_TRUE;
+							    }
+							    break;
+						    case NS_COMPOSITION_END:
+							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
+							      correctSubType = PR_TRUE;
+							    }
+							    break;
+						    default:
+							    break;
+						  }
+						  if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
+						    ret = ls->mListener->HandleEvent(*aDOMEvent);
+						  }
 					  }
 					}
-					aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
-				  }
 				}
+			}
 			break;
 
-	case NS_TEXT_EVENT:
+	  case NS_TEXT_EVENT:
 #if DEBUG_TAGUE
   		printf("DOM: got text event\n");
 #endif
@@ -720,11 +718,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-          aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
-				}
-			}
-		}
-		break;
+				  }
+			  }
+		  }
+		  break;
 
     case NS_KEY_UP:
     case NS_KEY_DOWN:
@@ -783,7 +780,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -837,7 +833,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -900,7 +895,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -966,7 +960,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -1000,9 +993,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 }
               }
             }
-            aEventStatus = (NS_OK == ret)
-              ? aEventStatus
-              : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -1047,9 +1037,6 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                 ret = ls->mListener->HandleEvent(*aDOMEvent);
               }
             }
-            aEventStatus = (NS_OK == ret)
-              ? aEventStatus
-              : nsEventStatus_eConsumeNoDefault;
           }
         }
       }
@@ -1059,6 +1046,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     default:
       break;
   }
+  //XXX This is going away
+  aEventStatus = (NS_OK == ret)
+    ? aEventStatus
+    : nsEventStatus_eConsumeNoDefault;
+
+  // This is correct
+  aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
+    ? nsEventStatus_eConsumeNoDefault
+    : aEventStatus;
+
   return NS_OK;
 }
 
@@ -1090,6 +1087,23 @@ nsresult nsEventListenerManager::CaptureEvent(nsIDOMEventListener *aListener)
 
 nsresult nsEventListenerManager::ReleaseEvent(nsIDOMEventListener *aListener)
 {
+  return NS_OK;
+}
+
+nsresult nsEventListenerManager::RemoveAllListeners()
+{
+  ReleaseListeners(&mEventListeners);
+  ReleaseListeners(&mMouseListeners);
+  ReleaseListeners(&mMouseMotionListeners);
+  ReleaseListeners(&mKeyListeners);
+  ReleaseListeners(&mLoadListeners);
+  ReleaseListeners(&mFocusListeners);
+  ReleaseListeners(&mFormListeners);
+  ReleaseListeners(&mDragListeners);
+  ReleaseListeners(&mPaintListeners);
+  ReleaseListeners(&mTextListeners);
+  ReleaseListeners(&mCompositionListeners);
+
   return NS_OK;
 }
 

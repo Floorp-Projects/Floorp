@@ -2277,6 +2277,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &mDOMEvent;
+    aEvent->flags = NS_EVENT_FLAG_NONE;
   }
   
   //Capturing stage
@@ -2289,7 +2290,8 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Local handling stage
-  if (nsnull != mListenerManager) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+    aEvent->flags = aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
   }
 
@@ -2345,13 +2347,12 @@ nsresult nsDocument::RemoveEventListenerByIID(nsIDOMEventListener *aListener, co
 }
 
 nsresult nsDocument::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                      PRBool aPostProcess, PRBool aUseCapture)
+                                      PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags);
     NS_RELEASE(manager);
@@ -2361,11 +2362,10 @@ nsresult nsDocument::AddEventListener(const nsString& aType, nsIDOMEventListener
 }
 
 nsresult nsDocument::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                         PRBool aPostProcess, PRBool aUseCapture)
+                                         PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
-    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
-                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;

@@ -47,7 +47,7 @@ public:
 
   nsVoidArray** GetListenersByIID(const nsIID& aIID);
   
-  void ReleaseListeners(nsVoidArray* aListeners);
+  void ReleaseListeners(nsVoidArray** aListeners);
 
   /**
   * Retrieves events listeners of all types. 
@@ -88,6 +88,8 @@ public:
   virtual nsresult CreateEvent(nsIPresContext& aPresContext, 
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent);
+
+  virtual nsresult RemoveAllListeners();
 
 protected:
   nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);

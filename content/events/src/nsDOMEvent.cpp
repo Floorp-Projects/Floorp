@@ -175,25 +175,44 @@ nsDOMEvent::GetCurrentNode(nsIDOMNode** aCurrentNode)
 NS_IMETHODIMP
 nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
-  *aEventPhase = 0;
+  if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
+    *aEventPhase = CAPTURING_PHASE;
+  }
+  else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
+    *aEventPhase = BUBBLING_PHASE;
+  }
+  else if (mEvent->flags & NS_EVENT_FLAG_INIT) {
+    *aEventPhase = AT_TARGET;
+  }
+  else {
+    *aEventPhase = 0;
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::PreventBubble()
 {
+  if (mEvent->flags & NS_EVENT_FLAG_BUBBLE || mEvent->flags & NS_EVENT_FLAG_INIT) {
+    mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::PreventCapture()
 {
+  if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
+    mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::PreventDefault()
 {
+  mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
   return NS_OK;
 }
 
@@ -400,7 +419,7 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
+NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 {
   switch (mEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -424,6 +443,13 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32* aButton)
   default:
     break;
   }
+  return NS_OK;
+}
+
+NS_METHOD nsDOMEvent::GetClickcount(PRUint16* aClickcount) 
+{
+  //XXX implement me.
+  *aClickcount = 1;
   return NS_OK;
 }
 
@@ -460,7 +486,11 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
   case NS_KEY_EVENT:
     return GetKeyCode(aWhich);
   case NS_MOUSE_EVENT:
-    return GetButton(aWhich);
+    {
+      PRUint16 button;
+      nsresult ret = GetButton(&button);
+      *aWhich = button;
+    }
   }
   return NS_OK;
 }

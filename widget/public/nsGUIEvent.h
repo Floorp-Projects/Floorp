@@ -53,7 +53,9 @@ struct nsEvent {
   // in widget relative coordinates, not modified by layout code.
   nsPoint     refPoint;               
   /// elapsed time, in milliseconds, from the time the system was started to the time the message was created
-  PRUint32    time;                                                
+  PRUint32    time;      
+  // flags to hold event flow stage and capture/bubble cancellation status
+  PRUint32    flags;
 };
 
 /**
@@ -463,7 +465,8 @@ enum nsDragDropEventStatus {
 #define NS_EVENT_FLAG_INIT          0x0001
 #define NS_EVENT_FLAG_BUBBLE        0x0002
 #define NS_EVENT_FLAG_CAPTURE       0x0004
-#define NS_EVENT_FLAG_POST_PROCESS  0x0008
+#define NS_EVENT_FLAG_STOP_DISPATCH 0x0008
+#define NS_EVENT_FLAG_NO_DEFAULT    0x0010
 
 // IME Constants  -- keep in synch with nsIDOMTextRange.h
 #define NS_TEXTRANGE_CARETPOSITION				0x01

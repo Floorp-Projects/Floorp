@@ -842,7 +842,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // We only do anything special for middle-mouse click (paste);
   // ignore all other events.
-  PRUint32 button = 0;
+  PRUint16 button = 0;
   uiEvent->GetButton(&button);
   if (button != 2)
     return NS_OK;

@@ -127,6 +127,12 @@ public:
 
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener) = 0;
 
+  /**
+  * Removes all events listeners registered by this instance of the listener
+  * manager.
+  */
+
+  virtual nsresult RemoveAllListeners() = 0;
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult); 

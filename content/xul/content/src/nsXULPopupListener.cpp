@@ -179,7 +179,7 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 nsresult
 XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  PRUint32 button;
+  PRUint16 button;
 
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aMouseEvent);

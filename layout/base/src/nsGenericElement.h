@@ -126,9 +126,9 @@ public:
 
   // nsIDOMEventTarget interface
   nsresult AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                            PRBool aPostProcess, PRBool aUseCapture);
+                            PRBool aUseCapture);
   nsresult RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                               PRBool aPostProcess, PRBool aUseCapture);
+                               PRBool aUseCapture);
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -398,15 +398,13 @@ public:
   }                                                                             \
   NS_IMETHOD AddEventListener(const nsString& aType,                            \
                               nsIDOMEventListener* aListener,                   \
-                              PRBool aPostProcess,                              \
                               PRBool aUseCapture) {                             \
-    return _g.AddEventListener(aType, aListener, aPostProcess, aUseCapture);    \
+    return _g.AddEventListener(aType, aListener, aUseCapture);    \
   }                                                                             \
   NS_IMETHOD RemoveEventListener(const nsString& aType,                         \
                                  nsIDOMEventListener* aListener,                \
-                                 PRBool aPostProcess,                           \
                                  PRBool aUseCapture) {                          \
-    return _g.RemoveEventListener(aType, aListener, aPostProcess, aUseCapture); \
+    return _g.RemoveEventListener(aType, aListener, aUseCapture); \
   }                                                                     
 
 #define NS_IMPL_ICONTENT_USING_GENERIC(_g)                                 \
