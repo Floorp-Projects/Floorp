@@ -317,26 +317,34 @@ nsAreaFrame::DidReflow(nsIPresContext&   aPresContext,
   nsresult  rv = nsBlockFrame::DidReflow(aPresContext, aStatus);
 
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView*  view;
-    GetView(view);
-
     // Size and position the view if requested
-    if (nsnull != view) {
-      // Position and size view relative to its parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      nsIViewManager  *vm;
-      view->GetViewManager(vm);
+    // XXX Not if we're being scrolled, because the scroll-frame handles
+    // this...
+    nsIAtom*  pseudoType;
+    mStyleContext->GetPseudoType(pseudoType);
+    PRBool  isScrolled = nsHTMLAtoms::scrolledContentPseudo == pseudoType;
+    NS_IF_RELEASE(pseudoType);
 
-      // Take into account any absolutely positioned children
-      nscoord xMost, yMost;
-      GetPositionedInfo(xMost, yMost);
-
-      vm->ResizeView(view, PR_MAX(mRect.width, xMost), PR_MAX(mRect.height, yMost));
-      vm->MoveViewTo(view, origin.x, origin.y);
-      NS_RELEASE(vm);
+    if (!isScrolled) {
+      nsIView*  view;
+      GetView(view);
+      if (nsnull != view) {
+        // Position and size view relative to its parent, not relative to our
+        // parent frame (our parent frame may not have a view).
+        nsIView* parentWithView;
+        nsPoint origin;
+        GetOffsetFromView(origin, parentWithView);
+        nsIViewManager  *vm;
+        view->GetViewManager(vm);
+  
+        // Take into account any absolutely positioned children
+        nscoord xMost, yMost;
+        GetPositionedInfo(xMost, yMost);
+  
+        vm->ResizeView(view, PR_MAX(mRect.width, xMost), PR_MAX(mRect.height, yMost));
+        vm->MoveViewTo(view, origin.x, origin.y);
+        NS_RELEASE(vm);
+      }
     }
   }
 
