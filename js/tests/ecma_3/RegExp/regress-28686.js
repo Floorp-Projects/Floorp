@@ -28,15 +28,12 @@ function test()
 {    
     enterFunc ("test");
 
-    printBugNumber (24712);
+    printBugNumber (28686);
     
-    var re = /([\S]+([ \t]+[\S]+)*)[ \t]*=[ \t]*[\S]+/;
-    var result = re.exec("Course_Creator = Test");
-
-    if (!result)
-        reportFailure ("exec() returned null.");
+    var str = 'foo "bar" baz';
+    reportCompare ('foo \\"bar\\" baz', str.replace(/([\'\"])/g, "\\$1"),
+                   "str.replace failed.");
     
     exitFunc ("test");
     
 }
-
