@@ -270,6 +270,13 @@ var gVersionPage = {
                                   "nextButtonText", true, 
                                   "cancelButtonText", true);
     document.documentElement.getButton("next").focus();
+    
+    // If the user has disabled Extension/Theme update checking, don't bother
+    // doing version compatibility updates first. 
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+      document.documentElement.advance();
 
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
@@ -414,6 +421,9 @@ var gUpdatePage = {
   
   onPageShow: function ()
   {
+    if (!gUpdateTypes)
+      gUpdateWizard.init();
+      
     gUpdateWizard.setButtonLabels(null, true, 
                                   "nextButtonText", true, 
                                   "cancelButtonText", true);
@@ -532,9 +542,11 @@ var gUpdatePage = {
       break;
     }
 
-    if (canFinish) {    
+    if (canFinish) {
       gUpdatePage.uninit();
-      if (gUpdateWizard.itemsToUpdate.length > 0 || gUpdateWizard.appUpdatesAvailable)
+      var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                              .getService(Components.interfaces.nsIUpdateService);
+      if (gUpdateWizard.itemsToUpdate.length > 0 || updates.appUpdatesAvailable)
         document.getElementById("checking").setAttribute("next", "found");
       document.documentElement.advance();
     }
@@ -552,6 +564,11 @@ var gFoundPage = {
   
   buildAddons: function ()
   {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+      return;
+
     var hasExtensions = false;
     var foundAddonsList = document.getElementById("found.addons.list");
     var uri = Components.classes["@mozilla.org/network/standard-url;1"]
@@ -887,9 +904,16 @@ var gOptionalPage = {
   onCommand: function (aEvent)
   {
     if (aEvent.target.localName == "checkbox") {
-      var index = parseInt(aEvent.target.getAttribute("index"));
-      var item = gUpdateWizard.appComps.optional.optional[index];
-      gUpdateWizard.appComps.upgraded.optional.push(item);
+      gUpdateWizard.appComps.upgraded.optional = [];
+      var optionalItemsList = document.getElementById("optionalItemsList");
+      var checkboxes = optionalItemsList.getElementsByTagName("checkbox");
+      for (var i = 0; i < checkboxes.length; ++i) {
+        if (checkboxes[i].checked) {
+          var index = parseInt(checkboxes[i].getAttribute("index"));
+          var item = gUpdateWizard.appComps.optional.optional[index];
+          gUpdateWizard.appComps.upgraded.optional.push(item);
+        }
+      }
     }
   },
   
