@@ -39,7 +39,7 @@ function findInPage(browser, rootSearchWindow, startSearchWindow)
   if (window.findDialog)
     window.findDialog.focus();
   else
-    window.findDialog = window.openDialog("chrome://global/content/finddialog.xul", "Find on Page", "chrome,resizable=no,dependent=yes", findInst);
+    window.findDialog = window.openDialog("chrome://global/content/finddialog.xul", "_blank", "chrome,resizable=no,dependent=yes", findInst);
 }
 
 function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
