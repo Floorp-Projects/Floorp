@@ -280,7 +280,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
     
-    if (mFTPProxyHost != "" && mFTPProxyPort > 0 &&
+    if (mFTPProxyHost.get()[0] && mFTPProxyPort > 0 &&
         !PL_strcasecmp(scheme, "ftp")) {
         rv = aProxy->SetProxyHost(mFTPProxyHost);
         if (NS_FAILED(rv)) return rv;
@@ -288,7 +288,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         return aProxy->SetProxyPort(mFTPProxyPort);
     }
     
-    if (mHTTPProxyHost != "" && mHTTPProxyPort > 0 &&
+    if (mHTTPProxyHost.get()[0] && mHTTPProxyPort > 0 &&
         !PL_strcasecmp(scheme, "http")) {
         rv = aProxy->SetProxyHost(mHTTPProxyHost);
         if (NS_FAILED(rv)) return rv;
@@ -296,7 +296,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         return aProxy->SetProxyPort(mHTTPProxyPort);
     }
     
-    if (mHTTPSProxyHost != "" && mHTTPSProxyPort > 0 &&
+    if (mHTTPSProxyHost.get()[0] && mHTTPSProxyPort > 0 &&
         !PL_strcasecmp(scheme, "https")) {
         rv = aProxy->SetProxyHost(mHTTPSProxyHost);
         if (NS_FAILED(rv)) return rv;
@@ -304,7 +304,7 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         return aProxy->SetProxyPort(mHTTPSProxyPort);
     }
     
-    if (mSOCKSProxyHost != "" && mSOCKSProxyPort > 0) {
+    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0) {
         rv = aProxy->SetProxyHost(mSOCKSProxyHost);
         if (NS_FAILED(rv)) return rv;
         aProxy->SetProxyType("socks");
