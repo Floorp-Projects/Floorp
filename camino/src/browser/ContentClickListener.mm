@@ -62,6 +62,9 @@
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
+#include "nsIURI.h"
+#include "nsIProtocolHandler.h"
+#include "nsNetUtil.h"
 
 // Common helper routines (also used by the context menu code)
 #include "CHGeckoUtils.h"
@@ -277,22 +280,25 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   mouseEvent->GetAltKey(&altKey);
 
   NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
-  NSURL* linkURL = [NSURL URLWithString: hrefStr];
   
   // Hack to determine specific protocols handled by Chimera in the frontend
   // until I can determine why the general unknown protocol handler handoff
   // between Necko and uriloader isn't happening. 
-  if (([[linkURL scheme] isEqualToString:@"http"])  ||
-     ([[linkURL scheme]  isEqualToString:@"https"]) ||
-     ([[linkURL scheme]  isEqualToString:@"ftp"])   ||
-     ([[linkURL scheme]  isEqualToString:@"about"]) ||
-     ([[linkURL scheme]  isEqualToString:@"file"]) ||
-     ([[linkURL scheme]  isEqualToString:@"data"]) ||
-     ([[linkURL scheme]  isEqualToString:@"javascript"]))
-  { 
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), href);
+  nsCAutoString scheme;
+  uri->GetScheme(scheme);
+
+  nsCAutoString contractId(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
+  contractId.Append(scheme);
+
+  nsCOMPtr<nsIProtocolHandler> handler = do_GetService(contractId.get());
+  if (handler) {
     // Fall through and do whatever we'd normally do with this kind of URL
-  } else
-    [[NSWorkspace sharedWorkspace] openURL:linkURL];
+  } else {
+    NSString* escapedString = (NSString*) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef) hrefStr, NULL, NULL, kCFStringEncodingUTF8);
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString: escapedString]];
+  }
 
   if ((metaKey && button == 0) || button == 1) {
     // The command key is down or we got a middle click.  Open the link in a new window or tab.
@@ -303,9 +309,9 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     if (shiftKey)
       loadInBackground = !loadInBackground;
     if (useTab)
-      [mBrowserController openNewTabWithURL: linkURL loadInBackground: loadInBackground];
+      [mBrowserController openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
     else
-      [mBrowserController openNewWindowWithURL: linkURL loadInBackground: loadInBackground];
+      [mBrowserController openNewWindowWithURL: hrefStr loadInBackground: loadInBackground];
   }
   else if (altKey) {
     // The user wants to save this link.
@@ -313,7 +319,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     CHGeckoUtils::GatherTextUnder(content, text);
 
     [mBrowserController saveURL: nil filterList: nil
-              url: linkURL suggestedFilename: [NSString stringWithCharacters: text.get()
+              url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
                                                                       length: nsCRT::strlen(text.get())]];
   }
 

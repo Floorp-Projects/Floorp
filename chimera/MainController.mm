@@ -146,7 +146,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   // Now open the new window.
   NSString* homePage = [mPreferenceManager homePage:YES];
-  BrowserWindowController* controller = [self openBrowserWindowWithURLString:homePage];
+  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage];
   if ([homePage isEqualToString: @"about:blank"])
     [controller focusURLBar];
   else
@@ -194,11 +194,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         // ----------------------
         NSWindow* mainWindow = [mApplication mainWindow];
         if (mainWindow) {
-          [[mainWindow windowController] loadURL: url];
+          [[mainWindow windowController] loadURL:[url absoluteString]];
           [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] setActive: YES];
         }
         else
-          [self openBrowserWindowWithURL: url];
+          [self openBrowserWindowWithURL:[url absoluteString]];
     }
 }
 
@@ -206,7 +206,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     NSWindow* mainWindow = [mApplication mainWindow];
     if (!mainWindow) {
-      [self openBrowserWindowWithURLString: @"about:blank"];
+      [self openBrowserWindowWithURL: @"about:blank"];
       mainWindow = [mApplication mainWindow];
     }
     
@@ -306,12 +306,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[[mApplication mainWindow] windowController] home: aSender];
 }
 
--(BrowserWindowController*)openBrowserWindowWithURLString: (NSString*)aURL
-{
-    return [self openBrowserWindowWithURL: [NSURL URLWithString:aURL]];
-}
-
--(BrowserWindowController*)openBrowserWindowWithURL: (NSURL*)aURL
+-(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL
 {
 	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   [browser loadURL: aURL];
@@ -365,7 +360,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       window = [mApplication mainWindow];
     }
     
-    [[window windowController] importBookmarks: url];
+    [[window windowController] importBookmarks: [url absoluteString]];
   }
 }
 
@@ -387,7 +382,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     NSWindow* mainWind = [mApplication mainWindow];
     if (!mainWind) {
-        [self openBrowserWindowWithURLString: @"about:blank"];
+        [self openBrowserWindowWithURL: @"about:blank"];
         mainWind = [mApplication mainWindow];
     }
 
@@ -398,7 +393,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   NSWindow* mainWindow = [mApplication mainWindow];
   if (!mainWindow) {
-    [self openBrowserWindowWithURLString: @"about:blank"];
+    [self openBrowserWindowWithURL: @"about:blank"];
     mainWindow = [mApplication mainWindow];
   }
 
@@ -428,9 +423,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     NSWindow* mainWindow = [mApplication mainWindow];
 
     if (mainWindow) {
-        [[mainWindow windowController] loadURL:[NSURL fileURLWithPath:filename]];
+        [[mainWindow windowController] loadURL:[[NSURL fileURLWithPath:filename] absoluteString]];
     } else {
-        [self openBrowserWindowWithURL:[NSURL fileURLWithPath:filename]];
+        [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString]];
     }
     
     return YES;
@@ -614,7 +609,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [urlString appendString:tmpString];
   }
   
-  [self openBrowserWindowWithURLString:urlString];
+  [self openBrowserWindowWithURL:urlString];
 }
 
 @end

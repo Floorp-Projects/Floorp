@@ -84,7 +84,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)load:(id)sender
 {
-  [mBrowserView loadURI:[NSURL URLWithString:[urlbar stringValue]] flags:NSLoadFlagsNone];
+  [mBrowserView loadURI:[urlbar stringValue] flags:NSLoadFlagsNone];
 }
 
 -(void)disconnectView
@@ -292,12 +292,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 }
 
-- (void)onLocationChange:(NSURL*)url 
+- (void)onLocationChange:(NSString*)urlSpec
 {
-  if ( mIsPrimary ) {
-    NSString* spec = [url absoluteString];
-    [mWindowController updateLocationFields:spec];
-  }
+  if (mIsPrimary)
+    [mWindowController updateLocationFields:urlSpec];
 }
 
 - (void)onStatusChange:(NSString*)aStatusString

@@ -608,12 +608,11 @@ nsCocoaBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIReques
   nsCAutoString spec;
   location->GetSpec(spec);
   NSString* str = [NSString stringWithCString:spec.get()];
-  NSURL* url = [NSURL URLWithString:str];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<NSBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:url];
+    [obj onLocationChange:str];
 
   return NS_OK;
 }
@@ -1030,14 +1029,13 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   return window;
 }
 
-- (void)loadURI:(NSURL *)url flags:(unsigned int)flags
+- (void)loadURI:(NSString *)urlSpec flags:(unsigned int)flags
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
   
-  NSString* spec = [url absoluteString];
-  int length = [spec length];
+  int length = [urlSpec length];
   PRUnichar* specStr = nsMemory::Alloc((length+1) * sizeof(PRUnichar));
-  [spec getCharacters:specStr];
+  [urlSpec getCharacters:specStr];
   specStr[length] = PRUnichar(0);
   
 
@@ -1137,7 +1135,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   }    
 }
 
-- (NSURL*)getCurrentURI
+// XXXbryner This isn't used anywhere. how is it different from getCurrentURLSpec?
+- (NSString*)getCurrentURI
 {
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
@@ -1152,9 +1151,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   
   const char* cstr = spec.get();
   NSString* str = [NSString stringWithCString:cstr];
-  NSURL* url = [NSURL URLWithString:str];
   
-  return url;
+  return str;
 }
 
 - (nsCocoaBrowserListener*)getCocoaBrowserListener
@@ -1280,10 +1278,10 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 }
 
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename
+            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), [[aURL absoluteString] cString]);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), [aURLSpec cString]);
   if (NS_FAILED(rv))
     return;
   
