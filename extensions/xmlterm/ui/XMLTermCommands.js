@@ -354,7 +354,7 @@ function DisplayAllOutput(flag) {
 
   if (!flag) {
     ScrollHomeKey(0,0);
-    ScrollEndKey(0,0);
+//    ScrollEndKey(0,0);
   }
 
   return (false);
