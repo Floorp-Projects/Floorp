@@ -121,7 +121,7 @@ namespace ICodeASM {
                                  string8 **rval);
         string8_citer
         parseJSClassOperand (string8_citer begin, string8_citer end,
-                             string8 **rval);
+                             JSTypes::JSType **rval);
         string8_citer
         parseJSStringOperand (string8_citer begin, string8_citer end,
                               JSTypes::JSString **rval);

@@ -297,7 +297,7 @@ namespace ICG {
         }
                 
         ICodeModule *complete(JSType *resultType);
-        void readICode(const char *fileName);
+        ICodeModule *readICode(const char *fileName);
 
         JSType *extractType(ExprNode *t);
         JSType *getParameterType(FunctionDefinition &function, int index);

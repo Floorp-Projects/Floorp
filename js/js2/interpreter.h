@@ -81,7 +81,7 @@ namespace Interpreter {
         ICodeModule* genCode(StmtNode *p, const String &fileName);
         JSValue readEvalFile(FILE* in, const String& fileName);
 
-        void loadClass(const char *fileName);
+        ICodeModule* loadClass(const char *fileName);
 
         const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op);
 
@@ -142,14 +142,16 @@ namespace Interpreter {
             // copy caller's parameter list to initial registers.
             JSValues::iterator dest = mRegisters.begin();
             *dest++ = thisArg;
-            const JSValues& params = caller->mRegisters;
-            for (ArgumentList::const_iterator src = list->begin(), 
-                     end = list->end(); src != end; ++src, ++dest) {
-                Register r = (*src).first.first;
-                if (r != NotARegister)
-                    *dest = params[r];
-                else
-                    *dest = JSValue(JSValue::uninitialized_tag);
+            if (list) {
+                const JSValues& params = caller->mRegisters;
+                for (ArgumentList::const_iterator src = list->begin(), 
+                         end = list->end(); src != end; ++src, ++dest) {
+                    Register r = (*src).first.first;
+                    if (r != NotARegister)
+                        *dest = params[r];
+                    else
+                        *dest = JSValue(JSValue::uninitialized_tag);
+                }
             }
         }
 

@@ -182,7 +182,9 @@ static JSValue loadxml(Context *cx, const JSValues &argv)
                 JSString& fileName = *val.string;
                 std::string str(fileName.length(), char());
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
-                cx->loadClass(str.c_str());
+                ICodeModule *icm = cx->loadClass(str.c_str());
+                if (icm)
+                    result = JSValue(new JSFunction(icm));
             }
         }
     }

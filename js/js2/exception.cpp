@@ -41,8 +41,8 @@ namespace JavaScript {
     void
     JSException::toString8 (string8 &rval)
     {
-        rval = *exception_types[mType] + " Exception: " +
-            *exception_msgs[mID];
+        rval = string8(exception_types[mType]) + " Exception: " +
+            string8(exception_msgs[mID]);
         if (mSource.size() != 0)
             rval += " in " + mSource;
     }
