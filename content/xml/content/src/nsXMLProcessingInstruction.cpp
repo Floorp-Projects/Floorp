@@ -560,7 +560,7 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
   nsAutoString mimeType;
   nsAutoString notUsed;
   SplitMimeType(type, mimeType, notUsed);
-  if (!mimeType.EqualsIgnoreCase("text/css")) {
+  if (!mimeType.IsEmpty() && !mimeType.EqualsIgnoreCase("text/css")) {
     aType.Assign(type);
     return;
   }
