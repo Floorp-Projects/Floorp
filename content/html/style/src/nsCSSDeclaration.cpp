@@ -345,10 +345,10 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mWordSpacing.AppendToString(buffer, PROP_WORD_SPACING);
   mLetterSpacing.AppendToString(buffer, PROP_LETTER_SPACING);
   mDecoration.AppendToString(buffer, PROP_TEXT_DECORATION);
-  mVertAlign.AppendToString(buffer, PROP_VERTICAL_ALIGN);
-  mTransform.AppendToString(buffer, PROP_TEXT_TRANSFORM);
+  mVerticalAlign.AppendToString(buffer, PROP_VERTICAL_ALIGN);
+  mTextTransform.AppendToString(buffer, PROP_TEXT_TRANSFORM);
   mTextAlign.AppendToString(buffer, PROP_TEXT_ALIGN);
-  mIndent.AppendToString(buffer, PROP_TEXT_INDENT);
+  mTextIndent.AppendToString(buffer, PROP_TEXT_INDENT);
   mLineHeight.AppendToString(buffer, PROP_LINE_HEIGHT);
   mWhiteSpace.AppendToString(buffer, PROP_WHITE_SPACE);
   fputs(buffer, out);
@@ -760,10 +760,10 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_WORD_SPACING:     mText->mWordSpacing = aValue;    break;
           case PROP_LETTER_SPACING:   mText->mLetterSpacing = aValue;  break;
           case PROP_TEXT_DECORATION:  mText->mDecoration = aValue;     break;
-          case PROP_VERTICAL_ALIGN:   mText->mVertAlign = aValue;      break;
-          case PROP_TEXT_TRANSFORM:   mText->mTransform = aValue;      break;
+          case PROP_VERTICAL_ALIGN:   mText->mVerticalAlign = aValue;  break;
+          case PROP_TEXT_TRANSFORM:   mText->mTextTransform = aValue;  break;
           case PROP_TEXT_ALIGN:       mText->mTextAlign = aValue;      break;
-          case PROP_TEXT_INDENT:      mText->mIndent = aValue;         break;
+          case PROP_TEXT_INDENT:      mText->mTextIndent = aValue;     break;
           case PROP_LINE_HEIGHT:      mText->mLineHeight = aValue;     break;
           case PROP_WHITE_SPACE:      mText->mWhiteSpace = aValue;     break;
         }
@@ -1111,10 +1111,10 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_WORD_SPACING:     aValue = mText->mWordSpacing;    break;
           case PROP_LETTER_SPACING:   aValue = mText->mLetterSpacing;  break;
           case PROP_TEXT_DECORATION:  aValue = mText->mDecoration;     break;
-          case PROP_VERTICAL_ALIGN:   aValue = mText->mVertAlign;      break;
-          case PROP_TEXT_TRANSFORM:   aValue = mText->mTransform;      break;
+          case PROP_VERTICAL_ALIGN:   aValue = mText->mVerticalAlign;  break;
+          case PROP_TEXT_TRANSFORM:   aValue = mText->mTextTransform;  break;
           case PROP_TEXT_ALIGN:       aValue = mText->mTextAlign;      break;
-          case PROP_TEXT_INDENT:      aValue = mText->mIndent;         break;
+          case PROP_TEXT_INDENT:      aValue = mText->mTextIndent;     break;
           case PROP_LINE_HEIGHT:      aValue = mText->mLineHeight;     break;
           case PROP_WHITE_SPACE:      aValue = mText->mWhiteSpace;     break;
         }
