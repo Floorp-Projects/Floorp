@@ -88,23 +88,34 @@ function commonDialogOnLoad()
   
   switch (nEditFields) {
     case 2:
-      var password2Container = document.getElementById("password2EditField");
-      password2Container.removeAttribute("collapsed");
-      var password2Field = document.getElementById("dialog.password2");
-      password2Field.value = gCommonDialogParam.GetString(7);
-      
-      var password2Label = gCommonDialogParam.GetString(5);
-      if (password2Label)
-        setElementText("password2.text", password2Label);
-        
       var containerID, fieldID, labelID;
+      
       if (gCommonDialogParam.GetInt(4) == 1) {
         // two password fields ('password' and 'retype password')
+        var password2Container = document.getElementById("password2EditField");
+        password2Container.removeAttribute("collapsed");
+        var password2Field = document.getElementById("dialog.password2");
+        password2Field.value = gCommonDialogParam.GetString(7);
+        
+        var password2Label = gCommonDialogParam.GetString(5);
+        if (password2Label)
+          setElementText("password2.text", password2Label);
+
         containerID = "password1EditField";
         fieldID = "dialog.password1";
         labelID = "password1.text";
       }
       else {
+        // one login field and one password field
+        var passwordContainer = document.getElementById("password1EditField");
+        passwordContainer.removeAttribute("collapsed");
+        var passwordField = document.getElementById("dialog.password1");
+        passwordField.value = gCommonDialogParam.GetString(7);
+
+        var passwordLabel = gCommonDialogParam.GetString(5);
+        if (passwordLabel)
+          setElementText("password1.text", passwordLabel);
+
         containerID = "loginEditField";
         fieldID = "dialog.loginname";
         labelID = "login.text";
@@ -207,11 +218,21 @@ function commonDialogOnOK()
 {
   gCommonDialogParam.SetInt(0, 0);
   var numEditfields = gCommonDialogParam.GetInt(3);
+  var editfield1Password = gCommonDialogParam.GetInt(4);
   if (numEditfields == 2) {
-    var editField2 = document.getElementById("dialog.password2");
+    var editField2;
+    if (editfield1Password == 1)
+      {
+        // we had two password fields
+        editField2 = document.getElementById("dialog.password2");
+      }
+    else
+      {
+        // we only had one password field (and one login field)
+        editField2 = document.getElementById("dialog.password1");
+      }
     gCommonDialogParam.SetString(7, editField2.value);
   }
-  var editfield1Password = gCommonDialogParam.GetInt(4);
   var editField1 = editfield1Password == 1 ? document.getElementById("dialog.password1") :
                                              document.getElementById("dialog.loginname");
   gCommonDialogParam.SetString(6, editField1.value);
