@@ -4625,7 +4625,7 @@ MOZ_ARG_ENABLE_STRING(meta-components,
   [ MOZ_META_COMPONENTS=`echo $enableval | sed 's/,/ /g'` ] )
 
 if test -n "$MOZ_STATIC_COMPONENTS" && test -n "$MOZ_META_COMPONENTS"; then
-    AC_MSG_ERROR([Simultaneous use of static-components & meta-components is not supported.])
+    AC_MSG_ERROR([Simultaneous use of meta-module-components & meta-components is not supported.])
 fi
 
 case "$target" in
