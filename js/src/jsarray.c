@@ -820,8 +820,10 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_GetLengthProperty(cx, obj, &len))
 	return JS_FALSE;
-    if (len == 0)
+    if (len == 0) {
+        *rval = OBJECT_TO_JSVAL(obj);
         return JS_TRUE;
+    }
 
     /*
      * Test for size_t overflow, which could lead to indexing beyond the end
