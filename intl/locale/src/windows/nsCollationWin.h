@@ -29,6 +29,8 @@ class nsCollationWin : public nsICollation {
 
 protected:
   nsCollation   *mCollation;  // XP collation class
+  PRBool        mW_API;       // If Windows95 or 98, we cannot use W version of API
+  nsString      mCharset;     // for unicode conversion
   PRUint32      mLCID;        // Windows platform locale ID
 
 public: 
