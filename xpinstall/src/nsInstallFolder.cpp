@@ -116,30 +116,32 @@ nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRel
         // if it already exists...
         nsCOMPtr<nsILocalFile> dirCheck;
         NS_NewLocalFile(aFolderID.ToNewCString(), getter_AddRefs(dirCheck));
-        dirCheck->IsDirectory(&flagIsDir);
-        dirCheck->Exists(&flagExists);
-        if ( flagIsDir || !flagExists )
+        if (dirCheck)
         {
-            mFileSpec = dirCheck;
-
-            if (mFileSpec && aRelativePath.Length() > 0 )
+            dirCheck->IsDirectory(&flagIsDir);
+            dirCheck->Exists(&flagExists);
+            if ( flagIsDir || !flagExists )
             {
-                // we've got a subdirectory to tack on
-                nsString morePath(aRelativePath);
+                mFileSpec = dirCheck;
 
-                //if ( morePath.Last() != '/' || morePath.Last() != '\\' )
-                //    morePath.AppendWithConversion('/');
+                if (mFileSpec && aRelativePath.Length() > 0 )
+                {
+                    // we've got a subdirectory to tack on
+                    nsString morePath(aRelativePath);
 
-                mFileSpec->Append(morePath.ToNewCString());
+                    //if ( morePath.Last() != '/' || morePath.Last() != '\\' )
+                    //    morePath.AppendWithConversion('/');
+
+                    mFileSpec->Append(morePath.ToNewCString());
+                }
+
+                // make sure that the directory is created. 
+                // XXX: **why** are we creating these? they might not be used!
+                // nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
             }
-
-            // make sure that the directory is created. 
-            // XXX: **why** are we creating these? they might not be used!
-            // nsFileSpec(mFileSpec->GetCString(), PR_TRUE);
         }
     }
 }
-
 
 nsInstallFolder::nsInstallFolder(nsInstallFolder& inFolder, const nsString& subString)
 {
@@ -291,17 +293,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
             case 109: ///////////////////////////////////////////////////////////  File URL
                 {
-                    if (aRelativePath.IsEmpty())
-                    {
-                        mFileSpec = nsnull;
-                        return;
-                    }
-                    
                     nsCOMPtr<nsILocalFile> temp;
-
-                    nsString tempFileURLString = aFolderID;
-                    tempFileURLString += aRelativePath;
-
                     NS_NewLocalFile(aRelativePath.ToNewCString(), getter_AddRefs(temp));
                     mFileSpec = temp;
 
