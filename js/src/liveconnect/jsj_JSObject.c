@@ -774,7 +774,7 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
 error:
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks && JSJ_callbacks->exit_js)
-        JSJ_callbacks->exit_js(jEnv);
+        JSJ_callbacks->exit_js(jEnv, cx);
 
 entry_failure:
     if (err_msg) {
@@ -823,7 +823,7 @@ jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JSErrorReporter original_
 
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks && JSJ_callbacks->exit_js)
-        JSJ_callbacks->exit_js(jEnv);
+        JSJ_callbacks->exit_js(jEnv, cx);
 
     return JS_TRUE;
 }
