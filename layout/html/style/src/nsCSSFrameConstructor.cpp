@@ -106,6 +106,26 @@
 #include "nsMathMLParts.h"
 #endif
 
+#ifdef MOZ_SVG
+#include "nsSVGAtoms.h"
+#endif
+
+#ifdef MOZ_SVG
+#include "nsSVGAtoms.h"
+#include "nsSVGContainerFrame.h"
+#include "nsPolygonFrame.h"
+#include "nsPolylineFrame.h"
+
+nsresult
+NS_NewSVGContainerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot );
+
+nsresult
+NS_NewPolygonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
+NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+#endif
+
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #include "nsTreeFrame.h"
@@ -2440,7 +2460,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
     return PR_TRUE;
   }
 #endif
-  
+
   // we should check for display type as well - later
   return PR_FALSE;
 }
@@ -6263,6 +6283,115 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 }
 #endif // MOZ_MATHML
 
+// SVG 
+#ifdef MOZ_SVG
+nsresult
+nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
+                                          nsIPresContext*          aPresContext,
+                                          nsFrameConstructorState& aState,
+                                          nsIContent*              aContent,
+                                          nsIFrame*                aParentFrame,
+                                          nsIAtom*                 aTag,
+                                          nsIStyleContext*         aStyleContext,
+                                          nsFrameItems&            aFrameItems)
+{
+  PRBool    processChildren = PR_TRUE;  // Whether we should process child content.
+                                        // MathML frames are inline frames.
+                                        // processChildren = PR_TRUE for inline frames.
+                                        // see case NS_STYLE_DISPLAY_INLINE in
+                                        // ConstructFrameByDisplayType()
+  
+  nsresult  rv = NS_OK;
+  PRBool    isAbsolutelyPositioned = PR_FALSE;
+  PRBool    isFixedPositioned = PR_FALSE;
+  PRBool    isReplaced = PR_FALSE;
+
+  NS_ASSERTION(aTag != nsnull, "null SVG tag");
+  if (aTag == nsnull)
+    return NS_OK;
+
+  // Make sure that we remain confined in the MathML world
+  PRInt32 nameSpaceID;
+  rv = aContent->GetNameSpaceID(nameSpaceID);
+  if (NS_FAILED(rv) || nameSpaceID != nsSVGAtoms::nameSpaceID) 
+    return NS_OK;
+
+  // Initialize the new frame
+  nsIFrame* newFrame = nsnull;
+  nsIFrame* ignore = nsnull;
+  //nsSVGTableCreator svgTableCreator(aPresShell); // Used to make table views.
+ 
+  // See if the element is absolute or fixed positioned
+  const nsStylePosition* position = (const nsStylePosition*)
+    aStyleContext->GetStyleData(eStyleStruct_Position);
+  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+    isAbsolutelyPositioned = PR_TRUE;
+  }
+  else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+    isFixedPositioned = PR_TRUE;
+  }
+  if (aTag == nsSVGAtoms::g)
+     rv = NS_NewSVGContainerFrame(aPresShell, &newFrame);
+  else if (aTag == nsSVGAtoms::polygon)
+     rv = NS_NewPolygonFrame(aPresShell, &newFrame);
+  else if (aTag == nsSVGAtoms::polyline)
+     rv = NS_NewPolylineFrame(aPresShell, &newFrame);
+
+  // If we succeeded in creating a frame then initialize it, process its
+  // children (if requested), and set the initial child list
+  if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+    // If the frame is a replaced element, then set the frame state bit
+    if (isReplaced) {
+      nsFrameState  state;
+      newFrame->GetFrameState(&state);
+      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+    }
+
+    nsIFrame* geometricParent = isAbsolutelyPositioned
+                              ? aState.mAbsoluteItems.containingBlock
+                              : aParentFrame;
+    InitAndRestoreFrame(aPresContext, aState, aContent, 
+                        geometricParent, aStyleContext, nsnull, newFrame);
+
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Add the new frame to our list of frame items.
+    aFrameItems.AddChild(newFrame);
+
+    // Process the child content if requested
+    nsFrameItems childItems;
+    if (processChildren) {
+      rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame, PR_TRUE,
+                           childItems, PR_FALSE);
+    }
+
+    // Set the frame's initial child list
+    newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+  
+    // If the frame is absolutely positioned then create a placeholder frame
+    if (isAbsolutelyPositioned || isFixedPositioned) {
+      nsIFrame* placeholderFrame;
+
+      CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent, newFrame, 
+                                aStyleContext, aParentFrame, &placeholderFrame);
+
+      // Add the positioned frame to its containing block's list of child frames
+      if (isAbsolutelyPositioned) {
+        aState.mAbsoluteItems.AddChild(newFrame);
+      } else {
+        aState.mFixedItems.AddChild(newFrame);
+      }
+
+      // Add the placeholder frame to the flow
+      aFrameItems.AddChild(placeholderFrame);
+    }
+  }
+  return rv;
+}
+#endif // MOZ_SVG
+
 nsresult
 nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell, 
                                       nsIPresContext*          aPresContext,
@@ -6319,6 +6448,15 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                                (lastChild == aFrameItems.lastChild))) {
         rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                                  tag, styleContext, aFrameItems);
+      }
+#endif
+
+// SVG
+#ifdef MOZ_SVG
+      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                               (lastChild == aFrameItems.lastChild))) {
+        rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                   tag, styleContext, aFrameItems);
       }
 #endif

@@ -569,6 +569,18 @@ protected:
 
 #endif
 
+// SVG - rods
+#ifdef MOZ_SVG
+  nsresult ConstructSVGFrame(nsIPresShell*            aPresShell,
+                                nsIPresContext*          aPresContext,
+                                nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aParentFrame,
+                                nsIAtom*                 aTag,
+                                nsIStyleContext*         aStyleContext,
+                                nsFrameItems&            aFrameItems);
+#endif
+
   nsresult ConstructFrameByDisplayType(nsIPresShell* aPresShell, 
                                        nsIPresContext*          aPresContext,
                                        nsFrameConstructorState& aState,
