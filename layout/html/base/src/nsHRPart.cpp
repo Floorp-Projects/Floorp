@@ -235,12 +235,20 @@ HRuleFrame::Reflow(nsIPresContext&      aPresContext,
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
   AddBordersAndPadding(&aPresContext, aDesiredSize);
 
-  // HR's do not impact the max-element-size, otherwise tables behave
-  // badly. This makes sense they are springy.
+  // HR's do not impact the max-element-size, unless a width is specified
+  // otherwise tables behave badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
     nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
-    aDesiredSize.maxElementSize->width = onePixel;
-    aDesiredSize.maxElementSize->height = onePixel;
+    nsSize size; 
+    PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, size);
+    if (NS_SIZE_HAS_WIDTH & ss) {
+      aDesiredSize.maxElementSize->width = size.width;
+      aDesiredSize.maxElementSize->height = onePixel;
+    }
+    else {
+      aDesiredSize.maxElementSize->width = onePixel;
+      aDesiredSize.maxElementSize->height = onePixel;
+    }
   }
 
   aStatus = NS_FRAME_COMPLETE;
@@ -259,7 +267,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
-      aDesiredSize.width = 1;
+      aDesiredSize.width =  nscoord(aPresContext->GetPixelsToTwips());
     }
     else {
       aDesiredSize.width = aReflowState.maxSize.width;
