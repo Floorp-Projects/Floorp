@@ -52,11 +52,6 @@ public:
    */
   nsUnicodeToTeXCMSYt1();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------

@@ -54,12 +54,6 @@ nsUnicodeToMathematica3::nsUnicodeToMathematica3()
 {
 }
 
-nsresult nsUnicodeToMathematica3::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMathematica3();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
