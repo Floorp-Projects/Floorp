@@ -16,6 +16,16 @@
  * Reserved.
  */
 
+/*
+
+  This is a test script that uses the <tt>nsStreamDataSource</tt>
+  class to read a file from the local file system (using a "file:"
+  URL) and write it back. The idea is that the RDF that gets written
+  out should be equivalent (but not necessarily identical) to the RDF
+  that was read in.
+
+ */
+
 #include <io.h>
 #include "nsIContent.h"
 #include "nsIInputStream.h"
