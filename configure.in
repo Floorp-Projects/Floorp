@@ -1220,7 +1220,6 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
-    MOZ_ENABLE_COREXFONTS=
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 
@@ -3242,6 +3241,10 @@ case "$MOZ_WIDGET_TOOLKIT" in
 gtk)
 	MOZ_ENABLE_GTK=1
     MOZ_ENABLE_XREMOTE=1
+    if test "$_HAVE_FREETYPE2"; then
+        MOZ_ENABLE_FREETYPE2=1
+    fi
+    MOZ_ENABLE_XPRINT=1
     TK_CFLAGS='$(MOZ_GTK_CFLAGS)'
     TK_LIBS='$(MOZ_GTK_LDFLAGS)'
 	AC_DEFINE(MOZ_WIDGET_GTK)
@@ -3250,6 +3253,7 @@ gtk)
 gtk2)
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
+    MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-}
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
@@ -3257,6 +3261,10 @@ gtk2)
 
 xlib)
 	MOZ_ENABLE_XLIB=1
+    if test "$_HAVE_FREETYPE2"; then
+        MOZ_ENABLE_FREETYPE2=1
+    fi
+    MOZ_ENABLE_XPRINT=1
 	TK_CFLAGS='$(MOZ_XLIB_CFLAGS)'
 	TK_LIBS='$(MOZ_XLIB_LDFLAGS)'
 	AC_DEFINE(MOZ_WIDGET_XLIB)
@@ -3264,6 +3272,10 @@ xlib)
 
 qt)
     MOZ_ENABLE_QT=1
+    if test "$_HAVE_FREETYPE2"; then
+        MOZ_ENABLE_FREETYPE2=1
+    fi
+    MOZ_ENABLE_XPRINT=1
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LDFLAGS)'
     AC_DEFINE(MOZ_WIDGET_QT)
@@ -3672,10 +3684,7 @@ dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(freetype2,
 [  --disable-freetype2     Disable FreeType2 support ],
     MOZ_ENABLE_FREETYPE2=,
-    MOZ_ENABLE_FREETYPE2=1,
-    [if test "$MOZ_X11" -a "$_HAVE_FREETYPE2"; then 
-         MOZ_ENABLE_FREETYPE2=1
-     fi])
+    MOZ_ENABLE_FREETYPE2=1)
 
 if test "$MOZ_ENABLE_FREETYPE2" && test -z "$MOZ_X11" -o -z "$_HAVE_FREETYPE2"; then
     AC_MSG_ERROR([Cannot enable FreeType2 support for non-X11 toolkits or if FreeType2 is not detected.])
@@ -3747,9 +3756,14 @@ then
 fi
 
 dnl ========================================================
-dnl = disabling x11 core support, enabled by default
+dnl = x11 core font support (default and ability to enable depend on toolkit)
 dnl ========================================================
-MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}
+if test "$MOZ_X11"
+then
+    MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}
+else
+    MOZ_ENABLE_COREXFONTS=
+fi
 if test "$MOZ_ENABLE_COREXFONTS"
 then
     AC_DEFINE(MOZ_ENABLE_COREXFONTS)
@@ -3770,8 +3784,6 @@ dnl = Xprint print module
 dnl ========================================================
 if test "$MOZ_X11"
 then
-    MOZ_ENABLE_XPRINT=1
-
     _SAVE_LDFLAGS="$LDFLAGS"
     LDFLAGS="$XLDFLAGS $LDFLAGS"
     AC_CHECK_LIB(Xp, XpGetPrinterList, [XPRINT_LIBS="-lXp"],
