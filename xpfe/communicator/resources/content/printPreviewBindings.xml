@@ -52,7 +52,7 @@
       <xul:button label="&print.label;" oncommand="BrowserPrint();"/>
 
       <xul:button label="&pageSetup.label;" 
-        oncommand="BrowserPrintSetup();"/>
+        oncommand="doPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
@@ -77,18 +77,30 @@
       <xul:vbox align="center" pack="center">
         <xul:label value="&scale.label;"/>
       </xul:vbox>
+
       <xul:hbox align="center" pack="center">
-        <xul:textbox size="3" align="end" value="100" lastvalid="100"
-          onblur="scale(0, this.value);"
-          onkeypress="if (event.keyCode==13) parentNode.parentNode.scale(0, this.value);"/>
-        <xul:label value="&percent.label;"/>
+        <xul:menulist crop="none" 
+          oncommand="parentNode.parentNode.scale(this.selectedItem.value);">
+          <xul:menupopup>
+            <xul:menuitem value="0.3" label="&p30.label;"/>
+            <xul:menuitem value="0.4" label="&p40.label;"/>
+            <xul:menuitem value="0.5" label="&p50.label;"/>
+            <xul:menuitem value="0.6" label="&p60.label;"/>
+            <xul:menuitem value="0.7" label="&p70.label;"/>
+            <xul:menuitem value="0.8" label="&p80.label;"/>
+            <xul:menuitem value="0.9" label="&p90.label;"/>
+            <xul:menuitem value="1" label="&p100.label;"/>
+            <xul:menuitem value="1.25" label="&p125.label;"/>
+            <xul:menuitem value="1.5" label="&p150.label;"/>
+            <xul:menuitem value="1.75" label="&p175.label;"/>
+            <xul:menuitem value="2" label="&p200.label;"/>
+            <xul:menuseparator/>
+            <xul:menuitem flex="1" value="ShrinkToFit" 
+              label="&ShrinkToFit.label;"/>
+            <xul:menuitem value="Custom" label="&Custom.label;"/>
+          </xul:menupopup>
+        </xul:menulist>
       </xul:hbox>
-      <xul:vbox align="center" pack="center">
-        <xul:toolbarbutton class="toolbarbutton-icon up-arrow" 
-          oncommand="parentNode.parentNode.scale(1, 0);"/>
-        <xul:toolbarbutton class="toolbarbutton-icon down-arrow" 
-          oncommand="parentNode.parentNode.scale(-1, 0);"/>
-      </xul:vbox>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:vbox align="center" pack="center">
@@ -106,6 +118,7 @@
       <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:button label="&close.label;" 
         oncommand="BrowserExitPrintPreview();"/>
+      <xul:data value="&customPrompt.title;"/>
     </content>
 
     <implementation>
@@ -121,17 +134,23 @@
       <field name="mTotalPages">
         document.getAnonymousNodes(this)[5].childNodes[2]
       </field>
-      <field name="mScaleTextBox">
+      <field name="mScaleLabel">
+        document.getAnonymousNodes(this)[9].firstChild
+      </field>
+      <field name="mScaleCombobox">
         document.getAnonymousNodes(this)[10].firstChild
       </field>
       <field name="mOrientButtonsBox">
-        document.getAnonymousNodes(this)[13].firstChild
+        document.getAnonymousNodes(this)[12].firstChild
       </field>
       <field name="mPortaitButton">
         this.mOrientButtonsBox.childNodes[0]
       </field>
       <field name="mLandscapeButton">
         this.mOrientButtonsBox.childNodes[1]
+      </field>
+      <field name="mCustomTitle">
+        document.getAnonymousNodes(this)[16].firstChild
       </field>
       
       <constructor>
@@ -141,13 +160,7 @@
         var print = _getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
 
-        var settings = print.currentPrintSettings;
-        if (settings.orientation == 
-            Components.interfaces.nsIPrintSettings.kLandscapeOrientation)
-          this.orient('landscape');
-
-        var normalizedScale = parseInt(settings.scaling * 100);
-        this.mScaleTextBox.value = normalizedScale;
+        _getValuesFromPS();
 
         // XXX TEMPORARY
         // XXX Until bug 119491 ("Cleanup global vars in PostScript and Xprint
@@ -176,6 +189,17 @@
         // XXX TEMPORARY
       ]]>
       </constructor>
+
+      <method name="doPageSetup">
+        <body>
+        <![CDATA[
+          var didOK = BrowserPrintSetup();
+          if (didOK) {
+            this._getValuesFromPS();
+          }
+        ]]>
+        </body>
+      </method>
 
       <method name="navigate">
         <parameter name="aDirection"/>
@@ -252,43 +276,81 @@
         </body>
       </method>
 
-      <method name="scale">
-        <parameter name="aDirection"/>
+      <method name="promptForScaleValue">
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          this._debug("scale: " + aDirection + " " + aValue);
-
-          // we use only one of aDirection or aValue
-          var newValue;
-          if (aDirection)
-            newValue = parseInt(this.mScaleTextBox.value) + aDirection;
-          else
-            newValue = parseInt(aValue);
-          
-          // bounds check the new value
-          if (newValue >= 10 && newValue <= 500)
-          {
-            this.mScaleTextBox.value = newValue;
-
-            // store the valid page number for future use to replace 
-            // the textbox value if erroneous input made it in
-            this.mScaleTextBox.setAttribute("lastvalid", newValue);
-
-            var print = this._getWebBrowserPrint();
-            var settings = print.currentPrintSettings;
-            settings.scaling = newValue/100.0;
-            print.printPreview(settings);
-
-            // update total number of pages since this could have changed
-            this.mTotalPages.value = print.printPreviewNumPages;
+          var value = Math.round(aValue);
+          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+          var promptStr = this.mScaleLabel.value;
+          var renameTitle = this.mCustomTitle;
+          var result = {value:value};
+          var confirmed = promptService.prompt(window, renameTitle, promptStr, result, null, {value:value});
+          this._debug("confirmed: " + confirmed);
+          if (!confirmed || (!result.value) || (result.value == "") || result.value == value) {
+            return(-1);
           }
-          else
-          {
-            // restore last valid value if erroneous input was found
-            this.mScaleTextBox.value = 
-              this.mScaleTextBox.getAttribute("lastvalid");
+          return result.value;
+        ]]>
+        </body>
+      </method>
+
+      <method name="setScaleCombobox">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var scaleValues = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.25, 1.5, 1.75, 2];
+
+          aValue = new Number(aValue);
+
+          var inx = -1;
+          for (var i=0;i<scaleValues.length;i++) {
+            if (aValue == scaleValues[i]) {
+              this.mScaleCombobox.selectedIndex = i;
+              return;
+            }
           }
+          this.mScaleCombobox.value = "Custom";
+        ]]>
+        </body>
+      </method>
+
+      <method name="scale">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          this._debug("scale: " + aValue);
+
+          var print = this._getWebBrowserPrint();
+          var settings = print.currentPrintSettings;
+          if (aValue == "ShrinkToFit") {
+            if (!settings.shrinkToFit) {
+              settings.shrinkToFit = true;
+              print.printPreview(settings);
+              this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
+              return;
+            } else {
+              return;
+            }
+          }
+
+          if (aValue == "Custom") {
+            aValue = this.promptForScaleValue(settings.scaling * 100.0);
+            this._debug("promptForScaleValue "+aValue);
+            if (aValue >= 10) {
+              aValue /= 100.0;
+            } else {
+              this.mScaleCombobox.selectedIndex = this.mScaleCombobox.getAttribute('lastValidInx');
+              return;
+            }
+          }
+
+          this.setScaleCombobox(aValue);
+          this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
+
+          settings.shrinkToFit = false;
+          settings.scaling = aValue;
+          print.printPreview(settings);
         ]]>
         </body>
       </method>
@@ -331,6 +393,28 @@
           var ifreq = _content.QueryInterface(
             Components.interfaces.nsIInterfaceRequestor);
           return ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_getValuesFromPS">
+        <body>
+        <![CDATA[
+          var print = this._getWebBrowserPrint();
+          var settings = print.currentPrintSettings;
+
+          var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
+
+          this.mPortaitButton.checked = isPortrait;
+          this.mLandscapeButton.checked = !isPortrait;
+
+          if (settings.shrinkToFit) {
+            this._debug("setting ShrinkToFit");
+            this.mScaleCombobox.value = "ShrinkToFit";
+          } else {
+            this.setScaleCombobox(settings.scaling);
+          }
+
         ]]>
         </body>
       </method>
