@@ -479,9 +479,6 @@
             if (evt.target != this.contentDocument)
               return;
 
-            if (this.contentDocument.title == "")
-              return;
-
             var i = 0;
             for ( ; i < this.parentNode.childNodes.length; i++) {
               if (this.parentNode.childNodes[i] == this)
@@ -490,7 +487,9 @@
 
             var tabBrowser = this.parentNode.parentNode.parentNode;
             var tab = tabBrowser.mTabContainer.childNodes[i];
-            tab.setAttribute("label", this.contentDocument.title);
+
+            if (this.contentDocument.title)
+              tab.setAttribute("label", this.contentDocument.title);
 
             if (tab == tabBrowser.mCurrentTab)
               this.parentNode.parentNode.parentNode.updateTitlebar();
