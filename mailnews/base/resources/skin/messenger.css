@@ -27,16 +27,6 @@
  display: none;
 } 
 
-treeitem[selected="true"] > treerow { 
-	color: black;
-	background-color: #CCCCCC;
-}
-
-tree:focus treeitem[selected="true"] > treerow { 
-	color: white;
-	background-color: #336699;
-}
-
 spring.spacer {
     width: 5px;
     height: 5px;

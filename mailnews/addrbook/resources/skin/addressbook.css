@@ -110,18 +110,9 @@ tree {
 	border-left: 1px solid transparent;
 }
 
-tree:focus { 
-	border-left: 1px solid #336699;
-}
-
 treeitem[selected="true"] > treerow { 
 	color: black;
 	background-color: #CCCCCC;
-}
-
-tree:focus treeitem[selected="true"] > treerow { 
-	color: white;
-	background-color: #336699;
 }
 
 tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
