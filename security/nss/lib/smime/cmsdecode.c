@@ -34,7 +34,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.5 2003/04/28 17:56:46 relyea%netscape.com Exp $
+ * $Id: cmsdecode.c,v 1.6 2003/05/14 22:34:21 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -61,7 +61,7 @@ struct NSSCMSDecoderContextStr {
 
 struct NSSCMSDecoderDataStr {
     SECItem data; 	/* must be first */
-    SECItem storage;
+    unsigned int totalBufferSize;
 };
 
 typedef struct NSSCMSDecoderDataStr NSSCMSDecoderData;
@@ -89,8 +89,7 @@ nss_cms_create_decoder_data(PRArenaPool *poolp)
     }
     decoderData->data.data = NULL;
     decoderData->data.len = 0;
-    decoderData->storage.data = NULL;
-    decoderData->storage.len = 0;
+    decoderData->totalBufferSize = 0;
     return decoderData;
 }
 
@@ -536,11 +535,10 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 	/* find the DATA item in the encapsulated cinfo and store it there */
 	NSSCMSDecoderData *decoderData = 
 				(NSSCMSDecoderData *)cinfo->content.pointer;
-	SECItem *storage = &decoderData->storage;
 	SECItem *dataItem = &decoderData->data;
 
 	offset = dataItem->len;
-	if (dataItem->len+len > storage->len) {
+	if (dataItem->len+len > decoderData->totalBufferSize) {
 	    int needLen = (dataItem->len+len) * 2;
 	    dest = (unsigned char *)
 				PORT_ArenaAlloc(p7dcx->cmsg->poolp, needLen);
@@ -549,12 +547,11 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 		goto loser;
 	    }
 
-	    storage->data = dest;
-	    storage->len = needLen;
 	    if (dataItem->len) {
-		PORT_Memcpy(storage->data , dataItem->data, dataItem->len);
+		PORT_Memcpy(dest, dataItem->data, dataItem->len);
 	    }
-	    dataItem->data = storage->data;
+	    decoderData->totalBufferSize = needLen;
+	    dataItem->data = dest;
 	}
 
 	/* copy it in */
