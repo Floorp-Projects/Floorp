@@ -930,7 +930,14 @@ nsLocalFile::Normalize()
         // add the current component to the path, including the preceding backslash
         normal.Append(pathBuffer + begin - 1, len + 1);
     }
-    
+
+    // kill trailing dots and spaces.
+    PRInt32 filePathLen = normal.Length() - 1;
+    while(filePathLen > 0 && (normal[filePathLen] == ' ' || normal[filePathLen] == '.'))
+    {
+        normal.Truncate(filePathLen--);
+    } 
+
     NS_CopyUnicodeToNative(normal, mWorkingPath);
     MakeDirty();
 #else // WINCE
@@ -1862,6 +1869,8 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     *_retval = PR_FALSE;
     
     nsresult rv;
+
+    Normalize();
 
     // only files can be executables
     PRBool isFile;
