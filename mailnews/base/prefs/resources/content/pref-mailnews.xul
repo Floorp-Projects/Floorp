@@ -26,24 +26,28 @@
 
 		<box align="horizontal">
 		
-			<html:label for="mail.quoted_style">&style.label;</html:label>
-			<html:select pref="true"
-                         preftype="int"
-                         prefstring="mail.quoted_style"
-                         id="mail.quoted_style">
-				<html:option value="0" label="&regular.label;"/>
-				<html:option value="1" label="&bold.label;"/>
-				<html:option value="2" label="&italic.label;"/>
-				<html:option value="3" label="&boldItalic.label;"/>
-			</html:select>
+			<html:div>
+				<html:label for="mail.quoted_style">&style.label;</html:label>
+				<html:select pref="true"
+	                         preftype="int"
+	                         prefstring="mail.quoted_style"
+	                         id="mail.quoted_style">
+					<html:option value="0" label="&regular.label;"/>
+					<html:option value="1" label="&bold.label;"/>
+					<html:option value="2" label="&italic.label;"/>
+					<html:option value="3" label="&boldItalic.label;"/>
+				</html:select>
+			</html:div>
 
 			<html:label for="mail.quoted_size">&size.label;</html:label>
 
-			<html:select pref="true" preftype="int" id="mail.quoted_size" prefstring="mail.quoted_size">
-				<html:option value="0" label="&regular.label;"/>
-				<html:option value="1" label="&bigger.label;"/>
-				<html:option value="2" label="&smaller.label;"/>
-			</html:select>
+			<html:div>
+				<html:select pref="true" preftype="int" id="mail.quoted_size" prefstring="mail.quoted_size">
+					<html:option value="0" label="&regular.label;"/>
+					<html:option value="1" label="&bigger.label;"/>
+					<html:option value="2" label="&smaller.label;"/>
+				</html:select>
+			</html:div>
 
 			<menu id="citationmenu">
 				<titledbutton value="&color.label;" class="popup" align="right"/> 

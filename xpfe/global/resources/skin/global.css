@@ -23,6 +23,8 @@ window {
   padding: 0px;
 }
 
+window[wait-cursor] { cursor: wait !important; }
+
 /**
  * This is a special class of window used for dialogs
  */
@@ -407,7 +409,10 @@ titledbutton.toolbar {
 }
 
 titledbutton.toolbar:hover {
-  border: 1px outset white;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
   color:#333366;
   text-decoration: underline;
 }
@@ -417,8 +422,11 @@ titledbutton.toolbar:hover:-moz-outline {
 }
  
 titledbutton.toolbar:active {
-  text-decoration:none;
-  border: 1px inset;
+  text-decoration: none;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
 }
 
 titledbutton.toolbar:active:-moz-outline {
@@ -684,6 +692,7 @@ titledbox
   display: block;
   border: 2px groove white;
   padding: 5px;
+  padding-bottom: 2px;
   margin: 2px;
 }
 
@@ -995,43 +1004,53 @@ titledbutton.toolbar-flat:active {
 }
 
 
+/* push button */
 titledbutton.push {
-  border: 1px outset white;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  -moz-border-radius: 3px 3px 2px 2px;
   padding: 2px;
   margin: 2px;
   text-align: center;
-  background-color:inherit;
+  background-color: inherit;
   background-image: inherit;
 }
 
 titledbutton.push:hover {
-	border: 1px outset white;
-	color:#003366;
-	text-decoration:underline;
-	padding: 2px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  color: #003366;
+  padding: 2px;
+  text-decoration: underline;
 }
  
-titledbutton.push:hover:-moz-outline {
-   border : 1px solid black;
-   color:#003366;
-   padding: 2px;
-}
- 
+/*titledbutton.push:hover:-moz-outline {
+  outline: 1px solid black;
+}*/
+
 titledbutton.push:active {
-  text-decoration:none;
-  border: 1px inset;
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 3px 1px 1px 3px;
+  text-decoration: none;
 }
 
+/*titledbutton.push:active:-moz-outline {
+  outline: 1px solid black;
+}*/
+
 titledbutton.push[toggled="1"] {
-  border: 1px white inset;
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 3px 1px 1px 3px;
 }
 
 titledbutton.push[toggled="2"] {
@@ -1039,16 +1058,11 @@ titledbutton.push[toggled="2"] {
    border: 1px solid gray;
 }
 
-titledbutton.push:active:-moz-outline {
-   border : 1px solid black;
-}
- 
 titledbutton.push[disabled="true"] {
 	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
-	text-decoration: none;
 }
 
 titledbutton.push[disabled="true"]:hover {
@@ -1056,7 +1070,6 @@ titledbutton.push[disabled="true"]:hover {
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
-	text-decoration: none;
 }
 
 titledbutton.push[disabled="true"]:active {
@@ -1064,8 +1077,7 @@ titledbutton.push[disabled="true"]:active {
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
-        padding: 2px;
-	text-decoration: none;
+	padding: 2px;
 }
 
 titledbutton.dialog {
@@ -1130,7 +1142,10 @@ titledbutton.borderless {
 }
  
 titledbutton.borderless:hover {
-  border: 1px outset white;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
   color:#333366;
   text-decoration: underline;
 }
@@ -1141,7 +1156,10 @@ titledbutton.borderless:hover:-moz-outline {
 
 titledbutton.borderless:active {
   text-decoration:none;
-  border: 1px inset;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
 }
  
 titledbutton.borderless:active:-moz-outline {
@@ -1169,9 +1187,11 @@ tree {
   border-spacing: 0px;
 }
 
-/* BEN: making dialog trees nicely inset */
 tree.inset {
-  border: 1px inset white;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
 }
 
 treeitem[selected="true"] > treerow { 
@@ -1187,18 +1207,22 @@ treecell {
 treehead > treerow > treecell { 
   background-color: #CCCCCC; 
   color: black;
-  border-right: 1px outset white;
+  border-right: 1px solid white;
   padding-left: 5px;
 } 
 
-/* BEN: making dialog treehead cells outset */
 tree.inset > treehead > treerow > treecell {
-  border: 1px outset white;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
 }
 
-/* BEN: making sortable dialog treehead cells clickable */
 tree.inset > treehead > treerow > treecell.sortable:active {
-  border: 1px inset white;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
 }
 
 treecell.image > titledbutton {
@@ -1279,114 +1303,80 @@ treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
 /********** Tab widget *********/
 
 tab { 
-  border: 1px outset white;
-  /* -moz-border-radius: 90; */
-  color:black; 
-  padding-left: 7px;
-  padding-right: 7px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  color: black; 
+  padding: 3px 5px 3px 5px;
 }
 
-tab:active { 
-  border: 1px outset white;
-  /* -moz-border-radius: 90; */
-
-  color:red; 
-}
-
-tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"]  tab { 
-	/* bottom tabs */
-  border-left: 1px outset white;
-  border-right: 1px outset white;
-  border-top: none;
-  border-bottom: 1px outset white;
-  
-  padding-right: 3px;
-  padding-left: 3px;
-  padding-top: 1px;
-  padding-bottom: 3px;
-
-  margin-right: 2px;
-  margin-left: 2px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
-tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
-  /* top tabs */
-  border-left: 1px outset white;
-  border-right: 1px outset white;
-  border-top: 1px outset white;
-  border-bottom: none;
-
-  padding-right: 3px;
-  padding-left: 3px;
-  padding-top: 3px;
-  padding-bottom: 1px;
-
-  margin-right: 2px;
-  margin-left: 2px;
-  margin-top: 1px;
-  margin-bottom: 1px;
-
-}
-
-tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
-	/* left tabs */
-  border-left: 1px outset white;
-  border-right: none;
-  border-top: 1px outset white;
-  border-bottom: 1px outset white;
-  
-  padding-right: 1px;
-  padding-left: 3px;
-  padding-top: 3px;
-  padding-bottom: 3px;
-
-  margin-right: 1px;
-  margin-left: 1px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  
-}
-
-tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
-	/* right tabs */
-  border-left: none;
-  border-right: 1px outset white;
-  border-top: 1px outset white;
-  border-bottom: 1px outset white;
-  
-  padding-right: 3px;
-  padding-left: 1px;
-  padding-top: 3px;
-  padding-bottom: 3px;
-
-  margin-right: 1px;
-  margin-left: 1px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  
+/* when a tab is selected this is how it should look */
+tab[selected="true"] {
+	font-weight: bold;
 }
 
 tab:hover { 
- color: #000033;
- text-decoration:underline;
+  color: #003366;
+  text-decoration: underline;
+}
+
+tab:active { 
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  text-decoration: none;
+}
+
+    /* top tabs */
+tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
+  border-bottom: none;
+  -moz-border-radius: 8px 9px 0px 0px;
+  padding-bottom: 1px;
+  margin: 1px 2px 1px 2px;
+}
+
+	/* bottom tabs */
+tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"] tab { 
+  border-top: none;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  -moz-border-radius: 0px 0px 8px 8px;
+  padding: 1px 5px 3px 5px;
+  margin: 1px 2px 1px 2px;
+}
+
+	/* left tabs */
+tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
+  border-right: none;
+  -moz-border-radius: 8px 0px 0px 8px;
+  padding-right: 1px;
+  margin: 2px 1px 2px 1px;
+}
+
+	/* right tabs */
+tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: none;
+  border-right: 1px solid #666666;
+  -moz-border-radius: 0px 9px 8px 0px;
+  padding: 3px 5px 1px 5px;
+  margin: 2px 1px 2px 1px;
 }
 
 tabcontrol { 
   border: none; 
 }
 
-/* when a tab is selected this is how it should look.
- */
-tab[selected="true"] {
-	font-weight: bold;
-}
-
-/* BEN - made tabpanel outset. */
 deck, tabpanel {
-  border: 1px outset white;
-  padding: 10px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  padding: 5px;
 }
 
 /**********************************
@@ -1443,7 +1433,7 @@ html|legend {
 	margin-top: 0px;
 	margin-left: 4px;
 	margin-right: 3px;
-  cursor: default;
+	cursor: default;
 }
 
 html|label {
@@ -1453,7 +1443,12 @@ html|label {
 }
 
 html|textarea {
-  border: 1px inset #DDDDDD;
+  font-family: inherit;
+  font-size: inherit;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
   padding-top: 1px;
   padding-bottom: 2px;
   padding-left: 4px;
@@ -1464,25 +1459,45 @@ html|textarea {
   margin-right: 3px;
   background-color: white;
   color: black;
+  cursor: text;
 }
 
+html|textarea:active { cursor: text; }
+
+html|textarea:hover { cursor: text; }
+
+html|textarea:focus { cursor: text; }
+
+
 html|input[type=text] {
-  border: 1px inset rgb(192, 192, 192);
-  padding-top: 1px;
-  padding-bottom: 1px;
-  padding-left: 1px;
-  padding-right: 1px;
-  margin-top: 0px;
-  margin-bottom: 2px;
-  margin-left: 4px;
-  margin-right: 3px;
+  font-family: inherit;
+  font-size: inherit;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 1px;
+  margin: 0px 3px 2px 4px;
   background-color: white;
   color: black;
   min-height: 1.6em;
+  cursor: text;
 }
 
+html|input[type=text]:active { cursor: text; }
+
+html|input[type=text]:hover { cursor: text; }
+
+html|input[type=text]:focus { cursor: text; }
+
+html|input[type=text][disabled] { color: #999999; }
+
+
 html|input[type=password] {
-  border: 1px inset rgb(192, 192, 192);
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
   padding-top: 3px;
   padding-bottom: 2px;
   padding-left: 4px;
@@ -1498,7 +1513,7 @@ html|input[type=password] {
 
 html|input {
   background-color: white;
-	text-align: left;
+  text-align: left;
   color: black;
   user-focus: normal;
 }
@@ -1514,42 +1529,368 @@ html|input.scroll-label {
 
 
 
+/********** radio **********/
 html|input[type=radio] {
-  margin-left:   3px;   
-  margin-right:  5px;  
-  margin-top:    3px; 
-  margin-bottom: 3px; 
-  color:black;
-  width:12px;
-  height:12px;
+  margin: 3px 5px 3px 3px;
+  color: black;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  background-color: #CCCCCC;
+  -moz-border-radius: 50%;
 }
 
+html|input[type=radio]:focus {
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+}
+
+html|input[type=radio]:hover {
+  border: 1px solid #003366;
+}
+
+html|input[type=radio]:active {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  background-color: #CCCCCC;
+}
+
+html|input[type=radio][disabled] {
+  border: 1px solid #666666;
+}
+
+
+/********** checkbox **********/
 html|input[type=checkbox] {
-  margin-left:   3px;   
-  margin-right:  5px;  
-  margin-top:    3px; 
-  margin-bottom: 4px;
-  border: 1px inset rgb(192, 192, 192);
-  color:black;
-}
-
-html|input[type=checkbox]:hover {
-  border: 1px solid black;
-}
-
-html|input[type=checkbox][disabled] {
-  border: 1px solid;
-}
-
-html|input[type=checkbox][disabled]:hover {
-  border: 1px solid rgb(153, 153, 153);
+  padding: 0px 1px 1px 0px;
+  margin: 3px 5px 4px 3px;
+  background-color: #CCCCCC;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  color: black;
+  width: 13px;
+  height: 13px;
+  color: black;
+  /* FIX ME - we really want the same size radius on each corner,
+    but rounding bug seems to cause the corners to be calculated in a different way */
+  -moz-border-radius: 3px 3px 2px 2px;
 }
 
 html|input[type=checkbox]:focus {
-  border:1px dotted rgb(153, 153, 153);
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+}
+
+html|input[type=checkbox]:hover {
+  border: 1px solid #003366;
+}
+
+html|input[type=checkbox]:active {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+}
+
+html|input[type=checkbox][disabled] {
+  border: 1px solid #666666;
+}
+
+html|input[type=checkbox][disabled]:hover {
+  border: 1px solid #666666;
+}
+
+html|input[type=checkbox][disabled]:active {
+  border: 1px solid #666666;
 }
 
 html|div, html|td {
   cursor: default;
+}
+
+/********** SELECT **********/
+html|select[size] {
+  font-family: inherit;
+  font-size: inherit;
+  background-color: white;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 1px 0px 1px 0px;
+}
+
+html|select, html|select[size="1"] {
+  font-family: inherit;
+  font-size: inherit;
+  background-color: #CCCCCC;
+  border: none;
+  padding: 0px;
+}
+
+html|select > html|input[type="button"]:hover {
+  border: 1px solid #003366;
+}
+
+html|select > html|input#-moz-display:hover {
+  border: 1px solid #003366;
+  border-right: none;
+}
+
+html|select[size]:focus {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 1px 0px 1px 0px;
+}
+
+html|select:focus, html|select[size="1"]:focus {
+  border: 1px solid black;
+  padding: 0px;
+}
+
+html|select[multiple]:focus {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+}
+
+html|select[size][disabled] {
+  background-color: #CCCCCC;
+  border: 1px solid #999999;
+}
+
+html|select[multiple][disabled] {
+  background-color: #CCCCCC;
+  border: 1px solid #999999;
+}
+
+html|select[disabled], html|select[size="1"][disabled] {
+  background-color: #CCCCCC;
+  border: 1px solid #999999;
+}
+
+/* combobox button */
+html|select > html|input[type="button"] {
+  background-color: #CCCCCC;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+  /*background-image:url("arrow.gif");*/
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 12px;
+  height: 12px;
+  -moz-border-radius: 0px 3px 2px 0px;
+}
+
+/* combobox button depressed */
+html|select > html|input[type="button"]:active {
+  background-color: #CCCCCC;
+  /*background-image:url("arrowd.gif");*/
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  -moz-border-radius: 0px 3px 2px 0px;
+}
+
+html|select[disabled] > html|input[type="button"] {
+  background-color: #CCCCCC;
+  border: solid 1px #999999;
+  -moz-border-radius: 0px 3px 2px 0px;
+}
+
+
+/* combobox display area */
+html|select > html|input#-moz-display {
+  font-family: inherit;
+  font-size: inherit;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: none;
+  background-color: #CCCCCC;
+  background-image: none;
+  padding: 0px 0px 3px 0px;
+  margin: 0px;
+  vertical-align: bottom;
+}
+
+html|select > html|input:button-content {
+  text-align: left;
+}
+
+html|select[disabled] > html|input#-moz-display {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  color: #999999;
+  background-color: #CCCCCC;
+  background-image: none;
+  -moz-border-radius: 0px;
+  padding: 0px 0px 3px 0px;
+  vertical-align: bottom;
+}
+
+/* combbox display area - active */
+html|select > html|input#-moz-display:active {
+  font-family: inherit;
+  font-size: inherit;
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: none;
+  background-color: #CCCCCC;
+  background-image: none;
+  -moz-border-radius: 0px;
+  padding: 0px 0px 3px 0px;
+  vertical-align: bottom;
+}
+
+
+html|option {
+  min-height: 1em;
+  display:block;
+  font-family: inherit;
+  font-size: inherit;
+  user-select: none;
+}
+
+/* we need to address the part where there is a label */
+/* and content. The CSS3 content property would be handy for this */
+html|option[label]:before { 
+  content:attr(label);
+}
+
+html|select[size] html|option {
+  padding-left:   3px;
+  padding-top:    0px;
+  padding-right:  11px;
+  padding-bottom: 0px;
+}
+
+html|select html|option, html|select[size="1"] html|option {
+  padding-left:   3px;
+  padding-top:    0px;
+  padding-right:  5px;
+  padding-bottom: 0px;
+}
+
+html|select[disabled] > html|option {
+  color: #999999;
+  background-color: white; 
+}
+
+/* Combobox item style */
+html|select html|option[-moz-option-selected] {
+ color: white;
+ background-color: #336699;
+}
+
+/* List box item selected style */
+html|select html|option[disabled][-moz-option-selected] {
+  color: #999999;
+  background-color: #CCCCCC;
+}
+
+html|select html|option[disabled] {
+  color: #999999;
+  background-color: #CCCCCC;
+}
+
+html|select[size] html|option[-moz-option-selected] {
+  color: white;
+  background-color: #336699;
+}
+
+html|select[size][disabled] html|option[-moz-option-selected] {
+  color: #999999;
+  background-color: #CCCCCC;
+}
+
+html|select[size="1"] html|option[-moz-option-selected] {
+  color: white;
+  background-color: #336699;
+}
+
+html|select[size="1"][disabled] html|option[-moz-option-selected] {
+  color: #999999;
+  background-color: #CCCCCC;
+}
+
+html|select[multiple] html|option[-moz-option-selected] {
+  color: white;
+  background-color: #336699;
+}
+
+html|select[multiple][disabled] html|option[-moz-option-selected] {
+  color: #999999;
+  background-color: #CCCCCC;
+}
+
+html|select[multiple][size="1"] html|option[-moz-option-selected] {
+  color: white;
+  background-color: #336699;
+}
+
+html|select > html|input[type="button"]#-moz-display:-moz-focus-inner {
+   /*border:none;
+   padding-left  : 3px;
+   padding-right : 0px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+   margin: 0px;*/
+}
+
+html|select > html|input[type="button"]#-moz-display:focus:-moz-focus-inner {
+   /*border:none;
+   padding-left  : 0px;
+   padding-right : 0px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+   margin: 0px;*/
+}
+
+html|optgroup {
+  font-family: inherit;
+  font-size: inherit;
+  display:block;
+  font-style: italic;
+  font-weight: bold;
+}
+
+html|optgroup > html|option {
+  display:block;
+  padding-left:20px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+html|optgroup:before {
+  display: block;
+  content:attr(label);
+}
+
+html|select:focus > html|input#-moz-display {
+  border: none;
+}
+
+html|select[size="1"]:focus > html|input#-moz-display {
+  border: none;
 }
 
