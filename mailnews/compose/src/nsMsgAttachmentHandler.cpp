@@ -493,7 +493,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     return SnarfMsgAttachment(compFields);
 
   tempName = GenerateFileNameFromURI(mURL); // Make it a sane name
-
   mCompFields = compFields;
 
   // First, get as file spec and create the stream for the

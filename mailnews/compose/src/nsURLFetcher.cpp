@@ -184,22 +184,6 @@ nsURLFetcher::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInpu
 nsresult
 nsURLFetcher::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 {
-  if (aChannel)
-  {
-    char    *contentType = nsnull;
-    if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
-    {
-      if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
-      {
-        mContentType = contentType;
-
-#ifdef NS_DEBUG_rhp
-  printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", mContentType);
-#endif
-      }
-    }
-  }
-
   return NS_OK;
 }
 
@@ -218,6 +202,24 @@ nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsre
   // First close the output stream...
   if (mOutStream)
     mOutStream->close();
+
+  // Check the content type!
+  if (aChannel)
+  {
+    char    *contentType = nsnull;
+
+    if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+    {
+      if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
+      {
+        mContentType = contentType;
+
+#ifdef NS_DEBUG_rhp
+  printf("nsURLFetcher::OnStopRequest() for Content-Type: %s\n", mContentType);
+#endif
+      }
+    }
+  }  
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
