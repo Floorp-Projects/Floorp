@@ -71,6 +71,7 @@ protected:
   nsStringArray               mURIArray;
   PRInt32                     mCurrentlyPrintingURI;
 
+  nsCOMPtr<nsIContentViewer>  mContentViewer;
   nsCOMPtr<nsIStringBundle>   mStringBundle;    // String bundles...
   nsCOMPtr<nsIMsgStatusFeedback> mFeedback;     // Tell the user something why don't ya'
 };

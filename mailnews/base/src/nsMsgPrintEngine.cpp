@@ -61,6 +61,7 @@ nsMsgPrintEngine::nsMsgPrintEngine() :
   mWindow(nsnull)
 {
   mCurrentlyPrintingURI = -1;
+  mContentViewer = nsnull;
 
   NS_INIT_REFCNT();
 }
@@ -97,7 +98,6 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
 {
   // Now, fire off the print operation!
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIContentViewer> viewer;
 
   // Tell the user the message is loaded...
   PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
@@ -125,10 +125,10 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
     }
   }
 
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));  
-  if (viewer) 
+  mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
+  if (mContentViewer) 
   {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(mContentViewer);
     if (viewerFile) 
     {
       if (mCurrentlyPrintingURI == 0)
