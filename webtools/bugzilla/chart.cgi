@@ -84,6 +84,10 @@ if ($action eq "search") {
 
 Bugzilla->login(LOGIN_REQUIRED);
 
+UserInGroup(Param("chartgroup")) 
+    || ThrowUserError("authorization_failure", 
+                     {action => "use this feature"});
+
 # Only admins may create public queries
 UserInGroup('admin') || $cgi->delete('public');
 

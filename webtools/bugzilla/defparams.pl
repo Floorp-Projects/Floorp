@@ -1035,6 +1035,17 @@ Reason: %reason%
   },
 
   {
+   name => 'chartgroup',
+   desc => 'The name of the group of users who can use the "New Charts" ' .
+           'feature. Administrators should ensure that the public categories ' .
+           'and series definitions do not divulge unwanted information ' .
+           'before enabling this for an untrusted population. If left blank, ' .
+           'no users will be able to use New Charts.',
+   type => 't',
+   default => ''
+  },
+  
+  {
    name => 'insidergroup',
    desc => 'The name of the group of users who can see/change private ' .
            'comments and attachments.',

@@ -64,10 +64,12 @@
     plot the status and/or resolution of [% terms.bugs %] against
     time, for each product in your database.
   </li>
-  <li>
-    <strong><a href="chart.cgi">New Charts</a></strong> - 
-    plot any arbitrary search against time. Far more powerful.
-  </li>
+  [% IF UserInGroup(Param("chartgroup")) %]
+    <li>
+      <strong><a href="chart.cgi">New Charts</a></strong> - 
+      plot any arbitrary search against time. Far more powerful.
+    </li>
+  [% END %]
 </ul>
 
 [% PROCESS global/footer.html.tmpl %]

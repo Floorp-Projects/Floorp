@@ -271,6 +271,10 @@ if ($action eq 'add') {
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"version\" VALUE=\"unspecified\"></TD>\n";
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Create chart datasets for this product:</TH>\n";
+    print "  <TD><INPUT TYPE=CHECKBOX NAME=\"createseries\" VALUE=1></TD>";
+    print "</TR>\n";
 
     print "</TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -389,36 +393,37 @@ if ($action eq 'new') {
                 CONTROLMAPNA . ", 0)");
     }
 
-    # Insert default charting queries for this product.
-    # If they aren't using charting, this won't do any harm.
-    GetVersionTable();
+    if ($::FORM{createseries}) {
+        # Insert default charting queries for this product.
+        # If they aren't using charting, this won't do any harm.
+        GetVersionTable();
+    
+        my @series;
+    
+        # We do every status, every resolution, and an "opened" one as well.
+        foreach my $bug_status (@::legal_bug_status) {
+            push(@series, [$bug_status, "bug_status=$bug_status"]);
+        }
 
-    my @series;
+        foreach my $resolution (@::legal_resolution) {
+            next if !$resolution;
+            push(@series, [$resolution, "resolution=$resolution"]);
+        }
 
-    # We do every status, every resolution, and an "opened" one as well.
-    foreach my $bug_status (@::legal_bug_status) {
-        push(@series, [$bug_status, "bug_status=$bug_status"]);
+        # For localisation reasons, we get the name of the "global" subcategory
+        # and the title of the "open" query from the submitted form.
+        my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
+        my $query = join("&", map { "bug_status=$_" } @openedstatuses);
+        push(@series, [$::FORM{'open_name'}, $query]);
+    
+        foreach my $sdata (@series) {
+            my $series = new Bugzilla::Series(undef, $product, 
+                                              $::FORM{'subcategory'},
+                                              $sdata->[0], $::userid, 1,
+                                              $sdata->[1] . "&product=$product", 1);
+            $series->writeToDatabase();
+        }
     }
-
-    foreach my $resolution (@::legal_resolution) {
-        next if !$resolution;
-        push(@series, [$resolution, "resolution=$resolution"]);
-    }
-
-    # For localisation reasons, we get the name of the "global" subcategory
-    # and the title of the "open" query from the submitted form.
-    my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
-    my $query = join("&", map { "bug_status=$_" } @openedstatuses);
-    push(@series, [$::FORM{'open_name'}, $query]);
-
-    foreach my $sdata (@series) {
-        my $series = new Bugzilla::Series(undef, $product, 
-                                          $::FORM{'subcategory'},
-                                          $sdata->[0], $::userid, 1,
-                                          $sdata->[1] . "&product=$product", 1);
-        $series->writeToDatabase();
-    }
-
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
