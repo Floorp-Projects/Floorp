@@ -38,7 +38,7 @@
 #include "nsStyleCoord.h"
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
-
+#include "nsHTMLBase.h"
 #include "nsIDocumentLoader.h"
 class nsHTMLIFrame;
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -72,6 +72,15 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParent
   mColSizes = nsnull;
 }
 
+nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
+{
+  if (mRowSizes) delete [] mRowSizes;
+  if (mRowSpecs) delete [] mRowSpecs;
+  if (mColSizes) delete [] mColSizes;
+  if (mColSpecs) delete [] mColSpecs;
+  mRowSizes = mColSizes = nsnull;
+  mRowSpecs = mColSpecs = nsnull;
+}
 
 /**
   * Translate the rows/cols specs into an array of integer sizes for
@@ -263,24 +272,36 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   return parent;
 }
 
-void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild, 
-                                         nsReflowMetrics& aDesiredSize)
+void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsReflowMetrics& aSize, nsPoint& aCellIndex)
 {
+  PRInt32 row = aIndexInParent / mNumCols;
+  PRInt32 col = aIndexInParent - (row * mNumCols); // remainder from dividing index by mNumCols
+  if ((row < mNumRows) && (col < mNumCols)) {
+    aSize.width  = mColSizes[col];
+    aSize.height = mRowSizes[row];
+    aCellIndex.x = col;
+    aCellIndex.y = row;
+  } else {
+    aSize.width = aSize.height = aCellIndex.x = aCellIndex.y = 0;
+  }
+}
+
+
+void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild, 
+                                         nsReflowMetrics& aSize)
+{
+  // Reflow only creates children frames for <frameset> and <frame> content.
+  // this assumption is used here
   int i = 0;
   for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
     if (aChild == child) {
-      PRInt32 row = i / mNumCols;
-      PRInt32 col = i - (row * mNumCols); // remainder from dividing i by mNumCols
-      if ((row < mNumRows) && (col < mNumCols)) {
-        aDesiredSize.width  = mColSizes[col];
-        aDesiredSize.height = mRowSizes[row];
-        return;
-      }
+      nsPoint ignore;
+      GetSizeOfChildAt(i, aSize, ignore);
     }
     i++;
   }
-  aDesiredSize.width  = 0;
-  aDesiredSize.height = 0;
+  aSize.width  = 0;
+  aSize.height = 0;
 }  
 
 
@@ -293,7 +314,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
-void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec* aSpecs) 
+void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs) 
 {
   nsHTMLValue value;
   nsAutoString rowsCols;
@@ -303,16 +324,16 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
       value.GetStringValue(rowsCols);
       nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
       aNumSpecs = ParseRowColSpec(rowsCols, gMaxNumRowColSpecs, specs);
-      aSpecs = new nsFramesetSpec[aNumSpecs];
+      *aSpecs = new nsFramesetSpec[aNumSpecs];
       for (int i = 0; i < aNumSpecs; i++) {
-        aSpecs[i] = specs[i];
+        (*aSpecs)[i] = specs[i];
       }
       delete [] specs;
       return;
     }
   }
   aNumSpecs = 1;  
-  aSpecs = nsnull;
+  *aSpecs = nsnull;
 }
 
 /**
@@ -390,9 +411,13 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
                             const nsReflowState& aReflowState,
                             nsReflowStatus&      aStatus)
 {
-  if (0 == mNumRows) {  // row, col specs have not been parsed 
-     ParseRowCol(nsHTMLAtoms::rows, mNumRows, mRowSpecs);
-     ParseRowCol(nsHTMLAtoms::cols, mNumCols, mColSpecs);
+  PRBool firstTime = (0 == mNumRows);
+
+  if (firstTime) {  // row, col specs have not been parsed 
+     ParseRowCol(nsHTMLAtoms::rows, mNumRows, &mRowSpecs);
+     ParseRowCol(nsHTMLAtoms::cols, mNumCols, &mColSpecs);
+     mRowSizes = new nscoord[mNumRows];
+     mColSizes = new nscoord[mNumCols];
   }
 
   // XXX check to see if our size actually changes before recomputing
@@ -407,7 +432,74 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
     CalculateRowCol(&aPresContext, aReflowState.maxSize.height, mNumCols, mColSpecs, mColSizes);
   }
 
-  // XXX need to reflow the children, but only the first n children where n <= number of cells
+
+  // create the children frames; skip those which aren't frameset or frame
+  mChildCount = 0;
+  if (firstTime) {
+    nsIFrame* lastFrame = nsnull;
+    nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
+    PRInt32 numChildren = content->ChildCount();
+    for (int i = 0; i < numChildren; i++) {
+      nsHTMLTagContent* child = (nsHTMLTagContent*)(content->ChildAt(i));
+      if (nsnull == child) {
+        continue;
+      }
+      nsIAtom* tag = child->GetTag();
+      if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
+        nsIFrame* frame;
+        nsresult result = nsHTMLBase::CreateFrame(&aPresContext, this, child, nsnull, frame); 
+        NS_RELEASE(child);
+        if (NS_OK != result) {
+          return result;
+        }
+        if (nsnull == lastFrame) {
+          mFirstChild = frame;
+        } else {
+          lastFrame->SetNextSibling(frame);
+        }
+        lastFrame = frame;
+        mChildCount++;
+      }
+    }
+  }
+
+  // reflow the children
+  PRInt32 lastRow = 0;
+  PRInt32 i       = 0;
+  nsPoint offset(0,0);
+  for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    nsReflowMetrics metrics(nsnull);
+    nsPoint cellIndex;
+    GetSizeOfChildAt(i, metrics, cellIndex);
+
+    nsSize size(metrics.width, metrics.height);
+    nsReflowState childReflowState(child, aReflowState, size);
+    child->WillReflow(aPresContext);
+    nsReflowMetrics ignore(nsnull);
+    aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, childReflowState);
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  
+    // Place and size the child
+    nsRect rect(offset.x, offset.y, metrics.width, metrics.height);
+    child->SetRect(rect);
+    child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+
+    if (lastRow != cellIndex.y) {  // changed to next row
+      offset.x = 0;
+      offset.y += metrics.height;
+    } else {                       // in same row
+      offset.x += metrics.width;
+    }
+    lastRow = cellIndex.y;
+    i++;
+  }
+
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+
+  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 

@@ -41,7 +41,8 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
     if (nsnull != child) {
       nsIAtom* tag;
       tag = child->GetTag();
-      if (nsHTMLAtoms::body == tag) {
+      // XXX added frameset check, is it necessary, what is a page frame anyway
+      if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
         // Create a frame
         nsIContentDelegate* cd = child->GetDelegate(aPresContext);
         if (nsnull != cd) {

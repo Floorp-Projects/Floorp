@@ -45,6 +45,10 @@
 #include "nsIWebShell.h"
 extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                                  nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
+extern nsresult NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
+                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
+extern nsresult NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
+                                 nsIAtom* aTag, nsIWebShell* aWebShell);  // XXX move
 
 // XXX attribute values have entities in them - use the parsers expander!
 
@@ -129,10 +133,10 @@ public:
   NS_IMETHOD CloseBody(const nsIParserNode& aNode);
   NS_IMETHOD OpenForm(const nsIParserNode& aNode);
   NS_IMETHOD CloseForm(const nsIParserNode& aNode);
-  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -156,6 +160,8 @@ protected:
   nsresult ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
   nsresult ProcessEMBEDTag(nsIHTMLContent** aInstancePtrResult,
+                           const nsIParserNode& aNode);
+  nsresult ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
                            const nsIParserNode& aNode);
   nsresult ProcessHRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
@@ -182,6 +188,8 @@ protected:
 
   nsresult ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
                             const nsIParserNode& aNode);
+  nsresult ProcessFRAMESETTag(nsIHTMLContent** aInstancePtrResult,
+                            const nsIParserNode& aNode);
   //----------------------------------------------------------------------
 
   void FlushText();
@@ -205,6 +213,8 @@ protected:
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIHTMLContent* aInstancePtrResult);
 
+  nsIHTMLContent* GetBodyOrFrameset() { if (mBody) return mBody; else return mFrameset; }
+
   nsresult LoadStyleSheet(nsIURL* aURL,
                           nsIUnicharInputStream* aUIN);
 
@@ -226,6 +236,7 @@ protected:
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
+  nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
 
   PRTime mLastUpdateTime;
@@ -233,6 +244,11 @@ protected:
   PRBool mLayoutStarted;
   PRInt32 mInMonolithicContainer;
   nsIWebShell* mWebShell;
+
+  // XXX The parser needs to keep track of body tags and frameset tags 
+  // and tell the content sink if they are to be ignored. For example, in nav4
+  // <html><body><frameset> ignores the frameset and 
+  // <html><frameset><body> ignores the body
 };
 
 // Note: operator new zeros our memory
@@ -252,6 +268,7 @@ HTMLContentSink::~HTMLContentSink()
 {
   NS_IF_RELEASE(mHead);
   NS_IF_RELEASE(mBody);
+  NS_IF_RELEASE(mFrameset);
   NS_IF_RELEASE(mRoot);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
@@ -304,21 +321,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
   mRoot->AppendChild(mHead, PR_FALSE);
 
-  // Make body container
-  NS_IF_RELEASE(mBody);
-  atom = NS_NewAtom("BODY");
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_NewBodyPart(&mBody, atom);
-  NS_RELEASE(atom);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Note: Can't do this here; see the comment in OpenBody
-  //XXX  mRoot->AppendChild(mBody, PR_FALSE);
-
   return rv;
 }
 
@@ -348,8 +350,12 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseHTML", aNode);
 
-  NS_ASSERTION(mStackPos > 0, "bad bad");
-  mNodeStack[--mStackPos] = eHTMLTag_unknown;
+  // XXX this is the way it used to be
+  //NS_ASSERTION(mStackPos > 0, "bad bad");
+  //mNodeStack[--mStackPos] = eHTMLTag_unknown;
+  if (mStackPos > 0) {
+    mNodeStack[--mStackPos] = eHTMLTag_unknown;
+  }
 
   NS_IF_RELEASE(mCurrentForm);
 
@@ -422,6 +428,19 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
                   "HTMLContentSink::OpenBody", aNode);
 
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
+
+  // Make body container
+  NS_IF_RELEASE(mBody);
+  nsIAtom* atom = NS_NewAtom("BODY");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = NS_NewBodyPart(&mBody, atom);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
   mContainerStack[mStackPos] = mBody;
   mStackPos++;
 
@@ -558,6 +577,60 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+// XXX this is a copy of OpenBody, consolidate!
+NS_IMETHODIMP
+HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenFrameset", aNode);
+
+  mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
+
+  // Make frameset container
+  NS_IF_RELEASE(mFrameset);
+  nsIAtom* atom = NS_NewAtom("FRAMESET");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = NS_NewHTMLFrameset(&mFrameset, atom, nsnull);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  mContainerStack[mStackPos] = mFrameset;
+  mStackPos++;
+
+  // Add attributes to the frameset content object
+  AddAttributes(aNode, mFrameset);
+  // XXX If the frameset already existed and has been reflowed somewhat
+  // then we need to trigger a style change
+  mRoot->AppendChild(mFrameset, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
+{
+  FlushText();
+
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::CloseFrameset", aNode);
+
+  NS_ASSERTION(mStackPos > 0, "bad bad");
+  mNodeStack[--mStackPos] = eHTMLTag_unknown;
+
+  // Reflow any lingering content
+  if (!mLayoutStarted) {
+    StartLayout();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 {
@@ -605,29 +678,6 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenFrameset", aNode);
-
-  mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseFrameset", aNode);
-
-  mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
@@ -716,6 +766,14 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     rv = ProcessIFRAMETag(&container, aNode);
     break;
 
+  case eHTMLTag_frameset:
+    if (!mFrameset) {
+      rv = OpenFrameset(aNode);  // top level frameset
+    } else {
+      rv = ProcessFRAMESETTag(&container, aNode);
+    }
+    break;
+
   default:
     rv = NS_NewHTMLContainer(&container, atom);
     break;
@@ -783,9 +841,15 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     eHTMLTags parentType;
     parent = GetCurrentContainer(&parentType);
     container->Compact();
+    // don't append the top level frameset to its parent, this was done in OpenFrameset
+    // XXX this is necessary because the parser is calling OpenContainer, CloseContainer
+    // on framesets. It should be calling OpenFrameset.
+    if (container == mFrameset) {
+      return CloseFrameset(aNode);
+    }
 
     if (nsnull != parent) {
-      PRBool allowReflow = parent == mBody;
+      PRBool allowReflow = parent == GetBodyOrFrameset();
 #ifdef NS_DEBUG
       if (allowReflow) {
         SINK_TRACE(SINK_TRACE_REFLOW,
@@ -821,7 +885,7 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
       }
 #endif
 #if XXX
-      if (parent == mBody) {
+      if (parent == GetBodyOrFrameset()) {
         // We just closed a child of the body off. Trigger a
         // content-appended reflow if enough time has elapsed
         PRTime now = PR_Now();
@@ -976,9 +1040,14 @@ void HTMLContentSink::ReflowNewContent()
 nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 {
   nsIHTMLContent* parent;
-  if (mStackPos <= 2) {         // assume HTML and BODY are on the stack
-    parent = mBody;
-    *aType = eHTMLTag_body;
+  if (mStackPos <= 2) {         // assume HTML and BODY/FRAMESET are on the stack
+    if (mBody) {
+      parent = mBody;
+      *aType = eHTMLTag_body;
+    } else {
+      parent = mFrameset;
+      *aType = eHTMLTag_frameset;
+    }
   } else {
     parent = mContainerStack[mStackPos - 1];
     *aType = mNodeStack[mStackPos - 1];
@@ -1055,6 +1124,10 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     case eHTMLTag_br:
       FlushText();
       rv = ProcessBRTag(&leaf, aNode);
+      break;
+    case eHTMLTag_frame:
+      FlushText();
+      rv = ProcessFrameTag(&leaf, aNode);
       break;
     case eHTMLTag_hr:
       FlushText();
@@ -1220,7 +1293,7 @@ HTMLContentSink::GetTableParent()
     }
     sp--;
   }
-  return mBody;
+  return GetBodyOrFrameset();
 }
 
 nsresult
@@ -1693,14 +1766,14 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
     else if (val.EqualsIgnoreCase("text")) {
       rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm);
     }
-    else if (val.EqualsIgnoreCase("select1")) {  // TEMP hack XXX
-      rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 1);
+    else if (val.EqualsIgnoreCase("frameset1")) {  // TEMP hack XXX
+      //      rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 1);
     }
-    else if (val.EqualsIgnoreCase("select2")) {  // TEMP hack XXX
-      rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 2);
+    else if (val.EqualsIgnoreCase("frameset2")) {  // TEMP hack XXX
+      // rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 2);
     }
-    else if (val.EqualsIgnoreCase("select3")) {  // TEMP hack XXX
-      rv = NS_NewHTMLSelect(aInstancePtrResult, atom, mCurrentForm, 3);
+    else if (val.EqualsIgnoreCase("frameset3")) {  // TEMP hack XXX
+      // rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 3);
     }
     else {
       rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
@@ -1716,6 +1789,18 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
     // Add remaining attributes from the tag
     rv = AddAttributes(aNode, *aInstancePtrResult);
   }
+
+  NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult HTMLContentSink::ProcessFrameTag(nsIHTMLContent** aInstancePtrResult,
+                                          const nsIParserNode& aNode)
+{
+  nsAutoString tmp("FRAME");
+  nsIAtom* atom = NS_NewAtom(tmp);
+
+  nsresult rv = NS_NewHTMLFrame(aInstancePtrResult, atom, mWebShell);
 
   NS_RELEASE(atom);
   return rv;
@@ -1847,6 +1932,19 @@ HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
                                       const nsIParserNode& aNode)
 {
   nsAutoString tmp("IFRAME");
+  nsIAtom* atom = NS_NewAtom(tmp);
+
+  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebShell);
+
+  NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessFRAMESETTag(nsIHTMLContent** aInstancePtrResult,
+                                      const nsIParserNode& aNode)
+{
+  nsAutoString tmp("FRAMESET");
   nsIAtom* atom = NS_NewAtom(tmp);
 
   nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebShell);

@@ -53,9 +53,13 @@ class nsHTMLFramesetFrame : public nsHTMLContainerFrame {
 public:
   nsHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParent);
 
+  virtual ~nsHTMLFramesetFrame();
+
   static PRInt32 gMaxNumRowColSpecs;
 
-  void GetSizeOfChild(nsIFrame* aChild, nsReflowMetrics& aDesiredSize);
+  void GetSizeOfChild(nsIFrame* aChild, nsReflowMetrics& aSize);
+
+  void GetSizeOfChildAt(PRInt32 aIndexInParent, nsReflowMetrics& aSize, nsPoint& aCellIndex);
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
@@ -78,7 +82,7 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec* aSpecs); 
+  void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
 
   PRInt32 ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
                           nsFramesetSpec* aSpecs);
