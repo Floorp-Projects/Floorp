@@ -50,8 +50,7 @@ pref("general.fullcircle_collect_ns_data",  false);
 pref("browser.enable_style_sheets",         true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);     
-// until bug #7417 gets fixed...
-pref("browser.startup.homepage",	   "http://www.mozillazine.org/");
+pref("browser.startup.homepage",	   "http://www.mozilla.org/");
 pref("browser.startup.homepage_override",   true);
 pref("browser.startup.autoload_homepage",   true);
 pref("browser.startup.agreed_to_licence",   false);
