@@ -39,9 +39,9 @@ Contributor(s): ______________________________________. -->
         persist="screenX screenY width height"
 > 
 
-<html:script src="chrome://global/content/strres.js"></html:script>
-<html:script src="chrome://global/content/globalOverlay.js"></html:script>
-<html:script src="chrome://global/content/console.js"></html:script>
+<script language="javascript" src="chrome://global/content/strres.js"/>
+<script language="javascript" src="chrome://global/content/globalOverlay.js"/>
+<script language="javascript" src="chrome://global/content/console.js"/>
 
 <broadcasterset>
         <broadcaster id="cmd_quit"/>
