@@ -259,7 +259,9 @@ public:
   NS_HIDDEN_(void)  SetInitialValue();
   NS_HIDDEN_(void)  SetNoneValue();
   NS_HIDDEN_(void)  SetNormalValue();
-  NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument) const;  // Not really const, but pretending
+  NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument,
+                                   PRBool aIsBGImage = PR_FALSE)
+                                   const;  // Not really const, but pretending
 
 #ifdef DEBUG
   NS_HIDDEN_(void)
@@ -320,7 +322,7 @@ public:
     // force us to include imgIRequest.h, which leads to REQUIRES hell, since
     // this header is included all over.
     Image(nsIURI* aURI, const PRUnichar* aString, nsIURI* aReferrer,
-          nsIDocument* aDocument) NS_HIDDEN;
+          nsIDocument* aDocument, PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
     ~Image() NS_HIDDEN;
 
     // Inherit operator== from nsCSSValue::URL

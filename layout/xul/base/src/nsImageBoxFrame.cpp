@@ -261,12 +261,13 @@ nsImageBoxFrame::AttributeChanged(nsPresContext* aPresContext,
 {
   nsresult rv = nsLeafBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
 
-  PRBool aResize = UpdateAttributes(aAttribute);
-
-  if (aResize) {
+  if (aAttribute == nsHTMLAtoms::src) {
+    UpdateImage();
     nsBoxLayoutState state(aPresContext);
     MarkDirty(state);
   }
+  else if (aAttribute == nsXULAtoms::validate)
+    UpdateLoadFlags();
 
   return rv;
 }
@@ -274,8 +275,6 @@ nsImageBoxFrame::AttributeChanged(nsPresContext* aPresContext,
 nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell) :
   nsLeafBoxFrame(aShell),
   mUseSrcAttr(PR_FALSE),
-  mSizeFrozen(PR_FALSE),
-  mHasImage(PR_FALSE),
   mSuppressStyleCheck(PR_FALSE),
   mIntrinsicSize(0,0),
   mLoadFlags(nsIRequest::LOAD_NORMAL)
@@ -329,17 +328,21 @@ nsImageBoxFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mSuppressStyleCheck = PR_FALSE;
 
-  GetImageSource();
   UpdateLoadFlags();
-
   UpdateImage();
 
   return rv;
 }
 
 void
-nsImageBoxFrame::GetImageSource()
+nsImageBoxFrame::UpdateImage()
 {
+  if (mImageRequest) {
+    mImageRequest->Cancel(NS_ERROR_FAILURE);
+    mImageRequest = nsnull;
+    mIntrinsicSize.SizeTo(0, 0);
+  }
+
   // get the new image src
   nsAutoString src;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
@@ -350,31 +353,35 @@ nsImageBoxFrame::GetImageSource()
       baseURI = mContent->GetBaseURI();
     }
     // XXX origin charset needed
-    NS_NewURI(getter_AddRefs(mURI), src, nsnull, baseURI);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), src, nsnull, baseURI);
+
+    nsresult rv;
+    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+    if (uri && NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
+
+      // Get the document URI for the referrer...
+      nsIDocument* doc = mContent ? mContent->GetDocument() : nsnull;
+      nsIURI *documentURI = doc ? doc->GetDocumentURI() : nsnull;
+
+      // XXX: initialDocumentURI is NULL!
+      il->LoadImage(uri, nsnull, documentURI, loadGroup, mListener, doc,
+                    mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
+    }
   } else {
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
-    const nsStyleDisplay* disp = GetStyleDisplay();
-    if (disp->mAppearance && nsBox::gTheme && 
-        nsBox::gTheme->ThemeSupportsWidget(nsnull, this, disp->mAppearance))
-      return;
-
-    // get the list-style-image
-    mURI = GetStyleList()->mListStyleImage;
+    PRUint8 appearance = GetStyleDisplay()->mAppearance;
+    if (!(appearance && nsBox::gTheme && 
+          nsBox::gTheme->ThemeSupportsWidget(nsnull, this, appearance))) {
+      // get the list-style-image
+      imgIRequest *styleRequest = GetStyleList()->mListStyleImage;
+      if (styleRequest) {
+        styleRequest->Clone(mListener, getter_AddRefs(mImageRequest));
+      }
+    }
   }
-}
-
-PRBool
-nsImageBoxFrame::UpdateAttributes(nsIAtom* aAttribute)
-{
-  if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
-    GetImageSource();
-    return UpdateImage();
-  }
-  else if (aAttribute == nsXULAtoms::validate)
-    UpdateLoadFlags();
-
-  return PR_FALSE;
 }
 
 void
@@ -388,66 +395,6 @@ nsImageBoxFrame::UpdateLoadFlags()
     mLoadFlags = nsIRequest::VALIDATE_NEVER|nsIRequest::LOAD_FROM_CACHE; 
   else
     mLoadFlags = nsIRequest::LOAD_NORMAL;
-}
-
-PRBool
-nsImageBoxFrame::UpdateImage()
-{
-  // get the new image src
-  if (!mURI) {
-    mSizeFrozen = PR_TRUE;
-    mHasImage = PR_FALSE;
-
-    if (mImageRequest) {
-      mImageRequest->Cancel(NS_ERROR_FAILURE);
-      mImageRequest = nsnull;
-    }
-
-    return PR_TRUE;
-  }
-
-  nsresult rv;
-  if (mImageRequest) {
-    nsCOMPtr<nsIURI> requestURI;
-    rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
-    NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
-    if (NS_FAILED(rv) || !requestURI) return PR_FALSE;
-
-    PRBool eq;
-    // if the source uri and the current one are the same, return
-    if (NS_SUCCEEDED(requestURI->Equals(mURI, &eq)) && eq)
-      return PR_FALSE;
-  }
-
-  mSizeFrozen = PR_FALSE;
-  mHasImage = PR_TRUE;
-
-  // otherwise, we need to load the new uri
-  if (mImageRequest) {
-    mImageRequest->Cancel(NS_ERROR_FAILURE);
-    mImageRequest = nsnull;
-  }
-
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-  if (NS_FAILED(rv)) return PR_FALSE;
-
-  nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
-
-  // Get the document URI for the referrer...
-  nsIURI *documentURI = nsnull;
-  nsCOMPtr<nsIDocument> doc;
-  if (mContent) {
-    doc = mContent->GetDocument();
-    if (doc) {
-      documentURI = doc->GetDocumentURI();
-    }
-  }
-
-  // XXX: initialDocumentURI is NULL!
-  il->LoadImage(mURI, nsnull, documentURI, loadGroup, mListener, doc,
-                mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
-
-  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -490,7 +437,7 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
     return;
 
   // don't draw if the image is not dirty
-  if (!mHasImage || !aDirtyRect.Intersects(rect))
+  if (!aDirtyRect.Intersects(rect))
     return;
 
   nsCOMPtr<imgIContainer> imgCon;
@@ -548,13 +495,16 @@ nsImageBoxFrame::DidSetStyleContext( nsPresContext* aPresContext )
     return NS_OK;
 
   // If list-style-image changes, we have a new image.
-  nsIURI *newURI = myList->mListStyleImage;
+  nsCOMPtr<nsIURI> oldURI, newURI;
+  if (mImageRequest)
+    mImageRequest->GetURI(getter_AddRefs(oldURI));
+  if (myList->mListStyleImage)
+    myList->mListStyleImage->GetURI(getter_AddRefs(newURI));
   PRBool equal;
-  if (newURI == mURI ||   // handles null==null
-      (newURI && mURI && NS_SUCCEEDED(newURI->Equals(mURI, &equal)) && equal))
+  if (newURI == oldURI ||   // handles null==null
+      (newURI && oldURI &&
+       NS_SUCCEEDED(newURI->Equals(oldURI, &equal)) && equal))
     return NS_OK;
-
-  mURI = newURI;
 
   UpdateImage();
   return NS_OK;
@@ -563,36 +513,13 @@ nsImageBoxFrame::DidSetStyleContext( nsPresContext* aPresContext )
 void
 nsImageBoxFrame::GetImageSize()
 {
-  nsHTMLReflowMetrics desiredSize(PR_TRUE);
-  const PRInt32 kDefaultSize = 0;
-  // XXX constant zero?
-  const PRInt32 kDefaultSizeInTwips =
-    GetPresContext()->IntScaledPixelsToTwips(kDefaultSize);
-
-// not calculated? Get the intrinsic size
-	if (mHasImage) {
-	  // get the size of the image and set the desired size
-	  if (mSizeFrozen) {
-			mImageSize.width = kDefaultSizeInTwips;
-			mImageSize.height = kDefaultSizeInTwips;
-      return;
-	  } else {
-      // Ask the image loader for the *intrinsic* image size
-      if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
-        mImageSize.width = mIntrinsicSize.width;
-        mImageSize.height = mIntrinsicSize.height;
-        return;
-      } else {
-        mImageSize.width = kDefaultSizeInTwips;
-        mImageSize.height = kDefaultSizeInTwips;
-        return;
-      }
-	  }
-	}
-
-  // XXX constant zero?
-  mImageSize.width = desiredSize.width;
-  mImageSize.height = desiredSize.height;
+  if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
+    mImageSize.width = mIntrinsicSize.width;
+    mImageSize.height = mIntrinsicSize.height;
+  } else {
+    mImageSize.width = 0;
+    mImageSize.height = 0;
+  }
 }
 
 
@@ -681,9 +608,6 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
 
   // Ensure the animation (if any) is started
   image->StartAnimation();
-
-  mHasImage = PR_TRUE;
-  mSizeFrozen = PR_FALSE;
 
   nscoord w, h;
   image->GetWidth(&w);

@@ -342,14 +342,14 @@ void nsCSSValue::SetNormalValue()
   mUnit = eCSSUnit_Normal;
 }
 
-void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
+void nsCSSValue::StartImageLoad(nsIDocument* aDocument, PRBool aIsBGImage) const
 {
   NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");
   nsCSSValue::Image* image =
     new nsCSSValue::Image(mValue.mURL->mURI,
                           mValue.mURL->mString,
                           mValue.mURL->mReferrer,
-                          aDocument);
+                          aDocument, aIsBGImage);
   if (image) {
     if (image->mString) {
       nsCSSValue* writable = NS_CONST_CAST(nsCSSValue*, this);
@@ -361,7 +361,8 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 }
 
 nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
-                         nsIURI* aReferrer, nsIDocument* aDocument)
+                         nsIURI* aReferrer, nsIDocument* aDocument,
+                         PRBool aIsBGImage)
   : URL(aURI, aString, aReferrer)
 {
   MOZ_COUNT_CTOR(nsCSSValue::Image);
@@ -371,8 +372,11 @@ nsCSSValue::Image::Image(nsIURI* aURI, const PRUnichar* aString,
     return;
 
   // If Paint Forcing is enabled, then force all background image loads to
-  // complete before firing onload for the document
-  static PRInt32 loadFlag = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD")
+  // complete before firing onload for the document.  Otherwise, background
+  // image loads are special and don't block onload.
+  static PRBool bg_in_bg = !PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD");
+
+  PRInt32 loadFlag = (!aIsBGImage || !bg_in_bg)
     ? (PRInt32)nsIRequest::LOAD_NORMAL
     : (PRInt32)nsIRequest::LOAD_BACKGROUND;
 
