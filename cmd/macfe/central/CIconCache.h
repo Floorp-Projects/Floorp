@@ -20,6 +20,13 @@
 // CIconCache.h
 // Mike Pinkerton, Netscape Communications
 //
+// Contains the implementation of the CImageCache class which is a small cache of
+// images which the FE can pull from with a low overhead. It's good for things
+// such as using images for icons in the chrome. Note that this is very
+// different from the XP image cache.
+//
+// The filename is old, owing back to the original name for this class, CIconCache
+//
 
 #pragma once
 
@@ -31,16 +38,16 @@
 
 
 //
-// class IconCacheData
+// class ImageCacheData
 //
-// Contains all the relevant data for an icon loaded from a url (not an FE icon). The
-// icon context controls the loading and notification of when the image has been loaded
+// Contains all the relevant data for an image loaded from a url (not an FE icon). The
+// context controls the loading and notification of when the image has been loaded
 // and keeps copies of the FE pixmap data so when imageLib cleans house, we're still ok.
 //
-class IconCacheData : public LBroadcaster {
+class ImageCacheData : public LBroadcaster {
 public:
-	IconCacheData ( const string & inURL ) ;
-	~IconCacheData ( ) ;
+	ImageCacheData ( const string & inURL ) ;
+	~ImageCacheData ( ) ;
 
 		// Hold on tight to whatever we need to draw, making copies if necessary.
 	void CacheThese ( IL_Pixmap* inImage, IL_Pixmap* inMask )  ;
@@ -55,16 +62,20 @@ public:
 	
 private:
 
+		// declare these as private so no one can do them.
+	ImageCacheData ( const ImageCacheData & ) ;
+	ImageCacheData & operator= ( const ImageCacheData & ) ;
+	
 	NS_PixMap*	mImage;
 	NS_PixMap*	mMask;
 
 	CIconContext* mContext;
 
-}; // struct IconCacheData
+}; // struct ImageCacheData
 
 
 //
-// class CIconCache
+// class CImageCache
 //
 // There should only be one of these in the entire application. Users make a request
 // by asking the cache for a particular URL. If the URL is not loaded, a new icon context
@@ -73,13 +84,13 @@ private:
 // be placed on that listener list (for animating images) or be given the data directly
 // (for static images).
 //
-class CIconCache : public LListener
+class CImageCache : public LListener
 {
 public:
 	enum ELoadResult { kDataPresent, kPutOnWaitingList } ;
 	
-	CIconCache ( ) ;
-	virtual ~CIconCache ( ) ;
+	CImageCache ( ) ;
+	virtual ~CImageCache ( ) ;
 	
 		// Make a request for an icon. Will start loading if not present.
 	ELoadResult RequestIcon ( const string & inURL, const LListener* inClient ) ;
@@ -99,15 +110,19 @@ public:
 	
 private:
 
+		// declare these private so no one can make a copy of the cache
+	CImageCache ( const CImageCache & ) ;
+	CImageCache & operator= ( const CImageCache & ) ;
+	
 	void ListenToMessage ( MessageT inMessage, void* inData ) ;
 	
 		// clean out the cache when it gets too big.
 	void Flush() ;
 	
-	map<string, IconCacheData*>	mCache;
+	map<string, ImageCacheData*>	mCache;
 	
-}; // class CIconCache
+}; // class CImageCache
 
 
 // global declaration of our icon cache
-extern CIconCache gIconCache;
+CImageCache& gImageCache ( ) ;

@@ -21,6 +21,13 @@
 // CIconCache.cp
 // Mike Pinkerton, Netscape Communications
 //
+// Contains the implementation of the CImageCache class which is a small cache of
+// images which the FE can pull from with a low overhead. It's good for things
+// such as using images for icons in the chrome. Note that this is very
+// different from the XP image cache.
+//
+// The filename is old, owing back to the original name for this class, CIconCache
+//
 // To Do:
 //	¥ Flush cache when it gets too full?
 //
@@ -33,10 +40,25 @@
 #include "libevent.h"
 
 
-CIconCache gIconCache;		// global storage definition
+//
+// gImageCache
+//
+// Wrapper around our image cache global so we know it gets initialized correctly before anyone
+// can call it.
+//
+CImageCache& gImageCache ( )
+{
+	static CImageCache _gImageCache;
+	
+	return _gImageCache;
+
+} // gImageCache
 
 
-IconCacheData :: IconCacheData ( const string & inURL )
+#pragma mark -
+
+
+ImageCacheData :: ImageCacheData ( const string & inURL )
 	: mImage(NULL), mMask(NULL)
 {
 	mContext = new CIconContext ( inURL );
@@ -44,7 +66,7 @@ IconCacheData :: IconCacheData ( const string & inURL )
 		throw bad_alloc();
 }
 
-IconCacheData :: ~IconCacheData ( ) 
+ImageCacheData :: ~ImageCacheData ( ) 
 {
 	DestroyFEPixmap ( mImage );
 	DestroyFEPixmap ( mMask );
@@ -60,7 +82,7 @@ IconCacheData :: ~IconCacheData ( )
 // that already exists.
 //
 void 
-IconCacheData :: CacheThese ( IL_Pixmap* inImage, IL_Pixmap* inMask ) 
+ImageCacheData :: CacheThese ( IL_Pixmap* inImage, IL_Pixmap* inMask ) 
 {
 	// clean up what we allocate beforehand.
 	DestroyFEPixmap ( mImage );
@@ -106,13 +128,13 @@ IconCacheData :: CacheThese ( IL_Pixmap* inImage, IL_Pixmap* inMask )
 #pragma mark -
 
 
-CIconCache :: CIconCache ( ) 
+CImageCache :: CImageCache ( ) 
 {
 
 }
 
 
-CIconCache :: ~CIconCache ( )
+CImageCache :: ~CImageCache ( )
 {
 	//¥ need to dispose of all the images....but since this is only called at shutdown....
 }
@@ -126,12 +148,12 @@ CIconCache :: ~CIconCache ( )
 // will be |kPutOnWaitingList|. If the data is already there in the cache, |kDataPresent|
 // is returned.
 //
-CIconCache::ELoadResult
-CIconCache :: RequestIcon ( const string & inURL, const LListener* inClient )
+CImageCache::ELoadResult
+CImageCache :: RequestIcon ( const string & inURL, const LListener* inClient )
 {
 	ELoadResult result;
 	
-	IconCacheData* data = mCache[inURL];
+	ImageCacheData* data = mCache[inURL];
 	if ( data ) {
 		if ( !data->ImageAvailable() && data->IconContext() ) {
 			// We're still loading. The cache is already on the notification list, so just
@@ -145,7 +167,7 @@ CIconCache :: RequestIcon ( const string & inURL, const LListener* inClient )
 	else {
 		// not in cache yet, need to start loading this icon. Add the caller as a 
 		// listener to the data class and add us a listener to the context. 
-		data = new IconCacheData(inURL);
+		data = new ImageCacheData(inURL);
 		if ( !data )
 			throw bad_alloc();
 		URL_Struct* urlStruct = NET_CreateURLStruct (inURL.c_str(), NET_DONT_RELOAD);
@@ -173,9 +195,9 @@ CIconCache :: RequestIcon ( const string & inURL, const LListener* inClient )
 // For images that are already loaded (RequestIcon() returned |kDataPresent|, get the data.
 //
 void
-CIconCache :: FetchImageData ( const string & inURL, NS_PixMap** outImage, NS_PixMap** outMask )
+CImageCache :: FetchImageData ( const string & inURL, NS_PixMap** outImage, NS_PixMap** outMask )
 {
-	IconCacheData* data = mCache[inURL];
+	ImageCacheData* data = mCache[inURL];
 	if ( data ) {
 		*outImage = data->Image();
 		*outMask = data->Mask();
@@ -207,12 +229,12 @@ static void DeferredDelete ( CNSContext * context )
 // but the data should remain.
 //
 void
-CIconCache :: ContextFinished ( const MWContext* inContext )
+CImageCache :: ContextFinished ( const MWContext* inContext )
 {
 	// find the context in the cache (we don't have the url). Remember the cache
 	// contains CIconContext's and we are given an MWContext. Easy enough, though,
 	// because the MWContext contains a pointer back to the FE class in |fe.newContext|
-	typedef map<string, IconCacheData*>::const_iterator CI;
+	typedef map<string, ImageCacheData*>::const_iterator CI;
 	CI it = mCache.begin();
 	for ( ; it != mCache.end(); ++it ) {
 		CIconContext* currContext = (*it).second->IconContext();
@@ -247,9 +269,9 @@ CIconCache :: ContextFinished ( const MWContext* inContext )
 // go telling dead objects their image has arrived.
 //
 void
-CIconCache :: ListenerGoingAway ( const string & inURL, LListener* inObjectGoingAway )
+CImageCache :: ListenerGoingAway ( const string & inURL, LListener* inObjectGoingAway )
 {
-	IconCacheData* data = mCache[inURL];
+	ImageCacheData* data = mCache[inURL];
 	if ( data && data->IconContext() )
 		data->IconContext()->RemoveListener ( inObjectGoingAway );
 	
@@ -262,7 +284,7 @@ CIconCache :: ListenerGoingAway ( const string & inURL, LListener* inObjectGoing
 // clean out the cache when it gets too big.
 //
 void
-CIconCache :: Flush()
+CImageCache :: Flush()
 {
 
 }
@@ -277,7 +299,7 @@ CIconCache :: Flush()
 // to draw things.
 //
 void
-CIconCache :: ListenToMessage ( MessageT inMessage, void* inData )
+CImageCache :: ListenToMessage ( MessageT inMessage, void* inData )
 {
 	switch ( inMessage ) {
 		case CIconContext::msg_ImageReadyToDraw:
@@ -286,7 +308,7 @@ CIconCache :: ListenToMessage ( MessageT inMessage, void* inData )
 			Assert_(data != NULL);
 			if ( data ) {
 				try {
-					IconCacheData* iconData = mCache[data->url];
+					ImageCacheData* iconData = mCache[data->url];
 					if ( iconData ) {
 						// remember whatever we need and tell clients to draw
 						iconData->CacheThese ( data->image, data->mask );
