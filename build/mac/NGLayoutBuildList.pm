@@ -541,6 +541,7 @@ sub MakeResouceAliases()
 	#//
 	my($resource_dir) = "$dist_dir" . "res:";
 	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",								"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
