@@ -152,9 +152,9 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_LOSTFOCUS                    (NS_WINDOW_START + 4)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
-// Key is pressed down within a window
-#define NS_KEY_UP                       (NS_WINDOW_START + 32)
 // Key is released within a window
+#define NS_KEY_UP                       (NS_WINDOW_START + 32)
+// Key is pressed within a window
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
 // Window has been moved to a new location.
 // The events point contains the x, y location in screen coordinates
