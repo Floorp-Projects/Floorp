@@ -30,7 +30,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"

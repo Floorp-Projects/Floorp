@@ -32,6 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
+#include "nsForwardReference.h"
 #include "nsXULAttributes.h"
 #include "nsIXULPopupListener.h"
 #include "nsIHTMLContentContainer.h"
@@ -54,7 +55,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptGlobalObject.h"
@@ -84,6 +84,7 @@
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsIXULContent.h"
+#include "nsIXULDocument.h"
 #include "nsXULTreeElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
@@ -334,6 +335,7 @@ public:
     NS_IMETHOD SetLazyState(PRInt32 aFlags);
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
+    NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -373,9 +375,6 @@ public:
     NS_DECL_IDOMXULELEMENT
 
     // Implementation methods
-	nsresult GetIdResource(nsIRDFResource** aResult);
-    nsresult GetRefResource(nsIRDFResource** aResult);
-
     nsresult EnsureContentsGenerated(void) const;
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
@@ -453,6 +452,7 @@ private:
     nsIDOMXULElement*      mBroadcaster;        // [WEAK]
     nsCOMPtr<nsIController>             mController; // [OWNER]
     nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;   // [OWNER]    
+    nsCOMPtr<nsIRDFResource>            mOwnedResource; // [OWNER]
 
     // An unreferenced bare pointer to an aggregate that can implement
     // element-specific APIs.
@@ -460,6 +460,29 @@ private:
 
     // The state of our sloth; see nsIXULContent.
     PRInt32                mLazyState;
+
+
+    class ObserverForwardReference : public nsForwardReference
+    {
+    protected:
+        nsCOMPtr<nsIDOMElement> mListener;
+        nsString mTargetID;
+        nsString mAttributes;
+
+    public:
+        ObserverForwardReference(nsIDOMElement* aListener,
+                                 const nsString& aTargetID,
+                                 const nsString& aAttributes) :
+            mListener(aListener),
+            mTargetID(aTargetID),
+            mAttributes(aAttributes) {}
+
+        virtual ~ObserverForwardReference() {}
+
+        virtual Result Resolve();
+    };
+
+    friend class ObserverForwardReference;
 };
 
 
@@ -541,6 +564,44 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
 
     { nsnull,          nsnull, nsnull                       }
 };
+
+
+////////////////////////////////////////////////////////////////////////
+
+nsForwardReference::Result
+RDFElementImpl::ObserverForwardReference::Resolve()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mListener);
+    if (! content)
+        return eResolveError;
+
+    nsCOMPtr<nsIDocument> doc;
+    rv = content->GetDocument(*getter_AddRefs(doc));
+    if (NS_FAILED(rv)) return eResolveError;
+
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(doc);
+    if (! xuldoc)
+        return eResolveError;
+
+    nsCOMPtr<nsIDOMElement> target;
+    rv = xuldoc->GetElementById(mTargetID, getter_AddRefs(target));
+    if (NS_FAILED(rv)) return eResolveError;
+
+    if (! target)
+        return eResolveLater;
+
+    nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
+    if (! broadcaster)
+        return eResolveError;
+
+    rv = broadcaster->AddBroadcastListener(mAttributes, mListener);
+    if (NS_FAILED(rv)) return eResolveError;
+
+    return eResolveSucceeded;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // RDFElementImpl
@@ -1465,6 +1526,24 @@ RDFElementImpl::GetLazyState(PRInt32 aFlag, PRBool& aResult)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+RDFElementImpl::ForceElementToOwnResource(PRBool aForce)
+{
+    nsresult rv;
+
+    if (aForce) {
+        rv = GetResource(getter_AddRefs(mOwnedResource));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // drop reference
+        mOwnedResource = nsnull;
+    }
+
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMEventReceiver interface
 
@@ -1691,30 +1770,8 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
     nsresult rv;
 
-    nsCOMPtr<nsIRDFDocument> rdfDoc;
+    nsCOMPtr<nsIXULDocument> rdfDoc;
     if (mDocument) {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
-        NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
-        if (rdfdoc) {
-            // Need to do a GetIdResource() here, because changing the document
-            // may actually change the element's URI.
-            nsCOMPtr<nsIRDFResource> resource;
-            GetIdResource(getter_AddRefs(resource));
-
-            // Remove this element from the RDF resource-to-element map in
-            // the old document.
-            if (resource) {
-                rv = rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
-            }
-
-            GetRefResource(getter_AddRefs(resource));
-            if (resource) {
-                rv = rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
-            }
-        }
-
         // Release the named reference to the script object so it can
         // be garbage collected.
         if (mScriptObject) {
@@ -1735,28 +1792,6 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument = aDocument; // not refcounted
 
     if (mDocument) {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
-        NS_ASSERTION(rdfdoc != nsnull, "ack! not in an RDF document");
-        if (rdfdoc) {
-            // Need to do a GetIdResource() here, because changing the document
-            // may actually change the element's URI.
-            nsCOMPtr<nsIRDFResource> resource;
-            GetIdResource(getter_AddRefs(resource));
-
-            // Add this element to the RDF resource-to-element map in the
-            // new document.
-            if (resource) {
-                rv = rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
-            }
-
-            GetRefResource(getter_AddRefs(resource));
-            if (resource) {
-                rv = rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
-            }
-        }
-
         // Add a named reference to the script object.
         if (mScriptObject) {
             nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
@@ -1859,11 +1894,17 @@ RDFElementImpl::SetParent(nsIContent* aParent)
         }
       }
       else {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        nsCOMPtr<nsIXULDocument> rdfdoc = do_QueryInterface(mDocument);
         if (! rdfdoc)
-          return NS_ERROR_UNEXPECTED;
+            return NS_ERROR_UNEXPECTED;
 
-        rdfdoc->AddForwardObserverDecl(listener, elementValue, attributeValue);
+        ObserverForwardReference* fwdref =
+            new ObserverForwardReference(listener, elementValue, attributeValue);
+
+        if (! fwdref)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rdfdoc->AddForwardReference(fwdref);
       }
     }
 
@@ -2268,11 +2309,17 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         }
       }
       else {
-        nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
+        nsCOMPtr<nsIXULDocument> rdfdoc = do_QueryInterface(mDocument);
         if (! rdfdoc)
           return NS_ERROR_UNEXPECTED;
 
-        rdfdoc->AddForwardObserverDecl(this, aValue, "*");
+        ObserverForwardReference* fwdref =
+            new ObserverForwardReference(this, aValue, nsAutoString("*"));
+
+        if (! fwdref)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rdfdoc->AddForwardReference(fwdref);
       }
     }
 
@@ -2347,26 +2394,6 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         NS_IF_RELEASE(popupListener);
     }
 
-    // Check to see if the REF attribute is being set. If so, we need
-    // to update the element map.  First, remove the old mapping, if
-    // necessary...
-    nsCOMPtr<nsIRDFDocument> rdfdoc = do_QueryInterface(mDocument);
-    if (rdfdoc && (aNameSpaceID == kNameSpaceID_None)) {
-        nsCOMPtr<nsIRDFResource> resource;
-        if (aName == kRefAtom) {
-            GetRefResource(getter_AddRefs(resource));
-        }
-        else if (aName == kIdAtom) {
-            GetIdResource(getter_AddRefs(resource));
-        }
-
-        if (resource) {
-            rdfdoc->RemoveElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-        }
-    }
-
-
-
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
     
@@ -2390,23 +2417,6 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
         mAttributes->AppendElement(attr);
     }
-
-    // Check for REF attribute, part deux. Add the new REF to the map,
-    // if appropriate.
-    if (rdfdoc && (aNameSpaceID == kNameSpaceID_None)) {
-        nsCOMPtr<nsIRDFResource> resource;
-        if (aName == kRefAtom) {
-            GetRefResource(getter_AddRefs(resource));
-        }
-        else if (aName == kIdAtom) {
-            GetIdResource(getter_AddRefs(resource));
-        }
-
-        if (resource) {
-            rdfdoc->AddElementForResource(resource, NS_STATIC_CAST(nsIStyledContent*, this));
-        }
-    }
-        
 
     // Check for event handlers and add a script listener if necessary.
     EventHandlerMapEntry* entry = kEventHandlerMap;
@@ -2529,18 +2539,6 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                 else {
                     rv = NS_CONTENT_ATTR_NO_VALUE;
                 }
-#if 0
-                if ((aNameSpaceID == kNameSpaceID_None) &&
-                    (attr->mName == kIdAtom))
-                {
-                  // RDF will treat all document IDs as absolute URIs, so we'll need convert 
-                  // a possibly-absolute URI into a relative ID attribute.
-                    NS_ASSERTION(mDocument != nsnull, "not initialized");
-                    if (nsnull != mDocument) {
-                        gXULUtils->MakeElementID(mDocument, attr->mValue, aResult);
-                    }
-                }
-#endif
                 break;
             }
         }
@@ -3053,15 +3051,25 @@ NS_IMETHODIMP
 RDFElementImpl::GetResource(nsIRDFResource** aResource)
 {
 	nsresult rv;
-	rv = GetRefResource(aResource);
-	if (NS_FAILED(rv)) return rv;
 
-	if (! *aResource) {
-		rv = GetIdResource(aResource);
+    nsAutoString id;
+    rv = GetAttribute(kNameSpaceID_None, kRefAtom, id);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+		rv = GetAttribute(kNameSpaceID_None, kIdAtom, id);
 		if (NS_FAILED(rv)) return rv;
-	}
+    }
 
-	return NS_OK;
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = gRDFService->GetResource(nsCAutoString(id), aResource);
+		if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        *aResource = nsnull;
+    }
+
+    return NS_OK;
 }
 
 
@@ -3098,51 +3106,6 @@ RDFElementImpl::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
 // Implementation methods
 
 nsresult
-RDFElementImpl::GetIdResource(nsIRDFResource** aResource)
-{
-    if (mAttributes) {
-        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
-            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
-            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == kIdAtom)) {
-                return gXULUtils->MakeElementResource(mDocument, attr->mValue, aResource);
-            }
-        }
-    }
-
-    // No resource associated with this element.
-    *aResource = nsnull;
-    return NS_OK;
-}
-
-
-nsresult
-RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
-{
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
-    if (! mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    if (mAttributes) {
-        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
-            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
-            if (attr->mNameSpaceID != kNameSpaceID_None)
-                continue;
-
-            if (attr->mName != kRefAtom)
-                continue;
-
-            return gXULUtils->MakeElementResource(mDocument, attr->mValue, aResource);
-        }
-    }
-
-    // If we get here, there was no 'ref' attribute. So return a null resource.
-    *aResource = nsnull;
-    return NS_OK;
-}
-
-
-nsresult
 RDFElementImpl::EnsureContentsGenerated(void) const
 {
     if (mLazyState & nsIXULContent::eChildrenMustBeRebuilt) {
@@ -3167,7 +3130,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
         // getters if needed.
         unconstThis->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
 
-        nsCOMPtr<nsIRDFDocument> rdfDoc = do_QueryInterface(mDocument);
+        nsCOMPtr<nsIXULDocument> rdfDoc = do_QueryInterface(mDocument);
         if (! mDocument)
             return NS_OK;
 

@@ -24,10 +24,9 @@ EXPORTS	= \
         nsIDOMXULDocument.h             \
         nsIDOMXULElement.h              \
         nsIDOMXULTreeElement.h          \
-        nsIRDFContentModelBuilder.h     \
-        nsIRDFDocument.h                \
 	nsIXULParentDocument.h		\
 	nsIXULChildDocument.h		\
+        nsIXULContentSink.h             \
 	nsIXULDocumentInfo.h		\
 	nsIXULPopupListener.h           \
 	nsIDOMXULCommandDispatcher.h    \

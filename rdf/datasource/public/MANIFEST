@@ -1,5 +1,4 @@
 nsILocalStore.h
 nsIRDFFileSystem.h
 nsIRDFFTP.h
-nsIXULContentSink.h
 

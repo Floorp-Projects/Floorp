@@ -84,6 +84,13 @@ public:
      * @aResult the result
      */
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aResult) = 0;
+
+    /**
+     * Evil rotten hack to make mailnews work. They assume that we
+     * keep a reference to their resource objects. If you think you
+     * should call this method, think again. You shouldn't.
+     */
+    NS_IMETHOD ForceElementToOwnResource(PRBool aForce) = 0;
 };
 
 #endif // nsIXULContent_h__
