@@ -73,7 +73,7 @@ HRESULT InitializeXPIStub()
 
   hXPIStubInst = NULL;
 
-  if(NS_LoadString(hSetupRscInst, IDS_ERROR_GETPROCADDRESS, szEGetProcAddress, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "ERROR_GETPROCADDRESS", "", szEGetProcAddress, sizeof(szEGetProcAddress), szFileIniInstall))
     return(1);
 
   /* change current directory to where xpistub.dll */
@@ -189,15 +189,15 @@ HRESULT SmartUpdateJars()
   char      szMsgSmartUpdateStart[MAX_BUF];
   char      szDlgExtractingTitle[MAX_BUF];
 
-  if(NS_LoadString(hSetupRscInst, IDS_MSG_SMARTUPDATE_START, szMsgSmartUpdateStart, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", "", szMsgSmartUpdateStart, sizeof(szMsgSmartUpdateStart), szFileIniInstall))
     return(1);
-  if(NS_LoadString(hSetupRscInst, IDS_DLG_EXTRACTING_TITLE, szDlgExtractingTitle, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "DLG_EXTRACTING_TITLE", "", szDlgExtractingTitle, sizeof(szDlgExtractingTitle), szFileIniInstall))
     return(1);
-  if(NS_LoadString(hSetupRscInst, IDS_STR_PROCESSINGFILE, szStrProcessingFile, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "STR_PROCESSINGFILE", "", szStrProcessingFile, sizeof(szStrProcessingFile), szFileIniInstall))
     exit(1);
-  if(NS_LoadString(hSetupRscInst, IDS_STR_INSTALLING, szStrInstalling, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "STR_INSTALLING", "", szStrInstalling, sizeof(szStrInstalling), szFileIniInstall))
     exit(1);
-  if(NS_LoadString(hSetupRscInst, IDS_STR_COPYINGFILE, szStrCopyingFile, MAX_BUF) != WIZ_OK)
+  if(!GetPrivateProfileString("Messages", "STR_COPYINGFILE", "", szStrCopyingFile, sizeof(szStrCopyingFile), szFileIniInstall))
     exit(1);
 
   ShowMessage(szMsgSmartUpdateStart, TRUE);
@@ -256,7 +256,7 @@ HRESULT SmartUpdateJars()
             {
               char szEFileNotFound[MAX_BUF];
 
-              if(NS_LoadString(hSetupRscInst, IDS_ERROR_FILE_NOT_FOUND, szEFileNotFound, MAX_BUF) == WIZ_OK)
+              if(GetPrivateProfileString("Messages", "ERROR_FILE_NOT_FOUND", "", szEFileNotFound, sizeof(szEFileNotFound), szFileIniInstall))
               {
                 wsprintf(szBuf, szEFileNotFound, szArchive);
                 PrintError(szBuf, ERROR_CODE_HIDE);
@@ -284,7 +284,7 @@ HRESULT SmartUpdateJars()
         {
           LogMSXPInstallStatus(siCObject->szArchiveName, hrResult);
           LogISXPInstallComponentResult(hrResult);
-          if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
+          if(GetPrivateProfileString("Messages", "ERROR_XPI_INSTALL", "", szEXpiInstall, sizeof(szEXpiInstall), szFileIniInstall))
           {
             char szErrorString[MAX_BUF];
 
@@ -406,6 +406,10 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
 			return FALSE;
 
 		case WM_COMMAND:

@@ -53,6 +53,7 @@ LPSTR           szSetupDir;
 LPSTR           szTempDir;
 LPSTR           szOSTempDir;
 LPSTR           szFileIniConfig;
+LPSTR           szFileIniInstall;
 
 LPSTR           szSiteSelectorDescription;
 
@@ -91,6 +92,7 @@ siSD            siSDObject;
 siCF            siCFXpcomFile;
 siC             *siComponents;
 ssi             *ssiSiteSelector;
+installGui      sgInstallGui;
 sems            gErrorMessageStream;
 sysinfo         gSystemInfo;
 dsN             *gdsnComponentDSRequirement = NULL;
@@ -100,6 +102,7 @@ dsN             *gdsnComponentDSRequirement = NULL;
 char *SetupFileList[] = {"setuprsc.dll",
                          "config.ini",
                          "setup.ini",
+                         "installer.ini",
                          ""};
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
@@ -134,7 +137,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     {
       char szEFailed[MAX_BUF];
 
-      if(NS_LoadString(hInstance, IDS_ERROR_FAILED, szEFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed), szFileIniInstall))
       {
         wsprintf(szBuf, szEFailed, "InitApplication().");
         PrintError(szBuf, ERROR_CODE_SHOW);
@@ -145,11 +148,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     {
       char szEFailed[MAX_BUF];
 
-      if(NS_LoadString(hInstance, IDS_ERROR_FAILED, szEFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed), szFileIniInstall))
       {
         wsprintf(szBuf, szEFailed, "InitInstance().");
         PrintError(szBuf, ERROR_CODE_SHOW);
       }
+      PostQuitMessage(1);
+    }
+    else if(GetInstallIni())
+    {
+      PostQuitMessage(1);
+    }
+    else if(ParseInstallIni())
+    {
       PostQuitMessage(1);
     }
     else if(GetConfigIni())

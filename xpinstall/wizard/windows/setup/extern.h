@@ -53,6 +53,7 @@ extern LPSTR            szSetupDir;
 extern LPSTR            szTempDir;
 extern LPSTR            szOSTempDir;
 extern LPSTR            szFileIniConfig;
+extern LPSTR            szFileIniInstall;
 
 extern LPSTR            szSiteSelectorDescription;
 
@@ -90,6 +91,7 @@ extern siCF             siCFXpcomFile;
 extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;
 extern char             *SetupFileList[];
+extern installGui       sgInstallGui;
 extern sems             gErrorMessageStream;
 extern sysinfo          gSystemInfo;
 extern dsN              *gdsnComponentDSRequirement;

@@ -52,14 +52,14 @@ END
 // Dialog
 //
 
-DLG_WELCOME DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_WELCOME DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_STATIC0,101,11,202,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,102,53,201,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC2,102,96,201,37,NOT WS_GROUP
@@ -69,12 +69,12 @@ BEGIN
                     WS_EX_STATICEDGE
 END
 
-DLG_SETUP_TYPE DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_SETUP_TYPE DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CAPTION ":"
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_RADIO_ST0,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,102,29,65,12
@@ -88,36 +88,36 @@ BEGIN
     LTEXT           "",IDC_STATIC_ST3_DESCRIPTION,175,114,126,25
     LTEXT           "",IDC_STATIC_ST1_DESCRIPTION,175,59,126,24
     LTEXT           "",IDC_STATIC_ST2_DESCRIPTION,175,86,126,24
-    GROUPBOX        "Destination Directory",IDC_STATIC,101,147,204,27
-    PUSHBUTTON      "B&rowse...",IDC_BUTTON_BROWSE,255,156,46,14
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    GROUPBOX        "",IDC_STATIC,101,147,204,27
+    PUSHBUTTON      "",IDC_BUTTON_BROWSE,255,156,46,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_STATIC_MSG0,101,11,204,17,NOT WS_GROUP
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    PUSHBUTTON      "Re&ad Me",IDC_README,11,186,53,14
+    PUSHBUTTON      "",IDC_README,11,186,83,14
     CONTROL         "",IDC_EDIT_DESTINATION,"Static",SS_LEFTNOWORDWRAP | 
                     WS_GROUP,107,160,143,9
 END
 
-DLG_SELECT_COMPONENTS DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_SELECT_COMPONENTS DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LISTBOX         IDC_LIST_COMPONENTS,101,42,204,67,LBS_OWNERDRAWFIXED | 
                     LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,10,204,19,NOT WS_GROUP
-    LTEXT           "C&omponents:",IDC_STATIC,101,32,103,8
-    GROUPBOX        "Description",IDC_STATIC,101,115,204,22
+    LTEXT           "",IDC_STATIC1,101,32,103,8
+    GROUPBOX        "",IDC_STATIC2,101,115,204,22
     LTEXT           "",IDC_STATIC_DESCRIPTION,106,124,195,8,SS_NOPREFIX
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
@@ -127,28 +127,28 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
     LTEXT           "",IDC_STATIC,201,32,103,8,0,WS_EX_RIGHT
-    LTEXT           "Total Download Size:",IDC_STATIC,105,148,92,9
-    LTEXT           "Space Available:",IDC_STATIC,206,148,94,9
+    LTEXT           "",IDC_STATIC3,105,148,92,9
+    LTEXT           "",IDC_STATIC4,206,148,94,9
 END
 
-DLG_WINDOWS_INTEGRATION DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_WINDOWS_INTEGRATION DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Check0",IDC_CHECK0,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+    CONTROL         "",IDC_CHECK0,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,101,32,205,17
-    CONTROL         "Check1",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+    CONTROL         "",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,101,53,205,17
-    CONTROL         "Check2",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+    CONTROL         "",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,101,73,205,17
-    CONTROL         "Check3",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+    CONTROL         "",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_TOP | 
                     BS_MULTILINE | WS_TABSTOP,101,94,205,17
     LTEXT           "",IDC_MESSAGE1,101,117,205,54,NOT WS_GROUP
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,17,NOT WS_GROUP
     CONTROL         108,IDC_PICT0,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
@@ -156,66 +156,65 @@ BEGIN
                     WS_EX_STATICEDGE
 END
 
-DLG_PROGRAM_FOLDER DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_PROGRAM_FOLDER DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_PROGRAM_FOLDER,101,64,204,12,ES_AUTOHSCROLL
     LISTBOX         IDC_LIST,101,94,204,79,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
-    LTEXT           "&Program Folder:",IDC_STATIC,101,54,105,8
-    LTEXT           "E&xisting Folders:",IDC_STATIC,101,84,163,8
+    LTEXT           "",IDC_STATIC1,101,54,105,8
+    LTEXT           "",IDC_STATIC2,101,84,163,8
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
 END
 
-DLG_LICENSE DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_LICENSE DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Accept",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&No",IDCANCEL,252,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     EDITTEXT        IDC_EDIT_LICENSE,11,29,295,119,ES_MULTILINE | 
                     ES_OEMCONVERT | ES_READONLY | WS_VSCROLL | WS_GROUP
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
     LTEXT           "",IDC_MESSAGE0,11,8,295,17,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE1,11,152,295,19,NOT WS_GROUP
     CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
 END
 
-DLG_START_INSTALL DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_START_INSTALL DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_CURRENT_SETTINGS,101,67,204,106,ES_MULTILINE | 
                     ES_OEMCONVERT | ES_READONLY | WS_VSCROLL | WS_HSCROLL
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
-    LTEXT           "Current Settings:",IDC_STATIC,101,57,163,8,NOT WS_GROUP
+    LTEXT           "",IDC_STATIC,101,57,163,8,NOT WS_GROUP
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
 END
 
-DLG_BROWSE_DIR DIALOG DISCARDABLE  147, 23, 190, 143
+DLG_BROWSE_DIR DIALOGEX 147, 23, 190, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select a directory"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_EDIT_DESTINATION,8,16,177,12,ES_AUTOHSCROLL | 
@@ -227,25 +226,23 @@ BEGIN
     COMBOBOX        1137,8,118,121,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
                     CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",1,135,43,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,135,63,50,14,WS_GROUP
-    LTEXT           "&Directories:",-1,8,6,92,9
-    LTEXT           "Dri&ves:",1091,8,108,92,9
+    DEFPUSHBUTTON   "",1,135,43,50,14,WS_GROUP
+    PUSHBUTTON      "",IDCANCEL,135,63,50,14,WS_GROUP
+    LTEXT           "",1092,8,6,92,9
+    LTEXT           "",1091,8,108,92,9
 END
 
-DLG_RESTART DIALOG FIXED IMPURE  133, 69, 226, 110
+DLG_RESTART DIALOG FIXED IMPURE  133, 69, 255, 111
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Setup has finished copying files to your computer.  Before you can use the program, you must restart Windows or your computer.\n\n Choose one of the following options and click OK to finish setup.",
-                    202,10,10,209,36,SS_NOPREFIX
-    CONTROL         "Yes, I want to restart my computer now.",IDC_RADIO_YES,
-                    "Button",BS_AUTORADIOBUTTON,26,52,191,12
-    CONTROL         "No, I will restart my computer later.",IDC_RADIO_NO,
-                    "Button",BS_AUTORADIOBUTTON,26,68,191,12
-    DEFPUSHBUTTON   "OK",IDOK,169,88,50,14,WS_GROUP
+    LTEXT           "",202,10,10,236,36,SS_NOPREFIX
+    CONTROL         "",IDC_RADIO_YES,"Button",BS_AUTORADIOBUTTON,26,52,220,
+                    12
+    CONTROL         "",IDC_RADIO_NO,"Button",BS_AUTORADIOBUTTON,26,68,223,12
+    DEFPUSHBUTTON   "",IDOK,189,88,50,14,WS_GROUP
 END
 
 DLG_MESSAGE DIALOG DISCARDABLE  0, 0, 236, 34
@@ -270,43 +267,43 @@ BEGIN
     CONTROL         "",IDC_GAUGE_ARCHIVE,"GaugeArchive",0x0,9,21,175,11
 END
 
-DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_ADVANCED_SETTINGS DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT_PROXY_SERVER,147,57,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_PROXY_PORT,147,74,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_PROXY_USER,147,101,152,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_PROXY_PASSWD,147,118,152,12,ES_PASSWORD | 
+    EDITTEXT        IDC_EDIT_PROXY_SERVER,165,57,134,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PROXY_PORT,165,74,134,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PROXY_USER,165,101,134,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PROXY_PASSWD,165,118,134,12,ES_PASSWORD | 
                     ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "&Ok",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    RTEXT           "Server:",IDC_STATIC,108,59,35,9
-    RTEXT           "Port:",IDC_STATIC,108,75,35,9
-    GROUPBOX        "Proxy Settings:",IDC_STATIC,101,44,206,94
+    RTEXT           "",IDC_STATIC1,108,59,52,9
+    RTEXT           "",IDC_STATIC2,108,75,52,9
+    GROUPBOX        "",IDC_STATIC,101,44,206,94
     LTEXT           "",IDC_MESSAGE0,101,11,204,29,NOT WS_GROUP
-    RTEXT           "User id:",IDC_STATIC,108,102,35,9
-    RTEXT           "Password:",IDC_STATIC,108,120,35,9
+    RTEXT           "",IDC_STATIC3,108,102,52,9
+    RTEXT           "",IDC_STATIC4,108,120,52,9
 END
 
-DLG_SELECT_ADDITIONAL_COMPONENTS DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_SELECT_ADDITIONAL_COMPONENTS DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,10,204,19,NOT WS_GROUP
-    LTEXT           "&Additional Components:",IDC_STATIC,101,32,125,8
-    GROUPBOX        "Description",IDC_STATIC,101,115,204,22
+    LTEXT           "",IDC_STATIC1,101,32,125,8
+    GROUPBOX        "",IDC_STATIC2,101,115,204,22
     LTEXT           "",IDC_STATIC_DESCRIPTION,106,124,195,8,SS_NOPREFIX
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
@@ -319,8 +316,8 @@ BEGIN
                     LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "",IDC_STATIC,241,32,63,8,0,WS_EX_RIGHT
-    LTEXT           "Total download size:",IDC_STATIC,105,148,92,9
-    LTEXT           "Space Available:",IDC_STATIC,206,148,94,9
+    LTEXT           "",IDC_STATIC3,105,148,92,9
+    LTEXT           "",IDC_STATIC4,206,148,94,9
 END
 
 DLG_UPGRADE DIALOG DISCARDABLE  51, 56, 310, 166
@@ -330,17 +327,17 @@ BEGIN
     LTEXT           "",IDC_MESSAGE0,17,13,276,31,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE1,17,48,276,21,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE2,17,73,276,21,NOT WS_GROUP
-    GROUPBOX        "Destination Directory",IDC_STATIC,16,102,276,25
+    GROUPBOX        "",IDC_STATIC,16,102,276,25
     LTEXT           "",IDC_DELETE_PATH,22,111,264,13,SS_CENTERIMAGE
-    PUSHBUTTON      "&Delete",ID_DELETE,95,139,53,14
-    DEFPUSHBUTTON   "&Back",IDWIZBACK,162,139,53,14
+    PUSHBUTTON      "",ID_DELETE,95,139,53,14
+    DEFPUSHBUTTON   "",IDWIZBACK,162,139,53,14
 END
 
-DLG_DOWNLOAD_OPTIONS DIALOG DISCARDABLE  51, 56, 315, 205
+DLG_DOWNLOAD_OPTIONS DIALOGEX 51, 56, 315, 205
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_LIST_SITE_SELECTOR,101,45,206,124,CBS_DROPDOWNLIST | 
                     CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
@@ -353,32 +350,31 @@ BEGIN
                     101,148,112,9
     CONTROL         "",IDC_USE_HTTP,"Button",BS_AUTORADIOBUTTON,101,161,112,
                     9
-    PUSHBUTTON      "&Proxy Settings",IDC_BUTTON_PROXY_SETTINGS,221,159,84,
-                    14
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    PUSHBUTTON      "",IDC_BUTTON_PROXY_SETTINGS,221,159,84,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,15,204,25,NOT WS_GROUP
     CONTROL         108,-1,"Static",SS_BITMAP,11,11,83,162,WS_EX_CLIENTEDGE
     CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
 END
 
-DLG_DOWNLOADING DIALOG DISCARDABLE  0, 0, 311, 114
+DLG_DOWNLOADING DIALOGEX 0, 0, 311, 114
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "Cancel",IDCANCEL,131,92,50,14,WS_GROUP
+    PUSHBUTTON      "",IDCANCEL,131,92,50,14,WS_GROUP
     LTEXT           "",IDC_MESSAGE0,9,9,293,21
-    RTEXT           "File:",IDC_STATIC,9,53,37,8,SS_NOPREFIX
+    RTEXT           "",IDC_STATIC2,9,53,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_FILE,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,53,253,8
-    RTEXT           "Url:",IDC_STATIC,9,61,37,8,SS_NOPREFIX
+    RTEXT           "",IDC_STATIC3,9,61,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_URL,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,61,253,8
-    RTEXT           "Status:",IDC_STATIC,9,44,37,8,SS_NOPREFIX
+    RTEXT           "",IDC_STATIC1,9,44,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_STATUS,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,44,253,8
     CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,9,72,293,11
@@ -432,74 +428,9 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_DIALOG_CREATE "Could not create %s dialog."
-    IDS_ERROR_FAILED        "%s failed."
     IDS_ERROR_FILE_NOT_FOUND "File not found: %s"
-    IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED "GetSystemDirectory() failed."
-    IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED "GetWindowsDirectory() failed."
-    IDS_DLGQUITTITLE        "Exit Setup"
-    IDS_DLGQUITMSG          "Setup is not complete.  If you quit the Setup program now, the program will not be installed.  \n\nYou may run the Setup program at a later time to complete the installation.\n\nAre you sure you want to cancel Setup?"
-    IDS_DLG_REBOOT_TITLE    "Restarting Windows"
-    IDS_ERROR_GETPROCADDRESS "GetProcAddress() of %s failed."
-    IDS_ERROR_WRITEPRIVATEPROFILESTRING 
-                            "WritePrivateProfileString() failed for file %s"
-    IDS_MSG_RETRIEVE_CONFIGINI 
-                            "Please wait while Setup is attempting to retrieve Config.ini, required by Setup, from the Web..."
-    IDS_ERROR_CREATE_TEMP_DIR 
-                            "Setup was unable to create the TEMP directory: %s"
-    IDS_DLGBROWSETITLE      "Select a directory"
-    IDS_ERROR_DETERMINING_DISK_SPACE 
-                            "Could not determine available disk space for: %s"
-    IDS_DLG_DISK_SPACE_CHECK_TITLE "Disk space check"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_DLG_DISK_SPACE_CHECK_CRUTIAL_MSG 
-                            "Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick Retry if more disk space has been made available, or click Cancel to cancel Setup."
-    IDS_DLG_DISK_SPACE_CHECK_MSG 
-                            "Setup has detected insufficient disk space to continue with installation process on %s for the path: %sRequired: %sAvailable: %sClick OK to go back and choose a different destination path."
-    IDS_ERROR_CREATE_DIRECTORY 
-                            "Could not create folder: %sMake sure you have access to create the folder."
-    IDS_STR_FILE_NUMBER     "File count:"
-    IDS_STR_FILENAME        "Filename:"
-    IDS_MSG_SMARTUPDATE_START "Preparing Install, please wait..."
-    IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
-    IDS_ERROR_XPI_INSTALL   "Error occurred during installation"
-    IDS_ERROR_SETUP_REQUIREMENT 
-                            "Windows95 or greater Operating System is required!  Exiting setup..."
-    IDS_DLG_EXTRACTING_TITLE "Install Progress"
-    IDS_STR_PROCESSINGFILE  "Preparing file: %s"
-    IDS_STR_INSTALLING      "Currently installing %s"
-    IDS_STR_COPYINGFILE     "Copying file: %s"
-    IDS_MB_WARNING_STR      "Warning"
-    IDS_MB_MESSAGE_STR      "Message"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_MSG_CREATE_DIRECTORY 
-                            "The following directory does not exist:%sWould you like to create it?"
-    IDS_STR_CREATE_DIRECTORY "Create Directory?"
-    IDS_ERROR_PROGRAM_FOLDER_NAME "Invalid Program folder name entered."
-    IDS_CB_DEFAULT          "Default"
-    IDS_ERROR_DESTINATION_PATH "Invalid path entered."
-    IDS_STR_SETUP_TYPE      "Setup Type:"
-    IDS_STR_SELECTED_COMPONENTS "Selected Components:"
-    IDS_STR_DESTINATION_DIRECTORY "Destination Directory:"
-    IDS_STR_PROGRAM_FOLDER  "Program Folder:"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STR_DELETING_DESTINATION_DIR 
-                            "Deleting destination directory to be able to upgrade, please wait..."
-    IDS_STR_SETUP           "Setup"
-    IDS_STR_DOWNLOAD_SITE   "Download Site:"
-    IDS_STR_SAVE_INSTALLER_FILES "Save downloaded and Setup program files to:"
-    IDS_MSG_INIT_SETUP      "Initializing Setup, please wait..."
-    IDS_STR_MESSAGEBOX_TITLE "%s Setup"
-    IDS_ERROR_GETVERSION    "GetVersionEx() failed!"
+    IDS_MSG_RETRIEVE_INSTALLINI 
+                            "Please wait while Setup is attempting to retrieve Installer.ini, required by Setup, from the Web..."
 END
 
 #endif    // English (U.S.) resources

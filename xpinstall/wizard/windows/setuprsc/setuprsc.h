@@ -6,37 +6,8 @@
 #define WINVER 0x0400
 #endif
 #include "winresrc.h"
-#define IDS_ERROR_DIALOG_CREATE         1
-#define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3
-#define IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED 4
-#define IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED 5
-#define IDS_DLGQUITTITLE                6
-#define IDS_DLGQUITMSG                  7
-#define IDS_DLG_REBOOT_TITLE            8
-#define IDS_ERROR_GETPROCADDRESS        9
-#define IDS_ERROR_WRITEPRIVATEPROFILESTRING 10
-#define IDS_MSG_RETRIEVE_CONFIGINI      11
-#define IDS_ERROR_CREATE_TEMP_DIR       12
-#define IDS_DLGBROWSETITLE              13
-#define IDS_ERROR_DETERMINING_DISK_SPACE 14
-#define IDS_DLG_DISK_SPACE_CHECK_TITLE  15
-#define IDS_DLG_DISK_SPACE_CHECK_SYS_MSG 16
-#define IDS_DLG_DISK_SPACE_CHECK_CRUTIAL_MSG 16
-#define IDS_DLG_DISK_SPACE_CHECK_MSG    17
-#define IDS_ERROR_CREATE_DIRECTORY      18
-#define IDS_STR_FILE_NUMBER             19
-#define IDS_STR_FILENAME                20
-#define IDS_MSG_SMARTUPDATE_START       21
-#define IDS_MSG_CONFIGURING             22
-#define IDS_ERROR_XPI_INSTALL           23
-#define IDS_ERROR_SETUP_REQUIREMENT     24
-#define IDS_DLG_EXTRACTING_TITLE        25
-#define IDS_STR_PROCESSINGFILE          26
-#define IDS_STR_INSTALLING              27
-#define IDS_STR_COPYINGFILE             28
-#define IDS_MB_WARNING_STR              29
-#define IDS_MB_MESSAGE_STR              30
+#define IDS_MSG_RETRIEVE_INSTALLINI     11
 #define IDI_ICON1                       105
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108
@@ -80,6 +51,8 @@
 #define IDC_STATIC0                     1033
 #define IDC_STATIC1                     1034
 #define IDC_STATIC2                     1035
+#define IDC_STATIC3                     1036
+#define IDC_STATIC4                     1037
 #define IDC_MESSAGE1                    1040
 #define IDC_PICT0                       1041
 #define IDC_MESSAGE0                    1042
@@ -146,21 +119,6 @@
 #define IDWIZNEXT                       11014
 #define IDS_MSG_CREATE_DIRECTORY        11015
 #define IDWIZNEXT2                      11015
-#define IDS_STR_CREATE_DIRECTORY        11016
-#define IDS_ERROR_PROGRAM_FOLDER_NAME   11017
-#define IDS_CB_DEFAULT                  11018
-#define IDS_ERROR_DESTINATION_PATH      11019
-#define IDS_STR_SETUP_TYPE              11020
-#define IDS_STR_SELECTED_COMPONENTS     11021
-#define IDS_STR_DESTINATION_DIRECTORY   11022
-#define IDS_STR_PROGRAM_FOLDER          11023
-#define IDS_STR_DELETING_DESTINATION_DIR 11024
-#define IDS_STR_SETUP                   11025
-#define IDS_STR_DOWNLOAD_SITE           11026
-#define IDS_STR_SAVE_INSTALLER_FILES    11027
-#define IDS_MSG_INIT_SETUP              11028
-#define IDS_STR_MESSAGEBOX_TITLE        11029
-#define IDS_ERROR_GETVERSION            11030
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

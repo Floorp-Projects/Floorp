@@ -213,7 +213,9 @@ HRESULT Initialize(HINSTANCE hInstance)
     {
       char szEGetWinDirFailed[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED, szEGetWinDirFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "", 
+                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed),
+                                 szFileIniUninstall))
         PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
 
       return(1);
@@ -234,7 +236,9 @@ HRESULT Initialize(HINSTANCE hInstance)
     {
       char szECreateTempDir[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_CREATE_TEMP_DIR, szECreateTempDir, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_CREATE_TEMP_DIR", "",
+                                 szECreateTempDir, sizeof(szECreateTempDir), 
+                                 szFileIniUninstall))
       {
         wsprintf(szBuf, szECreateTempDir, szTempDir);
         PrintError(szBuf, ERROR_CODE_HIDE);
@@ -629,7 +633,9 @@ void DetermineOSVersion()
   }
   else
   {
-    if(NS_LoadString(hInst, IDS_ERROR_SETUP_REQUIREMENT, szESetupRequirement, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "ERROR_SETUP_REQUIREMENT", "",
+                               szESetupRequirement, sizeof(szESetupRequirement), 
+                               szFileIniUninstall))
       PrintError(szESetupRequirement, ERROR_CODE_HIDE);
 
     exit(1);
@@ -1036,7 +1042,9 @@ BOOL CheckLegacy(HWND hDlg)
         {
           char szMBWarningStr[MAX_BUF];
 
-          if(NS_LoadString(hInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
+          if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
+                                      szMBWarningStr, sizeof(szMBWarningStr), 
+                                      szFileIniUninstall))
             lstrcpy(szMBWarningStr, "Warning");
 
           if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
@@ -1053,7 +1061,9 @@ BOOL CheckLegacy(HWND hDlg)
         {
           char szMBWarningStr[MAX_BUF];
 
-          if(NS_LoadString(hInst, IDS_MB_WARNING_STR, szMBWarningStr, MAX_BUF) != WIZ_OK)
+          if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
+                                      szMBWarningStr, sizeof(szMBWarningStr), 
+                                      szFileIniUninstall))
             lstrcpy(szMBWarningStr, "Warning");
 
           if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_ICONWARNING | MB_YESNO) == IDYES)
@@ -1107,7 +1117,9 @@ HRESULT GetUninstallLogPath()
 
   if(FileExists(szLogFolder) == FALSE)
   {
-    if(NS_LoadString(hInst, IDS_ERROR_UNINSTALL_LOG_FOLDER, szEUninstallLogFolder, MAX_BUF) == WIZ_OK)
+    if(GetPrivateProfileString("Messages", "ERROR_UNINSTALL_LOG_FOLDER", "",
+                               szEUninstallLogFolder, sizeof(szEUninstallLogFolder), 
+                               szFileIniUninstall))
     {
       lstrcpy(szBuf, "\n\n    ");
 
@@ -1445,7 +1457,9 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     {
       char szEGetWinDirFailed[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED, szEGetWinDirFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "",
+                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed), 
+                                 szFileIniUninstall))
         PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
 
       exit(1);
@@ -1467,7 +1481,9 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     {
       char szEGetWinDirFailed[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED, szEGetWinDirFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "",
+                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed), 
+                                 szFileIniUninstall))
         PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
       exit(1);
     }
@@ -1479,7 +1495,9 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     {
       char szEGetSysDirFailed[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED, szEGetSysDirFailed, MAX_BUF) == WIZ_OK)
+      if(GetPrivateProfileString("Messages", "ERROR_GET_SYSTEM_DIRECTORY_FAILED", "",
+                                 szEGetSysDirFailed, sizeof(szEGetSysDirFailed), 
+                                 szFileIniUninstall))
         PrintError(szEGetSysDirFailed, ERROR_CODE_SHOW);
 
       exit(1);

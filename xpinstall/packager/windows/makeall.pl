@@ -154,9 +154,13 @@ if(MakeConfigFile())
 RemoveLocalTmpStage();
 
 # Copy the setup files to the dist setup directory.
-if(system("copy redirect.ini $inDistPath"))
+if(system("copy install.ini $inDistPath"))
 {
-  die "\n Error: copy redirect.ini $inDistPath\n";
+  die "\n Error: copy install.ini $inDistPath\n";
+}
+if(system("copy install.ini $inDistPath\\setup"))
+{
+  die "\n Error: copy install.ini $inDistPath\\setup\n";
 }
 if(system("copy config.ini $inDistPath"))
 {
@@ -360,10 +364,10 @@ sub MakeConfigFile
     return(1);
   }
 
-  # Make redirect.ini file
-  if(system("perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL"))
+  # Make install.ini file
+  if(system("perl makecfgini.pl install.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL"))
   {
-    print "\n Error: perl makecfgini.pl redirect.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL\n";
+    print "\n Error: perl makecfgini.pl install.it $inDefaultVersion $gLocalTmpStage $inDistPath\\xpi $inRedirIniURL $inXpiURL\n";
     return(1);
   }
   return(0);

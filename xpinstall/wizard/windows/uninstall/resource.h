@@ -12,17 +12,6 @@
 #define IDS_ERROR_STRING_NULL           4
 #define IDS_ERROR_GLOBALALLOC           5
 #define IDS_ERROR_FAILED                6
-#define IDS_ERROR_DIALOG_CREATE         7
-#define IDS_DLGQUITTITLE                8
-#define IDS_DLGQUITMSG                  9
-#define IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED 10
-#define IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED 11
-#define IDS_ERROR_CREATE_TEMP_DIR       12
-#define IDS_ERROR_SETUP_REQUIREMENT     13
-#define IDS_MB_WARNING_STR              14
-#define IDS_ERROR_UNINSTALL_LOG_FOLDER  15
-#define IDS_MB_MESSAGE_STR              16
-#define IDS_DLG_REMOVE_FILE_TITLE       17
 #define IDI_SETUP                       105
 #define IDI_UNINSTALL                   105
 #define DLG_MESSAGE                     110
