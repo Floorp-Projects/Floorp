@@ -82,6 +82,8 @@ function Startup()
         element = document.getElementById("panel");
         element.setAttribute("index","0" );
       } else {
+        element = document.getElementById("cookieviewer");
+        element.setAttribute("title", bundle.GetStringFromName("imageTitle"));
         element = document.getElementById("imagesTab");
         element.setAttribute("selected","true" );
         element = document.getElementById("panel");
