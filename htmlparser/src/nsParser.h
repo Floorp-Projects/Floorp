@@ -126,6 +126,18 @@ friend class CTokenHandler;
      */
     virtual void SetCommand(const char* aCommand);
 
+    /**
+     *  Call this method once you've created a parser, and want to instruct it
+     *  about what charset to load
+     *  
+     *  @update  ftang 4/23/99
+     *  @param   aCharset- the charest of a document
+     *  @param   aCharsetSource- the soure of the chares
+     *  @return	 nada
+     */
+    virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource);
+
+
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
     
     virtual void RegisterDTD(nsIDTD* aDTD);
@@ -328,6 +340,8 @@ protected:
     PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;
     nsString            mUnusedInput;
+    nsString            mCharset;
+    nsCharsetSource     mCharsetSource;
 };
 
 

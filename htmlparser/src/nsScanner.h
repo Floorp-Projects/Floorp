@@ -39,16 +39,6 @@
 #include "nsFileStream.h"
 
 
-typedef enum {
-   kCharsetUninitialized = 0,
-   kCharsetFromUserDefault ,
-   kCharsetFromDocTypeDefault,
-   kCharsetFromParentFrame,
-   kCharsetFromAutoDetection,
-   kCharsetFromMetaTag,
-   kCharsetFromHTTPHeader
-} nsCharsetSource;
-
 class nsScanner {
   public:
 
