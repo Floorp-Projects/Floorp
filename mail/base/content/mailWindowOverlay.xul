@@ -80,8 +80,6 @@
 
     <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
     <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
-    
-    <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
     <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')" disabled="true"/>
     <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
     <command id="cmd_printpreview" oncommand="goDoCommand('cmd_printpreview')" disabled="true"/>
@@ -201,6 +199,7 @@
   <command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
   <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
+  <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')"/>
   <command id="cmd_createFilterFromMenu" oncommand="goDoCommand('cmd_createFilterFromMenu')"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
