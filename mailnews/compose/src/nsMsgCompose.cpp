@@ -67,6 +67,24 @@ static PRInt32 GetReplyOnTop()
 	return reply_on_top;
 }
 
+static nsresult RemoveDuplicateAddresses(const char * addresses, const char * anothersAddresses, PRBool removeAliasesToMe, char** newAddress)
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIMsgHeaderParser> parser;
+	nsComponentManager::CreateInstance(kHeaderParserCID,
+	                           nsnull,
+	                           nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+	                           getter_AddRefs(parser));
+	if (parser)
+		rv= parser->RemoveDuplicateAddresses(msgCompHeaderInternalCharset(), addresses, anothersAddresses, removeAliasesToMe, newAddress);
+	else
+		rv = NS_ERROR_FAILURE;
+
+	return rv;
+}
+
+
 nsMsgCompose::nsMsgCompose()
 {
 	NS_INIT_REFCNT();
@@ -714,11 +732,29 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
                 cString = cString + ", ";
               cString = cString + dString;
               m_compFields->SetCc(nsAutoCString(cString));
+              
               if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(cString, encodedCharset, decodedString)))
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
                 {
-                  m_compFields->SetCc(aCString);
-                  PR_Free(aCString);
+					char * resultStr = nsnull;
+					nsCString addressToBeRemoved = m_compFields->GetTo();
+					  	
+		            if (m_identity)
+		            {
+		                nsXPIDLCString email;
+		                m_identity->GetEmail(getter_Copies(email));
+		                addressToBeRemoved += ", ";
+		                addressToBeRemoved += NS_CONST_CAST(char*, (const char *)email);
+					}
+		      		rv= RemoveDuplicateAddresses(aCString, (char *)addressToBeRemoved, PR_TRUE, &resultStr);
+		      		if (NS_SUCCEEDED(rv))
+					{
+		                PR_Free(aCString);
+		                aCString = resultStr;
+		            }
+
+                  	m_compFields->SetCc(aCString);
+                    PR_Free(aCString);
                 }
             }
           
@@ -866,6 +902,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
           nsString followUpTo;
           char *outCString = nsnull;
           PRUnichar emptyUnichar = 0;
+          PRBool toChanged = PR_FALSE;
           
           mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
           if (outCString)
@@ -892,7 +929,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
           }
           
           if (! replyTo.IsEmpty())
+          {
             compFields->SetTo(replyTo.GetUnicode());
+            toChanged = PR_TRUE;
+          }
           
           if (! newgroups.IsEmpty())
           {
@@ -908,6 +948,22 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
               compFields->SetTo(&emptyUnichar);
           }
           
+          if (toChanged)
+          {
+          	//Remove duplicate addresses between TO && CC
+          	char * resultStr;
+          	nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields;
+  			if (NS_SUCCEEDED(rv))
+  			{
+			    rv= RemoveDuplicateAddresses(_compFields->GetCc(), _compFields->GetTo(), PR_FALSE, &resultStr);
+	          	if (NS_SUCCEEDED(rv))
+	          	{
+	          		_compFields->SetCc(resultStr);
+	          		PR_Free(resultStr);
+	          	}
+			}
+          }
+       
           NS_RELEASE(compFields);
       }
     }
