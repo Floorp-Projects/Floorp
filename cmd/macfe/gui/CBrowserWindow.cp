@@ -1864,6 +1864,7 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 		const Uint16 kMaxTreeHeight = 700;
 		const Uint16 kTreeWidth = 250;
 		const float kHeightPercentage = 0.8;		// 80%
+		const Uint16 kExtraPadding = 5;
 		
 		SDimension16 browserFrame;
 		GetFrameSize ( browserFrame );
@@ -1874,6 +1875,11 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 		if ( newHeight > kMaxTreeHeight )
 			newHeight = kMaxTreeHeight;
 		
+		// make sure we don't allow it to go off the right side of the browser by pulling it
+		// back to the left just enough to still fit (like menus)
+		if ( inLeft + kTreeWidth > browserFrame.width )
+			inLeft = browserFrame.width - kTreeWidth - kExtraPadding;
+
 		mPopdownParent->ResizeFrameTo ( kTreeWidth, newHeight, false );
 		mPopdownParent->PlaceInSuperImageAt ( inLeft, inTop, false );
 		mPopdownParent->BuildHTPane ( inResource );
