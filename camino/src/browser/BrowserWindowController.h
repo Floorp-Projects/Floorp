@@ -123,6 +123,7 @@ class nsIDOMNode;
 - (void)focusURLBar;
 - (void)beginLocationSheet;
 - (IBAction)endLocationSheet:(id)sender;
+- (IBAction)cancelLocationSheet:(id)sender;
 
 - (IBAction)cancelAddBookmarkSheet:(id)sender;
 - (IBAction)endAddBookmarkSheet:(id)sender;

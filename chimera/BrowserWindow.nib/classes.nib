@@ -2,14 +2,21 @@
     IBClasses = (
         {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            ACTIONS = {addBookmark = id; addFolder = id; deleteBookmark = id; deleteBookmarks = id; }; 
+            ACTIONS = {
+                addBookmark = id; 
+                addFolder = id; 
+                beginRenameBookmark = id; 
+                cancelRenameBookmarkSheet = id; 
+                deleteBookmarks = id; 
+                doRenameBookmarkSheet = id; 
+            }; 
             CLASS = BookmarksDataSource; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mAddButton = id; 
                 mBrowserWindowController = id; 
-                mDeleteButton = id; 
                 mOutlineView = id; 
+                mRenameSheet = id; 
+                mRenameTextField = NSTextField; 
             }; 
             SUPERCLASS = NSObject; 
         }, 
@@ -21,6 +28,7 @@
                 bookmarkLink = id; 
                 bookmarkPage = id; 
                 cancelAddBookmarkSheet = id; 
+                cancelLocationSheet = id; 
                 copyLinkLocation = id; 
                 endAddBookmarkSheet = id; 
                 endLocationSheet = id; 

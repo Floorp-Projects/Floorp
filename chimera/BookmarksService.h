@@ -54,9 +54,10 @@ class nsIAtom;
 
   IBOutlet id mOutlineView;	
   IBOutlet id mBrowserWindowController;
-  IBOutlet id mAddButton;	
-  IBOutlet id mDeleteButton;
-
+  
+  IBOutlet id mRenameSheet;
+  IBOutlet NSTextField* mRenameTextField;
+  
   NSString* mCachedHref;
 }
 
@@ -75,6 +76,10 @@ class nsIAtom;
 -(IBAction)addFolder:(id)aSender;
 
 -(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder;
+
+-(IBAction)beginRenameBookmark:(id)sender;
+-(IBAction)cancelRenameBookmarkSheet:(id)sender;
+-(IBAction)doRenameBookmarkSheet:(id)sender;
 
 // Datasource methods.
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
