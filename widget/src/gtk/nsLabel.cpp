@@ -53,7 +53,7 @@ NS_METHOD  nsLabel::CreateNative(GtkWidget *parentWindow)
   unsigned char alignment = GetNativeAlignment();
 
   mWidget = gtk_label_new("");
- 
+  gtk_widget_set_name(mWidget, "nsLabel");
   gtk_misc_set_alignment(GTK_MISC(mWidget), 0.0, alignment);
 
   return NS_OK;

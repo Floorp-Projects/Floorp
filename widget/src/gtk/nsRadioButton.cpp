@@ -77,6 +77,7 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_radio_button_new(NULL);
+  gtk_widget_set_name(mWidget, "nsRadioButton");
 
   return NS_OK;
 }

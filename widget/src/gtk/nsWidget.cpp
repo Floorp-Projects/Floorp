@@ -23,6 +23,7 @@
 #include "nsRepository.h"
 #include <gdk/gdkx.h>
 
+
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget? 
@@ -86,6 +87,7 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
+  g_print("nsWidget::Show(%6d)    - %s %p\n", bState, mWidget->name, this);
     if (bState) {
       if (mWidget) {
         gtk_widget_show(mWidget);
@@ -123,9 +125,7 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-#if DBG
-  fprintf(stderr,"nsWidget::Move called (%d,%d)\n", aX, aY);
-#endif
+  g_print("nsWidget::Move(%3d,%3d)   - %s %p\n", aX, aY, mWidget->name, this);
   mBounds.x = aX;
   mBounds.y = aY;
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -135,12 +135,10 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-#if DBG
-  fprintf(stderr,"nsWidget::Resize called w,h(%d,%d)\n", aWidth, aHeight);
-#endif
+  g_print("nsWidget::Resize(%3d,%3d) - %s %p\n", aWidth, aHeight, mWidget->name, this);
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  gtk_widget_set_usize(mWidget,aWidth, aHeight);
+  gtk_widget_set_usize(mWidget, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -461,11 +459,17 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
       parentWidget = GTK_WIDGET(shellWidget);
   }
 
+  g_print("--\n");
+
   CreateNative (parentWidget);
 
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+  Resize(mBounds.width, mBounds.height, TRUE);
+
   if (parentWidget)
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  {
+    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
+    g_print("nsWidget::SWC(%3d,%3d)    - %s %p\n", mBounds.x, mBounds.y, mWidget->name, this);
+  }
 
   InitCallbacks();
   CreateGC();

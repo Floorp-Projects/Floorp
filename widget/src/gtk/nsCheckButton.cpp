@@ -53,7 +53,7 @@ nsCheckButton::~nsCheckButton()
 NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_check_button_new();
-
+  gtk_widget_set_name(mWidget, "nsCheckButton");
   return NS_OK;
 }
 

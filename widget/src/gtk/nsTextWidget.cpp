@@ -61,8 +61,9 @@ nsTextWidget::~nsTextWidget()
 NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_entry_new();
+  gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
-
+  gtk_widget_show(mWidget);
   return NS_OK;
 }
 

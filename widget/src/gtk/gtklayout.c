@@ -153,14 +153,14 @@ gtk_layout_put (GtkLayout     *layout,
   child->window = NULL;
   child->x = x;
   child->y = y;
-  child->requisition.width = 0;
-  child->requisition.height = 0;
+  child->widget->requisition.width = 0;
+  child->widget->requisition.height = 0;
 
   layout->children = g_list_append (layout->children, child);
   
   gtk_widget_set_parent (child_widget, GTK_WIDGET (layout));
 
-  gtk_widget_size_request (child->widget, &child->requisition);
+  gtk_widget_size_request (child->widget, &child->widget->requisition);
   
   if (GTK_WIDGET_REALIZED (layout) &&
       !GTK_WIDGET_REALIZED (child_widget))
@@ -468,7 +468,7 @@ gtk_layout_size_request (GtkWidget     *widget,
   while (tmp_list)
     {
       GtkLayoutChild *child = tmp_list->data;
-      gtk_widget_size_request (child->widget, &child->requisition);
+      gtk_widget_size_request (child->widget, &child->widget->requisition);
       
       tmp_list = tmp_list->next;
     }
@@ -628,8 +628,8 @@ gtk_layout_position_child (GtkLayout      *layout,
 	  GtkAllocation allocation;
 	  allocation.x = x;
 	  allocation.y = y;
-	  allocation.width = child->requisition.width;
-	  allocation.height = child->requisition.height;
+	  allocation.width = child->widget->requisition.width;
+	  allocation.height = child->widget->requisition.height;
 	  
 	  gtk_widget_size_allocate (child->widget, &allocation);
 	}
