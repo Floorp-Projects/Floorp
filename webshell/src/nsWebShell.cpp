@@ -3030,8 +3030,12 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 
   // Stop loading of the earlier document completely when the document url
   // load starts.  Now we know that this url is valid and available.
-  const char* url;
-  aURL->GetSpec(&url);
+  nsXPIDLCString url;
+#ifdef NECKO
+  aURL->GetSpec(getter_Copies(url));
+#else
+  aURL->GetSpec(getter_Shares(url));
+#endif
   if (0 == PL_strcmp(url, mURL.GetBuffer()))
     StopAfterURLAvailable();
 
