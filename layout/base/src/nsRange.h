@@ -122,40 +122,40 @@ public:
   
   // helper routines
   
-  static PRBool        InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
+  static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsCOMPtr<nsIDOMNode> aNode);
-  static nsCOMPtr<nsIDOMNode>   CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
-  static nsresult      GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
-  static nsresult      GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr<nsIContent>* outContentNode);
-  static nsresult      PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsCOMPtr<nsIContent> aSourceNode);
+  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
+  static nsCOMPtr<nsIDOMNode>   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
+  static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode);
+  static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
   
-  static nsresult CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode,
+  static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
                                       PRInt32 nodeOffset,
-                                      nsCOMPtr<nsIDOMNode> clonedNode,
-                                      nsCOMPtr<nsIDOMNode> commonParent,
-                                      nsCOMPtr<nsIDOMDocumentFragment> docfrag,
+                                      nsIDOMNode* clonedNode,
+                                      nsIDOMNode* commonParent,
+                                      nsIDOMDocumentFragment* docfrag,
                                       PRBool leftP);
 
-  nsresult      DoSetRange(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
-                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOffset);
+  nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
-  PRBool        IsIncreasing(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOff,
-                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOff);
+  PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
+                             nsIDOMNode* aEndN, PRInt32 aEndOff);
                        
-  nsresult      IsPointInRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRBool* aResult);
+  nsresult      IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult);
   
-  nsresult      ComparePointToRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRInt32* aResult);
+  nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   
   
-  PRInt32       GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOffset,
+  PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
                         nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   
-  nsresult      AddToListOf(nsCOMPtr<nsIDOMNode> aNode);
+  nsresult      AddToListOf(nsIDOMNode* aNode);
   
-  nsresult      RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode);
+  nsresult      RemoveFromListOf(nsIDOMNode* aNode);
  
-  nsresult      ContentOwnsUs(nsCOMPtr<nsIDOMNode> domNode);
+  nsresult      ContentOwnsUs(nsIDOMNode* domNode);
   
   protected:
   	void*				mScriptObject;
