@@ -192,10 +192,15 @@ nsHttpNTLMAuth::Init()
 
     PSecurityFunctionTable (*initFun)(void);
 
+    // Win9x provides SECUR32.DLL, but WinNT4.0 (and likely older versions)
+    // only provide SECURITY.DLL.  Newer versions of Windows provide both.
     gLib = LoadLibrary("secur32.dll");
     if (!gLib) {
-        NS_ERROR("failed to load secur32.dll");
-        return NS_ERROR_UNEXPECTED;
+        gLib = LoadLibrary("security.dll");
+        if (!gLib) {
+            NS_ERROR("failed to load secur32.dll");
+            return NS_ERROR_UNEXPECTED;
+        }
     }
 
     initFun = (PSecurityFunctionTable (*)(void)) GetProcAddress(gLib, "InitSecurityInterfaceA");
