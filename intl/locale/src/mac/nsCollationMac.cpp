@@ -136,22 +136,20 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
     nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    aLocale.SetString(aLocaleUnichar);
+    if (NS_SUCCEEDED(res)) {
+      aLocale.SetString(aLocaleUnichar);
 
-    //TODO: Get a charset name from a script code.
-    nsIMacLocale* macLocale;
-    short scriptcode, langcode;
-    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
-    if (NS_FAILED(res)) {
-      return res;
+      //TODO: Get a charset name from a script code.
+      nsIMacLocale* macLocale = nsnull;
+      short scriptcode, langcode;
+      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
+      if (NS_SUCCEEDED(res) && nsnull != macLocale) {
+        if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode))) {
+          m_scriptcode = scriptcode;
+        }
+        macLocale->Release();
+      }
     }
-    if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode))) {
-      m_scriptcode = scriptcode;
-    }
-    macLocale->Release();
   }
 
   // Initialize a mapping table for the script code.
@@ -186,7 +184,7 @@ nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
     str_len = strlen(str);
-    NS_ASSERTION(str_len > *outLen, "output buffer too small");
+    NS_ASSERTION(str_len <= *outLen, "output buffer too small");
     
     // If no CJK then generate a collation key
     if (smJapanese != m_scriptcode && smKorean != m_scriptcode && 
