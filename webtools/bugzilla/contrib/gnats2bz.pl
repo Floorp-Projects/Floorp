@@ -743,7 +743,7 @@ sub write_non_bugs_tables {
             "  product, description, milestoneurl, disallownew\n";
         print DATA ") values (\n";
         print DATA
-            "  $product, $description, 'NULL', 0\n";
+            "  $product, $description, '', 0\n";
         print DATA ");\n";
 
         print DATA "\ninsert into components (\n";
@@ -751,7 +751,7 @@ sub write_non_bugs_tables {
             "  value, program, initialowner, initialqacontact, description\n";
         print DATA ") values (\n";
         print DATA
-            "  $product, $product, $initialowner, 'NULL', $description\n";
+            "  $product, $product, $initialowner, '', $description\n";
         print DATA ");\n";
     }
 
