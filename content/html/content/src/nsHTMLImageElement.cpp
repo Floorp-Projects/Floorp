@@ -354,9 +354,15 @@ nsHTMLImageElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::src)
+  if (aAttribute == nsHTMLAtoms::src) {
     *aHint = NS_STYLE_HINT_CONTENT;
-  else
+  }
+  else if ((aAttribute == nsHTMLAtoms::usemap) ||
+           (aAttribute == nsHTMLAtoms::ismap)) {
+    *aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }

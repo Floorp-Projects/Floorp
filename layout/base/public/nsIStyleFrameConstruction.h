@@ -40,14 +40,10 @@ public:
                                 nsIContent*     aDocElement,
                                 nsIFrame*&      aFrameSubTree) = 0;
 
-  // XXX TROY Is this what we want?
   // Causes reconstruction of a frame hierarchy rooted by the
-  // frame aFrameSubTree. This is often called when radical style
+  // document element frame. This is often called when radical style
   // change precludes incremental reflow.
-  NS_IMETHOD  ReconstructFrames(nsIPresContext* aPresContext,
-                                nsIContent*     aContent,
-                                nsIFrame*       aParentFrame,
-                                nsIFrame*       aFrameSubTree) = 0;
+  NS_IMETHOD  ReconstructDocElementHierarchy(nsIPresContext* aPresContext) = 0;
 
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,

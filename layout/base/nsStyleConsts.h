@@ -31,8 +31,9 @@
 #define NS_STYLE_HINT_CONTENT     2   // change was contentual (ie: SRC=)
 #define NS_STYLE_HINT_VISUAL      3   // change was visual only (ie: COLOR=)
 #define NS_STYLE_HINT_REFLOW      4   // change requires reflow (ie: WIDTH=)
-#define NS_STYLE_HINT_FRAMECHANGE 5   // change requires frame change (ie: DISPLAY=)
-#define NS_STYLE_HINT_MAX         NS_STYLE_HINT_FRAMECHANGE
+#define NS_STYLE_HINT_FRAMECHANGE 5   // change requires frame change (ie: display:)
+#define NS_STYLE_HINT_RECONSTRUCT_ALL 6 // change requires reconstruction of entire document (ie: style sheet change)
+#define NS_STYLE_HINT_MAX         NS_STYLE_HINT_RECONSTRUCT_ALL
 
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0

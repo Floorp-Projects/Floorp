@@ -189,10 +189,24 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
+nsHTMLAreaElement::GetStyleHintForAttributeChange(const nsIAtom* aAttribute,
+                                                  PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if ((aAttribute == nsHTMLAtoms::alt) ||
+      (aAttribute == nsHTMLAtoms::coords) ||
+      (aAttribute == nsHTMLAtoms::href) ||
+      (aAttribute == nsHTMLAtoms::nohref) ||
+      (aAttribute == nsHTMLAtoms::shape) ||
+      (aAttribute == nsHTMLAtoms::tabindex) ||
+      (aAttribute == nsHTMLAtoms::target)) {
+    *aHint = NS_STYLE_HINT_NONE;
+  }
+  else if (aAttribute == nsHTMLAtoms::accesskey) {
+    // XXX Notification needs to happen for this attribute
+    *aHint = NS_STYLE_HINT_NONE;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }

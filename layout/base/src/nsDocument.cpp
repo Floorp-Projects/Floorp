@@ -582,8 +582,8 @@ nsDocument::~nsDocument()
   // This notification will occur only after the reference has
   // been dropped.
   mInDestructor = PR_TRUE;
-  PRInt32 index, count = mObservers.Count();
-  for (index = 0; index < count; index++) {
+  PRInt32 index;
+  for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->DocumentWillBeDestroyed(this);
   }
@@ -1045,8 +1045,7 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
     }
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-    count = mObservers.Count();
-    for (index = 0; index < count; index++) {
+    for (index = 0; index < mObservers.Count(); index++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
       observer->StyleSheetAdded(this, aSheet);
     }
@@ -1078,8 +1077,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
     }
   }  
 
-  count = mObservers.Count();
-  for (index = 0; index < count; index++) {
+  for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
   }
@@ -1150,15 +1148,16 @@ PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 NS_IMETHODIMP
 nsDocument::BeginLoad()
 {
-  PRInt32 i, count = mObservers.Count();
-  for (i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->BeginLoad(this);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1167,15 +1166,16 @@ nsDocument::BeginLoad()
 NS_IMETHODIMP
 nsDocument::EndLoad()
 {
-  PRInt32 i, count = mObservers.Count();
-  for (i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->EndLoad(this);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1185,15 +1185,16 @@ NS_IMETHODIMP
 nsDocument::ContentChanged(nsIContent* aContent,
                            nsISupports* aSubContent)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentChanged(this, aContent, aSubContent);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1202,15 +1203,16 @@ nsDocument::ContentChanged(nsIContent* aContent,
 NS_IMETHODIMP
 nsDocument::ContentStateChanged(nsIContent* aContent)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentStateChanged(this, aContent);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1221,15 +1223,16 @@ NS_IMETHODIMP
 nsDocument::ContentAppended(nsIContent* aContainer,
                             PRInt32 aNewIndexInContainer)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentAppended(this, aContainer, aNewIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1240,15 +1243,16 @@ nsDocument::ContentInserted(nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1260,8 +1264,10 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
                             nsIContent* aNewChild,
                             PRInt32 aIndexInContainer)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                               aIndexInContainer);
@@ -1269,7 +1275,6 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1280,8 +1285,10 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentRemoved(this, aContainer, 
                              aChild, aIndexInContainer);
@@ -1289,7 +1296,6 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1300,15 +1306,16 @@ nsDocument::AttributeChanged(nsIContent* aChild,
                              nsIAtom* aAttribute,
                              PRInt32 aHint)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->AttributeChanged(this, aChild, aAttribute, aHint);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1319,15 +1326,16 @@ NS_IMETHODIMP
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule,
                              PRInt32 aHint)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1336,15 +1344,16 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
 NS_IMETHODIMP
 nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;
@@ -1353,15 +1362,16 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
 NS_IMETHODIMP
 nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
 {
-  PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; i++) {
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
-      count--;
     }
   }
   return NS_OK;

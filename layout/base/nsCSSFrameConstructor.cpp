@@ -2899,55 +2899,64 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
-// XXX we need aFrameSubTree's prev-sibling in order to properly
-// place its replacement!
-NS_IMETHODIMP  
-nsCSSFrameConstructor::ReconstructFrames(nsIPresContext* aPresContext,
-                                         nsIContent*     aContent,
-                                         nsIFrame*       aParentFrame,
-                                         nsIFrame*       aFrameSubTree)
+NS_IMETHODIMP
+nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresContext)
 {
   nsresult rv = NS_OK;
-
-  nsIDocument* document;
-  rv = aContent->GetDocument(document);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   
-  if (nsnull != document) {
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv)) {
-      // XXX This API needs changing, because it appears to be designed for
-      // an arbitrary content element, but yet it always constructs the document
-      // element's frame. Plus it has the problem noted above in the previous XXX
-      rv = aParentFrame->RemoveFrame(*aPresContext, *shell,
-                                     nsnull, aFrameSubTree);
+  if (nsnull != mDocument) {
+    nsCOMPtr<nsIContent> rootContent(dont_AddRef(mDocument->GetRootContent()));
 
-      // XXX Remove any existing fixed items...
-
+    if (rootContent) {
+      nsCOMPtr<nsIPresShell> shell;
+      rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv)) {
-        nsIFrame*                 newChild;
-        nsCOMPtr<nsIStyleContext> rootPseudoStyle;
-        nsAbsoluteItems           fixedItems(nsnull);  // XXX FIX ME...
+        nsIFrame* docElementFrame;
+        
+        // Get the frame that corresponds to the document element
+        shell->GetPrimaryFrameFor(rootContent, &docElementFrame);
 
-        aParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
-        rv = ConstructDocElementFrame(aPresContext, aContent,
-                                      aParentFrame, rootPseudoStyle, newChild,
-                                      fixedItems);
-        // XXX Do something with the fixed items...
-        if (NS_SUCCEEDED(rv)) {
-          rv = aParentFrame->InsertFrames(*aPresContext, *shell,
-                                          nsnull, nsnull, newChild);
+        if (nsnull != docElementFrame) {
+          nsIFrame* docParentFrame;
+          docElementFrame->GetParent(&docParentFrame);
+
+          if (nsnull != docParentFrame) {
+            // Remove the old document element hieararchy
+            rv = docParentFrame->RemoveFrame(*aPresContext, 
+                                             *shell,
+                                             nsnull, 
+                                             docElementFrame);
+            // XXX Remove any existing fixed items...
+        
+            if (NS_SUCCEEDED(rv)) {
+              nsIFrame*                 newChild;
+              nsCOMPtr<nsIStyleContext> rootPseudoStyle;
+              nsAbsoluteItems           fixedItems(nsnull);  // XXX FIX ME...
+          
+              docParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
+              rv = ConstructDocElementFrame(aPresContext, rootContent,
+                                            docParentFrame, 
+                                            rootPseudoStyle, newChild,
+                                            fixedItems);
+
+              // XXX Do something with the fixed items...
+              if (NS_SUCCEEDED(rv)) {
+                rv = docParentFrame->InsertFrames(*aPresContext, 
+                                                  *shell,
+                                                  nsnull, 
+                                                  nsnull, 
+                                                  newChild);
+              }
+            }
+          }
         }
       }
-    }  
-    NS_RELEASE(document);
+    }
   }
 
   return rv;
 }
+
 
 nsIFrame*
 nsCSSFrameConstructor::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
@@ -3677,7 +3686,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   nsIFrame*     frame;
    
   shell->GetPrimaryFrameFor(aContent, &frame);
-  
+
+  PRBool  reconstruct = PR_FALSE;
   PRBool  restyle = PR_FALSE;
   PRBool  reflow  = PR_FALSE;
   PRBool  reframe = PR_FALSE;
@@ -3704,6 +3714,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   switch (aHint) {
     default:
+    case NS_STYLE_HINT_RECONSTRUCT_ALL:
+      reconstruct = PR_TRUE;
+      break;
     case NS_STYLE_HINT_UNKNOWN:
     case NS_STYLE_HINT_FRAMECHANGE:
       reframe = PR_TRUE;
@@ -3720,7 +3733,10 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
 
   // apply changes
-  if (PR_TRUE == reframe) {
+  if (PR_TRUE == reconstruct) {
+    ReconstructDocElementHierarchy(aPresContext);
+  }
+  else if (PR_TRUE == reframe) {
     RecreateFramesForContent(aPresContext, aContent);
   }
   else if (PR_TRUE == restyle) {

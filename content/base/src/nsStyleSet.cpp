@@ -89,10 +89,7 @@ public:
   NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
                                 nsIFrame*&      aFrameSubTree);
-  NS_IMETHOD ReconstructFrames(nsIPresContext* aPresContext,
-                               nsIContent*     aContent,
-                               nsIFrame*       aParentFrame,
-                               nsIFrame*       aFrameSubTree);
+  NS_IMETHOD ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              PRInt32         aNewIndexInContainer);
@@ -728,13 +725,9 @@ NS_IMETHODIMP StyleSetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP   
-StyleSetImpl::ReconstructFrames(nsIPresContext* aPresContext,
-                                nsIContent*     aContent,
-                                nsIFrame*       aParentFrame,
-                                nsIFrame*       aFrameSubTree)
+StyleSetImpl::ReconstructDocElementHierarchy(nsIPresContext* aPresContext)
 {
-  return mFrameConstructor->ReconstructFrames(aPresContext, aContent,
-                                              aParentFrame, aFrameSubTree);
+  return mFrameConstructor->ReconstructDocElementHierarchy(aPresContext);
 }
 
 NS_IMETHODIMP StyleSetImpl::ContentAppended(nsIPresContext* aPresContext,

@@ -59,6 +59,8 @@ public:
 
   NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap);
 
+  NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap);
+
   NS_IMETHOD GetImageMap(const nsString& aMapName,
                          nsIDOMHTMLMapElement** aResult);
 

@@ -429,6 +429,19 @@ nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMETHODIMP 
+nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
+{
+  NS_PRECONDITION(nsnull != aMap, "null ptr");
+  if (nsnull == aMap) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (mImageMaps.RemoveElement((void*)aMap)) {
+    NS_RELEASE(aMap);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::GetImageMap(const nsString& aMapName,
                             nsIDOMHTMLMapElement** aResult)

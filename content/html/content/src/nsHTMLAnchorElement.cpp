@@ -329,6 +329,25 @@ nsHTMLAnchorElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if ((aAttribute == nsHTMLAtoms::charset) ||
+      (aAttribute == nsHTMLAtoms::coords) ||
+      (aAttribute == nsHTMLAtoms::href) ||
+      (aAttribute == nsHTMLAtoms::hreflang) ||
+      (aAttribute == nsHTMLAtoms::name) ||
+      (aAttribute == nsHTMLAtoms::rel) ||
+      (aAttribute == nsHTMLAtoms::rev) ||
+      (aAttribute == nsHTMLAtoms::shape) ||
+      (aAttribute == nsHTMLAtoms::tabindex) ||
+      (aAttribute == nsHTMLAtoms::target) ||
+      (aAttribute == nsHTMLAtoms::type)) {
+    *aHint = NS_STYLE_HINT_NONE;
+  }
+  else if (aAttribute == nsHTMLAtoms::accesskey) {
+    // XXX Notification needs to happen for this attribute
+    *aHint = NS_STYLE_HINT_NONE;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }

@@ -25,6 +25,7 @@ class nsIDOMHTMLCollection;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLMapElement;
 class nsIHTMLStyleSheet;
+class nsIStyleSheet;
 
 /* b2a848b0-d0a9-11d1-89b1-006008911b81 */
 #define NS_IHTMLDOCUMENT_IID \
@@ -47,6 +48,8 @@ public:
 
   NS_IMETHOD GetImageMap(const nsString& aMapName,
                          nsIDOMHTMLMapElement** aResult) = 0;
+
+  NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
   NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm) = 0;
 
