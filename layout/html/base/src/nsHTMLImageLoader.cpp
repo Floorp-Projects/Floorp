@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsHTMLImageLoader.h"
+#include "nsIStyleContext.h"
 #include "nsFrame.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -126,7 +127,6 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
                           nsIFrame* aFrame,
                           PRUint32 aStatus)
 {
-  //printf("---------------------> nsHTMLImageLoader::Update\n");
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, aFrame);
   printf(": update: status=%x [loader=%p] callBack=%p squelch=%s\n",
@@ -273,7 +273,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     widthConstraint = aReflowState->mComputedWidth;
     minWidth = aReflowState->mComputedMinWidth;
     maxWidth = aReflowState->mComputedMaxWidth;
-    if (NS_INTRINSICSIZE != widthConstraint) {
+    if (NS_INTRINSICSIZE != widthConstraint &&
+        eStyleUnit_Coord==aReflowState->mStylePosition->mWidth.GetUnit()) {
       fixedContentWidth = PR_TRUE;
     }
     else if (mFlags.mHaveIntrinsicImageSize) {
@@ -361,6 +362,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     else if (fixedContentHeight) {
       // We have a height, and an auto width. Compute width from height
       // once we have the intrinsic image size.
+
+      // otherwise, we really have auto-width based on height
       newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
       if (mFlags.mHaveIntrinsicImageSize) {
         float width = (float) mIntrinsicImageSize.width;
@@ -434,7 +437,10 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredSize.width = mComputedImageSize.width;
   aDesiredSize.height = mComputedImageSize.height;
-
+#ifdef NOISY_IMAGE_LOADING
+  printf("nsHTMLImageLoader::GetDesiredSize returning %d, %d\n",
+         aDesiredSize.width, aDesiredSize.height);
+#endif
   if ((mFlags.mNeedIntrinsicImageSize && !mFlags.mHaveIntrinsicImageSize) ||
       mFlags.mNeedSizeNotification) {
     return PR_FALSE;
