@@ -295,6 +295,9 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
 
 void nsDocAccessible::CheckForEditor()
 {
+  if (!mDocument) {
+    return;  // No document -- we've been shut down
+  }
   nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
   mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
   nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(ourGlobal));
