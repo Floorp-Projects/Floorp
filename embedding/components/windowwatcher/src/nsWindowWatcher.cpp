@@ -1317,7 +1317,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
        prevents untrusted script from opening modal windows in general
        while still allowing alerts and the like. */
     if (!aChromeURL)
-      chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
+      chromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
   }
 
   return chromeFlags;
