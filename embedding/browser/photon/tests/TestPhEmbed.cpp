@@ -82,7 +82,6 @@ int load_url_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 int moz_status_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 {
 	PtMozillaStatusCb_t *s = (PtMozillaStatusCb_t *) cbinfo->cbdata;
-	PtArg_t args[2];
 	struct BaseData *bd;
 
 	switch (s->type)
@@ -120,7 +119,6 @@ int moz_complete_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 int moz_progress_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 {
 	PtMozillaProgressCb_t *c = (PtMozillaProgressCb_t *) cbinfo->cbdata;
-	PtArg_t args[2];
 	int percent;
 	char message[256];
 
@@ -145,7 +143,6 @@ int moz_url_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 {
 	int *nflags = NULL;
 	PtMozillaUrlCb_t *c = (PtMozillaUrlCb_t *) cbinfo->cbdata;
-	struct BaseData *bd;
 
 	// display the url in the entry field
 	PtSetResource(url, Pt_ARG_TEXT_STRING, c->url, 0);
@@ -171,7 +168,6 @@ int moz_url_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 
 int moz_event_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 {
-	PtArg_t args[2];
 	int *nflags = NULL;
 	PtMozillaEventCb_t *c = (PtMozillaEventCb_t *) cbinfo->cbdata;
 
@@ -186,30 +182,30 @@ int moz_net_state_change_cb (PtWidget_t *widget, void *data, PtCallbackInfo_t *c
 
 	statusMessage = NULL;
 
-	if (c->flags & PH_MOZ_EMBED_FLAG_IS_REQUEST) 
+	if (c->flags & Pt_MOZ_FLAG_IS_REQUEST) 
 	{
-		if (c->flags & PH_MOZ_EMBED_FLAG_REDIRECTING)
+		if (c->flags & Pt_MOZ_FLAG_REDIRECTING)
 			statusMessage = "Redirecting to site...";
-		else if (c->flags & PH_MOZ_EMBED_FLAG_TRANSFERRING)
+		else if (c->flags & Pt_MOZ_FLAG_TRANSFERRING)
 			statusMessage = "Transferring data from site...";
-		else if (c->flags & PH_MOZ_EMBED_FLAG_NEGOTIATING)
+		else if (c->flags & Pt_MOZ_FLAG_NEGOTIATING)
 			statusMessage = "Waiting for authorization...";
 	}
 
-	if (c->status == PH_MOZ_EMBED_STATUS_FAILED_DNS)
+	if (c->status == Pt_MOZ_STATUS_FAILED_DNS)
 		statusMessage = "Site not found.";
-	else if (c->status == PH_MOZ_EMBED_STATUS_FAILED_CONNECT)
+	else if (c->status == Pt_MOZ_STATUS_FAILED_CONNECT)
 		statusMessage = "Failed to connect to site.";
-	else if (c->status == PH_MOZ_EMBED_STATUS_FAILED_TIMEOUT)
+	else if (c->status == Pt_MOZ_STATUS_FAILED_TIMEOUT)
 		statusMessage = "Failed due to connection timeout.";
-	else if (c->status == PH_MOZ_EMBED_STATUS_FAILED_USERCANCELED)
+	else if (c->status == Pt_MOZ_STATUS_FAILED_USERCANCELED)
 		statusMessage = "User canceled connecting to site.";
 
-	if (c->flags & PH_MOZ_EMBED_FLAG_IS_WINDOW) 
+	if (c->flags & Pt_MOZ_FLAG_IS_WINDOW) 
 	{
-		if (c->flags & PH_MOZ_EMBED_FLAG_START)
+		if (c->flags & Pt_MOZ_FLAG_START)
 	  		statusMessage = "Loading site...";
-		else if (c->flags & PH_MOZ_EMBED_FLAG_STOP)
+		else if (c->flags & Pt_MOZ_FLAG_STOP)
 	  		statusMessage = "Done.";
 	}
 
@@ -257,7 +253,6 @@ int moz_visibility_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 
 int moz_open_cb(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo)
 {
-	PtArg_t args[2];
 	int *nflags = NULL;
 	PtMozillaUrlCb_t *c = (PtMozillaUrlCb_t *) cbinfo->cbdata;
 
