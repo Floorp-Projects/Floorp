@@ -64,14 +64,7 @@ class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
             NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
 };
 
-#define AUTOUPDATE_ENABLE_PREF     "autoupdate.enabled"
-#define AUTOUPDATE_CONFIRM_PREF    "autoupdate.confirm_install"
-#define CHARSET_HEADER             "Charset"
-#define CONTENT_ENCODING_HEADER    "Content-encoding"
-#define INSTALLER_HEADER           "Install-Script"
-#define MOCHA_CONTEXT_PREFIX       "autoinstall:"
-#define REG_SOFTUPDT_DIR           "Netscape/Communicator/SoftwareUpdate/"
-#define LAST_REGPACK_TIME          "LastRegPackTime"
-
+#define XPINSTALL_ENABLE_PREF      "xpinstall.enabled"
+#define XPINSTALL_DETAILS_PREF     "xpinstall.show_details"
 
 #endif
