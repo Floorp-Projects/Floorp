@@ -114,6 +114,13 @@ fe_MakeScrolledWindow (MWContext *context, Widget parent, const char *name)
   Arg av [20];
   int ac = 0;
 
+#ifdef ENDER
+  /* The embedded editor looks better with a frame around it */
+  if (EDITOR_CONTEXT_DATA(context)->embedded)
+    parent = XtVaCreateManagedWidget("embeddedFrame", xmFrameWidgetClass,
+                                     parent, 0);
+#endif /* ENDER */
+
   ac = 0;
   XtSetArg (av[ac], XmNscrollingPolicy, XmAPPLICATION_DEFINED); ac++;
   /* The background of this widget is the color that shows up in the square

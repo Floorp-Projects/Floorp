@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -2476,7 +2476,7 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
 static void
 htmlarea_get_size(FEFormData *fed, LO_FormElementStruct *form)
 {
-#if 1
+#if HTMLAREA_USES_PIXELS_NOT_ROWCOL
   LO_FormElementData *form_data;
   int32 wid, ht;
 

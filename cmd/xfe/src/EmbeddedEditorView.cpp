@@ -29,6 +29,11 @@
 #include "il_util.h"
 #include "layers.h"
 
+#ifndef NO_WEB_FONTS
+#include "Mnfrf.h"
+#endif
+#include "fonts.h"
+
 extern "C"
 {
 MWContext *fe_CreateNewContext(MWContextType type, Widget w,
@@ -41,10 +46,6 @@ void fe_load_default_font(MWContext *context);
 void xfe2_EditorInit(MWContext *context);
 int fe_add_to_all_MWContext_list(MWContext *context);
 int fe_remove_from_all_MWContext_list(MWContext *context);
-void DisplayPixmap(MWContext *context, IL_Pixmap* image,
-							  IL_Pixmap *mask, PRInt32 x, PRInt32 y,
-							  PRInt32 x_offset, PRInt32 y_offset, PRInt32 width,
-							  PRInt32 height);
 void fe_find_scrollbar_sizes(MWContext *context);
 void fe_get_final_context_resources(MWContext *context);
 }
@@ -73,7 +74,7 @@ XFE_EmbeddedEditorView::~XFE_EmbeddedEditorView()
 }
 
 extern "C" Widget
-XFE_CreateEmbeddedEditor(Widget parent, int32 wid, int32 ht,
+XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
 							const char *default_url, MWContext *context)
 {
   Widget w;
@@ -110,17 +111,46 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 wid, int32 ht,
 
   new_context->compositor = fe_create_compositor(new_context);
 
+  // Multipliers to get from rows/columns to pixels.
+  int cols2pixels, rows2pixels;
+
+  /* get some idea of the size of the default font */
+  int16 charset;
+  // For some reason, the next line needs a cast otherwise it complains
+  // that an object of type void* can't be assigned to an entity of
+  // type fe_Font*; that even though fe_LoadFontFromFace() is declared
+  // in fonts.h (which we include) to return fe_Font*!
+  fe_Font* font = (fe_Font*)fe_LoadFontFromFace(context, NULL, &charset,
+                                                0, 3, 0);
+  if (font)
+  {
+    XCharStruct overall;
+    int ascent, descent;
+    FE_TEXT_EXTENTS(charset, font, "n", 1, &ascent, &descent, &overall);
+    cols2pixels = overall.width;
+    rows2pixels = ascent + descent;
+    /* could also use CONTEXT_DATA(context)->line_height */
+#ifdef DEBUG_akkana
+    printf("Read the font: %d x %d\n", rows2pixels, cols2pixels);
+#endif
+  }
+  else
+  {
+    cols2pixels = 7;
+    rows2pixels = 17;
+#ifdef DEBUG_akkana
+    printf("Couldn't get font -- defaulting to %d x %d\n",
+           cols2pixels, rows2pixels);
+#endif
+  }
+    
   w = eev->getBaseWidget();
   XtVaSetValues(w,
-				XmNwidth, wid,
-				XmNheight, ht,
-				XmNborderWidth, 1,
+				XmNwidth,
+                 cols*cols2pixels + CONTEXT_DATA(eev->getContext())->sb_w,
+				XmNheight,
+                 (rows+1)*rows2pixels + CONTEXT_DATA(eev->getContext())->sb_h,
 				0);
-
-  XtVaSetValues(CONTEXT_DATA(new_context)->scrolled,
-				XmNshadowThickness, 1,
-				0);
-
 
   xfe2_EditorInit(eev->getContext());
 
