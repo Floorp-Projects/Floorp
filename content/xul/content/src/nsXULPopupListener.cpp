@@ -360,8 +360,8 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
     esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
-    return rv;
   }
+  return rv;
 }
 //
 // MouseMove
