@@ -1430,7 +1430,13 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
       { // for every proportionally-sized column, set the col width to the computed width
         ProportionalColumnLayoutStruct * info = 
           (ProportionalColumnLayoutStruct *)(proportionalColumnsList->ElementAt(i));
+        // verify that the computed width is at least the minimum width
         nscoord computedColWidth = info->mProportion*widthPerSlice;
+        // compute the requested proportional width
+        nsTableColFrame *colFrame;
+        mTableFrame->GetColumnFrame(info->mColIndex, colFrame);
+        nscoord minColWidth = colFrame->GetMinColWidth();
+        computedColWidth = PR_MAX(computedColWidth, minColWidth);
         mTableFrame->SetColumnWidth(info->mColIndex, computedColWidth);
         if (gsDebug==PR_TRUE) 
           printf ("  3 proportional step 2: col %d given %d proportion of remaining space %d, set to width = %d\n", 
@@ -2010,7 +2016,13 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
       }
       else
       {
+        // compute the requested proportional width
         nscoord computedColWidth = info->mProportion*widthPerSlice;
+        // verify that the computed width is at least the minimum width
+        nsTableColFrame *colFrame;
+        mTableFrame->GetColumnFrame(info->mColIndex, colFrame);
+        nscoord minColWidth = colFrame->GetMinColWidth();
+        computedColWidth = PR_MAX(computedColWidth, minColWidth);
         mTableFrame->SetColumnWidth(info->mColIndex, computedColWidth);
         if (gsDebug==PR_TRUE) 
           printf ("  4 proportion: col %d given %d proportion of remaining space %d, set to width = %d\n", 
