@@ -408,7 +408,17 @@ nsHTMLReflowState::ComputePaddingFor(nsIFrame* aFrame,
                             (const nsStyleStruct*&) spacing);
   if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
     // If style can provide us the padding directly, then use it.
-    if (!spacing->GetPadding(aResult) && (nsnull != aParentRS)) {
+    spacing->CalcPaddingFor(aFrame, aResult);
+#if 0
+    if (!spacing->GetPadding(aResult) && (nsnull != aParentRS))
+#else
+    spacing->CalcPaddingFor(aFrame, aResult);
+    if ((eStyleUnit_Percent == spacing->mPadding.GetTopUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetRightUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetBottomUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetLeftUnit()))
+#endif
+    {
       // We have to compute the value (because it's uncomputable by
       // the style code).
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
@@ -475,7 +485,16 @@ nsHTMLReflowState::ComputeBorderPaddingFor(nsIFrame* aFrame,
     if (!spacing->GetBorder(b)) {
       b.SizeTo(0, 0, 0, 0);
     }
-    if (!spacing->GetPadding(p) && (nsnull != aParentRS)) {
+#if 0
+    if (!spacing->GetPadding(p) && (nsnull != aParentRS))
+#else
+    spacing->CalcPaddingFor(aFrame, p);
+    if ((eStyleUnit_Percent == spacing->mPadding.GetTopUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetRightUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetBottomUnit()) ||
+        (eStyleUnit_Percent == spacing->mPadding.GetLeftUnit()))
+#endif
+    {
       // We have to compute the value (because it's uncomputable by
       // the style code).
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
@@ -537,9 +556,7 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
                       (const nsStyleStruct*&) mStyleSpacing);
 
   // Calculate our border and padding value
-  ComputeBorderPaddingFor(frame,
-                          (nsHTMLReflowState*)parentReflowState,
-                          mBorderPadding);
+  ComputeBorderPaddingFor(frame, parentReflowState, mBorderPadding);
 
   // Set mNoWrap flag
   switch (mStyleText->mWhiteSpace) {
