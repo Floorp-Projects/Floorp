@@ -187,7 +187,6 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
 
   nsIXPFCContentSink * xpfc_sink;
   static NS_DEFINE_IID(kIXPFCContentSinkIID, NS_IXPFC_CONTENT_SINK_IID);
-  static NS_DEFINE_IID(kIXPFCContentSinkContainerIID, NS_IXPFC_CONTENT_SINK_CONTAINER_IID);
   
   res = stream_object->mSink->QueryInterface(kIXPFCContentSinkIID, (void**)&xpfc_sink);
   if (NS_OK == res)
