@@ -35,7 +35,6 @@
 #include "nsIDeviceContextPS.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
@@ -111,9 +110,8 @@ nsDeviceContextXlib::CommonInit(void)
 
   if (!initialized) {
     initialized = 1;
-    nsIPref* prefs = nsnull;
-    nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID,
-                                                (nsISupports**) &prefs);
+    nsresult res;
+    NS_WITH_SERVICE(nsIPref,prefs,kPrefCID,&res);
     if (NS_SUCCEEDED(res) && prefs) {
       PRInt32 intVal = 96;
       res = prefs->GetIntPref("browser.screen_resolution", &intVal);
@@ -128,7 +126,6 @@ nsDeviceContextXlib::CommonInit(void)
           dpi = nscoord(screenWidth / screenWidthIn);
         }
       }
-      nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
   }
 
