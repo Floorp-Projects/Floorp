@@ -35,30 +35,30 @@ static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 //NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
-nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuItemIID)) {                                         
-    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(kIMenuItemIID)) {
+    *aInstancePtr = (void*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenuItem)
@@ -77,6 +77,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mXULCommand  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -111,7 +112,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
   gtk_widget_show(mMenuItem);
  
   gtk_signal_connect (GTK_OBJECT (mMenuItem), "activate",
-                      GTK_SIGNAL_FUNC(nsGtkWidget_Menu_Callback),
+                      GTK_SIGNAL_FUNC(menu_item_activate_handler),
 		      this);
   delete[] nameStr;
 }
@@ -260,7 +261,15 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  	return nsEventStatus_eIgnore;
+  g_print("nsMenuItem::MenuSelected\n");
+  // Execute the XULCommand
+  if(mXULCommand)
+  {
+    mXULCommand->DoCommand();
+    return nsEventStatus_eConsumeNoDefault;
+  }
+  else
+    return nsEventStatus_eIgnore;
 }
 
 //-------------------------------------------------------------------------
@@ -268,5 +277,9 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetXULCommand(nsIXULCommand * aXULCommand)
 {
+  g_print("nsMenuItem::SetXULCommand\n");
+  NS_IF_RELEASE(mXULCommand);
+  NS_IF_ADDREF(aXULCommand);
+  mXULCommand = aXULCommand;
   return NS_OK;
 }

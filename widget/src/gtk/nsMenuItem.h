@@ -76,6 +76,7 @@ protected:
   nsIWidget    *mTarget;
 
   GtkWidget    *mMenuItem; // native cascade widget
+  nsIXULCommand * mXULCommand;
 
 };
 
