@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xul-overlay href="chrome://inspector/content/inspectorOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/toolboxOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/commandOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/keysetOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/statusbarOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://inspector/skin/inspectorWindow.css"?>
+
+<window id="winInspectorMain" class="color-dialog" 
+        title="Document Inspector"
+        width="1024" height="768" orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script language="Javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+
+  <popupset id="psTooltipSet">
+    <popup id="ppTooltip" class="tooltip" oncreate="return inspector.fillInTooltip(document.tooltipNode);"> 
+      <text id="txTooltip"/>
+    </popup>
+  </popupset>
+  
+  <popupset id="ppsGlobalPopupset"/>
+  <keyset id="ksGlobalKeyset"/>
+  <broadcasterset id="brsGlobalCommands"/>
+
+  <toolbox id="tbxInsToolbox">
+    <menubar id="mbrInspectorMain"/>
+    <toolbar id="tbInspectorPrimary"/>
+  </toolbox>
+
+  <box id="bxInspectorMain" flex="1"/>
+  
+  <box id="bxStatus"/>
+</window>
+
+        
