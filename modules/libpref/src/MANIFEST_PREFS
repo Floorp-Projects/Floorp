@@ -1,0 +1,6 @@
+initpref.js
+:init:all.js
+:init:mailnews.js
+:init:editor.js
+:init:config.js
+:mac:macprefs.js
