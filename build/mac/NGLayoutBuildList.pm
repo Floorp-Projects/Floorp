@@ -325,6 +325,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",				"$distdirectory:chardet");
 
 	#UCONV
+	_InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",						"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
 	_InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
 	_InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
@@ -870,6 +871,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",					"nsLocale");
 	BuildIDLProject(":mozilla:intl:strres:macbuild:strresIDL.mcp",					"nsIStringBundle");
 	BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",					"unicharutil");
+	BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",					"uconv");
 
 	print("--- IDL projects complete ----\n")
 }
