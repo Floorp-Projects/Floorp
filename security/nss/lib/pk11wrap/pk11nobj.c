@@ -579,6 +579,11 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
     CK_RV crv;
     SECItem *emailProfile = NULL;
 
+    if (!emailAddr || !emailAddr[0]) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
+
     PK11_SETATTRS(attrs, CKA_SUBJECT, name->data, name->len); attrs++;
     PK11_SETATTRS(attrs, CKA_CLASS, &smimeClass, sizeof(smimeClass)); attrs++;
     PK11_SETATTRS(attrs, CKA_NETSCAPE_EMAIL, emailAddr, strlen(emailAddr)); 
@@ -591,7 +596,7 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
 							PR_FALSE,PR_TRUE,NULL);
 	PK11SlotListElement *le;
 
-	/* loop through all the fortezza tokens */
+	/* loop through all the slots */
 	for (le = list->head; le; le = le->next) {
 	    smimeh = pk11_FindObjectByTemplate(le->slot,theTemplate,tsize);
 	    if (smimeh != CK_INVALID_HANDLE) {
