@@ -131,7 +131,7 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   const nsAString *keyStr = NS_STATIC_CAST(const nsAString *, key);
 
   // Initialize the key in the entry with placement new
-  nsString *str = new (&e->mKey) nsString(*keyStr);
+  new (&e->mKey) nsString(*keyStr);
 
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
