@@ -1359,10 +1359,17 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
   nsIFrame* frame = mFrames.FirstChild();
   PRBool done = PR_FALSE;
   while (nsnull != frame) {
+    PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
     rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
-    if (NS_FAILED(rv) || (NS_FRAME_COMPLETE != aStatus)) {
+    if (NS_FAILED(rv)) {
       done = PR_TRUE;
       break;
+    }
+    if (NS_FRAME_COMPLETE != aStatus) {
+      if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
+        done = PR_TRUE;
+        break;
+      }
     }
     irs.mPrevFrame = frame;
     frame->GetNextSibling(&frame);
@@ -1371,6 +1378,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
   // Attempt to pull frames from our next-in-flow until we can't
   if (!done && (nsnull != mNextInFlow)) {
     while (!done) {
+      PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       PRBool isComplete;
       frame = PullInlineFrame(aPresContext, irs, &isComplete);
       if (nsnull == frame) {
@@ -1380,9 +1388,15 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
         break;
       }
       rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
-      if (NS_FAILED(rv) || (NS_FRAME_COMPLETE != aStatus)) {
+      if (NS_FAILED(rv)) {
         done = PR_TRUE;
         break;
+      }
+      if (NS_FRAME_COMPLETE != aStatus) {
+        if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
+          done = PR_TRUE;
+          break;
+        }
       }
       irs.mPrevFrame = frame;
     }
@@ -1515,6 +1529,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
   }
 
   nsLineLayout* lineLayout = aReflowState.lineLayout;
+  PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1570,10 +1585,12 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    nsIFrame* nextFrame;
-    aFrame->GetNextSibling(&nextFrame);
-    if (nsnull != nextFrame) {
-      PushFrames(aPresContext, nextFrame, aFrame);
+    if (!reflowingFirstLetter) {
+      nsIFrame* nextFrame;
+      aFrame->GetNextSibling(&nextFrame);
+      if (nsnull != nextFrame) {
+        PushFrames(aPresContext, nextFrame, aFrame);
+      }
     }
   }
   return rv;
@@ -1849,7 +1866,7 @@ NS_IMETHODIMP
 nsFirstLineFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsHTMLAtoms::lineFrame;
+  *aType = nsLayoutAtoms::lineFrame;
   NS_ADDREF(*aType);
   return NS_OK;
 }
@@ -2060,6 +2077,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
       irs.mPrevFrame = nsnull;
     }
     else {
+// XXX do this in the Init method instead
       // For continuations, we need to check and see if our style
       // context is right. If its the same as the first-in-flow, then
       // we need to fix it up (that way :first-line style doesn't leak
