@@ -40,6 +40,6 @@ FILES := \
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
-install::
+libs::
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US

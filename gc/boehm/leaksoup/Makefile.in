@@ -43,7 +43,7 @@ include $(topsrcdir)/config/rules.mk
 %.class: %.java
 	javac -deprecation -d . -sourcepath $(srcdir) $^
 
-install:: $(JOBJS)
+libs:: $(JOBJS)
 	$(INSTALL) *.class $(DIST)/bin/leaksoup
 	$(INSTALL) $(srcdir)/leaksoup.sh $(DIST)/bin
 

@@ -37,6 +37,6 @@ EXPORT_PROPERTIES_CONTENT =          \
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 		$(INSTALL) $(EXPORT_PREF_CONTENT)       $(DIST)/bin/chrome/en-US/locale/en-US/communicator/pref
 		$(INSTALL) $(EXPORT_PROPERTIES_CONTENT) $(DIST)/bin/chrome/en-US/locale/en-US/communicator

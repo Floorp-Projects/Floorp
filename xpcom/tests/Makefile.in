@@ -86,6 +86,6 @@ INCLUDES	+= \
 		-I$(srcdir)/services \
 		$(NULL)
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 

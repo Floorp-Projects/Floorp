@@ -57,4 +57,4 @@ INCLUDES += -I$(srcdir)/xmlparse
 COMPILE_CFLAGS += -DXML_UNICODE -I$(srcdir)/xmltok
 endif
 
-install:: $(OBJS)
+libs:: $(OBJS)

@@ -29,6 +29,6 @@ FILES := \
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
-install::
+libs::
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/chrome
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US/chrome

@@ -43,7 +43,7 @@ XPIDLSRCS = nsSanePluginControl.idl
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(TARGETS)
+libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/test/camera.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/test/scanner.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/test/camera.html /home/httpd/html/test

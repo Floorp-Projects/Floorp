@@ -50,7 +50,7 @@ HOST_CFLAGS	+= -DEXPORT_XPT_API
 
 # Build libxpt early so that it'll be available to xpidl, which also
 # must be built early.
-export:: install
+export:: libs
 
 ifdef CROSS_COMPILE
 ifdef HOST_NSPR_MDCPUCFG

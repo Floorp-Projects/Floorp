@@ -47,6 +47,6 @@ FILES		= \
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/res/rdf
 

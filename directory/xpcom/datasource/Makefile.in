@@ -42,5 +42,5 @@ JSFILES         = $(srcdir)/nsLDAPDataSource.js
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(JSFILES) $(DIST)/bin/components

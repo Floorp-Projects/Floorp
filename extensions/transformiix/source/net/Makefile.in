@@ -40,4 +40,4 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base
 
-install:: $(OBJS)
+libs:: $(OBJS)

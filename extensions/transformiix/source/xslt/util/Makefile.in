@@ -46,4 +46,4 @@ INCLUDES += -I$(srcdir) -I$(srcdir)/../../base -I$(srcdir)/../../xpath \
   -I$(srcdir)/../../xml -I$(srcdir)/../../xml/dom \
   -I$(srcdir)/../../xslt -I$(srcdir)/../../xslt/functions
 
-install:: $(OBJS)
+libs:: $(OBJS)

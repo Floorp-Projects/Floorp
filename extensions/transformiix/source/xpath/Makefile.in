@@ -87,4 +87,4 @@ ifndef TX_EXE
 INCLUDES += -I$(srcdir)
 endif
 
-install:: $(OBJS)
+libs:: $(OBJS)

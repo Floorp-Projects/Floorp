@@ -69,5 +69,5 @@ CFLAGS    += $(GLIB_CFLAGS)
 EXTRA_DSO_LDOPTS += $(GLIB_LIBS) -lgmodule
 
 # Install pango.modules file for Shaping Modules.
-install::
+libs::
 	$(INSTALL) $(srcdir)/pango.modules $(DIST)/bin

@@ -52,6 +52,6 @@ DEFINES		+= -DNEW_STRING_APIS -DSTANDALONE_STRING_TESTS -UDEBUG -DNDEBUG
 #DEFINES		+= -DSTANDALONE_STRING_TESTS -UDEBUG -DNDEBUG
 INCLUDES	+= -I$(srcdir)/../public -I$(srcdir)/services
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 

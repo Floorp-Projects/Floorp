@@ -57,5 +57,5 @@ XMLTERM_DOCS = \
 	$(srcdir)/INSTALL.xmlterm \
 	$(NULL)
 
-install:: 
+libs:: 
 	$(INSTALL) -m 555 $(XMLTERM_DOCS) $(DIST)/bin

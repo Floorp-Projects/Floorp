@@ -51,6 +51,6 @@ include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(RESOURCE_SAMPLES))
 
-install::
+libs::
 	$(INSTALL) $(addprefix $(srcdir)/,$(RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

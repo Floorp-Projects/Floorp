@@ -31,12 +31,12 @@ DIRS=base build
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/resources/content/res/viewer-registry.rdf $(DIST)/bin/res/inspector
 	$(INSTALL) $(srcdir)/resources/content/res/search-registry.rdf $(DIST)/bin/res/inspector
 	$(INSTALL) $(srcdir)/resources/content/prefs/inspector.js $(DIST)/bin/defaults/pref
 
-install::
+libs::
 	$(REGCHROME) content inspector inspector.jar
 	$(REGCHROME) locale en-US/inspector inspector.jar
 	$(REGCHROME) skin modern/inspector inspector.jar

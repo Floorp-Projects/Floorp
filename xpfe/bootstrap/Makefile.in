@@ -254,17 +254,17 @@ endif
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
-install:: $(srcdir)/mozilla
+libs:: $(srcdir)/mozilla
 	$(INSTALL) $< $(DIST)/bin
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-install:: $(srcdir)/splash.bmp
+libs:: $(srcdir)/splash.bmp
 	$(INSTALL) $< $(DIST)/bin
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-install:: $(srcdir)/splash.xpm
+libs:: $(srcdir)/splash.xpm
 	$(INSTALL) $< $(DIST)/bin
 endif
 
@@ -310,7 +310,7 @@ else
 APP_NAME = Mozilla
 endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	rm -rf $(DIST)/$(APP_NAME).app
 	mkdir $(DIST)/$(APP_NAME).app
 	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app

@@ -42,6 +42,6 @@ BUILTIN_RESOURCES = \
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(BUILTIN_RESOURCES)
+libs:: $(BUILTIN_RESOURCES)
 	$(INSTALL) $^ $(DIST)/bin/res/builtin
 

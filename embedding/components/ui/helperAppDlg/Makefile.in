@@ -36,5 +36,5 @@ JSCOMPONENTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(JSCOMPONENTS)
+libs:: $(JSCOMPONENTS)
 	$(INSTALL) $^ $(DIST)/bin/components

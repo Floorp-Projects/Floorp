@@ -54,6 +54,6 @@ docopy:
 
 export:: docopy
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 

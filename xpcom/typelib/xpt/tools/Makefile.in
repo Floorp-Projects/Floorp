@@ -58,8 +58,8 @@ HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
 
-# Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
-export:: install
+# Build xpt_link and xpt_dump early.  (libs creates .deps used by libs.)
+export:: libs
 
 
 

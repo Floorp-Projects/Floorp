@@ -155,7 +155,7 @@ INCLUDES	+= \
 		-I$(srcdir) \
 		$(NULL)
 
-install::
+libs::
 	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
 	$(INSTALL) $(RESOURCES) $(DIST)/bin/res
 

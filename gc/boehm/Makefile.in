@@ -92,6 +92,5 @@ LOBJS	:= $(LCPPSRCS:.cc=.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
-export::
-	make install
+export:: libs
 

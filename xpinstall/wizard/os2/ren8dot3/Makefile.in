@@ -33,7 +33,7 @@ CSRCS             =ren8dot3.c
   
 include $(DEPTH)/config/autoconf.mk
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install
 
 include $(topsrcdir)/config/rules.mk

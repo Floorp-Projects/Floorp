@@ -62,6 +62,6 @@ ifdef SHARED_LIBRARY
 	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
 endif
 
-install:: install-plugin
+libs:: install-plugin
 
 

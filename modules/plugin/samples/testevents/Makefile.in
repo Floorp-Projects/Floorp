@@ -53,6 +53,6 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-install::
+libs::
 	$(INSTALL) SimpleEventsTest.html $(DIST)/bin/res/samples
 

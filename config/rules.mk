@@ -25,7 +25,7 @@
 # Pass 1. export  - Create generated headers and stubs.  Publish public headers
 #                   to dist/include.
 #
-# Pass 2. install - Create libraries & programs.  Publish them to dist/bin.
+# Pass 2. libs - Create libraries & programs.  Publish them to dist/bin.
 #
 # `gmake` will build each of these properly, but `gmake -jN` may break
 # use `gmake MAKE='gmake -jN'` instead
@@ -472,10 +472,10 @@ endif
 
 ################################################################################
 
-all:: export install
+all:: export libs
 
 # Do depend as well
-alldep:: export depend install
+alldep:: export depend libs
 
 # Do everything from scratch
 everything:: clean alldep
@@ -587,7 +587,7 @@ endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
 
 ##############################################
-install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
 ifeq ($(OS_ARCH),OS2)
@@ -1187,7 +1187,7 @@ endif
 #
 # JMC_GEN -- for generating java modules
 #
-# Provide default export & install rules when using JMC_GEN
+# Provide default export & libs rules when using JMC_GEN
 #
 ifneq ($(JMC_GEN),)
 INCLUDES		+= -I$(JMC_GEN_DIR) -I.
@@ -1293,7 +1293,7 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
 
-install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
 
 endif
@@ -1312,7 +1312,7 @@ else
 _JAR_REGCHROME_DISABLE_JAR=0
 endif
 
-install:: $(CHROME_DEPS)
+libs:: $(CHROME_DEPS)
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST); fi
 

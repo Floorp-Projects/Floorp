@@ -37,6 +37,6 @@ EXPORT_RESOURCE = \
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/defaults/profile/$(THEME)
 

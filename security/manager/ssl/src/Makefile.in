@@ -51,7 +51,7 @@ META_COMPONENT	= crypto
 EXPORTS = 			\
 	$(NULL)
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/nssifail.txt $(DIST)/bin/res
 
 CPPSRCS = 				\

@@ -40,7 +40,7 @@ CPPSRCS		= \
 EXPORTS        = InstallCleanupDefines.h \
 	$(NULL)
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/cmessage.txt $(DIST)/bin/res
 
 ifeq ($(OS_ARCH),OS2)

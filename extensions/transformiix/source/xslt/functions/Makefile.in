@@ -54,4 +54,4 @@ INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net \
   -I$(srcdir)/../../xml/dom \
   -I$(srcdir)/.. -I$(srcdir)/../util
 
-install:: $(OBJS)
+libs:: $(OBJS)

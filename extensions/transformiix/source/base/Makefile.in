@@ -56,4 +56,4 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt
 
-install:: $(OBJS)
+libs:: $(OBJS)
