@@ -192,9 +192,9 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
             break;
         }
         fprintf(state->file,
-                "%s  *%s = OBJECT_TO_JSVAL(%s::GetJSObject(cx, %s));\n"
-                "%s  NS_RELEASE(%s);\n",
-                extra_indent, to, IDL_IDENT(state->tree).str, from,
+                "%s  *%s = %s ? OBJECT_TO_JSVAL(%s::GetJSObject(cx, %s)) : 0;\n"
+                "%s  NS_IF_RELEASE(%s);\n",
+                extra_indent, to, from, IDL_IDENT(state->tree).str, from,
                 extra_indent, from);
         break;
       default:
@@ -242,8 +242,16 @@ stub_op_dcl(TreeState *state)
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
         fputs("  ", state->file);
-        if (!xpcom_param(state))
-            return FALSE;
+        if (IDL_NODE_TYPE(IDL_PARAM_DCL(state->tree).param_type_spec) == IDLN_IDENT) {
+            /* Emit a JSObject* for identifiers: we'll need to pull
+               out the object from the private ourselves */
+            fputs("JSObject* js", state->file);
+            fputs(IDL_IDENT(IDL_PARAM_DCL(state->tree).simple_declarator).str, state->file);
+        }
+        else {
+            if (!xpcom_param(state))
+                return FALSE;
+        }
         fputs(";\n", state->file);
     }
 
@@ -257,12 +265,40 @@ stub_op_dcl(TreeState *state)
     fputc('\"', state->file);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         param = IDL_LIST(iter).data;
-        fprintf(state->file, ", &%s",
-                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+        if (IDL_NODE_TYPE(IDL_PARAM_DCL(param).param_type_spec) == IDLN_IDENT) {
+            fputs(", &js", state->file);
+            fputs(IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str, state->file);
+        }
+        else {
+            fprintf(state->file, ", &%s",
+                    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+        }
     }
     fputs("))\n"
           "    return JS_FALSE;\n",
           state->file);
+
+    /* Pull the native object out of each JSObject */
+    for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+        param = IDL_LIST(iter).data;
+        if (IDL_NODE_TYPE(IDL_PARAM_DCL(param).param_type_spec) != IDLN_IDENT)
+            continue;
+
+        fputs("  ", state->file);
+
+        state->tree = param;
+        if (!xpcom_param(state))
+            return FALSE;
+
+        fputs(" = (", state->file);
+        if (!xpcom_type(state))
+            return FALSE;
+        fputs(") ", state->file);
+
+        fprintf(state->file,
+                "JS_GetPrivate(cx, js%s);\n",
+                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+    }
     
     /* declare the variable which will hold the return value */
     if (has_retval) {
@@ -394,10 +430,13 @@ stub_interface(TreeState *state)
 {
     IDL_tree iface = state->tree;
     const char *className;
+    const char *parentClassName;
     struct stub_private *priv, *save_priv;
     gboolean ok;
 
-    className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
+    className       = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
+    parentClassName = IDL_IDENT(IDL_LIST(IDL_INTERFACE(iface).inheritance_spec).data).str;
+        /* XXX Assumes single inheritance */
 
     priv = xpidl_malloc(sizeof *priv);
     memset(priv, 0, sizeof *priv);
@@ -531,14 +570,38 @@ stub_interface(TreeState *state)
         fprintf(state->file,
                 "#ifdef XPIDL_JS_STUBS\n"
                 "\nJSObject *\n"
-                "%s::InitJSClass(JSContext *cx)\n"
+                "%s::InitJSClass(JSContext *cx)\n",
+                className);
+
+        fprintf(state->file,
                 "{\n"
                 "  JSObject *globj = JS_GetGlobalObject(cx);\n"
                 "  if (!globj)\n"
-                "    return 0;\n"
-                "  JSObject *proto = JS_InitClass(cx, globj, 0, &%s_class, %s_ctor, 0,\n",
-                className, className, className);
-        fputs(  "                                 ",
+                "    return 0;\n");
+
+        fprintf(state->file,
+                "  JSObject *proto;\n"
+                "  jsval vp;\n"
+                "  if (!JS_LookupProperty(cx, globj, \"%s\", &vp) ||\n"
+                "      !JSVAL_IS_OBJECT(vp) ||\n"
+                "      !JS_LookupProperty(cx, JSVAL_TO_OBJECT(vp), \"prototype\", &vp) ||\n"
+                "      !JSVAL_IS_OBJECT(vp)) {\n",
+                className);
+
+        if (parentClassName) {
+            fprintf(state->file,
+                "    JSObject *parent_proto = %s::InitJSClass(cx);\n",
+                parentClassName);
+        }
+        else {
+            fprintf(state->file,
+                "    JSObject *parent_proto = 0;\n");
+        }
+
+        fprintf(state->file,
+                "    proto = JS_InitClass(cx, globj, parent_proto, &%s_class, %s_ctor, 0,\n",
+                className, className);
+        fputs(  "                                   ",
                 state->file);
         if (priv->props)
             fprintf(state->file, "%s_props", className);
@@ -550,6 +613,13 @@ stub_interface(TreeState *state)
         else
             fputc('0', state->file);
         fputs(  ", 0, 0);\n", state->file);
+
+        fputs(  "  }\n"
+                "  else {\n"
+                "    proto = JSVAL_TO_OBJECT(vp);\n"
+                "  }\n",
+                state->file);
+
         if (priv->enums) {
             fprintf(state->file,
                     "  if (!proto)\n"
