@@ -63,7 +63,6 @@ CPPSRCS		= \
 		nsSizeOfHandler.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
-		nsStringService.cpp \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
@@ -120,7 +119,6 @@ XPIDLSRCS	= \
 		nsIRecyclingAllocator.idl \
 		nsIVariant.idl \
 		nsISerializable.idl \
-		nsIStringService.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsITimelineService.idl \
@@ -131,7 +129,8 @@ SDK_XPIDLSRCS   = \
 		nsIObserver.idl		   \
 		nsIProperties.idl          \
 		nsISimpleEnumerator.idl	   \
-		nsISupportsPrimitives.idl \
+		nsIStringService.idl       \
+		nsISupportsPrimitives.idl  \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
