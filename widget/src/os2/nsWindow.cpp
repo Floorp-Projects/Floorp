@@ -678,7 +678,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
    {
       BOOL bPreHandling = g_bHandlingMouseClick;
       if( PR_FALSE == wnd->ProcessMessage( msg, mp1, mp2, mRC) &&
-          wnd->GetPrevWP())
+          WinIsWindow( (HAB)0, hwnd) && wnd->GetPrevWP())
       {
          mRC = (wnd->GetPrevWP())( hwnd, msg, mp1, mp2);
 
