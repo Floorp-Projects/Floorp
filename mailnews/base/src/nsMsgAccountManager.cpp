@@ -1376,6 +1376,8 @@ nsMsgAccountManager::UnloadAccounts()
   m_identities.Reset(hashElementRelease, nsnull);
   m_incomingServers.Reset(hashElementRelease, nsnull);
   m_accountsLoaded = PR_FALSE;
+  mAccountKeyList.Truncate(0);
+  SetLastServerFound(nsnull,"","","");
   return NS_OK;
 }
 
