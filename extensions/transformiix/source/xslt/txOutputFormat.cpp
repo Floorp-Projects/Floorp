@@ -109,10 +109,12 @@ void txOutputFormat::merge(txOutputFormat& aOutputFormat)
 
 void txOutputFormat::setFromDefaults()
 {
-    if (mMethod == eMethodNotSet)
-        mMethod = eXMLOutput;
-
     switch (mMethod) {
+        case eMethodNotSet:
+        {
+            mMethod = eXMLOutput;
+            // Fall through
+        }
         case eXMLOutput:
         {
             if (mVersion.isEmpty())
