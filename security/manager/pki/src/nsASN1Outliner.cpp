@@ -399,10 +399,10 @@ nsNSSASN1Outliner::GetLevel(PRInt32 index, PRInt32 *_retval)
 /* wstring getCellText (in long row, in wstring colID); */
 NS_IMETHODIMP 
 nsNSSASN1Outliner::GetCellText(PRInt32 row, const PRUnichar *colID, 
-                               PRUnichar **_retval)
+                               nsAString& _retval)
 {
   nsCOMPtr<nsIASN1Object> object;
-  *_retval = nsnull;
+  _retval.SetCapacity(0);
   char *col = NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(colID).get());
   nsresult rv = NS_OK;
   if (strcmp(col, "certDataCol") == 0) {
@@ -412,7 +412,10 @@ nsNSSASN1Outliner::GetCellText(PRInt32 row, const PRUnichar *colID,
       return rv;
 
     //There's only one column for ASN1 dump.
-    rv = object->GetDisplayName(_retval);
+    PRUnichar* displayName = nsnull;
+    rv = object->GetDisplayName(&displayName); // copies
+    _retval = displayName; // copies again!
+    nsCRT::free(displayName);
   }
   return rv;
 }

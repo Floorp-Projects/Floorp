@@ -497,7 +497,7 @@ nsFileView::GetLevel(PRInt32 aIndex, PRInt32* aLevel)
 
 NS_IMETHODIMP
 nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
-                        PRUnichar** aCellText)
+                        nsAString& aCellText)
 {
   PRUint32 dirCount, fileCount;
   mDirList->Count(&dirCount);
@@ -514,27 +514,31 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
     curFile = do_QueryElementAt(mFilteredFiles, aRow - dirCount);
   } else {
     // invalid row
-    *aCellText = ToNewUnicode(NS_LITERAL_STRING(""));
+    aCellText.SetCapacity(0);
     return NS_OK;
   }
 
   if (NS_LITERAL_STRING("FilenameColumn").Equals(aColID)) {
-    curFile->GetUnicodeLeafName(aCellText);
+    // XXX fix this by making GetUnicodeLeafName take an nsAString&
+    nsXPIDLString temp;
+    curFile->GetUnicodeLeafName(getter_Copies(temp));
+    aCellText = temp;
   } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(aColID)) {
     PRInt64 lastModTime;
     curFile->GetLastModifiedTime(&lastModTime);
-    nsAutoString dateString;
+    // XXX FormatPRTime could take an nsAString&
+    nsAutoString temp;
     mDateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatSeconds,
-                                 lastModTime * 1000, dateString);
-    *aCellText = ToNewUnicode(dateString);
+                                 lastModTime * 1000, temp);
+    aCellText = temp;
   } else {
     // file size
     if (isDirectory)
-      *aCellText = ToNewUnicode(NS_LITERAL_STRING(""));
+      aCellText.SetCapacity(0);
     else {
       PRInt64 fileSize;
       curFile->GetFileSize(&fileSize);
-      *aCellText = ToNewUnicode(nsPrintfCString("%lld", fileSize));
+      aCellText = NS_ConvertUTF8toUCS2(nsPrintfCString("%lld", fileSize));
     }
   }
 

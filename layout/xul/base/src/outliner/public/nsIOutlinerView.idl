@@ -139,7 +139,7 @@ interface nsIOutlinerView : nsISupports
    * The text for a given cell.  If a column consists only of an image, then
    * the empty string is returned.  
    */
-  wstring getCellText(in long row, in wstring colID);
+  AString getCellText(in long row, in wstring colID);
   
   /**
    * Called during initialization to link the view to the front end box object.

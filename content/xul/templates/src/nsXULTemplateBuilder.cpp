@@ -1095,17 +1095,17 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
 
 
 struct SubstituteTextClosure {
-    SubstituteTextClosure(nsTemplateMatch& aMatch, nsString& aResult)
+    SubstituteTextClosure(nsTemplateMatch& aMatch, nsAString& aResult)
         : match(aMatch), result(aResult) {}
 
     nsTemplateMatch& match;
-    nsString& result;
+    nsAString& result;
 };
 
 nsresult
 nsXULTemplateBuilder::SubstituteText(nsTemplateMatch& aMatch,
                                      const nsAReadableString& aAttributeValue,
-                                     nsString& aResult)
+                                     nsAString& aResult)
 {
     // See if it's the special value "..."
     if (aAttributeValue == NS_LITERAL_STRING("...")) {

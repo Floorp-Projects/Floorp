@@ -994,9 +994,8 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
     cellX += imageSize.width;
     
     // Cell Text 
-    nsXPIDLString text;
-    mView->GetCellText(aRow, currCol->GetID(), getter_Copies(text));
-    nsAutoString cellText(text);
+    nsAutoString cellText;
+    mView->GetCellText(aRow, currCol->GetID(), cellText);
 
     // Create a scratch rect to represent the text rectangle, with the current 
     // X and Y coords, and a guess at the width and height. The width is the 
@@ -1229,9 +1228,8 @@ nsOutlinerBodyFrame::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool
     remainWidth -= imageSize.width;
     
     // Get the cell text.
-    nsXPIDLString text;
-    mView->GetCellText(aRow, currCol->GetID(), getter_Copies(text));
-    nsAutoString cellText(text);
+    nsAutoString cellText;
+    mView->GetCellText(aRow, currCol->GetID(), cellText);
 
     nsCOMPtr<nsIStyleContext> textContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
@@ -2147,12 +2145,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
                                              nsFramePaintLayer    aWhichLayer)
 {
   // Now obtain the text for our cell.
-  nsXPIDLString text;
-  mView->GetCellText(aRowIndex, aColumn->GetID(), getter_Copies(text));
+  nsAutoString text;
+  mView->GetCellText(aRowIndex, aColumn->GetID(), text);
 
-  nsAutoString realText(text);
-
-  if (realText.Length() == 0)
+  if (text.Length() == 0)
     return NS_OK; // Don't paint an empty string. XXX What about background/borders? Still paint?
 
   // Resolve style for the text.  It contains all the info we need to lay ourselves
@@ -2199,21 +2195,19 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
     aRenderingContext.SetFont(fontMet);
 
     nscoord width;
-    aRenderingContext.GetWidth(realText, width);
-
+    aRenderingContext.GetWidth(text, width);
+ 
     if (width > textRect.width) {
       // See if the width is even smaller than the ellipsis
       // If so, clear the text completely.
       nscoord ellipsisWidth;
       aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
 
-      nsAutoString ellipsis; ellipsis.AssignWithConversion(ELLIPSIS);
-
       nscoord width = textRect.width;
       if (ellipsisWidth > width)
-        realText.SetLength(0);
+        text.SetLength(0);
       else if (ellipsisWidth == width)
-        realText = ellipsis;
+        text.Assign(NS_LITERAL_STRING(ELLIPSIS));
       else {
         // We will be drawing an ellipsis, thank you very much.
         // Subtract out the required width of the ellipsis.
@@ -2227,18 +2221,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
             // Crop right. 
             nscoord cwidth;
             nscoord twidth = 0;
-            int length = realText.Length();
+            int length = text.Length();
             int i;
             for (i = 0; i < length; ++i) {
-              PRUnichar ch = realText.CharAt(i);
+              PRUnichar ch = text[i];
               aRenderingContext.GetWidth(ch,cwidth);
               if (twidth + cwidth > width)
                 break;
               twidth += cwidth;
             }
 
-            realText.Truncate(i);
-            realText += ellipsis;
+            text.Truncate(i);
+            text += NS_LITERAL_STRING(ELLIPSIS);
           }
           break;
 
@@ -2246,10 +2240,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
             // Crop left.
             nscoord cwidth;
             nscoord twidth = 0;
-            int length = realText.Length();
+            int length = text.Length();
             int i;
             for (i=length-1; i >= 0; --i) {
-              PRUnichar ch = realText.CharAt(i);
+              PRUnichar ch = text[i];
               aRenderingContext.GetWidth(ch,cwidth);
               if (twidth + cwidth > width)
                   break;
@@ -2258,9 +2252,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
             }
 
             nsAutoString copy;
-            realText.Right(copy, length-1-i);
-            realText = ellipsis;
-            realText += copy;
+            text.Right(copy, length-1-i);
+            text.Assign(NS_LITERAL_STRING(ELLIPSIS));
+            text += copy;
           }
           break;
 
@@ -2277,7 +2271,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
     const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(colorStyle->mColor);
 
-    aRenderingContext.DrawString(realText, textRect.x, textRect.y + baseline);
+    aRenderingContext.DrawString(text, textRect.x, textRect.y + baseline);
   }
 
   return NS_OK;

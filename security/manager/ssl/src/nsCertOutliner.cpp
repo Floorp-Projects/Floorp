@@ -467,18 +467,16 @@ nsCertOutliner::GetLevel(PRInt32 index, PRInt32 *_retval)
 /* wstring getCellText (in long row, in wstring colID); */
 NS_IMETHODIMP 
 nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID, 
-                            PRUnichar **_retval)
+                            nsAString& _retval)
 {
   nsresult rv;
   char *col = NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(colID).get());
   outlinerArrayEl *el = GetThreadDescAtIndex(row);
   if (el != nsnull) {
-    if (strcmp(col, "certcol") == 0) {
-      nsAutoString oName(el->orgName);
-      *_retval = ToNewUnicode(oName);
-    } else {
-      *_retval = nsnull;
-    }
+    if (strcmp(col, "certcol") == 0)
+      _retval.Assign(el->orgName);
+    else
+      _retval.SetCapacity(0);
     return NS_OK;
   }
   nsCOMPtr<nsIX509Cert> cert = GetCertAtIndex(row);
@@ -565,7 +563,7 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
     nsAutoString astr = NS_ConvertASCIItoUCS2(str);
     wstr = ToNewUnicode(astr);
   }
-  *_retval = wstr;
+  _retval = wstr;
   return rv;
 }
 

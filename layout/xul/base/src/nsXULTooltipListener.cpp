@@ -448,12 +448,9 @@ SetTitletipLabel(nsIOutlinerBoxObject* aOutlinerBox, nsIContent* aTooltip,
   nsCOMPtr<nsIOutlinerView> view;
   aOutlinerBox->GetView(getter_AddRefs(view));
 
-  PRUnichar* cellText = nsnull;
-  view->GetCellText(aRow, aCol.get(), &cellText);
-  
   nsAutoString label;
-  label.Assign(cellText);
-
+  view->GetCellText(aRow, aCol.get(), label);
+  
   aTooltip->SetAttr(nsnull, nsXULAtoms::label, label, PR_FALSE);
 }
 
