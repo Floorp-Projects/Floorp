@@ -90,6 +90,21 @@ struct RowGroupReflowState {
 
 /* ----------- nsTableRowGroupFrame ---------- */
 
+nsresult
+nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kITableRowGroupIID, NS_ITABLEROWGROUPFRAME_IID);
+  if (aIID.Equals(kITableRowGroupIID)) {
+    *aInstancePtr = (void*)this;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  }
+}
+
 NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
 {
   // init out-param
