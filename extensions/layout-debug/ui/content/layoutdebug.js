@@ -326,7 +326,9 @@ RTestIndexList.prototype = {
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
 const nsILineInputStream = Components.interfaces.nsILineInputStream;
 const nsILocalFile = Components.interfaces.nsILocalFile;
+const nsIFileURL = Components.interfaces.nsIFileURL;
 const nsIIOService = Components.interfaces.nsIIOService;
+const nsILayoutRegressionTester = Components.interfaces.nsILayoutRegressionTester;
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
@@ -361,6 +363,9 @@ RTestURLList.prototype = {
       this.mIsBaseline = aIsBaseline;
       this.mURLs = new Array();
       this.readFileList(aLocalFile);
+      this.mRegressionTester =
+        Components.classes["@mozilla.org/layout-debug/regressiontester;1"].
+          createInstance(nsILayoutRegressionTester)
     },
 
   readFileList : function(aLocalFile)
@@ -368,7 +373,6 @@ RTestURLList.prototype = {
       var ios = Components.classes[IO_SERVICE_CONTRACTID]
                 .getService(nsIIOService);
       var dirURL = ios.newFileURI(aLocalFile.parent);
-      var moz_src = /.*(?=mozilla)/.exec(dirURL.path);
 
       var fis = Components.classes[NS_LOCALFILEINPUTSTREAM_CONTRACTID].
                     createInstance(nsIFileInputStream);
@@ -376,42 +380,75 @@ RTestURLList.prototype = {
       var lis = fis.QueryInterface(nsILineInputStream);
 
       var line = {value:null};
-      while (lis.readLine(line)) {
+      do {
+        var more = lis.readLine(line);
         var str = line.value;
         str = /^[^#]*/.exec(str); // strip everything after "#"
         str = /\S*/.exec(str); // take the first chunk of non-whitespace
         if (!str || str == "")
           continue;
       
-        var item = dirURL.resolve(str.toString().replace(/\/s\|\//, moz_src));
+        var item = dirURL.resolve(str);
         if (item.match(/\/rtest.lst$/)) {
           var itemurl = ios.newURI(item, null, null);
+          itemurl = itemurl.QueryInterface(nsIFileURL);
           this.readFileList(itemurl.file);
         } else {
-          this.mURLs.push(item);
+          this.mURLs.push( {url:item, dir:aLocalFile.parent, relurl:str} );
         }
-      }
+      } while (more);
     },
 
-  doneURL : function() {
-    // XXX Dump or compare regression test data here!
+  doneURL : function()
+  {
+    var basename = new String(this.mCurrentURL.relurl);
+    basename = basename.replace(":", "");
+    basename = basename.replace("/", "_");
+    basename = basename.replace(".", "_");
+    basename = basename.replace("?", "_");
+    basename = basename.replace("&", "_");
+    basename += ".rgd";
+
+    var data = this.mCurrentURL.dir.clone();
+    data.append( this.mIsBaseline ? "baseline" : "verify");
+    data.append(basename);
+
+    dump("Writing regression data to " +
+         data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
+    this.mRegressionTester.dumpFrameModel(gBrowser.contentWindow, data,
+      nsILayoutRegressionTester.DUMP_FLAGS_MASK_DUMP_STYLE);
+
+    if (!this.mIsBaseline) {
+      var base_data = this.mCurrentURL.dir.clone();
+      base_data.append("baseline");
+      base_data.append(basename);
+      dump("Comparing to regression data from " +
+           base_data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
+      var filesDiffer =
+        this.mRegressionTester.compareFrameModels(base_data, data,
+          nsILayoutRegressionTester.COMPARE_FLAGS_BRIEF)
+      dump("Comparison for " + this.mCurrentURL.url + " " +
+           (filesDiffer ? "failed" : "passed") + ".");
+    }
 
     this.mCurrentURL = null;
 
     this.startURL();
   },
 
-  startURL : function() {
+  startURL : function()
+  {
     this.mCurrentURL = this.mURLs.shift();
     if (!this.mCurrentURL) {
       gRTestURLList = null;
       return;
     }
 
-    gBrowser.loadURI(this.mCurrentURL);
+    gBrowser.loadURI(this.mCurrentURL.url);
   },
 
   mURLs : null,
-  mCurrentURL : null,
+  mCurrentURL : null, // url (string), dir (nsIFileURL), relurl (string)
   mIsBaseline : null,
+  mRegressionTester : null
 }
