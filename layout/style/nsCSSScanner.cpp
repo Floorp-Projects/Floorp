@@ -581,5 +581,6 @@ PRBool nsCSSScanner::ParseString(PRInt32* aErrorCode, PRInt32 aStop,
 {
   aToken->mIdent.SetLength(0);
   aToken->mType = eCSSToken_String;
+  aToken->mSymbol = PRUnichar(aStop); // remember how it's quoted
   return GatherString(aErrorCode, aStop, aToken->mIdent);
 }
