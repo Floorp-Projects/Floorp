@@ -33,7 +33,6 @@
 
 #include "secutil.h"
 #include "secmod.h"
-#include "cdbhdl.h"
 #include "cert.h"
 #include "secoid.h"
 
@@ -302,8 +301,7 @@ int main(int argc, char **argv)
 	} 
 
 	PR_SetError(0, 0); /* PR_Init("pp", 1, 1, 0);*/
-	SECU_PKCS11Init(PR_FALSE);
-	SEC_Init();
+	NSS_Init(SECU_ConfigDirectory(NULL));
 
 	rv = SECU_ReadDERFromFile(&der, signFile, 
 	                          signver.options[opt_ASCII].activated);
@@ -349,8 +347,6 @@ int main(int argc, char **argv)
 					rv = SECU_FileToItem(&data, dataFile);
 					dataToVerify = data.data;
 					if (dataToVerify) {
-						SECKEYKeyDBHandle *keyHandle;
-						CERTCertDBHandle *certHandle;
 						                   /*certUsageObjectSigner;*/
 						SECCertUsage usage = certUsageEmailSigner; 
 						
@@ -376,19 +372,6 @@ int main(int argc, char **argv)
 						}
 #endif
 
-						keyHandle = SECKEY_GetDefaultKeyDB();
-						if (keyHandle == NULL) {
-							PR_fprintf(PR_STDERR, ": %s\n", SECU_ErrorString((int16)PORT_GetError()));
-							return -1;
-						}
-
-						/* open cert database */
-						certHandle = SECU_OpenCertDB(PR_TRUE);
-						if (certHandle == NULL) {
-							PR_fprintf(PR_STDERR, "%s Problem open the cert dbase\n",
-										progName);
-							return -1;
-						}
 
 						if (signver.commands[cmd_VerifySignedObj].activated)
 							fprintf(outFile, "signatureValid=");

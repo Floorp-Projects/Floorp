@@ -44,40 +44,12 @@
 #include "secutil.h"
 #include "cert.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 
 #define SEC_CERT_DB_EXISTS 0
 #define SEC_CREATE_CERT_DB 1
 
 static char *progName;
 
-static CERTCertDBHandle
-*OpenCertDB(int createNew)
-  /* NOTE: This routine has been modified to allow the libsec/pcertdb.c  routines to automatically
-  ** find and convert the old cert database into the new v3.0 format (cert db version 5).
-  */
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus         rv;
-
-    /* Allocate a handle to fill with CERT_OpenCertDB below */
-    certHandle = (CERTCertDBHandle *)PORT_ZAlloc(sizeof(CERTCertDBHandle));
-    if (!certHandle) {
-	SECU_PrintError(progName, "unable to get database handle");
-	return NULL;
-    }
-
-
-    rv = CERT_OpenCertDB(certHandle, PR_FALSE, SECU_CertDBNameCallback, NULL);
-
-    if (rv) {
-	SECU_PrintError(progName, "could not open certificate database");
-	if (certHandle) free (certHandle);  /* we don't want to leave anything behind... */
-	return NULL;
-    }
-
-    return certHandle;
-}
 static CERTSignedCrl *FindCRL
    (CERTCertDBHandle *certHandle, char *name, int type)
 {
@@ -373,10 +345,9 @@ int main(int argc, char **argv)
     if (importCRL && !inFile) Usage (progName);
     
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
+    NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
 
-    certHandle = OpenCertDB(SEC_CREATE_CERT_DB);
+    certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
 	SECU_PrintError(progName, "unable to open the cert db");	    	
 	return (-1);

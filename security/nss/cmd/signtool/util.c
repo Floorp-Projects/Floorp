@@ -32,46 +32,10 @@
  */
 
 #include "signtool.h"
-#include "cdbhdl.h"
 #include "prio.h"
 #include "prmem.h"
 
 static int is_dir (char *filename);
-static char *certDBNameCallback(void *arg, int dbVersion);
-
-/***********************************************************************
- *
- * O p e n C e r t D B
- */
-CERTCertDBHandle *
-OpenCertDB(PRBool readOnly)
-{
-    CERTCertDBHandle *db;
-    SECStatus rv;
-
-    /* Allocate a handle to fill with CERT_OpenCertDB below */
-    db = (CERTCertDBHandle *) PORT_ZAlloc (sizeof(CERTCertDBHandle));
-    if (db == NULL) 
-        {
-	SECU_PrintError(progName, "unable to get database handle");
-	return NULL;
-        }
-
-    rv = CERT_OpenCertDB (db, readOnly, certDBNameCallback, NULL);
-
-    if (rv) 
-        {
-	SECU_PrintError(progName, "could not open certificate database");
-	if (db) PORT_Free (db);
-	return NULL;
-        }
-     else
-        {
-	CERT_SetDefaultCertDB(db);
-        }
-
-    return db;
-}
 
 /***********************************************************
  * Nasty hackish function definitions
@@ -800,28 +764,15 @@ InitCrypto(char *cert_dir, PRBool readOnly)
 	if (prior == 0) {
 		/* some functions such as OpenKeyDB expect this path to be
 		 * implicitly set prior to calling */
-		SECU_ConfigDirectory (cert_dir);
-
-		if ((rv = SECU_PKCS11Init(readOnly)) != SECSuccess) {
-			PR_fprintf(errorFD, "%s: Unable to initialize PKCS11, code %d\n",
-				PROGRAM_NAME, rv);
-			errorCount++;
-			exit (ERRX);
+		if (readOnly) {
+		   NSS_Init(cert_dir);
+		} else {
+		    NSS_InitReadWrite(cert_dir);
 		}
-
-		SEC_Init();
-
+		SECU_ConfigDirectory (cert_dir);
 
 		/* Been there done that */
 		prior++;
-
-
-		/* open cert database and set the default certificate DB */
-		db = OpenCertDB(readOnly); 
-
-		if (db == NULL) return -1;
-
-		CERT_SetDefaultCertDB (db);
 
 		if(password) {
 			PK11_SetPasswordFunc(pk11_password_hardcode);

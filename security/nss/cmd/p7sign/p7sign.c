@@ -35,7 +35,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.2 2001/01/05 01:37:47 nelsonb%netscape.com Exp $
+ * $Id: p7sign.c,v 1.3 2001/01/06 22:08:56 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -44,7 +44,6 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
 
 #if defined(XP_UNIX)
@@ -59,9 +58,6 @@ extern int fread(char *, size_t, size_t, FILE*);
 extern int fwrite(char *, size_t, size_t, FILE*);
 extern int fprintf(FILE *, char *, ...);
 #endif
-
-extern void SEC_Init(void);		/* XXX */
-
 
 static void
 Usage(char *progName)
@@ -80,40 +76,6 @@ Usage(char *progName)
     fprintf(stderr, "%-20s Encapsulate content in signature message\n",
 	    "-e");
     exit(-1);
-}
-
-static SECKEYKeyDBHandle *
-OpenKeyDB(char *progName)
-{
-    SECKEYKeyDBHandle *keyHandle;
-
-    keyHandle = SECU_OpenKeyDB(PR_FALSE);
-    if (keyHandle == NULL) {
-        SECU_PrintError(progName, "could not open key database");
-	return NULL;
-    }
-
-    return(keyHandle);
-}
-
-static CERTCertDBHandle certHandleStatic;	/* avoid having to allocate */
-
-static CERTCertDBHandle *
-OpenCertDB(char *progName)
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus rv;
-
-    certHandle = &certHandleStatic;
-    rv = CERT_OpenCertDB(certHandle, PR_FALSE, SECU_CertDBNameCallback, NULL);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "could not open cert database");
-	return NULL;
-    } else {
-	CERT_SetDefaultCertDB(certHandle);
-    }
-
-    return certHandle;
 }
 
 static void
@@ -193,7 +155,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
     }
 
     rv = SEC_PKCS7Encode (cinfo, SignOut, outFile, NULL,
-			  SECU_GetPassword, NULL);
+			  NULL, NULL);
 
     SEC_PKCS7DestroyContentInfo (cinfo);
 
@@ -210,7 +172,6 @@ main(int argc, char **argv)
     FILE *outFile;
     PRFileDesc *inFile;
     char *keyName;
-    SECKEYKeyDBHandle *keyHandle;
     CERTCertDBHandle *certHandle;
     CERTCertificate *cert;
     PRBool encapsulated = PR_FALSE;
@@ -274,27 +235,9 @@ main(int argc, char **argv)
 
     /* Call the initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
-
-    /* open key database */
-    keyHandle = OpenKeyDB(progName);
-    if (keyHandle == NULL) {
-	return -1;
-    }
-
-#if 0
-    /* check if key actually exists */
-    if (! SECU_CheckKeyNameExists(keyHandle, keyName)) {
-	SECU_PrintError(progName, "the key \"%s\" does not exist", keyName);
-	return -1;
-    }
-#endif
-
-    SECKEY_SetDefaultKeyDB(keyHandle);
-
+    NSS_Init(SECU_ConfigDirectory(NULL));
     /* open cert database */
-    certHandle = OpenCertDB(progName);
+    certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
 	return -1;
     }
@@ -307,8 +250,6 @@ main(int argc, char **argv)
 			keyName);
 	return -1;
     }
-
-    CERT_SetDefaultCertDB(certHandle);
 
     if (SignFile(outFile, inFile, cert, encapsulated)) {
 	SECU_PrintError(progName, "problem signing data");

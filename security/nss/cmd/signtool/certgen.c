@@ -33,7 +33,6 @@
 
 #include "signtool.h"
 
-#include "cdbhdl.h"
 #include "secoid.h"
 #include "cryptohi.h"
 #include "certdb.h"
@@ -87,7 +86,7 @@ GenerateCert(char *nickname, int keysize, char *token)
 		return;
 	}
 
-	db = OpenCertDB(PR_FALSE /*readOnly*/);
+	db = CERT_GetDefaultCertDB();
 	if(!db) {
 		FatalError("Unable to open certificate database");
 	}
