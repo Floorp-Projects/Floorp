@@ -159,7 +159,7 @@ if ($startpoint<0) {$startpoint=0; $startitem=0;}
  if ($enditem>$totalresults) {$enditem=$totalresults;} //Verify EndItem
 
 
-if ($_GET[nextnum]) {$startpoint = $_GET["nextnum"]; }
+if ($_GET[nextnum]) {$startpoint = escape_string($_GET["nextnum"]); }
 //$resultsquery = str_replace("GROUP BY `Name` ", "", $resultsquery);
 $resultsquery .= " LIMIT $startpoint , $items_per_page"; //Append LIMIT clause to result query
 
