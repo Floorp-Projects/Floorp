@@ -942,6 +942,32 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
+nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  // Our min size is the popup size (same as the pref size) if
+  // sizetopopup="always" is set.  However, we first need to check
+  // to see if a min size was set in CSS.
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aBoxLayoutState, collapsed);
+  if (collapsed) {
+    aSize.width = aSize.height = 0;
+    return NS_OK;
+  }
+
+  nsIFrame* popupChild = mPopupFrames.FirstChild();
+
+  if (popupChild) {
+    nsAutoString sizedToPopup;
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+    
+    if (sizedToPopup.EqualsIgnoreCase("always"))
+      return GetPrefSize(aBoxLayoutState, aSize);
+  }
+
+  return nsBoxFrame::GetMinSize(aBoxLayoutState, aSize);
+}
+
+NS_IMETHODIMP
 nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 {
   nsRect contentRect;
@@ -956,7 +982,8 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   if (popupChild) {
     nsAutoString sizedToPopup;
     mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-    PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("true"));
+    PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("pref") ||
+                          sizedToPopup.EqualsIgnoreCase("always"));
     
     nsIBox* ibox = nsnull;
     nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
@@ -1970,7 +1997,8 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   nsAutoString sizedToPopup;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-  PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("true"));
+  PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("pref") ||
+                        sizedToPopup.EqualsIgnoreCase("always"));
 
   if (sizeToPopup) {
     nsSize tmpSize(-1,0);

@@ -46,7 +46,7 @@
       <method name="setInitialSelection">
         <body>
           <![CDATA[
-            this.setAttribute('sizetopopup', 'true');
+            this.setAttribute('sizetopopup', 'pref');
             
             if (this.childNodes.length) {
               // if there was a previously selected item, be sure to set our internal
