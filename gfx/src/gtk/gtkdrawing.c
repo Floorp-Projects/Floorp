@@ -172,6 +172,13 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
   if (indicator_spacing)
     *indicator_spacing = klass->indicator_spacing;
 #endif
+
+  /* hack alert: many themes don't correctly report the indicator size,
+     and have indicators larger than the default 10px indicator_size.
+     So, leave a little slop room. Too bad there's no way to tell
+     if the theme has overridden the default indicator size.  */
+
+  *indicator_size = MAX(*indicator_size, 14);
 }
 
 void
