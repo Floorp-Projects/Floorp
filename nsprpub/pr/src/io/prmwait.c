@@ -652,7 +652,7 @@ static void _MW_InitialRecv(PRCList *io_ready)
         desc->bytesRecv = 0;
     else
     {
-        desc->bytesRecv = desc->fd->methods->recv(
+        desc->bytesRecv = (desc->fd->methods->recv)(
             desc->fd, desc->buffer.start,
             desc->buffer.length, 0, desc->timeout);
         if (desc->bytesRecv < 0)  /* SetError should already be there */
