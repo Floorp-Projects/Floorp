@@ -184,3 +184,8 @@ endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+
+echo-requires-recursive::
+	$(MAKE) -C boot $@
+	$(MAKE) -C ssl $@
+	$(MAKE) -C pki $@
