@@ -84,12 +84,9 @@ nsImageWin :: nsImageWin()
   mIsLocked = PR_FALSE;
   mDIBTemp = PR_FALSE;
 
-
-  //CleanUp(PR_TRUE);
   CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
-
 
 }
 
@@ -100,7 +97,6 @@ nsImageWin :: nsImageWin()
   */
 nsImageWin :: ~nsImageWin()
 {
-  //CleanUp(PR_TRUE);
   CleanUpDIBSection();
   CleanUpDDB();
   CleanUpDIB();
@@ -244,7 +240,6 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     }
   }
 
-
   return NS_OK;
 }
 
@@ -258,9 +253,7 @@ nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *a
 {
 }
 
-
 //------------------------------------------------------------
-
 
 struct MONOBITMAPINFO {
   BITMAPINFOHEADER  bmiHeader;
@@ -565,9 +558,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       if (nsnull != srcDS){
         srcDS->GetDC(&srcDC);
 
-
         rop = SRCCOPY;
-
 
         if (nsnull != mAlphaBits){
           if (1==mAlphaDepth){
@@ -727,7 +718,7 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
- *  @update 3/16/00 dwc
+ *  @update 8/26/02 dwc
  */
 NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
@@ -847,6 +838,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
 
       for (int y = 0,byw=aSYOffset; y < height; y++,byw++) {
+
         if (byw >= ScaledTileHeight) {
           byw = 0;
         }
@@ -855,7 +847,11 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
         imageRow = adjImage - (byw * mRowBytes);
         alphaRow = adjAlpha - (byw * mARowBytes);
 
-        for (int x=0,bxw=0;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
+        // we only need this adjustment at the beginning of each row
+        imageRow += (aSXOffset*imageBytesPerPixel);
+        alphaRow += aSXOffset;
+
+        for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
           // if we went past the row width of our buffer.. go back and start again
           if (bxw>=ScaledTileWidth) {
             bxw = 0;
@@ -882,9 +878,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     } 
   }
 
-
   numTiles = (aDestRect.width*aDestRect.height)/(ScaledTileWidth*ScaledTileHeight);
-
 
   // if alpha is less than 8,not printing, and not 8 bit palette image then we can do
   // a progressive tile and the tile is at least 8 times smaller than the area to update
@@ -892,7 +886,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   // because of the creation of the offscreens, DC's etc.
   if ( (mAlphaDepth < 8) && (canRaster!=DT_RASPRINTER) && (256!=mNumPaletteColors) && 
           (numTiles > 32) ) {
-    result = ProgressiveDoubleBlit(aSurface,aDestRect.width, aDestRect.height,
+    result = ProgressiveDoubleBlit(aSurface,x1-x0, y1-y0,
                              ScaledTileWidth,ScaledTileHeight, x0,y0,x1,y1);  
     if (result ) {
       return(NS_OK);
@@ -914,7 +908,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
 /** ---------------------------------------------------
  *  See documentation in nsImageWin.h
- *  @update 4/16/02 dwc
+ *  @update 8/26/02 dwc
  */
 PRBool
 nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
@@ -924,7 +918,7 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
                               PRInt32 aX1,PRInt32 aY1)
 {
   PRInt32 x,y,width,height;
-  nsRect  destRect,srcRect;
+  nsRect  srcRect;
   HDC     theHDC,offDC,maskDC;
   HBITMAP maskBits,tileBits,oldBits,oldMaskBits; 
 
@@ -999,31 +993,23 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       ::BitBlt(offDC,0,0,aScaledTileWidth,aScaledTileHeight,theHDC,0,0,SRCCOPY);
       ::SelectObject(theHDC, oldBits);
     }
-
-
+    
     srcRect.SetRect(0,0,aScaledTileWidth,aScaledTileHeight);
     BuildTile(offDC,srcRect,aDestBufferWidth/2,aDestBufferHeight/2,SRCCOPY);
 
-
     // now duplicate our tile into the background
-    destRect = srcRect;
-    width = destRect.width;
-    height = destRect.height;
-
+    width = srcRect.width;
+    height = srcRect.height;
 
     if (1!=mAlphaDepth) {
       for (y=aY0;y<aY1;y+=srcRect.height) {
         for (x=aX0;x<aX1;x+=srcRect.width) {
-          destRect.x = x;
-          destRect.y = y;
           ::BitBlt(theHDC,x,y,width,height,offDC,0,0,SRCCOPY);
         }
       } 
     } else {
       for (y=aY0;y<aY1;y+=srcRect.height) {
         for (x=aX0;x<aX1;x+=srcRect.width) {
-          destRect.x = x;
-         destRect.y = y;
           ::BitBlt(theHDC,x,y,width,height,maskDC,0,0,SRCAND);
           ::BitBlt(theHDC,x,y,width,height,offDC,0,0,SRCPAINT);
         }
