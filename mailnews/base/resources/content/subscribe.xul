@@ -124,7 +124,6 @@ Rights Reserved.
           <button id="unsubscribe" class="dialog" value="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
           <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="RefreshList()"/>
           <spring flex="1"/>
-          <button id="stop" class="dialog" value="&stopButton.label;" oncommand="Stop()"/>
         </box>
       </row>
     </rows>
