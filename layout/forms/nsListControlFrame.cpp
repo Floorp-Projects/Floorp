@@ -2205,7 +2205,9 @@ NS_IMETHODIMP
 nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   if (mComboboxFrame) {
-    mComboboxFrame->UpdateRecentIndex(aOldIndex);
+    // UpdateRecentIndex with -1, so that we won't fire an onchange
+    // event for this setting of selectedIndex.
+    mComboboxFrame->UpdateRecentIndex(-1);
   }
 
   ScrollToIndex(aNewIndex);
