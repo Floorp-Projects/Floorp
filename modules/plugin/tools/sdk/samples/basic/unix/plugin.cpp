@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,12 +40,12 @@
 #define MIME_TYPES_HANDLED  "application/basic-plugin"
 #define PLUGIN_NAME         "Basic Example Plug-in for Mozilla"
 #define MIME_TYPES_DESCRIPTION  MIME_TYPES_HANDLED":bsc:"PLUGIN_NAME
-fine PLUGIN_DESCRIPTION  PLUGIN_NAME " (Plug-ins SDK sample)"
+#define PLUGIN_DESCRIPTION  PLUGIN_NAME " (Plug-ins SDK sample)"
 
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(MIME_TYPES_DESCRIPTION);
+  return(MIME_TYPES_DESCRIPTION);
 }
 
 /////////////////////////////////////
