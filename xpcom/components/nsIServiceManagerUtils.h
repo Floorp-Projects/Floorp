@@ -56,7 +56,6 @@ class NS_COM nsGetServiceByCID : public nsCOMPtr_helper
         }
     
     virtual nsresult operator()( const nsIID&, void** ) const;
-    virtual ~nsGetServiceByCID() {};
     
  private:
     const nsCID&                mCID;
@@ -90,8 +89,6 @@ class NS_COM nsGetServiceByContractID : public nsCOMPtr_helper
         }
     
     virtual nsresult operator()( const nsIID&, void** ) const;
-    
-    virtual ~nsGetServiceByContractID() {};
     
  private:
     const char*                 mContractID;
@@ -128,7 +125,6 @@ class nsGetServiceFromCategory : public nsCOMPtr_helper
         }
     
     virtual nsresult operator()( const nsIID&, void** ) const;
-    virtual ~nsGetServiceFromCategory() {};
  protected:
     const char*                 mCategory;
     const char*                 mEntry;

@@ -58,7 +58,6 @@ public:
         // nothing else to do;
     }
     virtual nsresult operator()( const nsIID& aIID, void** aInstancePtr) const;
-    virtual ~nsCreateInstanceFromCategory() {};
 
 private:
     const char *mCategory;  // Do not free.  This char * is not owned.

@@ -59,6 +59,9 @@ class NS_COM nsHashKey {
 
 
   public:
+    // Virtual destructor because all hash keys are |delete|d via a
+    // nsHashKey pointer.
+
     virtual ~nsHashKey(void);
     virtual PRUint32 HashCode(void) const = 0;
     virtual PRBool Equals(const nsHashKey *aKey) const = 0;
@@ -119,7 +122,7 @@ class NS_COM nsHashtable {
 
   public:
     nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
-    virtual ~nsHashtable();
+    ~nsHashtable();
 
     PRInt32 Count(void) { return mHashtable.entryCount; }
     PRBool Exists(nsHashKey *aKey);

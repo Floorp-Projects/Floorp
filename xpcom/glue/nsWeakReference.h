@@ -38,9 +38,10 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
           // nothing else to do here
         }
 
-      inline virtual ~nsSupportsWeakReference();
-
       NS_DECL_NSISUPPORTSWEAKREFERENCE
+
+    protected:
+      inline ~nsSupportsWeakReference();
 
     private:
       friend class nsWeakReference;

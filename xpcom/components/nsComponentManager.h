@@ -321,7 +321,7 @@ class AutoRegEntry
 {
 public:
     AutoRegEntry(const nsACString& name, PRInt64* modDate);
-    virtual ~AutoRegEntry();
+    ~AutoRegEntry();
 
     const nsDependentCString GetName()
       { return nsDependentCString(mName, mNameLen); }

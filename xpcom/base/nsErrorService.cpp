@@ -56,17 +56,13 @@ nsInt2StrHashtable::nsInt2StrHashtable()
 {
 }
 
-nsInt2StrHashtable::~nsInt2StrHashtable()
-{
-}
-
 nsresult
 nsInt2StrHashtable::Put(PRUint32 key, const char* aData)
 {
   char* value = nsCRT::strdup(aData);
   if (value == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsVoidKey k((void*)key);
+  nsPRUint32Key k(key);
   char* oldValue = (char*)mHashtable.Put(&k, value);
   if (oldValue)
     nsCRT::free(oldValue);
@@ -76,7 +72,7 @@ nsInt2StrHashtable::Put(PRUint32 key, const char* aData)
 char* 
 nsInt2StrHashtable::Get(PRUint32 key)
 {
-  nsVoidKey k((void*)key);
+  nsPRUint32Key k(key);
   const char* value = (const char*)mHashtable.Get(&k);
   if (value == nsnull)
     return nsnull;
@@ -86,7 +82,7 @@ nsInt2StrHashtable::Get(PRUint32 key)
 nsresult
 nsInt2StrHashtable::Remove(PRUint32 key)
 {
-  nsVoidKey k((void*)key);
+  nsPRUint32Key k(key);
   char* oldValue = (char*)mHashtable.Remove(&k);
   if (oldValue)
     nsCRT::free(oldValue);

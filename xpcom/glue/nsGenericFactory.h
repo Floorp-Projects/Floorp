@@ -85,8 +85,10 @@ public:
                     nsModuleDestructorProc dtor,
                     const char** alibDepends);
 
-    virtual ~nsGenericModule();
+private:
+    ~nsGenericModule();
 
+public:
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIMODULE
