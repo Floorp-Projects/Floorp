@@ -30,7 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gkbase_s
 REQUIRES	= xpcom \
 		  string \
-      dom \
+		  dom \
 		  content \
 		  gfx \
 		  widget \
@@ -42,11 +42,9 @@ REQUIRES	= xpcom \
 		  uconv \
 		  pref \
 		  uriloader \
-		  unicharutil \
 		  docshell \
 		  imglib2 \
 		  gfx2 \
-      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

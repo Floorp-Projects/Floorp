@@ -49,7 +49,6 @@ REQUIRES	= xpconnect \
 		  string \
 		  js \
 		  xpconnect_tests \
-		  timer \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -31,14 +31,10 @@ include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom \
 		  string \
-		  widget \
 		  view \
-		  dom \
 		  uriloader \
-		  gfx \
 		  intl \
 		  embedcomponents \
-		  timer \
 		  $(NULL)
 
 EXPORTS         = \

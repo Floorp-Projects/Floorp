@@ -26,7 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= string xpcom
+REQUIRES	= xpcom \
+		  $(NULL)
 
 SIMPLECSRCS	+= \
 		bloatblame.c \

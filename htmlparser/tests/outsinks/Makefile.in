@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  layout \
 		  content \
-		  dom \
 		  $(NULL)
 
 CPPSRCS		= \

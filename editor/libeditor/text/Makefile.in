@@ -30,23 +30,22 @@ MODULE		= editor
 LIBRARY_NAME	= texteditor_s
 IS_COMPONENT	= 1
 
-REQUIRES        = xpcom \
-                  string \
-                  dom \
-                  locale \
-                  layout \
-                  content \
-                  txmgr \
-                  htmlparser \
-                  necko \
-                  pref \
-                  view \
-                  lwbrk \
-                  gfx \
-                  widget \
-                  webbrwsr \
-            		  unicharutil \
-                  $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  locale \
+		  layout \
+		  content \
+		  txmgr \
+		  htmlparser \
+		  necko \
+		  pref \
+		  view \
+		  lwbrk \
+		  gfx \
+		  widget \
+		  unicharutil \
+		  $(NULL)
 
 CPPSRCS		=                           \
 		nsPlaintextDataTransfer.cpp \

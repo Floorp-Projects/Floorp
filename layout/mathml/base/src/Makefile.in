@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  intl \
 		  unicharutil \
-		  view \
 		  necko \
 		  docshell \
 		  webbrwsr \

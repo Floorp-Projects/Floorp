@@ -30,7 +30,6 @@ MODULE		= rdf
 LIBRARY_NAME	= rdfbase_s
 REQUIRES	= xpcom \
 		  string \
-		  rdf \
 		  rdfutil \
 		  necko \
 		  layout \

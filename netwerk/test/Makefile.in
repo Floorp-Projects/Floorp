@@ -31,7 +31,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  nkcache \
-		  cookie \
 		  dbm \
 		  util \
 		  $(NULL)

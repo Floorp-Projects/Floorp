@@ -29,21 +29,20 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= editor
 LIBRARY_NAME	= htmleditor_s
 
-REQUIRES        = xpcom \
-                  string \
-                  dom \
-                  layout \
-                  locale \
-                  unicharutil \
-                  content \
-                  txmgr \
-                  htmlparser \
-                  necko \
-                  pref \
-                  gfx \
-                  widget \
-                  webbrwsr \
-                  $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  layout \
+		  locale \
+		  unicharutil \
+		  content \
+		  txmgr \
+		  htmlparser \
+		  necko \
+		  pref \
+		  gfx \
+		  widget \
+		  $(NULL)
 
 # Building the full blown HTML Editor  so add its source files and objects:
 

@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  imglib2 \
 		  unicharutil \
-		  webbrwsr \
 		  xpconnect \
 		  js \
 		  $(NULL)

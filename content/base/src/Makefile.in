@@ -56,8 +56,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  gfx2 \
 		  uriloader \
-		  webbrwsr  \
-		  webBrowser_core  \
+		  webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  content \
 		  gfx \
 		  widget \
-      layout_xul \
 		  locale \
 		  view \
 		  necko \

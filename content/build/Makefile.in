@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  xul \
 		  xuldoc \
 		  xultmpl \
-		  timer \
 		  webbrwsr \
 		  caps \
 		  xpconnect \
