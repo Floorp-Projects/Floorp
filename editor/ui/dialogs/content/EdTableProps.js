@@ -691,6 +691,13 @@ function MoveSelection(forward)
   // Change the selection
   DoCellSelection();
 
+  // Scroll page so new selection is visible
+  // Using SELECTION_ANCHOR_REGION makes the upper-left corner of first selected cell
+  //    the point to bring into view.
+  var selectionController = editorShell.selectionController;
+  if (selectionController)
+    selectionController.scrollSelectionIntoView(selectionController.SELECTION_NORMAL, selectionController.SELECTION_ANCHOR_REGION);
+
   // Reinitialize dialog using new cell
 //  if (!dialog.KeepCurrentData.checked)
   // Setting this false unchecks all "set attributes" checkboxes
