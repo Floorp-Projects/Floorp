@@ -2238,6 +2238,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   nsresult rv = NS_OK;
+  nsSize* pass1MaxElementSize = aDesiredSize.maxElementSize;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -2310,6 +2311,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       pass1Width = table->mRect.width;
     }
     reflowState.availableWidth = pass1Width;
+    if (pass1MaxElementSize) { 
+      // we already have the max element size, so don't request it during pass2
+      aDesiredSize.maxElementSize = nsnull;
+    }
     rv = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, aStatus);
     if (NS_FAILED(rv)) {
       return rv;
@@ -2335,6 +2340,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   SetColumnDimensions(aDesiredSize.height);
+  if (pass1MaxElementSize) {
+    aDesiredSize.maxElementSize = pass1MaxElementSize;
+  }
 
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
