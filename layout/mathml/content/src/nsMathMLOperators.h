@@ -36,7 +36,8 @@ typedef PRInt32 nsStretchDirection;
 
 #define NS_MATHML_OPERATOR_MUTABLE     0x80000000 // the very first bit
 #define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR     0x40000000 // the second bit
-#define NS_MATHML_OPERATOR_CENTERED    0x20000000 // the third bit
+#define NS_MATHML_OPERATOR_EMBELLISH_ISOLATED     0x20000000 // the third bit
+#define NS_MATHML_OPERATOR_CENTERED    0x10000000 // the fourth bit
 
 // define the bits used in the Operator Dictionary
 // XXX replace with the PR_BIT(n) macro
@@ -138,6 +139,9 @@ public:
 
 #define NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(_flags) \
   (NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR == ((_flags) & NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR))
+
+#define NS_MATHML_OPERATOR_EMBELLISH_IS_ISOLATED(_flags) \
+  (NS_MATHML_OPERATOR_EMBELLISH_ISOLATED == ((_flags) & NS_MATHML_OPERATOR_EMBELLISH_ISOLATED))
 
 #define NS_MATHML_OPERATOR_IS_CENTERED(_flags) \
   (NS_MATHML_OPERATOR_CENTERED == ((_flags) & NS_MATHML_OPERATOR_CENTERED))
