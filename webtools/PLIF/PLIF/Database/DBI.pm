@@ -259,9 +259,13 @@ sub setupConfigureDatabase {
         return 'database.adminPassword';
     }
 
-    my $adminHostname = $app->input->getArgument('database.adminHostname', 'localhost');
-    if (not defined($adminHostname)) {
-        return 'database.adminHostname';
+    my $localHostname = $app->input->getArgument('database.localHostname', '%');
+    # XXX need to autodetect default
+    # '%', besides being a security risk, will by default in a
+    # same-host MySQL cause the more specific localhost entry to
+    # match, thus causing the user to not get access.
+    if (not defined($localHostname)) {
+        return 'database.localHostname';
     }
 
     # find a helper
@@ -288,9 +292,9 @@ sub setupConfigureDatabase {
 
     # get the helper to do its stuff
     $helper->setupVerifyVersion($app, $self);
-    $helper->setupCreateUser($app, $self, $self->username, $self->password, $adminHostname, $self->name);
+    $helper->setupCreateUser($app, $self, $self->username, $self->password, $localHostname, $self->name);
     $helper->setupCreateDatabase($app, $self, $self->name);
-    $helper->setupSetRights($app, $self, $self->username, $self->password, $adminHostname, $self->name);
+    $helper->setupSetRights($app, $self, $self->username, $self->password, $localHostname, $self->name);
 
     # disconnect
     $self->handle->disconnect();
