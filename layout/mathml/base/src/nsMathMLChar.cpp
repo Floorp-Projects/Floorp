@@ -361,7 +361,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
 #ifdef NS_DEBUG
     nsCAutoString uriStr;
     uriStr.Assign(NS_LITERAL_CSTRING("resource://gre/res/fonts/mathfont"));
-    uriStr.Append(NS_LossyConvertUCS2toASCII(*mFontName[0]));
+    LossyAppendUTF16toASCII(*mFontName[0], uriStr);
     uriStr.StripWhitespace(); // that may come from mFontName
     uriStr.Append(NS_LITERAL_CSTRING(".properties"));
     printf("Loading %s ... %s\n",

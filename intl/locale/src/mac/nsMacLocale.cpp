@@ -302,8 +302,7 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsA
   for(i=0;country_list[i].iso_code;i++) {
     if (regionCode==country_list[i].mac_region_code) {
       locale.Append(PRUnichar('-'));
-      // XXX : perhaps, we need AppendASCIItoUTF16
-      AppendUTF8toUTF16(nsDependentCString(country_list[i].iso_code), locale);
+      AppendASCIItoUTF16(country_list[i].iso_code, locale);
       validResultFound = true;
       break;
     }

@@ -253,7 +253,7 @@ void nsCSSValue::AppendToString(nsAString& aBuffer,
   }
 
   if (-1 < aPropID) {
-    aBuffer.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aPropID)));
+    AppendASCIItoUTF16(nsCSSProps::GetStringValue(aPropID), aBuffer);
     aBuffer.Append(NS_LITERAL_STRING(": "));
   }
 

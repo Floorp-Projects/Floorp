@@ -533,7 +533,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
     else {
       escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
     }
-    aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
+    AppendASCIItoUTF16(escapedURI, aEscapedURI);
 
     // Append a reserved character without escaping.
     part = Substring(aURI, end, 1);
@@ -551,7 +551,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
     else {
       escapedURI.Adopt(nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path));
     }
-    aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
+    AppendASCIItoUTF16(escapedURI, aEscapedURI);
   }
 
   return rv;
@@ -997,13 +997,13 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
         aOutputStr.Append(fragmentStart, advanceLength);
         if (entityText) {
           aOutputStr.Append(PRUnichar('&'));
-          aOutputStr.Append(NS_ConvertASCIItoUCS2(entityText));
+          AppendASCIItoUTF16(entityText, aOutputStr);
           aOutputStr.Append(PRUnichar(';'));
           advanceLength++;
         }
         // if it comes from nsIEntityConverter, it already has '&' and ';'
         else if (fullEntityText) {
-          aOutputStr.Append(NS_ConvertASCIItoUCS2(fullEntityText));
+          AppendASCIItoUTF16(fullEntityText, aOutputStr);
           nsMemory::Free(fullEntityText);
           advanceLength++;
         }

@@ -387,7 +387,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
     aPrefix.Assign(NS_LITERAL_STRING("a"));
     char buf[128];
     PR_snprintf(buf, sizeof(buf), "%d", mPrefixIndex++);
-    aPrefix.Append(NS_ConvertASCIItoUCS2(buf));    
+    AppendASCIItoUTF16(buf, aPrefix);
   }
 
   // Indicate that we need to create a namespace decl for the
@@ -721,7 +721,7 @@ nsXMLContentSerializer::AppendToString(const nsAString& aStr,
 
       aOutputStr.Append(fragmentStart, advanceLength);
       if (entityText) {
-        aOutputStr.Append(NS_ConvertASCIItoUCS2(entityText));
+        AppendASCIItoUTF16(entityText, aOutputStr);
         advanceLength++;
       }
     }

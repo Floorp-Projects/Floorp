@@ -947,7 +947,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // print all values of this attribute
         //
         for ( PRUint32 j=0 ; j < valueCount; j++ ) {
-            entry.Append(NS_ConvertASCIItoUCS2(attrs[i]));
+            AppendASCIItoUTF16(attrs[i], entry);
             entry.Append(NS_LITERAL_STRING(": "));
             entry.Append(vals[j]);
             entry.Append(NS_LITERAL_STRING("\n"));

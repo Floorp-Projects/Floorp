@@ -3502,11 +3502,11 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   nsAutoString stringName(NS_LITERAL_STRING("finduri-"));
 
   // property
-  stringName.Append(NS_ConvertASCIItoUCS2(term->property));
+  AppendASCIItoUTF16(term->property, stringName);
   stringName.Append(PRUnichar('-'));
 
   // and now the method, such as "is" or "isgreater"
-  stringName.Append(NS_ConvertASCIItoUCS2(term->method));
+  AppendASCIItoUTF16(term->method, stringName);
 
   // try adding -<text> to see if there's a match
   // for example, to match
