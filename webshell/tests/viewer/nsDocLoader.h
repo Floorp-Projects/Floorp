@@ -20,13 +20,12 @@
 
 #include "nscore.h"
 #include "nsIStreamListener.h"
-
+#include "nsString.h"
 
 class nsIViewerContainer;
 class nsIDocumentLoader;
 class nsITimer;
 class nsVoidArray;
-class nsString;
 class nsViewer;
 
 /* 
@@ -100,7 +99,7 @@ protected:
   nsIViewerContainer* mContainer;
   nsIDocumentLoader*  mDocLoader;
   nsViewer*     mViewer;
-
+  nsString      mURL;
   nsVoidArray*  mURLList;
   nsVoidArray*  mTimers;
 };
