@@ -417,10 +417,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     if (0!=pMaxElementSize->width)
       aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
+  // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
-  if (nsnull!=aDesiredSize.maxElementSize)
-    SetMaxElementSize(*(aDesiredSize.maxElementSize));
-  
+
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
     printf("  %p cellFrame returning aDesiredSize=%d,%d\n",
            this, aDesiredSize.width, aDesiredSize.height);

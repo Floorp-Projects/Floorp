@@ -109,17 +109,6 @@ public:
   /** set the desired size returned by this frame during its last reflow */
   virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
-  /** return the MaxElement size returned by this frame during its last reflow 
-    * not counting reflows where MaxElementSize is not requested.  
-    * That is, the cell frame will always remember the last non-null MaxElementSize
-    */
-  virtual nsSize GetMaxElementSize();
-
-  /** set the MaxElement size returned by this frame during its last reflow.
-    * should never be called with a null MaxElementSize
-    */
-  virtual void SetMaxElementSize(const nsSize & aMaxElementSize);
-
   /** return the desired size returned by this frame during its last reflow */
   virtual nsSize GetPass1DesiredSize();
 
@@ -271,15 +260,6 @@ inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesire
 { 
   mDesiredSize.width = aDesiredSize.width;
   mDesiredSize.height = aDesiredSize.height;
-}
-
-inline nsSize nsTableCellFrame::GetMaxElementSize()
-{ return mMaxElementSize; }
-
-inline void nsTableCellFrame::SetMaxElementSize(const nsSize & aMaxElementSize)
-{ 
-  mMaxElementSize.width = aMaxElementSize.width;
-  mMaxElementSize.height = aMaxElementSize.height;
 }
 
 inline nsSize nsTableCellFrame::GetPass1DesiredSize()

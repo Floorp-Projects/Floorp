@@ -517,7 +517,7 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
         desiredSize.width = priorSize.width;
         desiredSize.height = priorSize.height;
         if (nsnull != pKidMaxElementSize) 
-          *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetMaxElementSize();
+          *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetPass1MaxElementSize();
       }
 
       // Place the child after taking into account its margin and attributes
