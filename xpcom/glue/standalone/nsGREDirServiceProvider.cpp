@@ -356,7 +356,7 @@ GRE_GetGREPath()
   //    i.e. we're compatible with GRE 1.2 and we're trying to find it's install
   //    location.
   //
-  // Please see http://www.mozilla.org/projects/embedding/GE.html for
+  // Please see http://www.mozilla.org/projects/embedding/GRE.html for
   // more info.
   //
   strcpy(szKey, GRE_WIN_REG_LOC GRE_BUILD_ID);
