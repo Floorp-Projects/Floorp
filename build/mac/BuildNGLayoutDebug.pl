@@ -35,7 +35,7 @@ $CARBON = 0;				# turn on to build with TARGET_CARBON
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS = 0;     # turn on to clobber only aliases/files for libraries/sym files in dist
-$USE_XPIDL = 0;             # turn on to use the XPIDL plugin to generate files.
+$USE_XPIDL = 1;             # turn on to use the XPIDL plugin to generate files.
 
 $CodeWarriorLib::CLOSE_PROJECTS_FIRST = 0;
 							#1 = close then make (for development), 0 = make then close (for tinderbox).
