@@ -1429,7 +1429,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 	            grState.state.parenCount = num;
 	            if (previousKid != -1)
 	                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
-	            return match;
+	            return index;
             }
             else
                 return -1;
@@ -1712,7 +1712,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             }
                             cp2--;
                         }
-                        return -1;
+                        break;
                     }
                 case REOP_WBDRY:
                     if (((index == 0) || !isWord(input[index-1]))
