@@ -387,6 +387,16 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
+
+    // Check to see if somebody has already turned it into a container; if so
+    // don't try to do it again.
+    PRBool isContainer;
+    rv = IsContainer(aDataSource, aResource, &isContainer);
+    if (NS_FAILED(rv)) return rv;
+
+    if (isContainer)
+      return NS_OK;
+
     rv = aDataSource->Assert(aResource, kRDF_instanceOf, aType, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 

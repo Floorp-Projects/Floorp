@@ -688,25 +688,25 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 
     PRInt32 nestLevel = mContextStack->Count();
     if (nestLevel == 0) {
-		mState = eXULContentSinkState_InEpilog;
-		
-		// We're about to finish parsing. Now we want to kick off the processing
-		// of our child overlays.
-		PRInt32 count;
-		if (mOverlayArray && (count = mOverlayArray->Count())) {
-			nsString* href = (nsString*)mOverlayArray->ElementAt(0);
-			ProcessOverlay(*href);
-			
-			// Block the parser. It will only be unblocked after all
-			// of our child overlays have finished parsing.
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-		}
-		
-		// Unblock the next sibling overlay. If there is no next sibling
-		// overlay, unblock our parent.
-		if (mParentContentSink) {
-			mParentContentSink->UnblockNextOverlay();
-		}
+		  mState = eXULContentSinkState_InEpilog;
+		  
+		  // We're about to finish parsing. Now we want to kick off the processing
+		  // of our child overlays.
+		  PRInt32 count;
+		  if (mOverlayArray && (count = mOverlayArray->Count())) {
+			  nsString* href = (nsString*)mOverlayArray->ElementAt(0);
+			  ProcessOverlay(*href);
+			  
+			  // Block the parser. It will only be unblocked after all
+			  // of our child overlays have finished parsing.
+        rv = NS_ERROR_HTMLPARSER_BLOCK;
+		  }
+		  
+		  // Unblock the next sibling overlay. If there is no next sibling
+		  // overlay, unblock our parent.
+		  if (mParentContentSink) {
+			  mParentContentSink->UnblockNextOverlay();
+		  }
     }
 
     PopNameSpaces();
@@ -1400,7 +1400,19 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         rv = gRDFService->GetLiteral(valueStr.GetUnicode(), getter_AddRefs(value));
         if (NS_FAILED(rv)) return rv;
 
-        rv = mDataSource->Assert(aSubject, property, value, PR_TRUE);
+        // XUL overlays may cause an old attribute to be over-ridden by
+        // a new value. So we check the graph to see if somebody has set
+        // the attribute already, and act appropriately.
+        nsCOMPtr<nsIRDFNode> oldvalue;
+        rv = mDataSource->GetTarget(aSubject, property, PR_TRUE, getter_AddRefs(oldvalue));
+        if (NS_FAILED(rv)) return rv;
+
+        if (oldvalue) {
+          rv = mDataSource->Change(aSubject, property, oldvalue, value);
+        }
+        else {
+          rv = mDataSource->Assert(aSubject, property, value, PR_TRUE);
+        }
         if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;
