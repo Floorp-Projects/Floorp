@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -52,46 +52,46 @@ main(int argc, char *argv[])
     int i, idlfiles;
 
     for (i = 1; i < argc; i++) {
-	if (argv[i][0] == '-') {
-	    switch (argv[i][1]) {
-	      case 'd':
-		generate_docs = TRUE;
-		break;
-	      case 'i':
-		generate_invoke = TRUE;
-		break;
-	      case 'h':
-		generate_headers = TRUE;
-		break;
-	      case 'w':
-		enable_warnings = TRUE;
-		break;
-	      case 'v':
-		verbose_mode = TRUE;
-		break;
-	      case 'n':
-		generate_nothing = TRUE;
-		break;
-	      default:
-		xpidl_usage(argc, argv);
-		return 1;
-	    }
-	}
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+              case 'd':
+                generate_docs = TRUE;
+                break;
+              case 'i':
+                generate_invoke = TRUE;
+                break;
+              case 'h':
+                generate_headers = TRUE;
+                break;
+              case 'w':
+                enable_warnings = TRUE;
+                break;
+              case 'v':
+                verbose_mode = TRUE;
+                break;
+              case 'n':
+                generate_nothing = TRUE;
+                break;
+              default:
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+        }
     }
     
     if (!(generate_docs || generate_invoke || generate_headers)) {
-	xpidl_usage(argc, argv);
-	return 1;
+        xpidl_usage(argc, argv);
+        return 1;
     }
 
     for (i = 1, idlfiles = 0; i < argc; i++) {
-	if (argv[i][0] && argv[i][0] != '-')
-	    idlfiles += xpidl_process_idl(argv[i]);
+        if (argv[i][0] && argv[i][0] != '-')
+            idlfiles += xpidl_process_idl(argv[i]);
     }
     
     if (!idlfiles) {
-	xpidl_usage(argc, argv);
-	return 1;
+        xpidl_usage(argc, argv);
+        return 1;
     }
 
     return 0;
