@@ -24,11 +24,6 @@
                   pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"/>
       <html:label for="XPInstallNotificationsEnabled">&enableNotification.label;</html:label>
     </html:div>
-    <html:div>
-      <html:input type="checkbox" id="XPInstallManualConfirm"
-                  pref="true" preftype="bool" prefstring="xpinstall.manual_confirm"/>
-      <html:label for="XPInstallManualConfirm">&requireConfirmation.label;</html:label>
-    </html:div>
   </titledbox>
 
 <!--
