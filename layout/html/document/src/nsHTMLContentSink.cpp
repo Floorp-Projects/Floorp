@@ -28,6 +28,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
+#include "nsIContentViewer.h"
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsCRT.h"
@@ -243,6 +244,8 @@ public:
 
   void ProcessBaseHref(const nsString& aBaseHref);
   void ProcessBaseTarget(const nsString& aBaseTarget);
+
+  nsresult RefreshIfEnabled(nsIViewManager* vm);
 
   // Routines for tags that require special handling
   nsresult ProcessATag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
@@ -2015,7 +2018,7 @@ HTMLContentSink::StartLayout()
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-        vm->EnableRefresh();
+        RefreshIfEnabled(vm);
       }
     }
   }
@@ -2176,6 +2179,24 @@ HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
   else {  // NAV compatibility quirk
     mBaseHREF = aBaseHref;
   }
+}
+
+nsresult
+HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
+{
+  if (vm) {
+    nsIContentViewer* contentViewer = nsnull;
+    nsresult rv = mWebShell->GetContentViewer(&contentViewer);
+    if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+      PRBool enabled;
+      contentViewer->GetEnableRendering(&enabled);
+      if (enabled) {
+        vm->EnableRefresh();
+      }
+      NS_RELEASE(contentViewer); 
+    }
+  }
+  return NS_OK;
 }
 
 void 

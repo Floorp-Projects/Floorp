@@ -186,6 +186,7 @@ PluginViewerImpl::PluginViewerImpl(const char* aCommand,
   NS_INIT_REFCNT();
   nsIStreamListener* it = new PluginListener(this);
   *aDocListener = it;
+  mEnableRendering = PR_TRUE;
 }
 
 // ISupports implementation...

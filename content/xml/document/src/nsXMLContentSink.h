@@ -116,6 +116,8 @@ protected:
   nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
 
+  nsresult RefreshIfEnabled(nsIViewManager* vm);
+
 #ifdef XSL
   nsresult CreateStyleSheetURL(nsIURL** aUrl, const nsAutoString& aHref);
   nsresult LoadXSLStyleSheet(const nsIURL* aUrl);
