@@ -870,7 +870,13 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
   var emailAddress = addressNode.getTextAttribute("emailAddress");
 
   if (gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(emailAddress))
+  {
     addressNode.setAttribute('label', displayName); 
+    addressNode.setAttribute("tooltiptext", emailAddress);
+    addressNode.setAttribute("tooltip", "emailAddressTooltip");
+  }
+  else
+    addressNode.removeAttribute("tooltiptext");
 } 
 
 function fillEmailAddressPopup(emailAddressNode)
@@ -879,6 +885,16 @@ function fillEmailAddressPopup(emailAddressNode)
   var emailAddress = emailAddressNode.getTextAttribute('emailAddress');
 
   emailAddressPlaceHolder.setAttribute('label', emailAddress);
+}
+
+
+// Public method called to generate a tooltip over a condensed display name
+function fillInEmailAddressTooltip(addressNode)
+{
+  var emailAddress = addressNode.getTextAttribute('emailAddress');
+  var tooltipNode = document.getElementById("attachmentListTooltip");
+  tooltipNode.setAttribute("label", attachmentName);
+  return true;
 }
 
 // returns true if we should use the display name for this address

@@ -54,6 +54,9 @@
 <tooltip id="attachmentListTooltip"
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 
+<tooltip id="emailAddressTooltip"
+         onpopupshowing="return fillInEmailAddressTooltip(document.tooltipNode);"/> 
+
 <hbox id="msgHeaderView" keywordrelated="true" originalclass="none" persist="state">
   <vbox flex="1">
   <!-- the message pane consists of 3 'boxes'. Box #1 is a grid, showing a brief view of the headers --> 
