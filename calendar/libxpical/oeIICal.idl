@@ -274,10 +274,10 @@ interface oeIICalContainer : nsISupports
 interface oeIICalError : nsISupports
 {
     //severity codes
-    const long DEBUG = 0;
-    const long WARN = 1;
-    const long PROBLEM = 2;
-    const long CRITICAL = 3;
+    const long CAL_DEBUG = 0;
+    const long CAL_WARN = 1;
+    const long CAL_PROBLEM = 2;
+    const long CAL_CRITICAL = 3;
 
     //error codes
     const long UID_NOT_FOUND               =  1001;
