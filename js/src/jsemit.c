@@ -1982,9 +1982,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	goto emit_call;
 
       case TOK_DELETE:
-	/* Delete is also lvalue-specialized to avoid reference types. */
+        /* Under ECMA 3, deleting a non-reference returns true. */
 	pn2 = pn->pn_kid;
-	JS_ASSERT(pn2->pn_type != TOK_RP);
 	switch (pn2->pn_type) {
 	  case TOK_NAME:
 	    if (!EmitAtomOp(cx, pn2, JSOP_DELNAME, cg))
@@ -1999,7 +1998,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		return JS_FALSE;
 	    break;
 	  default:
-	    JS_ASSERT(0);
+            if (js_Emit1(cx, cg, JSOP_TRUE) < 0)
+                return JS_FALSE;
 	}
 	break;
 
