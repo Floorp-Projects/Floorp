@@ -73,24 +73,40 @@ nsJARURI::Init()
 }
 
 #define NS_JAR_SCHEME           "jar:"
+#define NS_JAR_SCHEME_LEN       (sizeof(NS_JAR_SCHEME)-1)
 #define NS_JAR_DELIMITER        "!/"
+#define NS_JAR_DELIMITER_LEN    (sizeof(NS_JAR_DELIMITER)-1)
 
 nsresult
 nsJARURI::FormatSpec(const char* entryPath, char* *result)
 {
-    nsresult rv;
-    char* jarFileSpec;
-    rv = mJARFile->GetSpec(&jarFileSpec);
+    char* fileSpec;
+    nsresult rv = mJARFile->GetSpec(&fileSpec);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString spec(NS_JAR_SCHEME);
-    spec += jarFileSpec;
-    nsCRT::free(jarFileSpec);
-    spec += NS_JAR_DELIMITER;
-    spec += entryPath;
-    
-    *result = ToNewCString(spec);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    int fileSpecLen = strlen(fileSpec);
+    int entryPathLen = strlen(entryPath);
+
+    char *spec = (char *) nsMemory::Alloc(NS_JAR_SCHEME_LEN +
+                                          fileSpecLen +
+                                          NS_JAR_DELIMITER_LEN +
+                                          entryPathLen + 1);
+    if (!spec)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *result = spec;
+
+    memcpy(spec, NS_JAR_SCHEME, NS_JAR_SCHEME_LEN);
+    spec += NS_JAR_SCHEME_LEN;
+    memcpy(spec, fileSpec, fileSpecLen);
+    spec += fileSpecLen;
+    memcpy(spec, NS_JAR_DELIMITER, NS_JAR_DELIMITER_LEN);
+    spec += NS_JAR_DELIMITER_LEN;
+    memcpy(spec, entryPath, entryPathLen);
+    spec[entryPathLen] = 0;
+
+    nsMemory::Free(fileSpec);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
