@@ -18,6 +18,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIFolder;
+
 /* Interface for incoming mail/news host */
 
 [object, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
@@ -37,4 +39,6 @@ interface nsIMsgIncomingServer : nsISupports {
 
   attribute string localPath;
   readonly attribute string serverURI;
+
+  attribute nsIFolder RootFolder;
 };

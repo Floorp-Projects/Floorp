@@ -53,6 +53,8 @@ class nsIFolder : public nsICollection {
   /* void RemoveFolderListener (in nsIFolderListener listener); */
   NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener) = 0;
 
+  /* nsIFolder FindSubFolder (in string subFolderName); */
+  NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **_retval) = 0;
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIFolder *priv);

@@ -7,10 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
+class nsIFolder; /* forward decl */
 
 /* starting interface:    nsIMsgIncomingServer */
 
@@ -67,10 +64,9 @@ class nsIMsgIncomingServer : public nsISupports {
   /* readonly attribute string serverURI; */
   NS_IMETHOD GetServerURI(char * *aServerURI) = 0;
 
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgIncomingServer *priv);
-#endif
+  /* attribute nsIFolder RootFolder; */
+  NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder) = 0;
+  NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder) = 0;
 };
 
 #endif /* __gen_nsIMsgIncomingServer_h__ */

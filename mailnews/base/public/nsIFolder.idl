@@ -33,5 +33,6 @@ interface nsIFolder : nsICollection {
 
 		void AddFolderListener(in nsIFolderListener listener);
 		void RemoveFolderListener(in nsIFolderListener listener);
+		nsIFolder FindSubFolder(in string subFolderName);
 };
 
