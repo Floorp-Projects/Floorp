@@ -827,12 +827,14 @@ for the small amount of entropy it provides.
      * execution environment of the user and on the platform the program
      * is running on.
      */
-    cp = (const char * const *)environ;
-    while (*cp) {
-	RNG_RandomUpdate(*cp, strlen(*cp));
-	cp++;
+    if (environ != NULL) {
+        cp = environ;
+        while (*cp) {
+	    RNG_RandomUpdate(*cp, strlen(*cp));
+	    cp++;
+        }
+        RNG_RandomUpdate(environ, (char*)cp - (char*)environ);
     }
-    RNG_RandomUpdate(environ, (char*)cp - (char*)environ);
 
     /* Give in system information */
     if (gethostname(buf, sizeof(buf)) > 0) {
