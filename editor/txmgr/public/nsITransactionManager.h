@@ -19,8 +19,9 @@
 #ifndef nsITransactionManager_h__
 #define nsITransactionManager_h__
 #include "nsISupports.h"
-#include "nsITransaction.h"
 #include "nsIOutputStream.h"
+#include "nsITransaction.h"
+// #include "nsITransactionListener.h"
 
 /*
 Transaction Manager interface to outside world
@@ -41,32 +42,61 @@ class nsITransactionManager  : public nsISupports{
 public:
 
   /**
-   * Execute() tells the implementation of nsITransactionManager to execute a transaction.
+   * Execute() calls the transaction's Execute() method and  pushes it
+   * on the undo queue. Execute() calls the transaction's AddRef() method.
+   * The transaction's Release() method will be called when the undo or redo
+   * stack is pruned or when the transaction manager is destroyed.
+   *
    * @param nsITransaction *tx the transaction to execute.
    */
   virtual nsresult Execute(nsITransaction *tx) = 0;
 
   /**
-   * Undo() tells the implementation of nsITransactionManager to undo the specified number
-   * of transactions.
-   * @param PRInt32 n number of transactions to undo. n <= 0 means undo all transactions.
+   * Undo() pops the specified number of transactions off the undo stack,
+   * calls their Undo() method, and pushes them onto the redo stack.
+   *
+   * @param PRInt32 n number of transactions to undo. n <= 0 means undo all
+   * transactions.
    */
   virtual nsresult Undo(PRInt32 n) = 0;
 
   /**
-   * Redo() tells the implementation of nsITransactionManager to redo the specified number
-   * of transactions.
-   * @param PRInt32 n number of transactions to redo. n <= 0 means redo all transactions
-   * previously undone.
+   * Redo() pops the specified number of transactions off the redo stack,
+   * calls their Redo() method, and pushes them onto the undo stack.
+   *
+   * @param PRInt32 n number of transactions to redo. n <= 0 means redo all
+   * transactions previously undone.
    */
   virtual nsresult Redo(PRInt32 n) = 0;
 
   /**
-   * Write() tells the implementation of nsITransactionManager to write a representation
-   * of itself.
-   * @param nsIOutputStream *
+   * Write() allows the transaction manager to output a stream representation
+   * of itself, it then calls the Write() method of each transaction on the
+   * undo and redo stacks.
+   *
+   * @param nsIOutputStream *os output stream for writing.
    */
-  virtual nsresult Write(nsIOutputStream *) = 0;
+  virtual nsresult Write(nsIOutputStream *os) = 0;
+
+  /**
+   * AddListener() adds the specified listener to the transaction manager's
+   * list of listeners.  The listener is notified whenever a transaction is
+   * executed, undone, or redone.  AddListener() calls the listener's AddRef()
+   * method.
+   *
+   * @param nsITransactionListener *l the lister to add.
+   */
+  // virtual nsresult AddListener(nsITransactionListener *l) = 0;
+
+  /**
+   * RemoveListener() removes the specified listener from the transaction
+   * manager's list of listeners.  Removing a listener that is not on the
+   * transaction manager's list does nothing.  RemoveListener() calls the
+   * listener's Release() method.
+   *
+   * @param nsITransactionListener *l the lister to add.
+   */
+  // virtual nsresult RemoveListener(nsITransactionListener *l) = 0;
 };
 
 #endif // nsITransactionManager
