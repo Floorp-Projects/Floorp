@@ -118,8 +118,29 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
                               nsIMsgWindow *aMsgWindow,
                               nsIURI **aURL)
 {
-	NS_ASSERTION(PR_FALSE, "not implemented yet");
-	return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+	nsCOMPtr<nsIMailboxUrl> mailboxurl;
+
+  nsMailboxAction actionToUse = (moveMessage) ? nsIMailboxUrl::ActionMoveMessage : nsIMailboxUrl::ActionCopyMessage;
+
+  rv = PrepareMessageCopyUrl(srcFolder, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
+
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
+    nsCOMPtr<nsIMailboxUrl> mailboxUrl (do_QueryInterface(url));
+    msgUrl->SetMsgWindow(aMsgWindow);
+    msgKeys->QuickSort(); // sort the keys, which might reduce seeking while move/copying
+
+    mailboxUrl->SetMoveCopyMsgKeys(msgKeys->GetArray(), msgKeys->GetSize());
+    rv = RunMailboxUrl(url, aMailboxCopyHandler); 
+	}
+
+	if (aURL)
+		mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
+
+  return rv;
 }
 
 nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
@@ -292,6 +313,58 @@ nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDi
 		NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
 	}
 		
+	return rv;
+}
+
+nsresult nsMailboxService::PrepareMessageCopyUrl(nsIMsgFolder *folder, nsIUrlListener * aUrlListener,
+											 nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
+											 nsIMsgWindow *msgWindow)
+{
+	nsresult rv = NS_OK;
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            NS_GET_IID(nsIMailboxUrl),
+                                            (void **) aMailboxUrl);
+
+	if (NS_SUCCEEDED(rv) && aMailboxUrl && *aMailboxUrl)
+	{
+		// okay now generate the url string
+		char * urlSpec;
+		nsCAutoString folderURI;
+    nsCOMPtr<nsIFileSpec> localPath;
+		nsFileSpec folderPath;
+    rv = folder->GetPath(getter_AddRefs(localPath));
+    if (NS_SUCCEEDED(rv)) 
+      localPath->GetFileSpec(&folderPath);
+
+		if (NS_SUCCEEDED(rv))
+		{
+			// set up the url spec and initialize the url with it.
+			nsFilePath filePath(folderPath); // convert to file url representation...
+
+      urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
+            
+			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
+			url->SetSpec(urlSpec);
+			PR_FREEIF(urlSpec);
+   
+      (*aMailboxUrl)->SetMailboxAction(aMailboxAction);
+
+			// set up the url listener
+			if (aUrlListener)
+				rv = url->RegisterListener(aUrlListener);
+
+			url->SetMsgWindow(msgWindow);
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(url);
+      if (msgUrl)
+      {
+//        msgUrl->SetOriginalSpec(aSrcMsgMailboxURI);
+//        msgUrl->SetUri(aSrcMsgMailboxURI);
+      }
+
+		} // if we got a url
+	} // if we got a url
+
 	return rv;
 }
 

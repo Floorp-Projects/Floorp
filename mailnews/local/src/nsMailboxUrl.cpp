@@ -130,11 +130,12 @@ nsMailboxUrl::nsMailboxUrl()
 	m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
 	m_filePath = nsnull;
 	m_messageID = nsnull;
-	m_messageKey = 0;
+	m_messageKey = nsMsgKey_None;
 	m_messageSize = 0;
 	m_messageFileSpec = nsnull;
   m_addDummyEnvelope = PR_FALSE;
   m_canonicalLineEnding = PR_FALSE;
+  m_curMsgIndex = 0;
 }
  
 nsMailboxUrl::~nsMailboxUrl()
@@ -260,7 +261,7 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey  msgKey, nsIMsgDBHdr ** aMsgHdr)
 {
 	nsresult rv = NS_OK;
 	if (aMsgHdr)
@@ -276,12 +277,17 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 			rv = mailDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB));
 		if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
-			rv = mailDB->GetMsgHdrForKey(m_messageKey, aMsgHdr);
+			rv = mailDB->GetMsgHdrForKey(msgKey, aMsgHdr);
 	}
 	else
 		rv = NS_ERROR_NULL_POINTER;
 
 	return rv;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+{
+  return GetMsgHdrForKey(m_messageKey, aMsgHdr);
 }
 
 NS_IMPL_GETSET(nsMailboxUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
@@ -494,3 +500,33 @@ NS_IMETHODIMP nsMailboxUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
   mCharsetOverride = aCharacterSet;
   return NS_OK;
 }
+
+/* void setMoveCopyMsgKeys (out nsMsgKey keysToFlag, in long numKeys); */
+NS_IMETHODIMP nsMailboxUrl::SetMoveCopyMsgKeys(nsMsgKey *keysToFlag, PRInt32 numKeys)
+{
+  m_keys.RemoveAll();
+  m_keys.Add(keysToFlag, numKeys);
+  if (m_keys.GetSize() > 0 && m_messageKey == nsMsgKey_None)
+    m_messageKey = m_keys.GetAt(0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetMoveCopyMsgHdrForIndex(PRUint32 msgIndex, nsIMsgDBHdr **msgHdr)
+{
+  NS_ENSURE_ARG(msgHdr);
+  if (msgIndex < m_keys.GetSize())
+  {
+    nsMsgKey nextKey = m_keys.GetAt(msgIndex);
+    return GetMsgHdrForKey(nextKey, msgHdr);
+  }
+  return NS_MSG_MESSAGE_NOT_FOUND;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetNumMoveCopyMsgs(PRUint32 *numMsgs)
+{
+  NS_ENSURE_ARG(numMsgs);
+  *numMsgs = m_keys.GetSize();
+  return NS_OK;
+}
+
+

@@ -34,20 +34,28 @@
 #include "nsMsgLineBuffer.h"
 #include "nsMsgDBCID.h"
 #include "nsIMsgMailNewsUrl.h"
-
+#include "nsICopyMsgStreamListener.h"
 //#include "allxpstr.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
+#include "nspr.h"
 
 #include "nsFileStream.h"
 PRLogModuleInfo *MAILBOX;
-
+#include "nsIFileChannel.h"
+#include "nsIFileStreams.h"
 #include "nsIStreamConverterService.h"
+#include "nsIIOService.h"
+#include "nsIFileTransportService.h"
+#include "nsXPIDLString.h"
+#include "nsNetUtil.h"
+#include "nsIMsgWindow.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 /* the output_buffer_size must be larger than the largest possible line
@@ -102,6 +110,44 @@ NS_IMETHODIMP nsMailboxProtocol::GetContentLength(PRInt32 * aContentLength)
   return NS_OK;
 }
 
+nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount)
+{
+  NS_ENSURE_ARG_POINTER(aURL);
+
+	nsresult rv = NS_OK;
+	m_startPosition = aStartPosition;
+	m_readCount = aReadCount;
+
+  nsCOMPtr <nsIFile> file;
+
+  rv = GetFileFromURL(aURL, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  nsCOMPtr<nsIFileInputStream>     fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  m_multipleMsgMoveCopyStream = do_QueryInterface(fileStream, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  fileStream->Init(file,  PR_RDWR | PR_CREATE_FILE, 0664);
+  PRUint32 length;
+  PRInt64 fileSize; 
+  rv = file->GetFileSize( &fileSize);
+  LL_L2UI( length, fileSize );  
+
+  // probably should pass in the file size instead of aReadCount
+  rv = fts->CreateTransportFromStream("mailbox", m_multipleMsgMoveCopyStream,
+                            "", length, PR_FALSE, getter_AddRefs(m_transport));
+  m_socketIsOpen = PR_FALSE;
+
+	return rv;
+}
+
+
 void nsMailboxProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
@@ -111,11 +157,18 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 		rv = aURL->QueryInterface(NS_GET_IID(nsIMailboxUrl), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
+      nsCOMPtr <nsIMsgWindow> window;
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction); 
-			nsFileSpec * fileSpec = nsnull;
-			m_runningUrl->GetFileSpec(&fileSpec);
+      // clear stopped flag on msg window, because we care.
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+      if (mailnewsUrl)
+      {
+        mailnewsUrl->GetMsgWindow(getter_AddRefs(window));
+        if (window)
+          window->SetStopped(PR_FALSE);
+      }
 			if (m_mailboxAction == nsIMailboxUrl::ActionParseMailbox)
-				rv = OpenFileSocket(aURL, fileSpec, 0, -1 /* read in all the bytes in the file */);
+				rv = OpenFileSocket(aURL, 0, -1 /* read in all the bytes in the file */);
 			else
 			{
 				// we need to specify a byte range to read in so we read in JUST the message we want.
@@ -127,9 +180,15 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 				rv = m_runningUrl->GetMessageSize(&aMsgSize);
 				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
 
-				// mscott -- oops...impedence mismatch between aMsgSize and the desired
-				// argument type!
-				rv = OpenFileSocket(aURL, fileSpec, (PRUint32) aMsgKey, aMsgSize);
+        if (RunningMultipleMsgUrl())
+        {
+          rv = OpenFileSocketForReuse(aURL, (PRUint32) aMsgKey, aMsgSize);
+          // if we're running multiple msg url, we clear the event sink because the multiple
+          // msg urls will handle setting the progress.
+          mProgressEventSink = nsnull;
+        }
+        else
+				  rv = OpenFileSocket(aURL, (PRUint32) aMsgKey, aMsgSize);
 				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
 			}
 		}
@@ -158,13 +217,25 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIRequest *request, nsISupports
 		// we need to inform our mailbox parser that it's time to start...
 		m_mailboxParser->OnStartRequest(request, ctxt);
 	}
-
 	return nsMsgProtocol::OnStartRequest(request, ctxt);
+}
+
+PRBool nsMailboxProtocol::RunningMultipleMsgUrl()
+{
+  if (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage)
+  {
+    PRUint32 numMoveCopyMsgs;
+    nsresult rv = m_runningUrl->GetNumMoveCopyMsgs(&numMoveCopyMsgs);
+    if (NS_SUCCEEDED(rv) && numMoveCopyMsgs > 1)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
+  nsresult rv;
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
@@ -174,6 +245,68 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
 	{
 		DoneReadingMessage();
 	}
+  // I'm not getting cancel status - maybe the load group still has the status.
+  PRBool stopped = PR_FALSE;
+  if (m_runningUrl)
+  {
+    nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+    if (mailnewsUrl)
+    {
+      nsCOMPtr <nsIMsgWindow> window;
+      mailnewsUrl->GetMsgWindow(getter_AddRefs(window));
+      if (window)
+        window->GetStopped(&stopped);
+    }
+  }
+
+  if (!stopped && NS_SUCCEEDED(aStatus) && (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage))
+  {
+    PRUint32 numMoveCopyMsgs;
+    PRUint32 curMoveCopyMsgIndex;
+    rv = m_runningUrl->GetNumMoveCopyMsgs(&numMoveCopyMsgs);
+    if (NS_SUCCEEDED(rv) && numMoveCopyMsgs > 0)
+    {
+      m_runningUrl->GetCurMoveCopyMsgIndex(&curMoveCopyMsgIndex);
+      if (++curMoveCopyMsgIndex < numMoveCopyMsgs)
+      {
+	      if (!mSuppressListenerNotifications && m_channelListener)
+        {
+       	  nsCOMPtr<nsICopyMessageStreamListener> listener = do_QueryInterface(m_channelListener, &rv);
+          if (listener)
+          {
+            listener->EndCopy(ctxt, aStatus);
+            listener->StartMessage(); // start next message.
+          }
+        }
+        m_runningUrl->SetCurMoveCopyMsgIndex(curMoveCopyMsgIndex);
+        nsCOMPtr <nsIMsgDBHdr> nextMsg;
+        rv = m_runningUrl->GetMoveCopyMsgHdrForIndex(curMoveCopyMsgIndex, getter_AddRefs(nextMsg));
+        if (NS_SUCCEEDED(rv) && nextMsg)
+        {
+          PRUint32 msgSize = 0;
+          nsMsgKey msgKey;
+
+          nextMsg->GetMessageKey(&msgKey);
+          nextMsg->GetMessageSize(&msgSize);
+        // now we have to seek to the right position in the file and
+        // basically re-initialize the transport with the correct message size.
+          // then, we have to make sure the url keeps running somehow.
+			    nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
+            // put us in a state where we are always notified of incoming data
+            PR_Sleep(500);
+            rv = m_transport->AsyncRead(this, urlSupports, msgKey, msgSize, 0, getter_AddRefs(m_request));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
+            if (m_loadGroup)
+              m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
+            m_socketIsOpen = PR_TRUE; // mark the channel as open
+            return aStatus;
+          }
+        }
+        else
+        {
+        }
+      }
+    }
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one.
@@ -200,6 +333,11 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
    */
 	if (aStatus == NS_BINDING_ABORTED)
 		aStatus = NS_OK;
+  if (m_multipleMsgMoveCopyStream)
+  {
+    m_multipleMsgMoveCopyStream->Close();
+    m_multipleMsgMoveCopyStream = nsnull;
+  }
 	nsMsgProtocol::OnStopRequest(request, ctxt, aStatus);
 	return CloseSocket(); 
 }

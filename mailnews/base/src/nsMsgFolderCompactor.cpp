@@ -45,7 +45,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 // nsFolderCompactState
 //////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS3(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS4(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserver, nsIStreamListener, nsICopyMessageStreamListener)
 
 nsFolderCompactState::nsFolderCompactState()
 {
@@ -62,13 +62,7 @@ nsFolderCompactState::nsFolderCompactState()
 
 nsFolderCompactState::~nsFolderCompactState()
 {
-  if (m_fileStream)
-  {
-    m_fileStream->close();
-    delete m_fileStream;
-    m_fileStream = nsnull;
-  }
-
+  CloseOutputStream();
   if (m_messageService)
   {
     ReleaseMessageServiceFromURI(m_baseMessageUri, m_messageService);
@@ -83,13 +77,30 @@ nsFolderCompactState::~nsFolderCompactState()
 
   if (NS_FAILED(m_status))
   {
+    CleanupTempFilesAfterError();
     // if for some reason we failed remove the temp folder and database
-    if (m_db)
-      m_db->ForceClosed();
-    nsLocalFolderSummarySpec summarySpec(m_fileSpec);
-    m_fileSpec.Delete(PR_FALSE);
-    summarySpec.Delete(PR_FALSE);
   }
+}
+
+void nsFolderCompactState::CloseOutputStream()
+{
+  if (m_fileStream)
+  {
+    m_fileStream->close();
+    delete m_fileStream;
+    m_fileStream = nsnull;
+  }
+
+}
+
+void nsFolderCompactState::CleanupTempFilesAfterError()
+{
+  CloseOutputStream();
+  if (m_db)
+    m_db->ForceClosed();
+  nsLocalFolderSummarySpec summarySpec(m_fileSpec);
+  m_fileSpec.Delete(PR_FALSE);
+  summarySpec.Delete(PR_FALSE);
 }
 
 nsresult nsFolderCompactState::BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
@@ -304,6 +315,7 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
       PR_FREEIF(u);
     }
     AddRef();
+#ifdef OLD_WAY
     rv = BuildMessageURI(m_baseMessageUri,
                                 m_keyArray[0],
                                 m_messageUri);
@@ -311,6 +323,11 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
       rv = m_messageService->CopyMessage(
         m_messageUri, this, PR_FALSE, nsnull,
         /* ### should get msg window! */ nsnull, nsnull);
+#else
+    rv = m_messageService->CopyMessages(&m_keyArray, m_folder, this, PR_FALSE, nsnull, m_window, nsnull);
+    // m_curIndex = m_size;  // advance m_curIndex to the end - we're done
+#endif // OLD_WAY
+
   }
   else
   { // no messages to copy with
@@ -368,6 +385,12 @@ nsFolderCompactState::FinishCompact()
   m_fileSpec.Rename((const char*) idlName);
   newSummarySpec.Rename(dbName);
 
+  // Make the front end reload the folder. Calling GetMsgDatabase on a folder whose
+  // db isn't open will cause the folder to open the db and
+  // send a folder loaded event to the js front end, which will build up the view.
+  nsCOMPtr <nsIMsgDatabase> db;
+  m_folder->GetMsgDatabase(m_window, getter_AddRefs(db));
+  db = nsnull;
   if (m_compactAll)
   {
     m_folderIndex++;
@@ -397,16 +420,7 @@ nsFolderCompactState::GetMessage(nsIMsgDBHdr **message)
 NS_IMETHODIMP
 nsFolderCompactState::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  NS_ASSERTION(m_fileStream, "Fatal, null m_fileStream...\n");
-  if (m_fileStream)
-  {
-    // record the new message key for the message
-    m_fileStream->flush();
-    m_startOfNewMsg = m_fileStream->tell();
-    rv = NS_OK;
-  }
-  return rv;
+  return StartMessage();
 }
 
 NS_IMETHODIMP
@@ -421,16 +435,7 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   if (NS_FAILED(rv)) goto done;
   uri = do_QueryInterface(ctxt, &rv);
   if (NS_FAILED(rv)) goto done;
-  rv = GetMessage(getter_AddRefs(msgHdr));
-  if (NS_FAILED(rv)) goto done;
-    // okay done with the current message; copying the existing message header
-    // to the new database
-  m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, msgHdr, PR_TRUE,
-                               getter_AddRefs(newMsgHdr));
-
-//  m_db->Commit(nsMsgDBCommitType::kLargeCommit);  // no sense commiting until the end
-    // advance to next message 
-  m_curIndex ++;
+  EndCopy(nsnull, status);
   if (m_curIndex >= m_size)
   {
     msgHdr = nsnull;;
@@ -441,20 +446,13 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   }
   else
   {
-    nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
-    if (m_window)
+    // in case we're not getting an error, we still need to pretend we did get an error,
+    // because the compact did not successfully complete.
+    if (NS_SUCCEEDED(status))
     {
-      m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
-      if (statusFeedback)
-        statusFeedback->ShowProgress (100 * m_curIndex / m_size);
+      CleanupTempFilesAfterError();
+      Release();
     }
-    m_messageUri.SetLength(0); // clear the previous message uri
-    rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
-                                m_messageUri);
-    if (NS_FAILED(rv)) goto done;
-    rv = m_messageService->CopyMessage(m_messageUri, this, PR_FALSE, nsnull,
-                                       /* ### should get msg window! */ nsnull, nsnull);
-    
   }
 
 done:
@@ -603,4 +601,60 @@ nsOfflineStoreCompactState::FinishCompact()
   return rv;
 }
 
+
+NS_IMETHODIMP
+nsFolderCompactState::Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFolderCompactState::StartMessage()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  NS_ASSERTION(m_fileStream, "Fatal, null m_fileStream...\n");
+  if (m_fileStream)
+  {
+    // record the new message key for the message
+    m_fileStream->flush();
+    m_startOfNewMsg = m_fileStream->tell();
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsFolderCompactState::EndMessage(nsMsgKey key)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFolderCompactState::EndCopy(nsISupports *url, nsresult aStatus)
+{
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
+  m_messageUri.SetLength(0); // clear the previous message uri
+  nsresult rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
+                              m_messageUri);
+
+  rv = GetMessage(getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+    // okay done with the current message; copying the existing message header
+    // to the new database
+  m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, msgHdr, PR_TRUE,
+                               getter_AddRefs(newMsgHdr));
+
+//  m_db->Commit(nsMsgDBCommitType::kLargeCommit);  // no sense commiting until the end
+    // advance to next message 
+  m_curIndex ++;
+  nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+  if (m_window)
+  {
+    m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
+    if (statusFeedback)
+      statusFeedback->ShowProgress (100 * m_curIndex / m_size);
+  }
+  return NS_OK;
+}
 

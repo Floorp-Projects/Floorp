@@ -88,8 +88,9 @@ protected:
                                                    PRInt32 aGetPort,
                                                    const char *connectionType,
                                                    nsIInterfaceRequestor* callbacks);
-
-	virtual nsresult OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
+  // helper routine
+  nsresult GetFileFromURL(nsIURI * aURL, nsIFile **aResult);
+	virtual nsresult OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
 
 	// a Protocol typically overrides this method. They free any of their own connection state and then
 	// they call up into the base class to free the generic connection objects

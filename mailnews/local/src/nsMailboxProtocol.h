@@ -29,7 +29,6 @@
 #include "nsIChannel.h"
 #include "nsIOutputStream.h"
 #include "nsIMailboxUrl.h"
-
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
@@ -101,6 +100,10 @@ private:
 
 	nsCOMPtr<nsIFileSpec> m_tempMessageFile;
 
+  // this is used to hold the source mailbox file open when move/copying
+  // multiple messages.
+  nsCOMPtr<nsIInputStream> m_multipleMsgMoveCopyStream;
+
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);
 	virtual nsresult CloseSocket();
@@ -108,6 +111,8 @@ private:
 	// initialization function given a new url and transport layer
 	void Initialize(nsIURI * aURL);
 	PRInt32 SetupMessageExtraction();
+  nsresult OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount);
+  PRBool RunningMultipleMsgUrl();
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 

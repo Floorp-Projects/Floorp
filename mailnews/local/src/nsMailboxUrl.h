@@ -29,6 +29,7 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsMsgKeyArray.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {
@@ -49,6 +50,10 @@ public:
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
+  NS_IMETHOD SetMoveCopyMsgKeys(nsMsgKey *keysToFlag, PRInt32 numKeys);
+  NS_IMETHOD GetMoveCopyMsgHdrForIndex(PRUint32 msgIndex, nsIMsgDBHdr **msgHdr);
+  NS_IMETHOD GetNumMoveCopyMsgs(PRUint32 *numMsgs);
+	NS_IMPL_CLASS_GETSET(CurMoveCopyMsgIndex, PRUint32, m_curMsgIndex);
 
   // nsMailboxUrl
   nsMailboxUrl();
@@ -61,6 +66,7 @@ protected:
 	// protocol specific code to parse a url...
   virtual nsresult ParseUrl();
 	virtual const char * GetUserName() { return nsnull;}
+  nsresult GetMsgHdrForKey(nsMsgKey  msgKey, nsIMsgDBHdr ** aMsgHdr);
 
 	// mailboxurl specific state
 	nsCOMPtr<nsIStreamListener> m_mailboxParser;
@@ -79,6 +85,9 @@ protected:
   PRBool                m_canonicalLineEnding;
 	nsresult ParseSearchPart();
 
+  // for multiple msg move/copy
+  nsMsgKeyArray m_keys;
+  PRInt32 m_curMsgIndex;
   nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
 
   // truncated message support

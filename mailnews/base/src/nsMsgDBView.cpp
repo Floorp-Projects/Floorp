@@ -1104,6 +1104,7 @@ NS_IMETHODIMP nsMsgDBView::Close()
   // be consistent
   m_flags.RemoveAll();
   m_levels.RemoveAll();
+  ClearHdrCache();
   if (m_db)
   {
   	m_db->RemoveListener(this);

@@ -128,7 +128,29 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
   return OpenNetworkSocketWithInfo(hostName, port, connectionType, callbacks);
 }
 
-nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount)
+nsresult nsMsgProtocol::GetFileFromURL(nsIURI * aURL, nsIFile **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ENSURE_ARG_POINTER(aResult);
+	// extract the file path from the uri...
+	nsXPIDLCString filePath;
+	aURL->GetPath(getter_Copies(filePath));
+	char * urlSpec = PR_smprintf("file://%s", (const char *) filePath);
+  nsresult rv;
+
+// dougt - there should be an easier way!
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), urlSpec)))
+      return rv;
+
+  nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(uri);
+  if (!fileURL)   return NS_ERROR_FAILURE;
+
+  return fileURL->GetFile(aResult);
+  // dougt
+}
+
+nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount)
 {
 	// mscott - file needs to be encoded directly into aURL. I should be able to get
 	// rid of this method completely.
@@ -136,36 +158,17 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
 	nsresult rv = NS_OK;
 	m_startPosition = aStartPosition;
 	m_readCount = aReadCount;
+  nsCOMPtr <nsIFile> file;
 
-    NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-	if (NS_SUCCEEDED(rv) && aURL)
-	{
-		// extract the file path from the uri...
-		nsXPIDLCString filePath;
-		aURL->GetPath(getter_Copies(filePath));
-		char * urlSpec = PR_smprintf("file://%s", (const char *) filePath);
+  rv = GetFileFromURL(aURL, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-// dougt - there should be an easier way!
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), urlSpec)))
-        return rv;
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
+  if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(uri);
-    if (!fileURL)   return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIFile> file;
-    rv = fileURL->GetFile(getter_AddRefs(file));
-    if (NS_FAILED(rv))  return rv;
-// dougt
-
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);    
-    if (NS_FAILED(rv)) return rv;
-
-    rv = fts->CreateTransport(file, PR_RDWR | PR_CREATE_FILE,
-                              0664, getter_AddRefs(m_transport));
-		PR_FREEIF(urlSpec);
-    m_socketIsOpen = PR_FALSE;
-	}
+  rv = fts->CreateTransport(file, PR_RDWR | PR_CREATE_FILE,
+                            0664, getter_AddRefs(m_transport));
+  m_socketIsOpen = PR_FALSE;
 
 	return rv;
 }
@@ -256,6 +259,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIRequest *request, nsISupports *ct
  		rv = m_channelListener->OnStartRequest(this, m_channelContext);
   }
 
+  NS_ENSURE_SUCCESS(rv, rv);
 	return rv;
 }
 

@@ -1131,13 +1131,14 @@ int nsParseMailMessageState::FinalizeHeaders()
 		nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, getter_AddRefs(m_newMsgHdr));
 		if (NS_SUCCEEDED(ret) && m_newMsgHdr)
 		{
-            PRUint32 origFlags;
-            (void)m_newMsgHdr->GetFlags(&origFlags);
+      PRUint32 origFlags;
+      (void)m_newMsgHdr->GetFlags(&origFlags);
 			if (origFlags & MSG_FLAG_HAS_RE)
 				flags |= MSG_FLAG_HAS_RE;
 			else
 				flags &= ~MSG_FLAG_HAS_RE;
 
+      flags &= ~MSG_FLAG_OFFLINE; // don't keep MSG_FLAG_OFFLINE for local msgs
 			if (mdn_dnt && !(origFlags & MSG_FLAG_READ) &&
 				!(origFlags & MSG_FLAG_MDN_REPORT_SENT))
 				flags |= MSG_FLAG_MDN_REPORT_NEEDED;

@@ -147,13 +147,14 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIRequest * request, 
 	if(NS_SUCCEEDED(rv))
 		rv = mDestination->BeginCopy(message);
 
+  NS_ENSURE_SUCCESS(rv, rv);
 	return rv;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult aStatus)
+NS_IMETHODIMP nsCopyMessageStreamListener::EndCopy(nsISupports *url, nsresult aStatus)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);
+	nsCOMPtr<nsIURI> uri = do_QueryInterface(url, &rv);
 
 	if (NS_FAILED(rv)) return rv;
 	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);
@@ -189,5 +190,10 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIRequest* request, ns
 	//Even if the above actions failed we probably still want to return NS_OK.  There should probably
 	//be some error dialog if either the copy or delete failed.
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult aStatus)
+{
+  return EndCopy(ctxt, aStatus);
 }
 

@@ -58,6 +58,10 @@ protected:
 							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
 							   nsIMsgWindow *msgWindow);
 
+  nsresult PrepareMessageCopyUrl(nsIMsgFolder *folder, nsIUrlListener * aUrlListener,
+											 nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
+											 nsIMsgWindow *msgWindow);
+
 	nsresult RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 
   nsresult FetchMessage(const char* aMessageURI,

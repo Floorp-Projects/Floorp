@@ -28,15 +28,17 @@
 #include "nsIMsgFolder.h"	 
 #include "nsIStreamListener.h"
 #include "nsIMsgFolderCompactor.h"
+#include "nsICopyMsgStreamListener.h"
 #include "nsIMsgWindow.h"
 class nsIMsgMessageService;
 
-class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener
+class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener, public nsICopyMessageStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSICOPYMESSAGESTREAMLISTENER
   NS_DECL_NSIMSGFOLDERCOMPACTOR
 
   nsFolderCompactState(void);
@@ -46,6 +48,8 @@ public:
   // virtual nsresult FinishCompact();
   virtual nsresult InitDB(nsIMsgDatabase *db);
   nsresult CompactHelper(nsIMsgFolder *folder);
+  void CloseOutputStream();
+  void  CleanupTempFilesAfterError();
 
   nsresult GetMessage(nsIMsgDBHdr **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  

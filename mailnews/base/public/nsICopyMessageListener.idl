@@ -36,10 +36,10 @@ interface nsIInputStream;
 
 interface nsICopyMessageListener :  nsISupports
 {
-	void BeginCopy(in nsIMsgDBHdr message);
-	void StartMessage();
-	void CopyData(in nsIInputStream aIStream, in long aLength);
-	void EndMessage(in nsMsgKey key);
-	void EndCopy(in boolean copySucceeded);
-	void EndMove();
+	void beginCopy(in nsIMsgDBHdr message);
+	void startMessage();
+	void copyData(in nsIInputStream aIStream, in long aLength);
+	void endMessage(in nsMsgKey key);
+	void endCopy(in boolean copySucceeded);
+	void endMove();
 };

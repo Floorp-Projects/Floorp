@@ -55,7 +55,12 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsIMsgDBHdr> m_message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
   nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
-  
+
+  // for displaying status;
+  nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
+  nsCOMPtr <nsIStringBundle> m_stringBundle;
+  PRInt64 m_lastProgressTime;
+
   nsMsgKey m_curDstKey;
   PRUint32 m_curCopyIndex;
   nsIMsgMessageService* m_messageService;
@@ -111,7 +116,6 @@ public:
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
 	NS_IMETHOD Rename (const PRUnichar *aNewName, nsIMsgWindow *msgWindow);
-	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
 
@@ -172,10 +176,12 @@ protected:
 	nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
 	nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
-                         PRBool deleteStorage);
+                         PRBool deleteStorage, PRBool commit);
 
 	// copy message helper
-	nsresult CopyMessageTo(nsISupports *message, nsIMsgFolder *dstFolder,
+	nsresult DisplayMoveCopyStatusMsg();
+
+  nsresult CopyMessageTo(nsISupports *message, nsIMsgFolder *dstFolder,
                          nsIMsgWindow *msgWindow, PRBool isMove);
 
 	// copy multiple messages at a time from this folder
@@ -187,7 +193,7 @@ protected:
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder);
-  void ClearCopyState();
+  void ClearCopyState(PRBool moveCopySucceeded);
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
 protected:

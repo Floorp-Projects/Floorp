@@ -83,6 +83,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCompactor.h"
 #include "nsNetCID.h"
+#include "nsLocalStringBundle.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -1228,56 +1229,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
-{
-#ifdef HAVE_PORT
-  nsresult err = NS_OK;
-  PR_ASSERT (srcFolder->GetType() == GetType());  // we can only adopt the same type of folder
-  MSG_FolderInfoMail *mailFolder = (MSG_FolderInfoMail*) srcFolder;
-
-  if (srcFolder == this)
-    return MK_MSG_CANT_COPY_TO_SAME_FOLDER;
-
-  if (ContainsChildNamed(mailFolder->GetName()))
-    return MK_MSG_FOLDER_ALREADY_EXISTS;  
-  
-  // If we aren't already a directory, create the directory and set the flag bits
-  if (0 == m_subFolders->GetSize())
-  {
-    XP_Dir dir = XP_OpenDir (m_pathName, xpMailSubdirectory);
-    if (dir)
-      XP_CloseDir (dir);
-    else
-    {
-      XP_MakeDirectory (m_pathName, xpMailSubdirectory);
-      dir = XP_OpenDir (m_pathName, xpMailSubdirectory);
-      if (dir)
-        XP_CloseDir (dir);
-      else
-        err = MK_COULD_NOT_CREATE_DIRECTORY;
-    }
-    if (NS_OK == err)
-    {
-      m_flags |= MSG_FOLDER_FLAG_DIRECTORY;
-      m_flags |= MSG_FOLDER_FLAG_ELIDED;
-    }
-  }
-
-  // Recurse the tree to adopt srcFolder's children
-  err = mailFolder->PropagateAdopt (m_pathName, m_depth);
-
-  // Add the folder to our tree in the right sorted position
-  if (NS_OK == err)
-  {
-    PR_ASSERT(m_subFolders->FindIndex(0, srcFolder) == -1);
-    *pOutPos = m_subFolders->Add (srcFolder);
-  }
-
-  return err;
-#endif
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
 	return nsMsgFolder::GetPrettyName(prettyName);
@@ -1532,9 +1483,14 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           {
             msgSupport = getter_AddRefs(messages->ElementAt(i));
             if (msgSupport)
-              DeleteMessage(msgSupport, msgWindow, PR_TRUE);
+              DeleteMessage(msgSupport, msgWindow, PR_TRUE, PR_FALSE);
           }
+          // we are the source folder here for a move or shift delete
+          //enable notifications first, because that will close the file stream
+          // we've been caching, and truly make the summary valid.
           EnableNotifications(allMessageCountNotifications, PR_TRUE);
+          mDatabase->SetSummaryValid(PR_TRUE);
+          mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 		  if(!isMove)
         NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
@@ -1562,7 +1518,9 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 	nsFileSpec path;
 	nsCOMPtr<nsIFileSpec> pathSpec;
 
-  if (mCopyState) return NS_ERROR_FAILURE; // already has a  copy in progress
+  NS_ASSERTION(!mCopyState, "already copying a msg into this folder");
+  if (mCopyState) 
+    return NS_ERROR_FAILURE; // already has a  copy in progress
 
 	PRBool isLocked;
 
@@ -1611,18 +1569,25 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 done:
 
   if (NS_FAILED(rv))
-    ClearCopyState();
+    ClearCopyState(PR_FALSE);
 
   return rv;
 }
 
 void
-nsMsgLocalMailFolder::ClearCopyState()
+nsMsgLocalMailFolder::ClearCopyState(PRBool moveCopySucceeded)
 {
   if (mCopyState)
     delete mCopyState;
   mCopyState = nsnull;
-  
+   
+  // we are the destination folder for a move/copy
+  if (moveCopySucceeded && mDatabase)
+  {
+    mDatabase->SetSummaryValid(PR_TRUE);
+    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+
   PRBool haveSemaphore;
   nsresult result;
   result = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
@@ -1697,7 +1662,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   
       if (NS_FAILED(rv))
 	  {
-          ClearCopyState();
+          ClearCopyState(PR_FALSE);
 	  }
       else
 	  {
@@ -1717,7 +1682,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
 	  PRUint32 numMsgs = 0;
 	  messages->Count(&numMsgs);
-	if (numMsgs > 1 && protocolType.EqualsIgnoreCase("imap"))
+	if (numMsgs > 1 && (protocolType.EqualsIgnoreCase("imap") || protocolType.EqualsIgnoreCase("mailbox")))
 	{
 		mCopyState->m_copyingMultipleMessages = PR_TRUE;
 		rv = CopyMessagesTo(messages, msgWindow, this, isMove);
@@ -1732,7 +1697,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 		  if (!NS_SUCCEEDED(rv))
       {
         NS_ASSERTION(PR_FALSE, "copy message failed");
-			  ClearCopyState();
+			  ClearCopyState(PR_FALSE);
       }
 		}
 	}
@@ -1991,13 +1956,13 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
 
   if (msgToReplace)
   {
-    rv = DeleteMessage(msgToReplace, msgWindow, PR_TRUE);
+    rv = DeleteMessage(msgToReplace, msgWindow, PR_TRUE, PR_TRUE);
   }
 
 done:
   if(NS_FAILED(rv))
   {
-    ClearCopyState();
+    ClearCopyState(PR_FALSE);
   }
 
   fileSpec->CloseStream();
@@ -2006,7 +1971,7 @@ done:
 
 nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
                                              nsIMsgWindow *msgWindow,
-                                             PRBool deleteStorage)
+                                             PRBool deleteStorage, PRBool commit)
 {
 	nsresult rv = NS_OK;
   if (deleteStorage)
@@ -2014,7 +1979,7 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
 		nsCOMPtr <nsIMsgDBHdr> msgDBHdr(do_QueryInterface(message, &rv));
 
 		if(NS_SUCCEEDED(rv))
-			rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, commit, PR_TRUE);
 	}
 	return rv;
 }
@@ -2084,7 +2049,9 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
 			PRUint32 dbFlags = 0;
       curSourceMessage->GetFlags(&dbFlags);
 
-			PR_snprintf(statusStrBuf, sizeof(statusStrBuf), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, dbFlags & ~MSG_FLAG_RUNTIME_ONLY & 0x0000FFFF);
+      // write out x-mozilla-status, but make sure we don't write out MSG_FLAG_OFFLINE
+			PR_snprintf(statusStrBuf, sizeof(statusStrBuf), X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, 
+        dbFlags & ~(MSG_FLAG_RUNTIME_ONLY | MSG_FLAG_OFFLINE) & 0x0000FFFF);
       // need to carry the new flag over to the new header.
       if (dbFlags & MSG_FLAG_NEW)
       {
@@ -2126,6 +2093,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMsgDBHdr *message)
   nsresult rv = NS_OK;
   mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
 
+  PRInt32 messageIndex = (mCopyState->m_copyingMultipleMessages) ? mCopyState->m_curCopyIndex - 1 : mCopyState->m_curCopyIndex;
+  NS_ASSERTION(!mCopyState->m_copyingMultipleMessages || mCopyState->m_curCopyIndex > 0, "mCopyState->m_curCopyIndex invalid");
+  // by the time we get here, m_curCopyIndex is 1 relative because WriteStartOfNewMessage increments it
+  mCopyState->m_messages->QueryElementAt(messageIndex, NS_GET_IID(nsIMsgDBHdr),
+                                  (void **)getter_AddRefs(mCopyState->m_message));
+
+  DisplayMoveCopyStatusMsg();
   // if we're copying more than one message, StartMessage will handle this.
   if (!mCopyState->m_copyingMultipleMessages)
 	rv = WriteStartOfNewMessage();
@@ -2159,7 +2133,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     
     rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
                         maxReadCount, &readCount);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     mCopyState->m_leftOver += readCount;
     mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
     start = mCopyState->m_dataBuffer;
@@ -2250,15 +2224,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         }
     }
   }
-
   return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 {
+  // we are the destination folder for a move/copy
   nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
   nsCOMPtr<nsIMsgWindow> msgWindow;
+  PRBool multipleCopiesFinished = (mCopyState->m_curCopyIndex >= mCopyState->m_totalMsgCount);
 
   if (mCopyState->m_undoMsgTxn)
   {
@@ -2267,7 +2242,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
   }
 
-  
+  if (mCopyState)
+  {
+    NS_ASSERTION(mCopyState->m_leftOver == 0, "whoops, something wrong with previous copy");
+    mCopyState->m_leftOver = 0; // reset to 0.
+    // need to reset this in case we're move/copying multiple msgs.
+    mCopyState->m_fromLineSeen = PR_FALSE;
+    // flush the copied message.
+    if (mCopyState->m_fileStream)
+      mCopyState->m_fileStream->flush();
+  }
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->m_message)
 	{ //  CopyMessages() goes here; CopyFileMessage() never gets in here because
@@ -2286,8 +2270,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
                                                mCopyState->m_message, PR_TRUE,
                                                getter_AddRefs(newHdr));
-        msgDatabase->SetSummaryValid(PR_TRUE);
-        msgDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+        PRUint32 newHdrFlags;
+
+
+        // turn off offline flag - it's not valid for local mail folders.
+        newHdr->AndFlags(~MSG_FLAG_OFFLINE, &newHdrFlags);
       }
     }
 
@@ -2319,24 +2306,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     result = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
     if (NS_SUCCEEDED(result) && msgDb)
-	{
-	  if (!mCopyState->m_copyingMultipleMessages)
-	  {
+  	{
 		  result = mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
 		  if (NS_SUCCEEDED(result) && newHdr)
 		  {
-			msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
-			if (localUndoTxn)
-			{ // ** jt - recording the message size for possible undo use; the
+		  msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
+		  if (localUndoTxn)
+		  { // ** jt - recording the message size for possible undo use; the
 			  // message size is different for pop3 and imap4 messages
-				PRUint32 msgSize;
-				newHdr->GetMessageSize(&msgSize);
-				localUndoTxn->AddDstMsgSize(msgSize);
-			}
+			  PRUint32 msgSize;
+			  newHdr->GetMessageSize(&msgSize);
+			  localUndoTxn->AddDstMsgSize(msgSize);
 		  }
 	  }
-	  msgDb->SetSummaryValid(PR_TRUE);
-	  msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
+//	    msgDb->SetSummaryValid(PR_TRUE);
+//	    msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
     }
     mCopyState->m_parseMsgState->Clear();
 
@@ -2344,7 +2328,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       mCopyState->m_listener->SetMessageKey((PRUint32) mCopyState->m_curDstKey);
     }
 
-  if (mCopyState->m_curCopyIndex < mCopyState->m_totalMsgCount)
+  if (!multipleCopiesFinished && !mCopyState->m_copyingMultipleMessages)
   { // CopyMessages() goes here; CopyFileMessage() never gets in here because
     // curCopyIndex will always be less than the mCopyState->m_totalMsgCount
     nsCOMPtr<nsISupports> aSupport =
@@ -2356,35 +2340,38 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   { // both CopyMessages() & CopyFileMessage() go here if they have
     // done copying operation; notify completion to copy service
     nsresult result;
-	  if(!mCopyState->m_isMove)
-	  {
-		  nsCOMPtr<nsIMsgFolder> srcFolder;
-          srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-		  if (mCopyState->m_isFolder)
-			  DoNextSubFolder(this, srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
-
-		  NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-						  kMsgCopyServiceCID, &result); 
-
-		  if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
-		    mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
-
-          if (srcFolder && !mCopyState->m_isFolder)
-              srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
-
-          nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
-
-		  ClearCopyState();
-
-          if (NS_SUCCEEDED(result))
-		    copyService->NotifyCompletion(srcSupport, this, rv);
-
-	  }
-
+    if(!mCopyState->m_isMove)
+    {
+      if (!mCopyState->m_copyingMultipleMessages)
+      {
+        nsCOMPtr<nsIMsgFolder> srcFolder;
+        srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+        if (mCopyState->m_isFolder)
+          DoNextSubFolder(this, srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
+        
+        NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
+						    kMsgCopyServiceCID, &result); 
+        
+        if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
+          mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+        
+        if (srcFolder && !mCopyState->m_isFolder)
+          srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
+        
+        nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+        
+        if (!mCopyState->m_copyingMultipleMessages || multipleCopiesFinished)
+          ClearCopyState(PR_TRUE);
+        
+        if (NS_SUCCEEDED(result))
+          copyService->NotifyCompletion(srcSupport, this, rv);
+        
+      }
+      
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE);
+    }
   }
-
 	return rv;
 }
 
@@ -2396,10 +2383,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 	if (mCopyState->m_curCopyIndex == mCopyState->m_totalMsgCount)
 	{
 
-		NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
-						kMsgCopyServiceCID, &result); 
-
-		if (NS_SUCCEEDED(result))
+		nsCOMPtr <nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &result); 
+		if (copyService && NS_SUCCEEDED(result))
 		{
 			//Notify that a completion finished.
 			nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
@@ -2415,11 +2400,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
             EnableNotifications(allMessageCountNotifications, PR_TRUE);
 
    			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
-				mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+  				mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
 
-            nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+      nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
 
-            ClearCopyState();
+			ClearCopyState(PR_TRUE); // ### we don't know if it succeeded
+            ClearCopyState(PR_TRUE);
 			//passing in NS_OK because we only get in here if copy portion succeeded
 
             copyService->NotifyCompletion(srcSupport, this, NS_OK);
@@ -2558,6 +2544,10 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 		if(!streamListener)
 			return NS_ERROR_NO_INTERFACE;
 		mCopyState->m_curCopyIndex = 0; 
+    // we need to kick off the first message - subsequent messages
+    // are kicked off by nsMailboxProtocol when it finishes a message
+    // before starting the next message.
+    StartMessage();
 		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
                                             nsnull, aMsgWindow, &url);
 	}
@@ -2905,6 +2895,74 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     }
   }
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
+}
+
+nsresult nsMsgLocalMailFolder::DisplayMoveCopyStatusMsg()
+{
+  nsresult rv = NS_OK;
+  if (mCopyState)
+  {
+    if (!mCopyState->m_statusFeedback)
+    {
+      // get msgWindow from undo txn
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+	    nsresult rv;
+
+      if (mCopyState->m_undoMsgTxn)
+      {
+	      nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
+		    localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+        if (NS_SUCCEEDED(rv))
+          localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
+      }
+      NS_ASSERTION(msgWindow, "no msg window");
+      if (!msgWindow)
+        return NS_OK; // not a fatal error.
+      msgWindow->GetStatusFeedback(getter_AddRefs(mCopyState->m_statusFeedback));
+    }
+
+    if (!mCopyState->m_stringBundle)
+    {
+      nsCOMPtr <nsIMsgStringService> stringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID);
+
+      rv = stringService->GetBundle(getter_AddRefs(mCopyState->m_stringBundle));
+
+      NS_ASSERTION(NS_SUCCEEDED(rv), "GetBundle failed");
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (mCopyState->m_statusFeedback && mCopyState->m_stringBundle)
+    {
+      nsXPIDLString finalString;
+      nsXPIDLString folderName;
+      GetName(getter_Copies(folderName));
+      PRInt32 statusMsgId = (mCopyState->m_isMove) ? MOVING_MSGS_STATUS : COPYING_MSGS_STATUS;
+      nsAutoString numMsgSoFarString;
+      numMsgSoFarString.AppendInt((mCopyState->m_copyingMultipleMessages) ? mCopyState->m_curCopyIndex : 1);
+
+      nsAutoString totalMessagesString;
+      totalMessagesString.AppendInt(mCopyState->m_totalMsgCount);
+
+      const PRUnichar * stringArray[] = { numMsgSoFarString.GetUnicode(), totalMessagesString.GetUnicode(), folderName.get() };
+      rv = mCopyState->m_stringBundle->FormatStringFromID(statusMsgId, stringArray, 3,
+                                               getter_Copies(finalString));
+      PRInt64 minIntervalBetweenProgress;
+      PRInt64 nowMS = LL_ZERO;
+
+      // only update status/progress every half second
+      LL_I2L(minIntervalBetweenProgress, 500);
+      PRInt64 diffSinceLastProgress;
+      LL_I2L(nowMS, PR_IntervalToMilliseconds(PR_IntervalNow()));
+      LL_SUB(diffSinceLastProgress, nowMS, mCopyState->m_lastProgressTime); // r = a - b
+      LL_SUB(diffSinceLastProgress, diffSinceLastProgress, minIntervalBetweenProgress); // r = a - b
+      if (!LL_GE_ZERO(diffSinceLastProgress) && mCopyState->m_curCopyIndex < mCopyState->m_totalMsgCount)
+        return NS_OK;
+
+      mCopyState->m_lastProgressTime = nowMS;
+      mCopyState->m_statusFeedback->ShowStatusString(finalString);
+      mCopyState->m_statusFeedback->ShowProgress(mCopyState->m_curCopyIndex * 100 / mCopyState->m_totalMsgCount);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

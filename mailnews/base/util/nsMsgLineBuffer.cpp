@@ -194,9 +194,6 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
         net_buffer = newline;
         m_bufferPos = 0;
 	}
-#ifdef DEBUG_bienvenu
-	printf("returning from buffer input m_bufferPos = %ld\n", m_bufferPos);
-#endif	
     return 0;
 }
 
