@@ -36,6 +36,7 @@ REQUIRES	= string \
 		  widget \
 		  xpconnect \
 		  js \
+		  unicharutil \
 		  $(NULL)
 endif
 
