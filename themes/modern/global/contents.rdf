@@ -13,7 +13,7 @@
         chrome:displayName="Modern"
         chrome:accessKey="M"
         chrome:author="mozilla.org"
-        chrome:description="A contemporary theme for all Communicator components."
+        chrome:description="A contemporary theme for all components."
         chrome:name="modern/1.0"
         chrome:image="preview.gif">
     <chrome:packages>
