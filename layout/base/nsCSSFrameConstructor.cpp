@@ -386,6 +386,11 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
   
   // This gets reset later, since there may also be a caption. 
   // It allows descendants to get at the inner frame before that
+  // XXX This is very wrong. You cannot call SetInitialChildList() more
+  // than once (see the nsIFrame header file). Either call it once only,
+  // _or_ move the caption out into a separate named child list...
+  // XXX The other things that's wrong here is that the calls to
+  // SetInitialChildList() are bottom-up, and the order is wrong...
   aNewFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame); 
   childList = innerFrame;
 
@@ -3569,6 +3574,83 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   return rv;
 }
 
+nsresult
+nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresContext,
+                                                       nsIFrame*        aFrame,
+                                                       nsIFrame*        aParentFrame,
+                                                       nsIContent*      aContent,
+                                                       nsIStyleContext* aStyleContext,
+                                                       nsIFrame**       aContinuingFrame)
+{
+  nsIFrame* newFrame;
+  nsresult  rv;
+
+  rv = NS_NewTableOuterFrame(newFrame);
+  if (NS_SUCCEEDED(rv)) {
+    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Create a continuing inner table frame, and if there's a caption then
+    // replicate the caption
+    nsIFrame*     childFrame;
+    nsFrameItems  newChildFrames;
+
+    aFrame->FirstChild(nsnull, &childFrame);
+    while (childFrame) {
+      nsIAtom*  tableType;
+
+      // See if it's the inner table frame
+      childFrame->GetFrameType(&tableType);
+      if (nsLayoutAtoms::tableFrame == tableType) {
+        nsIFrame* continuingTableFrame;
+
+        // It's the inner table frame, so create a continuing frame
+        CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
+        newChildFrames.AddChild(continuingTableFrame);
+      } else {
+        nsIContent*           caption;
+        nsIStyleContext*      captionStyle;
+        const nsStyleDisplay* display;
+
+        childFrame->GetContent(&caption);
+        childFrame->GetStyleContext(&captionStyle);
+        display = (const nsStyleDisplay*)captionStyle->GetStyleData(eStyleStruct_Display);
+        NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay, "expected caption");
+
+        // Get the containing block for absolutely positioned elements
+        nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                       newFrame);
+
+        // Replicate the caption frame
+        // XXX We have to do it this way instead of calling ConstructFrameByDisplayType(),
+        // because of a bug in the way ConstructTableFrame() handles the initial child
+        // list...
+        nsIFrame*       captionFrame;
+        nsFrameItems    childItems;
+        nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+        nsAbsoluteItems fixedItems(mFixedContainingBlock);
+        NS_NewAreaFrame(captionFrame, 0);
+        captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
+        ProcessChildren(aPresContext, caption, captionFrame, absoluteItems, 
+                        childItems, fixedItems);
+        captionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+        newChildFrames.AddChild(captionFrame);
+        NS_RELEASE(caption);
+        NS_RELEASE(captionStyle);
+      }
+      NS_IF_RELEASE(tableType);
+      childFrame->GetNextSibling(&childFrame);
+    }
+
+    // Set the outer table's initial child list
+    newFrame->SetInitialChildList(*aPresContext, nsnull, newChildFrames.childList);
+  }
+
+  *aContinuingFrame = newFrame;
+  return rv;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aFrame,
@@ -3627,36 +3709,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
 
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
-    rv = NS_NewTableOuterFrame(newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
-                                               styleContext, PR_FALSE);
-
-      // Create a continuing inner table frame
-      nsIFrame*     childFrame;
-      nsFrameItems  newChildFrames;
-
-      aFrame->FirstChild(nsnull, &childFrame);
-      while (childFrame) {
-        nsIAtom*  tableType;
-
-        // See if it's the inner table frame
-        childFrame->GetFrameType(&tableType);
-        if (nsLayoutAtoms::tableFrame == tableType) {
-          nsIFrame* continuingTableFrame;
-
-          // It's the inner table frame, so create a continuing frame
-          CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
-          newChildFrames.AddChild(continuingTableFrame);
-        }
-        NS_IF_RELEASE(tableType);
-        childFrame->GetNextSibling(&childFrame);
-      }
-
-      // Set the outer table's initial child list
-      newFrame->SetInitialChildList(*aPresContext, nsnull, newChildFrames.childList);
-    }
+    rv = CreateContinuingOuterTableFrame(aPresContext, aFrame, aParentFrame,
+                                         content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableFrame == frameType) {
     rv = NS_NewTableFrame(newFrame);

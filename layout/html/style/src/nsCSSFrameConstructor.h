@@ -353,6 +353,13 @@ protected:
                                            nsIContent* aContent,
                                            nsIAtom* aAttribute);
 
+  nsresult CreateContinuingOuterTableFrame(nsIPresContext*  aPresContext,
+                                           nsIFrame*        aFrame,
+                                           nsIFrame*        aParentFrame,
+                                           nsIContent*      aContent,
+                                           nsIStyleContext* aStyleContext,
+                                           nsIFrame**       aContinuingFrame);
+
 protected:
   nsIDocument*        mDocument;
 
