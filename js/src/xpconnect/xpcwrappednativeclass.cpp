@@ -24,7 +24,8 @@ const char* XPC_VAL_STR = "val";
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
+static NS_DEFINE_IID(kWrappedNativeClassIID, NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID);
+NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, kWrappedNativeClassIID)
 
 // static
 nsXPCWrappedNativeClass*

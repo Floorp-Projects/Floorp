@@ -20,8 +20,6 @@
 
 #include "xpcprivate.h"
 
-static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
-
 // static
 JSBool
 XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
@@ -274,8 +272,9 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(nsXPCWrappedJSClass::IsWrappedJS(iface))
                 {
                     nsIXPConnectWrappedJSMethods* methods;
-                    if(NS_SUCCEEDED(iface->QueryInterface(kWrappedJSMethodsIID,
-                                                          (void**)&methods)) &&
+                    if(NS_SUCCEEDED(iface->QueryInterface(
+                                nsIXPConnectWrappedJSMethods::IID(),
+                                (void**)&methods)) &&
                        NS_SUCCEEDED(methods->GetJSObject(&aJSObj)))
                     {
                         NS_RELEASE(methods);

@@ -99,21 +99,28 @@ XPTParamDescriptor ResultParam[] = {
     {XPT_PD_OUT, {TD_UINT32,0}}
 };
 
+/***************/
+
 XPTParamDescriptor QueryInterfaceParams[2] = {
     {XPT_PD_IN, {TD_PNSIID|XPT_TDP_POINTER|XPT_TDP_REFERENCE,0}},
     {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_INTERFACE_IS_TYPE,0}}
-};
-
-XPTParamDescriptor TestParams[3] = {
-    {XPT_PD_IN, {TD_INT32,0}},
-    {XPT_PD_IN, {TD_INT32,0}},
-    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_UINT32,0}}
 };
 
 XPTMethodDescriptor nsISupportsMethods[3] = {
     {0, "QueryInterface", 2, QueryInterfaceParams, ResultParam},
     {0, "AddRef", 0, NULL, ResultParam},
     {0, "Release", 0, NULL, ResultParam}
+};
+
+XPTInterfaceDescriptor nsISupportsInterfaceDescriptor =
+    {NULL, 3, nsISupportsMethods, 0, NULL};
+
+/***************/
+
+XPTParamDescriptor TestParams[3] = {
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_UINT32,0}}
 };
 
 XPTMethodDescriptor nsITestXPCFooMethods[2] = {
@@ -127,31 +134,78 @@ XPTConstDescriptor  nsITestXPCFooConstants[3] = {
     {"seven", {TD_INT32,0}, 7}
 };
 
-XPTInterfaceDescriptor nsISupportsInterfaceDescriptor =
-    {NULL, 3, nsISupportsMethods, 0, NULL};
-
 XPTInterfaceDescriptor nsITestXPCFooInterfaceDescriptor =
     {NULL, 2, nsITestXPCFooMethods, 3, nsITestXPCFooConstants};
 
 XPTInterfaceDescriptor nsITestXPCFoo2InterfaceDescriptor =
     {NULL, 0, NULL, 0, NULL};
 
-XPTInterfaceDirectoryEntry InterfaceDirectoryEntryTable[] = {
- {NS_ISUPPORTS_IID, "nsISupports", "", &nsISupportsInterfaceDescriptor},
- {NS_ITESTXPC_FOO_IID, "nsITestXPCFoo", "", &nsITestXPCFooInterfaceDescriptor},
- {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2", "", &nsITestXPCFoo2InterfaceDescriptor}
+/***************/
+
+XPTParamDescriptor nsIEcho_SetRecieverParams[1] = {
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_INTERFACE_TYPE,0}} // fixup index later
 };
+
+XPTParamDescriptor nsIEcho_SendOneStringParams[1] = {
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_PSTRING,0}}
+};
+
+XPTParamDescriptor nsIEcho_In2OutOneIntParams[2] = {
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_INT32,0}}
+};
+
+XPTParamDescriptor nsIEcho_In2OutAddTwoIntsParams[5] = {
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_IN, {TD_INT32,0}},
+    {XPT_PD_OUT, {TD_INT32,0}},
+    {XPT_PD_OUT, {TD_INT32,0}},
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_INT32,0}}
+};
+
+XPTParamDescriptor nsIEcho_In2OutOneStringParams[2] = {
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_PSTRING,0}},
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_PSTRING,0}}
+};
+
+XPTMethodDescriptor nsIEchoMethods[6] = {
+    {0, "SetReciever",      1, nsIEcho_SetRecieverParams,       ResultParam},
+    {0, "SendOneString",    1, nsIEcho_SendOneStringParams,     ResultParam},
+    {0, "In2OutOneInt",     2, nsIEcho_In2OutOneIntParams,      ResultParam},
+    {0, "In2OutAddTwoInts", 5, nsIEcho_In2OutAddTwoIntsParams,  ResultParam},
+    {0, "In2OutOneString",  2, nsIEcho_In2OutOneStringParams,   ResultParam},
+    {0, "SimpleCallNoEcho", 0, NULL,                            ResultParam}
+};
+
+XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
+    {NULL, 6, nsIEchoMethods, 0, NULL};
+
+/***************/
+
+XPTInterfaceDirectoryEntry InterfaceDirectoryEntryTable[] = {
+ {NS_ISUPPORTS_IID,     "nsISupports",   "", &nsISupportsInterfaceDescriptor},
+ {NS_ITESTXPC_FOO_IID,  "nsITestXPCFoo", "", &nsITestXPCFooInterfaceDescriptor},
+ {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2","", &nsITestXPCFoo2InterfaceDescriptor},
+ {NS_IECHO_IID,         "nsIEcho",       "", &nsIEchoInterfaceDescriptor}
+};
+
+/***************/
 
 #define ENTRY_COUNT (sizeof(InterfaceDirectoryEntryTable)/sizeof(InterfaceDirectoryEntryTable[0]))
 #define TABLE_INDEX(p) ((p)-InterfaceDirectoryEntryTable)
 
-static BogusTableInit()
+static void BogusTableInit()
 {
     nsITestXPCFooInterfaceDescriptor.parent_interface =
         &InterfaceDirectoryEntryTable[0];
 
     nsITestXPCFoo2InterfaceDescriptor.parent_interface =
         &InterfaceDirectoryEntryTable[1];
+
+    nsIEchoInterfaceDescriptor.parent_interface =
+        &InterfaceDirectoryEntryTable[0];
+
+    nsIEcho_SetRecieverParams[0].type.type.interface = 3; // fixup index
 }
 
 /***************************************************************************/
@@ -184,7 +238,8 @@ nsXPTParamInfo::GetInterfaceIID() const
 /***************************************************************************/
 // VERY simple implementations...
 
-NS_IMPL_ISUPPORTS(InterfaceInfoManagerImpl, NS_IINTERFACEINFO_MANAGER_IID)
+static NS_DEFINE_IID(kInterfaceInfoManagerIID, NS_IINTERFACEINFO_MANAGER_IID);
+NS_IMPL_ISUPPORTS(InterfaceInfoManagerImpl, kInterfaceInfoManagerIID)
 
 XPC_PUBLIC_API(nsIInterfaceInfoManager*)
 XPT_GetInterfaceInfoManager()
@@ -347,7 +402,8 @@ InterfaceInfoManagerImpl::GetNameForIID(const nsIID* iid, char** name)
 }
 
 /***************************************************************************/
-NS_IMPL_ISUPPORTS(InterfaceInfoImpl, NS_IINTERFACEINFO_IID)
+static NS_DEFINE_IID(kInterfaceInfoIID, NS_IINTERFACEINFO_IID);
+NS_IMPL_ISUPPORTS(InterfaceInfoImpl, kInterfaceInfoIID)
 
 InterfaceInfoImpl::InterfaceInfoImpl(XPTInterfaceDirectoryEntry* entry,
                                      InterfaceInfoImpl* parent)

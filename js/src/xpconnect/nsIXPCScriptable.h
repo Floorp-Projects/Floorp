@@ -111,8 +111,7 @@ public: \
 class nsIXPCScriptable : public nsISupports
 {
 public:
-  static const nsIID& IID()
-    {static nsIID iid = NS_IXPCSCRIPTABLE_IID; return iid;}
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCSCRIPTABLE_IID)
 #define COND_PURE = 0
     XPC_DECLARE_IXPCSCRIPTABLE;
 #undef COND_PURE

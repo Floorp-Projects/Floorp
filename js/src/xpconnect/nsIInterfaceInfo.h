@@ -21,6 +21,12 @@
 #ifndef nsIInterfaceInfo_h___
 #define nsIInterfaceInfo_h___
 
+#ifndef NS_DEFINE_STATIC_IID_ACCESSOR
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
+  public: \
+  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
+#endif
+
 // forward declaration of non-XPCOM types
 class nsXPTMethodInfo;
 class nsXPTConstant;
@@ -33,6 +39,7 @@ class nsXPTConstant;
 class nsIInterfaceInfo : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINTERFACEINFO_IID)
 
     NS_IMETHOD GetName(char** name) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIID(nsIID** iid) = 0;  // returns IAllocatator alloc'd copy
@@ -62,6 +69,8 @@ public:
 class nsITestXPCFoo : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPC_FOO_IID)
+
     NS_IMETHOD Test(int p1, int p2, int* retval) = 0;
     NS_IMETHOD Test2() = 0;
 };
@@ -74,6 +83,31 @@ public:
 class nsITestXPCFoo2 : public nsITestXPCFoo
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPC_FOO2_IID)
+};
+
+// {CD2F2F40-C5D9-11d2-9838-006008962422}
+#define NS_IECHO_IID       \
+{ 0xcd2f2f40, 0xc5d9, 0x11d2, \
+  { 0x98, 0x38, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+class nsIEcho : public nsISupports
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IECHO_IID)
+
+    NS_IMETHOD SetReciever(nsIEcho* aReciever) = 0 ;
+    NS_IMETHOD SendOneString(const char* str) = 0 ;
+    NS_IMETHOD In2OutOneInt(int input, int* output) = 0 ;
+
+    NS_IMETHOD In2OutAddTwoInts(int input1, 
+                                int input2,
+                                int* output1,
+                                int* output2,
+                                int* result) = 0 ;
+
+    NS_IMETHOD In2OutOneString(const char* input, char** output) = 0 ;
+    NS_IMETHOD SimpleCallNoEcho() = 0 ;
 };
 
 /***************************************************************************/

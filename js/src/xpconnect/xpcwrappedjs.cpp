@@ -22,9 +22,6 @@
 
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
-
 NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -34,7 +31,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if(aIID.Equals(kWrappedJSMethodsIID))
+    if(aIID.Equals(nsIXPConnectWrappedJSMethods::IID()))
     {
         if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
             return NS_ERROR_OUT_OF_MEMORY;
@@ -139,7 +136,8 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
         {
             // just a root wrapper
             nsXPCWrappedJSClass* rootClazz;
-            rootClazz = nsXPCWrappedJSClass::GetNewOrUsedClass(xpcc, kISupportsIID);
+            rootClazz = nsXPCWrappedJSClass::GetNewOrUsedClass(
+                                                    xpcc, nsISupports::IID());
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -205,7 +203,7 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 nsXPCWrappedJS*
 nsXPCWrappedJS::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(kISupportsIID))
+    if(aIID.Equals(nsISupports::IID()))
         return mRoot;
 
     nsXPCWrappedJS* cur = mRoot;

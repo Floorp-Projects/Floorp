@@ -48,6 +48,8 @@ install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
+clean :: clobber
+
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
