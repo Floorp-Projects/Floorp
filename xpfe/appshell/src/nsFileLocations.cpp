@@ -197,6 +197,51 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 } // GetDefaultUserProfileRoot
 
 
+//----------------------------------------------------------------------------------------
+static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
+// UNIX    : ~/.mozilla/ProfileDefaults
+// WIN    : Program Files\Netscape\ProfileDefaults
+// Mac    : :Documents:Mozilla:ProfileDefaults:
+//----------------------------------------------------------------------------------------
+{
+#if defined(XP_MAC)
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Mac_DocumentsDirectory);
+    cwd += "Mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+#elif defined(XP_UNIX)  
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Unix_HomeDirectory);
+    cwd += ".mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+#elif defined(XP_PC)
+    // set its directory an aunt of the executable.
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    // That's "program files\Netscape\Communicator\Program"
+    nsFileSpec parent;
+    cwd.GetParent(parent); // "program files\Netscape\Communicator"
+    parent.GetParent(cwd); // "program files\Netscape\"
+
+#elif defined(XP_BEOS)
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::BeOS_SettingsDirectory);
+    cwd += "mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+#else
+#error dont_know_how_to_do_profiles_on_your_platform
+#endif
+
+    cwd += "ProfileDefaults";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+    outSpec = cwd;
+} // GetProfileDefaultsFolder
+
+
 //========================================================================================
 // Implementation of nsSpecialFileSpec
 //========================================================================================
@@ -280,6 +325,15 @@ void nsSpecialFileSpec::operator = (Type aType)
         case App_DefaultUserProfileRoot50:
             GetDefaultUserProfileRoot(*this);
             break;    
+
+        case App_ProfileDefaultsFolder30:
+        case App_ProfileDefaultsFolder40:
+            NS_NOTYETIMPLEMENTED("Write me!");
+            break;    
+        case App_ProfileDefaultsFolder50:
+            GetProfileDefaultsFolder(*this);
+            break;    
+            
             
         case App_PreferencesFile30:
             {
