@@ -156,7 +156,7 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
 /////////////////////////////////////////////
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
-NS_IMETHODIMP
+nsresult
 nsCertificatePrincipal::InitFromPersistent(const char* aPrefName, const char*  aCertID, 
                                            const char* aGrantedList, const char* aDeniedList)
 {
