@@ -42,6 +42,7 @@ extern "C" {
 #include "nsIProtocolConnection.h"
 #include "nsIProtocolURLFactory.h"
 #include "nsIProtocol.h"
+#include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -1106,16 +1107,27 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
 
 NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIStreamListener* aConsumer)
 {
-    nsINetService *inet = nsnull;
-    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
-                                               kINetServiceIID,
-                                               (nsISupports **)&inet);
-    if (rv != NS_OK) return rv;
+  nsresult rv;
+  nsIURLGroup* group = nsnull;
 
-    rv = inet->OpenStream(aURL, aConsumer);
+  rv = aURL->GetURLGroup(&group);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != group) {
+      rv = group->OpenStream(aURL, aConsumer);
+      NS_RELEASE(group);
+    } else {
+      nsINetService *inet = nsnull;
 
-    nsServiceManager::ReleaseService(kNetServiceCID, inet);
-    return rv;
+      rv = nsServiceManager::GetService(kNetServiceCID,
+                                        kINetServiceIID,
+                                        (nsISupports **)&inet);
+      if (NS_SUCCEEDED(rv)) {
+        rv = inet->OpenStream(aURL, aConsumer);
+        nsServiceManager::ReleaseService(kNetServiceCID, inet);
+      }
+    }
+  }
+  return rv;
 }
 
 NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIInputStream* *aNewStream,
