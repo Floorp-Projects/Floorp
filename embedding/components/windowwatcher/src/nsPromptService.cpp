@@ -156,6 +156,8 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
   block->SetInt(eCheckboxState, *checkValue);
 
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   block->GetInt(eCheckboxState, checkValue);
 
@@ -191,6 +193,8 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
   block->SetString(eIconClass, styleClass.get());
   
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
   
   PRInt32 buttonPressed = 0;
   block->GetInt(eButtonPressed, &buttonPressed);
@@ -230,6 +234,9 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   block->SetInt(eCheckboxState, *checkValue);
 
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
+
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
@@ -318,6 +325,8 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   /* perform the dialog */
 
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   /* get back output parameters */
 
@@ -369,6 +378,8 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
   }
 
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
@@ -433,6 +444,8 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   }
   
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
@@ -501,6 +514,8 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   }
 
   rv = DoDialog(parent, block, kPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   PRInt32 tempInt = 0;
   block->GetInt(eButtonPressed, &tempInt);
@@ -556,6 +571,8 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
 
   *outSelection = -1;
   rv = DoDialog(parent, block, kSelectPromptURL);
+  if (NS_FAILED(rv))
+    return rv;
 
   PRInt32 buttonPressed = 0;
   block->GetInt(eButtonPressed, &buttonPressed);
@@ -587,9 +604,9 @@ nsPromptService::DoDialog(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsISupports> arguments(do_QueryInterface(aParamBlock));
   nsCOMPtr<nsIDOMWindow> dialog;
-  mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
-              "centerscreen,chrome,modal,titlebar", arguments,
-              getter_AddRefs(dialog));
+  rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
+                            "centerscreen,chrome,modal,titlebar", arguments,
+                            getter_AddRefs(dialog));
 
   return rv;
 }
