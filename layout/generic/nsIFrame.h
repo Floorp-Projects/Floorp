@@ -552,6 +552,12 @@ public:
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end) const = 0;
 
   /**
+   * Reset the offsets when splitting frames during Bidi reordering
+   *
+   */
+  virtual void AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd) {}
+
+  /**
    * Get the style context associated with this frame.
    *
    */

@@ -48,7 +48,6 @@
 #include "nsIServiceManager.h"
 #include "nsIFrameManager.h"
 #include "nsBidiFrames.h"
-#include "nsITextFrame.h"
 #include "nsBidiUtils.h"
 
 static const PRUnichar kSpace            = 0x0020;
@@ -234,15 +233,12 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   PRBool                   isTextFrame    = PR_FALSE;
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
-  nsITextFrame*            textFrame;
   nsCOMPtr<nsIAtom>        frameType;
   nsCOMPtr<nsIContent>     content;
   nsCOMPtr<nsITextContent> textContent;
   const nsTextFragment*    fragment;
 
   for (; ;) {
-    textFrame = nsnull;
-
     if (fragmentLength <= 0) {
       if (++frameIndex >= frameCount) {
         break;
@@ -311,26 +307,12 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
                                       &nextBidi, frameIndex) ) {
             break;
           }
-          frame->QueryInterface(NS_GET_IID(nsITextFrame), (void**) &textFrame);
-          if (textFrame) {
-            textFrame->SetOffsets(contentOffset, contentOffset + runLength);
-            nsFrameState frameState;
-            frame->GetFrameState(&frameState);
-            frameState |= NS_FRAME_IS_BIDI;
-            frame->SetFrameState(frameState);
-          }
+          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
         else {
-          frame->QueryInterface(NS_GET_IID(nsITextFrame), (void**) &textFrame);
-          if (textFrame) {
-            textFrame->SetOffsets(contentOffset, contentOffset + fragmentLength);
-            nsFrameState frameState;
-            frame->GetFrameState(&frameState);
-            frameState |= NS_FRAME_IS_BIDI;
-            frame->SetFrameState(frameState);
-          }
+          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
           frame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
                                  (void**) &nextBidi,sizeof(nextBidi));
           if (RemoveBidiContinuation(aPresContext, frame, nextBidi,

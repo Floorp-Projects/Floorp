@@ -93,15 +93,9 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 
-#ifdef IBMBIDI
 #include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
-#include "nsITextFrame.h"
-
-//ahmed
 #include "nsBidiUtils.h"
-//ahmed end
-#endif // IBMBIDI
 
 #ifdef SUNCTL
 #include "nsILE.h"
@@ -389,11 +383,7 @@ nsresult nsBlinkTimer::RemoveBlinkFrame(nsIFrame* aFrame)
 
 //----------------------------------------------------------------------
 
-#ifdef IBMBIDI
-class nsTextFrame : public nsFrame, public nsITextFrame {
-#else
 class nsTextFrame : public nsFrame {
-#endif
 public:
   nsTextFrame();
 
@@ -477,6 +467,8 @@ public:
                          nsEventStatus*  aEventStatus);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
+
+  virtual void AdjustOffsetsForBidi(PRInt32 start, PRInt32 end);
 
   NS_IMETHOD GetPointFromOffset(nsIPresContext*         inPresContext,
                                 nsIRenderingContext*    inRendContext,
@@ -784,11 +776,6 @@ public:
 
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
 
-#ifdef IBMBIDI
-  // nsITextFrame methods here
-  NS_IMETHOD SetOffsets(PRInt32 aStart, PRInt32 aEnd);
-#endif
-
 protected:
   virtual ~nsTextFrame();
 
@@ -809,16 +796,13 @@ protected:
   static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
   static PRPackedBool sWordSelectEatSpaceAfter;         // should we include whitespace up to next word?
   
-#ifdef IBMBIDI
   void AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
                                     PRInt32 textLength,
                                     PRBool isRTLChars,
                                     PRBool isOddLevel,
                                     PRBool isBidiSystem);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-#endif
+
+  void SetOffsets(PRInt32 start, PRInt32 end);
 };
 
 #ifdef ACCESSIBILITY
@@ -850,12 +834,6 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
   if (!aInstancePtrResult)
   return NS_ERROR_NULL_POINTER;
 
-#ifdef IBMBIDI
-  if (aIID.Equals(NS_GET_IID(nsITextFrame))) {
-    *aInstancePtrResult = NS_STATIC_CAST(nsITextFrame*, this);
-    return NS_OK;
-  }
-#endif
   return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
@@ -1371,20 +1349,6 @@ nsTextFrame::~nsTextFrame()
     nsBlinkTimer::RemoveBlinkFrame(this);
   }
 }
-
-#ifdef IBMBIDI
-NS_IMETHODIMP_(nsrefcnt) nsTextFrame::AddRef(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsTextFrame::Release(void)
-{
-  NS_WARNING("not supported for frames");
-  return 1;
-}
-#endif // IBMBIDI
 
 nsIDocument*
 nsTextFrame::GetDocument(nsIPresContext* aPresContext)
@@ -4785,11 +4749,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       }
       nextBidi->GetOffsets(start, end);
       if (start <= mContentOffset) {
-        nextBidi->SetOffsets(mContentOffset + mContentLength, end);
-        nsFrameState frameState;
-        nextBidi->GetFrameState(&frameState);
-        frameState |= NS_FRAME_IS_BIDI;
-        nextBidi->SetFrameState(frameState);
+        nextBidi->AdjustOffsetsForBidi(mContentOffset + mContentLength, end);
       }
       else {
         mContentLength = start - mContentOffset;
@@ -6171,7 +6131,6 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
 }
 #endif
 
-#ifdef IBMBIDI
 void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
                                                PRInt32 textLength,
                                                PRBool isRTLChars,
@@ -6225,12 +6184,21 @@ void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
   return;
 }
 
-NS_IMETHODIMP
+void
+nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
+{
+  nsFrameState frameState;
+
+  GetFrameState(&frameState);
+  frameState |= NS_FRAME_IS_BIDI;
+  SetFrameState(frameState);
+
+  SetOffsets(aStart, aEnd);
+}
+
+void
 nsTextFrame::SetOffsets(PRInt32 aStart, PRInt32 aEnd)
 {
   mContentOffset = aStart;
   mContentLength = aEnd - aStart;
-
-  return NS_OK;
 }
-#endif // IBMBIDI
