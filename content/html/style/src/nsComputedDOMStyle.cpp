@@ -209,7 +209,12 @@ private:
 
   // Text Properties
   nsresult GetTextAlign(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
-  nsresult GetTextDecoration(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);  
+  nsresult GetTextDecoration(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetTextIndent(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetTextTransform(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetLetterSpacing(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetWordSpacing(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetWhiteSpace(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   // Visibility properties
   nsresult GetVisibility(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -314,6 +319,11 @@ static const nsCSSProperty queryableProperties[] = {
 
   eCSSProperty_text_align,
   eCSSProperty_text_decoration,
+  eCSSProperty_text_indent,
+  eCSSProperty_text_transform,
+  eCSSProperty_letter_spacing,
+  eCSSProperty_word_spacing,
+  eCSSProperty_white_space,
 
 };
 
@@ -576,9 +586,18 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
       // Text properties
     case eCSSProperty_text_align:
       rv = GetTextAlign(frame, *getter_AddRefs(val)); break;
-
     case eCSSProperty_text_decoration:
       rv = GetTextDecoration(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_text_indent:
+      rv = GetTextIndent(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_text_transform:
+      rv = GetTextTransform(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_letter_spacing:
+      rv = GetLetterSpacing(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_word_spacing:
+      rv = GetWordSpacing(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_white_space:
+      rv = GetWhiteSpace(frame, *getter_AddRefs(val)); break;
       
       // List properties
     case eCSSProperty_list_style_image:
@@ -1608,6 +1627,138 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
 	                         (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+
+  if (text) {
+    nsIFrame *container = nsnull;
+    nsRect rect;
+    switch (text->mTextIndent.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(text->mTextIndent.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        container = GetContainingBlock(aFrame);
+        if (container) {
+          container->GetRect(rect);
+          val->SetTwips(rect.width * text->mTextIndent.GetPercentValue());
+        } else {
+          // no containing block
+          val->SetPercent(text->mTextIndent.GetPercentValue());
+        }
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        val->SetTwips(0);
+        break;
+    }
+  } else {
+    val->SetTwips(0);
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTextTransform(nsIFrame *aFrame,
+                                     nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+
+  if (text && text->mTextTransform != NS_STYLE_TEXT_TRANSFORM_NONE) {
+    const nsAFlatCString& textTransform =
+      nsCSSProps::SearchKeywordTable(text->mTextTransform,
+                                     nsCSSProps::kTextTransformKTable);
+    val->SetString(textTransform);
+  }
+  else {
+    val->SetString(NS_LITERAL_STRING("none"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetLetterSpacing(nsIFrame *aFrame,
+                                     nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+
+  if (text && text->mLetterSpacing.GetUnit() == eStyleUnit_Coord) {
+    val->SetTwips(text->mLetterSpacing.GetCoordValue());
+  } else {
+    val->SetString(NS_LITERAL_STRING("normal"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetWordSpacing(nsIFrame *aFrame,
+                                   nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+
+  if (text && text->mWordSpacing.GetUnit() == eStyleUnit_Coord) {
+    val->SetTwips(text->mWordSpacing.GetCoordValue());
+  } else {
+    val->SetString(NS_LITERAL_STRING("normal"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetWhiteSpace(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+
+  if (text && text->mWhiteSpace != NS_STYLE_WHITESPACE_NORMAL) {
+    const nsAFlatCString& whiteSpace =
+      nsCSSProps::SearchKeywordTable(text->mWhiteSpace,
+                                     nsCSSProps::kWhitespaceKTable);
+    val->SetString(whiteSpace);
+  }
+  else {
+    val->SetString(NS_LITERAL_STRING("normal"));
+  }
+
+  return CallQueryInterface(val, &aValue);
 }
 
 nsresult
