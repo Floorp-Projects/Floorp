@@ -330,7 +330,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/mailnews/messenger/mailshell.xul",
+      toolkitCore.ShowWindow("chrome://messenger/content/",
                              window);
     }
   }
