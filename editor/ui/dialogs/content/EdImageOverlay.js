@@ -332,6 +332,8 @@ function PreviewImageLoaded()
 function LoadPreviewImage()
 {
   gDialog.PreviewSize.collapsed = true;
+  // XXXbz workaround for bug 265416 / bug 266284
+  gDialog.ImageHolder.collapsed = true;
 
   var imageSrc = TrimString(gDialog.srcInput.value);
   if (!imageSrc)
@@ -374,6 +376,7 @@ function LoadPreviewImage()
   {
     // set the src before appending to the document -- see bug 198435 for why
     // this is needed.
+    // XXXbz that bug is long-since fixed.  Is this still needed?
     gDialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
     gDialog.PreviewImage.src = imageSrc;
     gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
