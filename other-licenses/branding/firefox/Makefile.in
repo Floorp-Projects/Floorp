@@ -40,3 +40,4 @@ export::
 	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
 	cp $(srcdir)/Header.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Header.bmp
 	cp $(srcdir)/Watermrk.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Watermrk.bmp
+	cp $(srcdir)/alert-exclam.png $(DEPTH)/toolkit/skin/mac/icons/alert-exclam.png
