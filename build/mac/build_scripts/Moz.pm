@@ -1,6 +1,7 @@
 =head1 NAME
 
-B<Moz> - routines for automating CodeWarrior builds, and some extra-curricular activities related to building Mozilla
+B<Moz> - routines for automating CodeWarrior builds, and some extra-curricular
+activities related to building Mozilla
 
 =head1 SYNOPSIS
 
@@ -21,7 +22,10 @@ B<Moz> - routines for automating CodeWarrior builds, and some extra-curricular a
 
 =head1 DESCRIPTION
 
-B<Moz> comprises the routines needed to slap CodeWarrior around, force it to build a sequence of projects, report the results, and a few other things.
+B<Moz> comprises the routines needed to slap CodeWarrior around, force it
+to build a sequence of projects, report the results, and a few other things.
+This module should only contain functions that are generic to any build,
+not just the Mozilla build.
 
 =cut
 
@@ -56,9 +60,6 @@ use CodeWarriorLib;
                   DontStopForErrors
                   InstallFromManifest
                   InstallResources
-                  SetBuildNumber
-                  SetAgentString
-                  SetTimeBomb
                   Delay
                   ActivateApplication
                   IsProcessRunning);
@@ -421,73 +422,11 @@ sub InstallResources($;$;$)
 			}
 	}
 
- 
-sub SetBuildNumber($$$)
-{
-    my($build_num_file, $build_gen_script, $files_to_touch) = @_;
-    
-    open (OUTPUT, ">$build_num_file") || die "could not open buildnumber";
 
-   open (BDATE, "perl :mozilla:config:bdate.pl|");
-   
-   while (<BDATE>) {
-     print OUTPUT $_;
-   }
-
-   close (BDATE);
-   close (OUTPUT);
-
-    my($file);
-    foreach $file (@$files_to_touch)
-    {
-        print "Writing build number to $file\n";
-        system ("perl $build_gen_script $file $build_num_file");    
-    }
- }
-
-sub SetAgentString
-{
-	
-	open (BDATE, ":mozilla:config:build_number") || die "could not open buildnumber";
-	   
-	while (<BDATE>) {
-		$build_number = $_;
-	}
-	
-	close (BDATE);
-	
-	open (ORIGFILE, ":mozilla:cmd:macfe:restext:custom.r") || die "no original file";
-	open (OUTPUT, ">:mozilla:cmd:macfe:restext:agent.r") || die "no output file";
-	
-	chop($build_number);
-	
-	while (<ORIGFILE>) {
-	
-		$tempstring = $_;
-		if ($tempstring =~	"\#define		VERSION_MAJOR_STR") {
-			$tempstring = "\#define		VERSION_MAJOR_STR	\"5.0a1-" . $build_number . " Development\"\n";
-		}
-		print OUTPUT $tempstring;
-	}
-	
-	close (ORIGFILE);
-	close (OUTPUT);
-	
-	unlink (":mozilla:cmd:macfe:restext:custom.r");
-	rename (":mozilla:cmd:macfe:restext:agent.r", ":mozilla:cmd:macfe:restext:custom.r");
-}
-
-sub SetTimeBomb($$)
-		
-{
-  my ($warn_days, $bomb_days) = @_;
-  
-  system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
-	
-}
-
-sub Delay($)
-		
+#//--------------------------------------------------------------------------------------------------
+#// Delay
+#//--------------------------------------------------------------------------------------------------
+sub Delay($)		
 {
   my ($delay_seconds) = @_;
 
@@ -501,6 +440,9 @@ sub Delay($)
 	
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// GetFileModDate
+#//--------------------------------------------------------------------------------------------------
 sub GetFileModDate($)
 {
     my($filePath)=@_;
@@ -510,6 +452,9 @@ sub GetFileModDate($)
 }
 
 
+#//--------------------------------------------------------------------------------------------------
+#// LaunchCodeWarrior
+#//--------------------------------------------------------------------------------------------------
 sub LaunchCodeWarrior()
 {
   my($cur_dir) = cwd();
