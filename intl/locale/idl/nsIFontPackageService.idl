@@ -45,7 +45,7 @@ interface nsIFontPackageService : nsISupports {
    /*
     * Notify the installation have been handled
     * @param aSuccess to notify it is a success installation or not
-    * @param aReloadPages to notify to reload all relate page or not
+    * @param aRedrawPages to notify to reload all relate page or not
     * @param aFontPackID a font package id, this should be the same value pass to
     *        nsIFontPackageHandler::
     * The id have the following naming convenation 
@@ -64,6 +64,6 @@ interface nsIFontPackageService : nsISupports {
     *    th - Thai font package ("lang:th")
     * other name space are reserved for now.
     */
-   void FontPackageHandled(in boolean aSuccess, in boolean aReloadPages, in string aFontPackID );
+   void FontPackageHandled(in boolean aSuccess, in boolean aRedrawPages, in string aFontPackID );
 };
 
