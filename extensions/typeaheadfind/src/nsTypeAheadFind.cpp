@@ -842,23 +842,32 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // ----- Nothing found -----
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
 
-    nsCOMPtr<nsISound> soundInterface =
-      do_CreateInstance("@mozilla.org/sound;1");
-
-    if (soundInterface) {
-      soundInterface->Beep();
+    mRepeatingMode = eRepeatingNone;
+    if (!isBackspace) {
+      // Error beep (don't been when backspace is pressed, they're 
+      // trying to correct the mistake!)
+      nsCOMPtr<nsISound> soundInterface =
+        do_CreateInstance("@mozilla.org/sound;1");
+      if (soundInterface) {
+        soundInterface->Beep();
+      }
     }
 
     // Remove bad character from buffer, so we can continue typing from
     // last matched character
 
-#ifdef DONT_ADD_CHAR_IF_NOT_FOUND
     // If first character is bad, flush it away anyway
-    if (mTypeAheadBuffer.Length == 1)
+#ifdef TYPEAHEADFIND_REMOVE_ALL_BAD_KEYS
+    // Remove all bad characters
+    if (mTypeAheadBuffer.Length() >= 1 && !isBackspace) {
+#else
+    // Remove bad *first* characters only
+    if (mTypeAheadBuffer.Length() == 1 && !isBackspace) {
 #endif
-      // Note the if above inside the #ifdef!
+      // Notice if () in #ifdef above!
       mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0,
                                    mTypeAheadBuffer.Length() - 1);
+    }
   }
 
   return NS_OK;
@@ -967,6 +976,9 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
   } else {
     findBuffer = PromiseFlatString(mTypeAheadBuffer);
   }
+
+  if (findBuffer.IsEmpty())
+    return NS_ERROR_FAILURE;
 
   while (PR_TRUE) {    // ----- Outer while loop: go through all docs -----
     while (PR_TRUE) {  // === Inner while loop: go through a single doc ===
