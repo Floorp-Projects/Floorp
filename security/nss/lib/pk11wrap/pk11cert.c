@@ -2159,6 +2159,8 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
     NSSCryptoContext *cc;
     SECItem *derSerial;
 
+    if (slotPtr) *slotPtr = NULL;
+
     /* PKCS#11 needs to use DER-encoded serial numbers.  Create a
      * CERTIssuerAndSN that actually has the encoded value and pass that
      * to PKCS#11 (and the crypto context).
