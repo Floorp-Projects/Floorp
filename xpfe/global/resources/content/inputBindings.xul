@@ -5,7 +5,7 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <keyset id="inputKeySet">
+  <keyset id="editorKeySet">
     <key id="key_home" keycode="VK_HOME" shift="false" control="false"
         onkeypress="
             var controller =
