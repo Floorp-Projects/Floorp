@@ -656,7 +656,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   PRBool      bRead;
   PRBool      bWrote;
 
-#ifdef STANDALONE 
+#if defined STANDALONE && defined WIN32
   MSG msg;
 #endif /* STANDALONE */
 
