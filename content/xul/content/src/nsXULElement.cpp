@@ -583,12 +583,12 @@ NS_INTERFACE_MAP_BEGIN(nsXULElement)
     NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node,
                                    new nsNode3Tearoff(this))
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULElement)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULElement)
     if (mDocument) {
         return mDocument->GetBindingManager()->GetBindingImplementation(this,
                                                                         aIID,
                                                                         aInstancePtr);
     } else
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULElement)
 NS_INTERFACE_MAP_END
 
 
