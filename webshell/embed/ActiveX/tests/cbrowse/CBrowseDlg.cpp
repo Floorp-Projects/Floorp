@@ -35,6 +35,8 @@ TCHAR *aURLs[] =
 	_T("http://www.microsoft.com")
 };
 
+CBrowseDlg *CBrowseDlg::m_pBrowseDlg = NULL;
+
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseDlg dialog
 
@@ -51,7 +53,7 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
-
+	m_pBrowseDlg = this;
 	m_pControlSite = NULL;
 	m_clsid = CLSID_NULL;
 }
@@ -77,6 +79,7 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_BN_CLICKED(IDC_BACKWARD, OnBackward)
 	ON_BN_CLICKED(IDC_FORWARD, OnForward)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TESTLIST, OnSelchangedTestlist)
+	ON_NOTIFY(NM_DBLCLK, IDC_TESTLIST, OnDblclkTestlist)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -251,47 +254,142 @@ void CBrowseDlg::OnForward()
 	}
 }
 
+void CBrowseDlg::RunTestSet(TestSet *pTestSet)
+{
+	ASSERT(pTestSet);
+	if (pTestSet == NULL)
+	{
+		return;
+	}
+
+	for (int j = 0; j < pTestSet->nTests; j++)
+	{
+		Test *pTest = &pTestSet->aTests[j];
+		RunTest(pTest);
+	}
+}
+
+
+TestResult CBrowseDlg::RunTest(Test *pTest)
+{
+	ASSERT(pTest);
+	TestResult nResult = trFailed;
+
+	CString szMsg;
+	szMsg.Format(_T("Running test \"%s\""), pTest->szName);
+	m_lbMessages.AddString(szMsg);
+
+	if (pTest && pTest->pfn)
+	{
+		BrowserInfo cInfo;
+
+		cInfo.clsid = m_clsid;
+		cInfo.pControlSite = m_pControlSite;
+		cInfo.pIUnknown = NULL;
+		cInfo.pfnOutputString = CBrowseDlg::OutputString;
+		if (cInfo.pControlSite)
+		{
+			cInfo.pControlSite->GetControlUnknown(&cInfo.pIUnknown);
+		}
+		nResult = pTest->pfn(&cInfo);
+		pTest->nLastResult = nResult;
+		if (cInfo.pIUnknown)
+		{
+			cInfo.pIUnknown->Release();
+		}
+	}
+
+	switch (nResult)
+	{
+	case trFailed:
+		m_lbMessages.AddString(_T("Test failed"));
+		break;
+	case trPassed:
+		m_lbMessages.AddString(_T("Test passed"));
+		break;
+	case trPartial:
+		m_lbMessages.AddString(_T("Test partial"));
+		break;
+	default:
+		break;
+	}
+
+	return nResult;
+}
+
+void __cdecl CBrowseDlg::OutputString(const TCHAR *szMessage, ...)
+{
+	if (m_pBrowseDlg == NULL)
+	{
+		return;
+	}
+
+	TCHAR szBuffer[256];
+
+	va_list cArgs;
+	va_start(cArgs, szMessage);
+	_vstprintf(szBuffer, szMessage, cArgs);
+	va_end(cArgs);
+
+	CString szOutput;
+	szOutput.Format(_T("  Test: %s"), szBuffer);
+
+	m_pBrowseDlg->m_lbMessages.AddString(szOutput);
+}
+
+void CBrowseDlg::UpdateTest(HTREEITEM hItem, TestResult nResult)
+{
+	if (nResult == trPassed)
+	{
+		m_tcTests.SetItemImage(hItem, IL_TESTPASSED, IL_TESTPASSED);
+	}
+	else if (nResult == trFailed)
+	{
+		m_tcTests.SetItemImage(hItem, IL_TESTFAILED, IL_TESTFAILED);
+	}
+	else if (nResult == trPartial)
+	{
+		// TODO
+	}
+}
+
+void CBrowseDlg::UpdateTestSet(HTREEITEM hItem)
+{
+	// Examine the results
+	HTREEITEM hTest = m_tcTests.GetNextItem(hItem, TVGN_CHILD);
+	while (hTest)
+	{
+		Test *pTest = (Test *) m_tcTests.GetItemData(hTest);
+		UpdateTest(hTest, pTest->nLastResult);
+		hTest = m_tcTests.GetNextItem(hTest, TVGN_NEXT);
+	}
+}
+
 void CBrowseDlg::OnRuntest() 
 {
 	HTREEITEM hItem = m_tcTests.GetNextItem(NULL, TVGN_FIRSTVISIBLE);
 	while (hItem)
 	{
-		UINT nState;
-
-		nState = m_tcTests.GetItemState(hItem, TVIS_SELECTED);
-		if (!m_tcTests.ItemHasChildren(hItem) && nState & TVIS_SELECTED)
+		UINT nState = m_tcTests.GetItemState(hItem, TVIS_SELECTED);
+		if (!(nState & TVIS_SELECTED))
 		{
-			Test *pTest = (Test *) m_tcTests.GetItemData(hItem);
-			TestResult nResult = trFailed;
-			if (pTest && pTest->pfn)
-			{
-				BrowserInfo cInfo;
+			hItem = m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
+			continue;
+		}
 
-				cInfo.clsid = m_clsid;
-				cInfo.pControlSite = m_pControlSite;
-				cInfo.pIUnknown = NULL;
-				if (cInfo.pControlSite)
-				{
-					cInfo.pControlSite->GetControlUnknown(&cInfo.pIUnknown);
-				}
-				nResult = pTest->pfn(&cInfo);
-				if (cInfo.pIUnknown)
-				{
-					cInfo.pIUnknown->Release();
-				}
-			}
-			if (nResult == trPassed)
-			{
-				m_tcTests.SetItemImage(hItem, IL_TESTPASSED, IL_TESTPASSED);
-			}
-			else if (nResult == trFailed)
-			{
-				m_tcTests.SetItemImage(hItem, IL_TESTFAILED, IL_TESTFAILED);
-			}
-			else if (nResult == trPartial)
-			{
-				// TODO
-			}
+		if (m_tcTests.ItemHasChildren(hItem))
+		{
+			// Run complete set of tests
+			TestSet *pTestSet = (TestSet *) m_tcTests.GetItemData(hItem);
+			RunTestSet(pTestSet);
+			UpdateTestSet(hItem);
+		}
+		else
+		{
+			// Find the test
+			Test *pTest = (Test *) m_tcTests.GetItemData(hItem);
+			TestResult nResult = RunTest(pTest);
+			UpdateTest(hItem, nResult);
 		}
 
 		hItem = m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
@@ -333,5 +431,11 @@ void CBrowseDlg::OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult)
 	UpdateData(FALSE);
 	m_btnRunTest.EnableWindow(bItemSelected);
 
+	*pResult = 0;
+}
+
+void CBrowseDlg::OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	OnRuntest();
 	*pResult = 0;
 }

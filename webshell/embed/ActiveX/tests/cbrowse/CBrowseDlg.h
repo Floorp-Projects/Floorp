@@ -20,7 +20,14 @@ public:
 
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 
+	static CBrowseDlg *m_pBrowseDlg;
+	static void __cdecl CBrowseDlg::OutputString(const TCHAR *szMessage, ...);
+
 	HRESULT GetWebBrowser(IWebBrowser **pWebBrowser);
+	void RunTestSet(TestSet *pTestSet);
+	TestResult RunTest(Test *pTest);
+	void UpdateTest(HTREEITEM hItem, TestResult nResult);
+	void UpdateTestSet(HTREEITEM hItem);
 
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
@@ -53,6 +60,7 @@ protected:
 	afx_msg void OnBackward();
 	afx_msg void OnForward();
 	afx_msg void OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
