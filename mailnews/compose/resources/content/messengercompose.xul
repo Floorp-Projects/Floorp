@@ -516,7 +516,7 @@
 
   <statusbar id="status-bar">
     <statusbarpanel id="offline-status" onclick="setTimeout('UpdateOfflineState()', 0)"/> 
-    <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
+    <progressmeter id ="progressmeter" class="progressmeter-statusbar" mode="normal" value="0"/>
     <statusbarpanel id="statusText" flex="1" label="&defaultStatusText.label;"/>
   </statusbar>
 
