@@ -401,6 +401,16 @@ else
 
 	<listitem>
 	  <para>
+	    Taint Mode
+	  </para>
+	  <para>
+	    All new cgis must run in Taint mode (Perl taint and DBI taint), and existing cgi's
+	    which run in taint mode must not have taint mode turned off.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
 	    Templatization
 	  </para>
 	  <para>
