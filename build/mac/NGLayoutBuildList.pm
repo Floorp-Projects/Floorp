@@ -808,7 +808,7 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",         "$addressbookLocale", 0);
     _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST",        "$addressbookContent", 0);
     _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST",   "$addressbookLocale", 0);
-#    _InstallResources(":mozilla:mailnews:absync:resources:content:MANIFEST",                "$addressbookContent", 0);
+    _InstallResources(":mozilla:mailnews:absync:resources:locale:en-US:MANIFEST","$addressbookLocale", 0);
     
     # import
     _InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST",                "$messengerContent", 0);
@@ -1355,7 +1355,6 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",          "$distdirectory:idl:");
     _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",                 "$distdirectory:mailnews:");
     _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",               "$distdirectory:mailnews:");
-#    _InstallFromManifest(":mozilla:mailnews:absync:public:MANIFEST",            "$distdirectory:mailnews:");
                                                      
     print("--- Client Dist export complete ----\n");
 }
