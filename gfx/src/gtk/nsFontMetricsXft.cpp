@@ -298,10 +298,10 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
         name.Append(char('.'));
 
-        const PRUnichar* langGroup = nsnull;
-        mLangGroup->GetUnicode(&langGroup);
+        nsCAutoString name;
+        mLangGroup->GetUTF8String(&langGroup);
 
-        name.AppendWithConversion(langGroup);
+        name.Append(langGroup);
 
         PRInt32 minimum = 0;
         nsresult res;
@@ -802,10 +802,10 @@ nsFontMetricsXft::SetupFCPattern(void)
         }
 
         // language group
-        const PRUnichar *name;
-        mLangGroup->GetUnicode(&name);
+        const char *name;
+        mLangGroup->Get(&name);
         nsCAutoString cname;
-        cname.AssignWithConversion(nsDependentString(name));
+        cname.Assign(name);
         printf("\tlang group: %s\n", cname.get());
 
 
@@ -1671,10 +1671,8 @@ void
 AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
 {
     // Find the FC lang group for this lang group
-    const PRUnichar *name;
-    aLangGroup->GetUnicode(&name);
     nsCAutoString cname;
-    cname.AssignWithConversion(nsDependentString(name));
+    aLangGroup->ToUTF8String(cname);
 
     // see if the lang group needs to be translated from mozilla's
     // internal mapping into fontconfig's
