@@ -26,5 +26,6 @@ treeitem > treerow > treecell > titledbutton
 {
  border: none;
  font: inherit;
+ color: inherit;
  list-style-image: url("resource:/res/rdf/document.gif");
 }
