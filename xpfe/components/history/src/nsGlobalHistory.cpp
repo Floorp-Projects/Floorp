@@ -1368,6 +1368,7 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
   if (! aTarget)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
 
   *aSource = nsnull;
@@ -1425,6 +1426,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
   if (! aTarget)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
 
   if (aProperty == kNC_URL) {
@@ -1549,6 +1551,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
   if (! aProperty)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
 
   // Initialize return value.
@@ -1904,6 +1907,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget)
 {
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   // translate into an appropriate removehistory call
   nsresult rv;
   if ((aSource == kNC_HistoryRoot || aSource == kNC_HistoryByDate || IsFindResource(aSource)) &&
@@ -1992,6 +1996,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     return NS_OK;
   }
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
   
   // answer if a specific row matches a find URI
@@ -2095,6 +2100,7 @@ nsGlobalHistory::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *resul
   if (! aNode)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
   if (resource && IsURLInHistory(resource)) {
     *result = (aArc == kNC_child);
@@ -2112,6 +2118,7 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
   if (! aSource)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   if ((aSource == kNC_HistoryRoot) ||
       (aSource == kNC_HistoryByDate)) {
     *result = (aArc == kNC_child);
@@ -2146,6 +2153,7 @@ nsGlobalHistory::ArcLabelsIn(nsIRDFNode* aNode,
   if (! aNode)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
   if (resource && IsURLInHistory(resource)) {
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
@@ -2163,6 +2171,7 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
   if (! aSource)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   nsresult rv;
 
   if ((aSource == kNC_HistoryRoot) ||
@@ -2230,6 +2239,7 @@ nsGlobalHistory::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 NS_IMETHODIMP
 nsGlobalHistory::GetAllResources(nsISimpleEnumerator** aResult)
 {
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
   URLEnumerator* result = new URLEnumerator(kToken_URLColumn,
                                             kToken_HiddenColumn);
   if (! result)
