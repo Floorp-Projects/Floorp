@@ -4386,6 +4386,25 @@ else
     AC_MSG_RESULT([no])
 fi
 
+dnl pass -Wno-long-long to the compiler
+MOZ_ARG_ENABLE_BOOL(long-long-warning,
+[  --enable-long-long-warning 
+                          Warn about use of non-ANSI long long type],
+    _IGNORE_LONG_LONG_WARNINGS=,
+    _IGNORE_LONG_LONG_WARNINGS=1)
+
+if test "$_IGNORE_LONG_LONG_WARNINGS"; then
+     _SAVE_CFLAGS="$CFLAGS"
+     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
+     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
+     AC_TRY_COMPILE([], [return(0);], 
+	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+	  result="yes" ], result="no")
+     AC_MSG_RESULT([$result])
+     CFLAGS="$_SAVE_CFLAGS"
+fi
+
 AC_LANG_CPLUSPLUS
 
 dnl ========================================================
@@ -4460,25 +4479,6 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
-fi
-
-dnl pass -Wno-long-long to the compiler
-MOZ_ARG_ENABLE_BOOL(long-long-warning,
-[  --enable-long-long-warning 
-                          Warn about use of non-ANSI long long type],
-    _IGNORE_LONG_LONG_WARNINGS=,
-    _IGNORE_LONG_LONG_WARNINGS=1)
-
-if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-     _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-     AC_TRY_COMPILE([], [return(0);], 
-	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  result="yes" ], result="no")
-     AC_MSG_RESULT([$result])
-     CFLAGS="$_SAVE_CFLAGS"
 fi
 
 dnl ========================================================
