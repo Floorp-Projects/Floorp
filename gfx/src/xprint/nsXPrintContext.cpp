@@ -205,7 +205,7 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
 
   XlibRgbArgs xargs;
   memset(&xargs, 0, sizeof(xargs));
-  xargs.handle_name           = "xprint";
+  xargs.handle_name           = nsnull;
   xargs.disallow_image_tiling = True; /* XlibRGB's "Image tiling"-hack is 
                                        * incompatible to Xprint API */
   
