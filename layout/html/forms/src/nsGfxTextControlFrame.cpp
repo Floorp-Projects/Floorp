@@ -88,12 +88,9 @@ static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
-static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
-static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
-static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
 static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
+
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
@@ -172,6 +169,7 @@ nsGfxTextControlFrame::InitTextControl()
   mDocObserver->SetFrame(this);
   NS_ADDREF(mDocObserver);
 
+/*
   if (PR_TRUE==IsPlainTextControl())
   {
     nsCOMPtr<nsITextEditor> theEditor;
@@ -186,15 +184,15 @@ nsGfxTextControlFrame::InitTextControl()
   }
   else
   {
-    nsCOMPtr<nsIHTMLEditor> theEditor;
-    result = nsComponentManager::CreateInstance(kHTMLEditorCID,
-                                                nsnull,
-                                                kIHTMLEditorIID, getter_AddRefs(theEditor));
-    if (NS_FAILED(result)) { return result; }
-    if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
-    mEditor = do_QueryInterface(theEditor);
-    if (!mEditor) { return NS_ERROR_NO_INTERFACE; }
-  }
+*/
+  nsCOMPtr<nsIEditor> theEditor;
+  result = nsComponentManager::CreateInstance(kEditorCID,
+                                              nsnull,
+                                              nsIEditor::GetIID(), getter_AddRefs(theEditor));
+  if (NS_FAILED(result)) { return result; }
+  if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
+  mEditor = do_QueryInterface(theEditor);
+  if (!mEditor) { return NS_ERROR_NO_INTERFACE; }
 
   // allocate mDummy here to self-check native text control impl. vs. ender text control impl.
   //NS_NewNativeTextControlFrame((nsIFrame **)&mDummyFrame); //DUMMY
@@ -220,12 +218,10 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
   if (mSelectionListener)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
-    nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
-    NS_ASSERTION(editor, "bad QI to nsIEditor from mEditor");
-    if (editor)
+    if (mEditor)
     {
-      result = editor->GetSelection(getter_AddRefs(selection));
+      nsCOMPtr<nsIDOMSelection>selection;
+      result = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(result) && selection) 
       {
         nsCOMPtr<nsIDOMSelectionListener>listener;
@@ -237,7 +233,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
       if (mKeyListener || /*mMouseListener || */mFocusListener) 
       {
         nsCOMPtr<nsIDOMDocument>domDoc;
-        result = editor->GetDocument(getter_AddRefs(domDoc));
+        result = mEditor->GetDocument(getter_AddRefs(domDoc));
         if (NS_SUCCEEDED(result) && domDoc)
         {
           nsCOMPtr<nsIDOMEventReceiver> er;
@@ -256,7 +252,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     }
   }
 
-  mEditor = do_QueryInterface(nsnull);  // editor must be destroyed before the webshell!
+  mEditor = 0;  // editor must be destroyed before the webshell!
   if (nsnull != mWebShell) 
   {
     mWebShell->Destroy();    
@@ -366,13 +362,18 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   {
     PRInt32 maxLength;
     nsresult rv = GetMaxLength(&maxLength);
+    
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (htmlEditor)
+    {
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     {  // set the maxLength attribute
-      mEditor->SetMaxTextLength(maxLength);
+        htmlEditor->SetMaxTextLength(maxLength);
       // if maxLength>docLength, we need to truncate the doc content
     }
     else { // unset the maxLength attribute
-      mEditor->SetMaxTextLength(-1);
+        htmlEditor->SetMaxTextLength(-1);
+      }
     }
   } 
   else if (nsHTMLAtoms::readonly == aAttribute) 
@@ -384,12 +385,12 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
-      flags |= TEXT_EDITOR_FLAG_READONLY;
+      flags |= nsIHTMLEditor::eEditorReadonlyMask;
       presShell->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
-      flags &= ~(TEXT_EDITOR_FLAG_READONLY);
+      flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
       presShell->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -403,7 +404,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->GetFlags(&flags);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
-      flags |= TEXT_EDITOR_FLAG_DISABLED;
+      flags |= nsIHTMLEditor::eEditorDisabledMask;
       presShell->SetCaretEnabled(PR_FALSE);
       nsCOMPtr<nsIDocument> doc; 
       presShell->GetDocument(getter_AddRefs(doc));
@@ -413,7 +414,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
     else 
     { // unset readonly
-      flags &= ~(TEXT_EDITOR_FLAG_DISABLED);
+      flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
       presShell->SetCaretEnabled(PR_TRUE);
       nsCOMPtr<nsIDocument> doc; 
       presShell->GetDocument(getter_AddRefs(doc));
@@ -429,7 +430,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    result =  nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
 
 // DUMMY
@@ -615,7 +616,10 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
             nsAutoString bodyTag = "body";
             result = GetFirstNodeOfType(bodyTag, domDoc, getter_AddRefs(bodyNode));
             SelectAllTextContent(bodyNode, selection);
-            mEditor->InsertText(aValue);
+            
+            nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor)
+              htmlEditor->InsertText(aValue);
           }
         }
       }
@@ -1130,7 +1134,15 @@ nsGfxTextControlFrame::InstallEditor()
       }
     }
 
-    result = mEditor->Init(mDoc, presShell);
+    PRUint32 editorFlags = 0;
+    if (IsPlainTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
+    if (IsSingleLineTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorSingleLineMask;
+    if (IsPasswordTextControl())
+      editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
+      
+    result = mEditor->Init(mDoc, presShell, editorFlags);
     if (NS_SUCCEEDED(result)) {
       result = InitializeTextControl(presShell, mDoc);
     }
@@ -1153,6 +1165,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   {
     PRInt32 type;
     GetType(&type);
+
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (!htmlEditor)  { return NS_ERROR_NO_INTERFACE; }
 
     nsCOMPtr<nsIPresContext>presContext;
     aPresShell->GetPresContext(getter_AddRefs(presContext));
@@ -1202,7 +1217,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     PRInt32 maxLength;
     result = GetMaxLength(&maxLength);
     if (NS_CONTENT_ATTR_NOT_THERE != result) {
-      mEditor->SetMaxTextLength(maxLength);
+      htmlEditor->SetMaxTextLength(maxLength);
     }
 
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
@@ -1223,7 +1238,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
           {
             if (0!=value.Length())
             {
-              result = mEditor->InsertText(value);
+              result = htmlEditor->InsertText(value);
               result = SelectAllTextContent(bodyNode, selection);
             }
             selection->ClearSelection();
@@ -1249,13 +1264,13 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     {
       PRUint32 flags=0;
       if (IsPlainTextControl()) {
-        flags |= TEXT_EDITOR_FLAG_PLAINTEXT;
+        flags |= nsIHTMLEditor::eEditorPlaintextMask;
       }
       if (IsSingleLineTextControl()) {
-        flags |= TEXT_EDITOR_FLAG_SINGLELINE;
+        flags |= nsIHTMLEditor::eEditorSingleLineMask;
       }
       if (IsPasswordTextControl()) {
-        flags |= TEXT_EDITOR_FLAG_PASSWORD;
+        flags |= nsIHTMLEditor::eEditorPasswordMask;
       }
       nsCOMPtr<nsIContent> content;
       result = mContent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(content));
@@ -1266,13 +1281,13 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
         nsAutoString resultValue;
         result = content->GetAttribute(nameSpaceID, nsHTMLAtoms::readonly, resultValue);
         if (NS_CONTENT_ATTR_NOT_THERE != result) {
-          flags |= TEXT_EDITOR_FLAG_READONLY;
+          flags |= nsIHTMLEditor::eEditorReadonlyMask;
           aPresShell->SetCaretEnabled(PR_FALSE);
         }
         result = content->GetAttribute(nameSpaceID, nsHTMLAtoms::disabled, resultValue);
         if (NS_CONTENT_ATTR_NOT_THERE != result) 
         {
-          flags |= TEXT_EDITOR_FLAG_DISABLED;
+          flags |= nsIHTMLEditor::eEditorDisabledMask;
           aPresShell->SetCaretEnabled(PR_FALSE);
           nsCOMPtr<nsIDocument>doc = do_QueryInterface(aDoc);
           if (doc) {
@@ -1284,11 +1299,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
       // now add the selection listener
       nsCOMPtr<nsIDOMSelection>selection;
-      nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
-      NS_ASSERTION(editor, "bad QI to nsIEditor from mEditor");
-      if (editor)
+      if (mEditor)
       {
-        result = editor->GetSelection(getter_AddRefs(selection));
+        result = mEditor->GetSelection(getter_AddRefs(selection));
         if (NS_SUCCEEDED(result) && selection) 
         {
           result = NS_NewEnderSelectionListener(getter_AddRefs(mSelectionListener));
