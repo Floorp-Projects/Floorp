@@ -64,9 +64,9 @@
 #include "nsParseMailbox.h"
 #include "nsImapMailFolder.h"
 #include "nsIRDFResource.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
-#include "nsIMsgMailNewsUrl.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -506,11 +506,12 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	// create a url to process the request.
     rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
                                             nsIImapUrl::GetIID(), (void **)
+
                                             &m_url);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
 		rv = mailnewsurl->SetSpec(m_urlString); // reset spec
 		mailnewsurl->RegisterListener(this);
 
@@ -519,7 +520,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv))
 	{
         nsCOMPtr<nsIMsgIncomingServer> aServer;
-        rv = m_url->GetServer(getter_AddRefs(aServer));
+        rv = mailnewsurl->GetServer(getter_AddRefs(aServer));
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIImapIncomingServer>
