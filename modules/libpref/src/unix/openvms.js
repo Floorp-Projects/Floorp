@@ -28,6 +28,8 @@ pref("mail.use_builtin_movemail", false);
 
 pref("helpers.global_mime_types_file", "/sys$manager/netscape/mime.types");
 pref("helpers.global_mailcap_file", "/sys$manager/netscape/mailcap");
+pref("helpers.private_mime_types_file", "/sys$login/.mime.types");
+pref("helpers.private_mailcaptypes_file", "/sys$login/.mailcap");
 
 pref("applications.telnet", "create /term /detach \"telnet %h %p\"");
 pref("applications.tn3270", "create /term /detach \"telnet /term=IBM-3278-5 %h %p\"");
