@@ -6,6 +6,12 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="browserKeySet">
+    <key id="key_home" key="a" shift="false" control="false"
+        onkeypress="
+            dump('hi hello stuff\n');
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
+            controller.doCommand('cmd_scrollPageUp');"/>
     <key id="key_home" keycode="VK_PAGEUP" shift="false" control="false"
         onkeypress="
             var controller =

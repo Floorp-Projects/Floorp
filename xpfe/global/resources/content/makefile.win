@@ -28,6 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 DISTBROWSER=$(DIST)\bin\chrome\global\content\default
 
 install::
+	$(MAKE_INSTALL) browserBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) editorBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) inputBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) hiddenWindow.xul $(DISTBROWSER)
