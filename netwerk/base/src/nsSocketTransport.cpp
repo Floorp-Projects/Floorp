@@ -598,6 +598,56 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 }
 
 
+NS_METHOD
+nsReadFromSocket(void* closure,
+                 char* toRawSegment,
+                 PRUint32 offset,
+                 PRUint32 count,
+                 PRUint32 *readCount)
+{
+  nsresult rv = NS_OK;
+  PRInt32 len;
+  PRErrorCode code;
+
+  PRFileDesc* fd = (PRFileDesc*)closure;
+
+  *readCount = 0;
+
+  len = PR_Read(fd, toRawSegment, count);
+  if (len > 0) {
+    *readCount = (PRUint32)len;
+  } 
+  //
+  // The read operation has completed...
+  //
+  else if (len == 0) {
+    rv = NS_BASE_STREAM_EOF;
+  }
+  //
+  // Error...
+  //
+  else {
+    code = PR_GetError();
+
+    if (PR_WOULD_BLOCK_ERROR == code) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    } 
+    else {
+      PR_LOG(gSocketLog, PR_LOG_ERROR, 
+             ("PR_Read() failed. PRErrorCode = %x\n", code));
+
+      // XXX: What should this error code be?
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsReadFromSocket [fd=%x].  rv = %x. Buffer space = %d.  Bytes read =%d\n",
+                  fd, rv, count, *readCount));
+
+  return rv;
+}
+
 //-----
 //
 //  doRead:
@@ -614,9 +664,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 //-----
 nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 {
-  PRUint32 size, bytesWritten, totalBytesWritten;
-  PRInt32 len;
-  PRErrorCode code;
+  PRUint32 totalBytesWritten;
   nsresult rv = NS_OK;
 
   NS_ASSERTION(eSocketState_WaitReadWrite == mCurrentState, "Wrong state.");
@@ -637,67 +685,32 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     rv = NS_ERROR_FAILURE;
   }
 
+  //
+  // Fill the stream with as much data from the network as possible...
+  //
+  //
   totalBytesWritten = 0;
-  while (NS_OK == rv) {
-    //
-    // Determine how much space is available in the input stream...
-    //
-    // Since, the data is being read into a global buffer from the net, unless
-    // it can all be pushed into the stream it will be lost!
-    //
-    rv = mReadStream->GetWriteAmount(&size);
-    if (size > MAX_IO_BUFFER_SIZE) {
-      size = MAX_IO_BUFFER_SIZE;
+  rv = mReadStream->FillStream(nsReadFromSocket, (void*)mSocketFD, 
+                               MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("FillStream [fd=%x].  rv = %x. Bytes read =%d\n",
+                  mSocketFD, rv, totalBytesWritten));
+
+  //
+  // Deal with the possible return values...
+  //
+  if (NS_BASE_STREAM_FULL == rv) {
+    if (0 == totalBytesWritten) {
+      mSuspendCount += 1;
+      mReadStream->BlockTransport();
     }
-    if (size > 0) {
-      len = PR_Read(mSocketFD, gIOBuffer, size);
-      if (len > 0) {
-        rv = mReadStream->Fill(gIOBuffer, len, &bytesWritten);
-        NS_ASSERTION(bytesWritten == (PRUint32)len, "Data was lost during read.");
-
-        totalBytesWritten += bytesWritten;
-      } 
-      //
-      // The read operation has completed...
-      //
-      else if (len == 0) {
-        rv = NS_OK;
-        break;
-      } 
-      // Error...
-      else {
-        code = PR_GetError();
-
-        if (PR_WOULD_BLOCK_ERROR == code) {
-          rv = NS_BASE_STREAM_WOULD_BLOCK;
-        } 
-        else {
-          PR_LOG(gSocketLog, PR_LOG_ERROR, 
-                 ("PR_Read() failed. [this=%x].  PRErrorCode = %x\n",
-                  this, code));
-
-          // XXX: What should this error code be?
-          rv = NS_ERROR_FAILURE;
-        }
-      }
-    } 
-    //
-    // There is no room in the input stream for more data...  
-    // 
-    // Remove this entry from the select list until the consumer has read 
-    // some data...  Since we are already holding the transport lock, just
-    // increment the suspend count...
-    //
-    // When the consumer makes some room in the stream, the transport will be
-    // resumed...
-    //
-    else {
-      if (0 == totalBytesWritten) {
-        mSuspendCount += 1;
-        mReadStream->BlockTransport();
-      }
-      rv = NS_BASE_STREAM_WOULD_BLOCK;
-    }
+    rv = NS_BASE_STREAM_WOULD_BLOCK;
+  }
+  else if (NS_BASE_STREAM_EOF == rv) {
+    rv = NS_OK;
+  } 
+  else if (NS_SUCCEEDED(rv)) {
+    rv = NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   //
@@ -705,12 +718,13 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // been filled into the stream as possible...
   //
   if (totalBytesWritten && mReadListener) {
-    mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, totalBytesWritten);
+    mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
+                                   totalBytesWritten);
     mSourceOffset += totalBytesWritten;
   }
 
   //
-  // Set up the select flags for connect...
+  // Set up the select flags for read...
   //
   if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
     mSelectFlags |= (PR_POLL_READ | PR_POLL_EXCEPT);
