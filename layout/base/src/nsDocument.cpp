@@ -443,7 +443,6 @@ nsDOMImplementation::CreateDocument(const nsAReadableString& aNamespaceURI,
 {  
   NS_ENSURE_ARG_POINTER(aReturn);    
   
-  nsresult rv = NS_OK;
   *aReturn = nsnull;
 
   return NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
