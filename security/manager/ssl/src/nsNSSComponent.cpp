@@ -208,11 +208,13 @@ nsNSSComponent::InitializePIPNSSBundle()
   return rv;
 }
 
+#define SECURITY_FOLDER ":Security"
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
   nsresult rv;
-  nsXPIDLCString profileStr;
+  char *profileStr;
   nsCOMPtr<nsIFile> profilePath;
 
   if (mNSSInitialized) {
@@ -230,12 +232,21 @@ nsNSSComponent::InitializeNSS()
     return rv;
   }
 
-  rv = profilePath->GetPath(getter_Copies(profileStr));
+  rv = profilePath->GetPath(&profileStr);
   if (NS_FAILED(rv)) 
     return rv;
     
   PK11_SetPasswordFunc(PK11PasswordPrompt);
+#ifdef XP_MAC
+  size_t allocLen = PL_strlen(profileStr) + PL_strlen(SECURITY_FOLDER) + 1;
+  char *newString = (char*)nsMemory::Alloc(allocLen);
+  memcpy(newString, profileStr, PL_strlen(profileStr)+1);
+  PL_strcat(newString, SECURITY_FOLDER);
+  nsMemory::Free(profileStr);
+  profileStr = newString;
+#endif  
   NSS_InitReadWrite(profileStr);
+  nsMemory::Free(profileStr);
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
     
