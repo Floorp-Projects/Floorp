@@ -104,18 +104,11 @@ public class ImporterTopLevel extends ScriptableObject {
     }
 
     private Object getPackageProperty(String name, Scriptable start) {
-        Object result= NOT_FOUND;
-        if (name.equals("_packages_"))
-            return result;
-        Object plist = ScriptableObject.getProperty(start,"_packages_");
-        if (plist == NOT_FOUND)
-            return result;
+        Object result = NOT_FOUND;
         Object[] elements;
-        Context cx = Context.enter();
-        try {
-            elements = cx.getElements((Scriptable)plist);
+        synchronized (importedPackages) {
+            elements = importedPackages.toArray();
         }
-        finally { Context.exit(); }
         for (int i=0; i < elements.length; i++) {
             NativeJavaPackage p = (NativeJavaPackage) elements[i];
             Object v = p.getPkgProperty(name, start, false);
@@ -152,32 +145,27 @@ public class ImporterTopLevel extends ScriptableObject {
 
     void importPackage(Context cx, Scriptable thisObj, Object[] args)
     {
-        Scriptable importedPackages;
-        Object plist = thisObj.get("_packages_", thisObj);
-        if (plist == NOT_FOUND) {
-            importedPackages = cx.newArray(thisObj,0);
-            thisObj.put("_packages_", thisObj, importedPackages);
-        }
-        else {
-            importedPackages = (Scriptable)plist;
-        }
-        for (int i=0; i<args.length; i++) {
+        for (int i = 0; i != args.length; i++) {
             Object pkg = args[i];
             if (!(pkg instanceof NativeJavaPackage)) {
                 throw Context.reportRuntimeError1(
                     "msg.not.pkg", Context.toString(pkg));
             }
-            Object[] elements = cx.getElements(importedPackages);
-            for (int j=0; j < elements.length; j++) {
-                if (pkg == elements[j]) {
-                    pkg = null;
-                    break;
+            synchronized (importedPackages) {
+                for (int j = 0; j != importedPackages.size(); j++) {
+                    if (pkg == importedPackages.get(j)) {
+                        pkg = null;
+                        break;
+                    }
+                }
+                if (pkg != null) {
+                    importedPackages.add(pkg);
                 }
             }
-            if (pkg != null)
-                importedPackages.put(elements.length,importedPackages,pkg);
         }
     }
+
+    private ObjArray importedPackages = new ObjArray();
 }
 
 final class ImporterFunctions implements IdFunctionMaster
