@@ -33,7 +33,7 @@ class nsIDOMCSSStyleSheet;
 class nsIDOMCSSRule : public nsISupports {
 public:
   enum {
-    UNKNOWN_RULE = 14005568,
+    UNKNOWN_RULE = 0,
     STYLE_RULE = 1,
     IMPORT_RULE = 2,
     MEDIA_RULE = 3,

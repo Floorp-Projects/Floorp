@@ -1150,6 +1150,7 @@ void IdlScanner::Number(int aStartChar, Token *aToken)
       }
       else {
         mInputFile->putback(aStartChar);
+        aStartChar = '0';
       }
     }
 
