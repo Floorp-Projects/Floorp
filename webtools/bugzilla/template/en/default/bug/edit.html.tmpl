@@ -34,27 +34,29 @@
 [% PROCESS bug/navigate.html.tmpl %]
 [% PROCESS bug/time.html.tmpl %]
 
-<script type="text/javascript" language="JavaScript">
-<!--
-var fRemainingTime = [% bug.remaining_time %]; // holds the original value
-function adjustRemainingTime() {
-   // subtracts time spent from remaining time
-   var new_time;
+[% IF UserInGroup(Param('timetrackinggroup')) %]
+  <script type="text/javascript" language="JavaScript">
+  <!--
+  var fRemainingTime = [% bug.remaining_time %]; // holds the original value
+  function adjustRemainingTime() {
+     // subtracts time spent from remaining time
+     var new_time;
 
-   new_time =
-      fRemainingTime - document.changeform.work_time.value;
-   // get upto 2 decimal places
-   document.changeform.remaining_time.value = 
-        Math.round(new_time * 100)/100;
-}
+     new_time =
+        fRemainingTime - document.changeform.work_time.value;
+     // get upto 2 decimal places
+     document.changeform.remaining_time.value = 
+          Math.round(new_time * 100)/100;
+  }
 
-function updateRemainingTime() {
-   // if the remaining time is changed manually, update fRemainingTime
-   fRemainingTime = document.changeform.remaining_time.value;
-}
+  function updateRemainingTime() {
+     // if the remaining time is changed manually, update fRemainingTime
+     fRemainingTime = document.changeform.remaining_time.value;
+  }
 
-//-->
-</script>
+  //-->
+  </script>
+[% END %]
 
 <hr>
 
