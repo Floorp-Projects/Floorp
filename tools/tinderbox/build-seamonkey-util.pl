@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.192 $ ';
+$::UtilsVersion = '$Revision: 1.193 $ ';
 
 package TinderUtils;
 
@@ -1629,8 +1629,7 @@ sub run_all_tests {
         # Print out Zdiff if not zero.  Testing "zero" by looking for "+0 ".
         my $zdiff_sample = substr($zdiff_data,0,3);
         if (not ($zdiff_sample eq "+0 ")) {
-          my $zdiff_data_string = PrintSize($zdiff_data, 4);
-          print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data_string</a>\n";
+          print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
         }
 
         # Get ready for next cycle.
