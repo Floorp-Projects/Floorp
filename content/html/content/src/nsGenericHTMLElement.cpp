@@ -126,6 +126,8 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 
+#include "nsHTMLUtils.h"
+
 static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
@@ -4608,20 +4610,48 @@ nsGenericHTMLElement::SetPortInHrefString(const nsAReadableString &aHref,
 // static
 nsresult
 nsGenericHTMLElement::GetProtocolFromHrefString(const nsAReadableString& aHref,
-                                                nsAWritableString& aProtocol)
+                                                nsAWritableString& aProtocol,
+                                                nsIDocument *aDocument)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
-    return rv;
+  aProtocol.Truncate();
+
+  NS_ENSURE_TRUE(nsHTMLUtils::IOService, NS_ERROR_FAILURE);
 
   nsXPIDLCString protocol;
-  rv = uri->GetScheme(getter_Copies(protocol));
-  if (NS_FAILED(rv))
-    return rv;
 
-  aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
-  aProtocol.Append(PRUnichar(':'));
+  nsresult rv =
+    nsHTMLUtils::IOService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref).get(),
+                                          nsnull, nsnull,
+                                          getter_Copies(protocol));
+
+  if (NS_SUCCEEDED(rv)) {
+    aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol) + NS_LITERAL_STRING(":"));
+  } else {
+    // set the protocol to the protocol of the base URI.
+
+    nsCOMPtr<nsIURI> uri;
+
+    if (aDocument) {
+      aDocument->GetBaseURL(*getter_AddRefs(uri));
+
+      if (!uri) {
+        aDocument->GetDocumentURL(getter_AddRefs(uri));
+      }
+    }
+
+    if (uri) {
+      uri->GetScheme(getter_Copies(protocol));
+    }
+
+    if (protocol.IsEmpty()) {
+      // set the protocol to http since it is the mostlikely protocol
+      // to be used.
+
+      CopyASCIItoUCS2(nsDependentCString("http:"), aProtocol);
+    } else {
+      CopyASCIItoUCS2(protocol + NS_LITERAL_CSTRING(":"), aProtocol);
+    }
+  }
 
   return NS_OK;
 }

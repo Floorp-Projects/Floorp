@@ -52,7 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsHTMLUtils.h"
 #include "nsReadableUtils.h"
-
+#include "nsIDocument.h"
 
 class nsHTMLAreaElement : public nsGenericHTMLLeafElement,
                           public nsIDOMHTMLAreaElement,
@@ -291,7 +291,10 @@ nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)
   if (NS_FAILED(rv))
     return rv;
 
-  return GetProtocolFromHrefString(href, aProtocol);
+  nsCOMPtr<nsIDocument> doc;
+  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+
+  return GetProtocolFromHrefString(href, aProtocol, doc);
 }
 
 NS_IMETHODIMP

@@ -406,7 +406,8 @@ public:
                                       nsAWritableString &aResult);
 
   static nsresult GetProtocolFromHrefString(const nsAReadableString &aHref,
-                                            nsAWritableString& aProtocol);
+                                            nsAWritableString& aProtocol,
+                                            nsIDocument *aDocument);
 
   static nsresult GetHostFromHrefString(const nsAReadableString &aHref,
                                         nsAWritableString& aHost);
