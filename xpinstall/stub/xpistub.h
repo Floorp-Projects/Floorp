@@ -84,6 +84,7 @@ PR_EXTERN(nsresult) XPI_Init(
 #else
                               const char*       aProgramDir,
 #endif
+                              const char*       aLogName,
                               pfnXPIProgress    progressCB );
 
 /** XPI_Install
