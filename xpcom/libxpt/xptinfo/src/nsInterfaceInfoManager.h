@@ -55,9 +55,9 @@ public:
 
 private:
     friend nsIInterfaceInfo*
-        nsXPTParamInfo::GetInterface(XPTInterfaceDirectoryEntry *entry) const;
+        nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const;
     friend const nsIID*
-        nsXPTParamInfo::GetInterfaceIID(XPTInterfaceDirectoryEntry *entry) const;
+        nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const;
 
     void initInterfaceTables();
 

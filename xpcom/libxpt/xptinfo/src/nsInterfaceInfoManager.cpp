@@ -74,8 +74,6 @@ nsInterfaceInfoManager::GetAllocator(nsInterfaceInfoManager* iim /*= NULL*/)
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
-
-#define HACK_CACHE_SIZE 200
 nsInterfaceInfoManager::nsInterfaceInfoManager()
     : mAllocator(NULL)
 {

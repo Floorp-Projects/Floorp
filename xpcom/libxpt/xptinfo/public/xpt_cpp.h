@@ -115,10 +115,10 @@ public:
     // is associated with so that we can find the table this index indexes
     // and then find the referenced XPTInterfaceDirectoryEntry so that we can
     // find (or build) the appropriate nsIInterfaceInfo. Simple :)
-    nsIInterfaceInfo* GetInterface(XPTInterfaceDirectoryEntry *entry) const ;
+    nsIInterfaceInfo* GetInterface(nsIInterfaceInfo *info) const ;
 
     // a *little* simpler than the above
-    const nsIID* GetInterfaceIID(XPTInterfaceDirectoryEntry *entry) const ;
+    const nsIID* GetInterfaceIID(nsIInterfaceInfo *info) const ;
 
 private:
     nsXPTParamInfo();   // no implementation
