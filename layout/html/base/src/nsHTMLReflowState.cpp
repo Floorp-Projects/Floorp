@@ -1261,12 +1261,90 @@ IsInitialContainingBlock(nsIFrame* aFrame)
   return result;
 }
 
+nscoord 
+GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
+{
+  nscoord result = 0;
+  if (!aReflowState) return result;
+
+  // zero auto margins
+  nsMargin margin = aReflowState->mComputedMargin;
+  if (NS_AUTOMARGIN == margin.top) 
+    margin.top = 0;
+  if (NS_AUTOMARGIN == margin.bottom) 
+    margin.bottom = 0;
+
+  result += margin.top + margin.bottom;
+  result += aReflowState->mComputedBorderPadding.top + 
+            aReflowState->mComputedBorderPadding.bottom;
+
+  return result;
+}
+
+/* Get the height based on the viewport of the containing block specified 
+ * in aReflowState when the containing block has mComputedHeight == NS_AUTOHEIGHT
+ * and it is the body.
+ */
+nscoord
+CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
+{
+  nsHTMLReflowState* firstBlockRS = nsnull; // a candidate for body frame
+  nsHTMLReflowState* firstAreaRS  = nsnull; // a candidate for html frame
+  nscoord result = 0;
+
+  const nsHTMLReflowState* rs = &aReflowState;
+  for (; rs; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
+    nsCOMPtr<nsIAtom> frameType;
+    rs->frame->GetFrameType(getter_AddRefs(frameType));
+    // if the ancestor is auto height then skip it and continue up if it 
+    // is the first block/area frame and possibly the body/html
+    if (nsLayoutAtoms::blockFrame == frameType.get()) {
+      if (!firstBlockRS) {
+        firstBlockRS = (nsHTMLReflowState*)rs;
+        if (NS_AUTOHEIGHT == rs->mComputedHeight) continue;
+      }
+      else break;
+    }
+    else if (nsLayoutAtoms::areaFrame == frameType.get()) {
+      if (!firstAreaRS) {
+        firstAreaRS = (nsHTMLReflowState*)rs;
+        if (NS_AUTOHEIGHT == rs->mComputedHeight) continue;
+      }
+      else break;
+    }
+    else if (nsLayoutAtoms::canvasFrame != frameType.get()) {
+      break;
+    }
+    // the ancestor has a computed height, it is the percent base
+    result = rs->mComputedHeight;
+    // if we got to the canvas frame, then subtract out 
+    // margin/border/padding for the BODY and HTML elements
+    if (nsLayoutAtoms::canvasFrame == frameType.get()) {
+      result -= GetVerticalMarginBorderPadding(firstBlockRS); 
+      result -= GetVerticalMarginBorderPadding(firstAreaRS); 
+    }
+    // if we got to the html frame, then subtract out 
+    // margin/border/padding for the BODY element
+    else if (nsLayoutAtoms::areaFrame == frameType.get()) {
+      // make sure it is the body
+      nsCOMPtr<nsIAtom> fType;
+      rs->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
+      if (nsLayoutAtoms::canvasFrame == fType.get()) {
+        result -= GetVerticalMarginBorderPadding(firstBlockRS);
+      }
+    }
+    break;
+  }
+
+  return result;
+}
 // Called by InitConstraints() to compute the containing block rectangle for
 // the element. Handles the special logic for absolutely positioned elements
 void
-nsHTMLReflowState::ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
-                                                   nscoord& aContainingBlockWidth,
-                                                   nscoord& aContainingBlockHeight)
+nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPresContext,
+                                                   const nsHTMLReflowState* aContainingBlockRS,
+                                                   nscoord&                 aContainingBlockWidth,
+                                                   nscoord&                 aContainingBlockHeight)
 {
   // Unless the element is absolutely positioned, the containing block is
   // formed by the content edge of the nearest block-level ancestor
@@ -1339,6 +1417,19 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(const nsHTMLReflowState* aCon
     if (NS_UNCONSTRAINEDSIZE == availableWidth) {
       aContainingBlockWidth = NS_UNCONSTRAINEDSIZE;
     }
+    // a table in quirks mode gets a containing block based on the viewport (less  
+    // body margins, border, padding) if the table is a child of the body.
+    if (NS_AUTOHEIGHT == aContainingBlockHeight) {
+      nsCOMPtr<nsIAtom> fType;
+      frame->GetFrameType(getter_AddRefs(fType));
+      if (nsLayoutAtoms::tableFrame == fType.get()) {
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        if (eCompatibility_NavQuirks == mode) {
+          aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
+        }
+      }
+    }
   }
 }
 
@@ -1370,7 +1461,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // If we weren't given a containing block width and height, then
     // compute one
     if (aContainingBlockWidth == -1) {
-      ComputeContainingBlockRectangle(cbrs, aContainingBlockWidth, aContainingBlockHeight);
+      ComputeContainingBlockRectangle(aPresContext, cbrs, aContainingBlockWidth, 
+                                      aContainingBlockHeight);
     }
 
     // See if the element is relatively positioned
@@ -1517,10 +1609,9 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           mComputedWidth = NS_UNCONSTRAINEDSIZE;
 
         } else if (NS_STYLE_DISPLAY_TABLE == mStyleDisplay->mDisplay) {
-          // It's a table. The CSS spec says the computed width should be
-          // 0 so set it to 0. The table code will just chose whatever width
-          // it wants
-          mComputedWidth = 0;
+          // It's an outer table because an inner table is not positioned
+          // shrink wrap its width since the outer table is anonymous
+          mComputedWidth = NS_SHRINKWRAPWIDTH;
 
         } else {
           // The CSS2 spec says the computed width should be 0; however, that's
@@ -1704,9 +1795,24 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
         }
 
       } else {
-        mComputedWidth = availableWidth - mComputedMargin.left -
-          mComputedMargin.right - mComputedBorderPadding.left -
-          mComputedBorderPadding.right;
+        // tables act like replaced elements regarding mComputedWidth 
+        nsCOMPtr<nsIAtom> fType;
+        frame->GetFrameType(getter_AddRefs(fType));
+        if (nsLayoutAtoms::tableOuterFrame == fType.get()) {
+          mComputedWidth = NS_SHRINKWRAPWIDTH;
+        } else if (nsLayoutAtoms::tableFrame == fType.get()) {
+          mComputedWidth = NS_SHRINKWRAPWIDTH;
+          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) {
+            mComputedMargin.left = NS_AUTOMARGIN;
+          }
+          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit()) {
+            mComputedMargin.right = NS_AUTOMARGIN;
+          }
+        } else {
+          mComputedWidth = availableWidth - mComputedMargin.left -
+            mComputedMargin.right - mComputedBorderPadding.left -
+            mComputedBorderPadding.right;
+        }
 
         // Take into account any min and max values
         if (mComputedWidth > mComputedMaxWidth) {

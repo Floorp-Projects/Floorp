@@ -147,8 +147,8 @@ public:
 
   // calculate the height of aFrame including its border and padding given 
   // its reflow state.
-  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState,
-                              PRBool                   aDoNavHacks);
+  nscoord CalcBorderBoxHeight(nsIPresContext*          aPresContext,
+                              const nsHTMLReflowState& aReflowState);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
@@ -292,10 +292,6 @@ public:
   /** helper to get the cell padding style value */
   virtual nscoord GetCellPadding();
           
-
-  // Get cell margin information
-  NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
-
   /** return the row span of a cell, taking into account row span magic at the bottom
     * of a table. The row span equals the number of rows spanned by aCell starting at
     * aStartRowIndex, and can be smaller if aStartRowIndex is greater than the row
@@ -450,7 +446,8 @@ protected:
     *                     If not nested, undefined.
     * @return  PR_TRUE if this table is nested inside another table.
     */
-  PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
+  PRBool IsNested(const nsHTMLReflowState& aReflowState,
+                  const nsStylePosition*&  aPosition) const;
   
   // Sets the starting column index for aColGroupFrame and the siblings frames that
   // follow
@@ -576,17 +573,16 @@ protected:
 
   /** The following two functions are helpers for ComputeDesiredHeight 
     */
-  void DistributeSpaceToCells(nsIPresContext* aPresContext, 
+  void DistributeSpaceToCells(nsIPresContext*          aPresContext, 
                               const nsHTMLReflowState& aReflowState,
-                              nsIFrame* aRowGroupFrame);
-  void DistributeSpaceToRows(nsIPresContext* aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsIFrame* aRowGroupFrame, const nscoord& aSumOfRowHeights,
-                                  const nscoord& aExcess, const nsStyleTable* aTableStyle, 
-                                  nscoord& aExcessForRowGroup, 
-                                  nscoord& aRowGroupYPos);
-
-  nscoord GetEffectiveContainerHeight(const nsHTMLReflowState& aReflowState);
+                              nsIFrame*                aRowGroupFrame);
+  void DistributeSpaceToRows(nsIPresContext*          aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsIFrame*                aRowGroupFrame, 
+                             nscoord                  aSumOfRowHeights,
+                             nscoord                  aExcess,
+                             nscoord&                 aExcessForRowGroup, 
+                             nscoord&                 aRowGroupYPos);
 
   void PlaceChild(nsIPresContext*        aPresContext,
                   InnerTableReflowState& aReflowState,
@@ -653,6 +649,11 @@ protected:
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
+  void GetSectionInfo(nsFrameList& aKidFrames,
+                      PRBool&      aHaveTHead,
+                      PRBool&      aHaveTBody,
+                      PRBool&      aHaveTFoot,
+                      PRBool&      aTHeadBeforeTFoot);
 public:
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex     
@@ -811,7 +812,8 @@ public: /* ----- Cell Map public methods ----- */
 
   // compute the height of the table to be used as the basis for 
   // percentage height cells
-  void ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState);
+  void ComputePercentBasisForRows(nsIPresContext*          aPresContext,
+                                  const nsHTMLReflowState& aReflowState);
 
   nscoord GetPercentBasisForRows();
 

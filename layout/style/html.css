@@ -179,6 +179,7 @@ th {
 caption {
   text-align: center;
   display: table-caption;
+  box-sizing: border-box;
 }
 tr {
   display: table-row;
@@ -1084,6 +1085,35 @@ option[disabled] {
   background-color:rgb(204,204,204) !important; 
 }
 
+select option[disabled] {
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
+}
+
+select[size] option[-moz-option-selected] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
+select[size] option[-moz-option-selected-focus] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
+
+select[size][disabled] option[-moz-option-selected] {
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
+}
+
+select[size="1"] option[-moz-option-selected] {
+  color:white;
+  background-color:rgb(51,51,102); 
+}
+
+select[size="1"] option[disabled][-moz-option-selected] {
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
+}
+
 optgroup {
   font-family: sans-serif;
   font-size: small;
@@ -1290,12 +1320,20 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 :table {
   display: table;
-  border-style: inherit;
-  border-color: inherit;
-  margin-top: inherit;
-  margin-bottom: inherit;
-  background: inherit;
+  border-spacing: 2px; 
+  border-collapse: separate;
+  margin-top: 0;
+  margin-bottom: 0;
   box-sizing: border-box;
+}
+
+:table-outer {
+  display: table;
+  margin: 0px;
+  border: 0px;
+  padding: 0px;
+  float: inherit;
+  position: inherit;
 }
 
 :table-cell {
@@ -1308,10 +1346,6 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 :table-column-group {
 	display: table-column-group;
-}
-
-:table-outer {
-  display: table;
 }
 
 :table-row {

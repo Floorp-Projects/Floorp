@@ -181,23 +181,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
         if (NS_FAILED(rv) || (nsnull == tableFrame)) {
           return rv;
         }
-        nscoord halfCellSpacingY = 
-          NSToCoordRound(((float)tableFrame->GetCellSpacingY()) / (float)2);
-        // every row group is short by the ending cell spacing X
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        nsIFrame* firstRowGroup = nsnull;
-        tableFrame->FirstChild(aPresContext, nsnull, &firstRowGroup);
-        // first row group may have gotten too much cell spacing Y
-        if (tableFrame->GetRowCount() != 1) {
-          if (this == firstRowGroup) { 
-            rect.height -= halfCellSpacingY;
-          }
-          else {
-            rect.height += halfCellSpacingY;
-            rect.y      -= halfCellSpacingY;
-          }
-        }
-
+        nsRect rect(0,0,mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *color, *spacing, 0, 0);
       }
@@ -335,7 +319,12 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext*      aPresC
 {
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
-  nsresult  rv = NS_OK;
+
+  nsTableFrame* tableFrame = nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv) || !tableFrame) return rv;
+
+  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
   if (!ContinueReflow(nsnull, aPresContext, aReflowState.y, aReflowState.availSize.height))
       return rv;
@@ -413,12 +402,11 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext*      aPresC
       /* if the table has collapsing borders, we need to reset the length of the shared vertical borders
        * for the table and the cells that overlap this row
        */
-      if ((eReflowReason_Initial != aReflowState.reflowState.reason) && (NS_STYLE_BORDER_COLLAPSE==borderStyle))
-      {
+      if ((eReflowReason_Initial != aReflowState.reflowState.reason) && 
+          (NS_STYLE_BORDER_COLLAPSE==borderStyle)) {
         const nsStyleDisplay *childDisplay;
         kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
-        {
+        if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
           PRInt32 rowIndex = ((nsTableRowFrame*)kidFrame)->GetRowIndex();
           aReflowState.tableFrame->SetBorderEdgeLength(NS_SIDE_LEFT,
                                                        rowIndex,
@@ -446,13 +434,14 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext*      aPresC
           }
         }
       }
+      aReflowState.y += cellSpacingY;
     } else {
       // Adjust the running y-offset so we know where the next row should
       // be placed
       nsSize  kidSize;
 
       kidFrame->GetSize(kidSize);
-      aReflowState.y += kidSize.height;
+      aReflowState.y += kidSize.height + cellSpacingY;
     }
 
     if (PR_FALSE==aDoSiblings)
@@ -555,8 +544,8 @@ AllocateSpecialHeight(nsIPresContext* aPresContext,
  * Actual row heights are ultimately determined by the table, when the table
  * height attribute is factored in.
  */
-void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext, 
-                                               nsHTMLReflowMetrics& aDesiredSize,
+void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext, 
+                                               nsHTMLReflowMetrics&     aDesiredSize,
                                                const nsHTMLReflowState& aReflowState)
 {
   nsTableFrame* tableFrame = nsnull;
@@ -597,11 +586,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
         startRowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       }
       // get the height of the tallest cell in the row (excluding cells that span rows)
-      nscoord maxCellHeight = ((nsTableRowFrame*)rowFrame)->GetTallestChild();
-      nscoord topMargin     = ((nsTableRowFrame*)rowFrame)->GetTopMargin();
-      nscoord bottomMargin  = ((nsTableRowFrame*)rowFrame)->GetBottomMargin();
-      nscoord maxRowHeight  = maxCellHeight + topMargin + bottomMargin;
-      rowHeights[rowIndex]  = maxRowHeight;
+      rowHeights[rowIndex] = ((nsTableRowFrame*)rowFrame)->GetTallestChild();
       // See if a cell spans into the row. If so we'll have to do step 2
       if (!hasRowSpanningCell) {
         if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex)) {
@@ -649,6 +634,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
               if (rowSpan > 1) { // found a cell with rowspan > 1, determine the height 
                                  // of the rows it spans
                 nscoord heightOfRowsSpanned = 0;
+                nscoord cellSpacingOfRowsSpanned = 0;
                 PRInt32 spanX;
                 PRBool cellsOrigInSpan = PR_FALSE; // do any cells originate in the spanned rows
                 for (spanX = 0; spanX < rowSpan; spanX++) {
@@ -658,9 +644,11 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                     heightOfRowsSpanned += rowHeights[rowIndex + spanX];
                     cellsOrigInSpan = PR_TRUE;
                   }
+                  if (0 != spanX) {
+                    cellSpacingOfRowsSpanned += cellSpacingY;
+                  }
                 }
-                // reduce the height by top and bottom margins
-                nscoord availHeightOfRowsSpanned = heightOfRowsSpanned - cellSpacingY - cellSpacingY;
+                nscoord availHeightOfRowsSpanned = heightOfRowsSpanned + cellSpacingOfRowsSpanned;
   
                 // see if the cell's height fits within the rows it spans. If this is
                 // pass 1 then use the cell's desired height and not the current height
@@ -675,7 +663,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                 }
   
                 if (availHeightOfRowsSpanned >= cellFrameSize.height) {
-                  // yes the cell's height fits with the available space of the rows it
+                  // the cell's height fits with the available space of the rows it
                   // spans. Set the cell frame's height
                   cellFrame->SizeTo(aPresContext, cellFrameSize.width, availHeightOfRowsSpanned);
                   // Realign cell content based on new height
@@ -800,6 +788,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
     nsSize rowSize;
     rowFrame->GetSize(rowSize);
     rowGroupHeight += rowSize.height;
+    if (0 != rowIndex) {
+      rowGroupHeight += cellSpacingY;
+    }
 
     GetNextFrame(rowFrame, &rowFrame); // Get the next row
     rowIndex++;
@@ -1371,24 +1362,28 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext, nscoord& aResult)
+NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext, 
+                                                nscoord&        aResult)
 {
+  nsTableFrame* tableFrame = nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv) || !tableFrame) return rv;
+
+  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
+
   // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
   // and the rowgroup itself needs to be expanded by SUM(row height deltas)
-  nsIFrame * rowFrame=nsnull;
-  nsresult rv = FirstChild(aPresContext, nsnull, &rowFrame);
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
-  {
-    const nsStyleDisplay *rowDisplay;
+  nsIFrame* rowFrame = nsnull;
+  rv = FirstChild(aPresContext, nsnull, &rowFrame);
+  while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame)) {
+    const nsStyleDisplay* rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
-    { 
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
       aResult += rowRect.height;
     }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay)
-    {
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
       ((nsTableRowGroupFrame*)rowFrame)->GetHeightOfRows(aPresContext, aResult);
     }
     GetNextFrame(rowFrame, &rowFrame);

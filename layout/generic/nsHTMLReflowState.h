@@ -305,9 +305,14 @@ struct nsHTMLReflowState {
 
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
 
-  void ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
-                                       nscoord& aContainingBlockWidth,
-                                       nscoord& aContainingBlockHeight);
+  void ComputeContainingBlockRectangle(nsIPresContext*          aPresContext,
+                                       const nsHTMLReflowState* aContainingBlockRS,
+                                       nscoord&                 aContainingBlockWidth,
+                                       nscoord&                 aContainingBlockHeight);
+
+  void CalculateBlockSideMargins(const nsHTMLReflowState* aContainingBlockRS,
+                                 nscoord                  aComputedWidth);
+
 
 protected:
   // This method initializes various data members. It is automatically
@@ -342,9 +347,6 @@ protected:
                            nsStyleUnit aHeightUnit,
                            nscoord aContainingBlockWidth,
                            nscoord aContainingBlockHeight);
-
-  void CalculateBlockSideMargins(const nsHTMLReflowState* aContainingBlockRS,
-                                 nscoord                  aComputedWidth);
 
   void ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                      nsStyleUnit aUnit,

@@ -122,7 +122,6 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
         return Reflow(aPresContext, aDesiredSize, goodState, aStatus);
     }
     
-
     if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE) {
         NS_WARNING("Inefficient XUL: Reflowing outer tree frame with unconstrained width, try giving it a width in CSS!");
         nsHTMLReflowState goodState(aReflowState);

@@ -168,8 +168,6 @@ public:
 
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
   nscoord GetTallestChild() const;
-  nscoord GetTopMargin() const;
-  nscoord GetBottomMargin() const;
 
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;

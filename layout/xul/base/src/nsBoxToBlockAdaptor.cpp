@@ -593,12 +593,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     printf(" reason=%s %s",reflowReasonString,ch);
 #endif
 
-
-    nsHTMLReflowState   reflowState(aPresContext, aReflowState, mFrame, nsSize(size.width, NS_INTRINSICSIZE));
-    reflowState.reason = reason;
-    if (reason != eReflowReason_Incremental)
-       reflowState.reflowCommand = nsnull;
-
     if (size.height != NS_INTRINSICSIZE) {
         size.height -= (border.top + border.bottom);
         NS_ASSERTION(size.height >= 0,"Error top bottom border too large");
@@ -609,6 +603,12 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
         NS_ASSERTION(size.height >= 0,"Error left right border too large");
     }
 
+    nsHTMLReflowState   reflowState(aPresContext, aReflowState, mFrame, nsSize(size.width, NS_INTRINSICSIZE));
+    reflowState.reason = reason;
+    if (reason != eReflowReason_Incremental)
+       reflowState.reflowCommand = nsnull;
+
+    // XXX this needs to subtract out the border and padding of mFrame since it is content size
     reflowState.mComputedWidth = size.width;
     reflowState.mComputedHeight = size.height;
 #ifdef DEBUG_REFLOW

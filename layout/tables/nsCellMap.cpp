@@ -855,8 +855,8 @@ void nsCellMap::InsertCells(nsTableCellMap& aMap,
   PRInt32 startColIndex;
   for (startColIndex = aColIndexBefore + 1; startColIndex < numCols; startColIndex++) {
     CellData* data = GetMapCellAt(aMap, aRowIndex, startColIndex, PR_TRUE);
-    if (data && data->IsOrig()) {
-      break; // we found the col index
+    if (!data || data->IsOrig()) { // stop unless it is a span
+      break; 
     }
   }
 
@@ -904,19 +904,20 @@ void
 nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
                           nsTableCellMap& aMap,
                           nsVoidArray&    aRowFrames,
-                          PRInt32         aStartRowIndex)
+                          PRInt32         aStartRowIndexIn)
 {
+  PRInt32 startRowIndex = (aStartRowIndexIn >= 0) ? aStartRowIndexIn : 0;
   PRInt32 numNewRows  = aRowFrames.Count();
-  PRInt32 endRowIndex = aStartRowIndex + numNewRows - 1;
+  PRInt32 endRowIndex = startRowIndex + numNewRows - 1;
 
   // create the new rows first
-  if (!Grow(aMap, numNewRows, aStartRowIndex)) {
+  if (!Grow(aMap, numNewRows, startRowIndex)) {
     return;
   }
   mRowCount += numNewRows;
 
   PRInt32 newRowIndex = 0;
-  for (PRInt32 rowX = aStartRowIndex; rowX <= endRowIndex; rowX++) {
+  for (PRInt32 rowX = startRowIndex; rowX <= endRowIndex; rowX++) {
     nsTableRowFrame* rFrame = (nsTableRowFrame *)aRowFrames.ElementAt(newRowIndex);
     // append cells 
     nsIFrame* cFrame = nsnull;

@@ -1632,7 +1632,13 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
                                      nsXULAtoms::maxpos, value);
                                      
   if(value != maxpos){
+    // mark as having dirty children to avoid generating a reflow on SetAttribute
+    PRBool dirtyChildren(mState & NS_FRAME_HAS_DIRTY_CHILDREN);
+    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
     scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_TRUE);
+    if (!dirtyChildren) {
+      mState &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
+    }
   }
 }
 
