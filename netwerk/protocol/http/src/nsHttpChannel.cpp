@@ -465,7 +465,9 @@ nsHttpChannel::SetupTransaction()
         //
         if (!mAllowPipelining || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) ||
             !(mRequestHead.Method() == nsHttp::Get ||
-              mRequestHead.Method() == nsHttp::Head)) {
+              mRequestHead.Method() == nsHttp::Head ||
+              mRequestHead.Method() == nsHttp::Propfind ||
+              mRequestHead.Method() == nsHttp::Proppatch)) {
             LOG(("  pipelining disallowed\n"));
             mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         }
@@ -1224,14 +1226,13 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 nsresult
 nsHttpChannel::GenerateCacheKey(nsACString &cacheKey)
 {
-    cacheKey.SetLength(0);
     if (mPostID) {
         char buf[32];
-        PR_snprintf(buf, sizeof(buf), "%x", mPostID);
-        cacheKey.Append("id=");
-        cacheKey.Append(buf);
-        cacheKey.Append("&uri=");
-    }
+        PR_snprintf(buf, sizeof(buf), "id=%x&uri=", mPostID);
+        cacheKey.Assign(buf);
+    } else
+        cacheKey.Truncate();
+    
     // Strip any trailing #ref from the URL before using it as the key
     const char *spec = mSpec.get();
     const char *p = strchr(spec, '#');
@@ -2413,9 +2414,11 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
 
     GetCallback(NS_GET_IID(nsIAuthPromptProvider), getter_AddRefs(authPromptProvider));
     if (authPromptProvider) {
-        PRUint32 promptReason = (proxyAuth ?
-                                 nsIAuthPromptProvider::PROMPT_PROXY :
-                                 nsIAuthPromptProvider::PROMPT_NORMAL);
+        PRUint32 promptReason;
+        if (proxyAuth)
+            promptReason = nsIAuthPromptProvider::PROMPT_PROXY;
+        else 
+            promptReason = nsIAuthPromptProvider::PROMPT_NORMAL;
         (void) authPromptProvider->GetAuthPrompt(promptReason, getter_AddRefs(authPrompt));
     }
     else

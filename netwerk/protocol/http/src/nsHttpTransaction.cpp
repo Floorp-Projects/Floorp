@@ -522,7 +522,7 @@ nsHttpTransaction::Close(nsresult reason)
         NS_RELEASE(mConnection);
 
     mStatus = reason;
-    mTransactionDone = PR_TRUE; // force this flag
+    mTransactionDone = PR_TRUE; // forcibly flag the transaction as complete
     mClosed = PR_TRUE;
 
     // release some resources that we no longer need
@@ -534,7 +534,7 @@ nsHttpTransaction::Close(nsresult reason)
         mChunkedDecoder = nsnull;
     }
 
-    // closing this pipe signals triggers the channel's OnStopRequest method.
+    // closing this pipe triggers the channel's OnStopRequest method.
     mPipeOut->CloseWithStatus(reason);
 }
 
