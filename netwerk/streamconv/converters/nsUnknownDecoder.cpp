@@ -29,7 +29,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 
-#include "nsMimeTypes.h"
+#include "netCore.h"
 
 #define MAX_BUFFER_SIZE 1024
 
@@ -263,14 +263,14 @@ void nsUnknownDecoder::DetermineContentType()
     //
     if (str.Equals("#!", PR_FALSE, 2) || 
         str.Equals("%!", PR_FALSE, 2)) {
-      mContentType = TEXT_PLAIN;
+      mContentType = TEXT_PLAIN_MIME;
     }
     //
     // If the buffer begins with a mailbox delimiter then it is not HTML
     //
     else if (str.Equals("From ", PR_TRUE, 5) || 
              str.Equals(">From ", PR_TRUE, 6)) {
-      mContentType = TEXT_PLAIN;
+      mContentType = TEXT_PLAIN_MIME;
     }
     //
     // If the buffer contains "common" HTML tags then lets call it HTML :-)
@@ -285,9 +285,9 @@ void nsUnknownDecoder::DetermineContentType()
       }
 
       if (offset >= 0) {
-        mContentType = TEXT_HTML;
+        mContentType = TEXT_HTML_MIME;
       } else {
-        mContentType = TEXT_PLAIN;
+        mContentType = TEXT_PLAIN_MIME;
       }
     }
   }
@@ -296,7 +296,7 @@ void nsUnknownDecoder::DetermineContentType()
   // If the buffer is not text, then just call it application/octet-stream
   //
   if (mContentType.IsEmpty()) {
-    mContentType = APPLICATION_OCTET_STREAM;
+    mContentType = APPLICATION_OCTET_STREAM_MIME;
   }
 }
 
