@@ -318,8 +318,14 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     // namespace before attempting to load the plug-in seems to
     // work fine.
 
-    // Lazy resolving might cause crash later (bug 211587)
+
+#if defined(SOLARIS) || defined(HPUX)
+    // Acrobat/libXm: Lazy resolving might cause crash later (bug 211587)
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
+#else
+    // Some dlopen() doesn't recover from a failed PR_LD_NOW (bug 223744)
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+#endif
     if (!pLibrary) {
         LoadExtraSharedLibs();
         // try reload plugin once more
@@ -329,7 +335,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     }
 #else
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
-#endif
+#endif  // MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 
 #ifdef NS_DEBUG
     printf("LoadPlugin() %s returned %lx\n", 
