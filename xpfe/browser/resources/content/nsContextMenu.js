@@ -81,6 +81,7 @@ nsContextMenu.prototype = {
     
         // Remove open frame if not applicable.
         this.showItem( "context-openframe", this.inFrame );
+        this.showItem( "context-showonlythisframe", this.inFrame );
     
         // Remove separator after open items if neither link nor frame.
         this.showItem( "context-sep-open", this.onSaveableLink || ( this.inDirList && this.onLink ) || this.inFrame );
@@ -386,6 +387,10 @@ nsContextMenu.prototype = {
     // Open clicked-in frame in its own window.
     openFrame : function () {
         openNewWindowWith( this.target.ownerDocument.location.href );
+    },
+    // Open clicked-in frame in the same window
+    showOnlyThisFrame : function () {
+        window._content.location.href = this.target.ownerDocument.location.href;
     },
     // Open new "view source" window with the frame's URL.
     viewFrameSource : function () {
