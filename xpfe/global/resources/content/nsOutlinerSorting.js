@@ -144,17 +144,15 @@ function update_sort_menuitems(column, direction)
 function enable_sort_menuitems()
 {
   var columns = document.getElementsByTagName('outlinercol');
-  var i = 0;
-  var column_node = columns[i];
   var menuitem = document.getElementById('fill_after_this_node');
   menuitem = menuitem.nextSibling
-  while (column_node && menuitem) {
+  for (var i = 0; (i < columns.length) && menuitem; ++i) {
+    var column_node = columns[i];
     if (column_node.getAttribute("hidden") == "true")
       menuitem.setAttribute("disabled", "true");
     else
       menuitem.removeAttribute("disabled");
     menuitem = menuitem.nextSibling;
-    column_node = columns[++i];
   }
 }
 
@@ -170,11 +168,10 @@ function fillViewMenu(popup)
   if (!sortString)
     sortString = "Sorted by %COLNAME%";
     
-  var i = 0;
-  var column = columns[i];
   var popupChild = popup.firstChild.nextSibling.nextSibling;
   var firstTime = (fill_after.nextSibling == fill_before);
-  while (column) {
+  for (var i = 0; i < columns.length; ++i) {
+    var column = columns[i];
     if (firstTime) {
       // Construct an entry for each cell in the row.
       var column_name = column.getAttribute("label");
@@ -189,7 +186,6 @@ function fillViewMenu(popup)
       item.setAttribute("column_id", column.id);
       popup.insertBefore(item, fill_before);
     }
-    column = columns[++i];
   }
   var sort_column = find_sort_column();
   var sort_direction = find_sort_direction(sort_column);
