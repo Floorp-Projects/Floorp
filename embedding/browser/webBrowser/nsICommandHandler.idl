@@ -34,7 +34,7 @@ interface nsICommandHandlerInit : nsISupports
 interface nsICommandHandler : nsISupports
 {
     void exec(in string aCommand, in string aStatus);
-    void query(in string aCommand, in string aStatus, out string aResult);
+    void query(in string aCommand, in string aStatus, [retval] out string aResult);
 };
 
 
