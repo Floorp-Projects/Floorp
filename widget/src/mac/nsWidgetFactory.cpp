@@ -26,9 +26,10 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsButton.h"
+#include "nsRadioButton.h"
+
 //#include "nsScrollbar.h"
 //#include "nsCheckButton.h"
-//#include "nsRadioButton.h"
 //#include "nsTextWidget.h"
 //#include "nsTextAreaWidget.h"
 //#include "nsFileWidget.h"
@@ -169,10 +170,13 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCChild)) {
         inst = new ChildWindow(aOuter);
     }
-#ifdef NOTNOW
-    else if ( mClassID.Equals(kCCheckButtonCID)) {
-        inst = new nsCheckButton(aOuter);
+    else if ( mClassID.Equals(kCRadioButtonCID )) {
+        inst = new nsRadioButton(aOuter);
     }
+    
+    
+    
+#ifdef NOTNOW
     else if (mClassID.Equals(kCVertScrollbarCID)) {
         inst = new nsScrollbar(aOuter, PR_TRUE);
     }
@@ -189,8 +193,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCTextAreaWidgetCID)) {
         inst = new nsTextAreaWidget(aOuter);
     }
-    else if ( mClassID.Equals(kCRadioButtonCID)) {
-        inst = new nsRadioButton(aOuter);
+    else if ( mClassID.Equals(kCCheckButtonCID)) {
+        inst = new nsCheckButton(aOuter);
     }
     else if (mClassID.Equals(kCListBoxCID)) {
         inst = new nsListBox(aOuter);
