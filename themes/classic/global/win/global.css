@@ -229,29 +229,6 @@
       -moz-user-focus     : ignore; 
     } 
 
-
-/* XUL <colorpicker> pieces */
-.colorpickertile 
-  {
-    width                 : 20px;
-    height                : 20px;
-    margin                : 1px;
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
-  }
-
-.colorpickertile:hover 
-  {
-    border                : 1px solid #FFFFFF;
-  }
-
-.colorpickertile[selected="true"] 
-  {
-    border                : 1px solid #000000;
-  }
-
 /*  
 text[disabled="true"]
   {

@@ -1,3 +1,25 @@
+/* colorpicker tiles */
+
+.colorpickertile {
+  width                 : 20px;
+  height                : 20px;
+  margin                : 1px;
+  border-left           : 1px solid threedshadow;
+  border-top            : 1px solid threedshadow;
+  border-right          : 1px solid threedhighlight;
+  border-bottom         : 1px solid threedhighlight;
+}
+
+.colorpickertile[hover="true"] {
+  border                : 1px solid #FFFFFF;
+}
+
+.colorpickertile[selected="true"] {
+  border                : 1px solid #000000;
+}
+
+/* colorpicker button */
+
 colorpicker[type="button"] {
   width: 35px;
   height: 20px;
@@ -7,14 +29,7 @@ colorpicker[type="button"] {
   border-bottom: 1px solid threeddarkshadow;
 }
 
-colorpicker[type="button"][menuactive="true"] {
-  border-left: 1px solid threeddarkshadow;
-  border-top: 1px solid threeddarkshadow;
-  border-right: 1px solid threedhighlight;
-  border-bottom: 1px solid threedhighlight;
-}
-
-.colorpicker-button-menu {
+.colorpicker-button-internal-box {
   border-left: 1px solid transparent;
   border-top: 1px solid transparent;
   border-right: 1px solid threedshadow;
@@ -22,14 +37,23 @@ colorpicker[type="button"][menuactive="true"] {
   padding: 3px;
 }
 
-.colorpicker-button-menu[open="true"]
-{
-  border-left: 1px solid threedshadow;
-  border-top: 1px solid threedshadow;
-  border-right: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
 .colorpicker-button-colorbox {
   border: 1px solid #000000;
+}
+
+colorpicker[type="button"]:focus {
+  border: 1px solid black;
+}
+
+colorpicker[type="button"]:focus > .colorpicker-button-internal-box {
+  border-left: 1px solid threedhighlight;
+  border-top: 1px solid threedhighlight;
+}
+
+colorpicker[type="button"][open="true"] {
+  border: 1px solid black;
+}
+
+colorpicker[type="button"][open="true"] > .colorpicker-button-internal-box {
+  border: 1px solid threedshadow;
 }

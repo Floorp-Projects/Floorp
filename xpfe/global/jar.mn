@@ -33,6 +33,7 @@ toolkit.jar:
         content/global/scrollbarBindings.xml        (resources/content/scrollbarBindings.xml)
 	content/global/tabBindings.xml              (resources/content/tabBindings.xml) 
 	content/global/treeBindings.xml             (resources/content/treeBindings.xml) 
+	content/global/colorpickerBindings.xml      (resources/content/colorpickerBindings.xml) 
 	content/global/nsClipboard.js               (resources/content/nsClipboard.js) 
 	content/global/nsDragAndDrop.js             (resources/content/nsDragAndDrop.js) 
 	content/global/nsJSSupportsUtils.js         (resources/content/nsJSSupportsUtils.js) 

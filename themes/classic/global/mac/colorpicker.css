@@ -1,19 +1,42 @@
 
+/* colorpicker tiles */
+
+.colorpickertile 
+  {
+    width                 : 20px;
+    height                : 20px;
+    margin                : 1px;
+    border                : 1px inset #CCCCCC;
+  }
+
+.colorpickertile[hover="true"] 
+  {
+    border                : 1px solid #FFFFFF;
+  }
+
+.colorpickertile[selected="true"] 
+  {
+    border                : 1px solid #000000;
+  }
+
+/* colorpicker button */
+
 colorpicker[type="button"] {
   width: 35px;
   height: 20px;
   border: 1px solid #000000;
 }
 
-.colorpicker-button-menu {
+.colorpicker-button-internal-box {
   padding: 3px;
   border: 1px solid transparent;
-}
-
-.colorpicker-button-menu[open="true"] {
-  border-color: #000000;
 }
 
 .colorpicker-button-colorbox {
   border: 1px solid #000000;
 }
+
+colorpicker[type="button"][open="true"] > .colorpicker-button-internal-box {
+  border-color: #000000;
+}
+

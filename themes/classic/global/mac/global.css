@@ -230,22 +230,3 @@
       -moz-user-focus     : ignore; 
     } 
 
-
-/* XUL <colorpicker> pieces */
-.colorpickertile 
-  {
-    width                 : 20px;
-    height                : 20px;
-    margin                : 1px;
-    border                : 1px inset #CCCCCC;
-  }
-
-.colorpickertile:hover 
-  {
-    border                : 1px solid #FFFFFF;
-  }
-
-.colorpickertile[selected="true"] 
-  {
-    border                : 1px solid #000000;
-  }

@@ -428,11 +428,12 @@ textfield[autocomplete="true"] {
 }
 
 colorpicker {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#colorpicker);
+  -moz-binding: url(chrome://global/content/colorpickerBindings.xml#colorpicker);
 }
 
 colorpicker[type="button"] {
-  -moz-binding: url("chrome://global/content/xulBindings.xml#colorpickerButton");
+  -moz-binding: url("chrome://global/content/colorpickerBindings.xml#colorpickerButton");
+  -moz-user-focus: normal;
 }
 
 /** Buttons with Menus:
@@ -462,6 +463,16 @@ colorpicker[type="button"] {
       -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
     }
     
+  menubutton.top
+    {
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-top");
+    }
+
+  menubutton.bottom
+    {
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-bottom");
+    }
+
   menubutton.menubutton-dual,
   menubutton.menubutton-dual.left
     {
