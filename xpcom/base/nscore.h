@@ -192,7 +192,7 @@
 //#define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
-  // until we get an autoconf test for this, we'll assume it's on (since we're using it already)
+  /* until we get an autoconf test for this, we'll assume it's on (since we're using it already) */
 #define HAVE_CPP_TYPENAME
 
   /* waiting to find out if OS/2 VisualAge participates in autoconf */
