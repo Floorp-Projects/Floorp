@@ -566,14 +566,5 @@ function doContextCmd(cmdName)
 // put it back there (eventually).
 function toEditor(url)
 {
-	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-	if (!toolkitCore) {
-	  toolkitCore = new ToolkitCore();
-	  if (toolkitCore) {
-	    toolkitCore.Init("ToolkitCore");
-	  }
-	}
-	if (toolkitCore) {
-	  toolkitCore.ShowWindowWithArgs("chrome://editor/content/EditorAppShell.xul",window,url);
-	}
+    window.openDialog( "chrome://editor/content/EditorAppShell.xul", "_blank", "chrome,dialog=no,all", url );
 }
