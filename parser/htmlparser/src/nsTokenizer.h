@@ -50,22 +50,102 @@ class nsIURL;
 
 class  CTokenizer {
   public:
-                        CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
-                        ~CTokenizer();
+    CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMode);
+    ~CTokenizer();
     
-    PRInt32             Tokenize(void);
-    CToken*              GetToken(PRInt32& anErrorCode);
-    PRInt32             GetSize(void);
-    nsDeque&            GetDeque(void);
+    /**
+     *  This control routine causes the entire stream to be
+     *  tokenized. You probably want to call TokenizeAvailable()
+     *  instead (for incremental tokenization).
+     *  
+     *  @update  gess 3/25/98
+     *  @return  TRUE if it's ok to proceed
+     */
+    PRInt32 Tokenize(void);
 
-    void                DebugDumpSource(ostream& out);
-    void                DebugDumpTokens(ostream& out);
-    static void         SelfTest();
+    /**
+     *  This method incrementally tokenizes as much content as
+     *  it can get its hands on.
+     *  
+     *  @update  gess 3/25/98
+     *  @return  TRUE if it's ok to proceed
+     */
+    PRInt32 TokenizeAvailable(int anIteration); //your friendly incremental version
+
+    /**
+     *  Cause the tokenizer to consume the next token, and 
+     *  return an error result.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   anError -- ref to error code
+     *  @return  new token or null
+     */
+    PRInt32 GetToken(CToken*& aToken);
+    
+    /**
+     *  Retrieve the number of elements in the deque
+     *  
+     *  @update  gess 3/25/98
+     *  @return  int containing element count
+     */
+    PRInt32 GetSize(void);
+    
+    /**
+     * Retrieve a reference to the internal token deque.
+     *
+     * @update  gess 4/20/98
+     * @return  deque reference
+     */
+    nsDeque& GetDeque(void);
+
+    /**
+     *  This debug routine is used to cause the tokenizer to
+     *  iterate its token list, asking each token to dump its
+     *  contents to the given output stream.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  
+     */
+    void DebugDumpSource(ostream& out);
+    
+    /**
+     *  This debug routine is used to cause the tokenizer to
+     *  iterate its token list, asking each token to dump its
+     *  contents to the given output stream.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  
+     */
+    void DebugDumpTokens(ostream& out);
+    
+    static void SelfTest();
 
   protected:  
 
-    PRBool              WillTokenize();
-    PRBool              DidTokenize();
+    /**
+     *  This is the front-end of the code sandwich for the
+     *  tokenization process. It gets called once just before
+     *  tokenziation begins.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aIncremental tells us if tokenization is incremental
+     *  @return  TRUE if all went well
+     */
+    PRBool WillTokenize(PRBool aIncremental);
+    
+
+    /**
+     *  This is the tail-end of the code sandwich for the
+     *  tokenization process. It gets called once tokenziation
+     *  has completed.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aIncremental tells us if tokenization was incremental
+     *  @return  TRUE if all went well
+     */
+    PRBool DidTokenize(PRBool aIncremental);
 
     ITokenizerDelegate*  mDelegate;
     CScanner*           mScanner;

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+//#define __INCREMENTAL 1
 
 #include "nsScanner.h"
 #include "nsIURL.h" 
@@ -24,6 +25,12 @@
 const char* gURLRef;
 const char* kBadHTMLText1="<HTML><BODY><H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 const char* kBadHTMLText2="</BODY></HTML>";
+
+#ifdef __INCREMENTAL
+const int   kBufsize=1;
+#else
+const int   kBufsize=64;
+#endif
 
 /**
  *  default constructor
@@ -39,9 +46,15 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   mTotalRead=0;
   mParseMode=aMode;
   if(aURL) {
-    PRInt32 error;
+
     gURLRef=aURL->GetSpec();
+
+#ifdef  __INCREMENTAL
+    mStream=new fstream("c:/temp/temp.html",ios::in|ios::binary);
+#else
+    int error;
     mStream=aURL->Open(&error);
+#endif
   }
 }
 
@@ -53,22 +66,30 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
  *  @return  
  */
 CScanner::~CScanner() {
+#ifdef __INCREMENTAL
+  mStream->close();
+  delete mStream;
+  mStream=0;
+#else
   if(mStream) {
     mStream->Close();
     mStream->Release();
     mStream=0;
   }
+#endif
 }
 
 
-/*-------------------------------------------------------
- * 
+/** 
+ * Grab data from underlying stream.
+ *
  * @update  gess4/3/98
- * @param 
- * @return
+ * @return  error code
  */
-PRInt32 CScanner::FillBuffer(PRInt32& anError) {
-  mBuffer.Cut(0,mBuffer.Length());
+PRInt32 CScanner::FillBuffer(void) {
+  PRInt32 anError=0;
+
+  mBuffer.Truncate();
   if(!mStream) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
     //If you're here, it means someone tried to load a
@@ -82,16 +103,21 @@ PRInt32 CScanner::FillBuffer(PRInt32& anError) {
     else return 0;
   }
   else {
-    anError=0;
     PRInt32 numread=0;
-    char buf[64];
-    buf[sizeof(buf)-1]=0;
-    numread=mStream->Read(&anError,buf,0,sizeof(buf)-1);
+    char buf[kBufsize+1];
+    buf[kBufsize]=0;
+
+#ifdef __INCREMENTAL 
+    mStream->read(buf,kBufsize);
+    numread=mStream->gcount();
+#else
+    numread=mStream->Read(&anError,buf,0,kBufsize);
+#endif
     if((0<numread) && (0==anError))
       mBuffer.Append((const char*)buf,numread);
   }
   mTotalRead+=mBuffer.Length();
-  return mBuffer.Length();
+  return anError;
 }
 
 /**
@@ -104,15 +130,12 @@ PRInt32 CScanner::FillBuffer(PRInt32& anError) {
 PRBool CScanner::Eof() {
   PRInt32 theError=0;
   if(mOffset>=mBuffer.Length()) {
-    PRInt32 numread=FillBuffer(theError);
+    theError=FillBuffer();
     mOffset=0;
   }
   PRBool result=PR_TRUE;
   if(0==theError) {
     result=PRBool(0==mBuffer.Length());
-  }
-  else {
-    result=PR_TRUE;
   }
   return result;
 }
@@ -161,7 +184,6 @@ PRInt32 CScanner::PutBack(PRUnichar aChar) {
   mOffset--;
   return kNoError;
 }
-
 
 
 /**

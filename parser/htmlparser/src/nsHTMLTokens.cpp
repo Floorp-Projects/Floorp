@@ -560,7 +560,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
 PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   PRUnichar ch,ch2;
-  PRInt32   result;
+  PRInt32   result=kNoError;
   
   static nsAutoString terminals(">");
   

@@ -72,9 +72,9 @@ nsDeque& CTokenizer::GetDeque(void) {
  *  @param   anError -- ref to error code
  *  @return  new token or null
  */
-CToken* CTokenizer::GetToken(PRInt32& anError) {
-  CToken* nextToken=mDelegate->GetToken(*mScanner,anError);
-  return nextToken;
+PRInt32 CTokenizer::GetToken(CToken*& aToken) {
+  PRInt32 result=mDelegate->GetToken(*mScanner,aToken);
+  return result;
 }
 
 /**
@@ -83,7 +83,7 @@ CToken* CTokenizer::GetToken(PRInt32& anError) {
  *  @update  gess 3/25/98
  *  @param   
  *  @return  int containing element count
- *-----------------------------------------------------*/
+ */
 PRInt32 CTokenizer::GetSize(void) {
   return mTokenDeque.GetSize();
 }
@@ -98,9 +98,9 @@ PRInt32 CTokenizer::GetSize(void) {
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool CTokenizer::WillTokenize(){
+PRBool CTokenizer::WillTokenize(PRBool aIncremental){
   PRBool result=PR_TRUE;
-  result=mDelegate->WillTokenize();
+  result=mDelegate->WillTokenize(aIncremental);
   return result;
 }
 
@@ -110,30 +110,56 @@ PRBool CTokenizer::WillTokenize(){
  *  of data.
  *  
  *  @update  gess 3/25/98
- *  @param   
  *  @return  error code 
  */
 PRInt32 CTokenizer::Tokenize(void) {
-  CToken* nextToken;
-  PRInt32     result;
+  CToken* theToken=0;
+  PRInt32 result=kNoError;
 
-  if(WillTokenize()) {
+  if(WillTokenize(PR_FALSE)) {
     do {
-      nextToken=GetToken(result);
-      if(nextToken) {
+      result=GetToken(theToken);
+      if(theToken) {
 #ifdef VERBOSE_DEBUG
-        nextToken->DebugDumpToken(cout);
+        theToken->DebugDumpToken(cout);
 #endif
-        if(mDelegate->WillAddToken(*nextToken)) {
-          mTokenDeque.Push(nextToken);
+        if(mDelegate->WillAddToken(*theToken)) {
+          mTokenDeque.Push(theToken);
         }
       }
-    } while(nextToken!=0);
-    result=DidTokenize();
+    } while(0!=theToken);
+    result=DidTokenize(PR_FALSE);
   }
   return result;
 }
 
+/**
+ *  This is the primary control routine. It iteratively
+ *  consumes tokens until an error occurs or you run out
+ *  of data.
+ *  
+ *  @update  gess 3/25/98
+ *  @return  error code 
+ */
+PRInt32 CTokenizer::TokenizeAvailable(int anIteration) {
+  CToken* theToken=0;
+  PRInt32 result=kNoError;
+  PRBool  done=(0==anIteration) ? (!WillTokenize(PR_TRUE)) : PR_FALSE;
+  PRBool  moreData=PR_TRUE;
+
+  while((PR_FALSE==done) && (PR_TRUE==moreData)) {
+    result=GetToken(theToken);
+    if(theToken) {
+      if(mDelegate->WillAddToken(*theToken)) {
+        mTokenDeque.Push(theToken);
+      }
+    }
+    else done=PR_TRUE;
+  } 
+  if((PR_TRUE==done)  && (PR_FALSE==moreData))
+    DidTokenize(PR_TRUE);
+  return result;
+}
 
 /**
  *  This is the tail-end of the code sandwich for the
@@ -144,8 +170,8 @@ PRInt32 CTokenizer::Tokenize(void) {
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool CTokenizer::DidTokenize() {
-  PRBool result=mDelegate->DidTokenize();
+PRBool CTokenizer::DidTokenize(PRBool aIncremental) {
+  PRBool result=mDelegate->DidTokenize(aIncremental);
 
 #ifdef VERBOSE_DEBUG
     DebugDumpTokens(cout);
