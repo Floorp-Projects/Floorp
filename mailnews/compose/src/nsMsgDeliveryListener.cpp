@@ -42,7 +42,7 @@ nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 nsresult 
 nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_UNEXPECTED;
 #ifdef NS_DEBUG
 //  printf("\nOnStopRunningUrl() called!\n");
 #endif
@@ -75,6 +75,8 @@ nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
   //
   if (mCompletionCallback)
     rv = (*mCompletionCallback) (aUrl, aExitCode, mTagData);
+  else
+    rv = NS_OK;
 
 	return rv;
 }
