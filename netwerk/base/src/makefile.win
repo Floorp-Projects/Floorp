@@ -18,11 +18,6 @@ MODULE = necko
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-// temporary, until we land:
-!ifndef NECKO
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 LIBRARY_NAME=neckobase_s

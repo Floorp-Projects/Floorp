@@ -15,12 +15,6 @@
 
 DEPTH = ..\..\..
 
-// temporary, until we land:
-!ifndef NECKO
-include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 MODULE = streamconv
 
 IS_COMPONENT=1

@@ -17,12 +17,6 @@ MODULE = necko
 
 DEPTH = ..\..\..
 
-// temporary, until we land:
-!ifndef NECKO
-include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 LIBRARY_NAME=neckodns_s

@@ -20,11 +20,6 @@ MODULE = necko
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-// temporary, until we land:
-!ifndef NECKO
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 EXPORTS =                         \
         nsNeckoUtil.h             \
         nsIUnicharStreamLoader.h  \
