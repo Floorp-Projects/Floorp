@@ -25,11 +25,18 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#define NS_IMPL_IDS
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
 #include "nsFileWidget.h"
 #include "nsFileSpec.h"
 #include <windows.h>
 #include <SHLOBJ.H>
 
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ADDREF(nsFileWidget)
 NS_IMPL_RELEASE(nsFileWidget)
@@ -45,6 +52,8 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
   NS_INIT_REFCNT();
   mWnd = NULL;
   mNumberOfFilters = 0;
+  mUnicodeEncoder = nsnull;
+  mUnicodeDecoder = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -54,6 +63,8 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
+  NS_IF_RELEASE(mUnicodeEncoder);
+  NS_IF_RELEASE(mUnicodeDecoder);
 }
 
 /**
@@ -90,7 +101,14 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 PRBool nsFileWidget::Show()
 {
   char fileBuffer[MAX_PATH+1] = "";
-  mDefault.ToCString(fileBuffer,MAX_PATH);
+  char *converted = ConvertToFileSystemCharset(mDefault.GetUnicode());
+  if (nsnull == converted) {
+    mDefault.ToCString(fileBuffer,MAX_PATH);
+  }
+  else {
+    PL_strcpy(fileBuffer, converted);
+    delete [] converted;
+  }
 
   OPENFILENAME ofn;
   memset(&ofn, 0, sizeof(ofn));
@@ -100,7 +118,9 @@ PRBool nsFileWidget::Show()
   nsString filterList;
   GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
-  char *title = mTitle.ToNewCString();
+  char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
+  if (nsnull == title)
+    title = mTitle.ToNewCString();
   const char *initialDir = mDisplayDirectory.GetNativePathCString();
   if (initialDir && *initialDir) {
      ofn.lpstrInitialDir = initialDir;
@@ -139,12 +159,16 @@ PRBool nsFileWidget::Show()
   delete[] newCurrentDirectory;
 
    // Clean up filter buffers
-  delete[] filterBuffer;
-  delete[] title;
+  if (filterBuffer)
+    delete[] filterBuffer;
+  if (title)
+    delete[] title;
 
    // Set user-selected location of file or directory
   mFile.SetLength(0);
   if (result == PR_TRUE) {
+    // I think it also needs a conversion here (to unicode since appending to nsString) 
+    // but doing that generates garbage file name, weird.
     mFile.Append(fileBuffer);
   }
   
@@ -283,7 +307,9 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
 {
   Create(aParent, promptString, eMode_load, nsnull, nsnull);
   TCHAR buffer[MAX_PATH];
-  char *title = mTitle.ToNewCString();
+  char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
+  if (nsnull == title)
+    mTitle.ToNewCString();
 
   BROWSEINFO browserInfo;
   browserInfo.hwndOwner      = mWnd;
@@ -295,22 +321,31 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
   browserInfo.lParam         = nsnull;
   browserInfo.iImage         = nsnull;
 
-  // XXX UNICODE support is needed here
+  // XXX UNICODE support is needed here --> DONE
   nsFileDlgResults status = nsFileDlgResults_Cancel;
   LPITEMIDLIST list = ::SHBrowseForFolder(&browserInfo);
   if (list != NULL) {
     TCHAR path[MAX_PATH];
     BOOL st = ::SHGetPathFromIDList(list, (LPSTR)path);
     if (st) {
+      nsAutoString pathStr;
+      PRUnichar *unichar = ConvertFromFileSystemCharset(path);
+      if (nsnull == unichar)
+        pathStr.SetString(path);
+      else {
+        pathStr.SetString(unichar);
+        delete [] unichar;
+      }
       //printf("[%s]\n", path);
-      nsFilePath filePath(path);
+      nsFilePath filePath(pathStr);
       nsFileSpec fileSpec(filePath);
       theFileSpec = fileSpec;
       status = nsFileDlgResults_OK;
     }
   }
 
-  delete[] title;
+  if (nsnull != title)
+    delete[] title;
   return status;
 }
 
@@ -334,3 +369,98 @@ nsFileDlgResults nsFileWidget::PutFile(nsIWidget        * aParent,
   return status;
 }
 
+//-------------------------------------------------------------------------
+void nsFileWidget::GetFileSystemCharset(nsString & fileSystemCharset)
+{
+  static nsAutoString aCharset;
+  nsresult rv;
+
+  if (aCharset.Length() < 1) {
+	  nsCOMPtr <nsIPlatformCharset> platformCharset;
+	  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+	                                          NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+	  if (NS_SUCCEEDED(rv)) 
+		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
+	  if (NS_FAILED(rv)) 
+		  aCharset.SetString("ISO-8859-1");
+  }
+  fileSystemCharset = aCharset;
+}
+
+//-------------------------------------------------------------------------
+char * nsFileWidget::ConvertToFileSystemCharset(const PRUnichar *inString)
+{
+  char *outString = nsnull;
+  nsresult rv = NS_OK;
+
+  // get file system charset and create a unicode encoder
+  if (nsnull == mUnicodeEncoder) {
+    nsAutoString fileSystemCharset;
+    GetFileSystemCharset(fileSystemCharset);
+
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    if (NS_SUCCEEDED(rv)) {
+      rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
+    }
+  }
+
+  // converts from unicode to the file system charset
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 outLength;
+    rv = mUnicodeEncoder->GetMaxLength(inString, inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      outString = new char[outLength+1];
+      if (nsnull == outString) {
+        return nsnull;
+      }
+      rv = mUnicodeEncoder->Convert(inString, &inLength, outString, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        outString[outLength] = '\0';
+      }
+    }
+  }
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
+  return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
+
+//-------------------------------------------------------------------------
+PRUnichar * nsFileWidget::ConvertFromFileSystemCharset(const char *inString)
+{
+  PRUnichar *outString = nsnull;
+  nsresult rv = NS_OK;
+
+  // get file system charset and create a unicode encoder
+  if (nsnull == mUnicodeDecoder) {
+    nsAutoString fileSystemCharset;
+    GetFileSystemCharset(fileSystemCharset);
+
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+    if (NS_SUCCEEDED(rv)) {
+      rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
+    }
+  }
+
+  // converts from the file system charset to unicode
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 outLength;
+    rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      outString = new PRUnichar[outLength+1];
+      if (nsnull == outString) {
+        return nsnull;
+      }
+      rv = mUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        outString[outLength] = 0;
+      }
+    }
+  }
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
+  return NS_SUCCEEDED(rv) ? outString : nsnull;
+}

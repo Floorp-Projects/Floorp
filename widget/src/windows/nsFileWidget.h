@@ -23,6 +23,9 @@
 #ifndef nsFileWidget_h__
 #define nsFileWidget_h__
 
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#undef NS_IMPL_IDS
 #include "nsToolkit.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
@@ -78,6 +81,10 @@ class nsFileWidget : public nsIFileWidget
 
   protected:
 
+    static void GetFileSystemCharset(nsString & fileSystemCharset);
+    char * ConvertToFileSystemCharset(const PRUnichar *inString);
+    PRUnichar * ConvertFromFileSystemCharset(const char *inString);
+
      HWND                   mWnd;
      nsString               mTitle;
      nsFileDlgMode          mMode;
@@ -86,6 +93,8 @@ class nsFileWidget : public nsIFileWidget
      const nsString*        mTitles;
      const nsString*        mFilters;
      nsString               mDefault;
+     nsIUnicodeEncoder*     mUnicodeEncoder;
+     nsIUnicodeDecoder*     mUnicodeDecoder;
      nsFileSpec             mDisplayDirectory;
 
 
