@@ -258,7 +258,7 @@ protected:
    * Evaluates the expression for the given node and returns the boolean result.
    * 
    * @param aNode            The node to evaluate
-   * @param res              The result of the evaluation
+   * @param aRes             The result of the evaluation
    */
   nsresult BooleanExpression(nsXFormsMDGNode *aNode,
                              PRBool          &aRes);

@@ -143,7 +143,7 @@ public:
    * @param aFlag            The flag
    * @return                 The flag state
    */
-  PRBool TestAndClear(eFlag_t aFlags);
+  PRBool TestAndClear(eFlag_t aFlag);
 
   /**
    * Get flag state and set flag.
@@ -151,7 +151,7 @@ public:
    * @param aFlag            The flag
    * @return                 The flag state
    */
-  PRBool TestAndSet(eFlag_t aFlags);
+  PRBool TestAndSet(eFlag_t aFlag);
 
   /**
    * Get flag state
@@ -159,7 +159,7 @@ public:
    * @param aFlag            The flag   
    * @return                 The flag state
    */
-  PRBool Test(eFlag_t aFlags) const; 
+  PRBool Test(eFlag_t aFlag) const; 
 
   // Check states
   PRBool IsValid() const;
