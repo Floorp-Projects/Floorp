@@ -35,6 +35,7 @@ nsImageWin :: nsImageWin()
   mAlphaBits = nsnull;
   mColorMap = nsnull;
   mBHead = nsnull;
+
 	CleanUp(PR_TRUE);
 }
 
@@ -57,7 +58,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 	ComputePaletteSize(aDepth);
 
   if (mNumPalleteColors >= 0)
-    {
+  {
 	  mBHead = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors];
 	  mBHead->biSize = sizeof(BITMAPINFOHEADER);
 	  mBHead->biWidth = aWidth;
@@ -83,7 +84,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     mColorMap = new nsColorMap;
 
     if (mColorMap != nsnull) 
-	    {
+    {
       mColorMap->NumColors = mNumPalleteColors;
       mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
 
@@ -91,8 +92,8 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
       // copy of the memory (which we do!). I'm not sure if this
       // matters or not, but this shutup purify.
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
-		  }
-    }
+		}
+  }
 
   return NS_OK;
 }
@@ -102,24 +103,26 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 // set up the pallete to the passed in color array, RGB only in this array
 void nsImageWin :: ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect)
 {
-PRInt32 i;
-PRUint8 *cpointer;
+  PRInt32 i;
+  PRUint8 *cpointer;
 
-    if (aFlags & nsImageUpdateFlags_kColorMapChanged)
+  if (aFlags & nsImageUpdateFlags_kColorMapChanged)
+  {
+    if (mColorMap->NumColors > 0)
+    {
+      cpointer = mColorTable;
+
+      for(i = 0; i < mColorMap->NumColors; i++)
       {
-      if (mColorMap->NumColors > 0)
-        {
-        cpointer = mColorTable;
-        for(i = 0; i < mColorMap->NumColors; i++)
-          {
-		      *cpointer++ = mColorMap->Index[(3 * i) + 2];
-		      *cpointer++ = mColorMap->Index[(3 * i) + 1];
-		      *cpointer++ = mColorMap->Index[(3 * i)];
-		      *cpointer++ = 0;
-          }
-        }
-      this->MakePalette();
-	    }
+		    *cpointer++ = mColorMap->Index[(3 * i) + 2];
+		    *cpointer++ = mColorMap->Index[(3 * i) + 1];
+		    *cpointer++ = mColorMap->Index[(3 * i)];
+		    *cpointer++ = 0;
+      }
+    }
+
+    this->MakePalette();
+  }
 }
 
 //------------------------------------------------------------
@@ -130,6 +133,7 @@ PRUintn nsImageWin :: UsePalette(HDC* aHdc, PRBool bBackground)
     return 0;
 
   HPALETTE hOldPalette = ::SelectPalette(aHdc, mHPalette, (bBackground == PR_TRUE) ? TRUE : FALSE);
+
 	return ::RealizePalette(aHdc);
 }
 
@@ -139,29 +143,28 @@ PRUintn nsImageWin :: UsePalette(HDC* aHdc, PRBool bBackground)
 PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-PRUint32  value,error;
-HDC   the_hdc = (HDC)aSurface;
+  PRUint32  value,error;
+  HDC       the_hdc = (HDC)aSurface;
 
   if (mBHead == nsnull) 
     return PR_FALSE;
 
-    if (!IsOptimized())
-    {
+  if (!IsOptimized())
+  {
     value = ::StretchDIBits(the_hdc,aDX,aDY,aDWidth,aDHeight,
                             0,0,aSWidth, aSHeight,
                             mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS,SRCCOPY);
     if (value == GDI_ERROR)
       error = ::GetLastError();
-    }
+  }
   else
-    {
+  {
     SelectObject(mOptimizeDC,mHBitmap);
-    if(!::StretchBlt(the_hdc,aDX,aDY,aDWidth,aDHeight,mOptimizeDC,aSX,aSY,
-                          aSWidth,aSHeight,SRCCOPY))
-      {
+ 
+    if (!::StretchBlt(the_hdc,aDX,aDY,aDWidth,aDHeight,mOptimizeDC,aSX,aSY,
+                      aSWidth,aSHeight,SRCCOPY))
       error = ::GetLastError();
-      }
-    }
+  }
 
   return PR_TRUE;
 }
@@ -171,62 +174,56 @@ HDC   the_hdc = (HDC)aSurface;
 // Draw the bitmap, this draw just has destination coordinates
 PRBool nsImageWin :: Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-PRUint32  value,error;
-HDC   the_hdc = (HDC)aSurface;
+  PRUint32  value,error;
+  HDC   the_hdc = (HDC)aSurface;
 
   if (mBHead == nsnull) 
     return PR_FALSE;
 
-    if (!IsOptimized())
-    {
-    
+  if (!IsOptimized())
+  {
     value = ::StretchDIBits(the_hdc,aX,aY,aWidth,aHeight,
                             0,0,mBHead->biWidth, mBHead->biHeight,
                             mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS,SRCCOPY);
     
     if (value == GDI_ERROR)
       error = ::GetLastError();
-    }
+  }
   else
-    {
+  {
     SelectObject(mOptimizeDC,mHBitmap);
     //if((aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
     //BitBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,SRCCOPY);
     
-    if(!::StretchBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,
-                          mBHead->biWidth,mBHead->biHeight,SRCCOPY))
-      {
+    if (!::StretchBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,
+                      mBHead->biWidth,mBHead->biHeight,SRCCOPY))
       error = ::GetLastError();
-      }
-    }
+  }
 
   return PR_TRUE;
 }
 
 //------------------------------------------------------------
 
-void 
-nsImageWin::CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation)
+void nsImageWin::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation)
 {
-
-  
   // call the correct sub routine for each blend
-  if( mNumBytesPixel==3 && ((nsImageWin*)aTheImage)->mNumBytesPixel==3)
-    this->Comp24to24((nsImageWin*)aTheImage,aULLocation);
+
+  if ((mNumBytesPixel == 3) && (((nsImageWin *)aTheImage)->mNumBytesPixel == 3))
+    this->Comp24to24((nsImageWin*)aTheImage, aULLocation);
 
 }
 
 //------------------------------------------------------------
 
 // lets build an alpha mask from this image
-PRBool  
-nsImageWin::SetAlphaMask(nsIImage *aTheMask)
+PRBool nsImageWin::SetAlphaMask(nsIImage *aTheMask)
 {
-PRInt32 num;
-LPBYTE  srcbits;
+  PRInt32 num;
+  LPBYTE  srcbits;
 
-  if(aTheMask && ((nsImageWin*)aTheMask)->mNumBytesPixel == 1)
-    {
+  if (aTheMask && (((nsImageWin*)aTheMask)->mNumBytesPixel == 1))
+  {
     mLocation.x = 0;
     mLocation.y = 0;
     mlphaDepth = 8;
@@ -238,8 +235,9 @@ LPBYTE  srcbits;
 
     srcbits = aTheMask->GetBits();
     memcpy(mAlphaBits,srcbits,num); 
+
     return(PR_TRUE);
-    }
+  }
 
   return(PR_FALSE);
 }
@@ -248,117 +246,122 @@ LPBYTE  srcbits;
 
 // this routine has to flip the y, since the bits are in bottom scan
 // line to top.
-void 
-nsImageWin::Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation)
+void nsImageWin::Comp24to24(nsImageWin *aTheImage, nsPoint *aULLocation)
 {
-nsRect  arect,srect,drect,irect;
-PRInt32 dlinespan,slinespan,mlinespan,startx,starty,numbytes,numlines,x,y;
-LPBYTE  d1,d2,s1,s2,m1,m2;
-double  a1,a2;
+  nsRect  arect, srect, drect, irect;
+  PRInt32 dlinespan, slinespan, mlinespan, startx, starty, numbytes, numlines, x, y;
+  LPBYTE  d1, d2, s1, s2, m1, m2;
+  double  a1, a2;
 
-  if(mAlphaBits)
-    {
+  if (mAlphaBits)
+  {
     x = mLocation.x;
     y = mLocation.y;
-    arect.SetRect(0,0,this->GetWidth(),this->GetHeight());
-    srect.SetRect(mLocation.x,mLocation.y,mAlphaWidth,mAlphaHeight);
-    arect.IntersectRect(arect,srect);
-    }
+    arect.SetRect(0, 0, this->GetWidth(), this->GetHeight());
+    srect.SetRect(mLocation.x, mLocation.y, mAlphaWidth, mAlphaHeight);
+    arect.IntersectRect(arect, srect);
+  }
   else
-    {
-    arect.SetRect(0,0,this->GetWidth(),this->GetHeight());
+  {
+    arect.SetRect(0, 0, this->GetWidth(), this->GetHeight());
     x = y = 0;
-    }
+  }
 
-  srect.SetRect(aULLocation->x,aULLocation->y,aTheImage->GetWidth(),aTheImage->GetHeight());
+  srect.SetRect(aULLocation->x, aULLocation->y, aTheImage->GetWidth(), aTheImage->GetHeight());
   drect = arect;
 
-  if(irect.IntersectRect(srect,drect))
-    {
+  if (irect.IntersectRect(srect, drect))
+  {
     // calculate destination information
+
     dlinespan = this->GetLineStride();
     numbytes = this->CalcBytesSpan(irect.width);
     numlines = irect.height;
     startx = irect.x;
-    starty = this->GetHeight()-(irect.y+irect.height);
-    d1 = mImageBits +(starty*dlinespan)+(3*startx);
+    starty = this->GetHeight() - (irect.y + irect.height);
+    d1 = mImageBits + (starty * dlinespan) + (3 * startx);
 
     // get the intersection relative to the source rectangle
-    srect.SetRect(0,0,aTheImage->GetWidth(),aTheImage->GetHeight());
+    srect.SetRect(0, 0, aTheImage->GetWidth(), aTheImage->GetHeight());
     drect = irect;
-    drect.MoveBy(-aULLocation->x,-aULLocation->y);
+    drect.MoveBy(-aULLocation->x, -aULLocation->y);
 
     drect.IntersectRect(drect,srect);
     slinespan = aTheImage->GetLineStride();
     startx = drect.x;
-    starty = aTheImage->GetHeight() - (drect.y+drect.height);
-    s1 = aTheImage->GetBits() + (starty*slinespan)+(3*startx);
+    starty = aTheImage->GetHeight() - (drect.y + drect.height);
+    s1 = aTheImage->GetBits() + (starty * slinespan) + (3 * startx);
 
-    if(mAlphaBits)
-      {
+    if (mAlphaBits)
+    {
       mlinespan = this->GetAlphaLineStride();
       m1 = mAlphaBits;
-      numbytes/=3;
+      numbytes /= 3;
 
       // now go thru the image and blend (remember, its bottom upwards)
-      for(y=0;y<numlines;y++)
-        {
+
+      for (y = 0; y < numlines; y++)
+      {
         s2 = s1;
         d2 = d1;
         m2 = m1;
-        for(x=0;x<numbytes;x++)
-          {
-          a1 = (*m2)/256.0;
-          a2 = 1.0-a1;
-          *d2 = (*d2)*a1 + (*s2)*a2;
+
+        for (x = 0; x < numbytes; x++)
+        {
+          a1 = (*m2) * (1.0 / 256.0);
+          a2 = 1.0 - a1;
+          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
           d2++;
           s2++;
           
-          *d2 = (*d2)*a1 + (*s2)*a2;
+          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
           d2++;
           s2++;
 
-          *d2 = (*d2)*a1 + (*s2)*a2;
+          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
           d2++;
           s2++;
           m2++;
         }
+
         s1 += slinespan;
         d1 += dlinespan;
         m1 += mlinespan;
-        }
-      }
-    else
-      {
-      // now go thru the image and blend (remember, its bottom upwards)
-      for(y=0;y<numlines;y++)
-        {
-        s2 = s1;
-        d2 = d1;
-        for(x=0;x<numbytes;x++)
-          {
-          *d2 = (*d2+*s2)/2;
-          d2++;
-          s2++;
-          }
-        s1 += slinespan;
-        d1 += dlinespan;
-        }
       }
     }
+    else
+    {
+      // now go thru the image and blend (remember, its bottom upwards)
 
+      for(y = 0; y < numlines; y++)
+      {
+        s2 = s1;
+        d2 = d1;
+
+        for(x = 0; x < numbytes; x++)
+        {
+          *d2 = (*d2 + *s2) >> 1;
+          d2++;
+          s2++;
+        }
+
+        s1 += slinespan;
+        d1 += dlinespan;
+      }
+    }
+  }
 }
 
 //------------------------------------------------------------
 
-PRBool 
-nsImageWin::MakePalette()
+PRBool nsImageWin::MakePalette()
 {
 	// makes a logical palette (mHPalette) from the DIB's color table
 	// this palette will be selected and realized prior to drawing the DIB
 
 	if (mNumPalleteColors == 0) 
     return PR_FALSE;
+
 	if (mHPalette != nsnull) 
     ::DeleteObject(mHPalette);
 
@@ -368,16 +371,17 @@ nsImageWin::MakePalette()
 	LPRGBQUAD pDibQuad = (LPRGBQUAD) mColorTable;
 
 	for (int i = 0; i < mNumPalleteColors; i++) 
-    {
+  {
 		pLogPal->palPalEntry[i].peRed = pDibQuad->rgbRed;
 		pLogPal->palPalEntry[i].peGreen = pDibQuad->rgbGreen;
 		pLogPal->palPalEntry[i].peBlue = pDibQuad->rgbBlue;
 		pLogPal->palPalEntry[i].peFlags = 0;
 		pDibQuad++;
-    }
+  }
 
 	mHPalette = ::CreatePalette(pLogPal);
 	delete pLogPal;
+
 	return PR_TRUE;
 }	
 
@@ -418,19 +422,21 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
-nsRenderingContextWin  *therc = (nsRenderingContextWin*)aSurface;
-HDC the_hdc;
+  nsRenderingContextWin *therc = (nsRenderingContextWin*)aSurface;
+  HDC                   the_hdc;
 
   if ((therc != nsnull) && !IsOptimized() && (mSizeImage > 0))
-    {
+  {
     the_hdc = therc->getDrawingSurface();
-    if(mOptimizeDC == nsnull)
+  
+    if (mOptimizeDC == nsnull)
       mOptimizeDC = therc->CreateOptimizeSurface();
 
-    mHBitmap = ::CreateDIBitmap(the_hdc,mBHead,CBM_INIT,mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS);
+    mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead, DIB_RGB_COLORS);
+
     mIsOptimized = PR_TRUE;
     CleanUp(PR_FALSE);
-    }
+  }
 
   return NS_OK;
 }
@@ -463,7 +469,7 @@ void nsImageWin :: ComputePaletteSize(PRIntn nBitCount)
 
 PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
 {
-PRInt32 spanbytes;
+  PRInt32 spanbytes;
 
   spanbytes = (aWidth * mBHead->biBitCount) / 32; 
 
@@ -479,14 +485,13 @@ PRInt32 spanbytes;
 
 void nsImageWin :: ComputeMetrics()
 {
-
 	mSizeImage = mBHead->biSizeImage;
 
 	if (mSizeImage == 0) 
-    {
+  {
     mRowBytes = CalcBytesSpan(mBHead->biWidth);
 		mSizeImage = mRowBytes * mBHead->biHeight; // no compression
-    }
+  }
 
   // set the color table in the info header
 
@@ -499,12 +504,14 @@ void nsImageWin :: ComputeMetrics()
 void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 {
 	// this only happens when we need to clean up everything
-  if(aCleanUpAll)
-    {
+  if (aCleanUpAll == PR_TRUE)
+  {
     if (mAlphaBits != nsnull)
       delete [] mAlphaBits;
+
 	  if (mHBitmap != nsnull) 
       ::DeleteObject(mHBitmap);
+
     if(mBHead)
       delete[] mBHead;
 
@@ -513,24 +520,28 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
     mAlphaBits = nsnull;
     mIsOptimized = PR_FALSE;
 	  mBHead = nsnull;
-	if (mImageBits != nsnull) 
-    delete [] mImageBits;
-    mImageBits = nsnull;
+
+	  if (mImageBits != nsnull) 
+    {
+      delete [] mImageBits;
+      mImageBits = nsnull;
     }
+  }
 
   // clean up the DIB
 	if (mImageBits != nsnull) 
     delete [] mImageBits;
+
 	if (mHPalette != nsnull) 
     ::DeleteObject(mHPalette);
 
 	// Should be an ISupports, so we can release
   if (mColorMap != nsnull)
-    {
+  {
     if (mColorMap->Index != nsnull)
       delete [] mColorMap->Index;
     delete mColorMap;
-	  }
+  }
 
 	mColorTable = nsnull;
 	mNumPalleteColors = -1;
@@ -540,6 +551,3 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
   mImageBits = nsnull;
   mColorMap = nsnull;
 }
-
-//------------------------------------------------------------
-
