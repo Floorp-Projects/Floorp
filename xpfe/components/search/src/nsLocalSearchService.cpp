@@ -454,7 +454,7 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *
 	else if (!PL_strcmp(matchMethod, "endswith"))
 	{
 		PRInt32 pos = value.RFind(matchText, PR_TRUE);
-		if ((pos >= 0) && (pos == (value.Length() - PRInt32(strlen(matchText)))))
+		if ((pos >= 0) && (pos == (PRInt32(value.Length()) - PRInt32(strlen(matchText)))))
 			found = PR_TRUE;
 	}
 	else if (!PL_strcmp(matchMethod, "is"))
