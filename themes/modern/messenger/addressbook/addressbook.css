@@ -29,6 +29,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: primary toolbar masthead ::::: */
+
+#abToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://messenger/skin/addressbook/icons/mast-ab.gif");
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 #button-newcard {

@@ -29,6 +29,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: primary toolbar masthead ::::: */
+
+#composeToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://messenger/skin/messengercompose/icons/mast-msgcomp.gif");
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 #button-send {

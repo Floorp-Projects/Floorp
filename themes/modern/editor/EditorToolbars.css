@@ -27,6 +27,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: primary toolbar masthead ::::: */
+
+#EditToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://editor/skin/icons/mast-editor.gif");
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .button-toolbar-2 {

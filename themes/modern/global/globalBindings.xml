@@ -165,7 +165,7 @@
  
   <!-- :::/ scrollbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="scrollbar">
+  <binding id="scrollbar" extends="chrome://global/content/scrollbarBindings.xml#scrollbar">
     <content>
       <xul:scrollbarbutton type="decrement" inherits="sborient=align">
         <xul:image inherits="src"/>

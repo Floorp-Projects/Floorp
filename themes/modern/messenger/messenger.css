@@ -30,11 +30,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: primary toolbar icon ::::: */
+/* ::::: primary toolbar masthead ::::: */
 
 #msgToolbar > .toolbar-holder > .toolbar-primary-icon {
-  width: 77px;
-  background: url("chrome://messenger/skin/icons/prtb-mail-icon.gif") no-repeat top;
+  background-image: url("chrome://messenger/skin/icons/mast-mail.gif");
 }
  
 /* ::::: primary toolbar buttons ::::: */
