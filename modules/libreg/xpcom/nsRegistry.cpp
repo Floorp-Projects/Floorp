@@ -475,6 +475,19 @@ NS_IMETHODIMP nsRegistry::Close() {
     return regerr2nsresult( err );
 }
 
+/*----------------------------- nsRegistry::Flush ------------------------------
+| Flushes the registry via NR_RegFlush.                                        |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::Flush() {
+    REGERR err = REGERR_FAIL;
+    if( mReg ) {
+        PR_Lock(mregLock);
+        err = NR_RegFlush( mReg );
+        PR_Unlock(mregLock);
+    }
+    return regerr2nsresult( err );
+}
+
 /*----------------------------- nsRegistry::IsOpen -----------------------------
 | Tests the mReg handle and returns whether the registry is open or not.       |
 ------------------------------------------------------------------------------*/
