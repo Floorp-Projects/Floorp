@@ -1482,7 +1482,7 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
   }
   if (nsnull != mImportantRule) {
     mImportantRule->mSheet = nsnull;
-    delete mImportantRule;
+    NS_RELEASE(mImportantRule);
     mImportantRule = nsnull;
   }
   if (nsnull != mDOMDeclaration) {
