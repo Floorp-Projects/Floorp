@@ -1,4 +1,4 @@
-:nl The contents of this file are subject to the Mozilla Public License
+dnl The contents of this file are subject to the Mozilla Public License
 dnl Version 1.0 (the "License"); you may not use this file except in
 dnl compliance with the License. You may obtain a copy of the License
 dnl at http://www.mozilla.org/MPL/
@@ -41,6 +41,12 @@ dnl ========================================================
 MOZJPEG=62
 MOZPNG=95
 
+dnl Set the minimum version of toolkit libs used by mozilla
+dnl ========================================================
+GTK_MAJ_VER=1
+GTK_MIN_VER=1
+GTK_REL_VER=0
+
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
@@ -51,9 +57,13 @@ dnl Checks for programs.
 dnl ========================================================
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_CC_C_O
+if test -n "$NO_MINUS_C_MINUS_O"; then
+    CC='${topsrcdir}/build/hcc'
+    CXX='${topsrcdir}/build/hcpp'
+fi
 AC_PROG_CPP
 AC_PROG_CXXCPP
-AC_PROG_CC_C_O
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_AWK
@@ -118,15 +128,18 @@ dnl now the exceptions
 dnl ========================================================
 case "$target" in
 *-*-solaris*) 
-	AC_DEFINE(BROKEN_QSORT)
-        DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.so=%.so)' ;;
+    AC_DEFINE(BROKEN_QSORT)
+    if test -z "$GNU_CC"; then
+	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.so=%.so)'
+    fi ;;
 
 alpha-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
 *-freebsd*)
-	DSO_LDOPTS="-Bshareable $DSO_LDOPTS" ;;
-
+    if test -z "$GNU_CC"; then
+	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
+    fi ;;
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -508,12 +521,41 @@ fi
 
 res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
+    AC_ARG_WITH(gtk-config, 
+	[  --with-gtk-config=\$prog specify which gtk-config to use],
+	if test test ! -x $withval; then
+	   AC_MSG_ERROR("Specified --with-gtk-config not executable")
+	else
+	   GTK_CONFIG=$withval
+	fi
+   	, GTK_CONFIG=gtk-config )
+
+    _GTK_VERSION=`$GTK_CONFIG --version`
+    _GTK_MAJ_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $1 }'`
+    _GTK_MIN_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $2 }'`
+    _GTK_REL_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $3 }'`
+    if test "$_GTK_MAJ_VER" -lt "$GTK_MAJ_VER"; then
+	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+    else if test "$_GTK_MIN_VER" -lt "$GTK_MIN_VER"; then
+	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+    else if test "$_GTK_REL_VER" -lt "$GTK_REL_VER"; then
+	AC_MSG_ERROR("Must use gtk version >= $GTK_VERSION");
+    fi
+    fi
+    fi
+    unset GTK_VERSION
+    unset _GTK_MAJ_VER
+    unset _GTK_MIN_VER
+    unset _GTK_REL_VER
+
     AC_CHECK_LIB(gtk, gtk_widget_set, 
-	[TK_GTK_LIBS="`gtk-config --libs`" TK_GTK_CFLAGS="`gtk-config --cflags`" ],
-	[MISSING_GTK="-lgtk -lgtk_widget_set"],
-	`gtk-config --libs`)
+	[TK_GTK_LIBS="`${GTK_CONFIG} --libs`" 
+	    TK_GTK_CFLAGS="`${GTK_CONFIG} --cflags`" ],
+	[MISSING_GTK="-lgtk"],
+	`$GTK_CONFIG --libs`)
 fi
 
+AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_GTK_CFLAGS)
 AC_SUBST(TK_GTK_LIBS)
 AC_SUBST(TK_MOTIF_CFLAGS)
@@ -746,19 +788,19 @@ AC_SUBST(DSO_LDOPTS)
 
 dnl Check for missing components
 if [ test "$MISSING_X" != "" ]; then
-   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_X ]);
+   AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
 if [ test "$MISSING_GTK" != "" ]; then
-   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_GTK ]);
+   AC_MSG_ERROR([ Could not find the following gtk libraries: $MISSING_GTK ]);
 fi
 
 if [ test "$MISSING_MOTIF" != "" ]; then
-   AC_MSG_ERROR([ Could not find the following libraries: $MISSING_MOTIF ]);
+   AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
 
 if [ test "$MISSING_NSPR" != "" ]; then
-    AC_MSG_ERROR([Could not find standard nspr headers or libraries: $MISSING_NSPR]);
+    AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
 
 NG_MAKEFILES="
