@@ -202,6 +202,10 @@ nsHTTPIndexParser::Init()
   rv = mHTTPIndex->GetDataSource(getter_AddRefs(mDataSource));
   if (NS_FAILED(rv)) return rv;
 
+  // No datasource. Uh oh. We won't be much use then.
+  if (! mDataSource)
+    return NS_ERROR_UNEXPECTED;
+
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService("component://netscape/rdf/rdf-service",
                                       nsCOMTypeInfo<nsIRDFService>::GetIID(),
@@ -377,6 +381,14 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
                                  nsresult aStatus,
                                  const PRUnichar* aErrorMsg)
 {
+  // If mDirectory isn't set, then we should just bail. Either an
+  // error occurred and OnStartRequest() never got called, or
+  // something exploded in OnStartRequest().
+  if (! mDirectory)
+    return NS_OK;
+
+  // XXX Should we do anything different if aStatus != NS_OK?
+
   if (mLine.Length() > 0)
     ProcessOneLine();
 
