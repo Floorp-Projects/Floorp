@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *       Rajiv Dayal <rdayal@netscape.com>
+ *    Rajiv Dayal <rdayal@netscape.com>
+ *		David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,7 +87,7 @@ typedef int (WINAPI *mozDllRegisterServerPtr)(void);
 typedef int (WINAPI *mozDllUnregisterServerPtr)(void);
 
 // forward declaration
-int  InstallConduit(HINSTANCE hInstance);
+int  InstallConduit(HINSTANCE hInstance, TCHAR *installPath);
 int UninstallConduit();
 void ConstructMessage(HINSTANCE hInstance, DWORD dwMessageId, TCHAR *formattedMsg);
 
@@ -122,6 +123,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     int strResource=0;
     int res=-1;
+
+    // /p can only be used with a standard install, i.e., non-silent install
+    char *installDir = strstr(lpCmdLine, "/p");
+    if (installDir)
+      installDir += 2; // advance past "/p", e.g., "/pC:/program files/mozilla/dist/bin"
+
     if(!strcmp(lpCmdLine,"/u")) // un-install
     {
         ConstructMessage(hInstance, IDS_APP_TITLE_UNINSTALL, appTitle);
@@ -142,7 +149,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     }
     else if (!strcmp(lpCmdLine,"/s")) // silent install
     {
-        res = InstallConduit(hInstance);
+        res = InstallConduit(hInstance, installDir);
         if(!res)
             return TRUE; // success
         return res;
@@ -153,7 +160,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         ConstructMessage(hInstance, IDS_CONFIRM_INSTALL, msgStr);
         if (MessageBox(NULL, msgStr, appTitle, MB_YESNO) == IDYES) 
         {
-            res = InstallConduit(hInstance);
+            res = InstallConduit(hInstance, installDir);
             if(!res)
                 res = IDS_SUCCESS_INSTALL;
         }
@@ -387,7 +394,7 @@ int UnregisterMozPalmSyncDll()
 }
 
 // installs our Conduit
-int InstallConduit(HINSTANCE hInstance)
+int InstallConduit(HINSTANCE hInstance, TCHAR *installDir)
 { 
     int dwReturnCode;
     BOOL    bHotSyncRunning = FALSE;
@@ -396,26 +403,34 @@ int InstallConduit(HINSTANCE hInstance)
     // Applications should not place conduits in the Palm Desktop directory.
     // The Palm Desktop installer only manages the Palm Desktop conduits.
     TCHAR   szConduitPath[_MAX_PATH];
-    if(!GetModuleFileName(NULL, szConduitPath, _MAX_PATH))
-        return IDS_ERR_CONDUIT_NOT_FOUND;
-    // extract the dir path (without the module name)
-    int index = strlen(szConduitPath)-1;
-    while((szConduitPath[index] != DIRECTORY_SEPARATOR) && index)
-        index--;
-    szConduitPath[index] = 0;
+    if (!installDir)
+    {
+      if(!GetModuleFileName(NULL, szConduitPath, _MAX_PATH))
+          return IDS_ERR_CONDUIT_NOT_FOUND;
+      // extract the dir path (without the module name)
+      int index = strlen(szConduitPath)-1;
+      while((szConduitPath[index] != DIRECTORY_SEPARATOR) && index)
+          index--;
+      szConduitPath[index] = 0;
+    }
+    else
+      strncpy(szConduitPath, installDir, sizeof(szConduitPath) - 1);
 
     // take care of any possible string overwrites
     if((strlen(szConduitPath) + strlen(DIRECTORY_SEPARATOR_STR) + strlen(CONDUIT_FILENAME)) > _MAX_PATH)
         return IDS_ERR_LOADING_CONDMGR;
-    strcat(szConduitPath, DIRECTORY_SEPARATOR_STR);
-    strcat(szConduitPath, CONDUIT_FILENAME);
-    
+    // might already have conduit filename in szConduitPath if we're called recursively
+    if (!strstr(szConduitPath, CONDUIT_FILENAME)) 
+    {
+      strcat(szConduitPath, DIRECTORY_SEPARATOR_STR);
+      strcat(szConduitPath, CONDUIT_FILENAME);
+    }
     // Make sure the conduit dll exists
     struct _finddata_t dll_file;
     long hFile;
     if( (hFile = _findfirst( szConduitPath, &dll_file )) == -1L )
         return IDS_ERR_CONDUIT_NOT_FOUND;
-    
+
     // now register the Mozilla Palm Sync Support Dll
     if( (dwReturnCode = RegisterMozPalmSyncDll()) != 0)
         return dwReturnCode;
@@ -490,7 +505,7 @@ int InstallConduit(HINSTANCE hInstance)
             //free the library so that the existing AB Conduit is unloaded properly
             FreeLibrary(hConduitManagerDLL);
             FreeLibrary(hHsapiDLL);
-            return InstallConduit(hInstance);
+            return InstallConduit(hInstance, szConduitPath);
         }
     }
     if( dwReturnCode == 0 )
