@@ -2589,7 +2589,7 @@ RDFElementImpl::GetInlineStyleRule(nsIStyleRule*& aResult)
 NS_IMETHODIMP
 RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt32 *aHint) const
 {
-  *aHint = NS_STYLE_HINT_UNKNOWN;
+  *aHint = NS_STYLE_HINT_CONTENT;
   if (mNameSpaceID == kNameSpaceID_XUL)
   {
       // We are a XUL tag and need to specify a style hint.
