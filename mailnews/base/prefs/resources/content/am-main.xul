@@ -82,7 +82,7 @@
 -->
 
     <html:div>
-        <html:input name="identity.composeHtml" id="composeHtml" type="checkbox"/>
+        <html:input name="identity.composeHtml" id="identity.composeHtml" type="checkbox"/>
         <html:label for="identity.composeHtml">&useHtml.label;</html:label>
     </html:div>
 
