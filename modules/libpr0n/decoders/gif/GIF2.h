@@ -283,9 +283,9 @@ PRBool GIFInit(
 
 extern void gif_destroy(gif_struct* aGIFStruct);
 
-int gif_write(gif_struct* aGIFStruct, const PRUint8 * buf, PRUint32 numbytes);
+PRStatus gif_write(gif_struct* aGIFStruct, const PRUint8 * buf, PRUint32 numbytes);
 
-PRUint8 gif_write_ready(gif_struct* aGIFStruct);
+PRBool gif_write_ready(const gif_struct* aGIFStruct);
 
 extern void gif_complete(gif_struct** aGIFStruct);
 extern void gif_delay_time_callback(/* void *closure */);
