@@ -17,7 +17,9 @@
  */
 
 #include "nsCachePref.h"
-#include "xp.h"
+#ifndef XP_UNIX
+#include "xp.h" // This complains on unix. Works ok without there.
+#endif
 #include "prefapi.h"
 #include "prmem.h"
 #include "nsCacheManager.h"
@@ -69,7 +71,7 @@ nsCachePref::SetupPrefs(const char* i_Pref)
 {
     PRBool bSetupAll = PR_FALSE;
     
-    long nTemp;
+    int32 nTemp;
     char* tempPref=0;
 
     if (!i_Pref)
