@@ -2211,7 +2211,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // and also because our final height may depend on it. Only
       // update mY if the line is not empty, because that's what
       // PlaceLine does.
-      if (!line->IsEmpty()) {
+      if (!line->CachedIsEmpty()) {
         aState.mY = line->mBounds.YMost();
         // This will include any pending float clearing height, so
         // don't bother clearing previous lines' floats
@@ -2483,7 +2483,8 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   // Setup the line-layout for the new line
   aState.mCurrentLine = aLine;
   aLine->ClearDirty();
-
+  aLine->InvalidateCachedIsEmpty();
+  
   // Now that we know what kind of line we have, reflow it
   if (aLine->IsBlock()) {
     nsRect oldBounds = aLine->mFirstChild->GetRect();
@@ -3027,7 +3028,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 
   // Determine if this line is "essentially" the first line
   for (line_iterator line = begin_lines(); line != aLine; ++line) {
-    if (!line->IsEmpty()) {
+    if (!line->CachedIsEmpty()) {
       // A line which preceeds aLine is non-empty, so therefore the
       // top margin applies.
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
@@ -3053,7 +3054,7 @@ nsBlockFrame::GetTopBlockChild(nsPresContext* aPresContext)
   if (firstLine->IsBlock())
     return firstLine->mFirstChild;
 
-  if (!firstLine->IsEmpty())
+  if (!firstLine->CachedIsEmpty())
     return nsnull;
 
   line_iterator secondLine = begin_lines();
@@ -4195,7 +4196,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // collapsed with a block that follows.
   nscoord newY;
 
-  if (!aLine->IsEmpty()) {
+  if (!aLine->CachedIsEmpty()) {
     // This line has some height. Therefore the application of the
     // previous-bottom-margin should stick.
     aState.mPrevBottomMargin.Zero();

@@ -400,6 +400,20 @@ public:
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
   PRBool IsEmpty() const;
 
+  // Call this only while in Reflow() for the block the line belongs
+  // to, only between reflowing the line (or sliding it, if we skip
+  // reflowing it) and the end of reflowing the the block.
+  PRBool CachedIsEmpty();
+
+  void InvalidateCachedIsEmpty() {
+    mFlags.mEmptyCacheValid = PR_FALSE;
+  }
+
+  // For debugging purposes
+  PRBool IsValidCachedIsEmpty() {
+    return mFlags.mEmptyCacheValid;
+  }
+
 #ifdef DEBUG
   static PRInt32 GetCtorCount();
 #endif
@@ -418,9 +432,11 @@ public:
     PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
     PRUint32 mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
+    PRUint32 mEmptyCacheValid: 1;
+    PRUint32 mEmptyCacheState: 1;
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 21;
+    PRUint32 mChildCount : 19;
   };
 
   struct ExtraData {
