@@ -72,9 +72,11 @@
       <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
       <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
+<!--      
       <radio id="konqueror" label="&importFromKonqueror.label;" accesskey="&importFromKonqueror.accesskey;"/>
       <radio id="epiphany"  label="&importFromEpiphany.label;"  accesskey="&importFromEpiphany.accesskey;"/>
       <radio id="galeon"    label="&importFromGaleon.label;"    accesskey="&importFromGaleon.accesskey;"/>
+  -->      
 #endif
 #endif
 #ifdef XP_WIN

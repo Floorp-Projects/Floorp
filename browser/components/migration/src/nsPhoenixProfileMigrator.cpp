@@ -271,7 +271,13 @@ nsPhoenixProfileMigrator::FillProfileDataFromPhoenixRegistry()
   
   phoenixRegistry->Append(NS_LITERAL_STRING("Phoenix"));
   phoenixRegistry->Append(NS_LITERAL_STRING("Application Registry"));
+#elif defined(XP_UNIX)
+  fileLocator->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(phoenixRegistry));
+  
+  phoenixRegistry->Append(NS_LITERAL_STRING(".phoenix"));
+  phoenixRegistry->Append(NS_LITERAL_STRING("appreg"));
 #endif
+
 
   return GetProfileDataFromRegistry(phoenixRegistry, mProfileNames, mProfileLocations);
 }

@@ -81,6 +81,11 @@ static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define OPERA_PREFERENCES_FILE_NAME NS_LITERAL_STRING("Opera 6 Preferences")
 #define OPERA_HISTORY_FILE_NAME NS_LITERAL_STRING("Opera Global History")
 #define OPERA_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("Bookmarks")
+#elif defined (XP_UNIX)
+#define OPERA_PREFERENCES_FOLDER_NAME NS_LITERAL_STRING(".opera")
+#define OPERA_PREFERENCES_FILE_NAME NS_LITERAL_STRING("opera6.ini")
+#define OPERA_HISTORY_FILE_NAME NS_LITERAL_STRING("global.dat")
+#define OPERA_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("opera6.adr")
 #endif
 #define OPERA_COOKIES_FILE_NAME NS_LITERAL_STRING("cookies4.dat")
 
@@ -185,7 +190,7 @@ nsOperaProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
   nsCOMPtr<nsISupportsArray> profiles;
   GetSourceProfiles(getter_AddRefs(profiles));
 
-#ifndef XP_MACOSX
+#ifdef XP_WIN
   if (profiles) {
     PRUint32 count;
     profiles->Count(&count);
@@ -238,6 +243,19 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
     
     file->Append(NS_LITERAL_STRING("Preferences"));
+    file->Append(OPERA_PREFERENCES_FOLDER_NAME);
+    
+    PRBool exists;
+    file->Exists(&exists);
+    
+    if (exists) {
+      nsCOMPtr<nsISupportsString> string(do_CreateInstance("@mozilla.org/supports-string;1"));
+      string->SetData(OPERA_PREFERENCES_FOLDER_NAME);
+      mProfiles->AppendElement(string);
+    }
+#elif defined (XP_UNIX)
+    fileLocator->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
+    
     file->Append(OPERA_PREFERENCES_FOLDER_NAME);
     
     PRBool exists;
@@ -1252,6 +1270,10 @@ nsOperaProfileMigrator::GetOperaProfile(const PRUnichar* aProfile, nsILocalFile*
   fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
     
   file->Append(NS_LITERAL_STRING("Preferences"));
+  file->Append(OPERA_PREFERENCES_FOLDER_NAME);
+#elif defined (XP_UNIX)
+  fileLocator->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
+    
   file->Append(OPERA_PREFERENCES_FOLDER_NAME);
 #endif    
 
