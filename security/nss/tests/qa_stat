@@ -56,14 +56,22 @@ do
 	then
 		QA_OS=`echo $w $QA_RHVER | sed -e "s/Red Hat /RH /" -e "s/ release//"`
 	else
-		echo $QA_SYS | grep "SunOS 5.8" && \
-			IS_64=`rsh $w isainfo -v | grep 64 >/dev/null && echo 64 bit`
-		echo $QA_SYS | grep "HP" && \
-			IS_64=`rsh $w getconf KERNEL_BITS | grep 64 >/dev/null && \
-				echo 64 bit`
-		echo $QA_SYS | grep "AIX" && \
-			IS_64=`rsh $w lslpp -l | grep "bos.64bit"> /dev/null && \
-				echo 64 bit`
+		case $QA_SYS in
+			*SunOS*5.8*)
+				IS_64=`rsh $w isainfo -v | grep 64 >/dev/null && echo 64 bit`
+				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+				;;
+			*HP*)
+				IS_64=`rsh $w getconf KERNEL_BITS | grep 64 >/dev/null && \
+					echo 64 bit`
+				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+				;;
+			*AIX*)
+				IS_64=`rsh $w lslpp -l | grep "bos.64bit"> /dev/null && \
+					echo 64 bit`
+				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+				;;
+		esac
 		QA_OS=`echo "$w $QA_SYS $IS_64"`
 	fi
 	echo $QA_OS
