@@ -30,6 +30,7 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMPaintListener.h"
+#include "nsIDOMTextListener.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptObjectOwner.h"
@@ -52,6 +53,7 @@ nsEventListenerManager::nsEventListenerManager()
   mFormListeners = nsnull;
   mDragListeners = nsnull;
   mPaintListeners = nsnull;
+  mTextListeners = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -66,6 +68,7 @@ nsEventListenerManager::~nsEventListenerManager()
   ReleaseListeners(mFormListeners);
   ReleaseListeners(mDragListeners);
   ReleaseListeners(mPaintListeners);
+  ReleaseListeners(mTextListeners);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -112,6 +115,9 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   else if (aIID.Equals(kIDOMPaintListenerIID)) {
     return &mPaintListeners;
   }
+  else if (aIID.Equals(kIDOMTextListenerIID)) {
+	return &mTextListeners;
+  }
   return nsnull;
 }
 
@@ -143,7 +149,6 @@ nsresult nsEventListenerManager::GetEventListeners(nsVoidArray **aListeners, con
 * Sets events listeners of all types. 
 * @param an event listener
 */
-
 nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
   nsVoidArray** mListeners = GetListenersByIID(aIID);
@@ -162,7 +167,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
 
   return NS_OK;
 }
-
 const char *mEventArgv[] = {"event"};
 
 nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID)
@@ -355,7 +359,35 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
         }
       }
       break;
-  
+	
+	case NS_TEXT_EVENT:
+#if DEBUG_TAGUE
+		printf("DOM: got text event\n");
+#endif
+		if (nsnull != mTextListeners) {
+			if (nsnull == *aDOMEvent) {
+				ret = NS_NewDOMEvent(aDOMEvent,aPresContext,aEvent);
+			}
+			if (NS_OK == ret) {
+				for (int i=0; i<mTextListeners->Count(); i++) {
+					nsIDOMEventListener *mEventListener;
+					nsIDOMTextListener *mTextListener;
+
+					mEventListener = (nsIDOMEventListener*)mTextListeners->ElementAt(i);
+					
+					if (NS_OK == mEventListener->QueryInterface(kIDOMTextListenerIID, (void**)&mTextListener)) {
+						ret = mTextListener->HandleText(*aDOMEvent);
+						NS_RELEASE(mTextListener);
+					}
+					else {
+						ret = mEventListener->ProcessEvent(*aDOMEvent);
+					}
+				}
+				aEventStatus = (NS_OK == ret) ? aEventStatus : nsEventStatus_eConsumeNoDefault;
+			}
+		}
+		break;
+
     case NS_KEY_UP:
     case NS_KEY_DOWN:
     case NS_KEY_PRESS:

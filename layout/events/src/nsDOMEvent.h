@@ -59,7 +59,8 @@ public:
     eDOMEvents_submit,
     eDOMEvents_reset,
     eDOMEvents_change,
-    eDOMEvents_paint
+    eDOMEvents_paint,
+	eDOMEvents_text
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
@@ -70,6 +71,11 @@ public:
   // nsIDOMEventInterface
   NS_IMETHOD    GetType(nsString& aType);
   NS_IMETHOD    SetType(const nsString& aType);
+
+  NS_IMETHOD	GetText(nsString& aText);
+
+  NS_IMETHOD	GetCommitText(PRBool* aCommitText);
+  NS_IMETHOD	SetCommitText(PRBool aCommitText);
 
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);
   NS_IMETHOD    SetTarget(nsIDOMNode* aTarget);
@@ -136,7 +142,8 @@ protected:
   nsEvent* mEvent;
   nsIPresContext* mPresContext;
   nsIDOMNode* mTarget;
-
+  nsString*	mText;
+  PRBool	mCommitText;
   const char* GetEventName(PRUint32 aEventType);
 
 };

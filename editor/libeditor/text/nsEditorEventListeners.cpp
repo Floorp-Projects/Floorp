@@ -41,7 +41,7 @@ NS_IMPL_ADDREF(nsTextEditorKeyListener)
 NS_IMPL_RELEASE(nsTextEditorKeyListener)
 
 
-nsTextEditorKeyListener::nsTextEditorKeyListener() 
+nsTextEditorKeyListener::nsTextEditorKeyListener()
 {
   NS_INIT_REFCNT();
 }
@@ -513,6 +513,33 @@ nsTextEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+
+
+/*
+ * nsTextEditorMouseListener implementation
+ */
+
+
+
+NS_IMPL_ADDREF(nsTextEditorTextListener)
+
+NS_IMPL_RELEASE(nsTextEditorTextListener)
+
+
+nsTextEditorTextListener::nsTextEditorTextListener()
+:	mCommitText(PR_FALSE),
+	mInTransaction(PR_FALSE)
+{
+  NS_INIT_REFCNT();
+}
+
+
+
+nsTextEditorTextListener::~nsTextEditorTextListener() 
+{
+}
+
+
 /*
  * nsTextEditorDragListener implementation
  */
@@ -535,6 +562,77 @@ nsTextEditorDragListener::~nsTextEditorDragListener()
 {
 }
 
+
+
+nsresult
+nsTextEditorTextListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kIDOMTextListenerIID, NS_IDOMTEXTLISTENER_IID);
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMTextListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMTextListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult
+nsTextEditorTextListener::ProcessEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
+
+nsresult
+nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
+{
+	nsString				composedText;
+	const PRUnichar*		composedTextAsChar;
+	PRBool					commitText;
+	nsresult				result;
+
+	aTextEvent->GetText(composedText);
+	composedTextAsChar = (const PRUnichar*)(&composedText);
+	
+	if (!mInTransaction) {
+//		mEditor->BeginTransaction();
+		mInTransaction = PR_TRUE;
+	}
+
+	aTextEvent->GetCommitText(&commitText);
+	if (commitText) {
+		mEditor->Undo(1);
+		result = mEditor->InsertText(composedText);
+//		result = mEditor->EndTransaction();
+		mInTransaction=PR_FALSE;
+		mCommitText = PR_TRUE;
+	} else {
+		if (!mCommitText) {
+			mEditor->Undo(1);
+		} else {
+			mCommitText = PR_FALSE;
+		}	
+		result = mEditor->InsertText(composedText);
+	}
+
+	return result;
+}
 
 
 nsresult
@@ -632,6 +730,21 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult,
 }
 
 
+nsresult
+NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor* aEditor)
+{
+	nsTextEditorTextListener*	it = new nsTextEditorTextListener();
+	if (nsnull==it) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	it->SetEditor(aEditor);
+	static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+
+	return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);
+}
+
+
 
 nsresult
 NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, 
@@ -648,5 +761,6 @@ NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult,
 
   return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
 }
+
 
 

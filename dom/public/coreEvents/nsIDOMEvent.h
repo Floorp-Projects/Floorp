@@ -150,6 +150,11 @@ public:
   NS_IMETHOD    GetType(nsString& aType)=0;
   NS_IMETHOD    SetType(const nsString& aType)=0;
 
+  NS_IMETHOD    GetText(nsString& aText)=0;
+
+  NS_IMETHOD    GetCommitText(PRBool* aCommitText)=0;
+  NS_IMETHOD    SetCommitText(PRBool aCommitText)=0;
+
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget)=0;
   NS_IMETHOD    SetTarget(nsIDOMNode* aTarget)=0;
 
@@ -194,6 +199,9 @@ public:
 #define NS_DECL_IDOMEVENT   \
   NS_IMETHOD    GetType(nsString& aType);  \
   NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    GetCommitText(PRBool* aCommitText);  \
+  NS_IMETHOD    SetCommitText(PRBool aCommitText);  \
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);  \
   NS_IMETHOD    SetTarget(nsIDOMNode* aTarget);  \
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);  \
@@ -226,6 +234,9 @@ public:
 #define NS_FORWARD_IDOMEVENT(_to)  \
   NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
   NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
+  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
+  NS_IMETHOD    GetCommitText(PRBool* aCommitText) { return _to##GetCommitText(aCommitText); } \
+  NS_IMETHOD    SetCommitText(PRBool aCommitText) { return _to##SetCommitText(aCommitText); } \
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return _to##GetTarget(aTarget); } \
   NS_IMETHOD    SetTarget(nsIDOMNode* aTarget) { return _to##SetTarget(aTarget); } \
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return _to##GetScreenX(aScreenX); } \

@@ -15,19 +15,26 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsDOMEVENTSIIDs_h___
-#define nsDOMEVENTSIIDs_h___
 
-#include "nsISupports.h"
+#ifndef nsIDOMTextListener_h__
+#define nsIDOMTextListener_h__
 
-extern const nsIID kIDOMMouseListenerIID;
-extern const nsIID kIDOMKeyListenerIID;
-extern const nsIID kIDOMMouseMotionListenerIID;
-extern const nsIID kIDOMFocusListenerIID;
-extern const nsIID kIDOMFormListenerIID;
-extern const nsIID kIDOMLoadListenerIID;
-extern const nsIID kIDOMDragListenerIID;
-extern const nsIID kIDOMPaintListenerIID;
-extern const nsIID kIDOMTextListenerIID;
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventListener.h"
 
-#endif /* nsDOMEVENTSIIDs_h___ */
+/*
+ * Key pressed / released / typed listener interface.
+ */
+// {C6296E81-D823-11d2-9E7F-0060089FE59B}
+#define NS_IDOMTEXTLISTENER_IID \
+{ 0xc6296e81, 0xd823, 0x11d2, { 0x9e, 0x7f, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b } }
+
+
+class nsIDOMTextListener : public nsIDOMEventListener {
+
+public:
+
+    virtual nsresult HandleText(nsIDOMEvent* aTextEvent) = 0;
+
+};
+#endif // nsIDOMTextListener_h__

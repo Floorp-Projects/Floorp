@@ -35,7 +35,7 @@ static char* mEventNames[] = {
   "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover",
   "onmouseout", "onmousemove", "onkeydown", "onkeyup", "onkeypress",
   "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
-  "onsubmit", "onreset", "onchange", "onpaint"
+  "onsubmit", "onreset", "onchange", "onpaint" ,"text"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -43,12 +43,21 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
   NS_ADDREF(mPresContext);
   mEvent = aEvent;
   mTarget = nsnull;
+  mText = nsnull;
+
+  if (aEvent->eventStructType ==NS_TEXT_EVENT) {
+	  mText = new nsString(((nsTextEvent*)aEvent)->theText);
+	  mCommitText = ((nsTextEvent*)aEvent)->commitText;
+  }
+
   NS_INIT_REFCNT();
 }
 
 nsDOMEvent::~nsDOMEvent() {
   NS_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
+
+  delete mText;
 }
 
 NS_IMPL_ADDREF(nsDOMEvent)
@@ -92,6 +101,30 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   return NS_ERROR_FAILURE;
 }
 
+NS_METHOD nsDOMEvent::GetText(nsString& aText)
+{
+	if (mEvent->message == NS_TEXT_EVENT) {
+		aText = *mText;
+		return NS_OK;
+	}
+
+	return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::GetCommitText(PRBool* aCommitText)
+{
+	if (mEvent->message == NS_TEXT_EVENT) {
+		*aCommitText = mCommitText;
+		return NS_OK;
+	}
+	
+	return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::SetCommitText(PRBool aCommitText)
+{	
+	return NS_ERROR_FAILURE;
+}
 NS_METHOD nsDOMEvent::SetType(const nsString& aType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -429,6 +462,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_change];
   case NS_PAINT:
     return mEventNames[eDOMEvents_paint];
+  case NS_TEXT_EVENT:
+	return mEventNames[eDOMEvents_text];
   default:
     break;
   }

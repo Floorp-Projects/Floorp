@@ -50,25 +50,27 @@ NS_DEF_PTR(nsIDOMRenderingContext);
 //
 enum Event_slots {
   EVENT_TYPE = -1,
-  EVENT_TARGET = -2,
-  EVENT_SCREENX = -3,
-  EVENT_SCREENY = -4,
-  EVENT_CLIENTX = -5,
-  EVENT_CLIENTY = -6,
-  EVENT_ALTKEY = -7,
-  EVENT_CTRLKEY = -8,
-  EVENT_SHIFTKEY = -9,
-  EVENT_METAKEY = -10,
-  EVENT_CANCELBUBBLE = -11,
-  EVENT_CHARCODE = -12,
-  EVENT_KEYCODE = -13,
-  EVENT_BUTTON = -14,
-  NSEVENT_LAYERX = -15,
-  NSEVENT_LAYERY = -16,
-  NSEVENT_PAGEX = -17,
-  NSEVENT_PAGEY = -18,
-  NSEVENT_WHICH = -19,
-  NSEVENT_RC = -20
+  EVENT_TEXT = -2,
+  EVENT_COMMITTEXT = -3,
+  EVENT_TARGET = -4,
+  EVENT_SCREENX = -5,
+  EVENT_SCREENY = -6,
+  EVENT_CLIENTX = -7,
+  EVENT_CLIENTY = -8,
+  EVENT_ALTKEY = -9,
+  EVENT_CTRLKEY = -10,
+  EVENT_SHIFTKEY = -11,
+  EVENT_METAKEY = -12,
+  EVENT_CANCELBUBBLE = -13,
+  EVENT_CHARCODE = -14,
+  EVENT_KEYCODE = -15,
+  EVENT_BUTTON = -16,
+  NSEVENT_LAYERX = -17,
+  NSEVENT_LAYERY = -18,
+  NSEVENT_PAGEX = -19,
+  NSEVENT_PAGEY = -20,
+  NSEVENT_WHICH = -21,
+  NSEVENT_RC = -22
 };
 
 /***********************************************************************/
@@ -92,6 +94,28 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EVENT_TEXT:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetText(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EVENT_COMMITTEXT:
+      {
+        PRBool prop;
+        if (NS_OK == a->GetCommitText(&prop)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
           return JS_FALSE;
@@ -396,6 +420,17 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetType(prop);
+        
+        break;
+      }
+      case EVENT_COMMITTEXT:
+      {
+        PRBool prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+          return JS_FALSE;
+        }
+      
+        a->SetCommitText(prop);
         
         break;
       }
@@ -770,6 +805,8 @@ JSClass EventClass = {
 static JSPropertySpec EventProperties[] =
 {
   {"type",    EVENT_TYPE,    JSPROP_ENUMERATE},
+  {"text",    EVENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"commitText",    EVENT_COMMITTEXT,    JSPROP_ENUMERATE},
   {"target",    EVENT_TARGET,    JSPROP_ENUMERATE},
   {"screenX",    EVENT_SCREENX,    JSPROP_ENUMERATE},
   {"screenY",    EVENT_SCREENY,    JSPROP_ENUMERATE},

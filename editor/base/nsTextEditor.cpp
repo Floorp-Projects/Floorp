@@ -40,6 +40,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMTextListener.h"
 #include "nsEditorCID.h"
 #include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
@@ -79,6 +80,7 @@ class nsIFrame;
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMTextListenerIID,  NS_IDOMTEXTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMDragListenerIID,  NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIEditPropertyIID,     NS_IEDITPROPERTY_IID);
 
@@ -116,9 +118,15 @@ nsTextEditor::~nsTextEditor()
       if (mMouseListenerP) {
         erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
       }
+
+	  if (mTextListenerP) {
+		  erP->RemoveEventListener(mTextListenerP, kIDOMTextListenerIID);
+	  }
+
       if (mDragListenerP) {
         erP->RemoveEventListener(mDragListenerP, kIDOMDragListenerIID);
       }
+
     }
     else
       NS_NOTREACHED("~nsTextEditor");
@@ -178,9 +186,23 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
       return result;
     }
 
+	result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
+	if (NS_OK !=result) {
+		// drop the key and mouse listeners
+#ifdef DEBUG_TAGUE
+	printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
+#endif
+		mMouseListenerP = do_QueryInterface(0);
+		mKeyListenerP = do_QueryInterface(0);
+		return result;
+	}
+
     result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), this);
     if (NS_OK != result) {
       //return result;
+		mMouseListenerP = do_QueryInterface(0);
+		mKeyListenerP = do_QueryInterface(0);
+		mTextListenerP = do_QueryInterface(0);
     }
 
     nsCOMPtr<nsIDOMEventReceiver> erP;
@@ -189,6 +211,7 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     {
       mKeyListenerP = do_QueryInterface(0);
       mMouseListenerP = do_QueryInterface(0); //dont need these if we cant register them
+	  mTextListenerP = do_QueryInterface(0);
       mDragListenerP = do_QueryInterface(0); //dont need these if we cant register them
       return result;
     }
@@ -196,6 +219,8 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
     //erP->AddEventListener(mDragListenerP, kIDOMDragListenerIID);
     //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+	
+	erP->AddEventListener(mTextListenerP,kIDOMTextListenerIID);
 
     // instantiate the rules for this text editor
     // XXX: we should be told which set of rules to instantiate
