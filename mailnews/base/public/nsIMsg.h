@@ -6,17 +6,11 @@
 #define __gen_nsIMsg_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsIMsg */
 class nsIMsg : public nsISupports {
