@@ -23,6 +23,9 @@
 #include "dummy_nc.h"
 #include "il_strm.h"
 #include "if.h"
+#ifdef NU_CACHE
+#include "nsCacheManager.h"
+#endif
 
 PR_BEGIN_EXTERN_C
 extern int MK_OUT_OF_MEMORY;
@@ -68,9 +71,13 @@ public:
     
     virtual PRBool IsLocalFileURL(char *aAddress);
     
+#ifdef NU_CACHE
+    virtual PRBool IsURLInCache(ilIURL* iUrl);
+#else 
     virtual PRBool IsURLInMemCache(ilIURL *aUrl);
     
     virtual PRBool IsURLInDiskCache(ilIURL *aUrl);
+#endif
     
     virtual int GetURL (ilIURL * aUrl, NET_ReloadMethod aLoadMethod,
 			ilINetReader *aReader);
@@ -358,6 +365,15 @@ NetContextImpl::IsLocalFileURL(char *address)
     return (PRBool)NET_IsLocalFileURL(address);
 }
 
+#ifdef NU_CACHE
+PRBool
+NetContextImpl::IsURLInCache(ilIURL *iURL)
+{
+    return iURL ? 
+        nsCacheManager::GetInstance()->Contains(((URLImpl *)iURL)->GetURLStruct()->address) : PR_FALSE;
+}
+
+#else
 PRBool
 NetContextImpl::IsURLInMemCache(ilIURL *aURL)
 {
@@ -379,6 +395,7 @@ NetContextImpl::IsURLInDiskCache(ilIURL *aURL)
         return PR_FALSE;
     }
 }
+#endif /* NU_CACHE */
 
 static void
 il_netgeturldone(URL_Struct *URL_s, int status, OPAQUE_CONTEXT *cx)

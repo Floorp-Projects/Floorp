@@ -1293,13 +1293,20 @@ il_image_complete(il_container *ic)
                 /* Only loop if the image stream is available locally.
                    Also, if the user hit the "stop" button, don't
                    allow the animation to loop. */
+#ifdef NU_CACHE
                 if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
-                     ic->net_cx->IsURLInMemCache(netRequest)       ||
-                     ic->net_cx->IsURLInDiskCache(netRequest))          &&
-
+                     ic->net_cx->IsURLInCache(netRequest))          &&
                     (!il_image_stopped(ic))                &&
                     ic->net_cx &&
                     (display_type == IL_Console))
+#else
+                if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
+                     ic->net_cx->IsURLInMemCache(netRequest)       ||
+                     ic->net_cx->IsURLInDiskCache(netRequest))          &&
+                    (!il_image_stopped(ic))                &&
+                    ic->net_cx &&
+                    (display_type == IL_Console))
+#endif
                 {
                     if (!ic->is_looping) {
                         /* If this is the end of the first pass of the
