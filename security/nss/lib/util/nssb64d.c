@@ -34,7 +34,7 @@
 /*
  * Base64 decoding (ascii to binary).
  *
- * $Id: nssb64d.c,v 1.1 2000/03/31 19:38:17 relyea%netscape.com Exp $
+ * $Id: nssb64d.c,v 1.2 2000/04/06 00:26:24 thayes%netscape.com Exp $
  */
 
 #include "nssb64.h"
@@ -814,6 +814,9 @@ ATOB_AsciiToData(const char *string, unsigned int *lenp)
 {
     SECItem binary_item, *dummy;
 
+    binary_item.data = NULL;
+    binary_item.len = 0;
+
     dummy = NSSBase64_DecodeBuffer (NULL, &binary_item, string,
 				    (PRUint32) PORT_Strlen(string));
     if (dummy == NULL)
@@ -832,6 +835,9 @@ extern SECStatus
 ATOB_ConvertAsciiToItem(SECItem *binary_item, char *ascii)
 {
     SECItem *dummy;
+
+    binary_item->data = NULL;
+    binary_item->len = 0;
 
     dummy = NSSBase64_DecodeBuffer (NULL, binary_item, ascii,
 				    (PRUint32) PORT_Strlen(ascii));
