@@ -152,9 +152,9 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
     Drawable win = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
     GC gc        = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
     mRenderingSurface->Init(win, gc);
+    mOffscreenSurface = mRenderingSurface;
     NS_ADDREF(mRenderingSurface);
   }
-
   return (CommonInit());
 }
 
