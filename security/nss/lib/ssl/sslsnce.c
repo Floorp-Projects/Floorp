@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.11 2001/06/09 19:30:21 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.12 2001/06/12 20:27:12 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -246,6 +246,7 @@ static PRBool isMultiProcess  = PR_FALSE;
 
 
 static sslPID myPid;
+static PRUint32  ssl_max_sid_cache_locks = MAX_SID_CACHE_LOCKS;
 
 /* forward static function declarations */
 static void IOError(int rv, char *type);
@@ -874,7 +875,7 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     	cache->numSIDCacheSets * SID_CACHE_ENTRIES_PER_SET;
 
     cache->numSIDCacheLocks   = 
-    	PR_MIN(cache->numSIDCacheSets, MAX_SID_CACHE_LOCKS);
+    	PR_MIN(cache->numSIDCacheSets, ssl_max_sid_cache_locks);
 
     cache->numSIDCacheSetsPerLock = 
     	SID_HOWMANY(cache->numSIDCacheSets, cache->numSIDCacheLocks);
@@ -1029,6 +1030,29 @@ loser:
     return SECFailure;
 }
 
+PRUint32
+SSL_GetMaxServerCacheLocks(void)
+{
+    return ssl_max_sid_cache_locks + 2;
+    /* The extra two are the cert cache lock and the key cache lock. */
+}
+
+SECStatus
+SSL_SetMaxServerCacheLocks(PRUint32 maxLocks)
+{
+    /* Minimum is 1 sid cache lock, 1 cert cache lock and 1 key cache lock.
+    ** We'd like to test for a maximum value, but not all platforms' header
+    ** files provide a symbol or function or other means of determining
+    ** the maximum, other than trial and error.
+    */
+    if (maxLocks < 3) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    ssl_max_sid_cache_locks = maxLocks - 2;
+    /* The extra two are the cert cache lock and the key cache lock. */
+    return SECSuccess;
+}
 
 SECStatus
 SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,

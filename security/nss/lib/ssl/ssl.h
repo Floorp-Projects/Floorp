@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.8 2001/05/21 21:25:29 wtc%netscape.com Exp $
+ * $Id: ssl.h,v 1.9 2001/06/12 20:27:10 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -298,6 +298,17 @@ SSL_IMPORT SECStatus SSL_ConfigMPServerSIDCache(int      maxCacheEntries,
 				                PRUint32 timeout,
 			       	                PRUint32 ssl3_timeout, 
 		                          const char *   directory);
+
+/* Get and set the configured maximum number of mutexes used for the 
+** server's store of SSL sessions.  This value is used by the server 
+** session ID cache initialization functions shown above.  Note that on 
+** some platforms, these mutexes are actually implemented with POSIX 
+** semaphores, or with unnamed pipes.  The default value varies by platform.
+** An attempt to set a too-low maximum will return an error and the 
+** configured value will not be changed.
+*/
+SSL_IMPORT PRUint32  SSL_GetMaxServerCacheLocks(void);
+SSL_IMPORT SECStatus SSL_SetMaxServerCacheLocks(PRUint32 maxLocks);
 
 /* environment variable set by SSL_ConfigMPServerSIDCache, and queried by
  * SSL_InheritMPServerSIDCache when envString is NULL.
