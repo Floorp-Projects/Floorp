@@ -1,0 +1,81 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http:\\www.mozilla.org\NPL\
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..\..
+include <$(DEPTH)\config\rules.mak>
+
+install::
+  if not exist "bin" mkdir "bin"
+  if not exist "idl" mkdir "idl"
+  if not exist "include" mkdir "include"
+
+  $(MAKE_INSTALL) $(XPDIST)\idl\nsISupports.idl .\idl
+  $(MAKE_INSTALL) $(XPDIST)\idl\nsrootidl.idl .\idl
+
+  $(MAKE_INSTALL) $(XPDIST)\include\npapi.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\npupp.h .\include
+
+  $(MAKE_INSTALL) $(XPDIST)\include\java\jni.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\java\jni_md.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\java\jri.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\java\jri_md.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\java\jritypes.h .\include
+
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCom.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComponentManagerUtils.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCOMPtr.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nscore.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsDebug.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsError.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIClassInfo.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIComponentManager.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsID.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIDirectoryService.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIFactory.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIFile.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIID.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIInputStream.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIInterfaceRequestor.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsILocalFile.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIMemory.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIModule.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIObserver.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIOutputStream.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIProgrammingLanguage.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIProperties.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManager.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISimpleEmumerator.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupports.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsUtils.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIWeakReference.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsrootidl.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsTraceRefcnt.h .\include
+
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\pratom.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\prcpucfg.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\prlock.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\prlong.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\prtime.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\nspr\prtypes.h .\include
+
+  $(MAKE_INSTALL) $(DIST)\bin\regxpcom.exe .\bin
+  $(MAKE_INSTALL) $(DIST)\bin\xpidl.exe .\bin
+  $(MAKE_INSTALL) $(DIST)\bin\xpt_dump.exe .\bin
