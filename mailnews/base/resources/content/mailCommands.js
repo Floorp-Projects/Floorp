@@ -198,7 +198,7 @@ function SendUnsentMessages(folder)
    					if (folder.isServer) 
     						newsgroup = "";
     					else 
-          					newsgroup = folder.name; 
+          					newsgroup = server.hostName + "/" + folder.name; 
 				    }
 			}
 	        identity = getIdentityForServer(server);
