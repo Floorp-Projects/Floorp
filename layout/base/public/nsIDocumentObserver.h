@@ -19,6 +19,8 @@
 #define nsIDocumentObserver_h___
 
 #include "nsISupports.h"
+
+class nsIAtom;
 class nsIContent;
 class nsIPresShell;
 class nsIStyleSheet;
