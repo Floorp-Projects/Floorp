@@ -28,6 +28,7 @@
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
+#include "nsCExternalHelperApp.h" // contains progids for the helper app service
 
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
 NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
@@ -35,6 +36,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
 NS_INTERFACE_MAP_BEGIN(nsExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsIExternalHelperAppService)
+   NS_INTERFACE_MAP_ENTRY(nsPIExternalAppLauncher)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalHelperAppService::nsExternalHelperAppService()
@@ -58,12 +60,20 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler()
+NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsISupports * aAppCookie)
 {
   nsExternalAppHandler* handler = nsnull;
   NS_NEWXPCOM(handler, nsExternalAppHandler);
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
+
+  handler->Init(aAppCookie);
   return handler;
 }
 
@@ -155,6 +165,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIChannel * aChannel, nsISu
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
+  nsresult rv = NS_OK;
+
   // go ahead and execute the application passing in our temp file as an argument
   // this may involve us calling back into the OS external app service to make the call
   // for actually launching the helper app. It'd be great if nsIFile::spawn could be made to work
@@ -164,11 +176,17 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   if (mOutStream)
     mOutStream->Close();
 
-  return NS_OK;
+  nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
+  if (helperAppService)
+  {
+    rv = helperAppService->LaunchAppWithTempFile(mTempFile, mExternalApplication);
+  }
+
+  return rv;
 }
 
-nsresult nsExternalAppHandler::Init(nsIFile * aExternalApplication)
+nsresult nsExternalAppHandler::Init(nsISupports * aAppCookie)
 {
-  mExternalApplication = aExternalApplication;
+  mExternalApplication = aAppCookie;
   return NS_OK;
 }

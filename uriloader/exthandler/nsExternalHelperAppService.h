@@ -32,16 +32,19 @@
 
 class nsExternalAppHandler;
 
-class nsExternalHelperAppService : public nsIExternalHelperAppService
+class nsExternalHelperAppService : public nsIExternalHelperAppService, nsPIExternalAppLauncher
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXTERNALHELPERAPPSERVICE
+  NS_DECL_NSPIEXTERNALAPPLAUNCHER
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
 
-  virtual nsExternalAppHandler * CreateNewExternalHandler();
+  // create an external app handler and bind it with a cookie that came from the OS specific
+  // helper app service subclass.
+  virtual nsExternalAppHandler * CreateNewExternalHandler(nsISupports * aAppCookie);
 
 protected:
 
@@ -67,13 +70,13 @@ public:
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
 
-  // initialize the handler with an nsIFile that represents the external
+  // initialize the handler with a cookie that represents the external
   // application associated with this handler.
-  virtual nsresult Init(nsIFile * aExternalApplication);
+  virtual nsresult Init(nsISupports * aExternalApplicationCookie);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
-  nsCOMPtr<nsIFile> mExternalApplication;
+  nsCOMPtr<nsISupports> mExternalApplication;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
 
   char * mDataBuffer;
