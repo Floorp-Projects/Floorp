@@ -43,6 +43,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.ToolErrorReporter;
+import org.mozilla.javascript.serialize.*;
 
 /**
  * This class provides for sharing functions across multiple threads.
