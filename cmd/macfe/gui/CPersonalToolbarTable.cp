@@ -254,9 +254,11 @@ CPersonalToolbarTable :: AddButton ( HT_Resource inBookmark, Uint32 inIndex )
 		// (using the correct index) and add the new bookmark AFTER instead of before or just add
 		// it to the parent for the case of an empty toolbar
 		PRBool before = PR_TRUE;
-		HT_Resource dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
-		if ( ! dropOn ) {
-			dropOn = (*mButtonList)[URDFUtilities::PPRowToHTRow(inIndex) - 1].GetHTResource();
+		HT_Resource dropOn = NULL;
+		if ( inIndex <= mButtonList->size() )
+			dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
+		else {
+			dropOn = (*mButtonList)[mButtonList->size() - 1].GetHTResource();
 			before = PR_FALSE;
 		}
 		HT_DropHTRAtPos ( dropOn, inBookmark, before );
@@ -287,9 +289,11 @@ CPersonalToolbarTable :: AddButton ( const string & inURL, const string & inTitl
 		// (using the correct index) and add the new bookmark AFTER instead of before or just add
 		// it to the parent for the case of an empty toolbar
 		PRBool before = PR_TRUE;
-		HT_Resource dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
-		if ( ! dropOn ) {
-			dropOn = (*mButtonList)[URDFUtilities::PPRowToHTRow(inIndex) - 1].GetHTResource();
+		HT_Resource dropOn = NULL;
+		if ( inIndex <= mButtonList->size() )
+			dropOn = GetInfoForPPColumn(inIndex).GetHTResource();
+		else {
+			dropOn = (*mButtonList)[mButtonList->size() - 1].GetHTResource();
 			before = PR_FALSE;
 		}
 		HT_DropURLAndTitleAtPos ( dropOn, const_cast<char*>(inURL.c_str()), 
