@@ -614,11 +614,12 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
 {
   nsAutoString val;
   char char1, char2;
-  GetRepChars(aPresContext, char1, char2);  
-  for (int i = 0; i < aNumChars; i+=2) {
+  GetRepChars(aPresContext, char1, char2);
+  int i;
+  for (i = 0; i < aNumChars; i+=2) {
     val += char1;  
   }
-  for (int i = 1; i < aNumChars; i+=2) {
+  for (i = 1; i < aNumChars; i+=2) {
     val += char2;  
   }
   return GetTextSize(aPresContext, aFrame, val, aSize);
