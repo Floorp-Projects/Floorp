@@ -1957,12 +1957,12 @@ COOKIE_Enumerate (PRInt32 count, nsACString &name, nsACString &value, PRBool &is
                   nsACString &host, nsACString &path, PRBool &isSecure, PRUint64 &expires,
                   nsCookieStatus &status, nsCookiePolicy &policy)
 {
-  if (count > COOKIE_Count()) {
+  if (!cookie_list) {
     return NS_ERROR_FAILURE;
   }
   cookie_CookieStruct *cookie;
-  NS_ASSERTION(count >= 0 && count < cookie_list->Count(), "bad cookie index");
   if (count < 0 || count >= cookie_list->Count()) {
+    NS_ERROR("bad cookie index");
     return NS_ERROR_UNEXPECTED;
   }
   cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));

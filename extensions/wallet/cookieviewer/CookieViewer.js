@@ -199,6 +199,7 @@ function loadCookies() {
   var showPolicyField = false;
   while (enumerator.hasMoreElements()) {
     var nextCookie = enumerator.getNext();
+    if (!nextCookie) break;
     nextCookie = nextCookie.QueryInterface(Components.interfaces.nsICookie);
     var host = nextCookie.host;
     if (nextCookie.policy != nsICookie.POLICY_UNKNOWN) {

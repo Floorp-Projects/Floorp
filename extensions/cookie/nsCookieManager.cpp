@@ -56,13 +56,23 @@ class nsCookieEnumerator : public nsISimpleEnumerator
 
         NS_DECL_ISUPPORTS
 
-        nsCookieEnumerator() : mCookieCount(0) 
+        // note: mCookieCount is initialized just once in the ctor. While it might
+        // appear that the cookie list can change while the cookiemanager is running,
+        // the cookieservice is actually on the same thread, so it can't. Note that
+        // a new nsCookieEnumerator is created each time the cookiemanager is loaded.
+        // So we only need to get the count once. If we ever change the cookieservice to
+        // run on a different thread, then something to the effect of a lock will be
+        // required. see bug 191682 for details.
+        // note also that COOKIE_Count() removes expired cookies from the list before
+        // returning the count, so that they're not displayed in the cookiemanager.
+        nsCookieEnumerator() : mCookieIndex(0),
+                               mCookieCount(COOKIE_Count())
         {
         }
 
         NS_IMETHOD HasMoreElements(PRBool *result) 
         {
-            *result = COOKIE_Count() > mCookieCount;
+            *result = mCookieCount > mCookieIndex;
             return NS_OK;
         }
 
@@ -78,7 +88,7 @@ class nsCookieEnumerator : public nsISimpleEnumerator
           nsCookieStatus status;
           nsCookiePolicy policy;
           nsresult rv = COOKIE_Enumerate
-            (mCookieCount++, name, value, isDomain, host, path, isSecure, expires,
+            (mCookieIndex++, name, value, &isDomain, host, path, &isSecure, &expires,
               status, policy);
           if (NS_SUCCEEDED(rv)) {
             nsICookie *cookie =
@@ -97,6 +107,7 @@ class nsCookieEnumerator : public nsISimpleEnumerator
         }
 
     protected:
+        PRInt32 mCookieIndex;
         PRInt32 mCookieCount;
 };
 
