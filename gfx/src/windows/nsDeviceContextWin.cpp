@@ -831,11 +831,9 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
   if (NULL != mDC){
     DOCINFO docinfo;
 
-    
-    char *title = nsnull;
-    if( nsnull != aTitle) {
-      title = ToNewCString(nsDependentString(aTitle));
-    }
+    nsString titleStr;
+    titleStr = aTitle;
+    char *title = GetACPString(titleStr);
 
     docinfo.cbSize = sizeof(docinfo);
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
@@ -849,7 +847,7 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
       rv = NS_ERROR_FAILURE;
 
     if (title != nsnull) {
-      nsMemory::Free(title);
+      delete [] title;
     }
   }
 
@@ -907,4 +905,20 @@ nsDeviceContextWin :: PrefChanged(const char* aPref, void* aClosure)
   }
 
   return 0;
+}
+
+char* 
+nsDeviceContextWin :: GetACPString(const nsString& aStr)
+{
+   int acplen = aStr.Length() * 2 + 1;
+   char * acp = new char[acplen];
+   if(acp)
+   {
+      int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
+                      aStr.GetUnicode(), aStr.Length(),
+                      acp, acplen, NULL, NULL);
+      if ( outlen > 0)
+         acp[outlen] = '\0';  // null terminate
+   }
+   return acp;
 }

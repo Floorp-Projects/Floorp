@@ -75,6 +75,10 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  // Static Helper Methods
+  static char* GetACPString(const nsString& aStr);
+
+
 protected:
   virtual ~nsDeviceContextWin();
   void CommonInit(HDC aDC);
