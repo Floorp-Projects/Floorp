@@ -780,11 +780,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             dwTempSetupType = dwSetupType;
           }
 
-          /* set the next dialog to be shown depending on the 
-             what the user selected */
-          dwWizardState = DLG_SETUP_TYPE;
-          CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
-
           DestroyWindow(hDlg);
           DlgSequenceNext();
           break;
@@ -1512,8 +1507,6 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
 
         case IDWIZBACK:
           dwWizardState = DLG_WINDOWS_INTEGRATION;
-          CheckWizardStateCustom(DLG_SETUP_TYPE);
-
           DestroyWindow(hDlg);
           DlgSequencePrev();
           break;
@@ -2576,17 +2569,6 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   return(hDlg);
 }
 
-BOOL CheckWizardStateCustom(DWORD dwDefault)
-{
-  if(sgProduct.dwCustomType != dwSetupType)
-  {
-    dwWizardState = dwDefault;
-    return(FALSE);
-  }
-
-  return(TRUE);
-}
-
 /*
  * Check to see if turbo is enabled.  If so, do the following:
  *   * Log the turbo status that use had chosen.
@@ -2666,16 +2648,13 @@ void DlgSequenceNext()
           hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
           bDone = TRUE;
         }
-        else
-        {
-          CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
-        }
+
         break;
 
       case DLG_SETUP_TYPE:
         dwWizardState = DLG_SELECT_COMPONENTS;
         gbProcessingXpnstallFiles = FALSE;
-        if(diSelectComponents.bShowDialog)
+        if((diSelectComponents.bShowDialog) && (sgProduct.dwCustomType == dwSetupType))
         {
           hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
           bDone = TRUE;
@@ -2705,7 +2684,7 @@ void DlgSequenceNext()
       case DLG_WINDOWS_INTEGRATION:
         dwWizardState = DLG_PROGRAM_FOLDER;
         gbProcessingXpnstallFiles = FALSE;
-        if(diProgramFolder.bShowDialog)
+        if(diProgramFolder.bShowDialog && (sgProduct.dwCustomType == dwSetupType))
         {
           hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
           bDone = TRUE;
@@ -2984,14 +2963,11 @@ void DlgSequencePrev()
       case DLG_QUICK_LAUNCH:
         dwWizardState = DLG_PROGRAM_FOLDER;
         gbProcessingXpnstallFiles = FALSE;
-        if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
-        {
-          if(diProgramFolder.bShowDialog)
+        if(diProgramFolder.bShowDialog && (sgProduct.dwCustomType == dwSetupType))
           {
             hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
             bDone = TRUE;
           }
-        }
         break;
 
       case DLG_PROGRAM_FOLDER:
@@ -3017,7 +2993,7 @@ void DlgSequencePrev()
       case DLG_SELECT_ADDITIONAL_COMPONENTS:
         dwWizardState = DLG_SELECT_COMPONENTS;
         gbProcessingXpnstallFiles = FALSE;
-        if(diSelectComponents.bShowDialog)
+        if(diSelectComponents.bShowDialog && (sgProduct.dwCustomType == dwSetupType))
         {
           hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
           bDone = TRUE;

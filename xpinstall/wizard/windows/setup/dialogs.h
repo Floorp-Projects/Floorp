@@ -56,7 +56,6 @@ void              ShowMessage(LPSTR szMessage, BOOL bShow);
 void              DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
 void              InvalidateLBCheckbox(HWND hwndListBox);
 void              ProcessWindowsMessages(void);
-BOOL              CheckWizardStateCustom(DWORD dwDefault);
 LPSTR             GetStartInstallMessage(void);
 void              AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString);
 void              TruncateString(HWND hWnd, LPSTR szInPath, LPSTR szOutPath, DWORD dwOutPathBufSize);

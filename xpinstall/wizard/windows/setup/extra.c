@@ -2893,21 +2893,27 @@ BOOL IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected)
   return(FALSE);
 }
 
+//  This function:
+//  - Zeros the SELECTED and ADDITIONAL attributes of all components.
+//  - Set all attributes as specified for the specific Setup Type
+//  - Overrides attributes designated in any [Component XXX-Overwrite-Setup TypeX]
+//    sections for the specific Setup Type.
 void SiCNodeSetItemsSelected(DWORD dwSetupType)
 {
   siC  *siCNode;
   char szBuf[MAX_BUF];
-  char szIndex0[MAX_BUF];
   char szSTSection[MAX_BUF];
   char szComponentKey[MAX_BUF];
   char szComponentSection[MAX_BUF];
+  char szOverrideSection[MAX_BUF];
+  char szOverrideAttributes[MAX_BUF];
   DWORD dwIndex0;
 
   lstrcpy(szSTSection, "Setup Type");
   itoa(dwSetupType, szBuf, 10);
   lstrcat(szSTSection, szBuf);
 
-  /* for each component in the global list, unset its SELECTED attribute */
+  // For each component in the global list unset its SELECTED and ADDITIONAL attributes
   siCNode = siComponents;
   do
   {
@@ -2915,6 +2921,7 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
       break;
 
     siCNode->dwAttributes &= ~SIC_SELECTED;
+    siCNode->dwAttributes &= ~SIC_ADDITIONAL;
 
     /* Force Upgrade needs to be performed here because the user has just
      * selected the destination path for the product.  The destination path is
@@ -2923,27 +2930,36 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
     siCNode = siCNode->Next;
   } while((siCNode != NULL) && (siCNode != siComponents));
 
-  /* for each component in a setup type, set its attribute to be SELECTED */
+  /* for each component in a setup type, set its ATTRIBUTES to the right values */
   dwIndex0 = 0;
-  itoa(dwIndex0, szIndex0, 10);
-  lstrcpy(szComponentKey, "C");
-  lstrcat(szComponentKey, szIndex0);
+  wsprintf(szComponentKey, "C%d", dwIndex0);
   GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIniConfig);
   while(*szComponentSection != '\0')
   {
     if((siCNode = SiCNodeFind(siComponents, szComponentSection)) != NULL)
     {
+      wsprintf(szOverrideSection, "%s-Override-%s", siCNode->szReferenceName, szSTSection);
+      GetPrivateProfileString(szOverrideSection, "Attributes", "", szOverrideAttributes, sizeof(szOverrideAttributes), szFileIniConfig);
+
       if((siCNode->lRandomInstallPercentage != 0) &&
          (siCNode->lRandomInstallPercentage <= siCNode->lRandomInstallValue) &&
          !(siCNode->dwAttributes & SIC_DISABLED))
+      {
         /* Random Install Percentage check passed *and* the component
          * is not DISABLED */
+        if(*szOverrideAttributes != '\0')
+          siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
         siCNode->dwAttributes &= ~SIC_SELECTED;
+      }
       else if(sgProduct.dwCustomType != dwSetupType)
+      {
         /* Setup Type other than custom detected, so
          * make sure all components from this Setup Type
          * is selected (regardless if it's DISABLED or not). */
         siCNode->dwAttributes |= SIC_SELECTED;
+        if(*szOverrideAttributes != '\0')
+          siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
+      }
       else if(!(siCNode->dwAttributes & SIC_DISABLED) && !siCNode->bForceUpgrade)
       {
         /* Custom setup type detected and the component is
@@ -2954,14 +2970,14 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
          * Dialogs as not selected and DISABLED.  Not sure why we
          * want this, but marketing might find it useful someday. */
         GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        siCNode->dwAttributes = ParseComponentAttributes(szBuf);
+        siCNode->dwAttributes = ParseComponentAttributes(szBuf, 0, FALSE);
+        if(*szOverrideAttributes != '\0')
+          siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
       }
     }
 
     ++dwIndex0;
-    itoa(dwIndex0, szIndex0, 10);
-    lstrcpy(szComponentKey, "C");
-    lstrcat(szComponentKey, szIndex0);
+    wsprintf(szComponentKey, "C%d", dwIndex0);
     GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIniConfig);
   }
 }
@@ -3849,43 +3865,48 @@ DWORD ParseOSType(char *szOSType)
   return(dwOSType);
 }
 
-HRESULT ParseComponentAttributes(char *szAttribute)
+HRESULT ParseComponentAttributes(char *szAttribute, DWORD dwAttributes, BOOL bOverride)
 {
   char  szBuf[MAX_BUF];
-  DWORD dwAttributes = 0;
 
   lstrcpy(szBuf, szAttribute);
   strupr(szBuf);
 
-  if(strstr(szBuf, "SELECTED") && !strstr(szBuf, "UNSELECTED"))
-    /* Check for SELECTED attribute only. Since strstr will also return a
-     * SELECTED attribute for UNSELECTED, we need to make sure it's not the
-     * UNSELECTED attribute.
-     *
-     * Even though we're already checking for the UNSELECTED attribute
-     * later on in this function, we're trying not to be order dependent.
-     */
-    dwAttributes |= SIC_SELECTED;
-  if(strstr(szBuf, "INVISIBLE"))
-    dwAttributes |= SIC_INVISIBLE;
-  if(strstr(szBuf, "LAUNCHAPP"))
-    dwAttributes |= SIC_LAUNCHAPP;
-  if(strstr(szBuf, "DOWNLOAD_ONLY"))
-    dwAttributes |= SIC_DOWNLOAD_ONLY;
-  if(strstr(szBuf, "ADDITIONAL"))
-    dwAttributes |= SIC_ADDITIONAL;
-  if(strstr(szBuf, "DISABLED"))
-    dwAttributes |= SIC_DISABLED;
+  if(bOverride != TRUE)
+  {
+    if(strstr(szBuf, "LAUNCHAPP"))
+      dwAttributes |= SIC_LAUNCHAPP;
+    if(strstr(szBuf, "DOWNLOAD_ONLY"))
+      dwAttributes |= SIC_DOWNLOAD_ONLY;
+    if(strstr(szBuf, "FORCE_UPGRADE"))
+      dwAttributes |= SIC_FORCE_UPGRADE;
+    if(strstr(szBuf, "IGNORE_DOWNLOAD_ERROR"))
+      dwAttributes |= SIC_IGNORE_DOWNLOAD_ERROR;
+    if(strstr(szBuf, "IGNORE_XPINSTALL_ERROR"))
+      dwAttributes |= SIC_IGNORE_XPINSTALL_ERROR;
+    if(strstr(szBuf, "UNCOMPRESS"))
+      dwAttributes |= SIC_UNCOMPRESS;
+  }
+
   if(strstr(szBuf, "UNSELECTED"))
     dwAttributes &= ~SIC_SELECTED;
-  if(strstr(szBuf, "FORCE_UPGRADE"))
-    dwAttributes |= SIC_FORCE_UPGRADE;
-  if(strstr(szBuf, "IGNORE_DOWNLOAD_ERROR"))
-    dwAttributes |= SIC_IGNORE_DOWNLOAD_ERROR;
-  if(strstr(szBuf, "IGNORE_XPINSTALL_ERROR"))
-    dwAttributes |= SIC_IGNORE_XPINSTALL_ERROR;
-  if(strstr(szBuf, "UNCOMPRESS"))
-    dwAttributes |= SIC_UNCOMPRESS;
+  else if(strstr(szBuf, "SELECTED"))
+    dwAttributes |= SIC_SELECTED;
+
+  if(strstr(szBuf, "INVISIBLE"))
+    dwAttributes |= SIC_INVISIBLE;
+  else if(strstr(szBuf, "VISIBLE"))
+    dwAttributes &= ~SIC_INVISIBLE;
+
+  if(strstr(szBuf, "DISABLED"))
+    dwAttributes |= SIC_DISABLED;
+  if(strstr(szBuf, "ENABLED"))
+    dwAttributes &= ~SIC_DISABLED;
+
+  if(strstr(szBuf, "NOTADDITIONAL"))
+    dwAttributes &= ~SIC_ADDITIONAL;
+  else if(strstr(szBuf, "ADDITIONAL"))
+    dwAttributes |= SIC_ADDITIONAL;
 
   return(dwAttributes);
 }
@@ -3952,7 +3973,7 @@ BOOL ResolveForceUpgrade(siC *siCObject)
     }
     else
       /* Make sure to unset the DISABLED bit.  If the Setup Type is other than
-       * Cutsom, then we don't care if it's DISABLED or not because this flag
+       * Custom, then we don't care if it's DISABLED or not because this flag
        * is only used in the Custom dialogs.
        *
        * If the Setup Type is Custom and this component is DISABLED by default
@@ -4056,7 +4077,7 @@ void InitSiComponents(char *szFileIni)
 
         /* get attributes of component */
         GetPrivateProfileString(szComponentSection, "Attributes", "", szBuf, sizeof(szBuf), szFileIni);
-        siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
+        siCTemp->dwAttributes = ParseComponentAttributes(szBuf, 0, FALSE);
 
         /* get the random percentage value and select or deselect the component (by default) for
          * installation */
@@ -4156,7 +4177,7 @@ void ResetComponentAttributes(char *szFileIni)
 
     siCTemp = SiCNodeGetObject(dwCounter, TRUE, AC_ALL);
     GetPrivateProfileString(szComponentItem, "Attributes", "", szBuf, sizeof(szBuf), szFileIni);
-    siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
+    siCTemp->dwAttributes = ParseComponentAttributes(szBuf, 0, FALSE);
   }
 }
 

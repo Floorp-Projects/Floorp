@@ -73,7 +73,7 @@ ULONGLONG         SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisi
 ULONGLONG         SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 siC               *SiCNodeFind(siC *siComponents, char *szInReferenceName);
 void              InitSiComponents(char *szFileIni);
-HRESULT           ParseComponentAttributes(char *szBuf);
+HRESULT           ParseComponentAttributes(char *szBuf, DWORD dwAttributes, BOOL bOverride);
 void              InitSiteSelector(char *szFileIni);
 void              DeInitSiCDependencies(siCD *siCDDependencies);
 BOOL              ResolveDependencies(DWORD dwIndex);
