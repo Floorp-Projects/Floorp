@@ -104,7 +104,10 @@ public:
     NS_DECL_NSILINEINPUTSTREAM
     
     nsFileInputStream() : nsFileStream() {}
-    virtual ~nsFileInputStream() {}
+    virtual ~nsFileInputStream() 
+    {
+        Close();
+    }
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);

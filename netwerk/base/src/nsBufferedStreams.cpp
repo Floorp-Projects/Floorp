@@ -90,7 +90,7 @@ nsBufferedStream::Init(nsISupports* stream, PRUint32 bufferSize)
     NS_ASSERTION(stream, "need to supply a stream");
     NS_ASSERTION(mStream == nsnull, "already inited");
     mStream = stream;
-    NS_ADDREF(mStream);
+    NS_IF_ADDREF(mStream);
     mBufferSize = bufferSize;
     mBufferStartOffset = 0;
     mCursor = 0;
@@ -103,7 +103,7 @@ nsBufferedStream::Init(nsISupports* stream, PRUint32 bufferSize)
 nsresult
 nsBufferedStream::Close()
 {
-    nsresult rv = NS_OK;
+    NS_IF_RELEASE(mStream);
     if (mBuffer) {
         delete[] mBuffer;
         mBuffer = nsnull;
@@ -111,7 +111,7 @@ nsBufferedStream::Close()
         mBufferStartOffset = 0;
         mCursor = 0;
     }
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -1241,18 +1241,18 @@ nsLocalFile::Remove(PRBool recursive)
             }
         }
 #ifdef XP_OS2_VACPP
-        rmdir((char *) filePath);  // todo: save return value?
+        rv = rmdir((char *) filePath);  // todo: save return value?
 #else
-        rmdir(filePath);  // todo: save return value?
+        rv = rmdir(filePath);  // todo: save return value?
 #endif
     }
     else
     {
-        remove(filePath); // todo: save return value?
+        rv = remove(filePath); // todo: save return value?
     }
     
     MakeDirty();
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP  
