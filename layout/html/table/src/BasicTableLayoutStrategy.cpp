@@ -1139,6 +1139,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   if (!colInfo) { 
     return;
   }
+  memset(colInfo, 0, aNumConstrainedCols * sizeof(nsColInfo *));
   PRInt32 maxMinDiff = 0;
   PRInt32 constrColX = 0;
   // set the col info entries for each constrained col
