@@ -20,6 +20,8 @@
 //#include "prmem.h"
 //#include "plstr.h"
 
+#include "stdlib.h"  // getenv() on Solaris/CC
+
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
  *  @update   dc 12/02/98
