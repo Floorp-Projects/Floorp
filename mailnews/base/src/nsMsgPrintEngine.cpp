@@ -43,9 +43,13 @@
 #include "nsMsgPrintEngine.h"
 #include "nsMsgBaseCID.h"
 #include "nsIDocumentLoader.h"
+#include "nsIWebShellWindow.h"
+#include "nsIWidget.h"
+#include "nsIWebShellWindow.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
@@ -261,6 +265,53 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
     SetupObserver();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgPrintEngine::ShowWindow(PRBool aShow)
+{
+  nsresult rv;
+
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(mWindow, &rv);
+
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIDocShell> docShell;
+
+  rv = globalScript->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIWebShell> webShell = do_QueryInterface(docShell, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIWebShellContainer> webShellContainer;
+  rv = webShell->GetContainer(*getter_AddRefs(webShellContainer));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (webShellContainer) {
+    nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docShell, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // disable (enable) the window
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+    baseWindow = do_QueryInterface(treeOwner, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = baseWindow->SetEnabled(aShow);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // hide or show the window
+    rv = webShellWindow->Show(aShow);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

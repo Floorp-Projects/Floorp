@@ -31,7 +31,7 @@ function OnLoadPrintEngine()
 {
   PrintEngineCreateGlobals();
 	InitPrintEngineWindow();
-  printEngine.StartPrintOperation(printSettings);	
+  printEngine.startPrintOperation(printSettings);
 }
 
 function OnUnloadPrintEngine()
@@ -48,31 +48,30 @@ function PrintEngineCreateGlobals()
 function InitPrintEngineWindow()
 {
   /* Tell the nsIPrintEngine object what window is rendering the email */
-  printEngine.SetWindow(window);
+  printEngine.setWindow(window);
 
-  // See if we got arguments.
-  // Window was opened via window.openDialog.  Copy argument
-  // and perform compose initialization 
-  //
-  if ( window.arguments && window.arguments[0] != null ) 
-  {
+  /* hide the printEngine window.  see bug #73995 */
+  printEngine.showWindow(false);
+
+  /* See if we got arguments.
+   * Window was opened via window.openDialog.  Copy argument
+   * and perform compose initialization 
+   */
+  if ( window.arguments && window.arguments[0] != null ) {
     var numSelected = window.arguments[0];
     var uriArray = window.arguments[1];
     var statusFeedback = window.arguments[2];
     printSettings = window.arguments[3].QueryInterface(Components.interfaces.nsIPrintSettings);
 
-    printEngine.SetStatusFeedback(statusFeedback);
+    printEngine.setStatusFeedback(statusFeedback);
 
-    if (numSelected > 0)
-    {
-      printEngine.SetPrintURICount(numSelected);
-      for(var i = 0; i < numSelected; i++)
-	    {
-        dump(uriArray[i]);
-        printEngine.AddPrintURI(uriArray[i]);      
-        dump("\n");
-	    }	    
-	  }
+    if (numSelected > 0) {
+      printEngine.setPrintURICount(numSelected);
+      for (var i = 0; i < numSelected; i++) {
+        printEngine.addPrintURI(uriArray[i]);      
+        //dump(uriArray[i] + "\n");
+      }	    
+    }
   }
 }
 
@@ -84,19 +83,10 @@ function ClearPrintEnginePane()
 
 function StopUrls()
 {
-	printEngine.StopUrls();
+  printEngine.stopUrls();
 }
 
 function PrintEnginePrint()
 {
-  // XXX fix me
-  // instead of moving this offscreen (which doesn't work)
-  // and the user can close it from the task bar
-  // we should hide the window
-  var left = screen.width + 50;
-  var top = screen.height + 50;
-  printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
-								                        "",
-								                        "chrome,dialog=no,all",
-								                        "left="+left+",top="+top+")");
+  printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul", "", "chrome,dialog=no,all,centerscreen");
 }

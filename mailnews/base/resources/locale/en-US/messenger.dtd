@@ -534,9 +534,6 @@ Rights Reserved.
 <!ENTITY BlockAddress.label "Block Address">
 <!ENTITY BlockAddress.accesskey "A">
 
-<!-- Print Engine -->
-<!ENTITY printEngine.title "Printing...">
-
 <!---SearchBar-->
 <!-- also used by addressbook -->
 <!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">

@@ -25,25 +25,13 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
-%messengerDTD;
-]>
-                     
 <window id="printEngineWin"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-        title="&printEngine.title;"
-        titlemodifier="&titleModifier.label;"
-        titlemenuseparator="&titleSeparator.label;"
         onload="OnLoadPrintEngine()"
         onunload="OnUnloadPrintEngine()"
-        width="150"
-        height="250"
-        screenX="10000"
-        screenY="10000"
+        width="500"
+        height="500"
         windowtype="mail:printEngine">
 
 <!-- XXX: utilityOverlay.xul uses strres.js - once it is converted, this should be  removed-->

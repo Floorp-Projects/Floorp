@@ -1204,7 +1204,7 @@ function PrintEnginePrint()
 
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                           "",
-                                          "chrome,dialog=no,all",
+                                          "chrome,dialog=no,all,centerscreen",
                                           numMessages, messageList, statusFeedback, gPrintSettings);
     return true;
 }
