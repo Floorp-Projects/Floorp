@@ -48,8 +48,16 @@ CHROME_SKIN = \
         .\list-down.gif \
         .\list-up-dis.gif \
         .\list-up.gif \
+	.\sbgrippy-left-hover.gif \
+	.\sbgrippy-left.gif \
+	.\sbgrippy-right-hover.gif \
+	.\sbgrippy-right.gif \
 	.\sidebar-bottomright-cap.gif \
 	.\sidebar-topright-cap.gif \
+	.\sidebar-close-hover.gif \
+	.\sidebar-close.gif \
+	.\sidebar-open-hover.gif \
+	.\sidebar-open.gif \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
