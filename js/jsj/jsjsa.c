@@ -22,7 +22,7 @@
  *   the glue.
  */
 
-#if defined (JAVA)
+#if defined(JAVA)
 
 #include "jsapi.h"
 #include "jri.h"
@@ -219,3 +219,4 @@ JSJ_InitStandalone()
 }
 
 #endif /* defined (JAVA) */
+
