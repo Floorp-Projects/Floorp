@@ -150,6 +150,7 @@ struct nsRegSubtreeEnumerator : public nsIRegistryEnumerator {
 
     // ctor/dtor
     nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );
+    // virtual dtor since subclasses call our Release()
     virtual ~nsRegSubtreeEnumerator();
 
 protected:

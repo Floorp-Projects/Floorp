@@ -717,8 +717,11 @@ public:
     NS_IMETHOD FooMethod2(PRInt32 i);
 
     FooImpl();
-    virtual ~FooImpl();
 
+protected:
+    ~FooImpl() {}
+
+public:
     virtual const char* ImplName() = 0;
 
     int SomeData1;
@@ -733,8 +736,11 @@ public:
     NS_IMETHOD BarMethod2(PRInt32 i);
 
     BarImpl();
-    virtual ~BarImpl();
 
+protected:
+    ~BarImpl() {}
+
+public:
     virtual const char * ImplName() = 0;
 
     int SomeData1;
@@ -745,9 +751,6 @@ public:
 /***************************/
 
 FooImpl::FooImpl() : Name("FooImpl")
-{
-}
-FooImpl::~FooImpl()
 {
 }
 
@@ -768,9 +771,6 @@ NS_IMETHODIMP FooImpl::FooMethod2(PRInt32 i)
 /***************************/
 
 BarImpl::BarImpl() : Name("BarImpl")
-{
-}
-BarImpl::~BarImpl()
 {
 }
 
@@ -798,17 +798,17 @@ public:
     const char* ImplName();
 
     FooBarImpl();
-    virtual ~FooBarImpl();
+
+private:
+    ~FooBarImpl() {}
+
+public:
     const char* MyName;
 };
 
 FooBarImpl::FooBarImpl() : MyName("FooBarImpl")
 {
     NS_ADDREF_THIS();
-}
-
-FooBarImpl::~FooBarImpl()
-{
 }
 
 const char* FooBarImpl::ImplName()
@@ -946,17 +946,17 @@ public:
     NS_DECL_ISUPPORTS
 
     FooBarImpl2();
-    virtual ~FooBarImpl2();
-        PRInt32 value;
+
+private:
+    ~FooBarImpl2() {}
+
+public:
+    PRInt32 value;
 };
 
 FooBarImpl2::FooBarImpl2() : value(0x12345678)
 {
     NS_ADDREF_THIS();
-}
-
-FooBarImpl2::~FooBarImpl2()
-{
 }
 
 NS_IMETHODIMP FooBarImpl2::FooMethod1(PRInt32 i)

@@ -348,10 +348,7 @@ class nsSharedBufferHandleWithDestroy
 
       virtual void Destroy() = 0;
 
-      // This doesn't really need to be |virtual|, but it saves us from
-      // having to turn off gcc warnings that might be useful to
-      // someone.
-      virtual ~nsSharedBufferHandleWithDestroy() { }
+      ~nsSharedBufferHandleWithDestroy() { }
 
 
   };

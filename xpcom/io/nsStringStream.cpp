@@ -87,12 +87,14 @@ public:
         , mLength(0)
     {}
     
-    virtual ~nsStringInputStream()
+private:
+    ~nsStringInputStream()
     {
         if (mOwned)
             nsMemory::Free((char*)mConstString);
     }
 
+public:
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSISTRINGINPUTSTREAM
@@ -331,14 +333,16 @@ NS_NewStringInputStream(nsIInputStream** aStreamResult,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    NS_ADDREF(stream);
+
     nsresult rv = stream->AdoptData(data, aStringToRead.Length());
     if (NS_FAILED(rv)) {
         nsMemory::Free(data);
-        delete stream;
+        NS_RELEASE(stream);
         return rv;
     }
     
-    NS_ADDREF(*aStreamResult = stream);
+    *aStreamResult = stream;
     return NS_OK;
 }
 
@@ -360,14 +364,16 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    NS_ADDREF(stream);
+
     nsresult rv = stream->AdoptData(data, aStringToRead.Length());
     if (NS_FAILED(rv)) {
         nsMemory::Free(data);
-        delete stream;
+        NS_RELEASE(stream);
         return rv;
     }
     
-    NS_ADDREF(*aStreamResult = stream);
+    *aStreamResult = stream;
     return NS_OK;
 }
 
@@ -383,14 +389,16 @@ NS_NewCharInputStream(nsIInputStream** aStreamResult,
     if (! stream)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(stream);
+
     nsresult rv = stream->ShareData(aStringToRead, -1);
     
     if (NS_FAILED(rv)) {
-        delete stream;
+        NS_RELEASE(stream);
         return rv;
     }
     
-    NS_ADDREF(*aStreamResult = stream);
+    *aStreamResult = stream;
     return NS_OK;
 }
 
@@ -407,14 +415,16 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
     if (! stream)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(stream);
+
     nsresult rv = stream->ShareData(aStringToRead, aLength);
     
     if (NS_FAILED(rv)) {
-        delete stream;
+        NS_RELEASE(stream);
         return rv;
     }
     
-    NS_ADDREF(*aStreamResult = stream);
+    *aStreamResult = stream;
     return NS_OK;
 }
 

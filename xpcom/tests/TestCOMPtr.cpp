@@ -61,6 +61,7 @@ class IFoo : public nsISupports
 
 		public:
       IFoo();
+      // virtual dtor because IBar uses our Release()
       virtual ~IFoo();
 
       NS_IMETHOD_(nsrefcnt) AddRef();

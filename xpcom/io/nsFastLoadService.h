@@ -50,8 +50,10 @@ class nsFastLoadService : public nsIFastLoadService
 {
   public:
     nsFastLoadService();
-    virtual ~nsFastLoadService();
+  private:
+    ~nsFastLoadService();
 
+  public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFASTLOADSERVICE
 
