@@ -728,7 +728,8 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       {
         case NS_VK_PAGE_DOWN: 
         case NS_VK_PAGE_UP:
-          ScrollByPages((keyEvent->keyCode == NS_VK_PAGE_DOWN) ? 1 : -1);
+        case NS_VK_SPACE:
+          ScrollByPages((keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
           break;
 
         case NS_VK_DOWN: 
