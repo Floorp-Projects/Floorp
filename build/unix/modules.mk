@@ -18,6 +18,7 @@
 #
 
 BUILD_MODULE_DIRS := config build include
+BUILD_MODULE_DEP_DIRS	:=
 _BUILD_MODS = 
 NSPRPUB_DIR =
 
@@ -45,11 +46,16 @@ BUILD_MODULE_DIRS_dbm 		= $(NSPRPUB_DIR) dbm
 BUILD_MODULE_DIRS_js		+= js
 BUILD_MODULE_DIRS_necko		= $(BUILD_MODULE_DIRS_xpcom) netwerk
 BUILD_MODULE_DIRS_transformiix	= extensions/transformiix
-BUILD_MODULE_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom
+
 BUILD_MODULE_DIRS_xpconnect	= $(BUILD_MODULE_DIRS_xpcom) $(BUILD_MODULE_DIRS_js) js/src/xpconnect
 BUILD_MODULE_DIRS_security	= $(BUILD_MODULE_DIRS_xpcom) $(BUILD_MODULE_DIRS_dbm) security
 
+BUILD_MODULE_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom
+BUILD_MODULE_DEP_DIRS_xpcom	= intl modules/libjar
+
+
 BUILD_MODULE_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DIRS_$(mod)))
+BUILD_MODULE_DEP_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DEP_DIRS_$(mod)))
 
 # Remove dups from the list to speed up the build
 #
@@ -59,11 +65,16 @@ BUILD_MODULE_DIRS := $(shell $(PERL) -e 'undef @out; \
 	push @out, $$d if (!grep(/$$d/, @out)); \
     }; \
     print "@out\n"; ' $(BUILD_MODULE_DIRS))
+
+BUILD_MODULE_DEP_DIRS := $(shell $(PERL) -e 'undef @out; \
+    foreach $$d (@ARGV) { \
+	push @out, $$d if (!grep(/$$d/, @out)); \
+    }; \
+    print "@out\n"; ' $(BUILD_MODULE_DEP_DIRS))
 else
 # Since PERL isn't defined, client.mk must've called us so order doesn't matter
 BUILD_MODULE_DIRS := $(sort $(BUILD_MODULE_DIRS))
+BUILD_MODULE_DEP_DIRS := $(sort $(BUILD_MODULE_DEP_DIRS))
 endif
 
 endif # BUILD_MODULES
-
-
