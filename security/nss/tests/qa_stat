@@ -878,7 +878,9 @@ tbx_main()
     MACHINES_TO_CHECK=$HOST  #`uname -n` only search the local tests for errors
     qa_errorlist > $ERRORLIST        # 
     platformlist 
-    tbx_missing_platforms 
+    #tbx_missing_platforms  #temp. taken out until we find a better way to
+    #determine if all necessary QA ran - right now we run different 
+    #tinderboxes on one machine
     incomplete_results 
     echo '</table>' >>$TMP_HTML_FILE
     echo '<a NAME="errorlist"></a>' >> $TMP_HTML_FILE
