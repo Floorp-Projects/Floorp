@@ -53,7 +53,7 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  caps \
-		  content \
+		  layout \
 		  necko \
 		  uriloader \
 		  docshell \
