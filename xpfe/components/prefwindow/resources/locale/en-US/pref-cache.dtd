@@ -16,5 +16,8 @@
 <!ENTITY docCache "Document in cache is compared to document on network:">
 <!ENTITY chooseFolder "Choose Folder...">
 <!ENTITY oncePsessionRadio.label "Once per session">
+<!ENTITY oncePsessionRadio.accesskey "o">
 <!ENTITY everyTimeRadio.label "Every time">
+<!ENTITY everyTimeRadio.accesskey "e">
 <!ENTITY neverRadio.label "Never">
+<!ENTITY neverRadio.accesskey "n">
