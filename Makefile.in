@@ -71,7 +71,8 @@ DIRS +=				\
   layout			\
   rdf				\
   webshell			\
-  editor
+  editor			\
+  silentdl
 
 
 DIRS += xpfe
