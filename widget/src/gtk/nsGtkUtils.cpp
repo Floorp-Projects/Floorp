@@ -68,6 +68,7 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
 								 GtkStateType state,
 								 GdkColor *   color)
 {
+#if 0
   GtkRcStyle * rc_style;
 
   g_return_if_fail (widget != NULL);
@@ -110,5 +111,6 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
     rc_style->color_flags[state] |= GTK_RC_BASE;
     rc_style->base[state] = *color;
   }
+#endif
 }
 //////////////////////////////////////////////////////////////////
