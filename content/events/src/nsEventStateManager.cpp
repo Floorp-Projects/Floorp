@@ -862,7 +862,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused sub-window and sub-element for this top-level
       // window.
 
-      nsIFocusController *focusController =
+      nsCOMPtr<nsIFocusController> focusController =
         GetFocusControllerForDocument(mDocument);
 
       if (focusController)
