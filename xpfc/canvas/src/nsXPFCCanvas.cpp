@@ -1949,21 +1949,55 @@ nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
   return NS_OK;
 }
 
+nsCursor nsXPFCCanvas::GetCursor()
+{
+  return (GetWidget()->GetCursor());
+}
+
+void nsXPFCCanvas::SetCursor(nsCursor aCursor)
+{
+  GetWidget()->SetCursor(aCursor);
+}
+
 nsEventStatus nsXPFCCanvas::OnMouseMove(nsGUIEvent *aEvent)
-{ 
-  GetWidget()->SetCursor(eCursor_standard);
+{
+  nsPoint pt = ((nsEvent*)aEvent)->point;
+
+  nsCursor cursor = eCursor_standard;
+
+  if (IsSplittable() == PR_TRUE)
+  {
+    if (IsOverSplittableRegion(pt) == PR_TRUE)
+    {
+      nsSplittableOrientation orientation = GetSplittableOrientation(pt) ;
+
+      switch(orientation)
+      {
+        case nsSplittableOrientation_eastwest:
+          cursor = eCursor_sizeWE;
+          break;
+
+        case nsSplittableOrientation_northsouth:
+          cursor = eCursor_sizeNS;
+          break;
+
+      }
+    }
+  } 
+
+  SetCursor(cursor);
   return (DefaultProcessing(aEvent));
 }
 
 nsEventStatus nsXPFCCanvas::OnMouseEnter(nsGUIEvent *aEvent)
 {  
-  GetWidget()->SetCursor(eCursor_standard);
+  SetCursor(eCursor_standard);
   return (DefaultProcessing(aEvent));
 }
 
 nsEventStatus nsXPFCCanvas::OnMouseExit(nsGUIEvent *aEvent)
 {  
-  GetWidget()->SetCursor(eCursor_standard);
+  SetCursor(eCursor_standard);
   return (DefaultProcessing(aEvent));
 }
 
@@ -2135,4 +2169,19 @@ nsresult nsXPFCCanvas :: SetCommand(nsString& aCommand)
 nsString& nsXPFCCanvas :: GetCommand()
 {
   return (mCommand);
+}
+
+PRBool nsXPFCCanvas :: IsSplittable()
+{
+  return (PR_TRUE);
+}
+
+PRBool nsXPFCCanvas :: IsOverSplittableRegion(nsPoint& aPoint)
+{
+  return (PR_FALSE);
+}
+
+nsSplittableOrientation nsXPFCCanvas :: GetSplittableOrientation(nsPoint& aPoint)
+{
+  return (nsSplittableOrientation_none);
 }
