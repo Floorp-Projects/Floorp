@@ -35,6 +35,7 @@
               }
 	            break;
           }
+        }
         var controller =
           document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
           controller.doCommand('cmd_scrollPageDown');
