@@ -45,6 +45,11 @@
 #define CAL_DATETIME_CONTRACTID \
     "@mozilla.org/calendar/datetime;1"
 
+#define CAL_ICSSERVICE_CID \
+    { 0xf2f65cf2, 0x880e, 0x4960, { 0xb3, 0x7b, 0xae, 0x02, 0x05, 0xb6, 0xe3, 0x42 } }
+#define CAL_ICSSERVICE_CONTRACTID \
+    "@mozilla.org/calendar/ics-service;1"
+
 /* JS -- Update these from calItemModule.js */
 #define CAL_EVENT_CID \
     { 0x974339d5, 0xab86, 0x4491, { 0xaa, 0xaf, 0x2b, 0x2c, 0xa1, 0x77, 0xc1, 0x2b } }
