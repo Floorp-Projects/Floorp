@@ -21,7 +21,7 @@
 
 #include "nscore.h"
 #include "nsITableLayoutStrategy.h"
-#include "nscoord.h"
+#include "nsCoord.h"
 
 class nsTableFrame;
 struct nsStylePosition;
