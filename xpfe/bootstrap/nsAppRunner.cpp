@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
@@ -1768,6 +1769,17 @@ int main(int argc, char* argv[])
 #if defined(XP_OS2)
   __argc = argc;
   __argv = argv;
+
+  ULONG    ulMaxFH = 0;
+  LONG     ulReqCount = 0;
+  APIRET   rc = NO_ERROR;
+
+  DosSetRelMaxFH(&ulReqCount,
+                 &ulMaxFH);
+
+  if (ulMaxFH < 256) {
+    DosSetMaxFH(256);
+  }
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)

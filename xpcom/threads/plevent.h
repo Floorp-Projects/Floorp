@@ -180,6 +180,7 @@ and to ensure that no more events will be delivered for that owner.
 #elif defined(XP_OS2)
 #define INCL_DOSMISC
 #define INCL_DOSPROCESS
+#define INCL_DOSERRORS
 #include <os2.h>
 #endif
 

@@ -916,7 +916,19 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsAC
          * same drive.  "MoveFile()" on Windows will go ahead and move the
          * file without error, so we need to do the same   IBM-AKR
          */
-        rc = DosCopy(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
+        do {
+          rc = DosCopy(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
+          if (rc == ERROR_TOO_MANY_OPEN_FILES) {
+              ULONG CurMaxFH = 0;
+              LONG ReqCount = 20;
+              APIRET rc2;
+              rc2 = DosSetRelMaxFH(&ReqCount, &CurMaxFH);
+              if (rc2 != NO_ERROR) {
+                break;
+              }
+          }
+        } while (rc == ERROR_TOO_MANY_OPEN_FILES);
+
         /* WSOD2 HACK */
         if (rc == 65) { // NETWORK_ACCESS_DENIED
           CHAR         achProgram[CCHMAXPATH];  // buffer for program name, parameters
@@ -1489,7 +1501,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
                        OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
                        OPEN_SHARE_DENYREADWRITE | OPEN_ACCESS_READWRITE,
                        NULL);
-                                 
+
     if (rc != NO_ERROR)
     {
         MakeDirty();
