@@ -2835,7 +2835,9 @@ PresShell::FireResizeEvent()
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj;
 	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-  globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  if (globalObj) {
+    globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  }
 }
 
 NS_IMETHODIMP
