@@ -850,15 +850,50 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (aTab.localName != "tab")
-              aTab = this.mCurrentTab;
-            else
-              this.mTabContainer.selectedItem = aTab;
+            var numTabs = this.mTabContainer.childNodes.length;
 
-            var childNodes = this.mTabContainer.childNodes;
-            for (var i = childNodes.length - 1; i >= 0; --i) {
-              if (childNodes[i] != aTab)
-                this.removeTab(childNodes[i]);
+            if (numTabs > 1) {
+              const closeOtherTabsPref = "browser.tabs.warnOnCloseOther";
+              var shouldPrompt = this.mPrefs.getBoolPref(closeOtherTabsPref);
+              var reallyClose = true;
+
+              if (shouldPrompt) {
+                var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                              .getService(Components.interfaces.nsIPromptService);
+
+                //default to true: if it were false, we wouldn't get this far
+                var warnOnClose = { value:true };
+                var bundle = this.mStringBundle;
+                var tabsToClose = numTabs - 1; //number of tabs to be removed
+
+                var buttonPressed = promptService.confirmEx(window, 
+                                                            bundle.getString('tabs.closeWarningTitle'), 
+                                                            bundle.getFormattedString("tabs.closeWarning", [tabsToClose]),
+                                                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+                                                            + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+                                                            bundle.getString('tabs.closeButton'),
+                                                            null, null,
+                                                            bundle.getString('tabs.closeWarningPromptMe'),
+                                                            warnOnClose);
+                reallyClose = (buttonPressed == 0);
+                //don't set the pref unless they press OK and it's false
+                if (reallyClose && !warnOnClose.value)
+                  this.mPrefs.setBoolPref(closeOtherTabsPref, false);
+              }
+
+              if (reallyClose) {
+                if (aTab.localName != "tab")
+                  aTab = this.mCurrentTab;
+                else
+                  this.mTabContainer.selectedItem = aTab;
+
+                var childNodes = this.mTabContainer.childNodes;
+
+                for (var i = childNodes.length - 1; i >= 0; --i) {
+                  if (childNodes[i] != aTab)
+                    this.removeTab(childNodes[i]);
+                }
+              }
             }
           ]]>
         </body>

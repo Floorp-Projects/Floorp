@@ -137,6 +137,7 @@ pref("browser.tabs.opentabfor.urlbar", false);
 pref("browser.tabs.opentabfor.windowopen", false);
 pref("browser.tabs.opentabfor.bookmarks", false);
 pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnCloseOther", true);
 // 0 = append, 1 = replace
 pref("browser.tabs.loadGroup", 1);
 
