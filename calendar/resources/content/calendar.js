@@ -367,7 +367,7 @@ function dayEventItemClick( eventBox, event )
 {
    //do this check, otherwise on double click you get into an infinite loop
    if( event.detail == 1 )
-      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+      gCalendarWindow.EventSelection.replaceSelection( eventBox.event );
    
    if ( event ) 
    {
@@ -390,7 +390,7 @@ function dayEventItemDoubleClick( eventBox, event )
    // we only care about button 0 (left click) events
    if (event.button != 0) return;
    
-   editEvent( eventBox.calendarEventDisplay.event );
+   editEvent( eventBox.event );
 
    if ( event ) 
    {

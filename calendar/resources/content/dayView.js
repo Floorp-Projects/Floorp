@@ -106,9 +106,45 @@ function DayView( calendarWindow )
 *   Redraw the events for the current day
 */
 
-DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
+DayView.prototype.refreshEvents = function()
+{
+
+
+    // Figure out the start and end days for the week we're currently viewing
+    var startDate = new Date(this.calendarWindow.getSelectedDate());
+    var endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    endDate.setSeconds(endDate.getSeconds() - 1);
+
+    // Save this off so we can get it again in onGetResult below
+    var savedThis = this;
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            dump("onOperationComplete\n");
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            for (var i = 0; i < aCount; ++i) {
+                var eventBox = savedThis.createEventBox(aItems[i]);
+                dump("Adding eventBox " + eventBox + "\n");
+                document.getElementById("day-view-content-board").appendChild(eventBox);
+            }
+        }
+    };
+
+    var ccalendar = createCalendar(); // XXX Should get the composite calendar here
+
+    dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
+
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                      0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+
+    return;
+    
+    
+
+
    this.kungFooDeathGripOnEventBoxes = new Array();
-   
+      
    var dayEventList = gEventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
    var allDayEvents = new Array();
    var normalEvents = new Array();
@@ -312,52 +348,70 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
 *
 *   This creates an event box for the day view
 */
-DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay ) {
-   //if you change this class, you have to change calendarViewDNDObserver in calendarDragDrop.js
-   var displayDateObject = new Date( calendarEventDisplay.displayDate );
-   var startHour = displayDateObject.getHours();
-   var startMinutes = displayDateObject.getMinutes();
-   var eventDurationHours = ( ( calendarEventDisplay.displayEndDate 
-                                - calendarEventDisplay.displayDate ) 
-                              / ( kDate_MillisecondsInHour ) );
-   
-   var startHourTreeItem = document.getElementById( "day-tree-item-"+startHour );
-   
-   var hourHeight = startHourTreeItem.boxObject.height;
-   var hourWidth = startHourTreeItem.boxObject.width;
-   var eventSlotWidth = Math.round( ( hourWidth - kDayViewHourLeftStart ) 
-                                    / calendarEventDisplay.totalSlotCount );
+DayView.prototype.createEventBox = function(itemOccurrence)
+{
+    var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
 
-   var eventLocation = calendarEventDisplay.event.location;
+    var startDate = itemOccurrence.occurrenceStartDate;
+    var endDate = itemOccurrence.occurrenceEndDate;
 
-   //calculate event dimensions
-   var eventTop = startHourTreeItem.boxObject.y -
-                  startHourTreeItem.parentNode.boxObject.y +
-                  Math.round( hourHeight * startMinutes/ 60 ) - 1;
-   var eventLeft = kDayViewHourLeftStart + ( calendarEventDisplay.startDrawSlot * eventSlotWidth );
-   var eventHeight = Math.round( eventDurationHours * hourHeight ) + 1;
-   var eventWidth = ( calendarEventDisplay.drawSlotCount * eventSlotWidth ) - 1;
+    /*
+    if (calEvent.isAllDay) {
+        endDate = endDate.clone();
+        endDate.hour = 23;
+        endDate.minute = 59;
+        endDate.normalize();
+    }
+    */
+    dump("all day:   " + calEvent.isAllDay + "\n");
+    dump("startdate: " + startDate + "\n");
+    dump("enddate:   " + endDate + "\n");
+
+    var startHour = startDate.jsDate.getHours();
+    var startMinutes = startDate.minute;
+    var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
+
+    dump("duration:  " + eventDuration + "\n");
+    
+
    
-   // create title label, location label and description description :)
-   var eventTitleLabel = document.createElement( "label" );
-   eventTitleLabel.setAttribute( "class", "day-view-event-title-label-class" );
-   if( eventLocation ) 
-      eventTitleLabel.setAttribute( "value", calendarEventDisplay.event.title + " (" + eventLocation + ")" );
-   else
-      eventTitleLabel.setAttribute( "value", calendarEventDisplay.event.title );
+    var startHourTreeItem = document.getElementById( "day-tree-item-"+startHour );
+   
+    var hourHeight = startHourTreeItem.boxObject.height;
+    var hourWidth = startHourTreeItem.boxObject.width;
+    var eventSlotWidth = Math.round( ( hourWidth - kDayViewHourLeftStart ) 
+                                     / 1 /*calendarEventDisplay.totalSlotCount */);
 
-   var eventText = document.createTextNode( calendarEventDisplay.event.description );
-   var eventDescription = document.createElement( "description" );
-   eventDescription.setAttribute( "class", "day-view-event-description-class" );
-   eventDescription.appendChild( eventText );
+    var eventLocation = calEvent.location;
+
+    //calculate event dimensions
+    var eventTop = startHourTreeItem.boxObject.y -
+                    startHourTreeItem.parentNode.boxObject.y +
+                    Math.round( hourHeight * startMinutes/ 60 ) - 1;
+    var eventLeft = kDayViewHourLeftStart + ( /* calendarEventDisplay.startDrawSlot */ 0 * eventSlotWidth );
+    var eventHeight = Math.round( eventDuration * hourHeight ) + 1;
+    var eventWidth = ( 1 /* calendarEventDisplay.drawSlotCount */ * eventSlotWidth ) - 1;
+
+    // create title label, location label and description description :)
+    var eventTitleLabel = document.createElement( "label" );
+    eventTitleLabel.setAttribute( "class", "day-view-event-title-label-class" );
+    if (eventLocation)
+        eventTitleLabel.setAttribute( "value", calEvent.title + " (" + eventLocation + ")" );
+    else
+        eventTitleLabel.setAttribute( "value", calEvent.title );
+
+    var eventText = document.createTextNode( calEvent.description );
+    var eventDescription = document.createElement( "description" );
+    eventDescription.setAttribute( "class", "day-view-event-description-class" );
+    eventDescription.appendChild( eventText );
 
    //create actual eventbox
    var eventBox = document.createElement( "vbox" );
-   eventBox.calendarEventDisplay = calendarEventDisplay;
-   eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
+   eventBox.event = calEvent;
+   eventBox.setAttribute( "name", "day-view-event-box-"+calEvent.id );
 
    // set the event box to be of class day-view-event-class and the appropriate calendar-color class
-   this.setEventboxClass( eventBox, calendarEventDisplay.event, "day-view");
+   //this.setEventboxClass( eventBox, calEvent, "day-view");
 
    eventBox.setAttribute( "top", eventTop );
    eventBox.setAttribute( "left", eventLeft );
@@ -369,14 +423,14 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
+   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( event )" );
    eventBox.setAttribute( "tooltip", "eventTooltip" );
    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
    eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
    eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
    
    // mark the box as selected, if the event is
-   if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
+   if (this.calendarWindow.EventSelection.isSelectedEvent(calEvent))
       eventBox.setAttribute( "eventselected", "true" );
    
    eventBox.appendChild( eventTitleLabel );
