@@ -102,7 +102,7 @@ static void PrintImageDecoders()
 }
 #endif
 
-NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
+NS_IMPL_ISUPPORTS2(imgLoader, imgILoader, nsIContentSniffer)
 
 imgLoader::imgLoader()
 {
@@ -727,18 +727,17 @@ NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool 
   return reg->IsContractIDRegistered(decoderId.get(),  _retval);
 }
 
-NS_IMETHODIMP imgLoader::SupportImageWithContents(const char* aContents, PRUint32 aLength, char** aContentType)
+NS_IMETHODIMP imgLoader::GetMIMETypeFromContent(const PRUint8* aContents, PRUint32 aLength, nsACString& aContentType)
 {
-  return GetMimeTypeFromContent(aContents, aLength, aContentType);
+  return GetMimeTypeFromContent((const char*)aContents, aLength, aContentType);
 }
 
 /* static */
-nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, char** aContentType)
+nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, nsACString& aContentType)
 {
-  *aContentType = nsnull;
   /* Is it a GIF? */
   if (aLength >= 4 && !nsCRT::strncmp(aContents, "GIF8", 4))  {
-    *aContentType = nsCRT::strndup("image/gif", 9);
+    aContentType.AssignLiteral("image/gif");
   }
 
   /* or a PNG? */
@@ -747,7 +746,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
                    (unsigned char)aContents[2]==0x4E &&
                    (unsigned char)aContents[3]==0x47))
   { 
-    *aContentType = nsCRT::strndup("image/png", 9);
+    aContentType.AssignLiteral("image/png");
   }
 
   /* maybe a JPEG (JFIF)? */
@@ -762,7 +761,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
      ((unsigned char)aContents[1])==0xD8 &&
      ((unsigned char)aContents[2])==0xFF)
   {
-    *aContentType = nsCRT::strndup("image/jpeg", 10);
+    aContentType.AssignLiteral("image/jpeg");
   }
 
   /* or how about ART? */
@@ -774,31 +773,27 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
    ((unsigned char) aContents[1])==0x47 &&
    ((unsigned char) aContents[4])==0x00 )
   {
-    *aContentType = nsCRT::strndup("image/x-jg", 10);
+    aContentType.AssignLiteral("image/x-jg");
   }
 
   else if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
-    *aContentType = nsCRT::strndup("image/bmp", 9);
+    aContentType.AssignLiteral("image/bmp");
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
   else if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
-    *aContentType = nsCRT::strndup("image/x-icon", 12);
+    aContentType.AssignLiteral("image/x-icon");
   }
 
   else if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {
-    *aContentType = nsCRT::strndup("image/x-xbitmap", 15);
+    aContentType.AssignLiteral("image/x-xbitmap");
   }
   else {
     /* none of the above?  I give up */
-    /* don't raise an exception, simply return null */
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (*aContentType)
-    return NS_OK;
-
-  return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 /**

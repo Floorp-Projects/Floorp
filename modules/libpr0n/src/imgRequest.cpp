@@ -844,5 +844,5 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
 void
 imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
-  imgLoader::GetMimeTypeFromContent(buf, len, getter_Copies(mContentType));
+  imgLoader::GetMimeTypeFromContent(buf, len, mContentType);
 }

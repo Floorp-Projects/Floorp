@@ -58,7 +58,7 @@ interface nsISimpleEnumerator;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(4c8cf1e0-1dd2-11b2-aff9-c51cdbfcb6da)]
+[scriptable, uuid(a32826ff-9e56-4425-a811-97a8dba64ff5)]
 interface imgILoader : nsISupports
 {
   /**
@@ -109,12 +109,4 @@ interface imgILoader : nsISupports
    * @return true if a decoder is available, false otherwise
    */
   boolean supportImageWithMimeType(in string mimeType);
-
-  /**
-   * Checks if a decoder for the given contents is available.
-   * @param contents The first few bytes of the image
-   * @param length The length of contents
-   * @return The Content Type of the Image or null if no decoder was found.
-   */
-  string supportImageWithContents(in string contents, in unsigned long length);
 };
