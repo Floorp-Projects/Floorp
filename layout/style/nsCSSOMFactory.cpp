@@ -42,6 +42,7 @@
 
 nsCSSOMFactory::nsCSSOMFactory()
 {
+    NS_INIT_ISUPPORTS();
 }
 
 nsCSSOMFactory::~nsCSSOMFactory()
