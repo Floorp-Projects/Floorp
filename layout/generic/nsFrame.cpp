@@ -740,8 +740,8 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     GetRect(rect);
     rect.width-=2;
     rect.height-=2;
-    rect.x++;
-    rect.y++;
+    rect.x=1; //we are in the coordinate system of the frame now with regards to the rendering context.
+    rect.y=1;
     aRenderingContext.SetColor(NS_RGB(0,0,255));
     nsRect drawrect(rect.x, rect.y, rect.width, rect.height);
     aRenderingContext.DrawRect(drawrect);
