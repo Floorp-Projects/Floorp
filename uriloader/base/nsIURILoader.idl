@@ -43,10 +43,8 @@
 #include "nsISupports.idl"
 
 interface nsIURIContentListener;
-interface nsIStreamObserver;
 interface nsIURI;
-interface nsILoadGroup;
-interface nsIEventSinkGetter;
+interface nsIProgressEventSink;
 interface nsIChannel;
 
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
@@ -64,35 +62,42 @@ interface nsIURILoader : nsISupports
 
   /* OpenURI requires the following parameters.....
      aURI --> the uri you wish to open
-	 aCommand -> the verb that comes from layout... (can be null)
 	 aWindowTarget -> the name of the desired target window (can be null)
-	 aEventSinkGetter -> the event sink associated with the url
-	 aLoadGroup -> a load group you want the url to go into when we open it
-	 aContext -> the context associated with the url (can be null)
+	 aProgressEventSink -> a progress event sink associated with the url (can be null)
      aContentListener --> a content listener you want to give first crack
                           at handling the uri. (can be null) 
-     aContext --> same context for the AsyncOpen call that you would have passed
-                  if you were calling nsIIOChannel::AsyncOpen
      aReferringURI --> if a uri referral was involved....
+	 aOpenContext (in) --> if you've already opened a url before, and you still have
+						   the associated open context, you should pass it in here (can be null)
+						   This is used to help keep track of urls opened by the same caller!!
+	 aCurrentOpenContext --> a cookie returned to the caller which can be used by the caller
+						    to make future open calls on the uriloader. 
+
   */ 
-  void openURI(in nsIURI aURI, in string aCommand, in string aWindowTarget,
-			   in nsIEventSinkGetter aEventSinkGetter, 
-               in nsILoadGroup aLoadGroup,
-               in nsISupports aContext,
-               in nsIURIContentListener aContentListener,
-               in nsIURI aReferringURI);
+
+  void openURI(in nsIURI aURI, 
+			   in string aWindowTarget,
+			   in nsIProgressEventSink aProgressEventSink,
+			   in nsIURIContentListener aContentListener, 
+			   in nsIURI aReferringURI,
+			   in nsISupports aOpenContext,
+			   out nsISupports aCurrentOpenContext);
+
 
   /* same call as OpenURI except this one takes an IP address to use as well...
      adapterBinding -> the local IP address to bind to*/			   
 
-  void openURIVia(in nsIURI aURI, in string aCommand, in string aWindowTarget,
-				  in nsIEventSinkGetter aEventSinkGetter,
-				  in nsILoadGroup aLoadGroup,
-				  in nsISupports aContext,
-				  in nsIURIContentListener aContentListener,
-				  in nsIURI aReferringURI,
+  void openURIVia(in nsIURI aURI,
+				  in string aWindowTarget,
+				  in nsIProgressEventSink aProgressEventSink,
+			      in nsIURIContentListener aContentListener, 
+			      in nsIURI aReferringURI,
+			      in nsISupports aOpenContext,
+			      out nsISupports aCurrentOpenContext,
 				  in unsigned long adapterBinding); 
 
+  /* mscott -> I'm going to move this out into a separate private interface
+   */
   void dispatchContent(in string aContentType,
 					   in string aCommand,
 					   in string aWindowTarget,
