@@ -88,13 +88,9 @@ private:
   nsCOMPtr<nsISupports> mLoadCookie;
 };
 
-NS_INTERFACE_MAP_BEGIN(RemoteHelperContentListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
-  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(RemoteHelperContentListener)
-NS_IMPL_RELEASE(RemoteHelperContentListener)
+NS_IMPL_ISUPPORTS2(RemoteHelperContentListener,
+		   nsIURIContentListener,
+		   nsIInterfaceRequestor)
 
 RemoteHelperContentListener::RemoteHelperContentListener()
 {
@@ -139,8 +135,7 @@ RemoteHelperContentListener::IsPreferred(const char *aContentType,
 					 char **aDesiredContentType,
 					 PRBool *_retval)
 {
-  NS_NOTREACHED("RemoteHelperContentListener::IsPreferred");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -424,7 +419,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 	newWindow = PR_TRUE;
       }
       // ok, do it
-	  rv = OpenURL(commandString.get(), newWindow, raiseWindow);
+      rv = OpenURL(commandString.get(), newWindow, raiseWindow);
     }
   }
 
@@ -702,7 +697,8 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // load it
-    loader->OpenURI(channel, nsIURILoader::viewUserClick, listenerRef);
+    rv = loader->OpenURI(channel, nsIURILoader::viewUserClick, listenerRef);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     
   }
   return NS_OK;
