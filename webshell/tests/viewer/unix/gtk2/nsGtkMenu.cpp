@@ -171,6 +171,8 @@ void CreateViewerMenus(nsIWidget *   aParent,
   NS_ASSERTION(nsnull != aParent,"null parent.");
   NS_ASSERTION(nsnull != aMenuBarOut,"null out param.");
 
+  NS_WARNING("CreateViewerMenus is not implemented yet!\n");
+
   GtkItemFactory *item_factory;
   GtkWidget *menubar;
 
