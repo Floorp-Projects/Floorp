@@ -650,8 +650,10 @@ const PRInt32 kDefaultCertAllocLength = 2048;
 NS_IMETHODIMP
 CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-    channel->GetContentLength(&mContentLength);
-    if (mContentLength == -1)
+	nsresult rv;
+	
+    rv = channel->GetContentLength(&mContentLength);
+    if (rv != NS_OK || mContentLength == -1)
       mContentLength = kDefaultCertAllocLength;
     
     mBufferOffset = 0;
