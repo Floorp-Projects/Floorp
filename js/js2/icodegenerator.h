@@ -187,6 +187,7 @@ namespace ICG {
         void branch(Label *label);
         GenericBranch *branchTrue(Label *label, TypedRegister condition);
         GenericBranch *branchFalse(Label *label, TypedRegister condition);
+        GenericBranch *branchInitialized(Label *label, TypedRegister condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
                                                 { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }

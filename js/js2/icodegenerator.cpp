@@ -537,6 +537,16 @@ GenericBranch *ICodeGenerator::branchFalse(Label *label, TypedRegister condition
     return instr;
 }
 
+GenericBranch *ICodeGenerator::branchInitialized(Label *label, TypedRegister condition)
+{
+    GenericBranch *instr = new GenericBranch(BRANCH_INITIALIZED, label, condition);
+    iCode->push_back(instr);
+    return instr;
+}
+
+
+
+
 void ICodeGenerator::returnStmt(TypedRegister r)
 {
     iCode->push_back(new Return(r));
@@ -1620,9 +1630,20 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
         while (v) {    // include the rest parameter, as it may have an initializer
             if (v->name && (v->name->getKind() == ExprNode::identifier)) {
                 icg.addParameterLabel(icg.setLabel(icg.getLabel()));
+                TypedRegister p = icg.genExpr(v->name);
                 if (v->initializer) {           // might be NULL when we get to the restParameter
-                    TypedRegister p = icg.genExpr(v->name);
+                    Label *l = icg.getLabel();
+                    icg.branchInitialized(l, p);
                     icg.move(p, icg.genExpr(v->initializer));
+                    icg.setLabel(l);
+                }
+                else {  // an un-initialized rest parameter is still an empty array
+                    if (v == f->function.restParameter) {
+                        Label *l = icg.getLabel();
+                        icg.branchInitialized(l, p);
+                        icg.move(p, icg.newArray());
+                        icg.setLabel(l);
+                    }
                 }
             }
             v = v->next;

@@ -97,7 +97,7 @@ namespace JSTypes {
             NoHint
         };
 
-        enum {
+        typedef enum {
             i8_tag, u8_tag,
             i16_tag, u16_tag,
             i32_tag, u32_tag,
@@ -105,8 +105,10 @@ namespace JSTypes {
             f32_tag, f64_tag,
             integer_tag,
             object_tag, array_tag, function_tag, string_tag, boolean_tag, type_tag,
-            undefined_tag
-        } tag;
+            undefined_tag,
+            uninitialized_tag
+        } Tag;
+        Tag tag;
         
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(int32 i32) : i32(i32), tag(i32_tag) {}
@@ -118,6 +120,7 @@ namespace JSTypes {
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
         explicit JSValue(JSType* type) : type(type), tag(type_tag) {}
+        explicit JSValue(Tag tag) : tag(tag) {}
 
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         uint32& operator=(uint32 u32)                   { return (tag = u32_tag, this->u32 = u32); }
@@ -139,6 +142,7 @@ namespace JSTypes {
                                                            will have to be converted (to doubles?) anyway because
                                                            we can't have overflow happening in generic arithmetic */
 
+        bool isInitialized() const                      { return (tag != uninitialized_tag); }
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
         bool isNaN() const;
@@ -330,14 +334,15 @@ namespace JSTypes {
      */
     class JSArray : public JSObject {
         JSValues elements;
+        uint32 top;
     public:
-        JSArray() : elements(1) {}
-        JSArray(uint32 size) : elements(size) {}
+        JSArray() : elements(1) { top = 0; }
+        JSArray(uint32 size) : elements(size) { top = size; }
         JSArray(const JSValues &v) : elements(v) {}
-            
+
         uint32 length()
         {
-            return elements.size();
+            return top;
         }
             
         JSValue& operator[](const JSValue& index)
@@ -347,6 +352,7 @@ namespace JSTypes {
             // obviously, a sparse representation might be better.
             uint32 size = elements.size();
             if (n >= size) expand(n, size);
+            markHiEnd(n);
             return elements[n];
         }
             
@@ -355,15 +361,23 @@ namespace JSTypes {
             // obviously, a sparse representation might be better.
             uint32 size = elements.size();
             if (n >= size) expand(n, size);
+            markHiEnd(n);
             return elements[n];
         }
             
         void resize(uint32 size)
         {
             elements.resize(size);
+            top = size;
         }
             
     private:
+
+        void markHiEnd(uint32 index)
+        {
+            if ((index + 1) > top) top = index + 1;
+        }
+
         void expand(uint32 n, uint32 size)
         {
             do {

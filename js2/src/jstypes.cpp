@@ -504,7 +504,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
                 if (i < (a->length() - 1))
                     f << ", ";
             }
-            f << "]";
+            f << "] {" << *(static_cast<JSObject*>(value.array)) << "}";
 //          printFormat(f, "Array @ 0x%08X", value.array);
         }
         break;
@@ -523,6 +523,9 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::type_tag:
         printFormat(f, "Type @ 0x%08X\n", value.type);
         f << *value.type;
+        break;
+    case JSValue::uninitialized_tag:
+        f << "uninitialized";
         break;
     default:
         NOT_REACHED("Bad tag");

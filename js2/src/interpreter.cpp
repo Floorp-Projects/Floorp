@@ -105,7 +105,11 @@ struct Activation : public gc_base {
         const JSValues& params = caller->mRegisters;
         for (ArgumentList::const_iterator src = list.begin(), 
                  end = list.end(); src != end; ++src, ++dest) {
-            *dest = params[(*src).first.first];
+            Register r = (*src).first.first;
+            if (r != NotARegister)
+                *dest = params[r];
+            else
+                *dest = JSValue(JSValue::uninitialized_tag);
         }
     }
 
@@ -692,56 +696,89 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     else {
                         ICodeModule *icm = target->getICode();
                         ArgumentList &args = op4(call);
-                        ArgumentList newArgs(args.size());
-                        uint32 argCount = args.size() + 1;      // the 'this' arg is travelling separately
 
-                        if (hasNamedArguments(args)) {
-                            // find argument names that match parameter names
-                            for (uint32 a = 0; a < args.size(); a++) {
-                                if (args[a].second) {
-                                    VariableList::iterator i = icm->itsVariables->find(*(args[a].second));
-                                    if (i != icm->itsVariables->end()) {
-                                        TypedRegister r = (*i).second;
-                                        if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
-                                            // the named argument is arriving in slot a, but needs to be r instead
-                                            newArgs[r.first - 1] = Argument(args[a].first, NULL);
-                                        }
+                        // mParameterCount includes 'this' and also 1 for a named rest parameter
+                        //
+                        uint32 pCount = icm->mParameterCount - 1;
+                        ArgumentList callArgs(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
+                        if (icm->mHasNamedRestParameter) pCount--;
 
+
+                        // walk along the given arguments, handling each.
+                        // might be good to optimize the case of calls without named arguments and/or rest parameters
+                        JSArray *restArg = NULL;
+                        uint32 restIndex = 0;
+                        uint32 i;
+                        for (i = 0; i < args.size(); i++) {
+                            if (args[i].second) {       // a named argument
+                                VariableList::iterator vi = icm->itsVariables->find(*(args[i].second));
+                                bool isParameter = false;
+                                if (vi != icm->itsVariables->end()) {   // we found the name in the target's list of variables
+                                    TypedRegister r = (*vi).second;
+                                    if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
+                                        ASSERT(r.first <= callArgs.size());
+                                        // the named argument is arriving in slot i, but needs to be r instead
+                                        // r.first is the intended target register, we subtract 1 since the callArgs array doesn't include 'this'
+                                        // here's where we could detect over-writing a positional arg with a named one if that is illegal
+                                        // if (callArgs[r.first - 1].first.first != NotARegister)...
+                                        callArgs[r.first - 1] = Argument(args[i].first, NULL);   // no need to copy the name through?
+                                        isParameter = true;
                                     }
                                 }
-                                else
-                                    newArgs[a] = args[a];
-                            }
-                            args = newArgs;
-                        }
-                        uint32 pOffset = icm->mEntryPoint;
-                        if (argCount < icm->mNonOptionalParameterCount)
-                            throw new JSException("Too few arguments in call");
-                        if (argCount >= icm->mParameterCount) {
-                            if (icm->mHasRestParameter) {
-                                if (icm->mHasNamedRestParameter) {
-                                    uint32 restArgsCount = argCount - icm->mParameterCount + 1;
-                                    uint32 restArgsStart = icm->mParameterCount - 2;    // 1 for 'this', 1 for 0-based
-                                    JSArray *r = new JSArray(restArgsCount);
-                                    for (uint32 i = 0; i < restArgsCount; i++)
-                                        (*r)[i] = (*registers)[args[i + restArgsStart].first.first];
-                                    (*registers)[args[restArgsStart].first.first] = r;
+                                if (!isParameter) {     // wasn't a parameter, make it a property of the rest parameter (if there is one) 
+                                    if (icm->mHasRestParameter) {
+                                        if (icm->mHasNamedRestParameter) {
+                                            if (restArg == NULL) {
+                                                restArg = new JSArray();
+                                                restArg->setProperty(*args[i].second, (*registers)[args[i].first.first]);
+                                                (*registers)[args[i].first.first] = restArg;
+                                                callArgs[pCount] = Argument(TypedRegister(args[i].first.first, &Array_Type), NULL);
+                                            }
+                                            else
+                                                restArg->setProperty(*args[i].second, (*registers)[args[i].first.first]);
+
+                                        }
+                                        // else just throw it away 
+                                    }
+                                    else 
+                                        throw new JSException("Named argument doesn't match parameter name in call with no rest parameter");
+                                        // what about matching the named rest parameter ? aaarrggh!
                                 }
-                                // else, we just ignore the other arguments
                             }
                             else {
-                                if (argCount > icm->mParameterCount)
-                                    throw new JSException("Too many arguments in call");
+                                if (i >= pCount) {  // more args than expected
+                                    if (icm->mHasRestParameter) {
+                                        if (icm->mHasNamedRestParameter) {
+                                            if (restArg == NULL) {
+                                                restArg = new JSArray();
+                                                (*restArg)[restIndex++] = (*registers)[args[i].first.first];
+                                                (*registers)[args[i].first.first] = restArg;
+                                                callArgs[pCount] = Argument(TypedRegister(args[i].first.first, &Array_Type), NULL);
+                                            }
+                                            else
+                                                (*restArg)[restIndex++] = (*registers)[args[i].first.first];
+                                        }
+                                        // else just throw it away 
+                                    }
+                                    else
+                                        throw new JSException("Too many arguments in call");
+                                }
+                                callArgs[i] = args[i];  // it's a positional, just slap it in place
                             }
                         }
-                        else {
-                            if (argCount < icm->mParameterCount)
-                                pOffset = icm->mParameterInit[argCount - icm->mNonOptionalParameterCount];
+                        uint32 contiguousArgs = 0;
+                        for (i = 0; i < args.size(); i++) {
+                            Argument &arg = args[i];
+                            if (arg.first.first == NotARegister) break;
+                            contiguousArgs++;
                         }
+                        if ((contiguousArgs + 1) < icm->mNonOptionalParameterCount) // there's always a 'this' in R0 (even though it might be null)
+                            throw new JSException("Too few arguments in call");
+                        
                         mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(icm, mActivation, (*registers)[op3(call).first], args);
+                        mActivation = new Activation(icm, mActivation, (*registers)[op3(call).first], callArgs);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin() + pOffset;
+                        mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
                         continue;
                     }
@@ -1031,6 +1068,16 @@ using JSString throughout.
                         static_cast<GenericBranch*>(instruction);
                     ASSERT((*registers)[src1(bc).first].isBoolean());
                     if (!(*registers)[src1(bc).first].boolean) {
+                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
+            case BRANCH_INITIALIZED:
+                {
+                    GenericBranch* bc =
+                        static_cast<GenericBranch*>(instruction);
+                    if ((*registers)[src1(bc).first].isInitialized()) {
                         mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
