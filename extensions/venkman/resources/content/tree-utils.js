@@ -167,15 +167,18 @@ BasicOView.prototype.rowCount = 0;
 
 BasicOView.prototype.getCellProperties =
 function bov_cellprops (row, colID, properties)
-{}
+{
+}
 
 BasicOView.prototype.getColumnProperties =
 function bov_colprops (colID, elem, properties)
-{}
+{
+}
 
 BasicOView.prototype.getRowProperties =
 function bov_rowprops (index, properties)
-{}
+{
+}
 
 BasicOView.prototype.isContainer =
 function bov_isctr (index)
@@ -228,6 +231,9 @@ function bov_drop (index, orientation)
 BasicOView.prototype.getParentIndex =
 function bov_getpi (index)
 {
+    if (index < 0)
+        return -1;
+
     return 0;
 }
 
@@ -311,6 +317,82 @@ function bov_isedit (row, colID)
 BasicOView.prototype.setCellText =
 function bov_setct (row, colID, value)
 {
+}
+
+BasicOView.prototype.onRouteFocus =
+function bov_rfocus (event)
+{
+    if ("onFocus" in this)
+        this.onFocus(event);
+}
+
+BasicOView.prototype.onRouteBlur =
+function bov_rblur (event)
+{
+    if ("onBlur" in this)
+        this.onBlur(event);
+}
+
+BasicOView.prototype.onRouteDblClick =
+function bov_rdblclick (event)
+{
+    if (!("onRowCommand" in this) || event.target.localName != "treechildren")
+        return;
+
+    var rowIndex = this.tree.selection.currentIndex;
+    if (rowIndex == -1 || rowIndex > this.rowCount)
+        return;
+    var rec = this.childData.locateChildByVisualRow(rowIndex);
+    if (!rec)
+    {
+        ASSERT (0, "bogus row index " + rowIndex);
+        return;
+    }
+
+    this.onRowCommand(rec, event);
+}
+
+BasicOView.prototype.onRouteKeyPress =
+function bov_rkeypress (event)
+{
+    var rec;
+    
+    if ("onRowCommand" in this && (event.keyCode == 13 || event.charCode == 32))
+    {
+        if (!this.selection)
+            return;
+        
+        var rowIndex = this.tree.selection.currentIndex;
+        if (rowIndex == -1 || rowIndex > this.rowCount)
+            return;
+        rec = this.childData.locateChildByVisualRow(rowIndex);
+        if (!rec)
+        {
+            ASSERT (0, "bogus row index " + rowIndex);
+            return;
+        }
+
+        this.onRowCommand(rec, event);
+    }
+    else if ("onKeyPress" in this)
+    {
+        var rowIndex = this.tree.selection.currentIndex;
+        if (rowIndex != -1 && rowIndex < this.rowCount)
+        {
+            var rec = this.childData.locateChildByVisualRow(rowIndex);
+            if (!rec)
+            {
+                ASSERT (0, "bogus row index " + rowIndex);
+                return;
+            }
+        }
+        else
+        {
+            rec = null;
+        }
+        
+        this.onKeyPress(rec, event);
+    }
 }
 
 BasicOView.prototype.performAction =

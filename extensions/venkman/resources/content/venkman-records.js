@@ -818,12 +818,17 @@ function vr_countprops ()
 ValueRecord.prototype.listProperties =
 function vr_listprops ()
 {
+    // the ":" prefix for keys in the propMap avoid collisions with "real"
+    // pseudo-properties, such as __proto__.  If we were to actually assign
+    // to those we would introduce bad side affects.
+
     //dd ("listProperties {");
     var i;
     var jsval = this.value.getWrappedValue();
     var propMap = new Object();
-    
+
     /* get the enumerable properties */
+    
     for (var p in jsval)
     {
         var value;
@@ -832,20 +837,23 @@ function vr_listprops ()
             value = console.jsds.wrapValue(jsval[p]);
             if (this.showFunctions || value.jsType != TYPE_FUNCTION)
             {
-                propMap[p] = { name: p, value: value,
-                               flags: PROP_ENUMERATE | PROP_HINTED };
+                propMap[":" + p] = { name: p, value: value,
+                                     flags: PROP_ENUMERATE | PROP_HINTED };
             }
             else
             {
                 //dd ("not including function " + name);
-                propMap[p] = null;
+                propMap[":" + p] = null;
             }
         }
         catch (ex)
         {
-            propMap[p] = { name: p, value: console.jsds.wrapValue(ex),
-                           flags: PROP_EXCEPTION };
+            propMap[":" + p] = { name: p, value: console.jsds.wrapValue(ex),
+                                 flags: PROP_EXCEPTION };
         }
+
+        //dd ("jsval props: adding " + p + ", " + propMap[":" + p]);
+
     }
     
     /* get the local properties, may or may not be enumerable */
@@ -856,34 +864,33 @@ function vr_listprops ()
     for (i = 0; i < len; ++i)
     {
         var prop = localProps[i];
-        if (!ASSERT(prop, "prop[" + i + "] is null"))
-            continue;
-        
         var name = prop.name.stringValue;
         
-        if (!(name in propMap))
+        if (!((":" + name) in propMap))
         {
             if (this.showFunctions || prop.value.jsType != TYPE_FUNCTION)
             {
                 //dd ("localProps: adding " + name + ", " + prop);
-                propMap[name] = { name: name, value: prop.value,
-                                  flags: prop.flags };
+                propMap[":" + name] = { name: name, value: prop.value,
+                                        flags: prop.flags };
             }
             else
             {
                 //dd ("not including function " + name);
-                propMap[name] = null;
+                propMap[":" + name] = null;
             }
         }
         else
         {
-            if (propMap[name])
-                propMap[name].flags = prop.flags;
+            if (propMap[":" + name])
+                propMap[":" + name].flags = prop.flags;
         }
     }
     
     /* sort the property list */
     var nameList = keys(propMap);
+    //dd ("nameList is " + nameList);
+    
     nameList.sort();
     var propertyList = new Array();
     for (i = 0; i < nameList.length; ++i)
@@ -892,7 +899,7 @@ function vr_listprops ()
         if (propMap[name])
             propertyList.push (propMap[name]);
     }
-
+    
     //dd ("} " + propertyList.length + " properties");
 
     return propertyList;

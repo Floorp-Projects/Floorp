@@ -46,11 +46,11 @@
   <binding id="floatingview">
     <content>
       <xul:vbox id="view-frame-p" flex="1"
-        ondragover="console.dnd.dragOver(event, console.viewProxy);"
-        ondragexit="console.dnd.dragExit(event, console.viewProxy);"
-        ondragdrop="console.dnd.drop(event, console.viewProxy);">
+        ondragover="console.dnd.dragOver(event, console.viewDropProxy);"
+        ondragexit="console.dnd.dragExit(event, console.viewDropProxy);"
+        ondragdrop="console.dnd.drop(event, console.viewDropProxy);">
         <xul:vbox class="view-outer"
-          ondraggesture="console.dnd.startDrag(event, console.viewProxyTitle);">
+          ondraggesture="console.dnd.startDrag(event, console.viewDragProxy);">
           <xul:hbox id="view-title" flex="1">
             <xul:image class="view-title-pop"
               tooltiptext="&ViewFloat.tooltip;"
@@ -80,7 +80,7 @@
     </implementation>
   </binding>
 
-  <binding id="viewcontainer">
+  <binding id="viewcontainer-box">
     <content>
       <xul:box xbl:inherits="orient=type" class="view-container" flex="1">
         <children/>
@@ -90,6 +90,39 @@
     <implementation>
       <property name="ownerWindow" onget="return window;"/>
     </implementation>
+  </binding>
+
+  <binding id="viewcontainer-tab">
+    <content>
+      <xul:tabbox flex="1">
+        <xul:tabpanels flex="1">
+          <children/>
+        </xul:tabpanels>
+        <xul:tabs class="tabs-bottom">
+          <xul:little-tab needinit="true"/>
+        </xul:tabs>
+      </xul:tabbox>
+    </content>
+
+    <implementation>
+      <property name="ownerWindow" onget="return window;"/>
+      <property name="tabs"
+        onget="return document.getAnonymousNodes(this)[0].childNodes[1]"/>
+      <property name="deck"
+        onget="return document.getAnonymousNodes(this)[0].childNodes[0]"/>
+    </implementation>
+  </binding>
+
+  <binding id="little-tab">
+    <content>
+      <xul:hbox flex="1"
+        ondraggesture="console.dnd.startDrag(event, console.viewDragProxy);"
+        ondragover="console.dnd.dragOver(event, console.viewDropProxy);"
+        ondragdrop="console.dnd.drop(event, console.viewDropProxy);"
+        ondragexit="console.dnd.dragExit(event, console.viewDropProxy);">
+        <xul:label xbl:inherits="value=label" crop="right" flex="1"/>
+      </xul:hbox>
+    </content>
   </binding>
 
 </bindings>

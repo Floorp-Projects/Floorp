@@ -135,12 +135,9 @@ function copyToBreakpoint()
         if (dialog["result-radio"].childNodes[i] ==
             dialog["result-radio"].selectedItem)
         {
-            dd ("result radio is " + i);
             breakpoint.resultAction = i;
             break;
         }
-        else
-            dd ("not at index " + i);
     }
     breakpoint.condition = dialog["condition-textbox"].value;
     breakpoint.passExceptions = dialog["exception-checkbox"].checked;

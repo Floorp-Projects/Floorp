@@ -129,6 +129,10 @@ function pm_addpref (prefName, defaultValue)
     
     function prefGetter ()
     {
+        //dd ("getter for ``" + prefName + "''");
+        //dd ("default: " + defaultValue);
+        //dd ("real: " + realValue);
+
         if (typeof realValue == "undefined" ||
             prefName in prefManager.dirtyPrefs)
         {
@@ -160,8 +164,8 @@ function pm_addpref (prefName, defaultValue)
             }
             catch (ex)
             {
-                //dd ("caught exception reading pref ``" + prefName + "'' " +
-                //    type + "\n" + ex);
+                //dd ("caught exception reading pref ``" + prefName + "''\n" +
+                //ex);
                 realValue = defaultValue;
             }
         }

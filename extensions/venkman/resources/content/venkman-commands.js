@@ -47,6 +47,7 @@ function initCommands()
          ["about-mozilla",  cmdAboutMozilla,                                 0],
          ["break",          cmdBreak,                              CMD_CONSOLE],
          ["break-props",    cmdBreakProps,                         CMD_CONSOLE],
+         ["change-container", cmdChangeContainer,                  CMD_CONSOLE],
          ["change-value",   cmdChangeValue,                                  0],
          ["chrome-filter",  cmdChromeFilter,                       CMD_CONSOLE],
          ["clear",          cmdClear,                              CMD_CONSOLE],
@@ -90,7 +91,7 @@ function initCommands()
          ["help",           cmdHelp,                               CMD_CONSOLE],
          ["loadd",          cmdLoadd,                              CMD_CONSOLE],
          ["move-view",      cmdMoveView,                           CMD_CONSOLE],
-         ["mozilla-help",   cmdMozillaHelp,                                   0],
+         ["mozilla-help",   cmdMozillaHelp,                                  0],
          ["next",           cmdNext,              CMD_CONSOLE | CMD_NEED_STACK],
          ["open-dialog",    cmdOpenDialog,                         CMD_CONSOLE],
          ["open-url",       cmdOpenURL,                                      0],
@@ -183,6 +184,8 @@ function initCommands()
                                                      "expression",
                                                      "prefValue"],
                                                      "rest");
+    console.commandManager.argTypes.__aliasTypes__ (["deletePref"],
+                                                     "state");
 
     console.commandManager.installKeys(console.mainWindow.document,
                                        console.commandManager.commands);
@@ -304,6 +307,36 @@ function cmdBreakProps (e)
                     "chrome,extrachrome,menubar,resizable", e.breakWrapper);
 }
 
+function cmdChangeContainer(e)
+{
+    if (!(e.viewId in console.views))
+    {
+        display(getMsg(MSN_ERR_NO_SUCH_VIEW, e.viewId), MT_ERROR);
+        return;
+    }
+
+    var view = console.views[e.viewIs];
+    
+    if (!view.currentContent)
+    {
+        display(getMsg(MSN_ERR_INVALID_PARAM, ["<view-name>", e.viewId]),
+                MT_ERROR);
+        return;
+    }
+    
+    e.newType = e.newType.toLowerCase();
+    
+    if (e.newType.search(/^(horizontal|vertical|tab)$/) != 0)
+    {
+        display(getMsg(MSN_ERR_INVALID_PARAM, ["<new-type>", e.newType]),
+                MT_ERROR);
+        return;
+    }
+
+    console.viewManager.changeContainer(view.currentContent.parentNode,
+                                        e.newType);
+}
+
 function cmdChangeValue(e)
 {
     var obj = e.parentValue.getWrappedValue();
@@ -358,7 +391,7 @@ function cmdChangeValue(e)
     dispatch ("hook-eval-done");
 }
 
-function cmdChromeFilter (e)
+function cmdChromeFilter(e)
 {
     const FLAGS = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
     
@@ -366,8 +399,6 @@ function cmdChromeFilter (e)
     {
         if (!scriptWrapper.jsdScript.isValid)
             return;
-        
-        var lastDebugState = scriptWrapper.jsdScript.flags & SCRIPT_NODEBUG;
         
         if (e.toggle)
         {
@@ -391,19 +422,8 @@ function cmdChromeFilter (e)
             }
         }
 
-        if (lastDebugState != scriptWrapper.jsdScript.flags & SCRIPT_NODEBUG)
-        {
-            if (lastDebugState)
-            {
-                // went from on to off
-                --scriptWrapper.scriptInstance.disabledScripts;
-            }
-            else
-            {
-                // went from off to on
-                ++scriptWrapper.scriptInstance.disabledScripts;
-            }
-        }
+        if (scriptWrapper.jsdScript.flags & SCRIPT_NODEBUG)
+            ++scriptWrapper.scriptInstance.disabledScripts;
     };
     
     var currentState = console.prefs["enableChromeFilter"];
@@ -450,6 +470,7 @@ function cmdChromeFilter (e)
                 for (var i in mgr.instances)
                 {
                     var instance = mgr.instances[i];
+                    instance.disabledScripts = 0;
                     if (instance.topLevel)
                         setFlag (instance.topLevel);
                     
@@ -1207,7 +1228,10 @@ function cmdMoveView (e)
 
 function cmdMozillaHelp ()
 {
-    openHelp();
+    if (typeof openHelp == "undefined")
+        toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');
+    else
+        openHelp();
 }
 
 function cmdNext ()
@@ -1271,14 +1295,38 @@ function cmdPPrint (e)
 
 function cmdPref (e)
 {
+    if (e.prefName && e.prefName[0] == "-")
+    {
+        e.prefName = e.prefName.substr(1);
+        e.deletePref = true;
+    }
+        
+    if (e.deletePref)
+    {
+        try
+        {
+            console.prefManager.prefBranch.clearUserPref(e.prefName);
+            console.prefManager.dirtyPrefs[e.prefName] = true;
+            console.prefManager.prefService.savePrefFile(null);
+        }
+        catch (ex)
+        {
+            // ignore exception generated by clear of nonexistant pref
+            if (!("result" in ex) ||
+                ex.result != Components.results.NS_ERROR_UNEXPECTED)
+            {
+                throw ex;
+            }
+        }
+
+        var prefValue = console.prefs[e.prefName];
+        feedback (e, getMsg(MSN_FMT_PREFVALUE,
+                            [e.prefName, console.prefs[e.prefName]]));
+        return true;
+    }
+
     if (e.prefValue)
     {
-        if (e.prefName[0] == "-")
-        {
-            console.prefs.prefBranch.clearUserPref(e.prefName.substr(1));
-            return true;
-        }
-        
         var type = typeof console.prefs[e.prefName];
         switch (type)
         {

@@ -53,6 +53,7 @@ venkman.jar:
   content/venkman/venkman-output-base.css     (content/venkman-output-base.css)
   skin/modern/venkman/images/clear.png         (skin/images/clear.png)
   skin/modern/venkman/images/shaded.png        (skin/images/shaded.png)
+  skin/modern/venkman/images/new-tab.png       (skin/images/new-tab.png)
   skin/modern/venkman/images/arrow-left.png    (skin/images/arrow-left.png)
   skin/modern/venkman/images/arrow-right.png   (skin/images/arrow-right.png)
   skin/modern/venkman/images/arrow-up.png      (skin/images/arrow-up.png)

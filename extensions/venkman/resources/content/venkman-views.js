@@ -34,17 +34,31 @@
  */
 
 const DEFAULT_VURLS =
-(
- ("x-vloc:/mainwindow?target=container&type=horizontal&id=outer; " +
-  ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=gutter; " +
-   ("x-vloc:/mainwindow/gutter?target=view&id=scripts; " +
-    "x-vloc:/mainwindow/gutter?target=view&id=locals; " +
-    "x-vloc:/mainwindow/gutter?target=view&id=stack; ")) +
-  ("x-vloc:/mainwindow/outer?target=container&type=vertical&id=vright; " +
-   ("x-vloc:/mainwindow/vright?target=view&id=source2; " +
-    "x-vloc:/mainwindow/vright?target=view&id=session"))
+("x-vloc:/mainwindow/initial-container?target=container&id=outer&type=horizontal;" +
+ // left vert (gutter)
+ ("x-vloc:/mainwindow/outer?target=container&id=gutter&width=231&before=vright&type=vertical;" +
+  // top tab
+  ("x-vloc:/mainwindow/gutter?target=container&id=top-tab&height=177&before=vm-container-5&type=tab;" +
+   "x-vloc:/mainwindow/top-tab?target=view&id=scripts&height=177&before=windows;" +
+   "x-vloc:/mainwindow/top-tab?target=view&id=windows;"
+   ) +
+  // middle tab
+  ("x-vloc:/mainwindow/gutter?target=container&id=mid-tab&height=121&type=tab;" +
+   "x-vloc:/mainwindow/mid-tab?target=view&id=locals;" +
+   "x-vloc:/mainwindow/mid-tab?target=view&id=watches;"
+   ) +
+  // bottom tab
+  ("x-vloc:/mainwindow/gutter?target=container&id=bot-tab&height=100&type=tab;" +
+   "x-vloc:/mainwindow/bot-tab?target=view&id=breaks&height=100&;" +
+   "x-vloc:/mainwindow/bot-tab?target=view&id=stack&height=75;"
+   )
+  ) +
+ // right vert
+ ("x-vloc:/mainwindow/outer?target=container&id=vright&width=560&type=vertical;" +
+  "x-vloc:/mainwindow/vright?target=view&id=source2&before=session;" +
+  "x-vloc:/mainwindow/vright?target=view&id=session&width=677"
   )
- );
+ )
 
 function initViews()
 {
@@ -69,6 +83,12 @@ function initViews()
 
     for (var viewId in console.views)
     {
+        if (("enableMenuItem" in console.views[viewId]) &&
+            !console.views[viewId].enableMenuItem)
+        {
+            continue;
+        }
+        
         var toggleCommand = "toggle-" + viewId;
         if (toggleCommand in console.commandManager.commands)
         {
@@ -111,7 +131,7 @@ function syncTreeView (treeContent, treeView, cb)
         }
         else
         {
-            //dd ("trying to sync " + treeContent.getAttribute("id") + " AGAIN");
+            //dd ("trying to sync " + treeContent.getAttribute("id"));
             setTimeout (tryAgain, 500);
         }
     };
@@ -123,16 +143,30 @@ function syncTreeView (treeContent, treeView, cb)
         
         treeContent.treeBoxObject.view = treeView;
         if (treeContent.treeBoxObject.selection)
-            treeContent.treeBoxObject.selection.tree = treeContent.treeBoxObject;
-
+        {
+            treeContent.treeBoxObject.selection.tree =
+                treeContent.treeBoxObject;
+        }
     }
     catch (ex)
     {
         setTimeout (tryAgain, 500);
         return;
     }
-    
-    if (!treeContent._listenersInstalled)
+
+    if (!treeView)
+    {
+        if (treeContent._listenersInstalled)
+        {
+            treeContent._listenersInstalled = false;
+        
+            treeContent.removeEventListener("dblclick", ondblclick, false);
+            treeContent.removeEventListener("keypress", onkeypress, false);
+            treeContent.removeEventListener("focus", onfocus, false);
+            treeContent.removeEventListener("blur", onblur, false);
+        }
+    }
+    else if (!treeContent._listenersInstalled)
     {
         try
         {
@@ -234,19 +268,19 @@ function initContextMenu (document, id)
     }
 }
 
-console.viewProxyTitle = new Object();
+console.viewDragProxy = new Object();
 
-console.viewProxyTitle.onDragStart =
+console.viewDragProxy.onDragStart =
 Prophylactic(console.viewProxyTitle, vpxy_dragstart);
 function vpxy_dragstart (event, transferData, action)
 {
-    console.viewManager.onTitleDragStart (event, transferData, action);
+    console.viewManager.onDragStart (event, transferData, action);
     return true;
 }
 
-console.viewProxy = new Object();
+console.viewDropProxy = new Object();
 
-console.viewProxy.onDrop =
+console.viewDropProxy.onDrop =
 function vpxy_drop (event, transferData, session)
 {
     console.viewManager.onViewDrop (event, transferData, session);
@@ -257,20 +291,20 @@ function vpxy_drop (event, transferData, session)
     return true;
 }
 
-console.viewProxy.onDragOver =
+console.viewDropProxy.onDragOver =
 function vpxy_dragover (event, flavor, session)
 {
     console.viewManager.onViewDragOver (event, flavor, session);
     return true;
 }
 
-console.viewProxy.onDragExit =
+console.viewDropProxy.onDragExit =
 function vpxy_dragexit (event, session)
 {
     console.viewManager.onViewDragExit (event, session);
 }
         
-console.viewProxy.getSupportedFlavours =
+console.viewDropProxy.getSupportedFlavours =
 function vpxy_getflavors ()
 {
     return console.viewManager.getSupportedFlavours();
@@ -2236,6 +2270,8 @@ function cmdFindString (e)
 
 function cmdReloadTab (e)
 {
+    const WINDOW = Components.interfaces.nsIWebProgress.NOTIFY_STATE_WINDOW;
+    
     if (console.views.source2.sourceTabList.length == 0)
         return
 
@@ -2243,6 +2279,8 @@ function cmdReloadTab (e)
     
     function cb(status)
     {
+        sourceTab.iframe.addProgressListener (source2View.progressListener,
+                                              WINDOW);
         sourceTab.iframe.reload();
     };
 
@@ -3407,10 +3445,10 @@ function sv_init()
 {
     this.savedState = new Object();
 
-    /*
-      ["save-source"],
-      ["-"],
-    */
+    var prefs =
+        [
+         ["sourceView.enableMenuItem", false]
+        ];
 
     console.menuSpecs["context:source"] = {
         getContext: this.getContext,
@@ -3440,6 +3478,7 @@ function sv_init()
     };
     
     this.caption = MSG_VIEW_SOURCE;
+    this.enableMenuItem = console.prefs["sourceView.enableMenuItem"];
 
     var atomsvc = console.atomService;
 

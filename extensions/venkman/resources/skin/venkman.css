@@ -42,7 +42,11 @@
 @import url(chrome://global/skin/tabbox.css);
 
 viewcontainer {
-    -moz-binding: url(chrome://venkman/content/venkman-bindings.xml#viewcontainer);
+    -moz-binding: url(chrome://venkman/content/venkman-bindings.xml#viewcontainer-box);
+}
+
+viewcontainer[type="tab"] {
+    -moz-binding: url(chrome://venkman/content/venkman-bindings.xml#viewcontainer-tab);
 }
 
 floatingview {
@@ -230,13 +234,14 @@ browser {
 
 .view-container {
     -moz-box-orient: horizontal;
+
 /*
     border-top: 2px red solid;
     border-bottom: 2px black solid;
 */
 }
 
-.view-container[type="vertical"] {
+.view-container[orient="vertical"] {
     -moz-box-orient: vertical;
 
 /*
@@ -245,6 +250,10 @@ browser {
     border-left: 4px green solid;
     border-right: 4px black solid;
 */
+}
+
+.view-container[type="tab"] {
+    -moz-box-orient: vertical;
 }
 
 .view-title-margin-left {
@@ -308,11 +317,56 @@ tab {
 }
 */
 
+tabbox {
+  -moz-binding: none;
+}
+
+little-tab {
+    -moz-binding: url(chrome://venkman/content/venkman-bindings.xml#little-tab);
+    background: url(chrome://venkman/skin/images/shaded.png);
+    border-left: 1px black solid;
+    border-right: 1px black solid;
+    border-bottom: 1px black solid;
+    -moz-border-radius: 3px;
+    margin-bottom: 1px;
+}
+
+little-tab[selected] {
+    background: none;
+    padding-top: 1px;
+    margin-bottom: 0px;
+}
+
+little-tab[dragover="next-tab"] {
+    margin-right: 4px;
+}
+
+little-tab[dragover="prev-tab"] {
+    margin-left: 4px;
+}
+
+.view-title-pop[dragover="new-tab"] {
+    list-style-image: url("chrome://venkman/skin/images/new-tab.png") !important;
+}
+
+viewcontainer[type="tab"] {
+    padding: 4px 4px 4px 4px;
+}
+
 floatingview {
     padding: 4px 4px 4px 4px;
 }
 
+viewcontainer[type="tab"] floatingview {
+    padding: 0px 0px 0px 0px !important;
+}
+
 floatingview[dragover="left"] {
+    padding-left: 0px;
+    border-left: 4px black solid;
+}
+
+viewcontainer[type="tab"][dragover="left"] {
     padding-left: 0px;
     border-left: 4px black solid;
 }
@@ -327,8 +381,12 @@ floatingview[dragover="left"] {
     margin-top: 2px;
 }
 
-
 floatingview[dragover="up"] {
+    padding-top: 0px;
+    border-top: 4px black solid;
+}
+
+viewcontainer[type="tab"][dragover="up"] {
     padding-top: 0px;
     border-top: 4px black solid;
 }
@@ -342,11 +400,21 @@ floatingview[dragover="right"] {
     border-right: 4px black solid;
 }
 
+viewcontainer[type="tab"][dragover="right"] {
+    padding-right: 0px;
+    border-right: 4px black solid;
+}
+
 .view-title-pop[dragover="right"] {
     list-style-image: url("chrome://venkman/skin/images/arrow-right.png") !important;
 }
 
 floatingview[dragover="down"] {
+    padding-bottom: 0px;
+    border-bottom: 4px black solid;
+}
+
+viewcontainer[type="tab"][dragover="down"] {
     padding-bottom: 0px;
     border-bottom: 4px black solid;
 }

@@ -1230,9 +1230,9 @@ function bi_setEnabled (state)
     {
         this._enabled = state;
         if (state)
-            this.jsdScript.setBreakpoint(pc);
+            this.scriptWrapper.jsdScript.setBreakpoint(this.pc);
         else
-            this.jsdScript.clearBreakpoint(pc);
+            this.scriptWrapper.jsdScript.clearBreakpoint(this.pc);
     }
     
     return state;
@@ -1424,6 +1424,9 @@ function testBreakpoint(currentFrame, rv)
     {
         return -1;
     }
+
+    if (!ASSERT(breakpoint.enabled, "stopped at a disabled breakpoint?"))
+        return RETURN_CONTINUE;
 
     ++breakpoint.triggerCount;
     if ("propsWindow" in breakpoint)
