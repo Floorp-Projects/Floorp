@@ -190,10 +190,11 @@ nsBuiltinSchemaCollection::nsBuiltinSchemaCollection()
 {
 }
 
-nsBuiltinSchemaCollection::~nsBuiltinSchemaCollection()
+nsresult
+nsBuiltinSchemaCollection::Init()
 {
-  mBuiltinTypesHash.Reset();
-  mSOAPTypeHash.Reset();
+  return (mBuiltinTypesHash.Init() && mSOAPTypeHash.Init()) ? NS_OK
+                                                            : NS_ERROR_FAILURE;
 }
 
 NS_IMPL_ISUPPORTS1(nsBuiltinSchemaCollection,
@@ -284,13 +285,7 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAString& aName,
                                           const nsAString& aNamespace,
                                           nsISchemaType** aType)
 {
-  nsresult rv = NS_OK;
-  nsStringKey key(aName);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mBuiltinTypesHash.Get(&key));
-  if (sup) {
-    rv = CallQueryInterface(sup, aType);
-  }
-  else {
+  if (!mBuiltinTypesHash.Get(aName, aType)) {
     nsCOMPtr<nsIAtom> typeName = do_GetAtom(aName);
     PRUint16 typeVal;
     if (typeName == nsSchemaAtoms::sAnyType_atom) {
@@ -433,15 +428,13 @@ nsBuiltinSchemaCollection::GetBuiltinType(const nsAString& aName,
       return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
     }
 
-    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal);
+    nsCOMPtr<nsISchemaType> builtin = new nsSchemaBuiltinType(typeVal);
     if (!builtin) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    sup = builtin;
-    mBuiltinTypesHash.Put(&key, sup);
-    
-    *aType = builtin;
-    NS_ADDREF(*aType);
+
+    mBuiltinTypesHash.Put(aName, builtin);
+    builtin.swap(*aType);
   }
 
   return NS_OK;
@@ -453,12 +446,8 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
                                        nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
-  nsStringKey key(aName);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
-  if (sup) {
-    rv = CallQueryInterface(sup, aType);
-  }
-  else {
+
+  if (!mSOAPTypeHash.Get(aName, aType)) {
     if (aName.EqualsLiteral("Array")) {
       nsCOMPtr<nsISchemaType> anyType;
       rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
@@ -472,9 +461,9 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
       if (!array) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      sup = array;
-      mSOAPTypeHash.Put(&key, sup);
-    
+
+      mSOAPTypeHash.Put(aName, array);
+
       *aType = array;
       NS_ADDREF(*aType);
     }
@@ -483,9 +472,9 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
       if (!arrayType) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      sup = arrayType;
-      mSOAPTypeHash.Put(&key, sup);
-    
+
+      mSOAPTypeHash.Put(aName, arrayType);
+
       *aType = arrayType;
       NS_ADDREF(*aType);
     }
@@ -508,34 +497,26 @@ nsSchemaLoader::nsSchemaLoader()
   mBuiltinCollection = do_GetService(NS_BUILTINSCHEMACOLLECTION_CONTRACTID);
 }
 
-nsSchemaLoader::~nsSchemaLoader()
+nsresult
+nsSchemaLoader::Init()
 {
+  return mSchemas.Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS2_CI(nsSchemaLoader, 
-                      nsISchemaLoader, 
+NS_IMPL_ISUPPORTS2_CI(nsSchemaLoader,
+                      nsISchemaLoader,
                       nsISchemaCollection)
 
 
 /* nsISchema getSchema (in AString targetNamespace); */
 NS_IMETHODIMP 
 nsSchemaLoader::GetSchema(const nsAString & targetNamespace, 
-                          nsISchema **_retval)
+                          nsISchema ** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  nsStringKey key(targetNamespace);
-  nsCOMPtr<nsISupports> sup = dont_AddRef(mSchemas.Get(&key));
-  nsCOMPtr<nsISchema> schema(do_QueryInterface(sup));
-
-  if (!schema) {
-    return NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE;  // no schema for specified targetname
-  }
-
-  *_retval = schema;
-  NS_ADDREF(*_retval);
-
-  return NS_OK;
+  return mSchemas.Get(targetNamespace, aResult) ? NS_OK :
+           NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE;
 }
 
 /* nsISchemaElement getElement (in AString name, in AString namespace); */
@@ -640,10 +621,10 @@ nsSchemaLoader::GetResolvedURI(const nsAString& aSchemaURI,
     if (NS_SUCCEEDED(rv)) {
       principal->GetURI(getter_AddRefs(baseURI));
     }
-    
+
     rv = NS_NewURI(aURI, aSchemaURI, nsnull, baseURI);
     if (NS_FAILED(rv)) return rv;
-    
+
     rv = secMan->CheckLoadURIFromScript(cx, *aURI);
     if (NS_FAILED(rv))
     {
@@ -789,10 +770,10 @@ static PRUint32 kSchemaNamespacesLength = sizeof(kSchemaNamespaces) / sizeof(con
 NS_IMETHODIMP 
 nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
                                      nsIWebServiceErrorHandler* aErrorHandler,
-                                     nsISchema **_retval)
+                                     nsISchema **aResult)
 {
   NS_ENSURE_ARG(aElement);
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
   nsRefPtr<nsSchema> schemaInst = new nsSchema(this, aElement);
   if (!schemaInst) {
@@ -804,18 +785,14 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
 
   nsAutoString targetNamespace;
   schemaInst->GetTargetNamespace(targetNamespace);
-  nsStringKey key(targetNamespace);
-  nsCOMPtr<nsISupports> old = getter_AddRefs(mSchemas.Get(&key));
-  nsCOMPtr<nsISchema> os = do_QueryInterface(old);
-  
-  if (os) {
-    *_retval = os;
-    NS_ADDREF(*_retval);
-    
+
+  nsISchema * os;
+  if (mSchemas.Get(targetNamespace, &os)) {
+    *aResult = os;
     return NS_OK;
   }
 
-  nsChildElementIterator iterator(aElement, 
+  nsChildElementIterator iterator(aElement,
                                   kSchemaNamespaces, kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
   nsCOMPtr<nsIAtom> tagName;
@@ -825,7 +802,7 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
          childElement) {
     if (tagName == nsSchemaAtoms::sElement_atom) {
       nsCOMPtr<nsISchemaElement> schemaElement;
-      rv = ProcessElement(aErrorHandler, schemaInst, childElement,  
+      rv = ProcessElement(aErrorHandler, schemaInst, childElement,
                           getter_AddRefs(schemaElement));
       if (NS_SUCCEEDED(rv)) {
         rv = schemaInst->AddElement(schemaElement);
@@ -882,14 +859,14 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
       nsAutoString elementName;
       nsresult rc = aElement->GetTagName(elementName);
       NS_ENSURE_SUCCESS(rc, rc);
-      
+
       nsAutoString errorMsg;
       errorMsg.AppendLiteral("Failure processing schema, unexpected element \"");
       errorMsg.Append(elementName);
       errorMsg.AppendLiteral("\" in <schema .../>");
-      
+
       NS_SCHEMALOADER_FIRE_ERROR(rv, errorMsg);
-      
+
       return rv;
     }
   }
@@ -900,10 +877,9 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
     return rv;
   }
 
-  mSchemas.Put(&key, schemaInst);
+  mSchemas.Put(targetNamespace, schemaInst);
 
-  *_retval = schemaInst;
-  NS_ADDREF(*_retval);
+  NS_ADDREF(*aResult = schemaInst);
 
   return NS_OK;
 }

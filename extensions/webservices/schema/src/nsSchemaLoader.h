@@ -52,9 +52,9 @@
 // XPCOM Includes
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
-#include "nsHashtable.h"
 #include "nsString.h"
 #include "nsIAtom.h"
+#include "nsInterfaceHashtable.h"
 
 // Loading includes
 #include "nsIURI.h"
@@ -73,7 +73,7 @@ class nsBuiltinSchemaCollection : public nsISchemaCollection
 {
 public:
   nsBuiltinSchemaCollection();
-  virtual ~nsBuiltinSchemaCollection();
+  nsresult Init();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCHEMACOLLECTION
@@ -87,8 +87,8 @@ protected:
                        nsISchemaType** aType);
 
 protected:
-  nsSupportsHashtable mBuiltinTypesHash;
-  nsSupportsHashtable mSOAPTypeHash;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaType> mBuiltinTypesHash;
+  nsInterfaceHashtable<nsStringHashKey, nsISchemaType> mSOAPTypeHash;
 };
 
 class nsSchemaLoader : public nsISchemaLoader,
@@ -96,7 +96,7 @@ class nsSchemaLoader : public nsISchemaLoader,
 {
 public:
   nsSchemaLoader();
-  virtual ~nsSchemaLoader();
+  nsresult Init();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCHEMALOADER
@@ -222,7 +222,7 @@ protected:
                           nsAString& aName);
 
 protected:
-  nsSupportsHashtable mSchemas;
+  nsInterfaceHashtable<nsStringHashKey, nsISchema> mSchemas;
   nsCOMPtr<nsISchemaCollection> mBuiltinCollection;
 };
 
