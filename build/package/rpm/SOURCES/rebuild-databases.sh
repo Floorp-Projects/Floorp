@@ -1,5 +1,7 @@
 #!/bin/sh
 
+umask 022
+
 if [ -f /usr/lib/mozilla/regxpcom ]; then
 
     /bin/rm -rf /usr/lib/mozilla/chrome/overlayinfo
