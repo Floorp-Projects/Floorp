@@ -29,7 +29,7 @@
 !  may use your version of this file under either the MPL or the
 !  GPL.
 !  
-!   $Id: montmulf.s,v 1.1 2000/10/13 00:30:36 nelsonb%netscape.com Exp $
+!   $Id: montmulf.s,v 1.2 2002/02/08 00:43:18 sonja.mirtitsch%sun.com Exp $
 !  
 
 	.section	".text",#alloc,#execinstr
@@ -1965,12 +1965,3 @@ TwoToMinus32:		/* frequency 1.0 confidence 0.0 */
 /* 0x0b1c	   0 ( 0  0) */		.type	mont_mulf_noconv,2
 /* 0x0b1c	     ( 0  0) */		.size	mont_mulf_noconv,(.-mont_mulf_noconv)
 
-! Begin Disassembling Stabs
-	.xstabs	".stab.index","Xa ; O ; V=3.1 ; R=WorkShop Compilers 5.0 99/02/25 C 5.0 patch 107289-01",60,0,0,0	! (/tmp/acompAAALcayz5:1)
-	.xstabs	".stab.index","/home/ferenc; /usr/dist/pkgs/devpro,v5.0/5.x-sparc/SC5.0/bin/cc -DMONOLITH -I../include -DNO_ASM -DSIXTY_FOUR_BIT -fast -xtarget=ultra -xarch=v8plus -xO5 -xstrconst -xdepend -Xa -DB_ENDIAN -DBN_DIV2W -DULTRASPARC -Wc,-Qrm-Qd -Wc,-Qrm-Qf -Wc,-assembly -V -c montmulf.il -o montmulf.o  montmulf.c -W0,-xp",52,0,0,0	! (/tmp/acompAAALcayz5:2)
-! End Disassembling Stabs
-
-! Begin Disassembling Ident
-	.ident	"cg: WorkShop Compilers 5.0 99/04/15 Compiler Common 5.0 Patch 107357-02"	! (NO SOURCE LINE)
-	.ident	"acomp: WorkShop Compilers 5.0 99/02/25 C 5.0 patch 107289-01"	! (/tmp/acompAAALcayz5:31)
-! End Disassembling Ident
