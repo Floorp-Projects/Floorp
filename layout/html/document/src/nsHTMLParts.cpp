@@ -40,6 +40,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
   nsIAtom* atom = NS_NewAtom(tmp);
   switch (id) {
   case eHTMLTag_a:
+    rv = NS_NewHTMLAnchor(aInstancePtrResult, atom);
+    break;
   case eHTMLTag_abbr:
   case eHTMLTag_acronym:
   case eHTMLTag_address:
