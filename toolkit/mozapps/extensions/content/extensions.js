@@ -142,7 +142,7 @@ function Startup()
   }
 
   // Now look and see if we're being opened by XPInstall
-  var gDownloadManager = new XPInstallDownloadManager();
+  gDownloadManager = new XPInstallDownloadManager();
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(gDownloadManager, "xpinstall-download-started", false);
