@@ -38,15 +38,14 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["offlineStartupstate", "whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
-  ]]>
     
   function Startup()
   {
     var aCheckbox = document.getElementById("offlineCompactFolder");
-    enableField(aCheckbox, "offlineCompactFolderMin");
+    enableField(aCheckbox, "offlineCompactFolderMin", false);
   }
 
-  function enableField(aCheckbox, aNodeID) 
+  function enableField(aCheckbox, aNodeID, setFocus) 
   { 
      var aField = document.getElementById(aNodeID); 
      if (aCheckbox.checked) 
@@ -54,10 +53,10 @@
      else 
          aField.setAttribute("disabled", "true"); 
     
-     if (! aField.disabled)
+     if (!aField.disabled && setFocus)
        aField.focus();
   } 
-
+  ]]>
   </script>
 
 <groupbox>
@@ -96,7 +95,7 @@
     <hbox align="center">
         <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
             prefstring="mail.prompt_purge_threshhold"
-            oncommand="enableField(this,'offlineCompactFolderMin');"/> 
+            oncommand="enableField(this,'offlineCompactFolderMin',true);"/> 
         <textbox id="offlineCompactFolderMin" size="5" value="100"
             preftype="int" prefstring="mail.purge_threshhold"/>
         <label value="&kb.label;"/>
