@@ -71,13 +71,6 @@
         ]]></getter>
       </property>
 
-      <method name="loadBookmarksCallback">
-        <body><![CDATA[
-          BMSVC.ReadBookmarks();
-          this.toolbar.builder.rebuild();       
-        ]]></body>
-      </method>
-
       <field name="_selection">  null</field>
       <field name="_target">     null</field>
       <field name="_orientation">null</field>
