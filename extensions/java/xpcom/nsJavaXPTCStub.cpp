@@ -362,6 +362,10 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
           retval.l = mJavaEnv->CallObjectMethodA(mJavaObject, mid, java_params);
           break;
 
+        case nsXPTType::T_VOID:
+          retval.i = mJavaEnv->CallIntMethodA(mJavaObject, mid, java_params);
+          break;
+
         default:
           NS_WARNING("Unhandled retval type");
           break;
@@ -662,11 +666,20 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     }
     break;
 
-    // XXX How should this be handled?
+    // Pass the 'void*' address as an integer
     case nsXPTType::T_VOID:
-      NS_WARNING("Unhandled T_VOID");
-      return NS_ERROR_NOT_IMPLEMENTED;
-      break;
+    {
+      if (!aParamInfo.IsOut()) {
+        aJValue.i = (jint) aVariant.val.p;
+        aMethodSig.Append("I");
+      } else {
+        jintArray array = mJavaEnv->NewIntArray(1);
+        mJavaEnv->SetIntArrayRegion(array, 0, 1, (jint*) &(aVariant.val.p));
+        aJValue.l = array;
+        aMethodSig.Append("[I");
+      }
+    }
+    break;
 
     case nsXPTType::T_ARRAY:
       NS_WARNING("array types are not yet supported");
@@ -743,10 +756,9 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       aRetvalSig.Append("Lorg/mozilla/xpcom/nsISupports;");
       break;
 
-    // XXX How should this be handled?
+    // XXX Probably won't work for 64 bit addr
     case nsXPTType::T_VOID:
-      NS_WARNING("Unhandled T_VOID");
-      return NS_ERROR_NOT_IMPLEMENTED;
+      aRetvalSig.Append("I");
       break;
 
     case nsXPTType::T_ARRAY:
@@ -1178,9 +1190,25 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
     break;
 
     case nsXPTType::T_VOID:
-      NS_WARNING("Unhandled T_VOID");
-      return NS_ERROR_NOT_IMPLEMENTED;
-      break;
+    {
+      if (aParamInfo.IsOut()) {
+        if (aParamInfo.IsRetval()) {
+          *((PRUint32 *) aVariant.val.p) = aJValue.i;
+        } else {
+          if (aJValue.l) {
+            jboolean isCopy = PR_FALSE;
+            jint* array = mJavaEnv->GetIntArrayElements((jintArray) aJValue.l,
+                                                         &isCopy);
+            *((PRUint32 *) aVariant.val.p) = array[0];
+            if (isCopy) {
+              mJavaEnv->ReleaseIntArrayElements((jintArray) aJValue.l, array,
+                                                JNI_ABORT);
+            }
+          }
+        }
+      }
+    }
+    break;
 
     default:
       NS_WARNING("unexpected parameter type");
