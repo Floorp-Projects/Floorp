@@ -866,6 +866,9 @@ nsExtensionManager.prototype = {
           win.close();
         }
         
+        // XXXben we should be doing all of this in the EM's ctor, NOT after profile
+        //        selection... this means we need to verify that all the services
+        //        invoked by these operations are globally available.
         var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
         if (globalExtension)
           this._checkForGlobalInstalls(globalExtension, nsIUpdateItem.TYPE_EXTENSION);
@@ -873,10 +876,28 @@ nsExtensionManager.prototype = {
         var globalTheme = cmdLineSvc.getCmdLineValue("-install-global-theme");
         if (globalTheme)
           this._checkForGlobalInstalls(globalTheme, nsIUpdateItem.TYPE_THEME);
+        
+        var showList = cmdLineSvc.getCmdLineValue("-list-global-items");
+        if (showList)
+          this._showGlobalItemList();
+          
+        var locked = cmdLineSvc.getCmdLineValue("-lock-item");
+        if (locked) {
+          this._ensureDS();
+          this._ds.lockUnlockItem(locked, true);
+        }
+
+        var unlocked = cmdLineSvc.getCmdLineValue("-unlock-item");
+        if (unlocked) {
+          this._ensureDS();
+          this._ds.lockUnlockItem(unlocked, false);
+        }
+
+        var needsToQuit = globalExtension || globalTheme || showList || locked || unlocked;
 
         this._finishOperations();
         this._loadDefaults();
-        if (globalExtension || globalTheme) {
+        if (needsToQuit) {
           // If we did a global install, shut down the app now. 
           // XXXben - change to nsIAppStartup w/bsmedberg change
           var appStartup = Components.classes['@mozilla.org/appshell/appShellService;1']
@@ -928,6 +949,27 @@ nsExtensionManager.prototype = {
     }
     else
       dump("Invalid XPI/JAR Path: " + aPath + "\n");
+  },
+  
+  _showGlobalItemList: function ()
+  {
+    this._ensureDS();
+    
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var bundle = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+
+    dump(bundle.GetStringFromName("globalItemList"));
+    dump(bundle.GetStringFromName("globalItemListExtensions"));
+    var items = this.getItemList(null, nsIUpdateItem.TYPE_EXTENSION, {});
+    for (var i = 0; i < items.length; ++i)
+      dump(" " + items[i].id + "   " + items[i].name + "\n");
+    dump(bundle.GetStringFromName("globalItemListThemes"));
+    items = this.getItemList(null, nsIUpdateItem.TYPE_THEME, {});
+    for (var i = 0; i < items.length; ++i)
+      dump(" " + items[i].id + "   " + items[i].name + "\n");
+      
+    dump("\n\n");
   },
   
   _finishOperations: function ()
@@ -1915,6 +1957,16 @@ nsExtensionsDataSource.prototype = {
     
     this._flush(aIsProfile);
   },
+  
+  lockUnlockItem: function (aItemID, aLocked)
+  {
+    var item = this._getResourceForItem(aItemID);
+    if (item) {
+      var val = aLocked ? this._emL("true") : this._emL("false");
+      this.setItemProperty(aItemID, this._emR("locked"), val, false, getItemType(item.Value));
+      this._flush(false);
+    }
+  },  
   
   enableExtension: function (aExtensionID)
   {
