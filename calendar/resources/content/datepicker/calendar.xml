@@ -20,13 +20,13 @@
 		  </xul:hbox>
 		  <xul:vbox class="cal-cal-box" flex="1">
 			<xul:hbox class="cal-row-head" equalsize="always">
-				<xul:text class="cal-header" flex="1" value="S"/>
-				<xul:text class="cal-header" flex="1" value="M"/>
-				<xul:text class="cal-header" flex="1" value="T"/>
-				<xul:text class="cal-header" flex="1" value="W"/>
-				<xul:text class="cal-header" flex="1" value="T"/>
-				<xul:text class="cal-header" flex="1" value="F"/>
-				<xul:text class="cal-header" flex="1" value="S"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
+				<xul:text class="cal-header" flex="1"/>
 			</xul:hbox>
 			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
 				<xul:text class="cal-day" flex="1" />
@@ -102,6 +102,19 @@
         if (!this.mInitialized) {
           this.mInitialized = true;
 
+					// Find out which should be the first day of the week
+					var pref =  Components.classes[
+						"@mozilla.org/preferences-service;1"
+					].getService(Components.interfaces.nsIPrefBranch);
+
+					this.weekStart;
+					try {
+						this.weekStart = pref.getIntPref("calendar.week.start");
+					}
+					catch (e) {
+						this.weekStart = 0;
+					}
+
           // save references for convenience
           var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
           this.mLeftBtn = monthbox.childNodes[0];
@@ -119,10 +132,49 @@
           var monthchange = this.getAttribute("onmonthchange");
           if (monthchange) this.onmonthchange = new Function(monthchange);
           
+					this.setHeader();
           this.showMonth(this.mValue);
         }
 			]]>
 		</constructor>
+
+		<method name="setHeader">
+			<body><![CDATA[
+				// need to create string bundle manually instead of
+				// using <xul:stringbundle/> see bug 63370 for details
+
+				var localeService = Components.classes[
+					"@mozilla.org/intl/nslocaleservice;1"
+				].getService(Components.interfaces.nsILocaleService);
+
+				var stringBundleService = Components.classes[
+					"@mozilla.org/intl/stringbundle;1"
+				].getService(Components.interfaces.nsIStringBundleService);
+
+				var bundleURL = "chrome://calendar/locale/dateFormat.properties";
+				var dateBundle = stringBundleService.createBundle(
+					bundleURL, localeService.GetApplicationLocale()
+				);
+
+				// Reset the headers
+				var header = document.getAnonymousNodes(this)[0].
+					childNodes[1].childNodes[0]
+				;
+
+				for (var column = 0; column < header.childNodes.length; column++) {
+
+					header.childNodes[column].setAttribute( "value",
+						dateBundle.GetStringFromName(
+							"day."+
+							((this.weekStart + column) % 7 + 1) +
+							".short"
+						)
+					);
+				}
+        
+			]]></body>
+		</method>
+
 		
 		<method name="showMonth">
 			<parameter name="aDate"/>
@@ -147,11 +199,11 @@
         
         //-------- Update the calendar
         var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
-        
+
         var daytime = 86400000; // milliseconds in a day
-        var firstWeekday = aDate.getDay();
+        var firstWeekday = (7 + aDate.getDay() - this.weekStart) % 7;
         var date = new Date((aDate.getTime() - (firstWeekday*daytime)));
-        
+
         for (var k = 1; k < calbox.childNodes.length; k++) {
           var row = calbox.childNodes[k];
 

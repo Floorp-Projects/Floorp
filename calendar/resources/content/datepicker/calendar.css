@@ -76,6 +76,7 @@ calendar {
 .cal-header {
 	font-family: Arial;
 	color: blue;
+	text-align: center;
 }
 
 .cal-row-body {
@@ -85,6 +86,7 @@ calendar {
 	font-family: Arial;
 	color: #000000;
 	border: 1px solid transparent;
+	text-align: center;
 	-moz-binding: url("calendar.xml#cal-day");
 }
 
