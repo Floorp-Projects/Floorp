@@ -94,7 +94,7 @@ var unifinderToDoDataSourceObserver =
 
 function prepareCalendarToDoUnifinder()
 {
-    var calendar = createCalendar();
+    var calendar = getCalendar();
     calendar.addObserver(unifinderToDoDataSourceObserver, calendar.ITEM_FILTER_TYPE_TODO);
     toDoUnifinderRefresh();
 }
@@ -143,7 +143,7 @@ function toDoUnifinderRefresh()
        }
    };
 
-   var calendar = createCalendar();
+   var calendar = getCalendar();
    var filter = 0;
    if (hideCompleted)
        filter |= calendar.ITEM_FILTER_COMPLETED_NO;
@@ -232,7 +232,7 @@ function checkboxClick(thisTodo, completed)
             newTodo.percentComplete = 0;
     }
    
-    var calendar = createCalendar();
+    var calendar = getCalendar();
     calendar.modifyItem (newTodo, null);
 }
 
@@ -542,7 +542,7 @@ function contextChangeProgress( event, Progress )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.percentComplete = Progress;
-          var calendar = createCalendar();
+          var calendar = getCalendar();
           calendar.modifyItem (newItem, null);
       }
    }
@@ -560,7 +560,7 @@ function contextChangePriority( event, Priority )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.priority = Priority;
-          var calendar = createCalendar();
+          var calendar = getCalendar();
           calendar.modifyItem (newItem, null);
       }
    }

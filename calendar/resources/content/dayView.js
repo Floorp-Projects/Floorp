@@ -132,7 +132,7 @@ DayView.prototype.refreshEvents = function()
         }
     };
 
-    var ccalendar = createCalendar(); // XXX Should get the composite calendar here
+    var ccalendar = getCalendar(); // XXX Should get the composite calendar here
 
     dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
 

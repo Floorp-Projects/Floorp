@@ -153,7 +153,7 @@ WeekView.prototype.refreshEvents = function()
         }
     };
 
-    var ccalendar = createCalendar(); // XXX Should get the composite calendar here
+    var ccalendar = getCalendar(); // XXX Should get the composite calendar here
 
     debug("Fetching events from " + this.displayStartDate.toString() + " to " + this.displayEndDate.toString() + "\n");
 

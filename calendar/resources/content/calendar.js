@@ -174,8 +174,6 @@ function calendarInit()
     // XXX remove this eventually
     gICalLib = new Object();
 
-    gCalendar = createCalendar();
-
    // set up the CalendarWindow instance
    
    gCalendarWindow = new CalendarWindow();
@@ -739,32 +737,17 @@ function makeURL(uriString)
     return ioservice.newURI(uriString, null, null);
 }
 
-function createCalendar()
+function getCalendar()
 {
-    var prefobj = prefService.getBranch("calendar.");
-    var caltype = getCharPref(prefobj, "default-calendar.type", "memory");
-    var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + caltype].getService(Components.interfaces.calICalendar);
-    if (calendar.uri || caltype == "memory")
-        return calendar;
-
-    var uri = null;
-    if (caltype == "caldav" || caltype == "ics") {
-        var uriString = getCharPref(prefobj, "default-calendar.uri", null);
-        uri = makeURL(uriString);
-    } else if (caltype == "storage") {
-        var pathString = getCharPref(prefobj, "default-calendar.path", null);
-        var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-        dbFile.initWithPath(pathString);
-        var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        uri = ioservice.newFileURI(dbFile);
-    }
-
-    if (!uri) {
-        throw "Calendar type " + caltype + 
-            " requires that default-calendar.uri pref be set!";
-    }
-    calendar.uri = uri;
-    return calendar;
+   var calendarList = document.getElementById("list-calendars-listbox");
+   try {
+       var selectedCalendar = calendarList.currentItem.calendar;
+       return selectedCalendar;
+   } catch(e) {
+       newCalendarDialog();
+       var selectedCalendar = calendarList.currentItem.calendar;
+       return selectedCalendar;
+   }
 }
 
 function isEvent(aObject)
@@ -1032,11 +1015,13 @@ function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 {
     dump(functionToRun + " " + calendarEvent.title + "\n");
 
+    var calendar = getCalendar();
+
     if (functionToRun == 'addEvent')
-        gCalendar.addItem(calendarEvent, null);
+        calendar.addItem(calendarEvent, null);
 
     else if (functionToRun == 'modifyEvent')
-        gCalendar.modifyItem(calendarEvent, null);
+        calendar.modifyItem(calendarEvent, null);
 
 
 
@@ -1133,7 +1118,7 @@ function deleteItems( SelectedItems, DoNotConfirm )
         }
     }
 
-    ccalendar = createCalendar();
+    ccalendar = getCalendar();
 
     for (i in  SelectedItems) {
         ccalendar.deleteItem(SelectedItems[i], null);
@@ -1388,16 +1373,16 @@ function print()
    args.selectedDate=gNewDateVariable = gCalendarWindow.getSelectedDate();
 
    var Offset = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-			   "week.start", 
-			   gCalendarBundle.getString("defaultWeekStart" ) );
+                           "week.start", 
+                           gCalendarBundle.getString("defaultWeekStart" ) );
    var WeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-				"weeks.inview", 
-				gCalendarBundle.getString("defaultWeeksInView" ) );
+                                "weeks.inview", 
+                                gCalendarBundle.getString("defaultWeeksInView" ) );
    WeeksInView = ( WeeksInView >= 6 ) ? 6 : WeeksInView ;
 
    var PreviousWeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-					"previousweeks.inview", 
-					gCalendarBundle.getString("defaultPreviousWeeksInView" ) );
+                                        "previousweeks.inview", 
+                                        gCalendarBundle.getString("defaultPreviousWeeksInView" ) );
    PreviousWeeksInView = ( PreviousWeeksInView >= WeeksInView - 1 ) ? WeeksInView - 1 : PreviousWeeksInView ;
 
    args.startOfWeek=Offset;
@@ -1701,7 +1686,20 @@ function doCreateWizardFinish()
     }
     calManager.registerCalendar(newCalendar);
 
-    addCalendarToUI(newCalendar);
+    addCalendarToUI(window.opener.document, newCalendar);
 
     return true;
+}
+
+function addCalendarToUI(doc, calendar)
+{
+    var listItem = doc.createElement("listitem");
+    var listCell = doc.createElement("listcell");
+    listCell.setAttribute("label", calendar.name);
+    listItem.appendChild(listCell);
+    listItem.calendar = calendar;
+    var calendarList = doc.getElementById("list-calendars-listbox");
+    calendarList.appendChild(listItem);
+    if (calendarList.selectedIndex == -1)
+        calendarList.selectedIndex = 0;
 }

@@ -589,7 +589,7 @@ function refreshEventTree( eventArray )
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
    var EndDate;
 
-   var calendar = createCalendar();
+   var calendar = getCalendar();
    var filter = 0;
 
    filter |= calendar.ITEM_FILTER_TYPE_EVENT;

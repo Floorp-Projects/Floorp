@@ -138,6 +138,13 @@ function CalendarWindow( )
    
    var calendarWindow = this;
 
+    // fill in the calendars list
+    dump("\n\n\nlooking for calendars!!\n\n\n");
+    var calendars = getCalendarManager().getCalendars({});
+    for (var i = 0; i < calendars.length; i++) {
+        dump(calendars[i]);
+        addCalendarToUI(document, calendars[i]);
+    }
 
     var savedThis = this;
     var calendarObserver = {
@@ -150,20 +157,12 @@ function CalendarWindow( )
         onAlarm: function(aAlarmItem) {},
         onError: function(aErrNo, aMessage) { }
     }
-    var calendar = createCalendar();
+    var calendar = getCalendar();
     calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
 
 
 
 
-
-    // fill in the calendars list
-    dump("\n\n\nlooking for calendars!!\n\n\n");
-    var calendars = getCalendarManager().getCalendars({});
-    for (var i = 0; i < calendars.length; i++) {
-        dump(calendars[i]);
-        addCalendarToUI(calendars[i]);
-    }
 
 
 
@@ -245,20 +244,6 @@ function CalendarWindow( )
    //gICalLib.addObserver( this.calendarEventDataSourceObserver );
 */
 }
-
-
-function addCalendarToUI(calendar)
-{
-    var listItem = document.createElement("listitem");
-    var listCell = document.createElement("listcell");
-    listCell.setAttribute("label", calendar.name);
-    listItem.appendChild(listCell);
-    listItem.calendar = calendar;
-    var calendarList = document.getElementById("list-calendars-listbox");
-    calendarList.appendChild(listItem);
-}
-
-
 
 /** PUBLIC
 *
