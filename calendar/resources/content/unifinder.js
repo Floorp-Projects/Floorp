@@ -129,7 +129,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    }
    
    /* This needs to be in a setTimeout */
-   setTimeout( "resetAllowSelection()", 1 );
+   setTimeout( "resetAllowSelection()", 0 );
 }
 
 /**
@@ -427,6 +427,13 @@ function unifinderDeleteCommand( DoNotConfirm )
       gICalLib.batchMode = false;
    }
 }
+
+function unifinderToDoHasFocus()
+{
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   return( tree.treeBoxObject.focused );
+}
+
 
 
 /**
