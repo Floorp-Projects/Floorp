@@ -485,6 +485,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                            namespaceID,
                            *getter_AddRefs(attrName),
                            *getter_AddRefs(attrPrefix));
+
     if (attrPrefix) {
       attrPrefix->ToString(prefixStr);
     }
@@ -500,7 +501,13 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     
     content->GetAttr(namespaceID, attrName, valueStr);
     attrName->ToString(nameStr);
-    
+
+    // XXX Hack to get around the fact that MathML can add
+    //     attributes starting with '-', which makes them
+    //     invalid XML.
+    if (!nameStr.IsEmpty() && nameStr.First() == '-')
+      continue;
+
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, PR_TRUE);
     
     if (addNSAttr) {
