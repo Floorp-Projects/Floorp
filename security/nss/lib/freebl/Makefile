@@ -236,11 +236,13 @@ ifdef USE_PURE_32
 vpath %.c $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.S $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.s $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
+vpath %.asm $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 INCLUDES += -I$(FREEBL_PARENT) -I$(FREEBL_PARENT)/mpi
 else
 vpath %.c mpi
 vpath %.S mpi
 vpath %.s mpi
+vpath %.asm mpi
 INCLUDES += -Impi
 endif
 
