@@ -307,8 +307,8 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
   const nsTextFragment* textFrag;
   PRInt32 numFragments;
-  // XXX This method is const, but GetText() isn't, so cast away the
-  // XXX constness of mInner to fix windows build bustage temporarily.
+  // XXX This method is const, but GetText() isn't,
+  // XXX so cast away the constness of mInner:
   nsGenericDOMDataNode* inner = (nsGenericDOMDataNode*)&mInner;
   res = inner->GetText(textFrag, numFragments);
   if (!NS_SUCCEEDED(res))
@@ -355,7 +355,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
             if (startContent.get() == content)
              buffer.Cut(0,startOffset); 
           }
-          aConverter.AddComment(buffer);
+          aConverter.AddContentComment(buffer);
         }
       }
     }
@@ -370,4 +370,18 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   // XXX Possible mem leak: Do we need to delete textFrag?
   return NS_OK;
 }
+
+#if 0
+nsresult
+nsCommentNode::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+  return NS_OK;
+}
+
+nsresult
+nsCommentNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  return NS_OK;
+}
+#endif
 
