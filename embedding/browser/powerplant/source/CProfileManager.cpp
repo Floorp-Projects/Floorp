@@ -333,7 +333,10 @@ void CProfileManager::DoLogout()
     if (item == iCancel)
       return;
 
-    rv = profileService->ShutDownCurrentProfile(item == iPersist ? nsIProfile::SHUTDOWN_PERSIST : nsIProfile::SHUTDOWN_CLEANSE);
+    if (item == iPersist)
+        rv = profileService->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    else    
+        rv = profileService->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_CLEANSE);
     if (NS_SUCCEEDED(rv)) {
         // Just put this up modally until they pick a new profile
         DoManageProfilesDialog();

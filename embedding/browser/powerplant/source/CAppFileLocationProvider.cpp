@@ -202,14 +202,25 @@ NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFil
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     OSErr   err;
+ 
+#if defined(XP_MACOSX)
+    FSRef fsRef;
+    err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+    if (err) return NS_ERROR_FAILURE;
+    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localDir));
+    if (!localDir) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
+    rv = localDirMac->InitWithFSRef(&fsRef);
+    if (NS_FAILED(rv)) return rv;
+#else   
     long    response;
     err = ::Gestalt(gestaltSystemVersion, &response);
     const char *prop = (!err && response >= 0x00001000) ? NS_MAC_USER_LIB_DIR : NS_MAC_DOCUMENTS_DIR;
-
     rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;   
+#endif
 
     rv = localDir->AppendRelativeNativePath(nsDependentCString(mProductDirName));
     if (NS_FAILED(rv)) return rv;

@@ -22,7 +22,6 @@
 
 #include "CBrowserApp.h"
 
-#include <LGrowZone.h>
 #include <PP_Messages.h>
 #include <PP_Resources.h>
 #include <UDrawingState.h>
@@ -70,13 +69,16 @@
 #include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "macstdlibextras.h"
-#include "SIOUX.h"
 #include "nsNetUtil.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsIDownload.h"
 #include "nsCRT.h"
+
+#if defined(__MWERKS__) && !defined(__MACH__)
+#include "macstdlibextras.h"
+#include "SIOUX.h"
+#endif
 
 #include <TextServices.h>
 
@@ -99,30 +101,34 @@ int main()
     SetDebugThrow_(PP_PowerPlant::debugAction_Alert);   // Set Debugging options
     SetDebugSignal_(PP_PowerPlant::debugAction_Alert);
 
+#ifdef POWERPLANT_IS_FRAMEWORK
+    // A framework's Resource Mgr resources must be opened explicitly.
+    CFBundleRef powerplantBundle = ::CFBundleGetBundleWithIdentifier(
+                                      CFSTR("org.mozilla.PowerPlant"));
+    SInt16 powerPlantResRefNum = -1;
+    if (powerplantBundle) {
+      powerPlantResRefNum = ::CFBundleOpenBundleResourceMap(powerplantBundle);
+      ::CFRelease(powerplantBundle);
+    }
+#endif
+
     PP_PowerPlant::InitializeHeap(3);       // Initialize Memory Manager
                                             // Parameter is number of Master Pointer
                                             // blocks to allocate
     
-
-#if __PowerPlant__ >= 0x02100000
     PP_PowerPlant::UQDGlobals::InitializeToolbox();
-#else
-    PP_PowerPlant::UQDGlobals::InitializeToolbox(&qd);
-#endif
     
-#if DEBUG
+#if defined(__MWERKS__) && !TARGET_CARBON
     ::InitializeSIOUX(false);
 #endif
 
-#if !TARGET_CARBON      
+#if !TARGET_CARBON
+    new PP_PowerPlant::LGrowZone(20000);    // Install a GrowZone function to catch low memory situations.      
     ::InitTSMAwareApplication();
 #endif
     
-    new PP_PowerPlant::LGrowZone(20000);    // Install a GrowZone function to catch low memory situations.
-
     {
         CBrowserApp theApp;         // create instance of your application
-    
         theApp.Run();
     }
 
@@ -277,8 +283,7 @@ CBrowserApp::StartUp()
     
     nsCOMPtr<nsProfileDirServiceProvider> locProvider;
     NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-    if (!locProvider)
-      return NS_ERROR_FAILURE;
+    ThrowIfNil_(locProvider);
     
     // Directory service holds an strong reference to any
     // provider that is registered with it. Let it hold the
@@ -601,7 +606,7 @@ pascal OSStatus CBrowserApp::AppEventHandler(EventHandlerCallRef aHandlerChain,
                             typeHICommand, NULL, sizeof(HICommand), 
                             NULL, &command) != noErr)
         return result;
-
+    
     switch (::GetEventKind(event))
     {
         case kEventCommandProcess:
@@ -609,10 +614,12 @@ pascal OSStatus CBrowserApp::AppEventHandler(EventHandlerCallRef aHandlerChain,
                 switch (command.commandID)
                 {
                     case kHICommandPreferences:
+                    {
                         CBrowserApp *theApp = reinterpret_cast<CBrowserApp*>(userData);
                         theApp->ObeyCommand(PP_PowerPlant::cmd_Preferences, nsnull);
                         result = noErr;
                         break;
+                    }
                     default:
                         break;
                 }

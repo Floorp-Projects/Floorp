@@ -28,8 +28,6 @@
 
 #include "PPHeadersDebug_pch"
 
-#include "CarbonCompatibility.h"
-
 // Config flags common to all builds
 #include "PPEmbedConfig.h"
 

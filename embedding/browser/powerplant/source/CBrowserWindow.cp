@@ -182,7 +182,7 @@ void CBrowserWindow::ShowSelf()
 
     nsIWidget *widget = nsnull;
 
-    OSStatus err = ::GetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
+    OSStatus err = ::GetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
     if (err == noErr && widget)
         widget->Show(PR_TRUE);
 }
@@ -199,8 +199,6 @@ void CBrowserWindow::ListenToMessage(MessageT       inMessage,
     {
         case msg_OnNetStartChange:
             {
-                const MsgNetStartInfo *info = reinterpret_cast<MsgNetStartInfo*>(ioParam);
-
                 if (mProgressBar) {
                     mProgressBar->Show();
                     mProgressBar->SetIndeterminateFlag(true, true);
@@ -216,8 +214,6 @@ void CBrowserWindow::ListenToMessage(MessageT       inMessage,
         
         case msg_OnNetStopChange:
             {
-                const MsgNetStopInfo *info = reinterpret_cast<MsgNetStopInfo*>(ioParam);
-
                 if (mThrobber)
                     mThrobber->Stop();
 

@@ -302,7 +302,7 @@ void CDownloadProgressView::FinishCreateSelf()
                                paneID_SrcURILabel,
                                paneID_DestFileLabel };
                                  
-        for (int i = 0; i < sizeof(labelIDs) / sizeof(labelIDs[0]); i++) {
+        for (size_t i = 0; i < sizeof(labelIDs) / sizeof(labelIDs[0]); i++) {
             LStaticText *staticText = dynamic_cast<LStaticText*>(FindPaneByID(labelIDs[i]));
             if (staticText)
                 staticText->SetFontStyle(styleRec);
@@ -520,7 +520,7 @@ void CDownloadProgressView::UpdateStatus(CDownload::MsgOnDLProgressChangeInfo *i
     }
     
     if (mTimeRemainingText) {
-        PRInt32 secsRemaining = rint(float(info->mMaxProgress - info->mCurProgress) / bytesPerSec);
+        PRInt32 secsRemaining = (PRInt32)(float(info->mMaxProgress - info->mCurProgress) / bytesPerSec + 0.5);
         mTimeRemainingText->SetText(FormatFuzzyTime(secsRemaining, valueStr));
     }
 }

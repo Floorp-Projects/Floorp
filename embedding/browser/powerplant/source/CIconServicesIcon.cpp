@@ -22,6 +22,9 @@
  
 #include "CIconServicesIcon.h"
 
+#include "UResourceMgr.h"
+#include "UMemoryMgr.h"
+
 #include <Processes.h>
 
 //*****************************************************************************
@@ -29,7 +32,7 @@
 //*****************************************************************************   
 
 OSType CIconServicesIcon::mgAppCreator;
-FSSpec CIconServicesIcon::mgAppFileSpec;
+FSSpec CIconServicesIcon::mgIconFileSpec;
 
 CIconServicesIcon::CIconServicesIcon(const SPaneInfo&	inPaneInfo,
 	                                 MessageT			inValueMessage,
@@ -63,6 +66,9 @@ CIconServicesIcon::~CIconServicesIcon()
 
 void CIconServicesIcon::DrawSelf()
 {
+  if (!mIconRef)
+    return;
+    
 	Rect	iconRect;
 	CalcLocalFrameRect(iconRect);
     AdjustIconRect(iconRect);
@@ -112,6 +118,9 @@ SInt16 CIconServicesIcon::FindHotSpot(Point	inPoint) const
 Boolean CIconServicesIcon::PointInHotSpot(Point		inPoint,
 								          SInt16	inHotSpot) const
 {
+  if (!mIconRef)
+    return false;
+    
 	Rect	iconRect;
 	CalcLocalFrameRect(iconRect);
     AdjustIconRect(iconRect);
@@ -158,11 +167,34 @@ void CIconServicesIcon::Init()
         ProcessInfoRec info;
         info.processInfoLength = sizeof(info);
         info.processName = nil;
-        info.processAppSpec = &mgAppFileSpec;
+        info.processAppSpec = nil;
         err = ::GetProcessInformation(&psn, &info);
         ThrowIfError_(err);
         mgAppCreator = info.processSignature;
         
+        // RegisterIconRefFromResource() needs to be given an FSSpec of
+        // the file containing the 'icns' resource of the icon being
+        // registered. The following will track down the file no matter
+        // how our application is packaged.
+        
+        StResLoad resLoadState(false);
+        StResource resHandle('icns', mIconResID); // throws if N/A
+        SInt16 resRefNum = ::HomeResFile(resHandle);
+        if (resRefNum != -1)
+        {
+          FCBPBRec pb;
+      
+          pb.ioNamePtr = mgIconFileSpec.name;
+          pb.ioVRefNum = 0;
+          pb.ioRefNum = resRefNum;
+          pb.ioFCBIndx = 0;
+          err = PBGetFCBInfoSync(&pb);
+          if (err == noErr)
+          {
+              mgIconFileSpec.vRefNum = pb.ioFCBVRefNum;
+              mgIconFileSpec.parID = pb.ioFCBParID;
+          }
+        }
         gInitialized = true;
     }
     GetIconRef();
@@ -182,17 +214,11 @@ void CIconServicesIcon::AdjustIconRect(Rect& ioRect) const
 	
 void CIconServicesIcon::GetIconRef()
 {
-    OSErr   err;
-    IconRef iconRef;
-    
     // We would like to first see if the icon is already registered
     // But, for some reason, the following call always returns noErr and the wrong icon.
-    // err = ::GetIconRef(mgAppFileSpec.vRefNum, mgAppCreator, mIconType, &iconRef);    
+    // err = ::GetIconRef(mgIconFileSpec.vRefNum, mgAppCreator, mIconType, &iconRef);    
     // if (err != noErr)
-
-    err = ::RegisterIconRefFromResource(mgAppCreator, mIconType, &mgAppFileSpec, mIconResID, &iconRef);
-    ThrowIfError_(err);
-    mIconRef = iconRef;
+    ::RegisterIconRefFromResource(mgAppCreator, mIconType, &mgIconFileSpec, mIconResID, &mIconRef);
 }
 
 void CIconServicesIcon::ReleaseIconRef()
