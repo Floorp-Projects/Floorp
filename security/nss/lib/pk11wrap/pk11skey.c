@@ -2953,6 +2953,26 @@ PK11_PubUnwrapSymKey(SECKEYPrivateKey *wrappingKey, SECItem *wrappedKey,
 	wrappingKey->wincx, NULL, 0);
 }
 
+/* unwrap a symetric key with a private key. */
+PK11SymKey *
+PK11_PubUnwrapSymKeyWithFlags(SECKEYPrivateKey *wrappingKey, 
+	  SECItem *wrappedKey, CK_MECHANISM_TYPE target, 
+	  CK_ATTRIBUTE_TYPE operation, int keySize, CK_FLAGS flags)
+{
+    CK_MECHANISM_TYPE wrapType = pk11_mapWrapKeyType(wrappingKey->keyType);
+    CK_BBOOL        ckTrue	= CK_TRUE; 
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+    unsigned int    templateCount;
+
+    templateCount = pk11_FlagsToAttributes(flags, keyTemplate, &ckTrue);
+
+    PK11_HandlePasswordCheck(wrappingKey->pkcs11Slot,wrappingKey->wincx);
+    
+    return pk11_AnyUnwrapKey(wrappingKey->pkcs11Slot, wrappingKey->pkcs11ID,
+	wrapType, NULL, wrappedKey, target, operation, keySize, 
+	wrappingKey->wincx, keyTemplate, templateCount);
+}
+
 /*
  * Recover the Signed data. We need this because our old verify can't
  * figure out which hash algorithm to use until we decryptted this.
