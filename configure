@@ -8140,7 +8140,7 @@ EOF
 
   echo "$ac_t""yes" 1>&6
 else
-if test -f /dev/zero; then
+if test -r /dev/zero; then
   cat >> confdefs.h <<\EOF
 #define HAVE_DEV_ZERO 1
 EOF
