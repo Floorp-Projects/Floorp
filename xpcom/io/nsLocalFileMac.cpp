@@ -29,7 +29,6 @@
 #include "nsXPIDLString.h" 
 
 #include "nsLocalFileMac.h"
-
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
 #include "nsIInternetConfigService.h"
@@ -39,6 +38,7 @@
 #include "nsEscape.h"
 
 #include "nsReadableUtils.h"
+#include "nsITimelineService.h"
 
 #ifdef XP_MACOSX
 #include "nsXPIDLString.h"
@@ -1816,7 +1816,9 @@ nsLocalFile::Load(PRLibrary * *_retval)
 	
 	if (! isFile)
 		return NS_ERROR_FILE_IS_DIRECTORY;
-	
+
+  NS_TIMELINE_START_TIMER("PR_LoadLibrary");
+
 #if !TARGET_CARBON      
   	// This call to SystemTask is here to give the OS time to grow its
   	// FCB (file control block) list, which it seems to be unable to
@@ -1832,6 +1834,9 @@ nsLocalFile::Load(PRLibrary * *_retval)
 	libSpec.value.mac_indexed_fragment.index = 0;
 	*_retval =	PR_LoadLibraryWithFlags(libSpec, 0);
 	
+  NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
+  NS_TIMELINE_MARK_TIMER("PR_LoadLibrary");
+
 	if (*_retval)
 		return NS_OK;
 
