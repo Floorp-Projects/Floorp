@@ -101,7 +101,7 @@ protected:
       mNextRCFrame = nsnull;
       mPrevFrame = nsnull;
       mNextInFlow = nsnull;
-      mSetParentPointer = PR_TRUE;
+      mSetParentPointer = PR_FALSE;
     };
   };
 
