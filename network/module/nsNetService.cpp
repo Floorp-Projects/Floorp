@@ -45,6 +45,23 @@ extern "C" {
 static HINSTANCE g_hInst = NULL;
 #endif
 
+/*
+** Define TIMEBOMB_ON for beta builds.
+** Undef TIMEBOMB_ON for release builds.
+*/
+/* #define TIMEBOMB_ON */
+#undef TIMEBOMB_ON  
+/*
+** After this date all hell breaks loose
+*/
+#ifdef TIMEBOMB_ON
+#define TIME_BOMB_TIME          888739203       /* 3/01/98 + 3 secs */
+#define TIME_BOMB_WARNING_TIME  857203203       /* 3/01/97 + 3 secs */
+#else
+#define TIME_BOMB_TIME          -1
+#define TIME_BOMB_WARNING_TIME  -1
+#endif
+
 
 // Declare the nsFile struct here so it's state is initialized before
 // we initialize netlib.
@@ -133,6 +150,9 @@ nsNetlibService::nsNetlibService()
     PREF_SetDefaultCharPref(pref_proxyNoProxiesOn, "");
     PREF_SetDefaultCharPref(pref_padPacURL, "");
     PREF_SetDefaultCharPref(pref_scriptName, "");
+
+    PREF_SetDefaultIntPref("timebomb.expiration_time",TIME_BOMB_TIME);
+    PREF_SetDefaultIntPref("timebomb.warning_time",   TIME_BOMB_WARNING_TIME);
 
     // XXX: Where should the defaults really come from
     XP_AppCodeName = PL_strdup("Mozilla");
@@ -334,6 +354,11 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     MWContext *stubContext = new_stub_context(URL_s);
     net_AddrefContext(stubContext);
 
+    /* Check for timebomb...*/
+#ifdef TIMEBOMB_ON
+    NET_CheckForTimeBomb(stubContext);
+#endif /* TIMEBOMB_ON */
+
     /* Start the URL load... */
     NET_GetURL (URL_s,                      /* URL_Struct      */
                 FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
@@ -462,6 +487,11 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
       /* Create a new Context and set its reference count to one.. */
         MWContext *stubContext = new_stub_context(URL_s);
         net_AddrefContext(stubContext);
+
+        /* Check for timebomb...*/
+#ifdef TIMEBOMB_ON
+        NET_CheckForTimeBomb(stubContext);
+#endif /* TIMEBOMB_ON */
 
         /* Start the URL load... */
         NET_GetURL (URL_s,                      /* URL_Struct      */
