@@ -3953,7 +3953,7 @@ static const uint8 urlCharType[256] =
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
 
-        uint32 newLength = meta->convertValueToUInteger(argv[0]);
+        uint32 newLength = meta->valToUint32(argv[0]);
         if (newLength < arrInst->length) {
             // need to delete all the elements above the new length
             bool deleteResult;

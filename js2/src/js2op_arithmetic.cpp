@@ -82,7 +82,7 @@
                     pushULong(i);
                 }
                 else {
-                    pushNumber(~meta->toInteger(a));
+                    pushNumber(~meta->valToInt32(a));
                 }
             }
         }
@@ -92,7 +92,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInteger(b);
+            int32 count = meta->toInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHL(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -105,7 +105,7 @@
                 pushULong(r);
             }
             else
-            pushNumber(meta->toInteger(a) << (count & 0x1F));
+            pushNumber(meta->valToInt32(a) << (count & 0x1F));
         }
         break;
     case eRightShift:
@@ -113,7 +113,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInteger(b);
+            int32 count = meta->toInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -126,7 +126,7 @@
                 pushULong(r);
             }
             else
-            pushNumber(meta->toInteger(a) >> (count & 0x1F));
+            pushNumber(meta->valToInt32(a) >> (count & 0x1F));
         }
         break;
     case eLogicalRightShift:
@@ -134,7 +134,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInteger(b);
+            int32 count = meta->toInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -147,7 +147,7 @@
                 pushULong(r);
             }
             else
-            pushNumber(toUInt32(meta->toInteger(a)) >> (count & 0x1F));
+            pushNumber(meta->toUInt32(a) >> (count & 0x1F));
         }
         break;
     case eBitwiseAnd:
@@ -204,7 +204,7 @@
                     }
                 }
                 else
-                    pushNumber(meta->toInteger(a) & meta->toInteger(b));
+                    pushNumber(meta->valToInt32(a) & meta->valToInt32(b));
             }
         }
         break;
@@ -262,7 +262,7 @@
                     }
                 }
                 else
-                    pushNumber(meta->toInteger(a) ^ meta->toInteger(b));
+                    pushNumber(meta->valToInt32(a) ^ meta->valToInt32(b));
             }
         }
         break;
@@ -320,7 +320,7 @@
                     }
                 }
                 else
-                    pushNumber(meta->toInteger(a) | meta->toInteger(b));
+                    pushNumber(meta->valToInt32(a) | meta->valToInt32(b));
             }
         }
         break;

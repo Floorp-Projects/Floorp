@@ -590,7 +590,31 @@ namespace MetaData {
     }
 
     // x is not an int
-    int32 JS2Metadata::convertValueToInteger(js2val x)
+    float64 JS2Metadata::convertValueToInteger(js2val x)
+    {
+        int32 i;
+        if (JS2VAL_IS_LONG(x)) {
+            JSLL_L2I(i, *JS2VAL_TO_LONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_ULONG(x)) {
+            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 f = *JS2VAL_TO_FLOAT(x);
+            return JS2Engine::truncateFloat64(f);
+        }
+        if (JS2VAL_IS_DOUBLE(x)) {
+            float64 d = *JS2VAL_TO_DOUBLE(x);
+            return JS2Engine::truncateFloat64(d);
+        }
+        float64 d = convertValueToDouble(x);
+        return JS2Engine::truncateFloat64(d);
+    }
+    
+    // x is not an int
+    int32 JS2Metadata::convertValueToInt32(js2val x)
     {
         int32 i;
         if (JS2VAL_IS_LONG(x)) {
@@ -614,7 +638,7 @@ namespace MetaData {
     }
     
     // x is not an int
-    uint32 JS2Metadata::convertValueToUInteger(js2val x)
+    uint32 JS2Metadata::convertValueToUInt32(js2val x)
     {
         uint32 i;
         if (JS2VAL_IS_LONG(x)) {

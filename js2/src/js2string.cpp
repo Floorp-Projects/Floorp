@@ -411,7 +411,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
     if (JS2VAL_IS_UNDEFINED(limitV))
         lim = JS2Engine::float64toUInt32(two32minus1);
     else
-        lim = toUInt32(meta->toInteger(limitV));
+        lim = meta->toUInt32(limitV);
 
     uint32 s = S->size();
     uint32 p = 0;
@@ -495,7 +495,7 @@ static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = toUInt32(meta->toInteger(argv[0]));
+        pos = meta->toUInt32(argv[0]);
 
     if ((pos < 0) || (pos >= str->size()))
         return STRING_TO_JS2VAL(meta->engine->Empty_StringAtom);
@@ -511,7 +511,7 @@ static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2va
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = toUInt32(meta->toInteger(argv[0]));
+        pos = meta->toUInt32(argv[0]);
 
     if ((pos < 0) || (pos >= str->size()))
         return meta->engine->nanValue;
@@ -656,7 +656,7 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
     uint32 start, end;
 
     if (argc > 0) {
-        int32 arg0 = meta->toInteger(argv[0]);
+        int32 arg0 = meta->toInt32(argv[0]);
         if (arg0 < 0) {
             arg0 += sourceLength;
             if (arg0 < 0)
@@ -675,7 +675,7 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         start = 0;      // XXX argc must be > 1 since the length of the function is 1
 
     if (argc > 1) {
-        int32 arg1 = meta->toInteger(argv[1]);
+        int32 arg1 = meta->toInt32(argv[1]);
         if (arg1 < 0) {
             arg1 += sourceLength;
             if (arg1 < 0)

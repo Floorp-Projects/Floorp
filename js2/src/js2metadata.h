@@ -1518,8 +1518,9 @@ public:
     float64 convertValueToDouble(js2val x);
     float64 convertStringToDouble(const String *str);
     bool convertValueToBoolean(js2val x);
-    int32 convertValueToInteger(js2val x);
-    uint32 convertValueToUInteger(js2val x);
+    int32 convertValueToInt32(js2val x);
+    uint32 convertValueToUInt32(js2val x);
+    float64 convertValueToInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
     js2val convertValueToObject(js2val x);
 
@@ -1528,8 +1529,9 @@ public:
     float64 toFloat64(js2val x);
     js2val toGeneralNumber(js2val x)    { if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
-    int32 toInteger(js2val x)           { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
-    uint32 toUInteger(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToUInteger(x); }
+    float64 toInteger(js2val x)         { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
+    int32 valToInt32(js2val x)				{ if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInt32(x); }
+    uint32 valToUInt32(js2val x)			{ if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToUInt32(x); }
     js2val toObject(js2val x)           { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
     // x is a General Number
     int64 truncateToInteger(js2val x)   { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return JS2Engine::float64toInt64(toFloat64(x)); }

@@ -61,14 +61,14 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
     uint32 length = 0;
     if ((obj->kind == SimpleInstanceKind)
             && (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
-        length = toUInt32(meta->toInteger(Array_lengthGet(meta, OBJECT_TO_JS2VAL(obj), NULL, 0)));
+        length = meta->valToUInt32(Array_lengthGet(meta, OBJECT_TO_JS2VAL(obj), NULL, 0));
     }
     else {
         js2val result;
         JS2Class *c = meta->objectType(obj);
         js2val val = OBJECT_TO_JS2VAL(obj);
         if (c->ReadPublic(meta, &val, meta->engine->length_StringAtom, RunPhase, &result))
-            length = toUInt32(meta->toInteger(result));
+            length = meta->valToUInt32(result);
     }
     return length;
 }
@@ -394,7 +394,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     if (argc < 1) 
         start = 0;
     else {
-        int32 arg0 = meta->toInteger(argv[0]);
+        int32 arg0 = meta->valToInt32(argv[0]);
         if (arg0 < 0) {
             arg0 += length; 
             if (arg0 < 0)
@@ -413,7 +413,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     if (argc < 2) 
         end = length;
     else {
-        int32 arg1 = meta->toInteger(argv[1]);
+        int32 arg1 = meta->valToInt32(argv[1]);
         if (arg1 < 0) {
             arg1 += length;
             if (arg1 < 0)
@@ -622,7 +622,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
         DEFINE_ROOTKEEPER(rk, A);
 
-        int32 arg0 = meta->toInteger(argv[0]);
+        int32 arg0 = meta->valToInt32(argv[0]);
         uint32 start;
         if (arg0 < 0) {
             arg0 += length;
@@ -639,7 +639,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         }
 
         uint32 deleteCount;
-        int32 arg1 = meta->toInteger(argv[1]);
+        int32 arg1 = meta->valToInt32(argv[1]);
         if (arg1 < 0)
             deleteCount = 0;
         else

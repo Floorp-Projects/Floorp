@@ -115,7 +115,7 @@ namespace MetaData {
 			precision = 0.0;
 			oneArgMode = zeroArgMode;
 		} else {
-			precision = meta->convertValueToInteger(argv[0]);
+			precision = meta->toInteger(argv[0]);
 			if (precision < precisionMin || precision > precisionMax) {
 				numStr = doubleToStr(buf, sizeof buf, precision, dtosStandard, 0);
 				meta->reportError(Exception::typeError, "Precision value out of range {0}", meta->engine->errorPos(), numStr);
