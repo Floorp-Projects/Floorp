@@ -24,32 +24,117 @@
     Chris McAfee <mcafee@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
+<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/pageInfo.dtd">
+
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&mainWindow.title;" 
-	titlemodifier="&mainWindow.titlemodifier;" 
-        titlepreface="&mainWindow.preface;"
-        titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
-	windowtype="Browser:view-source"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="&pageInfo.title;" 
+  titlemodifier="&mainWindow.titlemodifier;" 
+  titlepreface="&mainWindow.preface;"
+  titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
+	windowtype="Browser:page-info"
 	onload="onLoadPageInfo()"
-	align="vertical" width="600" height="480"> 
+	align="vertical" class="dialog"
+	width="400" height="320"
+	screenX="10" screenY="10"
+	persist="screenX screenY width height sizemode"> 
 
-<html:script src="chrome://navigator/content/pageInfo.js"></html:script>
+  <script src="chrome://navigator/content/pageInfo.js"></script>
 
-  <box id="cont" orient="vertical" flex="1" style="margin: 1em; min-width: 1px; min-height: 1px;">
-    <html:div class="title">The document has the following structure:</html:div>
-    <box orient="vertical" id="documentinfo">
-      <html:div id="titletext">Title: </html:div>
-      <html:div id="urltext">URL: </html:div>
-      <html:div id="lastmodifiedtext">Last Modified: </html:div>
+  <broadcasterset id="broadcasterset"/>
+
+	<commands id="commands">
+		<commandset id="globalEditMenuItems"/>
+		<commandset id="selectEditMenuItems"/>
+		<commandset id="undoEditMenuItems"/>
+		<commandset id="clipboardEditMenuItems"/>
+	</commands>
+
+  <!-- keys are appended from the overlay -->
+  <keyset id="keyset"/>
+
+  <box id="cont" orient="vertical" flex="1">
+  
+    <text class="header label" value="&pageInfo.description;"/>
+    <box class="inset" orient="vertical" id="documentinfo">
+      <grid>
+        <columns> 
+          <column flex="1"/>
+          <column flex="3"/>
+        </columns>
+        
+        <rows>
+          <row>
+            <text class="label" value="&pageInfo.pageTitle;"/>        <text class="label" id="titletext" value=""/>
+          </row>
+          <row>
+            <text class="label" value="&pageInfo.URL;"/>              <text class="label" id="urltext" value=""/>
+          </row>
+          <row>
+            <text class="label" value="&pageInfo.lastModified;"/>     <text class="label" id="lastmodifiedtext" value=""/>
+          </row>
+
+        </rows>  
+      </grid>
     </box>
-  <!-- trees are appended here -->
+    
+    <box id="formtreecontainer" flex="1" orient="vertical" collapsed="true">
+    <text class="header label" value="Forms on this page"/>
+      <tree id="forms_tree" class="inset" flex="1">
+        <treecolgroup>
+          <treecol flex="2"/>
+          <treecol flex="1"/>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treehead>
+          <treerow>
+            <treecell value="&pageInfo.formAction;" class="treecell-header treecell-inset-header"/>
+            <treecell value="&pageInfo.formMethod;" class="treecell-header treecell-inset-header"/>
+            <treecell value="&pageInfo.formName;"   class="treecell-header treecell-inset-header"/>            
+          </treerow>
+        </treehead>
+        <treechildren id="formchildren" flex="1">
+        </treechildren>
+      </tree>
+      
+    </box>
+
+    <box id="image_items" orient="vertical" flex="1" collapsed="true">
+	    <box id="imagetreecontainer" flex="1" orient="vertical">
+	    <text class="header label" value="Images on this page"/>
+	      <tree id="images_tree" class="inset" onselect="onImageSelect()" flex="1">
+	        <treecolgroup>
+	          <treecol flex="8"/>
+	          <treecol flex="2"/>
+	          <treecol flex="2"/>
+	          <treecol flex="4"/>
+	        </treecolgroup>
+	        <treehead>
+	          <treerow>
+	            <treecell value="&pageInfo.imageURL;"     class="treecell-header treecell-inset-header"/>
+	            <treecell value="&pageInfo.imageWidth;"   class="treecell-header treecell-inset-header"/>
+	            <treecell value="&pageInfo.imageHeight;"  class="treecell-header treecell-inset-header"/>            
+	            <treecell value="&pageInfo.imageAltText;" class="treecell-header treecell-inset-header"/>            
+	          </treerow>
+	        </treehead>        
+	        <treechildren id="imageschildren" flex="1">
+	        </treechildren>
+	      </tree>
+	    </box>
+
+      <splitter orient="vertical" collapse="after">
+        <grippy/>
+      </splitter>
+      
+	    <box id="imagepreviewcontainer">
+	      <iframe id="image_frame" class="inset" src="about:blank" flex="1"/>
+	    </box>
+    </box>
   </box>
-<!-- for testing, use this iframe, and change the page access point in pageInfo.js
-  <html:iframe src="file:///tmp/so.html" name="content" width="0" height="0"/>
--->
+  
 </window>

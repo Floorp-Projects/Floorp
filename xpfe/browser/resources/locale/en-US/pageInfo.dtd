@@ -1,0 +1,23 @@
+<!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.title "Mozilla"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.titlemodifier "Mozilla"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseperator) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifierseperator " - ">
+<!ENTITY mainWindow.preface "Info for: "> 
+
+<!ENTITY  pageInfo.title "Page Info"> 
+<!ENTITY  pageInfo.description "Information about the current page"> 
+
+<!ENTITY  pageInfo.pageTitle "Title:"> 
+<!ENTITY  pageInfo.URL "URL:"> 
+<!ENTITY  pageInfo.lastModified "Last Modified:">
+
+<!ENTITY  pageInfo.formAction "Form Action">
+<!ENTITY  pageInfo.formMethod "Method">
+<!ENTITY  pageInfo.formName "Name">
+
+<!ENTITY  pageInfo.imageURL "Image URL">
+<!ENTITY  pageInfo.imageWidth "Width">
+<!ENTITY  pageInfo.imageHeight "Height">
+<!ENTITY  pageInfo.imageAltText "Alt Text">

@@ -30,6 +30,7 @@ CHROME_CONTENT = \
 	.\openLocation.js \
 	.\openLocation.xul \
 	.\viewsource.js \
+	.\viewSourceDD.js \
 	.\viewSource.xul \
 	.\pageInfo.js \
 	.\pageInfo.xul \

@@ -28,6 +28,7 @@ CHROME_L10N = \
 	.\openLocation.dtd \
 	.\openLocation.properties \
 	.\viewSource.dtd \
+	.\pageInfo.dtd \
 	.\navigator.dtd \
 	.\NetSupportConfirmCheckYN.dtd \
 	.\navigator.properties \

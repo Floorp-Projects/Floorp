@@ -20,25 +20,33 @@
  * Contributor(s): smorrison@gte.com
  */
 
-function onLoadPageInfo() {
+function onLoadPageInfo()
+{
   var page = window.opener.frames[0].document;
   //var page = window.frames.content.document;
   var root = document.getElementById("cont");
 
   makeDocument(page, root);
-  var hasimages = makeImageTree(page, root);
-  makeFormTree(page, root);
 
-  if(hasimages) {
-    var iframe = document.createElement("iframe");
-    iframe.setAttribute("name", "view");
-    iframe.setAttribute("src", "about:blank");
-    iframe.setAttribute("flex", "4");
-    root.appendChild(iframe);
+  var formTreeHolder = document.getElementById("formtreecontainer");
+  var hasForm = makeFormTree(page, formTreeHolder);
+  if (hasForm)
+  {
+    var formBox = document.getElementById("formtreecontainer");
+    formBox.removeAttribute("collapsed");
+  }
+
+  var imageTreeHolder = document.getElementById("imagetreecontainer");
+  var hasimages = makeImageTree(page, imageTreeHolder);
+  if (hasimages)
+  {
+    var imageBox = document.getElementById("image_items");
+    imageBox.removeAttribute("collapsed");
   }
 }
 
-function makeDocument(page, root) {
+function makeDocument(page, root)
+{
   var title = page.title;
   var url   = page.URL;
   var lastmodified;
@@ -50,115 +58,87 @@ function makeDocument(page, root) {
     lastmodified = lastmod;
   }
 
-  document.getElementById("titletext").appendChild(document.createTextNode(title));
-  document.getElementById("urltext").appendChild(document.createTextNode(url));
-  document.getElementById("lastmodifiedtext").appendChild(document.createTextNode(lastmodified));
+  document.getElementById("titletext").setAttribute("value", title);
+  document.getElementById("urltext").setAttribute("value", url);
+  document.getElementById("lastmodifiedtext").setAttribute("value", lastmodified);
 }
 
-function makeFormTree(page, root) {
+function makeFormTree(page, root)
+{
   var form_list = page.forms;
-  for(i=0; i < form_list.length; i++) {
-    if(i == 0) {
-      var tree = document.createElement("tree");
-      tree.setAttribute("flex", "4");
-      var treehead = tree.appendChild(document.createElement("treehead"));
-      var treerow = treehead.appendChild(document.createElement("treerow"));
+  if (form_list.length == 0) return false;
 
-      var treecolgroup = tree.appendChild(document.createElement("treecolgroup"));
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "2");
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "1");
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "1");
+  var treechildren = document.getElementById("formchildren");
+  
+  for (var i = 0; i < form_list.length; i++)
+  {
+	  var treeitem = document.createElement("treeitem");
+	  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
 
-      var treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Form Action");
-      treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Method");
-      treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Name");
+	  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", form_list[i].action);
 
-      var treechildren = document.createElement("treechildren");
-      tree.appendChild(treechildren);
+	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", form_list[i].method);
 
-      root.appendChild(tree);
-    }
-  var treeitem = treechildren.appendChild(document.createElement("treeitem"));
-  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
-
-  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", form_list[i].action);
-
-  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", form_list[i].method);
-
-  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", form_list[i].name);
-  tree.appendChild(treechildren);
-
+	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", form_list[i].name);
+	  
+	  treechildren.appendChild(treeitem);
   }
+  
+  return true;
 }
 
-function makeImageTree(page, root) {
+function makeImageTree(page, root)
+{
   var img_list = page.images;
-  var ret = false;
+  if (img_list.length == 0) return false;
 
-  for(i=0; i < img_list.length; i++) {
-    if(i == 0) {
-      var tree = document.createElement("tree");
-      tree.setAttribute("flex", "1");
+  var treechildren = document.getElementById("imageschildren");
 
-      var treehead = tree.appendChild(document.createElement("treehead"));
-      var treerow = treehead.appendChild(document.createElement("treerow"));
+  for (var i = 0; i < img_list.length; i++) 
+  {
+	  var treeitem = document.createElement("treeitem");
+	  treeitem.setAttribute("container", "true");
+	  treeitem.setAttribute("parent", "true");
+	  
+	  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
 
-      var treecolgroup = tree.appendChild(document.createElement("treecolgroup"));
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "8");
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "2");
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "2");
-      var treecol = treecolgroup.appendChild(document.createElement("treecol"));
-      treecol.setAttribute("width", "4");
+	  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", img_list[i].src);
 
-      var treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Image URLs");
-      treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Width");
-      treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Height");
-      treecell = treerow.appendChild(document.createElement("treecell"));
-      treecell.setAttribute("value", "Alt Text");
+	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", img_list[i].width);
 
-      var treechildren = document.createElement("treechildren");
-      tree.appendChild(treechildren);
+	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", img_list[i].height);
 
-      root.appendChild(tree);
-  }
-  var treeitem = treechildren.appendChild(document.createElement("treeitem"));
-  var treerow_elem = treeitem.appendChild(document.createElement("treerow"));
-
-  var treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", img_list[i].src);
-  treecell_elem.addEventListener("click", openImage, true);
-
-  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", img_list[i].width);
-
-  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", img_list[i].height);
-
-  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
-  treecell_elem.setAttribute("value", img_list[i].alt);
-
-  tree.appendChild(treechildren);
-  ret = true;
+	  treecell_elem = treerow_elem.appendChild(document.createElement("treecell"));
+	  treecell_elem.setAttribute("value", img_list[i].alt);
+	  
+	  treechildren.appendChild(treeitem);
   }
 
-  return ret;
+  return true;
 }
 
-function openImage(e) { window.frames.view.document.location.href = e.target.getAttribute("value"); }
+function onImageSelect()
+{
+  var tree = document.getElementById("images_tree");
+  var imageFrame = document.getElementById("image_frame");
+  
+  if (tree.selectedItems.length == 1)
+  {
+    var  clickedRow = tree.selectedItems[0].firstChild;
+    var  firstCell = clickedRow.firstChild;
+    var  imageUrl = firstCell.getAttribute("value");
+    imageFrame.setAttribute("src", imageUrl);
+  }
+}
 
 
+function BrowserClose()
+{
+  window.close();
+}
