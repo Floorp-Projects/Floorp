@@ -60,6 +60,7 @@
 
 #include "dev.h" 
 #include "nsspki.h"
+#include "pki.h"
 #include "pkim.h"
 #include "pkitm.h"
 
