@@ -42,10 +42,11 @@ CString cdshellPath;
 CString outputPath; 
 CString xpiDstPath;
 CString remoteAdminFile;
-
-// variables for CCK Linux build
 CString curPlatform;
 CString platformPath;
+CString curLanguage;
+
+// variables for CCK Linux build
 CString templinuxPath;
 CString templinuxDirPath;
 CString xpiDir;
@@ -1513,78 +1514,149 @@ void ModifyBookmarks(CString inputFile, CString outputFile)
 		return;
 	}
 
-	while (!srcf.eof()) 
+	if (curLanguage == "enus")
+	// begin bookmark customization for US builds
 	{
-		srcf.getline(tempbuf,MAX_SIZE);
-		dstf << tempbuf << "\n";
-		
-		if ((CString(tempbuf).Find(toolbarSearchStr)) != -1)
-		// add custom personal toolbar items
+		while (!srcf.eof()) 
 		{
 			srcf.getline(tempbuf,MAX_SIZE);
 			dstf << tempbuf << "\n";
-			if (!(toolbarTitle1.IsEmpty()) && !(toolbarURL1.IsEmpty()))
-				dstf << " <dt><a HREF=\"" << toolbarURL1 << "\">" << toolbarTitle1 << "</a>\n";
-			if (!(toolbarTitle2.IsEmpty()) && !(toolbarURL2.IsEmpty()))
-				dstf << " <dt><a HREF=\"" << toolbarURL2 << "\">" << toolbarTitle2 << "</a>\n";
-			if (!(toolbarTitle3.IsEmpty()) && !(toolbarURL3.IsEmpty()))
-				dstf << " <dt><a HREF=\"" << toolbarURL3 << "\">" << toolbarTitle3 << "</a>\n";
-		}
-	
-		if (bkmkChoice == "1")
-		// add single custom bookmark
-		{
-			if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
-				 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+		
+			if ((CString(tempbuf).Find(toolbarSearchStr)) != -1)
+			// add custom personal toolbar items
 			{
 				srcf.getline(tempbuf,MAX_SIZE);
 				dstf << tempbuf << "\n";
-				if (bkmkLocation == "Last")
-				{
-					// read one more line if bookmark location is 'last'
-					srcf.getline(tempbuf,MAX_SIZE);
-					dstf << tempbuf << "\n";
-				}
-				if (!(bookmarkTitle.IsEmpty()) && !(bookmarkURL.IsEmpty()))
-					dstf << " <dt><a HREF=\"" << bookmarkURL << "\">" << bookmarkTitle << "</a>\n";
+				if (!(toolbarTitle1.IsEmpty()) && !(toolbarURL1.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL1 << "\">" << toolbarTitle1 << "</a>\n";
+				if (!(toolbarTitle2.IsEmpty()) && !(toolbarURL2.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL2 << "\">" << toolbarTitle2 << "</a>\n";
+				if (!(toolbarTitle3.IsEmpty()) && !(toolbarURL3.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL3 << "\">" << toolbarTitle3 << "</a>\n";
 			}
-		}
-		else if (bkmkChoice == "2")
-		// add custom bookmark folder
-		{
-			if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
-				 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+	
+			if (bkmkChoice == "1")
+			// add single custom bookmark
 			{
-				srcf.getline(tempbuf,MAX_SIZE);
-				dstf << tempbuf << "\n";
-				
-				if (bkmkLocation == "Last")
+				if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+					 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
 				{
-					// read one more line if bookmark location is 'last'
 					srcf.getline(tempbuf,MAX_SIZE);
 					dstf << tempbuf << "\n";
+					if (bkmkLocation == "Last")
+					{
+						// read one more line if bookmark location is 'last'
+						srcf.getline(tempbuf,MAX_SIZE);
+						dstf << tempbuf << "\n";
+					}
+					if (!(bookmarkTitle.IsEmpty()) && !(bookmarkURL.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL << "\">" << bookmarkTitle << "</a>\n";
 				}
+			}
+			else if (bkmkChoice == "2")
+			// add custom bookmark folder
+			{
+				if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+					 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+				{
+					srcf.getline(tempbuf,MAX_SIZE);
+					dstf << tempbuf << "\n";
+					
+					if (bkmkLocation == "Last")
+					{
+						// read one more line if bookmark location is 'last'
+						srcf.getline(tempbuf,MAX_SIZE);
+						dstf << tempbuf << "\n";
+					}
 
-				if (!(folderTitle.IsEmpty()))
-				{
-					dstf << "<dt><h3>" << folderTitle << "</h3>\n";
-					dstf << "<dl><p>\n";
-					if (!(bookmarkTitle1.IsEmpty()) && !(bookmarkURL1.IsEmpty()))
-						dstf << " <dt><a HREF=\"" << bookmarkURL1 << "\">" << bookmarkTitle1 << "</a>\n";
-					if (!(bookmarkTitle2.IsEmpty()) && !(bookmarkURL2.IsEmpty()))
-						dstf << " <dt><a HREF=\"" << bookmarkURL2 << "\">" << bookmarkTitle2 << "</a>\n";
-					if (!(bookmarkTitle3.IsEmpty()) && !(bookmarkURL3.IsEmpty()))
-						dstf << " <dt><a HREF=\"" << bookmarkURL3 << "\">" << bookmarkTitle3 << "</a>\n";
-					if (!(bookmarkTitle4.IsEmpty()) && !(bookmarkURL4.IsEmpty()))
-						dstf << " <dt><a HREF=\"" << bookmarkURL4 << "\">" << bookmarkTitle4<< "</a>\n";
-					if (!(bookmarkTitle5.IsEmpty()) && !(bookmarkURL5.IsEmpty()))
-						dstf << " <dt><a HREF=\"" << bookmarkURL5 << "\">" << bookmarkTitle5 << "</a>\n";
-					dstf << "</dl><p>\n";
+					if (!(folderTitle.IsEmpty()))
+					{
+						dstf << "<dt><h3>" << folderTitle << "</h3>\n";
+						dstf << "<dl><p>\n";
+						if (!(bookmarkTitle1.IsEmpty()) && !(bookmarkURL1.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL1 << "\">" << bookmarkTitle1 << "</a>\n";
+						if (!(bookmarkTitle2.IsEmpty()) && !(bookmarkURL2.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL2 << "\">" << bookmarkTitle2 << "</a>\n";
+						if (!(bookmarkTitle3.IsEmpty()) && !(bookmarkURL3.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL3 << "\">" << bookmarkTitle3 << "</a>\n";
+						if (!(bookmarkTitle4.IsEmpty()) && !(bookmarkURL4.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL4 << "\">" << bookmarkTitle4<< "</a>\n";
+						if (!(bookmarkTitle5.IsEmpty()) && !(bookmarkURL5.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL5 << "\">" << bookmarkTitle5 << "</a>\n";
+						dstf << "</dl><p>\n";
+					}
 				}
 			}
 		}
-	}
+	} //end bookmark customization for US builds
+
+	else
+	// begin bookmark customization for non-US builds
+	{
+		toolbarSearchStr = "custom personal toolbar";
+		firstbkmkSearchStr = "custom bookmark start";
+		lastbkmkSearchStr  = "custom bookmark end";
+		while (!srcf.eof()) 
+		{
+			srcf.getline(tempbuf,MAX_SIZE);
+			dstf << tempbuf << "\n";
+		
+			if ((CString(tempbuf).Find(toolbarSearchStr)) != -1)
+			// add custom personal toolbar items
+			{
+				srcf.getline(tempbuf,MAX_SIZE);
+				dstf << tempbuf << "\n";
+				if (!(toolbarTitle1.IsEmpty()) && !(toolbarURL1.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL1 << "\">" << toolbarTitle1 << "</a>\n";
+				if (!(toolbarTitle2.IsEmpty()) && !(toolbarURL2.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL2 << "\">" << toolbarTitle2 << "</a>\n";
+				if (!(toolbarTitle3.IsEmpty()) && !(toolbarURL3.IsEmpty()))
+					dstf << " <dt><a HREF=\"" << toolbarURL3 << "\">" << toolbarTitle3 << "</a>\n";
+			}
 	
+			if (bkmkChoice == "1")
+			// add single custom bookmark
+			{
+				if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+					 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+				{
+					srcf.getline(tempbuf,MAX_SIZE);
+					dstf << tempbuf << "\n";
+
+					if (!(bookmarkTitle.IsEmpty()) && !(bookmarkURL.IsEmpty()))
+						dstf << " <dt><a HREF=\"" << bookmarkURL << "\">" << bookmarkTitle << "</a>\n";
+				}
+			}
+			else if (bkmkChoice == "2")
+			// add custom bookmark folder
+			{
+				if ( ((bkmkLocation == "First") && ((CString(tempbuf).Find(firstbkmkSearchStr)) != -1)) ||
+					 ((bkmkLocation == "Last") && ((CString(tempbuf).Find(lastbkmkSearchStr)) != -1)) )
+				{
+					srcf.getline(tempbuf,MAX_SIZE);
+					dstf << tempbuf << "\n";
+					
+					if (!(folderTitle.IsEmpty()))
+					{
+						dstf << "<dt><h3>" << folderTitle << "</h3>\n";
+						dstf << "<dl><p>\n";
+						if (!(bookmarkTitle1.IsEmpty()) && !(bookmarkURL1.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL1 << "\">" << bookmarkTitle1 << "</a>\n";
+						if (!(bookmarkTitle2.IsEmpty()) && !(bookmarkURL2.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL2 << "\">" << bookmarkTitle2 << "</a>\n";
+						if (!(bookmarkTitle3.IsEmpty()) && !(bookmarkURL3.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL3 << "\">" << bookmarkTitle3 << "</a>\n";
+						if (!(bookmarkTitle4.IsEmpty()) && !(bookmarkURL4.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL4 << "\">" << bookmarkTitle4<< "</a>\n";
+						if (!(bookmarkTitle5.IsEmpty()) && !(bookmarkURL5.IsEmpty()))
+							dstf << " <dt><a HREF=\"" << bookmarkURL5 << "\">" << bookmarkTitle5 << "</a>\n";
+						dstf << "</dl><p>\n";
+					}
+				}
+			}
+		}
+	} // end bookmark customization for non-US builds
+
 	srcf.close();
 	dstf.close();
 }
@@ -2853,8 +2925,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
-	CString curVersion, curLanguage, localePath,
-		strLang, strRegion, strREGION;
+	CString curVersion, localePath,	strLang, strRegion, strREGION;
 
 	componentOrder = 0;
 	rootPath = GetModulePath();
