@@ -382,6 +382,15 @@ class CNSContextCallbacks
 											int 					width, 
 											int 					height);
 
+			// SHACK callbacks
+		static void					FreeBuiltinElement( 
+											MWContext *inContext, 
+											LO_BuiltinStruct *) ;
+		static void 				DisplayBuiltin( 
+											MWContext * inContext, 
+											int iLocation , 
+											LO_BuiltinStruct *builtin_struct) ;
+
 		ContextFuncs				mCallbacks;
 
 		static	CNSContextCallbacks* sContextCallbacks;		// singleton class
