@@ -93,6 +93,12 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 
 nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
+  nsresult rv;
+  // remove self from form post notifications:
+  nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    svc->RemoveObserver(this, NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT).get());
+  }
 }
 
 NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
