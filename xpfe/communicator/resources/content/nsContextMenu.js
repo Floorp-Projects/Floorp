@@ -680,7 +680,7 @@ nsContextMenu.prototype = {
                       .getService(Components.interfaces.nsIIOService);
         var baseURI  = ioService.newURI(base, null);
         
-        return ioService.newURI(baseURI.resolve(url), null);
+        return ioService.newURI(baseURI.resolve(url), null).href;
     },
     // Save specified URL in user-selected file.
     savePage : function ( url, doNotValidate ) {
