@@ -23,8 +23,15 @@ DLLNAME = npmozax
 QUIET =
 DEPTH =..\..\..\..\..
 
+# Specify the path to the Communicator plugin SDK or get the default!
+!ifndef MOZ_PLUGINSDK
+MOZ_PLUGINSDK = M:\PluginSDK
+!endif
+
 # The default is to include control support unless told to do otherwise
 MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
+MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
+
 
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -51,6 +58,7 @@ LINCS=  \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
   -I..\control \
   -I$(MOZ_PLUGINSDK)\include \
+  -I.\_gen \
 !endif
   $(NULL) 
 
@@ -71,6 +79,21 @@ LLFLAGS = -SUBSYSTEM:windows /DLL
 
 include <$(DEPTH)\config\rules.mak>
 
+# If LiveConnect is enabled, we need to know where the Java compiler, header file
+# generator and classes live
+
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+
+LCFLAGS = /D MOZ_ACTIVEX_PLUGIN_LIVECONNECT $(LCFLAGS)
+JAVADIR = m:\VisualCafe\java
+JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
+JAVAC = $(JAVADIR)\bin\javac
+JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
+CLASSPATH = $(JAVACLASSES);.
+
+!endif
+
+
 !ifdef MOZ_NO_DEBUG_RTL
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
@@ -85,6 +108,27 @@ install:: $(DLL)
 $(DEFFILE) : mkctldef.bat
 	mkctldef.bat $(DEFFILE)
 
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+MozAxPlugin.class: MozAxPlugin.java
+  $(JAVAC) -classpath $(CLASSPATH) MozAxPlugin.java
+
+.\_gen\netscape_plugin_Plugin.h : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
+
+.\_stubs\netscape_plugin_Plugin.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs netscape.plugin.Plugin
+
+.\_gen\java_lang_Object.h : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
+
+.\_gen\MozAxPlugin.h : MozAxPlugin.class
+  $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen MozAxPlugin
+
+.\_stubs\MozAxPlugin.c : MozAxPlugin.class
+  $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs MozAxPlugin
+
+!endif
+
 ActiveScriptSite.cpp: ../control/ActiveScriptSite.cpp
 	-cp ../control/ActiveScriptSite.cpp .
 
@@ -95,7 +139,19 @@ MozActiveX.res: MozActiveX.rc resource.h
 
 MozActiveX.cpp: StdAfx.h
 
-LegacyPlugin.cpp \
+LegacyPlugin.cpp: StdAfx.h \
+                  ActiveXPlugin.h \
+                  ActiveXPluginInstance.h \
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+                  .\_gen\MozAxPlugin.h \
+                  .\_gen\netscape_plugin_Plugin.h \
+                  .\_gen\java_lang_Object.h \
+                  .\_stubs\MozAxPlugin.c        \
+!endif
+                  $(NULL)
+
+StdAfx.cpp : StdAfx.h
+
 ActiveXPlugin.cpp \
 ActiveXPluginInstance.cpp: StdAfx.h ActiveXPlugin.h ActiveXPluginInstance.h
 
