@@ -47,7 +47,7 @@ CSRCS		= \
 	$(NULL)
 
 EXPORTS= mkstream.h mkformat.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
-	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h
+	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h mkutils.h
 
 
 REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
