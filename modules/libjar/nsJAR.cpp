@@ -1118,7 +1118,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
-    mZips(nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
+    mZips((nsHashtableCloneElementFunc)nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
     mFreeCount(0), 
     mFreeList(nsnull)
 {
