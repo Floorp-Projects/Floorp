@@ -26,7 +26,7 @@
 #include "prefapi.h"
 #include "msgurlq.h"
 #include "ldap.h"
-
+#include "addrbook.h"
 #include "addrprsr.h"
 
 extern "C" {
