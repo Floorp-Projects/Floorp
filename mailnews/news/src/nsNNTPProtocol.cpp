@@ -105,7 +105,8 @@
 #include "nsIStreamListener.h"
 #include "nsNetCID.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIMsgWindow.h"
 #include "nsIWindowWatcher.h"
@@ -173,7 +174,6 @@ protected:
     PRUint32    mLength;
 };
 
-static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 typedef struct _cancelInfoEntry {
@@ -4256,7 +4256,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   cancelInfo.old_from = m_cancelFromHdr;
   cancelInfo.from = nsnull;
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIPrompt> dialog;
@@ -4328,18 +4328,17 @@ PRInt32 nsNNTPProtocol::DoCancel()
   else {
 	  NNTP_LOG_NOTE("CANCELCHK supported, don't do the us vs. them test");
   }
-  
+
   // QA needs to be able to disable this confirm dialog, for the automated tests.  see bug #31057
-  rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_CONFIRM, &requireConfirmationForCancel);
-  if (NS_FAILED(rv) || requireConfirmationForCancel) 
-  {
-       /* Last chance to cancel the cancel.*/
-	      GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
-	      rv = dialog->Confirm(nsnull, confirmText, &confirmCancelResult);
-	      // XXX:  todo, check rv?
-  } 
+  rv = prefBranch->GetBoolPref(PREF_NEWS_CANCEL_CONFIRM, &requireConfirmationForCancel);
+  if (NS_FAILED(rv) || requireConfirmationForCancel) {
+    /* Last chance to cancel the cancel.*/
+    GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
+    rv = dialog->Confirm(nsnull, confirmText, &confirmCancelResult);
+    // XXX:  todo, check rv?
+  }
   else {
-	confirmCancelResult = 1;
+    confirmCancelResult = 1;
   }
 
   if (confirmCancelResult != 1) {
@@ -4393,29 +4392,29 @@ PRInt32 nsNNTPProtocol::DoCancel()
                        cancelInfo.from, newsgroups, subject, id,
                        other_random_headers, body);
     
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	if (mailnewsurl)
-		status = SendData(mailnewsurl, data);
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+    if (mailnewsurl)
+      status = SendData(mailnewsurl, data);
     PR_Free (data);
     if (status < 0) {
-		nsCAutoString errorText;
-		errorText.AppendInt(status);
-		AlertError(MK_TCP_WRITE_ERROR, errorText.get());
-                failure = PR_TRUE;
-		goto FAIL;
-	}
+      nsCAutoString errorText;
+      errorText.AppendInt(status);
+      AlertError(MK_TCP_WRITE_ERROR, errorText.get());
+      failure = PR_TRUE;
+      goto FAIL;
+    }
 
     SetFlag(NNTP_PAUSE_FOR_READ);
-	m_nextState = NNTP_RESPONSE;
-	m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
+    m_nextState = NNTP_RESPONSE;
+    m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
 
     // QA needs to be able to turn this alert off, for the automate tests.  see bug #31057
-	rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_ALERT_ON_SUCCESS, &showAlertAfterCancel);
-	if (NS_FAILED(rv) || showAlertAfterCancel) {
-		GetNewsStringByName("messageCancelled", getter_Copies(alertText));
-		rv = dialog->Alert(nsnull, alertText);
-		// XXX:  todo, check rv?
-	}
+    rv = prefBranch->GetBoolPref(PREF_NEWS_CANCEL_ALERT_ON_SUCCESS, &showAlertAfterCancel);
+    if (NS_FAILED(rv) || showAlertAfterCancel) {
+      GetNewsStringByName("messageCancelled", getter_Copies(alertText));
+      rv = dialog->Alert(nsnull, alertText);
+      // XXX:  todo, check rv?
+    }
 
     if (!m_runningURL) return -1;
 

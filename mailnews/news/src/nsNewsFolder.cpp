@@ -38,7 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "prlog.h"
 
 #include "msgCore.h"    // precompiled header...
@@ -100,7 +101,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // ###tw  This really ought to be the most
 // efficient file reading size for the current
@@ -1826,10 +1826,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
     return NS_OK;
   }
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = prefs->GetBoolPref("news.persist_server_open_state_in_folderpane", aPersistElided);
+  rv = prefBranch->GetBoolPref("news.persist_server_open_state_in_folderpane", aPersistElided);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }

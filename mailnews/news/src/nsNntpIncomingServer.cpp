@@ -41,7 +41,8 @@
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
 #include "nsEscape.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIFolder.h"
 #include "nsIFileSpec.h"
@@ -82,7 +83,6 @@
 // operating system.
 #define HOSTINFO_FILE_BUFFER_SIZE 1024
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
 static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
@@ -232,14 +232,13 @@ nsNntpIncomingServer::SetNewsrcRootPath(nsIFileSpec *aNewsrcRootPath)
 {
     nsresult rv;
     
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-    if (NS_SUCCEEDED(rv) && prefs) {
-        rv = prefs->SetFilePref(PREF_MAIL_NEWSRC_ROOT,aNewsrcRootPath, PR_FALSE /* set default */);
-        return rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && prefBranch) {
+        return prefBranch->SetComplexValue(PREF_MAIL_NEWSRC_ROOT, NS_GET_IID(nsIFileSpec),
+                                           aNewsrcRootPath);
     }
-    else {
-        return NS_ERROR_FAILURE;
-    }
+
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -249,13 +248,14 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     *aNewsrcRootPath = nsnull;
     
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;
     nsCOMPtr<nsIFile> localFile;
     nsCOMPtr<nsILocalFile> prefLocal;
-    rv = prefs->GetFileXPref(PREF_MAIL_NEWSRC_ROOT, getter_AddRefs(prefLocal));
+    rv = prefBranch->GetComplexValue(PREF_MAIL_NEWSRC_ROOT, NS_GET_IID(nsILocalFile),
+                                     getter_AddRefs(prefLocal));
     if (NS_SUCCEEDED(rv)) {
         localFile = prefLocal;
         havePref = PR_TRUE;
@@ -265,7 +265,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
         if (NS_FAILED(rv)) return rv;
         havePref = PR_FALSE;
     }
-        
+
     PRBool exists;
     rv = localFile->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)

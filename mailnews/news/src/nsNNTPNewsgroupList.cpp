@@ -83,7 +83,6 @@
 
 #include "nsMsgDBCID.h"
 
-#include "nsIPref.h"
 #include "nsINewsDownloadDialogArgs.h"
 
 #include "nsXPCOM.h"
@@ -300,9 +299,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
 
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
-        nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv,rv);
-		
 		PRBool notifyMaxExceededOn = PR_TRUE;
 		rv = nntpServer->GetNotifyOn(&notifyMaxExceededOn);
 		if (NS_FAILED(rv)) notifyMaxExceededOn = PR_TRUE;

@@ -54,7 +54,8 @@
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
 #include "nsMsgBaseCID.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsNntpService.h"
 #include "nsIChannel.h"
@@ -91,7 +92,6 @@
 #define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
@@ -1433,11 +1433,10 @@ NS_IMETHODIMP
 nsNntpService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->SetFilePref(PREF_MAIL_ROOT_NNTP, aPath, PR_FALSE /* set default */);
-    return rv;
+    return prefBranch->SetComplexValue(PREF_MAIL_ROOT_NNTP, NS_GET_IID(nsIFileSpec), aPath);
 }
 
 NS_IMETHODIMP
@@ -1447,13 +1446,14 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;
     nsCOMPtr<nsIFile> localFile;
     nsCOMPtr<nsILocalFile> prefLocal;
-    rv = prefs->GetFileXPref(PREF_MAIL_ROOT_NNTP, getter_AddRefs(prefLocal));
+    rv = prefBranch->GetComplexValue(PREF_MAIL_ROOT_NNTP, NS_GET_IID(nsILocalFile),
+                                     getter_AddRefs(prefLocal));
     if (NS_SUCCEEDED(rv)) {
         localFile = prefLocal;
         havePref = PR_TRUE;
@@ -1463,7 +1463,7 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
         if (NS_FAILED(rv)) return rv;
         havePref = PR_FALSE;
     }
-        
+
     PRBool exists;
     rv = localFile->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
@@ -1710,11 +1710,11 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 { 
     if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefService(do_GetService(kCPrefServiceCID, &rv));
+	nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
 	if (NS_SUCCEEDED(rv))
 	{
 		PRInt32 layout;
-		rv = prefService->GetIntPref("mail.pane_config", &layout);		
+		rv = prefBranch->GetIntPref("mail.pane_config", &layout);		
 		if(NS_SUCCEEDED(rv))
 		{
 			if(layout == 0)
