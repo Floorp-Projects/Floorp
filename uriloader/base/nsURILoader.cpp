@@ -38,6 +38,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsWeakReference.h"
 
+#include "nsIHTTPChannel.h"
+
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 
@@ -171,7 +173,26 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
+
+  //
+  // Deal with "special" HTTP responses:
+  //
+  // - In the case of a 204 (No Content) response, do not try to find a
+  //   content handler.  Just return.  This causes the request to be
+  //   ignored.
+  //
+  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel, &rv));
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 responseCode = 0;
+
+    httpChannel->GetResponseStatus(&responseCode);
+    if (204 == responseCode) {
+      return NS_OK;
+    }
+  }
+
   rv = DispatchContent(aChannel, aCtxt);
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
