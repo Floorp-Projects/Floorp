@@ -331,6 +331,7 @@ void nsTableFrame::RecalcLayoutData()
         r2 = row + rowSpan;
         c = col;
         last = col + colSpan -1;
+        last = PR_MIN(last,colCount-1);
         
         while (c <= last)
         {
@@ -372,6 +373,7 @@ void nsTableFrame::RecalcLayoutData()
         c2 = col + colSpan;
         r = row ;
         last = row + rowSpan-1;
+        last = PR_MIN(last,rowCount-1);
         
         while (r <= last)
         {
