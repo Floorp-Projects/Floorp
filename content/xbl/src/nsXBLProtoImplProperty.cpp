@@ -256,8 +256,8 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   // Do we have a setter?
   nsAutoString setter(mSetterText);
 
-  // Make sure we free mGetterText here before calling
-  // CompileFunction() since that'll overwrite mGetterText
+  // Make sure we free mSetterText here before calling
+  // CompileFunction() since that'll overwrite mSetterText
   nsMemory::Free(mSetterText);
   mSetterText = nsnull;
 
