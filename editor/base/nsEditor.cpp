@@ -3034,6 +3034,9 @@ PRBool
 nsEditor::IsEditable(nsIDOMNode *aNode)
 {
   if (!aNode) return PR_FALSE;
+  nsCOMPtr<nsIPresShell> shell;
+  GetPresShell(getter_AddRefs(shell));
+  if (!shell)  return PR_FALSE;
   nsCOMPtr<nsIDOMElement>element;
   element = do_QueryInterface(aNode);
   if (element)
@@ -3044,12 +3047,10 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     if (val.Equals(kMOZEditorBogusNodeValue)) {
       return PR_FALSE;
     }
-    else {
-      return PR_TRUE;
-    }
   }
-  else
-  { 
+  // it's not the bogus node, so see if it is an irrelevant text node
+  if (PR_TRUE==IsTextNode(aNode))
+  {
     nsCOMPtr<nsIDOMCharacterData>text;
     text = do_QueryInterface(aNode);
     if (text)
@@ -3071,7 +3072,22 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       return PR_FALSE;
     }
   }
-  return PR_TRUE;
+  
+  // we got this far, so see if it has a frame.  If so, we'll edit it.
+  nsIFrame *resultFrame;
+  nsCOMPtr<nsIContent>content;
+  content = do_QueryInterface(aNode);
+  if (content)
+  {
+    nsresult result = shell->GetPrimaryFrameFor(content, &resultFrame);
+    if (NS_FAILED(result) || !resultFrame) {  // if it has no frame, it is not editable
+      return PR_FALSE;
+    }
+    else {                                    // it has a frame, so it is editable
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;  // it's not a content object (???) so it's not editable
 }
 
 nsresult

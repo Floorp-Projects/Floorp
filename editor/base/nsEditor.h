@@ -24,6 +24,7 @@
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMTextRangeList.h"
@@ -473,9 +474,9 @@ public:
     *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
     *                       If there is no prior node, aResultNode will be nsnull.
     */
-  static nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
-                               PRBool       aEditableNode,
-                               nsIDOMNode **aResultNode);
+  nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
+                        PRBool       aEditableNode,
+                        nsIDOMNode **aResultNode);
 
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
@@ -484,9 +485,9 @@ public:
     *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
     *                       If there is no prior node, aResultNode will be nsnull.
     */
-  static nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
-                              PRBool       aEditableNode,
-                              nsIDOMNode **aResultNode);
+  nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
+                       PRBool       aEditableNode,
+                       nsIDOMNode **aResultNode);
 
   /** Get the rightmost child of aCurrentNode, and return it in aResultNode
     * aResultNode is set to nsnull if aCurrentNode has no children.
@@ -523,14 +524,14 @@ public:
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
 
   /** returns PR_TRUE if aNode is an editable node */
-  static PRBool IsEditable(nsIDOMNode *aNode);
+  PRBool IsEditable(nsIDOMNode *aNode);
 
   /** counts number of editable child nodes */
-  static nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
+  nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
   
   /** Find the deep first and last children */
-  static nsCOMPtr<nsIDOMNode> GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot);
-  static nsCOMPtr<nsIDOMNode> GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot);
+  nsCOMPtr<nsIDOMNode> GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot);
+  nsCOMPtr<nsIDOMNode> GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot);
 
 
   /** from html rules code - migration in progress */

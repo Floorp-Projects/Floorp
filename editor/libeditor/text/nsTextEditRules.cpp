@@ -868,6 +868,7 @@ nsresult
 nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  if (!mEditor) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIDOMDocument>doc;
   mEditor->GetDocument(getter_AddRefs(doc));  
   nsCOMPtr<nsIDOMNodeList>nodeList;
@@ -889,7 +890,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
       result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
       while ((NS_SUCCEEDED(result)) && bodyChild)
       { 
-        if (PR_TRUE==nsEditor::IsEditable(bodyChild))
+        if (PR_TRUE==mEditor->IsEditable(bodyChild))
         {
           needsBogusContent = PR_FALSE;
           break;

@@ -493,7 +493,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     {
       arrayOfNodes->RemoveElementAt(i);
     }
-    else if (!nsEditor::IsEditable(testNode))
+    else if (!mEditor->IsEditable(testNode))
     {
       arrayOfNodes->RemoveElementAt(i);
     }
@@ -511,7 +511,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     {
       // dive as long as there is only one child, and it is a list, div, or blockquote
       PRUint32 numChildren;
-      res = nsEditor::CountEditableChildren(curNode, numChildren);
+      res = mEditor->CountEditableChildren(curNode, numChildren);
       if (NS_FAILED(res)) return res;
       
       if (numChildren == 1)
@@ -1125,7 +1125,7 @@ nsHTMLEditRules::IsFirstNode(nsIDOMNode *aNode)
   while (j < offset)
   {
     childList->Item(j, getter_AddRefs(child));
-    if (nsEditor::IsEditable(child)) 
+    if (mEditor->IsEditable(child)) 
       return PR_FALSE;
     j++;
   }
@@ -1155,7 +1155,7 @@ nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)
   while (j < numChildren)
   {
     childList->Item(j, getter_AddRefs(child));
-    if (nsEditor::IsEditable(child)) 
+    if (mEditor->IsEditable(child)) 
       return PR_FALSE;
     j++;
   }
