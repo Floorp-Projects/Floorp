@@ -44,7 +44,7 @@ nsCacheEntryChannel::~nsCacheEntryChannel()
     mCacheEntry->mChannelCount--;
 }
 
-NS_IMPL_ISUPPORTS3(nsCacheEntryChannel, nsISupports, nsIChannel, nsIRequest)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsCacheEntryChannel, nsISupports, nsIChannel, nsIRequest)
 
 // A proxy for nsIOutputStream
 class CacheOutputStream : public nsIOutputStream {
@@ -87,7 +87,7 @@ protected:
     PRIntervalTime mStartTime;
 };
 
-NS_IMPL_ISUPPORTS(CacheOutputStream, NS_GET_IID(nsIOutputStream))
+NS_IMPL_THREADSAFE_ISUPPORTS1(CacheOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
 nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition, nsIOutputStream* *aOutputStream)

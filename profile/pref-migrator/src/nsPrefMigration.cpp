@@ -297,7 +297,7 @@ nsPrefMigration::getPrefService()
   return NS_OK;   
 }
 
-NS_IMPL_ISUPPORTS(nsPrefMigration, NS_GET_IID(nsIPrefMigration))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrefMigration, nsIPrefMigration)
 
 NS_IMETHODIMP
 nsPrefMigration::AddProfilePaths(const char * oldProfilePathStr, const char * newProfilePathStr)

@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount), mListeners(0)
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
 
   mMonitor = ::PR_NewMonitor();
 }
@@ -90,7 +90,7 @@ NS_IMPL_QUERY_INTERFACE1(nsTransactionManager, nsITransactionManager)
 
 #else
 
-NS_IMPL_ISUPPORTS1(nsTransactionManager, nsITransactionManager)
+NS_IMPL_ISUPPORTS(nsTransactionManager, NS_GET_IID(nsITransactionManager))
 
 #endif
 

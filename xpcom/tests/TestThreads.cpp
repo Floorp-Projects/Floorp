@@ -25,20 +25,21 @@
 #include "nsIThreadPool.h"
 #include "nsIRunnable.h"
 #include <stdio.h>
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
 class nsRunner : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Run() {
-        printf("running %d\n", mNum);
-        nsIThread* thread;
-        nsresult rv = nsIThread::GetCurrent(&thread);
+        nsCOMPtr<nsIThread> thread;
+        nsresult rv = nsIThread::GetCurrent(getter_AddRefs(thread));
         if (NS_FAILED(rv)) {
             printf("failed to get current thread\n");
             return rv;
         }
-        NS_RELEASE(thread);
+        printf("running %d on thread %x\n", mNum, thread);
 
         // if we don't do something slow, we'll never see the other
         // worker threads run
@@ -55,22 +56,22 @@ protected:
     int mNum;
 };
 
-NS_IMPL_ISUPPORTS(nsRunner, NS_GET_IID(nsIRunnable));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunner, nsIRunnable);
 
 nsresult
 TestThreads()
 {
     nsresult rv;
 
-    nsIThread* runner;
-    rv = NS_NewThread(&runner, new nsRunner(0), 0, PR_JOINABLE_THREAD);
+    nsCOMPtr<nsIThread> runner;
+    rv = NS_NewThread(getter_AddRefs(runner), new nsRunner(0), 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;
     }
 
-    nsIThread* thread;
-    rv = nsIThread::GetCurrent(&thread);
+    nsCOMPtr<nsIThread> thread;
+    rv = nsIThread::GetCurrent(getter_AddRefs(thread));
     if (NS_FAILED(rv)) {
         printf("failed to get current thread\n");
         return rv;
@@ -97,12 +98,9 @@ TestThreads()
         printf("interrupt failed\n");        
     }
 
-    NS_RELEASE(runner);
-    NS_RELEASE(thread);
-
     ////////////////////////////////////////////////////////////////////////////
     // try an unjoinable thread 
-    rv = NS_NewThread(&runner, new nsRunner(1));
+    rv = NS_NewThread(getter_AddRefs(runner), new nsRunner(1));
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;
@@ -112,7 +110,8 @@ TestThreads()
     if (NS_SUCCEEDED(rv)) {
         printf("shouldn't have been able to join an unjoinable thread\n");        
     }
-    NS_RELEASE(runner);
+
+    PR_Sleep(100);       // hopefully the runner will quit here
 
     return NS_OK;
 }
@@ -120,8 +119,8 @@ TestThreads()
 nsresult
 TestThreadPools()
 {
-    nsIThreadPool* pool;
-    nsresult rv = NS_NewThreadPool(&pool, 4, 4);
+    nsCOMPtr<nsIThreadPool> pool;
+    nsresult rv = NS_NewThreadPool(getter_AddRefs(pool), 4, 4);
     if (NS_FAILED(rv)) {
         printf("failed to create thead pool\n");
         return rv;
@@ -137,11 +136,17 @@ TestThreadPools()
 int
 main()
 {
-    nsresult rv = TestThreads();
+    nsresult rv;
+    rv = NS_InitXPCOM(nsnull, nsnull);
+    if (NS_FAILED(rv)) return -1;
+
+    rv = TestThreads();
     if (NS_FAILED(rv)) return -1;
 
     rv = TestThreadPools();
     if (NS_FAILED(rv)) return -1;
 
+    rv = NS_ShutdownXPCOM(nsnull);
+    if (NS_FAILED(rv)) return -1;
     return 0;
 }

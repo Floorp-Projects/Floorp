@@ -365,29 +365,9 @@ nsSocketTransportService::SetSocketTimeoutInterval(PRIntervalTime aTime)
 // nsISupports implementation...
 // --------------------------------------------------------------------------
 //
-NS_IMPL_ADDREF(nsSocketTransportService);
-NS_IMPL_RELEASE(nsSocketTransportService);
-
-NS_IMETHODIMP
-nsSocketTransportService::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsISocketTransportService)) ||
-    aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsISocketTransportService*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIRunnable))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
-
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSocketTransportService,
+                              nsISocketTransportService,
+                              nsIRunnable)
 
 //
 // --------------------------------------------------------------------------

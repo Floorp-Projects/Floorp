@@ -55,14 +55,16 @@ class nsObserverListEnumerator : public nsIBidirectionalEnumerator
 			PRUint32										mCurrentItemIndex;
 	};
 
-NS_IMPL_ISUPPORTS2(nsObserverListEnumerator, nsIBidirectionalEnumerator, nsIEnumerator)
+NS_IMPL_ISUPPORTS2(nsObserverListEnumerator,
+                   nsIBidirectionalEnumerator,
+                   nsIEnumerator)
 
 nsObserverListEnumerator::nsObserverListEnumerator( nsISupportsArray* anArray )
 		: mRefCnt(0),
 			mTargetArray(anArray),
 			mCurrentItemIndex(0)
 	{
-		// nothing else to do here
+		NS_INIT_REFCNT();
 	}
 
 PRUint32

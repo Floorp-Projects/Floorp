@@ -41,7 +41,7 @@ NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 
 nsLocaleWinFactory::nsLocaleWinFactory(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mClassID = aClass;
 }   
 

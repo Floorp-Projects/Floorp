@@ -65,27 +65,7 @@ nsRDFResource::~nsRDFResource(void)
     }
 }
 
-NS_IMPL_ADDREF(nsRDFResource)
-NS_IMPL_RELEASE(nsRDFResource)
-
-NS_IMETHODIMP
-nsRDFResource::QueryInterface(REFNSIID aIID, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    *aResult = nsnull;
-    if (aIID.Equals(NS_GET_IID(nsIRDFResource)) ||
-        aIID.Equals(NS_GET_IID(nsIRDFNode)) ||
-        aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIRDFResource*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFNode methods:

@@ -52,6 +52,8 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
 
 #include "nsCRT.h"
 
@@ -71,11 +73,13 @@ static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 //static PRTime gElapsedTime;
 static int gKeepRunning = 1;
 
-#define NUM_TEST_THREADS 5
+#define NUM_TEST_THREADS 15
+#define TRANSFER_AMOUNT 64
 
-static TestConnection* gConnections[NUM_TEST_THREADS];
-static nsIThread*      gThreads[NUM_TEST_THREADS];
-//static nsITimer*       gPeriodicTimer;
+static TestConnection*  gConnections[NUM_TEST_THREADS];
+static nsIThread*       gThreads[NUM_TEST_THREADS];
+//static nsITimer*      gPeriodicTimer;
+static PRBool           gVerbose = PR_TRUE;
 
 
 void Pump_PLEvents(nsIEventQueueService * eventQService);
@@ -118,7 +122,9 @@ void Pump_PLEvents(nsIEventQueueService * eventQService)
 // -----
 
 class TestConnection : public nsIRunnable, 
-                       public nsIStreamListener
+                       public nsIStreamListener,
+                       public nsIInterfaceRequestor,
+                       public nsIProgressEventSink
 {
 public:
   TestConnection(const char* aHostName, PRInt32 aPort,
@@ -140,6 +146,25 @@ public:
   nsresult Resume(void);
 
   void SetAsyncOpenCompleted() { mAsyncOpenCompleted = PR_TRUE; }
+
+  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) {
+    if (uuid.Equals(NS_GET_IID(nsIProgressEventSink))) {
+      *result = (nsIProgressEventSink*)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+    return NS_NOINTERFACE;
+  }
+
+  NS_IMETHOD OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax) {
+    putc('+', stderr);
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg) {
+    putc('?', stderr);
+    return NS_OK;
+  }
 
 protected:
 #ifndef NSPIPE2
@@ -188,7 +213,8 @@ NS_IMPL_ISUPPORTS1(TestConnectionOpenObserver, nsIStreamObserver);
 NS_IMETHODIMP
 TestConnectionOpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-  printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", context);
+  if (gVerbose)
+    printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", context);
 
   mTestConnection->SetAsyncOpenCompleted();
   return NS_OK;
@@ -200,9 +226,10 @@ TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
-  printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
-         "\tContext = %p\n", 
-         aStatus, context);
+  if (gVerbose || NS_FAILED(aStatus))
+    printf("\n+++ TestConnectionOpenObserver::OnStopRequest (status = %x) +++."
+           "\tContext = %p\n", 
+           aStatus, context);
   return NS_OK;
 }
 
@@ -213,7 +240,8 @@ TestConnection::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
   NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
 
-  printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
+  if (gVerbose)
+    printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
 }
 
@@ -224,20 +252,27 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                 PRUint32 aSourceOffset,
                                 PRUint32 aLength)
 {
+  nsresult rv;
   NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
 
-  char buf[1025];
+  char buf[TRANSFER_AMOUNT];
   PRUint32 amt;
 
-  printf("\n+++ TestConnection::OnDavaAvailable +++."
-         "\tContext = %p length = %d\n", 
-         context, aLength);
-  do {
-    aIStream->Read(buf, 1024, &amt);
+  if (gVerbose)
+    printf("\n+++ TestConnection::OnDavaAvailable +++."
+           "\tContext = %p length = %d\n", 
+           context, aLength);
+
+  while (aLength > 0) {
+    PRInt32 cnt = PR_MIN(TRANSFER_AMOUNT, aLength);
+    rv = aIStream->Read(buf, cnt, &amt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Read failed");
     mBytesRead += amt;
+    aLength -= amt;
     buf[amt] = '\0';
-    puts(buf);
-  } while (amt != 0);
+    if (gVerbose)
+      puts(buf);
+  }
 
   if (mBufferLength == mBytesRead) {
     mBytesRead = 0;
@@ -256,9 +291,10 @@ TestConnection::OnStopRequest(nsIChannel* channel,
 {
   NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
 
-  printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
-         "\tContext = %p\n", 
-         aStatus, context);
+  if (gVerbose || NS_FAILED(aStatus))
+    printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
+           "\tContext = %p\n", 
+           aStatus, context);
   return NS_OK;
 }
 
@@ -275,7 +311,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   mTestAsyncOpen = testAsyncRead;
   mAsyncOpenCompleted = PR_FALSE;
 
-  mBufferLength = 255;
+  mBufferLength = TRANSFER_AMOUNT;
   mBufferChar   = 'a';
   mBytesRead    = 0;
 
@@ -294,6 +330,11 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = sts->CreateTransport(aHostName, aPort, aHostName, 0, 0, &mTransport);
+    if (NS_SUCCEEDED(rv)) {
+      // Set up the notification callbacks to provide a progress event sink.
+      // That way we exercise the progress notification proxy code.
+      rv = mTransport->SetNotificationCallbacks(this);
+    }
   }
 
 
@@ -334,33 +375,12 @@ TestConnection::~TestConnection()
   NS_IF_RELEASE(mOutStream);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(TestConnection);
-NS_IMPL_THREADSAFE_RELEASE(TestConnection);
-
-NS_IMETHODIMP
-TestConnection::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIRunnable)) ||
-      aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIStreamObserver))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  return NS_NOINTERFACE; 
-}
+NS_IMPL_THREADSAFE_ISUPPORTS5(TestConnection,
+                              nsIRunnable,
+                              nsIStreamListener,
+                              nsIStreamObserver,
+                              nsIInterfaceRequestor,
+                              nsIProgressEventSink);
 
 NS_IMETHODIMP
 TestConnection::Run(void)
@@ -419,7 +439,8 @@ TestConnection::Run(void)
     }
   }
 
-  printf("Transport thread exiting...\n");
+  if (gVerbose)
+    printf("Transport thread exiting...\n");
   return rv;
 }
 
@@ -437,7 +458,8 @@ nsresult TestConnection::WriteBuffer(void)
     mBufferChar++;
   }
 
-  printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
+  if (gVerbose)
+    printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
 
   // Create and fill a test buffer of data...
   buffer = (char*)PR_Malloc(mBufferLength + 4);
@@ -508,7 +530,8 @@ nsresult TestConnection::ReadBuffer(void)
 
       if (NS_SUCCEEDED(rv) && bytesRead > 0) {
         buffer[bytesRead] = '\0';
-        printf("TestConnection::ReadBuffer.  Read %d bytes\n", bytesRead);
+        if (gVerbose)
+          printf("TestConnection::ReadBuffer.  Read %d bytes\n", bytesRead);
         puts(buffer);
       }
       PR_Free(buffer);
@@ -610,7 +633,7 @@ main(int argc, char* argv[])
   //
   // -----
 ///  if (argc < 3) {
-///      printf("usage: %s <host> <path>\n", argv[0]);
+///      printf("usage: %s [-sync|-asyncopen|-silent] <host> <path>\n", argv[0]);
 ///      return -1;
 ///  }
 
@@ -629,7 +652,11 @@ main(int argc, char* argv[])
     if (PL_strcasecmp(argv[i], "-asyncopen") == 0) {
       bTestAsyncOpen = PR_TRUE;
       continue;
-    } 
+    }
+    if (PL_strcasecmp(argv[i], "-silent") == 0) {
+      gVerbose = PR_FALSE;
+      continue;
+    }
 
     hostName = argv[i];
   }

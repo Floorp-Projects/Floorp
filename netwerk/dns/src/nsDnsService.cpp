@@ -562,9 +562,9 @@ nsDNSService::~nsDNSService()
 #endif
 }
 
-
-NS_IMPL_ISUPPORTS2(nsDNSService, nsIDNSService, nsIRunnable);
-
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsDNSService,
+                              nsIDNSService, 
+                              nsIRunnable)
 
 NS_METHOD
 nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)

@@ -43,7 +43,7 @@ static nsObserverService* gObserverService = nsnull; // The one-and-only Observe
 // nsObserverService Implementation
 
 
-NS_IMPL_ISUPPORTS1(nsObserverService, nsIObserverService)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsObserverService, nsIObserverService)
 
 NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService)
 {

@@ -110,11 +110,10 @@ typedef struct _findAccountByKeyEntry {
 } findAccountByKeyEntry;
 
 
-
-NS_IMPL_ISUPPORTS3(nsMsgAccountManager,
-                   nsIMsgAccountManager,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgAccountManager,
+                              nsIMsgAccountManager,
+                              nsIObserver,
+                              nsISupportsWeakReference)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),

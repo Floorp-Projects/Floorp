@@ -645,6 +645,7 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 
 PresShell::PresShell()
 {
+  NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;

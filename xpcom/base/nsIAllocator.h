@@ -100,6 +100,7 @@ public:
     static NS_EXPORT void  HeapMinimize();
     static NS_EXPORT void* Clone(const void* ptr,  PRUint32 size);
     static NS_EXPORT nsIAllocator* GetGlobalAllocator();
+    static NS_EXPORT void Shutdown();
 private:
     nsAllocator();   // not implemented
     static PRBool EnsureAllocator() {return mAllocator || FetchAllocator();}

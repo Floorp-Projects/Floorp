@@ -23,8 +23,7 @@
 #include "nsString.h"
 #include "prprf.h"
 
-NS_IMPL_ISUPPORTS1(nsStdURLParser, 
-                   nsIURLParser)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStdURLParser, nsIURLParser)
 
 nsStdURLParser::~nsStdURLParser()
 {

@@ -6379,7 +6379,7 @@ nsImapCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * 
   return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
-NS_IMPL_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
 
 nsImapMockChannel::nsImapMockChannel()
 {

@@ -56,7 +56,7 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS1(nsSupportsArray, nsISupportsArray)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSupportsArray, nsISupportsArray)
 
 void nsSupportsArray::DeleteArray(void)
 {

@@ -38,7 +38,9 @@ nsGenericFactory::~nsGenericFactory()
 		(*mDestructor) ();
 }
 
-NS_IMPL_ISUPPORTS2(nsGenericFactory, nsIGenericFactory, nsIFactory)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsGenericFactory,
+                              nsIGenericFactory, 
+                              nsIFactory)
 
 NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -120,7 +122,7 @@ nsGenericModule::~nsGenericModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS1(nsGenericModule, nsIModule)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsGenericModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult

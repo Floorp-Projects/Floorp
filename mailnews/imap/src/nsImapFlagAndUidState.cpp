@@ -28,7 +28,7 @@
 #include "prcmon.h"
 #include "nspr.h"
 
-NS_IMPL_ISUPPORTS(nsImapFlagAndUidState, NS_GET_IID(nsIImapFlagAndUidState))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapFlagAndUidState, nsIImapFlagAndUidState)
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
 {

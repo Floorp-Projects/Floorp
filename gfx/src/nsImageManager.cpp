@@ -56,6 +56,7 @@ static ImageManagerImpl*   gImageManager = nsnull;
 
 ImageManagerImpl::ImageManagerImpl()
 {
+  NS_INIT_REFCNT();
   NS_NewImageSystemServices(getter_AddRefs(mSS));
   IL_Init(mSS);
   IL_SetCacheSize(1024L * 1024L);

@@ -177,6 +177,7 @@ static void ns_observer_proc (XP_Observable aSource,
 
 ImageRequestImpl::ImageRequestImpl()
 {
+  NS_INIT_REFCNT();
 }
 
 ImageRequestImpl::~ImageRequestImpl()

@@ -260,7 +260,7 @@ nsLocalFile::~nsLocalFile()
 }
 
 /* nsISupports interface implementation. */
-NS_IMPL_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile, nsILocalFile, nsIFile)
 
 NS_METHOD
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)

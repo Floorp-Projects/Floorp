@@ -47,10 +47,11 @@ public:
 
     static void Main(void* arg);
     static void Exit(void* arg);
+    static void Shutdown();
 
     static PRUintn kIThreadSelfIndex;
 
-	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 protected:
     PRThread*                   mThread;

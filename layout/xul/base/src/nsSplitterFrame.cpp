@@ -75,8 +75,8 @@ public:
 
   nsSplitterFrameInner(nsSplitterFrame* aSplitter)
   {
+    NS_INIT_REFCNT();
     mOuter = aSplitter;
-    mRefCnt = 0;
     mPressed = PR_FALSE;
   }
   virtual ~nsSplitterFrameInner() {}

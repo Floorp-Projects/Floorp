@@ -41,7 +41,7 @@ nsMemCacheRecord::~nsMemCacheRecord()
         delete[] mKey;
 }	
      
-NS_IMPL_ISUPPORTS(nsMemCacheRecord, NS_GET_IID(nsINetDataCacheRecord))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemCacheRecord, nsINetDataCacheRecord)
 
 NS_IMETHODIMP
 nsMemCacheRecord::GetKey(PRUint32 *aLength, char **aResult)

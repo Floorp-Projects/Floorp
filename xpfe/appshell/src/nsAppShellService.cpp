@@ -110,15 +110,15 @@ nsAppShellService::~nsAppShellService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ADDREF(nsAppShellService)
-NS_IMPL_RELEASE(nsAppShellService)
+NS_IMPL_THREADSAFE_ADDREF(nsAppShellService)
+NS_IMPL_THREADSAFE_RELEASE(nsAppShellService)
 
 NS_INTERFACE_MAP_BEGIN(nsAppShellService)
 	NS_INTERFACE_MAP_ENTRY(nsIAppShellService)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAppShellService)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_THREADSAFE
 
 
 NS_IMETHODIMP

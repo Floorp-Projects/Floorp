@@ -2059,6 +2059,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 
 // Note: operator new zeros our memory
 HTMLContentSink::HTMLContentSink() {
+  NS_INIT_REFCNT();
 #ifdef NS_DEBUG
   if (nsnull == gSinkLogModuleInfo) {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");

@@ -37,12 +37,12 @@
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
-NS_IMPL_ISUPPORTS2(nsMsgWindow, nsIMsgWindow, nsIURIContentListener)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgWindow, nsIMsgWindow, nsIURIContentListener)
 
 nsMsgWindow::nsMsgWindow()
 {
-	NS_INIT_ISUPPORTS();
-	mRootWebShell = nsnull;
+  NS_INIT_ISUPPORTS();
+  mRootWebShell = nsnull;
   mMessageWindowWebShell = nsnull;
 }
 

@@ -60,7 +60,7 @@
 #endif
 
 
-NS_IMPL_ISUPPORTS1(nsInterfaceInfoManager, nsIInterfaceInfoManager)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsInterfaceInfoManager, nsIInterfaceInfoManager)
 
 static nsInterfaceInfoManager* gInterfaceInfoManager = NULL;
 

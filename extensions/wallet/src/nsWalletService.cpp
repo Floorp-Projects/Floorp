@@ -61,27 +61,13 @@ nsWalletlibService::~nsWalletlibService()
   NS_IF_RELEASE(gKeyedStreamGenerator);
 }
 
-
-NS_IMPL_ADDREF(nsWalletlibService);
-NS_IMPL_RELEASE(nsWalletlibService);
-
-NS_INTERFACE_MAP_BEGIN(nsWalletlibService)
-	NS_INTERFACE_MAP_ENTRY(nsIWalletService)
-
-		/*
-			Note: although this class always inherited from |nsIObserver|,
-			|QueryInterface| didn't previously respond to this request.
-			Now it does.
-		*/
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-
-	NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIPasswordSink)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWalletService)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsWalletlibService,
+                              nsIWalletService,
+                              nsIObserver,
+                              nsIFormSubmitObserver,
+                              nsIDocumentLoaderObserver,
+                              nsIPasswordSink,
+                              nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
   ::WLLT_PreEdit(walletList);

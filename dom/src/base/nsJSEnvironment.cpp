@@ -129,7 +129,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);

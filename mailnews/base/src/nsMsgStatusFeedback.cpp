@@ -53,10 +53,10 @@ nsMsgStatusFeedback::~nsMsgStatusFeedback()
 //
 // nsISupports
 //
-NS_IMPL_ISUPPORTS3(nsMsgStatusFeedback,
-                   nsIMsgStatusFeedback,
-                   nsIDocumentLoaderObserver,
-                   nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgStatusFeedback,
+                              nsIMsgStatusFeedback,
+                              nsIDocumentLoaderObserver,
+                              nsIObserver)
 
 // nsIDocumentLoaderObserver
 

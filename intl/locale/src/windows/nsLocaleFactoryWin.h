@@ -29,23 +29,12 @@
 class nsLocaleWinFactory : public nsIFactory
 {   
   public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
 
     nsLocaleWinFactory(const nsCID &aClass);   
     ~nsLocaleWinFactory();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };

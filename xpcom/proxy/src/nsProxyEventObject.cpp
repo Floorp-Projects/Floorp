@@ -336,8 +336,8 @@ DebugDump("Delete", 0);
     NS_IF_RELEASE(mRoot);
 }
 
-NS_IMPL_ADDREF(nsProxyEventObject);
-NS_IMPL_RELEASE(nsProxyEventObject);
+NS_IMPL_THREADSAFE_ADDREF(nsProxyEventObject);
+NS_IMPL_THREADSAFE_RELEASE(nsProxyEventObject);
 
 NS_IMETHODIMP
 nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)

@@ -85,7 +85,7 @@ AtomImpl::~AtomImpl()
   }
 }
 
-NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
+NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
 
 void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
 {

@@ -102,12 +102,12 @@ nsInputStreamChannel::Init(nsIURI* uri,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS5(nsInputStreamChannel, 
-                   nsIInputStreamChannel,
-                   nsIChannel,
-                   nsIRequest,
-                   nsIStreamObserver,
-                   nsIStreamListener);
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsInputStreamChannel, 
+                              nsIInputStreamChannel,
+                              nsIChannel,
+                              nsIRequest,
+                              nsIStreamObserver,
+                              nsIStreamListener);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:

@@ -144,7 +144,7 @@ static nsresult _convertRes(int res)
         case PREF_TYPE_CHANGE_ERR:
         case PREF_ERROR:
         case PREF_BAD_LOCKFILE:
-	case PREF_DEFAULT_VALUE_NOT_INITIALIZED:
+        case PREF_DEFAULT_VALUE_NOT_INITIALIZED:
             return NS_ERROR_UNEXPECTED;
         case PREF_VALUECHANGED:
             return NS_PREF_VALUE_CHANGED;
@@ -253,7 +253,7 @@ nsPref* nsPref::GetInstance()
     return gInstance;
 } // nsPref::GetInstance
 
-NS_IMPL_ISUPPORTS1(nsPref, nsIPref);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsPref, NS_GET_IID(nsIPref));
 
 //========================================================================================
 // nsIPref Implementation

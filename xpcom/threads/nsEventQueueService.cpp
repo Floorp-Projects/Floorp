@@ -304,7 +304,7 @@ nsEventQueueServiceImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResu
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS1(nsEventQueueServiceImpl,nsIEventQueueService)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsEventQueueServiceImpl, nsIEventQueueService)
 
 /* nsIEventQueueService interface implementation... */
 

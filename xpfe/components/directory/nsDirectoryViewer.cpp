@@ -295,7 +295,7 @@ nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsHTTPIndexParser, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndexParser, nsIStreamListener, nsIStreamObserver);
 
 
 NS_IMETHODIMP

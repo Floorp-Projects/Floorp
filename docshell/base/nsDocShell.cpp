@@ -119,8 +119,8 @@ NS_IMETHODIMP nsDocShell::DestroyChildren()
 // nsDocShell::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ADDREF(nsDocShell)
-NS_IMPL_RELEASE(nsDocShell)
+NS_IMPL_THREADSAFE_ADDREF(nsDocShell)
+NS_IMPL_THREADSAFE_RELEASE(nsDocShell)
 
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShell)
@@ -133,7 +133,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
 // nsDocShell::nsIInterfaceRequestor

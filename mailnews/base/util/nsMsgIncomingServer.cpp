@@ -59,8 +59,6 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_serverKey(0),
     m_rootFolder(0)
 {
-  MOZ_COUNT_CTOR(nsMsgIncomingServer);
-
   NS_INIT_REFCNT();
   m_serverBusy = PR_FALSE;
   m_password = "";
@@ -68,22 +66,19 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
-	
-	MOZ_COUNT_DTOR(nsMsgIncomingServer);
-
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
                                                   nsnull);
     PR_FREEIF(m_serverKey)
 }
 
-NS_IMPL_ADDREF(nsMsgIncomingServer);
-NS_IMPL_RELEASE(nsMsgIncomingServer);
+NS_IMPL_THREADSAFE_ADDREF(nsMsgIncomingServer);
+NS_IMPL_THREADSAFE_RELEASE(nsMsgIncomingServer);
 NS_INTERFACE_MAP_BEGIN(nsMsgIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIMsgIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgIncomingServer)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMPL_GETSET(nsMsgIncomingServer, ServerBusy, PRBool, m_serverBusy)
 NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)

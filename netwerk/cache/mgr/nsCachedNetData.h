@@ -135,7 +135,7 @@ protected:
     friend class InterceptStreamListener;
 
 protected:
-    nsCachedNetData() {};
+    nsCachedNetData() { NS_INIT_REFCNT(); };
     virtual ~nsCachedNetData() {};
 
 private:

@@ -33,7 +33,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsMemCacheChannel, NS_GET_IID(nsIChannel))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemCacheChannel, nsIChannel)
 
 void
 nsMemCacheChannel::NotifyStorageInUse(PRInt32 aBytesUsed)
@@ -315,7 +315,7 @@ private:
     nsMemCacheChannel*          mChannel;
 };
 
-NS_IMPL_ISUPPORTS(MemCacheWriteStreamWrapper,  NS_GET_IID(nsIOutputStream))
+NS_IMPL_THREADSAFE_ISUPPORTS1(MemCacheWriteStreamWrapper, nsIOutputStream)
 
 nsMemCacheChannel::nsMemCacheChannel(nsMemCacheRecord *aRecord, nsILoadGroup *aLoadGroup)
     : mRecord(aRecord)
