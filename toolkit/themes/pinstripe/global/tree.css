@@ -284,6 +284,10 @@ treechildren::-moz-tree-twisty(open) {
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
+treechildren::-moz-tree-twisty(Name, separator) {
+  -moz-appearance: none;
+}
+
 treechildren::-moz-tree-indentation {
   width: 16px;
 }
@@ -318,7 +322,7 @@ treechildren::-moz-tree-image(Name, separator) {
 
 treechildren::-moz-tree-cell-text(Name, separator) {
   color: #999;
-  -moz-margin-end: 5px;
+  margin: 0 5px;
 }
 
 treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
