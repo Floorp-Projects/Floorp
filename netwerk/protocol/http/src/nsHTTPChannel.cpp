@@ -1766,13 +1766,19 @@ nsresult nsHTTPChannel::ResponseCompleted(
 
     PRUint32 contentLength;
     PRUint32 logicalLength;
-    mCacheEntry->GetLogicalLength(&logicalLength);
-    if (logicalLength) 
+    if (mCacheEntry)
     {
-        mCacheEntry->GetStoredContentLength(&contentLength);
-        if (contentLength > logicalLength) 
+        mCacheEntry->GetLogicalLength(&logicalLength);
+        if (logicalLength) 
         {
-            mCacheEntry->SetStoredContentLength(logicalLength);
+            mCacheEntry->GetStoredContentLength(&contentLength);
+            if (contentLength)
+            {
+                if (contentLength > logicalLength) 
+                {
+                    mCacheEntry->SetStoredContentLength(logicalLength);
+                }
+            }
         }
     }
 
