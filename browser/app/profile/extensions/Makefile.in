@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = {641d8d09-7dda-4850-8228-ac0ab65e2ac9} {972ce4c6-7e08-4474-a285-3208198ce6fd}
+DIRS = {972ce4c6-7e08-4474-a285-3208198ce6fd}
 
 include $(topsrcdir)/config/rules.mk
 
