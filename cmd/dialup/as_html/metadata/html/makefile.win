@@ -21,5 +21,5 @@ PACKAGE=netscape\asw
 !include <$(DEPTH)\config\rules.mak>
 
 export::
-	copy compare.tmpl $(JAVA_DESTPATH)\$(PACKAGE)\compare.htm
-	copy compare.js $(JAVA_DESTPATH)\$(PACKAGE)\.
+	copy compare.tmpl ..\..\compare.htm
+	copy compare.js ..\..\.

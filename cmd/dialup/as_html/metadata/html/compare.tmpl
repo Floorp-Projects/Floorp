@@ -64,11 +64,12 @@
 </TABLE>
 </CENTER>
 
+<FORM NAME="compare">
 <LAYER NAME="allisp" LEFT=0 VISIBILITY="show" ID="compare102">
 
 	<ILAYER NAME="level1isp" LEFT=0>
 	<HR size=4>
-	<CENTER><P><A HREF="javascript:window.donothing()" onClick="toggle( 'level1isp' ); return false;" ID="compare103">Level 1</A></P></CENTER>
+	<CENTER><P><A HREF="about:blank" onClick="toggle( 'level1isp' ); return false;" ID="compare103">Level 1</A></P></CENTER>
 	<P CLASS="body">
 	<ILAYER NAME="level1display" LEFT=0 VISIBILITY=SHOW>
 	###level1###
@@ -77,7 +78,7 @@
 	</LAYER>
 
 	<ILAYER NAME="level2isp" LEFT=0>
-	<CENTER><P><A HREF="javascript:window.donothing()" onClick="toggle( 'level2isp' ); return false;" ID="compare104">Level 2</A></CENTER></P>
+	<CENTER><P><A HREF="about:blank" onClick="toggle( 'level2isp' ); return false;" ID="compare104">Level 2</A></CENTER></P>
 	<P CLASS="body">
 	<ILAYER NAME="level2display" LEFT=0 VISIBILITY=SHOW>
 	###level2###
@@ -86,8 +87,9 @@
 	</LAYER>
 
 </LAYER>
+</FORM>
 
-<SCRIPT LANGUAGE="JavaScript1.2" ID="compare103">
+<SCRIPT LANGUAGE="JavaScript1.2" ID="compare105">
 savePositions();
 allisp.visible = "show";
 </SCRIPT>
