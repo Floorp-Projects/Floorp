@@ -42,14 +42,12 @@
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
-<!ENTITY findCmd.label "Find">
+<!ENTITY findCmd.label "Find and Replace...">
 	<!ENTITY findCmd.key "F">
 	<!ENTITY findCmd.accesskey "F">
 <!ENTITY findAgainCmd.label "Find Again">
 	<!ENTITY findAgainCmd.key "G">
 	<!ENTITY findAgainCmd.accesskey "g">
-<!ENTITY replaceCmd.label "Replace...">
-<!ENTITY replaceCmd.accesskey "l">
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings...">
 	<!ENTITY accountManagerCmd.accesskey "m">
 

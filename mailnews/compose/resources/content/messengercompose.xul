@@ -290,7 +290,6 @@
           <menuseparator/>
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
-          <menuitem label="&replaceCmd.label;" accesskey="&replaceCmd.accesskey;" observes="cmd_replace"/>
           <menuseparator/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
