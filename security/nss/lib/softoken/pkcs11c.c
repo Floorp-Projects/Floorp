@@ -4433,7 +4433,7 @@ loser:
  * SSL Key generation given pre master secret
  */
 static char *mixers[] = { "A", "BB", "CCC", "DDDD", "EEEEE", "FFFFFF", "GGGGGGG"};
-#define NUM_MIXERS 7
+#define NUM_MIXERS 9
 #define SSL3_PMS_LENGTH 48
 #define SSL3_MASTER_SECRET_LENGTH 48
 
