@@ -143,6 +143,9 @@ public:
     // an incremental reflow.
     CheckPullupReflow,
 
+    // Reflow dirty stuff (really a per-frame extension)
+    ReflowDirty,
+
     // Trap door for extensions.
     UserDefined
   };
