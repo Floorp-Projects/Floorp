@@ -147,6 +147,8 @@ protected:
   virtual PRInt32 InternalGetNumberOfStyleSheets();
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
+  
+  virtual nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
 
   // For HTML elements in our content model
   // XXX This is not clean, but is there a better way? 
