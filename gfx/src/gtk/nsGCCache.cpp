@@ -49,6 +49,15 @@ nsGCCache::nsGCCache()
   DEBUG_METER(memset(&GCCacheStats, 0, sizeof(GCCacheStats));)
 }
 
+/* static */ void
+nsGCCache::Shutdown()
+{
+    if (copyRegion) {
+        gdk_region_destroy(copyRegion);
+        copyRegion = nsnull;
+    }
+}
+
 void
 nsGCCache::move_cache_entry(PRCList *clist)
 {

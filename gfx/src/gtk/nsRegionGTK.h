@@ -36,6 +36,7 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual nsresult Init();
+  static void Shutdown();
 
   virtual void SetTo(const nsIRegion &aRegion);
   virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);

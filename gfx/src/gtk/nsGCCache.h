@@ -53,6 +53,8 @@ class nsGCCache
   nsGCCache();
   virtual ~nsGCCache();
 
+  static void Shutdown();
+
   void Flush(unsigned long flags);
 
   GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);

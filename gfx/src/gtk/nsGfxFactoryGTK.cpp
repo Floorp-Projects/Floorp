@@ -56,6 +56,8 @@
 #include "nsImageGTK.h"
 #include "nsPrintOptionsGTK.h"
 #include "nsFontList.h"
+#include "nsRegionGTK.h"
+#include "nsGCCache.h"
 
 // objects that just require generic constructors
 
@@ -188,6 +190,8 @@ nsGfxGTKModuleDtor(nsIModule *self)
 {
   nsRenderingContextGTK::Shutdown();
   nsDeviceContextGTK::Shutdown();
+  nsGCCache::Shutdown();
+  nsRegionGTK::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxGTKModule, components, nsGfxGTKModuleDtor)
