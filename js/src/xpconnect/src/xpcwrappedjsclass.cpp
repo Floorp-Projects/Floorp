@@ -1118,7 +1118,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 }
             }
         }
-        else if(!JS_GetProperty(cx, obj, name, &fval))
+        else if(!JS_GetMethod(cx, obj, name, &thisObj, &fval))
         {
             // XXX We really want to factor out the error reporting better and
             // specifically report the failure to find a function with this name.
