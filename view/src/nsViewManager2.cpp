@@ -39,6 +39,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 #define UPDATE_QUANTUM  1000 / 40
 
+
 //#define NO_DOUBLE_BUFFER
 
 // display list flags
@@ -63,9 +64,14 @@ struct DisplayListElement2 {
 inline nscoord max(nscoord x, nscoord y) { return (x > y ? x : y); }
 inline nscoord min(nscoord x, nscoord y) { return (x < y ? x : y); }
 
+
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
+
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
 	nsViewManager2 *vm = (nsViewManager2 *)aClosure;
+
+  printf("ViewManager2 timer callback\n");
 
 	//restart the timer
   
@@ -87,6 +93,7 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 	vm->Composite();
 #endif
 }
+#endif
 
 #if 0
 static void blinkRect(nsIRenderingContext* context, const nsRect& r)
@@ -97,7 +104,7 @@ static void blinkRect(nsIRenderingContext* context, const nsRect& r)
 }
 #endif
 
-PRUint32 nsViewManager2::mVMCount = 0;
+PRInt32 nsViewManager2::mVMCount = 0;
 nsDrawingSurface nsViewManager2::mDrawingSurface = nsnull;
 nsRect nsViewManager2::mDSBounds = nsRect(0, 0, 0, 0);
 
@@ -119,10 +126,12 @@ nsViewManager2::nsViewManager2()
 
 nsViewManager2::~nsViewManager2()
 {
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
 	if (nsnull != mTimer) {
 		mTimer->Cancel();     //XXX this should not be necessary. MMP
 		NS_RELEASE(mTimer);
 	}
+#endif
 
 	NS_IF_RELEASE(mRootWindow);
 
@@ -260,7 +269,9 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
 	mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
 	mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
 
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
 	mTimer = nsnull;
+#endif
 	mFrameRate = 0;
 	mTrueFrameRate = 0;
 	mTransCnt = 0;
@@ -340,21 +351,25 @@ NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
 
 	if (aFrameRate != mFrameRate)
 		{
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
 			if (nsnull != mTimer)
 				{
 					mTimer->Cancel();     //XXX this should not be necessary. MMP
 					NS_RELEASE(mTimer);
 				}
+#endif
 
 			mFrameRate = aFrameRate;
 			mTrueFrameRate = aFrameRate;
 
 			if (mFrameRate != 0)
 				{
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
 					rv = NS_NewTimer(&mTimer);
 
 					if (NS_OK == rv)
 						mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
+#endif
 				}
 			else
 				rv = NS_OK;
@@ -2463,7 +2478,6 @@ nsresult nsViewManager2::GetVisibleRect(nsRect& aVisibleRect)
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
     const nsIView*  clipView;
-    nsRect          visibleRect;
 
     scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
     scrollingView->GetClipView(&clipView);

@@ -38,6 +38,13 @@
 class nsISupportsArray;
 struct DisplayListElement2;
 
+
+// Dont want to get rid of timer code, because we may want to use it
+// if we go to a implementation where we have invalidates that have been queued
+// within the view manager, instead of doing invalidates on the widget.
+// The timer would be used to cause the paints to happen.
+//#define NS_VIEWMANAGER_NEEDS_TIMER 1
+
 class nsViewManager2 : public nsIViewManager {
 public:
   nsViewManager2();
@@ -245,7 +252,7 @@ private:
   nsIScrollableView *mRootScrollable;
 
   //from here to public should be static and locked... MMP
-  static PRUint32          mVMCount;        //number of viewmanagers
+  static PRInt32           mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface
   static nsRect            mDSBounds;       //for all VMs
 
@@ -273,7 +280,9 @@ private:
 
 public:
   //these are public so that our timer callback can poke them.
+#ifdef NS_VIEWMANAGER_NEEDS_TIMER
   nsITimer          *mTimer;
+#endif
   nsRect            mDirtyRect;
   nsIView           *mRootView;
   PRUint32          mFrameRate;
