@@ -165,86 +165,109 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
   }
 
-  PRBool keyProcessed;
   // we should check a flag here to see if we should be using built-in key bindings
   // mEditor->GetFlags(&flags);
   // if (flags & ...)
-  ProcessShortCutKeys(aKeyEvent, keyProcessed);
-  if (PR_FALSE==keyProcessed)
+
+  PRUint32 keyCode;
+  PRUint32 flags;
+  keyEvent->GetKeyCode(&keyCode);
+
+  // if we are readonly or disabled, then do nothing.
+  if (NS_SUCCEEDED(mEditor->GetFlags(&flags)))
   {
-    PRUint32     keyCode;
-    PRUint32 flags;
-    keyEvent->GetKeyCode(&keyCode);
+    if (flags & nsIHTMLEditor::eEditorReadonlyMask || 
+        flags & nsIHTMLEditor::eEditorDisabledMask) 
+      return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;  // Editor unable to handle this.
 
-    // if we are readonly or disabled, then do nothing.
-    if (NS_SUCCEEDED(mEditor->GetFlags(&flags)))
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
+
+  // if there is no charCode, then it's a key that doesn't map to a character,
+  // so look for special keys using keyCode
+  if (0 != keyCode)
+  {
+    PRBool isAnyModifierKey;
+    nsresult rv;
+    rv = keyEvent->GetAltKey(&isAnyModifierKey);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (!isAnyModifierKey)
     {
-      if (flags & nsIHTMLEditor::eEditorReadonlyMask || 
-          flags & nsIHTMLEditor::eEditorDisabledMask) 
-        return NS_OK;
-    }
-    else
-      return NS_ERROR_FAILURE;  // Editor unable to handle this.
-
-
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-    if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
-
-    // if there is no charCode, then it's a key that doesn't map to a character,
-    // so look for special keys using keyCode
-    if (0 != keyCode)
-    {
-      switch (keyCode)
+      rv = keyEvent->GetMetaKey(&isAnyModifierKey);
+      if (NS_FAILED(rv)) return rv;
+      
+      if (!isAnyModifierKey)
       {
-        // we should be handling DOM_VK_META here too but it doesn't exist at the moment
-        case nsIDOMKeyEvent::DOM_VK_SHIFT:
-        case nsIDOMKeyEvent::DOM_VK_CONTROL:
-        case nsIDOMKeyEvent::DOM_VK_ALT:
-          aKeyEvent->PreventDefault(); // consumed
-          return NS_OK;
-          break;
-
-        case nsIDOMKeyEvent::DOM_VK_BACK_SPACE: 
-          mEditor->DeleteSelection(nsIEditor::ePrevious);
-          ScrollSelectionIntoView(mEditor);
-          aKeyEvent->PreventDefault(); // consumed
-          return NS_OK;
-          break;
-   
-        case nsIDOMKeyEvent::DOM_VK_DELETE:
-          mEditor->DeleteSelection(nsIEditor::eNext);
-          ScrollSelectionIntoView(mEditor);
-          aKeyEvent->PreventDefault(); // consumed
-          return NS_OK; 
-          break;
-   
-        case nsIDOMKeyEvent::DOM_VK_TAB:
-          if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
-            return NS_OK; // let it be used for focus switching
-
-          // else we insert the tab straight through
-          htmlEditor->EditorKeyPress(keyEvent);
-          ScrollSelectionIntoView(mEditor);
-          aKeyEvent->PreventDefault(); // consumed
-          return NS_OK; 
-
-        case nsIDOMKeyEvent::DOM_VK_RETURN:
-        case nsIDOMKeyEvent::DOM_VK_ENTER:
-          if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
-          {
-            //htmlEditor->InsertBreak();
-            htmlEditor->EditorKeyPress(keyEvent);
-            ScrollSelectionIntoView(mEditor);
-            aKeyEvent->PreventDefault(); // consumed
-          }
-          return NS_OK;
+        rv = keyEvent->GetShiftKey(&isAnyModifierKey);
+        if (NS_FAILED(rv)) return rv;
+        
+        if (!isAnyModifierKey)
+        {
+          rv = keyEvent->GetCtrlKey(&isAnyModifierKey);
+          if (NS_FAILED(rv)) return rv;
+        }
       }
     }
 
-    if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
-      ScrollSelectionIntoView(mEditor);
+    switch (keyCode)
+    {
+      // we should be handling DOM_VK_META here too but it doesn't exist at the moment
+      case nsIDOMKeyEvent::DOM_VK_SHIFT:
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK;
+        break;
+
+      case nsIDOMKeyEvent::DOM_VK_BACK_SPACE: 
+        if (isAnyModifierKey)
+          return NS_OK;
+
+        mEditor->DeleteSelection(nsIEditor::ePrevious);
+        ScrollSelectionIntoView(mEditor);
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK;
+        break;
+ 
+      case nsIDOMKeyEvent::DOM_VK_DELETE:
+        if (isAnyModifierKey)
+          return NS_OK;
+
+        mEditor->DeleteSelection(nsIEditor::eNext);
+        ScrollSelectionIntoView(mEditor);
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK; 
+        break;
+ 
+      case nsIDOMKeyEvent::DOM_VK_TAB:
+        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
+          return NS_OK; // let it be used for focus switching
+
+        // else we insert the tab straight through
+        htmlEditor->EditorKeyPress(keyEvent);
+        ScrollSelectionIntoView(mEditor);
+        aKeyEvent->PreventDefault(); // consumed
+        return NS_OK; 
+
+      case nsIDOMKeyEvent::DOM_VK_RETURN:
+      case nsIDOMKeyEvent::DOM_VK_ENTER:
+        if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
+        {
+          //htmlEditor->InsertBreak();
+          htmlEditor->EditorKeyPress(keyEvent);
+          ScrollSelectionIntoView(mEditor);
+          aKeyEvent->PreventDefault(); // consumed
+        }
+        return NS_OK;
+    }
   }
-  else
+
+  if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
     ScrollSelectionIntoView(mEditor);
 
   return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
@@ -255,88 +278,6 @@ nsresult
 nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
 {
   aProcessed=PR_FALSE;
-
-#ifdef USE_OLD_OBSOLETE_HARDWIRED_SHORTCUT_KEYS
-  PRUint32 charCode;
-
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
-  keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) {
-    //non-key event passed in.  bad things.
-    return NS_OK;
-  }
-
-  if (NS_SUCCEEDED(keyEvent->GetCharCode(&charCode)))
-  {
-    // Figure out the modifier key, different on every platform
-    PRBool isOnlyPlatformModifierKey = PR_FALSE;
-    PRBool isCtrlKey, isAltKey, isMetaKey, isShiftKey;
-    if (NS_SUCCEEDED(keyEvent->GetAltKey(&isAltKey)) &&
-        NS_SUCCEEDED(keyEvent->GetMetaKey(&isMetaKey)) &&
-        NS_SUCCEEDED(keyEvent->GetShiftKey(&isShiftKey)) &&
-        NS_SUCCEEDED(keyEvent->GetCtrlKey(&isCtrlKey)) )
-    {
-#if defined(XP_MAC)
-      isOnlyPlatformModifierKey = (isMetaKey &&
-                                   !isShiftKey && !isCtrlKey && !isAltKey);
-#elif defined(XP_UNIX)
-      isOnlyPlatformModifierKey = (isAltKey &&
-                                   !isShiftKey && !isCtrlKey && !isMetaKey);
-#else /* Windows and default */
-      isOnlyPlatformModifierKey = (isCtrlKey &&
-                                   !isShiftKey && !isAltKey && !isMetaKey);
-#endif
-    }
-
-    if (PR_TRUE == isOnlyPlatformModifierKey)
-    {
-      // swallow all keys with only the platform modifier
-      // even if we don't process them
-      aProcessed = PR_TRUE;
-
-      // A minimal set of fallback mappings in case
-      // XUL keybindings are unavailable:
-      switch (charCode)
-      {
-        // XXX: hard-coded select all
-        case (PRUint32)('a'):
-          if (mEditor)
-            mEditor->SelectAll();
-          break;
-
-        // XXX: hard-coded cut
-        case (PRUint32)('x'):
-          if (mEditor)
-            mEditor->Cut();
-          break;
-
-        // XXX: hard-coded copy
-        case (PRUint32)('c'):
-          if (mEditor)
-            mEditor->Copy();
-          break;
-
-        // XXX: hard-coded paste
-        case (PRUint32)('v'):
-          if (mEditor)
-            mEditor->Paste(nsIClipboard::kGlobalClipboard);
-          break;
-
-        // XXX: hard-coded undo
-        case (PRUint32)('z'):
-          if (mEditor)
-            mEditor->Undo(1);
-          break;
-
-        // XXX: hard-coded redo
-        case (PRUint32)('y'):
-          if (mEditor)
-            mEditor->Redo(1);
-          break;
-      }
-    }
-  }
-#endif
   return NS_OK;
 }
 
@@ -411,62 +352,6 @@ nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-
-
-// XXX: evil global functions, move them to proper support module
-
-nsresult
-IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aOutIsInSel)
-{
-   aOutIsInSel = PR_FALSE;   // init out-param
-   if (!aInNode || !aInSelection) { return NS_ERROR_NULL_POINTER; }
-
-  nsCOMPtr<nsIContentIterator>iter;
-  nsresult result = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
-                                                       NS_GET_IID(nsIContentIterator), 
-                                                       getter_AddRefs(iter));
-   if (NS_FAILED(result)) { return result; }
-   if (!iter) { return NS_ERROR_OUT_OF_MEMORY; }
-
-   nsCOMPtr<nsIEnumerator> enumerator;
-  result = aInSelection->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(result)) { return result; }
-   if (!enumerator) { return NS_ERROR_OUT_OF_MEMORY; }
-
-  for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-  {
-    nsCOMPtr<nsISupports> currentItem;
-    result = enumerator->CurrentItem(getter_AddRefs(currentItem));
-    if ((NS_SUCCEEDED(result)) && (currentItem))
-    {
-      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-
-         iter->Init(range);
-         nsCOMPtr<nsIContent> currentContent;
-         iter->CurrentNode(getter_AddRefs(currentContent));
-         while (NS_ENUMERATOR_FALSE == iter->IsDone())
-         {
-            nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
-            if (currentNode.get()==aInNode)
-            {
-               // if it's a start or end node, need to test whether the (x,y) 
-               // of the event falls within the selection
-
-               // talk to Mike
-
-               aOutIsInSel = PR_TRUE;
-               return NS_OK;
-            }
-            /* do not check result here, and especially do not return the result code.
-             * we rely on iter->IsDone to tell us when the iteration is complete
-             */
-            iter->Next();
-            iter->CurrentNode(getter_AddRefs(currentContent));
-         }
-      }
-   }
-   return NS_OK;
-}
 
 
 nsresult
