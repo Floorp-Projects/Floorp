@@ -527,7 +527,7 @@ function Shutdown()
 	{
 		targetURI = targetURI.substring(targetURIIndex + 14);
 	}
-	service += "&AlisTargetURI=" + targetURI;
+	service += "&AlisTargetURI=" + escape(targetURI);
 
 	//window.content.location.href = service;
 	if (appCore)
