@@ -39,51 +39,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_UTIL_H__
-#define __MAI_UTIL_H__
+#ifndef __GCONF_INTERFACE_H__
+#define __GCONF_INTERFACE_H__
 
-#include <atk/atk.h>
-#include "nsAccessibilityInterface.h"
+#include "prlink.h"
 
-#define MAI_TYPE_UTIL              (mai_util_get_type ())
-#define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtil))
-#define MAI_UTIL_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
-#define MAI_IS_UTIL(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                    MAI_TYPE_UTIL))
-#define MAI_IS_UTIL_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), \
-                                    MAI_TYPE_UTIL))
-#define MAI_UTIL_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                                    MAI_TYPE_UTIL, MaiUtilClass))
-
-typedef struct _MaiUtil                  MaiUtil;
-typedef struct _MaiUtilClass             MaiUtilClass;
-
-class MaiAppRoot;
-class MaiCache;
-  
-struct _MaiUtil
+class nsGConfInterface
 {
-    AtkUtil parent;
-    GList *listener_list;
+public:
+    nsGConfInterface() {}
+    ~nsGConfInterface() {}
+
+    inline static PRBool IsInitialized(void) { return mInitialized; }
+    static PRBool GetBool(const char *aKey);
+
+private:
+    static PRBool Init();
+
+private:
+    static void *mGConfClient;
+    static PRLibrary *mGConfLib;
+    static PRBool mInitialized;
 };
 
-GType mai_util_get_type (void);
-
-struct _MaiUtilClass
-{
-    AtkUtilClass parent_class;
-};
-
-#define MAI_VERSION "0.0.6"
-#define MAI_NAME "MAI-Mozilla Atk Interface"
-
-MaiAppRoot *mai_get_root(void);
-MaiCache *mai_get_cache(void);
-
-G_BEGIN_DECLS
-gboolean mai_init(MaiHook **);
-G_END_DECLS
-
-#endif /* __MAI_UTIL_H__ */
+#endif /* __GCONF_INTERFACE_H__ */

@@ -64,6 +64,10 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityInterface.h"
+#endif
+
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
@@ -183,11 +187,6 @@ static void IMSetTextRange            (const PRInt32 aLen,
 
 // If after selecting profile window, the startup fail, please refer to
 // http://bugzilla.gnome.org/show_bug.cgi?id=88940
-#endif
-
-
-#ifdef ACCESSIBILITY
-MaiHook *gMaiHook = NULL;
 #endif
 
 #define kWindowPositionSlop 20
@@ -432,11 +431,9 @@ nsWindow::Destroy(void)
 
     OnDestroy();
 
-
-
 #ifdef ACCESSIBILITY
-    if (gMaiHook && mTopLevelAccessible && gMaiHook->RemoveTopLevelAccessible)
-        (gMaiHook->RemoveTopLevelAccessible)(mTopLevelAccessible);
+    if (mTopLevelAccessible)
+        nsAccessibilityInterface::RemoveTopLevel(mTopLevelAccessible);
 #endif
 
     return NS_OK;
@@ -3318,16 +3315,15 @@ get_inner_gdk_window (GdkWindow *aWindow,
 void
 nsWindow::CreateTopLevelAccessible()
 {
-    if (!gMaiHook || !(gMaiHook->AddTopLevelAccessible))
-        return;
-    if (mIsTopLevel && !mTopLevelAccessible) {
-        nsCOMPtr<nsIAccessible> acc;
+    if (mIsTopLevel && !mTopLevelAccessible &&
+        nsAccessibilityInterface::IsInitialized()) {
 
+        nsCOMPtr<nsIAccessible> acc;
         DispatchAccessibleEvent(getter_AddRefs(acc));
 
         if (acc) {
             mTopLevelAccessible = acc;
-            (gMaiHook->AddTopLevelAccessible)(acc);
+            nsAccessibilityInterface::AddTopLevel(acc);
         }
     }
 }
@@ -3360,7 +3356,7 @@ nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
     return result;
 }
 
-#endif
+#endif /* #ifdef ACCESSIBILITY */
 
 // nsChildWindow class
 

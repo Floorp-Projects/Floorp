@@ -47,6 +47,10 @@
 
 #include <gtk/gtkmain.h>
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityInterface.h"
+#endif
+
 static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
@@ -102,6 +106,10 @@ nsAppShell::Create(int *argc, char **argv)
     // XXX add all of the command line handling
 
     gtk_init(argc, &argv);
+
+#ifdef ACCESSIBILITY
+    nsAccessibilityInterface::Init();
+#endif
 
     if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
         gdk_window_set_debug_updates(TRUE);

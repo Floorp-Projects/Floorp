@@ -41,7 +41,6 @@
 
 #include <stdlib.h>
 
-#include "nsMaiHook.h"
 #include "nsMaiUtil.h"
 #include "nsMaiAppRoot.h"
 
@@ -285,24 +284,26 @@ add_listener (GSignalEmissionHook listener,
 }
 
 gboolean
-mai_init(void)
+mai_init(MaiHook **aMaiHook)
 {
-    if (mai_initialized) {
-        return TRUE;
-    }
-    mai_initialized = TRUE;
-
     //no MAI_LOG should come before this
     if (!gMaiLog) {
         gMaiLog = PR_NewLogModule("Mai");
         PR_ASSERT(gMaiLog);
     }
 
-    MAI_LOG_DEBUG(("Mozilla Atk Implementation initialized\n"));
+    if (mai_initialized) {
+        MAI_LOG_DEBUG(("MAI has been initialized\n"));
+        return TRUE;
+    }
+    mai_initialized = TRUE;
+
+    *aMaiHook = &sMaiHook;
+
+    MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
     g_type_init();
     /* Initialize the MAI Utility class */
     g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
-
 
     return TRUE;
 }
@@ -314,17 +315,15 @@ mai_shutdown(void)
         return TRUE;
     }
     mai_initialized = FALSE;
-    MAI_LOG_DEBUG(("Mozilla Atk Implementation shutdown\n"));
-    gMaiHook = NULL;
+    MAI_LOG_DEBUG(("Mozilla Atk Implementation shuting down\n"));
+
+    sMaiHook.MaiShutdown = NULL;
+    sMaiHook.MaiStartup = NULL;
+    sMaiHook.AddTopLevelAccessible = NULL;
+    sMaiHook.RemoveTopLevelAccessible = NULL;
+
     mai_delete_root();
     return TRUE;
-}
-
-int
-gtk_module_init(gint *argc, char **argv[])
-{
-    mai_init();
-    return 0;
 }
 
 /* supporting funcs */
@@ -346,7 +345,6 @@ mai_create_root(void)
          * "remove toplevel", which are used by Mozilla through the MAI hook.
          */
 
-        gMaiHook = &sMaiHook;
         sMaiHook.MaiShutdown = mai_shutdown;
         sMaiHook.MaiStartup = mai_init;
         sMaiHook.AddTopLevelAccessible = mai_add_toplevel_accessible;
