@@ -617,6 +617,8 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	nsresult	err = NS_OK;
     nsCOMPtr<nsIMsgDatabase> aDb(do_QueryInterface(this, &err));
 
+	// make sure someone has a reference so object won't get deleted out from under us.
+	AddRef();	
 	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first and close the store.
 	RemoveFromCache(this);
@@ -627,6 +629,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 		m_mdbStore->CloseMdbObject(m_mdbEnv);
 		m_mdbStore = nsnull;
 	}
+	Release();
 	return err;
 }
 
@@ -1787,8 +1790,11 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
 	allMsgHdrsTableOID.mOid_Id = key;	// presumes 0 is valid key value
 
-	err  = GetStore()->NewRowWithOid(GetEnv(),
+	if (m_mdbStore)
+		err  = m_mdbStore->NewRowWithOid(GetEnv(),
                                      &allMsgHdrsTableOID, &hdrRow);
+	else
+		err = NS_ERROR_NULL_POINTER;
 	if (NS_FAILED(err)) 
 		return err;
     err = CreateMsgHdr(hdrRow, key, pnewHdr);
