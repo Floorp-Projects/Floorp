@@ -55,7 +55,7 @@ HTML_PASSEDMSG=Passed
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
 TMPFILES="$TMPFILES $RSH_FILE $WARNINGLIST"
-RSH_WAIT_TIME=30 #maximum time allowed for the 2 rsh to finish...
+RSH_WAIT_TIME=40 #maximum time allowed for the 2 rsh to finish...
 TOTAL_TESTS=106
 
 Debug "NTDIST $NTDIST"
@@ -254,7 +254,7 @@ setQAsysvars()
 {
     if [ "$MACHINE" != "0" ]
     then
-        TESTDATE=`ls -ld $MACHINE | awk '{ print $5, $6, $7 }'`
+        TESTDATE=`ls -ld $MACHINE | awk '{ print $6, $7, $8 }'`
         TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
         SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
         Debug "SYSNAME= $SYSNAME"
@@ -314,9 +314,17 @@ html_line()
   echo '<tr NOSAVE>'
   echo '<td NOSAVE>'$BUILD_SYS'</td>'
   echo ''
-  echo '<td NOSAVE>'$QA_SYS_OS'</td>'
+  if [ "$QA_SYS_OS" != "0" ] ; then
+      echo '<td NOSAVE>'$QA_SYS_OS'</td>'
+  else
+      echo '<td></td>'
+  fi
   echo ''
-  echo '<td>'$SYSNAME'</td>'
+  if [ "$SYSNAME" != "0" ] ; then
+      echo '<td>'$SYSNAME'</td>'
+  else
+      echo '<td></td>'
+  fi
   #echo '<td>'$SYSNAME $TESTNUMBER $TESTDATE'</td>'
   echo ''
   # hopefully we never run more different tests on a tinderbox build...
@@ -489,6 +497,8 @@ missing_platforms()
 {
     QA_MISSING="QA report missing"
     MACHINE="0"
+    SYSNAME="0"
+    QA_SYS_OS="0"
 
     for BUILDPLATFORM in `cat $TESTSCRIPTDIR/platformlist`
     do
@@ -507,18 +517,19 @@ incomplete_results ()
     
     for w in `ls ${MACHINES_TO_CHECK}*/results.html`
     do
-        grep bgcolor=red $w || {
+      grep bgcolor=red $w || {
         PASSED_LINES=""
         PASSED_LINES=`grep bgcolor=lightGreen $w | wc -l`
         if [ -n "$PASSED_LINES" -a "$PASSED_LINES" -lt "$TOTAL_TESTS" ] ; then
             BUILDPLATFORM=`grep Platform $w | sed -e 's/<H4>Platform:/    /'                   -e 's/<BR>//'` 
-            MACHINE=`echo $w | sed -e "s/\.[0-9]*.results.html//"`
+            MACHINE=`echo $w | sed -e "s/.results.html//"`
+            #MACHINE=`echo $w | sed -e "s/\.[0-9]*.results.html//"`
             setQAsysvars
             html_line incomplete >>$TMP_HTML_FILE
         elif [ "$PASSED_LINES" -gt "$TOTAL_TESTS" ] ; then
             echo "WARNING - more tests than expected on $w ($PASSED_LINES)" >>$WARNINGLIST
 	fi
-        }
+      }
     done
 }
 
@@ -567,7 +578,7 @@ rsaperf()
             -e 's/_/ /'`
         TESTNUMBER=`echo $MACHINE | sed -e 's/[^\.]*\.//' -e 's/\/.*//'`
         MACHINE=`echo $MACHINE | sed -e 's/\..*//'`
-        TESTDATE=`ls -ld ${MACHINE}.${TESTNUMBER} | awk '{ print $5, $6, $7 }'`
+        TESTDATE=`ls -ld ${MACHINE}.${TESTNUMBER} | awk '{ print $6, $7, $8 }'`
         echo '<tr>'
         echo '<td>'$BUILD_SYS'</td>'
         echo ''
