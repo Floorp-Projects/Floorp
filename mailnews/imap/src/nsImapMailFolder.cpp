@@ -3068,18 +3068,18 @@ nsresult nsImapMailFolder::GetOwnersOnlineFolderName(char **retName)
         const char *relativeFolder = where + strlen(user) + 1;
         if (!relativeFolder)	// root of this user's personal namespace
         {
-          *retName = strdup("");
+          *retName = PL_strdup("");
           return NS_OK;
         }
         else
         {
-          *retName = strdup(relativeFolder);
+          *retName = PL_strdup(relativeFolder);
           return NS_OK;
         }
       }
     }
 
-    *retName = strdup(onlineName.get());
+    *retName = PL_strdup(onlineName.get());
     return NS_OK;
   }
   else if (!(mFlags & MSG_FOLDER_FLAG_IMAP_PUBLIC))
@@ -3089,7 +3089,7 @@ nsresult nsImapMailFolder::GetOwnersOnlineFolderName(char **retName)
     
   }
   else
-    *retName = strdup(onlineName.get());
+    *retName = PL_strdup(onlineName.get());
   return NS_OK;
 }
 
@@ -4871,11 +4871,11 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
   char *ourUserName = nsnull;
   
   if (!userName)
-    ourUserName = strdup(myUserName.get());
+    ourUserName = PL_strdup(myUserName.get());
   else
-    ourUserName = strdup(userName);
+    ourUserName = PL_strdup(userName);
   
-  char *rightsWeOwn = strdup(rights);
+  char *rightsWeOwn = PL_strdup(rights);
   nsCStringKey hashKey(ourUserName);
   if (rightsWeOwn && ourUserName)
   {

@@ -415,7 +415,7 @@ char *nsIMAPNamespaceList::AllocateCanonicalFolderName(const char *onlineFolderN
   if (delimiter)
     canonicalPath = nsImapUrl::ReplaceCharsInCopiedString(onlineFolderName, delimiter , '/');
   else
-    canonicalPath = strdup(onlineFolderName);
+    canonicalPath = PL_strdup(onlineFolderName);
   
   // eat any escape characters for escaped dir separators
   if (canonicalPath)
@@ -452,7 +452,7 @@ char* nsIMAPNamespaceList::GetFolderNameWithoutNamespace(nsIMAPNamespace *namesp
   char *retFolderName = nsnull;
   
   if (!PL_strcasecmp(canonicalFolderName, "INBOX"))
-    return strdup(canonicalFolderName);
+    return PL_strdup(canonicalFolderName);
   
   // convert the canonical path to the online path
   char *convertedFolderName = nsIMAPNamespaceList::AllocateServerFolderName(canonicalFolderName, namespaceForFolder->GetDelimiter());
@@ -546,7 +546,7 @@ char *nsIMAPNamespaceList::GetFolderOwnerNameFromPath(nsIMAPNamespace *namespace
       {
         *nextDelimiter = 0;
       }
-      rv = strdup(owner);
+      rv = PL_strdup(owner);
     }
     PR_Free(convertedFolderName);
   }
