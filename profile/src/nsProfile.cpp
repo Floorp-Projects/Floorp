@@ -122,6 +122,8 @@
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 #define PREF_AUTOMIGRATION             "profile.allow_automigration"
 #define PREF_MIGRATE_ALL               "profile.migrate_all"
+#define PREF_MIGRATION_BEHAVIOR        "profile.migration_behavior"
+#define PREF_MIGRATION_DIRECTORY       "profile.migration_directory"
 
 #if defined (XP_MAC)
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_WINDOW_BORDERS | nsIWebBrowserChrome::CHROME_WINDOW_CLOSE | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
@@ -2233,14 +2235,59 @@ nsProfile::MigrateProfile(const PRUnichar* profileName)
 
     nsCOMPtr<nsIFile> oldProfDir;    
     nsCOMPtr<nsIFile> newProfDir;
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    nsXPIDLCString profMigDir;
  
     rv = GetProfileDir(profileName, getter_AddRefs(oldProfDir));
     if (NS_FAILED(rv)) 
       return rv;
    
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfDir));
-    if (NS_FAILED(rv)) 
-      return rv;
+    // Check PREF_MIGRATION_BEHAVIOR for how to set profiles root
+    // 0 - use NS_APP_USER_PROFILES_ROOT_DIR
+    // 1 - create one based on the NS4.x profile root
+    // 2 - use if not empty PREF_MIGRATION_DIRECTORY
+    PRInt32 profRootBehavior = 0;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      if (NS_SUCCEEDED(rv))
+        (void) prefBranch->GetIntPref(PREF_MIGRATION_BEHAVIOR, &profRootBehavior);
+    }
+
+    switch (profRootBehavior) {
+
+      case 1:
+        rv = oldProfDir->Clone(getter_AddRefs(newProfDir));
+        if (NS_FAILED(rv)) 
+          return rv;
+        rv = newProfDir->SetNativeLeafName(NS_LITERAL_CSTRING("Profiles"));
+        if (NS_FAILED(rv)) 
+          return rv;
+        break;
+
+      case 2:
+        rv = prefBranch->GetCharPref(PREF_MIGRATION_DIRECTORY, getter_Copies(profMigDir));
+        if (NS_SUCCEEDED(rv) && !profMigDir.IsEmpty()) {
+          nsCOMPtr<nsILocalFile> localFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = localFile->InitWithNativePath(nsDependentCString(profMigDir));
+          if (NS_SUCCEEDED(rv)) {
+            newProfDir = do_QueryInterface(localFile, &rv);
+            if (NS_FAILED(rv)) 
+              return rv;
+          }
+        }
+        break;
+
+      default:
+        break;
+
+    }
+    if (!newProfDir) {
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfDir));
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
 
     rv = newProfDir->Append(nsDependentString(profileName));
     if (NS_FAILED(rv)) 

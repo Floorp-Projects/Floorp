@@ -756,6 +756,12 @@ pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
+// profile.migration_behavior determines how the profiles root is set
+// 0 - use NS_APP_USER_PROFILES_ROOT_DIR
+// 1 - create one based on the NS4.x profile root
+// 2 - use, if not empty, profile.migration_directory otherwise same as 0
+pref("profile.migration_behavior",0);
+pref("profile.migration_directory", "");
 
 // the amount of time (in seconds) that must elapse
 // before we think your mozilla profile is defunct
