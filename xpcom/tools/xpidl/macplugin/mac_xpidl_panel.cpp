@@ -444,6 +444,9 @@ static void TermDialog(PanelParameterBlock *pb)
 
 static void PutData(PanelParameterBlock *pb, Handle options)
 {
+	// make sure the options are the right size.
+	UpdatePref(options);
+	
 	XPIDLSettings prefsData = **(XPIDLSettingsHandle) options;
 
 	CWPanlSetItemValue(pb, kXPIDLModeItem, prefsData.mode);
@@ -461,7 +464,7 @@ static void PutData(PanelParameterBlock *pb, Handle options)
 
 static short GetData(PanelParameterBlock *pb, Handle options, Boolean noisy)
 {
-	XPIDLSettings	prefsData	= ** (XPIDLSettingsHandle) options;
+	XPIDLSettings prefsData	= **(XPIDLSettingsHandle) options;
 	long mode, warnings, verbose;
 	
 	CWPanlGetItemValue(pb, kXPIDLModeItem, &mode);
@@ -714,9 +717,11 @@ static void ObeyCommand(PanelParameterBlock *pb)
 static void Validate(Handle original, Handle current, Boolean *recompile, Boolean *relink, Boolean *reset)
 {
 #pragma unused(original, current)
+	XPIDLSettings& origSettings = **(XPIDLSettingsHandle) original;
+	XPIDLSettings& currentSettings = **(XPIDLSettingsHandle) current;
 	
-	*recompile	= false;
-	*relink		= false;
+	*recompile	= currentSettings.mode != origSettings.mode;
+	*relink		= *recompile && (currentSettings.mode == kXPIDLModeTypelib);
 	*reset		= false;
 }
 
@@ -724,7 +729,6 @@ static void Validate(Handle original, Handle current, Boolean *recompile, Boolea
  *	GetPref		-	get a specified Preference setting for an AppleEvent request
  *
  */
-
 static short GetPref(AEKeyword keyword, AEDesc *prefsDesc, Handle settings)
 {
 	XPIDLSettings	prefsData	= ** (XPIDLSettingsHandle) settings;
