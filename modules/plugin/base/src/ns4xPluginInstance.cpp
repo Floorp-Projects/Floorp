@@ -157,13 +157,8 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
       return NS_ERROR_FAILURE;
   }
 
-  // check to see if we have a call back and a
-  // XXX nasty hack for Shockwave Registration. 
-  //     we seem to crash doing URLNotify so just always exclude it.
-  //     See bug 85334.
-  const char macromediaurl[] = "http://pinger.macromedia.com";
-  if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
-      PL_strncasecmp(mNPStream.url, macromediaurl, sizeof(macromediaurl) - 1) != 0 )  {
+  // check to see if we have a callback
+  if (callbacks->urlnotify && mNotifyData) {
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
 
