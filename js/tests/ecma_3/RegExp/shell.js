@@ -29,7 +29,6 @@ var cnNoMatch = 'regexp FAILED to match anything!!!\n';
 var cnUnexpectedMatch = 'regexp MATCHED when we expected it to fail!!!\n';
 var cnSingleQuote = "'"; 
 var cnNewLine = '\n';
-var i = 0, j = 0;
 var actualmatch = '';
 var expectedmatch = '';
 
@@ -37,7 +36,7 @@ var expectedmatch = '';
 // Compares ouput from multiple applications of RegExp(pattern).exec(string)
 function testRegExp(patterns, strings, actualmatches, expectedmatches) 
 {  
-  for (i=0; i != patterns.length; i++)
+  for (var i=0; i != patterns.length; i++)
   {
     actualmatch=actualmatches[i];
     expectedmatch=expectedmatches[i];
@@ -47,7 +46,7 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
       if(expectedmatch)
       {
         // expectedmatch and actualmatch are arrays. Compare them element-by-element -
-        for (j=0; j !=actualmatch.length; j++)
+        for (var j=0; j !=actualmatch.length; j++)
         {
           reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
         }
