@@ -193,7 +193,7 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
     if (NS_SUCCEEDED(rv)) {
         // Pass the notification out to the consumer...
         if (m_pConsumer) {
-            rv = m_pConsumer->OnStartRequest(m_Channel, m_ResponseContext);
+            rv = m_pConsumer->OnStartRequest(channel, m_ResponseContext);
         } else {
             NS_ERROR("No Stream Listener...");
             rv = NS_ERROR_NULL_POINTER;
