@@ -1625,7 +1625,17 @@ static struct sigaction SIGABRT_oldact;
 static struct sigaction SIGSEGV_oldact;
 static struct sigaction SIGTERM_oldact;
 
+#ifdef HAVE_SIGINFO_T
+// There is no standard type definition for the type of sa_sigaction.
+extern "C" {
+typedef void (*my_sigaction_t)(int, siginfo_t*, void*);
+}
+
+void nsProfileLock::FatalSignalHandler(int signo, siginfo_t* info,
+                                       void* context)
+#else
 void nsProfileLock::FatalSignalHandler(int signo)
+#endif
 {
     // Remove any locks still held.
     RemovePidLockFiles();
@@ -1660,12 +1670,25 @@ void nsProfileLock::FatalSignalHandler(int signo)
         break;
     }
 
-    if (oldact &&
-        oldact->sa_handler &&
-        oldact->sa_handler != SIG_DFL &&
-        oldact->sa_handler != SIG_IGN)
-    {
-        oldact->sa_handler(signo);
+    if (oldact) {
+#ifdef HAVE_SIGINFO_T
+        if (oldact->sa_flags & SA_SIGINFO) {
+            if (oldact->sa_sigaction &&
+                oldact->sa_sigaction != (my_sigaction_t) SIG_DFL &&
+                oldact->sa_sigaction != (my_sigaction_t) SIG_IGN)
+            {
+                oldact->sa_sigaction(signo, info, context);
+            }
+        } else
+#endif
+        {
+            if (oldact->sa_handler &&
+                oldact->sa_handler != SIG_DFL &&
+                oldact->sa_handler != SIG_IGN)
+            {
+                oldact->sa_handler(signo);
+            }
+        }
     }
 
     // Backstop exit call, just in case.
@@ -1929,18 +1952,40 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
                 // Don't arm a handler if the signal is being ignored, e.g.,
                 // because mozilla is run via nohup.
                 struct sigaction act, oldact;
+#ifdef HAVE_SIGINFO_T
+                act.sa_sigaction = FatalSignalHandler;
+                act.sa_flags = SA_SIGINFO;
+#else
                 act.sa_handler = FatalSignalHandler;
                 act.sa_flags = 0;
+#endif
                 sigfillset(&act.sa_mask);
+
+#ifdef HAVE_SIGINFO_T
 
 #define CATCH_SIGNAL(signame)                                                 \
     PR_BEGIN_MACRO                                                            \
         if (sigaction(signame, NULL, &oldact) == 0 &&                         \
-            oldact.sa_handler != SIG_IGN)                                     \
+            ((oldact.sa_flags & SA_SIGINFO) ?                                 \
+               (oldact.sa_sigaction != (my_sigaction_t) SIG_IGN) :            \
+               (oldact.sa_handler != SIG_IGN)))                               \
         {                                                                     \
             sigaction(signame, &act, &signame##_oldact);                      \
         }                                                                     \
     PR_END_MACRO
+
+#else
+
+#define CATCH_SIGNAL(signame)                                                 \
+    PR_BEGIN_MACRO                                                            \
+        if (sigaction(signame, NULL, &oldact) == 0 &&                         \
+            (oldact.sa_handler != SIG_IGN))                                   \
+        {                                                                     \
+            sigaction(signame, &act, &signame##_oldact);                      \
+        }                                                                     \
+    PR_END_MACRO
+
+#endif
 
                 CATCH_SIGNAL(SIGHUP);
                 CATCH_SIGNAL(SIGINT);
