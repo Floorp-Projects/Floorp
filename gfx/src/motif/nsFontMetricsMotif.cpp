@@ -53,7 +53,7 @@ nsFontMetricsMotif :: ~nsFontMetricsMotif()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMotif, kIFontMetricsIID)
 
-NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
@@ -80,7 +80,8 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIDeviceContext* 
   mFont = new nsFont(aFont);
   mContext = aCX;
   mFontHandle = nsnull;
-
+  mLangGroup = aLangGroup;
+  
   firstFace.ToCString(wildstring, namelen);
 
   if (abs(dpi - 75) < abs(dpi - 100))
@@ -345,6 +346,17 @@ NS_IMETHODIMP nsFontMetricsMotif :: GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFontMetricsMotif :: GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
+  return NS_OK;
+}
 
 static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceContext* aDC,
                                    nsString& aFontFace)
