@@ -1283,7 +1283,6 @@ nsresult	ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFl
 nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
-	nsresult ReadBookmarks();
 	nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
 	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
@@ -3139,7 +3138,7 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 	return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks()
 {
 	nsresult rv;

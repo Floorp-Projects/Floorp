@@ -27,6 +27,7 @@
 [scriptable, uuid(a82e9300-e4af-11d2-8fdf-0008c70adc7b)]
 interface nsIBookmarksService : nsISupports
 {
+    void ReadBookmarks();
     void AddBookmark(in string aURI, in wstring aTitle);
     void UpdateBookmarkLastVisitedDate(in string aURL);
     string FindShortcut(in wstring aName);
