@@ -576,7 +576,19 @@ FIN
         my $bugtotal = 0;
         foreach $person (@people)
                 {
-                SendSQL ("select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"");
+                my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
+	        if( $::FORM{'product'} ne "-All-" ) {
+                    $query .= "and    bugs.product='$::FORM{'product'}'";
+                    }
+	        $query .= <<FIN;
+and 	 
+	( 
+	bugs.bug_status = 'NEW' or 
+	bugs.bug_status = 'ASSIGNED' or 
+	bugs.bug_status = 'REOPENED'
+	)
+FIN
+                SendSQL ($query);
 	        my $bugcount = FetchSQLData();
                 $bugsperperson{$person} = $bugcount;
                 $bugtotal += $bugcount;
