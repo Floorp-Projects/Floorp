@@ -590,8 +590,7 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
 
   PRBool ret;
   JSObject* obj;
-  PRUnichar* str = NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aID)));
-
+  jschar* str = JS_GetStringChars(JS_ValueToString(aContext, aID));
   size_t str_len = JS_GetStringLength(JS_ValueToString(aContext, aID));
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsresult rv = NS_OK;
@@ -615,8 +614,7 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
     if (htmlDoc) {
       nsCOMPtr<nsIDOMNodeList> list;
 
-      rv = htmlDoc->GetElementsByName(nsLiteralString(str, str_len),
-                                      getter_AddRefs(list));
+      rv = htmlDoc->GetElementsByName(nsLiteralString(NS_REINTERPRET_CAST(PRUnichar *, str), str_len), getter_AddRefs(list));
       if (NS_FAILED(rv)) {
         return PR_FALSE;
       }
