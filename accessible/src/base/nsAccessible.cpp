@@ -68,9 +68,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsGUIEvent.h"
 
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMXULButtonElement.h"
@@ -170,8 +168,19 @@ NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
   if (elt) {
     nsAutoString accesskey;
     elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
-    if (accesskey.IsEmpty())
-      return NS_OK;
+    if (accesskey.IsEmpty()) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(elt);
+      nsIContent *labelContent = 
+        content->IsContentOfType(nsIContent::eXUL) ? GetXULLabelContent(content) :
+                                                     GetHTMLLabelContent(content);
+
+      if (labelContent) {
+        labelContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey, accesskey);
+      }
+      if (accesskey.IsEmpty()) {
+        return NS_ERROR_FAILURE;
+      }
+    }
 
     if (gGeneralAccesskeyModifier == -1) {
       // Need to initialize cached global accesskey pref
@@ -913,7 +922,7 @@ NS_IMETHODIMP nsAccessible::TakeFocus()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent)
+nsresult nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent)
 {
   // Insert spaces to insure that words from controls aren't jammed together
   if (!textEquivalent.IsEmpty()) {
@@ -934,7 +943,7 @@ NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const
  * that node's decendants.
  */
 
-NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
+nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString)
 {
   nsAutoString textEquivalent;
   nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aContent));
@@ -1047,7 +1056,7 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 }
 
 
-NS_IMETHODIMP nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
+nsresult nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
 {
   nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString);
   if (NS_SUCCEEDED(rv) && !aFlatString->IsEmpty()) {
@@ -1084,57 +1093,96 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   return NS_OK;
 }
 
-/**
-  * Called for XUL work only
-  * Checks the label's value first then makes a call to get the 
-  *  text from the children if the value is not set.
-  */
-NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval)
+
+nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode)
 {
-  NS_ASSERTION(aLabelNode, "Label Node passed in is null");
-  nsCOMPtr<nsIDOMXULLabelElement> labelNode(do_QueryInterface(aLabelNode));
-  // label's value="foo" is set
-  if ( labelNode && NS_SUCCEEDED(labelNode->GetValue(_retval))) {
-    if (_retval.IsEmpty()) {
-      // label contains children who define it's text -- possibly HTML
-      nsCOMPtr<nsIContent> content(do_QueryInterface(labelNode));
-      if (content)
-        return AppendFlatStringFromSubtree(content, &_retval);
-    }
-    return NS_OK;
+  nsAutoString controlID;
+  nsIContent *labelContent = GetLabelForId(aForNode, nsnull, &controlID);
+  if (labelContent) {
+    return labelContent;
   }
-  return NS_ERROR_FAILURE;
+
+  // If we're in anonymous content, determine whether we should use
+  // the binding parent based on where the id for this control is
+  aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+  if (controlID.IsEmpty()) {
+    // If no control ID and we're anonymous content
+    // get ID from parent that inserted us.
+    aForNode = aForNode->GetBindingParent();
+    if (aForNode) {
+      aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
+    }
+    if (controlID.IsEmpty()) {
+      return nsnull;
+    }
+  }
+  
+  // Look for child label of control
+  static const PRUint32 kAncestorLevelsToSearch = 3;
+  PRUint32 count = 0;
+  while (!labelContent && ++count <= kAncestorLevelsToSearch && 
+         (aForNode = aForNode->GetParent()) != nsnull) {
+    labelContent = GetLabelForId(aForNode, nsAccessibilityAtoms::control, &controlID);
+  }
+
+  return labelContent;
 }
 
-/**
-  * Called for HTML work only
-  */
-NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode,
-                                           const nsAString *aId,
-                                           nsAString *aLabel)
+nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
 {
-  nsCOMPtr<nsIDOMHTMLLabelElement> labelElement(do_QueryInterface(aLookNode));
-  if (labelElement) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aLookNode));
-    nsresult rv = NS_OK;
+  nsIContent *walkUpContent = aForNode;
 
-    if (elt) {
-      nsAutoString labelIsFor;
-      elt->GetAttribute(NS_LITERAL_STRING("for"),labelIsFor);
-      if (labelIsFor.Equals(*aId))
-        rv = AppendFlatStringFromSubtree(aLookNode, aLabel);
+  // go up tree get name of ancestor label if there is one. Don't go up farther than form element
+  while ((walkUpContent = walkUpContent->GetParent()) != nsnull) {
+    nsIAtom *tag = walkUpContent->Tag();
+    if (tag == nsAccessibilityAtoms::label) {
+      return walkUpContent;
     }
-    return rv;
+    if (tag == nsAccessibilityAtoms::form) {
+      // Reached top ancestor in form
+      // There can be a label targeted at this control using the 
+      // for="control_id" attribute. To save computing time, only 
+      // look for those inside of a form element
+      nsAutoString forId;
+      aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, forId);
+      // Actually we'll be walking down the content this time, with a depth first search
+      if (forId.IsEmpty()) {
+        break;
+      }
+      return GetLabelForId(walkUpContent, nsAccessibilityAtoms::_for, &forId); 
+    }
   }
 
-  PRUint32 numChildren = aLookNode->GetChildCount();
+  return nsnull;
+}
 
-  for (PRUint32 index = 0; index < numChildren; index++) { 
-    nsIContent *contentWalker = aLookNode->GetChildAt(index);
-    if (contentWalker)
-      AppendLabelFor(contentWalker, aId, aLabel);
+// Pass in forAttrib == nsnull if any <label> will do
+nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
+                                        nsIAtom *forAttrib,
+                                        const nsAString *aId)
+{
+  if (aLookContent->Tag() == nsAccessibilityAtoms::label) {
+    if (forAttrib) {
+      nsAutoString labelIsFor;
+      aLookContent->GetAttr(kNameSpaceID_None, forAttrib, labelIsFor);
+      if (labelIsFor.Equals(*aId)) {
+        return aLookContent;
+      }
+    }
+    return nsnull;
   }
-  return NS_OK;
+
+  // Recursively search descendents for labels
+  PRUint32 count  = 0;
+  nsIContent *child;
+
+  while ((child = aLookContent->GetChildAt(count++)) != nsnull) {
+    nsIContent *labelContent = GetLabelForId(child, forAttrib, aId);
+    if (labelContent) {
+      return labelContent;
+    }
+  }
+  return nsnull;
 }
 
 /**
@@ -1142,53 +1190,25 @@ NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode,
   *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
   *   labels with the for="controlID" property.
   */
-NS_IMETHODIMP nsAccessible::GetHTMLName(nsAString& _retval)
+nsresult nsAccessible::GetHTMLName(nsAString& aLabel)
 {
   if (!mWeakShell || !mDOMNode) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;   // Node shut down
   }
-  nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIDOMHTMLLabelElement> labelElement;
-  nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-  nsresult rv = NS_OK;
 
-  nsAutoString label;
-  // go up tree get name of ancestor label if there is one. Don't go up farther than form element
-  while (label.IsEmpty() && !formElement) {
-    labelElement = do_QueryInterface(walkUpContent);
-    if (labelElement) 
-      rv = AppendFlatStringFromSubtree(walkUpContent, &label);
-    formElement = do_QueryInterface(walkUpContent); // reached top ancestor in form
-    if (formElement) {
-      break;
+  nsIContent *labelContent;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if ((labelContent = GetHTMLLabelContent(content)) != nsnull) {
+    nsAutoString label;
+    AppendFlatStringFromSubtree(labelContent, &label);
+    label.CompressWhitespace();
+    if (!label.IsEmpty()) {
+      aLabel = label;
+      return NS_OK;
     }
-    nsCOMPtr<nsIContent> nextParent = walkUpContent->GetParent();
-    if (!nextParent) {
-      break;
-    }
-    walkUpContent = nextParent;
   }
-  
 
-  // There can be a label targeted at this control using the for="control_id" attribute
-  // To save computing time, only look for those inside of a form element
-  
-  if (walkUpContent) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-    nsAutoString forId;
-    elt->GetAttribute(NS_LITERAL_STRING("id"), forId);
-    // Actually we'll be walking down the content this time, with a depth first search
-    if (!forId.IsEmpty())
-      AppendLabelFor(walkUpContent,&forId,&label); 
-  } 
-  
-  label.CompressWhitespace();
-  if (label.IsEmpty())
-    return nsAccessible::GetName(_retval);
-
-  _retval.Assign(label);
-  
-  return NS_OK;
+  return nsAccessible::GetName(aLabel);
 }
 
 /**
@@ -1203,15 +1223,15 @@ NS_IMETHODIMP nsAccessible::GetHTMLName(nsAString& _retval)
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
+nsresult nsAccessible::GetXULName(nsAString& aLabel)
 {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "No nsIContent for DOM node");
+
   nsresult rv = NS_OK;
   nsAutoString label;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "No content for accessible DOM node!");
-
-  // CASE #1 -- great majority of the cases
+  // CASE #1 (via label attribute) -- great majority of the cases
   nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(mDOMNode));
   if (labeledEl) {
     rv = labeledEl->GetLabel(label);
@@ -1223,95 +1243,26 @@ NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
     }
   }
 
+  // CASES #2 and #3 ------ label as a child or <label control="id" ... > </label>
   if (NS_FAILED(rv) || label.IsEmpty() ) {
-    // CASE #2 ------ label as a child
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-    NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-    nsAutoString nameSpaceURI;
-    domElement->GetNamespaceURI(nameSpaceURI);
-    nsCOMPtr<nsIDOMNodeList>labelChildren;
-    if (NS_SUCCEEDED(rv = domElement->GetElementsByTagNameNS(nameSpaceURI,
-                                                             NS_LITERAL_STRING("label"),
-                                                             getter_AddRefs(labelChildren)))) {
-      PRUint32 length = 0;
-      if (NS_SUCCEEDED(rv = labelChildren->GetLength(&length)) && length > 0) {
-        for (PRUint32 i = 0; i < length; ++i) {
-          nsCOMPtr<nsIDOMNode> child;
-          if (NS_SUCCEEDED(rv = labelChildren->Item(i, getter_AddRefs(child) ))) {
-            rv = AppendLabelText(child, label);
-          }
-        }
-      }
+    nsIContent *labelContent = GetXULLabelContent(content);
+    nsCOMPtr<nsIDOMXULLabelElement> xulLabel(do_QueryInterface(labelContent));
+    // Check if label's value attribute is used
+    if (xulLabel && NS_SUCCEEDED(xulLabel->GetValue(label)) && label.IsEmpty()) {
+      // If no value attribute, a non-empty label must contain
+      // children that define it's text -- possibly using HTML
+      AppendFlatStringFromSubtree(labelContent, &label);
     }
-    
-    if (NS_FAILED(rv) || label.IsEmpty()) {
+  }
 
-      // CASE #3 ----- non-child label pointing to control
-      //  XXX jgaunt
-      //   decided to search the parent's children for labels linked to
-      //   this control via the control="controlID" syntax, instead of searching
-      //   the entire document with:
-      //
-      //      nsCOMPtr<nsIDocument> doc;
-      //      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-      //      doc = content->GetDocument();
-      //      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      //      if (xulDoc) {
-      //        nsCOMPtr<nsIDOMNodeList>labelList;
-      //        if (NS_SUCCEEDED(rv = xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
-      //
-      //   This should keep search times down and still get the relevant
-      //   labels.
-      nsAutoString controlID;
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-      nsIContent *labelSearchStart = nsnull;
-      if (controlID.IsEmpty()) {
-        // If no control ID and we're anonymous content
-        // get ID from parent that inserted us.
-        nsIContent *bindingParent = content->GetBindingParent();
-        if (bindingParent) {
-          bindingParent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-          if (!controlID.IsEmpty()) {
-            labelSearchStart = bindingParent->GetParent();
-          }
-        }
-      }
-      else {
-        // We have an id
-        labelSearchStart = content->GetParent();
-      }
-      static const PRUint32 kAncestorLevelsToSearch = 3;
-      for (PRUint32 level = 0; level < kAncestorLevelsToSearch; level ++) {
-        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(labelSearchStart));
-        if (!xulElement) {
-          break;
-        }
-        nsCOMPtr<nsIDOMNodeList> labelList;
-        xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, 
-                                           getter_AddRefs(labelList));
-        if (!labelList) {
-          break;
-        }
-        PRUint32 index = 0;
-        nsCOMPtr<nsIDOMNode> child;
-        while (NS_SUCCEEDED(labelList->Item(index++, getter_AddRefs(child))) && child) {
-          AppendLabelText(child, label);
-        }
-        if (!label.IsEmpty()) {
-          break;
-        }
-        labelSearchStart = labelSearchStart->GetParent();
-      }  // End of CASE #3
-    }  // END of CASE #2
-  }  // END of CASE #1
-
+  // XXX If CompressWhiteSpace worked on nsAString we could avoid a copy
   label.CompressWhitespace();
-  if (label.IsEmpty()) {
-    return GetNameFromSubtree(content, &_retval);
+  if (!label.IsEmpty()) {
+    aLabel = label;
+    return NS_OK;
   }
   
-  _retval.Assign(label);
-  return NS_OK;
+  return AppendFlatStringFromSubtree(content, &aLabel);
 }
 
 NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)

@@ -89,17 +89,17 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
-  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
-  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
-  NS_IMETHOD GetHTMLName(nsAString& _retval);
-  NS_IMETHOD GetXULName(nsAString& _retval);
-  NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
-  NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
+  static nsIContent *GetLabelForId(nsIContent *aLookContent, nsIAtom *forAttrib,
+                                const nsAString *aId);
+  static nsIContent *GetXULLabelContent(nsIContent *aForNode);
+  static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
+  nsresult GetHTMLName(nsAString& _retval);
+  nsresult GetXULName(nsAString& _retval);
   // For accessibles that are not lists of choices, the name of the subtree should be the 
   // sum of names in the subtree
-  NS_IMETHOD GetNameFromSubtree(nsIContent *aContent, nsAString *aFlatString)
-    { return AppendFlatStringFromSubtree(aContent, aFlatString); }
-  NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
+  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
+  nsresult AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
+  nsresult AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
 
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);

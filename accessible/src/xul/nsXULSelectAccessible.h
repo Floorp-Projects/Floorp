@@ -83,8 +83,8 @@ public:
 
 protected:
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
-  NS_IMETHOD GetNameFromSubtree(nsIContent *aContent, nsAString *aFlatString)
-    { return NS_ERROR_FAILURE; }
+  nsresult AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString)
+    { return NS_ERROR_FAILURE; }  // Overrides base impl in nsAccessible
 };
 
 /*
