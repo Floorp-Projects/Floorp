@@ -48,7 +48,6 @@ CPPSRCS = \
 	nsRegionPh.cpp						\
 	nsRenderingContextPh.cpp			\
 	clip.cpp							\
-	ostream_hack.cpp					\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
