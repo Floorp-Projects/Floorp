@@ -47,6 +47,8 @@
 #include "nsIPref.h"
 #include "nsISecurityPref.h"
 
+#include "nsIJSContextStack.h"
+
 /////////////////////
 // nsIPrincipalKey //
 /////////////////////
@@ -101,7 +103,8 @@ public:
     
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
-    
+
+    JSContext * GetCurrentContextQuick();
 private:
 
     NS_IMETHOD
@@ -172,6 +175,7 @@ private:
     PRBool mIsMailJavaScriptEnabled;
     PRBool mIsWritingPrefs;
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
+    nsCOMPtr<nsIJSContextStack> mThreadJSContextStack;
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
