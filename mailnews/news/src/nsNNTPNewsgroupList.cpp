@@ -30,9 +30,6 @@
 #ifdef HAVE_PANES
 class MSG_Master;
 #endif
-#ifdef HAVE_DBVIEW
-class MessageDBView;
-#endif
 
 // we have a HAVE_XPGETSTRING in this file which needs fixed once we have XP_GetString
 
@@ -59,11 +56,6 @@ class MessageDBView;
 #include "nsNewsDatabase.h"
 
 //#include "nsDBFolderInfo.h"
-
-#ifdef HAVE_DBVIEW
-#include "msgdbvw.h"
-#endif
-
 
 #ifdef HAVE_PANES
 #include "msgpane.h"
@@ -120,9 +112,6 @@ private:
   void			SetMaster(MSG_Master *master) {m_master = master;}
 #endif
   
-#ifdef HAVE_DBVIEW
-  void			SetView(MessageDBView *view);
-#endif
 #ifdef HAVE_PANES
   void			SetPane(MSG_Pane *pane) {m_pane = pane;}
 #endif
@@ -141,9 +130,6 @@ private:
 
 protected:
   nsIMsgDatabase	*m_newsDB;
-#ifdef HAVE_DBVIEW
-  MessageDBView	*m_msgDBView;		// open view on current download, if any
-#endif
 #ifdef HAVE_PANES
   MSG_Pane		*m_pane;
 #endif
@@ -194,9 +180,6 @@ void
 nsNNTPNewsgroupList::Init(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname)
 {
 	m_newsDB = nsnull;
-#ifdef HAVE_DBVIEW
-	m_msgDBView = NULL;
-#endif
 	m_groupName = PL_strdup(name);
 	m_host = NULL;
 	m_url = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,name);
@@ -230,11 +213,6 @@ nsNNTPNewsgroupList::CleanUp() {
 	PR_Free(m_url);
 	PR_Free(m_groupName);
     
-#ifdef HAVE_DBVIEW
-	if (m_msgDBView != NULL)
-		m_msgDBView->Remove(this);
-#endif
-
 	if (m_newsDB) {
 		m_newsDB->Commit(kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
@@ -248,26 +226,9 @@ nsNNTPNewsgroupList::CleanUp() {
     return NS_OK;
 }
 
-#ifdef HAVE_DBVIEW
-void nsNNTPNewsgroupList::SetView(MessageDBView *view) 
-{
-	m_msgDBView = view;
-	if (view)
-		view->Add(this);
-}
-#endif
-
 #ifdef HAVE_CHANGELISTENER
 void	nsNNTPNewsgroupList::OnAnnouncerGoingAway (ChangeAnnouncer *instigator)
 {
-#ifdef HAVE_DBVIEW
-	if (m_msgDBView != NULL)
-	{
-		m_msgDBView->Remove(this);
-		m_msgDBView->NotifyAnnouncerGoingAway(instigator);	// shout it to the world!
-		m_msgDBView = NULL;
-	}
-#endif
 }
 #endif
 
@@ -776,7 +737,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   
   rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
   if (NS_FAILED(rv)) {
-        return rv;           
+      return rv;           
   }
 
   NS_IF_RELEASE(newMsgHdr);
@@ -804,24 +765,6 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	}
 	else
 		return NS_ERROR_NOT_INITIALIZED;
-
-#ifdef HAVE_DBVIEW
-	if (m_msgDBView != NULL)
-	{
-        int result=
-            ConvertMsgErrToMKErr( m_msgDBView->AddHdrFromServerLine(line, &message_number));
-		if (result < 0)
-		{
-#ifdef HAVE_PANES
-			if (result == MK_DISK_FULL || result == MK_OUT_OF_MEMORY)
-				FE_Alert(m_pane->GetContext(), XP_GetString(result));
-#endif
-            if (status) *status=result;
-            return NS_ERROR_NOT_INITIALIZED;
-		}
-	}
-	else 
-#endif
 
 	PR_ASSERT(message_number > m_lastProcessedNumber ||
 			message_number == 1);
@@ -929,18 +872,11 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 		m_set->AddRange(m_lastProcessedNumber + 1, m_lastMsgNumber);
 	}
 
-#ifdef HAVE_DBVIEW
-	if (m_msgDBView != NULL)
-	{
-		// we should think about not doing this if status != MK_INTERRUPTED, but we'd need to still clean up the view.
-		m_msgDBView->AddNewMessages();
-		m_msgDBView->Remove(this);
-		m_msgDBView = NULL;
-	}
-#endif
-
 	if (m_newsDB)
 	{
+#ifdef DEBUG_sspitzer
+        printf("committing summary file changes\n");
+#endif
 		m_newsDB->Commit(kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
 		m_newsDB = nsnull;
