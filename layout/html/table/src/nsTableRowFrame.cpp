@@ -1417,6 +1417,10 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   case eReflowReason_Incremental:
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus);
     break;
+  default:
+    NS_ASSERTION(PR_FALSE , "we should handle this reflow reason");
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+    break;
   }
 
   // just set our width to what was available. The table will calculate the width and not use our value.
