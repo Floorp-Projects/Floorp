@@ -1506,11 +1506,16 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 }
 
 :-moz-line-frame {
+  
 }
 
 :-moz-letter-frame {
 }
 
+:-moz-singleline-textcontrol-frame {
+  overflow:hidden;
+	white-space:nowrap;
+}
 
 
 
