@@ -996,6 +996,8 @@ SSM_SetSMIMEExport(void)
 
 #ifdef XP_MAC
 #define LOADABLE_CERTS_MODULE "System:NSSckbiDebug.shlb"
+#else
+#define LOADABLE_CERTS_MODULE "nssckbi.dll"
 #endif
 
 SECStatus
@@ -1059,7 +1061,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 
     /* set default policy strings */
     CERT_SetCAPolicyStringCallback(SSM_GetCAPolicyString, ctrl);
-#if 0    
+
     /*
      * Load the PKCS#11 module that has the root CA's in it.
      */
@@ -1087,7 +1089,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 	    }
 	    SECMOD_AddNewModule(modName, LOADABLE_CERTS_MODULE, 0, 0);
 	}
-#endif	
+
 loser:
     PR_FREEIF(modName);
     if (slotList) {
