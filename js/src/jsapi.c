@@ -3287,7 +3287,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         fun = NULL;
         goto out;
     }
-    if (funAtom) {
+    if (obj && funAtom) {
         if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)funAtom,
                                  OBJECT_TO_JSVAL(fun->object),
                                  NULL, NULL, 0, NULL)) {
