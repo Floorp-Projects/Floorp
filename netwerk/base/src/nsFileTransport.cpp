@@ -49,6 +49,7 @@
 #include "nsReadableUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsNetUtil.h"
+#include "nsProxyRelease.h"
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
@@ -520,6 +521,10 @@ nsFileTransport::AsyncRead(nsIStreamListener *aListener,
     mTransferAmount = aTransferCount;
     mXferState = OPEN_FOR_READ;
 
+    nsIEventQueueService* eqService = mService->GetCachedEventQueueService(); 
+    eqService->GetSpecialEventQueue(nsIEventQueueService::CURRENT_THREAD_EVENT_QUEUE, getter_AddRefs(mEventQ));
+    NS_ASSERTION(mEventQ, "No Event Queue on calling thread");
+
     LOG(("nsFileTransport: AsyncRead [this=%x %s] mOffset=%d mTransferAmount=%d\n",
         this, mStreamName.get(), mOffset, mTransferAmount));
 
@@ -562,6 +567,10 @@ nsFileTransport::AsyncWrite(nsIStreamProvider *aProvider,
     mOffset = aTransferOffset;
     mTransferAmount = aTransferCount;
     mXferState = OPEN_FOR_WRITE;
+
+    nsIEventQueueService* eqService = mService->GetCachedEventQueueService(); 
+    eqService->GetSpecialEventQueue(nsIEventQueueService::CURRENT_THREAD_EVENT_QUEUE, getter_AddRefs(mEventQ));
+    NS_ASSERTION(mEventQ, "No Event Queue on calling thread");
 
     LOG(("nsFileTransport: AsyncWrite [this=%x %s] mOffset=%d mTransferAmount=%d\n",
         this, mStreamName.get(), mOffset, mTransferAmount));
@@ -823,27 +832,38 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         // is reusing the stream.
         mXferState = CLOSING;
         DoClose();
-        nsCOMPtr <nsISupports> saveContext = mContext;
-        nsCOMPtr <nsIStreamListener> saveListener = mListener;
-        mListener = nsnull;
-        mContext = nsnull;
 
         // close the data source
         NS_IF_RELEASE(mSourceWrapper);
         mSourceWrapper = nsnull;
 
         if (progressSink) {
-            progressSink->OnStatus(this, saveContext, 
-                                    NS_NET_STATUS_READ_FROM, 
-                                    NS_ConvertASCIItoUCS2(mStreamName).get());
+            progressSink->OnStatus(this, 
+                                   mContext, 
+                                   NS_NET_STATUS_READ_FROM, 
+                                   NS_ConvertASCIItoUCS2(mStreamName).get());
         }
 
-        if (saveListener) {
-            saveListener->OnStopRequest(this, saveContext, mStatus);
-            saveListener = 0;
+        if (mListener) {
+            mListener->OnStopRequest(this, mContext, mStatus);
+            mListener = 0;
         }
-        saveContext = 0;
 
+        // if we have a context, we have to ensure that it is released on the 
+        // proper thread.
+        if (mContext) {
+            if (mEventQ) {
+                // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
+                // for the reason behind this evil reference counting.
+                nsISupports* doomed = mContext.get();
+                NS_ADDREF(doomed);
+                mContext = 0;
+                NS_ProxyRelease(mEventQ, doomed);
+            }
+            else {
+                mContext = nsnull;
+            }
+        }
         break;
       }
 
@@ -1002,16 +1022,31 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         NS_IF_RELEASE(mSinkWrapper);
         mSinkWrapper = nsnull;
 
-        if (mProvider) {
-            mProvider->OnStopRequest(this, mContext, mStatus);
-            mProvider = 0;
-        }
         if (progressSink)
             progressSink->OnStatus(this, mContext,
                                    NS_NET_STATUS_WROTE_TO, 
                                    NS_ConvertASCIItoUCS2(mStreamName).get());
-        mContext = 0;
 
+        if (mProvider) {
+            mProvider->OnStopRequest(this, mContext, mStatus);
+            mProvider = 0;
+        }
+
+        // if we have a context, we have to ensure that it is released on the
+        // proper thread.
+        if (mContext) {
+            if (mEventQ) {
+                // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
+                // for the reason behind this evil reference counting.
+                nsISupports* doomed = mContext.get();
+                NS_ADDREF(doomed);
+                mContext = 0;
+                NS_ProxyRelease(mEventQ, doomed);
+            }
+            else {
+                mContext = nsnull;
+            }
+        }
         mXferState = CLOSING;
         break;
       }

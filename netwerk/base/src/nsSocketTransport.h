@@ -309,6 +309,8 @@ protected:
     nsSocketBOS                    *mBOS;  // weak reference
     nsSocketReadRequest            *mReadRequest;
     nsSocketWriteRequest           *mWriteRequest;
+
+    friend nsSocketRequest;
 };
 
 /**
@@ -453,6 +455,8 @@ protected:
     nsSocketTransport           *mTransport;
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsISupports>        mContext;
+    // Queue where release of context, listener, and/or provider should occur.
+    nsCOMPtr<nsIEventQueue>      mEventQ;  
     nsresult                     mStatus;
     PRIntn                       mSuspendCount;
     PRPackedBool                 mCanceled;

@@ -42,6 +42,7 @@
 #include "nsIThreadPool.h"
 #include "nsSupportsArray.h"
 #include "nsIMIMEService.h"
+#include "nsIEventQueueService.h"
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MIN  1
 #define NS_FILE_TRANSPORT_WORKER_COUNT_MAX  4//16
@@ -64,6 +65,7 @@ public:
     static nsFileTransportService *GetInstance() { return mInstance; }
 
     nsIMIMEService* GetCachedMimeService();
+    nsIEventQueueService* GetCachedEventQueueService();
 
     PRInt32   mConnectedTransports;
     PRInt32   mTotalTransports;
@@ -79,6 +81,7 @@ protected:
     nsCOMPtr<nsIThreadPool>         mPool;
     PRLock*                         mLock;
     nsCOMPtr<nsIMIMEService>        mMimeService;
+    nsCOMPtr<nsIEventQueueService>  mEventQService;
     static nsFileTransportService*  mInstance;
 };
 

@@ -211,6 +211,15 @@ nsSocketTransportService::Init(void)
       rv = NS_ERROR_UNEXPECTED;
     }
   }
+
+
+  if (NS_SUCCEEDED(rv) && !mEventQService) {
+    mEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    if (!mEventQService) {
+      rv = NS_ERROR_UNEXPECTED;
+    }
+  }
+
   return rv;
 }
 
@@ -791,22 +800,22 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 	nsresult res;
 	nsAutoString	resultString; resultString.AssignWithConversion(aName);
 
-    if (!m_stringBundle) {
+    if (!mStringBundle) {
         const char propertyURL[] = NECKO_MSGS_URL;
         // make sure that we get this service on the UI thread.
         NS_WITH_PROXIED_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, 
                                 NS_UI_THREAD_EVENTQ, &res);
         if (NS_SUCCEEDED (res) && (nsnull != sBundleService)) {
-            res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
+            res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mStringBundle));
         }
     }
 
-    if (m_stringBundle)
+    if (mStringBundle)
 	{
 		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
 
 		PRUnichar *ptrv = nsnull;
-		res = m_stringBundle->GetStringFromName(unicodeName.get(), &ptrv);
+		res = mStringBundle->GetStringFromName(unicodeName.get(), &ptrv);
 
 		if (NS_FAILED(res)) 
 		{

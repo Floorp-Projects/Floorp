@@ -131,6 +131,9 @@ protected:
 
     nsCOMPtr<nsISupports>               mContext;
 
+    // Queue where release of context, listener, and/or provider should occur.
+    nsCOMPtr<nsIEventQueue>             mEventQ;  
+
     // mXferState is only changed by the file transport thread:
     XferState                           mXferState;
 
