@@ -181,7 +181,7 @@ public class Decompiler
         else {
             // we can ignore negative values, bc they're already prefixed
             // by NEG
-               if (lbits < 0) Context.codeBug();
+               if (lbits < 0) Kit.codeBug();
 
             // will it fit in a char?
             // this gives a short encoding for integer values up to 2^16.
@@ -234,7 +234,7 @@ public class Decompiler
     private void increaseSourceCapacity(int minimalCapacity)
     {
         // Call this only when capacity increase is must
-        if (minimalCapacity <= sourceBuffer.length) Context.codeBug();
+        if (minimalCapacity <= sourceBuffer.length) Kit.codeBug();
         int newCapacity = sourceBuffer.length * 2;
         if (newCapacity < minimalCapacity) {
             newCapacity = minimalCapacity;
@@ -246,7 +246,7 @@ public class Decompiler
 
     private String sourceToString(int offset)
     {
-        if (offset < 0 || sourceTop < offset) Context.codeBug();
+        if (offset < 0 || sourceTop < offset) Kit.codeBug();
         return new String(sourceBuffer, offset, sourceTop - offset);
     }
 

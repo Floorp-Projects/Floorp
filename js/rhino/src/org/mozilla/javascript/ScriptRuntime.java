@@ -67,30 +67,29 @@ public class ScriptRuntime {
      */
 
     public final static Class
-        BooleanClass      = classOrNull("java.lang.Boolean"),
-        ByteClass         = classOrNull("java.lang.Byte"),
-        CharacterClass    = classOrNull("java.lang.Character"),
-        ClassClass        = classOrNull("java.lang.Class"),
-        DoubleClass       = classOrNull("java.lang.Double"),
-        FloatClass        = classOrNull("java.lang.Float"),
-        IntegerClass      = classOrNull("java.lang.Integer"),
-        LongClass         = classOrNull("java.lang.Long"),
-        NumberClass       = classOrNull("java.lang.Number"),
-        ObjectClass       = classOrNull("java.lang.Object"),
-        ShortClass        = classOrNull("java.lang.Short"),
-        StringClass       = classOrNull("java.lang.String"),
+        BooleanClass      = Kit.classOrNull("java.lang.Boolean"),
+        ByteClass         = Kit.classOrNull("java.lang.Byte"),
+        CharacterClass    = Kit.classOrNull("java.lang.Character"),
+        ClassClass        = Kit.classOrNull("java.lang.Class"),
+        DoubleClass       = Kit.classOrNull("java.lang.Double"),
+        FloatClass        = Kit.classOrNull("java.lang.Float"),
+        IntegerClass      = Kit.classOrNull("java.lang.Integer"),
+        LongClass         = Kit.classOrNull("java.lang.Long"),
+        NumberClass       = Kit.classOrNull("java.lang.Number"),
+        ObjectClass       = Kit.classOrNull("java.lang.Object"),
+        ShortClass        = Kit.classOrNull("java.lang.Short"),
+        StringClass       = Kit.classOrNull("java.lang.String"),
 
-        SerializableClass = classOrNull("java.io.Serializable"),
+        SerializableClass = Kit.classOrNull("java.io.Serializable"),
 
-        DateClass         = classOrNull("java.util.Date");
+        DateClass         = Kit.classOrNull("java.util.Date");
 
     public final static Class
-        ContextClass      = classOrNull("org.mozilla.javascript.Context"),
-        FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
-        ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
-        ScriptableObjectClass = classOrNull(
-                                   "org.mozilla.javascript.ScriptableObject"),
-        UndefinedClass    = classOrNull("org.mozilla.javascript.Undefined");
+        ContextClass      = Kit.classOrNull("org.mozilla.javascript.Context"),
+        FunctionClass     = Kit.classOrNull("org.mozilla.javascript.Function"),
+        ScriptableClass   = Kit.classOrNull("org.mozilla.javascript.Scriptable"),
+        ScriptableObjectClass = Kit.classOrNull("org.mozilla.javascript.ScriptableObject"),
+        UndefinedClass    = Kit.classOrNull("org.mozilla.javascript.Undefined");
 
     /**
      * Convert the value to a boolean.
@@ -783,7 +782,7 @@ public class ScriptRuntime {
             return errorObject;
 
         } else if (!evaluatorException) {
-            Context.codeBug();
+            Kit.codeBug();
         }
 
         return cx.getWrapFactory().wrap(cx, scope, t, null);
@@ -1325,7 +1324,7 @@ public class ScriptRuntime {
                 return NativeWith.newWithSpecial(cx, scope, args);
             }
         } else {
-            Context.codeBug();
+            Kit.codeBug();
         }
 
         if (isNew) {
@@ -1893,7 +1892,7 @@ public class ScriptRuntime {
 
     private static ScriptableObject getGlobal(Context cx) {
         final String GLOBAL_CLASS = "org.mozilla.javascript.tools.shell.Global";
-        Class globalClass = classOrNull(GLOBAL_CLASS);
+        Class globalClass = Kit.classOrNull(GLOBAL_CLASS);
         if (globalClass != null) {
             try {
                 Class[] parm = { ScriptRuntime.ContextClass };
@@ -2156,46 +2155,6 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
 
-    static Class classOrNull(String className)
-    {
-        try {
-            return Class.forName(className);
-        } catch  (ClassNotFoundException ex) {
-        } catch  (SecurityException ex) {
-        } catch  (LinkageError ex) {
-        } catch (IllegalArgumentException e) {
-            // Can be thrown if name has characters that a class name
-            // can not contain
-        }
-        return null;
-    }
-
-    static Class classOrNull(ClassLoader loader, String className)
-    {
-        try {
-            return loader.loadClass(className);
-        } catch (ClassNotFoundException ex) {
-        } catch (SecurityException ex) {
-        } catch  (LinkageError ex) {
-        } catch (IllegalArgumentException e) {
-            // Can be thrown if name has characters that a class name
-            // can not contain
-        }
-        return null;
-    }
-
-    static Object newInstanceOrNull(Class cl)
-    {
-        try {
-            return cl.newInstance();
-        } catch (SecurityException x) {
-        } catch  (LinkageError ex) {
-        } catch (InstantiationException x) {
-        } catch (IllegalAccessException x) {
-        }
-        return null;
-    }
-
     static boolean hasProp(Scriptable start, String name) {
         Scriptable m = start;
         do {
@@ -2226,30 +2185,6 @@ public class ScriptRuntime {
     private static RuntimeException errorWithClassName(String msg, Object val)
     {
         return Context.reportRuntimeError1(msg, val.getClass().getName());
-    }
-
-    /**
-     * Split string into array of strings using semicolon as string terminator
-     * (; after the last string is required).
-     */
-    static String[] splitSC(String s)
-    {
-        int count = 0;
-        for (int cursor = 0; ;) {
-            cursor = s.indexOf(';', cursor) + 1;
-            if (cursor <= 0) { break; }
-            ++count;
-        }
-        String[] array = new String[count];
-        count = 0;
-        for (int cursor = 0; ;) {
-            int next = s.indexOf(';', cursor);
-            if (next < 0) { break; }
-            array[count] = s.substring(cursor, next);
-            ++count;
-            cursor = next + 1;
-        }
-        return array;
     }
 
     public static final Object[] emptyArgs = new Object[0];

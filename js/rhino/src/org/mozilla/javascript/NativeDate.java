@@ -914,7 +914,7 @@ final class NativeDate extends IdScriptable {
                       case 8 /* mdt */: tzoffset = 6 * 60; break;
                       case 9 /* pst */: tzoffset = 8 * 60; break;
                       case 10 /* pdt */:tzoffset = 7 * 60; break;
-                      default: Context.codeBug();
+                      default: Kit.codeBug();
                     }
                 }
             }
@@ -1128,7 +1128,7 @@ final class NativeDate extends IdScriptable {
 
     private static void append0PaddedUint(StringBuffer sb, int i, int minWidth)
     {
-        if (i < 0) Context.codeBug();
+        if (i < 0) Kit.codeBug();
         int scale = 1;
         --minWidth;
         if (i >= 10) {
@@ -1213,7 +1213,7 @@ final class NativeDate extends IdScriptable {
             break;
 
           default:
-              Context.codeBug();
+              Kit.codeBug();
             maxargs = 0;
         }
 
@@ -1319,7 +1319,7 @@ final class NativeDate extends IdScriptable {
             break;
 
           default:
-              Context.codeBug();
+              Kit.codeBug();
             maxargs = 0;
         }
 

@@ -944,7 +944,7 @@ public class Codegen extends Interpreter {
     private int addNumberConstant(double num)
     {
         // NaN is provided via ScriptRuntime.NaNobj
-        if (num != num) Context.codeBug();
+        if (num != num) Kit.codeBug();
         int N = itsConstantListSize;
         if (N == 0) {
             itsConstantList = new double[128];
@@ -2645,7 +2645,7 @@ class BodyCodegen
         } else if (exceptionType == WRAPPED_EXCEPTION) {
             exceptionName = "org/mozilla/javascript/WrappedException";
         } else {
-            if (exceptionType != ECMAERROR_EXCEPTION) Context.codeBug();
+            if (exceptionType != ECMAERROR_EXCEPTION) Kit.codeBug();
             exceptionName = "org/mozilla/javascript/EcmaError";
         }
 

@@ -158,7 +158,7 @@ public class Context {
         } else {
             if (cx == null)
                 cx = new Context();
-            if (cx.enterCount != 0) Context.codeBug();
+            if (cx.enterCount != 0) Kit.codeBug();
 
             Object[] array = contextListeners;
             if (array != null) {
@@ -202,7 +202,7 @@ public class Context {
             throw new IllegalStateException(
                 "Calling Context.exit without previous Context.enter");
         }
-        if (Context.check && cx.enterCount < 1) Context.codeBug();
+        if (Context.check && cx.enterCount < 1) Kit.codeBug();
         --cx.enterCount;
         if (cx.enterCount == 0) {
             released = true;
@@ -1768,7 +1768,7 @@ public class Context {
         // If Context was subclussed, cxClass != Context.class
         Class cxClass = this.getClass();
         // Check that Context or its suclass is accesible from this loader
-        Class x = ScriptRuntime.classOrNull(loader, cxClass.getName());
+        Class x = Kit.classOrNull(loader, cxClass.getName());
         if (x != cxClass) {
             // The check covers the case when x == null =>
             // threadLoader does not know about Rhino or the case
@@ -1904,7 +1904,7 @@ public class Context {
         throws IOException
     {
         // One of sourceReader or sourceString has to be null
-        if (!(sourceReader == null ^ sourceString == null)) Context.codeBug();
+        if (!(sourceReader == null ^ sourceString == null)) Kit.codeBug();
 
         Interpreter compiler = createCompiler();
 
@@ -1954,20 +1954,20 @@ public class Context {
                                          encodedSource);
 
         if (debugger != null) {
-            if (sourceString == null) Context.codeBug();
+            if (sourceString == null) Kit.codeBug();
             compiler.notifyDebuggerCompilationDone(this, result, sourceString);
         }
 
         return ts.errorCount == 0 ? result : null;
     }
 
-    private static Class codegenClass = ScriptRuntime.classOrNull(
+    private static Class codegenClass = Kit.classOrNull(
                              "org.mozilla.javascript.optimizer.Codegen");
 
     private Interpreter createCompiler() {
         Interpreter result = null;
         if (optimizationLevel >= 0 && codegenClass != null) {
-            result = (Interpreter)ScriptRuntime.newInstanceOrNull(codegenClass);
+            result = (Interpreter)Kit.newInstanceOrNull(codegenClass);
         }
         if (result == null) {
             result = new Interpreter();
@@ -2032,10 +2032,10 @@ public class Context {
 
     RegExpProxy getRegExpProxy() {
         if (regExpProxy == null) {
-            Class cl = ScriptRuntime.classOrNull(
+            Class cl = Kit.classOrNull(
                           "org.mozilla.javascript.regexp.RegExpImpl");
             if (cl != null) {
-                regExpProxy = (RegExpProxy)ScriptRuntime.newInstanceOrNull(cl);
+                regExpProxy = (RegExpProxy)Kit.newInstanceOrNull(cl);
             }
         }
         return regExpProxy;
@@ -2100,18 +2100,6 @@ public class Context {
             activationNames.remove(name);
     }
 
-    /**
-     * Throws RuntimeException to indicate failed assertion.
-     * The function never returns and its return type is RuntimeException
-     * only to be able to write <tt>throw Context.codeBug()</tt> if plain
-     * <tt>Context.codeBug()</tt> triggers unreachable code error.
-     */
-    public static RuntimeException codeBug()
-        throws RuntimeException
-    {
-        throw new RuntimeException("FAILED ASSERTION");
-    }
-
     static final boolean check = true;
 
     private static Hashtable threadContexts = new Hashtable(11);
@@ -2120,7 +2108,7 @@ public class Context {
     private static Method threadLocalSet;
 
     static {
-        Class cl = ScriptRuntime.classOrNull("java.lang.ThreadLocal");
+        Class cl = Kit.classOrNull("java.lang.ThreadLocal");
         if (cl != null) {
             try {
                 threadLocalGet = cl.getMethod("get", null);
@@ -2139,7 +2127,7 @@ public class Context {
         // Don't use "Thread.class": that performs the lookup
         // in the class initializer, which doesn't allow us to
         // catch possible security exceptions.
-        Class threadClass = ScriptRuntime.classOrNull("java.lang.Thread");
+        Class threadClass = Kit.classOrNull("java.lang.Thread");
         if (threadClass != null) {
             try {
                 method_getContextClassLoader =

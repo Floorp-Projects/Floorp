@@ -189,7 +189,7 @@ public class Main {
             }
             if (arg.equals("-sealedlib")) {
                 // Should already be processed
-                if (!sealedStdLib) Context.codeBug();
+                if (!sealedStdLib) Kit.codeBug();
                 continue;
             }
             usage(arg);

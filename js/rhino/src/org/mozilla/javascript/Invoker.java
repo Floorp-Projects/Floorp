@@ -59,14 +59,14 @@ public abstract class Invoker {
         if (implClass == null)
             return null;
 
-        Invoker master = (Invoker)ScriptRuntime.newInstanceOrNull(implClass);
+        Invoker master = (Invoker)Kit.newInstanceOrNull(implClass);
         if (master == null)
             implClass = null;
 
         return master;
     }
 
-    private static Class implClass = ScriptRuntime.classOrNull(
+    private static Class implClass = Kit.classOrNull(
         "org.mozilla.javascript.optimizer.InvokerImpl");
 
 }

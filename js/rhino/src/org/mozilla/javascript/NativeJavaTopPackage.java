@@ -112,7 +112,7 @@ public class NativeJavaTopPackage
         top.setPrototype(getObjectPrototype(scope));
         top.setParentScope(scope);
 
-        String[] names = ScriptRuntime.splitSC(commonPackages);
+        String[] names = Kit.semicolonSplit(commonPackages);
         for (int i = 0; i != names.length; ++i) {
             top.forcePackage(names[i]);
         }

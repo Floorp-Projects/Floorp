@@ -326,7 +326,7 @@ class JavaMembers
                 if (value instanceof ObjArray) {
                     overloadedMethods = (ObjArray)value;
                 } else {
-                    if (!(value instanceof Method)) Context.codeBug();
+                    if (!(value instanceof Method)) Kit.codeBug();
                     // value should be instance of Method as reflectMethods is
                     // called when staticMembers and members are empty
                     overloadedMethods = new ObjArray();
@@ -376,7 +376,7 @@ class JavaMembers
                 }
             } else {
                 // "unknown member type"
-                Context.codeBug();
+                Kit.codeBug();
             }
         }
     }
@@ -484,7 +484,7 @@ class JavaMembers
             } else {
                 ObjArray overloadedMethods = (ObjArray)value;
                 int N = overloadedMethods.size();
-                if (N < 2) Context.codeBug();
+                if (N < 2) Kit.codeBug();
                 methods = new MemberBox[N];
                 for (int i = 0; i != N; ++i) {
                     Method method = (Method)overloadedMethods.get(i);
@@ -559,7 +559,7 @@ class JavaMembers
                                     return method;
                                 }
                             } else {
-                                if (pass != 2) Context.codeBug();
+                                if (pass != 2) Kit.codeBug();
                                 if (params[0].isAssignableFrom(type)) {
                                     return method;
                                 }

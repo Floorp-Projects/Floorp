@@ -295,7 +295,7 @@ public class NativeJavaMethod extends BaseFunction
                 } else if (preference == PREFERENCE_SECOND_ARG) {
                     if (debug) printDebug("Rejecting ", member, args);
                 } else {
-                    if (preference != PREFERENCE_EQUAL) Context.codeBug();
+                    if (preference != PREFERENCE_EQUAL) Kit.codeBug();
                     MemberBox best = methodsOrCtors[bestFit];
                     if (best.isStatic()
                         && best.getDeclaringClass().isAssignableFrom(

@@ -88,7 +88,7 @@ class Arguments extends IdScriptable {
                 if (sharedWithActivation(index)) {
                     String argName = activation.funObj.argNames[index];
                     value = activation.get(argName, activation);
-                    if (value == NOT_FOUND) Context.codeBug();
+                    if (value == NOT_FOUND) Kit.codeBug();
                 }
                 return value;
             }

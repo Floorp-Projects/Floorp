@@ -290,7 +290,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             setterThis = start;
             args = new Object[] { actualArg };
         } else {
-            if (start != this) Context.codeBug();
+            if (start != this) Kit.codeBug();
             setterThis = slot.delegateTo;
             args = new Object[] { this, actualArg };
         }
@@ -1593,7 +1593,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             if (++i == array.length)
                 i = 0;
         } while (i != start);
-        if (Context.check && !sawRemoved) Context.codeBug();
+        if (Context.check && !sawRemoved) Kit.codeBug();
         // Table could be full, but with some REMOVED elements.
         // Call to addSlot will use a slot currently taken by
         // a REMOVED.
@@ -1647,7 +1647,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 i = 0;
         } while (i != start);
         // Unreachable code
-        if (Context.check) Context.codeBug();
+        if (Context.check) Kit.codeBug();
         return null;
     }
 
@@ -1742,7 +1742,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
         Slot[] s = slots;
         if (s == null) {
-            if (N != 0) Context.codeBug();
+            if (N != 0) Kit.codeBug();
             out.writeInt(0);
         } else {
             out.writeInt(s.length);

@@ -60,7 +60,7 @@ public class ScriptOrFnNode extends Node {
 
     public final void setBaseLineno(int lineno) {
         // One time action
-        if (lineno < 0 || baseLineno >= 0) Context.codeBug();
+        if (lineno < 0 || baseLineno >= 0) Kit.codeBug();
         baseLineno = lineno;
     }
 
@@ -68,7 +68,7 @@ public class ScriptOrFnNode extends Node {
 
     public final void setEndLineno(int lineno) {
         // One time action
-        if (lineno < 0 || endLineno >= 0) Context.codeBug();
+        if (lineno < 0 || endLineno >= 0) Kit.codeBug();
         endLineno = lineno;
     }
 
@@ -82,7 +82,7 @@ public class ScriptOrFnNode extends Node {
     }
 
     public final int addFunction(FunctionNode fnNode) {
-        if (fnNode == null) Context.codeBug();
+        if (fnNode == null) Kit.codeBug();
         if (functions == null) { functions = new ObjArray(); }
         functions.add(fnNode);
         return functions.size() - 1;
@@ -102,7 +102,7 @@ public class ScriptOrFnNode extends Node {
     }
 
     public final int addRegexp(String string, String flags) {
-        if (string == null) Context.codeBug();
+        if (string == null) Kit.codeBug();
         if (regexps == null) { regexps = new ObjArray(); }
         regexps.add(string);
         regexps.add(flags);
@@ -141,7 +141,7 @@ public class ScriptOrFnNode extends Node {
 
     public final void addParam(String name) {
         // Check addparam is not called after addLocal
-        if (varStart != itsVariables.size()) Context.codeBug();
+        if (varStart != itsVariables.size()) Kit.codeBug();
         // Allow non-unique parameter names: use the last occurrence
         int index = varStart++;
         itsVariables.add(name);

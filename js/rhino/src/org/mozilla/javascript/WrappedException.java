@@ -59,7 +59,7 @@ public class WrappedException extends EvaluatorException
     static {
         // Are we running on a JDK 1.4 or later system?
         try {
-            Class ThrowableClass = ScriptRuntime.classOrNull(
+            Class ThrowableClass = Kit.classOrNull(
                                        "java.lang.Throwable");
             initCauseMethod = ThrowableClass.getMethod("initCause",
                                           new Class[]{ThrowableClass});

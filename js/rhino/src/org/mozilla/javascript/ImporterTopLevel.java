@@ -186,7 +186,7 @@ final class ImporterFunctions extends JIFunction
         if (id == Id_importClass) {
             initNameArity("importClass", 1);
         } else {
-            if (id != Id_importPackage) Context.codeBug();
+            if (id != Id_importPackage) Kit.codeBug();
             initNameArity("importPackage", 1);
         }
         defineAsProperty(importer);
@@ -205,7 +205,7 @@ final class ImporterFunctions extends JIFunction
         if (id == Id_importClass) {
             importer.importClass(cx, thisObj, args);
         } else {
-            if (id != Id_importPackage) Context.codeBug();
+            if (id != Id_importPackage) Kit.codeBug();
             importer.importPackage(cx, thisObj, args);
         }
         return Undefined.instance;

@@ -279,12 +279,12 @@ public class TokenStream {
         this.lineno = lineno;
         this.flags = 0;
         if (sourceReader != null) {
-            if (sourceString != null) Context.codeBug();
+            if (sourceString != null) Kit.codeBug();
             this.sourceReader = sourceReader;
             this.sourceBuffer = new char[512];
             this.sourceEnd = 0;
         } else {
-            if (sourceString == null) Context.codeBug();
+            if (sourceString == null) Kit.codeBug();
             this.sourceString = sourceString;
             this.sourceEnd = sourceString.length();
         }
@@ -362,7 +362,7 @@ public class TokenStream {
     public final void ungetToken(int tt) {
         // Can not unread more then one token
         if (this.pushbackToken != Token.EOF && tt != Token.ERROR)
-            Context.codeBug();
+            Kit.codeBug();
         this.pushbackToken = tt;
         tokenno--;
     }
@@ -1031,7 +1031,7 @@ public class TokenStream {
     private void ungetChar(int c) {
         // can not unread past across line boundary
         if (ungetCursor != 0 && ungetBuffer[ungetCursor - 1] == '\n')
-            Context.codeBug();
+            Kit.codeBug();
         ungetBuffer[ungetCursor++] = c;
     }
 
@@ -1161,7 +1161,7 @@ public class TokenStream {
     }
 
     private boolean fillSourceBuffer() throws IOException {
-        if (sourceString != null) Context.codeBug();
+        if (sourceString != null) Kit.codeBug();
         if (sourceEnd == sourceBuffer.length) {
             if (lineStart != 0) {
                 System.arraycopy(sourceBuffer, lineStart, sourceBuffer, 0,

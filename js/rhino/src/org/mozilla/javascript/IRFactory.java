@@ -870,7 +870,7 @@ public class IRFactory {
           case Token.NUMBER:
             return Node.newNumber(newTemp.getDouble());
           default:
-            throw Context.codeBug();
+            throw Kit.codeBug();
         }
     }
 
@@ -879,7 +879,7 @@ public class IRFactory {
     }
 
     public Node createUseLocal(Node newLocal) {
-        if (Token.NEWLOCAL != newLocal.getType()) Context.codeBug();
+        if (Token.NEWLOCAL != newLocal.getType()) Kit.codeBug();
         Node result = new Node(Token.USELOCAL);
         result.putProp(Node.LOCAL_PROP, newLocal);
         return result;

@@ -640,9 +640,9 @@ public class NativeArray extends IdScriptable {
     {
         if (check) {
             if (cmp == null) {
-                if (cmpBuf != null) Context.codeBug();
+                if (cmpBuf != null) Kit.codeBug();
             } else {
-                if (cmpBuf == null || cmpBuf.length != 2) Context.codeBug();
+                if (cmpBuf == null || cmpBuf.length != 2) Kit.codeBug();
             }
         }
 
@@ -688,7 +688,7 @@ public class NativeArray extends IdScriptable {
                                  Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        if (check && length <= 1) Context.codeBug();
+        if (check && length <= 1) Kit.codeBug();
 
         // Build heap
         for (int i = length / 2; i != 0;) {
@@ -743,7 +743,7 @@ public class NativeArray extends IdScriptable {
                                           Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        if (check && length <= 1) Context.codeBug();
+        if (check && length <= 1) Kit.codeBug();
 
         // Build heap
         for (long i = length / 2; i != 0;) {

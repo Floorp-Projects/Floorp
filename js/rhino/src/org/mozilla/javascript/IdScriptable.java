@@ -400,7 +400,7 @@ public abstract class IdScriptable extends ScriptableObject
     protected final void setMaxId(int maxId)
     {
         // maxId can only go up
-        if (maxId < this.maxId) Context.codeBug();
+        if (maxId < this.maxId) Kit.codeBug();
         this.maxId = maxId;
     }
 

@@ -266,9 +266,9 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             // via system class loader which can be different from the
             // loader that brought Rhino classes that Class.forName() would
             // use, but ClassLoader.getSystemClassLoader() is Java 2 only
-            return ScriptRuntime.classOrNull(nestedClassName);
+            return Kit.classOrNull(nestedClassName);
         } else {
-            return ScriptRuntime.classOrNull(loader, nestedClassName);
+            return Kit.classOrNull(loader, nestedClassName);
         }
     }
 

@@ -67,7 +67,7 @@ class OptFunctionNode extends FunctionNode {
     void setDirectTargetIndex(int directTargetIndex) {
         // One time action
         if (directTargetIndex < 0 || this.directTargetIndex >= 0)
-            Context.codeBug();
+            Kit.codeBug();
         this.directTargetIndex = directTargetIndex;
     }
 

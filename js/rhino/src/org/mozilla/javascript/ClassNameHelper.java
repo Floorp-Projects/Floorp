@@ -45,11 +45,11 @@ public abstract class ClassNameHelper {
     public static ClassNameHelper get(Context cx) {
         ClassNameHelper helper = savedNameHelper;
         if (helper == null && !helperNotAvailable) {
-            Class nameHelperClass = ScriptRuntime.classOrNull(
+            Class nameHelperClass = Kit.classOrNull(
                 "org.mozilla.javascript.optimizer.OptClassNameHelper");
             // nameHelperClass == null if running lite
             if (nameHelperClass != null) {
-                helper = (ClassNameHelper)ScriptRuntime.newInstanceOrNull(
+                helper = (ClassNameHelper)Kit.newInstanceOrNull(
                                               nameHelperClass);
             }
             if (helper != null) {

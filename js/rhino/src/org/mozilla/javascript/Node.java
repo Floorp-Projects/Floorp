@@ -94,7 +94,7 @@ public class Node implements Cloneable {
             if (!(type == Token.BREAK || type == Token.CONTINUE
                   || type == Token.LABEL))
             {
-                Context.codeBug();
+                Kit.codeBug();
             }
             return label;
         }
@@ -104,36 +104,36 @@ public class Node implements Cloneable {
             if (!(type == Token.BREAK || type == Token.CONTINUE
                   || type == Token.LABEL))
             {
-                Context.codeBug();
+                Kit.codeBug();
             }
-            if (label == null) Context.codeBug();
-            if (this.label != null) Context.codeBug(); //only once
+            if (label == null) Kit.codeBug();
+            if (this.label != null) Kit.codeBug(); //only once
             this.label = label;
         }
 
         public final Target getFinally()
         {
-            if (!(type == Token.TRY)) Context.codeBug();
+            if (!(type == Token.TRY)) Kit.codeBug();
             return target2;
         }
 
         public final void setFinally(Target finallyTarget)
         {
-            if (!(type == Token.TRY)) Context.codeBug();
-            if (finallyTarget == null) Context.codeBug();
-            if (target2 != null) Context.codeBug(); //only once
+            if (!(type == Token.TRY)) Kit.codeBug();
+            if (finallyTarget == null) Kit.codeBug();
+            if (target2 != null) Kit.codeBug(); //only once
             target2 = finallyTarget;
         }
 
         public final Target getContinue()
         {
-            if (!(type == Token.LABEL || type == Token.LOOP)) Context.codeBug();                return target2;
+            if (!(type == Token.LABEL || type == Token.LOOP)) Kit.codeBug();                return target2;
         }
 
         public final void setContinue(Target continueTarget)
         {
-            if (!(type == Token.LABEL || type == Token.LOOP)) Context.codeBug();                if (continueTarget == null) Context.codeBug();
-            if (target2 != null) Context.codeBug(); //only once
+            if (!(type == Token.LABEL || type == Token.LOOP)) Kit.codeBug();                if (continueTarget == null) Kit.codeBug();
+            if (target2 != null) Kit.codeBug(); //only once
             target2 = continueTarget;
         }
 
@@ -431,7 +431,7 @@ public class Node implements Cloneable {
 
                 case SPECIALCALL_PROP:   return "specialcall";
 
-                default: Context.codeBug();
+                default: Kit.codeBug();
             }
         }
         return null;
@@ -493,7 +493,7 @@ public class Node implements Cloneable {
     public int getExistingIntProp(int propType)
     {
         PropListItem item = lookupProperty(propType);
-        if (item == null) { Context.codeBug(); }
+        if (item == null) { Kit.codeBug(); }
         return item.intValue;
     }
 

@@ -206,7 +206,7 @@ public class Interpreter
             for (iter.start(); !iter.done(); iter.next()) {
                 String str = (String)iter.getKey();
                 int index = iter.getValue();
-                if (itsData.itsStringTable[index] != null) Context.codeBug();
+                if (itsData.itsStringTable[index] != null) Kit.codeBug();
                 itsData.itsStringTable[index] = str;
             }
         }
@@ -832,7 +832,7 @@ public class Interpreter
                     boolean generated = false;
 
                     if (child == catchTarget) {
-                        if (tryEnd >= 0) Context.codeBug();
+                        if (tryEnd >= 0) Kit.codeBug();
                         tryEnd = iCodeTop;
                         catchStart = iCodeTop;
 
@@ -1061,7 +1061,7 @@ public class Interpreter
 
     private void resolveForwardGoto(int jumpStart, int iCodeTop)
     {
-        if (jumpStart + 3 > iCodeTop) Context.codeBug();
+        if (jumpStart + 3 > iCodeTop) Kit.codeBug();
         int offset = iCodeTop - jumpStart;
         // +1 to write after jump icode
         recordJumpOffset(jumpStart + 1, offset);
@@ -1091,14 +1091,14 @@ public class Interpreter
         if (!(Token.FIRST_BYTECODE_TOKEN <= token
             && token <= Token.LAST_BYTECODE_TOKEN))
         {
-            Context.codeBug();
+            Kit.codeBug();
         }
         return addByte(token, iCodeTop);
     }
 
     private int addIcode(int icode, int iCodeTop)
     {
-        if (!(BASE_ICODE < icode && icode <= Icode_END)) Context.codeBug();
+        if (!(BASE_ICODE < icode && icode <= Icode_END)) Kit.codeBug();
         return addByte(icode, iCodeTop);
     }
 
@@ -1115,7 +1115,7 @@ public class Interpreter
 
     private int addIndex(int index, int iCodeTop)
     {
-        if (index < 0) Context.codeBug();
+        if (index < 0) Kit.codeBug();
         if (index > 0xFFFF) {
             throw Context.reportRuntimeError0("msg.too.big.index");
         }
@@ -1177,7 +1177,7 @@ public class Interpreter
         int top = itsExceptionTableTop;
         int[] table = itsData.itsExceptionTable;
         if (table == null) {
-            if (top != 0) Context.codeBug();
+            if (top != 0) Kit.codeBug();
             table = new int[EXCEPTION_SLOT_SIZE * 2];
             itsData.itsExceptionTable = table;
         } else if (table.length == top) {
@@ -1196,7 +1196,7 @@ public class Interpreter
 
     private byte[] increaseICodeCapasity(int iCodeTop, int extraSize) {
         int capacity = itsData.itsICode.length;
-        if (iCodeTop + extraSize <= capacity) Context.codeBug();
+        if (iCodeTop + extraSize <= capacity) Kit.codeBug();
         capacity *= 2;
         if (iCodeTop + extraSize > capacity) {
             capacity = iCodeTop + extraSize;
@@ -1236,7 +1236,7 @@ public class Interpreter
             if (start <= pc && pc < end) {
                 if (best < 0 || bestStart <= start) {
                     // Check handlers are nested
-                    if (best >= 0 && bestEnd < end) Context.codeBug();
+                    if (best >= 0 && bestEnd < end) Kit.codeBug();
                     best = i;
                     bestStart = start;
                     bestEnd = end;
@@ -1307,7 +1307,7 @@ public class Interpreter
                 int icodeLength = icodeTokenLength(token);
                 switch (token) {
                     default:
-                        if (icodeLength != 1) Context.codeBug();
+                        if (icodeLength != 1) Kit.codeBug();
                         out.println(tname);
                         break;
 
@@ -1405,7 +1405,7 @@ public class Interpreter
                         break;
                     }
                 }
-                if (old_pc + icodeLength != pc) Context.codeBug();
+                if (old_pc + icodeLength != pc) Kit.codeBug();
             }
 
             int[] table = idata.itsExceptionTable;
@@ -1566,7 +1566,7 @@ public class Interpreter
                 return 1 + 2;
 
             default:
-                Context.codeBug(); // Bad icodeToken
+                Kit.codeBug(); // Bad icodeToken
                 return 0;
         }
     }
@@ -1581,7 +1581,7 @@ public class Interpreter
             int icodeToken = iCode[pc] & 0xff;
             int icodeLength = icodeTokenLength(icodeToken);
             if (icodeToken == Icode_LINE) {
-                if (icodeLength != 3) Context.codeBug();
+                if (icodeLength != 3) Kit.codeBug();
                 int line = getShort(iCode, pc + 1);
                 presentLines.put(line, 0);
             }
@@ -1610,7 +1610,7 @@ public class Interpreter
     private static Scriptable[] wrapRegExps(Context cx, Scriptable scope,
                                             InterpreterData idata)
     {
-        if (idata.itsRegExpLiterals == null) Context.codeBug();
+        if (idata.itsRegExpLiterals == null) Kit.codeBug();
 
         RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
         int N = idata.itsRegExpLiterals.length;
@@ -1664,7 +1664,7 @@ public class Interpreter
 
         int maxFrameArray = idata.itsMaxFrameArray;
         if (maxFrameArray != STACK_SHFT + idata.itsMaxStack)
-            Context.codeBug();
+            Kit.codeBug();
 
         Object[] stack = new Object[maxFrameArray];
         double[] sDbl = new double[maxFrameArray];
@@ -1718,7 +1718,7 @@ public class Interpreter
 
         if (idata.itsNestedFunctions != null) {
             if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
-                Context.codeBug();
+                Kit.codeBug();
             for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
                 InterpreterData fdata = idata.itsNestedFunctions[i];
                 if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
@@ -1779,7 +1779,7 @@ public class Interpreter
         // loop, not in the loop catch block itself to deal withnexceptions
         // from observeInstructionCount. A special bytecode is used only to
         // simplify logic.
-        if (javaException == null) Context.codeBug();
+        if (javaException == null) Kit.codeBug();
 
         int pcNew = -1;
         boolean doCatch = false;
@@ -1839,7 +1839,7 @@ public class Interpreter
         int tryWithDepth = idata.itsExceptionTable[
                                handlerOffset + EXCEPTION_WITH_DEPTH_SLOT];
         while (tryWithDepth != withDepth) {
-            if (scope == null) Context.codeBug();
+            if (scope == null) Kit.codeBug();
             scope = ScriptRuntime.leaveWith(scope);
             --withDepth;
         }
@@ -3008,7 +3008,7 @@ public class Interpreter
         String name = f.argNames[slot];
         Object val = activation.get(name, activation);
     // Activation parameter or var is permanent
-        if (val == Scriptable.NOT_FOUND) Context.codeBug();
+        if (val == Scriptable.NOT_FOUND) Kit.codeBug();
         return val;
     }
 
@@ -3031,7 +3031,7 @@ public class Interpreter
         throws JavaScriptException
     {
         if (cx.interpreterSecurityDomain == idata.securityDomain)
-            Context.codeBug();
+            Kit.codeBug();
 
         Script code = new Script() {
             public Object exec(Context cx, Scriptable scope)
@@ -3056,7 +3056,7 @@ public class Interpreter
     private static int getJavaCatchPC(byte[] iCode)
     {
         int pc = iCode.length - 1;
-        if ((iCode[pc] & 0xFF) != Icode_CATCH) Context.codeBug();
+        if ((iCode[pc] & 0xFF) != Icode_CATCH) Kit.codeBug();
         return pc;
     }
 

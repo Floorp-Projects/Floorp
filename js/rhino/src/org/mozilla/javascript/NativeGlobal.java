@@ -71,7 +71,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_parseInt:           name = "parseInt";           break;
                 case Id_unescape:           name = "unescape";           break;
                 default:
-                    Context.codeBug(); name = null;
+                    Kit.codeBug(); name = null;
             }
             IdFunction.define(scope, name, obj, id,
                               ScriptableObject.DONTENUM, sealed);
@@ -87,7 +87,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                         Undefined.instance,
                                         ScriptableObject.DONTENUM);
 
-        String[] errorMethods = ScriptRuntime.splitSC(""
+        String[] errorMethods = Kit.semicolonSplit(""
                                     +"ConversionError;"
                                     +"EvalError;"
                                     +"RangeError;"
@@ -575,7 +575,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     }
 
     private static char toHexChar(int i) {
-        if (i >> 4 != 0) Context.codeBug();
+        if (i >> 4 != 0) Kit.codeBug();
         return (char)((i < 10) ? i + '0' : i - 10 + 'a');
     }
 

@@ -51,7 +51,7 @@ public final class UniqueTag implements Serializable
     public Object readResolve() {
         if (_tagId == ID_NOT_FOUND) { return NOT_FOUND; }
         else if (_tagId == ID_NULL_VALUE) { return NULL_VALUE; }
-        Context.codeBug();
+        Kit.codeBug();
         return null;
     }
 
@@ -60,7 +60,7 @@ public final class UniqueTag implements Serializable
         String name;
         if (_tagId == ID_NOT_FOUND) { name = "NOT_FOUND"; }
         else if (_tagId == ID_NULL_VALUE) { name = "NULL_VALUE"; }
-        else { Context.codeBug(); name = null; }
+        else { Kit.codeBug(); name = null; }
         return super.toString()+": "+name;
 
     }

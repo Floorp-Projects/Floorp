@@ -123,7 +123,7 @@ public class GlobalScope extends ScriptableObject
 
     static void embed(ScriptableObject top)
     {
-        if (top instanceof GlobalScope) Context.codeBug();
+        if (top instanceof GlobalScope) Kit.codeBug();
         GlobalScope global = new GlobalScope();
         top.defineProperty("__globalScope", global,
                                ScriptableObject.PERMANENT
