@@ -74,8 +74,6 @@ public:
  
   virtual PRBool        SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead);
  
-  virtual nsNewsDatabase 	*GetNewsDB() ;
-
   virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   
   // used to handle filters editing on open news groups.

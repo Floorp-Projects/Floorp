@@ -83,35 +83,35 @@ NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
   nsNewsDatabase	        *newsDB;
-
+  
   if (!aNewsgroupName)
-	return NS_ERROR_NULL_POINTER;
-
+    return NS_ERROR_NULL_POINTER;
+  
   nsFileSpec				newsgroupName;
   aNewsgroupName->GetFileSpec(&newsgroupName);
-
+  
   nsNewsSummarySpec	        summarySpec(newsgroupName);
   nsresult                  err = NS_OK;
-	PRBool			newFile = PR_FALSE;
-
+  PRBool			newFile = PR_FALSE;
+  
 #ifdef DEBUG_NEWS_DATABASE
   printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
-           (const char*)newsgroupName, create ? "TRUE":"FALSE",
-           pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
+    (const char*)newsgroupName, create ? "TRUE":"FALSE",
+    pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
 #endif
-
+  
   nsFileSpec dbPath(summarySpec);
-
+  
   *pMessageDB = nsnull;
-
+  
   newsDB = (nsNewsDatabase *) FindInCache(dbPath);
   if (newsDB) {
-		*pMessageDB = newsDB;
-		//FindInCache does the AddRef'ing
-		//newsDB->AddRef();
-		return(NS_OK);
+    *pMessageDB = newsDB;
+    //FindInCache does the AddRef'ing
+    //newsDB->AddRef();
+    return(NS_OK);
   }
-
+  
   newsDB = new nsNewsDatabase();
   newsDB->m_folder = m_folder;
   
@@ -121,10 +121,10 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
 #endif
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
+  
   newsDB->AddRef();
-
-	nsIDBFolderInfo	*folderInfo = nsnull;
+  
+  nsIDBFolderInfo	*folderInfo = nsnull;
   err = newsDB->OpenMDB((const char *) summarySpec, create);
   if (err == NS_OK)
   {
@@ -153,31 +153,31 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
       newsDB = nsnull;
     }
   }
-	if (err != NS_OK || newFile)
-	{
-		// if we couldn't open file, or we have a blank one, and we're supposed 
-		// to upgrade, updgrade it.
-		if (newFile && !upgrading)	// caller is upgrading, and we have empty summary file,
-		{					// leave db around and open so caller can upgrade it.
-			err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
-		}
-		else if (err != NS_OK)
-		{
-			*pMessageDB = nsnull;
+  if (err != NS_OK || newFile)
+  {
+    // if we couldn't open file, or we have a blank one, and we're supposed 
+    // to upgrade, updgrade it.
+    if (newFile && !upgrading)	// caller is upgrading, and we have empty summary file,
+    {					// leave db around and open so caller can upgrade it.
+      err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+    }
+    else if (err != NS_OK)
+    {
+      *pMessageDB = nsnull;
       if (newsDB)
         newsDB->ForceClosed();
-			delete newsDB;
+      delete newsDB;
       summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
-			newsDB = nsnull;
-		}
-	}
-	if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
-	{
-		*pMessageDB = newsDB;
-		if (newsDB)
-			GetDBCache()->AppendElement(newsDB);
-
-	}
+      newsDB = nsnull;
+    }
+  }
+  if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+  {
+    *pMessageDB = newsDB;
+    if (newsDB)
+      GetDBCache()->AppendElement(newsDB);
+    
+  }
   return err;
 }
 
@@ -271,11 +271,6 @@ nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsNewsDatabase	*nsNewsDatabase::GetNewsDB() 
-{
-	return this;
 }
 
 // used to handle filters editing on open news groups.
