@@ -287,7 +287,13 @@ function Startup()
   var sidebarSplitter;
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
-    if (!openerSidebarBox.hidden) {
+#ifdef XP_MACOSX
+	  // The opener can be the hidden window too, if we're coming from the state where
+    // no windows are open, and the hidden window has no sidebar box. 
+    if (openerSidebarBox && !openerSidebarBox.hidden) {
+#else
+	  if (!openSidebarBox.hidden) {
+#endif
       var sidebarBox = document.getElementById("sidebar-box");
       var sidebarTitle = document.getElementById("sidebar-title");
       sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
@@ -315,7 +321,7 @@ function Startup()
       }
     }
   }
-
+  
   setTimeout(delayedStartup, 0);
 }
 
