@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
     static PRBool firstTime = PR_TRUE;
 #endif
 
-void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebShellWindow> *webWindow);
+static void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebShellWindow> *webWindow);
 
 //----------------------------------------------------------------------------------------
 nsPrefsCore::nsPrefsCore()
