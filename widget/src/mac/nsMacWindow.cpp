@@ -16,9 +16,19 @@
  * Reserved.
  */
 
+#include <LowMem.h>
+
 #include "nsWindow.h"
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
+
+// from MacHeaders.c
+#ifndef topLeft
+	#define topLeft(r)	(((Point *) &(r))[0])
+#endif
+#ifndef botRight
+	#define botRight(r)	(((Point *) &(r))[1])
+#endif
 
 
 const short kWindowTitleBarHeight = 20;

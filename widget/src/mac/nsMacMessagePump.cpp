@@ -23,6 +23,7 @@
 #include "nsWidgetsCID.h"
 #include <MacWindows.h>
 #include <LPeriodical.h>
+#include <ToolUtils.h>
 
 #define DRAW_ON_RESIZE
 

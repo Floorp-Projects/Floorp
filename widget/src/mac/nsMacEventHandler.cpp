@@ -16,8 +16,18 @@
  * Reserved.
  */
 
+#include <LowMem.h>
+
 #include "nsMacEventHandler.h"
 #include "prinrval.h"
+
+// from MacHeaders.c
+#ifndef topLeft
+	#define topLeft(r)	(((Point *) &(r))[0])
+#endif
+#ifndef botRight
+	#define botRight(r)	(((Point *) &(r))[1])
+#endif
 
 
 //-------------------------------------------------------------------------

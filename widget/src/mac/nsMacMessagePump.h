@@ -19,6 +19,8 @@
 #ifndef nsMacMessagePump_h__
 #define nsMacMessagePump_h__
 
+#include <LowMem.h>
+
 #include "prtypes.h"
 class nsToolkit;
 class nsWindow;
