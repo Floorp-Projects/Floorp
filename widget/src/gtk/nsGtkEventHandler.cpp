@@ -27,9 +27,6 @@
 #include "nsScrollbar.h"
 #include "nsIFileWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIMenu.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuListener.h"
 
 #include "nsTextWidget.h"
 #include "nsGtkIMEHelper.h"
@@ -462,90 +459,6 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 
   return PR_TRUE;
 }
-
-//==============================================================
-void menu_item_activate_handler(GtkWidget *w, gpointer p)
-{
-  // g_print("menu_item_activate_handler\n");
-
-  nsIMenuListener *menuListener = nsnull;
-  nsIMenuItem *menuItem = (nsIMenuItem *)p;
-  if (menuItem != nsnull) {
-    nsMenuEvent mevent;
-    mevent.message = NS_MENU_SELECTED;
-    mevent.eventStructType = NS_MENU_EVENT;
-    mevent.point.x = 0;
-    mevent.point.y = 0;
-    // mevent.widget = menuItem;
-    mevent.widget = nsnull;
-    menuItem->GetCommand(mevent.mCommand);
-
-    mevent.mMenuItem = menuItem;
-    mevent.time = PR_IntervalNow();
-
-    // FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
-    //    nsEventStatus status;
-    //    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
-
-    menuItem->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-    if(menuListener) {
-      menuListener->MenuItemSelected(mevent);
-      NS_IF_RELEASE(menuListener);
-    }
-  }
-}
-
-//==============================================================
-void menu_map_handler(GtkWidget *w, gpointer p)
-{ 
-  nsIMenuListener *menuListener = nsnull;
-  nsIMenu *menu = (nsIMenu *)p;
-  if (menu != nsnull) {
-    nsMenuEvent mevent;
-    mevent.message = NS_MENU_SELECTED;
-    mevent.eventStructType = NS_MENU_EVENT;
-    mevent.point.x = 0;
-    mevent.point.y = 0;
-    mevent.widget = nsnull;
-
-    mevent.time = PR_IntervalNow();
-
-    menu->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-
-    if(menuListener) {
-      menuListener->MenuConstruct(
-        mevent,
-      	nsnull,   //parent window
-        nsnull,   //menuNode
-        nsnull ); // webshell
-      NS_IF_RELEASE(menuListener);
-    }
-  }
-}
-
-//==============================================================
-void menu_unmap_handler(GtkWidget *w, gpointer p)
-{
-  nsIMenuListener *menuListener = nsnull;
-  nsIMenu *menu = (nsIMenu *)p;
-  if (menu != nsnull) {
-    nsMenuEvent mevent;
-    mevent.message = NS_MENU_SELECTED;
-    mevent.eventStructType = NS_MENU_EVENT;
-    mevent.point.x = 0;
-    mevent.point.y = 0;
-    mevent.widget = nsnull;
-
-    mevent.time = PR_IntervalNow();
-
-    menu->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-    if(menuListener) {
-      menuListener->MenuDestruct(mevent);
-      NS_IF_RELEASE(menuListener);
-    }
-  }
-}
-
 
 //==============================================================
 void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
@@ -1091,30 +1004,3 @@ handle_superwin_paint(gint aX, gint aY,
   window->DoPaint(aX, aY, aWidth, aHeight, NULL);
 }
 
-//==============================================================
-gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
-{
-#if 0
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
-  if (p != nsnull) {
-    widgetWindow->OnCancel();
-  }
-#endif
-
-  return PR_FALSE;
-}
-
-//==============================================================
-gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
-{
-#if 0
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsFileWidget * widgetWindow = (nsFileWidget *) p;
-  if (p != nsnull) {
-    widgetWindow->OnOk();
-  }
-#endif
-
-  return PR_FALSE;
-}

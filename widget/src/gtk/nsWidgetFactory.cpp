@@ -32,13 +32,9 @@
 #include "nsButton.h"
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
-#include "nsListBox.h"
-#include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
 #include "nsFontRetrieverService.h"
@@ -55,25 +51,14 @@ static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-#if 0
-static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
-static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-static NS_DEFINE_IID(kCContextMenu,   NS_CONTEXTMENU_CID);
-#endif
 static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 
 // Drag & Drop, Clipboard
@@ -147,26 +132,14 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
     }
-    else if (mClassID.Equals(kCCombobox)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsComboBox();
-    }
-    else if (mClassID.Equals(kCRadioButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
-    }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
-    }
-    else if (mClassID.Equals(kCListbox)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsListBox();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsScrollbar(PR_FALSE);
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsScrollbar(PR_TRUE);
-    }
-    else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsTextWidget();
@@ -183,25 +156,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCLabel)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWidget *)new nsLabel();
     }
-#if 0
-    else if (mClassID.Equals(kCMenuBar)) {
-        inst = (nsISupports*)(nsIMenuBar *)new nsMenuBar();
-    }
-    else if (mClassID.Equals(kCMenu)) {
-        inst = (nsISupports*)(nsIMenu *)new nsMenu();
-    }
-    else if (mClassID.Equals(kCMenuItem)) {
-        inst = (nsISupports*)(nsIMenuItem *)new nsMenuItem();
-    }
-    else if (mClassID.Equals(kCPopUpMenu)) {
-        inst = (nsISupports*)new nsPopUpMenu();
-    }
-    /*
-    else if (mClassID.Equals(kCContextMenu)) {
-        inst = (nsISupports*)(nsIContextMenu*)new nsContextMenu();
-    }
-    */
-#endif
     else if (mClassID.Equals(kCSound)) {
     	nsISound* aSound = nsnull;
     	NS_NewSound(&aSound);
