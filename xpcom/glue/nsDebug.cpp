@@ -210,7 +210,7 @@ NS_COM PRBool nsDebug::GetWarningMessageBoxEnable(void)
 NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("Abort: at file %s, line %d", aFile, aLine));
+          ("###!!! Abort: at file %s, line %d", aFile, aLine));
 #if defined(_WIN32)
 #ifdef _M_IX86
   long* __p = (long*) 0x7;
@@ -236,7 +236,7 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
 {
 #ifndef TEMP_MAC_HACK
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("Break: at file %s, line %d", aFile, aLine));
+          ("###!!! Break: at file %s, line %d", aFile, aLine));
 #if defined(_WIN32)
 #ifdef _M_IX86
    ::DebugBreak();
@@ -261,7 +261,7 @@ NS_COM void nsDebug::PreCondition(const char* aStr, const char* aExpr,
                                   const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("PreCondition: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
+          ("###!!! PreCondition: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
            aFile, aLine));
   Break(aFile, aLine);
 }
@@ -270,7 +270,7 @@ NS_COM void nsDebug::PostCondition(const char* aStr, const char* aExpr,
                                    const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("PostCondition: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
+          ("###!!! PostCondition: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
            aFile, aLine));
   Break(aFile, aLine);
 }
@@ -279,7 +279,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
                                const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("Assertion: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
+          ("###!!! Assertion: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
            aFile, aLine));
   Break(aFile, aLine);
 }
@@ -288,7 +288,7 @@ NS_COM void nsDebug::NotYetImplemented(const char* aMessage,
                                        const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("NotYetImplemented: \"%s\" at file %s, line %d", aMessage,
+          ("###!!! NotYetImplemented: \"%s\" at file %s, line %d", aMessage,
            aFile, aLine));
   Break(aFile, aLine);
 }
@@ -297,7 +297,7 @@ NS_COM void nsDebug::NotReached(const char* aMessage,
                                 const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("NotReached: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
+          ("###!!! NotReached: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
   Break(aFile, aLine);
 }
 
@@ -305,7 +305,7 @@ NS_COM void nsDebug::Error(const char* aMessage,
                            const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("Error: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
+          ("###!!! Error: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
   Break(aFile, aLine);
 }
 
@@ -313,5 +313,5 @@ NS_COM void nsDebug::Warning(const char* aMessage,
                              const char* aFile, PRIntn aLine)
 {
   DBG_LOG(gDebugLog, PR_LOG_ERROR,
-          ("Warning: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
+          ("###!!! Warning: \"%s\" at file %s, line %d", aMessage, aFile, aLine));
 }
