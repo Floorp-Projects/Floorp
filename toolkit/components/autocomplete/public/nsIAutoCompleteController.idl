@@ -74,8 +74,11 @@ interface nsIAutoCompleteController : nsISupports
 
   /*
    * Begin conducting autocomplete behavior on a given input object
+   *
+   * @param input - the input object to coordinate searching with
+   * @param searchString - an optional default string to search for immediately
    */
-  void attachToInput(in nsIAutoCompleteInput input);
+  void attachToInput(in nsIAutoCompleteInput input, in AString searchString);
   
   /*
    * Detach conductor from the widget it is currently attached to

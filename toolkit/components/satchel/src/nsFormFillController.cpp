@@ -37,7 +37,6 @@
 
 #include "nsFormFillController.h"
 
-#include "nsFormFillResult.h"
 #include "nsFormHistory.h"
 #include "nsIAutoCompleteResultTypes.h"
 #include "nsString.h"
@@ -172,8 +171,6 @@ nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePop
   
   mDocShells->AppendElement(aDocShell);
   mPopups->AppendElement(aPopup);
-  
-  printf("AttachToBrowser\n");
   
   // Listen for focus events on the domWindow of the docShell
   nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(aDocShell);
@@ -617,7 +614,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   AddKeyListener(aInput);
 
   // Now we are the autocomplete controller's bitch
-  mController->AttachToInput(this);
+  mController->AttachToInput(this, NS_LITERAL_STRING(""));
 }
 
 void
