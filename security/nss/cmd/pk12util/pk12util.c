@@ -42,6 +42,7 @@
 #define PKCS12_IN_BUFFER_SIZE	200
 
 static char *progName;
+PRBool pk12_debugging = PR_FALSE;
 
 PRIntn pk12uErrno = 0;
 
@@ -183,12 +184,6 @@ p12u_CreateTemporaryDigestFile(void)
 
     if (!p12cxt->filename) {
 	PR_SetError(SEC_ERROR_NO_MEMORY, 0);
-	p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
-	return NULL;
-    }
-
-    p12cxt->file = PR_Open(p12cxt->filename, PR_RDONLY, 0400);
-    if (!p12cxt->filename) {
 	p12u_DestroyExportFileInfo(&p12cxt, PR_FALSE);
 	return NULL;
     }
@@ -347,8 +342,7 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
     /* If converting Unicode to ASCII, swap bytes before conversion
      * as neccessary.
      */
-#ifdef DEBUG
-    {
+    if (pk12_debugging) {
 	int i;
 	printf("Converted from:\n");
 	for (i=0; i<inBufLen; i++) {
@@ -357,7 +351,6 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	}
 	printf("\n");
     }
-#endif
     it.data = inBuf;
     it.len = inBufLen;
     dup = SECITEM_DupItem(&it);
@@ -388,8 +381,7 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	SECITEM_ZfreeItem(dup, PR_TRUE);
     }
 #endif
-#ifdef DEBUG
-    {
+    if (pk12_debugging) {
 	int i;
 	printf("Converted to:\n");
 	for (i=0; i<*outBufLen; i++) {
@@ -398,7 +390,6 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	}
 	printf("\n");
     }
-#endif
     return ret;
 }
 
@@ -476,15 +467,15 @@ P12U_InitSlot(PK11SlotInfo *slot, secuPWData *slotPw)
 			   (slotPw->source == PW_PLAINTEXT) ? slotPw->data : 0,
 			   (slotPw->source == PW_FROMFILE) ? slotPw->data : 0);
 	if (rv != SECSuccess) {
-	    PR_fprintf(PR_STDERR, "%s: Failed to initialize slot \"%s\".\n",
-				   progName, PK11_GetSlotName(slot));
+	    SECU_PrintError(progName, "Failed to initialize slot \"%s\"",
+				    PK11_GetSlotName(slot));
 	    return SECFailure;
 	}
     }
 
     if (PK11_Authenticate(slot, PR_TRUE, slotPw) != SECSuccess) {
-	PR_fprintf(PR_STDERR, "%s: Failed to authenticate to PKCS11 slot.\n",
-			       progName);
+	SECU_PrintError(progName,
+			 "Failed to authenticate to PKCS11 slot");
 	PORT_SetError(SEC_ERROR_USER_CANCELLED);
 	pk12uErrno = PK12UERR_USER_CANCELLED;
 	return SECFailure;
@@ -520,15 +511,15 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 
     rv = P12U_InitSlot(slot, slotPw);
     if (rv != SECSuccess) {
-	PR_fprintf(PR_STDERR, "%s: Failed to authenticate to \"%s\".\n",
-			       progName, PK11_GetSlotName(slot));
+	SECU_PrintError(progName, "Failed to authenticate to \"%s\"",
+			       			 PK11_GetSlotName(slot));
 	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto loser;
     }
 
     p12cxt = p12u_InitFile(PR_TRUE, in_file);
     if(!p12cxt) {
-	printf("%s: Initialization failed: %s\n", progName, in_file);
+	SECU_PrintError(progName,"Initialization failed: %s", in_file);
 	pk12uErrno = PK12UERR_INIT_FILE;
 	goto loser;
     }
@@ -542,14 +533,14 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 
     if(P12U_UnicodeConversion(NULL, &uniPwitem, pwitem, PR_TRUE,
 			      swapUnicode) != SECSuccess) {
-	printf("%s: Unicode conversion failed \n", progName);
+	SECU_PrintError(progName,"Unicode conversion failed");
 	pk12uErrno = PK12UERR_UNICODECONV;
 	goto loser;
     }
 
     tmpcxt = p12u_CreateTemporaryDigestFile();
     if(!tmpcxt) {
-	printf("%s: Create Temporary digest file failed.\n", progName);
+	SECU_PrintError(progName,"Create Temporary digest file failed");
 	pk12uErrno = PK12UERR_TMPDIGCREATE;
 	goto loser;
     }
@@ -560,7 +551,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 				    p12u_DigestRead, p12u_DigestWrite,
 				    tmpcxt);
     if(!p12dcx) {
-	printf("%s: PKCS12 decoder start failed.\n", progName);
+	SECU_PrintError(progName,"PKCS12 decoder start failed");
 	pk12uErrno = PK12UERR_PK12DECODESTART;
 	goto loser;
     }
@@ -568,7 +559,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
     /* decode the item */
     rv = SECU_FileToItem(&p12file, p12cxt->file);
     if (rv != SECSuccess) {
-	fprintf(stderr, "%s: Failed to read from import file.\n", progName);
+	SECU_PrintError(progName,"Failed to read from import file");
 	goto loser;
     }
     rv = SEC_PKCS12DecoderUpdate(p12dcx, p12file.data, p12file.len);
@@ -587,7 +578,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 	}
 	goto tried_pdu_import;
 #endif /* EXTRA */
-	printf("%s: PKCS12 decoding failed.\n", progName);
+	SECU_PrintError(progName,"PKCS12 decoding failed");
 	pk12uErrno = PK12UERR_DECODE;
     }
 
@@ -595,7 +586,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 
     /* does the blob authenticate properly? */
     if(SEC_PKCS12DecoderVerify(p12dcx) != SECSuccess) {
-	printf("%s: PKCS12 decode not verified\n", progName);
+	SECU_PrintError(progName,"PKCS12 decode not verified");
 	pk12uErrno = PK12UERR_DECODEVERIFY;
 	goto loser;
     }
@@ -605,15 +596,16 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 	 != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_PKCS12_DUPLICATE_DATA) {
 	    pk12uErrno = PK12UERR_CERTALREADYEXISTS;
+	} else {
+	    pk12uErrno = PK12UERR_DECODEVALIBAGS;
 	}
-	printf("%s: PKCS12 decode validate bags failed.\n", progName);
-	pk12uErrno = PK12UERR_DECODEVALIBAGS;
+	SECU_PrintError(progName,"PKCS12 decode validate bags failed");
 	goto loser;
     }
 
     /* stuff 'em in */
     if(SEC_PKCS12DecoderImportBags(p12dcx) != SECSuccess) {
-	printf("%s: PKCS12 decode import bags failed.\n", progName);
+	SECU_PrintError(progName,"PKCS12 decode import bags failed");
 	pk12uErrno = PK12UERR_DECODEIMPTBAGS;
 	goto loser;
     }
@@ -622,7 +614,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
     /* important - to add the password hash into the key database */
     rv = PK11_CheckUserPassword(slot, pw_string);
     if( rv != SECSuccess ) {
-	printf("Failed to CheckUserPassword\n");
+	SECU_PrintError(progName,"Failed to CheckUserPassword");
 	exit(-1);
     }
 #endif
@@ -715,19 +707,19 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
 
     cert = PK11_FindCertFromNickname(nn, NULL);
     if(!cert) {
-	printf("%s: find cert by nickname failed.\n", progName);
+	SECU_PrintError(progName,"find cert by nickname failed");
 	pk12uErrno = PK12UERR_FINDCERTBYNN;
 	return;
     }
 
     if (!cert->slot) {
-	fprintf(stderr, "%s: cert does not have a slot.\n", progName);
+	SECU_PrintError(progName,"cert does not have a slot");
 	pk12uErrno = PK12UERR_FINDCERTBYNN;
 	goto loser;
     }
     if (P12U_InitSlot(cert->slot, slotPw) != SECSuccess) {
-	fprintf(stderr, "%s: Failed to authenticate to \"%s\".\n",
-			 progName, PK11_GetSlotName(cert->slot));
+	SECU_PrintError(progName,"Failed to authenticate to \"%s\"",
+			  PK11_GetSlotName(cert->slot));
 	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto loser;
     }
@@ -740,14 +732,14 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
 
     p12ecx = SEC_PKCS12CreateExportContext(NULL, NULL, cert->slot, NULL);
     if(!p12ecx) {
-	printf("%s: export context creation failed.\n", progName);
+	SECU_PrintError(progName,"export context creation failed");
 	pk12uErrno = PK12UERR_EXPORTCXCREATE;
 	goto loser;
     }
 
     if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, SEC_OID_SHA1)
        != SECSuccess) {
-	printf("%s: PKCS12 add password integrity failed.\n", progName);
+	SECU_PrintError(progName,"PKCS12 add password integrity failed");
 	pk12uErrno = PK12UERR_PK12ADDPWDINTEG;
 	goto loser;
     }
@@ -761,7 +753,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
     }
 
     if(!certSafe || !keySafe) {
-	printf("%s: key or cert safe creation failed.\n", progName);
+	SECU_PrintError(progName,"key or cert safe creation failed");
 	pk12uErrno = PK12UERR_CERTKEYSAFE;
 	goto loser;
     }
@@ -770,21 +762,21 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
 			CERT_GetDefaultCertDB(), keySafe, NULL, PR_TRUE, pwitem,
 			SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC)
 			!= SECSuccess) {
-	printf("%s: add cert and key failed.\n", progName);
+	SECU_PrintError(progName,"add cert and key failed");
 	pk12uErrno = PK12UERR_ADDCERTKEY;
 	goto loser;
     }
 
-    p12cxt = p12u_InitFile(PR_FALSE, outfile);
+    p12cxt = p12u_InitFile(PR_FALSE, outfile); 
     if(!p12cxt) {
-	printf("%s: Initialization failed: %s\n", progName, outfile);
+	SECU_PrintError(progName,"Initialization failed: %s", outfile);
 	pk12uErrno = PK12UERR_INIT_FILE;
 	goto loser;
     }
 
     if(SEC_PKCS12Encode(p12ecx, p12u_WriteToExportFile, p12cxt)
 			!= SECSuccess) {
-	printf("%s: PKCS12 encode failed.\n", progName);
+	SECU_PrintError(progName,"PKCS12 encode failed");
 	pk12uErrno = PK12UERR_ENCODE;
 	goto loser;
     }
@@ -869,7 +861,8 @@ enum {
     opt_Export,
     opt_P12FilePWFile,
     opt_P12FilePW,
-    opt_DBPrefix
+    opt_DBPrefix,
+    opt_Debug
 };
 
 static secuCommandFlag pk12util_options[] =
@@ -884,7 +877,8 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Export	       */ 'o', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePWFile     */ 'w', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePW	       */ 'W', PR_TRUE,	 0, PR_FALSE },
-    { /* opt_DBPrefix	       */ 'P', PR_TRUE,	 0, PR_FALSE }
+    { /* opt_DBPrefix	       */ 'P', PR_TRUE,	 0, PR_FALSE },
+    { /* opt_Debug	       */ 'v', PR_FALSE, 0, PR_FALSE }
 };
 
 int
@@ -913,6 +907,8 @@ main(int argc, char **argv)
 
     if (rv != SECSuccess)
 	Usage(progName);
+
+    pk12_debugging = pk12util.options[opt_Debug].activated;
 
     if (pk12util.options[opt_Import].activated &&
 	pk12util.options[opt_Export].activated) {
@@ -964,8 +960,7 @@ main(int argc, char **argv)
 	    slot = PK11_FindSlotByName(slotname);
 
 	if (!slot) {
-	    PR_fprintf(PR_STDERR, "%s: Invalid slot \"%s\".\n",
-				   progName, slotname);
+	    SECU_PrintError(progName,"Invalid slot \"%s\"", slotname);
 	    goto done;
 	}
 
