@@ -55,7 +55,6 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const PRUnichar *text, char **_retval) 
 {
   *_retval = nsnull;
-  char* convert;
   nsAutoString charsetStr(charset);
   nsIUnicodeEncoder *encoder = nsnull;
   nsresult rv = NS_OK;
@@ -85,7 +84,8 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
               pBuf = buf;
            }
            if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
-              *_retval = nsEscape(convert, url_XPAlphas);
+              pBuf[outlen] = '\0';
+              *_retval = nsEscape(pBuf, url_XPAlphas);
               if(nsnull == *_retval)
                 rv = NS_ERROR_OUT_OF_MEMORY;
            }
