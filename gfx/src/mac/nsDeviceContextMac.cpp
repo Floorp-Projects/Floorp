@@ -100,7 +100,25 @@ NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *
 NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
   //XXX it is very critical that this not lie!! MMP
-  aSupportsWidgets = PR_FALSE;
+  
+  // еее VERY IMPORTANT (pinkerton)
+  // This routine should return true if the widgets behave like Win32
+  // "windows", that is they paint themselves and the app never knows about
+  // them or has to send them update events. We were returning false which
+  // meant that raptor needed to make sure to redraw them. However, if we
+  // return false, the widgets never get created because the CreateWidget()
+  // call in nsView never creates the widget. If we return true (which makes
+  // things work), we are lying because the controls really need those
+  // precious update/repaint events.
+  // 
+  // The situation we need is the following:
+  // - return false from SupportsNativeWidgets()
+  // - Create() is called on widgets when the above case is true.
+  // 
+  // Raptor currently doesn't work this way and needs to be fixed.
+  // (please remove this comment when this situation is rectified)
+  
+  aSupportsWidgets = PR_TRUE;
 
   return NS_OK;
 }
