@@ -174,7 +174,6 @@ menubutton.button-toolbar[open="true"],
 menubutton.button-toolbar:hover 
   {
     color                   : #FF0000;
-    text-decoration         : underline;
   }  
 
   
