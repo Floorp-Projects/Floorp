@@ -1440,11 +1440,9 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
               result = PRBool(0 != (eventState & NS_EVENT_STATE_HOVER));
             }
-/*  XXX Rod, uncomment this to enable the drag over pseudo-class
             else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
-              result = PRBool(0 != (eventState & NS_EVENT_STATE_DRAG_OVER));
+              result = PRBool(0 != (eventState & NS_EVENT_STATE_DRAGOVER));
             }
-*/
           }
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
