@@ -130,19 +130,18 @@ public:
         Pull out an existing transport from the list, or if none exists
         create one. 
     */
-    nsresult RequestTransport(nsIURI *i_Uri, 
+    virtual nsresult RequestTransport(nsIURI *i_Uri, 
                               nsHTTPChannel* i_Channel, 
                               nsIChannel** o_pTrans);
     /*
         Remove this transport from the list.
     */
-    nsresult ReleaseTransport(nsIChannel* i_pTrans);
+    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
 
 protected:
     // None
     nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
-private:
 
 	// This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
