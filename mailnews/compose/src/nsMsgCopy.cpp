@@ -31,6 +31,8 @@
 #endif /* MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP */
 #include "nsMsgComposeStringBundle.h"
 
+#define ANY_SERVER "anyfolder://"
+
 #ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #else
@@ -277,164 +279,135 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
                     const char       *aFolderURI)
 {
   nsresult                  rv = NS_OK;
-  nsIMsgFolder              *msgFolder= nsnull;
-  PRUint32                  cnt = 0;
-  PRUint32                  i;
-  PRBool                    fixed = PR_FALSE;
-  char                      *savePref = "";
+  nsIMsgFolder              *msgFolder = nsnull;
 
+  if (!userIdentity || !aFolderURI || (PL_strlen(aFolderURI) == 0)) {
+    return nsnull;
+  }
+  
   //
   // get the current mail session....
   //
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
   if (NS_FAILED(rv)) 
     return nsnull;
-
+  
   nsCOMPtr<nsIMsgAccountManager> accountManager;
   rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
   if (NS_FAILED(rv)) 
     return nsnull;
-  
-  // XXX TODO why aren't we just finding the server that matches the URI?
-  // this makes no sense to me.
 
-  nsCOMPtr<nsISupportsArray> retval; 
-  accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 
-  if (!retval) 
-    return nsnull; 
-
-  // Ok, we have to look through the servers and try to find the server that
-  // has a valid folder of the type that interests us...
-  rv = retval->Count(&cnt);
-  if (NS_FAILED(rv))
-    return nsnull;
-
-  // Make a working copy to avoid compiler problems with const...
-  if ( (aFolderURI) && (*aFolderURI) )
-    savePref = PL_strdup(aFolderURI);
-
-  for (i=0; i<cnt; i++)
-  {
-    // Now that we have the server...we need to get the named message folder
-    nsCOMPtr<nsIMsgIncomingServer> inServer; 
-    nsISupports                    *ptr = retval->ElementAt(i);
-
-    inServer = do_QueryInterface(ptr);
-    NS_IF_RELEASE(ptr);
-    if(NS_FAILED(rv) || (!inServer))
-    {
-      if (*savePref)
-        PR_FREEIF(savePref);
+  // as long as it doesn't start with anyfolder://
+  if (PL_strncasecmp(ANY_SERVER, aFolderURI, PL_strlen(aFolderURI)) != 0) {
+    nsCOMPtr<nsIMsgIncomingServer> incomingServer;
+    rv = accountManager->FindServerUsingURI(aFolderURI, getter_AddRefs(incomingServer));
+    if (NS_FAILED(rv))
       return nsnull;
-    }
 
-    //
-    // If aFolderURI is passed in, then the user has chosen a specific
-    // mail folder to save the message, but if it is null, just find the
-    // first one and make that work. The folder is specified as a URI, like
-    // the following:
-    //
-    //                  mailbox://rhp@netscape.com/Sent
-    //                  imap://rhp@nsmail-2/Drafts
-    //                  newsgroup://news.mozilla.org/netscape.test
-    //
-    if ( (savePref) && (*savePref) )
-    {
-      char *anyServer = "anyfolder://";
-      if (PL_strncasecmp(anyServer, savePref, PL_strlen(savePref)) != 0)
-      {
-        char *serverURI = nsnull;
-        nsresult res = inServer->GetServerURI(&serverURI);
-        if ( NS_FAILED(res) || (!serverURI) || !(*serverURI) )
-          continue;
-
-        // First, make sure that savePref is only the protocol://server
-        // for this comparison...not the file path if any...
-        //
-        if (!fixed)
-        {
-          char *ptr1 = PL_strstr(savePref, "//");
-          if ( (ptr1) && (*ptr1) )
-          {
-            ptr1 = ptr1 + 2;
-            char *ptr2 = PL_strchr(ptr1, '/');
-            if ( (ptr2) && (*ptr2) )
-              *ptr2 = '\0';
-          }
-          fixed = PR_TRUE;
-        }
-        // Now check to see if this URI is the same as the
-        // server pref
-        if (PL_strncasecmp(serverURI, savePref, PL_strlen(savePref)) != 0)
-          continue;
-      }
-    }
-
-    nsIFolder *aFolder;
-    rv = inServer->GetRootFolder(&aFolder);
+    nsCOMPtr <nsIFolder> aFolder;
+    rv = incomingServer->GetRootFolder(getter_AddRefs(aFolder));
     if (NS_FAILED(rv) || (!aFolder))
-      continue;
-
+      return nsnull;
+        
     nsCOMPtr<nsIMsgFolder> rootFolder;
-    rootFolder = do_QueryInterface(aFolder);
-    NS_RELEASE(aFolder);
-
-    if(NS_FAILED(rv) || (!rootFolder))
-      continue;
-
-    PRUint32 numFolders = 0;
-    msgFolder = nsnull;
-
-    //
-    // First, just try to match the aFolderURI which is a URI with the GetChildWithURI
-    // call. If that fails, then fall back to the defaults, but if it works, then just
-    // return what is found
-    //
-    if ( (aFolderURI) && (*aFolderURI) )
-    {
-      rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE /* deep */, &msgFolder);
-      if (NS_SUCCEEDED(rv) && (msgFolder)) 
-        break;
-
-      /* we failed to find the folder, so we create it in the datasource so
-         we have something to return to pass into DoCopy */
-      rv = rootFolder->CreateFolderInDatasource(aFolderURI, &msgFolder);
-      if (NS_SUCCEEDED(rv) && (msgFolder)) 
-        break;
-    }
-
-    // 
-    // If we haven't found the msgFolder, then just use the defaults
-    // by getting the folder by flags
-    //
-    if (!msgFolder)
-    {
-      if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
-      {
-        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
-      }
-      else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
-      {
-        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
-      }
-      else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
-      {
-        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
-      }
-      else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
-      {
-        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
-      }
-    }
+    rootFolder = do_QueryInterface(aFolder, &rv);
     
+    if(NS_FAILED(rv) || (!rootFolder))
+      return nsnull;
+
+    rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE /* deep */, &msgFolder);
     if (NS_SUCCEEDED(rv) && (msgFolder)) 
-      break;
+      return msgFolder;
+    
+    /* we failed to find the folder, so we create it in the datasource so
+       we have something to return to pass into DoCopy()
+       see bug #14591  */
+    rv = rootFolder->CreateFolderInDatasource(aFolderURI, &msgFolder);
+    if (NS_SUCCEEDED(rv) && (msgFolder)) {
+      return msgFolder;
+    }
   }
+  else {
+    PRUint32                  cnt = 0;
+    PRUint32                  i;
+    
+    // if anyfolder will do, go look for one.
+    nsCOMPtr<nsISupportsArray> retval; 
+    accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 
+    if (!retval) 
+      return nsnull; 
+    
+    // Ok, we have to look through the servers and try to find the server that
+    // has a valid folder of the type that interests us...
+    rv = retval->Count(&cnt);
+    if (NS_FAILED(rv))
+      return nsnull;
+    
+    
+    for (i=0; i<cnt; i++) {
+      // Now that we have the server...we need to get the named message folder
+      nsCOMPtr<nsIMsgIncomingServer> inServer; 
+      nsCOMPtr<nsISupports>ptr;
+      ptr = retval->ElementAt(i);
+      
+      inServer = do_QueryInterface(ptr, &rv);
+      if(NS_FAILED(rv) || (!inServer))
+        continue;
+      
+      //
+      // If aFolderURI is passed in, then the user has chosen a specific
+      // mail folder to save the message, but if it is null, just find the
+      // first one and make that work. The folder is specified as a URI, like
+      // the following:
+      //
+      //                  mailbox://rhp@netscape.com/Sent
+      //                  imap://rhp@nsmail-2/Drafts
+      //                  newsgroup://news.mozilla.org/netscape.test
+      //
+      char *serverURI = nsnull;
+      rv = inServer->GetServerURI(&serverURI);
+      if ( NS_FAILED(rv) || (!serverURI) || !(*serverURI) )
+        continue;
+      
+      nsCOMPtr <nsIFolder> folder;
+      rv = inServer->GetRootFolder(getter_AddRefs(folder));
+      if (NS_FAILED(rv) || (!folder))
+        continue;
+      
+      nsCOMPtr<nsIMsgFolder> rootFolder;
+      rootFolder = do_QueryInterface(folder);
+      
+      if(NS_FAILED(rv) || (!rootFolder))
+        continue;
+      
+      PRUint32 numFolders = 0;
+      msgFolder = nsnull;
+      
+      // use the defaults by getting the folder by flags
+      if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+        {
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+        }
+      else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+        {
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
+        }
+      else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+        {
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
+        }
+      else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+        {
+          rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+        }
 
-  if (*savePref)
-    PR_FREEIF(savePref);
-
-  return msgFolder;
+      if (NS_SUCCEEDED(rv) && msgFolder) {
+        return msgFolder;
+      }
+    }
+  }
+  
+  return nsnull;
 }
 
 //
