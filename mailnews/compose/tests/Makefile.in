@@ -22,7 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = compose smtp
+DIRS = compose
+# smtp
 
 include $(topsrcdir)/config/config.mk
 
