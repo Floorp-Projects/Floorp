@@ -26,6 +26,7 @@ DIRS=            \
 	protocol \
 	util     \
     mime     \
+	streamconv \
 	test     \
 	$(NULL)
 
