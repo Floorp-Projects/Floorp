@@ -44,6 +44,7 @@ CPPSRCS		= \
 		nsXULDocumentInfo.cpp \
 		nsXULPopupListener.cpp \
 		nsXULCommandDispatcher.cpp \
+		nsXULControllers.cpp \
 		nsXULKeyListener.cpp \
 		nsXULTreeElement.cpp \
 		$(NULL)

@@ -38,6 +38,7 @@ EXPORTS		= \
 		nsIDOMPluginArray.h \
 		nsIDOMBarProp.h \
 		nsIDOMDOMException.h \
+		nsPIDOMWindow.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -19,6 +19,7 @@
         readonly attribute  BarProp directories;
         readonly attribute  boolean closed;
         readonly attribute  WindowCollection frames;
+		readonly attribute  xpidl nsIControllers controllers;
                  attribute  Window opener;
                  attribute  wstring status;
                  attribute  wstring defaultStatus;

@@ -41,6 +41,7 @@
 #include "nsIXULPopupListener.h"
 #include "nsIXULKeyListener.h"
 #include "nsIXULCommandDispatcher.h"
+#include "nsIControllers.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -69,6 +70,7 @@ static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID
 static NS_DEFINE_CID(kXULPopupListenerCID,                NS_XULPOPUPLISTENER_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,                  NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULCommandDispatcherCID,            NS_XULCOMMANDDISPATCHER_CID);
+static NS_DEFINE_CID(kXULControllersCID,                  NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,              NS_XULTEMPLATEBUILDER_CID);
 
 //----------------------------------------------------------------------
@@ -104,11 +106,16 @@ CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 extern nsresult
 NS_NewDefaultResource(nsIRDFResource** aResult);
 
+extern nsresult
+NS_NewXULControllers(nsIControllers** result);
+
+
 MAKE_CTOR(RDFService,RDFService,RDFService)
 MAKE_CTOR(XULSortService,XULSortService,XULSortService)
 MAKE_CTOR(XULPopupListener,XULPopupListener,XULPopupListener)
 MAKE_CTOR(XULKeyListener,XULKeyListener,XULKeyListener)
 MAKE_CTOR(XULCommandDispatcher,XULCommandDispatcher,XULCommandDispatcher)
+MAKE_CTOR(XULControllers,XULControllers,Controllers)
 
 MAKE_CTOR(RDFXMLDataSource,RDFXMLDataSource,RDFDataSource)
 MAKE_CTOR(RDFFileSystemDataSource,RDFFileSystemDataSource,RDFDataSource)
@@ -243,6 +250,9 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
     else if (aClass.Equals(kXULCommandDispatcherCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULCommandDispatcher);
     }
+    else if (aClass.Equals(kXULControllersCID)) {
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULControllers);
+    }
     else if (aClass.Equals(kXULContentUtilsCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewXULContentUtils);
     }
@@ -316,6 +326,8 @@ static Components gComponents[] = {
       NS_RDF_PROGID "/xul-key-listener", },
     { "XUL CommandDispatcher", &kXULCommandDispatcherCID,
       NS_RDF_PROGID "/xul-command-dispatcher", },
+    { "XUL Controllers", &kXULControllersCID,
+      NS_RDF_PROGID "/xul-controllers", },
     { "XUL Content Utilities", &kXULContentUtilsCID,
       NS_RDF_PROGID "/xul-content-utils", },
 };

@@ -3,9 +3,21 @@
 // Controller object for Results Pane
 var ResultsPaneController =
 {
-	IsCommandEnabled: function(command)
+    supportsCommand: function(command)
 	{
-		dump('ResultsPaneController::IsCommandEnabled(' + command + ')\n');
+        switch ( command )
+		{
+			case "cmd_selectAll":
+			case "cmd_delete":
+                return true;
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		dump('ResultsPaneController::isCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -23,7 +35,7 @@ var ResultsPaneController =
 		}
 	},
 
-	DoCommand: function(command)
+	doCommand: function(command)
 	{
 		var resultsTree = document.getElementById('resultsTree');
 		
@@ -52,9 +64,21 @@ var ResultsPaneController =
 // Controller object for Dir Pane
 var DirPaneController =
 {
-	IsCommandEnabled: function(command)
+    supportsCommand: function(command)
 	{
-		dump('DirPaneController::IsCommandEnabled(' + command + ')\n');
+        switch ( command )
+		{
+			case "cmd_selectAll":
+			case "cmd_delete":
+                return true;
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		dump('DirPaneController::isCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -71,7 +95,7 @@ var DirPaneController =
 		}
 	},
 
-	DoCommand: function(command)
+	doCommand: function(command)
 	{
 		var dirTree = document.getElementById('dirTree');
 
@@ -99,13 +123,19 @@ function SetupCommandUpdateHandlers()
 	
 	// dir pane
 	widget = document.getElementById('dirTree');
-	if ( widget )
-		widget.controller = DirPaneController;
+	if ( widget ) {
+	    dump('About to execute appendController(DirPaneController \n');
+		widget.controllers.appendController(DirPaneController);
+		dump('Finished appendController(DirPaneController \n');
+    }
 	
 	// results pane
 	widget = document.getElementById('resultsTree');
-	if ( widget )
-		widget.controller = ResultsPaneController;
+	if ( widget ) {
+	    dump('About to execute appendController(ResultsPaneController \n');
+		widget.controllers.appendController(ResultsPaneController);
+		dump('Finished to execute appendController(ResultsPaneController \n');
+		}
 }
 
 

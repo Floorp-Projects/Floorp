@@ -40,6 +40,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
+#include "nsIControllers.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -56,6 +57,7 @@ static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
+static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMElement);
@@ -68,6 +70,7 @@ NS_DEF_PTR(nsIDOMWindowCollection);
 NS_DEF_PTR(nsIDOMEvent);
 NS_DEF_PTR(nsIDOMEventTarget);
 NS_DEF_PTR(nsIDOMWindow);
+NS_DEF_PTR(nsIControllers);
 
 //
 // Window property ids
@@ -91,20 +94,21 @@ enum Window_slots {
   WINDOW_DIRECTORIES = -16,
   WINDOW_CLOSED = -17,
   WINDOW_FRAMES = -18,
-  WINDOW_OPENER = -19,
-  WINDOW_STATUS = -20,
-  WINDOW_DEFAULTSTATUS = -21,
-  WINDOW_NAME = -22,
-  WINDOW_INNERWIDTH = -23,
-  WINDOW_INNERHEIGHT = -24,
-  WINDOW_OUTERWIDTH = -25,
-  WINDOW_OUTERHEIGHT = -26,
-  WINDOW_SCREENX = -27,
-  WINDOW_SCREENY = -28,
-  WINDOW_PAGEXOFFSET = -29,
-  WINDOW_PAGEYOFFSET = -30,
-  WINDOW_SCROLLX = -31,
-  WINDOW_SCROLLY = -32
+  WINDOW_CONTROLLERS = -19,
+  WINDOW_OPENER = -20,
+  WINDOW_STATUS = -21,
+  WINDOW_DEFAULTSTATUS = -22,
+  WINDOW_NAME = -23,
+  WINDOW_INNERWIDTH = -24,
+  WINDOW_INNERHEIGHT = -25,
+  WINDOW_OUTERWIDTH = -26,
+  WINDOW_OUTERHEIGHT = -27,
+  WINDOW_SCREENX = -28,
+  WINDOW_SCREENY = -29,
+  WINDOW_PAGEXOFFSET = -30,
+  WINDOW_PAGEYOFFSET = -31,
+  WINDOW_SCROLLX = -32,
+  WINDOW_SCROLLY = -33
 };
 
 /***********************************************************************/
@@ -463,6 +467,25 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case WINDOW_CONTROLLERS:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "window.controllers", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIControllers* prop;
+        nsresult result = NS_OK;
+        result = a->GetControllers(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, result);
@@ -2683,6 +2706,7 @@ static JSPropertySpec WindowProperties[] =
   {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controllers",    WINDOW_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},

@@ -34,6 +34,7 @@ class nsIDOMHistory;
 class nsIDOMWindowCollection;
 class nsIDOMEvent;
 class nsIDOMWindow;
+class nsIControllers;
 
 #define NS_IDOMWINDOW_IID \
  { 0xa6cf906b, 0x15b3, 0x11d2, \
@@ -78,6 +79,8 @@ public:
   NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
 
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames)=0;
+
+  NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
 
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener)=0;
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener)=0;
@@ -202,6 +205,7 @@ public:
   NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories);  \
   NS_IMETHOD    GetClosed(PRBool* aClosed);  \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);  \
+  NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener);  \
   NS_IMETHOD    GetStatus(nsString& aStatus);  \
@@ -281,6 +285,7 @@ public:
   NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories) { return _to GetDirectories(aDirectories); } \
   NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to GetClosed(aClosed); } \
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames) { return _to GetFrames(aFrames); } \
+  NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to GetOpener(aOpener); } \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener) { return _to SetOpener(aOpener); } \
   NS_IMETHOD    GetStatus(nsString& aStatus) { return _to GetStatus(aStatus); } \

@@ -91,7 +91,7 @@
 #include "rdf.h"
 #include "nsHTMLValue.h"
 
-#include "nsIController.h"
+#include "nsIControllers.h"
 
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
@@ -141,6 +141,8 @@ static NS_DEFINE_IID(kIDOMFormListenerIID,        NS_IDOMFORMLISTENER_IID);
 static NS_DEFINE_IID(kIDOMLoadListenerIID,        NS_IDOMLOADLISTENER_IID);
 static NS_DEFINE_IID(kIDOMPaintListenerIID,       NS_IDOMPAINTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMMenuListenerIID,        NS_IDOMMENULISTENER_IID);
+
+static NS_DEFINE_CID(kXULControllersCID,          NS_XULCONTROLLERS_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -450,7 +452,7 @@ private:
     nsXULAttributes*       mAttributes;         // [OWNER]
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
     nsIDOMXULElement*      mBroadcaster;        // [WEAK]
-    nsCOMPtr<nsIController>             mController; // [OWNER]
+    nsCOMPtr<nsIControllers>             mControllers; // [OWNER]
     nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;   // [OWNER]    
     nsCOMPtr<nsIRDFResource>            mOwnedResource; // [OWNER]
 
@@ -3480,19 +3482,20 @@ RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   return NS_OK;
 }
 
-// Controller Methods
+// Controllers Methods
 NS_IMETHODIMP
-RDFElementImpl::GetController(nsIController** aResult)
+RDFElementImpl::GetControllers(nsIControllers** aResult)
 {
-  *aResult = mController;
+  if(!mControllers){
+    nsresult rv = nsComponentManager::CreateInstance(kXULControllersCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIControllers),
+                                            getter_AddRefs(mControllers));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
+    if (NS_FAILED(rv)) return rv;
+  }
+  *aResult = mControllers;
   NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFElementImpl::SetController(nsIController* aController)
-{
-  mController = aController;
   return NS_OK;
 }
 

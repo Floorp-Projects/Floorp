@@ -27,7 +27,7 @@
 // Default Controller object
 var DefaultController =
 {
-	IsCommandEnabled: function(command)
+    supportsCommand: function(command)
 	{
 		switch ( command )
 		{
@@ -42,7 +42,22 @@ var DefaultController =
 		}
 	},
 
-	DoCommand: function(command)
+	isCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_undo":
+				return true;
+			
+			case "cmd_redo":
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
 	{
 		switch ( command )
 		{
@@ -61,7 +76,20 @@ var DefaultController =
 // Controller object for folder pane
 var FolderPaneController =
 {
-	IsCommandEnabled: function(command)
+   supportsCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+			case "cmd_delete":
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
 	{
 		dump("FolderPaneController.IsCommandEnabled\n");
 		switch ( command )
@@ -78,7 +106,7 @@ var FolderPaneController =
 		}
 	},
 
-	DoCommand: function(command)
+	doCommand: function(command)
 	{
 		switch ( command )
 		{
@@ -102,9 +130,22 @@ var FolderPaneController =
 // Controller object for thread pane
 var ThreadPaneController =
 {
-	IsCommandEnabled: function(command)
+   supportsCommand: function(command)
 	{
-		dump("ThreadPaneController.IsCommandEnabled\n");
+		switch ( command )
+		{
+			case "cmd_selectAll":
+			case "cmd_delete":
+				return true;
+			
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		dump("ThreadPaneController.isCommandEnabled\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -119,7 +160,7 @@ var ThreadPaneController =
 		}
 	},
 
-	DoCommand: function(command)
+	doCommand: function(command)
 	{
 		switch ( command )
 		{
@@ -149,12 +190,12 @@ function SetupCommandUpdateHandlers()
 	// folder pane
 	widget = GetFolderTree();
 	if ( widget )
-		widget.controller = FolderPaneController;
+		widget.controllers.appendController(FolderPaneController);
 	
 	// thread pane
 	widget = GetThreadTree();
 	if ( widget )
-		widget.controller = ThreadPaneController;
+		widget.controllers.appendController(ThreadPaneController);
 }
 
 

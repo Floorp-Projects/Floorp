@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,27 +15,25 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
-/* DOM stubs so that we can pass DOM objects across XPConnect */
+#ifndef nsPIDOMWindow_h__
+#define nsPIDOMWindow_h__
 
-%{C++
-/* C++ should ignore this file because there are real DOM interfaces
-   elsewhere, so if 0 it out
-*/
-#if 0
-%}
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
 
-#include "domstubs.idl"
 
-[scriptable, uuid(0574ed81-c088-11d2-96ed-00104b7b7deb)]
-interface nsIDOMXULElement : nsIDOMElement {};
+#define NS_PIDOMWINDOW_IID \
+{ 0x3aa80781, 0x7e6a, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-[scriptable, uuid(a6cf90ec-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMXULTreeElement : nsIDOMXULElement {};
 
-[scriptable, uuid(f3c50361-14fe-11d3-bf87-00105a1b0627)]
-interface nsIDOMXULCommandDispatcher : nsISupports {};
+class nsPIDOMWindow : public nsISupports {
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_PIDOMWINDOW_IID; return iid; }
 
-%{C++
-#endif
-%}
+  NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult)=0;
+};
+
+#endif // nsPIDOMWindow_h__
