@@ -167,6 +167,12 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
+
+// lame global hack to make sure that we don't send an activate event when
+// a popup deactivates (popups arn't supposed to steal focus or cause 
+// activate/deactivate events, but we can't tell MacOS that)
+PRBool gPopupJustDeactivated = PR_FALSE;
+
 void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 {
     //printf("nsMacEventDispatcher::SetActivated \n");
@@ -179,6 +185,11 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
         return;
       }
     }
+   
+  if(gPopupJustDeactivated) {
+    gPopupJustDeactivated = PR_FALSE;
+    return;
+  }
     
 	// tell the old widget it is not focused
 	if (mActiveWidget)
@@ -206,12 +217,14 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
+
 void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 {
     //printf("nsMacEventDispatchHandler::SetDeactivated\n");
     if(aDeactivatedWidget) {
       if ( eWindowType_popup == aDeactivatedWidget->GetWindowType() ) {
         //printf("nsMacEventDispatchHandler::SetDeactivated type popup, bail\n");
+        gPopupJustDeactivated = PR_TRUE;
         return;
       }
     }
