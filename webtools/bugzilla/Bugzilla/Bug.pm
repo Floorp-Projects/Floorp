@@ -225,12 +225,18 @@ sub initBug  {
 # If you add a new sub, please try to keep it in alphabetical order
 # with the other ones.
 
+# Note: If you add a new method, remember that you must check the error
+# state of the bug before returning any data. If $self->{error} is
+# defined, then return something empty. Otherwise you risk potential
+# security holes.
+
 sub dup_id {
     my ($self) = @_;
-
     return $self->{'dup_id'} if exists $self->{'dup_id'};
 
     $self->{'dup_id'} = undef;
+    return if $self->{'error'};
+
     if ($self->{'resolution'} eq 'DUPLICATE') { 
         my $dbh = Bugzilla->dbh;
         $self->{'dup_id'} =
@@ -245,10 +251,13 @@ sub dup_id {
 
 sub actual_time {
     my ($self) = @_;
-
     return $self->{'actual_time'} if exists $self->{'actual_time'};
 
-    return undef unless Bugzilla->user->in_group(Param("timetrackinggroup"));
+    if ( $self->{'error'} || 
+         !Bugzilla->user->in_group(Param("timetrackinggroup")) ) {
+        $self->{'actual_time'} = undef;
+        return $self->{'actual_time'};
+    }
 
     my $sth = Bugzilla->dbh->prepare("SELECT SUM(work_time)
                                       FROM longdescs 
@@ -262,6 +271,7 @@ sub any_flags_requesteeble () {
     my ($self) = @_;
     return $self->{'any_flags_requesteeble'} 
         if exists $self->{'any_flags_requesteeble'};
+    return 0 if $self->{'error'};
 
     $self->{'any_flags_requesteeble'} = 
         grep($_->{'is_requesteeble'}, @{$self->flag_types});
@@ -272,6 +282,7 @@ sub any_flags_requesteeble () {
 sub attachments () {
     my ($self) = @_;
     return $self->{'attachments'} if exists $self->{'attachments'};
+    return [] if $self->{'error'};
     $self->{'attachments'} = Bugzilla::Attachment::query($self->{bug_id});
     return $self->{'attachments'};
 }
@@ -279,6 +290,7 @@ sub attachments () {
 sub assigned_to () {
     my ($self) = @_;
     return $self->{'assigned_to'} if exists $self->{'assigned_to'};
+    $self->{'assigned_to_id'} = 0 if $self->{'error'};
     $self->{'assigned_to'} = new Bugzilla::User($self->{'assigned_to_id'});
     return $self->{'assigned_to'};
 }
@@ -286,15 +298,18 @@ sub assigned_to () {
 sub blocked () {
     my ($self) = @_;
     return $self->{'blocked'} if exists $self->{'blocked'};
+    return [] if $self->{'error'};
     $self->{'blocked'} = EmitDependList("dependson", "blocked", $self->bug_id);
     return $self->{'blocked'};
 }
 
+# Even bugs in an error state always have a bug_id.
 sub bug_id { $_[0]->{'bug_id'}; }
 
 sub cc () {
     my ($self) = @_;
     return $self->{'cc'} if exists $self->{'cc'};
+    return [] if $self->{'error'};
 
     my $dbh = Bugzilla->dbh;
     $self->{'cc'} = $dbh->selectcol_arrayref(
@@ -312,6 +327,7 @@ sub cc () {
 sub dependson () {
     my ($self) = @_;
     return $self->{'dependson'} if exists $self->{'dependson'};
+    return [] if $self->{'error'};
     $self->{'dependson'} = 
         EmitDependList("blocked", "dependson", $self->bug_id);
     return $self->{'dependson'};
@@ -320,6 +336,7 @@ sub dependson () {
 sub flag_types () {
     my ($self) = @_;
     return $self->{'flag_types'} if exists $self->{'flag_types'};
+    return [] if $self->{'error'};
 
     # The types of flags that can be set on this bug.
     # If none, no UI for setting flags will be displayed.
@@ -344,6 +361,7 @@ sub flag_types () {
 sub keywords () {
     my ($self) = @_;
     return $self->{'keywords'} if exists $self->{'keywords'};
+    return () if $self->{'error'};
 
     my $dbh = Bugzilla->dbh;
     my $list_ref = $dbh->selectcol_arrayref(
@@ -360,17 +378,16 @@ sub keywords () {
 
 sub longdescs {
     my ($self) = @_;
-
     return $self->{'longdescs'} if exists $self->{'longdescs'};
-
+    return [] if $self->{'error'};
     $self->{'longdescs'} = GetComments($self->{bug_id});
-
     return $self->{'longdescs'};
 }
 
 sub milestoneurl () {
     my ($self) = @_;
     return $self->{'milestoneurl'} if exists $self->{'milestoneurl'};
+    return '' if $self->{'error'};
     $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
     return $self->{'milestoneurl'};
 }
@@ -378,6 +395,7 @@ sub milestoneurl () {
 sub qa_contact () {
     my ($self) = @_;
     return $self->{'qa_contact'} if exists $self->{'qa_contact'};
+    return undef if $self->{'error'};
 
     if (Param('useqacontact') && $self->{'qa_contact_id'}) {
         $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact_id'});
@@ -393,6 +411,7 @@ sub qa_contact () {
 sub reporter () {
     my ($self) = @_;
     return $self->{'reporter'} if exists $self->{'reporter'};
+    $self->{'reporter_id'} = 0 if $self->{'error'};
     $self->{'reporter'} = new Bugzilla::User($self->{'reporter_id'});
     return $self->{'reporter'};
 }
@@ -402,6 +421,7 @@ sub show_attachment_flags () {
     my ($self) = @_;
     return $self->{'show_attachment_flags'} 
         if exists $self->{'show_attachment_flags'};
+    return 0 if $self->{'error'};
 
     # The number of types of flags that can be set on attachments to this bug
     # and the number of flags on those attachments.  One of these counts must be
@@ -429,6 +449,7 @@ sub use_keywords {
 
 sub use_votes {
     my ($self) = @_;
+    return 0 if $self->{'error'};
 
     return Param('usevotes')
       && $::prodmaxvotes{$self->{product}} > 0;
@@ -436,8 +457,8 @@ sub use_votes {
 
 sub groups {
     my $self = shift;
-
     return $self->{'groups'} if exists $self->{'groups'};
+    return [] if $self->{'error'};
 
     my $dbh = Bugzilla->dbh;
     my @groups;
@@ -505,6 +526,7 @@ sub groups {
 sub user {
     my $self = shift;
     return $self->{'user'} if exists $self->{'user'};
+    return {} if $self->{'error'};
 
     my @movers = map { trim $_ } split(",", Param("movers"));
     my $canmove = Param("move-enabled") && Bugzilla->user->id && 
@@ -538,6 +560,7 @@ sub user {
 sub choices {
     my $self = shift;
     return $self->{'choices'} if exists $self->{'choices'};
+    return {} if $self->{'error'};
 
     &::GetVersionTable();
 
