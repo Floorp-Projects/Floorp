@@ -487,15 +487,7 @@ public:
     PRBool PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
                                   xptiWorkingSet*          aWorkingSet);
 
-    void Invalidate()
-        { 
-            if(IsValid())
-            {
-                xptiTypelib typelib = GetTypelibRecord();
-                mTypelib = typelib;
-                mName = nsnull;
-            }
-        }
+    void Invalidate();
 
 private:
     void CopyName(const char* name,
