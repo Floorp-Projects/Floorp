@@ -40,7 +40,6 @@ function fixLabels(box) {
             var input = child.childNodes[0];
             var label = child.childNodes[1];
 
-            dump("Looking at " + input.tagName + " and " + label.tagName + "\n");
             if (input.tagName.toLowerCase() == "input" &&
                 label.tagName.toLowerCase() == "label") {
                 input.setAttribute("id", input.getAttribute("fakeid"));
