@@ -31,11 +31,19 @@ MODULE=xpconnect
 
 # XXX hackage!
 # only copy the .so to components dir on platforms where xptcall is supported
-ifneq (,$(filter Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter SunOS Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 IS_COMPONENT =  1
 endif
 endif
+
+# Solaris/sparc
+ifneq (,$(filter SunOS,$(OS_ARCH)))
+ifneq (86,$(findstring 86,$(OS_TEST)))
+IS_COMPONENT =  1
+endif
+endif
+
 
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
