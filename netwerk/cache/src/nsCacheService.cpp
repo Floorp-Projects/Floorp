@@ -230,11 +230,11 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
 {
     NS_ASSERTION(request, "CommonOpenCacheEntry: request or entry is null");
      
-    nsCString * key = new nsCString(*session->ClientID() +
-                                    nsLiteralCString(":") +
-                                    nsLiteralCString(clientKey));
+    nsCString * key = new nsCString(*session->ClientID());
     if (!key)
         return NS_ERROR_OUT_OF_MEMORY;
+    key->Append(":");
+    key->Append(clientKey);
 
     if (mMaxKeyLength < key->Length()) mMaxKeyLength = key->Length();
 
