@@ -983,7 +983,9 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
     callData.when = aWhen;
 
     // Cycle through the dlls checking to see if they want to be unloaded
-    mDllStore->Enumerate(nsFreeLibraryEnum, &callData);
+    if (mDllStore) {
+        mDllStore->Enumerate(nsFreeLibraryEnum, &callData);
+    }
     return NS_OK;
 }
 
