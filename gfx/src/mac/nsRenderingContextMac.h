@@ -62,7 +62,7 @@ public:
   virtual void Reset();
   virtual nsIDeviceContext * GetDeviceContext(void);
   virtual nsresult	SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-  NS_IMETHOD GetHints(PRUint32& aResult){};
+  NS_IMETHOD GetHints(PRUint32& aResult){return NS_OK;};
   virtual void		PushState(void);
   virtual PRBool 	PopState(void);
   virtual PRBool	IsVisibleRect(const nsRect& aRect);
