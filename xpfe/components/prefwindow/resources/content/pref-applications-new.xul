@@ -48,25 +48,25 @@
     </columns>
     
     <rows>
-      <row>
+      <row align="center">
         <label value="&newDescription.label;" accesskey="&newDescription.accesskey;"
                control="description"/>
         <textbox id="description" flex="1"/>
       </row>
-      <row>
+      <row align="center">
         <label value="&newExtensions.label;" accesskey="&newExtensions.accesskey;"
                control="extensions"/>
         <textbox id="extensions" flex="1"/>
       </row>
-      <row>
+      <row align="center">
         <label value="&newMIME.label;" accesskey="&newMIME.accesskey;"
                control="mimeType"/>
         <textbox id="mimeType" flex="1"/>
       </row>
-      <row>
+      <row align="center">
         <label value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
                control="appPath"/>
-        <hbox align="top">
+        <hbox align="center">
           <textbox id="appPath" flex="1"/>
           <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
