@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Bob Lord <lord@netscape.com>
+   -   Ian McGreer <mcgreer@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+
+<window
+  id="editCert" 
+  title="&certmgr.editcert.title;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="setWindowName();"
+  persist="height width screenX screenY"
+  debug="false"
+>
+
+  <script src="editcerts.js"/>
+
+  <box orient="vertical" flex="1">
+    <html>&certmgr.editcert.beforename;</html>
+<!--
+    <text id="certname">
+-->
+    <html>&certmgr.editcert.aftername;</html>
+    <separator />
+    <html>&certmgr.editcert.edittrust;</html>
+    <box orient = "vertical">
+      <checkbox value="&certmgr.editcert.trustssl;" checked="false" 
+       id="trustSSL"/>
+      <checkbox value="&certmgr.editcert.trustemail;" checked="false" 
+       id="trustEmail"/>
+      <checkbox value="&certmgr.editcert.trustobjsign;" checked="false" 
+       id="trustObjSign"/>
+    </box>
+    <box orient="horizontal" align="center">
+      <button id="ok-button" class="dialog" value="&certmgr.ok.label;"
+           style="width: 8ex" oncommand="doOK();"/> 
+      <button id="cancel-button" class="dialog" value="&certmgr.cancel.label;"
+           style="width: 8ex" oncommand="window.close();" /> 
+      <button id="help-button" class="dialog" value="&certmgr.help.label;"
+           style="width: 8ex" oncommand="alert('Help to add here');" /> 
+    </box>
+  </box>
+
+</window>

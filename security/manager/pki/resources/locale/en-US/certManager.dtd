@@ -38,9 +38,25 @@
 <!ENTITY certmgr.certdetail.cn "Common Name (CN)">
 <!ENTITY certmgr.certdetail.o "Organization (O)">
 <!ENTITY certmgr.certdetail.ou "Organizational Unit (OU)">
+<!ENTITY certmgr.certdetail.subjectname "Subject Name">
+<!ENTITY certmgr.certdetail.issuername "Issuer Name">
+<!ENTITY certmgr.certdetail.serialnumber "Serial Number">
+<!ENTITY certmgr.certdetail.rsapubmodulus "RSA Public Modulus">
+<!ENTITY certmgr.certdetail.sha1fingerprint "SHA1 Fingerprint">
+<!ENTITY certmgr.certdetail.md5fingerprint "MD5 Fingerprint">
+
+<!ENTITY certmgr.editcert.title "Edit Security Certificate Settings">
+<!ENTITY certmgr.editcert.beforename "This certificate:">
+<!ENTITY certmgr.editcert.aftername "represents a Certificate Authority.">
+<!ENTITY certmgr.editcert.edittrust "Edit trust settings:">
+<!ENTITY certmgr.editcert.trustssl "This certificate can identify web sites.">
+<!ENTITY certmgr.editcert.trustemail "This certificate can identify mail users.">
+<!ENTITY certmgr.editcert.trustobjsign "This certificate can identify software makers.">
 
 <!ENTITY certmgr.help.label "Help">
+<!ENTITY certmgr.ok.label "Ok">
 <!ENTITY certmgr.close.label "Close">
+<!ENTITY certmgr.cancel.label "Cancel">
 <!ENTITY certmgr.view.label "View">
 <!ENTITY certmgr.edit.label "Edit">
 <!ENTITY certmgr.add.label "Add">

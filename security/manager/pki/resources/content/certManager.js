@@ -21,6 +21,11 @@
  *  Ian McGreer <mcgreer@netscape.com>
  */
 
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+const nsFilePicker = "@mozilla.org/filepicker;1";
+const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
+
 var selected_certs = [];
 var certmgr;
 
@@ -188,15 +193,31 @@ function websites_enableButtons()
 function backupCerts()
 {
   getSelectedCerts();
+  var numcerts= selected_certs.length;
+  var certs = [];
   var windowName = "";
-  for (var t=0; t<selected_certs.length; t++) {
+  for (var t=0; t<numcerts; t++) {
     if (selected_certs[t][0]) { // token name
       windowName = selected_certs[t].join(":");
     } else {
       windowName = selected_certs[t][1];
     }
-    alert("You want to backup \"" + windowName + "\"");
+    certs[t] = windowName;
   }
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  fp.init(window, 
+          bundle.GetStringFromName("chooseP12BackupFileDialog"),
+          nsIFilePicker.modeSave);
+  fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
+  fp.appendFilters(nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK || 
+      fp.show() == nsIFilePicker.returnReplace) {
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    certdb.exportPKCS12File(null, fp.file, numcerts, certs);
+  }
+  // don't really know it was successful...
+  alert(bundle.GetStringFromName("SuccessfulP12Backup"));
 }
 
 function backupAllCerts()
@@ -222,17 +243,26 @@ function editCerts()
     } else {
       windowName = selected_certs[t][1];
     }
-    alert("You want to edit \"" + windowName + "\"");
-/*
-    window.open('chrome://pippki/content/editCert.xul', windowName, 
+    window.open('chrome://pippki/content/editcerts.xul', windowName, 
                 'chrome,width=500,height=400,resizable=1');
-*/
   }
 }
 
 function restoreCerts()
 {
-  alert("needs to be coded");
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  fp.init(window, 
+          bundle.GetStringFromName("chooseP12RestoreFileDialog"),
+          nsIFilePicker.modeOpen);
+  fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
+  fp.appendFilters(nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK) {
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    certdb.importPKCS12File(null, fp.file);
+  }
+  // don't really know it was successful...
+  alert(bundle.GetStringFromName("SuccessfulP12Restore"));
 }
 
 function deleteCerts()
@@ -268,6 +298,7 @@ function viewCerts()
   }
 }
 
+/* XXX future - import a DER cert from a file? */
 function addCerts()
 {
   alert("Add cert chosen");

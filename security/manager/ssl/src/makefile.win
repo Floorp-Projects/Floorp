@@ -63,6 +63,7 @@ LLIBS   = \
     $(DIST)/lib/pk11wrap.lib \
     $(DIST)/lib/certdb.lib \
     $(DIST)/lib/softoken.lib \
+    $(DIST)/lib/pkcs12.lib \
     $(DIST)/lib/pkcs7.lib \
     $(DIST)/lib/freebl.lib \
     $(DIST)/lib/secutil.lib \
@@ -85,6 +86,7 @@ OBJS = \
     .\$(OBJDIR)\nsSDR.obj \
     .\$(OBJDIR)\nsPK11TokenDB.obj \
     .\$(OBJDIR)\nsNSSCertificate.obj \
+    .\$(OBJDIR)\nsPKCS12Blob.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

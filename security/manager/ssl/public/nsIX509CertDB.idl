@@ -41,6 +41,7 @@
 
 interface nsIX509Cert;
 interface nsIPK11Token;
+interface nsILocalFile;
 
 native nsAutoString(nsAutoString);
 [ref] native nsAutoStringRef(nsAutoString);
@@ -96,6 +97,48 @@ interface nsIX509CertDB : nsISupports {
                                     in unsigned long type,
                                     in unsigned long trust,
                                     in wstring nickname); 
+
+  /*
+   * setCertTrust
+   *
+   * The certificate database is responsible for managing cert trust.  This
+   * function allows clients to set the trust settings for a cert.
+   * XXX type is always CA, no?
+   */
+  void setCertTrust(in nsIX509Cert cert,
+                    in unsigned long type,
+                    in unsigned long trust);
+
+  /*
+   * getCertTrust
+   *
+   * Get the trust settings for this certificate.
+   *
+   * trustType = TRUSTED_SSL => returns true if cert is trusted SSL cert
+   * trustType = TRUSTED_EMAIL => returns true if cert is trusted email cert
+   * trustType = TRUSTED_OBJSIGN => returns true if cert is trusted 
+   *                                                     object signing cert
+   */
+  boolean getCertTrust(in nsIX509Cert cert,
+                       in unsigned long trustType);
+
+  /*
+   * importPKCS12File
+   *
+   * Import a PKCS#12 file contain cert(s) and key(s) into the database.
+   */
+  void importPKCS12File(in nsIPK11Token aToken,
+                        in nsILocalFile aFile);
+
+  /*
+   * exportPKCS12File
+   *
+   * Export a set of certs and keys from the database to a PKCS#12 file.
+   */
+  void exportPKCS12File(in nsIPK11Token aToken,
+                        in nsILocalFile aFile,
+                        in PRUint32 count,
+                        [array, size_is(count)] in wstring aCertNames);
 
 };
 

@@ -32,14 +32,16 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.8 2001/03/20 07:46:37 bryner%uiuc.edu Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.9 2001/03/20 18:00:42 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsILocalFile.h"
 #include "nsNSSCertificate.h"
+#include "nsPKCS12Blob.h"
 #include "nsIX509Cert.h"
 #include "nsString.h"
 
@@ -74,6 +76,9 @@ public:
   PRBool HasUser(PRBool checkSSL = PR_TRUE, 
                  PRBool checkEmail = PR_TRUE,  
                  PRBool checkObjSign = PR_TRUE);
+  PRBool HasTrustedCA(PRBool checkSSL = PR_TRUE, 
+                      PRBool checkEmail = PR_TRUE,  
+                      PRBool checkObjSign = PR_TRUE);
 
   /* common defaults */
   /* equivalent to "c,c,c" */
@@ -360,6 +365,24 @@ nsNSSCertTrust::HasUser(PRBool checkSSL,
   return PR_TRUE;
 }
 
+PRBool
+nsNSSCertTrust::HasTrustedCA(PRBool checkSSL, 
+                             PRBool checkEmail,  
+                             PRBool checkObjSign)
+{
+  if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED_CA) ||
+                    hasTrust(mTrust.sslFlags, CERTDB_TRUSTED_CLIENT_CA)))
+    return PR_FALSE;
+  if (checkEmail && !(hasTrust(mTrust.emailFlags, CERTDB_TRUSTED_CA) ||
+                      hasTrust(mTrust.emailFlags, CERTDB_TRUSTED_CLIENT_CA)))
+    return PR_FALSE;
+  if (checkObjSign && 
+       !(hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CA) ||
+         hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CLIENT_CA)))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
 void
 nsNSSCertTrust::addTrust(unsigned int *t, unsigned int v)
 {
@@ -465,6 +488,26 @@ nsNSSCertificate::~nsNSSCertificate()
     CERT_DestroyCertificate(mCert);
 }
 
+/*  readonly attribute wstring nickname; */
+NS_IMETHODIMP
+nsNSSCertificate::GetNickname(PRUnichar **_nickname)
+{
+  char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
+  nsAutoString nn = NS_ConvertASCIItoUCS2(nickname);
+  *_nickname = nn.ToNewUnicode();
+  return NS_OK;
+}
+
+/*  readonly attribute wstring emailAddress; */
+NS_IMETHODIMP
+nsNSSCertificate::GetEmailAddress(PRUnichar **_emailAddress)
+{
+  char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
+  nsAutoString em = NS_ConvertASCIItoUCS2(email);
+  *_emailAddress = em.ToNewUnicode();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
 {
@@ -475,7 +518,9 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
     if (commonName) {
       nsAutoString cn = NS_ConvertASCIItoUCS2(commonName);
       *aCommonName = cn.ToNewUnicode();
-    }
+    } /*else {
+      *aCommonName = NS_LITERAL_STRING("<not set>").get(), 
+    }*/
   }
   return NS_OK;
 }
@@ -490,7 +535,9 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
     if (organization) {
       nsAutoString org = NS_ConvertASCIItoUCS2(organization);
       *aOrganization = org.ToNewUnicode();
-    }
+    } /*else {
+      *aOrganization = NS_LITERAL_STRING("<not set>").get(), 
+    }*/
   }
   return NS_OK;
 }
@@ -505,7 +552,9 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
     if (orgunit) {
       nsAutoString ou = NS_ConvertASCIItoUCS2(orgunit);
       *aOrganizationalUnit = ou.ToNewUnicode();
-    }
+    } /*else {
+      *aOrganizationalUnit = NS_LITERAL_STRING("<not set>").get(), 
+    }*/
   }
   return NS_OK;
 }
@@ -518,7 +567,6 @@ nsNSSCertificate::GetChain(nsIEnumerator **_rvChain)
 {
   nsresult rv;
   CERTCertListNode *node;
-  nsIX509Cert **chain;
   /* Get the cert chain from NSS */
   CERTCertList *nssChain;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
@@ -543,6 +591,103 @@ done:
   if (nssChain)
     CERT_DestroyCertList(nssChain);
   return rv;
+}
+
+/*  readonly attribute wstring subjectName; */
+NS_IMETHODIMP
+nsNSSCertificate::GetSubjectName(PRUnichar **_subjectName)
+{
+  if (mCert->subjectName) {
+    nsAutoString sn = NS_ConvertASCIItoUCS2(mCert->subjectName);
+    *_subjectName = sn.ToNewUnicode();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*  readonly attribute wstring issuerName; */
+NS_IMETHODIMP
+nsNSSCertificate::GetIssuerName(PRUnichar **_issuerName)
+{
+  if (mCert->issuerName) {
+    nsAutoString in = NS_ConvertASCIItoUCS2(mCert->issuerName);
+    *_issuerName = in.ToNewUnicode();
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*  readonly attribute wstring serialNumber; */
+NS_IMETHODIMP
+nsNSSCertificate::GetSerialNumber(PRUnichar **_serialNumber)
+{
+  char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
+  if (tmpstr) {
+    nsAutoString sn = NS_ConvertASCIItoUCS2(tmpstr);
+    *_serialNumber = sn.ToNewUnicode();
+    PR_Free(tmpstr);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*  readonly attribute wstring rsaPubModulus; */
+NS_IMETHODIMP
+nsNSSCertificate::GetRsaPubModulus(PRUnichar **_rsaPubModulus)
+{
+  //char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
+  char *tmpstr = PL_strdup("not yet implemented");
+  if (tmpstr) {
+    nsAutoString rsap = NS_ConvertASCIItoUCS2(tmpstr);
+    *_rsaPubModulus = rsap.ToNewUnicode();
+    PR_Free(tmpstr);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*  readonly attribute wstring sha1Fingerprint; */
+NS_IMETHODIMP
+nsNSSCertificate::GetSha1Fingerprint(PRUnichar **_sha1Fingerprint)
+{
+  unsigned char fingerprint[20];
+  char *fpStr = NULL;
+  SECItem fpItem;
+  memset(fingerprint, 0, sizeof fingerprint);
+  PK11_HashBuf(SEC_OID_SHA1, fingerprint, 
+               mCert->derCert.data, mCert->derCert.len);
+  fpItem.data = fingerprint;
+  fpItem.len = SHA1_LENGTH;
+  fpStr = CERT_Hexify(&fpItem, 1);
+  if (fpStr) {
+    nsAutoString sha1str = NS_ConvertASCIItoUCS2(fpStr);
+    *_sha1Fingerprint = sha1str.ToNewUnicode();
+    PR_Free(fpStr);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+/*  readonly attribute wstring md5Fingerprint; */
+NS_IMETHODIMP
+nsNSSCertificate::GetMd5Fingerprint(PRUnichar **_md5Fingerprint)
+{
+  unsigned char fingerprint[20];
+  char *fpStr = NULL;
+  SECItem fpItem;
+  memset(fingerprint, 0, sizeof fingerprint);
+  PK11_HashBuf(SEC_OID_MD5, fingerprint, 
+               mCert->derCert.data, mCert->derCert.len);
+  fpItem.data = fingerprint;
+  fpItem.len = MD5_LENGTH;
+  fpStr = CERT_Hexify(&fpItem, 1);
+  if (fpStr) {
+    nsAutoString md5str = NS_ConvertASCIItoUCS2(fpStr);
+    *_md5Fingerprint = md5str.ToNewUnicode();
+    PR_Free(fpStr);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* [noscript] long getRawDER (out charPtr result) */
@@ -719,6 +864,111 @@ done:
   if (tmpCert) 
     CERT_DestroyCertificate(tmpCert);
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
+}
+
+/*
+ * void setCertTrust(in nsIX509Cert cert,
+ *                   in unsigned long type,
+ *                   in unsigned long trust);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert, 
+                                 PRUint32 type,
+                                 PRUint32 trusted)
+{
+  SECStatus srv;
+  nsNSSCertTrust trust;
+  if (type != nsIX509Cert::CA_CERT) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  ////// UGLY kluge until I decide how cert->GetCert() will work
+  PRUnichar *wnn;
+  cert->GetNickname(&wnn);
+  char *nickname = PL_strdup(NS_ConvertUCS2toUTF8(wnn).get()); 
+  CERTCertificate *nsscert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
+                                                     nickname);
+  if (!nsscert) {
+    return NS_ERROR_FAILURE;
+  }
+  ////// end of kluge
+  // always start with untrusted and move up
+  trust.SetValidCA();
+  trust.AddCATrust(trusted & nsIX509Cert::TRUSTED_SSL,
+                   trusted & nsIX509Cert::TRUSTED_EMAIL,
+                   trusted & nsIX509Cert::TRUSTED_OBJSIGN);
+  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+                             nsscert,
+                             trust.GetTrust());
+  return (srv) ? NS_ERROR_FAILURE : NS_OK;
+}
+
+/*
+ * boolean getCertTrust(in nsIX509Cert cert,
+ *                      in unsigned long trustType);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetCertTrust(nsIX509Cert *cert, 
+                                 PRUint32 trustType,
+                                 PRBool *_isTrusted)
+{
+  SECStatus srv;
+  ////// UGLY kluge until I decide how cert->GetCert() will work
+  PRUnichar *wnn;
+  cert->GetNickname(&wnn);
+  char *nickname = PL_strdup(NS_ConvertUCS2toUTF8(wnn).get()); 
+  CERTCertificate *nsscert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
+                                                     nickname);
+  if (!nsscert) {
+    return NS_ERROR_FAILURE;
+  }
+  ////// end of kluge
+  CERTCertTrust nsstrust;
+  srv = CERT_GetCertTrust(nsscert, &nsstrust);
+  nsNSSCertTrust trust(&nsstrust);
+  if (trustType & nsIX509Cert::TRUSTED_SSL) {
+    *_isTrusted = trust.HasTrustedCA(PR_TRUE, PR_FALSE, PR_FALSE);
+  } else if (trustType & nsIX509Cert::TRUSTED_EMAIL) {
+    *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_TRUE, PR_FALSE);
+  } else if (trustType & nsIX509Cert::TRUSTED_OBJSIGN) {
+    *_isTrusted = trust.HasTrustedCA(PR_FALSE, PR_FALSE, PR_TRUE);
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+/*
+ *  void importPKCS12File(in nsIPK11Token aToken,
+ *                        in nsILocalFile aFile);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::ImportPKCS12File(nsIPK11Token *aToken, 
+                                     nsILocalFile *aFile)
+{
+  NS_ENSURE_ARG(aFile);
+  nsPKCS12Blob blob;
+  blob.SetToken(aToken);
+  return blob.ImportFromFile(aFile);
+}
+
+/*
+ * void exportPKCS12File(in nsIPK11Token aToken,
+ *                       in nsILocalFile aFile,
+ *                       in PRUint32 count,
+ *                       [array, size_is(count)] in wstring aCertNames);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::ExportPKCS12File(nsIPK11Token     *aToken, 
+                                     nsILocalFile     *aFile,
+                                     PRUint32          count,
+                                     const PRUnichar **aCertNames)
+{
+  NS_ENSURE_ARG(aFile);
+  nsPKCS12Blob blob;
+  if (count == 0) return NS_OK;
+  blob.SetToken(aToken);
+  blob.LoadCerts(aCertNames, count);
+  return blob.ExportToFile(aFile);
 }
 
 /*

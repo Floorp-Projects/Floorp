@@ -42,6 +42,7 @@
 	debug="0"
         onload="LoadCertNames()">
 
+  <script src="chrome://global/content/strres.js" />
   <script src="certManager.js"/>
 
 <box orient="horizontal">

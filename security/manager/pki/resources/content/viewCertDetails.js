@@ -108,4 +108,29 @@ function setWindowName()
   //  Organizational Unit
   var ou=document.getElementById('orgunit');
   ou.setAttribute("value", cert.organizationalUnit);
+
+  //  Subject Name
+  var subn=document.getElementById('subjectname');
+  subn.setAttribute("value", cert.subjectName);
+
+  //  Issuer Name
+  var issn=document.getElementById('issuername');
+  issn.setAttribute("value", cert.issuerName);
+
+  //  Serial Number
+  var sern=document.getElementById('serialnumber');
+  sern.setAttribute("value", cert.serialNumber);
+
+  //  RSA Public Modulus
+  var rsap=document.getElementById('rsapubmodulus');
+  rsap.setAttribute("value", cert.rsaPubModulus);
+
+  //  SHA1 Fingerprint
+  var sha1=document.getElementById('sha1fingerprint');
+  sha1.setAttribute("value", cert.sha1Fingerprint);
+
+  //  MD5 Fingerprint
+  var md5=document.getElementById('md5fingerprint');
+  md5.setAttribute("value", cert.md5Fingerprint);
+
 }

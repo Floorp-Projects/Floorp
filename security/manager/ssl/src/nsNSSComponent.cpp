@@ -54,6 +54,8 @@
 #include "secmod.h"
 extern "C" {
 #include "pkcs11.h"
+#include "pkcs12.h"
+#include "p12plcy.h"
 }
 
 #ifdef PR_LOGGING
@@ -86,6 +88,9 @@ OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
   return noErr;
 }
 #endif
+
+// XXX tmp callback for slot password
+extern char * pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 
@@ -356,7 +361,8 @@ nsNSSComponent::InitializeNSS()
     return rv;
   }
     
-  PK11_SetPasswordFunc(PK11PasswordPrompt);
+  //PK11_SetPasswordFunc(PK11PasswordPrompt);
+  PK11_SetPasswordFunc(pk11PasswordPrompt); //XXX ian - until the above works
 #ifdef XP_MAC
   // On the Mac we place all NSS DBs in the Security
   // Folder in the profile directory.
@@ -386,6 +392,16 @@ nsNSSComponent::InitializeNSS()
   SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
   mPref->GetBoolPref("security.enable_tls", &enabled);
   SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+
+  // Enable ciphers for PKCS#12
+  SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
+  SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
+  SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
+  SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
+  PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;
@@ -552,6 +568,38 @@ nsNSSComponent::RegisterProfileChangeObserver()
   return rv;
 }
 
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
+NS_IMPL_ISUPPORTS1(PipUIContext, nsIInterfaceRequestor)
+
+PipUIContext::PipUIContext()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+PipUIContext::~PipUIContext()
+{
+}
+
+/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
+{
+  nsresult rv;
+
+  if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,
+                          NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = dialog;
+    NS_ADDREF(dialog);
+  } else {
+    rv = NS_ERROR_NO_INTERFACE;
+  }
+
+  return rv;
+}
+
 static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
 
 nsresult 
@@ -581,8 +629,6 @@ getNSSDialogs(void **_result, REFNSIID aIID)
 
   return rv;
 }
-
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 //
 // Implementation of an nsIInterfaceRequestor for use
