@@ -138,9 +138,14 @@ PRUnichar nsCRT::ToLower(PRUnichar aChar)
   return TOLOWER(aChar);
 }
 
-PRInt32 nsCRT::strlen(const PRUnichar* s)
+char* nsCRT::strtok(char* str, const char* delims, char* *newStr)
 {
-  PRInt32 len = 0;
+  return NULL;
+}
+
+PRUint32 nsCRT::strlen(const PRUnichar* s)
+{
+  PRUint32 len = 0;
   if(s) {
     while (*s++ != 0) {
       len++;
@@ -180,7 +185,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
+PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
 {
   if(s1 && s2) { 
     if(0<n) {
@@ -234,7 +239,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
+PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
 {
   if(s1 && s2) {
     if(0<n){
@@ -290,7 +295,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
+PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRUint32 n)
 {
   if(s1 && s2) {
     if(0<n){
@@ -344,7 +349,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
+PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
 {
   if(s1 && s2){
     if(0<n){
@@ -368,7 +373,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {
-  PRInt32 len = nsCRT::strlen(str) + 1; // add one for null
+  PRUint32 len = nsCRT::strlen(str) + 1; // add one for null
   PRUnichar* rslt = new PRUnichar[len];
   if (rslt == NULL) return NULL;
   nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
@@ -388,10 +393,10 @@ PRUint32 nsCRT::HashValue(const PRUnichar* us)
   return rv;
 }
 
-PRUint32 nsCRT::HashValue(const PRUnichar* us, PRInt32* uslenp)
+PRUint32 nsCRT::HashValue(const PRUnichar* us, PRUint32* uslenp)
 {
   PRUint32 rv = 0;
-  PRInt32 len = 0;
+  PRUint32 len = 0;
   PRUnichar ch;
   while ((ch = *us++) != 0) {
     // FYI: rv = rv*37 + ch

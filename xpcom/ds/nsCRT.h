@@ -32,19 +32,19 @@ public:
     @param aSrc the source address
     @param aCount the number of bytes to copy
     */
-  static void memcpy(void* aDest, const void* aSrc, PRInt32 aCount) {
+  static void memcpy(void* aDest, const void* aSrc, PRUint32 aCount) {
     ::memcpy(aDest, aSrc, (size_t)aCount);
   }
 
-  static void memmove(void* aDest, const void* aSrc, PRInt32 aCount) {
+  static void memmove(void* aDest, const void* aSrc, PRUint32 aCount) {
     ::memmove(aDest, aSrc, (size_t)aCount);
   }
 
-  static void memset(void* aDest, PRUint8 aByte, PRInt32 aCount) {
+  static void memset(void* aDest, PRUint8 aByte, PRUint32 aCount) {
     ::memset(aDest, aByte, aCount);
   }
 
-  static void zero(void* aDest, PRInt32 aCount) {
+  static void zero(void* aDest, PRUint32 aCount) {
     ::memset(aDest, 0, (size_t)aCount);
   }
 
@@ -52,13 +52,18 @@ public:
    @param s the string in question
    @return the length of s
    */
-  static PRInt32 strlen(const char* s) {
-    return PRInt32(::strlen(s));
+  static PRUint32 strlen(const char* s) {
+    return PRUint32(::strlen(s));
   }
 
   /// Compare s1 and s2.
   static PRInt32 strcmp(const char* s1, const char* s2) {
-    return PRInt32(PL_strcmp(s1, s2));
+    return PRUint32(PL_strcmp(s1, s2));
+  }
+
+  static PRUint32 strncmp(const char* s1, const char* s2,
+                         PRUint32 aMaxLen) {
+    return PRInt32(PL_strncmp(s1, s2, aMaxLen));
   }
 
   /// Case-insensitive string comparison.
@@ -67,7 +72,7 @@ public:
   }
 
   /// Case-insensitive string comparison with length
-  static PRInt32 strncasecmp(const char* s1, const char* s2, PRInt32 aMaxLen) {
+  static PRInt32 strncasecmp(const char* s1, const char* s2, PRUint32 aMaxLen) {
     return PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
   }
 
@@ -75,32 +80,51 @@ public:
     return PL_strdup(str);
   }
 
+  /**
+    How to use this fancy (thread-safe) version of strtok: 
+
+    void main( void ) {
+      printf( "%s\n\nTokens:\n", string );
+      // Establish string and get the first token:
+      char* newStr;
+      token = nsCRT::strtok( string, seps, &newStr );   
+      while( token != NULL ) {
+        // While there are tokens in "string"
+        printf( " %s\n", token );
+        // Get next token:
+        token = nsCRT::strtok( newStr, seps, &newStr );
+      }
+    }
+
+  */
+  static char* strtok(char* str, const char* delims, char* *newStr); 
+
   /// Like strlen except for ucs2 strings
-  static PRInt32 strlen(const PRUnichar* s);
+  static PRUint32 strlen(const PRUnichar* s);
 
   /// Like strcmp except for ucs2 strings
   static PRInt32 strcmp(const PRUnichar* s1, const PRUnichar* s2);
   /// Like strcmp except for ucs2 strings
   static PRInt32 strncmp(const PRUnichar* s1, const PRUnichar* s2,
-                         PRInt32 aMaxLen);
+                         PRUint32 aMaxLen);
 
   /// Like strcasecmp except for ucs2 strings
   static PRInt32 strcasecmp(const PRUnichar* s1, const PRUnichar* s2);
   /// Like strncasecmp except for ucs2 strings
   static PRInt32 strncasecmp(const PRUnichar* s1, const PRUnichar* s2,
-                             PRInt32 aMaxLen);
+                             PRUint32 aMaxLen);
 
   /// Like strcmp with a char* and a ucs2 string
   static PRInt32 strcmp(const PRUnichar* s1, const char* s2);
   /// Like strncmp with a char* and a ucs2 string
   static PRInt32 strncmp(const PRUnichar* s1, const char* s2,
-                         PRInt32 aMaxLen);
+                         PRUint32 aMaxLen);
 
   /// Like strcasecmp with a char* and a ucs2 string
   static PRInt32 strcasecmp(const PRUnichar* s1, const char* s2);
   /// Like strncasecmp with a char* and a ucs2 string
   static PRInt32 strncasecmp(const PRUnichar* s1, const char* s2,
-                             PRInt32 aMaxLen);
+                             PRUint32 aMaxLen);
 
   // Note: uses new[] to allocate memory, so you must use delete[] to
   // free the memory
@@ -110,7 +134,7 @@ public:
   static PRUint32 HashValue(const PRUnichar* s1);
 
   /// Same as above except that we return the length in s1len
-  static PRUint32 HashValue(const PRUnichar* s1, PRInt32* s1len);
+  static PRUint32 HashValue(const PRUnichar* s1, PRUint32* s1len);
 
   /// String to integer.
   static PRInt32 atoi( const PRUnichar *string );
