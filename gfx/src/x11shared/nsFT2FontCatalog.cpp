@@ -50,17 +50,7 @@
 #include "nsLocalFileUnix.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
-#include "nsFontDebug.h"
-/*
- * since this patch won't delete "gfx/src/freetype/nsFT2FontCatalog.h",
- * using "x11shared/nsFT2FontCatalog.h" will prevent this file from
- * including that "nsFT2FontCatalog.h". This can be changed to
- * "#include nsFT2FontCatalog.h" safely after deleting
- * unused "freetype/nsFT2FontCatalog.h"
- */
-#include "x11shared/nsFT2FontCatalog.h"
-
-PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
+#include "nsFT2FontCatalog.h"
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
 //
@@ -105,103 +95,132 @@ extern "C" {char *ctime(const time_t *timep);}
 #include FT_FREETYPE_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_IDS_H
+#include "nsFreeType.h"
 #include "nsFontDebug.h"
 
 // these should be static but the compilier complains
 extern nsFontVendorName sVendorNamesList[];
-extern nsulCodePageRangeLanguage    ulCodePageRange1Language[];
-extern nsulCodePageRangeLanguage    ulCodePageRange2Language[];
+extern nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[];
+extern nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[];
 
+nsFT2FontCatalog* gFT2FontCatalog = nsnull;
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+nsICharsetConverterManager2* nsFT2FontCatalog::sCharSetManager = nsnull;
 
-nsHashtable* nsFT2FontCatalog::sVendorNames = nsnull;
-nsIPref*     nsFT2FontCatalog::sPref = nsnull;
+nsTTFontEncoderInfo FEI_Adobe_Symbol_Encoding = {
+  "Adobe-Symbol-Encoding", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmr = {
+  "x-ttf-cmr", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmmi = {
+  "x-ttf-cmmi", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmsy = {
+  "x-ttf-cmsy", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_ttf_cmex = {
+  "x-ttf-cmex", TT_PLATFORM_MICROSOFT, TT_MS_ID_UNICODE_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica1 = {
+  "x-mathematica1", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica2 = {
+  "x-mathematica2", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica3 = {
+  "x-mathematica3", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica4 = {
+  "x-mathematica4", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mathematica5 = {
+  "x-mathematica5", TT_PLATFORM_MACINTOSH, TT_MAC_ID_ROMAN, nsnull
+};
+nsTTFontEncoderInfo FEI_x_mtextra = {
+  "x-mtextra", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
+nsTTFontEncoderInfo FEI_windows_1252 = {
+  "windows-1252", TT_PLATFORM_MICROSOFT, TT_MS_ID_SYMBOL_CS, nsnull
+};
 
-#endif
+nsTTFontFamilyEncoderInfo gFontFamilyEncoderInfo[] = {
+  { "symbol",         &FEI_Adobe_Symbol_Encoding },
+  { "cmr10",          &FEI_x_ttf_cmr,            },
+  { "cmmi10",         &FEI_x_ttf_cmmi,           },
+  { "cmsy10",         &FEI_x_ttf_cmsy,           },
+  { "cmex10",         &FEI_x_ttf_cmex,           },
+  { "math1",          &FEI_x_mathematica1,       },
+  { "math1-bold",     &FEI_x_mathematica1,       },
+  { "math1mono",      &FEI_x_mathematica1,       },
+  { "math1mono-bold", &FEI_x_mathematica1,       },
+  { "math2",          &FEI_x_mathematica2,       },
+  { "math2-bold",     &FEI_x_mathematica2,       },
+  { "math2mono",      &FEI_x_mathematica2,       },
+  { "math2mono-bold", &FEI_x_mathematica2,       },
+  { "ahMn",           &FEI_x_mathematica3,       }, // weird name for Math3
+  { "math3",          &FEI_x_mathematica3,       },
+  { "math3-bold",     &FEI_x_mathematica3,       },
+  { "math3mono",      &FEI_x_mathematica3,       },
+  { "math3mono-bold", &FEI_x_mathematica3,       },
+  { "math4",          &FEI_x_mathematica4,       },
+  { "math4-bold",     &FEI_x_mathematica4,       },
+  { "math4mono",      &FEI_x_mathematica4,       },
+  { "math4mono-bold", &FEI_x_mathematica4,       },
+  { "math5",          &FEI_x_mathematica5,       },
+  { "math5-bold",     &FEI_x_mathematica5,       },
+  { "math5bold",      &FEI_x_mathematica5,       },
+  { "math5mono",      &FEI_x_mathematica5,       },
+  { "math5mono-bold", &FEI_x_mathematica5,       },
+  { "math5monobold",  &FEI_x_mathematica5,       },
+  { "mtextra",        &FEI_x_mtextra,            },
+  { "mt extra",       &FEI_x_mtextra,            },
+  { "wingdings",      &FEI_windows_1252,         },
+  { "webdings",       &FEI_windows_1252,         },
+  { nsnull },
+};
 
-//
-// Implementation of Interfaces nsIFontCatalogService
-//
-NS_IMPL_ISUPPORTS1(nsFT2FontCatalog, nsIFontCatalogService)
-
-nsFT2FontCatalog::nsFT2FontCatalog()
+nsTTFontFamilyEncoderInfo*
+nsFT2FontCatalog::GetCustomEncoderInfo(nsFontCatalogEntry *aFce)
 {
-  NS_INIT_ISUPPORTS();
-  
-#if (defined(MOZ_ENABLE_FREETYPE2))
-  nsresult rv;
-  mAvailableFontCatalogService = PR_FALSE;
-  rv = nsFreeType::InitGlobals();
-  if (NS_FAILED(rv)) {
-    // FreeType is not available
-    return;
-  }
-  if (!InitGlobals(nsFreeType::GetLibrary())) {
-    // Font Catalog Service is not available
-    return;
-  }
-  mAvailableFontCatalogService = PR_TRUE;
-#endif
+  return GetCustomEncoderInfo(GetFamilyName(aFce));
 }
 
-nsFT2FontCatalog::~nsFT2FontCatalog()
+nsTTFontFamilyEncoderInfo*
+nsFT2FontCatalog::GetCustomEncoderInfo(const char * aFamilyName)
 {
-#if (defined(MOZ_ENABLE_FREETYPE2))
-  /* destructor code */
-  FreeGlobals();
-  // assumption: no one else use nsFreeType
-  nsFreeType::FreeGlobals();
-#endif
-}
+  if (!gFT2FontCatalog)
+    return nsnull;
 
-NS_IMETHODIMP
-nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
-                                        const nsACString & aLanguage,
-                                        PRUint16 aWeight,
-                                        PRUint16 aWidth,
-                                        PRUint16 aSlant,
-                                        PRUint16 aSpacing,
-                                        nsISupportsArray **_retval)
-{
-#if (!defined(MOZ_ENABLE_FREETYPE2))
-  *_retval = nsnull;
-  return NS_OK;
-#else
-  if (mAvailableFontCatalogService == PR_FALSE) {
-    *_retval = nsnull;
-    return NS_OK;
+  nsTTFontFamilyEncoderInfo *ffei;
+  nsCAutoString name(aFamilyName);
+  ToLowerCase(name);
+  nsCStringKey key(name);
+  ffei = (nsTTFontFamilyEncoderInfo*)gFT2FontCatalog->mFontFamilies->Get(&key);
+  if (!ffei)
+    return nsnull;
+
+  // init the converter
+  if (!ffei->mEncodingInfo->mConverter) {
+    nsTTFontEncoderInfo *fei = ffei->mEncodingInfo;
+    //
+    // build the converter
+    //
+    nsICharsetConverterManager2* charSetManager = GetCharSetManager();
+    if (!charSetManager)
+      return nsnull;
+    nsCOMPtr<nsIAtom> charset(dont_AddRef(NS_NewAtom(fei->mConverterName)));
+    if (charset) {
+      nsresult res;
+      res = charSetManager->GetUnicodeEncoder(charset, &fei->mConverter);
+      if (NS_FAILED(res)) {
+        return nsnull;
+      }
+    }
   }
-  
-  nsFontCatalog *fc = NewFontCatalog();
-  if (!fc)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  GetFontNames(aFamilyName, aLanguage, aWeight, aWidth, aSlant, aSpacing, fc);
-  nsCOMPtr<nsITrueTypeFontCatalogEntry> aFce;
-  nsCOMPtr<nsISupports> genericFce;
-  nsCOMPtr<nsISupportsArray> entries;
-  NS_NewISupportsArray(getter_AddRefs(entries));
-  if (!entries)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  int i;
-  for (i = 0; i < fc->numFonts; i++) {
-    aFce = nsFreeTypeGetFaceID(fc->fonts[i]);
-    genericFce = do_QueryInterface(aFce);
-    entries->InsertElementAt(genericFce, 0);
-  }
- 
-  free(fc);
-  *_retval = entries;
-  NS_ADDREF(*_retval);
-#endif
-  return NS_OK;
+  return ffei;
 }
-
-//--------------------------------------------------
-
-#if (defined(MOZ_ENABLE_FREETYPE2))
 
 void
 nsFT2FontCatalog::AddDir(nsDirCatalog *dc, nsDirCatalogEntry *dir)
@@ -501,7 +520,7 @@ nsFT2FontCatalog::FixUpFontCatalog(nsFontCatalog *fc)
     ToLowerCase(vendorID);
     vendorID.StripChars(" ");
     nsCStringKey key(vendorID);
-    const char *vendorStr = (const char *)sVendorNames->Get(&key);
+    const char *vendorStr = (const char *)mVendorNames->Get(&key);
     if (!vendorStr) {
       if (fce->mVendorID[0])
         vendorStr = fce->mVendorID;
@@ -532,7 +551,8 @@ PRBool
 nsFT2FontCatalog::FreeFceHashEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsFontCatalogEntry *fce = (nsFontCatalogEntry *)aData;
-  FreeFontCatalogEntry(fce);
+  gFT2FontCatalog->FreeFontCatalogEntry(fce);
+
   return PR_TRUE;
 }
 
@@ -570,22 +590,68 @@ nsFT2FontCatalog::FreeFontCatalogEntry(nsFontCatalogEntry *fce)
 void
 nsFT2FontCatalog::FreeGlobals()
 {
+  if (gFT2FontCatalog) {
+    gFT2FontCatalog->doFreeGlobals();
+    gFT2FontCatalog = nsnull;
+  }
+}
+
+void
+nsFT2FontCatalog::doFreeGlobals()
+{
   if (mFontCatalog) {
-    FreeFontCatalog(mFontCatalog);
+    gFT2FontCatalog->FreeFontCatalog(mFontCatalog);
     mFontCatalog = nsnull;
   }
 
-  // sVendorNames elements are not alloc'd so no need call Reset
-  delete sVendorNames;
- 
-  delete mRange1Language;
-  delete mRange2Language;
+  // mVendorNames elements are not alloc'd so no need call Reset
+  delete mVendorNames;
+  // mFontFamilies elements are not alloc'd so no need call Reset
+  delete mFontFamilies;
 
-  NS_IF_RELEASE(sPref);
+  //
+  // release any encoders that were created
+  //
+  int i;
+  for (i=0; gFontFamilyEncoderInfo[i].mFamilyName; i++) {
+    nsTTFontFamilyEncoderInfo *ffei = &gFontFamilyEncoderInfo[i];
+    nsTTFontEncoderInfo *fei = ffei->mEncodingInfo;
+    NS_IF_RELEASE(fei->mConverter);
+  }
+  NS_IF_RELEASE(sCharSetManager);
+}
+
+PRUint16*
+nsFT2FontCatalog::GetCCMap(nsFontCatalogEntry *aFce)
+{
+  nsCompressedCharMap ccmapObj;
+  ccmapObj.SetChars(aFce->mCCMap);
+  return ccmapObj.NewCCMap();
+}
+
+nsICharsetConverterManager2*
+nsFT2FontCatalog::GetCharSetManager()
+{
+  if (!sCharSetManager) {
+    //
+    // get the sCharSetManager
+    //
+    nsServiceManager::GetService(kCharSetManagerCID,
+                                 NS_GET_IID(nsICharsetConverterManager2),
+                                 (nsISupports**) &sCharSetManager);
+    NS_ASSERTION(sCharSetManager,"failed to create the charset manager");
+  }
+  return sCharSetManager;
 }
 
 void
 nsFT2FontCatalog::GetDirsPrefEnumCallback(const char* aName, void* aClosure)
+{
+  gFT2FontCatalog->doGetDirsPrefEnumCallback(aName, aClosure);
+}
+
+void
+nsFT2FontCatalog::doGetDirsPrefEnumCallback(const char* aName, void* aClosure)
 {
   nsDirCatalog *dirCatalog = (nsDirCatalog *)aClosure;
   nsDirCatalogEntry *dce;
@@ -593,7 +659,7 @@ nsFT2FontCatalog::GetDirsPrefEnumCallback(const char* aName, void* aClosure)
   if (!dce)
     return;
   // native charset?!
-  sPref->CopyCharPref(aName, (char **)&dce->mDirName);
+  mPref->CopyCharPref(aName, (char **)&dce->mDirName);
   if (!dce->mDirName)
     return;
   AddDir(dirCatalog, dce);
@@ -708,105 +774,52 @@ cleanup_and_return:
 }
 
 void
-nsFT2FontCatalog::GetFontNames(const nsACString & aFamilyName,
-                               const nsACString & aLanguage,
-                               PRUint16           aWeight,
-                               PRUint16           aWidth,
-                               PRUint16           aSlant,
-                               PRUint16           aSpacing,
-                               nsFontCatalog*     aFC)
+nsFT2FontCatalog::GetFontNames(const char* aPattern, nsFontCatalog* aFC)
+{
+  gFT2FontCatalog->doGetFontNames(aPattern, aFC);
+}
+
+void
+nsFT2FontCatalog::doGetFontNames(const char* aPattern, nsFontCatalog* aFC)
 {
   int i;
-  nsCAutoString familyName, language;
-  FONT_CATALOG_PRINTF(("looking for FreeType font matching"));
+  PRBool rslt;
+  char *pattern, *foundry, *family, *charset, *encoding;
 
-  ToLowerCase(aFamilyName, familyName);
-  ToLowerCase(aLanguage, language);
-  
-  FONT_CATALOG_PRINTF(("familyName=%s; language=%s; "
-                       "weight=%d; width=%d; slant=%d; spacing=%d",
-                       familyName.get(), language.get(),
-                       aWeight, aWidth, aSlant, aSpacing));
+  FONT_CATALOG_PRINTF(("looking for FreeType font matching %s", aPattern));
+  nsCAutoString patt(aPattern);
+  ToLowerCase(patt);
+  pattern = strdup(patt.get());
+  NS_ASSERTION(pattern, "failed to copy pattern");
+  if (!pattern)
+    goto cleanup_and_return;
 
-  unsigned long bit1 = GetRangeLanguage(language, CPR1);
-  unsigned long bit2 = GetRangeLanguage(language, CPR2);
+  rslt = ParseXLFD(pattern, &foundry, &family, &charset, &encoding);
+  if (!rslt)
+    goto cleanup_and_return;
 
-  PRUint16 italicBit = 0;
-  switch (aSlant) {
-    case kFCSlantRoman:
-      break;
-    case kFCSlantItalic:
-    case kFCSlantOblique:
-    case kFCSlantReverseItalic:
-    case kFCSlantReverseOblique:
-      italicBit = 1;
-      break;
-    default:
-      break;
+  // unable to handle "name-charset-*"
+  if (charset && !encoding) {
+    goto cleanup_and_return;
   }
-  
-  PRUint16 monoBit = 0;
-  switch (aSpacing) {
-    case kFCSpacingMonospace:
-      monoBit = 0;
-      break;
-    case kFCSpacingProportional:
-      monoBit = 1;
-      break;
-    default:
-      break;
-  }
-  
-  /* column headers for the debug output*/
-  FONT_CATALOG_PRINTF(("%s\t%-20s\t%-8s\t%-8s\t%-8s%-8s%-8s\t%-8s\t%-8s",
-                        "mFlags",
-                        "mFamilyName",
-                        "CodePageRange1",
-                        "mCodePageRange2",
-                        "mWeight",
-                        "mWidth",
-                        "mStyleFlags",
-                        "fce->mFaceFlags",
-                        "Ismatched"));
 
   for (i=0; i<mFontCatalog->numFonts; i++) {
     nsFontCatalogEntry *fce = mFontCatalog->fonts[i];
-    FONT_CATALOG_PRINTF(("%0x\t%-20s\t%08lx\t%08lx\t%i\t%i\t%08lx\t%08lx\t",
-                        fce->mFlags,
-                        fce->mFamilyName,
-                        fce->mCodePageRange1,
-                        fce->mCodePageRange2,
-                        fce->mWeight,
-                        fce->mWidth,
-                        fce->mStyleFlags,
-                        fce->mFaceFlags));
-    // not all "fce" are valid
-    if (!fce->mFlags&FCE_FLAGS_ISVALID)
+    if (!(fce->mFlags&FCE_FLAGS_ISVALID))
       continue;
-    // family
-    if (!familyName.IsEmpty() && !familyName.Equals(fce->mFamilyName))
+    if (foundry && !STRMATCH(foundry,fce->mFoundryName))
       continue;
-    // language
-    if (!language.IsEmpty() &&
-        !((fce->mCodePageRange1 & bit1) || (fce->mCodePageRange2 & bit2)))
+    if (family && !STRMATCH(family,fce->mFamilyName))
       continue;
-    // weight
-    if (aWeight && (aWeight != fce->mWeight))
-      continue;
-    // width
-    if (aWidth && (aWidth != fce->mWidth))
-       continue;
-    // slant
-    if (aSlant && !((fce->mStyleFlags & FT_STYLE_FLAG_ITALIC) == italicBit))
-      continue;
-    // spacing
-    if (aSpacing && !((fce->mFaceFlags & FT_FACE_FLAG_FIXED_WIDTH) == monoBit))
-      continue;
-    // match all patterns
-    FONT_CATALOG_PRINTF(("%s", "matching"));
     AddFont(aFC, fce);
   }
-  FONT_CATALOG_PRINTF(("\n"));
+
+  FREE_IF(pattern);
+  return;
+
+cleanup_and_return:
+  FONT_CATALOG_PRINTF(("nsFT2FontCatalog::GetFontNames failed"));
+  FREE_IF(pattern);
   return;
 }
 
@@ -937,7 +950,7 @@ nsFT2FontCatalog::GetFoundry(nsFontCatalogEntry *aFce)
   ToLowerCase(foundry);
   foundry.StripChars(" ");
   nsCStringKey key(foundry);
-  const char *vendorName = (const char *)sVendorNames->Get(&key);
+  const char *vendorName = (const char *)mVendorNames->Get(&key);
   if (!vendorName) {
     if (aFce->mVendorID[0])
       vendorName = aFce->mVendorID;
@@ -953,6 +966,25 @@ nsFT2FontCatalog::GetNumEmbeddedBitmaps(nsFontCatalogEntry *aFce)
   return aFce->mNumEmbeddedBitmaps;
 }
 
+const char *
+nsFT2FontCatalog::GetRange1CharSetName(unsigned long aBit)
+{
+  char buf[32];
+  sprintf(buf, "0x%08lx", aBit);
+  nsCStringKey key(buf);
+  const char *charsetName = (const char *)mRange1CharSetNames->Get(&key);
+  return charsetName;
+}
+
+const char *
+nsFT2FontCatalog::GetRange2CharSetName(unsigned long aBit)
+{
+  char buf[32];
+  sprintf(buf, "0x%08lx", aBit);
+  nsCStringKey key(buf);
+  const char *charsetName = (const char *)mRange2CharSetNames->Get(&key);
+  return charsetName;
+}
 
 PRBool
 nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary, 
@@ -1174,6 +1206,15 @@ nsFT2FontCatalog::HandleFontFile(FT_Library aFreeTypeLibrary,
 PRBool
 nsFT2FontCatalog::InitGlobals(FT_Library lib)
 {
+  gFT2FontCatalog = new nsFT2FontCatalog;
+  if (!gFT2FontCatalog)
+    return PR_FALSE;
+  return gFT2FontCatalog->doInitGlobals(lib);
+}
+
+PRBool
+nsFT2FontCatalog::doInitGlobals(FT_Library lib)
+{
   nsDirCatalog *dirCatalog = nsnull;
   nsCAutoString prefix("font.directory.truetype.");
 #ifdef DEBUG
@@ -1182,55 +1223,68 @@ nsFT2FontCatalog::InitGlobals(FT_Library lib)
   int i;
 #endif
   nsFontVendorName *vn = sVendorNamesList;
+  nsTTFontFamilyEncoderInfo *ff = gFontFamilyEncoderInfo;
+  nsulCodePageRangeCharSetName *crn = nsnull;
 
-  nsulCodePageRangeLanguage *crl = nsnull;
-
-  nsServiceManager::GetService(NS_PREF_CONTRACTID,
-                               NS_GET_IID(nsIPref),
-                               (nsISupports**) &sPref);
-  if (!sPref)
+  mPref = do_GetService(NS_PREF_CONTRACTID);
+  if (!mPref)
     goto cleanup_and_return;
 
   mFontCatalog = NewFontCatalog();
   if (!mFontCatalog)
     goto cleanup_and_return;
 
-  sVendorNames = new nsHashtable();
-  if (!sVendorNames)
+  mVendorNames = new nsHashtable();
+  if (!mVendorNames)
     goto cleanup_and_return;
   while (vn->vendorID) {
     nsCAutoString name(vn->vendorID);
     ToLowerCase(name);
     nsCStringKey key(name);
-    sVendorNames->Put(&key, (void*)vn->vendorName);
+    mVendorNames->Put(&key, (void*)vn->vendorName);
     vn++;
   }
 
-  mRange1Language = new nsHashtable();
-  if (!mRange1Language)
+  mFontFamilies = new nsHashtable();
+  if (!mFontFamilies)
     goto cleanup_and_return;
-  crl = ulCodePageRange1Language;
-  while (crl->language) {
-    nsCStringKey key(crl->language);
-    mRange1Language->Put(&key, &(crl->bit));
-    crl++;
+  while (ff->mFamilyName) {
+    nsCAutoString name(ff->mFamilyName);
+    ToLowerCase(name);
+    nsCStringKey key(name);
+    mFontFamilies->Put(&key, (void*)ff);
+    ff++;
   }
 
-  mRange2Language = new nsHashtable();
-  if (!mRange2Language)
+  mRange1CharSetNames = new nsHashtable();
+  if (!mRange1CharSetNames)
     goto cleanup_and_return;
-  crl = ulCodePageRange2Language;
-  while (crl->language) {
-    nsCStringKey key(crl->language);
-    mRange2Language->Put(&key, &(crl->bit));
-    crl++;
+  crn = ulCodePageRange1CharSetNames;
+  while (crn->charsetName) {
+    char buf[32];
+    sprintf(buf, "0x%08lx", crn->bit);
+    nsCStringKey key(buf);
+    mRange1CharSetNames->Put(&key, (void*)crn->charsetName);
+    crn++;
+  }
+
+  mRange2CharSetNames = new nsHashtable();
+  if (!mRange2CharSetNames)
+    goto cleanup_and_return;
+  crn = ulCodePageRange2CharSetNames;
+  while (crn->charsetName) {
+    char buf[32];
+    sprintf(buf, "0x%08lx", crn->bit);
+    nsCStringKey key(buf);
+    mRange2CharSetNames->Put(&key, (void*)crn->charsetName);
+    crn++;
   }
 
   // get dirs list from prefs
   dirCatalog = NewDirCatalog();
   if (!dirCatalog)
     goto cleanup_and_return;
-  sPref->EnumerateChildren(prefix.get(), GetDirsPrefEnumCallback,
+  mPref->EnumerateChildren(prefix.get(), GetDirsPrefEnumCallback,
                            dirCatalog);
 
   NS_TIMELINE_START_TIMER("nsFT2FontCatalog::GetFontCatalog");
@@ -1358,7 +1412,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
   if (!face->family_name)
     goto cleanup_and_return;
   nsTTFontFamilyEncoderInfo *ffei;
-  ffei = nsFreeType::GetCustomEncoderInfo(face->family_name);
+  ffei = nsFT2FontCatalog::GetCustomEncoderInfo(face->family_name);
   if (ffei) {
     fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_SYMBOL;
   }
@@ -1940,6 +1994,105 @@ nsFT2FontCatalog::ParseCCMapLine(nsCompressedCharMap *aCCMapObj, long base,
   return PR_TRUE;
 }
 
+//
+// Parse XLFD
+// The input is a typical XLFD string.
+//
+// the XLFD entries look like this:
+//  -adobe-courier-medium-r-normal--12-120-75-75-m-70-iso8859-1
+//  -adobe-courier-medium-r-*-*-12-*-*-*-*-*-*-*
+//
+// the fields are: 
+// -foundry-family-weight-slant-width-style-pixelsize-pointsize-
+//    resolution_x-resolution_y-spacing-avg_width-registry-encoding
+// 
+// see ftp://ftp.x.org/pub/R6.4/xc/doc/hardcopy/XLFD
+//
+PRBool
+nsFT2FontCatalog::ParseXLFD(char *aPattern, char** aFoundry, char** aFamily,
+                            char** aCharset, char** aEncoding)
+{
+  char *p;
+  int i;
+
+  *aFoundry  = nsnull;
+  *aFamily   = nsnull;
+  *aCharset  = nsnull;
+  *aEncoding = nsnull;
+
+  // start of pattern
+  p = aPattern;
+  NS_ASSERTION(*p == '-',"garbled pattern: does not start with a '-'");
+  if (*p++ != '-')
+    return PR_FALSE;
+
+  // foundry
+  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
+  if (!*p)
+    return PR_FALSE;
+  if (*p == '*')
+    *aFoundry = nsnull;
+  else
+    *aFoundry = p;
+  while (*p && (*p!='-'))
+    p++;
+  if (!*p)
+    return PR_TRUE; // short XLFD
+  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of foundry");
+  *p++ = '\0';
+
+  // family
+  if (!*p)
+    return PR_TRUE; // short XLFD
+  if (*p == '*')
+    *aFamily = nsnull;
+  else
+    *aFamily = p;
+  while (*p && (*p!='-'))
+    p++;
+  if (!*p)
+    return PR_TRUE; // short XLFD
+  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of family");
+  *p++ = '\0';
+
+  // skip forward to charset
+  for (i=0; i<10; i++) {
+    while (*p && (*p!='-'))
+      p++;
+    if (!*p)
+      return PR_TRUE; // short XLFD
+    *p++ = '\0';
+  }
+
+  // charset
+  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
+  if (!*p)
+    return PR_FALSE;
+  if (*p == '*')
+    *aCharset = nsnull;
+  else
+    *aCharset = p;
+  while (*p && (*p!='-'))
+    p++;
+  if (!*p)
+    return PR_TRUE; // short XLFD
+  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of charset");
+  *p++ = '\0';
+
+  // encoding
+  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
+  if (!*p)
+    return PR_FALSE;
+  if (*p == '*')
+    *aEncoding = nsnull;
+  else
+    *aEncoding = p;
+  while (*p && (*p!='-'))
+    p++;
+  if (*p)
+    return PR_TRUE; // short XLFD
+  return PR_TRUE;
+}
 
 void
 nsFT2FontCatalog::PrintCCMap(nsNameValuePairDB *aDB, PRUint16 *aCCMap)
@@ -2146,23 +2299,6 @@ cleanup_and_return:
   return 0;
 }
 
-unsigned long
-nsFT2FontCatalog::GetRangeLanguage(const nsACString & aLanguage,
-                                   PRInt16 aRange)
-{
-  unsigned long *bit;
-  if (aLanguage.IsEmpty())
-    return 0;
-  nsCStringKey key(aLanguage);
-  if (aRange == CPR1)
-    bit = (unsigned long *)(mRange1Language->Get(&key));
-  if (aRange == CPR2)
-    bit = (unsigned long *)(mRange2Language->Get(&key));
-  if (bit)
-    return *bit;
-  return 0;
-}
-
 nsFontVendorName sVendorNamesList[] = {
   { "2REB", "2Rebels"                                     },
   { "39BC", "Finley's Barcode Fonts"                      },
@@ -2352,42 +2488,46 @@ nsFontVendorName sVendorNamesList[] = {
   { nsnull,  nsnull                                       },
 };
  
-
-// TODO: what TT_OS2_CPR1_OEM standard for. use "oem" temporarily.
-nsulCodePageRangeLanguage ulCodePageRange1Language[] = {
-{ TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,     "latin1"              },
-{ TT_OS2_CPR1_LATIN2,                             "latin2"              },
-{ TT_OS2_CPR1_CYRILLIC,                           "cyrillic"            },
-{ TT_OS2_CPR1_GREEK,                              "greek"               },
-{ TT_OS2_CPR1_TURKISH,                            "turkish"             },
-{ TT_OS2_CPR1_HEBREW,                             "hebrew"              },
-{ TT_OS2_CPR1_ARABIC,                             "arabic"              },
-{ TT_OS2_CPR1_BALTIC,                             "baltic"              },
-{ TT_OS2_CPR1_VIETNAMESE,                         "vietnamese"          },
-{ TT_OS2_CPR1_THAI,                               "thai"                },
-{ TT_OS2_CPR1_JAPANESE,                           "apanese"             },
-{ TT_OS2_CPR1_CHINESE_SIMP,                       "simplified chinese"  },
-{ TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB,  "korean"              },
-{ TT_OS2_CPR1_CHINESE_TRAD,                       "traditional chinese" },
-{ TT_OS2_CPR1_OEM,                                "oem"                    },
-{ TT_OS2_CPR1_SYMBOL,                             "symbol"              },
-{ 0,                                              nsnull                },
+nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[] = {
+{ TT_OS2_CPR1_LATIN1,       "iso8859-1"         },
+{ TT_OS2_CPR1_LATIN2,       "iso8859-2"         },
+{ TT_OS2_CPR1_CYRILLIC,     "iso8859-5"         },
+{ TT_OS2_CPR1_GREEK,        "iso8859-7"         },
+{ TT_OS2_CPR1_TURKISH,      "iso8859-9"         },
+{ TT_OS2_CPR1_HEBREW,       "iso8859-8"         },
+{ TT_OS2_CPR1_ARABIC,       "iso8859-6"         },
+{ TT_OS2_CPR1_BALTIC,       "iso8859-13"        },
+{ TT_OS2_CPR1_VIETNAMESE,   "viscii1.1-1"       },
+{ TT_OS2_CPR1_THAI,         "tis620.2533-1"     },
+{ TT_OS2_CPR1_JAPANESE,     "jisx0208.1990-0"   },
+{ TT_OS2_CPR1_CHINESE_SIMP, "gb2312.1980-1"     },
+{ TT_OS2_CPR1_KO_WANSUNG,   "ksc5601.1992-3"    },
+{ TT_OS2_CPR1_CHINESE_TRAD, "big5-0"            },
+{ TT_OS2_CPR1_KO_JOHAB,     "ksc5601.1992-3"    },
+{ TT_OS2_CPR1_MAC_ROMAN,    "iso8859-1"         },
+{ TT_OS2_CPR1_OEM,          "fontspecific-0"    },
+{ TT_OS2_CPR1_SYMBOL,       "fontspecific-0"    },
+{ 0,                         nsnull             },
 };
 
-nsulCodePageRangeLanguage ulCodePageRange2Language[] = {
-{ TT_OS2_CPR2_GREEK | TT_OS2_CPR2_GREEK_437G,     "greek"               },
-{ TT_OS2_CPR2_RUSSIAN,                            "russian"             },
-{ TT_OS2_CPR2_NORDIC,                             "nordic"              },
-{ TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708,    "arabic"              },
-{ TT_OS2_CPR2_CA_FRENCH,                          "canadian french"     },
-{ TT_OS2_CPR2_HEBREW,                             "hebrew"              },
-{ TT_OS2_CPR2_ICELANDIC,                          "icelandic"           },
-{ TT_OS2_CPR2_PORTUGESE,                          "portugese"           },
-{ TT_OS2_CPR2_TURKISH,                            "turkish"             },
-{ TT_OS2_CPR2_CYRILLIC,                           "cyrillic"            },
-{ TT_OS2_CPR2_LATIN2,                             "latin2"              },
-{ TT_OS2_CPR2_BALTIC,                             "baltic"              },
-{ TT_OS2_CPR2_WE_LATIN1 || TT_OS2_CPR2_US,        "latin1"              },
-{ 0,                                              nsnull                },
+nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[] = {
+{ TT_OS2_CPR2_GREEK,        "iso8859-7"         },
+{ TT_OS2_CPR2_RUSSIAN,      "koi8-r"            },
+{ TT_OS2_CPR2_NORDIC,       "iso8859-10"        },
+{ TT_OS2_CPR2_ARABIC,       "iso8859-6"         },
+{ TT_OS2_CPR2_CA_FRENCH,    "iso8859-1"         },
+{ TT_OS2_CPR2_HEBREW,       "iso8859-8"         },
+{ TT_OS2_CPR2_ICELANDIC,    "iso8859-1"         },
+{ TT_OS2_CPR2_PORTUGESE,    "iso8859-1"         },
+{ TT_OS2_CPR2_TURKISH,      "iso8859-9"         },
+{ TT_OS2_CPR2_CYRILLIC,     "iso8859-5"         },
+{ TT_OS2_CPR2_LATIN2,       "iso8859-2"         },
+{ TT_OS2_CPR2_BALTIC,       "iso8859-4"         },
+{ TT_OS2_CPR2_GREEK_437G,   "iso8859-7"         },
+{ TT_OS2_CPR2_ARABIC_708,   "iso8859-6"         },
+{ TT_OS2_CPR2_WE_LATIN1,    "iso8859-1"         },
+{ TT_OS2_CPR2_US,           "iso8859-1"         },
+{ 0,                         nsnull             },
 };
+
 #endif /* #if (!defined(MOZ_ENABLE_FREETYPE2)) */

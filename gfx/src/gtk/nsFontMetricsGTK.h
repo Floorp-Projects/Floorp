@@ -52,7 +52,6 @@
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
 #include "nsIFontMetricsGTK.h"
-#include "nsIFontCatalogService.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -92,7 +91,7 @@ struct nsFontStretch
   char*              mScalable;
   PRBool             mOutlineScaled;
   nsVoidArray        mScaledFonts;
-  nsITrueTypeFontCatalogEntry*   mFreeTypeFaceID;
+  nsFreeTypeFace *   mFreeTypeFaceID;
 };
 
 struct nsFontStyle
