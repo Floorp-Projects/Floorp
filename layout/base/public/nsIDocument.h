@@ -50,6 +50,7 @@ class nsXIFConverter;
 class nsINameSpaceManager;
 class nsIDOMSelection;
 class nsIDOMDocumentFragment;
+class nsILineBreaker;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -110,6 +111,12 @@ public:
    */
   virtual nsString* GetDocumentCharacterSet() const = 0;
   virtual void SetDocumentCharacterSet(nsString* aCharSetID) = 0;
+
+  /**
+   * Return the Line Breaker for the document
+   */
+  NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) = 0;
+  NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) = 0;
 
   /**
    * Access HTTP header data (this may also get set from other sources, like

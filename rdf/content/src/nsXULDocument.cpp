@@ -83,6 +83,9 @@
 #include "plstr.h"
 #include "rdfutil.h"
 
+
+#include "nsILineBreakerFactory.h"
+#include "nsLWBrkCIID.h"
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kICSSParserIID,          NS_ICSS_PARSER_IID); // XXX grr..
@@ -127,6 +130,9 @@ static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,        NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,			NS_XULDATASOURCE_CID);
+
+static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
+static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -333,6 +339,9 @@ public:
     virtual nsString* GetDocumentCharacterSet() const;
 
     virtual void SetDocumentCharacterSet(nsString* aCharSetID);
+
+    NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) ;
+    NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
 
     NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
@@ -591,6 +600,7 @@ protected:
     nsIRDFDataSource*          mLocalDataSource;
     nsIRDFDataSource*          mDocumentDataSource;
     nsIParser*                 mParser;
+    nsILineBreaker*            mLineBreaker;
 };
 
 
@@ -614,9 +624,11 @@ XULDocumentImpl::XULDocumentImpl(void)
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
       mDocumentDataSource(nsnull),
+      mLineBreaker(nsnull),
       mParser(nsnull)
 {
     NS_INIT_REFCNT();
+
 
     nsresult rv;
 
@@ -650,6 +662,7 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mArena);
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mParser);
+    NS_IF_RELEASE(mLineBreaker);
 }
 
 
@@ -959,6 +972,42 @@ XULDocumentImpl::SetDocumentCharacterSet(nsString* aCharSetID)
 {
     mCharSetID = aCharSetID;
 }
+
+
+NS_IMETHODIMP 
+XULDocumentImpl::GetLineBreaker(nsILineBreaker** aResult) 
+{
+  if(nsnull == mLineBreaker ) {
+     // no line breaker, find a default one
+     nsILineBreakerFactory *lf;
+     nsresult result;
+     result = nsServiceManager::GetService(kLWBrkCID,
+                                          kILineBreakerFactoryIID,
+                                          (nsISupports **)&lf);
+     if (NS_SUCCEEDED(result)) {
+      nsILineBreaker *lb = nsnull ;
+      nsAutoString lbarg("");
+      result = lf->GetBreaker(lbarg, &lb);
+      if(NS_SUCCEEDED(result)) {
+         mLineBreaker = lb;
+      }
+      result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
+     }
+  }
+  *aResult = mLineBreaker;
+  NS_IF_ADDREF(mLineBreaker);
+  return NS_OK; // XXX we should do error handling here
+}
+
+NS_IMETHODIMP 
+XULDocumentImpl::SetLineBreaker(nsILineBreaker* aLineBreaker) 
+{
+  NS_IF_RELEASE(mLineBreaker);
+  mLineBreaker = aLineBreaker;
+  NS_IF_ADDREF(mLineBreaker);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 XULDocumentImpl::GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const

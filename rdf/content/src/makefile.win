@@ -48,6 +48,7 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\xpcom        \
         -I$(PUBLIC)\netlib       \
         -I$(PUBLIC)\raptor       \
+        -I$(PUBLIC)\lwbrk       \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
         -I$(DEPTH)\rdf\base\src  \
