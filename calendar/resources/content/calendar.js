@@ -687,6 +687,9 @@ function newEvent( startDate, endDate )
    // create a new event to be edited and added
    var calendarEvent = createEvent();
    
+   if( !startDate )
+      startDate = gCalendarWindow.currentView.getNewEventDate();
+
    calendarEvent.start.setTime( startDate );
    
    if( !endDate )

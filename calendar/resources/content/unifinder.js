@@ -253,11 +253,9 @@ function unifinderDoubleClickEvent( event )
    var calendarEvent = getCalendarEventFromEvent( event );
    
    if( calendarEvent != null )
-   {
-      // go to day view, of the day of the event, select the event
-      
       editEvent( calendarEvent );
-   }
+   else
+      newEvent();
 }
 
 
@@ -270,11 +268,10 @@ function getCalendarEventFromEvent( event )
 
    if( row.value != -1 && row.value < tree.view.rowCount )
    { 
-      var event = tree.eventView.getCalendarEventAtRow( row.value );
-      return event;
+      return ( tree.eventView.getCalendarEventAtRow( row.value ) );
+   } else {
+      return ( null );
    }
-
-   return( false );
 }
 
 /**
