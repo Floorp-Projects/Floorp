@@ -1692,7 +1692,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
     case NS_FORM_INPUT_BUTTON:
       if (UseXBLForms())
         return NS_OK;
-      return ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
+      return NS_NewGfxButtonControlFrame(aPresShell, &aFrame);
 
     case NS_FORM_INPUT_CHECKBOX:
       if (UseXBLForms())
@@ -1715,8 +1715,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
 
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
-      return ConstructTextControlFrame(aPresShell, aPresContext,
-                                       aFrame, aContent);
+      return NS_NewTextControlFrame(aPresShell, &aFrame);
 
     default:
       NS_ASSERTION(0, "Unknown input type!");
@@ -4062,54 +4061,6 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   return rv;
 }
 
-
-nsWidgetRendering
-nsCSSFrameConstructor::GetFormElementRenderingMode(nsIPresContext*		aPresContext,
-																									 nsWidgetType				aWidgetType) 
-{ 
-  if (!aPresContext) { return eWidgetRendering_Gfx;}
-
-  nsWidgetRendering mode;
-  aPresContext->GetWidgetRenderingMode(&mode);
-
-	switch (mode)
-	{ 
-		case eWidgetRendering_Gfx: 
-			return eWidgetRendering_Gfx; 
-
-		case eWidgetRendering_PartialGfx: 
-			switch (aWidgetType)
-			{
-				case eWidgetType_Button:
-				case eWidgetType_Checkbox:
-				case eWidgetType_Radio:
-				case eWidgetType_Text:
-					return eWidgetRendering_Gfx; 
-
-				default: 
-					return eWidgetRendering_Native; 
-			} 
-
-		case eWidgetRendering_Native: 
-		  PRBool useNativeWidgets = PR_FALSE;
-	    nsIDeviceContext* dc;
-	    aPresContext->GetDeviceContext(&dc);
-	    if (dc) {
-	      PRBool  supportsWidgets;
-	      if (NS_SUCCEEDED(dc->SupportsNativeWidgets(supportsWidgets))) {
-	        useNativeWidgets = supportsWidgets;
-	      }
-	      NS_RELEASE(dc);
-	    }
-			if (useNativeWidgets) 
-				return eWidgetRendering_Native;
-			else
-				return eWidgetRendering_Gfx;
-	}
-	return eWidgetRendering_Gfx; 
-}
-
-
 nsresult
 nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShell, 
                                                  nsIPresContext*  aPresContext,
@@ -4117,12 +4068,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
                                                  nsIContent*  aContent,
                                                  nsStyleContext* aStyleContext)
 {
-  nsresult rv = NS_OK;
-	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Radio) == eWidgetRendering_Gfx)
-		rv = NS_NewGfxRadioControlFrame(aPresShell, &aNewFrame);
-	else
-    NS_ASSERTION(0, "We longer support native widgets");
-
+  nsresult rv = NS_NewGfxRadioControlFrame(aPresShell, &aNewFrame);
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
     return rv;
@@ -4147,15 +4093,10 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*    aPresShell
                                                      nsIContent*      aContent,
                                                      nsStyleContext*  aStyleContext)
 {
-  nsresult rv = NS_OK;
-	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Checkbox) == eWidgetRendering_Gfx)
-		rv = NS_NewGfxCheckboxControlFrame(aPresShell, &aNewFrame);
-	else
-    NS_ASSERTION(0, "We longer support native widgets");
-
-
+  nsresult rv = NS_NewGfxCheckboxControlFrame(aPresShell, &aNewFrame);
   if (NS_FAILED(rv)) {
     aNewFrame = nsnull;
+    return rv;
   }
 
   nsRefPtr<nsStyleContext> checkboxStyle;
@@ -4167,49 +4108,6 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*    aPresShell
       NS_SUCCEEDED(aNewFrame->QueryInterface(NS_GET_IID(nsICheckboxControlFrame), (void**)&checkbox))) {
     checkbox->SetCheckboxFaceStyleContext(checkboxStyle);
     NS_RELEASE(checkbox);
-  }
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*   aPresShell,
-                                                   nsIPresContext* aPresContext,
-                                                   nsIFrame*&      aNewFrame)
-{
-  nsresult rv = NS_OK;
-  if (GetFormElementRenderingMode(aPresContext, eWidgetType_Button)
-      == eWidgetRendering_Gfx)
-    rv = NS_NewGfxButtonControlFrame(aPresShell, &aNewFrame);
-  else
-    NS_ASSERTION(0, "We longer support native widgets");
-
-  if (NS_FAILED(rv)) {
-    aNewFrame = nsnull;
-  }
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*   aPresShell,
-                                                 nsIPresContext* aPresContext,
-                                                 nsIFrame*&      aNewFrame,
-                                                 nsIContent*     aContent)
-{
-  if (!aPresContext) { return NS_ERROR_NULL_POINTER;}
-  nsresult rv = NS_OK;
-
-  nsWidgetRendering mode;
-  aPresContext->GetWidgetRenderingMode(&mode);
-  if (eWidgetRendering_Gfx == mode) 
-  {
-    rv = NS_NewTextControlFrame(aPresShell, &aNewFrame);
-    if (NS_FAILED(rv)) {
-      aNewFrame = nsnull;
-    }
-  }
-  if (!aNewFrame)
-  {
-    NS_ASSERTION(0, "We longer support native widgets");
   }
   return rv;
 }
@@ -4800,7 +4698,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
     }
     isReplaced = PR_TRUE;
-    rv = ConstructTextControlFrame(aPresShell, aPresContext, newFrame, aContent);
+    rv = NS_NewTextControlFrame(aPresShell, &newFrame);
   }
   else if (nsHTMLAtoms::select == aTag) {
     if (!UseXBLForms()) {

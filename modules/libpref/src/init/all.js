@@ -211,9 +211,6 @@ pref("browser.windows.loadOnNewWindow", 1);
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
 
-// gfx widgets
-pref("nglayout.widget.mode", 2);
-
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
 
