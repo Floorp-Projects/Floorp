@@ -112,8 +112,7 @@ print "  Xpinstall version: $gDefaultProductVersion\n";
 print "\n";
 
 $gDirPackager         = "$topsrcdir/xpinstall/packager";
-$gDirDistInstall      = `cygpath -mai $inDistPath/inst_gre`;
-chomp $gDirDistInstall;
+$gDirDistInstall      = "$inDistPath/inst_gre";
 $gDirStageProduct     = "$inStagePath/gre";
 
 # Create the stage area here.
