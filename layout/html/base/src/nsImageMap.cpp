@@ -84,7 +84,6 @@ public:
   virtual void GetRect(nsIPresContext* aCX, nsRect& aRect) = 0;
   virtual void GetShapeName(nsString& aResult) const = 0;
 
-  void ToHTML(nsString& aResult);
   void HasFocus(PRBool aHasFocus);
 
   void GetHREF(nsString& aHref) const;
@@ -344,50 +343,6 @@ void Area::ParseCoords(const nsString& aSpec)
     mCoords = lo_parse_coord_list(cp, &mNumCoords);
     nsCRT::free(cp);
   }
-}
-
-void Area::ToHTML(nsString& aResult)
-{
-  nsAutoString href, target, altText;
-
-  if (mArea) {
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, href);
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, altText);
-  }
-
-  aResult.Truncate();
-  aResult.Append(NS_LITERAL_STRING("<AREA SHAPE="));
-  nsAutoString shape;
-  GetShapeName(shape);
-  aResult.Append(shape);
-  aResult.Append(NS_LITERAL_STRING(" COORDS=\""));
-  if (nsnull != mCoords) {
-    PRInt32 i, n = mNumCoords;
-    for (i = 0; i < n; i++) {
-      aResult.AppendInt(mCoords[i], 10);
-      if (i < n - 1) {
-        aResult.Append(PRUnichar(','));
-      }
-    }
-  }
-  aResult.Append(NS_LITERAL_STRING("\" HREF=\""));
-  aResult.Append(href);
-  aResult.Append(NS_LITERAL_STRING("\""));
-  if (0 < target.Length()) {
-    aResult.Append(NS_LITERAL_STRING(" TARGET=\""));
-    aResult.Append(target);
-    aResult.Append(NS_LITERAL_STRING("\""));
-  }
-  if (0 < altText.Length()) {
-    aResult.Append(NS_LITERAL_STRING(" ALT=\""));
-    aResult.Append(altText);
-    aResult.Append(NS_LITERAL_STRING("\""));
-  }
-  if (mSuppressFeedback) {
-    aResult.Append(NS_LITERAL_STRING(" SUPPRESS"));
-  }
-  aResult.Append(PRUnichar('>'));
 }
 
 void Area::HasFocus(PRBool aHasFocus)
