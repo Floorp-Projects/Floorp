@@ -21,5 +21,15 @@
    -   Terry Hayes <thayes@netscape.com>
   -->
 
-<!ENTITY  security.label               "Privacy/Security">
-<!ENTITY  ssl.label                    "SSL">
+<!ENTITY  security.title         "Security Preferences">
+<!ENTITY  security.label         "Privacy/Security">
+<!ENTITY  security.description   "Settings for Privacy/Security">
+<!ENTITY  resetsettings.label    "Reset Settings">
+<!ENTITY  resetpreferences.label "Reset Preferences...">
+<!ENTITY  managecerts.label      "Manage Certificates">
+<!ENTITY  managecerts.text       "Use the Certificate Manager to manage your personal certificates, as well as those of other people and certificate authorities.">
+<!ENTITY  managecerts.button     "Manage Certificates...">
+<!ENTITY  managedevices.label    "Manage Security Devices...">
+<!ENTITY  managedevices.text     "Use this button to manage your security devices, such as smart cards.">
+<!ENTITY  managedevices.button   "Manage Security Devices...">
+<!ENTITY  ssl.label              "SSL">

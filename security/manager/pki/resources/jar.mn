@@ -4,6 +4,7 @@ pippki.jar:
     content/pippki/password.js               (content/password.js)
     content/pippki/PrefOverlay.xul           (content/PrefOverlay.xul)
     content/pippki/SecurityPrefs.xul         (content/SecurityPrefs.xul)
+    content/pippki/SecurityPrefs.js          (content/SecurityPrefs.js)
     content/pippki/SSLPrefs.xul              (content/SSLPrefs.xul)
     content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
     content/pippki/newserver.js              (content/newserver.js)
@@ -22,4 +23,5 @@ pippki.jar:
     locale/en-US/pippki/PrefOverlay.dtd      (locale/en-US/PrefOverlay.dtd)
     locale/en-US/pippki/newserver.properties (locale/en-US/newserver.properties)
     locale/en-US/pippki/newserver.dtd        (locale/en-US/newserver.dtd)
+    locale/en-US/pippki/SecurityPrefs.dtd    (locale/en-US/SecurityPrefs.dtd)
     locale/en-US/pippki/PageInfoOverlay.dtd  (locale/en-US/PageInfoOverlay.dtd)
