@@ -16,14 +16,14 @@
    - Corp. are Copyright (C) 2000 Netscape Communications Corp. All
    - Rights Reserved.
    - 
-   - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
-					 Mohan Bhamidipati       <mohanb@netscape.com>
+   - Contributor(s): David Bienvenu <bienvenu@netscape.com>
+   -                 Mohan Bhamidipati <mohanb@netscape.com>
   --> 
 
 <!ENTITY folderProps.windowtitle.label  "Properties">
 <!ENTITY generalInfo.label            "General Information">
 <!ENTITY folderCharsetTab.label       "Default Character Coding:">
-<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored).">
+<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored)">
 <!ENTITY folderOfflineTab.label                             "Offline">
 <!ENTITY folderOfflineTab.accesskey                         "o">
 <!ENTITY folderCheckForNewMessages.label                    "Check this folder for new messages">
