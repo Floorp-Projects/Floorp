@@ -47,6 +47,10 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * NB: If you add non-loop STMT_* enumerators, do so before STMT_DO_LOOP or
+ * you will break the STMT_IS_LOOP macro, just below this enum.
+ */
 typedef enum JSStmtType {
     STMT_BLOCK        = 0,      /* compound statement: { s1[;... sN] } */
     STMT_LABEL        = 1,      /* labeled statement:  L: s */
@@ -57,11 +61,11 @@ typedef enum JSStmtType {
     STMT_TRY          = 6,      /* try statement */
     STMT_CATCH        = 7,      /* catch block */
     STMT_FINALLY      = 8,      /* finally statement */
-    STMT_DO_LOOP      = 9,      /* do/while loop statement */
-    STMT_FOR_LOOP     = 10,     /* for loop statement */
-    STMT_FOR_IN_LOOP  = 11,     /* for/in loop statement */
-    STMT_WHILE_LOOP   = 12,     /* while loop statement */
-    STMT_SUBROUTINE   = 13      /* gosub-target subroutine body */
+    STMT_SUBROUTINE   = 9,      /* gosub-target subroutine body */
+    STMT_DO_LOOP      = 10,     /* do/while loop statement */
+    STMT_FOR_LOOP     = 11,     /* for loop statement */
+    STMT_FOR_IN_LOOP  = 12,     /* for/in loop statement */
+    STMT_WHILE_LOOP   = 13      /* while loop statement */
 } JSStmtType;
 
 #define STMT_IS_LOOP(stmt)      ((stmt)->type >= STMT_DO_LOOP)
@@ -154,11 +158,11 @@ struct JSJumpTarget {
 #define BITS_PER_PTRDIFF        (sizeof(ptrdiff_t) * JS_BITS_PER_BYTE)
 #define BITS_PER_BPDELTA        (BITS_PER_PTRDIFF - 1 - JT_UNTAG_SHIFT)
 #define BPDELTA_MAX             ((ptrdiff_t)(JS_BIT(BITS_PER_BPDELTA) - 1))
-#define BPDELTA_TO_TN(bp)       ((JSJumpTarget *)((bp) << JT_UNTAG_SHIFT))
+#define BPDELTA_TO_JT(bp)       ((JSJumpTarget *)((bp) << JT_UNTAG_SHIFT))
 #define JT_TO_BPDELTA(jt)       ((ptrdiff_t)((jsword)(jt) >> JT_UNTAG_SHIFT))
 
 #define SD_SET_TARGET(sd,jt)    ((sd)->target = JT_SET_TAG(jt))
-#define SD_SET_BPDELTA(sd,bp)   ((sd)->target = BPDELTA_TO_TN(bp))
+#define SD_SET_BPDELTA(sd,bp)   ((sd)->target = BPDELTA_TO_JT(bp))
 #define SD_GET_BPDELTA(sd)      (JS_ASSERT(!JT_HAS_TAG((sd)->target)),        \
                                  JT_TO_BPDELTA((sd)->target))
 #define SD_TARGET_OFFSET(sd)    (JS_ASSERT(JT_HAS_TAG((sd)->target)),         \
