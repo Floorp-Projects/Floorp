@@ -1711,10 +1711,10 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
  *  @return  
  */
 nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const char *msg){
+  nsresult result=DidBuildModel(status);
   if (nsnull != mListener) {
     mListener->OnStopBinding(status, msg);
   }
-  nsresult result=DidBuildModel(status);
   return result;
 }
 
