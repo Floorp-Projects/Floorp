@@ -83,6 +83,7 @@ components/libwebbrwsr.so  ; wtf!  it is needed?!
 components/mozbrwsr.xpt                 
 components/webBrowser_core.xpt
 components/libembedcomponents.so
+components/promptservice.xpt
 components/windowwatcher.xpt
 
 ; find functionality
