@@ -98,6 +98,15 @@ OLDTSVFILE="$2"
 SUMMARYFILE="$3"
 
 
+#
+#   On Mac OS X, use the --zerodrift option to maptsvdifftool
+#
+if [ $OSTYPE == "Darwin" ]; then
+ZERODRIFT="--zerodrift"
+else
+ZERODRIFT=""
+fi
+
 
 #
 #   Create our temporary directory.
@@ -157,7 +166,7 @@ rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
+  ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --input $DIFFFILE >> $SUMMARYFILE
 else
   ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
 fi
@@ -180,7 +189,7 @@ if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesizeDiff:"
 fi
-    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
+    ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --summary --input $DIFFFILE
 fi
 
 #
