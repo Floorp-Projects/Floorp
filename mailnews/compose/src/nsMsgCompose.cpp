@@ -1385,70 +1385,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
                 PR_Free(resultStr);
               }
           }
-        }
-    
-        // Ok, if we are here, we need to see if a charset was tagged
-        // on this channel. If there WAS, then this charset needs to 
-        // override the default charset that is set in compFields. This
-        // is the case where you are replying to a message that has a
-        // non US-ASCII charset. You are supposed to reply in that charset.
-        // 
-        char *contentType = nsnull;
-        if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
-        {
-          char *workContentType = nsCRT::strdup(contentType);
-          if (workContentType)
-          {
-            char *ptr = PL_strstr(workContentType, "charset=");
-            if (ptr)
-            {
-              ptr += nsCRT::strlen("charset=");
-              if (*ptr == '"')
-                ptr++;
-
-              char *ptr2 = ptr;
-              while (*ptr2)
-              {
-                if ( (*ptr2 == ' ') || (*ptr2 == ';') || (*ptr2 == '"'))
-                {
-                  *ptr2 = '\0';
-                  break;
-                }
-
-                ++ptr2;
-              }
-
-              // Re-label "us-ascii" to "ISO-8859-1" since the original body may contain
-              // non us-ascii characters with eitity encoded.
-              aCharset.AssignWithConversion(ptr);
-              if (aCharset.EqualsIgnoreCase("us-ascii"))
-                aCharset.AssignWithConversion("ISO-8859-1");
-              else {
-                // Use canonical charset name instead of using the charset name from the message header as is.
-                // This is needed for charset menu item to have a check mark correctly, for example.
-                nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(kCharsetConverterManagerCID, &rv);
-                if (NS_SUCCEEDED(rv)) {
-                  nsCOMPtr <nsIAtom> charsetAtom;
-                  rv = ccm2->GetCharsetAtom(aCharset.GetUnicode(), getter_AddRefs(charsetAtom));
-                  if (NS_SUCCEEDED(rv)) {
-                    nsAutoString canonicalCharset;
-                    rv = charsetAtom->ToString(canonicalCharset);
-                    if (NS_SUCCEEDED(rv))
-                      aCharset = canonicalCharset;
-                    else
-                      rv = NS_OK;   // no cannonical charset name does not mean an error
-                  }
-                }
-              }
-
-              compFields->SetCharacterSet(aCharset.GetUnicode());
-            }
-
-            PR_FREEIF(workContentType);
-          }
-
-          PR_FREEIF(contentType);
-        }
+        }    
 
         NS_RELEASE(compFields);
       }
