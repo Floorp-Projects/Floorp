@@ -113,17 +113,11 @@ struct nsFrameItems {
   nsIFrame* childList;
   nsIFrame* lastChild;
   
-  nsFrameItems();
-  nsFrameItems(nsIFrame* aFrame);
+  nsFrameItems(nsIFrame* aFrame = nsnull);
 
   // Appends the frame to the end of the list
   void AddChild(nsIFrame* aChild);
 };
-
-nsFrameItems::nsFrameItems()
-  : childList(nsnull), lastChild(nsnull)
-{
-}
 
 nsFrameItems::nsFrameItems(nsIFrame* aFrame)
   : childList(aFrame), lastChild(aFrame)
@@ -149,9 +143,9 @@ nsFrameItems::AddChild(nsIFrame* aChild)
 // state information needed for absolutely positioned elements
 struct nsAbsoluteItems : nsFrameItems {
   // containing block for absolutely positioned elements
-  nsIFrame* const containingBlock;
+  nsIFrame* containingBlock;
 
-  nsAbsoluteItems(nsIFrame* aContainingBlock);
+  nsAbsoluteItems(nsIFrame* aContainingBlock = nsnull);
 
   // Appends the frame to the end of the list
   void AddChild(nsIFrame* aChild);
@@ -172,6 +166,86 @@ nsAbsoluteItems::AddChild(nsIFrame* aChild)
   aChild->GetFrameState(&frameState);
   aChild->SetFrameState(frameState | NS_FRAME_OUT_OF_FLOW);
   nsFrameItems::AddChild(aChild);
+}
+
+// -----------------------------------------------------------
+
+// Structure for saving the existing state when pushing/poping containing
+// blocks. The destructor restores the state to its previous state
+class nsFrameConstructorSaveState {
+public:
+  nsFrameConstructorSaveState();
+  ~nsFrameConstructorSaveState();
+
+private:
+  nsAbsoluteItems* mItems;                // pointer to struct whose data we save/restore
+  nsAbsoluteItems  mSavedItems;           // copy of original data
+  friend class nsFrameConstructorState;
+};
+
+// Structure used for maintaining state information during the
+// frame construction process
+class nsFrameConstructorState {
+public:
+  // Containing block information for out-of-flow frammes
+  nsAbsoluteItems mFixedItems;
+  nsAbsoluteItems mAbsoluteItems;
+  nsAbsoluteItems mFloatedItems;
+
+  // Constructor
+  nsFrameConstructorState(nsIFrame* aFixedContainingBlock,
+                          nsIFrame* aAbsoluteContainingBlock,
+                          nsIFrame* aFloaterContainingBlock);
+
+  // Function to push the existing absolute containing block state and
+  // create a new scope
+  void PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteContainingBlock,
+                                   nsFrameConstructorSaveState& aSaveState);
+
+  // Function to push the existing floater containing block state and
+  // create a new scope
+  void PushFloaterContainingBlock(nsIFrame* aNewFloaterContainingBlock,
+                                  nsFrameConstructorSaveState& aSaveState);
+};
+
+nsFrameConstructorState::nsFrameConstructorState(nsIFrame* aFixedContainingBlock,
+                                                 nsIFrame* aAbsoluteContainingBlock,
+                                                 nsIFrame* aFloaterContainingBlock)
+  : mFixedItems(aFixedContainingBlock),
+    mAbsoluteItems(aAbsoluteContainingBlock),
+    mFloatedItems(aFloaterContainingBlock)
+{
+}
+
+void
+nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteContainingBlock,
+                                                     nsFrameConstructorSaveState& aSaveState)
+{
+  aSaveState.mItems = &mAbsoluteItems;
+  aSaveState.mSavedItems = mAbsoluteItems;
+  mAbsoluteItems = nsAbsoluteItems(aNewAbsoluteContainingBlock);
+}
+
+void
+nsFrameConstructorState::PushFloaterContainingBlock(nsIFrame* aNewFloaterContainingBlock,
+                                                    nsFrameConstructorSaveState& aSaveState)
+{
+  aSaveState.mItems = &mFloatedItems;
+  aSaveState.mSavedItems = mFloatedItems;
+  mFloatedItems = nsAbsoluteItems(aNewFloaterContainingBlock);
+}
+
+nsFrameConstructorSaveState::nsFrameConstructorSaveState()
+  : mItems(0)
+{
+}
+
+nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
+{
+  // Restore the state
+  if (mItems) {
+    *mItems = mSavedItems;
+  }
 }
 
 // -----------------------------------------------------------
@@ -566,14 +640,12 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
  *            child frames
  */
 nsresult
-nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
-                                       nsIContent*      aContent,
-                                       nsIFrame*        aFrame,
-                                       nsAbsoluteItems& aAbsoluteItems,
-                                       nsFrameItems&    aFrameItems,
-                                       nsAbsoluteItems& aFixedItems,
-                                       nsAbsoluteItems& aFloatingItems,
-                                       PRBool           aCanHaveGeneratedContent)
+nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
+                                       nsFrameConstructorState& aState,
+                                       nsIContent*              aContent,
+                                       nsIFrame*                aFrame,
+                                       PRBool                   aCanHaveGeneratedContent,
+                                       nsFrameItems&            aFrameItems)
 {
   nsIStyleContext*  styleContext = nsnull;
 
@@ -597,8 +669,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIContent> childContent;
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       // Construct a child frame
-      ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems,
-                     aFrameItems, aFixedItems, aFloatingItems, PR_FALSE);
+      ConstructFrame(aPresContext, aState, childContent, aFrame, PR_FALSE, aFrameItems);
     }
   }
 
@@ -684,14 +755,13 @@ struct nsTableList {
 // Construct the outer, inner table frames and the children frames for the table. 
 // Tables can have any table-related child.
 nsresult
-nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
-                                           nsIContent*      aContent,
-                                           nsIFrame*        aParentFrame,
-                                           nsIStyleContext* aStyleContext,
-                                           nsAbsoluteItems& aAbsoluteItems,
-                                           nsIFrame*&       aNewFrame,
-                                           nsAbsoluteItems& aFixedItems,
-                                           nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*          aPresContext,
+                                           nsFrameConstructorState& aState,
+                                           nsIContent*              aContent,
+                                           nsIFrame*                aParentFrame,
+                                           nsIStyleContext*         aStyleContext,
+                                           nsIFrame*&               aNewFrame,
+                                           nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
   nsIFrame* childList;
@@ -757,8 +827,8 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_CAPTION:
         if (nsnull == captionFrame) {  // only allow one caption
           // XXX should absolute items be passed along?
-          rv = ConstructTableCaptionFrame(aPresContext, childContent, aNewFrame, childStyleContext,
-                                          aAbsoluteItems, ignore1, captionFrame, aFixedItems, aTableCreator);
+          rv = ConstructTableCaptionFrame(aPresContext, aState, childContent, aNewFrame,
+                                          childStyleContext, ignore1, captionFrame, aTableCreator);
         }
         break;
 
@@ -768,24 +838,25 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
       {
         PRBool isRowGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP != styleDisplay->mDisplay);
-        rv = ConstructTableGroupFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                      aAbsoluteItems, isRowGroup, childFrame, ignore1, aFixedItems, aTableCreator);
+        rv = ConstructTableGroupFrame(aPresContext, aState, childContent, innerFrame,
+                                      childStyleContext, isRowGroup, childFrame, ignore1,
+                                      aTableCreator);
         break;
       }
       case NS_STYLE_DISPLAY_TABLE_ROW:
-        rv = ConstructTableRowFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                    aAbsoluteItems, childFrame, ignore1, aFixedItems, aTableCreator);
+        rv = ConstructTableRowFrame(aPresContext, aState, childContent, innerFrame,
+                                    childStyleContext, childFrame, ignore1, aTableCreator);
         break;
 
       case NS_STYLE_DISPLAY_TABLE_COLUMN:
-        rv = ConstructTableColFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                    aAbsoluteItems, childFrame, ignore1, aFixedItems, aTableCreator);
+        rv = ConstructTableColFrame(aPresContext, aState, childContent, innerFrame,
+                                    childStyleContext, childFrame, ignore1, aTableCreator);
         break;
 
 
       case NS_STYLE_DISPLAY_TABLE_CELL:
-        rv = ConstructTableCellFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                     aAbsoluteItems, childFrame, ignore1, ignore2, aFixedItems, aTableCreator);
+        rv = ConstructTableCellFrame(aPresContext, aState, childContent, innerFrame,
+                                     childStyleContext, childFrame, ignore1, ignore2, aTableCreator);
         break;
       default:
         //nsIFrame* nonTableRelatedFrame;
@@ -796,8 +867,8 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
         //childList->SetNextSibling(nonTableRelatedFrame);
         //NS_IF_RELEASE(tag);
         nsFrameItems childItems;
-        TableProcessChild(aPresContext, childContent, innerFrame, parentStyleContext,
-                          aAbsoluteItems, childItems, aFixedItems, aTableCreator);
+        TableProcessChild(aPresContext, aState, childContent, innerFrame, parentStyleContext,
+                          childItems, aTableCreator);
         childFrame = childItems.childList; // XXX: Need to change this whole function to return a list of frames
                                             // rather than a single frame. - DWH
         break;
@@ -824,15 +895,14 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresContext, 
-                                                     nsIContent*      aContent, 
-                                                     nsIFrame*        aParentFrame, 
-                                                     nsIFrame*&       aNewTopFrame,
-                                                     nsIFrame*&       aOuterFrame, 
-                                                     nsIFrame*&       aInnerFrame,
-                                                     nsAbsoluteItems& aAbsoluteItems,
-                                                     nsAbsoluteItems& aFixedItems,
-                                                     nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresContext*          aPresContext, 
+                                                    nsFrameConstructorState& aState,
+                                                    nsIContent*              aContent, 
+                                                    nsIFrame*                aParentFrame, 
+                                                    nsIFrame*&               aNewTopFrame,
+                                                    nsIFrame*&               aOuterFrame, 
+                                                    nsIFrame*&               aInnerFrame,
+                                                    nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
   NS_WARNING("an anonymous table frame was created. \n");
@@ -854,8 +924,8 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
   case NS_STYLE_DISPLAY_TABLE_ROW: // construct a cell
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
                                                PR_FALSE, getter_AddRefs(cellStyleContext));
-    rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, cellStyleContext, aAbsoluteItems,
-                                 aNewTopFrame, cellFrame, cellBodyFrame, aFixedItems, aTableCreator, PR_FALSE); 
+    rv = ConstructTableCellFrame(aPresContext, aState, aContent, aParentFrame, cellStyleContext,
+                                 aNewTopFrame, cellFrame, cellBodyFrame, aTableCreator, PR_FALSE); 
     break;
   case NS_STYLE_DISPLAY_TABLE_ROW_GROUP: // construct a row & a cell
   case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
@@ -866,15 +936,13 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo, 
                                                  parentStyleContext, PR_FALSE, 
                                                  getter_AddRefs(rowStyleContext));
-      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, rowStyleContext, 
-                                  aAbsoluteItems, aNewTopFrame, rowFrame, aFixedItems, 
-                                  aTableCreator);
+      rv = ConstructTableRowFrame(aPresContext, aState, aContent, aParentFrame, rowStyleContext, 
+                                  aNewTopFrame, rowFrame, aTableCreator);
       if (NS_FAILED(rv)) return rv;
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
                                                  PR_FALSE, getter_AddRefs(cellStyleContext));
-      rv = ConstructTableCellFrame(aPresContext, aContent, rowFrame, cellStyleContext, 
-                                   aAbsoluteItems, ignore, cellFrame, cellBodyFrame, 
-                                   aFixedItems, aTableCreator, PR_FALSE);
+      rv = ConstructTableCellFrame(aPresContext, aState, aContent, rowFrame, cellStyleContext, 
+                                   ignore, cellFrame, cellBodyFrame, aTableCreator, PR_FALSE);
       rowFrame->SetInitialChildList(*aPresContext, nsnull, cellFrame);
       break;
     }
@@ -885,24 +953,21 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowGroupPseudo, 
                                                  parentStyleContext, PR_FALSE, 
                                                  getter_AddRefs(groupStyleContext));
-      rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, groupStyleContext, 
-                                    aAbsoluteItems, PR_TRUE, aNewTopFrame, groupFrame, aFixedItems, 
-                                    aTableCreator);
+      rv = ConstructTableGroupFrame(aPresContext, aState, aContent, aParentFrame, groupStyleContext, 
+                                    PR_TRUE, aNewTopFrame, groupFrame, aTableCreator);
       if (NS_FAILED(rv)) return rv;
       nsIFrame* rowFrame;
       nsCOMPtr<nsIStyleContext> rowStyleContext;
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo, 
                                                  parentStyleContext, PR_FALSE, 
                                                  getter_AddRefs(rowStyleContext));
-      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, rowStyleContext, 
-                                  aAbsoluteItems, ignore, rowFrame, aFixedItems, 
-                                  aTableCreator);
+      rv = ConstructTableRowFrame(aPresContext, aState, aContent, aParentFrame, rowStyleContext, 
+                                  ignore, rowFrame, aTableCreator);
       if (NS_FAILED(rv)) return rv;
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
                                                PR_FALSE, getter_AddRefs(cellStyleContext));
-      rv = ConstructTableCellFrame(aPresContext, aContent, rowFrame, cellStyleContext, 
-                                   aAbsoluteItems, ignore, cellFrame, cellBodyFrame,
-                                   aFixedItems, aTableCreator, PR_FALSE);
+      rv = ConstructTableCellFrame(aPresContext, aState, aContent, rowFrame, cellStyleContext, 
+                                   ignore, cellFrame, cellBodyFrame, aTableCreator, PR_FALSE);
       rowFrame->SetInitialChildList(*aPresContext, nsnull, cellFrame);
       groupFrame->SetInitialChildList(*aPresContext, nsnull, rowFrame);
       break;
@@ -956,15 +1021,14 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
-                                                  nsIContent*      aContent,
-                                                  nsIFrame*        aParentFrame,
-                                                  nsIStyleContext* aStyleContext,
-                                                  nsAbsoluteItems& aAbsoluteItems,
-                                                  nsIFrame*&       aNewTopFrame,
-                                                  nsIFrame*&       aNewCaptionFrame,
-                                                  nsAbsoluteItems& aFixedItems,
-                                                  nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*          aPresContext,
+                                                  nsFrameConstructorState& aState,
+                                                  nsIContent*              aContent,
+                                                  nsIFrame*                aParentFrame,
+                                                  nsIStyleContext*         aStyleContext,
+                                                  nsIFrame*&               aNewTopFrame,
+                                                  nsIFrame*&               aNewCaptionFrame,
+                                                  nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_NewAreaFrame(aNewCaptionFrame, 0);
   if (NS_FAILED(rv)) return rv;
@@ -991,9 +1055,8 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
   } else { // parent is not a table, need to create a new table
     NS_WARNING("a non table contains a table caption child. \n");
     nsIFrame* outerFrame;
-    ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame,
-                                 outerFrame, innerFrame, aAbsoluteItems, aFixedItems, 
-                                 aTableCreator);
+    ConstructAnonymousTableFrame(aPresContext, aState, aContent, aParentFrame,
+                                 aNewTopFrame, outerFrame, innerFrame, aTableCreator);
     nsCOMPtr<nsIStyleContext> outerStyleContext;
     outerFrame->GetStyleContext(getter_AddRefs(outerStyleContext));
     nsCOMPtr<nsIStyleContext> adjStyleContext;
@@ -1008,8 +1071,8 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
 
   nsFrameItems childItems;
   nsAbsoluteItems floatingKids(aNewCaptionFrame);
-  ProcessChildren(aPresContext, aContent, aNewCaptionFrame, aAbsoluteItems, 
-                  childItems, aFixedItems, floatingKids, PR_TRUE);
+  ProcessChildren(aPresContext, aState, aContent, aNewCaptionFrame, PR_TRUE,
+                  childItems);
   aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   if (floatingKids.childList) {
     aNewCaptionFrame->SetInitialChildList(*aPresContext,
@@ -1022,17 +1085,16 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
 
 // if aParentFrame is a table, it is assummed that it is an inner table 
 nsresult
-nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
-                                                nsIContent*      aContent,
-                                                nsIFrame*        aParentFrame,
-                                                nsIStyleContext* aStyleContext,
-                                                nsAbsoluteItems& aAbsoluteItems,
-                                                PRBool           aIsRowGroup,
-                                                nsIFrame*&       aNewTopFrame, 
-                                                nsIFrame*&       aNewGroupFrame,
-                                                nsAbsoluteItems& aFixedItems,
-                                                nsTableCreator&  aTableCreator,
-                                                nsTableList*     aToDo)   
+nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*          aPresContext,
+                                                nsFrameConstructorState& aState,
+                                                nsIContent*              aContent,
+                                                nsIFrame*                aParentFrame,
+                                                nsIStyleContext*         aStyleContext,
+                                                PRBool                   aIsRowGroup,
+                                                nsIFrame*&               aNewTopFrame, 
+                                                nsIFrame*&               aNewGroupFrame,
+                                                nsTableCreator&          aTableCreator,
+                                                nsTableList*             aToDo)   
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
@@ -1061,16 +1123,16 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                                                  PR_FALSE, getter_AddRefs(styleContext));
     }
     // only process the group's children if we're called from above
-    rv = ConstructTableGroupFrameOnly(aPresContext, aContent, aParentFrame, styleContext, 
-                                      aAbsoluteItems, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
-                                      aFixedItems, aTableCreator, contentDisplayIsGroup);
+    rv = ConstructTableGroupFrameOnly(aPresContext, aState, aContent, aParentFrame,
+                                      styleContext, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
+                                      aTableCreator, contentDisplayIsGroup);
   } else { // construct anonymous frames
     NS_WARNING("a non table contains a table row or col group child. \n");
     nsIFrame* innerFrame;
     nsIFrame* outerFrame;
 
-    ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame, outerFrame, 
-                                 innerFrame, aAbsoluteItems, aFixedItems, aTableCreator);
+    ConstructAnonymousTableFrame(aPresContext, aState, aContent, aParentFrame, aNewTopFrame,
+                                 outerFrame, innerFrame, aTableCreator);
     nsCOMPtr<nsIStyleContext> innerStyleContext;
     innerFrame->GetStyleContext(getter_AddRefs(innerStyleContext));
     if (contentDisplayIsGroup) { // called from above
@@ -1083,9 +1145,9 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
     }
     nsIFrame* topFrame;
     // only process the group's children if we're called from above
-    rv = ConstructTableGroupFrameOnly(aPresContext, aContent, innerFrame, styleContext,
-                                      aAbsoluteItems, aIsRowGroup, topFrame, aNewGroupFrame, 
-                                      aFixedItems, aTableCreator, contentDisplayIsGroup);
+    rv = ConstructTableGroupFrameOnly(aPresContext, aState, aContent, innerFrame,
+                                      styleContext, aIsRowGroup, topFrame, aNewGroupFrame, 
+                                      aTableCreator, contentDisplayIsGroup);
     if (NS_FAILED(rv)) return rv;
     if (contentDisplayIsGroup) { // called from above
       innerFrame->SetInitialChildList(*aPresContext, nsnull, topFrame);
@@ -1098,17 +1160,16 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContext,
-                                                    nsIContent*      aContent,
-                                                    nsIFrame*        aParentFrame,
-                                                    nsIStyleContext* aStyleContext,
-                                                    nsAbsoluteItems& aAbsoluteItems,
-                                                    PRBool           aIsRowGroup,
-                                                    nsIFrame*&       aNewTopFrame, 
-                                                    nsIFrame*&       aNewGroupFrame,
-                                                    nsAbsoluteItems& aFixedItems,
-                                                    nsTableCreator&  aTableCreator,
-                                                    PRBool           aProcessChildren) 
+nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPresContext,
+                                                    nsFrameConstructorState& aState,
+                                                    nsIContent*              aContent,
+                                                    nsIFrame*                aParentFrame,
+                                                    nsIStyleContext*         aStyleContext,
+                                                    PRBool                   aIsRowGroup,
+                                                    nsIFrame*&               aNewTopFrame, 
+                                                    nsIFrame*&               aNewGroupFrame,
+                                                    nsTableCreator&          aTableCreator,
+                                                    PRBool                   aProcessChildren) 
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* styleDisplay = 
@@ -1149,12 +1210,11 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
   if (aProcessChildren) {
     nsFrameItems childItems;
     if (aIsRowGroup) {
-      TableProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                           childItems, aFixedItems, aTableCreator);
+      TableProcessChildren(aPresContext, aState, aContent, aNewGroupFrame,
+                           childItems, aTableCreator);
     } else {
         nsAbsoluteItems floatingKids(nsnull);
-      ProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                      childItems, aFixedItems, floatingKids);
+      ProcessChildren(aPresContext, aState, aContent, aNewGroupFrame, PR_FALSE, childItems);
         NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
     }
     aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -1164,16 +1224,15 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
-                                              nsIContent*      aContent,
-                                              nsIFrame*        aParentFrame,
-                                              nsIStyleContext* aStyleContext,
-                                              nsAbsoluteItems& aAbsoluteItems,
-                                              nsIFrame*&       aNewTopFrame,
-                                              nsIFrame*&       aNewRowFrame,
-                                              nsAbsoluteItems& aFixedItems,
-                                              nsTableCreator&  aTableCreator,
-                                              nsTableList*     aToDo)
+nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*          aPresContext,
+                                              nsFrameConstructorState& aState,
+                                              nsIContent*              aContent,
+                                              nsIFrame*                aParentFrame,
+                                              nsIStyleContext*         aStyleContext,
+                                              nsIFrame*&               aNewTopFrame,
+                                              nsIFrame*&               aNewRowFrame,
+                                              nsTableCreator&          aTableCreator,
+                                              nsTableList*             aToDo)
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -1200,9 +1259,9 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                                  getter_AddRefs(styleContext));
     }
     // only process the row's children if we're called from above
-    rv = ConstructTableRowFrameOnly(aPresContext, aContent, aParentFrame, styleContext, 
-                                    aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, 
-                                    aFixedItems, aTableCreator);
+    rv = ConstructTableRowFrameOnly(aPresContext, aState, aContent, aParentFrame,
+                                    styleContext, contentDisplayIsRow, aNewRowFrame, 
+                                    aTableCreator);
     aNewTopFrame = aNewRowFrame;
   } else { // construct an anonymous row group frame
     nsIFrame* groupFrame;
@@ -1210,9 +1269,8 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
     nsTableList* toDo = (aToDo) ? aToDo : &localToDo;
 
     // it may also need to create a table frame
-    rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, styleContext,
-                                  aAbsoluteItems, PR_TRUE, aNewTopFrame, groupFrame,
-                                  aFixedItems, aTableCreator, toDo);
+    rv = ConstructTableGroupFrame(aPresContext, aState, aContent, aParentFrame, styleContext,
+                                  PR_TRUE, aNewTopFrame, groupFrame, aTableCreator, toDo);
     if (NS_FAILED(rv)) return rv;
     groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
     if (contentDisplayIsRow) { // called from above
@@ -1224,9 +1282,8 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                                  getter_AddRefs(styleContext));
     }
     // only process the row's children if we're called from above
-    rv = ConstructTableRowFrameOnly(aPresContext, aContent, groupFrame, styleContext, 
-                                    aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, 
-                                    aFixedItems, aTableCreator);
+    rv = ConstructTableRowFrameOnly(aPresContext, aState, aContent, groupFrame, styleContext, 
+                                    contentDisplayIsRow, aNewRowFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
     groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewRowFrame);
     if (contentDisplayIsRow) { // called from above
@@ -1239,15 +1296,14 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
 
 
 nsresult
-nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
-                                                  nsIContent*      aContent,
-                                                  nsIFrame*        aParentFrame,
-                                                  nsIStyleContext* aStyleContext,
-                                                  nsAbsoluteItems& aAbsoluteItems,
-                                                  PRBool           aProcessChildren,
-                                                  nsIFrame*&       aNewRowFrame,
-                                                  nsAbsoluteItems& aFixedItems,
-                                                  nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*          aPresContext,
+                                                  nsFrameConstructorState& aState,
+                                                  nsIContent*              aContent,
+                                                  nsIFrame*                aParentFrame,
+                                                  nsIStyleContext*         aStyleContext,
+                                                  PRBool                   aProcessChildren,
+                                                  nsIFrame*&               aNewRowFrame,
+                                                  nsTableCreator&          aTableCreator)
 {
   nsresult rv = aTableCreator.CreateTableRowFrame(aNewRowFrame);
   if (NS_FAILED(rv)) return rv;
@@ -1255,8 +1311,8 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
                      nsnull);
   if (aProcessChildren) {
     nsFrameItems childItems;
-    rv = TableProcessChildren(aPresContext, aContent, aNewRowFrame, aAbsoluteItems, 
-                              childItems, aFixedItems, aTableCreator);
+    rv = TableProcessChildren(aPresContext, aState, aContent, aNewRowFrame,
+                              childItems, aTableCreator);
     if (NS_FAILED(rv)) return rv;
     aNewRowFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   }
@@ -1266,39 +1322,36 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
 
 
 nsresult
-nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
-                                              nsIContent*      aContent,
-                                              nsIFrame*        aParentFrame,
-                                              nsIStyleContext* aStyleContext,
-                                              nsAbsoluteItems& aAbsoluteItems,
-                                              nsIFrame*&       aNewTopFrame,
-                                              nsIFrame*&       aNewColFrame,
-                                              nsAbsoluteItems& aFixedItems,
-                                              nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*          aPresContext,
+                                              nsFrameConstructorState& aState,
+                                              nsIContent*              aContent,
+                                              nsIFrame*                aParentFrame,
+                                              nsIStyleContext*         aStyleContext,
+                                              nsIFrame*&               aNewTopFrame,
+                                              nsIFrame*&               aNewColFrame,
+                                              nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
   // the content display here is always table-col and were always called from above
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == parentDisplay->mDisplay) {
-    rv = ConstructTableColFrameOnly(aPresContext, aContent, aParentFrame, 
-                                    aStyleContext, aAbsoluteItems, aNewColFrame, 
-                                    aFixedItems, aTableCreator);
+    rv = ConstructTableColFrameOnly(aPresContext, aState, aContent, aParentFrame, 
+                                    aStyleContext, aNewColFrame, aTableCreator);
     aNewTopFrame = aNewColFrame;
   } else { // construct anonymous col group frame
     nsTableList toDo;
     nsIFrame* groupFrame;
-    rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                                  aAbsoluteItems, PR_FALSE, aNewTopFrame, 
-                                  groupFrame, aFixedItems, aTableCreator, &toDo);
+    rv = ConstructTableGroupFrame(aPresContext, aState, aContent, aParentFrame,
+                                  aStyleContext, PR_FALSE, aNewTopFrame, groupFrame,
+                                  aTableCreator, &toDo);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIStyleContext> groupStyleContext; 
     groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
     nsCOMPtr<nsIStyleContext> styleContext;
     aPresContext->ResolveStyleContextFor(aContent, groupStyleContext,
                                          PR_FALSE, getter_AddRefs(styleContext));
-    rv = ConstructTableColFrameOnly(aPresContext, aContent, groupFrame, 
-                                    styleContext, aAbsoluteItems, aNewColFrame, 
-                                    aFixedItems, aTableCreator);
+    rv = ConstructTableColFrameOnly(aPresContext, aState, aContent, groupFrame, 
+                                    styleContext, aNewColFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
     groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewColFrame);
 
@@ -1310,14 +1363,13 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
-                                                  nsIContent*      aContent,
-                                                  nsIFrame*        aParentFrame,
-                                                  nsIStyleContext* aStyleContext,
-                                                  nsAbsoluteItems& aAbsoluteItems,
-                                                  nsIFrame*&       aNewColFrame,
-                                                  nsAbsoluteItems& aFixedItems,
-                                                  nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*          aPresContext,
+                                                  nsFrameConstructorState& aState,
+                                                  nsIContent*              aContent,
+                                                  nsIFrame*                aParentFrame,
+                                                  nsIStyleContext*         aStyleContext,
+                                                  nsIFrame*&               aNewColFrame,
+                                                  nsTableCreator&          aTableCreator)
 {
   nsresult rv = aTableCreator.CreateTableColFrame(aNewColFrame);
   if (NS_FAILED(rv)) return rv;
@@ -1325,8 +1377,8 @@ nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
                      aStyleContext, nsnull);
   nsFrameItems colChildItems;
   nsAbsoluteItems floatingKids(nsnull);
-  rv = ProcessChildren(aPresContext, aContent, aNewColFrame, aAbsoluteItems, 
-                       colChildItems, aFixedItems, floatingKids);
+  rv = ProcessChildren(aPresContext, aState, aContent, aNewColFrame,
+                       PR_FALSE, colChildItems);
   NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
   if (NS_FAILED(rv)) return rv;
   aNewColFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -1335,17 +1387,16 @@ nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
-                                               nsIContent*      aContent,
-                                               nsIFrame*        aParentFrame,
-                                               nsIStyleContext* aStyleContext,
-                                               nsAbsoluteItems& aAbsoluteItems,
-                                               nsIFrame*&       aNewTopFrame,
-                                               nsIFrame*&       aNewCellFrame,
-                                               nsIFrame*&       aNewCellBodyFrame,
-                                               nsAbsoluteItems& aFixedItems,
-                                               nsTableCreator&  aTableCreator,
-                                               PRBool           aProcessChildren)
+nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aParentFrame,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsIFrame*&               aNewTopFrame,
+                                               nsIFrame*&               aNewCellFrame,
+                                               nsIFrame*&               aNewCellBodyFrame,
+                                               nsTableCreator&          aTableCreator,
+                                               PRBool                   aProcessChildren)
 {
   nsresult rv = NS_OK;
 
@@ -1371,17 +1422,17 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                                  getter_AddRefs(styleContext));
       wrapContent = PR_TRUE; 
     }
-    rv = ConstructTableCellFrameOnly(aPresContext, aContent, aParentFrame, styleContext,
-                                     aAbsoluteItems, aNewCellFrame, aNewCellBodyFrame,
-                                     aFixedItems, aTableCreator, aProcessChildren);
+    rv = ConstructTableCellFrameOnly(aPresContext, aState, aContent, aParentFrame,
+                                     styleContext, aNewCellFrame, aNewCellBodyFrame,
+                                     aTableCreator, aProcessChildren);
     aNewTopFrame = aNewCellFrame;
   } else { // the cell needs some ancestors to be fabricated
     NS_WARNING("WARNING - a non table row contains a table cell child. \n");
     nsTableList toDo;
     nsIFrame* rowFrame;
-    rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                                aAbsoluteItems, aNewTopFrame, rowFrame, aFixedItems, 
-                                aTableCreator, &toDo);
+    rv = ConstructTableRowFrame(aPresContext, aState, aContent, aParentFrame,
+                                aStyleContext, aNewTopFrame, rowFrame, aTableCreator,
+                                &toDo);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIStyleContext> rowStyleContext; 
     rowFrame->GetStyleContext(getter_AddRefs(rowStyleContext));
@@ -1394,9 +1445,9 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                                  rowStyleContext, PR_FALSE,
                                                  getter_AddRefs(styleContext));
     }
-    rv = ConstructTableCellFrameOnly(aPresContext, aContent, rowFrame, styleContext,
-                                     aAbsoluteItems, aNewCellFrame, aNewCellBodyFrame,
-                                     aFixedItems, aTableCreator, aProcessChildren);
+    rv = ConstructTableCellFrameOnly(aPresContext, aState, aContent, rowFrame,
+                                     styleContext, aNewCellFrame, aNewCellBodyFrame,
+                                     aTableCreator, aProcessChildren);
     if (NS_FAILED(rv)) return rv;
     rowFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellFrame);
     TableProcessTableList(aPresContext, toDo);
@@ -1406,16 +1457,15 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext,
-                                                   nsIContent*      aContent,
-                                                   nsIFrame*        aParentFrame,
-                                                   nsIStyleContext* aStyleContext,
-                                                   nsAbsoluteItems& aAbsoluteItems,
-                                                   nsIFrame*&       aNewCellFrame,
-                                                   nsIFrame*&       aNewCellBodyFrame,
-                                                   nsAbsoluteItems& aFixedItems,
-                                                   nsTableCreator&  aTableCreator,
-                                                   PRBool           aProcessChildren)
+nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPresContext,
+                                                   nsFrameConstructorState& aState,
+                                                   nsIContent*              aContent,
+                                                   nsIFrame*                aParentFrame,
+                                                   nsIStyleContext*         aStyleContext,
+                                                   nsIFrame*&               aNewCellFrame,
+                                                   nsIFrame*&               aNewCellBodyFrame,
+                                                   nsTableCreator&          aTableCreator,
+                                                   PRBool                   aProcessChildren)
 {
   nsresult rv;
 
@@ -1446,8 +1496,8 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
   if (aProcessChildren) {
     nsFrameItems childItems;
     nsAbsoluteItems floaterList(aNewCellBodyFrame);
-    rv = ProcessChildren(aPresContext, aContent, aNewCellBodyFrame, aAbsoluteItems,
-                         childItems, aFixedItems, floaterList, PR_TRUE);
+    rv = ProcessChildren(aPresContext, aState, aContent, aNewCellBodyFrame,
+                         PR_TRUE, childItems);
     if (NS_FAILED(rv)) return rv;
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     if (floaterList.childList) {
@@ -1464,13 +1514,12 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
 // This is only called by table row groups and rows. It allows children that are not
 // table related to have a cell wrapped around them.
 nsresult
-nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
-                                            nsIContent*      aContent,
-                                            nsIFrame*        aParentFrame,
-                                            nsAbsoluteItems& aAbsoluteItems,
-                                            nsFrameItems&    aChildItems,
-                                            nsAbsoluteItems& aFixedItems,
-                                            nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*          aPresContext,
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aParentFrame,
+                                            nsFrameItems&            aChildItems,
+                                            nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
   
@@ -1485,22 +1534,21 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIContent> childContent;
     
     aContent->ChildAt(i, *getter_AddRefs(childContent));
-    rv = TableProcessChild(aPresContext, childContent, aParentFrame, parentStyleContext,
-                           aAbsoluteItems, aChildItems, aFixedItems, aTableCreator);
+    rv = TableProcessChild(aPresContext, aState, childContent, aParentFrame, parentStyleContext,
+                           aChildItems, aTableCreator);
   }
 
   return rv;
 }
 
 nsresult
-nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
-                                         nsIContent*      aChildContent,
-                                         nsIFrame*        aParentFrame,
-                                         nsIStyleContext* aParentStyleContext,
-                                         nsAbsoluteItems& aAbsoluteItems,
-                                         nsFrameItems&    aChildItems,
-                                         nsAbsoluteItems& aFixedItems,
-                                         nsTableCreator&  aTableCreator)
+nsCSSFrameConstructor::TableProcessChild(nsIPresContext*          aPresContext,
+                                         nsFrameConstructorState& aState,
+                                         nsIContent*              aChildContent,
+                                         nsIFrame*                aParentFrame,
+                                         nsIStyleContext*         aParentStyleContext,
+                                         nsFrameItems&            aChildItems,
+                                         nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
   
@@ -1519,9 +1567,8 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) ||
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) ) {
       nsAbsoluteItems floaterList(nsnull);
-      rv = ConstructFrame(aPresContext, aChildContent, aParentFrame,
-                          aAbsoluteItems, aChildItems, aFixedItems,
-                          floaterList, PR_FALSE);
+      rv = ConstructFrame(aPresContext, aState, aChildContent, aParentFrame,
+                          PR_FALSE, aChildItems);
       NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
     } else {
       nsCOMPtr<nsIAtom> tag;
@@ -1542,14 +1589,12 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
           nsIFrame* outerFrame; 
           aParentFrame->GetParent(&outerFrame);
-          rv = ConstructFrame(aPresContext, aChildContent, outerFrame,
-                              aAbsoluteItems, aChildItems, aFixedItems,
-                              floaterList, PR_FALSE);
+          rv = ConstructFrame(aPresContext, aState, aChildContent, outerFrame,
+                              PR_FALSE, aChildItems);
           // XXX: Seems like this is going into the inner frame's child list instead of the outer frame. - DWH
         } else {
-          rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, 
-                              aAbsoluteItems, aChildItems, aFixedItems,
-                              floaterList, PR_FALSE);
+          rv = ConstructFrame(aPresContext, aState, aChildContent, aParentFrame, 
+                              PR_FALSE, aChildItems);
         }
         NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
       // wrap it in a table cell, row, row group, table if it is a valid tag or display
@@ -1572,9 +1617,8 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
             nsIFrame* cellBodyFrame;
             nsIFrame* cellFrame;
             nsIFrame* childFrame; // XXX: Need to change the ConstructTableCell function to return lists of frames. - DWH
-            rv = ConstructTableCellFrame(aPresContext, aChildContent, aParentFrame, childStyleContext, 
-                                         aAbsoluteItems, childFrame, cellFrame, cellBodyFrame,
-                                         aFixedItems, aTableCreator);
+            rv = ConstructTableCellFrame(aPresContext, aState, aChildContent, aParentFrame, childStyleContext, 
+                                         childFrame, cellFrame, cellBodyFrame, aTableCreator);
             aChildItems.AddChild(childFrame);
           }
         }
@@ -1712,12 +1756,12 @@ nsCSSFrameConstructor:: GetDisplay(nsIFrame* aFrame)
  ***********************************************/
 
 nsresult
-nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
-                                                nsIContent*      aDocElement,
-                                                nsIFrame*        aParentFrame,
-                                                nsIStyleContext* aParentStyleContext,
-                                                nsIFrame*&       aNewFrame,
-                                                nsAbsoluteItems& aFixedItems)
+nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresContext,
+                                                nsFrameConstructorState& aState,
+                                                nsIContent*              aDocElement,
+                                                nsIFrame*                aParentFrame,
+                                                nsIStyleContext*         aParentStyleContext,
+                                                nsIFrame*&               aNewFrame)
 {
   // Resolve the style context for the document element
   nsCOMPtr<nsIStyleContext>  styleContext;
@@ -1741,25 +1785,26 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     mInitialContainingBlock = areaFrame;
 
     // Process the child content
-    nsAbsoluteItems  absoluteItems(areaFrame);
-    nsAbsoluteItems  floaterList(areaFrame);
-    nsFrameItems     childItems;
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameConstructorSaveState floaterSaveState;
+    nsFrameItems                childItems;
 
-    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList, PR_TRUE);
+    aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState);
+    ProcessChildren(aPresContext, aState, aDocElement, areaFrame, PR_TRUE, childItems);
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull,
                                    childItems.childList);
-    if (nsnull != absoluteItems.childList) {
+    if (aState.mAbsoluteItems.childList) {
       areaFrame->SetInitialChildList(*aPresContext,
                                      nsLayoutAtoms::absoluteList,
-                                     absoluteItems.childList);
+                                     aState.mAbsoluteItems.childList);
     }
-    if (floaterList.childList) {
+    if (aState.mFloatedItems.childList) {
       areaFrame->SetInitialChildList(*aPresContext,
                                      nsLayoutAtoms::floaterList,
-                                     floaterList.childList);
+                                     aState.mFloatedItems.childList);
     }
 
     // Return the area frame
@@ -1809,12 +1854,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     mInitialContainingBlock = areaFrame;
     
     // Process the child content
-    nsAbsoluteItems  absoluteItems(areaFrame);
-    nsAbsoluteItems  floatingItems(areaFrame);
-    nsFrameItems     childItems;
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameConstructorSaveState floaterSaveState;
+    nsFrameItems                childItems;
 
-    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
-                    childItems, aFixedItems, floatingItems, PR_TRUE);
+    aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState);
+    ProcessChildren(aPresContext, aState, aDocElement, areaFrame, PR_TRUE, childItems);
 
     // See if the document element has a fixed background attachment.
     // Note: the reason we wait until after processing the document element's
@@ -1849,17 +1895,17 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull,
                                    childItems.childList);
-    if (nsnull != absoluteItems.childList) {
+    if (aState.mAbsoluteItems.childList) {
       areaFrame->SetInitialChildList(*aPresContext,
                                      nsLayoutAtoms::absoluteList,
-                                     absoluteItems.childList);
+                                     aState.mAbsoluteItems.childList);
     }
-    if (nsnull != floatingItems.childList) {
+    if (aState.mFloatedItems.childList) {
       areaFrame->SetInitialChildList(*aPresContext,
                                      nsLayoutAtoms::floaterList,
-                                     floatingItems.childList);
+                                     aState.mFloatedItems.childList);
     }
-    if (nsnull != scrollFrame) {
+    if (scrollFrame) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
     }
 
@@ -2092,19 +2138,18 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
-                                            nsIContent*      aContent,
-                                            nsIFrame*        aParentFrame,
-                                            nsIAtom*         aTag,
-                                            nsIStyleContext* aStyleContext,
-                                            nsAbsoluteItems& aAbsoluteItems,
-                                            nsIFrame*&       aNewFrame,
-                                            PRBool &         aProcessChildren,
-                                            PRBool           aIsAbsolutelyPositioned,
-                                            PRBool &         aFrameHasBeenInitialized,
-                                            PRBool           aIsFixedPositioned,
-                                            nsAbsoluteItems& aFixedItems,
-                                            nsFrameItems&    aFrameItems)
+nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContext,
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aParentFrame,
+                                            nsIAtom*                 aTag,
+                                            nsIStyleContext*         aStyleContext,
+                                            nsIFrame*&               aNewFrame,
+                                            PRBool&                  aProcessChildren,
+                                            PRBool                   aIsAbsolutelyPositioned,
+                                            PRBool&                  aFrameHasBeenInitialized,
+                                            PRBool                   aIsFixedPositioned,
+                                            nsFrameItems&            aFrameItems)
 {
   nsresult rv = NS_OK;
   nsWidgetRendering mode;
@@ -2125,9 +2170,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
 
           nsIFrame* geometricParent = aParentFrame;
           if (aIsAbsolutelyPositioned) {
-            geometricParent = aAbsoluteItems.containingBlock;
+            geometricParent = aState.mAbsoluteItems.containingBlock;
           } else if (aIsFixedPositioned) {
-            geometricParent = aFixedItems.containingBlock;
+            geometricParent = aState.mFixedItems.containingBlock;
           }
       
           comboboxFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext, nsnull);
@@ -2168,9 +2213,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
 
 
             // Initialize the scroll frame as absolutely positioned.
-            InitializeScrollFrame(listFrame, aPresContext, aContent, comboboxFrame, listStyle,
-                                  aAbsoluteItems,  aNewFrame, aFixedItems, PR_TRUE, 
-                                  PR_FALSE, PR_TRUE);
+            InitializeScrollFrame(aPresContext, aState, listFrame, aContent, comboboxFrame,
+                                  listStyle, aNewFrame, PR_TRUE, PR_FALSE, PR_TRUE);
 
               // Set flag so the events go to the listFrame not child frames.
               // XXX: We should replace this with a real widget manager similar
@@ -2200,7 +2244,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
 
             // Add the absolutely positioned frame to its containing block's list
             // of child frames
-            aAbsoluteItems.AddChild(listFrame);
+            aState.mAbsoluteItems.AddChild(listFrame);
 
             listFrame = aNewFrame;
 
@@ -2245,8 +2289,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
         nsIFrame * listFrame;
         rv = NS_NewListControlFrame(listFrame);
         aNewFrame = listFrame;
-        InitializeScrollFrame(listFrame, aPresContext, aContent, aParentFrame, aStyleContext,
-                              aAbsoluteItems,  aNewFrame, aFixedItems, aIsAbsolutelyPositioned, PR_FALSE, PR_TRUE);
+        InitializeScrollFrame(aPresContext, aState, listFrame, aContent, aParentFrame,
+                              aStyleContext, aNewFrame, aIsAbsolutelyPositioned, PR_FALSE,
+                              PR_TRUE);
 
           // Set flag so the events go to the listFrame not child frames.
           // XXX: We should replace this with a real widget manager similar
@@ -2273,15 +2318,13 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
 
 
 nsresult
-nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
-                                           nsIContent*      aContent,
-                                           nsIFrame*        aParentFrame,
-                                           nsIAtom*         aTag,
-                                           nsIStyleContext* aStyleContext,
-                                           nsAbsoluteItems& aAbsoluteItems,
-                                           nsFrameItems&    aFrameItems,
-                                           nsAbsoluteItems& aFixedItems,
-                                           nsAbsoluteItems& aFloatingItems)
+nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext,
+                                           nsFrameConstructorState& aState,
+                                           nsIContent*              aContent,
+                                           nsIFrame*                aParentFrame,
+                                           nsIAtom*                 aTag,
+                                           nsIStyleContext*         aStyleContext,
+                                           nsFrameItems&            aFrameItems)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;
@@ -2347,12 +2390,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::select == aTag) {
         isReplaced = PR_TRUE;
-        rv = ConstructSelectFrame(aPresContext, aContent, aParentFrame,
-                                  aTag, aStyleContext, aAbsoluteItems,
-                                  newFrame,  processChildren,
-                                  isAbsolutelyPositioned,
-                                  frameHasBeenInitialized,
-                                  isFixedPositioned, aFixedItems, aFrameItems);
+        rv = ConstructSelectFrame(aPresContext, aState, aContent, aParentFrame,
+                                  aTag, aStyleContext, newFrame,  processChildren,
+                                  isAbsolutelyPositioned, frameHasBeenInitialized,
+                                  isFixedPositioned, aFrameItems);
       }
       else if (nsHTMLAtoms::applet == aTag) {
         isReplaced = PR_TRUE;
@@ -2420,9 +2461,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
        
       if (canBePositioned) {
         if (isAbsolutelyPositioned) {
-          geometricParent = aAbsoluteItems.containingBlock;
+          geometricParent = aState.mAbsoluteItems.containingBlock;
         } else if (isFixedPositioned) {
-          geometricParent = aFixedItems.containingBlock;
+          geometricParent = aState.mFixedItems.containingBlock;
         }
       }
       
@@ -2439,14 +2480,12 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       nsAbsoluteItems floaterList(newFrame);
       if (processChildren) {
         if (newFrameIsFloaterContainer) {
-          rv = ProcessChildren(aPresContext, aContent, newFrame,
-                               aAbsoluteItems, childItems, aFixedItems,
-                               floaterList, PR_TRUE);
+          rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems);
         }
         else {
-          rv = ProcessChildren(aPresContext, aContent, newFrame,
-                               aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems, PR_TRUE);
+          rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems);
         }
       }
 
@@ -2471,9 +2510,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       // Add the positioned frame to its containing block's list of
       // child frames
       if (isAbsolutelyPositioned) {
-        aAbsoluteItems.AddChild(newFrame);
+        aState.mAbsoluteItems.AddChild(newFrame);
       } else {
-        aFixedItems.AddChild(newFrame);
+        aState.mFixedItems.AddChild(newFrame);
       }
 
       // Add the placeholder frame to the flow
@@ -2485,7 +2524,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                 aStyleContext, aParentFrame, &placeholderFrame);
 
       // Add the floating frame to its containing block's list of child frames
-      aFloatingItems.AddChild(newFrame);
+      aState.mFloatedItems.AddChild(newFrame);
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
@@ -2500,16 +2539,14 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
 #ifdef INCLUDE_XUL
 nsresult
-nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
-                                         nsIContent*      aContent,
-                                         nsIFrame*        aParentFrame,
-                                         nsIAtom*         aTag,
-                                         nsIStyleContext* aStyleContext,
-                                         nsAbsoluteItems& aAbsoluteItems,
-                                         nsFrameItems&    aFrameItems,
-                                         nsAbsoluteItems& aFixedItems,
-                                         nsAbsoluteItems& aFloatingItems,
-                                         PRBool&          haltProcessing)
+nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
+                                         nsFrameConstructorState& aState,
+                                         nsIContent*              aContent,
+                                         nsIFrame*                aParentFrame,
+                                         nsIAtom*                 aTag,
+                                         nsIStyleContext*         aStyleContext,
+                                         nsFrameItems&            aFrameItems,
+                                         PRBool&                  haltProcessing)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
@@ -2569,14 +2606,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       nsIFrame* geometricParent = aParentFrame;
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
-        aParentFrame = aAbsoluteItems.containingBlock;
+        aParentFrame = aState.mAbsoluteItems.containingBlock;
       }
       if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
-        aParentFrame = aFixedItems.containingBlock;
+        aParentFrame = aState.mFixedItems.containingBlock;
       }
-      rv = ConstructTableFrame(aPresContext, aContent, geometricParent, aStyleContext,
-                               aAbsoluteItems, newFrame, aFixedItems, treeCreator);
+      rv = ConstructTableFrame(aPresContext, aState, aContent, geometricParent, aStyleContext,
+                               newFrame, treeCreator);
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
       if (isAbsolutelyPositioned || isFixedPositioned) {
@@ -2587,9 +2624,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
 
         // Add the positioned frame to its containing block's list of child frames
         if (isAbsolutelyPositioned) {
-          aAbsoluteItems.AddChild(newFrame);
+          aState.mAbsoluteItems.AddChild(newFrame);
         } else {
-          aFixedItems.AddChild(newFrame);
+          aState.mFixedItems.AddChild(newFrame);
         }
 
         // Add the placeholder frame to the flow
@@ -2611,8 +2648,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       // A tree item causes a table row to be constructed that is always
       // slaved to the nearest enclosing table row group (regardless of how
       // deeply nested it is within other tree items).
-      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                  aAbsoluteItems, newFrame, ignore, aFixedItems, treeCreator);
+      rv = ConstructTableRowFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                  newFrame, ignore, treeCreator);
       aFrameItems.AddChild(newFrame);
 
       // We need to find the treechildren node that is a child of this node
@@ -2632,12 +2669,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
           {
             // Always build rows. Rely on style rules to hide frames.
             // Rely on RDF trickery to hide synthetic content from the content model.
-            
-            nsAbsoluteItems floaterList(nsnull);
-            rv = ProcessChildren(aPresContext, childContent, aParentFrame,
-                                 aAbsoluteItems, aFrameItems, aFixedItems,
-                                 floaterList);
-            NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
+            nsFrameConstructorSaveState  floaterSaveState;
+
+            aState.PushFloaterContainingBlock(nsnull, floaterSaveState);
+            rv = ProcessChildren(aPresContext, aState, childContent, aParentFrame,
+                                 PR_FALSE, aFrameItems);
+            NS_ASSERTION(!aState.mFloatedItems.childList, "floater in odd spot");
           }
         }
       }
@@ -2657,9 +2694,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 					      (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
     nsIFrame* ignore2;
-    rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                 aAbsoluteItems, newFrame, ignore, ignore2, aFixedItems, 
-                                 treeCreator);
+    rv = ConstructTableCellFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                 newFrame, ignore, ignore2, treeCreator);
     aFrameItems.AddChild(newFrame);
 	((nsTreeCellFrame*)newFrame)->SetAllowEvents(allowEvents);
     return rv;
@@ -2734,7 +2770,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     }
 
     nsIFrame* geometricParent = isAbsolutelyPositioned
-      ? aAbsoluteItems.containingBlock
+      ? aState.mAbsoluteItems.containingBlock
       : aParentFrame;
     newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
                    nsnull);
@@ -2749,8 +2785,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     // Process the child content if requested
     nsFrameItems childItems;
     if (processChildren) {
-      rv = ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                           childItems, aFixedItems, aFloatingItems);
+      rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_FALSE,
+                           childItems);
     }
 
 
@@ -2766,9 +2802,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
 
       // Add the positioned frame to its containing block's list of child frames
       if (isAbsolutelyPositioned) {
-        aAbsoluteItems.AddChild(newFrame);
+        aState.mAbsoluteItems.AddChild(newFrame);
       } else {
-        aFixedItems.AddChild(newFrame);
+        aState.mFixedItems.AddChild(newFrame);
       }
 
       // Add the placeholder frame to the flow
@@ -2782,25 +2818,24 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
 #endif
 
 nsresult
-nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
-                                             nsIPresContext*  aPresContext,
-                                             nsIContent*      aContent,
-                                             nsIFrame*        aParentFrame,
-                                             nsIStyleContext* aStyleContext,
-                                             nsAbsoluteItems& aAbsoluteItems,
-                                             nsIFrame*&       aNewFrame,
-                                             nsAbsoluteItems& aFixedItems,
-                                             PRBool           aIsAbsolutelyPositioned,
-                                             PRBool           aIsFixedPositioned,
-                                             PRBool           aCreateBlock)
+nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresContext,
+                                             nsFrameConstructorState& aState,
+                                             nsIFrame*                scrollFrame,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aParentFrame,
+                                             nsIStyleContext*         aStyleContext,
+                                             nsIFrame*&               aNewFrame,
+                                             PRBool                   aIsAbsolutelyPositioned,
+                                             PRBool                   aIsFixedPositioned,
+                                             PRBool                   aCreateBlock)
 {
   // Initialize it
   nsIFrame* geometricParent = aParentFrame;
     
   if (aIsAbsolutelyPositioned) {
-    geometricParent = aAbsoluteItems.containingBlock;
+    geometricParent = aState.mAbsoluteItems.containingBlock;
   } else if (aIsFixedPositioned) {
-    geometricParent = aFixedItems.containingBlock;
+    geometricParent = aState.mFixedItems.containingBlock;
   }
   scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
                     nsnull);
@@ -2831,8 +2866,8 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
     // absolutely positioned
     nsAbsoluteItems  absoluteItems(scrolledFrame);
     nsFrameItems     childItems;
-    ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList);
+    ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
+                    childItems);
 
     // Set the initial child lists
     scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -2849,8 +2884,8 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
     }
   } else {
     nsFrameItems childItems;
-    ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
-                    childItems, aFixedItems, floaterList);
+    ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
+                    childItems);
   
     // Set the initial child lists
     scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -2868,16 +2903,15 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
-                                                   const nsStyleDisplay* aDisplay,
-                                                   nsIContent*           aContent,
-                                                   nsIFrame*             aParentFrame,
-                                                   nsIStyleContext*      aStyleContext,
-                                                   nsAbsoluteItems&      aAbsoluteItems,
-                                                   nsFrameItems&         aFrameItems,
-                                                   nsAbsoluteItems&      aFixedItems,
-                                                   nsAbsoluteItems&      aFloatingItems,
-                                                   PRBool aHaveFirstLetterStyle)
+nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPresContext,
+                                                   nsFrameConstructorState& aState,
+                                                   const nsStyleDisplay*    aDisplay,
+                                                   nsIContent*              aContent,
+                                                   nsIFrame*                aParentFrame,
+                                                   nsIStyleContext*         aStyleContext,
+                                                   PRBool                   aHaveFirstLetterStyle,
+                                                   nsFrameItems&            aFrameItems)
+
 {
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
@@ -2919,10 +2953,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     NS_NewScrollFrame(scrollFrame);
 
     // Initialize it
-    InitializeScrollFrame(scrollFrame, aPresContext, aContent, aParentFrame,
-                          aStyleContext, aAbsoluteItems,  newFrame,
-                          aFixedItems, isAbsolutelyPositioned,
-                          isFixedPositioned, PR_FALSE);
+    InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
+                          aStyleContext, newFrame, isAbsolutelyPositioned, isFixedPositioned,
+                          PR_FALSE);
   }
   // See if the frame is absolute or fixed positioned
   else if (position->IsAbsolutelyPositioned() &&
@@ -2940,8 +2973,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     NS_NewAreaFrame(newFrame, NS_BLOCK_MARGIN_ROOT);
     newFrame->Init(*aPresContext, aContent,
                    (isAbsolutelyPositioned
-                    ? aAbsoluteItems.containingBlock
-                    : aFixedItems.containingBlock),
+                    ? aState.mAbsoluteItems.containingBlock
+                    : aState.mFixedItems.containingBlock),
                    aStyleContext, nsnull);
 
     // Create a view
@@ -2950,23 +2983,25 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Process the child content. The area frame becomes a container for child
     // frames that are absolutely positioned
-    nsAbsoluteItems  absoluteItems(newFrame);
-    nsFrameItems     childItems;
-    nsAbsoluteItems  floaterList(newFrame);
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameConstructorSaveState floaterSaveState;
+    nsFrameItems                childItems;
 
-    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList, PR_TRUE);
+    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+    aState.PushFloaterContainingBlock(newFrame, floaterSaveState);
+    ProcessChildren(aPresContext, aState, aContent, newFrame, PR_TRUE,
+                    childItems);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-    if (nsnull != absoluteItems.childList) {
+    if (aState.mAbsoluteItems.childList) {
       newFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
-                                     absoluteItems.childList);
+                                     aState.mAbsoluteItems.childList);
     }
-    if (floaterList.childList) {
+    if (aState.mFloatedItems.childList) {
       newFrame->SetInitialChildList(*aPresContext,
                                     nsLayoutAtoms::floaterList,
-                                    floaterList.childList);
+                                    aState.mFloatedItems.childList);
     }
   }
   // See if the frame is floated, and it's a block or inline frame
@@ -2985,17 +3020,18 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                                              aStyleContext, PR_FALSE);
 
     // Process the child content
-    nsFrameItems childItems;
-    nsAbsoluteItems  floaterList(newFrame);
-    ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                    childItems, aFixedItems, floaterList, PR_TRUE);
+    nsFrameConstructorSaveState floaterSaveState;
+    nsFrameItems                childItems;
+
+    aState.PushFloaterContainingBlock(newFrame, floaterSaveState);
+    ProcessChildren(aPresContext, aState, aContent, newFrame, PR_TRUE, childItems);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-    if (floaterList.childList) {
+    if (aState.mFloatedItems.childList) {
       newFrame->SetInitialChildList(*aPresContext,
                                     nsLayoutAtoms::floaterList,
-                                    floaterList.childList);
+                                    aState.mFloatedItems.childList);
     }
   }
   // See if it's relatively positioned
@@ -3018,29 +3054,32 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Process the child content. Relatively positioned frames becomes a
     // container for child frames that are positioned
-    nsAbsoluteItems  absoluteItems(newFrame);
-    nsAbsoluteItems  floaterList(newFrame);
-    nsFrameItems     childItems;
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameConstructorSaveState floaterSaveState;
+    nsFrameItems                childItems;
+
+    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
     
     if (NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) {
-      ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                      childItems, aFixedItems, floaterList, PR_TRUE);
+      aState.PushFloaterContainingBlock(newFrame, floaterSaveState);
+      ProcessChildren(aPresContext, aState, aContent, newFrame, PR_TRUE,
+                      childItems);
     
     } else {
-      ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                      childItems, aFixedItems, aFloatingItems, PR_TRUE);
+      ProcessChildren(aPresContext, aState, aContent, newFrame, PR_TRUE,
+                      childItems);
     }
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-    if (nsnull != absoluteItems.childList) {
+    if (aState.mAbsoluteItems.childList) {
       newFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
-                                    absoluteItems.childList);
+                                    aState.mAbsoluteItems.childList);
     }
-    if (floaterList.childList) {
+    if ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) && aState.mFloatedItems.childList) {
       newFrame->SetInitialChildList(*aPresContext,
                                     nsLayoutAtoms::floaterList,
-                                    floaterList.childList);
+                                    aState.mFloatedItems.childList);
     }
   }
   // otherwise let the display property influence the frame type to create
@@ -3077,14 +3116,14 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       nsIFrame* geometricParent = aParentFrame;
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
-        aParentFrame = aAbsoluteItems.containingBlock;
+        aParentFrame = aState.mAbsoluteItems.containingBlock;
       }
       if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
-        aParentFrame = aFixedItems.containingBlock;
+        aParentFrame = aState.mFixedItems.containingBlock;
       }
-      rv = ConstructTableFrame(aPresContext, aContent, geometricParent, aStyleContext,
-                               aAbsoluteItems, newFrame, aFixedItems, tableCreator);
+      rv = ConstructTableFrame(aPresContext, aState, aContent, geometricParent,
+                               aStyleContext, newFrame, tableCreator);
       // Note: table construction function takes care of initializing
       // the frame, processing children, and setting the initial child
       // list
@@ -3094,8 +3133,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     // the next 5 cases are only relevant if the parent is not a table, ConstructTableFrame handles children
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
     {
-      rv = ConstructTableCaptionFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                      aAbsoluteItems, newFrame, ignore, aFixedItems, tableCreator);
+      rv = ConstructTableCaptionFrame(aPresContext, aState, aContent, aParentFrame,
+                                      aStyleContext, newFrame, ignore, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
     }
@@ -3105,31 +3144,30 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
     {
       PRBool isRowGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP != aDisplay->mDisplay);
-      rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                    aAbsoluteItems, isRowGroup, newFrame, ignore, aFixedItems, tableCreator);
+      rv = ConstructTableGroupFrame(aPresContext, aState, aContent, aParentFrame,
+                                    aStyleContext, isRowGroup, newFrame, ignore, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
     }
    
     case NS_STYLE_DISPLAY_TABLE_COLUMN:
-      rv = ConstructTableColFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                  aAbsoluteItems, newFrame, ignore, aFixedItems, tableCreator);
+      rv = ConstructTableColFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                  newFrame, ignore, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
   
   
     case NS_STYLE_DISPLAY_TABLE_ROW:
-      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                  aAbsoluteItems, newFrame, ignore, aFixedItems, tableCreator);
+      rv = ConstructTableRowFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                  newFrame, ignore, tableCreator);
       aFrameItems.AddChild(newFrame);
       return rv;
   
     case NS_STYLE_DISPLAY_TABLE_CELL:
       {
         nsIFrame* ignore2;
-        rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                     aAbsoluteItems, newFrame, ignore, ignore2, 
-                                     aFixedItems, tableCreator);
+        rv = ConstructTableCellFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                     newFrame, ignore, ignore2, tableCreator);
         aFrameItems.AddChild(newFrame);
         return rv;
       }
@@ -3152,37 +3190,35 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       nsFrameItems childItems;
       if (processChildren) {
         if (newFrameIsFloaterContainer) {
-          nsAbsoluteItems floaterList(newFrame);
+          nsFrameConstructorSaveState floaterSaveState;
+
+          aState.PushFloaterContainingBlock(newFrame, floaterSaveState);
           if (haveFirstLetterStyle) {
-            rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
-                                      aAbsoluteItems, childItems, aFixedItems,
-                                      floaterList, PR_TRUE, PR_TRUE);
+            rv = ProcessBlockChildren(aPresContext, aState, aContent, newFrame,
+                                      childItems, PR_TRUE, PR_TRUE);
           }
           else {
-            rv = ProcessChildren(aPresContext, aContent, newFrame,
-                                 aAbsoluteItems, childItems, aFixedItems,
-                                 floaterList, PR_TRUE);
+            rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
+                                 PR_TRUE, childItems);
           }
 
           // Set the frame's initial child list
           newFrame->SetInitialChildList(*aPresContext, nsnull,
                                         childItems.childList);
-          if (floaterList.childList) {
+          if (aState.mFloatedItems.childList) {
             newFrame->SetInitialChildList(*aPresContext,
                                           nsLayoutAtoms::floaterList,
-                                          floaterList.childList);
+                                          aState.mFloatedItems.childList);
           }
         }
         else {
           if (haveFirstLetterStyle) {
-            rv = ProcessBlockChildren(aPresContext, aContent, newFrame,
-                                      aAbsoluteItems, childItems, aFixedItems,
-                                      aFloatingItems, PR_TRUE, PR_FALSE);
+            rv = ProcessBlockChildren(aPresContext, aState, aContent, newFrame,
+                                      childItems, PR_TRUE, PR_FALSE);
           }
           else {
-            rv = ProcessChildren(aPresContext, aContent, newFrame,
-                                 aAbsoluteItems, childItems, aFixedItems,
-                                 aFloatingItems, PR_TRUE);
+            rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
+                                 PR_TRUE, childItems);
           }
 
           // Set the frame's initial child list
@@ -3204,9 +3240,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Add the positioned frame to its containing block's list of child frames
     if (isAbsolutelyPositioned) {
-      aAbsoluteItems.AddChild(newFrame);
+      aState.mAbsoluteItems.AddChild(newFrame);
     } else {
-      aFixedItems.AddChild(newFrame);
+      aState.mFixedItems.AddChild(newFrame);
     }
 
     // Add the placeholder frame to the flow
@@ -3218,7 +3254,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                               aStyleContext, aParentFrame, &placeholderFrame);
 
     // Add the floating frame to its containing block's list of child frames
-    aFloatingItems.AddChild(newFrame);
+    aState.mFloatedItems.AddChild(newFrame);
 
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
@@ -3343,14 +3379,13 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
-                                      nsIContent*      aContent,
-                                      nsIFrame*        aParentFrame,
-                                      nsAbsoluteItems& aAbsoluteItems,
-                                      nsFrameItems&    aFrameItems,
-                                      nsAbsoluteItems& aFixedItems,
-                                      nsAbsoluteItems& aFloatingItems,
-                                      PRBool aHaveFirstLetterStyle)
+nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
+                                      nsFrameConstructorState& aState,
+                                      nsIContent*              aContent,
+                                      nsIFrame*                aParentFrame,
+                                      PRBool                   aHaveFirstLetterStyle,
+                                      nsFrameItems&            aFrameItems)
+
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
 
@@ -3417,13 +3452,11 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
       styleContext->GetStyleData(eStyleStruct_Display);
 
     if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
-
       nsIFrame* lastChild = aFrameItems.lastChild;
 
       // Handle specific frame types
-      rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame, tag,
-                               styleContext, aAbsoluteItems, aFrameItems,
-                               aFixedItems, aFloatingItems);
+      rv = ConstructFrameByTag(aPresContext, aState, aContent, aParentFrame,
+                               tag, styleContext, aFrameItems);
 
 #ifdef INCLUDE_XUL
       // Failing to find a matching HTML frame, try creating a specialized
@@ -3432,9 +3465,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                              (lastChild == aFrameItems.lastChild))) {
         PRBool haltProcessing = PR_FALSE;
-        rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
-                               styleContext, aAbsoluteItems, aFrameItems,
-                               aFixedItems, aFloatingItems, haltProcessing);
+        rv = ConstructXULFrame(aPresContext, aState, aContent, aParentFrame,
+                               tag, styleContext, aFrameItems, haltProcessing);
         if (haltProcessing) {
           return rv;
         }
@@ -3445,11 +3477,9 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
                                (lastChild == aFrameItems.lastChild))) {
         // When there is no explicit frame to create, assume it's a
         // container and let display style dictate the rest
-        rv = ConstructFrameByDisplayType(aPresContext, display, aContent,
+        rv = ConstructFrameByDisplayType(aPresContext, aState, display, aContent,
                                          aParentFrame, styleContext,
-                                         aAbsoluteItems, aFrameItems,
-                                         aFixedItems, aFloatingItems,
-                                         aHaveFirstLetterStyle);
+                                         aHaveFirstLetterStyle, aFrameItems);
       }
     }
   }
@@ -3489,21 +3519,21 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
             if (NS_SUCCEEDED(rv)) {
               nsIFrame*                 newChild;
               nsCOMPtr<nsIStyleContext> rootPseudoStyle;
-              nsAbsoluteItems           fixedItems(mFixedContainingBlock);
+              nsFrameConstructorState   state(mFixedContainingBlock, nsnull, nsnull);
           
               docParentFrame->GetStyleContext(getter_AddRefs(rootPseudoStyle));
-              rv = ConstructDocElementFrame(aPresContext, rootContent,
+              rv = ConstructDocElementFrame(aPresContext, state, rootContent,
                                             docParentFrame, rootPseudoStyle,
-                                            newChild, fixedItems);
+                                            newChild);
 
               if (NS_SUCCEEDED(rv)) {
                 rv = docParentFrame->InsertFrames(*aPresContext, *shell, nsnull,
                                                   nsnull, newChild);
 
                 // Tell the fixed containing block about its 'fixed' frames
-                if (nsnull != fixedItems.childList) {
+                if (state.mFixedItems.childList) {
                   mFixedContainingBlock->InsertFrames(*aPresContext, *shell,
-                    nsLayoutAtoms::fixedList, nsnull, fixedItems.childList);
+                    nsLayoutAtoms::fixedList, nsnull, state.mFixedItems.childList);
                 }
               }
             }
@@ -3705,20 +3735,13 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       }
     }
 
-    // Get the containing block for absolutely positioned elements
-    nsIFrame* absoluteContainingBlock =
-      GetAbsoluteContainingBlock(aPresContext, parentFrame);
-
-    nsIFrame* floaterContainingBlock =
-      GetFloaterContainingBlock(aPresContext, parentFrame);
-
     // Create some new frames
-    PRInt32         count;
-    nsIFrame*       firstAppendedFrame = nsnull;
-    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-    nsAbsoluteItems fixedItems(mFixedContainingBlock);
-    nsAbsoluteItems floaterList(floaterContainingBlock);
-    nsFrameItems    frameItems;
+    PRInt32                 count;
+    nsIFrame*               firstAppendedFrame = nsnull;
+    nsFrameItems            frameItems;
+    nsFrameConstructorState state(mFixedContainingBlock,
+                                  GetAbsoluteContainingBlock(aPresContext, parentFrame),
+                                  GetFloaterContainingBlock(aPresContext, parentFrame));
 
     aContainer->ChildCount(count);
 
@@ -3726,8 +3749,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> child;
       
       aContainer->ChildAt(i, *getter_AddRefs(child));
-      ConstructFrame(aPresContext, child, parentFrame, absoluteItems,
-                     frameItems, fixedItems, floaterList, PR_FALSE);
+      ConstructFrame(aPresContext, state, child, parentFrame, PR_FALSE, frameItems);
     }
 
     // Adjust parent frame for table inner/outer frame
@@ -3754,30 +3776,30 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (nsnull != absoluteItems.childList) {
-        absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
+      if (state.mAbsoluteItems.childList) {
+        state.mAbsoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                     nsLayoutAtoms::absoluteList,
-                                                    absoluteItems.childList);
+                                                    state.mAbsoluteItems.childList);
       }
 
       // If there are new fixed positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (nsnull != fixedItems.childList) {
-        fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
+      if (state.mFixedItems.childList) {
+        state.mFixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                  nsLayoutAtoms::fixedList,
-                                                 fixedItems.childList);
+                                                 state.mFixedItems.childList);
       }
 
       // If there are new floating child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (floaterList.childList) {
-        floaterList.containingBlock->AppendFrames(*aPresContext, *shell,
+      if (state.mFloatedItems.childList) {
+        state.mFloatedItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                   nsLayoutAtoms::floaterList,
-                                                  floaterList.childList);
+                                                  state.mFloatedItems.childList);
       }
     }
   }
@@ -3896,14 +3918,14 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     mDocElementContainingBlock->GetStyleContext(getter_AddRefs(containerStyle));
     
     // Create frames for the document element and its child elements
-    nsIFrame*       docElementFrame;
-    nsAbsoluteItems fixedItems(mFixedContainingBlock);
+    nsIFrame*               docElementFrame;
+    nsFrameConstructorState state(mFixedContainingBlock, nsnull, nsnull);
     ConstructDocElementFrame(aPresContext, 
+                             state,
                              docElement, 
                              mDocElementContainingBlock,
                              containerStyle, 
-                             docElementFrame, 
-                             fixedItems);
+                             docElementFrame);
     NS_IF_RELEASE(docElement);
     
     // Set the initial child list for the parent
@@ -3912,10 +3934,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                                     docElementFrame);
     
     // Tell the fixed containing block about its 'fixed' frames
-    if (nsnull != fixedItems.childList) {
+    if (state.mFixedItems.childList) {
       mFixedContainingBlock->SetInitialChildList(*aPresContext, 
                                                  nsLayoutAtoms::fixedList,
-                                                 fixedItems.childList);
+                                                 state.mFixedItems.childList);
     }
     
   }
@@ -3986,20 +4008,12 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
     // Construct a new frame
     if (nsnull != parentFrame) {
-      // Get the containing block for absolutely positioned elements
-      nsIFrame* absoluteContainingBlock =
-        GetAbsoluteContainingBlock(aPresContext, parentFrame);
-
-      // Get the containing block for floating elements
-      nsIFrame* floaterContainingBlock =
-        GetFloaterContainingBlock(aPresContext, parentFrame);
-      
-      nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-      nsAbsoluteItems floaterList(floaterContainingBlock);
-      nsFrameItems    frameItems;
-      nsAbsoluteItems fixedItems(mFixedContainingBlock);
-      rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems,
-                          frameItems, fixedItems, floaterList, PR_FALSE);
+      nsFrameItems            frameItems;
+      nsFrameConstructorState state(mFixedContainingBlock,
+                                    GetAbsoluteContainingBlock(aPresContext, parentFrame),
+                                    GetFloaterContainingBlock(aPresContext, parentFrame));
+      rv = ConstructFrame(aPresContext, state, aChild, parentFrame, PR_FALSE,
+                          frameItems);
       
       nsIFrame* newFrame = frameItems.childList;
       
@@ -4027,30 +4041,30 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         // the parent
         // XXX We can't just assume these frames are being appended, we need to
         // determine where in the list they should be inserted...
-        if (nsnull != absoluteItems.childList) {
-          rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
+        if (state.mAbsoluteItems.childList) {
+          rv = state.mAbsoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                            nsLayoutAtoms::absoluteList,
-                                                           absoluteItems.childList);
+                                                           state.mAbsoluteItems.childList);
         }
         
         // If there are new fixed positioned child frames, then notify
         // the parent
         // XXX We can't just assume these frames are being appended, we need to
         // determine where in the list they should be inserted...
-        if (nsnull != fixedItems.childList) {
-          rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
+        if (state.mFixedItems.childList) {
+          rv = state.mFixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                         nsLayoutAtoms::fixedList,
-                                                        fixedItems.childList);
+                                                        state.mFixedItems.childList);
         }
         
         // If there are new floating child frames, then notify
         // the parent
         // XXX We can't just assume these frames are being appended, we need to
         // determine where in the list they should be inserted...
-        if (floaterList.childList) {
-          rv = floaterList.containingBlock->AppendFrames(*aPresContext, *shell,
-                                                   nsLayoutAtoms::floaterList,
-                                                   floaterList.childList);
+        if (state.mFloatedItems.childList) {
+          rv = state.mFloatedItems.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                      nsLayoutAtoms::floaterList,
+                                                      state.mFloatedItems.childList);
         }
       }
     }
@@ -5037,26 +5051,16 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
              (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
     // It's an OBJECT element or APPLET, so we should display the contents
-    // instead. Get the containing block for absolutely positioned elements
-    nsIFrame* absoluteContainingBlock =
-      GetAbsoluteContainingBlock(aPresContext, parentFrame);
-
-    // Get the containing block for floating elements
-    nsIFrame* floaterContainingBlock =
-      GetFloaterContainingBlock(aPresContext, parentFrame);
-    
-    // Create a frame based on the display type
-    nsAbsoluteItems       absoluteItems(absoluteContainingBlock);
-    nsAbsoluteItems       floaterList(floaterContainingBlock);
-    nsFrameItems          frameItems;
-    nsAbsoluteItems       fixedItems(mFixedContainingBlock);
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
+    // instead. Create a frame based on the display type
+    nsFrameConstructorState state(mFixedContainingBlock,
+                                  GetAbsoluteContainingBlock(aPresContext, parentFrame),
+                                  GetFloaterContainingBlock(aPresContext, parentFrame));
+    nsFrameItems            frameItems;
+    const nsStyleDisplay*   display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
 
-    rv = ConstructFrameByDisplayType(aPresContext, display, content,
-                                     parentFrame, styleContext,
-                                     absoluteItems, frameItems,
-                                     fixedItems, floaterList, PR_FALSE);
+    rv = ConstructFrameByDisplayType(aPresContext, state, display, content,
+                                     parentFrame, styleContext, PR_FALSE, frameItems);
 
     nsIFrame* newFrame = frameItems.childList;
     if (NS_SUCCEEDED(rv)) {
@@ -5070,31 +5074,31 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (nsnull != absoluteItems.childList) {
-        rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *presShell,
+      if (state.mAbsoluteItems.childList) {
+        rv = state.mAbsoluteItems.containingBlock->AppendFrames(*aPresContext, *presShell,
                                                          nsLayoutAtoms::absoluteList,
-                                                         absoluteItems.childList);
+                                                         state.mAbsoluteItems.childList);
       }
 
       // If there are new fixed positioned child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (nsnull != fixedItems.childList) {
-        rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *presShell,
+      if (state.mFixedItems.childList) {
+        rv = state.mFixedItems.containingBlock->AppendFrames(*aPresContext, *presShell,
                                                       nsLayoutAtoms::fixedList,
-                                                      fixedItems.childList);
+                                                      state.mFixedItems.childList);
       }
 
       // If there are new floating child frames, then notify
       // the parent
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (floaterList.childList) {
-        rv = floaterList.containingBlock->AppendFrames(*aPresContext,
-                                                       *presShell,
+      if (state.mFloatedItems.childList) {
+        rv = state.mFloatedItems.containingBlock->AppendFrames(*aPresContext,
+                                                    *presShell,
                                                     nsLayoutAtoms::floaterList,
-                                                    floaterList.childList);
+                                                    state.mFloatedItems.childList);
       }
     }
 
@@ -5154,29 +5158,25 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         display = (const nsStyleDisplay*)captionStyle->GetStyleData(eStyleStruct_Display);
         NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay, "expected caption");
 
-        // Get the containing block for absolutely positioned elements
-        nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                       newFrame);
-
         // Replicate the caption frame
         // XXX We have to do it this way instead of calling ConstructFrameByDisplayType(),
         // because of a bug in the way ConstructTableFrame() handles the initial child
         // list...
-        nsIFrame*       captionFrame;
-        nsFrameItems    childItems;
-        nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-        nsAbsoluteItems fixedItems(mFixedContainingBlock);
-        nsAbsoluteItems floaterList(captionFrame);
+        nsIFrame*               captionFrame;
+        nsFrameItems            childItems;
+        nsFrameConstructorState state(mFixedContainingBlock,
+                                      GetAbsoluteContainingBlock(aPresContext, newFrame),
+                                      captionFrame);
         NS_NewAreaFrame(captionFrame, 0);
         captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
-        ProcessChildren(aPresContext, caption, captionFrame, absoluteItems, 
-                        childItems, fixedItems, floaterList, PR_TRUE);
+        ProcessChildren(aPresContext, state, caption, captionFrame,
+                        PR_TRUE, childItems);
         captionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
         // XXX Deal with absolute and fixed frames...
-        if (floaterList.childList) {
+        if (state.mFloatedItems.childList) {
           captionFrame->SetInitialChildList(*aPresContext,
                                             nsLayoutAtoms::floaterList,
-                                            floaterList.childList);
+                                            state.mFloatedItems.childList);
         }
         newChildFrames.AddChild(captionFrame);
         NS_RELEASE(caption);
@@ -5227,24 +5227,21 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresContext*  aPresContext,
       if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ||
           (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay)) {
         
-        // Get the containing block for absolutely positioned elements
-        nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                       newFrame);
         // Replicate the header/footer frame
-        nsIFrame*        headerFooterFrame;
-        nsFrameItems     childItems;
-        nsAbsoluteItems  absoluteItems(absoluteContainingBlock);
-        nsAbsoluteItems  fixedItems(mFixedContainingBlock);
-        nsAbsoluteItems  floaterList(nsnull);
-        nsIContent*      headerFooter;
+        nsIFrame*               headerFooterFrame;
+        nsFrameItems            childItems;
+        nsIContent*             headerFooter;
+        nsFrameConstructorState state(mFixedContainingBlock,
+                                      GetAbsoluteContainingBlock(aPresContext, newFrame),
+                                      nsnull);
 
         NS_NewTableRowGroupFrame(headerFooterFrame);
         rowGroupFrame->GetContent(&headerFooter);
         headerFooterFrame->Init(*aPresContext, headerFooter, newFrame,
                                 rowGroupStyle, nsnull);
-        ProcessChildren(aPresContext, headerFooter, headerFooterFrame, absoluteItems, 
-                        childItems, fixedItems, floaterList);
-        NS_ASSERTION(!floaterList.childList, "unexpected floated element");
+        ProcessChildren(aPresContext, state, headerFooter, headerFooterFrame,
+                        PR_FALSE, childItems);
+        NS_ASSERTION(!state.mFloatedItems.childList, "unexpected floated element");
         NS_RELEASE(headerFooter);
         headerFooterFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
 
@@ -5520,15 +5517,13 @@ ShouldCreateFirstLetterFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
-                                            nsIContent*      aContent,
-                                            nsIFrame*        aFrame,
-                                            nsAbsoluteItems& aAbsoluteItems,
-                                            nsFrameItems&    aFrameItems,
-                                            nsAbsoluteItems& aFixedItems,
-                                            nsAbsoluteItems& aFloatingItems,
-                                            PRBool           aCanHaveGeneratedContent,
-                                            PRBool           aForBlock)
+nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*          aPresContext,
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aFrame,
+                                            nsFrameItems&            aFrameItems,
+                                            PRBool                   aCanHaveGeneratedContent,
+                                            PRBool                   aForBlock)
 {
   nsresult rv = NS_OK;
   nsIStyleContext*  styleContext = nsnull;
@@ -5552,9 +5547,8 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIContent> childContent;
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       // Construct a child frame
-      rv = ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems,
-                          aFrameItems, aFixedItems, aFloatingItems,
-                          i == 0);
+      rv = ConstructFrame(aPresContext, aState, childContent, aFrame, i == 0,
+                          aFrameItems);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -5564,7 +5558,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*  aPresContext,
           ShouldCreateFirstLetterFrame(aPresContext, childContent,
                                        aFrameItems.childList)) {
         rv = WrapTextFrame(aPresContext, aFrameItems.childList, aContent,
-                           childContent, aFrame, aFrameItems, aFloatingItems,
+                           childContent, aFrame, aFrameItems, aState.mFloatedItems,
                            aForBlock);
       }
     }
@@ -5760,3 +5754,4 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
+
