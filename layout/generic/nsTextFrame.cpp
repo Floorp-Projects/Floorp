@@ -636,6 +636,7 @@ public:
     PRPackedBool        mFirstLetterOK;       // IN
     PRPackedBool        mIsBreakable;         // IN
     PRPackedBool        mComputeMaxWordWidth; // IN
+    PRPackedBool        mTrailingSpaceTrimmed; // IN/OUT
   
     TextReflowData(PRInt32 aStartingOffset,
                    PRBool  aWrapping,
@@ -644,7 +645,8 @@ public:
                    PRBool  aInWord,
                    PRBool  aFirstLetterOK,
                    PRBool  aIsBreakable,
-                   PRBool  aComputeMaxWordWidth)
+                   PRBool  aComputeMaxWordWidth,
+                   PRBool  aTrailingSpaceTrimmed)
       : mX(0),
         mOffset(aStartingOffset),
         mMaxWordWidth(0),
@@ -656,7 +658,8 @@ public:
         mInWord(aInWord),
         mFirstLetterOK(aFirstLetterOK),
         mIsBreakable(aIsBreakable),
-        mComputeMaxWordWidth(aComputeMaxWordWidth)
+        mComputeMaxWordWidth(aComputeMaxWordWidth),
+        mTrailingSpaceTrimmed(aTrailingSpaceTrimmed)
     {}
   };
 
@@ -1645,9 +1648,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 #endif
 
   // Remove trailing whitespace if it was trimmed after reflow
-  if (TEXT_TRIMMED_WS & mState) {
-    NS_ASSERTION(aTextBuffer != nsnull,
-      "Nonexistent text buffer should only occur during reflow, i.e. before whitespace is trimmed");
+  // TEXT_TRIMMED_WS can be set in measureText during reflow, and 
+  // nonexitent text buffer may occur in this situation.
+  if (TEXT_TRIMMED_WS & mState  && aTextBuffer) {
     if (--dstOffset >= 0) {
       PRUnichar ch = aTextBuffer->mBuffer[dstOffset];
       if (XP_IS_SPACE(ch)) {
@@ -4579,8 +4582,12 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
           if (aTextData.mX + dimensions.width <= maxWidth) {
             aTextData.mX += dimensions.width;
           }
-          else 
+          else {
+            // since we didn't add the trailing space width, set this flag so that 
+            // we will not trim this non-existing space
+            aTextData.mTrailingSpaceTrimmed = PR_TRUE;
             break;
+          }
         }
         else {
           //if we're not wrapping, then always advance 
@@ -5156,15 +5163,20 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   // Local state passed to the routines that do the actual text measurement
   TextReflowData  textData(startingOffset, wrapping, skipWhitespace, 
                            measureText, inWord, lineLayout.GetFirstLetterStyleOK(),
-                           lineLayout.LineIsBreakable(), nsnull != aMetrics.maxElementSize);
+                           lineLayout.LineIsBreakable(), nsnull != aMetrics.maxElementSize, 
+                           PR_FALSE);
   
   // Measure the text
+  // MeasureText may set TEXT_TRIMMED_WS flag, so don't clear after the call
   aStatus = MeasureText(aPresContext, aReflowState, tx, lb, ts, textData);
+  if (textData.mTrailingSpaceTrimmed)
+    mState |= TEXT_TRIMMED_WS;
+  else
+    mState &= ~TEXT_TRIMMED_WS;
 
   if (tx.HasMultibyte()) {
     mState |= TEXT_HAS_MULTIBYTE;
   }
-  mState &= ~TEXT_TRIMMED_WS;
 
   // Setup metrics for caller; store final max-element-size information
   aMetrics.width = textData.mX;
@@ -5317,6 +5329,14 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth)
 {
+  // in some situation (for instance, in wrapping mode, last space will not 
+  // be added to total width if it exceed maxwidth), this flag will be set 
+  // and we shouldn't trim non-added space
+  if (mState & TEXT_TRIMMED_WS) {
+    aDeltaWidth = 0;
+    return NS_OK;
+  }
+
   nscoord dw = 0;
   const nsStyleText* textStyle = (const nsStyleText*)
     mStyleContext->GetStyleData(eStyleStruct_Text);
