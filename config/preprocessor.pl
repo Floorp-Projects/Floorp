@@ -72,6 +72,7 @@ exit(0);
 
 package main;
 use File::Spec 0.8;
+use File::Spec::Unix; # on all platforms, because the #include syntax is unix-based
 
 sub include {
     my($stack, $filename) = @_;
