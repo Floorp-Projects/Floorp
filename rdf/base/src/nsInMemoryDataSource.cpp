@@ -60,7 +60,7 @@ public:
     PRBool          mTv;
     Assertion*      mNext;
     Assertion*      mInvNext;
-}
+};
     
 ////////////////////////////////////////////////////////////////////////
 
@@ -205,6 +205,7 @@ public:
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
     NS_IMETHOD GetObject(nsIRDFNode** aObject);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
+    NS_IMETHOD GetValue(nsIRDFNode** aValue);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -229,11 +230,8 @@ InMemoryAssertionCursor::InMemoryAssertionCursor (InMemoryDataSource* ds,
         mTarget = u;
         mNextAssertion = mDataSource->getArg2(u);
     } else {
-        mSource = u;
+        mSource = (nsIRDFResource*) u;
         mNextAssertion = mDataSource->getArg1(mSource);
-        // Dont need this ...
-        //        if (NS_SUCCEEDED(u->QueryInterface(kIRDFResourceIID, (void**) &mSource)))
-        //  mNextAssertion = mDataSource->getArg1(mSource);
     }
 }
 
@@ -247,10 +245,6 @@ NS_IMPL_ISUPPORTS(InMemoryAssertionCursor, kIRDFAssertionCursorIID);
 NS_IMETHODIMP
 InMemoryAssertionCursor::Advance(void)
 {
-    // XXX I don't think that the semantics of this are quite right:
-    // specifically, I think that the initial Advance() will skip the
-    // first element...
-    // Guha --- I am pretty sure it won't
     nsresult rv;
 
     NS_IF_RELEASE(mValue);
@@ -265,7 +259,7 @@ InMemoryAssertionCursor::Advance(void)
                 mValue = mNextAssertion->mSource;
                 NS_ADDREF(mValue);
             } else {
-                mValue = mNextAssertion->target;
+                mValue = mNextAssertion->mTarget;
                 NS_ADDREF(mValue);
             }
             return NS_OK;
@@ -276,6 +270,17 @@ InMemoryAssertionCursor::Advance(void)
     // If we get here, the cursor is empty.
     return NS_ERROR_RDF_CURSOR_EMPTY;
 }
+
+NS_IMETHODIMP 
+InMemoryAssertionCursor::GetValue (nsIRDFNode** aValue) {
+
+    if (! aValue)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_ADDREF(mValue);
+    *aValue = mValue;
+    return NS_OK;
+}   
 
 NS_IMETHODIMP
 InMemoryAssertionCursor::GetDataSource(nsIRDFDataSource** aDataSource)
@@ -477,7 +482,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,  nsIRDFResource* property,
         if (as->mTv != tv)
             continue;
 
-        *target = as->target;
+        *target = as->mTarget;
         return NS_OK;
     }
 
@@ -500,7 +505,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source, nsIRDFResource* propert
         if (! eq)
             continue;
 
-        if (NS_FAILED(rv = target->EqualsNode(as->target, &eq)))
+        if (NS_FAILED(rv = target->EqualsNode(as->mTarget, &eq)))
             return rv;
 
         if (! eq)
@@ -523,7 +528,7 @@ NS_IMETHODIMP
 InMemoryDataSource::GetSources(nsIRDFResource* property, nsIRDFNode* target,
                                PRBool tv, nsIRDFAssertionCursor** sources)
 {
-    *sources = new InMemoryAssertionCursor (this, target, property, tv, PR_TRUE);
+    *sources = new InMemoryAssertionCursor(this, target, property, tv, PR_TRUE);
     return NS_OK;
 }
 
@@ -532,7 +537,7 @@ InMemoryDataSource::GetTargets(nsIRDFResource* source,
                                nsIRDFResource* property,
                                PRBool tv, nsIRDFAssertionCursor** targets)
 {
-    *targets = new InMemoryAssertionCursor (this, source, property, tv, PR_FALSE);
+    *targets = new InMemoryAssertionCursor(this, source, property, tv, PR_FALSE);
     return NS_OK;
 }
 
@@ -555,7 +560,7 @@ InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property,
             return rv;
 
         if (eq) {
-            if (NS_FAILED(rv = target->EqualsNode(next->target, &eq)))
+            if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
                 return rv;
 
             if (eq) {
@@ -581,7 +586,7 @@ InMemoryDataSource::Assert(nsIRDFResource* source, nsIRDFResource* property,
     as->mProperty  = property;
 
     NS_ADDREF(target);
-    as->target  = target;
+    as->mTarget  = target;
 
     as->mTv = tv;
 
@@ -632,7 +637,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
             return rv;
 
         if (eq) {
-            if (NS_FAILED(rv = target->EqualsNode(next->target, &eq)))
+            if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
                 return rv;
 
             if (eq) {
