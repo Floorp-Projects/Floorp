@@ -464,6 +464,24 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 
 //------------------------------------------------------------------------
 
+// used by nsDeviceContextMac::CreateRenderingContext() for printing
+nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
+{
+  mContext = aContext;
+  NS_IF_ADDREF(mContext);
+ 
+	if (mOriginalSurface->GetPort() == nsnull)
+		mOriginalSurface->Init(aPort);
+
+ 	// select the surface
+	mFrontSurface->Init(aPort);
+	SelectDrawingSurface(mFrontSurface);
+
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
 void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 {
 	if (! aSurface)
