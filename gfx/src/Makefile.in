@@ -26,6 +26,10 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = ps $(MOZ_GFX_TOOLKIT)
 
+ifeq ($(MOZ_GFX_TOOLKIT),xlib)
+DIRS += xlibrgb
+endif
+
 LIBRARY_NAME = raptorgfx
 
 MODULE=raptor 
