@@ -666,6 +666,10 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
       {
          window.setCursor( "default" );
 
+         var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                       .getService(Components.interfaces.nsIPromptService);
+
          var retval = false;
          if( typeof( result ) != "string" ) //for 1.7 compatibility
              result = String.fromCharCode.apply(this, result);
@@ -676,18 +680,21 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          } catch(e) {
          }
          if (ch && !ch.requestSucceeded) {
-           alert("Getting the calendar file failed.\nStatus code: "+ch.responseStatus+": "+ch.responseStatusText);
+           promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                               calendarStringBundle.formatStringFromName('httpError',[ch.responseStatus, ch.responseStatusText],2));
          }
 
          else if (!Components.isSuccessCode(loader.request.status)) {
            // XXX this should be made human-readable.
-           alert("Getting the calendar file failed.\nStatus code: 0x"+loader.request.status.toString(16));
+           promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                               calendarStringBundle.formatStringFromName('otherError',[cloader.request.status.toString(16)],1));
          }
 
          //check to make sure its actually a calendar file, if not return.
          else if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
          {
-            alert( "This doesn't appear to be a valid file. Here's what I got back from\n"+Channel.URI.spec+":\nResult:"+result );
+           promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                               calendarStringBundle.formatStringFromName('contentError',[Channel.URI.spec, result],2));
          } else {
              onResponse( result );
              retval = true;
