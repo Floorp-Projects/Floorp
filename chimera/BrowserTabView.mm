@@ -67,6 +67,9 @@
 
 @end
 
+
+#define kTabDropTargetHeight  18.0
+
 @implementation BrowserTabView
 
 /******************************************/
@@ -106,7 +109,7 @@
   if (mIsDropTarget)
   {
     NSRect	hilightRect = aRect;
-    hilightRect.size.height = 18.0;		// no need to move origin.y; our coords are flipped
+    hilightRect.size.height = kTabDropTargetHeight;		// no need to move origin.y; our coords are flipped
     NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRect:hilightRect];
 
     [[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.5] set];
@@ -179,19 +182,21 @@
     if ( [[self tabViewItems] count] < 2)
     {
       if ( [self tabViewType] != NSNoTabsBezelBorder )
+      {
         [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) + 10 )];
-
-      [self setTabViewType:NSNoTabsBezelBorder];
-      tabVisibilityChanged = YES;
+        [self setTabViewType:NSNoTabsBezelBorder];
+        tabVisibilityChanged = YES;
+      }
       tabsVisible = NO;
     }
     else
     {
       if ( [self tabViewType] != NSTopTabsBezelBorder )
+      {
         [self setFrameSize:NSMakeSize( NSWidth([self frame]), NSHeight([self frame]) - 10 )];
-
-      [self setTabViewType:NSTopTabsBezelBorder];
-      tabVisibilityChanged = YES;
+        [self setTabViewType:NSTopTabsBezelBorder];
+        tabVisibilityChanged = YES;
+      }
       tabsVisible = YES;
     }
 
@@ -203,8 +208,9 @@
       if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
         [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];
     }
-
-    [self display];
+    
+    if (tabVisibilityChanged)
+      [self setNeedsDisplay:YES];
 	}
 }
 
@@ -241,8 +247,10 @@
 {
   if (!mIsDropTarget)
   {
+    NSRect invalidRect = [self bounds];
+    invalidRect.size.height = kTabDropTargetHeight;
+    [self setNeedsDisplayInRect:invalidRect];
     mIsDropTarget = YES;
-    [self setNeedsDisplay:YES];
   }
 }
 
@@ -250,8 +258,10 @@
 {
   if (mIsDropTarget)
   {
+    NSRect invalidRect = [self bounds];
+    invalidRect.size.height = kTabDropTargetHeight;
+    [self setNeedsDisplayInRect:invalidRect];
     mIsDropTarget = NO;
-    [self setNeedsDisplay:YES];
   }
 }
 
