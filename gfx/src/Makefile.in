@@ -132,11 +132,9 @@ EXPORTS += \
 endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
+PS_LCPPSRCS = nsPaperPS.cpp
 CPPSRCS += \
-        ps/nsPaperPS.cpp \
-        $(NULL)
-EXPORTS += \
-        ps/nsPaperPS.h \
+        $(PS_LCPPSRCS) \
         $(NULL)
 endif
 
@@ -158,3 +156,10 @@ FORCE_USE_PIC = 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES     += -D_IMPL_NS_GFX
+
+ifdef MOZ_ENABLE_POSTSCRIPT
+GARBAGE     += $(PS_LCPPSRCS)
+
+export:: $(addprefix $(srcdir)/ps/,$(PS_LCPPSRCS))
+	$(INSTALL) $^ .
+endif
