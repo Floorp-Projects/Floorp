@@ -2,9 +2,9 @@
 
 <!ENTITY advancedSettings.label "Advanced Settings">
 <!-- LOCALIZATION NOTE (smtpServer.label): do not translate "SMTP" in below line -->
-<!ENTITY smtpServer.label "Outgoing (SMTP) Server Settings">
+<!ENTITY smtpServer.label "Outgoing Server (SMTP) Settings">
 <!-- LOCALIZATION NOTE (smtpDesc.label): do not translate "SMTP" in below line -->
-<!ENTITY smtpDesc.label "Only one outgoing (SMTP) server needs to be specified, even if you have several mail accounts. Enter the name of the server for outgoing messages.">
+<!ENTITY smtpDesc.label "Only one outgoing server (SMTP) needs to be specified, even if you have several mail accounts. Enter the name of the server for outgoing messages.">
 
 <!ENTITY smtpAlwaysUseName.label "Use name and password">
 <!ENTITY smtpSavePassword.label "Save my password">
