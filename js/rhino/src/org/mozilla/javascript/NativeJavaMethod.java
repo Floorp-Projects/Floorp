@@ -41,11 +41,8 @@ import java.lang.reflect.*;
 import java.io.*;
 
 /**
- * This class reflects Java methods into the JavaScript environment.  It
- * handles overloading of methods, and method/field name conflicts.
- * All NativeJavaMethods behave as JSRef `bound' methods, in that they
- * always operate on the object underlying the original NativeJavaObject
- * parent regardless of any reparenting that may occur.
+ * This class reflects Java methods into the JavaScript environment and 
+ * handles overloading of methods.
  *
  * @author Mike Shaver
  * @see NativeJavaArray
@@ -56,16 +53,21 @@ import java.io.*;
 public class NativeJavaMethod extends BaseFunction
 {
 
-    public NativeJavaMethod(MemberBox[] methods)
+    NativeJavaMethod(MemberBox[] methods)
     {
         this.functionName = methods[0].getName();
         this.methods = methods;
     }
 
-    public NativeJavaMethod(MemberBox method, String name)
+    NativeJavaMethod(MemberBox method, String name)
     {
         this.functionName = name;
         this.methods = new MemberBox[] { method };
+    }
+
+    public NativeJavaMethod(Method method, String name)
+    {
+        this(new MemberBox(method), name);
     }
 
     private static String scriptSignature(Object value)
