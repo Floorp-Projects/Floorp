@@ -105,7 +105,7 @@
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *fullPathString = [aPath stringByStandardizingPath];
   if ([fm fileExistsAtPath:fullPathString]) {
-    [self buildButtonForBrowser:aBrowserName withObject:aPath];
+    [self buildButtonForBrowser:aBrowserName withObject:fullPathString];
   }
 }
 
