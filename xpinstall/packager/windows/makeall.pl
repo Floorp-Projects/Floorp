@@ -104,6 +104,7 @@ MakeXpiFile("browser");
 MakeXpiFile("mail");
 MakeXpiFile("chatzilla");
 MakeXpiFile("deflenus");
+MakeXpiFile("langenus");
 MakeXpiFile("langengb");
 
 MakeUninstall();
