@@ -50,10 +50,6 @@ public:
 
     nsCLiveconnectFactory(void);
     virtual ~nsCLiveconnectFactory(void);
-
-protected:
-    static nsIFactory      *m_pNSIFactory;  
-    static nsCLiveconnect  *m_pNSCLiveconnect;  
 };
 
 #endif // nsCLiveconnectFactory_h___
