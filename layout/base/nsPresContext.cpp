@@ -238,7 +238,7 @@ nsPresContext::~nsPresContext()
   nsContentUtils::UnregisterPrefCallback("browser.visited_color",
                                          nsPresContext::PrefChangedCallback,
                                          this);
-  nsContentUtils::UnregisterPrefCallback("network.image.imageBehavior",
+  nsContentUtils::UnregisterPrefCallback("permissions.default.image",
                                          nsPresContext::PrefChangedCallback,
                                          this);
   nsContentUtils::UnregisterPrefCallback("image.animation_mode",
@@ -673,7 +673,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("browser.visited_color",
                                        nsPresContext::PrefChangedCallback,
                                        this);
-  nsContentUtils::RegisterPrefCallback("network.image.imageBehavior",
+  nsContentUtils::RegisterPrefCallback("permissions.default.image",
                                        nsPresContext::PrefChangedCallback,
                                        this);
   nsContentUtils::RegisterPrefCallback("image.animation_mode",

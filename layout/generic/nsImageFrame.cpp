@@ -2003,7 +2003,7 @@ NS_IMPL_ISUPPORTS1(nsImageFrame::IconLoad, nsIObserver)
 
 static const char kIconLoadPrefs[][40] = {
   "browser.display.force_inline_alttext",
-  "network.image.imageBehavior",
+  "permissions.default.image",
   "browser.display.show_image_placeholders"
 };
 
@@ -2046,7 +2046,7 @@ void nsImageFrame::IconLoad::GetPrefs()
     nsContentUtils::GetBoolPref("browser.display.force_inline_alttext");
 
   mPrefAllImagesBlocked =
-    nsContentUtils::GetIntPref("network.image.imageBehavior") == 2;
+    nsContentUtils::GetIntPref("permissions.default.image") == 2;
 
   mPrefShowPlaceholders =
     nsContentUtils::GetBoolPref("browser.display.show_image_placeholders",
