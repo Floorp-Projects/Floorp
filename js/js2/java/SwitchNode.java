@@ -28,7 +28,7 @@ class SwitchNode extends ControlNode {
             ExpressionNode e = (ExpressionNode)(caseExpr.elementAt(i));
             e.eval(theEnv);
             v.eq(theEnv);                       
-            if (theEnv.theStack.pop().toJSBoolean().isTrue())
+            if (theEnv.theStack.pop().toJSBoolean(theEnv).isTrue())
                 return (ControlNode)(caseCode.elementAt(i));
         }
         if (defaultCode != null)

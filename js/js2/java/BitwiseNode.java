@@ -8,7 +8,7 @@ class BitwiseNode extends BinaryNode {
     void eval(Environment theEnv)
     {
         left.eval(theEnv);
-        JSInteger lV = theEnv.theStack.pop().toJSInteger();
+        JSInteger lV = theEnv.theStack.pop().toJSInteger(theEnv);
         right.eval(theEnv);
 
         if (op == "&")
