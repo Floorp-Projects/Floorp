@@ -35,6 +35,17 @@ public:
 	~CWizardUI();
 //	void SetModified(BOOL how =TRUE);
 
+	// WizardMachine needs this
+	static CString GetScreenValue(WIDGET *curWidget);
+	static BOOL NewConfig(WIDGET *curWidget);
+	static BOOL BrowseFile(WIDGET *curWidget);
+	static BOOL BrowseDir(WIDGET *curWidget);
+
+	// Not actually being used anywhere anymore
+	static BOOL ActCommand(WIDGET *curWidget);
+	static BOOL SortList(WIDGET *curWidget);
+	static BOOL Progress();
+
 // Dialog Data
 	//{{AFX_DATA(CWizardUI)
 	enum { IDD = IDD_BASE_DIALOG };
@@ -74,13 +85,6 @@ public:
 	void UpdateGlobals();
 	void DestroyCurrentScreenWidgets();
 	//void DoBuildInstallers();
-
-	BOOL ActCommand(WIDGET *curWidget);
-	BOOL SortList(WIDGET *curWidget);
-	BOOL NewConfig(WIDGET *curWidget);
-	BOOL BrowseFile(WIDGET *curWidget);
-	BOOL BrowseDir(WIDGET *curWidget);
-	BOOL Progress();
 
 	// Dlls related stuff
 	HINSTANCE hModule;

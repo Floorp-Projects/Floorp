@@ -22,8 +22,8 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
-#include "fstream.h"
 //#include "ImageDialog.h"
+#include "fstream.h"
 #include "ImgDlg.h"
 #include "SumDlg.h"
 #include "NavText.h"
@@ -165,7 +165,7 @@ LRESULT CWizardUI::OnWizardBack()
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
 		while (!theApp.GoToPrevNode())
-			; /* do nothing */
+			0; /* do nothing */
 
 		prevLock.Unlock();
 	}
@@ -208,7 +208,7 @@ LRESULT CWizardUI::OnWizardNext()
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
 		while (!theApp.GoToNextNode())
-			; /* do nothing */
+			0; /* do nothing */
 	
 		nextLock.Unlock();
 	}
@@ -257,30 +257,13 @@ void CWizardUI::OnPaint()
 	// Do not call CPropertyPage::OnPaint() for painting messages
 }
 
-void ExecuteCommand(char *command)
-{
-	STARTUPINFO	startupInfo; 
-	PROCESS_INFORMATION	processInfo; 
-
-	memset(&startupInfo, 0, sizeof(startupInfo));
-	memset(&processInfo, 0, sizeof(processInfo));
-
-	startupInfo.cb = sizeof(STARTUPINFO);
-	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	startupInfo.wShowWindow = SW_SHOW;
-
-	BOOL executionSuccessful = CreateProcess(NULL, command, NULL, NULL, TRUE, 
-												NORMAL_PRIORITY_CLASS, NULL, NULL, 
-												&startupInfo, &processInfo); 
-	DWORD error = GetLastError();
-	WaitForSingleObject(processInfo.hProcess, INFINITE);
-}
-
 BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 {
-	UpdateGlobals();
+#ifdef USETHEOLDMETHODOFHANDLINGCOMMANDS
 	char params[MAX_SIZE];
 					
+	UpdateGlobals();
+
 	CString function;
 	strcpy(params, curWidget->action.parameters);
 	int numCommands=0;
@@ -402,6 +385,8 @@ BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 							{
 								if (aWidget->type == "ListBox")
 								{
+									/* --- Broken at the moment due to listbox value overhaul ---
+
 									// Listbox iterator:  apply command to each selected value
 									//
 									// Use this index value to find the string from the listbox
@@ -459,6 +444,7 @@ BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 											}
 										}
 									}
+									*/
 								}
 								else
 								{
@@ -494,7 +480,7 @@ BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 		}
 		newEntry = FALSE;
 		for (int listNum =0; listNum < commandListLength; listNum++)
-			ExecuteCommand(commandList[listNum]);
+			theApp.ExecuteCommand(commandList[listNum]);
 
 		// This is the list of the target widget, but assumes the function
 		theApp.GenerateList(tmpFunction, tmpWidget, tmpParams);
@@ -514,6 +500,7 @@ BOOL CWizardUI::ActCommand(WIDGET *curWidget)
 			myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
 		}
 	}	
+#endif
 
 	return TRUE;
 }
@@ -685,6 +672,9 @@ BOOL CWizardUI::Progress()
 
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
+	// Get screen values exchanged
+	UpdateData(TRUE);
+
 	for(int i=0; i < CurrentNode->numWidgets; i++)
 	{
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
@@ -694,31 +684,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		if (curWidget->action.dll == "NULL") 
 		{
 			if (curWidget->action.function == "command")
-				ActCommand(curWidget);
-
-			else if (curWidget->action.function == "DisplayImage") 
-			{
-				// This is to dsiplay an image in a separate dialog
-				CImgDlg imgDlg(curWidget->action.parameters);
-				int retVal = imgDlg.DoModal();
-			}
-			else if (curWidget->action.function == "ShowSum") 
-			{
-				CSumDlg sumdlg;
-				int retVal = sumdlg.DoModal();
-			}
-			else if (curWidget->action.function == "BrowseFile") 
-				BrowseFile(curWidget);
-			
-			else if (curWidget->action.function == "BrowseDir") 
-				BrowseDir(curWidget);
-			
-			else if (curWidget->action.function == "NewConfig") 
-				NewConfig(curWidget);
-			
-			else if ((curWidget->action.function == "SortByName") ||
-				 (curWidget->action.function == "SortByPhone"))
-				SortList(curWidget);
+				theApp.interpret(curWidget->action.parameters, curWidget);
 		}
 		else 
 			Progress();
@@ -981,21 +947,12 @@ void CWizardUI::CreateControls()
 			selectedItems = (char *) GlobalAlloc(0, 20 * sizeof(char));
 			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
 
-			char* options[MIN_SIZE];
-			int numOfOptions = 0;
-			char* s = new char[MAX_SIZE];
-			s = strtok(selectedItems, ",");
+			char *s = strtok(selectedItems, ",");
 			while (s) 
 			{
-				options[numOfOptions] = new char[MID_SIZE];
-				strcpy(options[numOfOptions], s);
+				((CListBox*)curWidget->control)->SelectString(0, s);
 				s = strtok( NULL, "," );
-				numOfOptions++;
 			}
-
-			for (int j=0; j < numOfOptions; j++)
-				((CListBox*)curWidget->control)->SetSel(atoi(options[j]), TRUE);
-
 		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
@@ -1080,126 +1037,135 @@ void CWizardUI::DestroyCurrentScreenWidgets()
 	}
 }
 
+CString CWizardUI::GetScreenValue(WIDGET *curWidget) 
+{
+	//
+	//  NOTE:  Assumes caller has already done UpdateData(TRUE);
+	//
+
+	CString widgetType = curWidget->type;
+	CString rv("");
+
+	if (widgetType == "CheckBox") {
+		int state = ((CButton*)curWidget->control)->GetState();
+
+		char temp[MIN_SIZE];
+
+		itoa(state, temp, 10);
+
+		rv = CString(temp);
+	}
+	else if (widgetType == "RadioButton")
+	{
+		int state = ((CButton*)curWidget->control)->GetState();
+			
+		CString allOptions;
+		CString setBack;
+			
+		WIDGET* rWidget = theApp.findWidget((char *) (LPCTSTR) curWidget->group);
+
+		allOptions = rWidget->items;
+
+		char* options[MAX_SIZE];
+		int numOfOptions = 0;
+		char* s = new char[MAX_SIZE];
+		s = strtok((char *) (LPCTSTR) allOptions, ",");
+
+		if (curWidget->name == CString(s) && state == 1)
+		{
+			rWidget->value = "1";
+		}
+
+		if (s)
+		{
+			setBack = CString(s);
+		}
+
+		int i=1;
+		while (s) 
+		{
+			i++;
+			setBack = setBack + ",";
+			options[numOfOptions] = new char[MID_SIZE];
+			strcpy(options[numOfOptions], s);
+			s = strtok( NULL, "," );
+				
+			if (s)
+			{
+				setBack = setBack + CString(s);
+			}
+
+			char temp[MIN_SIZE];
+		
+			itoa(i, temp, 10);
+
+			if (curWidget->name == CString(s) && state == 1)
+			{
+				rWidget->value = CString(temp);
+			}
+				
+			numOfOptions++;
+		}
+	
+		setBack.SetAt(setBack.GetLength()-1, '\0');
+
+		rWidget->items = setBack;
+	}
+	else if (widgetType == "EditBox") {
+		char myLine[MAX_SIZE];
+		curWidget->control->GetWindowText(myLine, 250);
+
+		CString line = (CString)myLine;
+		rv = line;
+	}
+	else if (widgetType == "ListBox")
+	{
+		LPINT choices;
+
+		int count;
+		count = (((CListBox *)curWidget->control))->GetSelCount();
+		choices = (int *) GlobalAlloc(0, count * sizeof(LPINT));
+		((CListBox *)curWidget->control)->GetSelItems(count, choices);
+			
+		rv = "";
+		CString temp;
+		for (int i=0; i < count; i++)
+		{
+			((CListBox *)curWidget->control)->GetText(choices[i], temp);
+			rv = rv + temp;
+			if ( i+1 < count)
+				rv += ",";
+		}
+	}
+	else if (widgetType == "ComboBox")
+	{
+		int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
+		if (selectedIndex != -1)
+		{
+			char tmpStr[MIN_SIZE];
+			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
+			rv = tmpStr;
+		}
+	}
+	else
+		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
+								// Should be able to just pass in an "assign" boolean
+
+	return rv;
+}
+
 void CWizardUI::UpdateGlobals() 
 {
-	UpdateData(TRUE);
+	UpdateData(TRUE);  // Get data from screen into controls
 	
 	
 	WIDGET* curWidget;
-	CString widgetType;
 
 
 	for (int i = 0; i < m_pControlCount; i++) 
 	{
 		curWidget = CurrentNode->pageWidgets[i];
-		widgetType = curWidget->type;
-
-		if (widgetType == "CheckBox") {
-			int state = ((CButton*)curWidget->control)->GetState();
-
-			char temp[MIN_SIZE];
-
-			itoa(state, temp, 10);
-
-			curWidget->value = CString(temp);
-		}
-		if (widgetType == "RadioButton")
-		{
-			int state = ((CButton*)curWidget->control)->GetState();
-			
-			CString allOptions;
-			CString setBack;
-			
-			WIDGET* rWidget = theApp.findWidget((char *) (LPCTSTR) curWidget->group);
-
-			allOptions = rWidget->items;
-
-			char* options[MAX_SIZE];
-			int numOfOptions = 0;
-			char* s = new char[MAX_SIZE];
-			s = strtok((char *) (LPCTSTR) allOptions, ",");
-
-			if (curWidget->name == CString(s) && state == 1)
-			{
-				rWidget->value = "1";
-			}
-
-			if (s)
-			{
-				setBack = CString(s);
-			}
-
-			int i=1;
-			while (s) 
-			{
-				i++;
-				setBack = setBack + ",";
-				options[numOfOptions] = new char[MID_SIZE];
-				strcpy(options[numOfOptions], s);
-				s = strtok( NULL, "," );
-				
-				if (s)
-				{
-					setBack = setBack + CString(s);
-				}
-
-				char temp[MIN_SIZE];
-		
-				itoa(i, temp, 10);
-
-				if (curWidget->name == CString(s) && state == 1)
-				{
-					rWidget->value = CString(temp);
-				}
-				
-				numOfOptions++;
-			}
-	
-			setBack.SetAt(setBack.GetLength()-1, '\0');
-
-			rWidget->items = setBack;
-		}
-		if (widgetType == "EditBox") {
-			char myLine[MAX_SIZE];
-			curWidget->control->GetWindowText(myLine, 250);
-
-			CString line = (CString)myLine;
-			curWidget->value = line;
-		}
-		if (widgetType == "ListBox")
-		{
-			LPINT choices;
-
-			choices = (int *) GlobalAlloc(0, 10 * sizeof(LPINT));
-			((CListBox *)curWidget->control)->GetSelItems(10, choices);
-			int count;
-			count = (((CListBox *)curWidget->control))->GetSelCount();
-			
-			CString valStr;
-			for (int i=0; i < count; i++)
-			{
-				char temp[10];
-
-				itoa(choices[i], temp, 10);
-
-				CString tmpStr = CString(temp);
-				
-				valStr = valStr + tmpStr;
-				if ( i+1 < count)
-					valStr = valStr + ",";
-			}
-			curWidget->value = valStr;
-		}
-		if (widgetType == "ComboBox")
-		{
-			int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
-			if (selectedIndex != -1)
-			{
-				char tmpStr[MIN_SIZE];
-				((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
-				curWidget->value = tmpStr;
-			}
-		}
+		curWidget->value = GetScreenValue(curWidget);
 	}
 }
 
