@@ -91,7 +91,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   mListener = (nsIAutoCompleteListener *)new AutoCompleteListener(self);
   NS_IF_ADDREF(mListener);
 
-  [self setDelegate: self]; 
+  [self setFont:[NSFont controlContentFontOfSize:0]];
+  [self setDelegate: self];
 
   // XXX the owner of the textfield should set this
   [self setSession:@"history"];
@@ -151,6 +152,14 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResize:)
                                         name:NSWindowDidResizeNotification object:nil];
 
+  // listen for Undo/Redo to make sure autocomplete doesn't get horked.
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUndoOrRedo:)
+                                               name:NSUndoManagerDidRedoChangeNotification
+                                             object:[[self fieldEditor] undoManager]];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUndoOrRedo:)
+                                               name:NSUndoManagerDidUndoChangeNotification
+                                             object:[[self fieldEditor] undoManager]];
+  
   // read the user default on if we should auto-complete the text field as the user
   // types or make them pick something from a list (a-la mozilla).
 	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
@@ -499,6 +508,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) onResize:(NSNotification *)aNote
 {
   [self resizePopup];
+}
+
+- (void) onUndoOrRedo:(NSNotification *)aNote
+{
+  [self clearResults];
 }
 
 // NSTextField delegate //////////////////////////////////
