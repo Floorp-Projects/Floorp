@@ -415,6 +415,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 			gRDFService = nsnull;
 		}
+		categoryDataSource = NULL;		
 	}
 }
 
