@@ -121,6 +121,12 @@ public:
   NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext,
                                   nsIPresState* aState) = 0;
 
+  /**
+   *  Return the the frame that the options will be inserted into
+   */
+  NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext,
+                                 nsIFrame** aFrame) = 0;
+
 };
 
 #endif
