@@ -533,8 +533,12 @@ dump("error in refresh sort:"+e)
             observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
             observer.endUpdateBatch(this.db);
+            var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
             this.mOuter.treeBoxObject.selection.currentIndex=-1;
             this.mOuter.tree.builder.rebuild();
+            // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
+            // if the first visible row is not 0
+            this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
             this.mOuter.updateTreeSelection();
           }
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
