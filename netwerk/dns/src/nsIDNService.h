@@ -46,6 +46,8 @@
 #include "nsIUnicodeNormalizer.h"
 #include "nsIDNKitInterface.h"
 
+class nsIPrefBranch;
+
 //-----------------------------------------------------------------------------
 // nsIDNService
 //-----------------------------------------------------------------------------
@@ -72,8 +74,10 @@ private:
   nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out);
   nsresult decodeACE(const nsACString& in, nsACString& out);
+  void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
   
   PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
+  PRBool mShowPunycode;
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
   char mACEPrefix[kACEPrefixLen+1];

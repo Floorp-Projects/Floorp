@@ -553,6 +553,11 @@ pref("network.http.pipelining.maxrequests" , 4);
 // are handled.  IDN requires a nsIIDNService implementation.
 pref("network.enableIDN", true);
 
+// This preference, if true, causes all UTF-8 domain names to be normalized to
+// punycode.  The intention is to allow UTF-8 domain names as input, but never
+// generate them from punycode.
+pref("network.IDN_show_punycode", true);
+
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
 // and/or allows the user to disable IPv6 on a per-domain basis. See bug 68796.
