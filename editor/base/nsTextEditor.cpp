@@ -244,6 +244,8 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
           range->GetEndParent(getter_AddRefs(endParent));
           if (startParent.get()==endParent.get()) 
           { // the range is entirely contained within a single text node
+            // commonParent==aStartParent, so get the "real" parent of the selection
+            startParent->GetParentNode(getter_AddRefs(commonParent));
             result = SetTextPropertiesForNode(startParent, commonParent, 
                                               startOffset, endOffset,
                                               aProperty);
@@ -829,9 +831,9 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 
 NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
                                                      nsIDOMNode *aParent,
-                                                     PRInt32 aStartOffset,
-                                                     PRInt32 aEndOffset,
-                                                     nsIAtom *aPropName)
+                                                     PRInt32     aStartOffset,
+                                                     PRInt32     aEndOffset,
+                                                     nsIAtom    *aPropName)
 {
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
