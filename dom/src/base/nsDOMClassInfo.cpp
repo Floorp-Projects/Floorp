@@ -3705,6 +3705,14 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      // Special case for |Node|, which needs constants from Node3
+      // too for forwards compatibility.
+      if (primary_iid->Equals(NS_GET_IID(nsIDOMNode))) {
+        rv = DefineInterfaceConstants(cx, class_obj,
+                                      &NS_GET_IID(nsIDOM3Node));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
       // Special case for |Event|, Event needs constants from NSEvent
       // too for backwards compatibility.
       if (primary_iid->Equals(NS_GET_IID(nsIDOMEvent))) {

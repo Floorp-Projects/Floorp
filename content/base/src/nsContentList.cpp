@@ -677,7 +677,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
         nsresult rv =
           ourLastDOM3Node->CompareDocumentPosition(newNode, &comparisonFlags);
         if (NS_SUCCEEDED(rv) && 
-            (comparisonFlags & nsIDOMNode::DOCUMENT_POSITION_FOLLOWING)) {
+            (comparisonFlags & nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING)) {
           appendToList = PR_TRUE;
         }
       }

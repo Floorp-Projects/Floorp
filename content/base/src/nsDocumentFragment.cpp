@@ -413,8 +413,8 @@ nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
         // is based upon order between the root container of each
         // node that is in no container. In this case, the result
         // is disconnected and implementation-dependent.
-        mask |= (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
-                 nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+        mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
+                 nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
 
         break;
       }
@@ -429,8 +429,8 @@ nsDocumentFragment::CompareDocumentPosition(nsIDOMNode* aOther,
     if (NS_STATIC_CAST(nsIDOMNode*, this) == other) {
       // If the node being compared is contained by our node,
       // then it follows it.
-      mask |= (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
-               nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+      mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |
+               nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
       break;
     }
   } while (other);
