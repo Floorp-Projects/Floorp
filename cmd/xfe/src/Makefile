@@ -58,7 +58,8 @@ REQUIRES	=\
 			raptor \
 			netcnvts \
 			msg \
-			progress 
+			progress \
+			privacy
 
 ifdef OJI
 REQUIRES +=	  oji \
@@ -180,11 +181,6 @@ CPPSRCS		+= \
 		  $(NULL)
 endif
 
-ifdef MOZ_PRIVACY 
-REQUIRES	+= \
-		  privacy \
-		  $(NULL)
-endif
 
 ifdef EDITOR
 CPPSRCS		+= \
