@@ -546,6 +546,7 @@ public:
 #ifdef NS_DEBUG
 unsigned long nsWebShell::gNumberOfWebShells = 0;
 
+extern "C" NS_WEB
 unsigned long
 NS_TotalWebShellsInExistence()
 	{
