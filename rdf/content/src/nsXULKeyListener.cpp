@@ -200,8 +200,6 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
-  nsresult res = NS_OK;
-  
   if(aKeyEvent && mDOMDocument) {
     // Get DOMEvent target
     nsIDOMNode* target = nsnull;
@@ -224,7 +222,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   //printf("Root Node [%s] \n", rootName.ToNewCString()); // this leaks
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
   
-  nsresult rv = -1;
+  nsresult rv = NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMNode> keysetNode;
   rootNode->GetFirstChild(getter_AddRefs(keysetNode));
@@ -330,7 +328,6 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		            
 		            // Modifier tests passed so execute onclick command
 		            
-					nsresult rv = NS_ERROR_FAILURE;
 
 				    // This code executes in every presentation context in which this
 				    // document is appearing.
