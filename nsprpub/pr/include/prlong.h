@@ -202,9 +202,9 @@ NSPR_API(PRUint64) LL_MaxUint(void);
 #else  /* !HAVE_LONG_LONG */
 
 #ifdef IS_LITTLE_ENDIAN
-#define LL_INIT(hi, lo) {PR_INT32(lo), PR_INT32(hi)}
+#define LL_INIT(hi, lo) {PR_UINT32(lo), PR_UINT32(hi)}
 #else
-#define LL_INIT(hi, lo) {PR_INT32(hi), PR_INT32(lo)}
+#define LL_INIT(hi, lo) {PR_UINT32(hi), PR_UINT32(lo)}
 #endif
 
 #define LL_IS_ZERO(a)        (((a).hi == 0) && ((a).lo == 0))
