@@ -679,8 +679,10 @@ sub loadquickparseinfo {
         next;
       }
       $tooearly = 0;
-      next if exists $build->{$buildname};
+
       next if exists $ignore_builds->{$buildname};
+      next if exists $build->{$buildname}
+              and $times->{$buildname} >= $buildtime;
       
       $build->{$buildname} = $buildstatus;
       $times->{$buildname} = $buildtime;
