@@ -29,6 +29,7 @@ IS_COMPONENT    = 1
 CPPSRCS		= \
 		nsView.cpp \
 		nsScrollingView.cpp \
+		nsScrollPortView.cpp \
 		nsViewManager.cpp \
 		nsViewFactory.cpp \
 		$(NULL)
