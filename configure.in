@@ -2616,6 +2616,16 @@ MOZ_ARG_DISABLE_BOOL(ldap,
 [  --disable-ldap          Disable LDAP support],
     MOZ_LDAP_XPCOM=)
 
+dnl =========================================================
+dnl = Calendar
+dnl =========================================================
+if test "$MOZ_CALENDAR"; then
+    AC_CHECK_LIB(ical, icalproperty_new_location, [],
+        AC_MSG_ERROR([Calendar requires libical]))
+fi
+
+AC_SUBST(MOZ_CALENDAR)
+
 dnl ========================================================
 dnl = Xprint
 dnl ========================================================
