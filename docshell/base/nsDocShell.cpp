@@ -73,6 +73,8 @@
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIJSContextStack.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
@@ -4937,6 +4939,135 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 }
 
 
+nsresult
+nsDocShell::CheckLoadingPermissions(nsISupports *aOwner)
+{
+    nsresult rv = NS_OK;
+
+    if (mPrefs) {
+        PRBool frameLoadCheckDisabled = PR_FALSE;
+        rv = mPrefs->GetBoolPref("docshell.frameloadcheck.disabled",
+                                 &frameLoadCheckDisabled);
+
+        if (NS_SUCCEEDED(rv) && frameLoadCheckDisabled) {
+            return rv;
+        }
+    }
+
+    // Check to see if we're a frame in a frameset frame, or iframe,
+    // and make sure the caller has the right to load a new uri into
+    // this frame.
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    rv = GetSameTypeParent(getter_AddRefs(parentItem));
+
+    if (NS_FAILED(rv) || !parentItem) {
+        return rv;
+    }
+
+    // We're a frame. Check that the caller has write permission to
+    // the parent before allowing it to load anything into this
+    // docshell.
+
+    nsCOMPtr<nsIScriptSecurityManager> securityManager =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> caller(do_QueryInterface(aOwner));
+
+    if (!caller) {
+        rv = securityManager->GetSubjectPrincipal(getter_AddRefs(caller));
+
+        if (NS_FAILED(rv) || !caller) {
+            // No principal reachable, permit load (assuming the above
+            // call didn't fail)
+
+            return rv;
+        }
+    }
+
+    if (!aOwner && caller) {
+        // We were *not* passed a principal, but we found a subject
+        // principal. That means that JS is running. Check if
+        // "UniversalBrowserWrite" is enabled, and allow the load if
+        // it is.
+
+        PRBool ubwEnabled = PR_FALSE;
+        rv = securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
+                                                  &ubwEnabled);
+        if (NS_FAILED(rv) || ubwEnabled) {
+            return rv;
+        }
+    }
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(parentItem));
+
+    nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(sgo));
+
+    nsIPrincipal *parentPrincipal;
+    if (!sop || !(parentPrincipal = sop->GetPrincipal())) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Check if the caller is from the same origin as our parent.
+    rv = securityManager->CheckSameOriginPrincipal(caller, parentPrincipal);
+    if (NS_SUCCEEDED(rv)) {
+        // Same origin, permit load
+
+        return rv;
+    }
+
+    sop = do_QueryInterface(mScriptGlobal);
+
+    nsIPrincipal *principal;
+    if (!sop || !(principal = sop->GetPrincipal())) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Check if the caller is from the same origin as we are.
+    rv = securityManager->CheckSameOriginPrincipal(caller, principal);
+    if (NS_SUCCEEDED(rv)) {
+        // Same origin, permit load
+
+        return rv;
+    }
+
+    // Caller and callee are not from the same origin. Only permit
+    // loading content if both are part of the same window, assuming
+    // we can find the window of the caller.
+
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeCalleeRoot;
+    GetSameTypeRootTreeItem(getter_AddRefs(sameTypeCalleeRoot));
+
+    nsCOMPtr<nsIJSContextStack> stack =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (!stack) {
+        return rv;
+    }
+
+    JSContext *cx = nsnull;
+    stack->Peek(&cx);
+
+    if (!cx) {
+        // No caller docshell reachable, disallow load.
+
+        return rv;
+    }
+
+    nsIScriptContext *currentCX =
+        GetScriptContextFromJSContext(cx);
+    if (currentCX &&
+        (sgo = currentCX->GetGlobalObject())) {
+        nsCOMPtr<nsIDocShellTreeItem> sameTypeCallerRoot =
+            do_QueryInterface(sgo->GetDocShell());
+
+        if (sameTypeCalleeRoot == sameTypeCallerRoot) {
+            rv = NS_OK;
+        }
+    }
+
+    return rv;
+}
+
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
@@ -5199,7 +5330,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (mIsBeingDestroyed) {
         return NS_ERROR_FAILURE;
     }
-    
+
+    rv = CheckLoadingPermissions(aOwner);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
    
     //
