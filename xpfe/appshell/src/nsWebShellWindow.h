@@ -30,7 +30,7 @@
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
 #include "nsIUrlDispatcher.h"
-
+#include "nsINetSupport.h"
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -59,7 +59,8 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
-						 public nsIUrlDispatcher
+						 public nsIUrlDispatcher,
+						  public nsINetSupport
 {
 public:
   nsWebShellWindow();
@@ -248,7 +249,17 @@ public:
   NS_IMETHOD ShowMenuBar(PRBool aShow);
 
   NS_DECL_IURLDISPATCHER
-
+  // nsINetSupport
+  NS_IMETHOD_(void) Alert(const nsString &aText);  
+  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                             const nsString &aDefault,
+                             nsString &aResult);
+  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                            nsString &aUser,
+                                            nsString &aPassword);
+  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                     nsString &aPassword); 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
 
