@@ -25,4 +25,5 @@ nsIWebBrowser.idl
 nsIWebBrowserChrome.idl
 nsIWebBrowserSetup.idl
 nsIWebBrowserPersist.idl
+nsIWebBrowserFocus.idl
 

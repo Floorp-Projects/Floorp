@@ -41,6 +41,7 @@
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebProgress.h"
+#include "nsIWebBrowserFocus.h"
 
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -110,6 +111,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -1251,4 +1253,53 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
   NS_ADDREF(*aDOMWindow);
   return NS_OK;
   
+}
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserFocus
+//*****************************************************************************   
+
+/* void activate (); */
+NS_IMETHODIMP nsWebBrowser::Activate(void)
+{
+  return NS_OK;
+}
+
+/* void deactivate (); */
+NS_IMETHODIMP nsWebBrowser::Deactivate(void)
+{
+  return NS_OK;
+}
+
+/* void setFocusAtFirstElement (); */
+NS_IMETHODIMP nsWebBrowser::SetFocusAtFirstElement(void)
+{
+  return NS_OK;
+}
+
+/* void setFocusAtLastElement (); */
+NS_IMETHODIMP nsWebBrowser::SetFocusAtLastElement(void)
+{
+  return NS_OK;
+}
+
+/* attribute nsIDOMWindow focusedWindow; */
+NS_IMETHODIMP nsWebBrowser::GetFocusedWindow(nsIDOMWindow * *aFocusedWindow)
+{
+  *aFocusedWindow = nsnull;
+  return NS_OK;
+}
+NS_IMETHODIMP nsWebBrowser::SetFocusedWindow(nsIDOMWindow * aFocusedWindow)
+{
+  return NS_OK;
+}
+
+/* attribute nsIDOMElement focusedElement; */
+NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
+{
+  *aFocusedElement = nsnull;
+  return NS_OK;
+}
+NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
+{
+  return NS_OK;
 }
