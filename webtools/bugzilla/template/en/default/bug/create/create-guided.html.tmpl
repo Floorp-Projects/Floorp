@@ -36,11 +36,13 @@
 
 <p>
   <font color="red">
-    This is a template used on mozilla.org - it, along with the
-    comment-guided.txt.tmpl template, are included as a demo of what it's
+    This is a template used on mozilla.org.  This template, and the
+    comment-guided.txt.tmpl template that formats the data submitted via 
+    the form in this template, are included as a demo of what it's
     possible to do with custom templates in general, and custom [% terms.bug %]
-    entry templates in particular. You will need to alter the text of this
-    template if you want to use it on your [% terms.Bugzilla %] installation.
+    entry templates in particular. As much of the text will not apply, 
+    you should alter it 
+    if you want to use this form on your [% terms.Bugzilla %] installation.
   </font>
 </p>
 
@@ -65,24 +67,7 @@ function PutDescription() {
 }
 </script>
 
-[%# Browser sniff to try and reduce the incidence of 4.x and NS 6/7 bugs %]
-
-[% IF cgi.user_agent("Mozilla/4") AND NOT cgi.user_agent("compatible") %]
-   <div style="background-color: lightgrey;
-               border: 1px solid black;
-               padding: 2px">
-    <font color="#990000">
-      <b>
-        Note: This is a tool for reporting [% terms.bugs %] in software from
-        mozilla.org. Use Netscape's
-        <a href="http://help.netscape.com/forms/bug-client.html">[% terms.bug %]
-        reporting form</a> to report [% terms.bugs %] with Netscape products
-        like Navigator 4.x. Netscape products have a blue and black N in the 
-        top right hand corner.
-      </b>
-    </font>
-  </div>
-[% END %]
+[%# Browser sniff to try and reduce the incidence of Netscape 6/7 bugs %]
 
 [% IF cgi.user_agent('Netscape(\d)') %]
   [% matches = cgi.user_agent().match('Netscape(\d)') %]
@@ -102,103 +87,84 @@ function PutDescription() {
     in Netscape [% matches.0 %] with this form, you must reproduce it first in 
     a recent build of
     <a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/">Mozilla</a>,
-    <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a> or
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a>,
+<a href="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/latest-trunk/">Thunderbird</a> or
     <a href="http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/latest/">Camino</a>
     to make sure the problem hasn't been fixed already.
   </div>
 [% END %]
 
-<p>
-  This form prompts you for the information required to
-  file a good [% terms.bug %] report (or enhancement request.)
-  It may seem lengthy, but developers need all this information
-  to understand and reproduce the [% terms.bug %], which is the first step towards
-  fixing it. Please note that <strong>we do not accept [% terms.bug %] reports by
-  email</strong> - please do not email developers or mozilla.org staff
-  with [% terms.bug %] reports. <font color="red">Also, please do not
-  file [% terms.bugs %] on browser/email software older than two weeks - first,
-  download a newer build of
-  <a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/">Mozilla</a>,
-  <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a>,
-  <a href="http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/latest/">Camino</a>
-  or  
-  <a href="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/">Thunderbird</a>
-  and check that the problem is still present.
-  </font>
-</p>
+[% IF cgi.user_agent('Gecko/') %]
+  [% matches = cgi.user_agent().match('Gecko/(\d+)') %]
+  
+[% END %]
+
+<!-- @@@ Need UA checking here -->
 
 <a name="step1"></a>
-<h3>Step 1 - search for your [% terms.bug %]</h3>
+<h3>Step 1 of 3 - has your [% terms.bug %] already been reported?</h3>
 
 <p>
-  Please see if your [% terms.bug %] has already been reported.
-  <font color="red">Please don't skip this step.</font>
-  50% of the [% terms.bugs %] filed in
-  [%+ terms.Bugzilla %] are duplicates, and this wastes a lot of our QA engineers' time.
+  <font color="red">Please don't skip this step - half of all bugs filed are
+  reported already.</font>
+    Check the two lists of frequently-reported [% terms.bugs %]:
 </p>
 
-[%# Stop NS 4.x and all v.3 browsers from getting <iframe> code %]
-[% IF (cgi.user_agent("Mozilla/4")
-         AND NOT cgi.user_agent("compatible"))
-       OR (cgi.user_agent("Mozilla/[123]")) %]
-  <p>
-    Visit the <a href="duplicates.cgi">most-frequently-reported [% terms.bugs %] page</a>
-    and see if your [% terms.bug %] is there. If not, go to the
-    <a href="query.cgi?format=modern">search page</a>
-    and search [% terms.Bugzilla %] by entering two or
-    three of the main words having to do with your [% terms.bug %] in the top box.
-    For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
-  </p>
+[%# Include other products if sensible %]
+[% IF product == "Firefox" %]
+  [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Firefox" %]
+[% ELSIF product == "Thunderbird" %]
+  [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Thunderbird" %]
 [% ELSE %]
-  <p>
-    Check the list of most-frequently-reported [% terms.bugs %] below.
-    If your [% terms.bug %] isn't there, search [% terms.Bugzilla %] by entering two or
-    three of the main words having to do with your [% terms.bug %] in this box.
+  [% productstring = "product=" _ product FILTER uri %]
+[% END %]
+
+<p>
+    <a href="duplicates.cgi?[% productstring %]&format=simple" target="somebugs">All-time Top 100</a> (loaded initially) |
+    <a href="duplicates.cgi?[% productstring %]&format=simple&sortby=delta&reverse=1&maxrows=100&changedsince=14" target="somebugs">Hot in the last two weeks</a>  
+</p>
+
+<iframe name="somebugs" width="100%" height="80%"
+  style="border: 2px black solid"
+  src="duplicates.cgi?[% productstring %]&format=simple">
+</iframe>
+
+<p>
+    If your [% terms.bug %] isn't there, search [% terms.Bugzilla %] by entering
+    a few key words having to do with your [% terms.bug %] in this box.
     For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
+    The results will appear above.
   </p>
 
+[%# All bugs opened inside the past six months %]
   <form action="buglist.cgi" method="get" target="somebugs">
     <input type="hidden" name="format" value="simple">
     <input type="hidden" name="order" value="relevance desc">
-    <input type="hidden" name="bug_status" value="__open__">
+    <input type="hidden" name="bug_status" value="__all__">
     <input type="hidden" name="product" value="[% product FILTER html %]">
+    <input type="hidden" name="chfieldfrom" value="-6m">
+    <input type="hidden" name="chfieldto" value="Now">
+    <input type="hidden" name="chfield" value="[Bug creation]">
     <input type="text" name="content" size="40">
     <input type="submit" value="Search">
   </form>
 
-  <iframe name="somebugs" width="100%" height="80%"
-    style="border: 2px black solid"
-    src="duplicates.cgi?product=[% product FILTER uri %]&format=simple">
-  </iframe>
-[% END %]
-
 <p>
   Look through the search results. If you get the
-  <tt><b>Zarro Boogs</b></tt> message, [% terms.Bugzilla %] found no [% terms.bugs %] that
-  match. Check for typos, or add fewer or different keywords.
-</p>
-
-<p>
-  If you find [% terms.abug %] that looks the same as yours, you can add
-  useful comments to that [% terms.bug %], but please don't open a new one.
-  Please don't add comments like "please fix this [% terms.bug %]" - this
-  tends to annoy engineers and slow, rather than speed, the fixing of it.
-</p>
-
-<p>
-  If you find [% terms.bugs %] similar to yours, read them and note which component
-  they are in. You should file your [% terms.bug %] in that same component.
+  <tt><b>Zarro Boogs</b></tt> message, [% terms.Bugzilla %] found no 
+  [% terms.bugs %] that
+  match. Check for typing mistakes, or try fewer or different keywords.
+  If you find [% terms.abug %] that looks the same as yours, please add
+  any useful extra information you have to it, rather than opening a new one.
 </p>
 
 
 <a name="step2"></a>
-<h3>Step 2 - give information</h3>
+<h3>Step 2 of 3 - give information</h3>
 
 <p>
-  If you're pretty certain that your [% terms.bug %] isn't in there already, then
-  please try to complete this form as accurately as you
-  can. The more you can tell us, the better our chance of being able
-  to understand and reproduce your [% terms.bug %].
+  If you've tried a few searches and your [% terms.bug %] really isn't in 
+  there, tell us all about it.
 </p>
 
 <form method="post" action="post_bug.cgi">
@@ -212,7 +178,7 @@ function PutDescription() {
 <table valign="top" cellpadding="5" cellspacing="5" border="0">
 
   <tr bgcolor="[% tablecolour %]">
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Product</b>
     </td>
     <td valign="top">
@@ -222,19 +188,10 @@ function PutDescription() {
   </tr>
 
   <tr>
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Component</b>
     </td>
     <td valign="top">
-      <p>
-        The area where the problem occurs.
-        To pick the right component, you could use the same one as
-        similar [% terms.bugs %] you found in your search, or read the full list of
-        <a href="describecomponents.cgi?product=
-            [% product FILTER url_quote %]">component
-        descriptions</a> if you need more help.
-      </p>
-
       <table border="0" cellpadding="0" cellspacing="0">
         <tr>
           <td valign="top">
@@ -261,6 +218,15 @@ function PutDescription() {
           </td>
         </tr>
       </table>
+      
+      <p>
+        The area where the problem occurs.
+        To pick the right component, you could use the same one as
+        similar [% terms.bugs %] you found in your search, or read the full list of
+        <a target="_blank" href="describecomponents.cgi?product=
+            [% product FILTER url_quote %]">component
+        descriptions</a> (opens in new window) if you need more help.
+      </p>
     </td>
   </tr>
 
@@ -269,7 +235,7 @@ function PutDescription() {
   [% rep_platform = [ "PC", "Macintosh", "All", "Other" ] %]
 
   <tr bgcolor="[% tablecolour %]">
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Hardware Platform</b>
     </td>
     <td valign="top">
@@ -282,7 +248,7 @@ function PutDescription() {
                 "Linux", "All", "other" ] %]
 
   <tr>
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Operating System</b>
     </td>
     <td valign="top">
@@ -294,46 +260,46 @@ function PutDescription() {
   [% buildid = cgi.user_agent() IF matches %]
 
   <tr bgcolor="[% tablecolour %]">
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Build Identifier<br>(User Agent)</b>
     </td>
     <td valign="top">
+      <input type="text" size="80" name="buildid" value="[% buildid %]">
       <p>
-        If reporting [% terms.abug %] in Mozilla,
+        This identifies exactly the version of the product you were using.
+        If reporting [% terms.abug %] in Mozilla or Firefox,
         this is the line beginning <tt>"Mozilla/5.0"</tt> in
-        <tt>Help | About Mozilla</tt>.
-        It identifies exactly the version of Mozilla you were using.
-        If you are using the problem copy of Mozilla, this will be
-        filled in correctly for you already.
-        If Mozilla won't start, just enter the URL of the directory you
+        <tt>Help | About</tt>.
+        If you are using the problematic software to file the bug, this 
+        field will already be filled in correctly.
+        If the product won't start, just enter the complete URL you 
         downloaded it from.
       </p>
-      <input type="text" size="80" name="buildid" value="[% buildid %]">
     </td>
   </tr>
 
   <tr>
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>URL</b>
     </td>
     <td valign="top">
+      <input type="text" size="80" name="bug_file_loc" value="http://">
       <p>
         URL that demonstrates the problem you are seeing (optional.)
-        <b>IMPORTANT</b>: If you are filing [% terms.abug %] about a broken web page,
-        please read the
-        <a href="http://www.mozilla.org/docs/web-developer/faq.html">Mozilla
-        Web Developer FAQ</a>, which explains how we handle old or
-        badly-coded web pages.
+        <!--
+        <b>IMPORTANT</b>: problems with broken web pages go
+        <a href="http://write-this-webtool/">in this form instead</a>.
+        -->
       </p>
-      <input type="text" size="80" name="bug_file_loc" value="http://">
    </td>
   </tr>
 
   <tr bgcolor="[% tablecolour %]">
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Summary</b>
     </td>
     <td valign="top">
+      <input type="text" size="80" name="short_desc" id="short_desc">
       <p>
         A sentence which summarises the problem.
         Please be descriptive and use lots of keywords.
@@ -348,51 +314,47 @@ function PutDescription() {
           crash if I close the mail window while checking for new POP mail
         </tt>
       </p>
-      <input type="text" size="80" name="short_desc" id="short_desc">
     </td>
   </tr>
 
   <tr>
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Details</b>
     </td>
     <td valign="top">
+      <textarea rows="6" cols="80" name="comment"
+                wrap="hard"></textarea>
       <p>
         Expand on the Summary. Please be
         as specific as possible about what is wrong.
       </p>
       <p>
         <tt>
-          <font color="#990000">Bad example</font>: This page looks wrong in
-          Mozilla. Other browsers display it correctly. You suck!
+          <font color="#990000">Bad example</font>: Mozilla crashed.
+          You suck!
         </tt>
         <br>
         <tt>
-          <font color="#009900">Good example</font>: In the
-          page at http://www.foo.com/, text in the first column should be
-          fully justified -- text should be aligned with both the left and
-          right margins. In Mozilla, the text is only left-justified.
+          <font color="#009900">Good example</font>: After a crash which
+          happened when I was sorting in the Bookmark Manager,<br> all of my
+          top-level bookmark folders beginning with the letters Q to Z are 
+          no longer present.
         </tt>
       </p>
-      <textarea rows="6" cols="80" name="comment"
-                wrap="hard"></textarea>
     </td>
   </tr>
 
   <tr bgcolor="[% tablecolour %]">
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Reproducibility</b>
     </td>
     <td valign="top">
-      <p>
-        How often can you reproduce the problem?
-      </p>
       <select name="reproducible">
         <option name="AlwaysReproducible" value="Always">
-          Every time.
+          Happens every time.
         </option>
         <option name="Sometimes" value="Sometimes">
-          Sometimes, but not always.
+          Happens sometimes, but not always.
         </option>
         <option name="DidntTry" value="Didn't try">
           Haven't tried to reproduce it.
@@ -405,53 +367,55 @@ function PutDescription() {
   </tr>
 
   <tr>
-    <td align="right" valign="middle">
+    <td align="right" valign="top">
       <b>Steps to Reproduce</b>
     </td>
     <td valign="top">
-      <p>
-        Describe how to reproduce the problem, step by
-        step. Include any special setup steps.
-      </p>
 <textarea rows="4" cols="80" name="reproduce_steps" wrap="hard">
 1.
 2.
 3.
 </textarea>
+      <p>
+        Describe how to reproduce the problem, step by
+        step. Include any special setup steps.
+      </p>
     </td>
   </tr>
 
   <tr bgcolor="[% tablecolour %]">
-    <td valign="middle" align="right">
+    <td valign="top" align="right">
       <b>Actual Results</b>
     </td>
     <td valign="top">
+      <textarea rows="4" cols="80" name="actual_results"
+                wrap="hard"></textarea>
       <p>
         What happened after you performed the steps above?
       </p>
-      <textarea rows="4" cols="80" name="actual_results"
-                wrap="hard"></textarea>
     </td>
   </tr>
 
   <tr>
-    <td valign="middle" align="right">
+    <td valign="top" align="right">
       <b>Expected Results</b>
     </td>
     <td valign="top">
+      <textarea rows="4" cols="80" name="expected_results"
+                wrap="hard"></textarea>
       <p>
         What should the software have done instead?
       </p>
-      <textarea rows="4" cols="80" name="expected_results"
-                wrap="hard"></textarea>
     </td>
   </tr>
 
   <tr bgcolor="[% tablecolour %]">
-    <td valign="middle" align="right">
+    <td valign="top" align="right">
       <b>Additional Information</b>
     </td>
     <td valign="top">
+      <textarea rows="8" cols="80" name="additional_info"
+                wrap="hard"></textarea>
       <p>
         Add any additional information you feel may be
         relevant to this [% terms.bug %], such as the <b>theme</b> you were
@@ -470,25 +434,15 @@ function PutDescription() {
         which the software crashed (e.g., <tt>Application Violation in
         gkhtml.dll</tt>).
       </p>
-      <textarea rows="8" cols="80" name="additional_info"
-                wrap="hard"></textarea>
     </td>
   </tr>
 
   <tr>
-    <td valign="middle" align="right">
+    <td valign="top" align="right">
       <b>Severity</b>
     </td>
     <td valign="top">
-      <p>
-        How serious the problem is. Also, if your [% terms.bug %] is a request for a new
-        feature or enhancement, say so here.
-      </p>
       <select name="bug_severity">
-        <option name="blocker" value="blocker">
-          Blocker: This [% terms.bug %] prevents Mozilla developers from 
-          testing or developing the software.
-        </option>
         <option name="critical" value="critical">
           Critical: The software crashes, hangs, or causes you to
           lose data.
@@ -510,13 +464,17 @@ function PutDescription() {
           Enhancement: Request for new feature or enhancement.
         </option>
       </select>
+      <p>
+        Say how serious the problem is, or if your [% terms.bug %] is a 
+        request for a new feature.
+      </p>
     </td>
   </tr>
 </table>
 
 
 <a name="step3"></a>
-<h3>Step 3 - submit the [% terms.bug %]</h3>
+<h3>Step 3 of 3 - submit the [% terms.bug %] report</h3>
 
 <p>
   <input type="submit" value="    Submit [% terms.Bug %] Report    "
@@ -528,7 +486,14 @@ function PutDescription() {
 
 <p>
   That's it! Thanks very much. You'll be notified by email about any
-  progress that is made on fixing your [% terms.bug %].
+  progress that is made on fixing your [% terms.bug %]. 
+
+<p>  
+  Please be warned
+  that we get a lot of bug reports filed - it may take quite a while to
+  get around to yours. You can help the process by making sure your bug is
+  complete and easy to understand, and by quickly replying to any questions
+  which may arrive by email.
 </p>
 
     </form>
