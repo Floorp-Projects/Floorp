@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsGB2312ToUnicodeV2.cpp \
 		nsUnicodeToGB2312V2.cpp \
-		nsUnicodeToGB2312GL.cpp \
 		nsGBKToUnicode.cpp \
 		nsUnicodeToGBK.cpp \
 		nsISO2022CNToUnicode.cpp \
@@ -54,6 +53,7 @@ CPPSRCS		= \
 ifdef MOZ_EXTRA_X11CONVERTERS
 CPPSRCS		+= \
 		nsUnicodeToGBKNoAscii.cpp \
+		nsUnicodeToGB2312GL.cpp \
 		$(NULL)
 endif
 
