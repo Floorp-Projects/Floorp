@@ -360,8 +360,7 @@ nsNSSComponent::InitializeNSS()
     return rv;
   }
     
-  //PK11_SetPasswordFunc(PK11PasswordPrompt);
-  PK11_SetPasswordFunc(pk11PasswordPrompt); //XXX ian - until the above works
+  PK11_SetPasswordFunc(PK11PasswordPrompt);
 #ifdef XP_MAC
   // On the Mac we place all NSS DBs in the Security
   // Folder in the profile directory.

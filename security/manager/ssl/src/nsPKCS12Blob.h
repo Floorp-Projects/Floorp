@@ -31,12 +31,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.h,v 1.1 2001/03/20 18:00:44 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.h,v 1.2 2001/03/21 03:37:49 javi%netscape.com Exp $
  */
 
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
 #include "nsIPK11TokenDB.h"
+#include "nsNSSHelper.h"
 
 #include "nss.h"
 
@@ -69,8 +70,9 @@ public:
 
 private:
 
-  nsCOMPtr<nsIPK11Token>     mToken;
-  nsCOMPtr<nsISupportsArray> mCertArray;
+  nsCOMPtr<nsIPK11Token>          mToken;
+  nsCOMPtr<nsISupportsArray>      mCertArray;
+  nsCOMPtr<nsIInterfaceRequestor> mUIContext;
 
   // local helper functions
   nsresult getPKCS12FilePassword(SECItem *);

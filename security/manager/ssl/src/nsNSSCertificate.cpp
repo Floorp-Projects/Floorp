@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.9 2001/03/20 18:00:42 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.10 2001/03/21 03:37:48 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -48,6 +48,7 @@
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
+#include "nssb64.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -488,6 +489,40 @@ nsNSSCertificate::~nsNSSCertificate()
     CERT_DestroyCertificate(mCert);
 }
 
+/* readonly attribute string dbKey; */
+NS_IMETHODIMP 
+nsNSSCertificate::GetDbKey(char * *aDbKey)
+{
+  SECStatus srv;
+  SECItem key;
+
+  NS_ENSURE_ARG(aDbKey);
+  srv = CERT_KeyFromIssuerAndSN(mCert->arena, &mCert->derIssuer,
+                                &mCert->serialNumber, &key);
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+  *aDbKey = NSSBase64_EncodeItem(nsnull, nsnull, 0, &key);
+  return (*aDbKey) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* readonly attribute string windowTitle; */
+NS_IMETHODIMP 
+nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
+{
+  if (mCert) {
+    if (mCert->nickname) {
+      *aWindowTitle = PL_strdup(mCert->nickname);
+    } else {
+      *aWindowTitle = CERT_GetCommonName(&mCert->subject);
+    }
+  } else {
+    NS_ASSERTION(0,"Somehow got nsnull for mCertificate in nsNSSCertificate.");
+    *aWindowTitle = nsnull;
+  }
+  return NS_OK;
+}
+
 /*  readonly attribute wstring nickname; */
 NS_IMETHODIMP
 nsNSSCertificate::GetNickname(PRUnichar **_nickname)
@@ -768,6 +803,30 @@ nsNSSCertificateDB::GetCertByNickname(nsIPK11Token *aToken,
   }
   *_rvCert = nsnull;
   return NS_ERROR_FAILURE;
+}
+
+/* nsIX509Cert getCertByKeyDB (in string dbkey); */
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetCertByKeyDB(const char *dbkey, nsIX509Cert **_retval)
+{
+  SECItem keyItem = {siBuffer, nsnull, 0};
+  SECItem *dummy;
+
+  *_retval = nsnull; 
+  dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, dbkey,
+                                 (PRUint32)PL_strlen(dbkey)); 
+  CERTCertificate *cert = CERT_FindCertByKey(CERT_GetDefaultCertDB(),
+                                             &keyItem);
+  PR_FREEIF(keyItem.data);
+  if (cert) {
+    nsNSSCertificate *nssCert = new nsNSSCertificate(cert);
+    if (nssCert == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(nssCert);
+    *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  }
+  return NS_OK;
 }
 
 /* [noscript] void getCertificateNames(in nsIPK11Token aToken,

@@ -65,7 +65,7 @@
 
   <box>
   <button id="examineCert-button" class="dialog" value="&examineCert.label;"
-     onclick=""/> 
+     onclick="viewCert();"/> 
   </box>
   <separator/>
   

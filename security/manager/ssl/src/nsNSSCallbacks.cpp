@@ -86,21 +86,25 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
                               getter_AddRefs(proxyPrompt));
 
 
-  nsString promptString;
+  nsXPIDLString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
   if (NS_FAILED(rv))
     return nsnull; 
 
-  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt").get(),
-                                      promptString);
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(PK11_GetSlotName(slot))) };
+  rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertPassPrompt").get(),
+                                      formatStrings, 1,
+                                      getter_Copies(promptString));
+  nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
 
-  PRUnichar *uniString = promptString.ToNewUnicode();
-  rv = proxyPrompt->PromptPassword(nsnull, uniString,
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  rv = proxyPrompt->PromptPassword(nsnull, promptString,
                                    NS_LITERAL_STRING(" ").get(),
                                    nsIPrompt::SAVE_PASSWORD_NEVER,
                                    &password, &value);
-  nsMemory::Free(uniString);
   if (NS_SUCCEEDED(rv) && value) {
     char* str = nsString(password).ToNewCString();
     Recycle(password);

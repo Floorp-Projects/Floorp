@@ -61,6 +61,8 @@ interface nsIX509Cert : nsISupports {
   readonly attribute wstring md5Fingerprint;
 
   readonly attribute nsIX509CertValidity validity;
+  readonly attribute string dbKey;
+  readonly attribute string windowTitle;
 
   /*
    * enums for certs

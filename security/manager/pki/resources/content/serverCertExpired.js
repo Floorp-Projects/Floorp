@@ -28,6 +28,7 @@ const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 
 var dialogParams;
 var pkiParams;
+var cert=null;
 
 function onLoad()
 {
@@ -55,4 +56,15 @@ function doCancel()
 {
   dialogParams.SetInt(1,0);
   window.close();
+}
+
+function viewCert()
+{
+  if (cert == null) {
+    var isupport = pkiParams.getISupportAtIndex(1);
+    cert = isupport.QueryInterface(nsIX509Cert);
+  }
+
+  window.openDialog('chrome://pippki/content/viewCertDetails.xul', cert.dbKey,
+                    'chrome,width=500,height=400,resizable=1');
 }
