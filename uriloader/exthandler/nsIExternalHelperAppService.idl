@@ -29,6 +29,7 @@
 interface nsIURI;
 interface nsIStreamListener;
 interface nsIFile;
+interface nsIMIMEInfo;
 
 
 [scriptable, uuid(663CC0AA-42EA-11d4-98D0-001083010E9B)]
@@ -62,9 +63,27 @@ interface nsPIExternalAppLauncher : nsISupports
 {
   // launchAppWithTempFile --> used by the handler to actually launch the helper application
   // aTempFile --> the file which contains the data we want the helper app to use when it is launched
-  // aAppCookie --> a cookie that was given to the app handler when it was created by the OS specific
-  //                external helper app service. This cookie contains all the information the service
-  //                needs to know about the application in order to launch it. It's content differs by
-  //                platform.
-  void launchAppWithTempFile(in nsIFile aTempFile, in nsISupports aAppCookie);
+  void launchAppWithTempFile(in nsIMIMEInfo aMIMEInfo, in nsIFile aTempFile);
+};
+
+// a helper app launcher is a small object created to handle the launching of an external application.
+
+[scriptable, uuid(9503D0FE-4C9D-11d4-98D0-001083010E9B)]
+interface nsIHelperAppLauncher : nsISupports
+{
+  // the mime info object associated with the content type this helper app launcher is currently
+  // attempting to load
+  readonly attribute nsIMIMEInfo MIMEInfo;
+
+  // saveToDisk: called when we want to just save the content to a particular file
+  // aNewFileLocation --> location where the content should be saved
+  void saveToDisk(in nsIFile aNewFileLocation, in boolean aRememberThisPreference);
+
+  // launchWithApplication: use aApplication to launch with this content 
+  // aApplication --> nsIFile corresponding to the location of the application to use
+  // aRememberThisPreference --> TRUE if we should remember this choice.
+  void launchWithApplication(in nsIFile aApplication, in boolean aRememberThisPreference);
+
+  // called if the user decides to cancel the handling of this content type
+  void Cancel();
 };

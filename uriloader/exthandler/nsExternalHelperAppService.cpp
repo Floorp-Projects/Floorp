@@ -112,11 +112,7 @@ nsresult nsExternalHelperAppService::Init()
     rdf->GetResource(NC_RDF_PRETTYNAME,    getter_AddRefs(kNC_PrettyName));  
   }
     
-#ifdef DEBUG_mscott
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  GetMIMEInfoForMimeType("application/pdf", getter_AddRefs(mimeInfo));
-#endif
-    return rv;
+  return rv;
 }
 
 /* boolean canHandleContent (in string aMimeContentType); */
@@ -140,31 +136,14 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
   if (NS_SUCCEEDED(rv) && mimeInfo)
   {
-    // test to see if we should save to disk or use a helper application.
-    // eventually we'll add code to handle the ask me case...
-    nsMIMEInfoHandleAction action = nsIMIMEInfo::useHelperApp;
-    mimeInfo->GetPreferredAction(&action);
-    if (action == nsIMIMEInfo::saveToDisk)
-    {
-      // for the save to disk case, just pretened we don't want to handle it and the uri loader will eventually
-      // bring up the save to disk dialog for us!!
-      return NS_OK;
-    }
-    else
-    {
-      // try to see if we have a user specified application to launch with this content type.
-      nsCOMPtr<nsIFile> application;
-      mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-      if (application)
-      {
-        // ask the OS specific subclass to create a stream listener for us that binds this suggested application
-        // even if this fails, return NS_OK...
-        nsXPIDLCString fileExtension;
-        mimeInfo->FirstExtension(getter_Copies(fileExtension));
-        CreateStreamListenerWithApp(application, fileExtension, aStreamListener);
-        return NS_OK;
-      }
-    }
+    // ask the OS specific subclass to create a stream listener for us that binds this suggested application
+    // even if this fails, return NS_OK...
+    nsXPIDLCString fileExtension;
+    mimeInfo->FirstExtension(getter_Copies(fileExtension));
+    nsExternalAppHandler * app = CreateNewExternalHandler(mimeInfo, fileExtension);
+    if (app)
+      app->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+    return NS_OK;
   }
 
   // if we made it here, then we were unable to handle this ourselves..return an error so the
@@ -172,13 +151,13 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie)
+NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMimeInfo, nsIFile * aTempFile)
 {
   // this method should only be implemented by each OS specific implementation of this service.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsISupports * aAppCookie, 
+nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
                                                                             const char * aTempFileExtension)
 {
   nsExternalAppHandler* handler = nsnull;
@@ -186,7 +165,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIS
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
 
-  handler->Init(aAppCookie, aTempFileExtension);
+  handler->Init(aMIMEInfo, aTempFileExtension);
   return handler;
 }
 
@@ -398,12 +377,15 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler()
 {
   NS_INIT_ISUPPORTS();
-
+  mCanceled = PR_FALSE;
+  mReceivedDispostionInfo = PR_FALSE;
+  mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
 }
 
@@ -413,9 +395,9 @@ nsExternalAppHandler::~nsExternalAppHandler()
     nsMemory::Free(mDataBuffer);
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
-  NS_ENSURE_ARG(aChannel);
+  nsresult rv = NS_OK;
 
 #ifdef XP_MAC
  // create a temp file for the data...and open it for writing.
@@ -457,9 +439,36 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
   if (mFileChannel)
   {
-    mFileChannel->Init(mTempFile, -1, 0);
-    mFileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
+    rv = mFileChannel->Init(mTempFile, -1, 0);
+    if (NS_FAILED(rv)) return rv; 
+    rv = mFileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
+    if (NS_FAILED(rv)) return rv; 
   }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+{
+  NS_ENSURE_ARG(aChannel);
+
+  nsresult rv = SetUpTempFile(aChannel);
+
+  // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
+  // they want us to do with this content...
+
+  nsMIMEInfoHandleAction action = nsIMIMEInfo::alwaysAsk;
+  mMimeInfo->GetPreferredAction(&action);
+  if (action ==  nsIMIMEInfo::alwaysAsk)
+  {
+    // do this first! make sure we don't try to take an action until the user tells us what they want to do
+    // with it...
+    mReceivedDispostionInfo = PR_FALSE; 
+
+    // invoke the dialog!!!!!
+  }
+  else
+    mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
 
   return NS_OK;
 }
@@ -491,6 +500,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
 {
   nsresult rv = NS_OK;
 
+  mStopRequestIssued = PR_TRUE;
+
   // go ahead and execute the application passing in our temp file as an argument
   // this may involve us calling back into the OS external app service to make the call
   // for actually launching the helper app. It'd be great if nsIFile::spawn could be made to work
@@ -500,22 +511,99 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   if (mOutStream)
     mOutStream->Close();
 
-  nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
-  if (helperAppService)
+  if (mReceivedDispostionInfo && !mCanceled)
   {
-    rv = helperAppService->LaunchAppWithTempFile(mTempFile, mExternalApplication);
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::alwaysAsk;
+    mMimeInfo->GetPreferredAction(&action);
+    if (action == nsIMIMEInfo::saveToDisk)
+    {
+#ifdef DEBUG_mscott
+      // create a temp file for the data...and open it for writing.
+      NS_GetSpecialDirectory("system.OS_TemporaryDirectory", getter_AddRefs(mFinalFileDestination));
+      mFinalFileDestination->Append("foo.txt");
+#endif
+      rv = SaveToDisk(mFinalFileDestination, PR_FALSE);
+    }
+    else
+    {
+      rv = LaunchWithApplication(nsnull, PR_FALSE);
+    }
   }
 
   return rv;
 }
 
-nsresult nsExternalAppHandler::Init(nsISupports * aAppCookie, const char * aTempFileExtension)
+nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo, const char * aTempFileExtension)
 {
-  mExternalApplication = aAppCookie;
+  mMimeInfo = aMIMEInfo;
   
   // make sure the extention includes the '.'
   if (aTempFileExtension && *aTempFileExtension != '.')
     mTempFileExtension = ".";
   mTempFileExtension.Append(aTempFileExtension);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
+{
+  *aMIMEInfo = mMimeInfo;
+  NS_IF_ADDREF(*aMIMEInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBool aRememberThisPreference)
+{
+  nsresult rv = NS_OK;
+  mReceivedDispostionInfo = PR_TRUE;
+  if (mStopRequestIssued)
+  {
+    if (aNewFileLocation)
+    {
+       // extract the new leaf name from the file location
+       nsXPIDLCString fileName;
+       aNewFileLocation->GetLeafName(getter_Copies(fileName));
+       nsCOMPtr<nsIFile> directoryLocation;
+       aNewFileLocation->GetParent(getter_AddRefs(directoryLocation));
+       if (directoryLocation)
+       {
+         rv = mTempFile->MoveTo(directoryLocation, fileName);
+       }
+    }
+  }
+  // o.t. remember the new file location to save to.
+  else
+  {
+    mFinalFileDestination = aNewFileLocation;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
+{
+  mReceivedDispostionInfo = PR_TRUE; 
+
+  // if a stop request was already issued then proceed with launching the application.
+  nsresult rv = NS_OK;
+  if (mStopRequestIssued)
+  {
+    nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
+    if (helperAppService)
+    {
+      rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
+    }
+  }
+  // o.t. remember the application we should use to launch the app and when the on stop request is issued, launch it.
+  else
+  {
+    if (mMimeInfo)
+      mMimeInfo->SetPreferredApplicationHandler(aApplication);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::Cancel()
+{
+  mCanceled = PR_TRUE;
   return NS_OK;
 }
