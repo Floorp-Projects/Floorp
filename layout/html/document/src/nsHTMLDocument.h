@@ -140,6 +140,7 @@ protected:
 
   nsIContent * mHoldBlockContent;
   nsIContent * mCurrentBlockContent;
+  nsIContent * mBodyContent;
 
   PRBool       mShouldMatchCase;
   PRBool       mIsPreTag;
