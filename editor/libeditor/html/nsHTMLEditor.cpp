@@ -421,7 +421,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
   return PasteAsCitedQuotation(citation);
 }
 
-NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(nsString& aCitation)
+NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 {
   printf("nsHTMLEditor::PasteAsQuotation\n");
 
@@ -474,7 +474,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
-                                                   nsString& aCitation)
+                                                   const nsString& aCitation)
 {
   printf("nsHTMLEditor::InsertAsQuotation\n");
 

@@ -1098,6 +1098,119 @@ nsEditorAppCore::Paste()
 }
 
 NS_IMETHODIMP    
+nsEditorAppCore::PasteAsQuotation()
+{  
+  nsresult  err = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->PasteAsQuotation();
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->PasteAsQuotation();
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::PasteAsCitedQuotation(const nsString& aCiteString)
+{  
+  nsresult  err = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->PasteAsQuotation();
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->PasteAsCitedQuotation(aCiteString);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::InsertAsQuotation(const nsString& aQuotedText)
+{  
+  nsresult  err = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->InsertAsQuotation(aQuotedText);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->InsertAsQuotation(aQuotedText);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::InsertAsCitedQuotation(const nsString& aQuotedText,
+                                        const nsString& aCiteString)
+{  
+  nsresult  err = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->InsertAsQuotation(aQuotedText);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->InsertAsCitedQuotation(aQuotedText, aCiteString);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP    
 nsEditorAppCore::SelectAll()
 {  
   nsresult  err = NS_NOINTERFACE;

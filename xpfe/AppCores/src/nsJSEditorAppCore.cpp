@@ -1356,6 +1356,210 @@ EditorAppCorePaste(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
 
 //
+// Native method PasteAsQuotation
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCorePasteAsQuotation(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.pasteasquotation", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->PasteAsQuotation()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function pasteAsQuotation requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method PasteAsCitedQuotation
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCorePasteAsCitedQuotation(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.pasteascitedquotation", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->PasteAsCitedQuotation(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function pasteAsCitedQuotation requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method InsertAsQuotation
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertAsQuotation(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertasquotation", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->InsertAsQuotation(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertAsQuotation requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method InsertAsCitedQuotation
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertAsCitedQuotation(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertascitedquotation", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->InsertAsCitedQuotation(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertAsCitedQuotation requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SelectAll
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -3019,6 +3223,10 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"cut",          EditorAppCoreCut,     0},
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
+  {"pasteAsQuotation",          EditorAppCorePasteAsQuotation,     0},
+  {"pasteAsCitedQuotation",          EditorAppCorePasteAsCitedQuotation,     1},
+  {"insertAsQuotation",          EditorAppCoreInsertAsQuotation,     1},
+  {"insertAsCitedQuotation",          EditorAppCoreInsertAsCitedQuotation,     2},
   {"selectAll",          EditorAppCoreSelectAll,     0},
   {"find",          EditorAppCoreFind,     0},
   {"findNext",          EditorAppCoreFindNext,     0},

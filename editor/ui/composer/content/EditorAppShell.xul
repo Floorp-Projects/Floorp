@@ -51,6 +51,7 @@
       <menuitem name="Cut" onclick="EditorCut()"/>
       <menuitem name="Copy" onclick="EditorCopy()"/>
       <menuitem name="Paste" onclick="EditorPaste()"/>
+      <menuitem name="Paste as Quotation" onclick="EditorPasteAsQuotation()"/>
       <menuitem name=".Clear" onclick=""/>
       <separator />
       <menuitem name="Select All" onclick="EditorSelectAll()"/>
