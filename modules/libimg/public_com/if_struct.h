@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.16 2000/10/28 22:15:49 warren%netscape.com Exp $
+ * $Id: if_struct.h,v 1.17 2001/03/20 05:30:56 cls%seawood.org Exp $
  */
 
 #ifndef _if_h
@@ -67,14 +67,6 @@ typedef struct il_container_struct il_container;
 /* For debugging counts of loading, looping and aborted images, needed for
    group observer notification. */
 /* #define DEBUG_GROUP_OBSERVER */
-
-#ifdef DEBUG
-extern int il_debug;
-extern PRLogModuleInfo *il_log_module;
-#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} } 
-#else
-#define ILTRACE(l,t) {}
-#endif
 
 #define FREE_IF_NOT_NULL(x)    do {if (x) {PR_FREEIF(x); (x) = NULL;}} while (0)
 
