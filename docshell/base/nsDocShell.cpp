@@ -73,6 +73,7 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
+#include "nsICachingChannel.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -3320,11 +3321,18 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
    if(httpChannel)
-      {
+   {
+      nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(httpChannel));
+      /* Get the cache Key from SH */
+      nsCOMPtr<nsISupports>  cacheKey;
+      if (LSHE) {
+        LSHE->GetCacheKey(getter_AddRefs(cacheKey));
+      }
+
       // figure out if we need to set the post data stream on the channel...
       // right now, this is only done for http channels.....
       if(aPostData)
-         {
+      {
          // XXX it's a bit of a hack to rewind the postdata stream here but
          // it has to be done in case the post data is being reused multiple
          // times.
@@ -3334,14 +3342,38 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
              postDataRandomAccess->Seek(PR_SEEK_SET, 0);
          }
 
-	     nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+         nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
          httpChannel->SetRequestMethod(method);
          httpChannel->SetUploadStream(aPostData);
-         }
-      if (aHeadersData) 
-          {
-              rv = AddHeadersToChannel(aHeadersData, httpChannel);
+          /* If there is a valid postdata *and* it is a History Load,
+           * set up the cache key on the channel, to retrieve the
+           * data only from the cache. When there is a postdata
+           * on a history load, we do not want to go out to the net
+           * in our first attempt. We will go out to the net for a
+           * post data result, *only* if it has expired from cache *and*
+           * the user has given us permission to do so.
+           */
+          if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
+            if (cacheChannel)
+              cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
           }
+        }
+        else {
+          /* If there is no postdata, set the cache key on the channel
+           * with the readFromCacheOnly set to false, so that cache will
+           * be free to get it from net if it is not found in cache.
+           * New cache may use it creatively on CGI pages with GET
+           * method and even on those that say "no-cache"
+           */
+          if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
+            if (cacheChannel)
+              cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
+          }
+        }
+        if (aHeadersData) 
+        {
+          rv = AddHeadersToChannel(aHeadersData, httpChannel);
+        }
       // Set the referrer explicitly
       if(aReferrerURI) // Referrer is currenly only set for link clicks here.
          httpChannel->SetReferrer(aReferrerURI, 
@@ -4045,7 +4077,15 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   
   // Get the post data
   nsCOMPtr<nsIInputStream> inputStream;
+  nsCOMPtr<nsISupports> cacheKey;
   if (aChannel) {
+    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
+    /* If there is a caching channel, get the Cache Key  and store it 
+     * in SH.
+     */
+    if (cacheChannel) {
+      cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
+    }
     nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
 
     if(httpChannel) {
@@ -4058,7 +4098,8 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
                 nsnull,         // Title
                 nsnull,         // DOMDocument
                 inputStream,    // Post data stream
-                nsnull);        // LayoutHistory state
+                nsnull,         // LayoutHistory state
+                cacheKey);      // CacheKey
 
 
   // If no Session History component is available in the parent DocShell
@@ -4066,13 +4107,13 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // will be deleted when it loses scope...
   //
   if (mLoadType != LOAD_NORMAL_REPLACE) {
-    if (mSessionHistory)	  {
+    if (mSessionHistory) {
       nsCOMPtr<nsISHistoryInternal> shPrivate(do_QueryInterface(mSessionHistory));
       NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
       rv = shPrivate->AddEntry(entry, shouldPersist);
     }
-     else 
-         rv = AddChildSHEntry(nsnull, entry, mChildOffset);
+    else 
+      rv = AddChildSHEntry(nsnull, entry, mChildOffset);
   }
 
   // Return the new SH entry...
@@ -4102,6 +4143,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
       NS_ERROR_FAILURE);
 
+#if 0
    /* Ask whether to repost form post data */
    if (postData) {
        nsCOMPtr<nsIPrompt> prompter;
@@ -4125,7 +4167,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
 		  }
 	   }
     }
-    
+#endif  /* 0 */    
 
    NS_ENSURE_SUCCESS(InternalLoad(uri, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
@@ -4133,19 +4175,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    return NS_OK;
 }
 
-/*
-NS_IMETHODIMP
-nsDocShell::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
-{
-    if (OSHE) {
-		nsCOMPtr<nsISHContainer> container(do_QueryInterface(OSHE));
-		if (container)
-           return container->GetChildAt(aChildOffset, aResult);
-	}
-    return NS_ERROR_FAILURE;
 
-}
-*/
 NS_IMETHODIMP
 nsDocShell::PersistLayoutHistoryState()
 {
