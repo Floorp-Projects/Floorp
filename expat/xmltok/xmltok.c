@@ -993,6 +993,10 @@ static const char KW_version[] = {
   ASCII_v, ASCII_e, ASCII_r, ASCII_s, ASCII_i, ASCII_o, ASCII_n, '\0'
 };
 
+static const char KW_XML_1_0[] = {
+  ASCII_1, ASCII_PERIOD, ASCII_0, '\0'
+};
+
 static const char KW_encoding[] = {
   ASCII_e, ASCII_n, ASCII_c, ASCII_o, ASCII_d, ASCII_i, ASCII_n, ASCII_g, '\0'
 };
@@ -1040,16 +1044,23 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
   }
   else {
     if (versionPtr)
+    {
       *versionPtr = val;
+      /* Anything else but a version="1.0" is invalid for us, until we support later versions. */
+      if (!XmlNameMatchesAscii(enc, *versionPtr, ptr - enc->minBytesPerChar, KW_XML_1_0)) {
+        *badPtr = *versionPtr;
+        return 0;
+      }
+    }
     if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
     }
     if (!name) {
       if (isGeneralTextEntity) {
-	/* a TextDecl must have an EncodingDecl */
-	*badPtr = ptr;
-	return 0;
+        /* a TextDecl must have an EncodingDecl */
+        *badPtr = ptr;
+        return 0;
       }
       return 1;
     }
