@@ -18,17 +18,23 @@
 DEPTH=..\..
 MODULE=rdf 
 
+
+
+
+
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
 	bookmarks.html                  \
 	history.css                     \
 	history.xul                     \
+	bm-panel.xul			\
         bm-props.xul                    \
         bookmark-folder-closed.gif      \
         bookmark-folder-open.gif        \
         bookmark-item.gif               \
         bookmarks.css                   \
+	bookmarks.js			\
         bookmarks.xul                   \
         document.gif                    \
         dom-test-1.css                  \
@@ -53,7 +59,11 @@ FILES=\
         remote-flash-2.rdf              \
         remote-flash-3.rdf              \
         sidebar.css                     \
+	sidebar.js			\
         sidebar.xul                     \
+	sidebar-browser.css		\
+	sidebar-browser.rdf		\
+	sidebar-browser.xul		\
         sidebarcontainer.xul            \
         stock.gif                       \
         unread.gif                      \
