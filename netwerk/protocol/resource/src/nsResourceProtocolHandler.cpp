@@ -286,6 +286,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
         *cp = '/';
         cp++;
     }
+	delete registryLocation;
 #endif /* XP_PC */
 
     PR_Free(resourceBase);
