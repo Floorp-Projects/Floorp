@@ -49,6 +49,8 @@ require 'tbglobals.pl';
 
 $cvsroot = '/cvsroot/mozilla';
 $lxr_data_root = '/export2/lxr-data';
+$source_root_pat = '^.*/mozilla/';
+
 @ignore = ( 
   'long long',
   '__cmsg_data',
@@ -184,12 +186,15 @@ sub last_successful_builds {
 
 sub gcc_parser {
   my ($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullnames) = @_;
-  my $dir = '';
+  my $build_dir = '';
 
  PARSE_TOP: while (<$fh>) {
     # Directory
     #
-    next if /^gmake\[\d\]: Entering directory \`(.*)\'$/;
+    if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
+      $build_dir = $1;
+      $build_dir =~ s|$source_root_pat||o;
+    }
     
     # Now only match lines with "warning:"
     next unless /warning:/;
