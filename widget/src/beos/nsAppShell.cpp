@@ -35,9 +35,8 @@
 #include "prprf.h"
 #include "nsGUIEvent.h"
 
+#include <Application.h>
 #include <stdlib.h>
-#include <AppKit.h>
-#include <AppFileInfo.h>
 
 static int gBAppCount = 0;
 
@@ -82,60 +81,6 @@ NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
-static bool GetAppSig(char *sig)
-{
-  app_info 		appInfo;
-  BFile 			file;
-  BAppFileInfo	appFileInfo;
-  image_info		info;
-  int32			cookie = 0;
-
-  *sig = 0;
-  return get_next_image_info(0, &cookie, &info) == B_OK &&
-         file.SetTo(info.name, B_READ_ONLY) == B_OK &&
-         appFileInfo.SetTo(&file) == B_OK &&
-         appFileInfo.GetSignature(sig) == B_OK;
-}
-
-class nsBeOSApp : public BApplication
-{
-  public:
-    sem_id init;
-
-    nsBeOSApp(const char *signature, sem_id initsem);
-    virtual void ReadyToRun(void);
-};
-
-nsBeOSApp::nsBeOSApp(const char *signature, sem_id initsem)
- : BApplication(signature), init(initsem)
-{
-}
-
-void nsBeOSApp::ReadyToRun(void)
-{
-  release_sem(init);
-}
-
-// Return B_OK for success, anything else error!
-int32 bapp_thread(void *arg)
-{
-  // create and start BApplication
-  char sig[B_MIME_TYPE_LENGTH + 1];
-  int32 error = B_OK;
-  
-  GetAppSig(sig);
-  nsBeOSApp	*app = new nsBeOSApp(sig, (sem_id)arg);
-  if(app)
-  {
-    app->Run();
-  }
-  else
-  {
-    error = B_NO_MEMORY;
-  }
-  return error;
-}
-
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -147,13 +92,7 @@ nsAppShell::nsAppShell()
   NS_INIT_REFCNT();
   mDispatchListener = 0;
 
-  if(gBAppCount++ == 0)
-  {
-    sem_id initsem = create_sem(0, "bapp init");
-    resume_thread(spawn_thread(bapp_thread, "BApplication", B_NORMAL_PRIORITY, (void *)initsem));
-    acquire_sem(initsem);
-    delete_sem(initsem);
-  }
+  gBAppCount++;
 }
 
 

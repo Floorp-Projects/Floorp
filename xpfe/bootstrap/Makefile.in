@@ -151,6 +151,8 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
+CPPSRCS += nsNativeAppSupportBeOS.cpp
+CPPSRCS += nsNativeAppSupportBase.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
