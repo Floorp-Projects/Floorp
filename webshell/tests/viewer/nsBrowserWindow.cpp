@@ -842,8 +842,6 @@ HandleToolbarDemoWindowEvent(nsGUIEvent *aEvent)
 // resource to be the top-level bookmark node.
 #include "nsRDFCID.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFDataBase.h"
-#include "nsIRDFDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -860,8 +858,6 @@ static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
 
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,            NS_IRDFDATABASE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,          NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,            NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 
