@@ -28,6 +28,7 @@ nsICiter.h
 nsIEditorIMESupport.h
 nsIEditorLogging.h
 nsIEditorMailSupport.h
+nsIEditorObserver.h
 nsIEditorStyleSheets.h
 nsIHTMLEditor.h
 nsITableEditor.h
