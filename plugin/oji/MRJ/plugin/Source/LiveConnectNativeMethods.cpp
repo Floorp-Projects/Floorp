@@ -21,6 +21,7 @@
 
 #include "LiveConnectNativeMethods.h"
 
+#include "nsIServiceManager.h"
 #include "nsIPluginManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveconnect.h"
@@ -38,6 +39,7 @@
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 
 extern nsIPluginManager* thePluginManager;
+extern nsIServiceManager* theServiceManager;	// needs to be in badaptor.cpp.
 
 static MRJPlugin* theJVMPlugin = NULL;
 static nsILiveconnect* theLiveConnectManager = NULL;
@@ -56,9 +58,10 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 {
 	theJVMPlugin = jvmPlugin;
 
-	NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
-	// QI the LiveConnect interface.
-	nsresult result = thePluginManager->QueryInterface(kILiveconnectIID, &theLiveConnectManager);
+	NS_DEFINE_IID(kLiveConnectCID, NS_CLIVECONNECT_CID);
+	NS_DEFINE_IID(kILiveConnectIID, NS_ILIVECONNECT_IID);
+	nsresult result = theServiceManager->GetService(kLiveConnectCID, kILiveConnectIID,
+													(nsISupports**)&theLiveConnectManager);
 	if (result != NS_OK)
 		return result;
 	
