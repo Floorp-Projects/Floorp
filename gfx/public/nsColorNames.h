@@ -20,25 +20,38 @@
 #define nsColorNames_h___
 
 #include "nsColor.h"
-#include "nsColorNameIDs.h"
+
+struct nsStr;
+class nsCString;
+
+/*
+   Declare the enum list using the magic of preprocessing
+   enum values are "eColorName_foo" (where foo is the color name)
+
+   To change the list of colors, see nsColorNameList.h
+
+ */
+#define GFX_COLOR(_name, _value) eColorName_##_name,
+enum nsColorName {
+  eColorName_UNKNOWN = -1,
+#include "nsColorNameList.h"
+  eColorName_COUNT
+};
+#undef GFX_COLOR
 
 class NS_GFX nsColorNames {
 public:
-  // Given a null terminated string of 7 bit characters, return the
-  // tag id (see nsHTMLTagIDs.h) for the tag or -1 if the tag is not
-  // known. The lookup function uses a perfect hash.
-  static PRInt32 LookupName(const char* str);
+  static void AddRefTable(void);
+  static void ReleaseTable(void);
+
+  // Given a color name, return the color enum value
+  // This only functions provided a valid ref on the table
+  static nsColorName LookupName(const nsStr& aName);
+
+  static const nsCString& GetStringValue(nsColorName aColorName);
 
   // Color id to rgb value table
-  static nscolor kColors[];
-
-  struct NameTableEntry {
-    const char* name;
-    PRInt32 id;
-  };
-
-   // A table whose index is the id (from LookupName)
-  static const NameTableEntry kNameTable[];
+  static const nscolor kColors[];
 };
 
 #endif /* nsColorNames_h___ */
