@@ -26,9 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# unset the official macros so that mkdepened doesn't try to get versioned
-MOZILLA_OFFICIAL=
-BUILD_OFFICIAL=
 MODULE		= mkdepend
 PROGRAM		= mkdepend$(BIN_SUFFIX)
 ifdef GNU_CC
