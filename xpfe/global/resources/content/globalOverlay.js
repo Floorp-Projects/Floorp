@@ -271,4 +271,12 @@ function NewEditorFromDraft()
 {
   dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
 }
-
+function SendPage()
+{
+  var pageUrl = window.content.location.href;
+  var pageTitle =  window.content.document.title;
+  window.openDialog( "chrome://messengercompose/content/", "_blank", 
+                     "chrome,all,dialog=no", 
+                     "attachment='" + pageUrl + "',body='" + pageUrl +
+                     "',subject='" + pageTitle + "',bodyislink=true");
+}

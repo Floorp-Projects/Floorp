@@ -21,8 +21,6 @@
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
 <!ENTITY openFileCmd.commandkey "o">
-<!ENTITY sendPageCmd.label "Send Page">
-<!ENTITY sendPageCmd.accesskey "s">
 <!ENTITY sendLinkCmd.label "Send Link"> 
 <!ENTITY editPageCmd.label					"Edit Page">
 <!ENTITY editPageCmd.accesskey				"d">

@@ -139,6 +139,7 @@
     <broadcaster id="cmd_newEditor"/>
     <broadcaster id="cmd_newEditorTemplate"/>
     <broadcaster id="cmd_newEditorDraft"/>
+    <broadcaster id="cmd_sendPage"/>
 
     <!-- Edit Menu -->
     <broadcaster id="cmd_undo"/>
@@ -218,7 +219,8 @@
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                               observes="Editor:SaveAs"/>
       <menuseparator />
-      <!-- SEND PAGE, FRAME, LINK should go here, but nav must put them in global files -->
+      <!-- FRAME, LINK should go here, but nav must put them in global files -->
+      <menuitem id="menu_sendPage" observes="cmd_sendPage"/>
       <menuitem accesskey="&filepreview.accesskey;"                              observes="Editor:Preview"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="Editor:PrintSetup" />
@@ -315,14 +317,18 @@
           <menuitem value="&dcharThaiCmd.label;" accesskey="&charsetThai.accesskey;" oncommand="EditorSetDocumentCharacterSet('TIS-620');"/>
                  <menuseparator />
           <menuitem value="&dcharArmCmd.label;" accesskey="&charsetArmenian.accesskey;" oncommand="EditorSetDocumentCharacterSet('ARMSCII-8');"/>
+
 <!--
                  <menuseparator />
+
           <menuitem value="&dcharIso6Cmd.label;" accesskey="&charsetArabic.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-6');"/>
           <menuitem value="&dcharCp1256Cmd.label;" accesskey="&charsetWinArabic.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1256');"/>
                  <menuseparator />
           <menuitem value="&dcharIso8Cmd.label;" accesskey="&charsetHebrew.accesskey;" oncommand="EditorSetDocumentCharacterSet('ISO-8859-8');"/>
+ 
           <menuitem value="&dcharCp1255Cmd.label;" accesskey="&charsetWinHebrew.accesskey;" oncommand="EditorSetDocumentCharacterSet('windows-1255');"/>
 -->
+
         </menupopup>
       </menu>
       <menu id="charsetMenu4" value="&dcharMenu4.label;" accesskey="&viewcharsetmenu4.accesskey;">

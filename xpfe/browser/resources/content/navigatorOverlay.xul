@@ -70,6 +70,7 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_newEditorTemplate"/>
 	<broadcaster id="cmd_newEditorDraft"/>
+	<broadcaster id="cmd_sendPage"/>
 	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
@@ -92,7 +93,6 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
 	<broadcaster id="Browser:SendLink"  value="&sendLinkCmd.label;" oncommand="BrowserSendLink(window.content.location.href, window.content.document.title);"/>
-	<broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;" oncommand="BrowserSendPage(window.content.location.href, window.content.document.title);"/>
 	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
@@ -135,7 +135,7 @@ Contributor(s): ______________________________________. -->
 	      <menuitem id="menu_close"/>
 		  <menuitem id="context-savepage" value="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" oncommand="savePage();"/>
 	      <menuseparator/>
-	      <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
+	      <menuitem id="menu_sendPage"  observes="cmd_sendPage"/>
 	      <menuitem accesskey="&sendLinkCmd.label;" observes="Browser:SendLink"/>
 	      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
 	      <menuseparator/>
