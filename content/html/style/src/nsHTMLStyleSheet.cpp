@@ -1109,20 +1109,22 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
   fputs("HTML Style Sheet: ", out);
 #ifdef NECKO
-  char* buffer;
-  mURL->GetSpec(&buffer);
+  char* urlSpec = nsnull;
+  mURL->GetSpec(&urlSpec);
+  if (urlSpec) {
+    fputs(urlSpec, out);
+    nsCRT::free(urlSpec);
+  }
 #else
-  PRUnichar* buffer;
-  mURL->ToString(&buffer);
+  PRUnichar* urlSpec = nsnull;
+  mURL->ToString(&urlSpec);
+  if (urlSpec) {
+    nsAutoString buffer(urlSpec);
+    fputs(buffer, out);
+    delete [] urlSpec;
+  }
 #endif
-  nsAutoString as(buffer,0);
-  fputs(as, out);
   fputs("\n", out);
-#ifdef NECKO
-  nsCRT::free(buffer);
-#else
-  delete buffer;
-#endif
 }
 
 
