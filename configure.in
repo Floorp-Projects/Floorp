@@ -3331,6 +3331,23 @@ MOZ_ARG_DISABLE_BOOL(installer,
 AC_SUBST(MOZ_INSTALLER)
 
 dnl ========================================================
+dnl ActiveX
+dnl ========================================================
+MOZ_NO_ACTIVEX_SUPPORT=1
+
+case "$target_os" in
+    msvc*|mksnt*|cygwin*|mingw*)
+        MOZ_NO_ACTIVEX_SUPPORT=
+        ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(activex,
+[  --disable-activex     Disable building of ActiveX (win32 only)],
+    MOZ_NO_ACTIVEX_SUPPORT=1,
+    MOZ_NO_ACTIVEX_SUPPORT= )
+AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
+
+dnl ========================================================
 dnl build the tests by default
 dnl ========================================================
 ENABLE_TESTS=1
