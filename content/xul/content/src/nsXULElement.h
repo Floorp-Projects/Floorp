@@ -42,7 +42,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsIEventListenerManager.h"
-#include "nsIFocusableContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -312,7 +311,6 @@ public:
 class nsXULElement : public nsIStyledContent,
                      public nsIXMLContent,
                      public nsIXULContent,
-                     public nsIFocusableContent,
                      public nsIBindableContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
@@ -414,6 +412,8 @@ public:
     NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
     NS_IMETHOD RangeRemove(nsIDOMRange& aRange); 
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
+    NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+    NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
     // nsIStyledContent
     NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -441,10 +441,6 @@ public:
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
-
-    // nsIFocusableContent interface
-    NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-    NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
     // nsIBindableContent interface
     NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);

@@ -52,7 +52,6 @@
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
-#include "nsIFocusableContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIJSScriptObject.h"
@@ -617,11 +616,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIFocusableContent)) &&
-             (NameSpaceID() == kNameSpaceID_XUL) &&
-             IsFocusableContent()) {
-        *result = NS_STATIC_CAST(nsIFocusableContent*, this);
     }
     else if (iid.Equals(NS_GET_IID(nsIBindableContent))) {
         *result = NS_STATIC_CAST(nsIBindableContent*, this);
@@ -4083,11 +4077,6 @@ nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 NS_IMETHODIMP
 nsXULElement::Focus()
 {
-  // Make sure we're focusable.
-  nsCOMPtr<nsIFocusableContent> focusable = do_QueryInterface((nsIStyledContent*)this);
-  if (!focusable)
-    return NS_OK;
-
   // Obtain a presentation context and then call SetFocus.
   PRInt32 count = mDocument->GetNumberOfShells();
   if (count == 0)
@@ -4106,11 +4095,6 @@ nsXULElement::Focus()
 NS_IMETHODIMP
 nsXULElement::Blur()
 {
-  // Make sure we're focusable.
-  nsCOMPtr<nsIFocusableContent> focusable = do_QueryInterface((nsIStyledContent*)this);
-  if (!focusable)
-    return NS_OK;
-
   // Obtain a presentation context and then call SetFocus.
   PRInt32 count = mDocument->GetNumberOfShells();
   if (count == 0)

@@ -19,6 +19,10 @@
   display: none;
 }
 
+checkbox,radio,tree,menulist {
+  user-focus: normal;
+}
+
 /** 
  * All elements that have no visual representation
  */
