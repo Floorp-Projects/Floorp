@@ -27,6 +27,8 @@
 #include "nsString.h"
 #include "nsHashtable.h"
 #include "nsFont.h"
+#include <Gestalt.h>
+#include <Appearance.h>
 #include <TextEncodingConverter.h>
 #include <TextCommon.h>
 #include <StringCompare.h>
@@ -173,6 +175,35 @@ NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+
+/** ---------------------------------------------------
+ *  
+ */
+static bool HasAppearanceManager()
+{
+
+#define APPEARANCE_MIN_VERSION	0x0110		// we require version 1.1
+	
+	static bool inited = false;
+	static bool hasAppearanceManager = false;
+
+	if (inited)
+		return hasAppearanceManager;
+	inited = true;
+
+	SInt32 result;
+	if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
+		return false;		// no Appearance Mgr
+
+	if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
+		return false;		// still version 1.0
+
+	hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
+
+	return hasAppearanceManager;
+}
+
+
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
@@ -265,15 +296,44 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
 		case eSystemAttr_Font_Field:
     case eSystemAttr_Font_Tooltips:		// moz
 		case eSystemAttr_Font_Widget:
-			//¥TODO: we should get these from the Appearance Manager
-      aInfo->mFont->name = "geneva";
-      aInfo->mFont->size = 9;
-			float  dev2app;
-			GetDevUnitsToAppUnits(dev2app);
-      aInfo->mFont->size        = NSToCoordRound(float(aInfo->mFont->size) * dev2app);
       aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
       aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
       aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+			if (HasAppearanceManager())
+			{
+				ThemeFontID fontID;
+				switch (anID)
+				{
+					case eSystemAttr_Font_List:
+	    		case eSystemAttr_Font_Icon:
+	    			fontID = kThemeViewsFont;
+	    			break;
+	    		default:
+	    			fontID = kThemeSmallSystemFont;
+	    			break;
+				}
+				Str255 fontName;
+				SInt16 fontSize;
+				Style fontStyle;
+				::GetThemeFont(fontID, smSystemScript, fontName, &fontSize, &fontStyle);
+				fontName[fontName[0]+1] = 0;
+	      aInfo->mFont->name = (char*)&fontName[1];
+	      aInfo->mFont->size = fontSize;
+	      if (fontStyle & bold)
+	      	aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
+	      if (fontStyle & italic)
+	      	aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
+	      if (fontStyle & underline)
+	      	aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+			}
+			else
+			{
+	      aInfo->mFont->name = "geneva";
+	      aInfo->mFont->size = 9;
+			}
+			float  dev2app;
+			GetDevUnitsToAppUnits(dev2app);
+      aInfo->mFont->size = NSToCoordRound(float(aInfo->mFont->size) * dev2app);
       break;
 
   } // switch 
