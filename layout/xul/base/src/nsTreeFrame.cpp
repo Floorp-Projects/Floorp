@@ -55,11 +55,19 @@ nsTreeFrame::~nsTreeFrame()
 {
 }
 
-void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
 {
+  PRInt32 count = mSelectedItems.Count();
+  if (count == 1) {
+    // See if we're already selected.
+    nsTreeCellFrame* frame = (nsTreeCellFrame*)mSelectedItems[0];
+    if (frame == aFrame)
+      return;
+  }
+			
 	ClearSelection(aPresContext);
-	mSelectedItems.AppendElement(pFrame);
-	pFrame->Select(aPresContext, PR_TRUE);
+	mSelectedItems.AppendElement(aFrame);
+	aFrame->Select(aPresContext, PR_TRUE);
 
   FireChangeHandler(aPresContext);
 }
