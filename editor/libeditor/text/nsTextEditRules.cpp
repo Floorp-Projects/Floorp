@@ -385,9 +385,9 @@ nsTextEditRules::GetTopEnclosingPre(nsIDOMNode *aNode,
   {
     nsAutoString tag;
     nsEditor::GetTagString(node, tag);
-    if (tag.Equals("pre", PR_TRUE))
+    if (tag.EqualsWithConversion("pre", PR_TRUE))
       *aOutPreNode = node;
-    else if (tag.Equals("body", PR_TRUE))
+    else if (tag.EqualsWithConversion("body", PR_TRUE))
       break;
     
     res = node->GetParentNode(getter_AddRefs(parentNode));
@@ -448,7 +448,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
         nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
         if (preElement)
         {
-          nsString mozQuote ("_moz_quote");
+          nsString mozQuote; mozQuote.AssignWithConversion("_moz_quote");
           nsString mozQuoteVal;
           PRBool isMozQuote = PR_FALSE;
           if (NS_SUCCEEDED(mEditor->GetAttributeValue(preElement, mozQuote,
@@ -598,7 +598,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  nsAutoString textTag = "__moz_text";
+  nsAutoString textTag; textTag.AssignWithConversion("__moz_text");
   if (!mEditor->IsTextNode(selNode) && !mEditor->CanContainTag(selNode, textTag))
     return NS_ERROR_FAILURE;
 
@@ -660,7 +660,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
         
         // is it a return?
-        if (subStr.Equals("\n"))
+        if (subStr.EqualsWithConversion("\n"))
         {
           res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
@@ -675,7 +675,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     else
     {
       char specialChars[] = {'\t','\n',0};
-      nsAutoString tabString = "    ";
+      nsAutoString tabString; tabString.AssignWithConversion("    ");
       while (unicodeBuf && (pos != -1) && (pos < outString->Length()))
       {
         PRInt32 oldPos = pos;
@@ -698,13 +698,13 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
         
         // is it a tab?
-        if (subStr.Equals("\t"))
+        if (subStr.EqualsWithConversion("\t"))
         {
           res = mEditor->InsertTextImpl(tabString, &curNode, &curOffset, doc);
           pos++;
         }
         // is it a return?
-        else if (subStr.Equals("\n"))
+        else if (subStr.EqualsWithConversion("\n"))
         {
           res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
@@ -947,7 +947,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
       
-      nsAutoString tagName("div");
+      nsAutoString tagName; tagName.AssignWithConversion("div");
       nsCOMPtr<nsIDOMNodeList> nodeList;
       res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
@@ -996,7 +996,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
       
-      nsAutoString tagName("div");
+      nsAutoString tagName; tagName.AssignWithConversion("div");
       nsCOMPtr<nsIDOMNodeList> nodeList;
       res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
@@ -1032,7 +1032,7 @@ nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection,
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
 
-  if (PR_TRUE == aOutputFormat->Equals("text/plain"))
+  if (PR_TRUE == aOutputFormat->EqualsWithConversion("text/plain"))
   { // only use these rules for plain text output
     if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
     {
@@ -1041,7 +1041,7 @@ nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection,
     }
     else if (mBogusNode)
     { // this means there's no content, so output null string
-      *aOutString = "";
+      aOutString->SetLength(0);
       *aHandled = PR_TRUE;
     }
   }
@@ -1187,7 +1187,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   if (needsBogusContent)
   {
     // set mBogusNode to be the newly created <br>
-    res = mEditor->CreateNode(nsAutoString("br"), bodyNode, 0, 
+    res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("br"), bodyNode, 0, 
                                  getter_AddRefs(mBogusNode));
     if (NS_FAILED(res)) return res;
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
@@ -1197,9 +1197,10 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     newPElement = do_QueryInterface(mBogusNode);
     if (newPElement)
     {
-      nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-      nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
-      newPElement->SetAttribute(att, val);
+      newPElement->SetAttribute(
+        NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeAttr),
+        NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeValue)
+      );
     }
     
     // set selection
@@ -1243,7 +1244,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsIDOMSelection *aSelection,
     PRInt32 resultingDocLength = docLength - selectionLength;
     if (resultingDocLength >= aMaxLength) 
     {
-      *aOutString = "";
+      aOutString->SetLength(0);
       return res;
     }
     else
@@ -1270,9 +1271,9 @@ nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *a
   // change the output to '*' only
   PRInt32 length = aOutString->Length();
   PRInt32 i;
-  *aOutString = "";
+  aOutString->SetLength(0);
   for (i=0; i<length; i++)
-    *aOutString += '*';
+    aOutString->AppendWithConversion('*');
 
   return NS_OK;
 }
@@ -1293,7 +1294,7 @@ nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<ns
   nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(*outBRNode);
   if (brElem)
   {
-    res = mEditor->SetAttribute(brElem, "type", "_moz");
+    res = mEditor->SetAttribute(brElem, NS_ConvertASCIItoUCS2("type"), NS_ConvertASCIItoUCS2("_moz"));
     if (NS_FAILED(res)) return res;
   }
   return res;
