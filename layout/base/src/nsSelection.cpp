@@ -1844,7 +1844,13 @@ printf("SetMouseDownState to FALSE - stopping cell selection\n");
     mSelectingTableCells = PR_FALSE;
     mStartSelectedCell = nsnull;
     mEndSelectedCell = nsnull;
-    PostReason(aState?nsISelectionListener::MOUSEDOWN_REASON:nsISelectionListener::MOUSEUP_REASON);//not a drag reason
+
+    short reason;
+    if (aState)
+      reason = nsISelectionListener::MOUSEDOWN_REASON;
+    else
+      reason = nsISelectionListener::MOUSEUP_REASON;
+    PostReason(reason);//not a drag reason
     NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);//notify that reason is mouse up please.
   }
   return NS_OK;
