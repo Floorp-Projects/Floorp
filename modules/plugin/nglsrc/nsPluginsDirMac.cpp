@@ -53,29 +53,19 @@ static nsresult getApplicationSpec(FSSpec& outAppSpec)
 
 nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
-#if 0
-	// Use the folder manager to get location of Extensions folder, and
-	// build an FSSpec for "Netscape Plugins" within it.
-	FSSpec& pluginsDir = *this;
-	OSErr result = FindFolder(kOnSystemDisk,
-								 kExtensionFolderType,
-								 kDontCreateFolder,
-								&pluginsDir.vRefNum,
-								&pluginsDir.parID);
-	if (result == noErr) {
-		SetLeafName("Netscape Plugins");
-	}
-#else
+	PRBool wasAliased;
+
 	// The "Plugins" folder in the application's directory is where plugins are loaded from.
 	mError = getApplicationSpec(mSpec);
-	if (NS_SUCCEEDED(mError)) 
-  {
-    if(location == PLUGINS_DIR_LOCATION_MAC_OLD)
-		  SetLeafName("Plug-ins");
-    else
-		  SetLeafName("Plugins");
+	if (NS_SUCCEEDED(mError))
+	{
+		if (location == PLUGINS_DIR_LOCATION_MAC_OLD)
+			SetLeafName("Plug-ins");
+		else
+			SetLeafName("Plugins");
+		if (IsSymlink())
+			ResolveSymlink(wasAliased);
 	}
-#endif
 }
 
 nsPluginsDir::~nsPluginsDir() {}
