@@ -267,6 +267,17 @@ nsXULTreeFrame::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
   return XULTreeOuterGroup->GetIndexOfFirstVisibleRow(aResult);
 }
 
+NS_IMETHODIMP 
+nsXULTreeFrame::GetRowCount(PRInt32 *aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* XULTreeOuterGroup = nsnull;
+  GetTreeBody(&XULTreeOuterGroup);
+
+  if (!XULTreeOuterGroup) return NS_OK;
+  
+  return XULTreeOuterGroup->GetRowCount(aResult);
+}
 
 void
 nsXULTreeFrame::GetTreeBody(nsXULTreeOuterGroupFrame** aResult)

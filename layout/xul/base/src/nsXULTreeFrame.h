@@ -48,6 +48,7 @@ public:
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult);
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32 *aResult);
+  NS_IMETHOD GetRowCount(PRInt32* aResult);
 
 protected:
   nsXULTreeFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);

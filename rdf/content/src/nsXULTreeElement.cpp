@@ -301,7 +301,6 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIAtom> tag;
 
-
   while (PR_TRUE) {
       content = do_QueryInterface(currentItem);
       content->GetTag(*getter_AddRefs(tag));
@@ -336,16 +335,30 @@ nsXULTreeElement::SelectAll()
   if (childCount == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> startContent;
-  content->ChildAt(0, *getter_AddRefs(startContent));
-  nsCOMPtr<nsIContent> endContent;
-  content->ChildAt(childCount-1, *getter_AddRefs(endContent));
+  // Get the total row count.
+  nsCOMPtr<nsIBoxObject> boxObject;
+  mOuter->GetBoxObject(getter_AddRefs(boxObject));
+  nsCOMPtr<nsITreeBoxObject> treebox = do_QueryInterface(boxObject);
+  PRInt32 rowCount;
+  treebox->GetRowCount(&rowCount);
+  
+  if (rowCount == 0)
+    return NS_OK;
 
-  nsCOMPtr<nsIDOMXULElement> startElement = do_QueryInterface(startContent);
-  nsCOMPtr<nsIDOMXULElement> endElement = do_QueryInterface(endContent);
+  // Get the item at index 0
+  nsCOMPtr<nsIDOMXULElement> startContent;
+  nsCOMPtr<nsIDOMElement> startElement;
+  treebox->GetItemAtIndex(0, getter_AddRefs(startElement));
+  startContent = do_QueryInterface(startElement);
+
+  // Get the item at index rowCount-1
+  nsCOMPtr<nsIDOMXULElement> endContent;
+  nsCOMPtr<nsIDOMElement> endElement;
+  treebox->GetItemAtIndex(rowCount-1, getter_AddRefs(endElement));
+  endContent = do_QueryInterface(endElement);
 
   // Select the whole range.
-  SelectItemRange(startElement, endElement);
+  SelectItemRange(startContent, endContent);
 
   // We shouldn't move the active item.
   mCurrentItem = oldItem;
