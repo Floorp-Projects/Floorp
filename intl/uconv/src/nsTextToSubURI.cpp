@@ -97,7 +97,14 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
                 outlen = 255;
                 pBuf = buf;
              }
+             PRInt32 bufLen = outlen;
              if(NS_SUCCEEDED(rv = encoder->Convert(text,&ulen, pBuf, &outlen))) {
+                // put termination characters (e.g. ESC(B of ISO-2022-JP) if necessary
+                PRInt32 finLen = bufLen - outlen;
+                if (finLen > 0) {
+                  if (NS_SUCCEEDED(encoder->Finish((char *)(pBuf+outlen), &finLen)))
+                    outlen += finLen;
+                }
                 pBuf[outlen] = '\0';
                 *_retval = nsEscape(pBuf, url_XPAlphas);
                 if(nsnull == *_retval)
