@@ -18,6 +18,7 @@
 
 
 #include "nsRenderingContextPS.h"
+#include "nsFontMetricsPS.h"
 #include <math.h>
 #include "libimg.h"
 #include "nsDeviceContextPS.h"
@@ -348,7 +349,7 @@ NS_IMETHODIMP nsRenderingContextPS :: SetClipRect(const nsRect& aRect, nsClipCom
 {
 nsRect  trect = aRect;
 #ifdef XP_PC
-int     cliptype;
+PRInt32     cliptype;
 #endif
 
   mStates->mLocalClip = aRect;
@@ -946,24 +947,15 @@ nsRenderingContextPS :: GetWidth(const char* aString, nscoord& aWidth)
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& aWidth)
 {
-#if XP_PC
+
   if (nsnull != mFontMetrics){
-    SIZE  size;
-
-    SetupFontAndColor();
-    aWidth = 12;
-   
-    // XXX WINDOWS ONLY
-    aWidth = ::GetTextExtentPoint32(((nsDeviceContextPS*)mContext)->mDC , aString, aLength, &size);
-    aWidth = NSToCoordRound(float(size.cx) * mP2T);
-
+    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
+    aWidth = NSToCoordRound(float(aWidth) * mP2T);
     return NS_OK;
-  }
-  else
+  } else {
     return NS_ERROR_FAILURE;
-#else
-    return NS_OK;
-#endif
+  }
+
 }
 
 /** ---------------------------------------------------
@@ -983,27 +975,15 @@ nsRenderingContextPS :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoord &aWidth, PRInt32 *aFontID)
 {
-#ifdef XP_PC
+
   if (nsnull != mFontMetrics){
-    SIZE  size;
-
-    SetupFontAndColor();
-    aWidth = 12;
-
-    // XXX WINDOWS ONLY
-    aWidth = ::GetTextExtentPoint32W( ((nsDeviceContextPS*)mContext)->mDC, aString, aLength, &size);
-    aWidth = NSToCoordRound(float(size.cx) * mP2T);
-
-    if (nsnull != aFontID)
-      *aFontID = 0;
-
+    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
+    aWidth = NSToCoordRound(float(aWidth) * mP2T);
     return NS_OK;
-  }
-  else
+  } else {
     return NS_ERROR_FAILURE;
-#else
-    return NS_OK;
-#endif
+  }
+
 }
 
 /** ---------------------------------------------------
@@ -1091,7 +1071,7 @@ nsIFontMetrics  *fMetrics;
   fMetrics = mFontMetrics;
 
   if (nsnull != fMetrics){
-    const nsFont *font;
+    nsFont *font;
     fMetrics->GetFont(font);
     PRUint8 decorations = font->decorations;
 
@@ -1215,7 +1195,6 @@ NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 void 
 nsRenderingContextPS :: SetupFontAndColor(void)
 {
-#ifdef XP_PC
 nscoord         fontHeight = 0;
 nsFont          *font;
 nsFontHandle    fontHandle;       // WINDOWS ONLY
@@ -1226,14 +1205,13 @@ nsFontHandle    fontHandle;       // WINDOWS ONLY
 
   mFontMetrics->GetFontHandle(fontHandle);
 
-  HFONT         tfont = (HFONT)fontHandle;                      // WINDOWS ONLY
-  ::SelectObject(((nsDeviceContextPS*)mContext)->mDC, tfont);    // WINDOWS ONLY
+  //HFONT         tfont = (HFONT)fontHandle;                      // WINDOWS ONLY
+  //::SelectObject(((nsDeviceContextPS*)mContext)->mDC, tfont);    // WINDOWS ONLY
 
   //mStates->mFont = mCurrFont = tfont;
   mStates->mFontMetrics = mFontMetrics;
 
   mPSObj->setscriptfont(fontHeight,font->style,font->variant,font->weight,font->decorations);
-#endif
 }
 
 
@@ -1250,7 +1228,7 @@ int             ptr = 0;
 unsigned int    i;
 char            *buf = 0;
 nscoord         fontHeight = 0,yCoord;
-const nsFont          *font;
+nsFont          *font;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
