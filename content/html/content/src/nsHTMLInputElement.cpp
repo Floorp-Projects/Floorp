@@ -346,6 +346,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
       NS_RELEASE(formControlFrame);
     }
   }        
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
