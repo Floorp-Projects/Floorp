@@ -63,11 +63,6 @@ nsBIG5ToUnicode::nsBIG5ToUnicode()
 {
 }
 
-nsresult nsBIG5ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsBIG5ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
 
 //----------------------------------------------------------------------
 // Subclassing of nsMultiTableDecoderSupport class [implementation]

@@ -41,11 +41,6 @@ public:
    */
   nsUnicodeToBIG5NoAscii();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------
