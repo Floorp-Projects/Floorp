@@ -53,7 +53,7 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 	if(mTextView && mTextView->LockLooper())
 	{
 		aTextBuffer.SetLength(0);
-		aTextBuffer.Append(mTextView->Text());
+		aTextBuffer.AppendWithConversion(mTextView->Text());
 		aActualSize = strlen(mTextView->Text());
 		mTextView->UnlockLooper();
 	}

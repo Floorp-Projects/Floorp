@@ -225,7 +225,7 @@ NS_METHOD nsMenu::AddSeparator()
   nsresult rv = nsComponentManager::CreateInstance(
     kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    nsString tmp = "menuseparator";
+    nsString tmp; tmp.AssignWithConversion("menuseparator");
     nsISupports * supports = nsnull;
     QueryInterface(kISupportsIID, (void**) &supports);
     pnsMenuItem->Create(supports, tmp, PR_TRUE);  
@@ -441,7 +441,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
   // First open the menu.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if (domElement)
-    domElement->SetAttribute("open", "true");
+    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
 
 
    /// Now get the kids. Retrieve our menupopup child.
@@ -452,7 +452,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
     if (menuPopupElement) {
       nsString menuPopupNodeType;
       menuPopupElement->GetNodeName(menuPopupNodeType);
-      if (menuPopupNodeType.Equals("menupopup"))
+      if (menuPopupNodeType.EqualsWithConversion("menupopup"))
         break;
     }
     nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -473,16 +473,16 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
         nsString menuitemNodeType;
         nsString menuitemName;
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(this,
                        menuitemElement,
                        menuitemNode,
                        menuIndex,
                        (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Load a submenu
           LoadSubMenu(this, menuitemElement, menuitemNode);
         }
@@ -502,7 +502,7 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   // Close the node.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if (domElement)
-    domElement->RemoveAttribute("open");
+    domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
 
   //g_print("nsMenu::MenuDestruct called \n");
   RemoveAll();
@@ -554,9 +554,9 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
-  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+  menuitemElement->GetAttribute(nsAutoString(NS_ConvertASCIItoUCS2("disabled")), disabled);
+  menuitemElement->GetAttribute(nsAutoString(NS_ConvertASCIItoUCS2("value")), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString(NS_ConvertASCIItoUCS2("cmd")), menuitemCmd);
       
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -572,7 +572,7 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
     pParentMenu->AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports);
             
-    if(disabled == NS_STRING_TRUE ) {
+    if(disabled.EqualsWithConversion(NS_STRING_TRUE) ) {
       pnsMenuItem->SetEnabled(PR_FALSE);
     }
   
@@ -586,7 +586,7 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
 		return;
     }
     
-    nsAutoString cmdAtom("oncommand");
+    nsAutoString cmdAtom; cmdAtom.AssignWithConversion("oncommand");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -609,7 +609,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
                          nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu

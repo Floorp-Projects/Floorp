@@ -143,7 +143,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 	if(mCheckBox && mCheckBox->LockLooper())
 	{
 		aBuffer.SetLength(0);
-		aBuffer.Append(mCheckBox->Label());
+		aBuffer.AppendWithConversion(mCheckBox->Label());
 		mCheckBox->UnlockLooper();
 	}
 	return NS_OK;

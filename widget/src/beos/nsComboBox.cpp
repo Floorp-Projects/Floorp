@@ -131,7 +131,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 	if(mMenuField && mMenuField->LockLooper())
 	{
 		BMenuItem	*it = mMenuField->Menu()->ItemAt(aPosition);
-		anItem.Append(it->Label());
+		anItem.AppendWithConversion(it->Label());
 		mMenuField->UnlockLooper();
 		result = PR_TRUE;
 	}

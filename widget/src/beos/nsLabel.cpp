@@ -124,7 +124,7 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
 	if(mStringView && mStringView->LockLooper())
 	{
 		aBuffer.SetLength(0);
-		aBuffer.Append(mStringView->Text());
+		aBuffer.AppendWithConversion(mStringView->Text());
 		mStringView->UnlockLooper();
 	}
 	return NS_OK;

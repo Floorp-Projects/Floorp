@@ -135,11 +135,11 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
     const nsString& filter = mFilters[i];
     
     aFilterList.Append(title);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion("\0");
     aFilterList.Append(filter);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion("\0");
   }
-  aFilterList.Append('\0'); 
+  aFilterList.AppendWithConversion("\0"); 
 }
 
 //-------------------------------------------------------------------------

@@ -141,7 +141,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 		BStringItem	*str;
 		if((str = dynamic_cast<BStringItem *>(it)) != 0)
 		{
-			anItem.Append(str->Text());
+			anItem.AppendWithConversion(str->Text());
 			result = PR_TRUE;
 		}
 		mListView->UnlockLooper();

@@ -177,7 +177,7 @@ NS_IMETHODIMP nsFontRetrieverService::Advance()
 //------------------------------
 static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
 {
-  nsAutoString name(aName);
+  nsAutoString name; name.AssignWithConversion(aName);
   PRInt32 i;
   PRInt32 cnt = aFontList->Count();
   for (i=0;i<cnt;i++) {
@@ -188,7 +188,7 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
   }
 
   FontInfo * fontInfo   = new FontInfo();
-  fontInfo->mName       = aName;
+  fontInfo->mName.AssignWithConversion(aName);
   //printf("Adding [%s]\n", aName);fflush(stdout); 
   fontInfo->mIsScalable = PR_FALSE; // X fonts aren't scalable right??
   fontInfo->mSizes      = nsnull;
