@@ -27,12 +27,7 @@
 }
 
 div.title {
-  font: 5mm tahoma,arial,helvetica,sans-serif;
-  margin: 2px;
-}
-
-div.subtitle {
-  font: 3mm tahoma,arial,helvetica,sans-serif;
+  font-weight: bold;
   margin: 2px;
 }
 
@@ -45,6 +40,7 @@ box.button-group {
 
 /* These rules apply appropriate images to the 'reorder' buttons */
 titledbutton.up {
+  min-width: 1em;
   list-style-image:url("chrome://sidebar/skin/list-up.gif");
 }
 
@@ -53,6 +49,7 @@ titledbutton.up[disabled="true"] {
 }
 
 titledbutton.down {
+  min-width: 1em;
   list-style-image:url("chrome://sidebar/skin/list-down.gif");
 }
 
