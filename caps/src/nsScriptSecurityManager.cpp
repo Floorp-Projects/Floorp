@@ -31,8 +31,12 @@
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
 #include "xpcexception.h"
+#include "nsDOMCID.h"
+#include "nsIScriptNameSetRegistry.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCScriptNameSetRegistryCID, 
+                     NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 enum {
     SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
@@ -179,6 +183,20 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
     return NS_OK;
 }
 
+static JSContext *
+GetCurrentContext() {
+    // Get JSContext from stack.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+    JSContext *cx;
+    if (NS_FAILED(stack->Peek(&cx)))
+        return nsnull;
+    return cx;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::HasSubjectPrincipal(PRBool *result)
 {
@@ -274,7 +292,7 @@ nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
 
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal, 
+nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal,
                                              const char *capability, 
                                              PRBool *result)
 {
@@ -282,7 +300,7 @@ nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::SetCanEnableCapability(nsIPrincipal *principal, 
+nsScriptSecurityManager::SetCanEnableCapability(nsIPrincipal *principal,
                                                 const char *capability, 
                                                 PRBool canEnable)
 {
@@ -290,22 +308,26 @@ nsScriptSecurityManager::SetCanEnableCapability(nsIPrincipal *principal,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::EnableCapability(nsIScriptContext *cx, 
-                                          const char *capability)
+nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
+                                             PRBool *result)
 {
     return NS_ERROR_FAILURE;    // not yet implemented
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::RevertCapability(nsIScriptContext *cx, 
-                                          const char *capability)
+nsScriptSecurityManager::EnableCapability(const char *capability)
 {
     return NS_ERROR_FAILURE;    // not yet implemented
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::DisableCapability(nsIScriptContext *cx, 
-                                           const char *capability)
+nsScriptSecurityManager::RevertCapability(const char *capability)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::DisableCapability(const char *capability)
 {
     return NS_ERROR_FAILURE;    // not yet implemented
 }
@@ -390,23 +412,17 @@ nsScriptSecurityManager *
 nsScriptSecurityManager::GetScriptSecurityManager()
 {
     static nsScriptSecurityManager *ssecMan = NULL;
-    if (!ssecMan) 
+    if (!ssecMan) {
         ssecMan = new nsScriptSecurityManager();
+	    nsresult rv;
+	    NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
+                        kCScriptNameSetRegistryCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsSecurityNameSet* nameSet = new nsSecurityNameSet();
+            registry->AddExternalNameSet(nameSet);
+        }
+    }
     return ssecMan;
-}
-
-JSContext *
-nsScriptSecurityManager::GetCurrentContext() {
-    // Get JSContext from stack.
-    nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                    &rv);
-    if (NS_FAILED(rv))
-        return nsnull;
-    JSContext *cx;
-    if (NS_FAILED(stack->Peek(&cx)))
-        return nsnull;
-    return cx;
 }
 
 NS_IMETHODIMP
@@ -610,18 +626,6 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
-    // Temporary: only enforce if security.checkxpconnect pref is enabled
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-		PRBool enabled;
-		if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect", &enabled)) &&
-			!enabled) 
-		{
-			return NS_OK;
-		}
-	}
-    
     nsCOMPtr<nsIPrincipal> subject;
     PRBool ok = PR_FALSE;
     if (NS_SUCCEEDED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
@@ -629,120 +633,175 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     if (!ok || NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
         ok = PR_FALSE;
     if (!ok) {
+        // Check the pref "security.checkxpconnect". If it exists and is
+        // set to false, don't report an error.
+	    nsresult rv;
+	    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	    if (NS_SUCCEEDED(rv)) {
+		    PRBool enabled;
+		    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect",
+                                                &enabled)) &&
+			    !enabled) 
+		    {
+			    return NS_OK;
+		    }
+	    }
 		static const char msg[] = "Access denied to XPConnect service.";
 		JS_SetPendingException(aJSContext, 
 			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
-		//JS_ReportError(aJSContext, msg);
         return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
     }
     return NS_OK;
 }
 
 
-#if 0
-static JSBool
-callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval, nsCapsFn fn, char *name)
-{
-    JSString *str;
-    char *cstr;
-    struct nsTarget *target;
+///////////////////////
+// nsSecurityNameSet //
+///////////////////////
 
+nsSecurityNameSet::nsSecurityNameSet()
+{
+  NS_INIT_REFCNT();
+}
+
+nsSecurityNameSet::~nsSecurityNameSet()
+{
+}
+
+NS_IMPL_ISUPPORTS(nsSecurityNameSet, NS_GET_IID(nsIScriptExternalNameSet));
+
+NS_IMETHODIMP 
+nsSecurityNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
+{
+  return NS_OK;
+}
+
+static char *
+getStringArgument(JSContext *cx, JSObject *obj, uintN argc, jsval *argv)
+{
     if (argc == 0 || !JSVAL_IS_STRING(argv[0])) {
-        JS_ReportError(cx, "String argument expected for %s.", name);
-        return JS_FALSE;
+        JS_ReportError(cx, "String argument expected");
+        return nsnull;
     }
     /*
      * We don't want to use JS_ValueToString because we want to be able
      * to have an object to represent a target in subsequent versions.
-     * XXX but then use of an object will cause errors here....
      */
-    str = JSVAL_TO_STRING(argv[0]);
+    JSString *str = JSVAL_TO_STRING(argv[0]);
     if (!str)
-        return JS_FALSE;
+        return nsnull;
 
-    cstr = JS_GetStringBytes(str);
-    if (cstr == NULL)
-        return JS_FALSE;
-
-    target = nsCapsFindTarget(cstr);
-    if (target == NULL)
-        return JS_FALSE;
-    /* stack depth of 1: first frame is for the native function called */
-    if (!(*fn)(cx, target, 1)) {
-        /* XXX report error, later, throw exception */
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+    return JS_GetStringBytes(str);
 }
- 
+
 PR_STATIC_CALLBACK(JSBool)
 netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
-                                        jsval *argv, jsval *rval)
+                                     jsval *argv, jsval *rval)
 {
-    return callCapsCode(cx, obj, argc, argv, rval, nsCapsIsPrivilegeEnabled,
-                        isPrivilegeEnabledStr);
+    JSBool result = JS_FALSE;
+    char *cap = getStringArgument(cx, obj, argc, argv);
+    if (cap) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+            rv = securityManager->IsCapabilityEnabled(cap, &result);
+            if (NS_FAILED(rv)) 
+                result = JS_FALSE;
+        }
+    }
+    *rval = BOOLEAN_TO_JSVAL(result);
+    return JS_TRUE;
 }
+
 
 PR_STATIC_CALLBACK(JSBool)
 netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
-                                     jsval *argv, jsval *rval)
+                                  jsval *argv, jsval *rval)
 {
-    return callCapsCode(cx, obj, argc, argv, rval, nsCapsEnablePrivilege,
-                        enablePrivilegeStr);
+    char *cap = getStringArgument(cx, obj, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+    if (NS_FAILED(securityManager->EnableCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
 netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
-                                      jsval *argv, jsval *rval)
+                                   jsval *argv, jsval *rval)
 {
-    return callCapsCode(cx, obj, argc, argv, rval, nsCapsDisablePrivilege,
-                        disablePrivilegeStr);
+    char *cap = getStringArgument(cx, obj, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+    if (NS_FAILED(securityManager->DisableCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
 netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
-                                     jsval *argv, jsval *rval)
+                                  jsval *argv, jsval *rval)
 {
-    return callCapsCode(cx, obj, argc, argv, rval, nsCapsRevertPrivilege,
-                        revertPrivilegeStr);
+    char *cap = getStringArgument(cx, obj, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+    if (NS_FAILED(securityManager->RevertCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
 }
 
 static JSFunctionSpec PrivilegeManager_static_methods[] = {
-    { isPrivilegeEnabledStr, netscape_security_isPrivilegeEnabled,   1},
-    { enablePrivilegeStr,    netscape_security_enablePrivilege,      1},
-    { disablePrivilegeStr,   netscape_security_disablePrivilege,     1},
-    { revertPrivilegeStr,    netscape_security_revertPrivilege,      1},
+    { "isPrivilegeEnabled", netscape_security_isPrivilegeEnabled,   1},
+    { "enablePrivilege",    netscape_security_enablePrivilege,      1},
+    { "disablePrivilege",   netscape_security_disablePrivilege,     1},
+    { "revertPrivilege",    netscape_security_revertPrivilege,      1},
     {0}
 };
 
-JSBool
-lm_InitSecurity(MochaDecoder *decoder)
+/*
+ * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
+ * et. al. so that code that worked with 4.0 can still work.
+ */
+NS_IMETHODIMP
+nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 {
-    JSContext  *cx;
-    JSObject   *obj;
-    JSObject   *proto;
-    JSClass    *objectClass;
-    jsval      v;
-    JSObject   *securityObj;
+    JSContext *cx = (JSContext *) aScriptContext->GetNativeContext();
+    JSObject *global = JS_GetGlobalObject(cx);
 
     /*
-     * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
-     * et. al. so that code that worked with 4.0 can still work.
-     */
-
-    /*
-     * Find Object.prototype's class by walking up the window object's
+     * Find Object.prototype's class by walking up the global object's
      * prototype chain.
      */
-    cx = decoder->js_context;
-    obj = decoder->window_object;
+    JSObject *obj = global;
+    JSObject *proto;
     while (proto = JS_GetPrototype(cx, obj))
         obj = proto;
-    objectClass = JS_GetClass(cx, obj);
+    JSClass *objectClass = JS_GetClass(cx, obj);
 
-    if (!JS_GetProperty(cx, decoder->window_object, "netscape", &v))
-        return JS_FALSE;
+    jsval v;
+    if (!JS_GetProperty(cx, global, "netscape", &v))
+        return NS_ERROR_FAILURE;
+    JSObject *securityObj;
     if (JSVAL_IS_OBJECT(v)) {
         /*
          * "netscape" property of window object exists; must be LiveConnect
@@ -750,71 +809,27 @@ lm_InitSecurity(MochaDecoder *decoder)
          */
         obj = JSVAL_TO_OBJECT(v);
         if (!JS_GetProperty(cx, obj, "security", &v) || !JSVAL_IS_OBJECT(v))
-            return JS_FALSE;
+            return NS_ERROR_FAILURE;
         securityObj = JSVAL_TO_OBJECT(v);
     } else {
         /* define netscape.security object */
-        obj = JS_DefineObject(cx, decoder->window_object, "netscape",
-                              objectClass, NULL, 0);
-        if (obj == NULL)
-            return JS_FALSE;
+        obj = JS_DefineObject(cx, global, "netscape", objectClass, nsnull, 0);
+        if (obj == nsnull)
+            return NS_ERROR_FAILURE;
         securityObj = JS_DefineObject(cx, obj, "security", objectClass,
-                                      NULL, 0);
-        if (securityObj == NULL)
-            return JS_FALSE;
+                                      nsnull, 0);
+        if (securityObj == nsnull)
+            return NS_ERROR_FAILURE;
     }
 
     /* Define PrivilegeManager object with the necessary "static" methods. */
     obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass,
-                          NULL, 0);
-    if (obj == NULL)
-        return JS_FALSE;
+                          nsnull, 0);
+    if (obj == nsnull)
+        return NS_ERROR_FAILURE;
 
-    return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods);
+    return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods)
+           ? NS_OK
+           : NS_ERROR_FAILURE;
 }
 
-JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    JSObject *newParent;
-
-    if (!JSVAL_IS_OBJECT(*vp))
-        return JS_TRUE;
-    newParent = JSVAL_TO_OBJECT(*vp);
-    if (newParent) {
-        const char *oldOrigin = lm_GetObjectOriginURL(cx, obj);
-        const char *newOrigin = lm_GetObjectOriginURL(cx, newParent);
-        if (!sameOrigins(cx, oldOrigin, newOrigin))
-            return JS_TRUE;
-    } else {
-        if (!JS_InstanceOf(cx, obj, &lm_layer_class, 0) &&
-            !JS_InstanceOf(cx, obj, &lm_window_class, 0))
-        {
-            return JS_TRUE;
-        }
-        if (lm_GetContainerPrincipals(cx, obj) == NULL) {
-            JSPrincipals *principals;
-            principals = lm_GetInnermostPrincipals(cx, obj, NULL);
-            if (principals == NULL)
-                return JS_FALSE;
-            lm_SetContainerPrincipals(cx, obj, principals);
-        }
-    }
-    return JS_TRUE;
-}
-
-752 JSBool win_check_access(JSContext *cx, JSObject *obj, jsval id,
-753                         JSAccessMode mode, jsval *vp)
-754 {
-755     if(mode == JSACC_PARENT)  {
-756         return lm_CheckSetParentSlot(cx, obj, id, vp);
-757     }
-758     return JS_TRUE;
-759 }
-760 
-761 JSClass lm_window_class = {
-762     "Window", JSCLASS_HAS_PRIVATE,
-763     JS_PropertyStub, JS_PropertyStub, win_getProperty, win_setProperty,
-764     win_list_properties, win_resolve_name, JS_ConvertStub, win_finalize,
-765     NULL, win_check_access
-766 };
-#endif
