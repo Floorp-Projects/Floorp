@@ -3177,6 +3177,9 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+#ifdef XP_MAC  // send KeyPress events only on Mac
+  return DispatchKeyToPlugin(aKeyEvent);
+#else
   if (mInstance) {
     // If this event is going to the plugin, we want to kill it.
     // Not actually sending keypress to the plugin, since we didn't before.
@@ -3188,6 +3191,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_ERROR_FAILURE; // means consume event                             
   }
   return NS_OK;
+#endif
 }
 
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
