@@ -1860,17 +1860,18 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
                                                 nsIPluginInstance::GetIID(),
                                                 (void**)&instance);
 
+
     // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
     if (NS_FAILED(result)) {
-      if(GetPluginFactory(mimetype, &plugin) == NS_OK){
+      result = GetPluginFactory(mimetype, &plugin);
+      if(!NS_FAILED(result)){
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
         NS_RELEASE(plugin);
       }
-      return result;
     }
 
     // neither an XPCOM or legacy plugin could be instantiated, so return the failure
-    if (NS_FAILED(result)) {
+    if (NS_FAILED(result)){
       return result;
     }
 
