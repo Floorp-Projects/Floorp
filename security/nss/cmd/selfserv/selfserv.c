@@ -1361,12 +1361,24 @@ beAGoodParent(int argc, char **argv, int maxProcs, PRFileDesc * listen_sock)
 }
 
 #ifdef DEBUG_nelsonb
+
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#define SSL_GETPID getpid
+#elif defined(_WIN32_WCE)
+#define SSL_GETPID GetCurrentProcessId
+#elif defined(WIN32)
+extern int __cdecl _getpid(void);
+#define SSL_GETPID _getpid
+#else
+#define SSL_GETPID() 0   
+#endif
+
 void
 WaitForDebugger(void)
 {
 
     int waiting       = 12;
-    int myPid         = _getpid();
+    int myPid         = SSL_GETPID();
     PRIntervalTime    nrval = PR_SecondsToInterval(5);
 
     while (waiting) {
