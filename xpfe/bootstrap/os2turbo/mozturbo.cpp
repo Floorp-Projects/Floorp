@@ -135,11 +135,15 @@ int main(int argc, char *argv[]) {
       else if (strnicmp(argv[i],"-?", 2) == 0)
         do_help = 1;
       else if (strnicmp(argv[i],"-p", 2) == 0) {
-        strcpy(basepath, argv[i+1]);
-        if (basepath[strlen(basepath)] !='\\') {
-          strcat(basepath, "\\");
-        }
+        if (argc > i+1) {
+          strcpy(basepath, argv[i+1]);
+          if (basepath[strlen(basepath)] !='\\') {
+            strcat(basepath, "\\");
+          }
         do_path = 1;
+        } else {
+          do_help = 1;
+        }
       }
     }
   }
@@ -165,7 +169,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    printf("Unload failed\n");
+    printf("Mozilla for OS/2 preloader is not running\n");
     return(1);
   }
 
@@ -186,7 +190,7 @@ int main(int argc, char *argv[]) {
 
     HEV hev;
     if (DosCreateEventSem(SEMNAME, &hev, DC_SEM_SHARED, FALSE) != NO_ERROR) {
-      printf("DosCreateEventSem failed\n");
+      printf("Mozilla for OS/2 preloader is already running\n");
       return(1);
     }
 
