@@ -32,7 +32,9 @@
 #include <Memory.h>
 #include <Processes.h>
 #include <TextUtils.h>
-#include "primpl.h"     // XXX for PR_PATH_SEPARATOR 
+#ifndef PR_PATH_SEPARATOR
+#define PR_PATH_SEPARATOR       ':' 
+#endif
 #elif defined(XP_UNIX)
 #ifndef PR_PATH_SEPARATOR
 #define PR_PATH_SEPARATOR       ':'     // nspr doesn't like sun386i?
