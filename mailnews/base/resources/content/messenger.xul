@@ -146,10 +146,10 @@ Rights Reserved.
   </toolbox>
 
   <hbox style="height:100px" flex="1">
-    <hbox id="sidebar-box">
+    <vbox id="sidebar-box">
       <sidebarheader type="box" class="sidebarheader-main" label="&mail-sidebar-header.label;"/>
       <tree id="folderTree" flex="1000" context="folderPaneContext"  />
-    </hbox>
+    </vbox>
           
     <splitter id="sidebar-splitter"/>
 
