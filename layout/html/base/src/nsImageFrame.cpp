@@ -666,8 +666,10 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       NS_ASSERTION(imageContainer, "Successful load with no container?");
       intrinsicSizeChanged = RecalculateTransform(imageContainer);
     }
-    else
+    else {
+      // Have to size to 0,0 so that GetDesiredSize recalculates the size
       mIntrinsicSize.SizeTo(0, 0);
+    }
 
     if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we havn't gotten the inital reflow yet
       if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
