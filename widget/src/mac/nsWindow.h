@@ -165,8 +165,6 @@ public:
     NS_IMETHOD				GetAttention();
 
     // Mac specific methods
-    nsWindowType            GetWindowType() const { return mWindowType; }
-    
     void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
     PRBool 					RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
 	virtual void			CalcWindowRegions();

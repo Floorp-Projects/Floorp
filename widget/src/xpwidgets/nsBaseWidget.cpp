@@ -438,6 +438,18 @@ NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
     
 //-------------------------------------------------------------------------
 //
+// Get the window type for this widget
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::GetWindowType(nsWindowType& aWindowType)
+{
+  aWindowType = mWindowType;
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
 // Create a rendering context from this nsBaseWidget
 //
 //-------------------------------------------------------------------------

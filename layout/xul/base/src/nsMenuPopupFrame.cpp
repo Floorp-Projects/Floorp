@@ -22,6 +22,7 @@
  * Contributor(s): 
  *   Mike Pinkerton (pinkerton@netscape.com)
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Ben Goodger <ben@netscape.com>
  */
 
 
@@ -195,10 +196,39 @@ nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
   aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY;
 }
 
-void
-nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView, 
-  nsPoint& aPoint)
+PRBool ParentIsScrollableView(nsIView* aStartView);
+PRBool ParentIsScrollableView(nsIView* aStartView)
 {
+  nsIView* scrollportView = nsnull;
+  nsIScrollableView* scrollableView = nsnull;
+  aStartView->GetParent(scrollportView);
+  if (scrollportView)
+    scrollportView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &scrollableView);
+  return scrollableView != nsnull;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GetViewOffset
+//   Retrieves the offset of the given view with the root view, in the 
+//   coordinate system of the root view. 
+void
+nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
+{
+  // Notes:
+  //   1) The root view is the client area of the toplevel window that
+  //      this popup is anchored to. 
+  //   2) Each menupopup is a child of the root view (see 
+  //      nsMenuPopupFrame::Init())
+  //   3) The coordinates that we return are the total distance between 
+  //      the top left of the start view and the origin of the root view.
+  //      Note that for extremely tall menus there can be negative bounds
+  //      as the menupopup may fall north of the client area (e.g. above
+  //      the titlebar). We must take this into account for correct positioning,
+  //      however, negative bounds due to views that are the canvas in a 
+  //      ScrollPortView must be ignored (as this has no bearing on 
+  //      view offset), hence the call to ParentIsScrollableView. 
+  //      
+  
   aPoint.x = 0;
   aPoint.y = 0;
  
@@ -206,27 +236,105 @@ nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   nsRect bounds;
 
   parent = aView;
-  while (nsnull != parent) {
+  while (parent) {
     parent->GetBounds(bounds);
-    if (bounds.y >= 0) {
-      aPoint.x += bounds.x;
+    if ((bounds.y >= 0 && bounds.x >= 0) || !ParentIsScrollableView(parent)) {
+      //
+      // The Extremely Tall Menu: 
+      //           +----+---------------------------------------
+      //           |    |             +--------------------+  -       -
+      //           |    |             |    (Decoration)    |  | <-(4) | <-(3)
+      // (0, 0) -> +----+-------------+                    |  +       |
+      //           | _File    _Edit   +--------------------+  |       +
+      //           +------------------|  (ScrollPortView)  |  |       |
+      //           |                  |                    |  |       |
+      //           |                  |                    |  | <-(1) | <-(2)
+      //           |                  |                    |  |       |
+      //           |<---------------->|                    |  |       |
+      //           |        (5)       |====================|  -       -
+      //           |                  | MenuFrame         >|
+      //           |                  |====================|
+      // 
+      // Typically, we want to ignore negative view bounds as these imply
+      // a canvas view inside a scrollport view. However in other cases this
+      // means the view falls outside the positive quadrant of the root view,
+      // and has negative y-axis bounds. We still want to add this negative
+      // bounds as when positioning the menu, the following calculation can
+      // be performed:
+      // 
+      //   (1) = (2) + (3) + (4) 
+      //
+      // (1) - the position on the y-axis in the coordinate system of the root
+      //       view at which to position the popup
+      // (2) - the offset of the invoking MenuFrame from the top of the scroll-
+      //       port view (adjusted for canvas area scrolled out of view)
+      // (3) - the bounds of the scrollport view with respect to the popup's
+      //       view (at this point, aPoint.y)
+      // (4) - the bounds of the popup's view with respect to the root view
+      //       (a negative value for extremely tall popups)
+      //  
+      // (5) - the position on the x-axis in the coordinate system of the root
+      //       view at which to position the popup.
+  
       aPoint.y += bounds.y;
+      aPoint.x += bounds.x;
     }
-
     parent->GetParent(parent);
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// GetRootViewForPopup
+//   Retrieves the view for the popup widget that contains the given frame. 
+//   If the given frame is not contained by a popup widget, return the root view.
 void
-nsMenuPopupFrame::GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult)
+nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext, 
+                                      nsIFrame* aStartFrame, nsIView** aResult)
 {
   *aResult = nsnull;
-  aStartFrame->GetView(aPresContext, aResult);
-  if (!*aResult) {
-    nsIFrame* parent;
-    aStartFrame->GetParentWithView(aPresContext, &parent);
-    if (parent)
-      parent->GetView(aPresContext, aResult);
+
+  // A frame with a view.
+  nsIFrame* parentWithView = nsnull;
+
+  nsFrameState fs;
+  aStartFrame->GetFrameState(&fs);
+  if (fs & NS_FRAME_HAS_VIEW) {
+    // If the given frame has a view, we don't need to climb anywhere.
+    parentWithView = aStartFrame;
+  }
+  else {
+    // Otherwise, walk up the frame tree looking for the first parent which
+    // has a view.
+    aStartFrame->GetParentWithView(aPresContext, &parentWithView);
+  }
+
+  if (parentWithView) {
+    nsIView* view = nsnull;
+    nsIView* temp = nsnull;
+    parentWithView->GetView(aPresContext, &view);
+    while (view) {
+      // Walk up the view hierachy looking for a view whose widget has a 
+      // window type of eWindowType_popup - in other words a popup window
+      // widget. If we find one, this is the view we want. 
+      nsCOMPtr<nsIWidget> widget;
+      view->GetWidget(*getter_AddRefs(widget));
+      if (widget) {
+        nsWindowType wtype;
+        widget->GetWindowType(wtype);
+        if (wtype == eWindowType_popup) {
+          *aResult = view;
+          return;
+        }
+      }
+
+      view->GetParent(temp);
+      if (!temp) {
+        // Otherwise, we've walked all the way up to the root view and not
+        // found a view for a popup window widget. Just return the root view.
+        *aResult = view;
+      }
+      view = temp;
+    }
   }
 }
 
@@ -482,29 +590,21 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG(aFrame);
 
-  nsPoint parentPos;
-  nsCOMPtr<nsIViewManager> viewManager;
-
-  //
-  // Collect info about our parent view and the frame we're sync'ing to
-  //
-
-  nsIView* parentView = nsnull;
-  nsIFrame* parentFrame = nsnull;
-  aFrame->GetParent(&parentFrame);
-
-  GetNearestEnclosingView(aPresContext, parentFrame, &parentView);
-  if (!parentView)
-    return NS_OK;
-
-  parentView->GetViewManager(*getter_AddRefs(viewManager));
-  GetViewOffset(viewManager, parentView, parentPos);
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
-
+  // |containingView|
+  //   The view that contains the frame that is invoking this popup. This is 
+  //   the canvas view inside the scrollport view. It can have negative bounds
+  //   if the canvas is scrolled so that part is off screen.
   nsIView* containingView = nsnull;
   nsPoint offset;
   aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
+  if (!containingView)
+    return NS_OK;
+
+  // |view|
+  //   The root view for the popup window widget associated with this frame,
+  //   or, the view associated with this frame. 
+  nsIView* view = nsnull;
+  GetView(aPresContext, &view);
 
   ///////////////////////////////////////////////////////////////////////////////
   //
@@ -536,26 +636,29 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // so the offset is unchanged. For toplevel menus whose containing view is 
   // a window or other view, whose bounds should not be taken into account. 
   //
-  if (containingView) {
-    nsIView* scrollportView = nsnull;
-    containingView->GetParent(scrollportView);
-    if (scrollportView) {
-      nsIScrollableView* scrollableView = nsnull;
-      scrollportView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &scrollableView);
-      if (scrollableView) {
-        nsRect bounds;
-        containingView->GetBounds(bounds);
-        offset += nsPoint(bounds.x, bounds.y);
-      }
-    }
+  if (ParentIsScrollableView(containingView)) {
+    nsRect bounds;
+    containingView->GetBounds(bounds);
+    offset += nsPoint(bounds.x, bounds.y);
   }
   
+  // |parentPos|
+  //   The distance between the containingView and the root view. This provides
+  //   a hint as to where to position the menu relative to the window. 
+  nsPoint parentPos;
+  GetViewOffset(containingView, parentPos);
+
+  // |parentRect|
+  //   The dimensions of the frame invoking the popup. 
   nsRect parentRect;
   aFrame->GetRect(parentRect);
 
   float p2t, t2p;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
+  nsCOMPtr<nsIViewManager> viewManager;
+  containingView->GetViewManager(*getter_AddRefs(viewManager));
+    
   nsCOMPtr<nsIDeviceContext> dx;
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
   dx->GetAppUnitsToDevUnits(t2p);
@@ -650,6 +753,17 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // based on converting (0,0) in its coordinate space to screen coords. We then
   // offset that point by (|xpos|,|ypos|) to get the true screen coordinates of
   // the view. *whew*
+
+  // |parentView|
+  //   The root view for the window that contains the frame, for frames inside 
+  //   menupopups this is the first view inside the popup window widget, for 
+  //   frames inside a toplevel window, this is the root view of the toplevel
+  //   window.
+  nsIView* parentView = nsnull;
+  GetRootViewForPopup(aPresContext, aFrame, &parentView);
+  if (!parentView)
+    return NS_OK;
+
   nsCOMPtr<nsIWidget> parentViewWidget;
   GetWidgetForView ( parentView, *getter_AddRefs(parentViewWidget) );
   nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
@@ -1304,7 +1418,7 @@ nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
 {
   // Get parent view
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetNearestEnclosingView(mPresContext, this, &view);
+  nsMenuPopupFrame::GetRootViewForPopup(mPresContext, this, &view);
   if (!view)
     return NS_OK;
 
@@ -1529,3 +1643,4 @@ nsMenuPopupFrame :: KillPendingTimers ( )
   return KillCloseTimer();
 
 } // KillPendingTimers
+

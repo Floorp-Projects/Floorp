@@ -110,8 +110,8 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
-  void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-  static void GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
+  void GetViewOffset(nsIView* aView, nsPoint& aPoint);
+  static void GetRootViewForPopup(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
 
   nsresult SyncViewWithFrame(nsIPresContext* aPresContext, const nsString& aPopupAnchor,
                              const nsString& aPopupAlign,
@@ -137,6 +137,7 @@ public:
   }
 
   void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
+
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
   
 protected:
