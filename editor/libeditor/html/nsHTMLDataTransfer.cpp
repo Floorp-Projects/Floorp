@@ -215,12 +215,12 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
   if (NS_FAILED(res)) return res;
   
   // Get the first range in the selection, for context:
-  nsCOMPtr<nsIDOMRange> range;
+  nsCOMPtr<nsIDOMRange> range, clone;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
-  if (NS_FAILED(res))
-    return res;
-
-  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+  NS_ENSURE_SUCCESS(res, res);
+  res = range->CloneRange(getter_AddRefs(clone));
+  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(clone));
   if (!nsrange)
     return NS_ERROR_NO_INTERFACE;
 
@@ -1503,7 +1503,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   return res;
 }
 
-nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
+nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
                                                   const nsString& aInputString,
                                                   const nsString& aContextStr,
                                                   const nsString& aInfoStr,
@@ -1511,25 +1511,21 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
                                                   PRInt32 *outRangeStartHint,
                                                   PRInt32 *outRangeEndHint)
 {
-  if (!outFragNode || !outRangeStartHint || !outRangeEndHint) 
+  if (!outFragNode || !outRangeStartHint || !outRangeEndHint || !aNSRange) 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  nsresult res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
-  NS_ENSURE_SUCCESS(res, res);
-  *outFragNode = do_QueryInterface(docfrag);
-
-  res = StripFormattingNodes(*outFragNode);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // if we have context info, create a fragment for that too
+  nsCOMPtr<nsIDOMNode> contextAsNode;  
+  nsresult res = NS_OK;
+  
+  // if we have context info, create a fragment for that
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   nsCOMPtr<nsIDOMNode> contextLeaf;
   PRInt32 contextDepth = 0;
   if (aContextStr.Length())
   {
-    res = nsrange->CreateContextualFragment(aContextStr, getter_AddRefs(contextfrag));
+    res = aNSRange->CreateContextualFragment(aContextStr, getter_AddRefs(contextfrag));
     NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMNode> contextAsNode (do_QueryInterface(contextfrag));
+    contextAsNode = do_QueryInterface(contextfrag);
     res = StripFormattingNodes(contextAsNode);
     NS_ENSURE_SUCCESS(res, res);
     // cache the deepest leaf in the context
@@ -1540,6 +1536,26 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
       contextLeaf = tmp;
       contextLeaf->GetFirstChild(getter_AddRefs(tmp));
     }
+    // tweak aNSRange to point inside contextAsNode
+    nsCOMPtr<nsIDOMRange> range(do_QueryInterface(aNSRange));
+    if (range)
+    {
+      aNSRange->NSDetach();
+      range->SetStart(contextLeaf,0);
+      range->SetEnd(contextLeaf,0);
+    }
+  }
+  
+  // create fragment for pasted html
+  res = aNSRange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
+  NS_ENSURE_SUCCESS(res, res);
+  *outFragNode = do_QueryInterface(docfrag);
+  res = StripFormattingNodes(*outFragNode);
+  NS_ENSURE_SUCCESS(res, res);
+  
+  if (contextfrag)
+  {
+    nsCOMPtr<nsIDOMNode> junk;
     // unite the two trees
     contextLeaf->AppendChild(*outFragNode, getter_AddRefs(junk));
     *outFragNode = contextAsNode;

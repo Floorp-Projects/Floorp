@@ -120,7 +120,6 @@ protected:
   nsresult FlushText(nsAWritableString& aString, PRBool aForce);
 
   static PRBool IsTag(nsIDOMNode* aNode, nsIAtom* aAtom);
-  static nsresult AdjustCommonParent(nsCOMPtr<nsIDOMNode> *aCommPar);
   
   virtual PRBool IncludeInContext(nsIDOMNode *aNode);
 
@@ -373,35 +372,6 @@ nsDocumentEncoder::IsTag(nsIDOMNode* aNode, nsIAtom* aAtom)
     }
   }
   return PR_FALSE;
-}
-
-nsresult
-nsDocumentEncoder::AdjustCommonParent(nsCOMPtr<nsIDOMNode> *aCommPar)
-{
-  // if common parent is a table section other than
-  // td or th, look for the parent of the enclosing 
-  // table and use that instead.
-  if (IsTag(*aCommPar, nsHTMLAtoms::tr)    || 
-      IsTag(*aCommPar, nsHTMLAtoms::tbody) ||
-      IsTag(*aCommPar, nsHTMLAtoms::tfoot) ||
-      IsTag(*aCommPar, nsHTMLAtoms::thead) ||
-      IsTag(*aCommPar, nsHTMLAtoms::table))
-  {
-    nsCOMPtr<nsIDOMNode> parent, tmp=*aCommPar;
-    while (tmp)
-    {
-      if (IsTag(parent, nsHTMLAtoms::table))
-      {
-        // return parent of table
-        parent->GetParentNode(getter_AddRefs(tmp));
-        *aCommPar = tmp;
-        break;
-      }
-      tmp->GetParentNode(getter_AddRefs(parent));
-      tmp = parent;
-    }
-  }
-  return NS_OK;
 }
 
 static nsresult
@@ -1198,7 +1168,13 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
   // leaf of ancestors might be text node.  If so discard it.
   nsCOMPtr<nsIDOMNode> node;
   node = NS_STATIC_CAST(nsIDOMNode *, mCommonAncestors.ElementAt(0));
-  if (node && IsTextNode(node)) mCommonAncestors.RemoveElementAt(0);
+  if (node && IsTextNode(node)) 
+  {
+    mCommonAncestors.RemoveElementAt(0);
+    // don't forget to adjust range depth info
+    if (mStartDepth) mStartDepth--;
+    if (mEndDepth) mEndDepth--;
+  }
   
   PRInt32 i = mCommonAncestors.Count();
 
