@@ -519,6 +519,13 @@ MailDataSource::ArcLabelsOut(nsIRDFResource* source,
     }
 }
 
+NS_IMETHODIMP
+MailDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+{
+    NS_NOTYETIMPLEMENTED("sorry!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 MailDataSource::InitAccountList(void)
 {

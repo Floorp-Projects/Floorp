@@ -92,7 +92,7 @@ static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
 
@@ -130,7 +130,7 @@ SetupRegistry(void)
     nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFContentSinkCID,        RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFDataBaseCID,           RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFCompositeDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFXMLDataSourceCID,      RDF_DLL,    PR_FALSE, PR_FALSE);
 
     // parser
@@ -167,11 +167,10 @@ main(int argc, char** argv)
     nsIEventQueueService* theEventQueueService = nsnull;
     PLEventQueue* mainQueue      = nsnull;
     nsIRDFService* theRDFService = nsnull;
-    nsIRDFDataSource* ds         = nsnull;
+    nsIRDFXMLDataSource* ds      = nsnull;
     nsIRDFResource* theHomePage  = nsnull;
     nsIRDFResource* NC_title     = nsnull;
     nsIRDFLiteral* theTitle      = nsnull;
-    PRInt32 i;
 
     // Get netlib off the floor...
     if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -195,14 +194,12 @@ main(int argc, char** argv)
                                                     (void**) &ds)))
         goto done;
 
-    if (NS_FAILED(rv = ds->Init(argv[1])))
+    if (NS_FAILED(rv = ds->SetSynchronous(PR_TRUE)))
         goto done;
 
-    // XXX This is really gross. I need to figure out the right way to do it...
-    for (i = 0; i < 1000000; ++i) {
-        PLEvent* event = PL_GetEvent(mainQueue);
-        PL_HandleEvent(event);
-    }
+    // Okay, this should load the XML file...
+    if (NS_FAILED(rv = ds->Init(argv[1])))
+        goto done;
 
     // Now take the graph and munge it a little bit...
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -213,7 +210,7 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = theRDFService->GetResource("http://home.netscape.com", &theHomePage)))
         goto done;
 
-    if (NS_FAILED(rv = theRDFService->GetResource("http://rdf.nescape.com/NC#title", &NC_title)))
+    if (NS_FAILED(rv = theRDFService->GetResource("http://home.nescape.com/NC-rdf#title", &NC_title)))
         goto done;
 
     if (NS_FAILED(rv = theRDFService->GetLiteral(nsAutoString("Netscape's Home Page"), &theTitle)))

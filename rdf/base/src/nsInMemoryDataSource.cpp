@@ -37,7 +37,6 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
-#include "nsIRDFXMLSource.h"
 #include "nsIServiceManager.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
@@ -54,7 +53,7 @@ static NS_DEFINE_IID(kIRDFDataSourceIID,       NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,          NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,             NS_IRDFNODE_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,         NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFXMLSourceIID,        NS_IRDFXMLSOURCE_IID);
+static NS_DEFINE_IID(kIRDFResourceCursorIID,   NS_IRDFRESOURCECURSOR_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 
 enum Direction {
@@ -96,48 +95,12 @@ rdf_CompareNodes(const void* v1, const void* v2)
     return (PRIntn) result;
 }
 
-static nsresult
-rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
-{
-    PRUint32 written = 0;
-    PRUint32 remaining = size;
-    while (remaining > 0) {
-        nsresult rv;
-        PRUint32 cb;
-
-        if (NS_FAILED(rv = stream->Write(buf, written, remaining, &cb)))
-            return rv;
-
-        written += cb;
-        remaining -= cb;
-    }
-    return NS_OK;
-}
-
-static nsresult
-rdf_BlockingWrite(nsIOutputStream* stream, const nsString& s)
-{
-    char buf[256];
-    char* p = buf;
-
-    if (s.Length() >= sizeof(buf))
-        p = new char[s.Length() + 1];
-
-    nsresult rv = rdf_BlockingWrite(stream, s.ToCString(p, s.Length() + 1), s.Length());
-
-    if (p != buf)
-        delete[](p);
-
-    return rv;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
+class InMemoryResourceCursor;
 
-
-class InMemoryDataSource : public nsIRDFDataSource,
-                           public nsIRDFXMLSource
+class InMemoryDataSource : public nsIRDFDataSource
 {
 protected:
     char*        mURL;
@@ -153,6 +116,8 @@ protected:
     nsVoidArray* mObservers;  
 
     static const PRInt32 kInitialTableSize;
+
+    friend class InMemoryResourceCursor; // b/c it needs to enumerate mForwardArcs
 
 public:
     InMemoryDataSource(void);
@@ -211,6 +176,8 @@ public:
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
                             nsIRDFArcsOutCursor** labels);
 
+    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor);
+
     NS_IMETHOD Flush();
 
     NS_IMETHOD IsCommandEnabled(const char* aCommand,
@@ -219,9 +186,6 @@ public:
 
     NS_IMETHOD DoCommand(const char* aCommand,
                          nsIRDFResource* aCommandTarget);
-
-    // nsIRDFXMLSource methods
-    NS_IMETHOD Serialize(nsIOutputStream* aStream);
 
     // Implemenatation methods
     Assertion* GetForwardArcs(nsIRDFResource* u);
@@ -269,10 +233,10 @@ public:
    
     // nsIRDFCursor interface
     NS_IMETHOD Advance(void);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 
     // nsIRDFAssertionCursor interface
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
     NS_IMETHOD GetSubject(nsIRDFResource** aResource);
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
     NS_IMETHOD GetObject(nsIRDFNode** aObject);
@@ -489,10 +453,10 @@ public:
 
     // nsIRDFCursor interface
     NS_IMETHOD Advance(void);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 
     // nsIRDFArcsOutCursor interface
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
     NS_IMETHOD GetSubject(nsIRDFResource** aSubject);
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
@@ -682,6 +646,127 @@ InMemoryArcsCursor::GetTruthValue(PRBool* aTruthValue)
     return NS_OK;
 }
 
+
+////////////////////////////////////////////////////////////////////////
+// InMemoryResourceCursor
+
+class InMemoryResourceCursor : public nsIRDFResourceCursor
+{
+private:
+    nsIRDFDataSource* mDataSource;
+    nsVoidArray mResources;
+    PRInt32 mNext;
+
+public:
+    InMemoryResourceCursor(InMemoryDataSource* ds);
+    virtual ~InMemoryResourceCursor(void);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFCursor interface
+    NS_IMETHOD Advance(void);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+    NS_IMETHOD GetValue(nsIRDFNode** aValue);
+
+    // nsIRDFResourceCursor interface
+    NS_IMETHOD GetResource(nsIRDFResource** aResource);
+};
+
+static PRIntn
+rdf_ResourceEnumerator(PLHashEntry* he, PRIntn index, void* closure)
+{
+    nsVoidArray* resources = NS_STATIC_CAST(nsVoidArray*, closure);
+
+    nsIRDFResource* resource = 
+        NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
+
+    NS_ADDREF(resource);
+    resources->AppendElement(resource);
+    return HT_ENUMERATE_NEXT;
+}
+
+InMemoryResourceCursor::InMemoryResourceCursor(InMemoryDataSource* ds)
+    : mDataSource(ds),
+      mNext(-1)
+{
+    mDataSource = ds;
+    NS_ADDREF(ds);
+
+    // XXX Ick. To fix this, we need to write our own hash table
+    // implementation. Takers?
+    PL_HashTableEnumerateEntries(ds->mForwardArcs, rdf_ResourceEnumerator, &mResources);
+}
+
+InMemoryResourceCursor::~InMemoryResourceCursor(void)
+{
+    for (PRInt32 i = mResources.Count() - 1; i >= mNext; --i) {
+        nsIRDFResource* resource = NS_STATIC_CAST(nsIRDFResource*, mResources[i]);
+        NS_RELEASE(resource);
+    }
+    NS_RELEASE(mDataSource);
+}
+
+
+NS_IMPL_ISUPPORTS(InMemoryResourceCursor, kIRDFResourceCursorIID);
+
+NS_IMETHODIMP
+InMemoryResourceCursor::Advance(void)
+{
+    if (mNext >= mResources.Count())
+        return NS_ERROR_RDF_CURSOR_EMPTY;
+
+    if (mNext >= 0) {
+        nsIRDFResource* resource = NS_STATIC_CAST(nsIRDFResource*, mResources[mNext]);
+        NS_RELEASE(resource);
+    }
+
+    ++mNext;
+
+    if (mNext >= mResources.Count())
+        return NS_ERROR_RDF_CURSOR_EMPTY;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryResourceCursor::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+    NS_ADDREF(mDataSource);
+    *aDataSource = mDataSource;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryResourceCursor::GetValue(nsIRDFNode** aValue)
+{
+    nsresult rv;
+    nsIRDFResource* result;
+    if (NS_FAILED(rv = GetResource(&result)))
+        return rv;
+
+    *aValue = result; // already addref-ed
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryResourceCursor::GetResource(nsIRDFResource** aResource)
+{
+    NS_ASSERTION(mNext >= 0, "didn't advance");
+    if (mNext < 0)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_ASSERTION(mNext < mResources.Count(), "past end of cursor");
+    if (mNext > mResources.Count())
+        return NS_ERROR_UNEXPECTED;
+
+    nsIRDFResource* result = NS_STATIC_CAST(nsIRDFResource*, mResources[mNext]);
+    *aResource = result;
+    NS_ADDREF(result);
+    return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 
@@ -697,11 +782,6 @@ InMemoryDataSource::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kISupportsIID) ||
         iid.Equals(kIRDFDataSourceIID)) {
         *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else if (iid.Equals(kIRDFXMLSourceIID)) {
-        *result = NS_STATIC_CAST(nsIRDFXMLSource*, this);
         NS_ADDREF(this);
         return NS_OK;
     }
@@ -1153,6 +1233,24 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* source, nsIRDFArcsOutCursor** l
 }
 
 NS_IMETHODIMP
+InMemoryDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+{
+    NS_PRECONDITION(aCursor != nsnull, "null ptr");
+    if (! aCursor)
+        return NS_ERROR_NULL_POINTER;
+
+    InMemoryResourceCursor* result = 
+        new InMemoryResourceCursor(this);
+
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *aCursor = result;
+    NS_ADDREF(result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 InMemoryDataSource::Flush()
 {
     // XXX nothing to flush, right?
@@ -1171,220 +1269,6 @@ NS_IMETHODIMP
 InMemoryDataSource::DoCommand(const char* aCommand,
                               nsIRDFResource* aCommandTarget)
 {
-    return NS_OK;
-}
-
-// XXX This is a total kludge that takes a property resource (like
-// "http://www.w3.org/TR/WD-rdf-syntax#Description") and converts it
-// into a property ("Description"), a namespace prefix ("RDF"), and a
-// namespace URI ("http://www.w3.org/TR/WD-rdf-syntax#").
-//
-// It should really do this by looking at some feature of the document
-// or something. The stuff it spits out is valid, but probably pretty
-// damn illegible and verbose. It generates a new, unique namespace
-// identifier for every qualified name.
-//
-// How To Fix It.
-//
-// 1) We could improve this by refactoring the code between
-// nsRDFDocument, nsRDFContentSink, and nsMemoryDataSource: this is
-// probably The Right Thing To Do, but it's a lot of work and may even
-// involve writing an RDF DTD processer in mozilla/htmlparser. At a
-// minimum, it involves keeping track of namespace URIs and
-// identifiers as they appear in the document, and maybe even
-// implementing an nsIRDFProperty subclass that can tell you the
-// difference between a the namespace URI and the unqualified
-// property.
-//
-// 2) Alternatively, we could do a quick n' dirty hack where we grovel
-// through all the properties in the data source, guess what the
-// namespace URI prefixes are, sort-unique on the namespace prefixes,
-// assign unique namespace identifiers to each, and then make a second
-// pass where we write everything out.
-//
-// 3) Even worse, we could just hard-code in a couple of well-known
-// namespaces (e.g., the Netscape vocabulary), and punt on all the
-// rest.
-//
-// 4) Another idea might be to pass in a "namespace identifier set" to
-// the Serialize() method. Then, any namespace prefix that you find in
-// the set can be written up-front, and any namespace prefix that you
-// don't find, you just generate. This is probably the easiest thing
-// to do...
-
-static void
-rdf_MakeQName(nsIRDFResource* resource,
-              nsString& property,
-              nsString& nameSpacePrefix,
-              nsString& nameSpaceURI)
-{
-    const char* uri;
-    resource->GetValue(&uri);
-
-    PRInt32 index;
-
-    nameSpaceURI = uri;
-    index = nameSpaceURI.RFind('#'); // first try a '#'
-    if (index == -1) {
-        index = nameSpaceURI.RFind('/');
-        if (index == -1) {
-            // Okay, just punt and assume there is _no_ namespace on
-            // this thing...
-            nameSpaceURI.Truncate();
-            nameSpacePrefix.Truncate();
-            property = uri;
-            return;
-        }
-    }
-
-    // Take whatever is to the right of the '#' and call it the
-    // property.
-    property.Truncate();
-    nameSpaceURI.Right(property, nameSpaceURI.Length() - (index + 1));
-
-    // Truncate the namespace URI down to the string up to and
-    // including the '#'.
-    nameSpaceURI.Truncate(index + 1);
-
-    // XXX hack any common prefixes here
-    if (nameSpaceURI.Equals("http://www.w3.org/TR/WD-rdf-syntax#")) {
-        nameSpacePrefix = "RDF";
-    }
-    else {
-        // Just generate a random prefix
-        static PRInt32 gPrefixID = 0;
-        nameSpacePrefix = "NS";
-        nameSpacePrefix.Append(++gPrefixID, 10);
-    }
-}
-
-// convert '<' and '>' into '&lt;' and '&gt', respectively.
-static void
-rdf_EscapeAngleBrackets(nsString& s)
-{
-    PRInt32 index;
-    while ((index = s.Find('<')) != -1) {
-        s[index] = '&';
-        s.Insert(nsAutoString("lt;"), index + 1);
-    }
-
-    while ((index = s.Find('>')) != -1) {
-        s[index] = '&';
-        s.Insert(nsAutoString("gt;"), index + 1);
-    }
-}
-
-static void
-rdf_EscapeAmpersands(nsString& s)
-{
-    PRInt32 index = 0;
-    while ((index = s.Find('&', index)) != -1) {
-        s[index] = '&';
-        s.Insert(nsAutoString("amp;"), index + 1);
-        index += 4;
-    }
-}
-
-static PRIntn
-rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
-{
-    nsIOutputStream* stream = NS_STATIC_CAST(nsIOutputStream*, closure);
-
-    nsIRDFResource* node = 
-        NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
-
-    const char* s;
-    node->GetValue(&s);
-
-    static const char kRDFDescription1[] = "  <RDF:Description RDF:about=\"";
-    static const char kRDFDescription2[] = "\">\n";
- 
-    nsAutoString escaped(s);
-    rdf_EscapeAmpersands(escaped);
-
-    rdf_BlockingWrite(stream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
-    rdf_BlockingWrite(stream, escaped);
-    rdf_BlockingWrite(stream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
-
-    for (Assertion* as = (Assertion*) he->value; as != nsnull; as = as->mNext) {
-        nsAutoString property, nameSpacePrefix, nameSpaceURI;
-        nsAutoString tag;
-        rdf_MakeQName(as->mProperty, property, nameSpacePrefix, nameSpaceURI);
-
-        if (nameSpacePrefix.Length()) {
-            tag.Append(nameSpacePrefix);
-            tag.Append(':');
-        }
-        tag.Append(property);
-
-        rdf_BlockingWrite(stream, "    <", 5);
-        rdf_BlockingWrite(stream, tag);
-
-        if (nameSpacePrefix.Length()) {
-            rdf_BlockingWrite(stream, " xmlns:", 7);
-            rdf_BlockingWrite(stream, nameSpacePrefix);
-            rdf_BlockingWrite(stream, "=\"", 2);
-            rdf_BlockingWrite(stream, nameSpaceURI);
-            rdf_BlockingWrite(stream, "\"");
-        }
-
-        rdf_BlockingWrite(stream, ">", 1);
-
-        nsIRDFResource* resource;
-        nsIRDFLiteral* literal;
-
-        if (NS_SUCCEEDED(as->mTarget->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
-            const char* uri;
-            resource->GetValue(&uri);
-
-            nsAutoString escaped(uri);
-            rdf_EscapeAmpersands(escaped);
-
-            rdf_BlockingWrite(stream, escaped);
-            NS_RELEASE(resource);
-        }
-        else if (NS_SUCCEEDED(as->mTarget->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
-            const PRUnichar* value;
-            literal->GetValue(&value);
-            nsAutoString s(value);
-
-            rdf_EscapeAmpersands(s); // do these first!
-            rdf_EscapeAngleBrackets(s);
-
-            rdf_BlockingWrite(stream, s);
-
-            NS_RELEASE(literal);
-        }
-        else {
-            PR_ASSERT(0);
-        }
-
-        rdf_BlockingWrite(stream, "</", 2);
-        rdf_BlockingWrite(stream, tag);
-        rdf_BlockingWrite(stream, ">\n", 2);
-    }
-
-    static const char kRDFDescription3[] = "  </RDF:Description>\n";
-    rdf_BlockingWrite(stream, kRDFDescription3, sizeof(kRDFDescription3) - 1);
-
-    return HT_ENUMERATE_NEXT;
-}
-
-NS_IMETHODIMP
-InMemoryDataSource::Serialize(nsIOutputStream* aStream)
-{
-    static const char kOpenRDF[]  = "<RDF:RDF xmlns:RDF=\"http://www.w3.org/TR/WD-rdf-syntax#\">\n";
-    static const char kCloseRDF[] = "</RDF:RDF>\n";
-
-    nsresult rv;
-    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kOpenRDF, sizeof(kOpenRDF) - 1)))
-        return rv;
-
-    PL_HashTableEnumerateEntries(mForwardArcs, rdf_SerializeEnumerator, aStream);
-
-    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kCloseRDF, sizeof(kCloseRDF) - 1)))
-        return rv;
-
     return NS_OK;
 }
 

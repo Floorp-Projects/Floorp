@@ -107,25 +107,34 @@ rdf_IsOrdinalProperty(const nsIRDFResource* property)
 }
 
 
+// XXX This'll permanently leak RDF_Alt, RDF_Seq, RDF_Bag, and
+// RDF_instanceOf. Since we do it a lot, it seems like it's worth it.
+
 PRBool
 rdf_IsContainer(nsIRDFDataSource* ds,
                 nsIRDFResource* resource)
 {
     PRBool result = PR_FALSE;
 
-    nsIRDFResource* RDF_instanceOf = nsnull;
-    nsIRDFResource* RDF_Bag        = nsnull;
-    nsIRDFResource* RDF_Seq        = nsnull;
+static nsIRDFResource* RDF_instanceOf = nsnull;
+static nsIRDFResource* RDF_Bag        = nsnull;
+static nsIRDFResource* RDF_Seq        = nsnull;
+static nsIRDFResource* RDF_Alt        = nsnull;
 
     nsresult rv;
     if (NS_FAILED(rv = rdf_EnsureRDFService()))
         goto done;
 
-    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &RDF_instanceOf)))
-        goto done;
+    if (! RDF_instanceOf) {
+        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &RDF_instanceOf)))
+            goto done;
+    }
     
-    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Bag, &RDF_Bag)))
-        goto done;
+    // bag?
+    if (! RDF_Bag) {
+        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Bag, &RDF_Bag)))
+            goto done;
+    }
 
     if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, &result)))
         goto done;
@@ -133,16 +142,33 @@ rdf_IsContainer(nsIRDFDataSource* ds,
     if (result)
         goto done;
 
-    if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Seq, &RDF_Seq)))
-        goto done;
+    // sequence?
+    if (! RDF_Seq) {
+        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Seq, &RDF_Seq)))
+            goto done;
+    }
 
     if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Seq, PR_TRUE, &result)))
         goto done;
 
+    if (result)
+        goto done;
+
+    // alternation?
+    if (! RDF_Alt) {
+        if (NS_FAILED(rv = gRDFService->GetResource(kURIRDF_Alt, &RDF_Alt)))
+            goto done;
+    }
+
+    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Alt, PR_TRUE, &result)))
+        goto done;
+
 done:
-    NS_IF_RELEASE(RDF_Seq);
-    NS_IF_RELEASE(RDF_Bag);
-    NS_IF_RELEASE(RDF_instanceOf);
+    // XXX permanent leak
+    //NS_IF_RELEASE(RDF_Alt);
+    //NS_IF_RELEASE(RDF_Seq);
+    //NS_IF_RELEASE(RDF_Bag);
+    //NS_IF_RELEASE(RDF_instanceOf);
     return result;
 }
 

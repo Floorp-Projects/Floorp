@@ -1421,7 +1421,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                 // Get the attribute value (the URI for the namespace)
                 uri = aNode.GetValueAt(i);
                 rdf_StripAndConvert(uri);
-      
+
                 // Open a local namespace
                 nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
                 nsINameSpace* child = nsnull;
@@ -1430,6 +1430,10 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                     NS_RELEASE(nameSpace);
                     nameSpace = child;
                 }
+
+                // Add it to the set of namespaces used in the RDF/XML document.
+                mDataSource->AddNameSpace(prefixAtom, uri);
+      
                 NS_IF_RELEASE(prefixAtom);
             }
         }
