@@ -2080,19 +2080,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
               spaceLoc = urlStr.FindChar(' ');
 
               PRBool keyword = PR_FALSE;
-              if ( (qMarkLoc == 0)
-#ifdef XP_PC
-                  // This is windows only because windows is the
-                  // only platform that utilizes WINS resolution 
-                  // (a DNS fallback) which can take several minutes to
-                  // fail a resolve call if the host does not exist. 
-                  // Thus, this forces us to bypass DNS/WINS altogether
-                  // on windows; for nonQualifiedHosts *only*.
-
-                  // "nonQualifiedHost"
-                    || ( (qMarkLoc == -1) && (spaceLoc == -1) )
-#endif // XP_PC      
-                  ) {
+              if (qMarkLoc == 0) {
                   keyword = PR_TRUE;
               } else if ( (spaceLoc > 0) && 
                           ( (qMarkLoc == -1) || (spaceLoc < qMarkLoc) )) {
