@@ -986,15 +986,6 @@ select[size][disabled] {
   border: 2px inset rgb(153, 153, 153);
 }
 
-select[multiple] {
-  background-color: white;
-  border: 2px inset rgb(153, 153, 153);
-  padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  3px;
-  padding-bottom: 0px;
-}
-
 select[multiple][disabled] {
   background-color:rgb(204, 204, 204);  
   border: 2px inset rgb(153, 153, 153);
@@ -1003,15 +994,6 @@ select[multiple][disabled] {
 select[disabled] {
   background-color: rgb(204, 204, 204);
   border: 2px inset rgb(153, 153, 153);
-}
-
-select[multiple][size="1"] {
-  background-color: white;
-  border: 2px inset rgb(153, 153, 153);
-  padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  3px;
-  padding-bottom: 0px;
 }
 
 /* combobox button */
@@ -1099,14 +1081,14 @@ option[label]:before {
   content:attr(label);
 }
 
-select[size] > option {
+select[size] option {
   padding-left:   3px;
   padding-top:    0px;
   padding-right:  11px;
   padding-bottom: 0px;
 }
 
-select > option, select[size="1"] > option {
+select option, select[size="1"] option {
   padding-left:   3px;
   padding-top:    0px;
   padding-right:  5px;
@@ -1226,10 +1208,6 @@ select:focus, select[size="1"]:focus {
 
 select[multiple]:focus {
   border: 2px dotted rgb(128,128,128);
-  padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  3px;
-  padding-bottom: 0px;
 }
 
 select:focus > input#-moz-display {
