@@ -79,7 +79,7 @@
     </vbox>
     <separator/>
     <hbox align="center">
-      <html:a class="themesLink" link="http://texturizer.net/firebird/extensions.html" onclick="parent.visitLink(event);"
+      <html:a class="themesLink" link="&getnew.url;" onclick="parent.visitLink(event);"
           style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;">&getNewExtensions.label;</html:a>
       <spacer flex="1"/>
       <button disabled="true" id="extensionSettings" label="&extensionSettings.label;" oncommand="showSettings();"/>
