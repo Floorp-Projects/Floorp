@@ -36,6 +36,7 @@
 #include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include "nsIMIMEService.h"
 
@@ -97,8 +98,20 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 		aUrl->DirFile(getter_Copies(fileString));
 		// to be mac friendly you need to convert a file path to a nsFilePath before
 		// passing it to a nsFileSpec...
+#ifdef XP_MAC
+		static const char kNetscapeDirectory[] = "/usr/local/netscape/bin/";
+		static const unsigned int kNetscapeDirectoryLength = sizeof(kNetscapeDirectory) - 1;
+		if (nsCRT::strncmp(kNetscapeDirectory, fileString, kNetscapeDirectoryLength) == 0) {
+			nsSpecialSystemDirectory netscapeDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+			mSpec = netscapeDir + (fileString + kNetscapeDirectoryLength);
+		} else {
+			nsFilePath filePath(fileString);
+			mSpec = filePath;
+		}
+#else
 		nsFilePath filePath(fileString);
 		mSpec = filePath;
+#endif
 	}
 	else
 	{
