@@ -125,21 +125,21 @@ nsHTMLTableCaptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
 
-static nsGenericHTMLElement::EnumTable kTableCaptionAlignTable[] = {
-  { "left",  NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "top",   NS_STYLE_VERTICAL_ALIGN_TOP},
-  { "bottom",NS_STYLE_VERTICAL_ALIGN_BOTTOM},
+static nsGenericHTMLElement::EnumTable kCaptionAlignTable[] = {
+  { "left",  NS_SIDE_LEFT },
+  { "right", NS_SIDE_RIGHT },
+  { "top",   NS_SIDE_TOP},
+  { "bottom",NS_SIDE_BOTTOM},
   { 0 }
 };
 
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
-                                      nsHTMLValue& aResult)
+                                      nsHTMLValue&    aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kTableCaptionAlignTable, aResult)) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kCaptionAlignTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -147,13 +147,13 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
+nsHTMLTableCaptionElement::AttributeToString(nsIAtom*    aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsString&          aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      nsGenericHTMLElement::EnumValueToString(aValue, kCaptionAlignTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -170,17 +170,9 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = value.GetIntValue();
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
-      switch (align) {
-      case NS_STYLE_VERTICAL_ALIGN_TOP:
-      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
-        break;
-      default:
-        // illegal value -- ignore it.
-        break;
-      }
+      nsStyleTable* tableStyle = (nsStyleTable*)
+        aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mCaptionSide = align;
     }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
