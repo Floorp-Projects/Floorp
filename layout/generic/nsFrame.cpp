@@ -891,7 +891,6 @@ nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParen
   return NS_OK;
 }
 
-static
 PRBool IsSelectable(nsIFrame *aFrame) //checks style to see if we can selected
 {
   if (!aFrame)
