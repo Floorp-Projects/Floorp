@@ -21,6 +21,7 @@
 #include <Events.h>
 #include <MacWindows.h>
 #include "nsWindow.h"
+#include "nsCOMPtr.h"
 
 
 class nsMacEventHandler
@@ -65,9 +66,9 @@ protected:
 
 
 protected:
-	nsWindow*				mTopLevelWidget;
-	nsWindow*				mLastWidgetHit;
-	nsWindow*				mLastWidgetPointed;
+	nsCOMPtr<nsWindow>		mTopLevelWidget;
+	nsCOMPtr<nsWindow>		mLastWidgetHit;
+	nsCOMPtr<nsWindow>		mLastWidgetPointed;
 	RgnHandle				mUpdateRgn;
 };
 

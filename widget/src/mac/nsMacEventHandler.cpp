@@ -45,8 +45,6 @@ nsMacEventHandler::nsMacEventHandler(nsWindow* aTopLevelWidget)
 
 nsMacEventHandler::~nsMacEventHandler()
 {
-	NS_IF_RELEASE(mLastWidgetPointed);
-	NS_IF_RELEASE(mLastWidgetHit);
 }
 
 
@@ -104,13 +102,10 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 															long						aMenuResult)
 {
 	// get the focused widget
-	nsWindow*	focusedWidget = nsnull;
-	nsToolkit* toolkit = (nsToolkit*)mTopLevelWidget->GetToolkit();
+	nsCOMPtr<nsWindow> focusedWidget;
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
-	{
 		focusedWidget = toolkit->GetFocus();
-		NS_RELEASE(toolkit);
-	}
 	
 	if (focusedWidget == nsnull)
 		focusedWidget = mTopLevelWidget;
@@ -137,21 +132,19 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	PRBool eventHandled = focusedWidget->DispatchWindowEvent(menuEvent);
 	if (! eventHandled)
 	{
-		nsIWidget* grandParent;
-		nsIWidget* parent = focusedWidget->GetParent();
+		nsCOMPtr<nsWindow> grandParent;
+		nsCOMPtr<nsWindow> parent ( dont_AddRef((nsWindow*)focusedWidget->GetParent()) );
 		while (parent)
 		{
 			menuEvent.widget = parent;
-			eventHandled = ((nsWindow*)parent)->DispatchWindowEvent(menuEvent);
+			eventHandled = parent->DispatchWindowEvent(menuEvent);
 			if (eventHandled)
 			{
-				NS_IF_RELEASE(parent);
 				break;
 			}
 			else
 			{
-				grandParent = parent->GetParent();
-				NS_IF_RELEASE(parent);
+				grandParent = dont_AddRef((nsWindow*)parent->GetParent());
 				parent = grandParent;
 			}
 		}
@@ -169,13 +162,10 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	// get the focused widget
-	nsWindow*	focusedWidget = nsnull;
-	nsToolkit* toolkit = (nsToolkit*)mTopLevelWidget->GetToolkit();
+	nsCOMPtr<nsWindow> focusedWidget;
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
-	{
 		focusedWidget = toolkit->GetFocus();
-		NS_RELEASE(toolkit);
-	}
 	
 	if (focusedWidget == nsnull)
 		focusedWidget = mTopLevelWidget;
@@ -289,23 +279,18 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		{
 			nsMouseEvent mouseEvent;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN);
-			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
+			nsCOMPtr<nsWindow> widgetHit ( mouseEvent.widget );
 			if (widgetHit)
 			{
 				// set the focus on the widget hit
-				nsToolkit* toolkit = (nsToolkit*)widgetHit->GetToolkit();
+				nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)widgetHit->GetToolkit()) );
 				if (toolkit)
-				{
 					toolkit->SetFocus(widgetHit);
-					NS_RELEASE(toolkit);
-				}
 
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
 			}
-			NS_IF_RELEASE(mLastWidgetHit);
 			mLastWidgetHit = widgetHit;
-			NS_ADDREF(widgetHit);
 			break;
 		}
 	}
@@ -326,14 +311,13 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_UP);
 
-	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
+	nsCOMPtr<nsWindow> widgetReleased ( mouseEvent.widget );
 	if ((widgetReleased != nsnull) && (widgetReleased != mLastWidgetHit))
 		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
 
 	if (mLastWidgetHit != nsnull)
 	{
 		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
-		NS_RELEASE(mLastWidgetHit);
 		mLastWidgetHit = nsnull;
 	}
 
@@ -354,7 +338,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_MOVE);
 
-	nsWindow* widgetPointed = (nsWindow*)mouseEvent.widget;
+	nsCOMPtr<nsWindow> widgetPointed ( mouseEvent.widget );
 	if (widgetPointed != mLastWidgetPointed)
 	{
 		if (mLastWidgetPointed != nsnull)
@@ -362,7 +346,6 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 			mouseEvent.widget = mLastWidgetPointed;
 				mouseEvent.message = NS_MOUSE_EXIT;
 				retVal |= mLastWidgetPointed->DispatchMouseEvent(mouseEvent);
-				NS_IF_RELEASE(mLastWidgetPointed);
 				mLastWidgetPointed = nsnull;
 			mouseEvent.widget = widgetPointed;
 		}
@@ -370,9 +353,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 		{
 			mouseEvent.message = NS_MOUSE_ENTER;
 			retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
-			NS_IF_RELEASE(mLastWidgetPointed);
 			mLastWidgetPointed = widgetPointed;
-			NS_ADDREF(widgetPointed);
 		}
 	}
 	else
@@ -423,7 +404,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	::GlobalToLocal(&hitPoint);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
-	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
+	nsCOMPtr<nsWindow> widgetHit ( mTopLevelWidget->FindWidgetHit(hitPoint) );
 	if (widgetHit)
 	{
 		nsRect bounds;
