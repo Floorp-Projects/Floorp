@@ -28,10 +28,11 @@ CPPSRCS = \
 	nsUnixMain.cpp		\
 	nsViewerApp.cpp		\
 	nsWebCrawler.cpp	\
+        nsStubs.cpp  		\
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
-	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref
+	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref -I$(PUBLIC)/network -I$(PUBLIC)/xp
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 

@@ -114,3 +114,8 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+
+void ValidateDocData() { }
+void XP_ReBuffer() { }
+void XP_Trace() { }
