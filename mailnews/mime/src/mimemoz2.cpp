@@ -1962,15 +1962,15 @@ int EndMailNewsFont(MimeObject *obj)
 }
 
 // TODO: rewrite BeginMailNewFont to use this.
-nsresult GetMailNewsFont(MimeObject *obj, char *fontName, PRInt32 *fontSize)
+nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontName, PRInt32 *fontSize)
 {
   nsresult rv = NS_OK;
 
   // check Content-Type:
   PRBool bTEXT_HTML = PR_FALSE;
-  if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
+  if (!nsCRT::strcasecmp(contentType, TEXT_HTML))
     bTEXT_HTML = PR_TRUE;
-  else if (nsCRT::strcasecmp(obj->content_type, TEXT_PLAIN))
+  else if (nsCRT::strcasecmp(contentType, TEXT_PLAIN))
     return NS_ERROR_FAILURE;  // not supported type
 
   nsIPref *aPrefs = GetPrefServiceManager(obj->options);

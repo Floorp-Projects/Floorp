@@ -164,7 +164,7 @@ extern "C" nsresult         nsMimeNewURI(nsIURI** aInstancePtrResult, const char
 
 extern "C" int BeginMailNewsFont(MimeObject *obj);
 extern "C" int EndMailNewsFont(MimeObject *obj);
-extern "C" nsresult GetMailNewsFont(MimeObject *obj, char *fontName, PRInt32 *fontSize);
+extern "C" nsresult GetMailNewsFont(MimeObject *obj, const char *contentType, char *fontName, PRInt32 *fontSize);
 
 #ifdef __cplusplus
 }
