@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
   }
   // Default URL if one was not provided in the cmdline
   if (nsnull == urlstr)
-      urlstr = "resource:/res/samples/test0.html";
+      urlstr = "resource:/res/samples/appshell.html";
   else
       fprintf(stderr, "URL to load is %s\n", urlstr);
 
