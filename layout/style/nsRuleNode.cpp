@@ -1589,9 +1589,9 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
   switch (aSID) {
     case eStyleStruct_Font: 
     {
-      nsFont defaultFont;
-      mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultFont);
-      nsStyleFont* fontData = new (mPresContext) nsStyleFont(defaultFont);
+      const nsFont* defaultFont;
+      mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
+      nsStyleFont* fontData = new (mPresContext) nsStyleFont(*defaultFont);
       aContext->SetStyle(eStyleStruct_Font, *fontData);
       return fontData;
     }
@@ -1768,9 +1768,10 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
         const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
         nsStyleFont* aFont, PRBool& aInherited)
 {
-  nsFont defaultVariableFont, defaultFixedFont;
-  aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultVariableFont);
-  aPresContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, defaultFixedFont);
+  const nsFont* defaultVariableFont;
+  const nsFont* defaultFixedFont;
+  aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultVariableFont);
+  aPresContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, &defaultFixedFont);
 
   // font-family: string list, enum, inherit
   if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
@@ -1832,9 +1833,9 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     aPresContext->GetDeviceContext(getter_AddRefs(dc));
     if (dc) {
       // GetSystemFont sets the font face but not necessarily the size
-      aFont->mFont.size = defaultVariableFont.size;
+      aFont->mFont.size = defaultVariableFont->size;
       if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
-        aFont->mFont.name = defaultVariableFont.name;
+        aFont->mFont.name = defaultVariableFont->name;
       }
       aFont->mSize = aFont->mFont.size; // this becomes our cascading size
     }
@@ -1846,11 +1847,11 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
         case eSystemFont_Field:
         case eSystemFont_List:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont.size;
+          aFont->mSize = defaultFixedFont->size;
           break;
         case eSystemFont_Button:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
-          aFont->mSize = defaultVariableFont.size;
+          aFont->mSize = defaultVariableFont->size;
           break;
       }
     }
@@ -1878,10 +1879,10 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       case eSystemFont_Field:
         if (eCompatibility_NavQuirks == mode) {
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont.size;
+          aFont->mSize = defaultFixedFont->size;
         } else {
           // Assumption: system defined font is proportional
-          aFont->mSize = PR_MAX(defaultVariableFont.size - NSIntPointsToTwips(2), 0);
+          aFont->mSize = PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0);
         }
         break;
       //
@@ -1902,7 +1903,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
           aFont->mFont.name.Assign(NS_LITERAL_STRING("sans-serif"));
         }
         // Assumption: system defined font is proportional
-        aFont->mSize = PR_MAX(defaultVariableFont.size - NSIntPointsToTwips(2), 0);
+        aFont->mSize = PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0);
         break;
     }
 #endif
@@ -1912,12 +1913,12 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       switch (sysID) {
         case eSystemFont_Field:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont.size;
+          aFont->mSize = defaultFixedFont->size;
           break;
         case eSystemFont_Button:
         case eSystemFont_List:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
-          aFont->mSize = defaultVariableFont.size;
+          aFont->mSize = defaultVariableFont->size;
           break;
         default:
           NS_ERROR("unexpected SID");
@@ -2086,9 +2087,9 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   // If we stopped earlier because we reached the root of the style tree,
   // we will start with the default generic font from the presentation
   // context. Otherwise we start with the higher context.
-  nsFont defaultFont;
-  aPresContext->GetDefaultFont(aGenericFontID, defaultFont);
-  nsStyleFont parentFont(defaultFont);
+  const nsFont* defaultFont;
+  aPresContext->GetDefaultFont(aGenericFontID, &defaultFont);
+  nsStyleFont parentFont(*defaultFont);
   PRInt32 i = contextPath.Count() - 1;
   if (higherContext) {
     nsIStyleContext* context = (nsIStyleContext*)contextPath[i];
@@ -2134,7 +2135,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 
     SetFont(aPresContext, context, aMinFontSize,
             aUseDocumentFonts, aChromeOverride, PR_TRUE,
-            fontData, defaultFont, &parentFont, aFont, dummy);
+            fontData, *defaultFont, &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
@@ -2151,7 +2152,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   // can just compute the delta from the parent.
   SetFont(aPresContext, aContext, aMinFontSize,
           aUseDocumentFonts, aChromeOverride, PR_TRUE,
-          aFontData, defaultFont, &parentFont, aFont, dummy);
+          aFontData, *defaultFont, &parentFont, aFont, dummy);
 }
 
 const nsStyleStruct* 
@@ -2187,10 +2188,10 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     }
   }
 
-  nsFont defaultFont;
+  const nsFont* defaultFont;
   if (!font) {
-    mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultFont);
-    font = new (mPresContext) nsStyleFont(defaultFont);
+    mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
+    font = new (mPresContext) nsStyleFont(*defaultFont);
   }
   if (!parentFont)
     parentFont = font;
@@ -2256,10 +2257,10 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     // continue the normal processing
     // our default font is the most recent generic font
     generic = parentFont->mFlags & NS_STYLE_FONT_FACE_MASK;
-    mPresContext->GetDefaultFont(generic, defaultFont);
+    mPresContext->GetDefaultFont(generic, &defaultFont);
     SetFont(mPresContext, aContext, minimumFontSize,
             useDocumentFonts, chromeOverride, PR_FALSE,
-            fontData, defaultFont, parentFont, font, inherited);
+            fontData, *defaultFont, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
