@@ -59,6 +59,7 @@
 #include "nsIBindingManager.h"
 
 #include "nsIAutoCopy.h"
+#include "nsContentPolicyUtils.h"
 #include "nsIXIFConverter.h"
 
 #include "nsINodeInfo.h"
@@ -106,6 +107,7 @@ static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
+static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
 static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 
 
@@ -135,6 +137,7 @@ extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
+extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
 extern nsresult NS_NewXIFConverter(nsIXIFConverter** aResult);
 
@@ -424,10 +427,17 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }  
   else if (mClassID.Equals(kDOMImplementationCID)) {
     res = NS_NewDOMImplementation((nsIDOMDOMImplementation**) &inst);
-	if (NS_FAILED(res)) {
+    if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewDOMImplementation", res);
       return res;
-	}
+    }
+  }
+  else if (mClassID.Equals(kContentPolicyCID)) {
+    res = NS_NewContentPolicy((nsIContentPolicy**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewContentPolicy", res);
+      return res;
+    }
   }
   else {
     return NS_NOINTERFACE;

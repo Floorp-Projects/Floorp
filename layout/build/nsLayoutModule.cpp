@@ -67,6 +67,7 @@
 #include "nsTextTransformer.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "gbdate.h"
+#include "nsContentPolicyUtils.h"
 #define PRODUCT_NAME "Gecko"
 
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
@@ -357,8 +358,8 @@ static Components gComponents[] = {
   { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
   
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
+  { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_PROGID },
   { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },
-
   { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
