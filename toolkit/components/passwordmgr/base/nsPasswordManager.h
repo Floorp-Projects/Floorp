@@ -47,6 +47,8 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsIWebProgressListener.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIStringBundle.h"
 
 /* 360565c4-2ef3-4f6a-bab9-94cca891b2a7 */
 #define NS_PASSWORDMANAGER_CID \
@@ -64,6 +66,8 @@ class nsIComponentManager;
 class nsIContent;
 class nsIDOMWindowInternal;
 class nsIURI;
+class nsIDOMHTMLInputElement;
+class nsIAutoCompleteResult;
 struct nsModuleComponentInfo;
 
 class nsPasswordManager : public nsIPasswordManager,
@@ -72,6 +76,7 @@ class nsPasswordManager : public nsIPasswordManager,
                           public nsIFormSubmitObserver,
                           public nsIWebProgressListener,
                           public nsIDOMFocusListener,
+                          public nsIDOMLoadListener,
                           public nsSupportsWeakReference
 {
 public:
@@ -81,6 +86,8 @@ public:
 
   nsPasswordManager();
   virtual ~nsPasswordManager();
+
+  static nsPasswordManager* GetInstance();
 
   nsresult Init();
   static PRBool SingleSignonEnabled();
@@ -125,6 +132,17 @@ public:
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
+  // nsIDOMLoadListener
+  NS_IMETHOD Load(nsIDOMEvent* aEvent);
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
+  NS_IMETHOD Error(nsIDOMEvent* aEvent);
+
+  // Autocomplete
+  PRBool AutoCompleteSearch(const nsAString& aSearchString,
+                            nsIAutoCompleteResult* aPreviousResult,
+                            nsIDOMHTMLInputElement* aElement,
+                            nsIAutoCompleteResult** aResult);
 
 protected:
   void ReadSignonFile();
@@ -139,6 +157,7 @@ protected:
 
 
   nsresult FillPassword(nsIDOMEvent* aEvent);
+  void AttachToInput(nsIDOMHTMLInputElement* aElement);
 
   static PLDHashOperator PR_CALLBACK FindEntryEnumerator(const nsACString& aKey,
                                                          SignonHashEntry* aEntry,
@@ -160,10 +179,15 @@ protected:
                                                                 PRInt32 aEntry,
                                                                 void* aUserData);
 
+  static PLDHashOperator PR_CALLBACK RemoveForDOMDocumentEnumerator(nsISupports* aKey,
+                                                                    PRInt32& aEntry,
+                                                                    void* aUserData);
+
   static void EnsureDecoderRing();
 
   nsClassHashtable<nsCStringHashKey,SignonHashEntry> mSignonTable;
   nsDataHashtable<nsCStringHashKey,PRInt32> mRejectTable;
+  nsDataHashtable<nsISupportsHashKey,PRInt32> mAutoCompleteInputs;
 
   nsCOMPtr<nsIFile> mSignonFile;
 };

@@ -68,6 +68,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIAutoCompleteResult.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -75,6 +76,7 @@ static PRBool sPrefsInitialized = PR_FALSE;
 
 static nsIStringBundle* sPMBundle;
 static nsISecretDecoderRing* sDecoderRing;
+static nsPasswordManager* sPasswordManager;
 
 static void PMLocalizedString(const nsAString& key, nsAString& aResult,
                               PRBool aFormatted = PR_FALSE,
@@ -170,6 +172,9 @@ nsPasswordManager::PasswordEntry::GetPassword(nsAString& aPassword)
 }
 
 
+
+
+
 NS_IMPL_ADDREF(nsPasswordManager)
 NS_IMPL_RELEASE(nsPasswordManager)
 
@@ -180,7 +185,8 @@ NS_INTERFACE_MAP_BEGIN(nsPasswordManager)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPasswordManager)
 NS_INTERFACE_MAP_END
@@ -194,11 +200,32 @@ nsPasswordManager::~nsPasswordManager()
 }
 
 
+/* static */ nsPasswordManager*
+nsPasswordManager::GetInstance()
+{
+  if (!sPasswordManager) {
+    sPasswordManager = new nsPasswordManager();
+    if (!sPasswordManager)
+      return nsnull;
+
+    NS_ADDREF(sPasswordManager);   // addref the global
+
+    if (NS_FAILED(sPasswordManager->Init())) {
+      NS_RELEASE(sPasswordManager);
+      return nsnull;
+    }
+  }
+
+  NS_ADDREF(sPasswordManager);   // addref the return result
+  return sPasswordManager;
+}
+
 nsresult
 nsPasswordManager::Init()
 {
   mSignonTable.Init();
   mRejectTable.Init();
+  mAutoCompleteInputs.Init();
 
   sPrefsInitialized = PR_TRUE;
 
@@ -310,6 +337,7 @@ nsPasswordManager::Shutdown()
 {
   NS_IF_RELEASE(sDecoderRing);
   NS_IF_RELEASE(sPMBundle);
+  NS_IF_RELEASE(sPasswordManager);
 }
 
 // nsIPasswordManager implementation
@@ -618,9 +646,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
         // that we can attempt to prefill the password after the user has
         // entered the username.
 
-        nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(userField);
-        targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
-        targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), this, PR_FALSE);
+        AttachToInput(userField);
         firstMatch = nsnull;
         break;   // on to the next form
       } else {
@@ -637,11 +663,13 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       DecryptData(firstMatch->passValue, buffer);
       passField->SetValue(buffer);
 
-      nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(userField);
-      targ->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
-      targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), this, PR_FALSE);
+      AttachToInput(userField);
     }
   }
+
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
+  targ->AddEventListener(NS_LITERAL_STRING("unload"),
+                         NS_STATIC_CAST(nsIDOMLoadListener*, this), PR_FALSE);
 
   return NS_OK;
 }
@@ -967,6 +995,227 @@ nsPasswordManager::HandleEvent(nsIDOMEvent* aEvent)
 {
   return FillPassword(aEvent);
 }
+
+// Autocomplete implementation
+
+class UserAutoComplete : public nsIAutoCompleteResult
+{
+public:
+  UserAutoComplete(const nsAString& aSearchString);
+  virtual ~UserAutoComplete();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTOCOMPLETERESULT
+
+  nsVoidArray mArray;
+  nsString mSearchString;
+  PRInt32 mDefaultIndex;
+  PRUint16 mResult;
+};
+  
+UserAutoComplete::UserAutoComplete(const nsAString& aSearchString)
+  : mSearchString(aSearchString),
+    mDefaultIndex(-1),
+    mResult(RESULT_FAILURE)
+{
+}
+
+UserAutoComplete::~UserAutoComplete()
+{
+  for (PRUint32 i  = 0; i < mArray.Count(); ++i)
+    nsMemory::Free(mArray.ElementAt(i));
+}
+
+NS_IMPL_ISUPPORTS1(UserAutoComplete, nsIAutoCompleteResult)
+
+NS_IMETHODIMP
+UserAutoComplete::GetSearchString(nsAString& aString)
+{
+  aString.Assign(mSearchString);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetSearchResult(PRUint16* aResult)
+{
+  *aResult = mResult;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetDefaultIndex(PRInt32* aDefaultIndex)
+{
+  *aDefaultIndex = mDefaultIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetErrorDescription(nsAString& aDescription)
+{
+  aDescription.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetMatchCount(PRUint32* aCount)
+{
+  *aCount = mArray.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetValueAt(PRInt32 aIndex, nsAString& aValue)
+{
+  aValue.Assign(NS_STATIC_CAST(PRUnichar*, mArray.ElementAt(aIndex)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetCommentAt(PRInt32 aIndex, nsAString& aComment)
+{
+  aComment.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UserAutoComplete::GetStyleAt(PRInt32 aIndex, nsAString& aHint)
+{
+  aHint.Truncate();
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(int)
+SortPRUnicharComparator(const void* aElement1,
+                        const void* aElement2,
+                        void* aData)
+{
+  return nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, aElement1),
+                       NS_STATIC_CAST(const PRUnichar*, aElement2));
+}
+
+PRBool
+nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
+                                      nsIAutoCompleteResult* aPreviousResult,
+                                      nsIDOMHTMLInputElement* aElement,
+                                      nsIAutoCompleteResult** aResult)
+{
+  PRInt32 dummy;
+  if (!mAutoCompleteInputs.Get(aElement, &dummy))
+    return PR_FALSE;
+
+  UserAutoComplete* result = nsnull;
+
+  if (aPreviousResult) {
+
+    // We have a list of results for a shorter search string, so just
+    // filter them further based on the new search string.
+
+    result = NS_STATIC_CAST(UserAutoComplete*, aPreviousResult);
+
+    if (result->mArray.Count()) {
+      for (PRUint32 i = result->mArray.Count(); i > 0; --i) {
+        nsDependentString match(NS_STATIC_CAST(PRUnichar*, result->mArray.ElementAt(i - 1)));
+        if (aSearchString.Length() >= match.Length() ||
+            !StringBeginsWith(match, aSearchString)) {
+          nsMemory::Free(result->mArray.ElementAt(i - 1));
+          result->mArray.RemoveElementAt(i - 1);
+        }
+      }
+    }
+  } else {
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIURI> uri;
+    doc->GetDocumentURL(getter_AddRefs(uri));
+
+    nsCAutoString realm;
+    uri->GetPrePath(realm);
+
+    // Get all of the matches into an array that we can sort.
+
+    result = new UserAutoComplete(aSearchString);
+
+    SignonHashEntry* hashEnt;
+    if (mSignonTable.Get(realm, &hashEnt)) {
+      for (SignonDataEntry* e = hashEnt->head; e; e = e->next) {
+
+        nsAutoString userValue;
+        DecryptData(e->userValue, userValue);
+
+        if (aSearchString.Length() < userValue.Length() &&
+            StringBeginsWith(userValue, aSearchString)) {
+          result->mArray.AppendElement(ToNewUnicode(userValue));
+        }
+      }
+    }
+
+    if (result->mArray.Count()) {
+      result->mArray.Sort(SortPRUnicharComparator, nsnull);
+      result->mResult = nsIAutoCompleteResult::RESULT_SUCCESS;
+      result->mDefaultIndex = 0;
+    } else {
+      result->mResult = nsIAutoCompleteResult::RESULT_NOMATCH;
+      result->mDefaultIndex = -1;
+    }
+  }
+
+  *aResult = result;
+  NS_ADDREF(*aResult);
+
+  return PR_TRUE;
+}
+
+// nsIDOMLoadListener implementation
+
+NS_IMETHODIMP
+nsPasswordManager::Load(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+/* static */ PLDHashOperator PR_CALLBACK
+nsPasswordManager::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
+                                                  PRInt32& aEntry,
+                                                  void* aUserData)
+{
+  nsIDOMDocument* domDoc = NS_STATIC_CAST(nsIDOMDocument*, aUserData);
+  nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(aKey);
+  nsCOMPtr<nsIDOMDocument> elementDoc;
+  element->GetOwnerDocument(getter_AddRefs(elementDoc));
+  if (elementDoc == domDoc)
+    return PL_DHASH_REMOVE;
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Unload(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
+  if (domDoc)
+    mAutoCompleteInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Abort(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Error(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
 
 // internal methods
 
@@ -1370,6 +1619,18 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+void
+nsPasswordManager::AttachToInput(nsIDOMHTMLInputElement* aElement)
+{
+  nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(aElement);
+  nsIDOMEventListener* listener = NS_STATIC_CAST(nsIDOMFocusListener*, this);
+
+  targ->AddEventListener(NS_LITERAL_STRING("blur"), listener, PR_FALSE);
+  targ->AddEventListener(NS_LITERAL_STRING("DOMAutoComplete"), listener, PR_FALSE);
+
+  mAutoCompleteInputs.Put(aElement, 1);
+}
+
 //////////////////////////////////////
 // nsSingleSignonPrompt
 
@@ -1389,14 +1650,16 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
 {
   nsAutoString checkMsg;
   nsString emptyString;
-  PRBool checkValue = (aSavePassword == SAVE_PASSWORD_PERMANENTLY);
+  PRBool checkValue = PR_FALSE;
   PRBool *checkPtr = nsnull;
   PRUnichar* value = nsnull;
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
-  if (nsPasswordManager::SingleSignonEnabled()) {
-    PMLocalizedString(NS_LITERAL_STRING("rememberValue"), checkMsg);
-    checkPtr = &checkValue;
+  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
+    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
+      PMLocalizedString(NS_LITERAL_STRING("rememberValue"), checkMsg);
+      checkPtr = &checkValue;
+    }
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
     nsCAutoString outHost;
@@ -1419,19 +1682,24 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
                   checkPtr,
                   aConfirm);
 
-  if (*aConfirm && checkValue && value[0] != '\0') {
-    // The user requested that we save the value
-    // TODO: support SAVE_PASSWORD_FOR_SESSION
+  if (*aConfirm) {
+    if (checkValue && value[0] != '\0') {
+      // The user requested that we save the value
+      // TODO: support SAVE_PASSWORD_FOR_SESSION
 
-    nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
+      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-    manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                     nsDependentString(value),
-                     emptyString);
+      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+                       nsDependentString(value),
+                       emptyString);
+    }
+
+    *aResult = value;
+  } else {
+    if (value)
+      nsMemory::Free(value);
+    *aResult = nsnull;
   }
-
-  if (value)
-    nsMemory::Free(value);
 
   return NS_OK;
 }
@@ -1447,14 +1715,16 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
 {
   nsAutoString checkMsg;
   nsString emptyString;
-  PRBool checkValue = (aSavePassword == SAVE_PASSWORD_PERMANENTLY);
+  PRBool checkValue = PR_FALSE;
   PRBool *checkPtr = nsnull;
   PRUnichar *user = nsnull, *password = nsnull;
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
-  if (nsPasswordManager::SingleSignonEnabled()) {
-    PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
-    checkPtr = &checkValue;
+  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
+    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
+      PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
+      checkPtr = &checkValue;
+    }
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
     nsCAutoString outHost;
@@ -1479,21 +1749,29 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
                                      checkPtr,
                                      aConfirm);
 
-  if (*aConfirm && checkValue && user[0] != '\0') {
-    // The user requested that we save the values
-    // TODO: support SAVE_PASSWORD_FOR_SESSION
+  if (*aConfirm) {
+    if (checkValue && user[0] != '\0') {
+      // The user requested that we save the values
+      // TODO: support SAVE_PASSWORD_FOR_SESSION
 
-    nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
+      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-    manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                     nsDependentString(user),
-                     nsDependentString(password));
+      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+                       nsDependentString(user),
+                       nsDependentString(password));
+    }
+
+    *aUser = user;
+    *aPassword = password;
+
+  } else {
+    if (user)
+      nsMemory::Free(user);
+    if (password)
+      nsMemory::Free(password);
+
+    *aUser = *aPassword = nsnull;
   }
-
-  if (user)
-    nsMemory::Free(user);
-  if (password)
-    nsMemory::Free(password);
 
   return NS_OK;
 }
@@ -1508,14 +1786,16 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
 {
   nsAutoString checkMsg;
   nsString emptyString;
-  PRBool checkValue = (aSavePassword == SAVE_PASSWORD_PERMANENTLY);
+  PRBool checkValue = PR_FALSE;
   PRBool *checkPtr = nsnull;
   PRUnichar* password = nsnull;
   nsCOMPtr<nsIPasswordManagerInternal> mgrInternal;
 
-  if (nsPasswordManager::SingleSignonEnabled()) {
-    PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
-    checkPtr = &checkValue;
+  if (nsPasswordManager::SingleSignonEnabled() && aPasswordRealm) {
+    if (aSavePassword == SAVE_PASSWORD_PERMANENTLY) {
+      PMLocalizedString(NS_LITERAL_STRING("rememberPassword"), checkMsg);
+      checkPtr = &checkValue;
+    }
 
     mgrInternal = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
     nsCAutoString outHost;
@@ -1538,19 +1818,25 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
                           checkPtr,
                           aConfirm);
 
-  if (*aConfirm && checkValue && password[0] != '\0') {
-    // The user requested that we save the password
-    // TODO: support SAVE_PASSWORD_FOR_SESSION
+  if (*aConfirm) {
+    if (checkValue && password[0] != '\0') {
+      // The user requested that we save the password
+      // TODO: support SAVE_PASSWORD_FOR_SESSION
 
-    nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
+      nsCOMPtr<nsIPasswordManager> manager = do_QueryInterface(mgrInternal);
 
-    manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
-                     emptyString,
-                     nsDependentString(password));
+      manager->AddUser(NS_ConvertUCS2toUTF8(aPasswordRealm),
+                       emptyString,
+                       nsDependentString(password));
+    }
+
+    *aPassword = password;
+
+  } else {
+    if (password)
+      nsMemory::Free(password);
+    *aPassword = nsnull;
   }
-
-  if (password)
-    nsMemory::Free(password);
 
   return NS_OK;
 }
