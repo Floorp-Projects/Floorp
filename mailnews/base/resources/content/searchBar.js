@@ -99,8 +99,6 @@ function onEnterInSearchBar()
    if (!gDBView) 
      return;
 
-   ClearThreadPaneSelection();
-   ClearMessagePane();
    if (!gSearchSession)
    {
      getDocumentElements();
@@ -123,39 +121,16 @@ function onEnterInSearchBar()
      if (searchView)
      {
        statusFeedback.showStatusString("");
-       gDBView.reloadFolderAfterQuickSearch(); // that should have initialized gDBView, now re-root the thread pane
-       var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-       if (outlinerView)
-       {
-         var outliner = GetThreadOutliner();
-         outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
-       }
-       restoreSelection();
+       gDBView.reloadFolderAfterQuickSearch(); // that should have initialized gDBView
      }
      return;
    }
 
+   ClearThreadPaneSelection();
+   ClearMessagePane();
+
    addListeners();
    onSearch();
-}
-
-function restoreSelection()
-{
-  var msgToSelect = gDBView.currentlyDisplayedMessage
-  if (msgToSelect != nsMsgViewIndex_None)
-  {
-    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    var outlinerSelection = outlinerView.selection;
-    outlinerSelection.select(msgToSelect);
-    if (outlinerSelection.isSelected(msgToSelect))
-    {
-      if (outlinerView)
-        outlinerView.selectionChanged();
-      gDBView.reloadMessage();
-
-      EnsureRowInThreadOutlinerIsVisible(msgToSelect);
-    }
-  }
 }
 
 function initializeGlobalListeners()

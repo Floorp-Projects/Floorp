@@ -103,6 +103,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
   mIsSearchView = PR_FALSE;
   m_sortValid = PR_FALSE;  //force a sort
   nsresult rv = NS_OK;
+  nsMsgKeyArray preservedSelection;
+  SaveAndClearSelection(&preservedSelection);  
+
   if (m_preSearchKeys.GetSize())
   {
     // restore saved id array and flags array
@@ -121,7 +124,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
     m_levels.InsertAt(0, &m_preSearchLevels);
     ClearPreSearchInfo();
     ClearPrevIdArray();  // previous cached info about non threaded display is not useful
-    InitSort(m_sortType, m_sortOrder);
+    Sort(m_sortType, m_sortOrder);
 
     // now, account for adding all the pre search items back.
     // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
@@ -132,6 +135,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
   {
     rv = InitThreadedView(nsnull);
   }
+
+  RestoreSelection(&preservedSelection);
+
   return rv;
 }
 
@@ -802,7 +808,12 @@ nsMsgThreadedDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 
 NS_IMETHODIMP
 nsMsgThreadedDBView::OnSearchDone(nsresult status)
-{  
+{
+  if (m_sortType != nsMsgViewSortType::byThread)//we do not find levels for the results.
+  {
+    m_sortValid = PR_FALSE;       //sort the results 
+    Sort(m_sortType, m_sortOrder);
+  }
   return NS_OK;
 }
 
