@@ -843,10 +843,11 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
             nsCOMPtr<nsIRDFContentModelBuilder> builder;
             rv = CreateTemplateBuilder(element, dataSources, &builder);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
-
-            // Force construction of immediate template sub-content _now_.
-            rv = builder->CreateContents(element);
-            if (NS_FAILED(rv)) return NS_OK;
+            if (NS_SUCCEEDED(rv)) {
+                // Force construction of immediate template sub-content _now_.
+                rv = builder->CreateContents(element);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create template contents");
+            }
         }
 
         rv = NS_OK;
