@@ -2241,7 +2241,10 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   }
 
-    //Take care of mailto: url
+  if (!uri) // we were unable to create a uri
+      return rv;
+  
+  //Take care of mailto: url
   PRBool  isMail= PR_FALSE;
   rv = uri->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv))
