@@ -150,7 +150,7 @@ my $last_slashdot = 0;
 # leave $freshmeat tuned to undef if you don't want freshmeat
 # headlines checked every two hours
 
-my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
+# my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
 my @freshmeat;
 my $last_freshmeat = 0;
 
