@@ -188,6 +188,7 @@ bin/components/msgimap.xpt
 bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
+bin/components/txmgr.xpt
 
 bin/chrome/addressbook/*
 bin/chrome/messenger/*
@@ -196,8 +197,6 @@ bin/defaults/pref/mailnews.js
 bin/help/mailhelp/*
 
 ;[editor]
-bin/components/editor.js
-bin/components/editor.xpt
 bin/chrome/editor/content/default/*
 bin/chrome/editor/locale/en-US/*
 bin/chrome/editor/skin/default/*
