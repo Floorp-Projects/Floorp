@@ -40,8 +40,3 @@ DIRS  = communicator editor global messenger navigator
 
 include $(topsrcdir)/config/rules.mk
 
-# choose Classic skin as default
-#export::
-#	@echo skin,install,select,classic/1.0 >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
-
-
