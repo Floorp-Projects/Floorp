@@ -2981,7 +2981,8 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
         
     if (NS_SUCCEEDED(rv) && m_newsgroupList) {
-        rv = m_newsgroupList->GetRangeOfArtsToDownload(m_firstPossibleArticle,
+        rv = m_newsgroupList->GetRangeOfArtsToDownload(m_msgWindow,
+					      m_firstPossibleArticle,
                                               m_lastPossibleArticle,
                                               m_numArticlesWanted -
                                               m_numArticlesLoaded,

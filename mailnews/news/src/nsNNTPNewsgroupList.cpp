@@ -37,11 +37,7 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
-#include "nsIAppShellService.h" 
-#include "nsAppShellCIDs.h"
 #include "jsapi.h"	// for JS_PushArguments and JS_PopArguments
-
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #include "nsXPIDLString.h"
 #include "nsIMsgAccountManager.h"
@@ -79,6 +75,12 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 #include "nsIPref.h"
 #include "nsIDialogParamBlock.h"
+
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsIMsgWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIScriptContext.h"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
@@ -221,26 +223,39 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 }
 
 static nsresult 
-openWindow( const char *chromeURL, nsIDialogParamBlock *ioParamBlock) 
+openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL, nsIDialogParamBlock *ioParamBlock) 
 {
-    nsCOMPtr<nsIDOMWindow> hiddenWindow;
-    JSContext *jsContext = nsnull;
     nsresult rv;
+
+	if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIWebShell> webShell;
+	rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+    if (NS_FAILED(rv)) return rv;
+	NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+
+   	nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(webShell));
+	NS_ENSURE_TRUE(globalObjectOwner, NS_ERROR_FAILURE);
+
+	nsCOMPtr<nsIScriptGlobalObject> globalObject;
+	globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+	NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
+
+	nsCOMPtr<nsIDOMWindow> parentWindow(do_QueryInterface(globalObject));
+	NS_ENSURE_TRUE(parentWindow, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIScriptContext> context;
+    globalObject->GetContext( getter_AddRefs( context ) );
+    if (!context) return NS_ERROR_FAILURE;
+    JSContext *jsContext = (JSContext*)context->GetNativeContext();
     
-    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if (NS_FAILED(rv)) return rv;
-
-    // todo, we should not be using the hidden window for this.  we should be using the nsIMsgWindow for the parent
-    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),&jsContext);
-    if (NS_FAILED(rv)) return rv;
-
     void *stackPtr;
     jsval *argv = JS_PushArguments( jsContext,
                                     &stackPtr,
                                     "sss%ip",
                                     chromeURL,
                                     "_blank",
-                                    "chrome,modal,dialog",
+                                    "modal,dialog",
                                     (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)), 
                                     (nsISupports*)ioParamBlock);
 
@@ -248,17 +263,17 @@ openWindow( const char *chromeURL, nsIDialogParamBlock *ioParamBlock)
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = hiddenWindow->OpenDialog(jsContext,
+    nsCOMPtr<nsIDOMWindow> dialogWindow;
+    rv = parentWindow->OpenDialog(jsContext,
                                   argv,
                                   4,
-                                  getter_AddRefs(newWindow));
+                                  getter_AddRefs(dialogWindow));
     JS_PopArguments( jsContext, stackPtr );
     return rv;
 }       
 
 nsresult
-nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
+nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
                                               /*nsINNTPHost* host,
                                                 const char* group_name,*/
                                               PRInt32 first_possible,
@@ -470,7 +485,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
                 rv = ioParamBlock->SetString(SERVERKEY_STRING_ARG, nsString((const char *)serverKey).GetUnicode());
                 if (NS_FAILED(rv)) return rv;
 
-				rv = openWindow(DOWNLOAD_HEADERS_URL, ioParamBlock); 
+				rv = openWindow(aMsgWindow, DOWNLOAD_HEADERS_URL, ioParamBlock); 
 				NS_ASSERTION(NS_SUCCEEDED(rv), "failed to open download headers dialog");
                 if (NS_FAILED(rv)) return rv;
             

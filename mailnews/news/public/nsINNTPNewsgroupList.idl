@@ -32,6 +32,7 @@
 interface nsINNTPHost;
 interface nsINNTPNewsgroup;
 interface nsINntpUrl;
+interface nsIMsgWindow;
 
 [scriptable, uuid(E628ED19-9452-11d2-B7EA-00805F05FFA5)]
 interface nsINNTPNewsgroupList : nsISupports {
@@ -40,7 +41,7 @@ interface nsINNTPNewsgroupList : nsISupports {
      get in a big newsgroup. */
 
 
-  long GetRangeOfArtsToDownload(in long first_message,
+  long GetRangeOfArtsToDownload(in nsIMsgWindow aMsgWindow, in long first_message,
                                 in long last_message,
                                 in long maxextra,
                                 out long real_first_message,
