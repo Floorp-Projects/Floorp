@@ -1,0 +1,30 @@
+ interface Selection {
+/* IID: { 0xa6cf90e1, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+		readonly attribute	Node				anchorNode;
+		readonly attribute	long				anchorOffset;
+		
+		readonly attribute	Node				focusNode;
+		readonly attribute	long				focusOffset;
+		
+		readonly attribute	boolean			isCollapsed;
+		
+		void		getAnchorNodeAndOffset(out Node anchorNode, out long offset);
+		void		getFocusNodeAndOffset(out Node focusNode, out long offset);		
+		
+		void		clearSelection();
+		
+		void 		collapse(in Node parentNode, in long offset);
+		void		extend(in Node parentNode, in long offset);
+		
+		void		deleteFromDocument();
+
+		void		addRange(in Range range);
+		
+		void		startBatchChanges();
+		void		endBatchChanges();
+		
+		void		addSelectionListener(in SelectionListener newListener);
+		void		removeSelectionListener(in SelectionListener listenerToRemove);
+};
