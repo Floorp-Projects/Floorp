@@ -19,10 +19,8 @@
 #include "prthread.h"
 #include "pprthred.h"
 #include "jsjava.h"
-#ifdef MOCHA
 #include "libmocha.h"
 #include "libevent.h"
-#endif
 #include "jvmmgr.h"
 #include "npglue.h"
 
@@ -61,8 +59,6 @@ private:
 PR_BEGIN_EXTERN_C
 
 #include "jscntxt.h"
-
-#ifdef MOCHA
 
 static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
@@ -441,7 +437,6 @@ get_java_vm_impl(JNIEnv* env)
     return (SystemJavaVM*)JVM_GetJVMMgr();
 }
 
-#endif /* MOCHA */
 
 PR_END_EXTERN_C
 
