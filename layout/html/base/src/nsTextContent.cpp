@@ -732,8 +732,8 @@ NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
 
     if (0 == (mFlags & TEXT_IS_PRE)) {
       if (mRect.width != 0) {
-        lineLayoutState->mSkipLeadingWhiteSpace =
-          (0 != (mFlags & TEXT_ENDS_IN_WHITESPACE));
+        lineLayoutState->SetSkipLeadingWhiteSpace(
+          (0 != (mFlags & TEXT_ENDS_IN_WHITESPACE)));
       }
     }
   }
@@ -756,12 +756,9 @@ NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
                             const nsReflowState& aReflowState,
                             nsReflowStatus& aStatus)
 {
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": resize reflow into %g,%g\n",
-         NS_TWIPS_TO_POINTS_FLOAT(aReflowState.maxSize.width),
-         NS_TWIPS_TO_POINTS_FLOAT(aReflowState.maxSize.height));
-#endif
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+     ("enter TextFrame::ResizeReflow: aMaxSize=%d,%d",
+      aReflowState.maxSize.width, aReflowState.maxSize.height));
 
   // Wipe out old justification information since it's going to change
   if (nsnull != mWords) {
@@ -818,11 +815,10 @@ NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
                            startingOffset, lineLayoutState);
   }
 
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": reflow %scomplete [flags=%x]\n",
-         (NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "), mFlags);
-#endif
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("exit TextFrame::ResizeReflow: %scomplete width=%d",
+                (NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "),
+                aDesiredSize.width));
   return NS_OK;
 }
 
@@ -847,7 +843,6 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
 
   nsIFontMetrics* fm = aCX->GetMetricsFor(aFont.mFont);
   PRInt32 spaceWidth = fm->GetWidth(' ');
-  PRBool atLeftMargin = PR_TRUE;
   PRBool wrapping = PR_TRUE;
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
@@ -856,7 +851,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
   if (nsnull != aLineState) {
-    if (aLineState->mSkipLeadingWhiteSpace) {
+    if (aLineState->mState.mSkipLeadingWhiteSpace) {
       skipWhitespace = PR_TRUE;
       mFlags |= TEXT_SKIP_LEADING_WS;
     }
@@ -878,6 +873,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   const PRUnichar* lastWordStart = cpStart;
   PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
+PRIntn gotHere = 0;
   while (cp < end) {
     PRUnichar ch = *cp++;
     PRBool isWhitespace;
@@ -893,6 +889,8 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
         break;
       }
       if (skipWhitespace) {
+        gotHere++;
+        aLineState->AtSpace();
         skipWhitespace = PR_FALSE;
         continue;
       }
@@ -924,15 +922,20 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
 
     // Now that we have the end of the word or whitespace, see if it
     // will fit.
-    if (!atLeftMargin && wrapping && (x + width > maxWidth)) {
+    if ((0 != x) && wrapping && (x + width > maxWidth)) {
       // The word/whitespace will not fit.
       cp = lastWordEnd;
-      if (x == 0) {
-        // Nothing fit at all. In this case, we still may want to know
-        // the maxWordWidth so compute it right now.
-        maxWordWidth = width;
-      }
       break;
+    }
+
+    // Update break state in line reflow state
+    // XXX move this out of the loop!
+    gotHere++;
+    if (isWhitespace) {
+      aLineState->AtSpace();
+    }
+    else {
+      aLineState->AtWordStart(this, x);
     }
 
     // The word fits. Add it to the run of text.
@@ -940,10 +943,10 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     if (width > maxWordWidth) {
       maxWordWidth = width;
     }
-    atLeftMargin = PR_FALSE;
     lastWordEnd = cp;
     endsInWhitespace = isWhitespace;
   }
+  NS_ASSERTION(0 != gotHere, "whoops");
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
@@ -958,10 +961,11 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
       // flag alone since it doesn't want leading whitespace
     }
     else {
-      aLineState->mSkipLeadingWhiteSpace = endsInWhitespace;
+      aLineState->mState.mSkipLeadingWhiteSpace = endsInWhitespace;
     }
   }
 
+  // XXX too much code here: some of it isn't needed
   // Now we know our content length
   mContentLength = lastWordEnd - cpStart;
   if (0 == mContentLength) {
@@ -1016,7 +1020,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
   PRUint16 tabs = 0;
   PRIntn col = 0;
   if (nsnull != aLineState) {
-    col = aLineState->mColumn;
+    col = aLineState->GetColumn();
   }
   mColumn = (PRUint16) col;
   nscoord spaceWidth = widths[' '];
@@ -1050,7 +1054,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
     col++;
   }
   if (nsnull != aLineState) {
-    aLineState->mColumn = col;
+    aLineState->SetColumn(col);
   }
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
@@ -1362,7 +1366,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
   if (nsnull != lineLayoutState) {
-    if (lineLayoutState->mSkipLeadingWhiteSpace) {
+    if (lineLayoutState->SkipLeadingWhiteSpace()) {
       skipWhitespace = PR_TRUE;
       mFlags |= TEXT_SKIP_LEADING_WS;
     }
