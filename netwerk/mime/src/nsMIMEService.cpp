@@ -239,6 +239,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
 
     // find the file extension (if any)
     specStr.SetString(cStrSpec);
+    nsAllocator::Free(cStrSpec);
     nsString2 extStr;
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
