@@ -63,10 +63,10 @@
 #include "nsReadableUtils.h"
 #include "nsAString.h"
 #include "nsXPIDLString.h"
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
 #include "nsFT2FontCatalog.h"
 #include "nsFreeType.h"
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 #ifdef USE_X11SHARED_CODE
 #include "nsXFontNormal.h"
 #endif /* USE_X11SHARED_CODE */
@@ -112,9 +112,9 @@ static PRLogModuleInfo *FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
 /* Local prototypes */
 static PRBool                 FreeNode(nsHashKey* aKey, void* aData, void* aClosure);
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
 static void                   CharSetNameToCodeRangeBits(const char*, PRUint32*, PRUint32*);
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 static const nsFontCharSetMapXlib *GetCharSetMap(nsFontMetricsXlibContext *aFmctx, const char *aCharSetName);
 
 // the font catalog is so expensive to generate
@@ -214,11 +214,11 @@ public:
 #endif /* USE_AASB */
   PRInt32                               mEmbeddedBitmapMaximumHeight;
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   PRBool                                mEnableFreeType2;
   PRBool                                mFreeType2Autohinted;
   PRBool                                mFreeType2Unhinted;
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 #ifdef USE_AASB
   PRUint8                               mAATTDarkTextMinValue;
   double                                mAATTDarkTextGain;
@@ -235,8 +235,10 @@ struct nsFontCharSetInfoXlib
   const char*            mCharSet;
   nsFontCharSetConverterXlib Convert;
   PRUint8                mSpecialUnderline;
+#ifdef MOZ_ENABLE_FREETYPE2
   PRInt32                mCodeRange1Bits;
   PRInt32                mCodeRange2Bits;
+#endif
   PRUint16*              mCCMap;
   nsIUnicodeEncoder*     mConverter;
   nsIAtom*               mLangGroup;
@@ -284,6 +286,7 @@ static int ISO10646Convert(nsFontCharSetInfoXlib* aSelf, XFontStruct* aFont,
 static nsFontCharSetInfoXlib Unknown = { nsnull };
 static nsFontCharSetInfoXlib Special = { nsnull };
 
+#ifdef MOZ_ENABLE_FREETYPE2
 static nsFontCharSetInfoXlib USASCII =
   { "us-ascii", SingleByteConvert, 0,
     TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,
@@ -489,7 +492,160 @@ static nsFontCharSetInfoXlib Mathematica4 =
    { "x-mathematica4", SingleByteConvert, 0, TT_OS2_CPR1_SYMBOL, 0};
 static nsFontCharSetInfoXlib Mathematica5 =
    { "x-mathematica5", SingleByteConvert, 0, TT_OS2_CPR1_SYMBOL, 0};
-#endif /* MOZ_MATHML */
+#endif /* MATHML */
+
+#else
+
+static nsFontCharSetInfoXlib USASCII =
+  { "us-ascii", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88591 =
+  { "ISO-8859-1", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88592 =
+  { "ISO-8859-2", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88593 =
+  { "ISO-8859-3", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88594 =
+  { "ISO-8859-4", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88595 =
+  { "ISO-8859-5", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88596 =
+  { "ISO-8859-6", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO885968x =
+  { "x-iso-8859-6-8-x", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO8859616 =
+  { "x-iso-8859-6-16", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib IBM1046 =
+  { "x-IBM1046", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88597 =
+  { "ISO-8859-7", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO88598 =
+  { "ISO-8859-8", SingleByteConvert, 0 };
+// change from  
+// { "ISO-8859-8", SingleByteConvertReverse, 0, 0, 0 };
+// untill we fix the layout and ensure we only call this with pure RTL text
+static nsFontCharSetInfoXlib ISO88599 =
+  { "ISO-8859-9", SingleByteConvert, 0 };
+// no support for iso-8859-10 (Nordic/Icelandic) currently
+// static nsFontCharSetInfoXlib ISO885910 =
+// { "ISO-8859-10", SingleByteConvert, 0,
+//   0, TT_OS2_CPR2_NORDIC | TT_OS2_CPR2_ICELANDIC };
+// no support for iso-8859-12 (Vietnamese) currently
+// static nsFontCharSetInfoXlib ISO885912 =
+// { "ISO-8859-12", SingleByteConvert, 0,
+//   TT_OS2_CPR1_VIETNAMESE, 0 };
+static nsFontCharSetInfoXlib ISO885913 =
+  { "ISO-8859-13", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO885915 =
+  { "ISO-8859-15", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib JISX0201 =
+  { "jis_0201", SingleByteConvert, 1 };
+static nsFontCharSetInfoXlib KOI8R =
+  { "KOI8-R", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib KOI8U =
+  { "KOI8-U", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib TIS6202 =
+/* Added to support thai context sensitive shaping if
+ * CTL extension is is in force */
+#ifdef SUNCTL
+  { "tis620-2", SingleByteConvert, 0 };
+#else
+  { "windows-874", SingleByteConvert, 0 };
+#endif /* SUNCTL */
+static nsFontCharSetInfoXlib TIS620 =
+  { "TIS-620", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib ISO885911 =
+  { "ISO-8859-11", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib Big5 =
+  { "x-x-big5", DoubleByteConvert, 1 };
+// a kludge to distinguish zh-TW only fonts in Big5 (such as hpbig5-)
+// from zh-TW/zh-HK common fonts in Big5 (such as big5-1)
+static nsFontCharSetInfoXlib Big5TWHK =
+  { "x-x-big5", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116431 =
+  { "x-cns-11643-1", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116432 =
+  { "x-cns-11643-2", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116433 =
+  { "x-cns-11643-3", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116434 =
+  { "x-cns-11643-4", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116435 =
+  { "x-cns-11643-5", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116436 =
+  { "x-cns-11643-6", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib CNS116437 =
+  { "x-cns-11643-7", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib GB2312 =
+  { "gb_2312-80", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib GB18030_0 =
+  { "gb18030.2000-0", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib GB18030_1 =
+  { "gb18030.2000-1", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib GBK =
+  { "x-gbk-noascii", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib HKSCS =
+  { "hkscs-1", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib JISX0208 =
+  { "jis_0208-1983", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib JISX0212 =
+  { "jis_0212-1990", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib KSC5601 =
+  { "ks_c_5601-1987", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib X11Johab =
+  { "x-x11johab", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib JohabNoAscii =
+  { "x-johab-noascii", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib JamoTTF =
+  { "x-koreanjamo-0", DoubleByteConvert, 1 };
+static nsFontCharSetInfoXlib TamilTTF =
+  { "x-tamilttf-0", DoubleByteConvert, 0 };
+static nsFontCharSetInfoXlib CP1250 =
+  { "windows-1250", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib CP1251 =
+  { "windows-1251", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib CP1252 =
+  { "windows-1252", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib CP1253 =
+  { "windows-1253", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib CP1257 =
+  { "windows-1257", SingleByteConvert, 0 };
+
+#ifdef SUNCTL
+/* Hindi range currently unsupported in FT2 range. Change TT* once we 
+   arrive at a way to identify hindi */
+static nsFontCharSetInfoXlib SunIndic =
+  { "x-sun-unicode-india-0", DoubleByteConvert, 0 };
+#endif /* SUNCTL */
+
+static nsFontCharSetInfoXlib ISO106461 =
+  { nsnull, ISO10646Convert, 1};
+
+static nsFontCharSetInfoXlib AdobeSymbol =
+   { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
+static nsFontCharSetInfoXlib AdobeEuro =
+  { "x-adobe-euro", SingleByteConvert, 0 };
+         
+#ifdef MOZ_MATHML
+static nsFontCharSetInfoXlib CMCMEX =
+   { "x-t1-cmex", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib CMCMSY =
+   { "x-t1-cmsy", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib CMCMR =
+   { "x-t1-cmr", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib CMCMMI =
+   { "x-t1-cmmi", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib Mathematica1 =
+   { "x-mathematica1", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib Mathematica2 =
+   { "x-mathematica2", SingleByteConvert, 0}; 
+static nsFontCharSetInfoXlib Mathematica3 =
+   { "x-mathematica3", SingleByteConvert, 0};
+static nsFontCharSetInfoXlib Mathematica4 =
+   { "x-mathematica4", SingleByteConvert, 0}; 
+static nsFontCharSetInfoXlib Mathematica5 =
+   { "x-mathematica5", SingleByteConvert, 0};
+#endif /* MATHML */
+#endif /* FREETYPE2 */
 
 static nsFontLangGroupXlib FLG_WESTERN = { "x-western",     nsnull };
 static nsFontLangGroupXlib FLG_BALTIC  = { "x-baltic",      nsnull };
@@ -1047,9 +1203,9 @@ nsFontMetricsXlibContext::~nsFontMetricsXlibContext()
 {
   PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("# nsFontMetricsXlibContext destroy()\n"));
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   nsFreeTypeFreeGlobals();
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
 #ifdef ENABLE_X_FONT_BANNING
   if (mFontRejectRegEx) {
@@ -1179,11 +1335,11 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
 #endif /* USE_AASB */
   mEmbeddedBitmapMaximumHeight = 1000000;
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   mEnableFreeType2 = PR_TRUE;
   mFreeType2Autohinted = PR_FALSE;
   mFreeType2Unhinted = PR_TRUE;
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 #ifdef USE_AASB
   mAATTDarkTextMinValue = 64;
   mAATTDarkTextGain = 0.8;
@@ -1367,7 +1523,7 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
     mForceOutlineScaledFonts = force_outline_scaled_fonts;
   }
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   PRBool enable_freetype2 = PR_TRUE;
   rv = mPref->GetBoolPref("font.FreeType2.enable", &enable_freetype2);
   if (NS_SUCCEEDED(rv)) {
@@ -1388,7 +1544,7 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
     mFreeType2Unhinted = freetype2_unhinted;
     FREETYPE_FONT_PRINTF(("mFreeType2Unhinted = %d", mFreeType2Unhinted));
   }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
 #ifdef USE_AASB
   PRInt32 antialias_minimum = 8;
@@ -1582,12 +1738,12 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   }
 #endif /* ENABLE_X_FONT_BANNING */
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   rv = nsFreeTypeInitGlobals();
   if (NS_FAILED(rv)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
   return NS_OK;
 }
@@ -1913,7 +2069,7 @@ void nsFontMetricsXlib::RealizeFont()
   float f;
   f = mDeviceContext->DevUnitsToAppUnits();
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   if (mWesternFont->IsFreeTypeFont()) {
     nsFreeTypeFont *ft = (nsFreeTypeFont *)mWesternFont;
     if (!ft)
@@ -1996,7 +2152,7 @@ void nsFontMetricsXlib::RealizeFont()
     return;
 #endif /* MOZ_ENABLE_FREETYPE2 */
   }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
   nsXFont *xFont = mWesternFont->GetXFont();
   XFontStruct *fontInfo = xFont->GetXFontStruct();
   f = mDeviceContext->DevUnitsToAppUnits();
@@ -3007,13 +3163,13 @@ nsFontXlib::GetXFontIs10646(void)
   return ((PRBool) (mCharSetInfo == mFontMetricsContext->mISO106461));
 }
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
 PRBool
 nsFontXlib::IsFreeTypeFont(void)
 {
   return PR_FALSE;
 }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
 MOZ_DECL_CTOR_COUNTER(nsFontXlib)
 
@@ -3651,7 +3807,7 @@ nsFontXlib*
 nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
   nsFontCharSetInfoXlib* aCharSet, PRUnichar aChar, const char *aName)
 {
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   if (aStretch->mFreeTypeFaceID) {
     //FREETYPE_FONT_PRINTF(("mFreeTypeFaceID = 0x%p", aStretch->mFreeTypeFaceID));
     nsFreeTypeFont *ftfont = nsFreeTypeFont::NewFont(aStretch->mFreeTypeFaceID,
@@ -3679,7 +3835,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
     //FREETYPE_FONT_PRINTF(("add the ftfont"));
     return AddToLoadedFontsList(ftfont);
   }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
   PRBool      use_scaled_font               = PR_FALSE;
   PRBool      have_nearly_rightsized_bitmap = PR_FALSE;
@@ -4495,10 +4651,10 @@ GetFontNames(nsFontMetricsXlibContext *aFmctx, const char* aPattern, PRBool aAny
   }
 #endif
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   // get FreeType fonts
   nsFT2FontCatalog::GetFontNames(aFmctx, aPattern, aNodes);
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
   nsCAutoString previousNodeName;
   nsHashtable* node_hash;
@@ -5893,7 +6049,7 @@ const nsFontCharSetMapXlib *GetCharSetMap(nsFontMetricsXlibContext *aFmctx, cons
   return charSetMap;
 }
 
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
 static
 void CharSetNameToCodeRangeBits(const char *aCharset,
                                 PRUint32 *aCodeRange1, PRUint32 *aCodeRange2)
@@ -5904,5 +6060,5 @@ void CharSetNameToCodeRangeBits(const char *aCharset,
   *aCodeRange1 = charSetInfo->mCodeRange1Bits;
   *aCodeRange2 = charSetInfo->mCodeRange2Bits;
 }
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 

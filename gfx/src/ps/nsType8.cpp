@@ -51,7 +51,9 @@
 #include "nsCidMap.h"
 #include "nsType1.h"
 #include "nsType8.h"
+#ifndef MOZ_ENABLE_XFT
 #include "nsIFreeType2.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsISignatureVerifier.h"
 #include "plbase64.h"
@@ -65,7 +67,11 @@
 static void hex_out(unsigned char *buf, PRUint32 n, FILE *f, PRUint32 *pos);
 
 static void flatten_name(char *aToName);
+#ifdef MOZ_ENABLE_XFT
+static int FT2SubsetToCidKeyedType1(FT_Face aFace,
+#else
 static int FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
+#endif
                                     const PRUnichar *aCharIDs, int aLen,
                                     const char *aFontName,
                                     const char *aRegistry,
@@ -317,12 +323,14 @@ FT2SubsetToType8(FT_Face aFace, const PRUnichar *aCharIDs, PRUint32 aNumChars,
   int cmap_type = 0;
   PRBool status = PR_FALSE;
 
+#ifndef MOZ_ENABLE_XFT
   nsresult rv;
   nsCOMPtr<nsIFreeType2> ft2 = do_GetService(NS_FREETYPE2_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to get nsIFreeType2 service");
     goto done;
   }
+#endif
 
   if ((aNumChars+1) > sizeof(CIDs_buf)/sizeof(CIDs_buf[0]))
     CIDs = (PRUint32 *)PR_Malloc((aNumChars+1)*sizeof(CIDs_buf[0]));
@@ -366,7 +374,11 @@ FT2SubsetToType8(FT_Face aFace, const PRUnichar *aCharIDs, PRUint32 aNumChars,
   WriteCmapFooter(aFile);
 
   /* output the Type 8 CID font */
+#ifdef MOZ_ENABLE_XFT
+  FT2SubsetToCidKeyedType1(aFace, aCharIDs, aNumChars, fontname,
+#else
   FT2SubsetToCidKeyedType1(ft2, aFace, aCharIDs, aNumChars, fontname,
+#endif
                            registry, encoding, supplement, aWmode, lenIV,
                            aFile);
   fprintf(aFile, "\n");
@@ -390,7 +402,11 @@ done:
 }
 
 static PRBool
+#ifdef MOZ_ENABLE_XFT
+FT2SubsetToCidKeyedType1(FT_Face aFace,
+#else
 FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
+#endif
                          const PRUnichar *aCharIDs,
                          int aLen, const char *aFontName,
                          const char *aRegistry, const char *aEncoding,
@@ -443,16 +459,26 @@ FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
   fprintf(aFile, "\n");
 
   /* measure the notdef glyph length */
+#ifdef MOZ_ENABLE_XFT
+  cmapinfo[0] = FT2GlyphToType1CharString(aFace, 0, aWmode, aLenIV, NULL);
+#else
   cmapinfo[0] = FT2GlyphToType1CharString(aFt2, aFace, 0, aWmode, aLenIV, NULL);
+#endif
   num_charstrings = 1;
   charstrings_len = cmapinfo[0];
 
   /* get charstring lengths */
   max_charstring = cmapinfo[0];
   for (i=0; i<aLen; i++) {
+#ifdef MOZ_ENABLE_XFT
+    glyphID = FT_Get_Char_Index(aFace, aCharIDs[i]);
+    cmapinfo[i+1] = FT2GlyphToType1CharString(aFace, glyphID, aWmode,
+                                              aLenIV, NULL);
+#else
     aFt2->GetCharIndex(aFace, aCharIDs[i], &glyphID);
     cmapinfo[i+1] = FT2GlyphToType1CharString(aFt2, aFace, glyphID, aWmode,
                                               aLenIV, NULL);
+#endif
     charstrings_len += cmapinfo[i+1];
     if (cmapinfo[i+1])
       num_charstrings++;
@@ -552,15 +578,26 @@ FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
   // output the charStrings
   //
   // output the notdef glyph
+#ifdef MOZ_ENABLE_XFT
+  charstring_len = FT2GlyphToType1CharString(aFace, 0, aWmode, aLenIV,
+                                             charstring);
+#else
   charstring_len = FT2GlyphToType1CharString(aFt2, aFace, 0, aWmode, aLenIV,
                                              charstring);
+#endif
   hex_out(charstring, charstring_len, aFile, &line_pos);
 
   /* output the charstrings for the glyphs */
   for (i=0; i<aLen; i++) {
+#ifdef MOZ_ENABLE_XFT
+    glyphID = FT_Get_Char_Index(aFace, aCharIDs[i]);
+    charstring_len = FT2GlyphToType1CharString(aFace, glyphID, aWmode,
+                                               aLenIV, charstring);
+#else
     aFt2->GetCharIndex(aFace, aCharIDs[i], &glyphID);
     charstring_len = FT2GlyphToType1CharString(aFt2, aFace, glyphID, aWmode,
                                                aLenIV, charstring);
+#endif
     NS_ASSERTION(charstring_len==cmapinfo[i+1], "glyph data changed");
     hex_out(charstring, charstring_len, aFile, &line_pos);
   }

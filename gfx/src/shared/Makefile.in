@@ -64,12 +64,18 @@ CPPSRCS = \
 	gfxImageFrame.cpp \
 	$(NULL)
 
+
 ifneq (,$(filter windows mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsNativeTheme.cpp
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)/.. \
                  $(NULL)
+
+ifdef MOZ_ENABLE_XFT
+CPPSRCS += nsFontConfigUtils.cpp
+LOCAL_INCLUDES += $(MOZ_XFT_CFLAGS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

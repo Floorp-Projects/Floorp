@@ -82,13 +82,18 @@ CSRCS		= nsPrintdGTK.c
 # Code shared between GTK+, Xlib and Xprint gfx modules
 X11SHARED_LCPPSRCS = \
 		nsAntiAliasedGlyph.cpp \
-		nsFontFreeType.cpp \
-		nsFT2FontNode.cpp \
-		nsFT2FontCatalog.cpp \
 		nsX11AlphaBlend.cpp \
 		nsXFontAAScaledBitmap.cpp \
 		nsXFontNormal.cpp \
 		$(NULL)
+
+ifdef MOZ_ENABLE_FREETYPE2
+X11SHARED_LCPPSRCS += \
+		nsFontFreeType.cpp \
+		nsFT2FontNode.cpp \
+		nsFT2FontCatalog.cpp \
+		$(NULL)
+endif
                 
 CPPSRCS		= \
 		nsDeviceContextGTK.cpp \
@@ -232,13 +237,13 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		-I$(srcdir)/../shared \
-		-I$(srcdir)/../freetype \
 		-I$(srcdir)/../x11shared \
 		$(MOZ_XFT_CFLAGS) \
 		$(NULL)
 
 ifdef MOZ_ENABLE_FREETYPE2
 INCLUDES        += $(FT2_CFLAGS)
+LOCAL_INCLUDES        += -I$(srcdir)/../freetype
 endif
 
 ifdef MOZ_ENABLE_XPRINT

@@ -55,7 +55,7 @@
 #include "nsCompressedCharMap.h"
 
 /* Undefine some CPP symbols which wrap not-yet-implemented code */
-#undef USE_FREETYPE
+#undef MOZ_ENABLE_FREETYPE2
 #undef USE_AASB
 #undef USE_X11SHARED_CODE
 
@@ -186,9 +186,9 @@ struct nsFontWeightXlib;
 
 class nsFontXlibUserDefined;
 class nsFontMetricsXlib;
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
 class nsFreeTypeFace;
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 
 struct nsFontStretchXlib
 {
@@ -203,9 +203,9 @@ struct nsFontStretchXlib
   char*              mScalable;
   PRBool             mOutlineScaled;
   nsVoidArray        mScaledFonts;
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   nsFreeTypeFace    *mFreeTypeFaceID;
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
 };
 
 struct nsFontStyleXlib
@@ -288,9 +288,9 @@ public:
   virtual XFontStruct *GetXFontStruct(void);
   virtual nsXFont     *GetXFont(void);
   virtual PRBool       GetXFontIs10646(void);
-#ifdef USE_FREETYPE
+#ifdef MOZ_ENABLE_FREETYPE2
   virtual PRBool       IsFreeTypeFont(void);
-#endif /* USE_FREETYPE */
+#endif /* MOZ_ENABLE_FREETYPE2 */
   virtual int          GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual int          DrawString(nsRenderingContextXlib *aContext,
                                   nsIDrawingSurfaceXlib *aSurface, nscoord aX,
@@ -475,7 +475,7 @@ class nsHashKey;
  * GDK/GTK+ includes which are not available in Xlib builds (fix is to remove
  * the GDK/GTK+ dependicy from the code in gfx/src/x11shared/ ...)
  */
-#ifndef USE_FREETYPE
+#ifndef MOZ_ENABLE_FREETYPE2
 /*
  * Defines for the TrueType codepage bits.
  * Used as a hint for the languages supported in a TrueType font.
@@ -524,7 +524,7 @@ class nsHashKey;
 #define TT_OS2_CPR2_ARABIC_708   (0x20000000) /* Arabic; ASMO 708            */
 #define TT_OS2_CPR2_WE_LATIN1    (0x40000000) /* WE/Latin 1                  */
 #define TT_OS2_CPR2_US           (0x80000000) /* US                          */
-#endif /* !USE_FREETYPE */
+#endif /* !MOZ_ENABLE_FREETYPE2 */
 
 #endif /* !nsFontMetricsXlib_h__ */
 

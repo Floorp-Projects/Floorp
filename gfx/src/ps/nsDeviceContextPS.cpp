@@ -63,7 +63,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsPrintJobPS.h"
 #include "nsPrintJobFactoryPS.h"
-#ifdef MOZ_ENABLE_FREETYPE2
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
 #include "nsType8.h"
 #endif
 
@@ -214,6 +214,15 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
  
   nsresult rv;
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
+#ifdef MOZ_ENABLE_XFT
+  if (NS_SUCCEEDED(rv)) {
+      rv = pref->GetBoolPref("font.FreeType2.printing", &mFTPEnable);
+      if (NS_FAILED(rv))
+        mFTPEnable = PR_FALSE;
+  }
+#else 
+  mFTPEnable = PR_FALSE;
+#ifdef MOZ_ENABLE_FREETYPE2
   if (NS_SUCCEEDED(rv)) {
     rv = pref->GetBoolPref("font.FreeType2.enable", &mFTPEnable);
     if (NS_FAILED(rv))
@@ -224,6 +233,8 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
         mFTPEnable = PR_FALSE;
     }
   }
+#endif
+#endif
   
   // the user's locale
   nsCOMPtr<nsILanguageAtomService> langService;
@@ -449,7 +460,7 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
       // Start writing the print job to the job handler
       mPSObj->write_prolog(submitFP);
 
-#ifdef MOZ_ENABLE_FREETYPE2
+#if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
       // Before output Type8 font, check whether printer support CID font
       if (mFTPEnable && mPSFontGeneratorList)
         if (mPSFontGeneratorList->Count() > 0)

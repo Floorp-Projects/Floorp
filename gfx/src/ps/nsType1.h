@@ -52,7 +52,15 @@
 
 #include <stdio.h>
 #include "nspr.h"
+#ifdef MOZ_ENABLE_XFT
+#include "nsISupports.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_OUTLINE_H
+#else
 #include "nsIFreeType2.h"
+#endif
 
 /* to/from Character Space */
 inline int
@@ -93,7 +101,11 @@ fromCS(double upm, double x)
 #define TYPE1_ENCRYPTION_C1  52845
 #define TYPE1_ENCRYPTION_C2  22719
 
+#ifdef MOZ_ENABLE_XFT  
+FT_Error FT2GlyphToType1CharString(FT_Face aFace,
+#else /* MOZ_ENABLE_FREETYPE2 */
 FT_Error FT2GlyphToType1CharString(nsIFreeType2 *aFt2, FT_Face aFace,
+#endif
                                    PRUint32 aGlyphID, int aWmode, int aLenIV,
                                    unsigned char *aBuf);
 

@@ -3478,6 +3478,14 @@ if test "$MOZ_ENABLE_XFT" && test -z "$MOZ_ENABLE_GTK2"; then
     AC_MSG_ERROR([Cannot enable XFT support for non-GTK2 toolkits.])
 fi
 
+if test "$MOZ_ENABLE_XFT" && test -z "$MOZ_ENABLE_GTK2"; then
+    AC_MSG_ERROR([Cannot enable XFT support for non-GTK2 toolkits.])
+fi
+
+if test "$MOZ_ENABLE_XFT" && test "$MOZ_ENABLE_FREETYPE2"; then
+    AC_MSG_ERROR([Cannot enable XFT and FREETYPE2 at the same time.])
+fi
+
 if test "$MOZ_ENABLE_XFT"
 then
     AC_DEFINE(MOZ_ENABLE_XFT)

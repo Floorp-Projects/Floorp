@@ -97,7 +97,9 @@
 #define FREETYPE_FONT_PRINTF(x) \
          DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_FREETYPE_FONT)
 
+#ifdef MOZ_ENABLE_FREETYPE2
 extern PRUint32 gFontDebug;
+#endif
 
 #endif
 
