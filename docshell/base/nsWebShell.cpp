@@ -847,6 +847,30 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURLSpec), nsnull);
 
+        // No URI object? This may indicate the URLspec is for an
+        // unrecognized protocol. Embedders might still be interested
+        // in handling the click, so we fire a notification before
+        // throwing the click away.
+        if (!uri && NS_SUCCEEDED(EnsureContentListener()))
+        {
+            nsCOMPtr<nsIURIContentListener> listener = do_QueryInterface(mContentListener);
+            nsCAutoString spec; spec.AssignWithConversion(aURLSpec);
+            PRBool abort = PR_FALSE;
+            nsresult rv;
+            uri = do_CreateInstance(kSimpleURICID, &rv);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "can't create simple uri");
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = uri->SetSpec(spec);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
+                if (NS_SUCCEEDED(rv))
+                {
+                    listener->OnStartURIOpen(uri, target, &abort);
+                }
+            }
+            return;
+        }
+
 #ifdef SH_IN_FRAMES
 		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, aPostDataStream, 
                  aHeadersDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
