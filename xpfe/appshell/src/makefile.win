@@ -36,6 +36,7 @@ CPP_OBJS=                               \
 LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\xpcom                 \
       -I$(PUBLIC)\base                  \
+      -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\netlib
 
 MAKE_OBJ_TYPE = DLL
