@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = msgdb mdb mork
+DIRS = mork msgdb mdb
 
 include $(topsrcdir)/config/config.mk
 
