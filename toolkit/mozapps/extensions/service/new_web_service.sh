@@ -41,6 +41,7 @@ cd "$sAXIS_HOME"
 #
 #mkdir -p $pkg_dir || exit 1
 cp -f "$srcdir"/*.java "$sAXIS_HOME/$pkg_dir"
+echo "Compiling original source files..."
 javac "$pkg_dir"/*.java || exit 1
 
 #
@@ -51,12 +52,12 @@ java org.apache.axis.wsdl.Java2WSDL -o "$AXIS_HOME\\$pkg_dir\\$name.wsdl" \
     -p"$pkg" "urn:$name" $pkg.$name || exit 1
   
 java org.apache.axis.wsdl.WSDL2Java -o . \
-    -d Session -s -S true  -Nurn:$name $pkg $name.wsdl || exit 1
+    -d Session -s -S true  -Nurn:$name $pkg "$AXIS_HOME\\$pkg_dir\\$name.wsdl" || exit 1
 
 #
 # verify results! ;-)
 #
-if [ ! -f "$name.wsdl" -o ! -f "$pkg_dir/"$name"SoapBindingImpl.java" ]; then
+if [ ! -f "$AXIS_HOME\\$pkg_dir\\$name.wsdl" -o ! -f "$pkg_dir/"$name"SoapBindingImpl.java" ]; then
   echo "something went wrong!"
   exit 1
 fi
@@ -77,6 +78,7 @@ regexp="s/public class ${name}SoapBindingImpl/public class ${name}SoapBindingImp
 sed -e "$regexp" $pkg_dir/${name}SoapBindingImpl.java > $pkg_dir/temp.java
 mv $pkg_dir/temp.java "$pkg_dir/${name}SoapBindingImpl.java"
 
+echo "Compiling generated source files..."
 javac "$pkg_dir\*.java" || exit 1
 cd "$sAXIS_HOME/$pkg_dir"
 cp *.class "$sCATALINA_HOME/webapps/axis/WEB-INF/classes/$pkg_dir"

@@ -46,12 +46,14 @@ public class VersionCheck
   {
   }
 
+  /*
   public static void main(String[] args) throws Exception 
   {
     VersionCheck impl = new VersionCheck();
     int id = impl.getNewestExtension("{bb8ee064-ccb9-47fc-94ae-ec335af3fe2d}", "3.0", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", "0.8.0+");
     System.out.println("result = " + impl.getProperty(id, "xpiurl"));
   }
+  */
 
   protected Connection getConnection() throws Exception
   {
@@ -63,11 +65,12 @@ public class VersionCheck
   {
     int id = getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
     Extension e = new Extension();
-    e.row = id;
-    e.id = getProperty(id, "id");
-    e.version = getProperty(id, "version");
-    e.name = getProperty(id, "name");
-    e.xpiURL = getProperty(id, "xpiurl");
+
+    e.setRow(id);
+    e.setId(getProperty(id, "id"));
+    e.setVersion(getProperty(id, "version"));
+    e.setName(getProperty(id, "name"));
+    e.setXpiURL(getProperty(id, "xpiurl"));
 
     return e;
   }
