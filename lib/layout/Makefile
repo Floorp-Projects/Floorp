@@ -55,6 +55,14 @@ CSRCS		= bullet.c \
 		  laylayer.c \
 		  layrelay.c \
 		  laytrav.c \
+		  layfree.c \
+		  layimage.c \
+		  layout.c \
+		  laysel.c \
+		  laytable.c \
+		  laytags.c \
+		  laytext.c \
+		  layutil.c \
                   $(NULL)
 
 REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha oji ojiimpl xpcom
@@ -67,14 +75,6 @@ include $(DEPTH)/config/config.mk
 
 ifdef MOZ_EDITOR
 CSRCS		+= layedit.c \
-		  layfree.c \
-		  layimage.c \
-		  layout.c \
-		  laysel.c \
-		  laytable.c \
-		  laytags.c \
-		  laytext.c \
-		  layutil.c \
 		  $(NULL)
 
 CPPSRCS		= streams.cpp \
