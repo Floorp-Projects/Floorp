@@ -80,10 +80,7 @@ WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     nsCvrtJSValToStr(b0, cx, argv[0]);
     nsCvrtJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->getString(b0, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
+    nativeThis->getString(b0, b1, &nativeRet);
 
     nsCvrtStrToJSVal(nativeRet, cx, rval);
   }
