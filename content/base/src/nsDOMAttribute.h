@@ -80,11 +80,8 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
   // nsIDOMAttr interface
-  NS_IMETHOD GetSpecified(PRBool* aSpecified);
-  NS_IMETHOD GetName(nsString& aReturn);
-  NS_IMETHOD GetValue(nsString& aReturn);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  
+  NS_DECL_IDOMATTR
+ 
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
 

@@ -241,6 +241,21 @@ nsDOMAttribute::GetSpecified(PRBool* aSpecified)
 }
 
 NS_IMETHODIMP
+nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
+{
+  NS_ENSURE_ARG_POINTER(aOwnerElement);
+
+  if (mContent) {
+    return mContent->QueryInterface(NS_GET_IID(nsIDOMElement),
+                                    (void **)aOwnerElement);
+  }
+
+  *aOwnerElement = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMAttribute::GetNodeName(nsString& aNodeName)
 {
   return GetName(aNodeName);

@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
+class nsIDOMElement;
 
 #define NS_IDOMATTR_IID \
  { 0xa6cf9070, 0x15b3, 0x11d2, \
@@ -44,6 +45,8 @@ public:
 
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
+
+  NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement)=0;
 };
 
 
@@ -52,6 +55,7 @@ public:
   NS_IMETHOD    GetSpecified(PRBool* aSpecified);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement);  \
 
 
 
@@ -60,6 +64,7 @@ public:
   NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return _to GetSpecified(aSpecified); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement) { return _to GetOwnerElement(aOwnerElement); } \
 
 
 extern "C" NS_DOM nsresult NS_InitAttrClass(nsIScriptContext *aContext, void **aPrototype);
