@@ -224,6 +224,74 @@ nsXFormsInstanceElement::SetDocument(nsIDOMDocument *aDocument)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::BackupOriginalDocument()
+{
+  nsresult rv = NS_OK;
+
+  // This is called when xforms-ready is received by the model.  By now we know 
+  // that the instance document, whether external or inline, is loaded into 
+  // mDocument.  Get the root node, clone it, and insert it into our copy of 
+  // the document.  This is the magic behind getting xforms-reset to work.
+  if(mDocument && mOriginalDocument) {
+    nsCOMPtr<nsIDOMNode> newNode;
+    nsCOMPtr<nsIDOMElement> instanceRoot;
+    rv = mDocument->GetDocumentElement(getter_AddRefs(instanceRoot));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(instanceRoot, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMNode> nodeReturn;
+    rv = instanceRoot->CloneNode(PR_TRUE, getter_AddRefs(newNode)); 
+    if(NS_SUCCEEDED(rv)) {
+      rv = mOriginalDocument->AppendChild(newNode, getter_AddRefs(nodeReturn));
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), 
+                       "failed to set up original instance document");
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsInstanceElement::RestoreOriginalDocument()
+{
+  nsresult rv = NS_OK;
+
+  // This is called when xforms-ready is received by the model.  By now we know 
+  // that the instance document, whether external or inline, is loaded into 
+  // mDocument.  Get the root node, clone it, and insert it into our copy of 
+  // the document.  This is the magic behind getting xforms-reset to work.
+  if(mDocument && mOriginalDocument) {
+    nsCOMPtr<nsIDOMNode> newNode, instanceRootNode, nodeReturn;
+    nsCOMPtr<nsIDOMElement> instanceRoot;
+
+    // first remove all the old stuff
+    rv = mDocument->GetDocumentElement(getter_AddRefs(instanceRoot));
+    if(NS_SUCCEEDED(rv)) {
+      if(instanceRoot) {
+        rv = mDocument->RemoveChild(instanceRoot, getter_AddRefs(nodeReturn));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    // now all of the garbage is out o' there!  Put the original data back
+    // into mDocument
+    rv = mOriginalDocument->GetDocumentElement(getter_AddRefs(instanceRoot));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(instanceRoot, NS_ERROR_FAILURE);
+    instanceRootNode = do_QueryInterface(instanceRoot);
+
+    rv = instanceRootNode->CloneNode(PR_TRUE, getter_AddRefs(newNode)); 
+    if(NS_SUCCEEDED(rv)) {
+      rv = mDocument->AppendChild(newNode, getter_AddRefs(nodeReturn));
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), 
+                       "failed to restore original instance document");
+    }
+  }
+  return rv;
+}
+
+
 // private methods
 
 nsresult
@@ -323,8 +391,17 @@ nsXFormsInstanceElement::CreateInstanceDocument()
   rv = doc->GetImplementation(getter_AddRefs(domImpl));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
+  rv = domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
                                  getter_AddRefs(mDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // I don't know if not being able to create a backup document is worth
+  // failing this function.  Since it probably won't be used often, we'll
+  // let it slide.  But it probably does mean that things are going south
+  // with the browser.
+  domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
+                          getter_AddRefs(mOriginalDocument));
+  return rv;
 }
 
 already_AddRefed<nsIModelElementPrivate>

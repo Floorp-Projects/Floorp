@@ -89,6 +89,7 @@ private:
   NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 
   nsCOMPtr<nsIDOMDocument>  mDocument;
+  nsCOMPtr<nsIDOMDocument>  mOriginalDocument;
   nsIDOMElement            *mElement;
   PRBool                    mIgnoreAttributeChanges;
 };

@@ -231,6 +231,10 @@ NS_IMETHODIMP
 nsXFormsModelElement::WillChangeDocument(nsIDOMDocument* aNewDocument)
 {
   RemoveModelFromDocument();
+  if(!aNewDocument) {
+    // can't send this much later or the model won't still be in the document!
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelDestruct);
+  }
   return NS_OK;
 }
 
@@ -356,18 +360,18 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   nsAutoString type;
   aEvent->GetType(type);
 
-  if (type.EqualsLiteral("xforms-refresh")) {
+  if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Refresh].name)) {
     Refresh();
-  } else if (type.EqualsLiteral("xforms-revalidate")) {
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Revalidate].name)) {
     Revalidate();
-  } else if (type.EqualsLiteral("xforms-recalculate")) {
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Recalculate].name)) {
     Recalculate();
-  } else if (type.EqualsLiteral("xforms-rebuild")) {
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Rebuild].name)) {
     Rebuild();
-  } else if (type.EqualsLiteral("xforms-reset")) {
-#ifdef DEBUG
-    printf("nsXFormsModelElement::Reset()\n");
-#endif    
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Ready].name)) {
+    Ready();
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
+    Reset();
   } else {
     *aHandled = PR_FALSE;
   }
@@ -1025,6 +1029,65 @@ nsXFormsModelElement::ProcessBindElements()
 
   return NS_OK;
 }
+
+void
+nsXFormsModelElement::Reset()
+{
+  BackupOrRestoreInstanceData(PR_TRUE);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
+}
+
+void
+nsXFormsModelElement::Ready()
+{
+  BackupOrRestoreInstanceData(PR_FALSE);
+}
+
+// This function will restore all of the model's instance data to it's original
+// state if the supplied boolean is PR_TRUE.  If it is PR_FALSE, this function
+// will cause this model's instance data to be backed up.
+void
+nsXFormsModelElement::BackupOrRestoreInstanceData(PRBool restore)
+{
+  // I imagine that this can be done more elegantly.  But in the end, the
+  // bulk of the work is walking the model's children looking for instance
+  // elements.  After one is found, just need to ask the instance element to
+  // backup or restore.
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  mElement->GetChildNodes(getter_AddRefs(children));
+
+  if (!children)
+    return;
+
+  PRUint32 childCount = 0;
+  children->GetLength(&childCount);
+
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIInstanceElementPrivate> instance;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    children->Item(i, getter_AddRefs(node));
+    NS_ASSERTION(node, "incorrect NodeList length?");
+
+    instance = do_QueryInterface(node);
+    if (!instance)
+      continue;
+
+    // Don't know what to do with error if we get one.
+    // Restore/BackupOriginalDocument will already output warnings.
+    if(restore) {
+      instance->RestoreOriginalDocument();
+    }
+    else {
+      instance->BackupOriginalDocument();
+    }
+  }
+}
+
 
 nsresult
 nsXFormsModelElement::FinishConstruction()

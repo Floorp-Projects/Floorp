@@ -50,4 +50,6 @@ interface nsIInstanceElementPrivate : nsISupports
    * The document which holds the live instance data.
    */
   attribute nsIDOMDocument document;
+  void backupOriginalDocument();
+  void restoreOriginalDocument();
 };
