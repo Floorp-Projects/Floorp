@@ -150,7 +150,7 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports *aServMgr, const char *aPath)
 {
 #ifdef DEBUG
-    printf("***Registering Security***\n");
+    printf("*** Registering Security\n");
 #endif
     nsresult rv;
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, 
