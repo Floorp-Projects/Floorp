@@ -852,8 +852,8 @@ sub init {
                 } elsif ($unit eq 'y') {
                     $unitinterval = 'YEAR';
                 }
-                my $cutoff = "DATE_SUB(NOW(), 
-                              INTERVAL $quantity $unitinterval)";
+                my $cutoff = "DATE_SUB(NOW(), " .
+                             "INTERVAL $quantity $unitinterval)";
                 my $assigned_fieldid = &::GetFieldID('assigned_to');
                 push(@supptables, "LEFT JOIN longdescs comment_$table " .
                                   "ON comment_$table.who = bugs.assigned_to " .
