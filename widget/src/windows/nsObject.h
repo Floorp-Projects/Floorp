@@ -28,23 +28,19 @@
  * nsObject is the base class for all native widgets 
  */
 
-class nsObject : public nsISupports
+class nsObject 
 {
 
 public:
                             nsObject();
     virtual                 ~nsObject();
     
-    NS_DECL_ISUPPORTS
-    
-
 protected:
     //
     // Data members:
     //
     CList m_link;
 
- 
 public:
 
     //

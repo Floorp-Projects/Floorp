@@ -28,8 +28,6 @@
 NS_IMPL_ADDREF(nsListBox)
 NS_IMPL_RELEASE(nsListBox)
 
-
-
 //-------------------------------------------------------------------------
 //
 //  initializer

@@ -44,11 +44,6 @@ extern HINSTANCE g_hinst;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-
-
 //-------------------------------------------------------------------------
 //
 // Default for height modification is to do nothing
@@ -360,23 +355,15 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow()
+nsWindow::nsWindow() : nsBaseWidget()
 {
     NS_INIT_REFCNT();
     mWnd           = 0;
     mPrevWndProc   = NULL;
-    mChildren      = NULL;
-    mEventCallback = NULL;
-    mToolkit       = NULL;
-    mAppShell      = NULL;
-    mMouseListener = NULL;
-    mEventListener = NULL;
     mBackground    = ::GetSysColor(COLOR_BTNFACE);
     mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
     mForeground    = ::GetSysColor(COLOR_WINDOWTEXT);
     mPalette       = NULL;
-    mCursor        = eCursor_standard;
-    mBorderStyle   = eBorderStyle_none;
     mIsShiftDown   = PR_FALSE;
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
@@ -386,9 +373,6 @@ nsWindow::nsWindow()
     mDeferredPositioner = NULL;
     mLastPoint.x   = 0;
     mLastPoint.y   = 0;
-    mWidth = mHeight = 0;
-    mClientData = NULL;
-    mContext = NULL;
 }
 
 
@@ -419,26 +403,6 @@ nsWindow::~nsWindow()
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIWidget*)this);
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
@@ -450,34 +414,15 @@ void nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    if (NULL == mToolkit) {
-        if (NULL != aToolkit) {
-            mToolkit = (nsToolkit*)aToolkit;
-            NS_ADDREF(mToolkit);
-        }
-        else {
-            if (NULL != aParent) {
-                mToolkit = (nsToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
-            }
-            // it's some top level window with no toolkit passed in.
-            // Create a default toolkit with the current thread
-            else {
-                mToolkit = new nsToolkit();
-                NS_ADDREF(mToolkit);
-                mToolkit->Init(PR_GetCurrentThread());
-            }
-        }
-
-    }
-
-    mAppShell = aAppShell;
-    NS_IF_ADDREF(mAppShell);
+    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+       aAppShell, aToolkit, aInitData);
 
     //
     // Switch to the "main gui thread" if necessary... This method must
     // be executed on the "gui thread"...
     //
-    if (!mToolkit->IsGuiThread()) {
+    nsToolkit* toolkit = (nsToolkit *)mToolkit;
+    if (! toolkit->IsGuiThread()) {
         DWORD args[5];
         args[0] = (DWORD)aParent;
         args[1] = (DWORD)&aRect;
@@ -486,33 +431,10 @@ void nsWindow::Create(nsIWidget *aParent,
         args[4] = (DWORD)aToolkit;
         args[5] = (DWORD)aInitData;
         MethodInfo info(this, nsWindow::CREATE, 6, args);
-        mToolkit->CallMethod(&info);
+        toolkit->CallMethod(&info);
         return;
     }
 
-    // save the event callback function
-    mEventCallback = aHandleEventFunction;
-
-    // keep a reference to the device context
-    if (aContext) {
-        mContext = aContext;
-        NS_ADDREF(mContext);
-    }
-    else {
-      nsresult  res;
-
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
-
-      if (NS_OK == res)
-        mContext->Init(nsnull);
-    }
-
-    if (nsnull != aInitData) {
-      PreCreateWidget(aInitData);
-    }
 
     // See if the caller wants to explictly set clip children
     DWORD style = WindowStyle();
@@ -538,14 +460,11 @@ void nsWindow::Create(nsIWidget *aParent,
                             nsToolkit::mDllInstance,
                             NULL);
     
-    VERIFY(mWnd);
     if (aParent) {
         aParent->AddChild(this);
     }
 
-    // Force cursor to default setting
-    mCursor = eCursor_select;
-    SetCursor(eCursor_standard);
+    VERIFY(mWnd);
 
     // call the event callback to notify about creation
 
@@ -567,28 +486,15 @@ void nsWindow::Create(nsNativeWidget aParent,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
-
-    if (NULL == mToolkit) {
-        if (NULL != aToolkit) {
-            mToolkit = (nsToolkit*)aToolkit;
-            NS_ADDREF(mToolkit);
-        }
-        else {
-            mToolkit = new nsToolkit();
-            NS_ADDREF(mToolkit);
-            mToolkit->Init(PR_GetCurrentThread());
-        }
-
-    }
-
-    mAppShell = aAppShell;
-    NS_IF_ADDREF(aAppShell);
-
+    BaseCreate(nsnull, aRect, aHandleEventFunction, aContext, 
+               aAppShell, aToolkit, aInitData);
+   
     //
     // Switch to the "main gui thread" if necessary... This method must
     // be executed on the "gui thread"...
     //
-    if (!mToolkit->IsGuiThread()) {
+    nsToolkit* toolkit = (nsToolkit *)mToolkit;
+    if (!toolkit->IsGuiThread()) {
         DWORD args[5];
         args[0] = (DWORD)aParent;
         args[1] = (DWORD)&aRect;
@@ -597,32 +503,8 @@ void nsWindow::Create(nsNativeWidget aParent,
         args[4] = (DWORD)aToolkit;
         args[5] = (DWORD)aInitData;
         MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
-        mToolkit->CallMethod(&info);
+        toolkit->CallMethod(&info);
         return;
-    }
-
-    // save the event callback function
-    mEventCallback = aHandleEventFunction;
-
-    // keep a reference to the device context
-    if (aContext) {
-        mContext = aContext;
-        NS_ADDREF(mContext);
-    }
-    else {
-      nsresult  res;
-
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
-
-      if (NS_OK == res)
-        mContext->Init(nsnull);
-    }
-
-    if (nsnull != aInitData) {
-      PreCreateWidget(aInitData);
     }
 
     // See if the caller wants to explictly set clip children
@@ -657,24 +539,6 @@ void nsWindow::Create(nsNativeWidget aParent,
 
 //-------------------------------------------------------------------------
 //
-// Accessor functions to get/set the client data
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
-{
-  aClientData = mClientData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
-{
-  mClientData = aClientData;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Close this nsWindow
 //
 //-------------------------------------------------------------------------
@@ -682,19 +546,16 @@ void nsWindow::Destroy()
 {
   // Switch to the "main gui thread" if necessary... This method must
   // be executed on the "gui thread"...
-  if (mToolkit != nsnull && !mToolkit->IsGuiThread()) {
+  nsToolkit* toolkit = (nsToolkit *)mToolkit;
+  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
     MethodInfo info(this, nsWindow::DESTROY);
-    mToolkit->CallMethod(&info);
+    toolkit->CallMethod(&info);
     return;
   }
 
   // disconnect from the parent
   if (!mIsDestroying) {
-    nsIWidget *parent = GetParent();
-    if (parent) {
-      parent->RemoveChild(this);
-      NS_RELEASE(parent);
-    }
+    nsBaseWidget::Destroy();
   }
 
   // destroy the HWND
@@ -739,64 +600,6 @@ nsIWidget* nsWindow::GetParent(void)
     }
 
     return (nsIWidget*)widget;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get this nsWindow's list of children
-//
-//-------------------------------------------------------------------------
-nsIEnumerator* nsWindow::GetChildren()
-{
-  if (mChildren) {
-    // Reset the current position to 0
-    mChildren->Reset();
-
-    // XXX Does this copy of our enumerator work? It looks like only
-    // the first widget in the list is added...
-    Enumerator * children = new Enumerator;
-    NS_ADDREF(children);
-    nsISupports   * next = mChildren->Next();
-    if (next) {
-      nsIWidget *widget;
-      if (NS_OK == next->QueryInterface(kIWidgetIID, (void**)&widget)) {
-        children->Append(widget);
-      }
-    }
-
-    return (nsIEnumerator*)children;
-  }
-
-  return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Add a child to the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::AddChild(nsIWidget* aChild)
-{
-  if (!mChildren) {
-    mChildren = new Enumerator;
-  }
-
-  mChildren->Append(aChild);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Remove a child from the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::RemoveChild(nsIWidget* aChild)
-{
-  if (mChildren) {
-    mChildren->Remove(aChild);
-  }
 }
 
 
@@ -942,9 +745,10 @@ void nsWindow::SetFocus(void)
     // Switch to the "main gui thread" if necessary... This method must
     // be executed on the "gui thread"...
     //
-    if (!mToolkit->IsGuiThread()) {
+    nsToolkit* toolkit = (nsToolkit *)mToolkit;
+    if (!toolkit->IsGuiThread()) {
         MethodInfo info(this, nsWindow::SET_FOCUS);
-        mToolkit->CallMethod(&info);
+        toolkit->CallMethod(&info);
         return;
     }
 
@@ -1009,40 +813,7 @@ void nsWindow::GetNonClientBounds(nsRect &aRect)
     }
 }
 
-    
-//-------------------------------------------------------------------------
-//
-// Get the foreground color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetForegroundColor(void)
-{
-    return mForeground;
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Set the foreground color
-//
-//-------------------------------------------------------------------------
-void nsWindow::SetForegroundColor(const nscolor &aColor)
-{
-    mForeground = aColor;
-}
-
-    
-//-------------------------------------------------------------------------
-//
-// Get the background color
-//
-//-------------------------------------------------------------------------
-nscolor nsWindow::GetBackgroundColor(void)
-{
-    return mBackground;
-}
-
-    
+           
 //-------------------------------------------------------------------------
 //
 // Set the background color
@@ -1050,8 +821,8 @@ nscolor nsWindow::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
-    mBackground = aColor;
-
+    nsBaseWidget::SetBackgroundColor(aColor);
+  
     if (mBrush)
       ::DeleteObject(mBrush);
 
@@ -1095,18 +866,7 @@ void nsWindow::SetFont(const nsFont &aFont)
     NS_RELEASE(fontCache);
 }
 
-    
-//-------------------------------------------------------------------------
-//
-// Get this component cursor
-//
-//-------------------------------------------------------------------------
-nsCursor nsWindow::GetCursor()
-{
-    return mCursor;
-}
-
-    
+        
 //-------------------------------------------------------------------------
 //
 // Set this component cursor
@@ -1118,6 +878,7 @@ nsCursor nsWindow::GetCursor()
 
 void nsWindow::SetCursor(nsCursor aCursor)
 {
+ 
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     HCURSOR newCursor = NULL;
@@ -1240,46 +1001,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     return NULL;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Create a rendering context from this nsWindow
-//
-//-------------------------------------------------------------------------
-nsIRenderingContext* nsWindow::GetRenderingContext()
-{
-nsRect  bounds;
-
-    nsIRenderingContext *renderingCtx = NULL;
-    if (mWnd) {
-        nsresult  res;
-
-        static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-        static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-        res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
-
-        if (NS_OK == res)
-          renderingCtx->Init(mContext, this);
-
-        NS_ASSERTION(NULL != renderingCtx, "Null rendering context");
-    }
-
-    return renderingCtx;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the toolkit this widget was created on
-//
-//-------------------------------------------------------------------------
-nsIToolkit* nsWindow::GetToolkit()
-{
-  NS_IF_ADDREF(mToolkit);
-  return mToolkit;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Set the colormap of the window
@@ -1316,28 +1037,6 @@ void nsWindow::SetColorMap(nsColorMap *aColorMap)
     }
 }
 
-//-------------------------------------------------------------------------
-//
-// Return the used device context
-//
-//-------------------------------------------------------------------------
-nsIDeviceContext* nsWindow::GetDeviceContext() 
-{
-  NS_IF_ADDREF(mContext);
-  return mContext; 
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the App Shell
-//
-//-------------------------------------------------------------------------
-
-nsIAppShell *nsWindow::GetAppShell()
-{
-    NS_IF_ADDREF(mAppShell);
-    return mAppShell;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -1832,11 +1531,8 @@ void nsWindow::OnDestroy()
     }
 
     // release references to children, device context, toolkit, and app shell
-    NS_IF_RELEASE(mChildren);
-    NS_IF_RELEASE(mContext);
-    NS_IF_RELEASE(mToolkit);
-    NS_IF_RELEASE(mAppShell);
-
+    nsBaseWidget::OnDestroy();
+ 
     // dispatch the event
     if (!mIsDestroying) {
       // dispatching of the event may cause the reference count to drop to 0
@@ -2074,99 +1770,6 @@ HBRUSH nsWindow::OnControlColor()
     return mBrush;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Constructor
-//
-//-------------------------------------------------------------------------
-
-nsWindow::Enumerator::Enumerator()
-{
-  mRefCnt = 1;
-  mCurrentPosition = 0;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Destructor
-//
-//-------------------------------------------------------------------------
-nsWindow::Enumerator::~Enumerator()
-{   
-  // We add ref'd when adding the child widgets, so we need to release
-  // the references now
-  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
-    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(i);
-
-    NS_ASSERTION(nsnull != widget, "null widget pointer");
-    NS_IF_RELEASE(widget);
-  }
-}
-
-//
-// nsISupports implementation macro
-//
-NS_IMPL_ISUPPORTS(nsWindow::Enumerator, NS_IENUMERATOR_IID);
-
-//-------------------------------------------------------------------------
-//
-// Get enumeration next element. Return null at the end
-//
-//-------------------------------------------------------------------------
-nsISupports* nsWindow::Enumerator::Next()
-{
-  if (mCurrentPosition < mChildren.Count()) {
-    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
-
-    mCurrentPosition++;
-    NS_IF_ADDREF(widget);
-    return widget;
-  }
-
-  return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Reset enumerator internal pointer to the beginning
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Reset()
-{
-  mCurrentPosition = 0;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Append an element 
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Append(nsIWidget* aWidget)
-{
-  NS_PRECONDITION(aWidget, "Null widget");
-  if (nsnull != aWidget) {
-    mChildren.AppendElement(aWidget);
-    NS_ADDREF(aWidget);
-  }
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Remove an element 
-//
-//-------------------------------------------------------------------------
-void nsWindow::Enumerator::Remove(nsIWidget* aWidget)
-{
-  if (mChildren.RemoveElement(aWidget)) {
-    NS_RELEASE(aWidget);
-  }
-}
-
 //-------------------------------------------------------------------------
 //
 // return the style for a child nsWindow
@@ -2229,12 +1832,6 @@ DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
   }
 }
 
-
-void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
-{
-  mBorderStyle = aBorderStyle; 
-} 
-
 void nsWindow::SetTitle(const nsString& aTitle) 
 {
   NS_ALLOC_STR_BUF(buf, aTitle, 256);
@@ -2242,26 +1839,6 @@ void nsWindow::SetTitle(const nsString& aTitle)
   NS_FREE_STR_BUF(buf);
 } 
 
-
-/**
- * Processes a mouse pressed event
- *
- **/
-void nsWindow::AddMouseListener(nsIMouseListener * aListener)
-{
-  NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
-  mMouseListener = aListener;
-}
-
-/**
- * Processes a mouse pressed event
- *
- **/
-void nsWindow::AddEventListener(nsIEventListener * aListener)
-{
-  NS_PRECONDITION(mEventListener == nsnull, "Null mouse listener");
-  mEventListener = aListener;
-}
 
 PRBool nsWindow::AutoErase()
 {

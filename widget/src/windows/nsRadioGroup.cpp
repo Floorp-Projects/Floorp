@@ -20,6 +20,7 @@
 #include "nsToolkit.h"
 #include "nsStringUtil.h"
 
+NS_IMPL_ISUPPORTS(nsRadioGroup, NS_IRADIOGROUP_IID)
 
 class nsStringHashKey : public nsHashKey {
 public:
@@ -121,11 +122,6 @@ PRBool HashtableEnum(nsHashKey *aKey, void *aData) {
 }
 
 
-
-NS_IMPL_ADDREF(nsRadioGroup)
-NS_IMPL_RELEASE(nsRadioGroup)
-
-
 //-------------------------------------------------------------------------
 //
 // nsRadioGroup constructor
@@ -165,28 +161,6 @@ nsRadioGroup * nsRadioGroup::getNamedRadioGroup(const nsString & aName) {
 
 NS_EXPORT nsIRadioGroup * NS_GetRadioGroup(const nsString &aName) {
   return nsRadioGroup::getNamedRadioGroup(aName);
-}
-
-
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsRadioGroup::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsRadioGroupIID, NS_IRADIOGROUP_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsRadioGroupIID)) {
-        *aInstancePtr = (void*) ((nsIRadioGroup*)this);
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
-
 }
 
 

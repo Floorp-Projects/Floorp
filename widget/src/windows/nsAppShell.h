@@ -26,7 +26,7 @@
  * Native Win32 Application shell wrapper
  */
 
-class nsAppShell : public nsObject, public nsIAppShell
+class nsAppShell : public nsIAppShell
 {
   public:
                             nsAppShell(); 

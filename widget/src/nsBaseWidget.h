@@ -1,0 +1,145 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#ifndef nsBaseWidget_h__
+#define nsBaseWidget_h__
+
+#include "nsIWidget.h"
+#include "nsIEnumerator.h"
+#include "nsIMouseListener.h"
+#include "nsIEventListener.h"
+#include "nsIToolkit.h"
+#include "nsStringUtil.h"
+#include "nsString.h"
+#include "nsVoidArray.h"
+
+#define NSRGB_2_COLOREF(color) \
+            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
+
+/**
+ * Common widget implementation used as base class for native
+ * or crossplatform implementations of Widgets. 
+ * All cross-platform behavior that all widgets need to implement 
+ * should be placed in this class. 
+ * (Note: widget implementations are not required to use this
+ * class, but it gives them a head start.)
+ */
+
+class nsBaseWidget : public nsIWidget
+{
+
+public:
+    nsBaseWidget();
+    virtual ~nsBaseWidget();
+
+    NS_DECL_ISUPPORTS
+
+    virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
+
+      // nsIWidget interface
+    NS_IMETHOD              GetClientData(void*& aClientData);
+    NS_IMETHOD              SetClientData(void* aClientData);
+    virtual void            Destroy();
+    virtual nsIWidget*      GetParent(void);
+    virtual nsIEnumerator*  GetChildren();
+    virtual void            AddChild(nsIWidget* aChild);
+    virtual void            RemoveChild(nsIWidget* aChild);
+
+
+    virtual nscolor         GetForegroundColor(void);
+    virtual void            SetForegroundColor(const nscolor &aColor);
+    virtual nscolor         GetBackgroundColor(void);
+    virtual void            SetBackgroundColor(const nscolor &aColor);
+    virtual nsCursor        GetCursor();
+    virtual void            SetCursor(nsCursor aCursor);
+    virtual nsIRenderingContext* GetRenderingContext();
+    virtual nsIDeviceContext* GetDeviceContext();
+    virtual nsIAppShell *   GetAppShell();
+    virtual nsIToolkit*     GetToolkit();  
+    virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
+    virtual void            SetTitle(const nsString& aTitle); 
+    virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
+    virtual void            RemoveTooltips();
+    virtual void            UpdateTooltips(nsRect* aNewTips[]);
+    virtual void            AddMouseListener(nsIMouseListener * aListener);
+    virtual void            AddEventListener(nsIEventListener * aListener);
+    virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+protected:
+
+    virtual void            OnDestroy();
+    virtual void            BaseCreate(nsIWidget *aParent,
+                            const nsRect &aRect,
+                            EVENT_CALLBACK aHandleEventFunction,
+                            nsIDeviceContext *aContext,
+                            nsIAppShell *aAppShell,
+                            nsIToolkit *aToolkit,
+                            nsWidgetInitData *aInitData);
+
+protected: 
+    void*             mClientData;
+    EVENT_CALLBACK    mEventCallback;
+    nsIDeviceContext  *mContext;
+    nsIAppShell       *mAppShell;
+    nsIToolkit        *mToolkit;
+    nsIMouseListener  *mMouseListener;
+    nsIEventListener  *mEventListener;
+    nscolor           mBackground;
+    nscolor           mForeground;
+    nsCursor          mCursor;
+    nsBorderStyle     mBorderStyle;
+    PRBool            mIsShiftDown;
+    PRBool            mIsControlDown;
+    PRBool            mIsAltDown;
+    PRBool            mIsDestroying;
+    PRBool            mOnDestroyCalled;
+    PRInt32           mWidth;
+    PRInt32           mHeight;
+
+    // keep the list of children
+    class Enumerator : public nsIEnumerator {
+    public:
+      NS_DECL_ISUPPORTS
+
+      Enumerator();
+      ~Enumerator();
+
+      NS_IMETHOD_(nsISupports*) Next();
+      NS_IMETHOD_(void) Reset();
+
+      void Append(nsIWidget* aWidget);
+      void Remove(nsIWidget* aWidget);
+
+    private:
+      nsVoidArray   mChildren;
+      PRInt32       mCurrentPosition;
+    } *mChildren;
+
+    // Enumeration of the methods which are accessable on the "main GUI thread"
+    // via the CallMethod(...) mechanism...
+    // see nsSwitchToUIThread
+    enum {
+        CREATE       = 0x0101,
+        CREATE_NATIVE,
+        DESTROY, 
+        SET_FOCUS,
+        SET_CURSOR,
+        CREATE_HACK
+    };
+    
+};
+
+#endif // nsBaseWidget_h__

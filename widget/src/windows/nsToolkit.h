@@ -34,25 +34,20 @@ class nsToolkit : public nsIToolkit
 {
 
   public:
+
+            NS_DECL_ISUPPORTS
+
                             nsToolkit();
-
-    NS_DECL_ISUPPORTS
-
-    virtual void            Init(PRThread *aThread);
-
-
+            virtual void    Init(PRThread *aThread);
             void            CallMethod(MethodInfo *info);
-
             // Return whether the current thread is the application's Gui thread.  
             PRBool          IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}
             PRThread*       GetGuiThread(void)       { return mGuiThread;   }
             HWND            GetDispatchWindow(void)  { return mDispatchWnd; }
-
             void            CreateInternalWindow(PRThread *aThread);
 
 private:
                             ~nsToolkit();
-
             void            CreateUIThread(void);
 
 public:

@@ -59,27 +59,26 @@ static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
 
 NS_WIDGET nsresult 
 NS_CreateDialog(nsISupports* aParent, 
-									nsIDialog* aDialog, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction,
-								  const nsFont* aFont)
+	        nsIDialog* aDialog, 
+	        const nsRect& aRect, 
+		EVENT_CALLBACK aHandleEventFunction,
+	        const nsFont* aFont)
 {
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
+    nsIWidget* parent = nsnull;
+    if (aParent != nsnull)
+      aParent->QueryInterface(kIWidgetIID,(void**)&parent);
 
-  nsIWidget* 	widget;
-	if (NS_OK == aDialog->QueryInterface(kIWidgetIID,(void**)&widget))
-	{
-  	widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	    widget->SetFont(*aFont);
-		NS_IF_RELEASE(widget); 
-	}
-  if (aParent != nsnull)
-    NS_IF_RELEASE(parent);
-  return NS_OK;
+    nsIWidget* 	widget;
+    if (NS_OK == aDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
+      widget->Create(parent, aRect, aHandleEventFunction, NULL);
+      widget->Show(PR_TRUE);
+      if (aFont != nsnull)
+        widget->SetFont(*aFont);
+	NS_IF_RELEASE(widget); 
+    }
+    if (aParent != nsnull)
+      NS_IF_RELEASE(parent);
+    return NS_OK;
 }
 
 

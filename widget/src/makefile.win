@@ -18,6 +18,34 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS=windows 
+DIRS = windows
+
+LIBRARY_NAME=raptorbasewidget_s
+MODULE=raptor 
+REQUIRES=xpcom 
+
+DEFINES= -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_WIDGET
+
+CPPSRCS= \
+	nsBaseWidget.cpp 
+
+EXPORTS=nsBaseWidget.h 
+
+CPP_OBJS=.\$(OBJDIR)\nsBaseWidget.obj  
+    
+
+LINCS= -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor 
+
+LCFLAGS = \
+	$(LCFLAGS) \
+	$(DEFINES) \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+	
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

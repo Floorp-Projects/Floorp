@@ -40,9 +40,7 @@ public:
     virtual                 ~nsRadioButton();
 
     // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS
 
     // nsIRadioButton part
     NS_IMETHOD              SetLabel(const nsString& aText);

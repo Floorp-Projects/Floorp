@@ -24,9 +24,7 @@
 #include "nsFileWidget.h"
 #include <windows.h>
 
-
-NS_IMPL_ADDREF(nsFileWidget)
-NS_IMPL_RELEASE(nsFileWidget)
+NS_IMPL_ISUPPORTS(nsFileWidget, NS_IFILEWIDGET_IID)
 
 //-------------------------------------------------------------------------
 //
@@ -183,26 +181,5 @@ void nsFileWidget::Create(nsIWidget *aParent,
 nsFileWidget::~nsFileWidget()
 {
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  //  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
-
-    nsresult result = NS_NOINTERFACE;
-    static NS_DEFINE_IID(kInsFileWidgetIID, NS_IFILEWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsFileWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIFileWidget*)this);
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
 
 

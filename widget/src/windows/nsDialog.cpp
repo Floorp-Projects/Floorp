@@ -17,7 +17,6 @@
  */
 
 #include "nsDialog.h"
-//#include "nsWindow.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
@@ -50,17 +49,7 @@ NS_IMPL_RELEASE(nsDialog)
 nsDialog::nsDialog() : nsWindow(), nsIDialog()
 {
   NS_INIT_REFCNT();
-   /* hDlgPrint = CreateDialog (hInst, (LPCTSTR) "PrintDlgBox", hwnd, PrintDlgProc) ;
-     SetDlgItemText (hDlgPrint, IDD_FNAME, szTitleName) ;
-
-     SetAbortProc (pd.hDC, AbortProc) ;
-
-     GetWindowText (hwnd, (PTSTR) di.lpszDocName, sizeof (PTSTR)) ;
-     */
-
-
 }
-
 
 
 //-------------------------------------------------------------------------
@@ -177,7 +166,7 @@ LPCTSTR nsDialog::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsDialog::WindowStyle()
 { 
-  return DS_MODALFRAME;//WS_CHILD | WS_CLIPSIBLINGS; 
+  return DS_MODALFRAME; 
 }
 
 //-------------------------------------------------------------------------

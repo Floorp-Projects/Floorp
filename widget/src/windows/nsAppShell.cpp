@@ -19,16 +19,14 @@
 #include "nsAppShell.h"
 #include <windows.h>
 
-NS_IMPL_ADDREF(nsAppShell)
-NS_IMPL_RELEASE(nsAppShell)
-
+NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
 
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
 //
 //-------------------------------------------------------------------------
-nsAppShell::nsAppShell() : nsObject() 
+nsAppShell::nsAppShell()  
 { 
   NS_INIT_REFCNT();
   mDispatchListener = 0;
@@ -90,24 +88,6 @@ nsAppShell::~nsAppShell()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = NS_NOINTERFACE;
-    static NS_DEFINE_IID(kInsAppShellIID, NS_IAPPSHELL_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsAppShellIID)) {
-        nsIAppShell* shell = this;
-        *aInstancePtr = (void*)shell;
-        NS_ADDREF_THIS();
-        result = NS_OK;
-    }
-
-    return result;
-}
 //-------------------------------------------------------------------------
 //
 // GetNativeData
