@@ -113,6 +113,7 @@ protected:
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
     PRUint32 mMatchTypeConters[LAST_MATCH_TYPE];
+    PRUint32 mDefaultDomainMatchTypeCounters[LAST_MATCH_TYPE];
 
     // how to process the comment column, if at all.  this value
     // comes from "mail.autoComplete.commentColumn", or, if that
@@ -135,7 +136,6 @@ class nsAbAutoCompleteParam : public nsISupports
 {
 public:
 	NS_DECL_ISUPPORTS
-    //  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
 	
 	nsAbAutoCompleteParam(const PRUnichar* nickName,
                           const PRUnichar* displayName,
@@ -144,7 +144,7 @@ public:
                           const PRUnichar* emailAddress,
                           const PRUnichar* notes,
                           const PRUnichar* dirName,
-                          PRBool isMailList,
+                          PRBool isMailList, 
                           nsAbAutoCompleteSession::MatchType type)
 	{
 	  NS_INIT_REFCNT();
@@ -154,7 +154,7 @@ public:
 		mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-        mDirName = nsCRT::strdup(dirName ? dirName : NS_STATIC_CAST(const PRUnichar *, NS_LITERAL_STRING("").get()));
+    mDirName = nsCRT::strdup(dirName ? dirName : NS_STATIC_CAST(const PRUnichar *, NS_LITERAL_STRING("").get()));
 		mIsMailList = isMailList;
 		mType = type;
 	}

@@ -70,7 +70,7 @@ void nsAbAutoCompleteSession::ResetMatchTypeConters()
 {
     PRInt32 i;
     for (i = 0; i < LAST_MATCH_TYPE; mMatchTypeConters[i++] = 0)
-        ;
+      mDefaultDomainMatchTypeCounters[i] = 0;
 }
 
 PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results)
@@ -229,10 +229,29 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       rv = results->GetItems(getter_AddRefs(array));
       if (NS_SUCCEEDED(rv))
       {
-        PRInt32 insertPosition = 0;
+        PRInt32 index = 0;
         PRInt32 i;
-        for (i = 0; i <= type; insertPosition += mMatchTypeConters[i++])
-          ; 
+        // break off at the first of our type....
+        for (i = 0; i < type; index += mMatchTypeConters[i++])
+          ;        
+        
+        // use domain matches as the distinguisher amongst matches of the same type.
+        PRInt32 insertPosition = index + mMatchTypeConters[i];
+        
+        if (type != DEFAULT_MATCH && !bIsMailList)
+        {
+          nsAutoString emailaddr(pEmailStr);
+          PRInt32 foundIndex = emailaddr.Find(mDefaultDomain, PR_TRUE);
+          if (foundIndex > 0)
+          {
+            // okay the match contains the default domain, we want to insert it
+            // AFTER any exisiting matches of the same type which also have a domain
+            // match....            
+            insertPosition = index + mDefaultDomainMatchTypeCounters[type];
+            mDefaultDomainMatchTypeCounters[type]++;           
+          }
+        }
+
         rv = array->InsertElementAt(newItem, insertPosition);
         if (NS_SUCCEEDED(rv))
           mMatchTypeConters[type] ++;
