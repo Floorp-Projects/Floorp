@@ -201,6 +201,8 @@ function CalendarWindow( calendarDataSource )
    // add the observer to the event source
    
    gICalLib.addObserver( this.calendarEventDataSourceObserver );
+
+   var FilterList = document.getElementById( "event-filter-menulist" ); 
 }
 
 
