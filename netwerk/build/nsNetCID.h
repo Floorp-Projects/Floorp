@@ -436,6 +436,14 @@
     {0xaa, 0xe3, 0xde, 0x6b, 0x92, 0xda, 0xb6, 0x20} \
 }
 
+#define NS_HTTPNTLMAUTH_CID \
+{ /* bbef8185-c628-4cc1-b53e-e61e74c2451a */         \
+    0xbbef8185,                                      \
+    0xc628,                                          \
+    0x4cc1,                                          \
+    {0xb5, 0x3e, 0xe6, 0x1e, 0x74, 0xc2, 0x45, 0x1a} \
+}
+
 #define NS_HTTPAUTHMANAGER_CLASSNAME \
     "nsHttpAuthManager"
 #define NS_HTTPAUTHMANAGER_CONTRACTID \

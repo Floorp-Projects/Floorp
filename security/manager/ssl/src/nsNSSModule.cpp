@@ -368,6 +368,13 @@ static const nsModuleComponentInfo components[] =
     NS_CIPHERINFOSERVICE_CID,
     NS_CIPHERINFOSERVICE_CONTRACTID,
     nsCipherInfoServiceConstructor
+  },
+  
+  {
+    NS_CRYPTO_FIPSINFO_SERVICE_CLASSNAME,
+    NS_PKCS11MODULEDB_CID,
+    NS_CRYPTO_FIPSINFO_SERVICE_CONTRACTID,
+    nsPKCS11ModuleDBConstructor
   }
 };
 
