@@ -55,7 +55,7 @@ class nsGfxFactoryGTK : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsGfxFactoryGTK(const nsCID &aClass);   
-    ~nsGfxFactoryGTK();   
+    virtual ~nsGfxFactoryGTK();   
 
   private:   
     nsrefcnt  mRefCnt;   
