@@ -68,7 +68,7 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcPropValue" label="&styleRulePropValue.label;" flex="1"/>
     </treecols>
-    <treechildren id="olbStyleProps"/>
+    <treechildren id="olbStyleProps" ondblclick="viewer.cmdEditSelectedProperty()"/>
   </tree>
 
 </page>
