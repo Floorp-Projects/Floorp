@@ -2110,7 +2110,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       }
     }
     // here we need to tweak flags from uid state..
-    if (!m_msgMovedByFilter || ShowDeletedMessages())
+    if (mDatabase && (!m_msgMovedByFilter || ShowDeletedMessages()))
       mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     // I don't think we want to do this - it does bad things like set the size incorrectly.
 //    m_msgParser->FinishHeader();
