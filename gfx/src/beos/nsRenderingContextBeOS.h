@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Daniel Switkin and Mathias Agopian
+ * Contributor(s): Daniel Switkin, Mathias Agopian, Sergei Dolgov
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -147,7 +147,25 @@ public:
 		nsTextDimensions &aDimensions);
 	NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
 		nsTextDimensions &aDimensions, PRInt32 *aFontID);
-	
+	NS_IMETHOD GetTextDimensions(const char*       aString,
+								PRInt32           aLength,
+								PRInt32           aAvailWidth,
+								PRInt32*          aBreaks,
+								PRInt32           aNumBreaks,
+								nsTextDimensions& aDimensions,
+								PRInt32&          aNumCharsFit,
+								nsTextDimensions& aLastWordDimensions,
+								PRInt32*          aFontID = nsnull);
+	NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+								PRInt32           aLength,
+								PRInt32           aAvailWidth,
+								PRInt32*          aBreaks,
+								PRInt32           aNumBreaks,
+								nsTextDimensions& aDimensions,
+								PRInt32&          aNumCharsFit,
+								nsTextDimensions& aLastWordDimensions,
+								PRInt32*          aFontID = nsnull);
+                               	
 	NS_IMETHOD DrawString(const char *aString, PRUint32 aLength, nscoord aX, nscoord aY,
 		const nscoord *aSpacing);
 	NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
