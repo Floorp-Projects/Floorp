@@ -114,6 +114,6 @@ NSGetModule(nsIComponentManager *servMgr,
     metainfo.mCtor       = Initialize;
     metainfo.mDtor       = Shutdown;
 
-    return NS_NewGenericModule(&metainfo, result);
+    return NS_NewGenericModule2(&metainfo, result);
 }
 
