@@ -68,11 +68,6 @@ typedef enum {
   nsLoadRefresh
 } nsLoadType;
 
-typedef enum {
-	nsWebShellChrome,
-	nsWebShellContent
-} nsWebShellType;
-
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
@@ -96,30 +91,6 @@ public:
                          const PRUnichar* aURL,
                          nsresult aStatus) = 0;
  
- //instances
-
-  // XXX kipp sez: I don't think that this method should be a part of
-  // this interface.
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell) = 0;
-  
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
-                                  nsIWebShell*& aResult) = 0;
-  
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode) = 0;
-
-  /**
-   * Notify the WebShellContainer that a contained webshell is
-   * offering focus (for example if it finshed tabbing through its
-   * contents).  The container can choose to set focus to themselves
-   * or ignore the message and let the contained keep focus
-   */
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken) = 0;
-
-  // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
-
-  // Link traversing control
 };
 
 // Return value from WillLoadURL
@@ -253,11 +224,6 @@ public:
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult) = 0;
 
-	/**
-	 * Set the type of the webshell to be content or chrome.
-   */
-	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType) = 0;
-
   /*
    * Get Chrome Event Handler 
    */
@@ -378,9 +344,6 @@ public:
   NS_IMETHOD GetMarginHeight(PRInt32* aWidth)  = 0;
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
   
-  // XXX this will go away, replaced by a new content viewer method
-  NS_IMETHOD SizeToContent() = 0;
-
   /**
    * Set/Get the document scale factor
    */
