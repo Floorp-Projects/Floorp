@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
@@ -67,6 +68,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
+#include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -319,6 +322,7 @@ public:
   nsIHTMLContent* mHead;
   nsString* mTitle;
   nsString  mUnicodeXferBuf;
+  nsString  mScriptCharset;
 
   PRBool mLayoutStarted;
   PRInt32 mInScript;
@@ -4342,9 +4346,55 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     nsAutoString characterSet;
     nsICharsetConverterManager  *charsetConv = nsnull;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
+    nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+    nsXPIDLCString contenttypeheader;
+    nsCOMPtr<nsIHTTPChannel> httpChannel;
 
-    // charset from document default
-    rv = mDocument->GetDocumentCharacterSet(characterSet);
+    nsCOMPtr<nsIChannel> channel;
+    rv = aLoader->GetChannel(getter_AddRefs(channel));
+
+    if (channel) {
+      httpChannel = do_QueryInterface(channel);
+      if (httpChannel) {
+        rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+        NS_RELEASE(contentTypeKey);
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+
+        nsAutoString contentType(contenttypeheader);
+        PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+
+        if(kNotFound != start)
+        {
+          start += 8; // 8 = "charset=".length
+          PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
+          if(kNotFound == end ) end = contentType.Length();
+
+          contentType.Mid(characterSet, start, end - start);
+          NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+          if(NS_SUCCEEDED(rv) && (nsnull != calias) )
+          {
+           nsAutoString preferred;
+           rv = calias->GetPreferred(characterSet, preferred);
+           if(NS_SUCCEEDED(rv))
+           {
+              characterSet = preferred;
+           }
+          }
+        }
+      }
+      
+    if (NS_FAILED(rv) || (characterSet.Length() == 0)) {
+      //charset from script charset tag
+      characterSet = mScriptCharset;
+    }
+
+    if (NS_FAILED(rv) || (characterSet.Length() == 0) ) {
+      // charset from document default
+      rv = mDocument->GetDocumentCharacterSet(characterSet);
+    }
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
 
@@ -4374,7 +4424,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
       }
     }
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not convert Script input to Unicode!");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not convert external JavaScript to Unicode!");
 
     if ((NS_OK == aStatus) && (NS_SUCCEEDED(rv))) {
 
@@ -4461,6 +4511,19 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
        
       GetAttributeValueAt(aNode, i, lang);
       isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
+    }
+    else if (key.EqualsIgnoreCase("charset")) {
+      //charset from script charset tag
+      nsAutoString  charset;
+
+      GetAttributeValueAt(aNode, i, charset);
+      NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+      if(NS_SUCCEEDED(rv) && (nsnull != calias) )
+      {
+       rv = calias->GetPreferred(charset, mScriptCharset);
+      } else {
+       mScriptCharset = charset;
+      }
     }
   }
 
