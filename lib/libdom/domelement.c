@@ -106,7 +106,7 @@ element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     value = element->ops->getAttribute(cx, element, JS_GetStringBytes(name),
                                        &cache);
     if (value) {
-        *rval = STRING_TO_JSVAL(JS_InternString(cx, value));
+        *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, value));
         if (!JSVAL_TO_STRING(*rval))
             return JS_FALSE;
     } else {

@@ -72,7 +72,7 @@ DOM_NewAttributeObject(JSContext *cx, DOM_Attribute *attr)
         return NULL;
     }
 
-    str = JS_InternString(cx, node->name);
+    str = JS_NewStringCopyZ, node->name);
     v = STRING_TO_JSVAL(str);
     if (!str ||
         !JS_SetProperty(cx, obj, "name", &v))
