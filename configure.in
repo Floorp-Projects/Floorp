@@ -36,9 +36,10 @@ if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
 fi
 unset d
 
-dnl Set the version number of the libjpeg included with mozilla
+dnl Set the version number of the libs included with mozilla
 dnl ========================================================
-dnl MOZJPEG=60
+MOZJPEG=62
+MOZPNG=95
 
 dnl Set various checks
 dnl ========================================================
@@ -69,9 +70,11 @@ AC_PATH_PROG(ZIP, zip, :)
 AC_PATH_X
 AC_PATH_XTRA
 
-CFLAGS="$CFLAGS $X_CFLAGS"
-LDFLAGS="$LDFLAGS $X_LIBS"
+dnl CFLAGS="$CFLAGS $X_CFLAGS"
+dnl LDFLAGS="$LDFLAGS $XLDFLAGS"
 dnl LIBS="$X_PRE_LIBS $X_EXTRA_LIBS $LIBS"
+XLDFLAGS="$X_LIBS"
+XLIBS="$X_EXTRA_LIBS"
 
 if [ test ! -z "$x_includes" ]; then
     MOTIF_XINCS="-xif -I$x_includes"
@@ -291,12 +294,10 @@ AC_ARG_ENABLE(crypto,
 [  --enable-crypto	  enable use of SSL (untested)],
 	[if test "$enableval" = "yes"; then
 	    MOZ_SECURITY=1
-	    NO_SECURITY=
 	else
 	    MOZ_SECURITY=
-	    NO_SECURITY=1
 	fi],
-	[MOZ_SECURITY= NO_SECURITY=1])
+	[MOZ_SECURITY= ])
 
 AC_ARG_ENABLE(netcast,
 [  --enable-netcast	  enable use of netcast (untested)],
@@ -388,7 +389,8 @@ AC_ARG_ENABLE(dom,
 AC_ARG_ENABLE(pthreads,
 [  --enable-pthreads       enable native pthreads support],
         [if test "$enableval" = "yes"; then
-	    AC_CHECK_LIB(pthread, pthread_create, NSPR_LIBS=-lpthread USE_PTHREADS=1)
+	    AC_CHECK_LIB(pthread, pthread_create, 
+		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
         fi] )
 
 AC_ARG_ENABLE(mail-compose,
@@ -407,7 +409,6 @@ AC_ARG_ENABLE(ldap,
 
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
-AC_SUBST(NO_SECURITY)
 AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
 AC_SUBST(MOZ_OJI)
@@ -432,27 +433,37 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-AC_CHECK_LIB(X11, XDrawLines,,
-	[MISSING_X="$MISSING_X -lX11"])
-AC_CHECK_LIB(Xext, XextAddDisplay,,
-	[MISSING_X="$MISSING_X -lXext"], -lX11)
-AC_CHECK_LIB(ICE, IceFlush,,, -lX11)
-AC_CHECK_LIB(SM, SmcCloseConnection,,, -lICE -lX11)
-AC_CHECK_LIB(Xt, XtFree,,
-	[MISSING_X="$MISSING_X -lXt"], -lX11)
-AC_CHECK_LIB(Xmu, XmuLookupString,,
-	[MISSING_X="$MISSING_X -lXmu"], -lXt -lX11)
+_SAVE_LDFLAGS="$LDFLAGS"
+LDFLAGS="$XLDFLAGS $LDFLAGS"
+AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
+	[MISSING_X="$MISSING_X -lX11"], $XLIBS)
+AC_CHECK_LIB(Xext, XextAddDisplay, [XLIBS="-lXext $XLIBS"],
+	[MISSING_X="$MISSING_X -lXext"], $XLIBS)
+AC_CHECK_LIB(ICE, IceFlush, [XLIBS="-lICE $XLIBS"],, $XLIBS)
+AC_CHECK_LIB(SM, SmcCloseConnection, [XLIBS="-lSM $XLIBS"],, $XLIBS)
+AC_CHECK_LIB(Xt, XtFree, [XLIBS="-lXt $XLIBS"],
+	[MISSING_X="$MISSING_X -lXt"], $XLIBS)
+AC_CHECK_LIB(Xmu, XmuLookupString, [XLIBS="-lXmu $XLIBS"],
+	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
+LDFLAGS="$_SAVE_LDFLAGS"
 
 res=`echo :$MOZ_FE | grep -c " x"`
 if [ test $res != 0 ]; then
-    if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
-	AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, FE_X_LIBS="-lXpm $FE_X_LIBS", 
-	    [MISSING_MOTIF="-lXpm $MISSING_MOTIF"], -lX11)
-    fi
-    if [ test "$MOTIF_VERSION" = "2.1" ]; then
-	AC_CHECK_LIB(Xp, XpGetPrinterList, 
-	    FE_X_LIBS="-lXp $FE_X_LIBS",
-	    [MISSING_MOTIF="-lXp $MISSING_MOTIF"], -lX11)
+    if [ test "$MOTIF_REQUIRES_XPM" = "True" && test "$MOTIF_VERSION" = "2.1" ]; then
+        _SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$XLDFLAGS $LDFLAGS"
+	if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
+	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
+		FE_X_LIBS="-lXpm $FE_X_LIBS", 
+		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
+	fi
+	if [ test "$MOTIF_VERSION" = "2.1" ]; then
+	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
+		FE_X_LIBS="-lXp $FE_X_LIBS",
+		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
+	fi
+	FE_X_LIBS="$XLDFLAGS $FE_X_LIBS"
+	LDFLAGS="$_SAVE_LDFLAGS"
     fi
 
     if [ test "$MOTIF_STATIC_LIB" = "unknown" && test "$MOTIF_DYNAMIC_LIB" = "unknown" ]; then
@@ -481,15 +492,16 @@ if [ test $res != 0 ]; then
 	sysstaticmotif=$withval)
 
     if [ test "$sysstaticmotif" != "yes" ]; then
+	_SAVE_LDFLAGS="$LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    FE_X_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $FE_X_LIBS",
 	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
-	    $MOTIF_DYNAMIC_PATHS $FE_X_LIBS -lX11)
+	    $MOTIF_DYNAMIC_PATHS $FE_X_LIBS $XLIBS)
     else
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    FE_X_LIBS="$MOTIF_STATIC_FLAGS $FE_X_LIBS",
 	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
-	    $FE_X_LIBS -lX11)
+	    $FE_X_LIBS $XLIBS)
     fi
 
     FE_X_CFLAGS="$MOTIF_INCLUDES"
@@ -522,12 +534,11 @@ if [ test $res != 0 ]; then
 	`gnome-config --libs gnomeui`)
 fi
 
-dnl XCFLAGS="$X_CFLAGS"
-dnl XLFLAGS="$X_LIBS"
+XCFLAGS="$X_CFLAGS"
 
-dnl AC_SUBST(XCFLAGS)
-dnl AC_SUBST(XLFLAGS)
-dnl AC_SUBST(XLIBS)
+AC_SUBST(XCFLAGS)
+AC_SUBST(XLDFLAGS)
+AC_SUBST(XLIBS)
 
 AC_SUBST(FE_X_CFLAGS)
 AC_SUBST(FE_X_LIBS)
@@ -540,36 +551,114 @@ AC_SUBST(FE_GNOME_LIBS)
 
 dnl system JPEG support
 dnl ========================================================
-dnl If --with-jpeg=$val is specified, use the logic specified by $val
-
-sysjpeg=maybe
 AC_ARG_WITH(jpeg,
-[  --with-jpeg		  use system libjpeg if present],
-	sysjpeg=$withval)
+[  --with-jpeg=\$dir        use system libjpeg in \$dir if more recent],
+	JPEG_DIR=$withval)
 
-if test "$sysjpeg" = yes; then
-    AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [SYSTEM_JPEG=1 LIBS="$LIBS -ljpeg"], SYSTEM_JPEG=)
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="-I${JPEG_DIR}/include $CFLAGS"
+LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
+if test "$JPEG_DIR" = no; then
+    SYSTEM_JPEG=
+else
+    AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [SYSTEM_JPEG=1 JPEG_LIBS="-ljpeg $JPEG_LIBS"], SYSTEM_JPEG=, $JPEG_LIBS)
 fi
 
-dnl system PNG Support
-dnl ========================================================
-AC_ARG_WITH(png, 
-[  --with-png		  use system libpng if present],
-        syspng=$withval, syspng=no)
+if [ test "$SYSTEM_JPEG" = 1 ]; then
+    LIBS="$JPEG_LIBS $LIBS"
+    AC_TRY_RUN( 
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <jpeglib.h>
+	int main () {
+	    #if JPEG_LIB_VERSION >= $MOZJPEG
+		exit(0);
+	    #else
+		exit(1);
+	    #endif
+	}
+	, SYSTEM_JPEG=1, [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=], SYSTEM_JPEG= ) 
+fi 
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
 
-if test "$syspng" = yes; then
-    AC_CHECK_LIB(png, png_get_valid, 
-	[SYSTEM_PNG=1 LIBS="$LIBS -lpng"] , SYSTEM_PNG=, -lz -lm)
+if [ test -n "${JPEG_DIR}" && test -d "${JPEG_DIR}"  && test "$SYSTEM_JPEG" = 1]; then
+    JPEG_CFLAGS="-I${JPEG_DIR}/include"
+    JPEG_LIBS="-L${JPEG_DIR}/lib ${JPEG_LIBS}"
 fi
 
 dnl system ZLIB support
 dnl ========================================================
 AC_ARG_WITH(zlib,
-[  --with-zlib		  use system libz if present],
-	syslibz=$withval, [syslibz=no SYSTEM_ZLIB=])
+[  --with-zlib=\$dir        use system libz in \$dir],
+	ZLIB_DIR=$withval)
 
-if test "$syslibz" = yes; then
-    AC_CHECK_LIB(z, gzread, [SYSTEM_ZLIB=1 LIBS="$LIBS -lz"], SYSTEM_ZLIB=)
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
+LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
+if test "$ZLIB_DIR" = no; then
+    SYSTEM_ZLIB=
+else
+    AC_MSG_CHECKING("for zlib.h")
+    AC_TRY_COMPILE([#include "zlib.h"], [], 
+	[result="yes" SYSTEM_ZLIB=1],
+	[result="no" SYSTEM_ZLIB=])
+    AC_MSG_RESULT("$result")
+fi
+if [ test "$SYSTEM_ZLIB" = 1 ]; then
+    AC_CHECK_LIB(z, gzread, [SYSTEM_ZLIB=1 ZLIB_LIBS="-lz $ZLIB_LIBS"], 
+	[SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=], $ZLIB_LIBS)
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+
+if [ test -n "${ZLIB_DIR}" && test -d "${ZLIB_DIR}" && test "$SYSTEM_ZLIB" = 1 ]; then
+    ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
+    ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
+fi
+
+dnl system PNG Support
+dnl ========================================================
+AC_ARG_WITH(png, 
+[  --with-png=\$dir         use system libpng in \$dir if more recent],
+        PNG_DIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="-I${PNG_DIR}/include $ZLIB_CFLAGS $CFLAGS"
+LDFLAGS="-L${PNG_DIR}/lib $ZLIB_LIBS -lz $LDFLAGS"
+if test "$PNG_DIR" = no; then
+    SYSTEM_PNG=
+else
+    AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"], SYSTEM_PNG=, $PNG_LIBS)
+fi
+if [ test "$SYSTEM_PNG" = 1 ]; then
+    LIBS="$PNG_LIBS $LIBS"
+    AC_TRY_RUN(
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <png.h>
+	int main () {
+	    #if PNG_LIBPNG_VER >= $MOZPNG
+		exit(0);
+	    #else
+		exit(1);
+	    #endif
+	}
+	, SYSTEM_PNG=1, [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=], SYSTEM_PNG= ) 
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; then
+    PNG_CFLAGS="-I${PNG_DIR}/include"
+    PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
 dnl system NSPR support
@@ -581,23 +670,74 @@ AC_ARG_WITH(nspr,
 	NSPR_DIR=$withval)
 
 _SAVE_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
-AC_MSG_CHECKING("for nspr.h")
-AC_TRY_COMPILE([#include "nspr.h"], [], 
-    [result="yes"],
-    [MISSING_NSPR="$MISSING_NSPR nspr.h" result="no"])
-AC_MSG_RESULT("$result")
-CFLAGS=$_SAVE_CFLAGS
-
 _SAVE_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib"
-AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr21 $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lnspr21"], $NSPR_LIBS)
+_SAVE_LIBS=$LIBS
+CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
+LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
+
+dnl AC_MSG_CHECKING("for nspr.h")
+dnl AC_TRY_COMPILE([#include "nspr.h"], [], 
+dnl [result="yes"],
+dnl [MISSING_NSPR="$MISSING_NSPR nspr.h" result="no"])
+dnl AC_MSG_RESULT("$result")
+
+dnl AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, 
+dnl	[_FOUND_NSPR_LIB=1 NSPR_LIBS="-lnspr21 $NSPR_LIBS",
+dnl [MISSING_NSPR="$MISSING_NSPR -lnspr21"], $NSPR_LIBS)
+
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21")
+LIBS="-lnspr21 $NSPR_LIBS $LIBS"
+AC_TRY_RUN(
+	#include <stdio.h>
+	#include <nspr.h>
+	int main () {
+	    PRThread *dummy = PR_GetCurrentThread();
+	    exit(0);
+	}
+	, [NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"],
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+AC_MSG_RESULT("$result")
+
+dnl XXX - Is this really the best way to do this check? - cls
+if [ test "$_NSPR_NEEDS_THREAD_LIB" = 1 ]; then
+
+LIBS=$_SAVE_LIBS
+case "$target" in
+*-*-linux*) 
+	AC_CHECK_LIB(pthread, pthread_create, 
+		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1) ;;
+alpha-*-osf*)
+	CFLAGS="$CFLAGS -pthread" 
+	_SAVE_CFLAGS="$_SAVE_CFLAGS -pthread" ;;
+esac
+
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21 with thread lib")
+    LIBS="-lnspr21 $NSPR_LIBS $LIBS"
+    AC_TRY_RUN(
+	#include <stdio.h>
+	#include <nspr.h>
+	int main () {
+	    PRThread *dummy = PR_GetCurrentThread();
+	    exit(0);
+	}
+	, [NSPR_LIBS="-lnspr21 $NSPR_LIBS" result="yes"],
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
+	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
+AC_MSG_RESULT("$result")
+fi
+
+dnl AC_CHECK_LIB(nspr21, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr21 $NSPR_LIBS",
+dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr21"], $NSPR_LIBS)
+
 AC_CHECK_LIB(plc21, PL_CreateOptState, NSPR_LIBS="-lplc21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplc21"], $NSPR_LIBS)
 AC_CHECK_LIB(plds21, PL_VectorAdd, NSPR_LIBS="-lplds21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
+
+CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
 
 if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
     NSPR_CFLAGS="-I${NSPR_DIR}/include"
@@ -608,6 +748,12 @@ AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
 AC_SUBST(SYSTEM_ZLIB)
 
+AC_SUBST(JPEG_CFLAGS)
+AC_SUBST(JPEG_LIBS)
+AC_SUBST(ZLIB_CFLAGS)
+AC_SUBST(ZLIB_LIBS)
+AC_SUBST(PNG_CFLAGS)
+AC_SUBST(PNG_LIBS)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
