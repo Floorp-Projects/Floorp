@@ -62,6 +62,10 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES += profilemanager
+endif
+
 CPPSRCS		= \
 		nsChromeTreeOwner.cpp \
 		nsContentTreeOwner.cpp \
