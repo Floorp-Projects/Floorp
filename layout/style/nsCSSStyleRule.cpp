@@ -985,6 +985,8 @@ DOMCSSDeclarationImpl::DeclarationChanged()
 
   nsCOMPtr<nsICSSStyleRule> oldRule = mRule;
   mRule = oldRule->DeclarationChanged(PR_TRUE).get();
+  if (!mRule)
+    return NS_ERROR_OUT_OF_MEMORY;
   nsrefcnt cnt = mRule->Release();
   NS_ASSERTION(cnt != 0, "container didn't take ownership");
 
