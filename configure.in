@@ -2643,6 +2643,19 @@ if test "$ac_cv_need_cpp_template_cast_to_base" = yes ; then
   AC_DEFINE(NEED_CPP_TEMPLATE_CAST_TO_BASE)
 fi
 
+dnl Some compilers have trouble resolving the ambiguity between two
+dnl functions whose arguments differ only by cv-qualifications.
+AC_CACHE_CHECK(whether the compiler cannot resolve const ambiguities correctly,
+               ac_cv_cant_resolve_const_ambiguity,
+               [AC_TRY_COMPILE([int a(int *i) { return *i; }
+                                const int a(const int *i) { return *i; } ],
+                               [ int i; a(&i); ],
+                               ac_cv_cant_resolve_const_ambiguity=no,
+                               ac_cv_cant_resolve_const_ambiguity=yes)])
+if test "$ac_cv_cant_resolve_const_ambiguity" = yes ; then
+  AC_DEFINE(CANT_RESOLVE_CPP_CONST_AMBIGUITY)
+fi
+
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
 dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 

@@ -649,6 +649,17 @@ class nsCOMPtr
           return get();
         }
 
+#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
+  // broken version for IRIX
+
+      nsCOMPtr<T>*
+      get_address() const
+        {
+          return NS_CONST_CAST(nsCOMPtr<T>*, this);
+        }
+
+#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
+
       nsCOMPtr<T>*
       get_address()
         {
@@ -660,6 +671,8 @@ class nsCOMPtr
         {
           return this;
         }
+
+#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
       // This is going to become private soon, once all users of
       // nsCOMPtr stop using it.  It may even become:
@@ -851,6 +864,17 @@ class nsCOMPtr<nsISupports>
           return get();
         }
 
+#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
+  // broken version for IRIX
+
+      nsCOMPtr<nsISupports>*
+      get_address() const
+        {
+          return NS_CONST_CAST(nsCOMPtr<nsISupports>*, this);
+        }
+
+#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
+
       nsCOMPtr<nsISupports>*
       get_address()
         {
@@ -862,6 +886,8 @@ class nsCOMPtr<nsISupports>
         {
           return this;
         }
+
+#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
       // This is going to become private soon, once all users of
       // nsCOMPtr stop using it.  It may even become:
@@ -943,6 +969,20 @@ nsCOMPtr<T>::begin_assignment()
   }
 #endif
 
+#ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
+
+// This is the broken version for IRIX, which can't handle the version below.
+
+template <class T>
+inline
+nsCOMPtr<T>*
+address_of( const nsCOMPtr<T>& aPtr )
+  {
+    return aPtr.get_address();
+  }
+
+#else // CANT_RESOLVE_CPP_CONST_AMBIGUITY
+
 template <class T>
 inline
 nsCOMPtr<T>*
@@ -958,6 +998,8 @@ address_of( const nsCOMPtr<T>& aPtr )
   {
     return aPtr.get_address();
   }
+
+#endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
 template <class T>
 class nsGetterAddRefs
