@@ -11,7 +11,7 @@
 locale/en-US/messenger,                                   en-US/locale/en-US/messenger
 locale/en-US/messenger-mdn,                               en-US/locale/en-US/messenger-mdn
 locale/en-US/messenger/addressbook,                       en-US/locale/en-US/messenger/addressbook
-locale/en-US/messenger/messengercompose,                 en-US/locale/en-US/messenger/messengercompose
+locale/en-US/messenger/messengercompose,                  en-US/locale/en-US/messenger/messengercompose
 locale/en-US/messenger-smime,                             en-US/locale/en-US/messenger-smime
 
 
@@ -22,9 +22,9 @@ locale/en-US/mozldap,                                     en-US/locale/en-US/moz
 locale/en-US/wallet,					  en-US/locale/en-US/wallet
 locale/en-US/necko,					  en-US/locale/en-US/necko
 
-
 locale/en-US/navigator/contents.rdf,		  	  en-US/locale/en-US/navigator/contents.rdf
 locale/en-US/navigator/navigator.properties,		  en-US/locale/en-US/navigator/navigator.properties
+locale/en-US/navigator/viewSource.dtd,	          	  en-US/locale/en-US/navigator/viewSource.dtd
 
 #################################################################################################
 # global
