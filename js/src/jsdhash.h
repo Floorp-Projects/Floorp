@@ -522,8 +522,8 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry);
  * that were enumerated so far.  Return the total number of live entries when
  * enumeration completes normally.
  *
- * If etor calls JS_DHashTableOperate on table, it must return JS_DHASH_STOP;
- * otherwise undefined behavior results.
+ * If etor calls JS_DHashTableOperate on table with op != JS_DHASH_LOOKUP, it
+ * must return JS_DHASH_STOP; otherwise undefined behavior results.
  *
  * If any enumerator returns JS_DHASH_REMOVE, table->entryStore may be shrunk
  * or compressed after enumeration, but before JS_DHashTableEnumerate returns.

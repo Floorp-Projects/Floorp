@@ -616,7 +616,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
      * if the table is underloaded according to the configured minimum alpha,
      * and is not minimal-size already.  Do this only if we removed above, so
      * non-removing enumerations can count on stable table->entryStore until
-     * the next Operate or removing-Enumerate.
+     * the next non-lookup-Operate or removing-Enumerate.
      */
     if (didRemove &&
         (table->removedCount >= capacity >> 2 ||
