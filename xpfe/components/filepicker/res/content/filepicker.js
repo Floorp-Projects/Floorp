@@ -239,6 +239,7 @@ function createTree(parentElement, dirArray)
     /* treeRow */
     var treeRow = document.createElement("treerow");
     treeRow.setAttribute("path", file.path);
+    treeRow.setAttribute("onclick", "onClick(event)");
 
     /* treeCell -- name */
     var treeCell = document.createElement("treecell");
