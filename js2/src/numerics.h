@@ -38,6 +38,14 @@ using std::atan;
 namespace JavaScript {
 
 //
+// Double-precision constants
+//
+
+	extern double positiveInfinity;
+	extern double negativeInfinity;
+	extern double nan;
+
+//
 // Portable double-precision floating point to string and back conversions
 //
 
@@ -100,32 +108,36 @@ namespace JavaScript {
 	//
 	// Some of the modes take an integer parameter <precision>.
 	//
-	// Keep this in sync with number_constants[].
+	// Keep this in sync with doubleToAsciiModes[].
 	enum DToStrMode {
-	    DTOSTR_STANDARD,				// Either fixed or exponential format; round-trip
-	    DTOSTR_STANDARD_EXPONENTIAL,	// Always exponential format; round-trip
-	    DTOSTR_FIXED,					// Round to <precision> digits after the decimal point; exponential if number is large
-	    DTOSTR_EXPONENTIAL,				// Always exponential format; <precision> significant digits
-	    DTOSTR_PRECISION				// Either fixed or exponential format; <precision> significant digits
+	    dtosStandard,					// Either fixed or exponential format; round-trip
+	    dtosStandardExponential,		// Always exponential format; round-trip
+	    dtosFixed,						// Round to <precision> digits after the decimal point; exponential if number is large
+	    dtosExponential,				// Always exponential format; <precision> significant digits
+	    dtosPrecision					// Either fixed or exponential format; <precision> significant digits
 	};
 
 
-	// Maximum number of characters (including trailing null) that a DTOSTR_STANDARD or DTOSTR_STANDARD_EXPONENTIAL
+	// Maximum number of characters (including trailing null) that a dtosStandard or dtosStandardExponential
 	// conversion can produce.  This maximum is reached for a number like -1.2345678901234567e+123.
-	const int DTOSTR_STANDARD_BUFFER_SIZE = 25;
+	const int dtosStandardBufferSize = 25;
 
 	// Maximum number of characters (including trailing null) that one of the other conversions
 	// can produce.  This maximum is reached for TO_FIXED, which can generate up to 21 digits before the decimal point.
-	#define DTOSTR_VARIABLE_BUFFER_SIZE(precision) ((precision)+24 > DTOSTR_STANDARD_BUFFER_SIZE ? (precision)+24 : DTOSTR_STANDARD_BUFFER_SIZE)
+	#define dtosVariableBufferSize(precision) ((precision)+24 > dtosStandardBufferSize ? (precision)+24 : dtosStandardBufferSize)
 
 	// "-0.0000...(1073 zeros after decimal point)...0001\0" is the longest string that we could produce,
 	// which occurs when printing -5e-324 in binary.  We could compute a better estimate of the size of
 	// the output string and malloc fewer bytes depending on d and base, but why bother?
-	const int DTOBASESTR_BUFFER_SIZE = 1078;
+	const int dtobasesBufferSize = 1078;
 
-	double strToD(const char *s00, char **se);
-	char *dToStr(char *buffer, size_t bufferSize, DToStrMode mode, int precision, double dval);
-	void dToBaseStr(char *buffer, uint base, double d);
+	double strToDouble(const char *str, const char *&numEnd);
+	double stringToDouble(const char16 *str, const char16 *strEnd, const char16 *&numEnd);
+	double stringToInteger(const char16 *str, const char16 *strEnd, const char16 *&numEnd, uint base);
 
+	char *doubleToStr(char *buffer, size_t bufferSize, double value, DToStrMode mode, int precision);
+	size_t doubleToBaseStr(char *buffer, double value, uint base);
+	void printDouble(String &dst, double value, DToStrMode mode = dtosStandard, int precision = 0);
+	inline String &operator+=(String &s, double value) {printDouble(s, value); return s;}
 }
 #endif

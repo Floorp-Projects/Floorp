@@ -63,7 +63,7 @@ using namespace JavaScript;
 
 // On a machine with IEEE extended-precision registers, it is
 // necessary to specify double-precision (53-bit) rounding precision
-// before invoking strToD or dToA.  If the machine uses (the equivalent
+// before invoking strToDouble or doubleToAscii.  If the machine uses (the equivalent
 // of) Intel 80x87 arithmetic, the call
 //  _control87(PC_53, MCW_PC);
 // does this with many compilers.  Whether this or another call is
@@ -72,9 +72,9 @@ using namespace JavaScript;
 // file.
 
 
-// strToD for IEEE-arithmetic machines.
+// strToDouble for IEEE-arithmetic machines.
 //
-// This strToD returns a nearest machine number to the input decimal
+// This strToDouble returns a nearest machine number to the input decimal
 // string.  With IEEE arithmetic, ties are broken by the IEEE round-even
 // rule.  Otherwise ties are broken by biased rounding (add half and chop).
 //
@@ -108,18 +108,13 @@ using namespace JavaScript;
 // #define Sudden_Underflow for IEEE-format machines without gradual
 //  underflow (i.e., that flush to zero on underflow).
 // #define No_leftright to omit left-right logic in fast floating-point
-//  computation of dToA.
+//  computation of doubleToAscii.
 // #define Check_FLT_ROUNDS if FLT_ROUNDS can assume the values 2 or 3.
 // #define ROUND_BIASED for IEEE-format with biased rounding.
 // #define Inaccurate_Divide for IEEE-format with correctly rounded
 //  products but inaccurate quotients, e.g., for Intel i860.
 // #define NATIVE_INT64 on machines that have "long long"
 //  64-bit integer types int64 and uint64.
-// #define INFNAN_CHECK on IEEE systems to cause strToD to check for
-//  Infinity and NaN (case insensitively).  On some systems (e.g.,
-//  some HP systems), it may be necessary to #define NAN_WORD0
-//  appropriately -- to the most significant word of a quiet NaN.
-//  (On HP Series 700/800 machines, -DNAN_WORD0=0x7ff40000 works.)
 // #define JS_THREADSAFE if the system offers preemptively scheduled
 //  multiple threads.  In this case, you must provide (or suitably
 //  #define) two locks, acquired by ACQUIRE_DTOA_LOCK(n) and freed
@@ -128,8 +123,8 @@ using namespace JavaScript;
 //  powers of 5; omitting this lock would introduce a small
 //  probability of wasting memory, but would otherwise be harmless.)
 //  You must also invoke freeDToA(s) to free the value s returned by
-//  dToA.  You may do so whether or not JS_THREADSAFE is #defined.
-// #define NO_IEEE_Scale to disable new (Feb. 1997) logic in strToD that
+//  doubleToAscii.  You may do so whether or not JS_THREADSAFE is #defined.
+// #define NO_IEEE_Scale to disable new (Feb. 1997) logic in strToDouble that
 //  avoids underflows on inputs whose result does not underflow.
 
 #ifdef IS_LITTLE_ENDIAN
@@ -138,14 +133,6 @@ using namespace JavaScript;
  #define IEEE_MC68k
 #endif
 
-
-#ifndef __MATH_H__
-//#include "math.h"
-#endif
-
-#if defined(IEEE_8087) + defined(IEEE_MC68k) != 1
-Exactly one of IEEE_8087 or IEEE_MC68k should be defined.
-#endif
 
 // Stefan Hanske <sh990154@mail.uni-greifswald.de> reports:
 //  ARM is a little endian architecture but 64 bit double words are stored
@@ -216,6 +203,34 @@ Exactly one of IEEE_8087 or IEEE_MC68k should be defined.
  #define ACQUIRE_DTOA_LOCK(n)
  #define FREE_DTOA_LOCK(n)
 #endif
+
+
+//
+// Double-precision constants
+//
+
+
+double JS::positiveInfinity;
+double JS::negativeInfinity;
+double JS::nan;
+
+struct InitNumerics {InitNumerics();};
+static InitNumerics initNumerics;
+
+InitNumerics::InitNumerics()
+{
+	word0(positiveInfinity) = Exp_mask;
+	word1(positiveInfinity) = 0;
+	word0(negativeInfinity) = Exp_mask | Sign_bit;
+	word1(negativeInfinity) = 0;
+	word0(nan) = 0x7FFFFFFF;
+	word1(nan) = 0xFFFFFFFF;
+}
+
+
+//
+// Portable double-precision floating point to string and back conversions
+//
 
 
 // Return the absolute difference between x and the adjacent greater-magnitude double number (ignoring exponent overflows).
@@ -323,6 +338,9 @@ static int lo0bits(uint32 &y)
     y = x;
     return k;
 }
+
+
+uint32 *JS::BigInt::freeLists[maxLgGrossSize+1];
 
 
 // Allocate a BigInt with 2^lgGrossSize words.  The BigInt must not currently contain a number.
@@ -1030,37 +1048,10 @@ static const double tinytens[] = {1e-16, 1e-32, 1e-64, 1e-128,
 #endif
         };
 // The factor of 2^53 in tinytens[4] helps us avoid setting the underflow
-// flag unnecessarily.  It leads to a song and dance at the end of strToD.
+// flag unnecessarily.  It leads to a song and dance at the end of strToDouble.
 
 const int32 Scale_Bit = 0x10;
 const int n_bigtens = 5;
-
-
-#ifdef INFNAN_CHECK
-
-#ifndef NAN_WORD0
- #define NAN_WORD0 0x7ff80000
-#endif
-
-#ifndef NAN_WORD1
- #define NAN_WORD1 0
-#endif
-
-static int match(const char **sp, char *t)
-{
-    int c, d;
-    const char *s = *sp;
-
-    while (d = *t++) {
-        if ((c = *++s) >= 'A' && c <= 'Z')
-            c += 'a' - 'A';
-        if (c != d)
-            return 0;
-    }
-    *sp = s + 1;
-    return 1;
-    }
-#endif // INFNAN_CHECK
 
 
 #ifdef JS_THREADSAFE
@@ -1078,15 +1069,15 @@ static void InitDtoa(void)
 
 
 // Return as a double-precision floating-point number the value represented by the character
-// string s00.  The string is scanned up to the first unrecognized character.
-// If se is not nil, return a pointer to the character terminating the scan in se.
-// If no number can be formed, set se to s00 and return zero.
-double JS::strToD(const char *s00, char **se)
+// string str.  The string is scanned up to the first unrecognized character.  The character
+// sequences 'Infinity', '+Infinity', '-Infinity', and 'NaN' are also recognized.
+// Return a pointer to the character terminating the scan in numEnd.
+// If no number can be formed, set numEnd to str and return zero.
+double JS::strToDouble(const char *str, const char *&numEnd)
 {
     int32 scale;
     int32 bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
         e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0;
-    bool negative;
     const char *s, *s0, *s1;
     double aadj, aadj1, adj, rv, rv0;
     int32 L;
@@ -1097,36 +1088,53 @@ double JS::strToD(const char *s00, char **se)
 #endif
 
     nz0 = nz = 0;
-    negative = false;
+    bool negative = false;
+    bool haveSign = false;
     rv = 0.;
-    for (s = s00;;s++)
+    for (s = str;; s++)
     	switch (*s) {
-	    case '-':
+	      case '-':
 	        negative = true;
 	        // no break
-	    case '+':
+	      case '+':
+	    	haveSign = true;
 	        if (*++s)
 	            goto break2;
 	        // no break
-	    case 0:
-	        s = s00;
+	      case 0:
+	        s = str;
 	        goto ret;
-	    case '\t':
-	    case '\n':
-	    case '\v':
-	    case '\f':
-	    case '\r':
-	    case ' ':
+	      case '\t':
+	      case '\n':
+	      case '\v':
+	      case '\f':
+	      case '\r':
+	      case ' ':
 	        continue;
-	    default:
+	      default:
 	        goto break2;
 	    }
-break2:
-    if (*s == '0') {
+  break2:
+    switch (*s) {
+      case '0':
         nz0 = 1;
         while (*++s == '0') ;
         if (!*s)
             goto ret;
+        break;
+      case 'I':
+        if (!std::strncmp(s+1, "nfinity", 7)) {
+        	rv = positiveInfinity;
+        	s += 8;
+        	goto ret;
+        }
+        break;
+      case 'N':
+        if (!haveSign && !std::strncmp(s+1, "aN", 2)) {
+        	rv = nan;
+        	s += 3;
+        	goto ret;
+        }
     }
     s0 = s;
     y = z = 0;
@@ -1150,7 +1158,7 @@ break2:
             goto dig_done;
         }
         for (; c >= '0' && c <= '9'; c = *++s) {
-        have_dig:
+          have_dig:
             nz++;
             if (c -= '0') {
                 nf += nz;
@@ -1167,14 +1175,14 @@ break2:
             }
         }
     }
-dig_done:
+  dig_done:
     e = 0;
     if (c == 'e' || c == 'E') {
         if (!nd && !nz && !nz0) {
-            s = s00;
+            s = str;
             goto ret;
         }
-        s00 = s;
+        str = s;
         esign = 0;
         switch (c = *++s) {
           case '-':
@@ -1202,31 +1210,11 @@ dig_done:
                 e = 0;
         }
         else
-            s = s00;
+            s = str;
     }
     if (!nd) {
         if (!nz && !nz0) {
-#ifdef INFNAN_CHECK
-            // Check for Nan and Infinity
-            switch (c) {
-              case 'i':
-              case 'I':
-                if (match(&s,"nfinity")) {
-                    word0(rv) = 0x7ff00000;
-                    word1(rv) = 0;
-                    goto ret;
-                    }
-                break;
-              case 'n':
-              case 'N':
-                if (match(&s, "an")) {
-                    word0(rv) = NAN_WORD0;
-                    word1(rv) = NAN_WORD1;
-                    goto ret;
-                    }
-              }
-#endif // INFNAN_CHECK
-            s = s00;
+            s = str;
             }
         goto ret;
     }
@@ -1277,10 +1265,9 @@ dig_done:
             rv *= tens[i];
         if (e1 &= ~15) {
             if (e1 > DBL_MAX_10_EXP) {
-            ovfl:
+              ovfl:
             	// Return infinity.
-                word0(rv) = Exp_mask;
-                word1(rv) = 0;
+                rv = positiveInfinity;
                 goto ret;
             }
             e1 >>= 4;
@@ -1339,7 +1326,7 @@ dig_done:
                 rv *= tinytens[j];
 #endif
                 if (!rv) {
-                undfl:
+                  undfl:
                     rv = 0.;
                     goto ret;
                 }
@@ -1463,7 +1450,7 @@ dig_done:
 #ifdef Avoid_Underflow
 	                dsign = 2;
 #endif
-	            drop_down:
+	              drop_down:
 	                // boundary case -- decrement exponent
 #ifdef Sudden_Underflow
 	                L = word0(rv) & Exp_mask;
@@ -1524,11 +1511,11 @@ dig_done:
 	            aadj1 = dsign ? aadj : -aadj;
 #ifdef Check_FLT_ROUNDS
 	            switch (FLT_ROUNDS) {
-	            case 2: // towards +infinity
+	              case 2: // towards +infinity
 	                aadj1 -= 0.5;
 	                break;
-	            case 0: // towards 0
-	            case 3: // towards -infinity
+	              case 0: // towards 0
+	              case 3: // towards -infinity
 	                aadj1 += 0.5;
 	            }
 #else
@@ -1641,14 +1628,186 @@ dig_done:
 #endif // Avoid_Underflow
 	}
   ret:
-    if (se)
-        *se = (char *)s;
+    numEnd = s;
     return negative ? -rv : rv;
 }
 
 
+// A version of strToDouble that takes a char16 string that begins at str and ends just
+// before strEnd.  The char16 string does not have to be null-terminated.
+// Leading Unicode whitespace is skipped.
+double JS::stringToDouble(const char16 *str, const char16 *strEnd, const char16 *&numEnd)
+{
+    const char16 *str1 = skipWhiteSpace(str, strEnd);
 
-// dToA for IEEE arithmetic (dmg): convert double to ASCII string.
+    CharAutoPtr cstr(new char[strEnd - str1 + 1]);
+    char *q = cstr.get();
+    for (const char16 *p = str1; p != strEnd; p++) {
+    	char16 ch = *p;
+		if (uint16(ch) >> 8)
+			break;
+		*q++ = char(ch);
+    }
+    *q = '\0';
+
+    const char *estr;
+	double value = strToDouble(cstr.get(), estr);
+    ptrdiff_t i = estr - cstr.get();
+    numEnd = i ? str1 + i : str;
+    return value;
+}
+
+
+
+class BinaryDigitReader
+{
+    uint base;							// Base of number; must be a power of 2
+    uint digit;							// Current digit value in radix given by base
+    uint digitMask;						// Mask to extract the next bit from digit
+    const char16 *digits;				// Pointer to the remaining digits
+    const char16 *digitsEnd;			// Pointer to first non-digit
+
+  public:
+	BinaryDigitReader(uint base, const char16 *digitsBegin, const char16 *digitsEnd):
+		base(base), digitMask(0), digits(digitsBegin), digitsEnd(digitsEnd) {}
+	
+	int next();
+};
+
+
+// Return the next binary digit from the number or -1 if done.
+int BinaryDigitReader::next()
+{
+    if (digitMask == 0) {
+		if (digits == digitsEnd)
+		    return -1;
+
+		uint c = *digits++;
+		if ('0' <= c && c <= '9')
+		    digit = c - '0';
+		else if ('a' <= c && c <= 'z')
+		    digit = c - 'a' + 10;
+		else digit = c - 'A' + 10;
+		digitMask = base >> 1;
+    }
+    int bit = (digit & digitMask) != 0;
+    digitMask >>= 1;
+    return bit;
+}
+
+
+// Read an integer from a char16 string that begins at str and ends just before strEnd.
+// The char16 string does not have to be null-terminated.  The integer is returned as a double,
+// which is guaranteed to be the closest double number to the given input when base is 10 or a power of 2.
+// May experience roundoff errors for very large numbers of a different radix.
+// Return a pointer to the character just past the integer in numEnd.
+// If the string does not have a number in it, set numEnd to str and return 0.
+// Leading Unicode whitespace is skipped.
+double JS::stringToInteger(const char16 *str, const char16 *strEnd, const char16 *&numEnd, uint base)
+{
+    const char16 *str1 = skipWhiteSpace(str, strEnd);
+
+    bool negative = (*str1 == '-');
+    if (negative || *str1 == '+')
+		str1++;
+
+    if ((base == 0 || base == 16) && *str1 == '0' && (str1[1] == 'X' || str1[1] == 'x')) {
+		// Skip past hex prefix.
+		base = 16;
+		str1 += 2;
+	}
+    if (base == 0)
+		base = 10; // Default to decimal.
+
+    // Find some prefix of the string that's a number in the given base.
+    const char16 *start = str1; // Mark - if string is empty, we return 0.
+    double value = 0.0;
+    while (true) {
+		uint digit;
+		char16 c = *str1;
+		if ('0' <= c && c <= '9')
+		    digit = uint(c) - '0';
+		else if ('a' <= c && c <= 'z')
+		    digit = uint(c) - 'a' + 10;
+		else if ('A' <= c && c <= 'Z')
+		    digit = uint(c) - 'A' + 10;
+		else
+		    break;
+		if (digit >= base)
+		    break;
+		value = value*base + digit;
+		str1++;
+    }
+
+    if (value >= 9007199254740992.0) {
+		if (base == 10) {
+		    // If we're accumulating a decimal number and the number is >= 2^53, then
+		    // the result from the repeated multiply-add above may be inaccurate.  Call
+		    // stringToDouble to get the correct answer.
+		    const char16 *numEnd2;
+		    value = stringToDouble(start, str1, numEnd2);
+		    ASSERT(numEnd2 == str1);
+
+		} else if (base == 2 || base == 4 || base == 8 || base == 16 || base == 32) {
+		    // The number may also be inaccurate for one of these bases.  This
+		    // happens if the addition in value*base + digit causes a round-down
+		    // to an even least significant mantissa bit when the first dropped bit
+		    // is a one.  If any of the following digits in the number (which haven't
+		    // been added in yet) are nonzero then the correct action would have
+		    // been to round up instead of down.  An example of this occurs when
+		    // reading the number 0x1000000000000081, which rounds to 0x1000000000000000
+		    // instead of 0x1000000000000100.
+		    BinaryDigitReader bdr(base, start, str1);
+		    value = 0.0;
+
+		    // Skip leading zeros.
+		    int bit;
+		    do {
+				bit = bdr.next();
+		    } while (bit == 0);
+
+		    if (bit == 1) {
+				// Gather the 53 significant bits (including the leading 1)
+				value = 1.0;
+				for (int j = 52; j; --j) {
+				    bit = bdr.next();
+				    if (bit < 0)
+						goto done;
+				    value = value*2 + bit;
+				}
+				// bit2 is the 54th bit (the first dropped from the mantissa)
+				int bit2 = bdr.next();
+				if (bit2 >= 0) {
+				    double factor = 2.0;
+				    int sticky = 0;  // sticky is 1 if any bit beyond the 54th is 1
+				    int bit3;
+
+				    while ((bit3 = bdr.next()) >= 0) {
+						sticky |= bit3;
+						factor *= 2;
+				    }
+				    value += bit2 & (bit | sticky);
+				    value *= factor;
+				}
+		      done:;
+		    }
+		}
+    }
+    // We don't worry about inaccurate numbers for any other base.
+
+    if (str1 == start)
+		numEnd = str;
+    else {
+    	numEnd = str1;
+    	if (negative)
+    		value = -value;
+    }
+    return value;
+}
+
+
+
+// doubleToAscii for IEEE arithmetic (dmg): convert double to ASCII string.
 //
 // Inspired by "How to Print Floating-Point Numbers Accurately" by
 // Guy L. Steele, Jr. and Jon L. White [Proc. ACM SIGPLAN '90, pp. 92-101].
@@ -1687,15 +1846,15 @@ dig_done:
 // when the number is exactly halfway between two representable values.  For example, 
 // rounding 2.5 to zero digits after the decimal point will return 3 and not 2.
 // 2.49 will still round to 2, and 2.51 will still round to 3.
-// bufsize should be at least 20 for modes 0 and 1.  For the other modes,
-// bufsize should be two greater than the maximum number of output characters expected.
-static bool dToA(double d, int mode, bool biasUp, int ndigits,
-    int *decpt, bool *negative, char **rve, char *buf, size_t bufsize)
+// The buffer should be at least 20 bytes for modes 0 and 1.  For the other modes,
+// the buffer's size should be two greater than the maximum number of output characters expected.
+// Return a pointer to the resulting string's trailing null.
+static char *doubleToAscii(double d, int mode, bool biasUp, int ndigits,
+    int *decpt, bool *negative, char *buf)
 {
     /*  Arguments ndigits, decpt, negative are similar to those
         of ecvt and fcvt; trailing zeros are suppressed from
-        the returned string.  If not null, *rve is set to point
-        to the end of the return value.  If d is +-Infinity or NaN,
+        the returned string.  If d is +-Infinity or NaN,
         then *decpt is set to 9999.
 
         mode:
@@ -1753,28 +1912,14 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
         // Infinity or NaN
         *decpt = 9999;
         s = !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN";
-        if ((s[0] == 'I' && bufsize < 9) || (s[0] == 'N' && bufsize < 4)) {
-            ASSERT(false);
-            return false;
-        }
         std::strcpy(buf, s);
-        if (rve) {
-            *rve = buf[3] ? buf + 8 : buf + 3;
-            ASSERT(**rve == '\0');
-        }
-        return true;
+        return buf[3] ? buf + 8 : buf + 3;
     }
     if (!d) {
       no_digits:
         *decpt = 1;
-        if (bufsize < 2) {
-            ASSERT(false);
-            return false;
-        }
         buf[0] = '0'; buf[1] = '\0';  // copy "0" to buffer
-        if (rve)
-            *rve = buf + 1;
-        return true;
+        return buf + 1;
     }
 
 	BigInt b;
@@ -1870,24 +2015,24 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
     leftright = 1;
     ilim = ilim1 = 0;
     switch (mode) {
-    case 0:
-    case 1:
+      case 0:
+      case 1:
         ilim = ilim1 = -1;
         i = 18;
         ndigits = 0;
         break;
-    case 2:
+      case 2:
         leftright = 0;
         // no break
-    case 4:
+      case 4:
         if (ndigits <= 0)
             ndigits = 1;
         ilim = ilim1 = i = ndigits;
         break;
-    case 3:
+      case 3:
         leftright = 0;
         // no break
-    case 5:
+      case 5:
         i = ndigits + k + 1;
         ilim = i;
         ilim1 = i - 1;
@@ -1897,12 +2042,6 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
     // ilim is the maximum number of significant digits we want, based on k and ndigits.
     // ilim1 is the maximum number of significant digits we want, based on k and ndigits,
     // when it turns out that k was computed too high by one.
-
-    // Ensure space for at least i+1 characters, including trailing null.
-    if (bufsize <= (size_t)i) {
-        ASSERT(false);
-        return false;
-    }
     s = buf;
 
     if (ilim >= 0 && ilim <= Quick_max && try_quick) {
@@ -1999,7 +2138,7 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
 #ifndef No_leftright
         }
 #endif
-    fast_failed:
+      fast_failed:
         s = buf;
         d = d2;
         k = k0;
@@ -2033,7 +2172,7 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
             if (i == ilim) {
                 d += d;
                 if ((d > ds) || (d == ds && (L & 1 || biasUp))) {
-                bump_up:
+                  bump_up:
                     while (*--s == '9')
                         if (s == buf) {
                             k++;
@@ -2238,7 +2377,7 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
 	            }
 	            if (j1 > 0) {
 	                if (dig == '9') { // possible if i == 1
-	                round_9_up:
+	                  round_9_up:
 	                    *s++ = '9';
 	                    goto roundoff;
 	                }
@@ -2267,7 +2406,7 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
 	    b.pow2Mul(1);
 	    j = b.cmp(S);
 	    if ((j > 0) || (j == 0 && (dig & 1 || biasUp))) {
-	    roundoff:
+	      roundoff:
 	        while (*--s == '9')
 	            if (s == buf) {
 	                k++;
@@ -2285,45 +2424,40 @@ static bool dToA(double d, int mode, bool biasUp, int ndigits,
 		// S, mLow, and mHigh are destroyed at the end of this block scope.
     }
   ret1:
-    ASSERT(s < buf + bufsize);
     *s = '\0';
-    if (rve)
-        *rve = s;
     *decpt = k + 1;
-    return true;
+    return s;
 }
 
 
-// Mapping of DToStrMode -> dToA mode
-static const int dToAModes[] = {
-    0,   // DTOSTR_STANDARD
-    0,   // DTOSTR_STANDARD_EXPONENTIAL
-    3,   // DTOSTR_FIXED
-    2,   // DTOSTR_EXPONENTIAL
-    2};  // DTOSTR_PRECISION
+// Mapping of DToStrMode -> doubleToAscii mode
+static const int doubleToAsciiModes[] = {
+    0,   // dtosStandard
+    0,   // dtosStandardExponential
+    3,   // dtosFixed
+    2,   // dtosExponential
+    2};  // dtosPrecision
 
 
-// Convert dval according to the given mode and return a pointer to the resulting ASCII string.
+// Convert value according to the given mode and return a pointer to the resulting ASCII string.
 // The result is held somewhere in buffer, but not necessarily at the beginning.  The size of
-// buffer is given in bufferSize, and must be at least as large as given by the above macros.
-char *JS::dToStr(char *buffer, size_t bufferSize, DToStrMode mode, int precision, double d)
+// buffer is given in bufferSize, and must be at least as large as given by dtosStandardBufferSize
+// or dtosVariableBufferSize, whichever is appropriate.
+char *JS::doubleToStr(char *buffer, size_t bufferSize, double value, DToStrMode mode, int precision)
 {
-    int decPt;                  // Position of decimal point relative to first digit returned by dToA
-    bool negative;              // True if the sign bit was set in d
-    int nDigits;                // Number of significand digits returned by dToA
-    char *numBegin = buffer+2;  // Pointer to the digits returned by dToA; the +2 leaves space for
+    int decPt;                  // Position of decimal point relative to first digit returned by doubleToAscii
+    bool negative;              // True if the sign bit was set in value
+    int nDigits;                // Number of significand digits returned by doubleToAscii
+    char *numBegin = buffer+2;  // Pointer to the digits returned by doubleToAscii; the +2 leaves space for
                                 // the sign and/or decimal point
-    char *numEnd;               // Pointer past the digits returned by dToA
+    char *numEnd;               // Pointer past the digits returned by doubleToAscii
 
-    ASSERT(bufferSize >= (size_t)(mode <= DTOSTR_STANDARD_EXPONENTIAL ? DTOSTR_STANDARD_BUFFER_SIZE :
-            DTOSTR_VARIABLE_BUFFER_SIZE(precision)));
+    ASSERT(bufferSize >= (size_t)(mode <= dtosStandardExponential ? dtosStandardBufferSize : dtosVariableBufferSize(precision)));
 
-    if (mode == DTOSTR_FIXED && (d >= 1e21 || d <= -1e21))
-        mode = DTOSTR_STANDARD; // Change mode here rather than below because the buffer may not be large enough to hold a large integer.
+    if (mode == dtosFixed && (value >= 1e21 || value <= -1e21))
+        mode = dtosStandard; 	// Change mode here rather than below because the buffer may not be large enough to hold a large integer.
 
-    if (!dToA(d, dToAModes[mode], mode >= DTOSTR_FIXED, precision, &decPt, &negative, &numEnd, numBegin, bufferSize-2))
-        return 0;
-
+    numEnd = doubleToAscii(value, doubleToAsciiModes[mode], mode >= dtosFixed, precision, &decPt, &negative, numBegin);
     nDigits = numEnd - numBegin;
 
     // If Infinity, -Infinity, or NaN, return the string regardless of the mode.
@@ -2334,34 +2468,34 @@ char *JS::dToStr(char *buffer, size_t bufferSize, DToStrMode mode, int precision
         char *q;
 
         switch (mode) {
-            case DTOSTR_STANDARD:
-                if (decPt < -5 || decPt > 21)
-                    exponentialNotation = true;
-                else
-                    minNDigits = decPt;
-                break;
-
-            case DTOSTR_FIXED:
-                if (precision >= 0)
-                    minNDigits = decPt + precision;
-                else
-                    minNDigits = decPt;
-                break;
-
-            case DTOSTR_EXPONENTIAL:
-                ASSERT(precision > 0);
-                minNDigits = precision;
-                // Fall through
-            case DTOSTR_STANDARD_EXPONENTIAL:
+          case dtosStandard:
+            if (decPt < -5 || decPt > 21)
                 exponentialNotation = true;
-                break;
+            else
+                minNDigits = decPt;
+            break;
 
-            case DTOSTR_PRECISION:
-                ASSERT(precision > 0);
-                minNDigits = precision;
-                if (decPt < -5 || decPt > precision)
-                    exponentialNotation = true;
-                break;
+          case dtosFixed:
+            if (precision >= 0)
+                minNDigits = decPt + precision;
+            else
+                minNDigits = decPt;
+            break;
+
+          case dtosExponential:
+            ASSERT(precision > 0);
+            minNDigits = precision;
+            // Fall through
+          case dtosStandardExponential:
+            exponentialNotation = true;
+            break;
+
+          case dtosPrecision:
+            ASSERT(precision > 0);
+            minNDigits = precision;
+            if (decPt < -5 || decPt > precision)
+                exponentialNotation = true;
+            break;
         }
 
         // If the number has fewer than minNDigits, pad it with zeros at the end
@@ -2412,9 +2546,9 @@ char *JS::dToStr(char *buffer, size_t bufferSize, DToStrMode mode, int precision
 
     // If negative and neither -0.0 nor NaN, output a leading '-'.
     if (negative &&
-            !(word0(d) == Sign_bit && word1(d) == 0) &&
-            !((word0(d) & Exp_mask) == Exp_mask &&
-              (word1(d) || (word0(d) & Frac_mask)))) {
+            !(word0(value) == Sign_bit && word1(value) == 0) &&
+            !((word0(value) & Exp_mask) == Exp_mask &&
+              (word1(value) || (word0(value) & Frac_mask)))) {
         *--numBegin = '-';
     }
     return numBegin;
@@ -2430,47 +2564,42 @@ inline char baseDigit(uint32 digit)
 }
 
 
-// Convert d to a string in the given base.  The integral part of d will be printed exactly
+// Convert value to a string in the given base.  The integral part of value will be printed exactly
 // in that base, regardless of how large it is, because there is no exponential notation for non-base-ten
 // numbers.  The fractional part will be rounded to as few digits as possible while still preserving
 // the round-trip property (analogous to that of printing decimal numbers).  In other words, if one were
 // to read the resulting string in via a hypothetical base-number-reading routine that rounds to the nearest
 // IEEE double (and to an even significand if there are two equally near doubles), then the result would
-// equal d (except for -0.0, which converts to "0", and NaN, which is not equal to itself).
+// equal value (except for -0.0, which converts to "0", and NaN, which is not equal to itself).
 //
-// Store the result in the given buffer, which must have at least DTOBASESTR_BUFFER_SIZE bytes.
-void JS::dToBaseStr(char *buffer, uint base, double d)
+// Store the result in the given buffer, which must have at least dtobasesBufferSize bytes.
+// Return the number of characters stored.
+size_t JS::doubleToBaseStr(char *buffer, double value, uint base)
 {
-    char *p;             // Pointer to current position in the buffer
-    char *pInt;          // Pointer to the beginning of the integer part of the string
-    char *q;
-    uint32 digit;
-    double di;           // d truncated to an integer
-    double df;           // The fractional part of d
-
     ASSERT(base >= 2 && base <= 36);
 
-    p = buffer;
-    if (d < 0.0
+    char *p = buffer;		// Pointer to current position in the buffer
+    if (value < 0.0
 #ifdef XP_PC
-        && !((word0(d) & Exp_mask) == Exp_mask && ((word0(d) & Frac_mask) || word1(d))) // Visual C++ doesn't know how to compare against NaN
+        && !((word0(value) & Exp_mask) == Exp_mask && ((word0(value) & Frac_mask) || word1(value))) // Visual C++ doesn't know how to compare against NaN
 #endif
        ) {
         *p++ = '-';
-        d = -d;
+        value = -value;
     }
 
     // Check for Infinity and NaN
-    if ((word0(d) & Exp_mask) == Exp_mask) {
-        std::strcpy(p, !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN");
-        return;
+    if ((word0(value) & Exp_mask) == Exp_mask) {
+        std::strcpy(p, !word1(value) && !(word0(value) & Frac_mask) ? "Infinity" : "NaN");
+        return std::strlen(buffer);
     }
 
-    // Output the integer part of d with the digits in reverse order.
-    pInt = p;
-    di = floor(d);
-    if (di <= 4294967295.0) {
-        uint32 n = (uint32)di;
+    // Output the integer part of value with the digits in reverse order.
+    char *pInt = p;					// Pointer to the beginning of the integer part of the string
+    double valueInt = floor(value);	// value truncated to an integer
+    uint32 digit;
+    if (valueInt <= 4294967295.0) {
+        uint32 n = (uint32)valueInt;
         if (n)
             do {
                 uint32 m = n / base;
@@ -2482,9 +2611,9 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
         else *p++ = '0';
     } else {
         int32 e;
-        int32 bits;  // Number of significant bits in di; not used.
+        int32 bits;  // Number of significant bits in valueInt; not used.
         BigInt b;
-        b.init(di, e, bits);
+        b.init(valueInt, e, bits);
         b.pow2Mul(e);
         do {
             digit = b.divRem(base);
@@ -2492,32 +2621,32 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
             *p++ = baseDigit(digit);
         } while (!b.isZero());
     }
-    // Reverse the digits of the integer part of d.
-    q = p-1;
+    // Reverse the digits of the integer part of value.
+    char *q = p-1;
     while (q > pInt) {
         char ch = *pInt;
         *pInt++ = *q;
         *q-- = ch;
     }
     
-    df = d - di;
-    if (df != 0.0) {
+    double valueFrac = value - valueInt;		// The fractional part of value
+    if (valueFrac != 0.0) {
         // We have a fraction.
         *p++ = '.';
 
         int32 e, bbits;
         BigInt b;
-        b.init(df, e, bbits);
+        b.init(valueFrac, e, bbits);
         ASSERT(e < 0);
-        // At this point df = b * 2^e.  e must be less than zero because 0 < df < 1.
+        // At this point valueFrac = b * 2^e.  e must be less than zero because 0 < valueFrac < 1.
         
-        int32 s2 = -int32(word0(d) >> Exp_shift1 & Exp_mask>>Exp_shift1);
+        int32 s2 = -int32(word0(value) >> Exp_shift1 & Exp_mask>>Exp_shift1);
 #ifndef Sudden_Underflow
         if (!s2)
             s2 = -1;
 #endif
         s2 += Bias + P;
-        // 1/2^s2 = (nextDouble(d) - d)/2
+        // 1/2^s2 = (nextDouble(value) - value)/2
         ASSERT(-s2 < e);
 
         BigInt mLow;
@@ -2525,13 +2654,13 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
         bool useMHigh = false;	// If false, assume that mHigh == mLow
 
         mLow.init(1);
-        if (!word1(d) && !(word0(d) & Bndry_mask)
+        if (!word1(value) && !(word0(value) & Bndry_mask)
 #ifndef Sudden_Underflow
-            && word0(d) & (Exp_mask & Exp_mask << 1)
+            && word0(value) & (Exp_mask & Exp_mask << 1)
 #endif
             ) {
             // The special case.  Here we want to be within a quarter of the last input
-            // significant digit instead of one half of it when the output string's value is less than d.
+            // significant digit instead of one half of it when the output string's value is less than value.
             s2 += Log2P;
             useMHigh = true;
             mHigh.init(1u<<Log2P);
@@ -2544,9 +2673,9 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
 
         // At this point we have the following:
         //   s = 2^s2;
-        //   1 > df = b/2^s2 > 0;
-        //   (d - prevDouble(d))/2 = mLow/2^s2;
-        //   (nextDouble(d) - d)/2 = mHigh/2^s2.
+        //   1 > valueFrac = b/2^s2 > 0;
+        //   (value - prevDouble(value))/2 = mLow/2^s2;
+        //   (nextDouble(value) - value)/2 = mHigh/2^s2.
 
         bool done = false;
         do {
@@ -2558,7 +2687,7 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
             if (useMHigh)
                 mHigh.mulAdd(base, 0);
 
-            // Do we yet have the shortest string that will round to d?
+            // Do we yet have the shortest string that will round to value?
             j = b.cmp(mLow);
             // j is b/2^s2 compared with mLow/2^s2.
             {
@@ -2569,7 +2698,7 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
             // j1 is b/2^s2 compared with 1 - mHigh/2^s2.
 
 #ifndef ROUND_BIASED
-            if (j1 == 0 && !(word1(d) & 1)) {
+            if (j1 == 0 && !(word1(value) & 1)) {
                 if (j > 0)
                     digit++;
                 done = true;
@@ -2577,12 +2706,12 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
 #endif
             if (j < 0 || (j == 0
 #ifndef ROUND_BIASED
-                && !(word1(d) & 1)
+                && !(word1(value) & 1)
 #endif
                 )) {
                 if (j1 > 0) {
                     // Either dig or dig+1 would work here as the least significant digit.
-                    // Use whichever would produce an output value closer to d.
+                    // Use whichever would produce an output value closer to value.
                     b.pow2Mul(1);
                     j1 = b.cmp(s);
                     if (j1 > 0) // The even test (|| (j1 == 0 && (digit & 1))) is not here because it messes up odd base output
@@ -2598,6 +2727,17 @@ void JS::dToBaseStr(char *buffer, uint base, double d)
             *p++ = baseDigit(digit);
         } while (!done);
     }
-    ASSERT(p < buffer + DTOBASESTR_BUFFER_SIZE);
+    ASSERT(p < buffer + dtobasesBufferSize);
     *p = '\0';
+    return size_t(p - buffer);
+}
+
+
+// A version of doubleToStr that appends to the end of String dst.
+void JS::printDouble(String &dst, double value, DToStrMode mode, int precision)
+{
+	char buffer[dtosVariableBufferSize(101)];
+	ASSERT(uint(precision) <= 101);
+	
+	dst += doubleToStr(buffer, sizeof buffer, value, mode, precision);
 }
