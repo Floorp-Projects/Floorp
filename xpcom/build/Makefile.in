@@ -44,25 +44,33 @@ endif
 
 CPPSRCS		= nsXPComInit.cpp
 
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= dlldeps.cpp
+endif
+
 ifdef XPCOM_USE_LEA
 CSRCS += malloc.c
 endif
 
+ifdef GC_LEAK_DETECTOR
+EXTRA_DSO_LIBS = boehm
+endif
+
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libxpcomds_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomio_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomcomponents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomthreads_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomproxy_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcombase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxptcall.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxptinfo.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpt.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxptcmd.$(LIB_SUFFIX) \
-		$(DIST)/lib/libmozreg_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libstring_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libstring_obsolete_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpcomglue.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomcomponents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomthreads_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomproxy_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcombase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xptcall.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xptinfo.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xptcmd.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -78,10 +86,6 @@ LOCAL_INCLUDES	= \
 
 ifdef MOZ_DEMANGLE_SYMBOLS
 EXTRA_DSO_LDOPTS += -liberty
-endif
-
-ifdef GC_LEAK_DETECTOR
-EXTRA_DSO_LDOPTS += -lboehm
 endif
 
 # pull in MoreFiles for MacOSX
@@ -101,7 +105,18 @@ FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
+DEFINES		+= \
+		-D_IMPL_NS_COM \
+		-D_IMPL_NS_BASE \
+		-DEXPORT_XPT_API \
+		-DEXPORT_XPTC_API \
+		-DEXPORT_XPTI_API
+
+EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
+
+ifdef GC_LEAK_DETECTOR
+DEFINES += -DGC_LEAK_DETECTOR
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 CXXFLAGS	+= $(TK_CFLAGS)
@@ -112,5 +127,11 @@ ifeq ($(OS_ARCH),BeOS)
 EXTRA_DSO_LDOPTS += -lbe
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
+ifeq ($(OS_ARCH),WINNT)
+DEFINES += -DWIN32_LEAN_AND_MEAN
+EXTRA_DSO_LDOPTS += shell32.lib ole32.lib
+ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+EXTRA_DSO_LDOPTS += imagehlp.lib
+endif
+endif # WINNT
 

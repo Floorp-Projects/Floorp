@@ -19,7 +19,7 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -27,32 +27,34 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-LIBRARY_NAME	= xptinfo
-REQUIRES	= jar \
-		  string \
-		  $(NULL)
+LIBRARY_NAME	= xptcmd
 
-CPPSRCS		= \
-		xptiFile.cpp	\
-		xptiInterfaceInfo.cpp	\
-		xptiInterfaceInfoManager.cpp	\
-		xptiManifest.cpp	\
-		xptiMisc.cpp	\
-		xptiTypelibGuts.cpp	\
-		xptiWorkingSet.cpp	\
-		xptiZipItem.cpp	\
-		xptiZipLoader.cpp	\
-		$(NULL)
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
+#
+# The default is this buildable, but non-functioning code.
+#
+CPPSRCS		:= xptcinvoke.cpp xptcstubs.cpp
 
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(CPU),ALPHA)
+CPPSRCS 	:= xptcinvoke_alpha.cpp xptcstubs_alpha.cpp
+ASFILES		:= xptcinvoke_asm_alpha.s xptcstubs_asm_alpha.s
+AS		:= asaxp
+ASFLAGS		+= /I../../..public
+endif
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DEXPORT_XPTI_API -DEXPORT_XPT_API
-ifeq ($(OS_ARCH), WINNT)
+DEFINES		+= -DEXPORT_XPTC_API
+
+LOCAL_INCLUDES	= -I$(srcdir)/../..
+
+ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

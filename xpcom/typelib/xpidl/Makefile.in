@@ -30,6 +30,9 @@ MODULE		= xpcom
 PROGRAM		= xpidl$(BIN_SUFFIX)
 INTERNAL_TOOLS	= 1
 
+# glib and libIDL link against the non-debug msvcrt
+MOZ_NO_DEBUG_RTL=1
+
 CSRCS		= \
 		xpidl.c \
 		xpidl_idl.c \
@@ -52,10 +55,14 @@ CFLAGS		+= $(LIBIDL_CFLAGS)
 
 # Compile directly against the static lib, so we can use xpidl during the build
 # without the shared library path being set.
-LIBS		= $(DIST)/lib/libxpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+DEFINES		+= -DEXPORT_XPT_API
+LDFLAGS		+= -SUBSYSTEM:CONSOLE -NODEFAULTLIB:MSVCRTD
+endif
 
 # Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
+LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
 HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
@@ -68,4 +75,3 @@ endif
 endif
 
 export:: libs
-

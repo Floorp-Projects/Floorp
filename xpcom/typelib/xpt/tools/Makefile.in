@@ -42,12 +42,15 @@ include $(topsrcdir)/config/rules.mk
 
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
-LIBS		= $(DIST)/lib/libxpt.$(LIB_SUFFIX)
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API
+endif
+
+LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
 
 # Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
 # when libxpt changes.
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
-
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
 HOST_LIBS		= $(DIST)/host/lib/libhostxpt.$(LIB_SUFFIX)

@@ -33,7 +33,6 @@ ifdef CROSS_COMPILE
 HOST_LIBRARY_NAME	= hostxpt
 endif
 
-
 CSRCS		= xpt_arena.c xpt_struct.c xpt_xdr.c
 HOST_CSRCS	= $(CSRCS)
 
@@ -47,6 +46,10 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_XPT_API
 HOST_CFLAGS	+= -DEXPORT_XPT_API
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
 
 # Build libxpt early so that it'll be available to xpidl, which also
 # must be built early.

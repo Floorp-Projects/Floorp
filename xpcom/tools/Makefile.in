@@ -28,5 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= registry
 
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= windows
+endif
+
 include $(topsrcdir)/config/rules.mk
 
