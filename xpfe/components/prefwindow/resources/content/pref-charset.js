@@ -10,7 +10,8 @@ var pref_string_content  = new String();
 
 function Init()
 {
-
+  doSetOKCancel(Save);
+  
   var applicationArea      = new String();
   dump("*** pref-charset.js, Init()\n");
 
@@ -380,9 +381,8 @@ function enable_remove_button()
   
 function enable_save()
 {
-  var save_button = document.getElementById('save_button');
-	
-  save_button.setAttribute('disabled','false');
+  var save_button = document.getElementById('ok');
+  save_button.removeAttribute('disabled');
 }
 
 
