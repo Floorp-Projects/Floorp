@@ -1698,41 +1698,32 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
 {
-  PRBool inThisFrame = mRect.Contains(aPoint);
-  if (! ((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame) ) {
-    return NS_ERROR_FAILURE;
-  }
+  // The button is getting the hover events so...
+  // None of the children frames of the combobox get
+  // the events. (like the button frame), that way
+  // all event based style rules affect the combobox 
+  // and not the any of the child frames.  (The inability
+  // of the parent to be in the :hover state at the same
+  // time as its children is really a bug (#5693 / #33736)
+  // in the implementation of :hover.)
+  
+  // It would be theoretically more elegant to check the
+  // children when not disabled, and then use event
+  // capturing.  It would correctly handle situations (obscure!!)
+  // where the children were visible but the parent was not.
+  // Now the functionality of the OPTIONs depends on the SELECT
+  // being visible.  Oh well...
 
-  if ( nsFormFrame::GetDisabled(this) && inThisFrame ) {
+  if ( mRect.Contains(aPoint) &&
+       (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) ) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
-    return NS_ERROR_FAILURE;
-  }
-  
-  // The button is getting the hover events so...
-  // This ifdef makes it so none of the children frame of the combobox get
-  // the events. (like the button frame), that way all event based style rules 
-  // affect the combobox and not the any of the child frames.
-#if 0
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
-    if (NS_SUCCEEDED(rv)) return rv;
-    return GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE, aFrame);
   }
   return NS_ERROR_FAILURE;
-#else  
-  if (inThisFrame && (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)) {
-    // should probably test for visibility, although children could be
-    // visible without parent, so I'm not sure...
-    *aFrame = this;
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 
