@@ -48,13 +48,8 @@
 /*
  * Elf linux supports dl* functions
  */
-#if defined(LINUX1_2) || defined(LINUX2_0)
 #define HAVE_DLL
 #define USE_DLFCN
-#else
-#undef	HAVE_DLL
-#undef	USE_DLFCN
-#endif
 
 #if !defined(MKLINUX) && !defined(NEED_TIME_R)
 #define NEED_TIME_R

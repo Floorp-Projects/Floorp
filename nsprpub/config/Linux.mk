@@ -59,18 +59,15 @@ OS_CFLAGS		= $(DSO_CFLAGS) $(PLATFORM_FLAGS) $(PORT_FLAGS)
 ######################################################################
 
 ifeq ($(CPU_ARCH),alpha)
-PLATFORM_FLAGS		+= -DLINUX1_2 -D_ALPHA_ -D__alpha
+PLATFORM_FLAGS		+= -D_ALPHA_ -D__alpha
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),ppc)
-PLATFORM_FLAGS		+= -DMKLINUX -DLINUX1_2
+PLATFORM_FLAGS		+= -DMKLINUX
 OS_INCLUDES		+= -I/usr/local/include
 endif
-ifeq ($(CPU_ARCH),sparc)
-PLATFORM_FLAGS		+= -DLINUX1_2
-endif
 ifeq ($(CPU_ARCH),x86)
-PLATFORM_FLAGS		+= -mno-486 -DLINUX1_2 -Di386
+PLATFORM_FLAGS		+= -mno-486 -Di386
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),m68k)
@@ -82,12 +79,7 @@ ifeq ($(CPU_ARCH),m68k)
 ifndef BUILD_OPT
 OPTIMIZER		+= -O
 endif
-PLATFORM_FLAGS		+= -m68020-40 -DLINUX1_2
-endif
-
-# These are CPU_ARCH independent
-ifeq ($(basename $(OS_RELEASE)),2.0)
-PLATFORM_FLAGS		+= -DLINUX2_0
+PLATFORM_FLAGS		+= -m68020-40
 endif
 
 #

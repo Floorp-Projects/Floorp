@@ -141,7 +141,7 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
 /*
  * These platforms don't have sigtimedwait()
  */
-#if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX2_0) \
+#if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
 	|| defined(FREEBSD)
 #define PT_NO_SIGTIMEDWAIT
 #endif

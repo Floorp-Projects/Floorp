@@ -72,7 +72,7 @@ static sigset_t timer_set;
  */
 
 #if defined(SOLARIS) \
-	|| (defined(LINUX2_0) && defined(_REENTRANT) \
+	|| (defined(LINUX) && defined(_REENTRANT) \
         && !(defined(__GLIBC__) && __GLIBC__ >= 2))
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_GETPROTO_R_POINTER
@@ -86,7 +86,7 @@ static sigset_t timer_set;
 #define _PR_HAVE_GETPROTO_R_INT
 #endif
 
-#if (defined(LINUX2_0) && defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2)
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_5_ARG_GETPROTO_R
 #endif
