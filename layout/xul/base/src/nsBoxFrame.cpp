@@ -631,14 +631,6 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
       aIsHorizontal = PR_FALSE;
     else if (value.EqualsIgnoreCase("horizontal"))
      aIsHorizontal = PR_TRUE;
-  } else {
-    // deprecated, use align
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-      if (value.EqualsIgnoreCase("vertical"))
-        aIsHorizontal = PR_FALSE;
-      else if (value.EqualsIgnoreCase("horizontal"))
-        aIsHorizontal = PR_TRUE;
-    }
   }
 }
 
