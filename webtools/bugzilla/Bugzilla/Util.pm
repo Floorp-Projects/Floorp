@@ -149,7 +149,7 @@ sub trim {
 sub format_time {
     my ($time) = @_;
 
-    my ($year, $month, $day, $hour, $min);
+    my ($year, $month, $day, $hour, $min, $sec);
     if ($time =~ m/^\d{14}$/) {
         # We appear to have a timestamp direct from MySQL
         $year  = substr($time,0,4);
@@ -158,12 +158,13 @@ sub format_time {
         $hour  = substr($time,8,2);
         $min   = substr($time,10,2);
     }
-    elsif ($time =~ m/^(\d{4})[-\.](\d{2})[-\.](\d{2}) (\d{2}):(\d{2})(:\d{2})?$/) {
+    elsif ($time =~ m/^(\d{4})[-\.](\d{2})[-\.](\d{2}) (\d{2}):(\d{2})(:(\d{2}))?$/) {
         $year  = $1;
         $month = $2;
         $day   = $3;
         $hour  = $4;
         $min   = $5;
+        $sec   = $7;
     }
     else {
         warn "Date/Time format ($time) unrecogonzied";
@@ -171,6 +172,9 @@ sub format_time {
 
     if (defined $year) {
         $time = "$year-$month-$day $hour:$min";
+        if (defined $sec) {
+            $time .= ":$sec";
+        }
         $time .= " " . &::Param('timezone') if &::Param('timezone');
     }
     return $time;

@@ -28,7 +28,7 @@ use lib 't';
 use Support::Files;
 
 BEGIN { 
-	use Test::More tests => 12;
+	use Test::More tests => 13;
 	use_ok(Bugzilla::Util);
 }
 
@@ -69,6 +69,7 @@ is(trim(" fg<*\$%>+=~~ "),'fg<*$%>+=~~','trim()');
 
 #format_time();
 is(format_time("20021123140436"),'2002-11-23 14:04 TEST','format_time("20021123140436")');
-is(format_time("2002.11.24 00:05:56"),'2002-11-24 00:05 TEST','format_time("2002.11.24 00:05:56")');
+is(format_time("2002.11.24 00:05"),'2002-11-24 00:05 TEST','format_time("2002.11.24 00:05")');
+is(format_time("2002.11.24 00:05:56"),'2002-11-24 00:05:56 TEST','format_time("2002.11.24 00:05:56")');
 
 

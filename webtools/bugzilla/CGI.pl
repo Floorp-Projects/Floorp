@@ -281,7 +281,8 @@ sub CheckIfVotedConfirmed {
 }
 sub LogActivityEntry {
     my ($i,$col,$removed,$added,$whoid,$timestamp) = @_;
-    # in the case of CCs, deps, and keywords, there's a possibility that someone    # might try to add or remove a lot of them at once, which might take more
+    # in the case of CCs, deps, and keywords, there's a possibility that someone
+    # might try to add or remove a lot of them at once, which might take more
     # space than the activity table allows.  We'll solve this by splitting it
     # into multiple entries if it's too long.
     while ($removed || $added) {
@@ -331,7 +332,7 @@ sub GetBugActivity {
         SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),
                 fielddefs.name,
                 bugs_activity.attach_id,
-                DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i'),
+                DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i:%s'),
                 bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
         FROM bugs_activity $suppjoins LEFT JOIN fielddefs ON 
