@@ -40,21 +40,23 @@ public:
   nsAtomList* mNext;
 };
 
-#define NS_ATTR_FUNC_SET       0   // [attr]
-#define NS_ATTR_FUNC_EQUALS    1   // [attr=value]
-#define NS_ATTR_FUNC_INCLUDES  2   // [attr~=value] (space separated)
-#define NS_ATTR_FUNC_DASHMATCH 3   // [attr|=value] ('-' separated)
+#define NS_ATTR_FUNC_SET        0     // [attr]
+#define NS_ATTR_FUNC_EQUALS     1     // [attr=value]
+#define NS_ATTR_FUNC_INCLUDES   2     // [attr~=value] (space separated)
+#define NS_ATTR_FUNC_DASHMATCH  3     // [attr|=value] ('-' truncated)
 
 struct nsAttrSelector {
 public:
   nsAttrSelector(const nsString& aAttr);
-  nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue);
+  nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
+                 PRBool aCaseSensative);
   nsAttrSelector(const nsAttrSelector& aCopy);
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
   nsIAtom*        mAttr;
   PRUint8         mFunction;
+  PRPackedBool    mCaseSensative;
   nsString        mValue;
   nsAttrSelector* mNext;
 };
@@ -76,7 +78,8 @@ public:
   void AddPseudoClass(const nsString& aPseudoClass);
   void AddPseudoClass(nsIAtom* aPseudoClass);
   void AddAttribute(const nsString& aAttr);
-  void AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue);
+  void AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
+                    PRBool aCaseSensative);
   void SetOperator(PRUnichar aOperator);
 
   PRInt32 CalcWeight(void) const;
