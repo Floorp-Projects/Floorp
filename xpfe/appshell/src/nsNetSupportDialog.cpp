@@ -424,7 +424,6 @@ nsresult nsNetSupportDialog::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
 {
 	nsresult result;
-  nsIWebShellWindow *dialogWindow;
  	// Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &result);
 
@@ -435,7 +434,8 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
  	if (!NS_SUCCEEDED (result = NS_NewURL(&dialogURL, inXULURL ) ) )
  		return result;
 
- 	appShellService->RunModalDialog( nsnull, dialogURL, dialogWindow, nsnull, this, 300, 200);
+ 	NS_IF_RELEASE( mWebShellWindow );
+ 	appShellService->RunModalDialog( nsnull, dialogURL, mWebShellWindow, nsnull, this, 300, 200);
 
 	// cleanup
 	if ( mOKButton )
@@ -448,8 +448,6 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
   // the window has been closed and partially destroyed at this point.  but here we are.
   // it seems necessary to first release any old window we may be holding, since this is
   // a service, and can therefore remain active between actual invocations.
-  NS_IF_RELEASE( mWebShellWindow );
-  mWebShellWindow = dialogWindow; // no need to addref; RunModalDialog did that
 
  	return NS_OK;	
 }
