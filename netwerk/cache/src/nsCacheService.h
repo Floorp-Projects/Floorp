@@ -153,13 +153,10 @@ private:
 #if defined(PR_LOGGING)
     void LogCacheStatistics();
 #endif
+
     /**
      *  Data Members
      */
-
-    enum {
-        cacheServiceActiveMask    = 1
-    };
 
     static nsCacheService *             gService;  // there can be only one...
     nsCOMPtr<nsIEventQueueService>      mEventQService;
@@ -173,7 +170,6 @@ private:
     nsCacheDevice *         mMemoryDevice;
     nsCacheDevice *         mDiskDevice;
 
-    //    nsCacheClientHashTable  mClientIDs;
     nsCacheEntryHashTable   mActiveEntries;
     PRCList                 mDoomedEntries;
 
