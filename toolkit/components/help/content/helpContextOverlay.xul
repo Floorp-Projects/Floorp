@@ -68,6 +68,16 @@
       		label="&textZoomReduceBtn.label;"
       		accesskey="&textZoomReduceBtn.accesskey;"
       		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+#ifdef XP_WIN
+      <menuseparator/>
+      <menuitem id="context-zlevel"
+                type="checkbox"
+                checked="true"
+                persist="checked"
+                label="&zLevel.label;"
+                accesskey="&zLevel.accesskey;"
+                oncommand="toggleZLevel(this);"/>
+#endif
     </popup>
   </popupset>
 </overlay>

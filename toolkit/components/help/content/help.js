@@ -867,3 +867,35 @@ function showRelativePanel(goForward) {
   sidebarButtons[selectedIndex].doCommand();
 }
 
+# getXulWin - Returns the current Help window as a nsIXULWindow.
+function getXulWin()
+{
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var webnav = window.getInterface(Components.interfaces.nsIWebNavigation);
+  var dsti = webnav.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
+  var treeowner = dsti.treeOwner;
+  var ifreq = treeowner.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+
+  return ifreq.getInterface(Components.interfaces.nsIXULWindow);
+}
+
+# toggleZLevel - Toggles whether or not the window will always appear on top. Because
+#   alwaysRaised is not supported on an OS other than windows, this code will not
+#   appear in those builds.
+#
+#   element - The DOM node that persists the checked state.
+#ifdef XP_WIN
+function toggleZLevel(element)
+{
+  var xulwin = getXulWin();
+  
+  // Now we can flip the zLevel, and set the attribute so that it persists correctly
+  if (xulwin.zLevel > xulwin.normalZ) {
+    xulwin.zLevel = xulwin.normalZ;
+    element.setAttribute("checked", "false");
+  } else {
+    xulwin.zLevel = xulwin.raisedZ;
+    element.setAttribute("checked", "true");
+  }
+}
+#endif
