@@ -44,7 +44,7 @@
 #include "nsContentUtils.h"
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
-  : mType(CSS_PX), mTwips(0), mString(), mOwner(aOwner), mT2P(aT2P)
+  : mType(CSS_PX), mTwips(0), mString(), mFloat(0), mOwner(aOwner), mT2P(aT2P)
 {
   NS_INIT_REFCNT();
 }
@@ -124,10 +124,15 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         tmpStr.Append(mString);
         break;
       }
+    case CSS_PERCENTAGE :
+      {
+        tmpStr.AppendInt(int(mFloat * 100));
+        tmpStr.Append(PRUnichar('%'));
+        break;
+      }
     case CSS_PC :
     case CSS_UNKNOWN :
     case CSS_NUMBER :
-    case CSS_PERCENTAGE :
     case CSS_EMS :
     case CSS_EXS :
     case CSS_DEG :
