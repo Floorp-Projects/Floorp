@@ -108,9 +108,9 @@ sub ThrowTemplateError {
     # Try a template first; but if this one fails too, fall back
     # on plain old print statements.
     if (!$template->process("global/code-error.html.tmpl", $vars)) {
-        my $maintainer = Param('maintainer');
-        my $error = html_quote($vars->{'template_error_msg'});
-        my $error2 = html_quote($template->error());
+        my $maintainer = Bugzilla::Config::Param('maintainer');
+        my $error = Bugzilla::Util::html_quote($vars->{'template_error_msg'});
+        my $error2 = Bugzilla::Util::html_quote($template->error());
         print <<END;
         <tt>
           <p>
