@@ -260,7 +260,9 @@ nsListBoxObject::GetListBoxBody()
 NS_IMETHODIMP
 nsListBoxObject::InvalidatePresentationStuff()
 {
-  return SetPropertyAsSupports(NS_LITERAL_STRING("listboxbody").get(), nsnull);
+  SetPropertyAsSupports(NS_LITERAL_STRING("listboxbody").get(), nsnull);
+
+  return nsBoxObject::InvalidatePresentationStuff();
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

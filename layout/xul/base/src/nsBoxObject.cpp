@@ -156,7 +156,7 @@ nsBoxObject::SetDocument(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsBoxObject::InvalidatePresentationStuff()
 {
-  // Nothing to do here, subclasses might care though...
+  mPresShell = nsnull;
 
   return NS_OK;
 }
