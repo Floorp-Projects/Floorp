@@ -476,25 +476,22 @@ NS_IMETHODIMP
 nsStreamIOChannel::OnStopRequest(nsIRequest *request, nsISupports* context,
                                  nsresult aStatus, const PRUnichar* aStatusArg)
 {
-    nsresult rv;
+    if (mUserObserver)
+        mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
 
-    if (mUserObserver) {
-        rv = mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    if (mLoadGroup) {
-        if (NS_SUCCEEDED(rv)) {
-            rv = mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
 
     // Release the reference to the consumer stream listener...
-    mUserObserver = null_nsCOMPtr();
-    mFileTransport = null_nsCOMPtr();
+    mRequest = 0;
+    mFileTransport = 0;
+    mUserObserver = 0;
 
-    return mStreamIO->Close(aStatus);
+    // Make sure the stream io is closed
+    mStreamIO->Close(aStatus);
+
+    // There is no point in returning anything other than NS_OK
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
