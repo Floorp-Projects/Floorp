@@ -37,6 +37,7 @@ CPPSRCS=                        \
 	nsParseMailbox.cpp			\
 	nsMailboxProtocol.cpp		\
 	nsMailboxService.cpp		\
+	nsPop3Service.cpp			\
 	nsLocalMailFolder.cpp		\
 	$(NULL)
 
@@ -49,6 +50,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsParseMailbox.obj			\
 	.\$(OBJDIR)\nsMailboxProtocol.obj		\
 	.\$(OBJDIR)\nsMailboxService.obj		\
+	.\$(OBJDIR)\nsPop3Service.obj			\
 	.\$(OBJDIR)\nsLocalMailFolder.obj		\
 	$(NULL)
 
@@ -61,6 +63,7 @@ EXPORTS=				\
 	nsParseMailbox.h	\
 	nsMailboxProtocol.h	\
 	nsMailboxService.h	\
+	nsPop3Service.h		\
 	$(NULL)
 
 LINCS=  -I$(PUBLIC)\xpcom \
