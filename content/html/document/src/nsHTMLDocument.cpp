@@ -86,6 +86,10 @@ static PRBool gPlugDetector = PR_FALSE;
 #include "net.h"
 #endif
 
+#ifdef NECKO
+#include "prmem.h"
+#endif
+
 // Find/Serach Includes
 const PRInt32 kForward  = 0;
 const PRInt32 kBackward = 1;
