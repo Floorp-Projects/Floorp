@@ -22,6 +22,7 @@
  * Written by Lou Montulli Jan 98
  */
 #include "xp.h"
+#include "prlog.h"
 #include "mcom_db.h"
 #include "pwcacapi.h"
 
@@ -92,7 +93,7 @@ pc_open_database(void)
 
 			have_tried_open = TRUE; /* only do this once */
 
-            TRACEMSG(("Could not open cache database -- errno: %d", errno));
+            PR_LogPrint("Could not open cache database -- errno: %d",errno);
 
 			/* if the file is zero length remove it
 			 */
