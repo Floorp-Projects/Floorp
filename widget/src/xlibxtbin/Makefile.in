@@ -34,6 +34,8 @@ REQUIRES	= xlibrgb
 CPPSRCS         = \
                 xlibxtbin.cpp \
 
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -L$(DIST)/lib -lxlibrgb
+
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_XLIB_LDFLAGS) -L/usr/X11R6/lib -lXt
 else
