@@ -112,7 +112,7 @@ char* chop(char*);
 void out_of_memory(void);
 void FatalError(char *msg);
 char* get_default_cert_dir(void);
-SECItem *password_hardcode(void *arg, SECKEYKeyDBHandle *handle);
+SECItem *password_hardcode(void *arg, void *handle);
 char* pk11_password_hardcode(PK11SlotInfo *slot, PRBool retry, void *arg);
 int rm_dash_r(char *path);
 char* pr_fgets(char *buf, int size, PRFileDesc *file);

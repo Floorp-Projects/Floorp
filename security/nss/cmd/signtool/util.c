@@ -445,12 +445,12 @@ static int is_dir (char *filename)
  *
  */
 SECItem *
-password_hardcode(void *arg, SECKEYKeyDBHandle *handle)
+password_hardcode(void *arg, void *handle)
 {
   SECItem *pw = NULL;
   if (password) {
     pw = SECITEM_AllocItem(NULL, NULL, PL_strlen(password));
-    pw->data = PL_strdup(password);
+    pw->data = (unsigned char *)PL_strdup(password);
     password = NULL;
   }
   return pw;
