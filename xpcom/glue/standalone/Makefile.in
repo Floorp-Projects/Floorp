@@ -93,21 +93,12 @@ GARBAGE		+= $(addprefix $(srcdir)/,$(XPCOM_GLUE_SRC_LCSRCS))
 GARBAGE		+= $(addprefix $(srcdir)/,$(STRING_LCSRCS))
 endif
 
+SRCS_IN_OBJDIR	= 1
+
 include $(topsrcdir)/config/rules.mk
 
-export:: $(XPCOM_GLUE_SRC_CSRCS)
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $^ $(srcdir)
-else
+export:: $(XPCOM_GLUE_SRC_CSRCS) $(STRING_CSRCS)
 	$(INSTALL) $^ .
-endif
-
-export:: $(STRING_CSRCS)
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $^ $(srcdir)
-else
-	$(INSTALL) $^ .
-endif
 
 DEFINES		+= -DXPCOM_GLUE
 

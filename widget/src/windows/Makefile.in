@@ -88,10 +88,12 @@ FORCE_STATIC_LIB = 1
 
 GARBAGE		+= L_Ienumfe.cpp $(srcdir)/L_Ienumfe.cpp
 
+SRCS_IN_OBJDIR	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 # Silly case-insensitive fs
 export:: IENUMFE.CPP
-	cp $< $(srcdir)/L_Ienumfe.cpp
+	cp $< L_Ienumfe.cpp
 
 

@@ -181,12 +181,14 @@ LIBS = \
     $(NULL)
 endif
 
+SRCS_IN_OBJDIR	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += -GX
 
 copy-sources: $(addprefix $(MOZCTLSRC)/,$(_CONTROL_CPPSRCS))
-	$(INSTALL) $^ $(srcdir)
+	$(INSTALL) $^ .
 
 export:: copy-sources
 
