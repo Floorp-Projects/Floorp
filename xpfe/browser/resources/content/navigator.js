@@ -54,8 +54,7 @@ var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
 var gClickSelectsAll = false;
 var gIgnoreFocus = false;
-var gIgnoreFocusCount = 0;
-var gMouseDownX = -1;
+var gIgnoreClick = false;
 
 var pref = null;
 
@@ -1550,71 +1549,27 @@ function getNewThemes()
 
 function URLBarFocusHandler(aEvent)
 {
-  if (gClickSelectsAll)
-    if (!gIgnoreFocus)
-      gURLBar.select();
-    else {
-      // check if gIgnoreFocusCount >= 2 because right-clicking on the url bar
-      // causes two blur and two focus events before the context menu is displayed.
-      // we need to eat all those events and not select all, because the user
-      // may want to work with the selection (eg. copy the selection).
-      // a normal click in URLBarMouseDownHandler() primes gIgnoreFocusCount
-      // to 1 so that when it hits this code it will only ignore 1 focus event.
-      gIgnoreFocusCount++;
-      if (gIgnoreFocusCount >= 2) {
-        gIgnoreFocusCount = 0;
-        gIgnoreFocus = false;
-      }
-    }
-}
-
-function URLBarBlurHandler(aEvent)
-{
-  // reset the selection so the next time the urlbar is focused it
-  // doesn't re-select the old selection
-  if (gClickSelectsAll && !gIgnoreFocus)
-    gURLBar.setSelectionRange(0, 0);
+  if (gIgnoreFocus)
+    gIgnoreFocus = false;
+  else if (gClickSelectsAll)
+    gURLBar.select();
 }
 
 function URLBarMouseDownHandler(aEvent)
 {
-  gMouseDownX = -1;
-  if (gURLBar) {
-    if (gClickSelectsAll) {
-      var focusedElement = null;
-      if (document.commandDispatcher.focusedElement)
-        focusedElement = document.commandDispatcher.focusedElement.parentNode.parentNode.parentNode;
-      if (!focusedElement || (focusedElement && focusedElement != gURLBar))
-      {
-        // clicking onto the url bar when it doesn't have focus.
-        // see note in URLBarFocusHandler() about gIgnoreFocusCount.
-        gIgnoreFocusCount = 1;
-        gIgnoreFocus = true;
-        gMouseDownX = aEvent.screenX;
-      }
-      else if (aEvent.button == 2 && focusedElement && focusedElement == gURLBar) {
-        gIgnoreFocusCount = 0;
-        gIgnoreFocus = true;
-      }
-    }
+  if (gURLBar.hasAttribute("focused")) {
+    gIgnoreClick = true;
+  } else {
+    gIgnoreFocus = true;
+    gIgnoreClick = false;
+    gURLBar.setSelectionRange(0, 0);
   }
 }
 
-function URLBarMouseUpHandler(aEvent)
+function URLBarClickHandler(aEvent)
 {
-  if (gMouseDownX > -1 && Math.abs(aEvent.screenX - gMouseDownX) <= 2) {
-    // mouse has moved less than two horizontal pixels between mouse down
-    // and mouse up - call it a click
+  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd)
     gURLBar.select();
-    gMouseDownX = -1;
-  }
-}
-
-function URLBarKeyupHandler(aEvent)
-{
-  if (aEvent.keyCode == aEvent.DOM_VK_TAB ) {
-    ShowAndSelectContentsOfURLBar();
-  }
 }
 
 // This function gets the "windows hooks" service and has it check its setting

@@ -169,9 +169,8 @@ Contributor(s):
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event);"
-                 onblur="URLBarBlurHandler(event);"
                  onmousedown="URLBarMouseDownHandler(event);"
-                 onmouseup="URLBarMouseUpHandler(event);">
+                 onclick="URLBarClickHandler(event);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                    onclick="BookmarksUtils.addBookmarkForBrowser(getBrowser().webNavigation, true);"

@@ -64,8 +64,6 @@
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
                                       onget="return this.inputField.selectionEnd;"/>
      
-      <field name="suppressFocusBlur">false</field>
-
       <method name="setSelectionRange">
         <parameter name="aSelectionStart"/>
         <parameter name="aSelectionEnd"/>
@@ -85,23 +83,19 @@
     
     <handlers>
       <handler event="focus" phase="capturing">
-      <![CDATA[
-        if (!this.hasAttribute('focused')) {
-          this.setAttribute('focused','true');
-          this.suppressFocusBlur = true;
-          if (document.commandDispatcher.focusedElement != this.inputField) 
-            this.inputField.focus();
-          this.suppressFocusBlur = false;
-        }
-      ]]>
+        <![CDATA[
+          if (!this.hasAttribute('focused')) {
+            if (document.commandDispatcher.focusedElement != this.inputField) 
+              this.inputField.focus();
+            this.setAttribute('focused','true');
+          }
+        ]]>
       </handler>
       
       <handler event="blur" phase="capturing">
-      <![CDATA[
-        if (!this.suppressFocusBlur && this.hasAttribute('focused')) {
+        <![CDATA[
           this.removeAttribute('focused');
-        }
-      ]]>
+        ]]>
       </handler>
     </handlers>    
   </binding>
@@ -118,27 +112,16 @@
   <binding id="input-box">
     <content context="_child">
       <children/>
-      <xul:menupopup onpopupshowing="this.parentNode.focus(); this.parentNode.doPopupItemEnabling(this);">
-        <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
-                                 controller.doCommand('cmd_undo');"/>
+      <xul:menupopup onpopupshowing="this.parentNode.firstChild.focus(); this.parentNode.doPopupItemEnabling(this);"
+                     oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));">
+        <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <xul:menuseparator/>
-        <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-                                 controller.doCommand('cmd_cut');"/>
-        <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-                                 controller.doCommand('cmd_copy');"/>
-        <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-                      controller.doCommand('cmd_paste');"/>
-        <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
-                                 controller.doCommand('cmd_delete');"/>
+        <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+        <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+        <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+        <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
         <xul:menuseparator/>
-        <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"
-                      oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
-                                 controller.doCommand('cmd_selectAll');"/>
+        <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
       </xul:menupopup>
     </content>
 
@@ -159,6 +142,16 @@
                   children[i].setAttribute("disabled", "true");               
               }
             }
+          ]]>
+        </body>
+      </method>
+
+      <method name="doCommand">
+        <parameter name="command"/>
+        <body>
+          <![CDATA[
+            var controller = document.commandDispatcher.getControllerForCommand(command);
+            controller.doCommand(command);
           ]]>
         </body>
       </method>
