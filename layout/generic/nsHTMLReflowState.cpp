@@ -215,7 +215,7 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
 
 void
 nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
-                                          const nsStylePosition* aPosition)
+                                          const nsStylePosition*   aPosition)
 {
   nsStyleCoord              coord;
   const nsHTMLReflowState*  pcbrs = nsnull;
@@ -242,49 +242,102 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
     }
   }
 
-  // For relatively positioned elements 'auto' becomes 0
-  if (eStyleUnit_Inherit == aPosition->mOffset.GetLeftUnit()) {
-    computedOffsets.left = pcbrs ? pcbrs->computedOffsets.left : 0;
-  } else if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
-    computedOffsets.left = 0;
-  } else {
-    ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetLeftUnit(),
-                           aPosition->mOffset.GetLeft(coord),
-                           computedOffsets.left);
+  // Compute the 'left' and 'right' values. 'Left' moves the boxes to the right,
+  // and 'right' moves the boxes to the left. The computed values are always:
+  // left=-right
+  PRBool  leftIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit();
+  PRBool  rightIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetRightUnit();
+
+  // If neither 'left' not 'right' are auto, then we're over-constrained and
+  // we ignore one of them
+  if (!leftIsAuto && !rightIsAuto) {
+    const nsStyleDisplay* display;
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    
+    if (NS_STYLE_DIRECTION_LTR == display->mDirection) {
+      rightIsAuto = PR_TRUE;
+    } else {
+      leftIsAuto = PR_TRUE;
+    }
   }
 
-  if (eStyleUnit_Inherit == aPosition->mOffset.GetTopUnit()) {
-    computedOffsets.top = pcbrs ? pcbrs->computedOffsets.top : 0;
-  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
-      ((NS_AUTOHEIGHT == cbrs->computedHeight) &&
-       (eStyleUnit_Percent == aPosition->mOffset.GetTopUnit()))) {
-    computedOffsets.top = 0;
+  if (leftIsAuto) {
+    if (rightIsAuto) {
+      // If both are 'auto' (their initial values), the computed values are 0
+      computedOffsets.left = computedOffsets.right = 0;
+    } else {
+      // 'Right' isn't 'auto' so compute its value
+      if (eStyleUnit_Inherit == aPosition->mOffset.GetRightUnit()) {
+        computedOffsets.right = pcbrs ? pcbrs->computedOffsets.right : 0;
+      } else {
+        ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetRightUnit(),
+                               aPosition->mOffset.GetRight(coord),
+                               computedOffsets.right);
+      }
+      
+      // Computed value for 'left' is minus the value of 'right'
+      computedOffsets.left = -computedOffsets.right;
+    }
+
   } else {
-    ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetTopUnit(),
-                         aPosition->mOffset.GetTop(coord),
-                         computedOffsets.top);
+    NS_ASSERTION(rightIsAuto, "unexpected specified constraint");
+    
+    // 'Left' isn't 'auto' so compute its value
+    if (eStyleUnit_Inherit == aPosition->mOffset.GetLeftUnit()) {
+      computedOffsets.left = pcbrs ? pcbrs->computedOffsets.left : 0;
+    } else {
+      ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetLeftUnit(),
+                             aPosition->mOffset.GetLeft(coord),
+                             computedOffsets.left);
+    }
+
+    // Computed value for 'right' is minus the value of 'left'
+    computedOffsets.right = -computedOffsets.left;
   }
 
-  if (eStyleUnit_Inherit == aPosition->mOffset.GetRightUnit()) {
-    computedOffsets.right = pcbrs ? pcbrs->computedOffsets.right : 0;
-  } else if (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) {
-    computedOffsets.right = 0;
-  } else {
-    ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetRightUnit(),
-                           aPosition->mOffset.GetRight(coord),
-                           computedOffsets.right);
+  // Compute the 'top' and 'bottom' values. The 'top' and 'bottom' properties
+  // move relatively positioned elements up and down. They also must be each 
+  // other's negative
+  PRBool  topIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetTopUnit();
+  PRBool  bottomIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit();
+
+  // If neither is 'auto', 'bottom' is ignored
+  if (!topIsAuto && !bottomIsAuto) {
+    bottomIsAuto = PR_TRUE;
   }
 
-  if (eStyleUnit_Inherit == aPosition->mOffset.GetBottomUnit()) {
-    computedOffsets.bottom = pcbrs ? pcbrs->computedOffsets.bottom : 0;
-  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) ||
-      ((NS_AUTOHEIGHT == cbrs->computedHeight) &&
-      (eStyleUnit_Percent == aPosition->mOffset.GetBottomUnit()))) {
-    computedOffsets.bottom = 0;
+  if (topIsAuto) {
+    if (bottomIsAuto) {
+      // If both are 'auto' (their initial values), the computed values are 0
+      computedOffsets.top = computedOffsets.bottom = 0;
+    } else {
+      // 'Bottom' isn't 'auto' so compute its value
+      if (eStyleUnit_Inherit == aPosition->mOffset.GetBottomUnit()) {
+        computedOffsets.bottom = pcbrs ? pcbrs->computedOffsets.bottom : 0;
+      } else {
+        ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetBottomUnit(),
+                               aPosition->mOffset.GetBottom(coord),
+                               computedOffsets.bottom);
+      }
+      
+      // Computed value for 'top' is minus the value of 'bottom'
+      computedOffsets.top = -computedOffsets.bottom;
+    }
+
   } else {
-    ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetBottomUnit(),
-                         aPosition->mOffset.GetBottom(coord),
-                         computedOffsets.bottom);
+    NS_ASSERTION(bottomIsAuto, "unexpected specified constraint");
+    
+    // 'Top' isn't 'auto' so compute its value
+    if (eStyleUnit_Inherit == aPosition->mOffset.GetTopUnit()) {
+      computedOffsets.top = pcbrs ? pcbrs->computedOffsets.top : 0;
+    } else {
+      ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetTopUnit(),
+                             aPosition->mOffset.GetTop(coord),
+                             computedOffsets.top);
+    }
+
+    // Computed value for 'bottom' is minus the value of 'top'
+    computedOffsets.bottom = -computedOffsets.top;
   }
 }
 
