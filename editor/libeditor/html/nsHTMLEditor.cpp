@@ -1584,18 +1584,26 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   if (mJSEditorLog)
     mJSEditorLog->Indent(aIndent);
 #endif // ENABLE_JS_EDITOR_LOG
+  
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  PRBool cancel= PR_FALSE;
 
   nsAutoEditBatch beginBatching(this);
+  
+  // pre-process
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kIndent);
+  if (aIndent == "outdent")
+    ruleInfo.action = nsHTMLEditRules::kOutdent;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if (cancel || (NS_FAILED(res))) return res;
+  
+  // Do default - insert a blockquote node if selection collapsed
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
-  
-  // Find out if the selection is collapsed:
-  nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res) || !selection) return res;
-
-  nsAutoSelectionReset selectionResetter(selection);
-
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
@@ -1652,7 +1660,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
     }
   }
   
-  return NS_OK;
+  return res;
 }
 
 //TODO: IMPLEMENT ALIGNMENT!
@@ -1669,34 +1677,17 @@ nsHTMLEditor::Align(const nsString& aAlignType)
 
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
+  PRBool cancel= PR_FALSE;
   
   // Find out if the selection is collapsed:
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res) || !selection) return res;
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kAlign);
+  ruleInfo.alignType = &aAlignType;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
 
-  nsAutoSelectionReset selectionResetter(selection);
-
-  PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
-
-  res = GetStartNodeAndOffset(selection, &node, &offset);
-  if (!node) res = NS_ERROR_FAILURE;
-  if (NS_FAILED(res)) return res;
-  
-  nsAutoString leftStr("left");
-  if (aAlignType == leftStr)
-  {
-  
-    if (isCollapsed)
-    {
-    
-    }
-  }
-  
-  return NS_OK;
+  return res;
 }
 
 
@@ -1721,15 +1712,13 @@ nsHTMLEditor::InsertList(const nsString& aListType)
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
   nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeList);
+  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
+  else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if (cancel || (NS_FAILED(res))) return res;
 
   // Find out if the selection is collapsed:
   if (NS_FAILED(res) || !selection) return res;
-
-  // Using nsAutoSelectionReset isn't appropriate here, can cause a crash
-  // http://bugzilla.mozilla.org/show_bug.cgi?id=7801
-  // nsAutoSelectionReset selectionResetter(selection);
 
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
@@ -1778,6 +1767,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
     if (NS_FAILED(res)) return res;
     // put a space in it so layout will draw the list item
+    // XXX - revisit when layout is fixed
     res = selection->Collapse(newItem,0);
     if (NS_FAILED(res)) return res;
     nsAutoString theText(" ");
@@ -1790,7 +1780,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     if (NS_FAILED(res)) return res;
   }
 
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP

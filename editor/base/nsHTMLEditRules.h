@@ -22,6 +22,8 @@
 #include "nsTextEditRules.h"
 #include "nsCOMPtr.h"
 
+class nsISupportsArray;
+
 class nsHTMLEditRules : public nsTextEditRules
 {
 public:
@@ -41,6 +43,13 @@ protected:
     kIterBackward
   };
 
+  enum RulesEndpoint
+  {
+    kStart,
+    kEnd
+  };
+
+
   // nsHTMLEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool         *aCancel,
@@ -51,10 +60,10 @@ protected:
                             PRInt32         aMaxLength);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECollapsedSelectionAction aAction, PRBool *aCancel);
-  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel);
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult WillAlign(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel);
   nsresult WillMakeHeader(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillMakeAddress(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillMakePRE(nsIDOMSelection *aSelection, PRBool *aCancel);
@@ -73,8 +82,20 @@ protected:
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsListItem(nsIDOMNode *aNode);
+  static PRBool IsUnorderedList(nsIDOMNode *aNode);
+  static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsBreak(nsIDOMNode *aNode);
-   
+  static PRBool IsBody(nsIDOMNode *aNode);
+  static PRBool IsBlockquote(nsIDOMNode *aNode);
+
+  static PRBool IsFirstNode(nsIDOMNode *aNode);
+  static PRBool IsLastNode(nsIDOMNode *aNode);
+  static nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
+                                  PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+  
+  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
+  nsresult InsertContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
+
 };
 
 #endif //nsHTMLEditRules_h__

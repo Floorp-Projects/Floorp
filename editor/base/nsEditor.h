@@ -380,6 +380,14 @@ public:
                                  nsIDOMNode *aParent, 
                                  PRInt32    &aOffset);
 
+  /**
+   *  Set aParent to the parent of aChild.
+   *  Set aOffset to the offset of aChild in aParent.  
+   */
+  static nsresult GetNodeLocation(nsIDOMNode *aChild, 
+                                 nsCOMPtr<nsIDOMNode> *aParent, 
+                                 PRInt32    *aOffset);
+
   /** set aIsInline to PR_TRUE if aNode is inline as defined by HTML DTD */
   static nsresult IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline);
 

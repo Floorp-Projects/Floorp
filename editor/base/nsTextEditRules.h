@@ -156,14 +156,21 @@ class nsTextRulesInfo : public nsRulesInfo
   nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState(),maxLength(-1),collapsedAction(nsIEditor::eDeleteRight) {}
   virtual ~nsTextRulesInfo() {}
   
-  // used by kInsertText
+  // kInsertText
   PlaceholderTxn **placeTxn;
   const nsString *inString;
   nsString *outString;
   TypeInState typeInState;
   PRInt32 maxLength;
   
+  // kDeleteSelection
   nsIEditor::ECollapsedSelectionAction collapsedAction;
+  
+  // kMakeList
+  PRBool bOrdered;
+  
+  // kAlign
+  const nsString *alignType;
 };
 
 #endif //nsTextEditRules_h__
