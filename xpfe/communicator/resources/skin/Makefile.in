@@ -35,6 +35,7 @@ CHROME_SKIN = \
 		box.css \
 		button.css \
 		communicator.css \
+		formatting.css \
 		menu.css \
 		menubutton.css \
 		splitter.css \
