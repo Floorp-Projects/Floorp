@@ -38,6 +38,7 @@ CONFIG_CONFIG_MAK=1
 #//
 #//------------------------------------------------------------------------
 
+!if "$(WINOS)" == ""
 !if [$(MOZ_TOOLS)\bin\uname > osuname.inc]
 !endif
 WINOS=\
@@ -45,6 +46,7 @@ WINOS=\
 WINOS=$(WINOS: =)^
 
 !if [del osuname.inc]
+!endif
 !endif
 
 # need this everywhere jsapi.h might be included
