@@ -113,22 +113,25 @@ nsWindow::~nsWindow()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// Create a window.
+//
+// Note: aNativeParent is always non-null if aWidgetParent is non-null.
+// aNativeaParent is set regardless if the parent for the Create() was an 
+// nsIWidget or a Native widget. 
+// aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
+//-------------------------------------------------------------------------
 
-//-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-void nsWindow::Create(nsIWidget *aParent,
+void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-
-  Widget mainWindow, frame;
-  Widget parentWidget;
+  Widget mainWindow = 0, frame = 0;
+  Widget parentWidget = 0;
 
   if (nsnull == mToolkit) {
     if (nsnull != aToolkit) {
@@ -136,8 +139,8 @@ void nsWindow::Create(nsIWidget *aParent,
       mToolkit->AddRef();
     }
     else {
-      if (nsnull != aParent) {
-	mToolkit = (nsToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
+      if (nsnull != aWidgetParent) {
+	mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
       }
       // it's some top level window with no toolkit passed in.
       // Create a default toolkit with the current thread
@@ -190,52 +193,59 @@ void nsWindow::Create(nsIWidget *aParent,
     }
   }
   
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
+  if (0==aNativeParent) {
     parentWidget = (Widget) aInitData ;
   }
+  else
+    parentWidget = (Widget)aNativeParent;
   
-  if (!aParent) {
+  Widget frameParent = 0;
+  if (!aNativeParent) {
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
 					   xmMainWindowWidgetClass,
 					   parentWidget, 
   					   XmNwidth, aRect.width,
   					   XmNheight, aRect.height,
   					   nsnull);
+    frameParent = mainWindow;
   }
-  
+  else
+   frameParent = aNativeParent;
+
   frame = ::XtVaCreateManagedWidget("frame",
 				    xmDrawingAreaWidgetClass,
-				    (aParent) ? parentWidget : mainWindow,
+				    frameParent,
 				    XmNwidth, aRect.width,
 				    XmNheight, aRect.height,
 				    nsnull);
 
   mWidget = frame ;
 
-  if (!aParent) {
+  if (mainWindow) {
     XmMainWindowSetAreas (mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
   }
 
     
-  if (aParent) {
-    aParent->AddChild(this);
+  if (aWidgetParent) {
+    aWidgetParent->AddChild(this);
   }
 
   // Force cursor to default setting
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
 
-  XtAddEventHandler(mWidget, 
+/*  XtAddEventHandler(mWidget, 
 		    ExposureMask, 
 		    PR_FALSE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
+*/
 
   InitCallbacks();
 
 }
+
+
 
 //-------------------------------------------------------------------------
 //
@@ -286,6 +296,22 @@ void nsWindow::InitCallbacks()
 
 //-------------------------------------------------------------------------
 //
+// create with nsIWidget parent
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+    CreateWindow((nsNativeWindow)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+}
+
+//-------------------------------------------------------------------------
+//
 // create with a native parent
 //
 //-------------------------------------------------------------------------
@@ -296,7 +322,7 @@ void nsWindow::Create(nsNativeWindow aParent,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
- NS_ASSERTION(0, "nsWindow Constructor is not implemented\n");
+    CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
 }
 
 
@@ -419,6 +445,7 @@ void nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 void nsWindow::GetBounds(nsRect &aRect)
 {
+  XWindowAttributes attrs ;
   Window w = nsnull;
 
   if (mWidget)
@@ -445,9 +472,8 @@ void nsWindow::GetBounds(nsRect &aRect)
     aRect.y =  0;
     aRect.width =  0;
     aRect.height = 0;
-
- }
   
+}
 }
 
     
@@ -558,7 +584,8 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 
         case NS_NATIVE_WINDOW:
 	  {
-            return (void*)XtWindow(mWidget);
+//            return (void*)XtWindow(mWidget);
+              return (void*)(mWidget);
 	  }
 	break;
         case NS_NATIVE_DISPLAY:
