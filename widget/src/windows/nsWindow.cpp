@@ -2583,6 +2583,12 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     if (!parentWnd) break;
   }
 
+  if (!GetNSWindowPtr(hwnd))
+  {
+    NS_WARNING("Trying to hide window decorations in an embedded context");
+    return NS_ERROR_FAILURE;
+  }
+
   DWORD style, exStyle;
   if (aShouldHide) {
     DWORD tempStyle = nsToolkit::mGetWindowLong(hwnd, GWL_STYLE);
@@ -2590,6 +2596,8 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 
     style = WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
     exStyle = tempExStyle & WS_EX_LAYERED;
+
+    if (tempExStyle & WS_EX_LAYERED) style = 0;
 
     mOldStyle = tempStyle;
     mOldExStyle = tempExStyle;
@@ -7267,10 +7275,10 @@ STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid,
 
 #ifdef MOZ_XUL
 
-typedef WINUSERAPI BOOL WINAPI UpdateLayeredWindowProc (HWND hWnd, HDC hdcDst, POINT *pptDst,
-                                                        SIZE *psize, HDC hdcSrc, POINT *pptSrc,
-                                                        COLORREF crKey, BLENDFUNCTION *pblend,
-                                                        DWORD dwFlags);
+typedef BOOL WINAPI UpdateLayeredWindowProc (HWND hWnd, HDC hdcDst, POINT *pptDst,
+                                             SIZE *psize, HDC hdcSrc, POINT *pptSrc,
+                                             COLORREF crKey, BLENDFUNCTION *pblend,
+                                             DWORD dwFlags);
 
 
 static UpdateLayeredWindowProc* pUpdateLayeredWindow = NULL;
@@ -7431,16 +7439,26 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
     return NS_OK;
   
   HWND hWnd = GetTopLevelHWND(mWnd);
-  LONG style;
-  LONG exStyle = nsToolkit::mGetWindowLong(hWnd, GWL_EXSTYLE);
+
+  if (!GetNSWindowPtr(hWnd))
+  {
+    NS_WARNING("Trying to use transparent chrome in an embedded context");
+    return NS_ERROR_FAILURE;
+  }
+
+  LONG style, exStyle;
+
   if (aTranslucent)
   {
-    style = nsToolkit::mGetWindowLong(hWnd, GWL_STYLE) & ~WS_CAPTION;
+    style = nsToolkit::mGetWindowLong(hWnd, GWL_STYLE) &
+            ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+    exStyle = nsToolkit::mGetWindowLong(hWnd, GWL_EXSTYLE) &
+              ~(WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
     exStyle |= WS_EX_LAYERED;
   } else
   {
     style = WindowStyle();
-    exStyle &= ~WS_EX_LAYERED;
+    exStyle = WindowExStyle();
   }
   nsToolkit::mSetWindowLong(hWnd, GWL_STYLE, style);
   nsToolkit::mSetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
