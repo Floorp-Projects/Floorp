@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.16 2001/04/26 21:53:11 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.17 2001/05/08 23:12:34 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -213,6 +213,7 @@ ssl_DupSocket(sslSocket *os)
 	ss->fdx                = os->fdx;
 	ss->v2CompatibleHello  = os->v2CompatibleHello;
 	ss->detectRollBack     = os->detectRollBack;
+
 	ss->peerID             = !os->peerID ? NULL : PORT_Strdup(os->peerID);
 	ss->url                = !os->url    ? NULL : PORT_Strdup(os->url);
 
@@ -398,6 +399,20 @@ ssl_FreeSocket(sslSocket *ss)
 }
 
 /************************************************************************/
+SECStatus 
+ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled)
+{
+    PRFileDesc *       osfd = ss->fd->lower;
+    int 	       rv;
+    PRSocketOptionData opt;
+
+    opt.option         = PR_SockOpt_NoDelay;
+    opt.value.no_delay = (PRBool)!enabled;
+
+    rv = osfd->methods->setsocketoption(osfd, &opt);
+
+    return rv;
+}
 
 static void
 ssl_ChooseOps(sslSocket *ss)
