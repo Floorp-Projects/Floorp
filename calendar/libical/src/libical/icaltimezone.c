@@ -3,7 +3,7 @@
  FILE: icaltimezone.c
  CREATOR: Damon Chaplin 15 March 2001
 
- $Id: icaltimezone.c,v 1.34 2002/11/04 00:01:21 acampi Exp $
+ $Id: icaltimezone.c,v 1.1.1.1 2005/01/05 20:09:17 mvl%exedo.nl Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -42,6 +42,14 @@
 #ifdef WIN32
 #define snprintf _snprintf
 #define PACKAGE_DATA_DIR "/Projects/libical"
+#else
+#ifdef XP_MAC
+#define PACKAGE_DATA_DIR "/Projects/libical"
+#else
+#ifndef PACKAGE_DATA_DIR
+#define PACKAGE_DATA_DIR "/usr/share/libical"
+#endif
+#endif
 #endif
 
 /** This is the toplevel directory where the timezone data is installed in. */

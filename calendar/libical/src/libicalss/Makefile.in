@@ -1,656 +1,104 @@
-# Makefile.in generated automatically by automake 1.5 from Makefile.am.
-
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
-# Free Software Foundation, Inc.
-# This Makefile.in is free software; the Free Software Foundation
-# gives unlimited permission to copy and/or distribute it,
-# with or without modifications, as long as this notice is preserved.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE.
-
-@SET_MAKE@
-
-#======================================================================
-#  FILE: Makefile.am
-#  CREATOR: eric 
-#  
-#  $Id: Makefile.in,v 1.5 2003/04/28 17:20:52 acampi Exp $
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
 #
-# (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of either: 
+# The Original Code is libical code.
 #
-#    The LGPL as published by the Free Software Foundation, version
-#    2.1, available at: http://www.fsf.org/copyleft/lesser.html
+# The Initial Developer of the Original Code is
+#  Eric Busboom
+# Portions created by the Initial Developer are Copyright (C) 2000
+# the Initial Developer. All Rights Reserved.
 #
-#  Or:
+# Contributor(s):
+#   Michiel van Leeuwen <mvl@exedo.nl>
 #
-#    The Mozilla Public License Version 1.0. You may obtain a copy of
-#    the License at http://www.mozilla.org/MPL/
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
 #
-#  
-#
-#======================================================================
+# ***** END LICENSE BLOCK *****
 
-SHELL = @SHELL@
+DEPTH= ../../../..
 
-srcdir = @srcdir@
-top_srcdir = @top_srcdir@
-VPATH = @srcdir@
-prefix = @prefix@
-exec_prefix = @exec_prefix@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-bindir = @bindir@
-sbindir = @sbindir@
-libexecdir = @libexecdir@
-datadir = @datadir@
-sysconfdir = @sysconfdir@
-sharedstatedir = @sharedstatedir@
-localstatedir = @localstatedir@
-libdir = @libdir@
-infodir = @infodir@
-mandir = @mandir@
-includedir = @includedir@
-oldincludedir = /usr/include
-pkgdatadir = $(datadir)/@PACKAGE@
-pkglibdir = $(libdir)/@PACKAGE@
-pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ../..
+include $(DEPTH)/config/autoconf.mk
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOMAKE = @AUTOMAKE@
-AUTOHEADER = @AUTOHEADER@
+MODULE           = calicalss
+LIBRARY_NAME     = calicalss_s
+MODULE_NAME      = calIcalssModule
+FORCE_STATIC_LIB = 1
+GRE_MODULE       = 1
 
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_HEADER = $(INSTALL_DATA)
-transform = @program_transform_name@
-NORMAL_INSTALL = :
-PRE_INSTALL = :
-POST_INSTALL = :
-NORMAL_UNINSTALL = :
-PRE_UNINSTALL = :
-POST_UNINSTALL = :
-build_alias = @build_alias@
-build_triplet = @build@
-host_alias = @host_alias@
-host_triplet = @host@
-target_alias = @target_alias@
-target_triplet = @target@
-AMTAR = @AMTAR@
-AR = @AR@
-AS = @AS@
-AWK = @AWK@
-BDB_DIR = @BDB_DIR@
-BDB_DIR_INCLUDE = @BDB_DIR_INCLUDE@
-BDB_DIR_LIB = @BDB_DIR_LIB@
-BDB_LIB = @BDB_LIB@
-BDB_VERSION = @BDB_VERSION@
-CC = @CC@
-CXX = @CXX@
-DEPDIR = @DEPDIR@
-DLLTOOL = @DLLTOOL@
-EXEEXT = @EXEEXT@
-INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-JAR = @JAR@
-JAVA = @JAVA@
-JAVAC = @JAVAC@
-JAVAH = @JAVAH@
-JAVA_PLATFORM = @JAVA_PLATFORM@
-LEX = @LEX@
-LIBTOOL = @LIBTOOL@
-LN_S = @LN_S@
-MAINT = @MAINT@
-OBJDUMP = @OBJDUMP@
-OBJEXT = @OBJEXT@
-PACKAGE = @PACKAGE@
-PERL = @PERL@
-PKG_CONFIG = @PKG_CONFIG@
-PTHREAD_LIBS = @PTHREAD_LIBS@
-PY_CFLAGS = @PY_CFLAGS@
-PY_EXTRA_LIBS = @PY_EXTRA_LIBS@
-PY_LIBS = @PY_LIBS@
-PY_LIB_LOC = @PY_LIB_LOC@
-RANLIB = @RANLIB@
-RRCAP_CFLAGS = @RRCAP_CFLAGS@
-RRCAP_LIBS = @RRCAP_LIBS@
-VERSION = @VERSION@
-YACC = @YACC@
-am__include = @am__include@
-am__quote = @am__quote@
-install_sh = @install_sh@
-python_val = @python_val@
+REQUIRES =			\
+	calical 		\
+	$(NULL)
 
-AM_YFLAGS = -d -v -p ss
-AM_LFLAGS = -Pss 
-LEX_OUTPUT_ROOT = lex.ss
-
-@WITH_BDB4_TRUE@BDB_INCLUDE = -I@BDB_DIR_INCLUDE@ -DWITH_BDB4
-@WITH_BDB4_FALSE@BDB_INCLUDE = 
-@WITH_BDB4_TRUE@BDB_SOURCEFILES = icalbdbset.c icalbdbset.h icalbdbsetimpl.h
-@WITH_BDB4_FALSE@BDB_SOURCEFILES = 
-@WITH_BDB4_TRUE@BDB_HEADERFILES = $(srcdir)/icalbdbset.h
-@WITH_BDB4_FALSE@BDB_HEADERFILES = 
-@WITH_BDB4_TRUE@libicalssinclude_BDBHEADERS = icalbdbset.h icalbdbsetimpl.h
-@WITH_BDB4_TRUE@BDB_LIBFILES = @BDB_DIR_LIB@/@BDB_LIB@
-
-@WITH_CXX_TRUE@cxx_lib = libicalss_cxx.la
-@WITH_CXX_FALSE@cxx_lib = 
-@WITH_CXX_TRUE@cxx_headers = icalspanlist_cxx.h
-@WITH_CXX_FALSE@cxx_headers = 
-
-lib_LTLIBRARIES = libicalss.la $(cxx_lib)
-
-INCLUDES = \
-	-I$(top_srcdir)/src	\
-	-I$(top_builddir)/src	\
-	-I$(top_srcdir)/src/libical	\
-	-I$(top_builddir)/libical \
-	$(BDB_INCLUDE)
-
-
-libicalss_la_LDFLAGS = -version-info 0:0:0
-libicalss_la_LIBADD = $(BDB_LIBFILES)
-
-@DEV_TRUE@libicalss_la_DEVSOURCES = icalsslexer.l icalssyacc.y
-@DEV_FALSE@libicalss_la_DEVSOURCES = icalsslexer.c icalssyacc.c
-
-libicalss_la_SOURCES = \
+CSRCS =				\
 	icalcalendar.c		\
-	icalcalendar.h		\
 	icalclassify.c		\
-	icalclassify.h		\
 	icalcluster.c		\
-	icalcluster.h		\
-	icalclusterimpl.h	\
 	icalgauge.c		\
-	icalgauge.h		\
-	icalgaugeimpl.h		\
 	icaldirset.c		\
-	icaldirset.h		\
-	icaldirsetimpl.h	\
 	icalfileset.c		\
-	icalfileset.h		\
-	icalfilesetimpl.h	\
 	icalset.c		\
-	icalset.h		\
-	icalssyacc.h		\
 	icalspanlist.c		\
-	icalspanlist.h		\
 	icalmessage.c		\
-	icalmessage.h		\
-	$(BDB_SOURCEFILES)	\
-	$(libicalss_la_DEVSOURCES)
+	icalsslexer.c           \
+        icalssyacc.c            \
+        $(NULL)
 
+include $(topsrcdir)/config/rules.mk
 
-libicalssincludedir = $(includedir)
+DESIGNDATA = $(srcdir)/../../design-data
+ICALSCRIPTS = $(srcdir)/../../scripts
 
-COMBINEDHEADERS = \
+CFLAGS += -DHAVE_CONFIG_H -I$(srcdir)/../.. -I$(srcdir)/../libical
+EXPORTS = icalss.h
+
+# ORDERING OF HEADERS IS SIGNIFICANT. Don't change this ordering. It
+# is required to make the combined header ical.h properly
+COMBINEDHEADERS =                        \
         $(srcdir)/icalgauge.h \
         $(srcdir)/icalset.h \
         $(srcdir)/icalcluster.h \
         $(srcdir)/icalfileset.h \
         $(srcdir)/icaldirset.h \
-	$(BDB_HEADERFILES) \
         $(srcdir)/icalcalendar.h  \
         $(srcdir)/icalclassify.h \
-	$(srcdir)/icalspanlist.h	\
+	$(srcdir)/icalspanlist.h \
 	$(srcdir)/icalmessage.h
 
-
-@WITH_CXX_TRUE@libicalss_cxx_la_SOURCES = \
-@WITH_CXX_TRUE@	$(libicalss_la_SOURCES)	\
-@WITH_CXX_TRUE@	icalspanlist_cxx.h	\
-@WITH_CXX_TRUE@	icalspanlist_cxx.cpp
-
-
-libicalssinclude_HEADERS = icalss.h  icalcalendar.h icalclassify.h icalcluster.h icaldirset.h icaldirsetimpl.h icalfileset.h icalfilesetimpl.h icalgauge.h icalgaugeimpl.h icalmessage.h icalset.h icalspanlist.h icalssyacc.h $(libicalssinclude_BDBHEADERS) $(cxx_headers)
-
-CONFIG_CLEAN_FILES = y.output
-subdir = src/libicalss
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = $(top_builddir)/config.h
-LTLIBRARIES = $(lib_LTLIBRARIES)
-
-@WITH_BDB4_TRUE@libicalss_la_DEPENDENCIES =
-@WITH_BDB4_FALSE@libicalss_la_DEPENDENCIES =
-@DEV_FALSE@@WITH_BDB4_TRUE@am_libicalss_la_OBJECTS = icalcalendar.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalclassify.lo icalcluster.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalgauge.lo icaldirset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalfileset.lo icalset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalspanlist.lo icalmessage.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalbdbset.lo icalsslexer.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@	icalssyacc.lo
-@DEV_FALSE@@WITH_BDB4_FALSE@am_libicalss_la_OBJECTS = icalcalendar.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@	icalclassify.lo icalcluster.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@	icalgauge.lo icaldirset.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@	icalfileset.lo icalset.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@	icalspanlist.lo icalmessage.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@	icalsslexer.lo icalssyacc.lo
-@DEV_TRUE@@WITH_BDB4_TRUE@am_libicalss_la_OBJECTS = icalcalendar.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalclassify.lo icalcluster.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalgauge.lo icaldirset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalfileset.lo icalset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalspanlist.lo icalmessage.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalbdbset.lo icalsslexer.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@	icalssyacc.lo
-@DEV_TRUE@@WITH_BDB4_FALSE@am_libicalss_la_OBJECTS = icalcalendar.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@	icalclassify.lo icalcluster.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@	icalgauge.lo icaldirset.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@	icalfileset.lo icalset.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@	icalspanlist.lo icalmessage.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@	icalsslexer.lo icalssyacc.lo
-libicalss_la_OBJECTS = $(am_libicalss_la_OBJECTS)
-libicalss_cxx_la_LDFLAGS =
-libicalss_cxx_la_LIBADD =
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@am_libicalss_cxx_la_OBJECTS = \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalcalendar.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalclassify.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalcluster.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalgauge.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icaldirset.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalfileset.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalset.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalspanlist.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalmessage.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalsslexer.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalssyacc.lo \
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalspanlist_cxx.lo
-@DEV_FALSE@@WITH_BDB4_FALSE@@WITH_CXX_FALSE@am_libicalss_cxx_la_OBJECTS =
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@am_libicalss_cxx_la_OBJECTS = \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalcalendar.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalclassify.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalcluster.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalgauge.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icaldirset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalfileset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalspanlist.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalmessage.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalbdbset.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalsslexer.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalssyacc.lo \
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalspanlist_cxx.lo
-@DEV_FALSE@@WITH_BDB4_TRUE@@WITH_CXX_FALSE@am_libicalss_cxx_la_OBJECTS =
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@am_libicalss_cxx_la_OBJECTS = \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalcalendar.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalclassify.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalcluster.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalgauge.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icaldirset.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalfileset.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalset.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalspanlist.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalmessage.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalsslexer.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalssyacc.lo \
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_TRUE@	icalspanlist_cxx.lo
-@DEV_TRUE@@WITH_BDB4_FALSE@@WITH_CXX_FALSE@am_libicalss_cxx_la_OBJECTS =
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@am_libicalss_cxx_la_OBJECTS = \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalcalendar.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalclassify.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalcluster.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalgauge.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icaldirset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalfileset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalspanlist.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalmessage.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalbdbset.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalsslexer.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalssyacc.lo \
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_TRUE@	icalspanlist_cxx.lo
-@DEV_TRUE@@WITH_BDB4_TRUE@@WITH_CXX_FALSE@am_libicalss_cxx_la_OBJECTS =
-libicalss_cxx_la_OBJECTS = $(am_libicalss_cxx_la_OBJECTS)
-
-DEFS = @DEFS@
-DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
-CPPFLAGS = @CPPFLAGS@
-LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
-depcomp = $(SHELL) $(top_srcdir)/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/icalbdbset.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalcalendar.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalclassify.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalcluster.Plo $(DEPDIR)/icaldirset.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalfileset.Plo $(DEPDIR)/icalgauge.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalmessage.Plo $(DEPDIR)/icalset.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalspanlist.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalspanlist_cxx.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/icalsslexer.Plo $(DEPDIR)/icalssyacc.Plo
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
-	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-CFLAGS = @CFLAGS@
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-CXXFLAGS = @CXXFLAGS@
-LEXCOMPILE = $(LEX) $(LFLAGS) $(AM_LFLAGS)
-LTLEXCOMPILE = $(LIBTOOL) --mode=compile $(LEX) $(LFLAGS) $(AM_LFLAGS)
-YLWRAP = $(top_srcdir)/ylwrap
-YACCCOMPILE = $(YACC) $(YFLAGS) $(AM_YFLAGS)
-LTYACCCOMPILE = $(LIBTOOL) --mode=compile $(YACC) $(YFLAGS) $(AM_YFLAGS)
-DIST_SOURCES = $(libicalss_la_SOURCES) $(libicalss_cxx_la_SOURCES)
-HEADERS = $(libicalssinclude_HEADERS)
-
-DIST_COMMON = $(libicalssinclude_HEADERS) Makefile.am Makefile.in \
-	icalsslexer.c icalssyacc.c icalssyacc.h
-SOURCES = $(libicalss_la_SOURCES) $(libicalss_cxx_la_SOURCES)
-
-all: all-am
-
-.SUFFIXES:
-.SUFFIXES: .c .cpp .l .lo .o .obj .y
-
-mostlyclean-libtool:
-	-rm -f *.lo
-
-clean-libtool:
-	-rm -rf .libs _libs
-
-distclean-libtool:
-	-rm -f libtool
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
-	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/libicalss/Makefile
-Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
-	cd $(top_builddir) && \
-	  CONFIG_HEADERS= CONFIG_LINKS= \
-	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libdir)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    echo " $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p"; \
-	    $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p; \
-	  else :; fi; \
-	done
-
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
-	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
-	done
-
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-icalssyacc.h: icalssyacc.c
-icalssyacc.h: icalssyacc.c
-libicalss.la: $(libicalss_la_OBJECTS) $(libicalss_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libicalss_la_LDFLAGS) $(libicalss_la_OBJECTS) $(libicalss_la_LIBADD) $(LIBS)
-icalssyacc.h: icalssyacc.c
-icalssyacc.h: icalssyacc.c
-libicalss_cxx.la: $(libicalss_cxx_la_OBJECTS) $(libicalss_cxx_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(libdir) $(libicalss_cxx_la_LDFLAGS) $(libicalss_cxx_la_OBJECTS) $(libicalss_cxx_la_LIBADD) $(LIBS)
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT) core *.core
-
-distclean-compile:
-	-rm -f *.tab.c
-
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalbdbset.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalcalendar.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalclassify.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalcluster.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icaldirset.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalfileset.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalgauge.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalmessage.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalset.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalspanlist.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalspanlist_cxx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalsslexer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/icalssyacc.Plo@am__quote@
-
-distclean-depend:
-	-rm -rf $(DEPDIR)
-
-.c.o:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
-
-.c.obj:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c `cygpath -w $<`
-
-.c.lo:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-CCDEPMODE = @CCDEPMODE@
-
-.cpp.o:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(CXXCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
-.cpp.obj:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(CXXCOMPILE) -c -o $@ `cygpath -w $<`
-
-.cpp.lo:
-@AMDEP_TRUE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(LTCXXCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-CXXDEPMODE = @CXXDEPMODE@
-LEXLIB = @LEXLIB@
-
-.l.c:
-	$(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)
-
-.y.c:
-	$(SHELL) $(YLWRAP) $< y.tab.c $@ y.tab.h $*.h -- $(YACCCOMPILE)
-uninstall-info-am:
-install-libicalssincludeHEADERS: $(libicalssinclude_HEADERS)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libicalssincludedir)
-	@list='$(libicalssinclude_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libicalssincludedir)/$$f"; \
-	  $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libicalssincludedir)/$$f; \
-	done
-
-uninstall-libicalssincludeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libicalssinclude_HEADERS)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(libicalssincludedir)/$$f"; \
-	  rm -f $(DESTDIR)$(libicalssincludedir)/$$f; \
-	done
-
-tags: TAGS
-
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
-	       END { for (i in files) print i; }'`; \
-	mkid -fID $$unique $(LISP)
-
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
-	tags=; \
-	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
-	       END { for (i in files) print i; }'`; \
-	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
-
-GTAGS:
-	here=`CDPATH=: && cd $(top_builddir) && pwd` \
-	  && cd $(top_srcdir) \
-	  && gtags -i $(GTAGS_ARGS) $$here
-
-distclean-tags:
-	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
-
-DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-
-top_distdir = ../..
-distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
-
-distdir: $(DISTFILES)
-	@for file in $(DISTFILES); do \
-	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
-	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
-	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
-	    $(mkinstalldirs) "$(distdir)/$$dir"; \
-	  fi; \
-	  if test -d $$d/$$file; then \
-	    cp -pR $$d/$$file $(distdir) \
-	    || exit 1; \
-	  else \
-	    test -f $(distdir)/$$file \
-	    || cp -p $$d/$$file $(distdir)/$$file \
-	    || exit 1; \
-	  fi; \
-	done
-check-am: all-am
-check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
-
-installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(libicalssincludedir)
-
-install: install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
-
-install-am: all-am
-	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
-
-installcheck: installcheck-am
-install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
-	  `test -z '$(STRIP)' || \
-	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
-mostlyclean-generic:
-
-clean-generic:
-
-distclean-generic:
-	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
-
-maintainer-clean-generic:
-	@echo "This command is intended for maintainers to use"
-	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "icalssyacc.hicalssyacc.hicalssyacc.hicalssyacc.h" || rm -f icalssyacc.h icalssyacc.h icalssyacc.h icalssyacc.h
-clean: clean-am
-
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
-
-distclean: distclean-am
-
-distclean-am: clean-am distclean-compile distclean-depend \
-	distclean-generic distclean-libtool distclean-tags
-
-dvi: dvi-am
-
-dvi-am:
-
-info: info-am
-
-info-am:
-
-install-data-am: install-libicalssincludeHEADERS
-
-install-exec-am: install-libLTLIBRARIES
-
-install-info: install-info-am
-
-install-man:
-
-installcheck-am:
-
-maintainer-clean: maintainer-clean-am
-
-maintainer-clean-am: distclean-am maintainer-clean-generic
-
-mostlyclean: mostlyclean-am
-
-mostlyclean-am: mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool
-
-uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-libicalssincludeHEADERS
-
-.PHONY: GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool distclean distclean-compile \
-	distclean-depend distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am info info-am install \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libLTLIBRARIES install-libicalssincludeHEADERS \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool tags uninstall uninstall-am \
-	uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-libicalssincludeHEADERS
-
-
-all: icalss.h
-
-# just to get it built
-$(srcdir)/icalgauge.c: icalssyacc.h
-$(srcdir)/icalsslexer.c: icalssyacc.h 
-
-icalss.h: $(COMBINEDHEADERS)
-	echo '#ifdef __cplusplus'         >  icalss.h
-	echo 'extern "C" {'               >> icalss.h
-	echo '#endif'                     >> icalss.h
-	echo '/*'                         >> icalss.h
-	echo ' $$''Id''$$'                >> icalss.h
-	echo '*/'                         >> icalss.h
+rebuild:
+	echo '#ifdef __cplusplus'         >  $(srcdir)/icalss.h
+	echo 'extern "C" {'               >> $(srcdir)/icalss.h
+	echo '#endif'                     >> $(srcdir)/icalss.h
+	echo '/*'                         >> $(srcdir)/icalss.h
+	echo ' $$''Id''$$'                >> $(srcdir)/icalss.h
+	echo '*/'                         >> $(srcdir)/icalss.h
 	cat $(COMBINEDHEADERS)				\
 	| egrep -v "#include.*\"ical"			\
 	| egrep -v "#include.*\"pvl\.h\""		\
-	| egrep -v '\$$(Id|Locker): .+\$$'>> icalss.h
-	echo '#ifdef __cplusplus'         >> icalss.h
-	echo '};'                         >> icalss.h
-	echo '#endif'                     >> icalss.h
-
-# c++ needs ical.h auto-generated.
-@WITH_CXX_TRUE@icalspanlist_cxx.lo: icalss.h
-# Tell versions [3.59,3.63) of GNU make to not export all variables.
-# Otherwise a system limit (for SysV at least) may be exceeded.
-.NOEXPORT:
+	| egrep -v '\$$(Id|Locker): .+\$$'>> $(srcdir)/icalss.h
+	echo '#ifdef __cplusplus'         >> $(srcdir)/icalss.h
+	echo '};'                         >> $(srcdir)/icalss.h
+	echo '#endif'                     >> $(srcdir)/icalss.h
