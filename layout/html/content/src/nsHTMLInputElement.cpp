@@ -666,9 +666,15 @@ nsHTMLInputElement::Click()
         rv = shell->GetPresContext(getter_AddRefs(context));
         if (NS_SUCCEEDED(rv) && context) {
 	  nsEventStatus status = nsEventStatus_eIgnore;
-	  nsGUIEvent event;
+	  nsMouseEvent event;
 	  event.eventStructType = NS_GUI_EVENT;
 	  event.message = NS_MOUSE_LEFT_CLICK;
+    event.isShift = false;
+    event.isControl = false;
+    event.isAlt = false;
+    event.isMeta = false;
+    event.clickCount = 0;
+    event.widget = nsnull;
           rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
 	NS_RELEASE(shell);
