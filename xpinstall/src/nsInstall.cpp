@@ -126,7 +126,6 @@ nsInstallInfo::~nsInstallInfo()
   MOZ_COUNT_DTOR(nsInstallInfo);
 }
 
-
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
   
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
@@ -1986,23 +1985,19 @@ nsInstall::FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, n
 }
 
 PRInt32
-nsInstall::FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt32* aReturn)
+nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32* aReturn)
 {
 
   *aReturn = nsInstall::SUCCESS;
 
 #ifdef XP_MAC
-  //nsFileSpec nsfsSource(aSourcePath, PR_FALSE);
-  //nsFileSpec nsfsAlias(aAliasPath, PR_TRUE);
-  nsCOMPtr<nsILocalFile> nsfsSource;
-  nsCOMPtr<nsILocalFile> nsfsAlias;
-  
-  nsAutoCString tempSource(aSourcePath);
-  nsAutoCString tempAlias(aAliasPath);
-  NS_NewLocalFile(tempSource, getter_AddRefs(nsfsSource));
-  NS_NewLocalFile(tempAlias, getter_AddRefs(nsfsAlias));
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, nsfsSource, nsfsAlias, aReturn);
-
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, aSourceFile, aAliasFile, aReturn);
+  if (!ifop)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+      
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
@@ -2450,7 +2445,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     
     nsCOMPtr<nsILocalFileMac> tempExtractHereSpec;
     tempExtractHereSpec = do_QueryInterface(extractHereSpec, &rv);
-    tempExtractHereSpec->GetFSSpec(&extractedSpec);
+    tempExtractHereSpec->GetResolvedFSSpec(&extractedSpec);
 	
 	if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
 	{
