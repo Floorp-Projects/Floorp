@@ -87,28 +87,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
     mech = JSS_getPK11MechFromAlg(env, alg);
     PR_ASSERT(mech != CKM_INVALID_MECHANISM);
 
-    /*
-     * This translation code can come out once we start using a version
-     * of NSS that has a fix for bug 162761.
-     */
-    switch(mech) {
-    case CKM_DES_KEY_GEN:
-        mech = CKM_DES_ECB;
-        break;
-    case CKM_DES3_KEY_GEN:
-        mech = CKM_DES3_ECB;
-        break;
-    case CKM_RC4_KEY_GEN:
-        mech = CKM_RC4;
-        break;
-    case CKM_AES_KEY_GEN:
-        mech = CKM_AES_CBC;
-        break;
-    default:
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unsupported keygen algorithm");
-        goto finish;
-    }
-
     /* generate the key */
     skey = PK11_KeyGen(slot, mech, NULL /*param*/,
                     strength/8 /*in bytes*/, NULL /*wincx*/ );
