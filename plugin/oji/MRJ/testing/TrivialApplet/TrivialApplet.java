@@ -32,13 +32,17 @@ class AboutBox extends Frame {
 		// Annoying use of flow layout managers.
 		Panel labelPanel = new Panel();
 		Panel buttonPanel = new Panel();
+		Panel fieldPanel = new Panel();
 
 		labelPanel.add(new Label("This applet's about box..."));
 		buttonPanel.add(okButton);
 
+		fieldPanel.add(new TextField(20));
+		fieldPanel.add(new TextField(20));
+
 		add(labelPanel, "North");
 		add(buttonPanel, "Center");
-		add(new TextField(), "South");
+		add(fieldPanel, "South");
 		
 		// test menu bar stuff.
 		MenuBar menuBar = new MenuBar();
@@ -106,7 +110,10 @@ public class TrivialApplet extends Applet {
 						URL location = new URL(urlField.getText());
 						System.out.println("going to URL: " + location);
 						JSObject window = JSObject.getWindow(TrivialApplet.this);
-						window.eval("alert('going to location " + location + "');");
+						if (window != null) {
+							//window.eval("alert('going to location " + location + "');");
+							window.eval("println(" + location + ")");
+						}
 						getAppletContext().showDocument(location, "_new");
 					} catch (MalformedURLException mfue) {
 					}
