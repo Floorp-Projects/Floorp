@@ -2872,6 +2872,39 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
   return mCurrPen;
 }
 
+//========================================================
+
+NS_IMETHODIMP 
+nsRenderingContextWin::SetPenMode(nsPenMode aPenMode)
+{
+
+  switch(aPenMode){
+  case nsPenMode_kNone:
+    ::SetROP2(mDC,R2_COPYPEN);
+    mPenMode = nsPenMode_kNone;
+    break;
+  case nsPenMode_kInvert:
+    ::SetROP2(mDC,R2_NOT);
+    mPenMode = nsPenMode_kInvert;
+    break;
+  }
+
+  return NS_OK;
+}
+
+//========================================================
+
+NS_IMETHODIMP 
+nsRenderingContextWin::GetPenMode(nsPenMode &aPenMode)
+{
+  // can use the ::GetROP2(mDC); for debugging, see if windows is in the correct mode
+  aPenMode = mPenMode;
+
+  return NS_OK;
+}
+
+//========================================================
+
 void nsRenderingContextWin :: PushClipState(void)
 {
   if (!(mStates->mFlags & FLAG_CLIP_CHANGED))

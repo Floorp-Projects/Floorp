@@ -70,6 +70,13 @@ typedef enum
   nsLineStyle_kDotted = 3
 } nsLineStyle;
 
+typedef enum
+{
+  nsPenMode_kNone   = 0,
+  nsPenMode_kInvert = 1,
+} nsPenMode;
+
+
 // IID for the nsIRenderingContext interface
 #define NS_IRENDERING_CONTEXT_IID \
  { 0xa6cf9068, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -206,6 +213,21 @@ public:
    * @return NS_OK if the line style is correctly retrieved
    */
   NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle) = 0;
+
+  /**
+   * Gets the Pen Mode for the RenderingContext
+   * @param aPenMode The Pen Mode to be retrieved
+   * @return NS_OK if the Pen Mode is correctly retrieved
+   */
+  NS_IMETHOD GetPenMode(nsPenMode &aPenMode) =0;
+
+  /**
+   * Sets the Pen Mode for the RenderingContext 
+   * @param aPenMode The Pen Mode
+   * @return NS_OK if the Pen Mode is correctly set
+   */
+  NS_IMETHOD SetPenMode(nsPenMode aPenMode) =0;
+
 
   /**
    * Sets the clipping for the RenderingContext to the passed in region

@@ -1835,8 +1835,17 @@ nscoord width;
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
   nscolor outlineColor;
+  PRBool  canDraw,modeChanged=PR_FALSE;
+ 
+  // see if the outline color is 'invert' or can invert.
+  if (aOutlineStyle.GetOutlineInvert() && NS_SUCCEEDED(aRenderingContext.SetPenMode(nsPenMode_kInvert)) ) {
+    canDraw = PR_TRUE;
+    modeChanged=PR_TRUE;
+  } else {
+    canDraw = aOutlineStyle.GetOutlineColor(outlineColor);
+  }
 
-  if (aOutlineStyle.GetOutlineColor(outlineColor)) {
+  if (PR_TRUE == canDraw) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
              outlineStyle,
              outlineColor,
@@ -1860,6 +1869,9 @@ nscoord width;
              outlineColor,
              bgColor->mBackgroundColor,outside, inside,aSkipSides,
              twipsPerPixel, aGap);
+    if(PR_TRUE == modeChanged ) {
+      aRenderingContext.SetPenMode(nsPenMode_kNone);
+    }  
   }
   // Restore clipping
   aRenderingContext.PopState(clipState);

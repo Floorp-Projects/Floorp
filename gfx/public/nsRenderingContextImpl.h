@@ -52,6 +52,22 @@ public:
 
 
 // CLASS METHODS
+
+  /**
+   * Gets the Pen Mode for the RenderingContext
+   * @param aPenMode The Pen Mode to be retrieved
+   * @return NS_OK if the Pen Mode is correctly retrieved
+   */
+  NS_IMETHOD GetPenMode(nsPenMode &aPenMode) { return NS_ERROR_FAILURE;}
+
+  /**
+   * Sets the Pen Mode for the RenderingContext 
+   * @param aPenMode The Pen Mode
+   * @return NS_OK if the Pen Mode is correctly set
+   */
+  NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
+
+
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
    *	@update 03/29/00 dwc
@@ -126,6 +142,9 @@ protected:
   void cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts);
 
 public:
+
+protected:
+  nsPenMode   mPenMode;
 
 };
 
