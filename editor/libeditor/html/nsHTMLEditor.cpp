@@ -7276,7 +7276,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 
     nsCOMPtr<nsIAtom> atom = GetTag(currentNode);
 
-    if (tagAtom==atom)
+    if (tagAtom==atom.get())
     {
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(currentNode);
       if (!element) return NS_ERROR_NULL_POINTER;
