@@ -304,19 +304,55 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
 
       // Now create the content object and frame based on the 'content' property
       // XXX For the time being just pretend it's text
-      NS_NewTextNode(&textContent);
-      textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-      domData->SetData("GENERATED");
-      NS_RELEASE(domData);
+
+      // XXX this needs to create a wrapper frame, then a collection of text frames to contain the
+      // generated content nodes.
+      // for now, create a single text frame
+      const nsStyleContent* styleContent;
+      styleContent = (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
+      PRUint32  contentCount = styleContent->ContentCount();
+
+      if (contentCount) {
+        nsStyleContentType  type;
+        nsAutoString  contentString;
+        styleContent->GetContentAt(0, type, contentString);
+
+        switch (type) {
+          case eStyleContentType_String:
+            break;
+          case eStyleContentType_Attr:
+            {  // XXX for now, prefetch the attr value, this needs to be a special content node
+              nsIAtom* attrName = NS_NewAtom(contentString);
+              aContent->GetAttribute(kNameSpaceID_None, attrName, contentString);  // XXX need attr namespace from style
+              NS_RELEASE(attrName);
+            }
+            break;
+
+          case eStyleContentType_URL:   // XXX need to handle these differently than simple text
+          case eStyleContentType_Counter:
+          case eStyleContentType_Counters:
+          case eStyleContentType_OpenQuote:
+          case eStyleContentType_CloseQuote:
+          case eStyleContentType_NoOpenQuote:
+          case eStyleContentType_NoCloseQuote:
+            contentString.Append("GENERATED");
+            break;
+        }
+        NS_NewTextNode(&textContent);
+        textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+        domData->SetData(contentString);
+        NS_RELEASE(domData);
   
-      // Create a text frame and initialize it
-      nsIFrame* textFrame;
-      NS_NewTextFrame(textFrame);
-      textFrame->Init(*aPresContext, textContent, aFrame, pseudoStyleContext, nsnull);
+        // Create a text frame and initialize it
+        nsIFrame* textFrame;
+        NS_NewTextFrame(textFrame);
+        textFrame->Init(*aPresContext, textContent, aFrame, pseudoStyleContext, nsnull);
   
-      NS_RELEASE(pseudoStyleContext);
-      *aResult = textFrame;
-      return PR_TRUE;
+        NS_RELEASE(pseudoStyleContext);
+        NS_RELEASE(textContent);
+        *aResult = textFrame;
+        return PR_TRUE;
+      }
     }
   }
 
