@@ -143,7 +143,6 @@ PK11SymKey * pk11_CopyToSlot(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 /**********************************************************************
  *                   Certs
  **********************************************************************/
-CERTCertificate *PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey);
 SECStatus PK11_TraversePrivateKeysInSlot( PK11SlotInfo *slot,
     SECStatus(* callback)(SECKEYPrivateKey*, void*), void *arg);
 SECKEYPrivateKey * PK11_FindPrivateKeyFromNickname(char *nickname, void *wincx);
