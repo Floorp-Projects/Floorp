@@ -137,8 +137,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
     }
 
     // Get a pseudo style context for the appropriate style font 
-    fontStyle.AssignWithConversion(":-moz-math-font-style-normal");                           
-    nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
+    nsIAtom* fontAtom = nsMathMLAtoms::fontstyle_normal;
     nsCOMPtr<nsIStyleContext> newStyleContext;
     aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
                                                PR_FALSE, getter_AddRefs(newStyleContext));          

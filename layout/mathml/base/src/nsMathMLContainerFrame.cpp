@@ -271,6 +271,7 @@ nsMathMLContainerFrame::ParseNumericValue(nsString&   aString,
       gotDot = PR_TRUE;
     else if (!nsCRT::IsAsciiDigit(c)) {
       aString.Right(unit, stringLength - i);
+      unit.CompressWhitespace(); // some authors leave blanks before the unit
       break;
     }
     number.Append(c);
@@ -293,19 +294,19 @@ printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
   if (0 == unit.Length()) {
     cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
   } 
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("%"))) {
+  else if (unit.EqualsWithConversion("%")) {
     floatValue = floatValue / 100.0f;
     aCSSValue.SetPercentValue(floatValue);
     return PR_TRUE;
   } 
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("em"))) cssUnit = eCSSUnit_EM;        
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("ex"))) cssUnit = eCSSUnit_XHeight;   
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("px"))) cssUnit = eCSSUnit_Pixel;     
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("in"))) cssUnit = eCSSUnit_Inch;      
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("cm"))) cssUnit = eCSSUnit_Centimeter;
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("mm"))) cssUnit = eCSSUnit_Millimeter;
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("pt"))) cssUnit = eCSSUnit_Point;     
-  else if (unit.Equals(NS_ConvertASCIItoUCS2("pc"))) cssUnit = eCSSUnit_Pica;      
+  else if (unit.EqualsWithConversion("em")) cssUnit = eCSSUnit_EM;        
+  else if (unit.EqualsWithConversion("ex")) cssUnit = eCSSUnit_XHeight;   
+  else if (unit.EqualsWithConversion("px")) cssUnit = eCSSUnit_Pixel;     
+  else if (unit.EqualsWithConversion("in")) cssUnit = eCSSUnit_Inch;      
+  else if (unit.EqualsWithConversion("cm")) cssUnit = eCSSUnit_Centimeter;
+  else if (unit.EqualsWithConversion("mm")) cssUnit = eCSSUnit_Millimeter;
+  else if (unit.EqualsWithConversion("pt")) cssUnit = eCSSUnit_Point;     
+  else if (unit.EqualsWithConversion("pc")) cssUnit = eCSSUnit_Pica;      
   else // unexpected unit
     return PR_FALSE;
 
@@ -874,7 +875,7 @@ nsMathMLContainerFrame::FindSmallestFontSizeFor(nsIPresContext* aPresContext,
 // a MathMLChar. Frame classes that use this should ensure that the 
 // extra leaf style contexts given to the MathMLChars are acessible to
 // the Style System via the Get/Set AdditionalStyleContext() APIs.
-void
+PRBool
 nsMathMLContainerFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                                                nsIContent*      aContent,
                                                nsIStyleContext* aParentStyleContext,
@@ -882,17 +883,18 @@ nsMathMLContainerFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
 {
   nsAutoString data;
   aMathMLChar->GetData(data);
-  PRBool isStretchy = nsMathMLOperators::MatchOperator(data, NS_MATHML_OPERATOR_STRETCHY);
-  nsAutoString fontStyle = (isStretchy) ? 
-	NS_ConvertASCIItoUCS2(":-moz-math-font-style-stretchy") :
-        NS_ConvertASCIItoUCS2(":-moz-math-font-style-anonymous");
-  nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
+  PRBool isStretchy = nsMathMLOperators::IsMutableOperator(data);
+  nsIAtom* fontAtom = (isStretchy) ?
+    nsMathMLAtoms::fontstyle_stretchy :
+    nsMathMLAtoms::fontstyle_anonymous;
   nsCOMPtr<nsIStyleContext> newStyleContext;
   nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
                                              aParentStyleContext, PR_FALSE,
                                              getter_AddRefs(newStyleContext));
   if (NS_SUCCEEDED(rv) && newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);
+
+  return isStretchy;
 }
 
 // helper method to alter the style context
@@ -900,9 +902,8 @@ nsMathMLContainerFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
 // mfrac, msub, msup, msubsup, munder, mover, munderover, mmultiscripts 
 
 // XXX change the code to ensure that the size decreases in a top-down manner. 
-// the code should always insert top-scriptstyle frames, and inner frames that 
+// the coide should always insert top-scriptstyle frames, and inner frames that 
 // cause the size to decrease pass the smallest limit should be removed
-#if 1
 nsresult
 nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresContext)
 {
@@ -1009,10 +1010,9 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
           nsCOMPtr<nsIStyleContext> newStyleContext;
 
           // XXX seems not to decrease when the initail font-size is large (100pt)
-          nsAutoString fontSize = (0 < gap)
-                                ? NS_ConvertASCIItoUCS2(":-moz-math-font-size-smaller")
-                                : NS_ConvertASCIItoUCS2(":-moz-math-font-size-larger");
-          nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
+          nsIAtom* fontAtom = (0 < gap) ?
+            nsMathMLAtoms::fontsize_smaller :
+            nsMathMLAtoms::fontsize_larger;
 
           PRBool isSmaller = PR_TRUE;
           if (0 > gap) { isSmaller = PR_FALSE; gap = -gap; } // absolute value
@@ -1091,314 +1091,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
   }
   return rv;
 }
-#endif
 
-//////////
-////// TOP-DOWN INSERT ///////
-#if 0
-
-nsresult
-nsMathMLContainerFrame::RemoveScriptLevelStyleContext(
-     nsIPresContext* aPresContext,
-     nsIFrame* aFrame,
-     PRInt32 scriptminsize)
-{
-  NS_PRECONDITION(aFrame, "null arg");
-
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      RemoveScriptLevelStyleContext(aPresContext, childFrame, scriptminsize);
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-
-
-  while (fontSize < scriptminsize) 
-  {
-
-  nsIMathMLFrame* aMathMLFrame = nsnull;
-  rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-  if (nsnull != aMathMLFrame && NS_SUCCEEDED(rv)) {
-
-    nsPresentationData presData;
-    aMathMLFrame->GetPresentationData(presData);
-
-    if (NS_MATHML_IS_WRAPPER_FRAME(presData)) {
-
-      aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-
-      nsStyleFont font;
-      nsCOMPtr<nsIStyleContext> styleContext;
-      childFrame->GetStyleContext(getter_AddRefs(styleContext));
-      styleContext->GetStyle(eStyleStruct_Font, font);
-      PRInt32 fontSize = font.mFont.size;
-
-      if  (fontSize < scriptminsize) {
-        // as the parent of the wrapper to delete the wrapper
-
-        nsIFrame* parentFrame;
-        aFrame->GetParent(&parentFrame);
-
-// replace the wrapper
-        nsIFrame* firstChild;
-        parentFrame->FirstChild(aPresContext, nsnull, &firstChild);
-        nsFrameList frames(firstChild);
-        frames.ReplaceFrame(parentFrame, aFrame, childFrame);
-
-// delete the wrapper
-        aFrame->Destroy(aPresContext);
-
- 
-       aPresContext->ReParentStyleContext(childFrame, parentStyleContext);
-
-
-      }
-    }
-  }
-
-
-#if 0
-  GetPresentationData()
-	
-  PRint32 fontIndex, fontSize,
-
-
-  nsStyleFont font;
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aFrame->GetStyleContext(getter_AddRefs(styleContext));
-  styleContext->GetStyle(eStyleStruct_Font, font);
-  PRInt32 fontSize = font.mFont.size;
-
-  PRInt32 childSize;
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      childSize = FindSmallestFontSizeFor(aPresContext, childFrame);
-      if (fontSize > childSize) fontSize = childSize;
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-  return fontSize;
-
-
-
-      while (fontSize < scriptminsize) 
-      {
-
-        fontIndex = nsStyleUtil::FindNextLargerFontSize(fontSize, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-        fontSize = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-      }
-#endif
-}
-
-nsresult
-nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresContext)
-{
-  nsresult rv = NS_OK;
-  nsIFrame* nextFrame = mFrames.FirstChild();
-  while (nsnull != nextFrame && NS_SUCCEEDED(rv)) { 	
-    nsIFrame* childFrame = nextFrame;
-    rv = nextFrame->GetNextSibling(&nextFrame);
-    if (!IsOnlyWhitespace(childFrame) && NS_SUCCEEDED(rv)) {
-
-      // see if the child frame implements the nsIMathMLFrame interface
-      nsIMathMLFrame* aMathMLFrame = nsnull;
-      rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-      if (nsnull != aMathMLFrame && NS_SUCCEEDED(rv)) {
-
-        // get the scriptlevel of the child
-        nsPresentationData childData;
-        aMathMLFrame->GetPresentationData(childData);
-
-        // Iteration to set a style context for the script level font.
-        // Wow, here is what is happening: the style system requires that any style context
-        // *must* be uniquely associated to a frame. So we insert as many frames as needed
-        // to scale-down (or scale-up) the fontsize.
-
-        PRInt32 gap = childData.scriptLevel - mPresentationData.scriptLevel;
-        if (0 != gap) {
-          // We are about to change the font-size... We first see if we
-          // are in the scope of a <mstyle> that tells us what to do.
-          // This is one of the most obscure part to implement in the spec...
-          /*
-          The REC says:
-
-          Whenever the scriptlevel is changed, either automatically or by being
-          explicitly incremented, decremented, or set, the current font size is
-          multiplied by the value of scriptsizemultiplier to the power of the
-          change in scriptlevel. For example, if scriptlevel is increased by 2,
-          the font size is multiplied by scriptsizemultiplier twice in succession;
-          if scriptlevel is explicitly set to 2 when it had been 3, the font size
-          is divided by scriptsizemultiplier. 
-
-          The default value of scriptsizemultiplier is less than one (in fact, it
-          is approximately the square root of 1/2), resulting in a smaller font size
-          with increasing scriptlevel. To prevent scripts from becoming unreadably
-          small, the font size is never allowed to go below the value of
-          scriptminsize as a result of a change to scriptlevel, though it can be
-          set to a lower value using the fontsize attribute  on <mstyle> or on
-          token elements. If a change to scriptlevel would cause the font size to
-          become lower than scriptminsize using the above formula, the font size
-          is instead set equal to scriptminsize within the subexpression for which
-          scriptlevel was changed. 
-          */
-
-          // default scriptsizemultiplier = 0.71 
-          // default scriptminsize = 8pt 
-
-          // here we only consider scriptminsize, and use the default
-          // smaller-font-size algorithm of the style system
-          PRInt32 scriptminsize = NSIntPointsToTwips(8);
-
-          // see if there is a scriptminsize attribute on a <mstyle> that wraps us
-          nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == 
-              GetAttribute(nsnull, mPresentationData.mstyle, 
-                           nsMathMLAtoms::scriptminsize_, value))
-          {
-            nsCSSValue cssValue;
-            if (ParseNumericValue(value, cssValue)) {
-              nsCSSUnit unit = cssValue.GetUnit();
-              if (eCSSUnit_Number == unit)
-                scriptminsize = nscoord(float(scriptminsize) * cssValue.GetFloatValue());
-              else if (eCSSUnit_Percent == unit)
-                scriptminsize = nscoord(float(scriptminsize) * cssValue.GetPercentValue());
-              else if (eCSSUnit_Null != unit)
-                scriptminsize = CalcLength(aPresContext, mStyleContext, cssValue);
-            }
-#ifdef NS_DEBUG
-            else {
-              char str[50];
-              value.ToCString(str, 50);
-              printf("Invalid attribute scriptminsize=%s\n", str);
-            }
-#endif
-          }
-
-          // get Nav's magic font scaler
-          PRInt32 scaler;
-          aPresContext->GetFontScaler(&scaler);
-          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);          
-          nsFont defaultFont;
-          aPresContext->GetDefaultFont(defaultFont);
-
-          nsCOMPtr<nsIContent> childContent;
-          childFrame->GetContent(getter_AddRefs(childContent));
-
-          nsCOMPtr<nsIPresShell> shell;
-          aPresContext->GetShell(getter_AddRefs(shell));
-
-          nsIFrame* firstFrame = nsnull;
-          nsIFrame* lastFrame = this;
-          nsIStyleContext* lastStyleContext = mStyleContext;
-          nsCOMPtr<nsIStyleContext> newStyleContext;
-
-          // XXX seems not to decrease when the initail font-size is large (100pt)
-
-          nsAutoString fontSize = (0 < gap)
-                                ? NS_ConvertASCIItoUCS2(":-moz-math-font-size-smaller")
-                                : NS_ConvertASCIItoUCS2(":-moz-math-font-size-larger");
-          nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
-#if 0
-          nsCOMPtr<nsIAtom> fontAtom = (0 < gap) 
-                                     ? nsMathMLAtoms::moz_math_font_size_smaller
-                                     : nsMathMLAtoms::moz_math_font_size_larger;
-#endif
-          PRBool isSmaller = PR_TRUE;
-          if (0 > gap) { 
-            isSmaller = PR_FALSE;
-            gap = -gap;  // absolute value
-          }
-
-          PRInt32 smallestFontIndex, smallestFontSize = 0;
-          if (isSmaller) {
-            // find the smallest font-size in this subtree
-//            smallestFontSize = FindSmallestFontSizeFor(aPresContext, childFrame);
-
-            nsStyleFont font;
-            nsCOMPtr<nsIStyleContext> childStyleContext;
-            childFrame->GetStyleContext(getter_AddRefs(childStyleContext));
-            childStyleContext->GetStyle(eStyleStruct_Font, font);
-            smallestFontSize = font.mFont.size;
-          }
-
-          while (0 < gap--) {
-
-            if (isSmaller) {
-              // look ahead for the next smallest font size that will be in the subtree
-              smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-              smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-//printf("About to move to fontsize:%dpt(%dtwips)\n", 
-//NSTwipsToFloorIntPoints(smallestFontSize), smallestFontSize);
-              if (smallestFontSize < scriptminsize) {
-                // don't bother doing any work
-//printf("..... stopping ......\n");
-// XXX there should be a mechanism so that we never try this subtree again
-                break;
-              }
-            }
-
-            aPresContext->ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
-                                                       PR_FALSE, getter_AddRefs(newStyleContext));          
-            if (newStyleContext && newStyleContext.get() != lastStyleContext) {
-              // create a new wrapper frame and append it as sole child of the last created frame
-              nsIFrame* newFrame = nsnull;
-              NS_NewMathMLWrapperFrame(shell, &newFrame);
-              NS_ASSERTION(newFrame, "Failed to create new frame");
-              if (!newFrame) break;
-              newFrame->Init(aPresContext, childContent, lastFrame, newStyleContext, nsnull);
-
-              if (nsnull == firstFrame) {
-                firstFrame = newFrame; 
-              }
-              if (this != lastFrame) {
-                lastFrame->SetInitialChildList(aPresContext, nsnull, newFrame);
-              }
-              lastStyleContext = newStyleContext;
-              lastFrame = newFrame;    
-            }
-            else {
-              break;
-            }
-          }
-          if (nsnull != firstFrame) { // at least one new frame was created
-            mFrames.ReplaceFrame(this, childFrame, firstFrame);
-            childFrame->SetParent(lastFrame);
-            childFrame->SetNextSibling(nsnull);
-            aPresContext->ReParentStyleContext(childFrame, lastStyleContext);
-            lastFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
-
-            // if the child was an embellished operator,
-            // make the whole list embellished as well
-            nsEmbellishData embellishData;
-            aMathMLFrame->GetEmbellishData(embellishData);
-            if (0 != embellishData.flags && nsnull != embellishData.firstChild) {
-              do { // walk the hierarchy in a bottom-up manner
-                rv = lastFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-                NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
-                if (NS_FAILED(rv) || !aMathMLFrame) break;
-                embellishData.firstChild = childFrame;
-                aMathMLFrame->SetEmbellishData(embellishData);
-                childFrame = lastFrame;
-                lastFrame->GetParent(&lastFrame);
-              } while (lastFrame != this);
-            }
-          }
-
-          if (isSmaller) {
-            // remove the extra wrappers that cause the font-size to be too small
-            RemoveScriptLevelStyleContext(aPresContext, childFrame);
-          }
-        }
-      }
-    }
-  }
-  return rv;
-}
-#endif
 
 /* //////////////////
  * Frame construction
