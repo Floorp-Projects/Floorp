@@ -138,6 +138,8 @@ int main(int argc, char** argv) {
         xsltProcessor.process(*xmlInput, *xmlFilename, xsltInput, *xsltFilename, *resultOutput);
     }
     resultFileStream.close();
+    if (xmlInput != &cin)
+        delete xmlInput;
     txShutdown();
     return 0;
 } //-- main
