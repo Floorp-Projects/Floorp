@@ -1575,20 +1575,15 @@ void HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
 }
 #endif
 
-extern NS_EXPORT nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)
+nsresult
+NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)
 {
-  if (aInstancePtrResult == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  *aInstancePtrResult = new HTMLAttributesImpl();
+  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
 
-  HTMLAttributesImpl  *it = new HTMLAttributesImpl();
+  NS_ADDREF(*aInstancePtrResult);
 
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(NS_GET_IID(nsIHTMLAttributes), (void **) aInstancePtrResult);
+  return NS_OK;
 }
 
 
