@@ -196,7 +196,8 @@ nsCacheManager::Init()
         if (NS_FAILED(rv)) return rv;
     }
 
-    return NS_OK;
+		InitPrefs();
+		return NS_OK;
 }
 
 nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager )
