@@ -2321,6 +2321,8 @@ nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                                     const nsAReadableString& aEventType,
                                     nsIDOMEvent** aDOMEvent)
 {
+  *aDOMEvent = nsnull;
+
   nsAutoString str(aEventType);
   if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") && !str.EqualsIgnoreCase("KeyEvents") &&
       !str.EqualsIgnoreCase("HTMLEvents") && !str.EqualsIgnoreCase("MutationEvents") &&
