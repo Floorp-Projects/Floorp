@@ -114,7 +114,7 @@ nsViewerApp::nsViewerApp()
 
   mDelay = 1;
   mRepeatCount = 1;
-  mNumSamples = 13;
+  mNumSamples = 14;
   mAllowPlugins = PR_TRUE;
   mIsInitialized = PR_FALSE;
 }
