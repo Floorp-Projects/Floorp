@@ -1,0 +1,54 @@
+#clientBox {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+#extensionName {
+  font-size: large;
+  font-weight: bold;
+}
+
+#extensionVersion {
+  font-weight: bold;
+  color: #909090;
+}
+
+#extensionHomepage {
+  color: #0000FF;
+  text-decoration: underline !important;
+  cursor: pointer;
+}
+
+#genericAbout {
+  padding: 0px 0px 10px 0px;
+  min-height: 200px;
+  width: 30em;
+}
+
+#groove {
+  margin-top: 0px;
+}
+
+#clientBox {
+  padding: 10px;
+} 
+
+#extensionDescription {
+  color: #404040;
+}
+
+#extensionDescription, #extensionContributors, #creatorBox, #contributorsBox {
+  margin-left: 6px;
+}
+
+#extensionCreator, .contributor {
+  margin: 0px;
+} 
+
+#extensionCreatorLabel, #extensionContributors {
+  border-top: 2px solid #C0C0C0;
+  padding: 2px 0px 3px 0px;
+  margin-top: 3px;
+  font-weight: bold;
+}
+

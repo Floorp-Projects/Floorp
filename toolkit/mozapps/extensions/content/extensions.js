@@ -102,55 +102,98 @@ function fireEventForElement(aElement, aEventType)
 
 function onExtensionViewOptions(aEvent)
 {
-  var optionsURL = aEvent.target.getAttribute("optionsURL");
+  var optionsURL = gExtensionsView.selected.getAttribute("optionsURL");
   if (optionsURL != "")
     openDialog(optionsURL, "", "chrome,modal");
 }
 
 function onExtensionVisitHomepage(aEvent)
 {
-  var homepageURL = aEvent.target.getAttribute("homepageURL");
-  if (homepageURL != "") {
-    dump("*** attempting to load " + homepageURL + "\n");
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);
-    uri.spec = homepageURL;
+  var homepageURL = gExtensionsView.selected.getAttribute("homepageURL");
+  if (homepageURL != "")
+    openURL(homepageURL);
+}
 
+function openURL(aURL)
+{
 # If we're not a browser, use the external protocol service to load the URI.
 #ifndef MOZ_PHOENIX
-    var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                                .getService(Components.interfaces.nsIExternalProtocolService);
-    if (protocolSvc.isExposedProtocol(uri.scheme))
-      protocolSvc.loadUrl(uri);
+  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                      .createInstance(Components.interfaces.nsIURI);
+  uri.spec = aURL;
+
+  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                              .getService(Components.interfaces.nsIExternalProtocolService);
+  if (protocolSvc.isExposedProtocol(uri.scheme))
+    protocolSvc.loadUrl(uri);
 # If we're a browser, open a new browser window instead.    
 #else
-    openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", homepageURL, null, null);
+  openDialog("chrome://browser/content/browser.xul", "_blank", "chrome,all,dialog=no", aURL, null, null);
 #endif
-  }
 }
 
 function onExtensionViewAbout(aEvent)
 {
-  var aboutURL = aEvent.target.getAttribute("aboutURL");
+  var aboutURL = gExtensionsView.selected.getAttribute("aboutURL");
   if (aboutURL != "")
     openDialog(aboutURL, "", "chrome,modal");
   else
-    openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", aEvent.target.id);
+    openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", gExtensionsView.selected.id, gExtensionsView.database);
 }
 
 function onExtensionMoveTop(aEvent)
 {
+  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
+  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+  container.Init(gExtensionManager.datasource, extensions);
+  
+  var extension = rdfs.GetResource(aEvent.target.id);
+  var index = container.IndexOf(extension);
+  if (index > 1) {
+    container.RemoveElement(extension, false);
+    container.InsertElementAt(extension, 1, true);
+  }
+  
+  flushDataSource();
 }
 
 function onExtensionMoveUp(aEvent)
 {
+  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
+  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+  container.Init(gExtensionManager.datasource, extensions);
+  
+  var extension = rdfs.GetResource(aEvent.target.id);
+  var index = container.IndexOf(extension);
+  if (index > 1) {
+    container.RemoveElement(extension, false);
+    container.InsertElementAt(extension, index - 1, true);
+  }
+  
+  flushDataSource();
 }
 
 function onExtensionMoveDown(aEvent)
 {
+  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
+  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+  container.Init(gExtensionManager.datasource, extensions);
+  
+  var extension = rdfs.GetResource(aEvent.target.id);
+  var index = container.IndexOf(extension);
+  var count = container.GetCount();
+  if (index < count) {
+    container.RemoveElement(extension, false);
+    container.InsertElementAt(extension, index + 1, true);
+  }
+  
+  flushDataSource();
 }
 
 function onExtensionUpdate(aEvent)
@@ -168,6 +211,14 @@ function onExtensionUninstall(aEvent)
 
 }
 
+function flushDataSource()
+{
+#if 0
+  var rds = gExtensionManager.datasource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  if (rds)
+    rds.Flush();
+#endif
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
@@ -196,7 +247,7 @@ function Startup()
   gExtensionsView.addEventListener("extension-disable", onExtensionEnableDisable, false);
   gExtensionsView.addEventListener("extension-move-top", onExtensionMoveTop, false);
   gExtensionsView.addEventListener("extension-move-up", onExtensionMoveUp, false);
-  gExtensionsView.addEventListener("extension-move-dn", onExtensionMoveDn, false);
+  gExtensionsView.addEventListener("extension-move-dn", onExtensionMoveDown, false);
 
   // Finally, update the UI. 
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
@@ -229,9 +280,17 @@ function buildContextMenu(aEvent)
     popup.removeChild(popup.firstChild);
 
   var menus = gWindowState == "extensions" ? gExtensionContextMenus : gThemeContextMenus;  
-  for (var i = 0; i < menus.length; ++i)
-    popup.appendChild(document.getElementById(menus[i]).cloneNode(true));
+  for (var i = 0; i < menus.length; ++i) {
+    var clonedMenu = document.getElementById(menus[i]).cloneNode(true);
+    clonedMenu.id = clonedMenu.id + "_clone";
+    popup.appendChild(clonedMenu);
+  }
 
+  var extensionsStrings = document.getElementById("extensionsStrings");
+  var menuitem_about = document.getElementById("menuitem_about_clone");
+  var name = document.popupNode.getAttribute("name");
+  menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
+  
   return true;
 }
 

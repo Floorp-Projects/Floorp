@@ -37,10 +37,37 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/about.css" type="text/css"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/extensions/about.dtd">
 
 <dialog id="genericAbout"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-        
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept" onload="init();" onaccept="close();">
+
+  <script type="application/x-javascript" src="chrome://mozapps/content/extensions/about.js"/>
+  
+  <stringbundleset id="aboutSet">
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+  </stringbundleset>
+
+  <vbox id="clientBox" flex="1">
+    <label id="extensionName" crop="right"/>
+    <label id="extensionVersion" crop="right"/>
+    <description id="extensionDescription"/>
+
+    <label id="extensionCreatorLabel">&creator.label;</label>
+    <hbox id="creatorBox">
+      <label id="extensionCreator" flex="1" crop="right"/>
+      <label id="extensionHomepage" onclick="window.opener.openURL(event.target.getAttribute('href'));">&homepage.label;</label>
+    </hbox>
+      
+    <label id="extensionContributors">&contributors.label;</label>
+    <vbox flex="1" id="contributorsBox"/>
+  </vbox>
+    
+  <separator id="groove" class="groove"/>
+
 </dialog>
 
         
