@@ -50,8 +50,12 @@
 /* Read compiler options */
 #include "IDE_Options.h"
 
-/* Read generated build options. */
-#include "DefinesOptions.h"		// written at build time
+/* Read generated build options (written at build time). */
+#ifdef DEBUG
+#include "DefinesOptionsDebug.h"
+#else
+#include "DefinesOptions.h"
+#endif
 
 /* Read file of defines global to the Mac build */
 #include "DefinesMac.h"
