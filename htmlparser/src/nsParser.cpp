@@ -749,7 +749,7 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
       DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType);
 
-      NS_ASSERTION(aDTDMode==theDTDMode,"aDTDMode overrides the mode selected from the DOCTYPE ");
+      NS_ASSERTION(aDTDMode==eDTDMode_unknown || aDTDMode==theDTDMode,"aDTDMode overrides the mode selected from the DOCTYPE ");
 
       if(aDTDMode!=eDTDMode_unknown) theDTDMode=aDTDMode;  // aDTDMode takes precedence over theDTDMode
 
