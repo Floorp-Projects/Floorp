@@ -21,6 +21,7 @@
  */
 
 #include "nsHTMLDocShell.h"
+#include "nsString.h"
 
 //*****************************************************************************
 //***    nsHTMLDocShell: Object Management
@@ -60,6 +61,20 @@ NS_IMPL_ISUPPORTS7(nsHTMLDocShell, nsIDocShell, nsIHTMLDocShell,
 //*****************************************************************************
 // nsHTMLDocShell::nsIDocShell Overrides
 //*****************************************************************************   
+
+NS_IMETHODIMP nsHTMLDocShell::CanHandleContentType(const PRUnichar* contentType, 
+   PRBool* canHandle)
+{
+   NS_ENSURE_ARG_POINTER(canHandle);
+
+   nsAutoString aType(contentType);
+                                         
+   if(aType.EqualsIgnoreCase("text/html"))
+      *canHandle = PR_TRUE;
+   else   
+      *canHandle = PR_FALSE;
+   return NS_OK;
+}
 
 //*****************************************************************************
 // nsHTMLDocShell::nsIHTMLDocShell

@@ -31,6 +31,9 @@ class nsHTMLDocShell : public nsDocShellBase, public nsIHTMLDocShell
 public:
    NS_DECL_ISUPPORTS
 
+   NS_IMETHOD CanHandleContentType(const PRUnichar* contentType, PRBool* canHandle);
+
+
    NS_DECL_NSIHTMLDOCSHELL
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
