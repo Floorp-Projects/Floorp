@@ -1150,11 +1150,14 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
 
   // for now just reflow the table if a style changed. This should be improved
-  // XXXwaterson danger! assuming aOuterRS.tree->mReflowCommand...
-  nsReflowType reflowCommandType;
-  aOuterRS.path->mReflowCommand->GetType(reflowCommandType);
-  PRBool needInnerReflow = (eReflowType_StyleChanged == reflowCommandType)
-                            ? PR_TRUE : PR_FALSE;
+  PRBool needInnerReflow = PR_FALSE;
+  nsHTMLReflowCommand* command = aOuterRS.path->mReflowCommand;
+  if (command) {
+    nsReflowType reflowCommandType;
+    command->GetType(reflowCommandType);
+    if (eReflowType_StyleChanged == reflowCommandType)
+      needInnerReflow = PR_TRUE;
+  }
 
   if (mMinCaptionWidth != captionMES.width) {  
     // set the new caption min width, and set state to reflow the inner table if necessary
