@@ -201,10 +201,10 @@ Usage(const char *progName)
 "Usage: %s -n rsa_nickname -p port [-3DNRTbmrvx] [-w password] [-t threads]\n"
 #ifdef NSS_ENABLE_ECC
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-e ec_nickname] \n"
-"         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l]\n"
+"         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
 #else
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
-"         [-L [seconds]] [-M maxProcs] [-l]\n"
+"         [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
 #endif /* NSS_ENABLE_ECC */
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
@@ -1478,6 +1478,7 @@ main(int argc, char **argv)
     PLOptStatus          status;
     PRThread             *loggerThread;
     PRBool               debugCache = PR_FALSE; /* bug 90518 */
+    char*                certPrefix = "";
 
 
     tmp = strrchr(argv[0], '/');
@@ -1491,7 +1492,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:NRTbc:d:e:f:hi:lmn:op:rt:vw:xy");
+    	"2:3DL:M:NP:RTbc:d:e:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1543,7 +1544,9 @@ main(int argc, char **argv)
 
 	case 'm': useModelSocket = PR_TRUE; break;
 
-	case 'n': nickName = strdup(optstate->value); break;
+        case 'n': nickName = strdup(optstate->value); break;
+
+        case 'P': certPrefix = strdup(optstate->value); break;
 
 	case 'o': MakeCertOK = 1; break;
 
@@ -1686,7 +1689,7 @@ main(int argc, char **argv)
     PK11_SetPasswordFunc( passwd ? ownPasswd : SECU_GetModulePassword);
 
     /* Call the libsec initialization routines */
-    rv = NSS_Initialize(dir, "", "", SECMOD_DB, NSS_INIT_READONLY);
+    rv = NSS_Initialize(dir, certPrefix, certPrefix, SECMOD_DB, NSS_INIT_READONLY);
     if (rv != SECSuccess) {
     	fputs("NSS_Init failed.\n", stderr);
 		exit(8);
