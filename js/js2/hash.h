@@ -86,7 +86,7 @@ namespace JavaScript {
 
 	  public:
 		explicit GenericHashTable(uint32 nEntriesDefault);
-		~GenericHashTable() {ASSERT(nReferences == 0); delete buckets;}
+		~GenericHashTable() {ASSERT(nReferences == 0); delete[] buckets;}
 
 		void recomputeMinMaxNEntries(uint lgNBuckets);
 		void rehash();
