@@ -74,6 +74,8 @@ public:
                     nsIRDFResource* aProperty, nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
     NS_IMETHOD CreateWidgetItem(nsIContent* aElement, nsIRDFResource* aProperty,
 				nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
+    NS_IMETHOD UpdateWidgetItemAttribute(nsIContent *templateNode, nsIContent* aTreeItemElement,
+				PRBool isUnique, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
     // nsIRDFObserver interface
     NS_IMETHOD OnAssert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObject);
