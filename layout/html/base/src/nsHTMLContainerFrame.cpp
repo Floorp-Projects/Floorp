@@ -68,6 +68,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
       nsEventStatus es;
       nsresult rv;
 
+      nsRect r(aDirtyRect);
       nsPaintEvent event;
       event.eventStructType = NS_PAINT_EVENT;
       event.message = NS_PAINT;
@@ -76,8 +77,8 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
       event.time = 0;
       event.widget = nsnull;
       event.nativeMsg = nsnull;
-      event.renderingContext = nsnull;
-      event.rect = nsnull;
+      event.renderingContext = &aRenderingContext;
+      event.rect = &r;
 
       rv = mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, es);
       if (NS_OK == rv) {

@@ -136,7 +136,7 @@ struct nsBlockReflowState : public nsFrameReflowState {
 
   void AddFloater(nsPlaceholderFrame* aPlaceholderFrame);
 
-  void PlaceFloater(nsPlaceholderFrame* aFloater);
+  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool& aIsLeftFloater);
 
   void PlaceFloaters(nsVoidArray* aFloaters);
 
@@ -1304,6 +1304,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   // coordinate system origin for later.
   mSpaceManager->Translate(mBorderPadding.left, mBorderPadding.top);
   mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
+frame->ListTag(stdout); printf(": BEGIN: BP=%d,%d,%d,%d spaceManager=%d,%d\n", mBorderPadding, mSpaceManagerX, mSpaceManagerY);
 
   mPresContext = aPresContext;
   mBlock = (nsBlockFrame*) frame;
@@ -1370,6 +1371,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
 nsBlockReflowState::~nsBlockReflowState()
 {
+frame->ListTag(stdout); printf(": END\n");
   // Restore the coordinate system
   mSpaceManager->Translate(-mBorderPadding.left, -mBorderPadding.top);
 
@@ -1413,6 +1415,7 @@ nsBlockReflowState::GetAvailableSpace()
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
   mCurrentBand.ComputeAvailSpaceRect();
+mBlock->ListTag(stdout); printf(": availSpace=%d,%d,%d,%d\n", mCurrentBand.availSpace);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("nsBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d} count=%d",
@@ -1710,8 +1713,9 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Prepare inline-reflow engine
-  nsInlineReflow inlineReflow(state.mLineLayout, state, this);
+  nsInlineReflow inlineReflow(state.mLineLayout, state, this, PR_TRUE);
   state.mInlineReflow = &inlineReflow;
+  state.mLineLayout.PushInline(&inlineReflow);
 // ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
 
   nsresult rv = NS_OK;
@@ -1973,7 +1977,13 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
       }
       line = line->mNext;
     }
-    aMetrics.maxElementSize->width += maxLeft + maxRight;
+    // XXX what to do???
+    if (maxLeft > aMetrics.maxElementSize->width) {
+      aMetrics.maxElementSize->width = maxLeft;
+    }
+    if (maxRight > aMetrics.maxElementSize->width) {
+      aMetrics.maxElementSize->width = maxRight;
+    }
   }
 }
 
@@ -2954,6 +2964,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       asBlock = PR_FALSE;
       break;
     }
+
+    // clear floaters if the clear style is not none
+    if (NS_STYLE_CLEAR_NONE != display->mBreakType) {
+      aState.ClearFloaters(display->mBreakType);
+    }
   }
   PrepareInlineReflow(aState, aFrame, asBlock);
   ir.SetIsFirstChild((aLine == mLines) &&
@@ -3464,6 +3479,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
          ("nsBlockFrame::PlaceLine: clearing floaters=%d",
           breakType));
       aState.ClearFloaters(breakType);
+ListTag(stdout); printf(": clearing %x\n", breakType);
       break;
     }
     // XXX page breaks, etc, need to be passed upwards too!
@@ -4013,19 +4029,21 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
     // that's a child of our block) we need to restore the space
     // manager's translation to the space that the block resides in
     // before placing the floater.
+    PRBool isLeftFloater;
     nscoord ox, oy;
     mSpaceManager->GetTranslation(ox, oy);
     nscoord dx = ox - mSpaceManagerX;
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
-    PlaceFloater(aPlaceholder);
+    PlaceFloater(aPlaceholder, isLeftFloater);
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
-    mInlineReflow->UpdateBand(mCurrentBand.availSpace.x + mBorderPadding.left,
+    mLineLayout.UpdateInlines(mCurrentBand.availSpace.x + mBorderPadding.left,
                               mY,
                               mCurrentBand.availSpace.width,
-                              mCurrentBand.availSpace.height);
+                              mCurrentBand.availSpace.height,
+                              isLeftFloater);
 
     // Restore coordinate system
     mSpaceManager->Translate(dx, dy);
@@ -4091,7 +4109,8 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 }
 
 void
-nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
+nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
+                                 PRBool& aIsLeftFloater)
 {
   nsISpaceManager* sm = mSpaceManager;
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
@@ -4139,6 +4158,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
 
   case NS_STYLE_FLOAT_LEFT:
     region.x = mCurrentBand.availSpace.x;
+    aIsLeftFloater = PR_TRUE;
     break;
 
   case NS_STYLE_FLOAT_RIGHT:
@@ -4146,6 +4166,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
     if (region.x < 0) {    // XXX do this?
       region.x = 0;
     }
+    aIsLeftFloater = PR_FALSE;
     break;
   }
 
@@ -4175,7 +4196,8 @@ nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters)
       // Left-most children are placed during the line's reflow
       continue;
     }
-    PlaceFloater(placeholderFrame);
+    PRBool isLeftFloater;
+    PlaceFloater(placeholderFrame, isLeftFloater);
   }
 
   // Update available spcae now that the floaters have been placed
@@ -4185,16 +4207,19 @@ nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters)
 void
 nsBlockReflowState::ClearFloaters(PRUint8 aBreakType)
 {
+  // Update band information based on current mY before clearing
+  GetAvailableSpace();
+
   for (;;) {
     PRBool haveFloater = PR_FALSE;
     // Find the Y coordinate to clear to. Note that the band trapezoid
-    // coordinates are relative to the last translation. Since we
-    // never translate by Y before getting a band, we can use absolute
-    // comparisons against mY.
+    // coordinates are relative to the our spacemanager translation
+    // (which means the band coordinates are inside the border+padding
+    // area of this block frame).
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
        ("nsBlockReflowState::ClearFloaters: mY=%d trapCount=%d",
         mY, mCurrentBand.count));
-    nscoord clearYMost = mY;
+    nscoord clearYMost = mY - mBorderPadding.top;
     nsRect tmp;
     PRInt32 i;
     for (i = 0; i < mCurrentBand.count; i++) {
@@ -4257,9 +4282,6 @@ nsBlockReflowState::ClearFloaters(PRUint8 aBreakType)
                 (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
               trapezoid->GetRect(tmp);
               nscoord ym = tmp.YMost();
-NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-   ("nsBlockReflowState::ClearFloaters: left? ym=%d clearYMost=%d",
-    ym, clearYMost));
               if (ym > clearYMost) {
                 clearYMost = ym;
                 NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
@@ -4288,8 +4310,7 @@ NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
     if (!haveFloater) {
       break;
     }
-
-    if (clearYMost == mY) {
+    if (clearYMost == mY - mBorderPadding.top) {
       // Nothing to clear
       break;
     }
@@ -4297,8 +4318,7 @@ NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
        ("nsBlockReflowState::ClearFloaters: mY=%d clearYMost=%d",
         mY, clearYMost));
-
-    mY = clearYMost + 1;
+    mY = mBorderPadding.top + clearYMost + 1;
 
     // Get a new band
     GetAvailableSpace();
@@ -4442,6 +4462,11 @@ nsBlockFrame::PaintChild(nsIPresContext& aPresContext,
     }
     else {
       overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+#ifdef NS_DEBUG
+      if (!overlap && (0 == kidRect.width) && (0 == kidRect.height)) {
+        overlap = PR_TRUE;
+      }
+#endif
     }
 
     if (overlap || aAlwaysRender) {

@@ -118,7 +118,8 @@ public:
                                 nsInlineReflow& aInlineReflow);
 
   nsIFrame* PullOneChild(nsInlineFrame* aNextInFlow,
-                         nsIFrame* aLastChild);
+                         nsIFrame* aLastChild,
+                         nsReflowStatus& aReflowStatus);
 
   void PushKids(nsInlineReflowState& aState,
                 nsInlineReflow& aInlineReflow,
@@ -131,6 +132,8 @@ public:
   void InsertNewFrame(nsIPresContext& aPresContext,
                       nsIFrame*       aNewFrame,
                       nsIFrame*       aPrevSibling);
+
+  PRBool SafeToPull(nsIFrame* aFrame);
 
   friend nsresult NS_NewInlineFrame(nsIContent* aContent,
                                     nsIFrame* aParentFrame,
@@ -339,15 +342,17 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
 
   // Prepare inline reflow engine
   NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
-  nsInlineReflow inlineReflow(*aReflowState.lineLayout, state, this);
+  nsInlineReflow inlineReflow(*aReflowState.lineLayout, state, this, PR_FALSE);
   inlineReflow.Init(state.mBorderPadding.left, state.mBorderPadding.top,
                     width, height);
+  aReflowState.lineLayout->PushInline(&inlineReflow);
 
 // ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
   // Now translate in by our border and padding
   NS_ASSERTION(nsnull != aReflowState.spaceManager, "no space manager");
   aReflowState.spaceManager->Translate(state.mBorderPadding.left,
                                        state.mBorderPadding.top);
+nscoord sx, sy; aReflowState.spaceManager->GetTranslation(sx, sy); ListTag(stdout); printf(": BEGIN: BP=%d,%d,%d,%d spaceManager=%d,%d\n", state.mBorderPadding, sx, sy);
 
   // Based on the type of reflow, switch out to the appropriate
   // routine.
@@ -411,8 +416,10 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
 // ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
   // Now translate in by our border and padding
+  aReflowState.lineLayout->PopInline();
   aReflowState.spaceManager->Translate(-state.mBorderPadding.left,
                                        -state.mBorderPadding.top);
+ListTag(stdout); printf(": END\n");
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsInlineFrame::InlineReflow size=%d,%d status=%x nif=%p",
@@ -714,7 +721,8 @@ nsInlineFrame::PullUpChildren(nsInlineReflowState& aState,
   nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
   while (nsnull != nextInFlow) {
     // Get child from our next-in-flow
-    nsIFrame* child = PullOneChild(nextInFlow, aState.mLastChild);
+    nsIFrame* child = PullOneChild(nextInFlow, aState.mLastChild,
+                                   reflowStatus);
     if (nsnull == child) {
       nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
       continue;
@@ -755,13 +763,15 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
   }
 
   // XXX temporary code until blocks can return break-after naturally
-  if (aInlineReflow.GetIsBlock() &&
-      !NS_INLINE_IS_BREAK(aReflowStatus) &&
-      NS_FRAME_IS_COMPLETE(aReflowStatus)) {
-    // Force reflow status to be what the block code should have returned
-    aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
+  if (aInlineReflow.GetIsBlock()) {
+    if (!NS_INLINE_IS_BREAK(aReflowStatus) &&
+        NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+      // Force reflow status to be what the block code should have returned
+      aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
+    }
   }
 
+ListTag(stdout); printf(": child="); aFrame->ListTag(stdout); printf(": reflowStatus=%x\n", aReflowStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("nsInlineFrame::ReflowMapped: frame=%p reflowStatus=%x",
                   aFrame, aReflowStatus));
@@ -856,14 +866,31 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
   return PR_TRUE;
 }
 
+PRBool
+nsInlineFrame::SafeToPull(nsIFrame* aFrame)
+{
+  const nsStyleDisplay* disp;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+  const nsStylePosition* pos;
+  aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) pos);
+  if ((nsnull != disp) && (nsnull != pos)) {
+    if (nsLineLayout::TreatFrameAsBlock(disp, pos)) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 nsIFrame*
 nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
-                               nsIFrame*   aLastChild)
+                            nsIFrame* aLastChild,
+                            nsReflowStatus& aReflowStatus)
 {
   NS_PRECONDITION(nsnull != aNextInFlow, "null ptr");
 
   // Get first available frame from the next-in-flow; if it's out of
-  // frames check it's overflow list.
+  // frames check it's overflow list. Don't pull-up a block frame
+  // unless we have zero children.
   nsIFrame* kidFrame = aNextInFlow->mFirstChild;
   if (nsnull == kidFrame) {
     if (nsnull == aNextInFlow->mOverflowList) {
@@ -873,13 +900,20 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
        ("nsInlineFrame::PullOneChild: from overflow list, frame=%p",
         kidFrame));
     kidFrame = aNextInFlow->mOverflowList;
+    if ((nsnull != aLastChild) && !SafeToPull(kidFrame)) {
+      aReflowStatus = NS_FRAME_NOT_COMPLETE;
+      return nsnull;
+    }
     kidFrame->GetNextSibling(aNextInFlow->mOverflowList);
   }
   else {
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("nsInlineFrame::PullOneChild: frame=%p",
                   kidFrame));
-
+    if ((nsnull != aLastChild) && !SafeToPull(kidFrame)) {
+      aReflowStatus = NS_FRAME_NOT_COMPLETE;
+      return nsnull;
+    }
     // Take the frame away from the next-in-flow. Update it's first
     // content offset.
     kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
@@ -901,6 +935,7 @@ nsInlineFrame::PullOneChild(nsInlineFrame* aNextInFlow,
   }
   kidFrame->SetNextSibling(nsnull);
 
+  aReflowStatus = NS_FRAME_COMPLETE;
   return kidFrame;
 }
 
@@ -924,6 +959,16 @@ nsInlineFrame::PushKids(nsInlineReflowState& aState,
   // Place overflow frames on our overflow list; our next-in-flow
   // will pick them up when it is reflowed
   mOverflowList = aPushedChild;
+
+  // Count how many frames are remaining and set the
+  // aInlineReflow's frame count accordingly.
+  PRInt32 count = 0;
+  nsIFrame* kid = mFirstChild;
+  while (nsnull != kid) {
+    count++;
+    kid->GetNextSibling(kid);
+  }
+  aInlineReflow.ChangeFrameCount(count);
 }
 
 void

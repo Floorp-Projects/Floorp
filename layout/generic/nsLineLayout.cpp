@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsLineLayout.h"
+#include "nsInlineReflow.h"
 #include "nsCSSLayout.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
@@ -117,4 +118,23 @@ nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
     return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+void
+nsLineLayout::UpdateInlines(nscoord aX, nscoord aY,
+                            nscoord aWidth, nscoord aHeight,
+                            PRBool aIsLeftFloater)
+{
+  PRInt32 i, n = mInlineStack.Count();
+  for (i = 0; i < n; i++) {
+    nsInlineReflow* ir = (nsInlineReflow*) mInlineStack[i];
+    ir->UpdateBand(aX, aY, aWidth, aHeight, aIsLeftFloater);
+
+    // After the first inline is updated the remainder are relative to
+    // their parent therefore zap the x,y coordinates.
+
+    // XXX border/padding adjustments need to be re-applied for inlines
+    aX = 0;
+    aY = 0;
+  }
 }

@@ -188,6 +188,11 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
       kid->GetRect(kidRect);
       nsRect damageArea;
       PRBool overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+#ifdef NS_DEBUG
+      if (!overlap && (0 == kidRect.width) && (0 == kidRect.height)) {
+        overlap = PR_TRUE;
+      }
+#endif
 //XXX ListTag(stdout); printf(": re=%c overlap=%c dirtyRect={%d,%d,%d,%d} damageArea={%d,%d,%d,%d}\n", renderEverything?'T':'F', overlap?'T':'F', aDirtyRect, damageArea);
       if (renderEverything || overlap) {
         // Translate damage area into kid's coordinate system
