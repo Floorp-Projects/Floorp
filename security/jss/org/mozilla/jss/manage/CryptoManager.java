@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.6 $ $Date: 2001/04/10 17:32:20 $ 
+ * @version $Revision: 1.7 $ $Date: 2001/07/06 01:08:08 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -112,14 +112,6 @@ public final class CryptoManager implements TokenSupplier
 
         public InitializationValues(String configDir) {
             this.configDir = configDir;
-        }
-
-        /**
-         * deprecated
-         */
-        public InitializationValues(String secmodName, String keydbName,
-            String certdbName)
-        {
         }
 
         public InitializationValues(String configDir, String certPrefix,
@@ -735,19 +727,6 @@ public final class CryptoManager implements TokenSupplier
                 GeneralSecurityException
     {
         initialize( new InitializationValues(configDir) );
-    }
-
-    /**
-     * deprecated
-     */
-    public static synchronized void initialize( String secmodName,
-        String keydbName, String certdbName)
-        throws  KeyDatabaseException,
-                CertDatabaseException,
-                AlreadyInitializedException,
-                GeneralSecurityException
-    {
-        initialize( new InitializationValues() );
     }
 
     /**
