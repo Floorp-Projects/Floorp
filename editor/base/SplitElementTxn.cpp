@@ -23,7 +23,7 @@
 #include "nsIEditorSupport.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -117,7 +117,7 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
     }
     if (NS_SUCCEEDED(result))
     {
-      if (gNoisy) { printf("  left node = %p removed\n", this, mNewLeftNode.get()); }
+      if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
       nsCOMPtr<nsIDOMSelection>selection;
       mEditor->GetSelection(getter_AddRefs(selection));
       if (selection)

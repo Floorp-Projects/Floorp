@@ -115,29 +115,6 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
 //     and re-inserted mLeft?
 NS_IMETHODIMP JoinElementTxn::Undo(void)
 {
-  /*
-  nsresult result;
-  nsCOMPtr<nsIEditorSupport> editor;
-  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) {
-    result = editor->SplitNodeImpl(mRightNode, mOffset, mLeftNode, mParent);
-    if (NS_SUCCEEDED(result) && mLeftNode)
-    {
-      if (gNoisy) { printf("  created left node = %p\n", this, mLeftNode.get()); }
-      nsCOMPtr<nsIDOMSelection>selection;
-      mEditor->GetSelection(getter_AddRefs(selection));
-      if (selection)
-      {
-        selection->Collapse(mLeftNode, mOffset);
-      }
-    }
-  }
-  else {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-  */
-
   if (gNoisy) { printf("%p Undo Join, right node = %p\n", this, mRightNode.get()); }
   NS_ASSERTION(mRightNode && mLeftNode && mParent, "bad state");
   if (!mRightNode || !mLeftNode || !mParent) {
