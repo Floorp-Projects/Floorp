@@ -114,7 +114,7 @@ nsCString::nsCString(const nsStr &aString)  {
  * @param   reference to another nsCString
  */
 nsCString::nsCString(const nsCString& aString)  {
-  Initialize(*this,aString.mCharSize);
+  Initialize(*this,eCharSize(aString.mCharSize));
   StrAssign(*this,aString,0,aString.mLength);
 }
 

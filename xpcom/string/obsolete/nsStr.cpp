@@ -132,7 +132,7 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
   PRBool result=PR_TRUE;
   if(aNewLength>aDest.mCapacity) {
     nsStr theTempStr;
-    nsStr::Initialize(theTempStr,aDest.mCharSize);
+    nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
 
 #ifndef NS_USE_OLD_STRING_ALLOCATION_STRATEGY
       // the new strategy is, allocate exact size, double on grows
@@ -232,7 +232,7 @@ void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PR
 
           if(aDest.mLength+theLength > aDest.mCapacity) {
             nsStr theTempStr;
-            nsStr::Initialize(theTempStr,aDest.mCharSize);
+            nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
 
             PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength);  //grow the temp buffer to the right size
 
