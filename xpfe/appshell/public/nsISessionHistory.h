@@ -138,6 +138,17 @@ public:
    */
   NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL) = 0;
 
+  /**
+   * Get the title of the index
+   */
+  NS_IMETHOD GetTitleForIndex(PRInt32 aIndex, const PRUnichar ** aTitle) = 0;
+
+ /**
+   * Set the Title of the index
+   */
+  NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle) = 0;
+
+
 };
 
 extern "C" NS_APPSHELL nsresult
