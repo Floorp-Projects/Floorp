@@ -35,9 +35,9 @@
 
 class nsStyleChangeList;
 
-#define NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX      0
-#define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  1
-#define NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX  2
+
+#define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  0
+#define NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX  1
 #define NS_BUTTON_RENDERER_LAST_CONTEXT_INDEX   NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX
 
 class nsButtonFrameRenderer {
@@ -103,7 +103,6 @@ private:
 	nsCOMPtr<nsIStyleContext> mBorderStyle;
 	nsCOMPtr<nsIStyleContext> mInnerFocusStyle;
 	nsCOMPtr<nsIStyleContext> mOuterFocusStyle;
-	nsCOMPtr<nsIStyleContext> mOutlineStyle;
 
 	PRInt32 mNameSpace;
 	nsFrame* mFrame;

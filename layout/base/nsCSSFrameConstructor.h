@@ -428,6 +428,11 @@ protected:
 												          nsIFrame       *&aFrame, 
 												          nsFrameConstructorState& aState,
 												          nsFrameItems&  aFrameItems);
+  nsresult ConstructButtonFrames(nsIPresContext  *aPresContext,
+                                 nsIContent     *aContent,
+												         nsIFrame       *&aFrame, 
+												         nsFrameConstructorState& aState,
+												         nsFrameItems&  aFrameItems);
 
   nsresult ConstructButtonControlFrame(nsIPresContext*      	aPresContext,
                                      nsIFrame*&               aNewFrame);
@@ -527,7 +532,8 @@ protected:
   nsresult CreateInputFrame(nsIPresContext  *aPresContext,
                             nsIContent      *aContent, 
                             nsIFrame        *&aFrame,
-                            nsIStyleContext *aStyleContext);
+                            nsIStyleContext *aStyleContext,
+                            PRBool           &aIsButton);
 
   nsresult RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
                                       nsIPresShell *  aPresShell,

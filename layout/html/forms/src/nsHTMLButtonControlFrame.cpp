@@ -101,6 +101,27 @@ nsHTMLButtonControlFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mRenderer.SetFrame(this,aPresContext);
+   // cache our display type
+  const nsStyleDisplay* styleDisplay;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+  mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
+
+  PRUint32 flags = NS_BLOCK_SPACE_MGR;
+  if (mInline) {
+    flags |= NS_BLOCK_SHRINK_WRAP;
+  }
+  nsIFrame* areaFrame;
+  NS_NewAreaFrame(&areaFrame, flags);
+  mFrames.SetFrames(areaFrame);
+
+  // Resolve style and initialize the frame
+  nsIStyleContext* styleContext;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
+                                            mStyleContext, PR_FALSE,
+                                            &styleContext);
+  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
+  NS_RELEASE(styleContext);                                           
+
   return rv;
 }
 
@@ -382,27 +403,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *this);
 
-  // cache our display type
-  const nsStyleDisplay* styleDisplay;
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
-  mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
-
-  PRUint32 flags = NS_BLOCK_SPACE_MGR;
-  if (mInline) {
-    flags |= NS_BLOCK_SHRINK_WRAP;
-  }
-  nsIFrame* areaFrame;
-  NS_NewAreaFrame(&areaFrame, flags);
-  mFrames.SetFrames(areaFrame);
-
-  // Resolve style and initialize the frame
-  nsIStyleContext* styleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
-                                            mStyleContext, PR_FALSE,
-                                            &styleContext);
-  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
-  NS_RELEASE(styleContext);                                           
-
+ 
   // Set the parent for each of the child frames
   for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(&frame)) {
     frame->SetParent(mFrames.FirstChild());

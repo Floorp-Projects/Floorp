@@ -162,29 +162,6 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
     }
   }
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
-  {
-    /*
-      if (mOutlineStyle) {
-
-      GetButtonOutlineRect(aRect, rect);
-
-      mOutlineRect = rect;
-
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOutlineStyle ->GetStyleData(eStyleStruct_Spacing);
-
-      // set the clipping area so we can draw outside our bounds.
-      aRenderingContext.PushState();
-      PRBool clipEmpty;
-
-      aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-      aDirtyRect, rect, *spacing, mOutlineStyle, 0);
-
-      aRenderingContext.PopState(clipEmpty);
-      }
-    */
-  }
 }
 
 
@@ -331,15 +308,6 @@ nsMargin
 nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
 {
   nsMargin borderAndPadding(0,0,0,0);
-
-  if (mOutlineStyle) {
-    // get the outline border and padding
-    const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOutlineStyle ->GetStyleData(eStyleStruct_Spacing);
-    if (!spacing->GetBorderPadding(borderAndPadding)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
-    }
-  }
-
   return borderAndPadding;
 }
 
@@ -370,14 +338,9 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
   nsCOMPtr<nsIStyleContext> context;
   mFrame->GetStyleContext(getter_AddRefs(context));
 
-  // style that draw an outline around the button
-  nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-outline")) );
-  aPresContext.ProbePseudoStyleContextFor(content, atom, context,
-                                          PR_FALSE,
-                                          getter_AddRefs(mOutlineStyle));
 
   // style for the inner such as a dotted line (Windows)
-  atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
+  nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
   aPresContext.ProbePseudoStyleContextFor(content, atom, context,
                                           PR_FALSE,
                                           getter_AddRefs(mInnerFocusStyle));
@@ -399,10 +362,7 @@ nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleC
   }
   *aStyleContext = nsnull;
   switch (aIndex) {
-  case NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX:
-    *aStyleContext = mOutlineStyle;
-    NS_IF_ADDREF(*aStyleContext);
-    break;
+
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
     *aStyleContext = mInnerFocusStyle;
     NS_IF_ADDREF(*aStyleContext);
@@ -424,9 +384,7 @@ nsButtonFrameRenderer::SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleCo
     return NS_ERROR_INVALID_ARG;
   }
   switch (aIndex) {
-  case NS_BUTTON_RENDERER_OUTLINE_CONTEXT_INDEX:
-    mOutlineStyle = aStyleContext;
-    break;
+ 
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
     mInnerFocusStyle = aStyleContext;
     break;
