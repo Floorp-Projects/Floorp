@@ -1523,6 +1523,7 @@ js_InitPropertyTree(JSRuntime *rt)
 {
     if (!JS_DHashTableInit(&rt->propertyTreeHash, &PropertyTreeHashOps, NULL,
                            sizeof(JSPropertyTreeEntry), JS_DHASH_MIN_SIZE)) {
+        rt->propertyTreeHash.ops = NULL;
         return JS_FALSE;
     }
     JS_InitArenaPool(&rt->propertyArenaPool, "properties",
@@ -1533,6 +1534,9 @@ js_InitPropertyTree(JSRuntime *rt)
 void
 js_FinishPropertyTree(JSRuntime *rt)
 {
-    JS_DHashTableFinish(&rt->propertyTreeHash);
+    if (rt->propertyTreeHash.ops) {
+        JS_DHashTableFinish(&rt->propertyTreeHash);
+        rt->propertyTreeHash.ops = NULL;
+    }
     JS_FinishArenaPool(&rt->propertyArenaPool);
 }
