@@ -206,6 +206,30 @@ nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
 
 #endif
 
+static nsresult GetNativeAppSupport(nsINativeAppSupport** aNativeApp)
+{
+    NS_ENSURE_ARG_POINTER(aNativeApp);
+    *aNativeApp = nsnull;
+    
+    nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+    if (appShellService)
+        appShellService->GetNativeAppSupport(aNativeApp);
+    
+    return *aNativeApp ? NS_OK : NS_ERROR_FAILURE;
+}
+
+static PRBool IsAppInServerMode()
+{
+    PRBool serverMode = PR_FALSE;
+    nsCOMPtr<nsINativeAppSupport> nativeApp;
+    GetNativeAppSupport(getter_AddRefs(nativeApp));
+    if (nativeApp)
+        nativeApp->GetIsServerMode(&serverMode);
+        
+    return serverMode;
+}
+
+
 /*
  * This routine translates the nsresult into a platform specific return
  * code for the application...
@@ -702,19 +726,13 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
     if ( !more )
     {
       // If starting up in server mode, then we do things differently.
-      nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-      if (appShellService) {
-        nsCOMPtr<nsINativeAppSupport> nativeApp;
-        appShellService->GetNativeAppSupport(getter_AddRefs(nativeApp));
-        if (nativeApp) {
-          PRBool serverMode = PR_FALSE;
-          nativeApp->GetIsServerMode(&serverMode);
-          if (serverMode) {
-            // Create special Nav window.
-            nativeApp->StartServerMode();
-            return NS_OK;
-          }
-        }
+      nsCOMPtr<nsINativeAppSupport> nativeApp;
+      PRBool serverMode;
+      rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
+      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsServerMode(&serverMode)) && serverMode) {
+        // Create special Nav window.
+        nativeApp->StartServerMode();
+        return NS_OK;
       }
 
       // No window exists so lets create a browser one
@@ -814,7 +832,9 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
         if (NS_FAILED(rv)) return rv;
 
-        rv = profileMgr->StartupWithArgs(cmdLineArgs);
+        // If we are in server mode, profile mgr cannot show UI
+        rv = profileMgr->StartupWithArgs(cmdLineArgs, !IsAppInServerMode());
+        NS_ASSERTION(NS_SUCCEEDED(rv), "StartupWithArgs failed\n");
         if (NS_FAILED(rv)) return rv;
 
         // if we get here, and we don't have a current profile, return a failure so we will exit

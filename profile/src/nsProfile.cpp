@@ -333,10 +333,6 @@ NS_INTERFACE_MAP_END
 /*
  * nsIProfile Implementation
  */
-NS_IMETHODIMP nsProfile::Startup(const PRUnichar *filename)
-{
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsProfile::GetAutomigrate(PRBool *aAutomigrate)
@@ -355,7 +351,7 @@ nsProfile::SetAutomigrate(PRBool aAutomigrate)
 }
 
 NS_IMETHODIMP
-nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
+nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
 {
     nsresult rv;
 
@@ -376,7 +372,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
         return NS_ERROR_FAILURE;
 
     if (!profileDirSet) {
-        rv = LoadDefaultProfileDir(profileURLStr);
+        rv = LoadDefaultProfileDir(profileURLStr, canInteract);
 
         if (NS_FAILED(rv)) return rv;
     }
@@ -430,7 +426,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 
 
 nsresult
-nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
+nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> profileURL;
@@ -471,6 +467,8 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 
     if (profileURLStr.Length() != 0)
     {
+        if (!canInteract) return NS_ERROR_PROFILE_REQUIRES_INTERACTION;
+        
         NS_WITH_SERVICE(nsIAppShellService, profAppShell, kAppShellServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
@@ -508,7 +506,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
                 // so they don't want to automatically migrate
                 // so call this again with the profile manager ui
                 nsCString profileManagerUrl(PROFILE_MANAGER_URL);
-                rv = LoadDefaultProfileDir(profileManagerUrl);
+                rv = LoadDefaultProfileDir(profileManagerUrl, canInteract);
                 return rv;
             }
         }
