@@ -127,6 +127,11 @@
 
 <!ENTITY pref.categories.help.description   "Utilize v&#xED;rgula entre cada categoria que deseja acrescentar.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Recarregar Calend&#xE1;rios Remotos ao Iniciar">
 
 <!ENTITY pref.publish.caption        "Op&#xE7;&#xF5;es de Publica&#xE7;&#xE3;o">

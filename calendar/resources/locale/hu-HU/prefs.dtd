@@ -128,6 +128,11 @@
 
 <!ENTITY pref.categories.help.description   "Használjon vesszőt minden egyes hozzáadni kívánt kategória között.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Induláskor a távoli naptárak frissítése">
 
 <!ENTITY pref.publish.caption        "Közzétételi beállítások">

@@ -126,6 +126,11 @@
 
 <!ENTITY pref.categories.help.description   "Norint pridėti grupių pavadinimus, reikia juos atskirti kableliais.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Paledžiant kalendorių įkelti iš naujo visas nuotolinių kalendorių bylas">
 
 <!ENTITY pref.publish.caption        "Publikavimo nuostatos">

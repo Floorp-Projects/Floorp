@@ -126,6 +126,11 @@
 
 <!ENTITY pref.categories.help.description   "Servez-vous d'une virgule pour séparer les catégories que vous voulez définir.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Recharger les calendriers distants au démarrage">
 
 <!ENTITY pref.publish.caption        "Réglage pour la publication">

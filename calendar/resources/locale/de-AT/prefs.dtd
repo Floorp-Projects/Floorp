@@ -125,6 +125,11 @@
 
 <!ENTITY pref.categories.help.description   "Verwenden Sie ein Komma zwischen allen Kategorien, die Sie hinzufügen wollen.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Entfernte Kalender beim Start neu laden">
 
 <!ENTITY pref.publish.caption        "Publizierungseinstellungen">

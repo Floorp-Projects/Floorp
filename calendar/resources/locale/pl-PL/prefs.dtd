@@ -124,6 +124,11 @@
 
 <!ENTITY pref.categories.help.description   "Używaj przecinków by oddzielić kategorie, które chcesz dodać.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Przeładuj zdalne kalendarze przy starcie">
 
 <!ENTITY pref.publish.caption        "Ustawienia publikowania">

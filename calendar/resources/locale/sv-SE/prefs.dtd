@@ -127,6 +127,11 @@
 
 <!ENTITY pref.categories.help.description   "Använd ett komma mellan varje kategori du vill lägga till.">
 
+<!ENTITY pref.categories.add.title    "Add Category">
+<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
+<!ENTITY pref.categories.edit.title   "Edit Category">
+
+
 <!ENTITY pref.reloadonlaunch       "Hämta Länkade Kalendrar Vid Uppstart">
 
 <!ENTITY pref.publish.caption        "Publiceringsinställningar">
