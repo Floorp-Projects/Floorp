@@ -2303,7 +2303,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
 
     nsresult rv;
 
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+//    NS_PRECONDITION(mDocument != nsnull, "not initialized");
     if (!mDocument)
         return NS_ERROR_NOT_INITIALIZED;
 
