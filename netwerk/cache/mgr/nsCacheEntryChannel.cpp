@@ -174,7 +174,7 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
 
     mCacheEntry->NoteAccess();
 
-    nsCOMPtr<nsIStreamListener> headListener;
+    nsCOMPtr<nsIStreamListener> headListener = aListener;
     if (mLoadGroup) {
         mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
 
@@ -186,12 +186,6 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
                                                   getter_AddRefs(headListener));
             if (NS_FAILED(rv)) return rv;
         }
-        NS_ASSERTION(headListener, "Load group listener factory did not create listener");
-        if (!headListener)
-            headListener = aListener;
-
-    } else {
-        headListener = aListener;
     }
 
     CacheManagerStreamListener* cacheManagerStreamListener;
