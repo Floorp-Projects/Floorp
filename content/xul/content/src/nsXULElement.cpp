@@ -3130,8 +3130,8 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
             aEvent->message == NS_DRAGDROP_GESTURE ||
-            tagName == "menu" || tagName == "menuitem" ||
-            tagName == "menubar" || tagName == "key" || tagName == "keyset") {
+            tagName == "menu" || tagName == "menuitem" || tagName == "menulist" ||
+            tagName == "menubar" || tagName == "menupopup" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
                 NS_ERROR("Unable to instantiate a listener manager on this event.");
