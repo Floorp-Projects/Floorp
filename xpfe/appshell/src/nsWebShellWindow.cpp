@@ -974,7 +974,8 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       PRInt32 heightDelta = oldRect.height - rect.height;
       nsRect currentBounds;
       GetWindowBounds(currentBounds);
-      SizeWindowTo(currentBounds.width, currentBounds.height + heightDelta);
+      SizeWindowTo(currentBounds.width, currentBounds.height + heightDelta,
+                   PR_FALSE, PR_FALSE);
       // END REFLOW CODE
       #endif
                   
@@ -2329,6 +2330,35 @@ void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize)
 } // StoreBoundsToXUL
 
 
+void nsWebShellWindow::KillPersistentSize()
+{
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsAutoString persistString;
+  PRInt32 index;
+  PRBool saveString;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (!webshellElement) // it's hopeless
+    return;
+
+  webshellElement->GetAttribute("persist", persistString);
+
+  saveString = PR_FALSE;
+  if ((index = persistString.Find("width")) >= 0) {
+    persistString.Cut(index, 5);
+    saveString = PR_TRUE;
+  }
+  if ((index = persistString.Find("height")) >= 0) {
+    persistString.Cut(index, 6);
+    saveString = PR_TRUE;
+  }
+  if (saveString)
+    webshellElement->SetAttribute("persist", persistString);
+}
+
+
 void nsWebShellWindow::SetTitleFromXUL()
 {
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
@@ -2759,12 +2789,12 @@ NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
  
-NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
+                          PRBool aWidthTransient, PRBool aHeightTransient)
 {
-  // XXX We have to look at the delta between our content shell's 
-  // size and the size passed in and then resize ourselves based on that
-  // delta.
   mIntrinsicallySized = PR_FALSE; // We got changed. No more intrinsic sizing here.
+  if (aWidthTransient || aHeightTransient)
+    KillPersistentSize();
   mWindow->Resize(aWidth, aHeight, PR_TRUE);
   StoreBoundsToXUL(PR_FALSE, PR_TRUE);
   return NS_OK;
@@ -2772,6 +2802,9 @@ NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
  
 NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
+  // We have to look at the delta between our content shell's 
+  // size and the size passed in and then resize ourselves based on that
+  // delta.
    nsCOMPtr<nsIWebShell> content;
    GetContentWebShell(getter_AddRefs(content));
    nsCOMPtr<nsIBaseWindow> contentAsWin(do_QueryInterface(content));
