@@ -44,7 +44,9 @@ class nsUnicodeMappingUtil {
 public:
 	nsUnicodeMappingUtil();
 	~nsUnicodeMappingUtil();
-	
+	void Init();
+	void CleanUp();
+	void Reset();
 	inline PRBool ScriptEnabled(ScriptCode script) 
 		{ return (0 != (mScriptEnabled & (1L << script))); };
 	inline ScriptCode BlockToScript(nsUnicodeBlock blockID) 
