@@ -446,31 +446,58 @@ NS_IMETHODIMP
 nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
 {
   if (!aNode) { return NS_ERROR_NULL_POINTER; }
-  // find the current block parent
+  // find the current block parent, or just use aNode if it is a block node
   nsCOMPtr<nsIDOMElement>blockParentElement;
-  nsresult result = nsTextEditor::GetBlockParent(aNode, getter_AddRefs(blockParentElement));
-  if ((NS_SUCCEEDED(result)) && blockParentElement)
+  nsCOMPtr<nsIDOMNode>nodeToReParent; // this is the node we'll operate on, by default it's aNode
+  nsresult result = aNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(nodeToReParent));
+  PRBool nodeIsInline;
+  PRBool nodeIsBlock=PR_FALSE;
+  nsTextEditor::IsNodeInline(aNode, nodeIsInline);
+  if (PR_FALSE==nodeIsInline)
+  {
+    nsresult QIResult;
+    nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+    QIResult = aNode->QueryInterface(nsIDOMCharacterData::GetIID(), getter_AddRefs(nodeAsText));
+    if (NS_FAILED(QIResult) || !nodeAsText) {
+      nodeIsBlock=PR_TRUE;
+    }
+  }
+  // if aNode is the block parent, then we're operating on one of its children
+  if (PR_TRUE==nodeIsBlock) 
+  {
+    result = aNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(blockParentElement));
+    if (NS_SUCCEEDED(result) && blockParentElement) {
+      result = aNode->GetFirstChild(getter_AddRefs(nodeToReParent));
+    }
+  }
+  else {
+    result = nsTextEditor::GetBlockParent(aNode, getter_AddRefs(blockParentElement));
+  }
+  // at this point, we must have a good result, a node to reparent, and a block parent
+  if (!nodeToReParent) { return NS_ERROR_UNEXPECTED;}
+  if (!blockParentElement) { return NS_ERROR_NULL_POINTER;}
+  if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIDOMNode> newParentNode;
     nsCOMPtr<nsIDOMNode> blockParentNode = do_QueryInterface(blockParentElement);
-    // select all children of block parent, if the block parent is not the body
+    // we need to treat nodes directly inside the body differently
     nsAutoString parentTag;
     blockParentElement->GetTagName(parentTag);
     nsAutoString bodyTag = "body";
     if (PR_TRUE==parentTag.EqualsIgnoreCase(bodyTag))
     {
-      // if aNode is a text node, we have <BODY><TEXT>text.
+      // if nodeToReParent is a text node, we have <BODY><TEXT>text.
       // re-parent <TEXT> into a new <aTag> at the offset of <TEXT> in <BODY>
-      nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToReParent);
       if (nodeAsText)
       {
-        result = ReParentBlockContent(aNode, aParentTag, blockParentNode, parentTag, 
+        result = ReParentBlockContent(nodeToReParent, aParentTag, blockParentNode, parentTag, 
                                       getter_AddRefs(newParentNode));
       }
       else
       { // this is the case of an insertion point between 2 non-text objects
         PRInt32 offsetInParent=0;
-        result = nsIEditorSupport::GetChildOffset(aNode, blockParentNode, offsetInParent);
+        result = nsIEditorSupport::GetChildOffset(nodeToReParent, blockParentNode, offsetInParent);
         NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
         // otherwise, just create the block parent at the selection
         result = nsTextEditor::CreateNode(aParentTag, blockParentNode, offsetInParent, 
@@ -485,7 +512,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
       if (PR_FALSE==parentTag.EqualsIgnoreCase(aParentTag))
       {
         DebugDumpContent(); // DEBUG
-        result = ReParentBlockContent(aNode, aParentTag, blockParentNode, parentTag, 
+        result = ReParentBlockContent(nodeToReParent, aParentTag, blockParentNode, parentTag, 
                                       getter_AddRefs(newParentNode));
         if (NS_SUCCEEDED(result) && newParentNode)
         {
@@ -548,6 +575,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
       result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
       NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
       result = nsTextEditor::CreateNode(aParentTag, aBlockParentNode, offsetInParent, aNewParentNode);
+      if (gNoisy) { printf("created a node in aBlockParentNode at offset %d\n", offsetInParent); }
     }
     else
     {
@@ -555,9 +583,23 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
       result = aBlockParentNode->GetParentNode(getter_AddRefs(grandParent));
       if ((NS_SUCCEEDED(result)) && grandParent)
       {
-        result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
-        NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
-        result = nsTextEditor::CreateNode(aParentTag, aBlockParentNode, offsetInParent, aNewParentNode);
+        nsCOMPtr<nsIDOMNode>firstChildNode, lastChildNode;
+        aBlockParentNode->GetFirstChild(getter_AddRefs(firstChildNode));
+        aBlockParentNode->GetLastChild(getter_AddRefs(lastChildNode));
+        if (firstChildNode==leftNode && lastChildNode==rightNode)
+        {
+          result = nsIEditorSupport::GetChildOffset(aBlockParentNode, grandParent, offsetInParent);
+          NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
+          result = nsTextEditor::CreateNode(aParentTag, grandParent, offsetInParent, aNewParentNode);
+          if (gNoisy) { printf("created a node in grandParent at offset %d\n", offsetInParent); }
+        }
+        else
+        {
+          result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
+          NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
+          result = nsTextEditor::CreateNode(aParentTag, aBlockParentNode, offsetInParent, aNewParentNode);
+          if (gNoisy) { printf("created a node in aBlockParentNode at offset %d\n", offsetInParent); }
+        }
       }
     }
     if ((NS_SUCCEEDED(result)) && *aNewParentNode)
