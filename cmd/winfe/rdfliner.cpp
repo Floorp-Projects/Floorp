@@ -63,6 +63,7 @@ extern int XP_BKMKS_HOURS_AGO;
 #define CLICKED_BACKGROUND 0
 #define CLICKED_TRIGGER 1
 #define CLICKED_LINE 2
+#define CLICKED_BAR 3
 
 // Used in painting
 #define COL_LEFT_MARGIN	((m_cxChar+1)/2)
@@ -1080,6 +1081,9 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 	HT_Resource r = (HT_Resource)pLineData;
 	ReleaseLineData ( pLineData );
 			
+	int iTriggerSize = 9;
+	int iBarWidth = iTriggerSize / 2 + 1; // 5 pixels out of the 9.
+
 	// If the user clicked on the image column, they might have struck the trigger.  Check for this.
 	if ( m_pColumn[ iCol ]->iCommand == m_idImageCol ) 
 	{
@@ -1087,12 +1091,24 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 		RECT rcToggle = m_rcHit;
 		rcToggle.left += iDepth * iImageWidth;
 		rcToggle.right = rcToggle.left + iImageWidth;
+		rcToggle.top += (iImageWidth - iTriggerSize) / 2 + 2; // Account for the pixel of padding
+		rcToggle.bottom = rcToggle.top + iTriggerSize;
 
 		// If the data is a container and if the point is inside the toggle rect, the user clicked the
 		// trigger.
 		if ( ::PtInRect( &rcToggle, point ) && HT_IsContainer(r)) 
 			return CLICKED_TRIGGER;
 			
+		// The user may have clicked on a bar.
+		if (m_bHasPipes && point.x > iImageWidth && point.x < rcToggle.right) // No bars on the outermost level
+		{
+			int area = point.x % iImageWidth; // Determine where within the particular level the click occurred
+			int left = (iImageWidth - iBarWidth) / 2;
+			int right = left + iBarWidth;
+			if (area >= left && area <= right) // Hard-code it for now.
+				return CLICKED_BAR;
+		}
+
 		// If the user clicked to the left of the trigger on a container, then treat as a background click.
 		// If the user clicked where the trigger would have been (or to the left of the trigger) on a non-
 		// container, then treat that as a background click also.
@@ -1167,6 +1183,19 @@ void CRDFOutliner::OnLButtonDown ( UINT nFlags, CPoint point )
 	
 	if (clickResult == CLICKED_TRIGGER)
 		DoToggleExpansion(m_iRowHit);
+	else if (clickResult == CLICKED_BAR)
+	{
+		int clickDepth = m_ptHit.x / GetIndentationWidth();
+		HT_Resource r = (HT_Resource)AcquireLineData(m_iRowHit);
+		if (r)
+		{
+			for (HT_Resource curr = r; curr && HT_GetItemIndentation(curr) > clickDepth; 
+				 curr = HT_GetParent(curr));
+
+			if (curr)
+				HT_SetOpenState(curr, PR_FALSE);
+		}
+	}
 	else if (clickResult == CLICKED_LINE)				
 	{
 		if ( ColumnCommand( m_pColumn[ m_iColHit ]->iCommand, m_iRowHit) )
