@@ -283,6 +283,8 @@ virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   PLDHashTable  *m_cachedHeaders;
 	PRBool				m_bCacheHeaders;
 
+private:
+  PRUint32 m_cacheSize;
 };
 
 class nsMsgRetentionSettings : public nsIMsgRetentionSettings

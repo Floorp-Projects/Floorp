@@ -43,6 +43,12 @@ public:
 	// State/attribute member functions
 	PRUint32          GetSize() const;
 	PRBool            SetSize(PRUint32 nNewSize, PRBool AdjustGrowth=PR_FALSE, PRUint32 nGrowBy = 0);
+  PRBool            AllocateSpace(PRUint32 nNewSize) {
+                      PRUint32 saveSize = m_nSize;
+                      nsresult rv = SetSize(nNewSize);
+                      m_nSize = saveSize;
+                      return rv;
+                    };
 
 	// Accessor member functions
 	PRUint32            &ElementAt(PRUint32 nIndex);

@@ -92,10 +92,10 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize,
 	}
 	else if (nSize <= m_nMaxSize)
 	{
-		// The new size is within the current maximum size, make sure new
-		// elements are to initialized to zero
-		if (nSize > m_nSize)
-			nsCRT::memset(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
+    // The new size is within the current maximum size, make sure new
+    // elements are to initialized to zero
+    if (nSize > m_nSize)
+	    nsCRT::memset(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
 
 		m_nSize = nSize;
 	}

@@ -57,6 +57,8 @@ interface  nsIDBFolderInfo : nsISupports {
 	attribute unsigned long FolderDate;
 	void ChangeNumNewMessages(in long delta);
 	void ChangeNumMessages(in long delta);
+
+  // ChangeNumVisibleMessages, NumNewMessages and NumMessages will never return negative numbers. 0 means 'no msgs'.
 	void ChangeNumVisibleMessages(in long delta);
 	attribute long NumNewMessages;
 	attribute long NumMessages;

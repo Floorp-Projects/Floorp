@@ -106,9 +106,11 @@ protected:
 	time_t		m_folderDate;
 	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
 
+  // m_numVisibleMessages, m_numNewMessages and m_numMessages can never be negative. 0 means 'no msgs'.
 	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
 	PRInt32		m_numNewMessages;
 	PRInt32		m_numMessages;		// includes expunged and ignored messages
+
 	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
 									// configured for off-line use, use default retrieval, purge article/header options
 	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message

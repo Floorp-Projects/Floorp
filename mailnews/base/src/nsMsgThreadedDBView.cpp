@@ -39,6 +39,10 @@
 #include "nsMsgThreadedDBView.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgThread.h"
+#include "nsIDBFolderInfo.h"
+
+#define MSGHDR_CACHE_LOOK_AHEAD_SIZE  25    // Allocate this more to avoid reallocation on new mail.
+#define MSGHDR_CACHE_MAX_SIZE         8192  // Max msghdr cache entries.
 
 nsMsgThreadedDBView::nsMsgThreadedDBView()
 {
@@ -56,6 +60,30 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
 	nsresult rv;
 	rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
     NS_ENSURE_SUCCESS(rv, rv);
+
+  // Preset msg hdr cache size for performance reason.
+  if (m_db)
+  {
+    PRInt32 totalMessages, unreadMessages;
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+    rv = m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
+    { 
+      // Set unread msg size + extra entries to avoid reallocation on new mail.
+      dbFolderInfo->GetNumNewMessages(&unreadMessages);
+      totalMessages = (PRUint32)unreadMessages+MSGHDR_CACHE_LOOK_AHEAD_SIZE;  
+    }
+    else
+    {
+      dbFolderInfo->GetNumMessages(&totalMessages);
+      if (totalMessages > MSGHDR_CACHE_MAX_SIZE) 
+        totalMessages = MSGHDR_CACHE_MAX_SIZE;        // use max default
+      else
+        totalMessages += MSGHDR_CACHE_LOOK_AHEAD_SIZE;// allocate extra entries to avoid reallocation on new mail.
+    }
+    m_db->SetMsgHdrCacheSize((PRUint32)totalMessages);
+  }
 
 	if (pCount)
 		*pCount = 0;
@@ -137,6 +165,10 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 
 {
 	PRInt32	numAdded = 0;
+  // Allocate enough space first to avoid memory allocation/deallocation.
+  m_keys.AllocateSpace(numKeysToAdd);
+  m_flags.AllocateSpace(numKeysToAdd);
+  m_levels.AllocateSpace(numKeysToAdd);
 	for (PRInt32 i = 0; i < numKeysToAdd; i++)
 	{
 		PRInt32 threadFlag = pFlags[i];

@@ -77,14 +77,14 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 	}
 	else if (nNewSize <= m_nMaxSize)
 	{
-		// it fits
-		if (nNewSize > m_nSize)
-		{
-			// initialize the new elements
+    // it fits
+    if (nNewSize > m_nSize)
+    {
+	    // initialize the new elements
 
       nsCRT::memset(&m_pData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
 
-		}
+    }
 
 		m_nSize = nNewSize;
 	}

@@ -95,7 +95,7 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 #define MSG_HASH_SIZE 512
 
-const PRInt32 kMaxHdrsInCache = 512;
+const PRInt32 kMaxHdrsInCache = 512;  // this will be used on discovery, since we don't know total, and after loading (and sorting), on a new header, we'll use this.
 
 // special keys
 static const nsMsgKey kAllMsgHdrsTableKey = 1; 
@@ -139,12 +139,12 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	if (m_bCacheHeaders)
 	{
 		if (!m_cachedHeaders)
-    m_cachedHeaders = PL_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
+      m_cachedHeaders = PL_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), m_cacheSize );
     if (m_cachedHeaders)
     {
 		  if (key == nsMsgKey_None)
 			  hdr->GetMessageKey(&key);
-      if (m_cachedHeaders->entryCount > kMaxHdrsInCache)
+      if (m_cachedHeaders->entryCount > m_cacheSize)
         ClearHdrCache(PR_TRUE);
       PLDHashEntryHdr *entry = PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_ADD);
       if (!entry)
@@ -170,6 +170,19 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
   return PL_DHASH_NEXT;
 }
 
+NS_IMETHODIMP nsMsgDatabase::SetMsgHdrCacheSize(PRUint32 aSize)
+{
+  m_cacheSize = aSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::GetMsgHdrCacheSize(PRUint32 *aSize)
+{
+  NS_ENSURE_ARG_POINTER(aSize);
+  *aSize = m_cacheSize;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 {
   return ClearHdrCache(PR_FALSE); // don't re-init, hope db gets closed.
@@ -187,7 +200,7 @@ nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
     if (reInit)
     {
       PL_DHashTableFinish(saveCachedHeaders);
-      PL_DHashTableInit(saveCachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+      PL_DHashTableInit(saveCachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), m_cacheSize);
       m_cachedHeaders = saveCachedHeaders;
 
     }
@@ -672,11 +685,11 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_HeaderParser(nsnull),
 	  m_headersInUse(nsnull),
 	  m_cachedHeaders(nsnull),
-	  m_bCacheHeaders(PR_FALSE)
+	  m_bCacheHeaders(PR_TRUE),
+    m_cacheSize(kMaxHdrsInCache)
 
 {
 	NS_INIT_REFCNT();
-	m_bCacheHeaders = PR_TRUE;
 }
 
 nsMsgDatabase::~nsMsgDatabase()

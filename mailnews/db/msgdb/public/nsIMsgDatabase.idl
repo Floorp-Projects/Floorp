@@ -264,5 +264,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // news can be threaded by default)
   readonly attribute nsMsgViewFlagsTypeValue defaultViewFlags;
   readonly attribute nsMsgViewSortTypeValue  defaultSortType;
+
+  // for msg hdr hash table allocation. controllable by caller to improve folder loading preformance.
+  attribute unsigned long msgHdrCacheSize;
 };
 

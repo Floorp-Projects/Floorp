@@ -522,6 +522,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString *boxName)
 NS_IMETHODIMP nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
 {
 	m_numNewMessages += delta;
+  // m_numNewMessages can never be set to negative.
 	if (m_numNewMessages < 0)
 	{
 #ifdef DEBUG_bienvenu1
@@ -535,6 +536,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
 NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 {
 	m_numMessages += delta;
+  // m_numMessages can never be set to negative.
 	if (m_numMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
@@ -548,6 +550,7 @@ NS_IMETHODIMP nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 NS_IMETHODIMP nsDBFolderInfo::ChangeNumVisibleMessages(PRInt32 delta)
 {
 	m_numVisibleMessages += delta;
+  // m_numVisibleMessages can never be set to negative.
 	if (m_numVisibleMessages < 0)
 	{
 #ifdef DEBUG_bienvenu
