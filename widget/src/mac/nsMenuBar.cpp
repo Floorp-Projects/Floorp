@@ -493,6 +493,12 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aCount)
 {
+  nsISupports* menu = (nsISupports*)mMenuVoidArray[aCount];
+  NS_IF_RELEASE( menu );
+  
+  mMenuVoidArray.RemoveElementAt(aCount);
+  
+  ::DrawMenuBar();
   return NS_OK;
 }
 

@@ -1523,7 +1523,28 @@ nsMenu::ContentRemoved(
   nsIContent  * aContainer,
   nsIContent  * aChild,
   PRInt32       aIndexInContainer)
-{
+{  
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if(!element) {
+    NS_ERROR("Unable to QI dom element.");
+    return NS_OK;  
+  }
+		  
+  nsCOMPtr<nsIContent> contentNode;
+  contentNode = do_QueryInterface(element);
+  if (!contentNode) {
+    NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+    return NS_OK;
+  }
+  
+  if(aChild == contentNode.get()) {
+    if(mMenuParent) {
+      mMenuParent->RemoveItem(aIndexInContainer);
+    } else if(mMenuBarParent) {
+      mMenuBarParent->RemoveMenu(aIndexInContainer);
+    }
+  }    
+    
   return NS_OK;
 }
 //-------------------------------------------------------------------------
