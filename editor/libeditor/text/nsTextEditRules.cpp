@@ -517,6 +517,16 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
+
+  // if we're a single line control, pretreat the input string to remove returns
+  // this is unnecessary if we use <BR>'s for breaks in "plain text", because
+  // InsertBreak() checks the string.  But we don't currently do that, so we need this
+  // fixes bug 21032 
+  // *** there's some debate about whether we should replace CRLF with spaces, or
+  //     truncate the string at the first CRLF.  Here, we replace with spaces.
+  if (nsIHTMLEditor::eEditorSingleLineMask & mFlags) {
+    aOutString->ReplaceChar(CRLF, ' ');
+  }
   
   // do text insertion
   PRBool bCancel;
@@ -1072,7 +1082,17 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
               // selectedNode will remain after the join, siblingNode is removed
               // set selection
               res = aSelection->Collapse(siblingNode, selectedNodeLength);
+              if (NS_FAILED(res)) return res;
             }
+          }
+          // if, after all this work, selectedNode is empty, delete it
+          // it's good practice to remove empty text nodes, and this fixes 
+          // bugs 20387 for text controls in html content area.
+          PRUint32 finalSelectedNodeLength; // the length of the resulting node
+          selectedNodeAsText->GetLength(&finalSelectedNodeLength);
+          if (0==finalSelectedNodeLength)
+          {
+            res = mEditor->DeleteNode(selectedNode);
           }
         }
       }
