@@ -1050,13 +1050,12 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
     nsCOMPtr<nsIAbDirectoryQueryResult> result ;
     nsAbDirectoryQueryResult *newResult = nsnull ;
 
-    if (nbResults == 0) {
-        newResult = new nsAbDirectoryQueryResult(0, aArguments,
-                                                 nsIAbDirectoryQueryResult::queryResultComplete, 
-                                                 0) ;
-        result = newResult ;
-        aListener->OnQueryItem(result) ;
-    }
+    newResult = new nsAbDirectoryQueryResult(0, aArguments,
+                                             nsIAbDirectoryQueryResult::queryResultComplete, 
+                                             0) ;
+    result = newResult ;
+    aListener->OnQueryItem(result) ;
+
     if (aResultLimit > 0 && nbResults > NS_STATIC_CAST(PRUint32, aResultLimit)) { 
         nbResults = NS_STATIC_CAST(PRUint32, aResultLimit) ; 
     }
