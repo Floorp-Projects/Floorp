@@ -865,6 +865,7 @@ nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
 }
 
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
 //
 // Return true if we are on Mac OS X, caching the result after the first call
 //
@@ -882,3 +883,4 @@ OnMacOSX()
   }
   return gOnMacOSX;
 }
+#endif
