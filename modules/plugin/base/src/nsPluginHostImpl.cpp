@@ -174,10 +174,13 @@
 #endif
 #endif
 
+#if defined(XP_MAC) && TARGET_CARBON                                            
+#include "nsIClassicPluginFactory.h"
+#endif
+
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #if TARGET_CARBON
-#include "nsIClassicPluginFactory.h"
-#include <TextServices.h>
+#include <TextServices.h>  // for ::UseInputWindow()
 #endif
 #endif
 
