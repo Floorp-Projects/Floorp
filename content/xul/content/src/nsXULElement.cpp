@@ -39,8 +39,7 @@
 
 /*
 
-  Implementation for a "pseudo content element" that acts as a proxy
-  to the RDF graph.
+  Implementation for a XUL content element.
 
   TO DO
 
@@ -2393,15 +2392,8 @@ nsXULElement::Finalize(JSContext *aContext, JSObject *aObj)
 
 
 //----------------------------------------------------------------------
+//
 // nsIContent interface
-//
-//   Just to say this again (I said it in the header file), none of
-//   the manipulators for nsIContent will do anything to the RDF
-//   graph. These are assumed to be used only by the content model
-//   constructor, who is presumed to be _using_ the RDF graph to
-//   construct this content model.
-//
-//   You have been warned.
 //
 
 NS_IMETHODIMP
