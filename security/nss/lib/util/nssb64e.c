@@ -34,7 +34,7 @@
 /*
  * Base64 encoding (binary to ascii).
  *
- * $Id: nssb64e.c,v 1.1 2000/04/06 00:39:49 repka%netscape.com Exp $
+ * $Id: nssb64e.c,v 1.2 2002/09/07 00:22:50 jpierre%netscape.com Exp $
  */
 
 #include "nssb64.h"
@@ -147,7 +147,7 @@ pl_base64_encode_buffer (PLBase64Encoder *data, const unsigned char *in,
 {
     const unsigned char *end = in + size;
     char *out = data->output_buffer + data->output_length;
-    int i = data->in_buffer_count;
+    unsigned int i = data->in_buffer_count;
     PRUint32 n = 0;
     int off;
     PRUint32 output_threshold;
