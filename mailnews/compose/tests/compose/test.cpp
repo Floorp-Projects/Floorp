@@ -17,6 +17,9 @@
 #include "nsIServiceManager.h"
 #include "nscore.h"
 #include "nsIMsgMailSession.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
 
 
 #include "nsINetService.h"
@@ -35,6 +38,7 @@
 #include "prmem.h"
 
 #include "nsIMimeURLUtils.h"
+#include "nsMsgSendLater.h"
 
 
 #ifdef XP_PC
@@ -64,8 +68,8 @@
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
@@ -75,6 +79,29 @@ static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID);
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
+
+
+static NS_DEFINE_IID(kIMsgSendLaterIID, NS_IMSGSENDLATER_IID); 
+static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
+
+
+void
+DoIT()
+{
+  nsresult rv = NS_OK;
+  nsIMsgSendLater *pMsgSendLater;
+  
+  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, (void **) &pMsgSendLater); 
+  if (rv == NS_OK && pMsgSendLater) 
+  { 
+    printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
+    nsIMsgIdentity *identity = nsnull;
+    pMsgSendLater->SendUnsentMessages(identity, "Outbox", "nsmail-2");
+  }
+}
 
 nsresult OnIdentityCheck()
 {
@@ -119,8 +146,8 @@ GetAttachments(void)
     return NULL;
   
   nsCRT::memset(attachments, 0, sizeof(MSG_AttachedFile) * 2);
-  attachments[0].orig_url = PL_strdup("file://C:/big.bmp");
-  attachments[0].file_name = PL_strdup("C:\\big.bmp");
+  attachments[0].orig_url = PL_strdup("file://C:/boxster.jpg");
+  attachments[0].file_name = PL_strdup("C:\\boxster.jpg");
   attachments[0].type = PL_strdup("image/jpeg");
   attachments[0].encoding = PL_strdup(ENCODING_BINARY);
   attachments[0].description = PL_strdup("Boxster Image");
@@ -150,6 +177,7 @@ int main(int argc, char *argv[])
   nsIMsgCompFields *pMsgCompFields;
   nsIMsgSend *pMsgSend;
   nsresult rv = NS_OK;
+  nsIAppShellService* appShell = nsnull;
 
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
@@ -157,6 +185,19 @@ int main(int argc, char *argv[])
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kNetSupportDialogCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kAppShellServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+  /*
+   * Create the Application Shell instance...
+   */
+  nsIWebShellWindow* newWindow;
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                   (nsISupports**)&appShell);
+	if (NS_SUCCEEDED(rv)) 
+    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, newWindow,
+                nsnull, nsnull, 200, 200);
 
   // Create the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
@@ -194,6 +235,8 @@ int main(int argc, char *argv[])
 
   OnIdentityCheck();
 
+
+  DoIT();
 
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
                                            nsIMsgCompFields::GetIID(), (void **) &pMsgCompFields);   
@@ -236,7 +279,7 @@ int main(int argc, char *argv[])
 	    else
 		    nBodyLength = 0;
 
-      // nsMsgAttachmentData *ptr = GetAttachments();
+      //nsMsgAttachedFile *ptr = NULL;
       nsMsgAttachedFile *ptr = GetAttachments();
 
       pMsgSend->SendMessage(pMsgCompFields, 

@@ -27,10 +27,13 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS=    nsSmtpUrl.h             \
             nsSmtpProtocol.h        \
-			nsSmtpService.h			\
-			nsComposeAppCore.h		\
-			nsComposer.h			\
-			nsMsgCompPrefs.h		\
+      			nsSmtpService.h			\
+		      	nsComposeAppCore.h		\
+			      nsComposer.h			\
+			      nsMsgCompPrefs.h		\
+            nsMsgZapIt.h \
+            nsMsgCreate.h \
+            nsMsgSendLater.h \
             $(NULL)
 
 ################################################################################
@@ -44,18 +47,28 @@ LCFLAGS =		   \
         $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj		\
-            .\$(OBJDIR)\nsMsgCompose.obj		\
             .\$(OBJDIR)\nsSmtpUrl.obj			\
             .\$(OBJDIR)\MsgCompGlue.obj			\
-			.\$(OBJDIR)\nsSmtpProtocol.obj		\
-			.\$(OBJDIR)\nsMsgSend.obj			\
-			.\$(OBJDIR)\nsMsgSendPart.obj		\
-			.\$(OBJDIR)\nsSmtpService.obj		\
-			.\$(OBJDIR)\nsJSComposeAppCore.obj	\
-			.\$(OBJDIR)\nsComposeAppCore.obj	\
-			.\$(OBJDIR)\nsComposer.obj			\
-			.\$(OBJDIR)\nsComposerNameSet.obj	\
-			.\$(OBJDIR)\nsMsgCompPrefs.obj		\
+      			.\$(OBJDIR)\nsSmtpProtocol.obj		\
+      			.\$(OBJDIR)\nsMsgSend.obj			\
+      			.\$(OBJDIR)\nsMsgSendPart.obj		\
+      			.\$(OBJDIR)\nsSmtpService.obj		\
+      			.\$(OBJDIR)\nsJSComposeAppCore.obj	\
+      			.\$(OBJDIR)\nsComposeAppCore.obj	\
+      			.\$(OBJDIR)\nsComposer.obj			\
+      			.\$(OBJDIR)\nsComposerNameSet.obj	\
+      			.\$(OBJDIR)\nsMsgCompPrefs.obj		\
+            .\$(OBJDIR)\nsMsgZapIt.obj \
+        		.\$(OBJDIR)\nsMsgCreate.obj \
+      	  	.\$(OBJDIR)\nsMsgCopy.obj \
+      		  .\$(OBJDIR)\nsMsgSendLater.obj \
+        		.\$(OBJDIR)\nsMsgDeliveryListener.obj \
+        		.\$(OBJDIR)\nsMsgComposeStringBundle.obj \
+        		.\$(OBJDIR)\nsMsgEncoders.obj \
+        		.\$(OBJDIR)\nsMsgUtils.obj \
+        		.\$(OBJDIR)\nsMsgI18N.obj \
+        		.\$(OBJDIR)\nsMsgAttachmentHandler.obj \
+        		.\$(OBJDIR)\nsMsgPrompts.obj \
             $(NULL)
 
 
