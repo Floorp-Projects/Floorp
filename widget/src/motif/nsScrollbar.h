@@ -19,7 +19,6 @@
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
 
-#include "nsdefs.h"
 #include "nsWindow.h"
 
 #include "nsIScrollbar.h"
