@@ -251,6 +251,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
       aPresContext->GetScaledPixelsToTwips(&p2t);
       return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
     default:
+      NS_NOTREACHED("unexpected unit");
       break;
   }
   return 0;
@@ -794,6 +795,8 @@ CheckFontCallback(const nsCSSStruct& aData)
         (family == NS_STYLE_FONT_LIST) ||
         (family == NS_STYLE_FONT_FIELD) ||
         (family == NS_STYLE_FONT_THEME))
+      // Mixed rather than Reset in case another sub-property has
+      // an explicit 'inherit'.   XXXperf Could check them.
       return nsRuleNode::eRuleFullMixed;
   }
   return nsRuleNode::eRuleUnknown;
@@ -1503,14 +1506,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     if (ruleNode->mNoneBits & bit)
       break;
 
-    // If the inherit bit is set on a rule node for this struct, that
+    // If the dependent bit is set on a rule node for this struct, that
     // means its rule won't have any information to add, so skip it.
     // XXXldb I don't understand why we need to check |detail| here, but
     // we do.
     if (detail == eRuleNone)
       while (ruleNode->mDependentBits & bit) {
         NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
-                     "inherit bit with cached data makes no sense");
+                     "dependent bit with cached data makes no sense");
         // Climb up to the next rule in the tree (a less specific rule).
         rootNode = ruleNode;
         ruleNode = ruleNode->mParent;
@@ -2261,7 +2264,12 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleFont* parentFont = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext && aRuleDetail != eRuleFullReset)
+  // This optimization is a little weaker here since 'em', etc., for
+  // 'font-size' require inheritance.
+  if (parentContext &&
+      (aRuleDetail != eRuleFullReset ||
+       (fontData.mSize.IsRelativeLengthUnit() &&
+        fontData.mSize.GetUnit() != eCSSUnit_Pixel)))
     parentFont = NS_STATIC_CAST(const nsStyleFont*,
                                parentContext->GetStyleData(eStyleStruct_Font));
   if (aStartStruct)
