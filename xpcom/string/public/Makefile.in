@@ -59,6 +59,7 @@ EXPORTS		=				\
 		nsSharableString.h		\
 		nsSharedBufferList.h		\
 		nsSlidingString.h		\
+		nsUTF8Utils.h			\
 		nsXPIDLString.h			\
 		$(NULL)			
 
