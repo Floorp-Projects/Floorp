@@ -1084,11 +1084,18 @@ nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
-  if (NS_SUCCEEDED(rv) && jvmManager != nsnull) {
+  nsCOMPtr<nsIJVMManager> jvmManager =
+    do_GetService(nsIJVMManager::GetCID(), &rv);
+
+  if (NS_SUCCEEDED(rv) && jvmManager) {
     PRBool javaEnabled = PR_FALSE;
-    if (NS_SUCCEEDED(jvmManager->GetJavaEnabled(&javaEnabled)) && javaEnabled) {
-      nsCOMPtr<nsILiveConnectManager> liveConnectManager = do_QueryInterface(jvmManager);
+
+    rv = jvmManager->GetJavaEnabled(&javaEnabled);
+
+    if (NS_SUCCEEDED(rv) && javaEnabled) {
+      nsCOMPtr<nsILiveConnectManager> liveConnectManager =
+        do_QueryInterface(jvmManager);
+
       if (liveConnectManager) {
         rv = liveConnectManager->InitLiveConnectClasses(mContext, ::JS_GetGlobalObject(mContext));
       }
@@ -1277,6 +1284,9 @@ nsJSContext::InitClasses()
   JSObject *globalObj = ::JS_GetGlobalObject(mContext);
 
   rv = InitializeExternalClasses();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = InitializeLiveConnectClasses();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the options object and set default options in mContext
