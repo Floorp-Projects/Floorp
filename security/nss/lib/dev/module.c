@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 20:38:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.5 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -43,9 +43,13 @@ static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.4 $ $Date
 #include "devm.h"
 #endif /* DEVM_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11.h"
+#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
@@ -178,12 +182,10 @@ module_load_slots(NSSModule *mod)
 	goto loser;
     }
     /* Alloc memory for the array of slots, in the module's arena */
-#ifdef arena_mark_bug_fixed
     mark = nssArena_Mark(mod->arena);
     if (!mark) {
 	return PR_FAILURE;
     }
-#endif
     slots = nss_ZNEWARRAY(mod->arena, NSSSlot *, ulNumSlots);
     if (!slots) {
 	goto loser;
@@ -193,21 +195,17 @@ module_load_slots(NSSModule *mod)
 	slots[i] = nssSlot_Create(mod->arena, slotIDs[i], mod);
     }
     nss_ZFreeIf(slotIDs);
-#ifdef arena_mark_bug_fixed
     nssrv = nssArena_Unmark(mod->arena, mark);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
-#endif
     mod->slots = slots;
     mod->numSlots = ulNumSlots;
     return PR_SUCCESS;
 loser:
-#ifdef arena_mark_bug_fixed
     if (mark) {
 	nssArena_Release(mod->arena, mark);
     }
-#endif
     nss_ZFreeIf(slotIDs);
     return PR_FAILURE;
 }
@@ -232,6 +230,16 @@ nssModule_Destroy
 	return NSSArena_Destroy(mod->arena);
     }
     return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT NSSModule *
+nssModule_AddRef
+(
+  NSSModule *mod
+)
+{
+    ++mod->refCount;
+    return mod;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -309,6 +317,48 @@ nssModule_Unload
     mod->library = NULL;
     mod->epv = NULL;
     return nssrv;
+}
+
+NSS_IMPLEMENT NSSSlot *
+nssModule_FindSlotByName
+(
+  NSSModule *mod,
+  NSSUTF8 *slotName
+)
+{
+    PRUint32 i;
+    PRStatus nssrv;
+    for (i=0; i<mod->numSlots; i++) {
+	if (nssUTF8_Equal(mod->slots[i]->name, slotName, &nssrv)) {
+	    return nssSlot_AddRef(mod->slots[i]);
+	}
+	if (nssrv != PR_SUCCESS) {
+	    break;
+	}
+    }
+    return (NSSSlot *)NULL;
+}
+
+NSS_EXTERN NSSToken *
+nssModule_FindTokenByName
+(
+  NSSModule *mod,
+  NSSUTF8 *tokenName
+)
+{
+    PRUint32 i;
+    PRStatus nssrv;
+    NSSToken *tok;
+    for (i=0; i<mod->numSlots; i++) {
+	tok = mod->slots[i]->token;
+	if (nssUTF8_Equal(tok->name, tokenName, &nssrv)) {
+	    return nssToken_AddRef(tok);
+	}
+	if (nssrv != PR_SUCCESS) {
+	    break;
+	}
+    }
+    return (NSSToken *)NULL;
 }
 
 NSS_IMPLEMENT PRStatus *

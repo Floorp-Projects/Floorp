@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.3 $ $Date: 2001/09/19 19:08:29 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.4 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -48,9 +48,13 @@ static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.3 $ $D
 #include "nssbaset.h"
 #endif /* NSSBASET_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11t.h"
+#else
 #ifndef NSSCKT_H
 #include "nssckt.h"
 #endif /* NSSCKT_H */
+#endif /* NSS_3_4_CODE */
 
 PR_BEGIN_EXTERN_C
 
@@ -126,6 +130,7 @@ struct nssSessionStr
     PZLock *lock;
     CK_SESSION_HANDLE handle;
     NSSSlot *slot;
+    PRBool isRW;
 };
 
 PR_END_EXTERN_C

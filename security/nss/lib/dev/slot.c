@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.7 $ $Date: 2001/09/20 20:38:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.8 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -43,9 +43,13 @@ static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.7 $ $Date: 
 #include "devm.h"
 #endif /* DEVM_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11.h"
+#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
@@ -93,12 +97,10 @@ nssSlot_Create
     CK_RV ckrv;
     if (arenaOpt) {
 	arena = arenaOpt;
-#ifdef arena_mark_bug_fixed
 	mark = nssArena_Mark(arena);
 	if (!mark) {
-	    return PR_FAILURE;
+	    return (NSSSlot *)NULL;
 	}
-#endif
 	newArena = PR_FALSE;
     } else {
 	arena = NSSArena_Create();
@@ -148,22 +150,18 @@ nssSlot_Create
 	}
     }
     rvSlot->token = token;
-#ifdef arena_mark_bug_fixed
     nssrv = nssArena_Unmark(arena, mark);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
-#endif
     return rvSlot;
 loser:
     if (newArena) {
 	nssArena_Destroy(arena);
     } else {
-#ifdef arena_mark_bug_fixed
 	if (mark) {
 	    nssArena_Release(arena, mark);
 	}
-#endif
     }
     /* everything was created in the arena, nothing to see here, move along */
     return (NSSSlot *)NULL;
@@ -182,6 +180,16 @@ nssSlot_Destroy
     return PR_SUCCESS;
 }
 
+NSS_IMPLEMENT NSSSlot *
+nssSlot_AddRef
+(
+  NSSSlot *slot
+)
+{
+    ++slot->refCount;
+    return slot;
+}
+
 NSS_IMPLEMENT NSSUTF8 *
 nssSlot_GetName
 (
@@ -197,7 +205,7 @@ nssSlot_GetName
 
 static PRStatus
 nssslot_login(NSSSlot *slot, nssSession *session, 
-              CK_USER_TYPE userType, NSSCallback pwcb)
+              CK_USER_TYPE userType, NSSCallback *pwcb)
 {
     PRStatus nssrv;
     PRUint32 attempts;
@@ -205,7 +213,7 @@ nssslot_login(NSSSlot *slot, nssSession *session,
     NSSUTF8 *password = NULL;
     CK_ULONG pwLen;
     CK_RV ckrv;
-    if (!pwcb.getPW) {
+    if (!pwcb->getPW) {
 	/* set error INVALID_ARG */
 	return PR_FAILURE;
     }
@@ -213,7 +221,7 @@ nssslot_login(NSSSlot *slot, nssSession *session,
     nssrv = PR_FAILURE;
     attempts = 0;
     while (keepTrying) {
-	nssrv = pwcb.getPW(slot->name, &attempts, pwcb.arg, &password);
+	nssrv = pwcb->getPW(slot->name, &attempts, pwcb->arg, &password);
 	if (nssrv != PR_SUCCESS) {
 	    nss_SetError(NSS_ERROR_USER_CANCELED);
 	    break;
@@ -251,19 +259,19 @@ nssslot_login(NSSSlot *slot, nssSession *session,
 }
 
 static PRStatus
-nssslot_init_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
+nssslot_init_password(NSSSlot *slot, nssSession *rwSession, NSSCallback *pwcb)
 {
     NSSUTF8 *userPW = NULL;
     NSSUTF8 *ssoPW = NULL;
     PRStatus nssrv;
     CK_ULONG userPWLen, ssoPWLen;
     CK_RV ckrv;
-    if (!pwcb.getInitPW) {
+    if (!pwcb->getInitPW) {
 	/* set error INVALID_ARG */
 	return PR_FAILURE;
     }
     /* Get the SO and user passwords */
-    nssrv = pwcb.getInitPW(slot->name, pwcb.arg, &ssoPW, &userPW);
+    nssrv = pwcb->getInitPW(slot->name, pwcb->arg, &ssoPW, &userPW);
     if (nssrv != PR_SUCCESS) goto loser;
     userPWLen = (CK_ULONG)nssUTF8_Length(userPW, &nssrv); 
     if (nssrv != PR_SUCCESS) goto loser;
@@ -293,7 +301,7 @@ loser:
 }
 
 static PRStatus
-nssslot_change_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
+nssslot_change_password(NSSSlot *slot, nssSession *rwSession, NSSCallback *pwcb)
 {
     NSSUTF8 *userPW = NULL;
     NSSUTF8 *newPW = NULL;
@@ -302,14 +310,14 @@ nssslot_change_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
     PRBool keepTrying = PR_TRUE;
     CK_ULONG userPWLen, newPWLen;
     CK_RV ckrv;
-    if (!pwcb.getNewPW) {
+    if (!pwcb->getNewPW) {
 	/* set error INVALID_ARG */
 	return PR_FAILURE;
     }
     attempts = 0;
     while (keepTrying) {
-	nssrv = pwcb.getNewPW(slot->name, &attempts, pwcb.arg, 
-	                      &userPW, &newPW);
+	nssrv = pwcb->getNewPW(slot->name, &attempts, pwcb->arg, 
+	                       &userPW, &newPW);
 	if (nssrv != PR_SUCCESS) {
 	    nss_SetError(NSS_ERROR_USER_CANCELED);
 	    break;
@@ -354,7 +362,7 @@ nssSlot_Login
 (
   NSSSlot *slot,
   PRBool asSO,
-  NSSCallback pwcb
+  NSSCallback *pwcb
 )
 {
     PRBool needsLogin, needsInit;
@@ -406,7 +414,7 @@ NSS_IMPLEMENT PRStatus
 nssSlot_SetPassword
 (
   NSSSlot *slot,
-  NSSCallback pwcb
+  NSSCallback *pwcb
 )
 {
     PRStatus nssrv;
@@ -469,6 +477,7 @@ nssSlot_CreateSession
     }
     rvSession->handle = session;
     rvSession->slot = slot;
+    rvSession->isRW = readWrite;
     return rvSession;
 }
 
@@ -506,5 +515,14 @@ nssSession_ExitMonitor
 )
 {
     return (s->lock) ? PZ_Unlock(s->lock) : PR_SUCCESS;
+}
+
+NSS_EXTERN PRBool
+nssSession_IsReadWrite
+(
+  nssSession *s
+)
+{
+    return s->isRW;
 }
 
