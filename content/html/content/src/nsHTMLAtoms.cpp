@@ -80,6 +80,7 @@ nsIAtom* nsHTMLAtoms::h6;
 nsIAtom* nsHTMLAtoms::height;
 nsIAtom* nsHTMLAtoms::hidden;
 nsIAtom* nsHTMLAtoms::hover;
+nsIAtom* nsHTMLAtoms::hr;
 nsIAtom* nsHTMLAtoms::href;
 nsIAtom* nsHTMLAtoms::hspace;
 nsIAtom* nsHTMLAtoms::httpEquiv;
@@ -243,6 +244,7 @@ void nsHTMLAtoms::AddrefAtoms()
     height = NS_NewAtom("HEIGHT");
     hidden = NS_NewAtom("HIDDEN");
     hover = NS_NewAtom("HOVER");
+    hr = NS_NewAtom("HR");
     href = NS_NewAtom("HREF");
     hspace = NS_NewAtom("HSPACE");
     httpEquiv = NS_NewAtom("HTTP-EQUIV");
@@ -399,6 +401,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(height);
     NS_RELEASE(hidden);
     NS_RELEASE(hover);
+    NS_RELEASE(hr);
     NS_RELEASE(href);
     NS_RELEASE(hspace);
     NS_RELEASE(httpEquiv);

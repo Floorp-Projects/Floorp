@@ -108,6 +108,7 @@ public:
   static nsIAtom* height;
   static nsIAtom* hidden;
   static nsIAtom* hover;
+  static nsIAtom* hr;
   static nsIAtom* href;
   static nsIAtom* hspace;
   static nsIAtom* httpEquiv;
