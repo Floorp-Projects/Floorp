@@ -1592,8 +1592,6 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   // initialize nativeMsg field otherwise plugin code will crash when trying to access it
   mouseOutEvent.nativeMsg = nsnull;
 
-  nsEventStatus mouseoutStatus = nsEventStatus_eIgnore;
-
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 
