@@ -1431,6 +1431,7 @@ nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
 {  
   if (m_inputStream)
     m_inputStream->Close();
+  m_inputStream = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
