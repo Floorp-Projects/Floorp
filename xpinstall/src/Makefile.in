@@ -121,6 +121,7 @@ EXTRA_DSO_LDOPTS = \
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer
 FORCE_SHARED_LIB	= 1
+MOZ_STATIC_COMPONENT_LIBS=
 
 include $(topsrcdir)/config/rules.mk
 
