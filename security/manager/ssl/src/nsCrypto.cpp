@@ -63,7 +63,6 @@
 #include "seccomon.h"
 extern "C" {
 #include "crmf.h"
-#include "crmfi.h"
 #include "pk11pqg.h"
 }
 #include "cmmf.h"
@@ -1311,6 +1310,49 @@ nsSetProofOfPossession(CRMFCertReqMsg *certReqMsg,
 
 }
 
+static void
+nsCRMFEncoderItemCount(void *arg, const char *buf, unsigned long len)
+{
+  unsigned long *count = (unsigned long *)arg;
+  *count += len;
+}
+
+static void
+nsCRMFEncoderItemStore(void *arg, const char *buf, unsigned long len)
+{
+  SECItem *dest = (SECItem *)arg;
+  memcpy(dest->data + dest->len, buf, len);
+  dest->len += len;
+}
+
+static SECItem*
+nsEncodeCertReqMessages(CRMFCertReqMsg **certReqMsgs)
+{
+  unsigned long len = 0;
+  if (CRMF_EncodeCertReqMessages(certReqMsgs, nsCRMFEncoderItemCount, &len)
+      != SECSuccess) {
+    return nsnull;
+  }
+  SECItem *dest = (SECItem *)PORT_Alloc(sizeof(SECItem));
+  if (dest == nsnull) {
+    return nsnull;
+  }
+  dest->type = siBuffer;
+  dest->data = (unsigned char *)PORT_Alloc(len);
+  if (dest->data == nsnull) {
+    PORT_Free(dest);
+    return nsnull;
+  }
+  dest->len = 0;
+
+  if (CRMF_EncodeCertReqMessages(certReqMsgs, nsCRMFEncoderItemStore, dest)
+      != SECSuccess) {
+    SECITEM_FreeItem(dest, PR_TRUE);
+    return nsnull;
+  }
+  return dest;
+}
+
 //Create a Base64 encoded CRMFCertReqMsg that can be sent to a CA
 //requesting one or more certificates to be issued.  This function
 //creates a single cert request per key pair and then appends it to
@@ -1332,9 +1374,6 @@ nsCreateReqFromKeyPairs(nsKeyPairInfo *keyids, PRInt32 numRequests,
   memset(certReqMsgs, 0, sizeof(CRMFCertReqMsg*)*(1+numRequests));
   SECStatus srv;
   nsresult rv;
-  CRMFCertReqMessages messages;
-  memset(&messages, 0, sizeof(messages));
-  messages.messages = certReqMsgs;
   SECItem *encodedReq;
   char *retString;
   for (i=0; i<numRequests; i++) {
@@ -1355,8 +1394,7 @@ nsCreateReqFromKeyPairs(nsKeyPairInfo *keyids, PRInt32 numRequests,
       goto loser;
     CRMF_DestroyCertRequest(certReq);
   }
-  encodedReq = SEC_ASN1EncodeItem(nsnull, nsnull, &messages,
-                                  CRMFCertReqMessagesTemplate);
+  encodedReq = nsEncodeCertReqMessages(certReqMsgs);
   nsFreeCertReqMessages(certReqMsgs, numRequests);
 
   retString = NSSBase64_EncodeItem (nsnull, nsnull, 0, encodedReq);

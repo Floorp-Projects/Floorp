@@ -66,7 +66,6 @@
 #include "sslerr.h"
 #include "secder.h"
 #include "secasn1.h"
-#include "genname.h"
 #include "certdb.h"
 #include "cert.h"
 
