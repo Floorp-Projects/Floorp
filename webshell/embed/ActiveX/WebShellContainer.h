@@ -48,9 +48,14 @@ public:
 	// nsIBrowserWindow
 	NS_IMETHOD Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins = PR_TRUE);
 	NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
-	NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
-	NS_IMETHOD GetBounds(nsRect& aResult);
-	NS_IMETHOD GetWindowBounds(nsRect& aResult);
+
+    NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
+
+    NS_IMETHOD GetContentBounds(nsRect& aResult);
+    NS_IMETHOD GetWindowBounds(nsRect& aResult);
+    NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
+
 	NS_IMETHOD Show();
 	NS_IMETHOD Hide();
 	NS_IMETHOD Close();
@@ -85,8 +90,8 @@ public:
 
 #ifdef NECKO
 	// nsIStreamObserver
-    NS_IMETHOD OnStartRequest(nsISupports* aContext);
-    NS_IMETHOD OnStopRequest(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
+    NS_IMETHOD OnStartRequest(nsIChannel* aChannel, nsISupports* aContext);
+    NS_IMETHOD OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
 
 	// nsIDocumentLoaderObserver 
 	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
