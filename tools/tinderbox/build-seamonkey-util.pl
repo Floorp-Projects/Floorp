@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.33 $ ';
+$::UtilsVersion = '$Revision: 1.34 $ ';
 
 package TinderUtils;
 
@@ -767,10 +767,11 @@ sub run_all_tests {
       print_log "Page-loader performance test goes here.\n";
 	  print_log "Running LayoutPerformanceTest ...\n";
 	  $test_result = AliveTest("LayoutAliveTest", $build_dir,
-							   $binary, "http://www.apple.com", 45);
+							   $binary, 
+							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
+							   1800);
     }
-
-
+	# "http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0", 
     return $test_result;
 }
 
@@ -1035,6 +1036,7 @@ sub AliveTest {
 	if($args) {
 	  print "\$args = $args\n";
 	  $cmd .= " " . $args;
+	  print "\$cmd = $cmd\n";
 	}
 
 	# Print out testname
@@ -1043,7 +1045,7 @@ sub AliveTest {
 	# Print out timeout.
 	print_log "Timeout = $timeout_secs seconds.\n";
 
-    my $result = run_cmd($build_dir, $binary_dir, $binary_basename,
+    my $result = run_cmd($build_dir, $binary_dir, $cmd,
                           $binary_log, $timeout_secs);
 
     print_logfile($binary_log, "$test_name");
