@@ -1733,14 +1733,11 @@ NS_IMETHODIMP
 #define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE, Test, Ref) \
   DECODE_ARRAY(XPType, VTYPE, Test, nsnull, rc = v->GetAs##VType(Ref(a + p));if(NS_FAILED(rc))break;)
 
-
   if (NS_FAILED(rc))
     return rc;
   PRBool unhandled = PR_FALSE;
   if (ns.Equals(*nsSOAPUtils::kXSURI[mSchemaVersion])) {
-    if (name.Equals(kStringSchemaType)) {
-      DECODE_SIMPLE_ARRAY(nsString,AString,ASTRING,!a[p].IsEmpty(),*);
-    } else if (name.Equals(kBooleanSchemaType)) {
+    if (name.Equals(kBooleanSchemaType)) {
       DECODE_SIMPLE_ARRAY(PRBool,Bool,BOOL,a[p],);
     } else if (name.Equals(kFloatSchemaType)) {
       DECODE_SIMPLE_ARRAY(float,Float,FLOAT,a[p],);
@@ -1768,8 +1765,20 @@ NS_IMETHODIMP
   } else {
     unhandled = PR_TRUE;
   }
-  if (unhandled) {  //  Handle all the other cases as variants.
-    DECODE_ARRAY(nsIVariant*,INTERFACE,a[p],&NS_GET_IID(nsIVariant),a[p] = v;);
+  if (unhandled) {  //  Handle all the other cases
+    if (subtype) {
+      PRUint16 typevalue;
+      nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+      if (NS_FAILED(rc))
+        return rc;
+      if (typevalue != nsISchemaType::SCHEMA_TYPE_COMPLEX) {//  Simple == string
+        DECODE_SIMPLE_ARRAY(nsString,AString,ASTRING,!a[p].IsEmpty(),*);
+        unhandled = PR_FALSE;
+      }
+    }
+    if (unhandled) {  //  Handle all the other cases as variants.
+      DECODE_ARRAY(nsIVariant*,INTERFACE,a[p],&NS_GET_IID(nsIVariant),a[p] = v;);
+    }
   }
   *_retval = result;
   NS_ADDREF(*_retval);
