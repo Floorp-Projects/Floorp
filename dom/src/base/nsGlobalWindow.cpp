@@ -680,6 +680,9 @@ GlobalWindowImpl::GetStatus(nsString& aStatus)
     aStatus = status;
     NS_RELEASE(mBrowser);
   }
+  else {
+    aStatus.Truncate();
+  }
   return NS_OK;
 }
 
@@ -870,6 +873,9 @@ GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
     *aScreenX = r.x;
     NS_RELEASE(mBrowser);
   }
+  else {
+    *aScreenX = nsnull;
+  }
   return NS_OK;
 }
 
@@ -898,6 +904,9 @@ GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
     mBrowser->GetWindowBounds(r);
     *aScreenY = r.y;
     NS_RELEASE(mBrowser);
+  }
+  else {
+    *aScreenY = nsnull;
   }
   return NS_OK;
 }
