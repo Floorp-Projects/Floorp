@@ -801,8 +801,6 @@ function sidebar_open_default_panel(wait, tries) {
     // which will aggregate it with the other datasources that describe
     // the individual panel's title, customize URL, and content URL.
     var panels = document.getElementById('sidebar-panels');
-    
-    var ds = RDF.GetDataSource(sidebarObj.datasource_uri);
     panels.database.AddDataSource(ds);
 
     debug("Adding observer to database.");
@@ -1501,13 +1499,15 @@ function SidebarSetButtonOpen(aSidebarNowOpen)
 {
   // change state so toolbar icon can be updated
   var pt = document.getElementById("PersonalToolbar");
-  pt.setAttribute("prefixopen", aSidebarNowOpen);
-  
-  // set tooltip for toolbar icon
-  var header = document.getElementById("sidebar-title-box");
-  var tooltip = header.getAttribute(aSidebarNowOpen ? 
-                "tooltipclose" : "tooltipopen");
-  pt.setAttribute("prefixtooltip", tooltip);
+  if (pt) {
+    pt.setAttribute("prefixopen", aSidebarNowOpen);
+
+    // set tooltip for toolbar icon
+    var header = document.getElementById("sidebar-title-box");
+    var tooltip = header.getAttribute(aSidebarNowOpen ? 
+                  "tooltipclose" : "tooltipopen");
+    pt.setAttribute("prefixtooltip", tooltip);
+  }
 }
 
 function SidebarInitContextMenu(aMenu, aPopupNode)
