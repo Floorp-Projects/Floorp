@@ -364,12 +364,30 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 	return status;
 }
 
+/**
+ * Quit AppleEvent handler.
+ */
+static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, long)
+{
+	if (gTheApp != nsnull) {
+		gTheApp->Exit();
+	} else {
+		ExitToShell();
+	}
+	return noErr;
+}
+
 #pragma mark -
 //----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
 	// Set up the toolbox and (if DEBUG) the console
 	InitializeMacToolbox();
+
+	// Install an a Quit AppleEvent handler.
+	OSErr err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+									NewAEEventHandlerProc(handleQuitApplication), 0, false);
+	NS_ASSERTION((err==noErr), "AEInstallEventHandler failed");
 
 	// Start up XPCOM?
  	nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
@@ -386,6 +404,12 @@ int main(int argc, char **argv)
 			gTheApp->Run();
 		NS_RELEASE(gTheApp);
 	}
+
+#ifdef DETECT_WEBSHELL_LEAKS
+	if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
+		printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
+	}
+#endif
 
 	// Shutdown XPCOM?
 	rv = NS_ShutdownXPCOM(nsnull);
