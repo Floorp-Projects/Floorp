@@ -270,19 +270,18 @@ tabpanels {
 .unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell > .unifinder-treecell-box-class
 {
    background-color        : #d5e3f2; 
-   border                  : 1px #2085c4 solid;
+   /* border                  : 1px #2085c4 solid; */
 }
 
 .unifinder-treecell-box-class
 {
 
-   /*border         : 1px #2085c4 solid;*/
    margin         : 4px;
    margin-right   : 8px;
    padding        : 2px;
    padding-left   : 4px;
    font-family    : Arial, Helvetica;
-   
+   -moz-box-align : center;
 }
 
 /*--------------------------------------------------------------------
