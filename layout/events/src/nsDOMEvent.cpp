@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIEventStateManager.h"
@@ -32,6 +33,7 @@
 #include "nsIDocument.h"
 #include "nsIViewManager.h"
 #include "nsIPrivateCompositionEvent.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -590,14 +592,72 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
   return NS_OK;
 }
 
+nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
+   float* aP2T, float* aT2P)
+{
+  mPresContext->GetPixelsToTwips(aP2T);
+  mPresContext->GetTwipsToPixels(aT2P);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if(presShell) {
+     nsCOMPtr<nsIViewManager> vm;
+     presShell->GetViewManager(getter_AddRefs(vm));
+     if(vm) {
+        return vm->GetRootScrollableView(aScrollableView);
+     }
+  }
+  return NS_OK;
+}
+
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 {
-  return GetClientX(aPageX);
+  nsresult ret = NS_OK;
+  PRInt32 scrollX = 0;
+  nsCOMPtr<nsIScrollableView> view;
+  float p2t, t2p;
+
+  GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+  if(view) {
+    nscoord xPos, yPos;
+    ret = view->GetScrollPosition(xPos, yPos);
+    scrollX = NSTwipsToIntPixels(xPos, t2p);
+  }
+
+  if (NS_SUCCEEDED(ret)) {
+    ret = GetClientX(aPageX);
+  }
+
+  if (NS_SUCCEEDED(ret)) {
+    *aPageX += scrollX;
+  }
+
+  return ret;
 }
 
 NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 {
-  return GetClientY(aPageY);
+  nsresult ret = NS_OK;
+  PRInt32 scrollY = 0;
+  nsCOMPtr<nsIScrollableView> view;
+  float p2t, t2p;
+
+  GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
+  if(view) {
+    nscoord xPos, yPos;
+    ret = view->GetScrollPosition(xPos, yPos);
+    scrollY = NSTwipsToIntPixels(yPos, t2p);
+  }
+
+  if (NS_SUCCEEDED(ret)) {
+    ret = GetClientY(aPageY);
+  }
+
+  if (NS_SUCCEEDED(ret)) {
+    *aPageY += scrollY;
+  }
+
+  return ret;
 }
 
 NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
