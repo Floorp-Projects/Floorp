@@ -1431,6 +1431,8 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
   // could break if any of the connections along the way change.
   // I wish there were a better way.
   nsresult result = NS_OK;
+  *sourceURL = nsnull;
+
   nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
   
   if (nsnull != context) {
@@ -1438,14 +1440,14 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
 
     global = dont_AddRef(context->GetGlobalObject());
     if (global) {
-      nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global));
+      nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(global, &result));
 
       if (window) {
         nsCOMPtr<nsIDOMDocument> document;
         
         result = window->GetDocument(getter_AddRefs(document));
         if (NS_SUCCEEDED(result)) {
-          nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document));
+          nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document, &result));
           if (htmlDocument) {
             nsAutoString url;
             
