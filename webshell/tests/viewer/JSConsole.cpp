@@ -911,15 +911,13 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                                                       nsnull,
                                                       returnValue,
                                                       &isUndefined))) {
-                // output the result on the console and on the edit area
+                // output the result in the edit area
                 CHAR result[128];
                 LPSTR res = result;
                 int bDelete = 0;
 
                 JSContext *cx = (JSContext *)mContext->GetNativeContext();
                 char *str = ToNewCString(returnValue);
-
-                ::printf("The return value is %s\n", str);
 
                 // make a string with 0xA changed to 0xD0xA
                 res = PrepareForTextArea(str, returnValue.Length());
