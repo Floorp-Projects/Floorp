@@ -424,6 +424,7 @@ PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
   if (MATCHES_TAG("html")     ||
       MATCHES_TAG("frameset") ||
       MATCHES_TAG("body")     ||
+      MATCHES_TAG("head")     ||
       MATCHES_TAG("script")   ||
       MATCHES_TAG("a href")   ||
       MATCHES_TAG("img")      ||
