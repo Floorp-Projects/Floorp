@@ -317,7 +317,6 @@
   <broadcaster id="Editor:Style:IsItalic"/>
   <broadcaster id="Editor:Style:IsUnderline"/>
 
-  <box id="outer-box" align="vertical">
     <toolbox>
       <toolbar id="EditToolbar">
 	      <titledbutton src="chrome://editor/skin/images/ED_NewFile.gif" align="bottom" value="New" class="popup" onclick="EditorNew()"/>
@@ -375,7 +374,6 @@
       <titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
 	    </titledbutton>
     </box>
-  </box>
 
 <!-- Popup Menus and Windows - Not displayed in primary chrome -->
 <popup id="ParagraphMenu">
