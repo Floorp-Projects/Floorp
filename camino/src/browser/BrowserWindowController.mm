@@ -1337,9 +1337,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection
 {
-  // we should really identify the tab by identifier, not index.
-  BOOL bookmarksShowing =  ([mSidebarDrawer state] == NSDrawerOpenState) && 
-            ([mSidebarTabView tabViewItemAtIndex: 0] == [mSidebarTabView selectedTabViewItem]);
+  BOOL bookmarksShowing = [mContentView isBookmarkManagerVisible];
             
   if (inRequireSelection)
     bookmarksShowing &= ([mSidebarBookmarksDataSource haveSelectedRow]);
@@ -2341,14 +2339,14 @@ static NSArray* sToolbarDefaults = nil;
 - (void)toggleBookmarkManager:(id)sender
 {
   // deactivate any gecko view that might think it has focus
-	if ([self isResponderGeckoView:[[self window] firstResponder]]) {
+  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
     CHBrowserView* browserView = [mBrowserView getBrowserView];
     if (browserView)
       [browserView setActive:NO];
   }
   
   // swap out between content and bookmarks.
-	[mContentView toggleBookmarkManager:sender];
+  [mContentView toggleBookmarkManager:sender];
     
   // if we're now showing the bm manager, force it to have focus,
   // otherwise give focus back to gecko.
