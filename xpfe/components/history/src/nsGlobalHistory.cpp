@@ -2784,6 +2784,9 @@ nsresult nsGlobalHistory::ExpireEntries(PRBool notify)
 nsresult
 nsGlobalHistory::CloseDB()
 {
+  if (!mStore)
+    return NS_OK;
+
   mdb_err err;
 
   ExpireEntries(PR_FALSE /* don't notify */);
@@ -2795,8 +2798,7 @@ nsGlobalHistory::CloseDB()
   if (mTable)
     mTable->Release();
 
-  if (mStore)
-    mStore->Release();
+  mStore->Release();
 
   if (mEnv)
     mEnv->Release();
