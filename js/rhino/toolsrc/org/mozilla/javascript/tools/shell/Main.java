@@ -82,23 +82,12 @@ public class Main {
 
         args = processOptions(cx, args);
 
-        int skip = 0;
-        if (fileList.size() == 0 && args.length > 0) {
-            skip = 1;
-            fileList.addElement(args[0]);
-        }
         if (processStdin) 
             fileList.addElement(null);
 
-        // get the command line arguments after the name of the script,
-        // and define "arguments" array in the top-level object
+        // define "arguments" array in the top-level object
         Object[] array = args;
-        if (args.length > 0) {
-            int length = args.length - skip;
-            array = new Object[length];
-            System.arraycopy(args, skip, array, 0, length);
-        }
-        Scriptable argsObj = cx.newArray(global, array);
+        Scriptable argsObj = cx.newArray(global, args);
         global.defineProperty("arguments", argsObj,
                               ScriptableObject.DONTENUM);
         
@@ -119,8 +108,9 @@ public class Main {
             String arg = args[i];
             if (!arg.startsWith("-")) {
                 processStdin = false;
-                String[] result = new String[args.length - i];
-                System.arraycopy(args, i, result, 0, args.length - i);
+                fileList.addElement(arg);
+                String[] result = new String[args.length - i - 1];
+                System.arraycopy(args, i+1, result, 0, args.length - i - 1);
                 return result;
             }
             if (arg.equals("-version")) {
