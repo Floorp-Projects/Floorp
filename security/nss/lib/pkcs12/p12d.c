@@ -32,6 +32,7 @@
  */
 
 
+#include "nssrenam.h"
 #include "p12t.h"
 #include "p12.h"
 #include "plarena.h"

@@ -34,8 +34,10 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.2 2001/01/05 01:38:17 nelsonb%netscape.com Exp $
+ * $Id: p7encode.c,v 1.3 2001/01/30 21:02:14 wtc%netscape.com Exp $
  */
+
+#include "nssrenam.h"
 
 #include "p7local.h"
 

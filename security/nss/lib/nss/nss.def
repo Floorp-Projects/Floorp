@@ -174,12 +174,15 @@ SEC_NewCrl;
 ;+# The following symbols are exported only to make libssl3.so work. 
 ;+# These are still private!!!
 ;+#
+__CERT_NewTempCertificate;
+__PK11_CreateContextByRawKey;
+__PK11_GetKeyData;
+__nss_InitLock;
 CERT_CertChainFromCert;
 CERT_DestroyCertificateList;
 CERT_DupCertList;
 CERT_ExtractPublicKey;
 CERT_FindCertByName;
-CERT_NewTempCertificate;
 DER_Lengths;
 DSAU_DecodeDerSig;
 DSAU_EncodeDerSig;
@@ -192,7 +195,6 @@ NSSRWLock_New;
 NSSRWLock_UnlockRead;
 NSSRWLock_UnlockWrite;
 NSS_PutEnv;
-PK11_CreateContextByRawKey;
 PK11_Derive;
 PK11_DeriveWithFlags;
 PK11_DigestKey;
@@ -204,7 +206,6 @@ PK11_GetBestSlot;
 PK11_GetBestSlotMultiple;
 PK11_GetBestWrapMechanism;
 PK11_GetCurrentWrapIndex;
-PK11_GetKeyData;
 PK11_GetMechanism;
 PK11_GetModuleID;
 PK11_GetPrivateModulusLen;
@@ -261,16 +262,20 @@ VFY_CreateContext;
 VFY_DestroyContext;
 VFY_End;
 VFY_Update;
-nss_InitLock;
 ;+#
 ;+# The following symbols are exported only to make libsmime3.so work. 
 ;+# These are still private!!!
 ;+#
+__CERT_ClosePermCertDB;
+__CERT_DecodeDERCertificate;
+__CERT_TraversePermCertsForNickname;
+__CERT_TraversePermCertsForSubject;
+__PBE_CreateContext;
+__PBE_DestroyContext;
+__PBE_GenerateBits;
 ATOB_ConvertAsciiToItem;
 CERT_AddCertToListTail;
 CERT_CertListFromCert;
-CERT_ClosePermCertDB;
-CERT_DecodeDERCertificate;
 CERT_DestroyCertArray;
 CERT_FindCertByDERCert;
 CERT_FindCertByIssuerAndSN;
@@ -279,15 +284,10 @@ CERT_ImportCerts;
 CERT_NewCertList;
 CERT_OpenCertDBFilename;
 CERT_SaveSMimeProfile;
-CERT_TraversePermCertsForNickname;
-CERT_TraversePermCertsForSubject;
 CERT_VerifyCert;
 DER_GetInteger;
 DER_TimeToUTCTime;
 DER_UTCTimeToTime;
-PBE_CreateContext;
-PBE_DestroyContext;
-PBE_GenerateBits;
 PK11_AlgtagToMechanism;
 PK11_BlockData;
 PK11_CreatePBEAlgorithmID;

@@ -32,9 +32,10 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.5 2001/01/05 01:38:26 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.6 2001/01/30 21:02:24 wtc%netscape.com Exp $
  */
 
+#include "nssrenam.h"
 #include "cert.h"
 #include "secitem.h"
 #include "sechash.h"
