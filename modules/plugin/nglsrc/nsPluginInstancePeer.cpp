@@ -288,6 +288,8 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::NewStream(nsMIMEType type, const char* t
 {
   nsresult rv;
   nsPluginStreamToFile*  stream = new nsPluginStreamToFile(target, mOwner);
+  if(stream == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   rv = stream->QueryInterface(kIOutputStreamIID, (void **)result);
 
