@@ -1798,6 +1798,21 @@ loser:
 #endif
 }
 
+SECStatus
+PK11_ImportDERCert(PK11SlotInfo *slot, SECItem *derCert,
+		CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust) {
+    CERTCertificate *cert;
+    SECStatus rv;
+
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                   derCert, NULL, PR_FALSE, PR_TRUE);
+    if (cert == NULL) return SECFailure;
+
+    rv = PK11_ImportCert(slot, cert, key, nickname, includeTrust);
+    CERT_DestroyCertificate (cert);
+    return rv;
+}
+
 /*
  * get a certificate handle, look at the cached handle first..
  */
