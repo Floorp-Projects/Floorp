@@ -37,14 +37,16 @@ extern "C" {
 pascal short xpt_linker(CWPluginContext context);
 int xptlink_main(int argc, char* argv[]);
 int xptdump_main(int argc, char* argv[]);
+
+FILE * FSp_fopen(ConstFSSpecPtr spec, const char * open_mode);
+size_t mac_get_file_length(const char* filename);
 }
 
 /* global variables */
 CWPluginContext gPluginContext;
 
 /* local variables */
-static CWFileSpec gSourceFile;
-static char* gSourcePath = NULL;
+static CWFileSpec gOutputDirectory;
 
 /*
  *	main	-	main entry-point for Drop-In Sample linker
@@ -129,6 +131,31 @@ static char* full_path_to(short vRefNum, long dirID)
 	return NULL;
 }
 
+/**
+ * Returns the length of a file, assuming it is always located in the
+ * project's output directory.
+ */
+size_t mac_get_file_length(const char* filename)
+{
+	FSSpec filespec = { gOutputDirectory.vRefNum, gOutputDirectory.parID };
+	c2p_strcpy(filespec.name, filename);
+	long dataSize, rsrcSize;
+	if (FSpGetFileSize(&filespec, &dataSize, &rsrcSize) != noErr)
+		dataSize = 0;
+	return dataSize;
+}
+
+/**
+ * replaces standard fopen, assuming the file is always located in the
+ * project's output directory.
+ */
+FILE* std::fopen(const char* filename, const char *mode)
+{
+	FSSpec filespec = { gOutputDirectory.vRefNum, gOutputDirectory.parID };
+	c2p_strcpy(filespec.name, filename);
+	return FSp_fopen(&filespec, mode);
+}
+
 static CWResult GetSettings(CWPluginContext context, XPIDLSettings& settings)
 {
 	CWMemHandle	settingsHand;
@@ -149,6 +176,8 @@ static CWResult GetSettings(CWPluginContext context, XPIDLSettings& settings)
 
 	return noErr;
 }
+
+// #define USING_FULL_PATHS
 
 static CWResult	Link(CWPluginContext context)
 {
@@ -173,15 +202,18 @@ static CWResult	Link(CWPluginContext context)
 		return (err);
 
 	// assemble the argument list.
+	// { "xpt_link", outputFile, inputFile1, ..., inputFileN, NULL }
 	char** argv = new char*[2 + filecount + 1];
 	int argc = 0;
 	argv[argc++] = "xpt_link";
-	
+
 	// get the full path to the output directory.
-	FSSpec outputDir;
+	FSSpec& outputDir = gOutputDirectory;
 	err = CWGetOutputFileDirectory(context, &outputDir);
 	if (!CWSUCCESS(err))
 		return (err);
+
+#ifdef USING_FULL_PATHS	
 	char* outputPrefix = full_path_to(outputDir.vRefNum, outputDir.parID);
 	if (outputPrefix == NULL)
 		return cwErrOutOfMemory;
@@ -194,7 +226,11 @@ static CWResult	Link(CWPluginContext context)
 	strcpy(outputFilePath, outputPrefix);
 	p2c_strcpy(outputFilePath + outputPrefixLen, settings.output);
 	argv[argc++] = outputFilePath;
-	
+#else
+	// push the output file name.
+	argv[argc++] = p2c_strdup(settings.output);
+#endif
+
 	for (index = 0; (err == cwNoErr) && (index < filecount); index++) {
 		CWProjectFileInfo	fileInfo;
 		
@@ -214,7 +250,8 @@ static CWResult	Link(CWPluginContext context)
 		xptFile.name[len++] = 'x';
 		xptFile.name[len++] = 'p';
 		xptFile.name[len++] = 't';
-		
+
+#ifdef USING_FULL_PATHS
 		// construct a full path to the .xpt file.
 		char* xptFilePath = new char[outputPrefixLen + xptFile.name[0] + 1];
 		if (xptFilePath == NULL)
@@ -223,6 +260,9 @@ static CWResult	Link(CWPluginContext context)
 		p2c_strcpy(xptFilePath + outputPrefixLen, xptFile.name);
 
 		argv[argc++] = xptFilePath;
+#else
+		argv[argc++] = p2c_strdup(xptFile.name);
+#endif
 
 #if 0		
 		/* determine if we need to process this file */
@@ -271,22 +311,25 @@ static CWResult	Disassemble(CWPluginContext context)
 {
 	CWResult err = noErr;
 
-	CWFileSpec sourceFile;
-	err = CWGetMainFileSpec(context, &sourceFile);
+	long fileNum;
+	err = CWGetMainFileNumber(context, &fileNum);
 	if (!CWSUCCESS(err))
 		return (err);
 
+	CWProjectFileInfo fileInfo;
+	err = CWGetFileInfo(context, fileNum, false, &fileInfo);
+	if (!CWSUCCESS(err))
+		return (err);
+
+	CWFileSpec sourceFile = fileInfo.filespec;
 	char* sourceName = p2c_strdup(sourceFile.name);
 	char* dot = strrchr(sourceName, '.');
 	if (dot != NULL)
 		strcpy(dot + 1, "xpt");
 
-	err = CWGetOutputFileDirectory(gPluginContext, &gSourceFile);
+	err = CWGetOutputFileDirectory(gPluginContext, &gOutputDirectory);
 	if (!CWSUCCESS(err))
 		return (err);
-
-	c2p_strcpy(gSourceFile.name, sourceName);
-	gSourcePath = full_path_to(gSourceFile);
 
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	GetSettings(context, settings);
@@ -295,7 +338,7 @@ static CWResult	Disassemble(CWPluginContext context)
 	int argc = 1;
 	char* argv[] = { "xpt_dump", NULL, NULL, NULL };
 	if (settings.verbose) argv[argc++] = "-v";
-	argv[argc++] = gSourcePath;
+	argv[argc++] = sourceName;
 	
 	try {
 		xptdump_main(argc, argv);
@@ -304,10 +347,10 @@ static CWResult	Disassemble(CWPluginContext context)
 		err = cwErrRequestFailed;
 	}
 
-	delete[] gSourcePath;
-	gSourcePath = NULL;
+	delete[] sourceName;
 
 	if (err == noErr) {
+		// display the disassembly in its own fresh text window.
 		CWNewTextDocumentInfo info = {
 			NULL,
 			mac_console_handle,
@@ -322,39 +365,25 @@ static CWResult	Disassemble(CWPluginContext context)
 
 static CWResult	GetTargetInfo(CWPluginContext context)
 {
-	CWTargetInfo	targ;
-	CWMemHandle		prefsHand;
-	SamplePref		prefsData;
-	SamplePref		*prefsPtr;
-	CWResult		err;
-	
+	CWTargetInfo targ;
 	memset(&targ, 0, sizeof(targ));
 	
-	err = CWGetOutputFileDirectory(context, &targ.outfile);
-	targ.outputType 		= linkOutputFile;
-	targ.symfile			= targ.outfile;	/* location of SYM file				*/
-	targ.linkType			= exelinkageFlat;
-	targ.targetCPU			= 'SAMP';
-	targ.targetOS			= 'SAMP';
+	CWResult err = CWGetOutputFileDirectory(context, &targ.outfile);
+	targ.outputType = linkOutputFile;
+	targ.symfile = targ.outfile;	/* location of SYM file */
+	targ.linkType = exelinkageFlat;
+	targ.targetCPU = '****';
+	targ.targetOS = '****';
 	
 	/* load the relevant prefs */
-	err = CWGetNamedPreferences(context, kXPIDLPanelName, &prefsHand);
-	if (err != cwNoErr)
-		return (err);
-	
-		err = CWLockMemHandle(context, prefsHand, false, (void**)&prefsPtr);
-	if (err != cwNoErr)
-		return (err);
-	
-	prefsData = *prefsPtr;
-	
-	err = CWUnlockMemHandle(context, prefsHand);
+	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
+	err = GetSettings(context, settings);
 	if (err != cwNoErr)
 		return (err);
 	
 #if CWPLUGIN_HOST == CWPLUGIN_HOST_MACOS
-	targ.outfileCreator		= 'MWIE';
-	targ.outfileType		= 'TEXT';
+	targ.outfileCreator		= 'MOSS';
+	targ.outfileType		= 'TYPL';
 	targ.debuggerCreator	= kDebuggerCreator;	/* so IDE can locate our debugger	*/
 
 	/* we put output file in same folder as project, but with name stored in prefs */
