@@ -104,12 +104,14 @@ nsDiskCacheRecordChannel::nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord,
     mLoadGroup(aLoadGroup) 
 {
   NS_INIT_REFCNT() ;
+  NS_ADDREF(mRecord);
   mRecord->mNumChannels++ ;
 }
 
 nsDiskCacheRecordChannel::~nsDiskCacheRecordChannel()
 {
   mRecord->mNumChannels-- ;
+  NS_RELEASE(mRecord);
 }
 
 // FUR!!

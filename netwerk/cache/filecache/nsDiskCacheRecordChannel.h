@@ -53,7 +53,7 @@ class nsDiskCacheRecordChannel : public nsIChannel
 
   nsresult NotifyStorageInUse(PRInt32 aBytesUsed) ;
 
-  nsCOMPtr<nsDiskCacheRecord>           mRecord ;
+  nsDiskCacheRecord*                    mRecord ;
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
   nsCOMPtr<nsISupports>                 mOwner ;
   nsCOMPtr<nsIChannel>                  mFileTransport ;

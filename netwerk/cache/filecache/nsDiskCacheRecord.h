@@ -60,7 +60,7 @@ class nsDiskCacheRecord : public nsINetDataCacheRecord
   void*                     mInfo ;
   PRUint32                  mInfoSize ;
   PRUint32                  mNumChannels ;
-  nsCOMPtr<nsNetDiskCache>           mDiskCache ;
+  nsNetDiskCache*           mDiskCache ;
 
   friend class nsDiskCacheRecordChannel ;
   friend class nsDBEnumerator ;
