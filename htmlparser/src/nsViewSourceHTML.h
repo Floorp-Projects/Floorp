@@ -238,13 +238,8 @@ class CViewSourceHTML: public nsIDTD {
 
 
 private:
-#ifdef VIEW_SOURCE_HTML
     nsresult WriteTag(PRInt32 tagType,const nsAReadableString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
     nsresult WriteTagWithError(PRInt32 tagType,const nsAReadableString& aToken,PRInt32 attrCount,PRBool aNewlineRequired);
-#else
-    nsresult WriteTag(nsString &anXMLName,const nsAReadableString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTagWithError(nsString &theXMLTagName,const nsAReadableString& aStr,PRInt32 attrCount,PRBool aNewlineRequired);
-#endif
     void     AddContainmentError(eHTMLTags aChild,eHTMLTags aParent,PRInt32 aLineNumber);
 
     nsresult WriteAttributes(PRInt32 attrCount);
@@ -253,14 +248,10 @@ private:
 protected:
 
     nsParser*           mParser;
-#ifdef VIEW_SOURCE_HTML
     nsIHTMLContentSink* mSink;
-#else
-    nsIXMLContentSink*  mSink;
-#endif
     PRInt32             mLineNumber;
     nsITokenizer*       mTokenizer;
-#ifdef VIEW_SOURCE_HTML
+
     PRInt32             mStartTag;
     PRInt32             mEndTag;
     PRInt32             mCommentTag;
@@ -275,21 +266,6 @@ protected:
     PRInt32             mPopupTag;
     PRInt32             mSummaryTag;
     PRBool              mSyntaxHighlight;
-#else
-    nsAutoString        mStartTag;
-    nsAutoString        mEndTag;
-    nsAutoString        mCommentTag;
-    nsAutoString        mCDATATag;
-    nsAutoString        mMarkupDeclaration;
-    nsAutoString        mDocTypeTag;
-    nsAutoString        mPITag;
-    nsAutoString        mEntityTag;
-    nsAutoString        mText;
-    nsAutoString        mKey;
-    nsAutoString        mValue;
-    nsAutoString        mPopupTag;
-    nsAutoString        mSummaryTag;
-#endif
 
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
@@ -299,10 +275,12 @@ protected:
     PRInt32             mTagCount;
 
     nsIDTD              *mValidator;
+    nsString            mFilename;
     nsString            mTags;
     nsString            mErrors;
     PRBool              mShowErrors;
     PRBool              mHasOpenRoot;
+    PRBool              mHasOpenBody;
     PRBool              mInCDATAContainer;
 };
 
