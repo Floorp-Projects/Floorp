@@ -516,7 +516,7 @@ WriteSegmentToString(nsIInputStream* aStream,
 #ifdef IS_LITTLE_ENDIAN
         outString->Append(PRUnichar(NS_SWAP16(unichar)));
 #else
-        outString->Append(newByte);        
+        outString->Append(unichar);        
 #endif
         
         // now skip past the first byte of the buffer.. code from here
