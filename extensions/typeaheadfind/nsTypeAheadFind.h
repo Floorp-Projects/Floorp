@@ -121,7 +121,8 @@ protected:
   static int PR_CALLBACK TypeAheadFindPrefsReset(const char* aPrefName, void* instance_data);
 
   // Helper methods
-  nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget);
+  nsresult HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget);
+  void SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled);
   void AttachNewSelectionListener();
   void RemoveCurrentSelectionListener();
   void AttachNewScrollPositionListener(nsIPresShell *aPresShell);
@@ -155,7 +156,6 @@ protected:
   PRBool mIsTypeAheadOn;
   PRBool mCaretBrowsingOn;
   PRBool mLiteralTextSearchOnly;
-  PRBool mKeepSelectionOnCancel;
   PRBool mDontTryExactMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
@@ -185,6 +185,3 @@ protected:
   // The windows where type ahead find does not start automatically as the user types
   nsCOMPtr<nsISupportsArray> mManualFindWindows; // List of windows where automatic typeahead find is disabled
 };
-
-
-

@@ -39,4 +39,3 @@
 pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.timeout", 2500);
-

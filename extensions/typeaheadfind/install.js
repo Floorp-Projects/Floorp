@@ -58,4 +58,3 @@ if (getLastError() == SUCCESS) {
 } else {
   cancelInstall(err);
 }
-

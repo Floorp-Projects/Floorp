@@ -73,6 +73,7 @@
 #include "nsILink.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
+#include "nsILookAndFeel.h"
 
 #include "nsICaret.h"
 #include "nsIFocusController.h"
@@ -83,6 +84,7 @@
 #include "nsISound.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
+#include "nsWidgetsCID.h"
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 
@@ -115,6 +117,7 @@ NS_IMPL_RELEASE(nsTypeAheadFind);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
@@ -124,7 +127,7 @@ PRInt32 nsTypeAheadFind::gAccelKey = -1;  // magic value of -1 indicates unitial
 
 nsTypeAheadFind::nsTypeAheadFind(): 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
-  mCaretBrowsingOn(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE), 
+  mCaretBrowsingOn(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE), 
   mDontTryExactMatch(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
 {
@@ -659,8 +662,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   if (NS_SUCCEEDED(rv)) {
     // ------- Success!!! ---------------------------------------------------------------------------------
-    mKeepSelectionOnCancel = !isLinksOnly;   // Next time CancelFind() is called, selection will be collapsed
-
     // ------- Store current find string for regular find usage: find-next or find dialog text field ------
 
     if (mTypeAheadBuffer.Length() == 1) {  // If first letter, store where the first find succeeded (mStartFindRange)
@@ -800,6 +801,8 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
       mFocusedDocSelection->AddRange(returnRange);
       mFocusedDocSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
                                                  nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+      SetCaretEnabled(presShell, PR_TRUE);
+
       nsCOMPtr<nsIEventStateManager> esm;
       presContext->GetEventStateManager(getter_AddRefs(esm));
       nsCOMPtr<nsIContent> focusedContent;
@@ -1043,9 +1046,7 @@ NS_IMETHODIMP nsTypeAheadFind::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIS
   PRBool isSelectionCollapsed;
   aSel->GetIsCollapsed(&isSelectionCollapsed);
 
-  if (!isSelectionCollapsed)
-    mKeepSelectionOnCancel = PR_TRUE;
-  else if (mCaretBrowsingOn && aSel) {
+  if (!isSelectionCollapsed || (mCaretBrowsingOn && aSel)) {
     // Cancel find if they moved the caret in browse with caret mode
     CancelFind();
   }
@@ -1134,8 +1135,7 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
     mTypeAheadBuffer.Truncate();
     DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Clear status
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
-    if (!mKeepSelectionOnCancel && presShell)
-      mFocusedDocSelection->CollapseToStart();
+    SetCaretEnabled(presShell, PR_FALSE);
   }
   mLinksOnly = mLinksOnlyPref;
 
@@ -1160,6 +1160,42 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 
 
 // ------- Helper Methods ---------------
+
+void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
+{
+#ifdef TYPEAHEADFIND_CHANGES_SELECTION_LOOK
+  if (!aPresShell || !mFocusedDocSelCon)
+    return;
+  // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
+  mFocusedDocSelCon->SetDisplaySelection(aEnabled? nsISelectionController::SELECTION_ATTENTION: 
+                                         nsISelectionController::SELECTION_ON);
+  mFocusedDocSelCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+
+  nsCOMPtr<nsICaret> caret;
+  aPresShell->GetCaret(getter_AddRefs(caret));
+  nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
+  if (!caret || !lookNFeel)
+    return;
+  if (aEnabled) {
+    // Set caret visible so that it's obvious we're in a live mode
+    caret->SetCaretDOMSelection(mFocusedDocSelection);
+    caret->SetVisibilityDuringSelection(PR_TRUE);
+    caret->SetCaretVisible(PR_TRUE);
+    mFocusedDocSelCon->SetCaretEnabled(PR_TRUE);
+    PRInt32 pixelWidth = 1;
+    lookNFeel->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
+    caret->SetCaretWidth(pixelWidth);
+  }
+  else {
+    PRInt32 isCaretVisibleDuringSelection = 0;
+    lookNFeel->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, isCaretVisibleDuringSelection);
+    caret->SetVisibilityDuringSelection(isCaretVisibleDuringSelection != 0);
+    caret->SetCaretVisible(isCaretVisibleDuringSelection != 0);
+    mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
+  }
+#endif
+}
+
 
 void nsTypeAheadFind::RemoveCurrentScrollPositionListener()
 {
@@ -1419,6 +1455,3 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, PromiseFlatString(statusString).get());
 }
-
-
-

@@ -96,4 +96,3 @@ xpi::
 	    bin/components/typeaheadfind.xpt \
 	    bin/chrome/typeaheadfind.jar \
 	    bin/defaults/pref/typeaheadfind.js )
-

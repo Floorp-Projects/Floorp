@@ -65,7 +65,3 @@ interface nsITypeAheadFind : nsISupports
   void setAutoStart(in nsIDOMWindow aWindow, in boolean aAutoStartOn);
   boolean getAutoStart(in nsIDOMWindow aWindow);  
 };
-
-
-
-

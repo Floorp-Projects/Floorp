@@ -18,5 +18,3 @@
   <RDF:Description about="urn:mozilla:locale:en-US:typeaheadfind"
 	                 chrome:localeVersion="1.0.0"/>
 </RDF:RDF>
-
-
