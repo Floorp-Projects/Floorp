@@ -232,7 +232,7 @@ dnl ========================================================
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 DLL_SUFFIX=so
-MKSHLIB='$(LD) $(DSO_LDOPTS)'
+MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
 PR_MD_ASFILES=
 PR_MD_CSRCS=
 PR_MD_ARCH_DIR=unix
@@ -259,7 +259,6 @@ case "$target" in
     AC_DEFINE(AIX)
     AC_DEFINE(SYSV)
     DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     case "${target_os}" in
     aix3.2*)
         USE_NSPR_THREADS=1
@@ -352,7 +351,6 @@ case "$target" in
     fi
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-Bshareable
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MDCPUCFG_H=_freebsd.cfg
     PR_MD_CSRCS=freebsd.c
     ;;
@@ -362,7 +360,6 @@ case "$target" in
     AC_DEFINE(_HPUX_SOURCE)
     DEFINES="$DEFINES -D${target_cpu}"
     DLL_SUFFIX=sl
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
     if test -n "$USE_64"; then
@@ -454,7 +451,7 @@ case "$target" in
     AC_DEFINE(_SGI_MP_SOURCE)
     PR_MD_CSRCS=irix.c
     PR_MD_ASFILES=os_Irix.s
-    MKSHLIB='$(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@)'
+    MKSHLIB='$(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
     DSO_LDOPTS='-elf -shared -all'
     if test -n "$USE_64"; then
         MDCPUCFG_H=_irix64.cfg
@@ -545,7 +542,7 @@ case "$target" in
     CXXFLAGS="$CXXFLAGS -pipe"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@)'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-shared
     case "${target_cpu}" in
@@ -642,7 +639,6 @@ case "$target" in
         MDCPUCFG=_solaris32.cfg
     fi
     PR_MD_CSRCS=solaris.c
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS='-G -h $(notdir $@)'
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
