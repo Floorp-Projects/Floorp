@@ -1848,13 +1848,11 @@ function cmdLoad(e)
     var ex;
     var plugin;
 
-    function removeOldPlugin(id)
+    function removeOldPlugin(url)
     {
         var oldPlugin;
 
-        var i = getPluginIndexByURL(e.url);
-        if ((i == -1) && id)
-            i = getPluginIndexById(id);
+        var i = getPluginIndexByURL(url);
         if (i == -1)
             return -1;
 
@@ -1905,9 +1903,9 @@ function cmdLoad(e)
     {
         var rvStr;
         var rv = rvStr = client.load(e.url, e.scope);
-        var index;
+        var index = removeOldPlugin(e.url);
 
-        if ((index = removeOldPlugin(plugin.id)) == null)
+        if (index == null)
             return null;
 
         if ("init" in plugin)
