@@ -18,8 +18,8 @@
  
 #include "nsISupportsArray.idl"
 #include "nsISupports.idl"
-#include "nsIMsg.idl"
 #include "nsIFolder.idl"
+#include "nsIMessage.idl"
 
 %{ C++
 #include "nsFileSpec.h"
@@ -109,6 +109,8 @@ interface nsIMsgFolder : nsIFolder {
                          in unsigned long resultsize, out unsigned long numFolders);
 
 	void GetExpansionArray(in nsISupportsArray expansionArray);
+
+	void DeleteMessage(in nsIMessage message);
 
 };
 

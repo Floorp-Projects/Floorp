@@ -8,22 +8,16 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsICollection.h" /* interface nsICollection */
-#include "nsIMsg.h" /* interface nsIMsg */
+#include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
 #include "nsIFolder.h" /* interface nsIFolder */
+#include "nsIMessage.h" /* interface nsIMessage */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsError.h"
-
-class nsISupportsArray;
-class nsIMessage;
 #include "nsFileSpec.h"
+
 
 /* starting interface nsIMsgFolder */
 
@@ -81,16 +75,16 @@ class nsIMsgFolder : public nsIFolder {
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage) = 0;
 
   /* void CreateSubfolder (in string leafNameFromUser, out nsIMsgFolder outFolder, out unsigned long outPos); */
-  NS_IMETHOD CreateSubfolder(char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos) = 0;
+  NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos) = 0;
 
   /* void Rename (in string name); */
-  NS_IMETHOD Rename(char *name) = 0;
+  NS_IMETHOD Rename(const char *name) = 0;
 
   /* void Adopt (in nsIMsgFolder srcFolder, out unsigned long outPos); */
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos) = 0;
 
   /* boolean ContainsChildNamed (in string name); */
-  NS_IMETHOD ContainsChildNamed(char *name, PRBool *_retval) = 0;
+  NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval) = 0;
 
   /* nsIMsgFolder FindParentOf (in nsIMsgFolder childFolder); */
   NS_IMETHOD FindParentOf(nsIMsgFolder *childFolder, nsIMsgFolder **_retval) = 0;
@@ -99,7 +93,7 @@ class nsIMsgFolder : public nsIFolder {
   NS_IMETHOD IsParentOf(nsIMsgFolder *folder, PRBool deep, PRBool *_retval) = 0;
 
   /* string GenerateUniqueSubfolderName (in string prefix, in nsIMsgFolder otherFolder); */
-  NS_IMETHOD GenerateUniqueSubfolderName(char *prefix, nsIMsgFolder *otherFolder, char **_retval) = 0;
+  NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder, char **_retval) = 0;
 
   /* attribute unsigned long depth; */
   NS_IMETHOD GetDepth(PRUint32 *aDepth) = 0;
@@ -154,7 +148,7 @@ class nsIMsgFolder : public nsIFolder {
   NS_IMETHOD GetSizeOnDisk(PRUint32 *aSizeOnDisk) = 0;
 
   /* void RememberPassword (in string password); */
-  NS_IMETHOD RememberPassword(char *password) = 0;
+  NS_IMETHOD RememberPassword(const char *password) = 0;
 
   /* string GetRememberedPassword (); */
   NS_IMETHOD GetRememberedPassword(char **_retval) = 0;
@@ -192,6 +186,9 @@ class nsIMsgFolder : public nsIFolder {
   /* void GetExpansionArray (in nsISupportsArray expansionArray); */
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray) = 0;
 
+  /* void DeleteMessage (in nsIMessage message); */
+  NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgFolder *priv);
@@ -213,8 +210,6 @@ class nsIMsgLocalMailFolder : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
-  NS_IMETHOD GetPath(nsFileSpec& aPathName) = 0;
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgLocalMailFolder *priv);
@@ -236,8 +231,8 @@ class nsIMsgImapMailFolder : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
-  NS_IMETHOD GetPathName(nsFileSpec& aPathName) = 0;
+  /* readonly attribute nsNativeFileSpec pathName; */
+  NS_IMETHOD GetPathName(nsNativeFileSpec* *aPathName) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
