@@ -1652,7 +1652,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
                      ++i, node = CERT_LIST_NEXT(node)
                     )
                 {
-                    nsCOMPtr<nsNSSCertificate> c1 = new nsNSSCertificate(node->cert);
+                    nsNSSCertificate *c0 = new nsNSSCertificate(node->cert);
+
+                    nsCOMPtr<nsIX509Cert> c1 = c0;
 
                     nsCOMPtr<nsIX509Cert> c2;
                     proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
