@@ -702,55 +702,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   *
   */
 void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, 
-                                          nsStyleSpacing& aSpacingStyle, 
-                                          nscoord         aBorderWidth,
+                                          nsStyleSpacing& aSpacingStyle,
                                           nsTableFrame*   aTableFrame)
 {
-  nsStyleCoord  width;
-  width.SetCoordValue(aBorderWidth);
-  aSpacingStyle.mBorder.SetTop(width);
-  aSpacingStyle.mBorder.SetLeft(width);
-  aSpacingStyle.mBorder.SetBottom(width);
-  aSpacingStyle.mBorder.SetRight(width);
-
-  // XXX This should come from the default style sheet (ua.css), and
-  // not be hardcoded. Using solid causes the borders not to show up...
-#if 1
-
-  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_BG_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_BG_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_INSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_INSET);
-
-#endif
-  
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  nsIStyleContext*  styleContext = nsnull;
-  
-  tableFrame->GetStyleContext(&styleContext);
-
-  const nsStyleColor* colorData = 
-      nsStyleUtil::FindNonTransparentBackground(styleContext);
-  NS_IF_RELEASE(styleContext);
-
-  // Yaahoo, we found a style context which has a background color 
-  nscolor borderColor = 0xFFC0C0C0;
-
-  if (colorData != nsnull)
-    borderColor = colorData->mBackgroundColor;
-
-  // if the border color is white, then shift to grey
-  if (borderColor == 0xFFFFFFFF)
-    borderColor = 0xFFC0C0C0;
-  aSpacingStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
-
   //adjust the border style based on the table rules attribute
   const nsStyleTable* tableStyle;
-  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  aTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
 
   switch (tableStyle->mRules)
   {
@@ -760,24 +717,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
     aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
     aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
-  case NS_STYLE_TABLE_RULES_GROUPS:
-#ifdef NS_DEBUG
-    printf("warning: NS_STYLE_TABLE_RULES_GROUPS used but not yet implemented.\n");
-#endif
-    // XXX: it depends on which cell this is!
-    /*
-    for h-sides, walk up content parent list to row and see what "index in parent" row is.
-    if it is 0 or last, then draw the rule.  otherwise, don't.  Probably just compare
-    against FirstChild and LastChild.
-    for v-sides, do the same thing only for col and colgroup.
-    */
-    /*
-    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
-    */
-    break;
+
   case NS_STYLE_TABLE_RULES_COLS:
 	  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
     aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
@@ -788,7 +728,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
     aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
-  // do nothing for "ALL" or for any illegal value
+  default:
+    // do nothing for "GROUPS" or "ALL" or for any illegal value
+    // "GROUPS" will be handled in nsTableFrame::ProcessGroupRules
+    break;
   }
 }
 
@@ -858,13 +801,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   if (eStyleUnit_Null == spacingData->mPadding.GetLeftUnit()) 
     spacingData->mPadding.SetLeft(defaultPadding);
 
-  // get border information from the table
-  if (tableStyle->mRules!= NS_STYLE_TABLE_RULES_NONE) {
-    // XXX: need to get border width here
-    // in HTML, cell borders are always 1 pixel by default
-    nscoord border = NSIntPixelsToTwips(1, p2t);
-    MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
-  }
+  MapHTMLBorderStyle(aPresContext, *spacingData, tableFrame);
 
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);

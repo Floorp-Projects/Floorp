@@ -19,6 +19,7 @@
 #include "nsTableFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsCellMap.h"
 #include "nsTableCellFrame.h"
@@ -429,6 +430,10 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
     EnsureColumns(aPresContext, createdColFrames);
   }
 
+  if (HasGroupRules()) {
+    ProcessGroupRules(aPresContext);
+  }
+
   return rv;
 }
 
@@ -606,6 +611,64 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
     result = numCols;
   return result;
 }
+
+PRBool nsTableFrame::HasGroupRules() const
+{
+  const nsStyleTable* tableStyle = nsnull;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  if (NS_STYLE_TABLE_RULES_GROUPS == tableStyle->mRules) { 
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+// this won't work until bug 12948 is resolved and col groups are considered 
+void nsTableFrame::ProcessGroupRules(nsIPresContext& aPresContext)
+{
+  PRInt32 numRows = GetRowCount();
+  PRInt32 numCols = GetColCount();
+
+  // process row groups
+  nsIFrame* iFrame;
+  for (iFrame = mFrames.FirstChild(); iFrame; iFrame->GetNextSibling(&iFrame)) {
+    nsIAtom* frameType;
+    iFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
+      nsTableRowGroupFrame* rgFrame = (nsTableRowGroupFrame *)iFrame;
+      PRInt32 startRow = rgFrame->GetStartRowIndex();
+      PRInt32 numGroupRows;
+      rgFrame->GetRowCount(numGroupRows, PR_FALSE);
+      PRInt32 endRow = startRow + numGroupRows - 1;
+      if (startRow == endRow) {
+        continue;
+      }
+      for (PRInt32 rowX = startRow; rowX <= endRow; rowX++) {
+        for (PRInt32 colX = 0; colX < numCols; colX++) {
+          PRBool originates;
+          nsTableCellFrame* cell = GetCellInfoAt(rowX, colX, &originates);
+          if (originates) {
+            nsCOMPtr<nsIStyleContext> styleContext;
+            cell->GetStyleContext(getter_AddRefs(styleContext));
+            nsStyleSpacing* spacing = (nsStyleSpacing*)styleContext->GetMutableStyleData(eStyleStruct_Spacing);
+            if (rowX == startRow) { 
+              spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+            }
+            else if (rowX == endRow) { 
+              spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+            }
+            else {
+              spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+              spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+            }
+            styleContext->RecalcAutomaticData(&aPresContext);
+          }
+        }
+      }
+    }
+    NS_IF_RELEASE(frameType);
+  }
+}
+
 
 NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame* aRowGroup, 
                                              PRInt32 aRowIndex,
@@ -4905,7 +4968,6 @@ PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
   PRBool isAuto = PR_TRUE;  // the default
 
   nsStylePosition* tablePosition = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-//unused  const nsStyleSpacing* spacing;
 
   switch (tablePosition->mWidth.GetUnit()) {
 
@@ -5318,9 +5380,9 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
   char indent[256];
   nsTableFrame::DebugGetIndent(aFrame, indent);
   printf("%s%s %p ", indent, aMessage, aFrame);
+  char width[32];
+  char height[32];
   if (aState) {
-    char width[32];
-    char height[32];
     PrettyUC(aState->availableWidth, width);
     PrettyUC(aState->availableHeight, height);
     printf("rea=%d av=(%s,%s) ", aState->reason, width, height); 
@@ -5332,10 +5394,10 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
     if (aState) {
       printf("%s", indent);
     }
-    printf("des=(%d,%d) ", aMetrics->width, aMetrics->height);
+    PrettyUC(aMetrics->width, width);
+    PrettyUC(aMetrics->height, height);
+    printf("des=(%d,%d) ", width, height);
     if (aMetrics->maxElementSize) {
-      char width[32];
-      char height[32];
       PrettyUC(aMetrics->maxElementSize->width, width);
       PrettyUC(aMetrics->maxElementSize->height, height);
       printf("maxElem=(%s,%s)", width, height);
