@@ -47,6 +47,7 @@ DIRS		+= jpeg
 endif
 
 DIRS		+= \
+		include \
 		netwerk \
 		modules/libutil \
 		intl \
