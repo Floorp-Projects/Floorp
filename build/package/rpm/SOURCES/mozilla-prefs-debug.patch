@@ -1,27 +1,27 @@
---- mozilla/xpfe/components/prefwindow/resources/content/preftree.xul.debug	Wed Jan 16 13:15:13 2002
-+++ mozilla/xpfe/components/prefwindow/resources/content/preftree.xul	Wed Jan 16 13:15:29 2002
-@@ -151,24 +151,6 @@
-       </outlinerchildren>
-     </outlineritem>
+--- mozilla/xpfe/components/prefwindow/resources/content/preftree.xul.foo	Fri Apr  5 00:27:57 2002
++++ mozilla/xpfe/components/prefwindow/resources/content/preftree.xul	Fri Apr  5 00:28:08 2002
+@@ -150,24 +150,6 @@
+       </treechildren>
+     </treeitem>
  
--    <outlineritem container="true" id="debugItem">
--      <outlinerrow>       
--        <outlinercell url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
--      </outlinerrow>
--      <outlinerchildren id="debugChildren">
--        <outlineritem>
--          <outlinerrow>
--            <outlinercell url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
--          </outlinerrow>
--        </outlineritem>
--        <outlineritem>
--          <outlinerrow>
--            <outlinercell url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
--          </outlinerrow>
--        </outlineritem>
--      </outlinerchildren>
--    </outlineritem>
+-    <treeitem container="true" id="debugItem">
+-      <treerow>       
+-        <treecell url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
+-      </treerow>
+-      <treechildren id="debugChildren">
+-        <treeitem>
+-          <treerow>
+-            <treecell url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
+-          </treerow>
+-        </treeitem>
+-        <treeitem>
+-          <treerow>
+-            <treecell url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
+-          </treerow>
+-        </treeitem>
+-      </treechildren>
+-    </treeitem>
 -
-     <outlineritem id="offlineItem">
-       <outlinerrow>
-         <outlinercell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
+     <treeitem id="offlineItem">
+       <treerow>
+         <treecell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 

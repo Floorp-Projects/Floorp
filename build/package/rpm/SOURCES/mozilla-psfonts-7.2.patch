@@ -1,6 +1,6 @@
---- mozilla/modules/libpref/src/unix/unix.js.psfoo	Thu Feb 21 15:58:23 2002
-+++ mozilla/modules/libpref/src/unix/unix.js	Thu Feb 21 16:00:22 2002
-@@ -344,8 +344,10 @@
+--- mozilla/modules/libpref/src/unix/unix.js.psfoo	Fri Apr  5 12:36:19 2002
++++ mozilla/modules/libpref/src/unix/unix.js	Fri Apr  5 12:39:11 2002
+@@ -345,8 +345,10 @@
  pref("print.postscript.nativefont.ar",             "");
  pref("print.postscript.nativefont.el",             "");
  pref("print.postscript.nativefont.he",             "");
@@ -13,3 +13,16 @@
  pref("print.postscript.nativefont.th",             "");
  pref("print.postscript.nativefont.tr",             "");
  pref("print.postscript.nativefont.x-baltic",       "");
+@@ -355,8 +357,10 @@
+ pref("print.postscript.nativefont.x-unicode",      "");
+ pref("print.postscript.nativefont.x-user-def",     "");
+ pref("print.postscript.nativefont.x-western",      "");
+-pref("print.postscript.nativefont.zh-CN",          "");
+-pref("print.postscript.nativefont.zh-TW",          "");
++pref("print.postscript.nativecode.zh-CN", "gb18030");
++pref("print.postscript.nativefont.zh-CN", "MSungGBK-Light-GBK2K-H");
++pref("print.postscript.nativecode.zh-TW", "big5");
++pref("print.postscript.nativefont.zh-TW", "ShanHeiSun-Light-B5-H");
+ 
+ pref("mail.signature_date", 0);
+ // EOF.

@@ -1,1 +1,6 @@
-bin/mozilla-xremote-client
+libgkgfx.so
+libjsj.so
+libmozjs.so
+libgtkembedmoz.so
+libgtksuperwin.so
+libgtkxtbin.so

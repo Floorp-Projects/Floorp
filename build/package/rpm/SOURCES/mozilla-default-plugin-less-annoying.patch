@@ -1,0 +1,62 @@
+--- mozilla/modules/plugin/samples/default/unix/npshell.c.foo	Tue May  7 14:18:45 2002
++++ mozilla/modules/plugin/samples/default/unix/npshell.c	Tue May  7 14:49:55 2002
+@@ -224,7 +224,7 @@
+       This->depth = ws_info->depth;
+       This->colormap = ws_info->colormap;
+       makePixmap(This);
+-      makeWidget(This);
++      /* makeWidget(This); */
+     }
+     return NPERR_NO_ERROR;
+ }
+--- mozilla/modules/plugin/samples/default/unix/nullplugin.c.foo	Tue May  7 14:18:45 2002
++++ mozilla/modules/plugin/samples/default/unix/nullplugin.c	Tue May  7 14:48:33 2002
+@@ -70,6 +70,8 @@
+ 
+     gtk_object_remove_data(GTK_OBJECT(button), DIALOGID);
+ 
++#if 0
++
+     if (This->pluginsFileUrl != NULL)
+     {
+         /* Get the JavaScript command string */
+@@ -110,6 +112,7 @@
+             NPN_MemFree(url);
+         }
+     }
++#endif
+     destroyWidget(This);
+ }
+ 
+@@ -265,14 +268,14 @@
+                    GTK_DIALOG(dialogWindow)->action_area);
+     gtk_object_set_data(GTK_OBJECT(okButton), DIALOGID, dialogWindow);
+ 
+-    cancelButton= AddWidget(gtk_button_new_with_label (CANCEL_BUTTON), 
+-                   GTK_DIALOG(dialogWindow)->action_area);
++    /*    cancelButton= AddWidget(gtk_button_new_with_label (CANCEL_BUTTON), 
++          GTK_DIALOG(dialogWindow)->action_area); */
+ 
+     gtk_signal_connect (GTK_OBJECT(okButton),  "clicked",
+                         GTK_SIGNAL_FUNC(DialogOKClicked), This);
+ 
+-    gtk_signal_connect (GTK_OBJECT(cancelButton),  "clicked",
+-                        GTK_SIGNAL_FUNC(DialogCancelClicked), This);
++    /*    gtk_signal_connect (GTK_OBJECT(cancelButton),  "clicked",
++          GTK_SIGNAL_FUNC(DialogCancelClicked), This); */
+ 
+     /* hookup to when the dialog is destroyed */
+     gtk_signal_connect(GTK_OBJECT(dialogWindow), "destroy",
+--- mozilla/modules/plugin/samples/default/unix/nullplugin.h.foo	Tue May  7 14:46:48 2002
++++ mozilla/modules/plugin/samples/default/unix/nullplugin.h	Tue May  7 14:47:08 2002
+@@ -53,9 +53,7 @@
+ #define JVM_MINETYPE        "application/x-java-vm"
+ #define MESSAGE "\
+ This page contains information of a type (%s) that can\n\
+-only be viewed with the appropriate Plug-in.\n\
+-\n\
+-Click OK to download Plugin."
++only be viewed with the appropriate Plug-in."
+ 
+ #define GET 1
+ #define REFRESH 2

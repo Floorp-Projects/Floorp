@@ -28,25 +28,25 @@ use File::Find;
 use strict;
 
 # global vars
-my $srcdir       = "";
+my $install_dir  = "";
+my $install_root = "";
 my $package_name = "";
 my $package_file = "";
 my $output_file  = "";
 my $exclude_file = "";
-my $shared_pass;
 my $retval;
 
 # std return val
 
-$retval = GetOptions('source=s',       \$srcdir,
+$retval = GetOptions('install-dir=s',  \$install_dir,
+		     'install-root=s', \$install_root,
 		     'package=s',      \$package_name,
 		     'package-file=s', \$package_file,
 		     'output-file=s',  \$output_file,
-                     'exclude-file=s', \$exclude_file,
-		     'shared!',        \$shared_pass);
+                     'exclude-file=s', \$exclude_file);
 
 # make sure that all of the values are specific on the command line
-if (!$retval || !$srcdir || !$package_name || 
+if (!$retval || !$install_dir || !$install_root || !$package_name || 
     !$package_file || !$output_file) {
     print_usage();
     exit 1;
@@ -56,8 +56,8 @@ if (!$retval || !$srcdir || !$package_name ||
 
 open (PACKAGE_FILE, $package_file) || die("$0: Failed to open file $package_file for reading.");
 
-print "chdir to $srcdir\n";
-chdir($srcdir);
+print "chdir to $install_dir\n";
+chdir($install_dir);
 
 my @file_list;
 my @exclude_list;
@@ -133,20 +133,12 @@ foreach (@final_file_list) {
     # strip off the bin/
     s/^bin\///;
 
-    # if it's a shared library and we're doing a shared pass print it.
-    # otherwise ignore it.
-    my $is_shared_library = 0;
-    $is_shared_library = /^[a-zA-Z0-9]+\.so$/;
-    if ($shared_pass && $is_shared_library) {
-	print ("Adding $_\n");
-	print (OUTPUT_FILE $_ . "\n");
-    }
-    elsif (!$shared_pass && !$is_shared_library) {
-	print ("Adding $_\n");
-	print (OUTPUT_FILE $_ . "\n");
+    if ( ! -f $_ ) {
+	print("Skipping $_ because it doesn't exist\n");
     }
     else {
-	print("Ignoring $_\n");
+	print ("Adding $_\n");
+	print (OUTPUT_FILE $install_root . "/" . $_ . "\n");
     }
 }
 close OUTPUT_FILE;
@@ -164,12 +156,16 @@ sub expand_file_list {
     my $final_file_list_ref = shift;
     my $this_file;
     foreach $this_file (@{$file_list_ref}) {
+	# strip off the bin/
+	$this_file =~ s/^bin\///;
+
 	# is it a wild card?
 	if ($this_file =~ /\*$/) {
 	    print "Wild card $this_file\n";
 	    # expand that wild card, removing anything in the exclude
 	    # list
 	    my @temp_list;
+	    printf ("Expanding $this_file\n");
 	    @temp_list = glob($this_file);
 	    foreach $this_file (@temp_list) {
 		if (!in_exclude_list($this_file, $exclude_list_ref)) {
@@ -202,10 +198,10 @@ sub in_exclude_list {
 # print out a usage message
 
 sub print_usage {
-    print ("$0: --source dir --package name --package-file file --output-file file [--shared]\n");
-    print ("\t source is the source directory where the files can be found.\n");
+    print ("$0: --install-dir dir --install-root dir --package name --package-file file --output-file file\n");
+    print ("\t install-dir is the directory where the files are installed.\n");
+    print ("\t install-root is the directory that should prefix files in the package file.\n");
     print ("\t package is the name of the package to list\n");
     print ("\t package-file is the file that contains the list of packages\n");
     print ("\t output-file is the file which will contain the list of files\n");
-    print ("\t shared pulls out only the shared libraries\n");
 }

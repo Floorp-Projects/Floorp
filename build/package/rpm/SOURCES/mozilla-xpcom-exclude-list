@@ -1,4 +1,5 @@
-bin/libnspr4.so
-bin/libplc4.so
-bin/libplds4.so
+libnspr4.so
+libplc4.so
+libplds4.so
+libxpcom.so
 

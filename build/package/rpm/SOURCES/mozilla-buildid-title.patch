@@ -1,0 +1,14 @@
+--- mozilla/xpfe/browser/resources/locale/en-US/navigator.dtd.foo	Mon Jul  8 09:16:49 2002
++++ mozilla/xpfe/browser/resources/locale/en-US/navigator.dtd	Mon Jul  8 09:17:13 2002
+@@ -4,9 +4,9 @@
+ <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
+ 
+ <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE --> 
+-<!ENTITY mainWindow.title "&brandShortName; {&buildId.label;}"> 
++<!ENTITY mainWindow.title "&brandShortName;"> 
+ <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
+-<!ENTITY mainWindow.titlemodifier "&brandShortName; {&buildId.label;}"> 
++<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
+ <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+ <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+ <!ENTITY viewsourcetitle.preface "Source for: ">

@@ -1,6 +1,6 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Thu Feb 21 15:18:58 2002
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Thu Feb 21 15:19:31 2002
-@@ -351,133 +351,6 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.foo	Tue Jul 23 14:43:07 2002
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Tue Jul 23 14:44:43 2002
+@@ -363,133 +363,6 @@
    
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
  
@@ -106,7 +106,7 @@
 -  </menu>
 -
 -  <menu id="qaMenu" accesskey="Q" label="QA">
--    <menupopup>
+-    <menupopup id="qaMenuPopup">
 -      <menuitem label="Getting Involved" oncommand="loadURI('http://www.mozilla.org/start/');"/>
 -      <menuitem label="Mozilla QA Overview" oncommand="loadURI('http://www.mozilla.org/quality/');"/>
 -

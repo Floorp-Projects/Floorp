@@ -39,14 +39,14 @@ ulimit -c 0
 ##
 ## Variables
 ##
-MOZ_DIST_BIN="/usr/lib/mozilla"
-MOZ_PROGRAM="/usr/lib/mozilla/mozilla-bin"
-MOZ_CLIENT_PROGRAM="/usr/bin/mozilla-xremote-client"
+MOZ_DIST_BIN="/usr/lib/mozilla-MOZILLA_VERSION"
+MOZ_PROGRAM="/usr/lib/mozilla-MOZILLA_VERSION/mozilla-bin"
+MOZ_CLIENT_PROGRAM="/usr/lib/mozilla-MOZILLA_VERSION/mozilla-xremote-client"
 
 ##
 ## Set MOZILLA_FIVE_HOME
 ##
-MOZILLA_FIVE_HOME="/usr/lib/mozilla"
+MOZILLA_FIVE_HOME="/usr/lib/mozilla-MOZILLA_VERSION"
 
 export MOZILLA_FIVE_HOME
 
@@ -55,12 +55,18 @@ export MOZILLA_FIVE_HOME
 ##
 if [ "$LD_LIBRARY_PATH" ]
 then
-  LD_LIBRARY_PATH=/usr/lib/mozilla:/usr/lib/mozilla/plugins:$LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=/usr/lib/mozilla-MOZILLA_VERSION:/usr/lib/mozilla-MOZILLA_VERSION/plugins:$LD_LIBRARY_PATH
 else
-  LD_LIBRARY_PATH=/usr/lib/mozilla:/usr/lib/mozilla/plugins
+  LD_LIBRARY_PATH=/usr/lib/mozilla-MOZILLA_VERSION:/usr/lib/mozilla-MOZILLA_VERSION/plugins
 fi
 
 export LD_LIBRARY_PATH
+
+##
+## Make sure that we set the plugin path for backwards compatibility
+##
+MOZ_PLUGIN_PATH=/usr/lib/mozilla/plugins
+export MOZ_PLUGIN_PATH
 
 ##
 ## Set FONTCONFIG_PATH for Xft/fontconfig
@@ -72,18 +78,27 @@ export FONTCONFIG_PATH
 
 function set_jvm_vars() {
 
-    if [ ! -L /usr/lib/mozilla/plugins/libjavaplugin_oji.so ]; then
-	return;
+    # see if the jvm exists in either of the locations
+    if [ -L /usr/lib/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so ]; then
+        JVM_ORIG_LINK=/usr/lib/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so
     fi
 
-    JVM_LINK=`perl -e 'print readlink("/usr/lib/mozilla/plugins/libjavaplugin_oji.so")'`
+    if [ -L /usr/lib/mozilla/plugins/libjavaplugin_oji.so ]; then
+        JVM_ORIG_LINK=/usr/lib/mozilla/plugins/libjavaplugin_oji.so
+    fi
+
+    if [ -z "$JVM_ORIG_LINK" ]; then
+        return;
+    fi
+
+    JVM_LINK=`perl -e "print readlink('$JVM_ORIG_LINK')"`
 
     # is it relative?  if so append the full path
 
     echo "${JVM_LINK}" | grep -e "^/" 2>&1 > /dev/null
 
     if [ "$?" -ne "0" ]; then
-	JVM_LINK=/usr/lib/mozilla/plugins/${JVM_LINK}
+	JVM_LINK=/usr/lib/mozilla-MOZILLA_VERSION/plugins/${JVM_LINK}
     fi
 
     JVM_BASE=`basename $JVM_LINK`
