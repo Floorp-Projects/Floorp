@@ -49,7 +49,7 @@ public final class NativeCall extends ScriptableObject {
                Scriptable thisObj, Object[] args)
     {
         this(cx, scope, funObj, thisObj);
-        this.originalArgs = args;
+        this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
         
         // initialize values of arguments
         String[] names = funObj.names;
