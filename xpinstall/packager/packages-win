@@ -88,6 +88,7 @@ bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
 bin\components\gkcontent.dll
+bin\components\content_base.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 bin\components\gklayout.dll

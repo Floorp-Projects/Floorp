@@ -109,6 +109,7 @@ bin/components/libpsmglue.so
 bin/components/libpref.so
 bin/components/libprofile.so
 bin/components/libgkcontent.so
+bin/components/content_base.xpt
 bin/components/libgklayout.so
 bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
