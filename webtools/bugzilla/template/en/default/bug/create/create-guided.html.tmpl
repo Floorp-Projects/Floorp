@@ -211,8 +211,10 @@ function PutDescription() {
 <form method="post" action="post_bug.cgi">  
   <input type="hidden" name="format" value="guided">
   <input type="hidden" name="assigned_to" value="">
-  <input type="hidden" name="priority" value="[% default.priority %]">
-  <input type="hidden" name="version" value="[% default.version %]">
+  <input type="hidden" name="priority" 
+         value="[% default.priority FILTER html %]">
+  <input type="hidden" name="version" 
+         value="[% default.version FILTER html %]">
   
 <table valign="top" cellpadding="5" cellspacing="5" border="0">
 

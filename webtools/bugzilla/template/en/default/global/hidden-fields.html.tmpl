@@ -32,11 +32,11 @@
   [% NEXT IF exclude && field.key.search(exclude) %]
   [% IF mform.${field.key}.size > 1 %]
     [% FOREACH mvalue = mform.${field.key} %]
-      <input type="hidden" name="[% field.key %]"
+      <input type="hidden" name="[% field.key FILTER html %]"
              value="[% mvalue | html | html_linebreak %]">
     [% END %]
   [% ELSE %]
-    <input type="hidden" name="[% field.key %]"
+    <input type="hidden" name="[% field.key FILTER html %]"
            value="[% field.value | html | html_linebreak %]">
   [% END %]
 [% END %]

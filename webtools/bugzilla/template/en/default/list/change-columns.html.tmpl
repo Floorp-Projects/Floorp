@@ -36,7 +36,7 @@
 [% field_descs.qa_contact_realname  = "QA Contact Realname" %]
 
 <form action="colchange.cgi">
-  <input type="hidden" name="rememberedquery" value="[% buffer %]">
+  <input type="hidden" name="rememberedquery" value="[% buffer FILTER html %]">
   [% FOREACH column = masterlist %]
     <input type="checkbox" id="[% column %]" name="column_[% column %]" 
       [% "checked='checked'" IF lsearch(collist, column) != -1 %]>
@@ -65,7 +65,7 @@
 </form>
 
 <form action="colchange.cgi">
-  <input type="hidden" name="rememberedquery" value="[% buffer %]">
+  <input type="hidden" name="rememberedquery" value="[% buffer FILTER html %]">
   <input type="hidden" name="resetit" value="1">
   <input type="submit" value="Reset to Bugzilla default">
 </form>

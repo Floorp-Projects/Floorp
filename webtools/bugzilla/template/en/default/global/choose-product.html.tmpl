@@ -41,7 +41,7 @@
   <tr>
     <th align="right" valign="top">
       <a href="[% target %]?product=[% p FILTER url_quote %]
-                                       [%- "&amp;format=$format" IF format %]">
+            [% IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
       [% p FILTER html %]</a>:
     </th>
 

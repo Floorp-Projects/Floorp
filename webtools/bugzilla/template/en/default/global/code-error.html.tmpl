@@ -86,7 +86,7 @@
 
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field %]</code>
-    and <code>[% type %]</code> together.
+    and <code>[% type FILTER html %]</code> together.
  
   [% ELSIF error == "gd_not_installed" %]
     Charts will not work without the GD Perl module being installed.

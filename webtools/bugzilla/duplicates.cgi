@@ -74,7 +74,7 @@ my $sortby = formvalue("sortby");
 my $changedsince = formvalue("changedsince", 7);
 my $maxrows = formvalue("maxrows", 100);
 my $openonly = formvalue("openonly");
-my $reverse = formvalue("reverse");
+my $reverse = formvalue("reverse") ? 1 : 0;
 my $product = formvalue("product");
 my $sortvisible = formvalue("sortvisible");
 my @buglist = (split(/[:,]/, formvalue("bug_id")));
@@ -159,8 +159,14 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
     $dobefore = 1;
 }
 
+my $origmaxrows = $maxrows;
 detaint_natural($maxrows)
-  || ThrowUserError("invalid_maxrows", { maxrows => $maxrows});
+  || ThrowUserError("invalid_maxrows", { maxrows => $origmaxrows});
+
+my $origchangedsince = $changedsince;
+detaint_natural($changedsince)
+  || ThrowUserError("invalid_changedsince", 
+                    { changedsince => $origchangedsince });
 
 my @bugs;
 my @bug_ids; 

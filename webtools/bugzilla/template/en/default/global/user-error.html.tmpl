@@ -235,7 +235,7 @@
     
   [% ELSIF error == "illegal_date" %]
     [% title = "Your Query Makes No Sense" %]
-    '<tt>[% date %]</tt>' is not a legal date.
+    '<tt>[% date FILTER html %]</tt>' is not a legal date.
     
   [% ELSIF error == "illegal_email_address" %]
     [% title = "Invalid Email Address" %]
@@ -289,6 +289,11 @@
     If you are trying to use QuickSearch, you need to enable JavaScript 
     in your browser. To help us fix this limitation, add your comments to 
     <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">bug 70907</a>.
+
+  [% ELSIF error == "invalid_changedsince" %]
+    [% title = "Invalid 'Changed Since'" %]
+    The 'changed since' value, '[% changedsince FILTER html %]', must be an
+    integer >= 0.
 
   [% ELSIF error == "invalid_content_type" %]
     [% title = "Invalid Content-Type" %]
@@ -355,7 +360,7 @@
   [% ELSIF error == "missing_email_type" %]
     [% title = "Your Query Makes No Sense" %]
     You must specify one or more fields in which to search for
-    <tt>[% email %]</tt>.
+    <tt>[% email FILTER html %]</tt>.
     
   [% ELSIF error == "missing_query" %]
     [% title = "Missing Query" %]

@@ -107,7 +107,8 @@
     [% sel = { description => 'Priority', name => 'priority' } %]
     [% INCLUDE select %]
   [% ELSE %]
-    <input type="hidden" name="priority" value="[% default.priority %]">
+    <input type="hidden" name="priority" 
+           value="[% default.priority FILTER html %]">
   [% END %]
 
   [% sel = { description => 'Severity', name => 'bug_severity' } %]

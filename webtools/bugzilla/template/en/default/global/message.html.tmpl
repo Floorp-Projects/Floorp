@@ -34,7 +34,7 @@
 [%# Display a URL if the calling script or message block has included one. %]
 [% IF url && link %]
   <p>
-    <a href="[% url %]">[% link %]</a>
+    <a href="[% url FILTER html %]">[% link FILTER html %]</a>
   </p>
 [% END %]
 

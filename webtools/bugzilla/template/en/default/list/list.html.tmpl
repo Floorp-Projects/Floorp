@@ -95,7 +95,7 @@
   <p>
     <a href="query.cgi">Query Page</a>
     &nbsp;&nbsp;<a href="enter_bug.cgi">Enter New Bug</a>
-    <a href="query.cgi?[% urlquerypart %]">Edit this query</a>
+    <a href="query.cgi?[% urlquerypart FILTER html %]">Edit this query</a>
   </p>
 
 [% ELSIF bugs.size == 1 %]
@@ -133,11 +133,13 @@
     <input type="hidden" name="buglist" value="[% buglist %]">
     <input type="submit" value="Long Format">
     &nbsp;&nbsp;
-    <a href="buglist.cgi?[% urlquerypart %]&amp;ctype=csv">CSV</a> &nbsp;&nbsp;
-    <a href="colchange.cgi?[% urlquerypart %]">Change Columns</a> &nbsp;&nbsp;
+    <a href="buglist.cgi?
+             [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> &nbsp;&nbsp;
+    <a href="colchange.cgi?
+                [% urlquerypart FILTER html %]">Change Columns</a> &nbsp;&nbsp;
 
     [% IF bugs.size > 1 && caneditbugs && !dotweak %]
-      <a href="buglist.cgi?[% urlquerypart %]
+      <a href="buglist.cgi?[% urlquerypart FILTER html %]
         [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1">Change Several 
         Bugs at Once</a>
       &nbsp;&nbsp;
@@ -147,7 +149,8 @@
       <a href="mailto:[% bugowners %]">Send Mail to Bug Owners</a> &nbsp;&nbsp;
     [% END %]
 
-    <a href="query.cgi?[% urlquerypart %]">Edit this Query</a> &nbsp;&nbsp;
+    <a href="query.cgi?
+               [% urlquerypart FILTER html %]">Edit this Query</a> &nbsp;&nbsp;
 
   </form>
 
