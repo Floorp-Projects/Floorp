@@ -77,14 +77,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-#ifdef DEBUG
-  static PRBool once = PR_TRUE;
-  if (once) {
-    printf("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips);
-    once = PR_FALSE;
-  }
-#endif
-
 #if 0
   mTwipsToPixels = ( ((float)::gdk_screen_width()) /
                      ((float)::gdk_screen_width_mm()) * 25.4) /
@@ -111,6 +103,14 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mScrollbarHeight = req.height;
   gtk_widget_destroy(sb);
   gtk_widget_unref(sb);
+
+#ifdef DEBUG
+  static PRBool once = PR_TRUE;
+  if (once) {
+    printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", dpi, mTwipsToPixels, mPixelsToTwips,mDepth);
+    once = PR_FALSE;
+  }
+#endif
 
   return NS_OK;
 }
