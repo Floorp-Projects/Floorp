@@ -48,25 +48,24 @@ typedef struct MacLibrary
 
 #ifdef IMPL_MAC_REPOSITORY
 
-// entry points
-// extern "C" nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsIFactory **);
+extern "C" nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_GFXWIN_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_VIEW_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_PLUGIN_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_PREF_DLL(const nsCID &, nsIFactory **);
+//extern "C" nsresult		NSGetFactory_VIEW_DLL(const nsCID &, nsIFactory **);
+//extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsIFactory **);
+//extern "C" nsresult		NSGetFactory_PLUGIN_DLL(const nsCID &, nsIFactory **);
+//extern "C" nsresult		NSGetFactory_PREF_DLL(const nsCID &, nsIFactory **);
 extern "C" nsresult		NSGetFactory_PARSER_DLL(const nsCID &, nsIFactory **);
 
 extern "C" PRBool		NSCanUnload_PREF_DLL(void);
 
 // library list
 static MacLibrary	libraries[] = {
-// 	WIDGET_DLL,		NSGetFactory_WIDGET_DLL,	NULL,
+	WIDGET_DLL,		NSGetFactory_WIDGET_DLL,	NULL,
 	GFXWIN_DLL,		NSGetFactory_GFXWIN_DLL,	NULL,
-	VIEW_DLL,		NSGetFactory_VIEW_DLL,		NULL,
-	WEB_DLL,		NSGetFactory_WEB_DLL,		NULL,
-	PLUGIN_DLL,		NSGetFactory_PLUGIN_DLL,	NULL,
-	PREF_DLL,		NSGetFactory_PREF_DLL,		NSCanUnload_PREF_DLL,
+	//VIEW_DLL,		NSGetFactory_VIEW_DLL,		NULL,
+	//WEB_DLL,		NSGetFactory_WEB_DLL,		NULL,
+	//PLUGIN_DLL,		NSGetFactory_PLUGIN_DLL,	NULL,
+	//PREF_DLL,		NSGetFactory_PREF_DLL,		NSCanUnload_PREF_DLL,
 	PARSER_DLL,		NSGetFactory_PARSER_DLL,	NULL,
 	NULL};
 
