@@ -112,6 +112,7 @@
 				F5C501F501C024BF0100017F,
 				F5C501F601C024BF0100017F,
 				F5C501FB01C025870100017F,
+				F5E974C201EE3D040100017F,
 				F5C501FC01C025870100017F,
 				F5C501FF01C025B80100017F,
 				F5C5020001C025B80100017F,
@@ -131,7 +132,7 @@
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = ../../../src;
+				HEADER_SEARCH_PATHS = "../../../src ../../../src/regexp";
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
@@ -177,6 +178,7 @@
 				F5F243C301C19ED30100017F,
 				F5F243C401C19ED30100017F,
 				F5F243C501C19ED30100017F,
+				F5E974C001EE3C090100017F,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -191,11 +193,9 @@
 				F5C501E201C023340100017F,
 				F5C501E501C023D50100017F,
 				F5C501E601C023D50100017F,
-				F5C501E801C024110100017F,
 				F5C501EE01C0247F0100017F,
 				F5C501EF01C0247F0100017F,
 				F5C501F001C0247F0100017F,
-				F5C501F101C0247F0100017F,
 				F5C501F201C0247F0100017F,
 				F5C501F701C024BF0100017F,
 				F5C501F801C024BF0100017F,
@@ -207,6 +207,9 @@
 				F5C5020401C025B80100017F,
 				F5C5020501C025B80100017F,
 				F5C5020601C025B80100017F,
+				F5E974C301EE3D040100017F,
+				F52EF06701EE461C0100017F,
+				F52EF06801EE46510100017F,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -254,6 +257,18 @@
 //F52
 //F53
 //F54
+		F52EF06701EE461C0100017F = {
+			fileRef = F5C501EC01C0247F0100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52EF06801EE46510100017F = {
+			fileRef = F5C501E701C024100100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5C501D901C01FBF0100017F = {
 			isa = PBXFileReference;
 			name = DikDik_Shell.cpp;
@@ -344,12 +359,6 @@
 			path = ../../../src/js2runtime.cpp;
 			refType = 2;
 		};
-		F5C501E801C024110100017F = {
-			fileRef = F5C501E701C024100100017F;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5C501E901C0247F0100017F = {
 			isa = PBXFileReference;
 			name = jsarray.cpp;
@@ -394,12 +403,6 @@
 		};
 		F5C501F001C0247F0100017F = {
 			fileRef = F5C501EB01C0247F0100017F;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C501F101C0247F0100017F = {
-			fileRef = F5C501EC01C0247F0100017F;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -530,6 +533,38 @@
 			settings = {
 			};
 		};
+		F5E974BC01EE3B4A0100017F = {
+			children = (
+				F5E974BF01EE3C090100017F,
+			);
+			isa = PBXGroup;
+			name = regexp;
+			refType = 4;
+		};
+		F5E974BF01EE3C090100017F = {
+			isa = PBXFileReference;
+			name = regexp.h;
+			path = /Users/beard/Projects/JS2/mozilla/js2/src/regexp/regexp.h;
+			refType = 0;
+		};
+		F5E974C001EE3C090100017F = {
+			fileRef = F5E974BF01EE3C090100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E974C201EE3D040100017F = {
+			isa = PBXFileReference;
+			name = regexpwrapper.cpp;
+			path = /Users/beard/Projects/JS2/mozilla/js2/src/regexpwrapper.cpp;
+			refType = 0;
+		};
+		F5E974C301EE3D040100017F = {
+			fileRef = F5E974C201EE3D040100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5F2439901C19AC60100017F = {
 			children = (
 				F5F2439C01C19B920100017F,
@@ -548,6 +583,7 @@
 				F5F243AE01C19ED30100017F,
 				F5F243AF01C19ED30100017F,
 				F5F243B001C19ED30100017F,
+				F5E974BC01EE3B4A0100017F,
 				F5F243B101C19ED30100017F,
 				F5F243B201C19ED30100017F,
 				F5F243B301C19ED30100017F,
