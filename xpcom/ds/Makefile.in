@@ -58,7 +58,6 @@ CPPSRCS		= \
 		nsQuickSort.cpp \
 		nsRecyclingAllocator.cpp \
 		nsStaticNameTable.cpp \
-		nsStatistics.cpp \
 		nsStringEnumerator.cpp \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
