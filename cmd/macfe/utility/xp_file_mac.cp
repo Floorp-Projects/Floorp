@@ -180,6 +180,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			GetIndString(outSpec->name, 300, globHistoryName);
 			break;
+#ifdef MOZ_MAIL_NEWS
 		case xpImapRootDirectory:
 			_ftype = emMailSubdirectory;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
@@ -222,6 +223,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 				}
 			
 			break;
+#endif
 		case xpBookmarks:
 			_ftype = emTextType;
 			err = ConvertURLToSpec(inName, outSpec, (ResIDT)0);
@@ -302,12 +304,14 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			GetIndString(outSpec->name, 300, htmlAddressBook);
 			break;
+#ifdef MOZ_MAIL_NEWS
 		case xpAddrBookNew:
 		case xpAddrBook:
 			_ftype = emAddressBookDB;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::MainFolder );
 			*(CStr63*)(outSpec->name) = tempName;	
 			break;		
+#endif
 		case xpRegistry:
 			_ftype = emRegistry;
 			err = FindFolder( kOnSystemDisk, kPreferencesFolderType, TRUE, &outSpec->vRefNum, &outSpec->parID);
@@ -504,8 +508,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype(CPrefs::NewsFolder);
 			GetIndString(outSpec->name, 300, newsHostDatabase);
 			break;
-#endif /* #ifdef MOZ_MAIL_NEWS */
-/* MAIL */
+
 		case xpJSMailFilters:
 			_ftype = emTextType;
 			*outSpec = CPrefs::GetFilePrototype(CPrefs::MailFolder);
@@ -602,6 +605,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype(CPrefs::MainFolder);
 			*(CStr63*)(outSpec->name) = "liprefs.js";
 			break;
+#endif // ifdef MOZ_MAILNEWS
 			
 		default:
 			XP_ASSERT( false );		// Whoever added the enum, it is time to implement it on the Mac
