@@ -105,13 +105,62 @@ _PR_DestroyZones(void)
     use_zone_allocator = PR_FALSE;
 } 
 
+/*
+** pr_FindSymbolInProg
+**
+** Find the specified data symbol in the program and return
+** its address.
+*/
+
+#ifdef USE_DLFCN
+
+#include <dlfcn.h>
+
+static void *
+pr_FindSymbolInProg(const char *name)
+{
+    void *h;
+    void *sym;
+
+    h = dlopen(0, RTLD_LAZY);
+    if (h == NULL)
+        return NULL;
+    sym = dlsym(h, name);
+    (void)dlclose(h);
+    return sym;
+}
+
+#elif defined(USE_HPSHL)
+
+#include <dl.h>
+
+static void *
+pr_FindSymbolInProg(const char *name)
+{
+    shl_t h = NULL;
+    void *sym;
+
+    if (shl_findsym(&h, name, TYPE_DATA, &sym) == -1)
+        return NULL;
+    return sym;
+}
+
+#else
+
+#error "The zone allocator is not supported on this platform"
+
+#endif
+
 void
 _PR_InitZones(void)
 {
     int i, j;
     char *envp;
+    PRBool *sym;
 
-    if ((envp = getenv("NSPR_USE_ZONE_ALLOCATOR")) != NULL) {
+    if ((sym = pr_FindSymbolInProg("nspr_use_zone_allocator")) != NULL) {
+        use_zone_allocator = *sym;
+    } else if ((envp = getenv("NSPR_USE_ZONE_ALLOCATOR")) != NULL) {
         use_zone_allocator = (atoi(envp) == 1);
     }
 
