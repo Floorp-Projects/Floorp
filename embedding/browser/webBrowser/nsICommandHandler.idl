@@ -45,3 +45,4 @@ interface nsICommandHandler : nsISupports
 #define NS_COMMANDHANDLER_PROGID \
 "component://netscape/embedding/browser/nsCommandHandler"
 %}
+
