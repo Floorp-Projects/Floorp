@@ -121,7 +121,7 @@ Rights Reserved.
 				<menuseparator/>
 				<menuitem id="menu_close"/>
 				<menuseparator/>
-				<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
+				<menuitem value="&importCmd.label;" oncommand="toImport()"/>
 				<menuitem value="&exportCmd.label;" disabled="true" oncommand="AbExport()"/>
 				<menuseparator/>
 				<menuitem id="menu_pageSetup"/>
