@@ -152,9 +152,20 @@
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          openNewWindowWith(href);                                    // open link in new window
-          event.preventBubble();
-          return true;
+          if (pref && pref.GetBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
+            getBrowser() && getBrowser().localName == "tabbrowser") {
+            var t = getBrowser().addTab(href); // open link in new tab
+            if (!event.shiftKey && !pref.GetBoolPref("browser.tabs.loadInBackground"))
+              getBrowser().selectedTab = t;
+            event.preventBubble();
+            return true;
+          }
+          
+          if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  
+            openNewWindowWith(href);                                    // open link in new window
+            event.preventBubble();
+            return true;
+          }
         } 
         var saveModifier = true;
         if (pref) {
@@ -177,11 +188,13 @@
         if (pref && pref.GetBoolPref("browser.tabs.opentabfor.middleclick") && getBrowser && 
             getBrowser() && getBrowser().localName == "tabbrowser") {
           var t = getBrowser().addTab(href); // open link in new tab
-          getBrowser().selectedTab = t;
+          if (!event.shiftKey && !pref.GetBoolPref("browser.tabs.loadInBackground"))
+            getBrowser().selectedTab = t;
           event.preventBubble();
           return true;
         }
-        else if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  
+        
+        if (pref && pref.GetBoolPref("middlemouse.openNewWindow")) {  
           openNewWindowWith(href);                                    // open link in new window
           event.preventBubble();
           return true;
