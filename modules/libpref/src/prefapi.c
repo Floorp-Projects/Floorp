@@ -518,15 +518,25 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 		PR_Free(node);
 		node = next_node;
 	}
+	gCallbacks = NULL;
+
 	if (gMochaContext)
 		JS_DestroyContext(gMochaContext);
+	gMochaContext = NULL;
+
 	if (gMochaTaskState)
 		JS_Finish(gMochaTaskState);                      
-	gMochaContext = NULL;
 	gMochaTaskState = NULL;
 	
 	if (gHashTable)
 		PR_HashTableDestroy(gHashTable);
+	gHashTable = NULL;
+
+#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
+	if (gFileName)
+		PL_strfree(gFileName);
+	gFileName = NULL;
+#endif //  PREF_SUPPORT_OLD_PATH_STRINGS
 }
 
 PR_IMPLEMENT(PrefResult)
