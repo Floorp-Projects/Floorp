@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.2 2000/09/06 23:27:34 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.3 2000/09/06 23:58:41 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -179,17 +179,69 @@ cleanup:
     return key;
 }
 
+static unsigned int
+rsa_modulusLen(SECItem *modulus)
+{
+	unsigned char byteZero = modulus->data[0];
+	unsigned int modLen = modulus->len - !byteZero;
+	return modLen;
+}
+
 /*
 ** Perform a raw public-key operation 
 **	Length of input and output buffers are equal to key's modulus len.
 */
 SECStatus 
-RSA_PublicKeyOp(RSAPublicKey *key, 
+RSA_PublicKeyOp(RSAPublicKey  *key, 
                 unsigned char *output, 
                 unsigned char *input)
 {
-    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
-    return SECFailure;
+    unsigned int modLen;
+    mp_int n, e, m, c;
+    mp_err err   = MP_OKAY;
+    SECStatus rv = SECSuccess;
+    if (!key || !output || !input) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    MP_DIGITS(&n) = 0;
+    MP_DIGITS(&e) = 0;
+    MP_DIGITS(&m) = 0;
+    MP_DIGITS(&c) = 0;
+    CHECK_MPI_OK( mp_init(&n) );
+    CHECK_MPI_OK( mp_init(&e) );
+    CHECK_MPI_OK( mp_init(&m) );
+    CHECK_MPI_OK( mp_init(&c) );
+    modLen = rsa_modulusLen(&key->modulus);
+    /* 1.  Obtain public key (n, e) */
+    SECITEM_TO_MPINT(key->modulus, &n);
+#ifdef USE_MPI_EXPT_D
+    /* XXX convert exponent to mp_digit */
+#else
+    SECITEM_TO_MPINT(key->publicExponent, &e);
+#endif
+    /* 2.  Represent message as integer in range [0..n-1] */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&m, input, modLen) );
+    /* 3.  Compute c = m**e mod n */
+#ifdef USE_MPI_EXPT_D
+    /* XXX see which is faster */
+    CHECK_MPI_OK( mp_exptmod_d(&m, exp, &n, &c) );
+#else
+    CHECK_MPI_OK( mp_exptmod(&m, &e, &n, &c) );
+#endif
+    /* 4.  result c is ciphertext */
+    err = mp_to_unsigned_octets(&c, output, modLen);
+    if (err >= 0) err = MP_OKAY;
+cleanup:
+    mp_clear(&n);
+    mp_clear(&e);
+    mp_clear(&m);
+    mp_clear(&c);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
 }
 
 /*
