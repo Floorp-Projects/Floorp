@@ -334,6 +334,7 @@ if ($action eq 'update') {
 
     print "Keyword updated.<BR>\n";
 
+    &RebuildCacheWarning;
     # Make versioncache flush
     unlink "data/versioncache";
 
@@ -382,6 +383,7 @@ to delete the <code>$name</code> keyword?
 
     print "Keyword $name deleted.\n";
 
+    &RebuildCacheWarning;
     # Make versioncache flush
     unlink "data/versioncache";
 
@@ -395,3 +397,15 @@ print "I don't have a clue what you want.<BR>\n";
 foreach ( sort keys %::FORM) {
     print "$_: $::FORM{$_}<BR>\n";
 }
+
+
+
+sub RebuildCacheWarning {
+
+    print "<BR><BR><B>You have deleted or modified a keyword. You must rebuild the keyword cache!<BR></B>";
+    print "You can rebuild the cache using sanitycheck.cgi. On very large installations of Bugzilla,<BR>";
+    print "This can take several minutes.<BR><BR><B><A HREF=sanitycheck.cgi?rebuildkeywordcache=1>Rebuild cache</HREF><BR></B>";
+
+}
+
+
