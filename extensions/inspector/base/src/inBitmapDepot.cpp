@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS1(inBitmapDepot, inIBitmapDepot);
 // inIBitmapDepot
 
 NS_IMETHODIMP
-inBitmapDepot::Put(inIBitmap* aBitmap, const nsAReadableString& aName)
+inBitmapDepot::Put(inIBitmap* aBitmap, const nsAString& aName)
 {
   nsStringKey key(aName);
   nsCOMPtr<inIBitmap> bitmap(aBitmap);
@@ -70,7 +70,7 @@ inBitmapDepot::Put(inIBitmap* aBitmap, const nsAReadableString& aName)
 }
 
 NS_IMETHODIMP
-inBitmapDepot::Get(const nsAReadableString& aName, inIBitmap** _retval)
+inBitmapDepot::Get(const nsAString& aName, inIBitmap** _retval)
 {
   nsStringKey key(aName);
   nsCOMPtr<nsISupports> supports = mHash.Get(&key);
@@ -82,7 +82,7 @@ inBitmapDepot::Get(const nsAReadableString& aName, inIBitmap** _retval)
 }
 
 NS_IMETHODIMP
-inBitmapDepot::Remove(const nsAReadableString& aName, inIBitmap** _retval)
+inBitmapDepot::Remove(const nsAString& aName, inIBitmap** _retval)
 {
   nsStringKey key(aName);
   nsCOMPtr<nsISupports> supports;

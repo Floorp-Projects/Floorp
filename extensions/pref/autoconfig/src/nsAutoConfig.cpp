@@ -501,7 +501,7 @@ nsresult nsAutoConfig::writeFailoverFile()
     return rv;
 }
 
-nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
+nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
 {
     
     nsresult rv;

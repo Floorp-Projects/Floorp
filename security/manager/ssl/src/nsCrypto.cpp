@@ -412,7 +412,7 @@ ns_can_escrow(nsKeyGenType keyGenType)
 //Retrieve crypto.version so that callers know what
 //version of PSM this is.
 NS_IMETHODIMP
-nsCrypto::GetVersion(nsAWritableString& aVersion)
+nsCrypto::GetVersion(nsAString& aVersion)
 {
   aVersion.Assign(NS_LITERAL_STRING(PSM_VERSION_STRING).get());
   return NS_OK;
@@ -1827,10 +1827,10 @@ nsCertListCount(CERTCertList *certList)
 //Import user certificates that arrive as a CMMF base64 encoded
 //string.
 NS_IMETHODIMP
-nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname, 
-                                 const nsAReadableString& aCmmfResponse, 
+nsCrypto::ImportUserCertificates(const nsAString& aNickname, 
+                                 const nsAString& aCmmfResponse, 
                                  PRBool aDoForcedBackup, 
-                                 nsAWritableString& aReturn)
+                                 nsAString& aReturn)
 {
   char *nickname=nsnull, *cmmfResponse=nsnull;
   char *retString=nsnull;
@@ -2041,20 +2041,20 @@ nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname,
 }
 
 NS_IMETHODIMP
-nsCrypto::PopChallengeResponse(const nsAReadableString& aChallenge, 
-                               nsAWritableString& aReturn)
+nsCrypto::PopChallengeResponse(const nsAString& aChallenge, 
+                               nsAString& aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCrypto::Random(PRInt32 aNumBytes, nsAWritableString& aReturn)
+nsCrypto::Random(PRInt32 aNumBytes, nsAString& aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCrypto::SignText(nsAWritableString& aReturn)
+nsCrypto::SignText(nsAString& aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2062,7 +2062,7 @@ nsCrypto::SignText(nsAWritableString& aReturn)
 
 
 NS_IMETHODIMP
-nsCrypto::Alert(const nsAReadableString& aMessage)
+nsCrypto::Alert(const nsAString& aMessage)
 {
   PRUnichar *message = ToNewUnicode(aMessage);
   alertUser(message);
@@ -2102,7 +2102,7 @@ nsCRMFObject::init()
 }
 
 NS_IMETHODIMP
-nsCRMFObject::GetRequest(nsAWritableString& aRequest)
+nsCRMFObject::GetRequest(nsAString& aRequest)
 {
   aRequest.Assign(mBase64Request);
   return NS_OK;
@@ -2143,7 +2143,7 @@ confirm_user(const PRUnichar *message)
 
 //Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
-nsPkcs11::Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn)
+nsPkcs11::Deletemodule(const nsAString& aModuleName, PRInt32* aReturn)
 {
   nsresult rv;
   nsString errorMessage;
@@ -2198,8 +2198,8 @@ nsPkcs11::Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn)
 
 //Add a new PKCS11 module to the user's profile.
 NS_IMETHODIMP
-nsPkcs11::Addmodule(const nsAReadableString& aModuleName, 
-                    const nsAReadableString& aLibraryFullPath, 
+nsPkcs11::Addmodule(const nsAString& aModuleName, 
+                    const nsAString& aLibraryFullPath, 
                     PRInt32 aCryptoMechanismFlags, 
                     PRInt32 aCipherFlags, PRInt32* aReturn)
 {

@@ -59,8 +59,8 @@ class nsInstallProgressDialog : public nsIXPIListener,
 //        void SetWindow(nsISupports* aWindow);
 
     protected:
-        nsresult setDlgAttribute(const char *id, const char *name, const nsAReadableString &value);
-        nsresult getDlgAttribute(const char *id, const char *name, nsAWritableString &value);
+        nsresult setDlgAttribute(const char *id, const char *name, const nsAString &value);
+        nsresult getDlgAttribute(const char *id, const char *name, nsAString &value);
 
     private:
         nsPIXPIManagerCallbacks*       mManager;

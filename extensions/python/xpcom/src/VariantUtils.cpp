@@ -29,22 +29,21 @@
 
 #include "PyXPCOM_std.h"
 #include <nsIInterfaceInfoManager.h>
-#include <nsAReadableString.h>
-#include <nsAWritableString.h>
+#include <nsAString.h>
 #include <nsString.h>
 #include <nsReadableUtils.h>
 
 // one day we may know what they look like.
 inline
 PRBool
-IsNullDOMString( const nsAReadableString& aString )
+IsNullDOMString( const nsAString& aString )
 {
 	return PR_FALSE;
 }
 
 inline
 PRBool
-IsNULLDOMString( const nsAReadableCString& aString )
+IsNULLDOMString( const nsACString& aString )
 {
 	return PR_FALSE;
 }
@@ -522,7 +521,7 @@ PyXPCOM_InterfaceVariantHelper::~PyXPCOM_InterfaceVariantHelper()
 			if (ns_v.IsValDOMString() && ns_v.val.p) {
 				PythonTypeDescriptor &ptd = m_python_type_desc_array[i];
 				if (XPT_PD_IS_OUT(ptd.param_flags) || XPT_PD_IS_DIPPER(ptd.param_flags))
-					delete (nsAReadableString *)ns_v.val.p;
+					delete (const nsAString *)ns_v.val.p;
 			}
 			if (ns_v.IsValArray()) {
 				nsXPTCVariant &ns_v = m_var_array[i];
@@ -1132,7 +1131,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 		ret = Py_nsIID::PyObjectFromIID( **((nsIID **)ns_v.ptr) );
 		break;
 	  case nsXPTType::T_DOMSTRING: {
-		nsAWritableString *rs = (nsAWritableString *)ns_v.ptr;
+		nsAString *rs = (nsAString *)ns_v.ptr;
 		if (rs == NULL || IsNullDOMString(*rs)) {
 			ret = Py_None;
 			Py_INCREF(Py_None);
@@ -1484,7 +1483,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 		}
 	  case nsXPTType::T_DOMSTRING: {
 		NS_ABORT_IF_FALSE(is_out || !XPT_PD_IS_DIPPER(td.param_flags), "DOMStrings can't be inout");
-		nsAReadableString *rs = (nsAReadableString *)ns_v.val.p;
+		const nsAString *rs = (const nsAString *)ns_v.val.p;
 		if (rs==NULL || IsNullDOMString(*rs)) {
 			ret = Py_None;
 			Py_INCREF(Py_None);
@@ -1745,7 +1744,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		}
 
 	  case nsXPTType::T_DOMSTRING: {
-		nsAWritableString *ws = (nsAWritableString *)ns_v.val.p;
+		nsAString *ws = (nsAString *)ns_v.val.p;
 		NS_ABORT_IF_FALSE(ws->Length() == 0, "Why does this writable string already have chars??");
 		if (val == Py_None) {
 			(*ws) = (PRUnichar *)nsnull;
