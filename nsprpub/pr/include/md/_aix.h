@@ -59,6 +59,7 @@
 #endif
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
+#define _PR_ACCEPT_INHERIT_NONBLOCK
 
 /* Timer operations */
 #if defined(AIX_TIMERS)

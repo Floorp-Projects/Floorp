@@ -85,7 +85,8 @@ int main(int argc, char **argv)
 
     shm = PR_OpenSharedMemory(SHM_NAME, sizeof(*counter_addr), PR_SHM_CREATE, SHM_MODE);
     if (NULL == shm) {
-        fprintf(stderr, "PR_OpenSharedMemory failed\n");
+        fprintf(stderr, "PR_OpenSharedMemory failed (%d, %d)\n",
+                PR_GetError(), PR_GetOSError());
         exit(1);
     }
     counter_addr = PR_AttachSharedMemory(shm, 0);
@@ -102,7 +103,8 @@ int main(int argc, char **argv)
     }
     sem2 = PR_OpenSemaphore(SEM_NAME2, PR_SEM_CREATE, SEM_MODE, 0);
     if (NULL == sem2) {
-        fprintf(stderr, "PR_OpenSemaphore failed\n");
+        fprintf(stderr, "PR_OpenSemaphore failed (%d, %d)\n",
+                PR_GetError(), PR_GetOSError());
         exit(1);
     }
 

@@ -26,6 +26,20 @@
 
 extern PRLogModuleInfo *_pr_shm_lm;
 
+/*
+ * NSPR-to-NT access right mapping table for file-mapping objects.
+ *
+ * The OR of these three access masks must equal FILE_MAP_ALL_ACCESS.
+ * This is because if a file-mapping object with the specified name
+ * exists, CreateFileMapping requests full access to the existing
+ * object.
+ */
+static DWORD filemapAccessTable[] = {
+    FILE_MAP_ALL_ACCESS & ~FILE_MAP_WRITE, /* read */
+    FILE_MAP_ALL_ACCESS & ~FILE_MAP_READ, /* write */ 
+    0  /* execute */
+};
+
 extern PRSharedMemory * _MD_OpenSharedMemory( 
         const char *name,
         PRSize      size,
@@ -38,6 +52,10 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
     DWORD dwHi, dwLo;
     PRSharedMemory *shm;
     DWORD flProtect = ( PAGE_READWRITE );
+    SECURITY_ATTRIBUTES sa;
+    LPSECURITY_ATTRIBUTES lpSA = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    PACL pACL = NULL;
 
     rc = _PR_MakeNativeIPCName( name, ipcname, PR_IPC_NAME_SIZE, _PRIPCShm );
     if ( PR_FAILURE == rc )
@@ -72,23 +90,33 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
     shm->ident = _PR_SHM_IDENT;
 
     if (flags & PR_SHM_CREATE ) {
-        /* XXX: Not 64bit safe. Fix when WinNT goes 64bit, if ever */
+        /* XXX: Not 64bit safe. Fix when WinNT goes 64bit. */
         dwHi = 0;
         dwLo = shm->size;
 
+        if (_PR_NT_MakeSecurityDescriptorACL(mode, filemapAccessTable,
+                &pSD, &pACL) == PR_SUCCESS) {
+            sa.nLength = sizeof(sa);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+            lpSA = &sa;
+        }
         shm->handle = CreateFileMapping(
             (HANDLE)-1 ,
-            NULL,
+            lpSA,
             flProtect,
             dwHi,
             dwLo,
             shm->ipcname);
+        if (lpSA != NULL) {
+            _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
+        }
 
         if ( NULL == shm->handle ) {
             PR_LOG(_pr_shm_lm, PR_LOG_DEBUG, 
                 ( "PR_OpenSharedMemory: CreateFileMapping() failed: %s",
                     shm->ipcname )); 
-            PR_SetError( PR_FILE_EXISTS_ERROR, ERROR_ALREADY_EXISTS );
+            _PR_MD_MAP_DEFAULT_ERROR( GetLastError());
             PR_FREEIF( shm->ipcname )
             PR_DELETE( shm );
             return(NULL);
@@ -110,7 +138,7 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
             }
         }
     } else {
-        shm->handle = OpenFileMapping( FILE_MAP_ALL_ACCESS, TRUE, shm->ipcname );
+        shm->handle = OpenFileMapping( FILE_MAP_WRITE, TRUE, shm->ipcname );
         if ( NULL == shm->handle ) {
             _PR_MD_MAP_DEFAULT_ERROR( GetLastError());
             PR_LOG(_pr_shm_lm, PR_LOG_DEBUG, 

@@ -33,21 +33,26 @@
 #include <stdlib.h>
 
 /*
- * This release (3.5) is backward compatible with all
- * the previous releases.  It, of course, is compatible
- * with itself.
+ * This release (4.0) is compatible with itself.
  */
 static char *compatible_version[] = {
-    "2.1 19980529", "3.0", "3.0.1", "3.1", "3.1.1", "3.1.2", PR_VERSION
+    PR_VERSION
 };
 
 /*
+ * This release is not backward compatible with the old
+ * NSPR 2.1 and 3.x releases.
+ *
  * Any release is incompatible with future releases and
  * patches.
  */
 static char *incompatible_version[] = {
-    "3.5.1",
-    "4.0", "4.0.3",
+    "2.1 19980529",
+    "3.0", "3.0.1",
+    "3.1", "3.1.1", "3.1.2", "3.1.3",
+    "3.5", "3.5.1",
+    "4.0.1",
+    "4.1", "4.1.3",
     "10.0", "11.1", "12.14.20"
 };
 

@@ -35,11 +35,14 @@ fi
 # Irrevelant tests
 #
 #bug1test 	- used to demonstrate a bug on NT
+#bigfile2   - requires 4Gig file creation. See BugZilla #5451
+#bigfile3   - requires 4Gig file creation. See BugZilla #5451
 #dbmalloc	- obsolete; originally for testing debug version of nspr's malloc
 #dbmalloc1	- obsolete; originally for testing debug version of nspr's malloc
 #depend		- obsolete; used to test a initial spec for library dependencies
 #dceemu		- used to tests special functions in NSPR for DCE emulation
 #ipv6		- IPV6 not in use by NSPR clients
+#mbcs       - tests use of multi-byte charset for filenames. See BugZilla #25140
 #sproc_ch	- obsolete; sproc-based tests for Irix
 #sproc_p	- obsolete; sproc-based tests for Irix
 #io_timeoutk - obsolete; subsumed in io_timeout
@@ -122,6 +125,7 @@ nameshm1
 nblayer
 nonblock
 ntioto
+ntoh
 op_2long
 op_excl
 op_filnf
@@ -187,36 +191,75 @@ rval=0
 # If TEST_TIMEOUT is not set or if it's value is 0, then test programs
 # don't timeout.
 #
+# Running runtests.ksh under MKS toolkit on NT, 95, 98 does not cause
+# timeout detection correctly. For these platforms, do not attempt timeout
+# test. (lth).
+#
+#
 
+OS_PLATFORM=`uname`
 OBJDIR=`basename $PWD`
 echo "\nNSPR Test Results - $OBJDIR\n"
 echo "BEGIN\t\t\t`date`"
 echo "NSPR_TEST_LOGFILE\t${LOGFILE}\n"
 echo "Test\t\t\tResult\n"
-for prog in $TESTS
-do
-echo "$prog\c"
-echo "\nBEGIN TEST: $prog\n" >> ${LOGFILE} 2>&1
-export test_rval
-./$prog >> ${LOGFILE} 2>&1 &
-test_pid=$!
-sleep_pid=0
-if [ "$TEST_TIMEOUT" -gt 0 ]
-then
-(sleep  $TEST_TIMEOUT; kill $test_pid >/dev/null 2>&1 ) &
-sleep_pid=$!
-fi
-wait $test_pid
-test_rval=$?
-[ sleep_pid -eq 0 ] || kill $sleep_pid >/dev/null 2>&1
-if [ 0 = $test_rval ] ; then
-	echo "\t\t\tPassed";
+if [ $OS_PLATFORM = "Windows_95" ] || [ $OS_PLATFORM = "Windows_98" ] || [ $OS_PLATFORM = "Windows_NT" ] ; then
+	for prog in $TESTS
+	do
+		echo "$prog\c"
+		echo "\nBEGIN TEST: $prog\n" >> ${LOGFILE} 2>&1
+		./$prog >> ${LOGFILE} 2>&1
+		if [ 0 = $? ] ; then
+			echo "\t\t\tPassed";
+		else
+			echo "\t\t\tFAILED";
+			rval=1
+		fi;
+		echo "\nEND TEST: $prog\n" >> ${LOGFILE} 2>&1
+	done
 else
-	echo "\t\t\tFAILED";
-	rval=1
+	for prog in $TESTS
+	do
+		echo "$prog\c"
+		echo "\nBEGIN TEST: $prog\n" >> ${LOGFILE} 2>&1
+		export test_rval
+		./$prog >> ${LOGFILE} 2>&1 &
+		test_pid=$!
+		sleep_pid=0
+		if [ "$TEST_TIMEOUT" -gt 0 ]
+		then
+		(sleep  $TEST_TIMEOUT; kill $test_pid >/dev/null 2>&1 ) &
+		sleep_pid=$!
+		fi
+		wait $test_pid
+		test_rval=$?
+		[ sleep_pid -eq 0 ] || kill $sleep_pid >/dev/null 2>&1
+		if [ 0 = $test_rval ] ; then
+			echo "\t\t\tPassed";
+		else
+			echo "\t\t\tFAILED";
+			rval=1
+		fi;
+		echo "\nEND TEST: $prog\n" >> ${LOGFILE} 2>&1
+	done
 fi;
-echo "\nEND TEST: $prog\n" >> ${LOGFILE} 2>&1
-done
-echo "END\t\t\t`date`"
 
+echo "END\t\t\t`date`"
 exit $rval
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

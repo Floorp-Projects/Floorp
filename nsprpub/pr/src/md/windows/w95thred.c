@@ -48,6 +48,8 @@ _PR_MD_EARLY_INIT()
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
+    _PR_NT_FreeSids();
+
     WSACleanup();
 
 #ifndef _PR_USE_STATIC_TLS

@@ -188,10 +188,6 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
 
 	PLOptState *opt = PL_CreateOptState(argc, argv, "dGb:t:T:R");
 
-#ifdef _PR_INET6
-    PR_SetIPv6Enable(PR_TRUE);
-#endif
-
     shared = PR_NEWZAP(Shared);
 
     shared->debug = NULL;

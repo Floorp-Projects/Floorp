@@ -60,6 +60,7 @@
 #define HAVE_POINTER_LOCALTIME_R
 #define _PR_HAVE_POSIX_SEMAPHORES
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
+#define _PR_ACCEPT_INHERIT_NONBLOCK
 
 /* Initialization entry points */
 NSPR_API(void) _MD_EarlyInit(void);

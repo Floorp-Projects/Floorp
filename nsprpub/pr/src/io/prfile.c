@@ -268,8 +268,8 @@ static PRIOMethods _pr_fileMethods = {
     (PRTransmitfileFN)_PR_InvalidInt, 
     (PRGetsocknameFN)_PR_InvalidStatus,	
     (PRGetpeernameFN)_PR_InvalidStatus,	
-    (PRGetsockoptFN)_PR_InvalidStatus,	
-    (PRSetsockoptFN)_PR_InvalidStatus,	
+    (PRReservedFN)_PR_InvalidInt,	
+    (PRReservedFN)_PR_InvalidInt,	
     (PRGetsocketoptionFN)_PR_InvalidStatus,	
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
@@ -312,8 +312,8 @@ static PRIOMethods _pr_pipeMethods = {
     (PRTransmitfileFN)_PR_InvalidInt, 
     (PRGetsocknameFN)_PR_InvalidStatus,	
     (PRGetpeernameFN)_PR_InvalidStatus,	
-    (PRGetsockoptFN)_PR_InvalidStatus,	
-    (PRSetsockoptFN)_PR_InvalidStatus,	
+    (PRReservedFN)_PR_InvalidInt,	
+    (PRReservedFN)_PR_InvalidInt,	
     (PRGetsocketoptionFN)_PR_InvalidStatus,	
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
@@ -339,6 +339,26 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
     /* Map pr open flags and mode to os specific flags */
 
     osfd = _PR_MD_OPEN(name, flags, mode);
+    if (osfd != -1) {
+        fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
+        if (!fd) {
+            (void) _PR_MD_CLOSE_FILE(osfd);
+        }
+    }
+    return fd;
+}
+
+PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
+    const char *name, PRIntn flags, PRIntn mode)
+{
+    PRInt32 osfd;
+    PRFileDesc *fd = 0;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    /* Map pr open flags and mode to os specific flags */
+
+    osfd = _PR_MD_OPEN_FILE(name, flags, mode);
     if (osfd != -1) {
         fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
         if (!fd) {

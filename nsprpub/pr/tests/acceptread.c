@@ -105,7 +105,7 @@ static void AcceptingThread(void *arg)
     PRStatus rv;
     PRInt32 bytes;
     PRSize buf_size = BUF_SIZE;
-    PRUint8 buf[BUF_SIZE + (20 * sizeof(PRNetAddr))];
+    PRUint8 buf[BUF_SIZE + (2 * sizeof(PRNetAddr)) + 32];
     PRNetAddr *accept_addr, *listen_addr = (PRNetAddr*)arg;
     PRFileDesc *accept_sock, *listen_sock = PR_NewTCPSocket();
     PRSocketOptionData sock_opt;

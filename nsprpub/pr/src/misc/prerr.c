@@ -88,7 +88,7 @@ static const struct PRErrorMessage text[] = {
 	{"PR_END_OF_FILE_ERROR",    "Encountered end of file"},
 	{"PR_FILE_SEEK_ERROR",    "Seek error"},
 	{"PR_FILE_IS_BUSY_ERROR",    "The file is busy"},
-	{"PR_RESERVED_ERROR_5935",    "Reserved Error Code -5935"},
+	{"PR_OPERATION_ABORTED_ERROR",    "The I/O operation was aborted"},
 	{"PR_IN_PROGRESS_ERROR",    "Operation is still in progress (probably a non-blocking connect)"},
 	{"PR_ALREADY_INITIATED_ERROR",    "Operation has already been initiated (probably a non-blocking connect)"},
 	{"PR_GROUP_EMPTY_ERROR",    "The wait group is empty"},

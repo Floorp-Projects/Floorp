@@ -280,9 +280,6 @@ int Tmocon(int argc, char **argv)
     PRInt32 dally = DEFAULT_DALLY, timeout = DEFAULT_TIMEOUT;
     PLOptState *opt = PL_CreateOptState(argc, argv, "divGRh:m:s:t:T:D:");
 
-#ifdef _PR_INET6
-    PR_SetIPv6Enable(PR_TRUE);
-#endif
     shared = PR_NEWZAP(Shared);
 
     shared->debug = 0;

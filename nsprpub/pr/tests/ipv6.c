@@ -49,10 +49,9 @@ static PRFileDesc *err = NULL;
 
 static void Help(void)
 {
-    PR_fprintf(err, "Usage: [-V] [-6] [-h]\n");
+    PR_fprintf(err, "Usage: [-V] [-h]\n");
     PR_fprintf(err, "\t<nul>    Name of host to lookup          (default: self)\n");
     PR_fprintf(err, "\t-V       Display runtime version info    (default: FALSE)\n");
-    PR_fprintf(err, "\t-6       First turn on IPv6 capability   (default: FALSE)\n");
     PR_fprintf(err, "\t-h       This message and nothing else\n");
 }  /* Help */
 
@@ -106,7 +105,7 @@ PRIntn main(PRIntn argc, char **argv)
     PRBool ipv6 = PR_FALSE;
     const char *name = NULL;
     PRBool failed = PR_FALSE, version = PR_FALSE;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "Vh6");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "Vh");
 
     err = PR_GetSpecialFD(PR_StandardError);
 
@@ -117,9 +116,6 @@ PRIntn main(PRIntn argc, char **argv)
         {
         case 0:  /* Name of host to lookup */
             name = opt->value;
-            break;
-        case '6':  /* Turn on IPv6 mode */
-            ipv6 = PR_TRUE;
             break;
          case 'V':  /* Do version discovery */
             version = PR_TRUE;
@@ -184,16 +180,6 @@ PRIntn main(PRIntn argc, char **argv)
         if (NULL != nspr_name) PR_FreeLibraryName(nspr_name);
     }
 
-    if (ipv6)
-    {
-        rv = PR_SetIPv6Enable(ipv6);
-        if (PR_FAILURE == rv)
-        {
-            failed = PR_TRUE;
-            PL_FPrintError(err, "PR_SetIPv6Enable");
-        }
-    }
-
     {
         if (NULL == name)
         {
@@ -202,7 +188,7 @@ PRIntn main(PRIntn argc, char **argv)
             if (PR_FAILURE == rv)
             {
                 failed = PR_TRUE;
-                PL_FPrintError(err, "PR_GetHostName");
+                PL_FPrintError(err, "PR_GetSystemInfo");
                 return 2;
             }
             name = me;  /* just leak the storage */

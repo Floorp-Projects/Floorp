@@ -30,13 +30,6 @@
 ** for all C files.
 **/
 
-/* the following update, a big '#if 0' for most of this file
-** intentionally breaks the build of NSPR on the tip of the source tree
-** nobody but NSPR should be interested in the tip right now
-** anyway.
-*/
-#if 0
-
 #ifndef prtypes_h___
 #define prtypes_h___
 
@@ -484,4 +477,3 @@ PR_END_EXTERN_C
 
 #endif /* prtypes_h___ */
 
-#endif /* the #if 0 that intentionally breaks the tree */

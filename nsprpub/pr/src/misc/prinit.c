@@ -78,11 +78,11 @@ PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
     /*
     ** This is the secret handshake algorithm.
     **
-    ** This release (3.1) is backward compatible with
-    ** all the previous releases ("2.1 19980529", "3.0",
-    ** "3.0.x").  It is not compatible with future
-    ** releases or patches.  So this release has a
-    ** simple version compatibility check algorithm.
+    ** This release has a simple version compatibility
+    ** check algorithm.  This release is not backward
+    ** compatible with previous major releases.  It is
+    ** not compatible with future major, minor, or
+    ** patch releases.
     */
     int vmajor = 0, vminor = 0, vpatch = 0;
     const char *ptr = importedVersion;
@@ -106,7 +106,7 @@ PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
         }
     }
 
-    if (vmajor > PR_VMAJOR) {
+    if (vmajor != PR_VMAJOR) {
         return PR_FALSE;
     }
     if (vmajor == PR_VMAJOR && vminor > PR_VMINOR) {
@@ -142,6 +142,10 @@ static void _pr_SetNativeThreadsOnlyMode(void)
         _native_threads_only = (atoi(envp) == 1);
     }
 }
+#endif
+
+#if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+extern PRStatus _pr_init_ipv6();
 #endif
 
 static void _PR_InitStuff(void)
@@ -220,6 +224,10 @@ static void _PR_InitStuff(void)
 
     nspr_InitializePRErrorTable();
 
+#if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+	_pr_init_ipv6();
+#endif
+	
     _PR_MD_FINAL_INIT();
 }
 

@@ -260,6 +260,7 @@ PR_IMPLEMENT(PRStatus) PR_SetLibraryPath(const char *path)
 {
     PRStatus rv = PR_SUCCESS;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     PR_EnterMonitor(pr_linker_lock);
     PR_FREEIF(_pr_currentLibPath);
     if (path) {
@@ -284,6 +285,7 @@ PR_GetLibraryPath()
     char *ev;
     char *copy = NULL;  /* a copy of _pr_currentLibPath */
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     PR_EnterMonitor(pr_linker_lock);
     if (_pr_currentLibPath != NULL) {
         goto exit;
@@ -797,6 +799,7 @@ PR_FindLibrary(const char *name)
 {
     PRLibrary* result;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     PR_EnterMonitor(pr_linker_lock);
     result = pr_UnlockedFindLibrary(name);
     PR_ExitMonitor(pr_linker_lock);
@@ -1143,6 +1146,7 @@ PR_FindSymbolAndLibrary(const char *raw_name, PRLibrary* *lib)
 #endif
     PRLibrary* lm;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     /*
     ** Mangle the raw symbol name in any way that is platform specific.
     */

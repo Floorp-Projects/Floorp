@@ -118,7 +118,7 @@ PRIntn main(PRIntn argc, char *argv[])
     */
     fd = PR_Open( NEW_FILENAME, PR_CREATE_FILE | PR_EXCL | PR_WRONLY, 0666 );
     if ( NULL != fd )  {
-        if (debug) fprintf( stderr, "Open exclusive. Expected failure, got success");
+        if (debug) fprintf( stderr, "Open exclusive. Expected failure, got success\n");
         failed_already = 1;
         PR_Close(fd);
     }

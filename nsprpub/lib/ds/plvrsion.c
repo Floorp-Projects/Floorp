@@ -42,7 +42,14 @@
 #define _DEBUG_STRING ""
 #endif
 
-PRVersionDescription prVersionDescription_libplds3 =
+/*
+ * A trick to expand the PR_VMAJOR macro before concatenation.
+ */
+#define CONCAT(x, y) x ## y
+#define CONCAT2(x, y) CONCAT(x, y)
+#define VERSION_DESC_NAME CONCAT2(prVersionDescription_libplds, PR_VMAJOR)
+
+PRVersionDescription VERSION_DESC_NAME =
 {
     /* version          */  2,                  /* this is the only one supported */
     /* buildTime        */  _BUILD_TIME,        /* usecs since midnight 1/1/1970 GMT */
@@ -92,7 +99,7 @@ PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
     dummy = rcsid;
     dummy = sccsid;
 #endif
-    return &prVersionDescription_libplds3;
+    return &VERSION_DESC_NAME;
 }  /* versionEntryPointType */
 
 /* plvrsion.c */

@@ -82,7 +82,7 @@ PR_OBJDIR = WIN954.0_OPT.OBJ
 
 all:: export libs install
 
-export libs install clobber clobber_all clean::
+export libs install clobber clobber_all clean depend::
 !if "$(MOZ_BITS)" == "16"
 	set PATH=%WATCPATH%
 	set INCLUDE=%WATC_INC%
@@ -103,6 +103,3 @@ export::
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\lib\*.lib $(DIST)\lib
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\lib\*.dll $(DIST)\bin
 !endif
-
-depend::
-	@echo NSPR20 has no dependencies.  Skipped.

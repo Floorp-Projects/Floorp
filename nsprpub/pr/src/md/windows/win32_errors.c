@@ -142,6 +142,9 @@ void _MD_win32_map_default_error(PRInt32 err)
         case ERROR_OPEN_FILES:
             prError = PR_IO_ERROR;
             break;
+        case ERROR_OPERATION_ABORTED:
+            prError = PR_OPERATION_ABORTED_ERROR;
+            break;
         case ERROR_OUTOFMEMORY:
             prError = PR_INSUFFICIENT_RESOURCES_ERROR;
             break;

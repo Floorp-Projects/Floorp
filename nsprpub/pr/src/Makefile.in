@@ -162,6 +162,7 @@ OBJS = \
     io/$(OBJDIR)/prmwait.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prmapopt.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/priometh.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prlayer.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prlog.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prmmap.$(OBJ_SUFFIX) \
@@ -227,10 +228,6 @@ OBJS += \
 	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
 endif
 
-endif
-
-ifeq ($(USE_IPV6), 1)
-OBJS += io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(USE_CPLUS), 1)

@@ -243,6 +243,22 @@ static void PrepareForAsyncCompletion(PRThread * thread, PRInt32 osfd)
 }
 
 
+static void
+WakeUpNotifiedThread(PRThread *thread, OTResult result)
+{
+    _PRCPU *      cpu      = _PR_MD_CURRENT_CPU(); 
+
+	if (thread) {
+		thread->md.osErrCode = result;
+		if (_PR_MD_GET_INTSOFF()) {
+			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
+			thread->md.missedIONotify = PR_TRUE;
+			return;
+		}
+		DoneWaitingOnThisThread(thread);
+	}
+}
+
 // Notification routine
 // Async callback routine.
 // A5 is OK. Cannot allocate memory here
@@ -252,9 +268,9 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
 	_MDFileDesc * md       = &(secret->md);
 	EndpointRef   endpoint = (EndpointRef)secret->md.osfd;
     PRThread *    thread   = NULL;
-    _PRCPU *      cpu      = _PR_MD_CURRENT_CPU(); 
 	OSStatus      err;
 	OTResult	  resultOT;
+    TDiscon		  discon;
 
     switch (code)
     {
@@ -303,10 +319,28 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
 			return;
 
         case T_DISCONNECT:  // A disconnect is available
-            err = OTRcvDisconnect(endpoint, NULL);
+            discon.udata.len = 0;
+            err = OTRcvDisconnect(endpoint, &discon);
             PR_ASSERT(err == kOTNoError);
             secret->md.exceptReady     = PR_TRUE;
             secret->md.connectionOpen  = PR_FALSE;
+
+			// wake up waiting threads, if any
+			result = -3199 - discon.reason; // obtain the negative error code
+
+            if ((thread = secret->md.read.thread) != NULL) {
+		        secret->md.read.thread    = NULL;
+    	        secret->md.read.cookie    = cookie;
+            	WakeUpNotifiedThread(thread, result);
+    	    }
+            
+            if ((thread = secret->md.write.thread) != NULL) {
+	            secret->md.write.thread    = NULL;
+	            secret->md.write.cookie    = cookie;
+	            WakeUpNotifiedThread(thread, result);
+	        }
+	        
+	        thread = NULL; // already took care of notification here
             break;
 		
         case T_ERROR:       // obsolete/unused in library
@@ -323,6 +357,11 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
             secret->md.readReady      = PR_TRUE;   // mark readable (to emulate bsd sockets)
             // remember connection is closed, so we can return 0 on read or receive
 			secret->md.connectionOpen = PR_FALSE;
+	
+            thread = secret->md.read.thread;
+	        secret->md.read.thread    = NULL;
+	        secret->md.read.cookie    = cookie;
+
             break;		
 
         case T_GODATA:   // Flow control lifted on standard data
@@ -391,16 +430,7 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
             return;
     }
 
-	if (thread) {
-		thread->md.osErrCode = result;
-		if (_PR_MD_GET_INTSOFF()) {
-			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-			thread->md.missedIONotify = PR_TRUE;
-			return;
-		}
-
-		DoneWaitingOnThisThread(thread);
-	}
+	WakeUpNotifiedThread(thread, result);
 }
 
 
@@ -584,6 +614,7 @@ PRInt32 _MD_listen(PRFileDesc *fd, PRIntn backlog)
         goto ErrorExit;
     }
         
+    addr.inet.family = AF_INET;
     addr.inet.port = addr.inet.ip = 0;
 
     bindReq.addr.maxlen = PR_NETADDR_SIZE (&addr);
@@ -667,12 +698,6 @@ PRInt32 _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
         goto ErrorExit;
     }
 
-#if !defined(_PR_INET6)        
-    addr->inet.family = AF_INET;
-#endif
-    
-    PR_ASSERT(PR_NETADDR_SIZE(addr) >= (*addrlen));
-
     bindReq.addr.len = *addrlen;
     bindReq.addr.maxlen = *addrlen;
     bindReq.addr.buf = (UInt8*) addr;
@@ -696,6 +721,7 @@ PRInt32 _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
     if (err != kOTNoError)
         goto ErrorExit;
 
+    *addrlen = PR_NETADDR_SIZE(addr);
     return kOTNoError;
 
 ErrorExit:
@@ -988,7 +1014,7 @@ PRInt32 _MD_socketavailable(PRFileDesc *fd)
     
     err = OTCountDataBytes(endpoint, &bytes);
     if ((err == kOTLookErr) ||         // Not really errors, we just need to do a read,
-        (err == kOTNoDataErr))        // or there’s nothing there.
+        (err == kOTNoDataErr))        // or there's nothing there.
         err = kOTNoError;
         
     if (err != kOTNoError)
@@ -1127,9 +1153,15 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
         
     memset(&call, 0 , sizeof(call));
 
-    call.addr.maxlen = PR_NETADDR_SIZE(&callAddr);
-    call.addr.len = PR_NETADDR_SIZE(&callAddr);
-    call.addr.buf = (UInt8*) &callAddr;
+    if (addr != NULL) {
+        call.addr.maxlen = *addrlen;
+        call.addr.len = *addrlen;
+        call.addr.buf = (UInt8*) addr;
+    } else {
+        call.addr.maxlen = sizeof(callAddr);
+        call.addr.len = sizeof(callAddr);
+        call.addr.buf = (UInt8*) &callAddr;
+    }
 
 	do {
 	    PrepareForAsyncCompletion(me, fd->secret->md.osfd);
@@ -1169,6 +1201,7 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
 	PR_ASSERT(err == kOTNoError);
 
     // Bind to a local port; let the system assign it.
+    bindAddr.inet.family = AF_INET;
     bindAddr.inet.port = bindAddr.inet.ip = 0;
 
     bindReq.addr.maxlen = PR_NETADDR_SIZE (&bindAddr);
@@ -1199,8 +1232,6 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen, PRInterva
     if (err != kOTNoError)
         goto ErrorExit;
 
-    if (addr != NULL)
-        *addr = callAddr;
     if (addrlen != NULL)
         *addrlen = call.addr.len;
 
@@ -1240,6 +1271,7 @@ PRInt32 _MD_connect(PRFileDesc *fd, PRNetAddr *addr, PRUint32 addrlen, PRInterva
         
     // Bind to a local port; let the system assign it.
 
+    bindAddr.inet.family = AF_INET;
     bindAddr.inet.port = bindAddr.inet.ip = 0;
 
     bindReq.addr.maxlen = PR_NETADDR_SIZE (&bindAddr);
@@ -1784,7 +1816,7 @@ _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
 	TBind peerAddr;
 	OSErr err;
 	
-	if (*addrlen < PR_NETADDR_SIZE(addr)) {
+	if (*addrlen < sizeof(InetAddress)) {
 
 		err = (OSErr) kEINVALErr;
 		goto ErrorExit;

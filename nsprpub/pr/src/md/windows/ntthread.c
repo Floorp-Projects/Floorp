@@ -118,6 +118,8 @@ _PR_MD_EARLY_INIT()
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
+    _PR_NT_FreeSids();
+
     WSACleanup();
 
     if (!_pr_use_static_tls) {

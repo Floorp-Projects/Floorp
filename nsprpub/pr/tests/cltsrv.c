@@ -83,7 +83,7 @@
 #define DEFAULT_HIGH 0
 #define BUFFER_SIZE 1024
 #define DEFAULT_BACKLOG 5
-#define DEFAULT_PORT 12848
+#define DEFAULT_PORT 12849
 #define DEFAULT_CLIENTS 1
 #define ALLOWED_IN_ACCEPT 1
 #define DEFAULT_CLIPPING 1000
@@ -773,8 +773,11 @@ static void PR_CALLBACK Server(void *arg)
     TEST_ASSERT(PR_SUCCESS == rv);
 
     memset(&serverAddress, 0, sizeof(serverAddress));
-    rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
-
+	if (PR_AF_INET6 != domain)
+		rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
+	else
+		rv = PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, DEFAULT_PORT,
+													&serverAddress);
     rv = PR_Bind(server->listener, &serverAddress);
     TEST_ASSERT(PR_SUCCESS == rv);
 
@@ -888,9 +891,7 @@ static void Help(void)
     PR_fprintf(debug_out, "\t-s <string>  dsn name of server               (localhost)\n");
     PR_fprintf(debug_out, "\t-G           use GLOBAL threads               (LOCAL)\n");
     PR_fprintf(debug_out, "\t-X           use XTP as transport             (TCP)\n");
-#ifdef _PR_INET6
     PR_fprintf(debug_out, "\t-6           Use IPv6                         (IPv4)\n");
-#endif /* _PR_INET6 */
     PR_fprintf(debug_out, "\t-v           verbosity (accumulative)         (0)\n");
     PR_fprintf(debug_out, "\t-p           pthread statistics               (FALSE)\n");
     PR_fprintf(debug_out, "\t-d           debug mode                       (FALSE)\n");
@@ -951,12 +952,9 @@ PRIntn main(PRIntn argc, char** argv)
         case 'X':  /* use XTP as transport */
             protocol = 36;
             break;
-#ifdef _PR_INET6
-	case '6':  /* Use IPv6 */
-            domain = AF_INET6;
-            PR_SetIPv6Enable(PR_TRUE);
+        case '6':  /* Use IPv6 */
+            domain = PR_AF_INET6;
             break;
-#endif /* _PR_INET6 */
         case 'a':  /* the value for accepting */
             accepting = atoi(opt->value);
             break;
@@ -1097,9 +1095,13 @@ PRIntn main(PRIntn argc, char** argv)
             client[index].ml = PR_NewLock();
             if (serverIsLocal)
             {
-                (void)PR_InitializeNetAddr(
-                    PR_IpAddrLoopback, DEFAULT_PORT,
-                    &client[index].serverAddress);
+				if (PR_AF_INET6 != domain)
+                	(void)PR_InitializeNetAddr(
+                    	PR_IpAddrLoopback, DEFAULT_PORT,
+                    	&client[index].serverAddress);
+				else
+					rv = PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET6,
+							DEFAULT_PORT, &client[index].serverAddress);
             }
             else
             {

@@ -25,7 +25,6 @@
 ** Modification History:
 */
 #include "primpl.h"
-#include "prtpool.h"
 
 #include "plgetopt.h"
 
@@ -251,6 +250,27 @@ Serve_Client(void *arg)
 	PR_DELETE(scp);
 }
 
+static void
+print_stats(void *arg)
+{
+    Server_Param *sp = (Server_Param *) arg;
+    PRThreadPool *tp = sp->tp;
+    PRInt32 counter;
+	PRJob *jobp;
+
+	PR_EnterMonitor(sp->exit_mon);
+	counter = (*sp->job_counterp);
+	PR_ExitMonitor(sp->exit_mon);
+
+	printf("PRINT_STATS: #client connections = %d\n",counter);
+
+
+	jobp = PR_QueueJob_Timer(tp, PR_MillisecondsToInterval(500),
+						print_stats, sp, PR_FALSE);
+
+	PR_ASSERT(NULL != jobp);
+}
+
 static int job_counter = 0;
 /*
  * TCP Server
@@ -273,6 +293,7 @@ TCP_Server(void *arg)
 	PRMonitor *sc_mon;
 	PRJob *jobp;
 	int i;
+	PRStatus rval;
 
     /*
      * Create a tcp socket
@@ -317,6 +338,28 @@ TCP_Server(void *arg)
     DPRINTF((
 	"TCP_Server: PR_BIND netaddr.inet.ip = 0x%lx, netaddr.inet.port = %d\n",
         netaddr.inet.ip, netaddr.inet.port));
+
+	sp = PR_NEW(Server_Param);
+	if (sp == NULL) {
+		fprintf(stderr,"%s: PR_NEW failed\n", program_name);
+		failed_already=1;
+		return;
+	}
+	sp->iod.socket = sockfd;
+	sp->iod.timeout = PR_SecondsToInterval(60);
+	sp->datalen = tcp_mesg_size;
+	sp->exit_mon = sc_mon;
+	sp->job_counterp = &job_counter;
+	sp->conn_counter = 0;
+	sp->tp = tp;
+	sp->netaddr = netaddr;
+
+	/* create and cancel an io job */
+	jobp = PR_QueueJob_Accept(tp, &sp->iod, TCP_Server_Accept, sp,
+							PR_FALSE);
+	PR_ASSERT(NULL != jobp);
+	rval = PR_CancelJob(jobp);
+	PR_ASSERT(PR_SUCCESS == rval);
 
 	/*
 	 * create the client process
@@ -363,12 +406,6 @@ TCP_Server(void *arg)
         return;
     }
 
-	sp = PR_NEW(Server_Param);
-	if (sp == NULL) {
-		fprintf(stderr,"%s: PR_NEW failed\n", program_name);
-		failed_already=1;
-		return;
-	}
 	sp->iod.socket = sockfd;
 	sp->iod.timeout = PR_SecondsToInterval(60);
 	sp->datalen = tcp_mesg_size;
@@ -378,33 +415,19 @@ TCP_Server(void *arg)
 	sp->tp = tp;
 	sp->netaddr = netaddr;
 
+	/* create and cancel a timer job */
+	jobp = PR_QueueJob_Timer(tp, PR_MillisecondsToInterval(5000),
+						print_stats, sp, PR_FALSE);
+	PR_ASSERT(NULL != jobp);
+	rval = PR_CancelJob(jobp);
+	PR_ASSERT(PR_SUCCESS == rval);
+
     DPRINTF(("TCP_Server: Accepting connections \n"));
 
 	jobp = PR_QueueJob_Accept(tp, &sp->iod, TCP_Server_Accept, sp,
 							PR_FALSE);
 	PR_ASSERT(NULL != jobp);
 	return;
-}
-
-static void
-print_stats(void *arg)
-{
-    Server_Param *sp = (Server_Param *) arg;
-    PRThreadPool *tp = sp->tp;
-    PRInt32 counter;
-	PRJob *jobp;
-
-	PR_EnterMonitor(sp->exit_mon);
-	counter = (*sp->job_counterp);
-	PR_ExitMonitor(sp->exit_mon);
-
-	printf("PRINT_STATS: #client connections = %d\n",counter);
-
-
-	jobp = PR_QueueJob_Timer(tp, PR_MillisecondsToInterval(500),
-						print_stats, sp, PR_FALSE);
-
-	PR_ASSERT(NULL != jobp);
 }
 
 static void

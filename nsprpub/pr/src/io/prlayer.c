@@ -319,24 +319,6 @@ static PRStatus PR_CALLBACK pl_DefGetpeername (PRFileDesc *fd, PRNetAddr *addr)
     return (fd->lower->methods->getpeername)(fd->lower, addr);
 }
 
-static PRStatus PR_CALLBACK pl_DefGetsockopt (
-    PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32* optlen)
-{
-    PR_ASSERT(fd != NULL);
-    PR_ASSERT(fd->lower != NULL);
-
-    return (fd->lower->methods->getsockopt)(fd->lower, optname, optval, optlen);
-}
-
-static PRStatus PR_CALLBACK pl_DefSetsockopt (
-    PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen)
-{
-    PR_ASSERT(fd != NULL);
-    PR_ASSERT(fd->lower != NULL);
-
-    return (fd->lower->methods->setsockopt)(fd->lower, optname, optval, optlen);
-}
-
 static PRStatus PR_CALLBACK pl_DefGetsocketoption (
     PRFileDesc *fd, PRSocketOptionData *data)
 {
@@ -394,8 +376,8 @@ static PRIOMethods pl_methods = {
     pl_DefTransmitfile,
     pl_DefGetsockname,
     pl_DefGetpeername,
-    pl_DefGetsockopt,
-    pl_DefSetsockopt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
     pl_DefGetsocketoption,
     pl_DefSetsocketoption,
     pl_DefSendfile,

@@ -40,7 +40,7 @@ AC_DEFINE(USE_AUTOCONF)
 dnl ========================================================
 dnl = Defaults
 dnl ========================================================
-NSPR_VERSION=3
+NSPR_VERSION=4
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -195,6 +195,9 @@ if test "$target" != "$host"; then
     if test -z "$AS"; then
 	    AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
     fi
+    if test -z "$LD"; then
+	    AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
+    fi
     if test -z "$DLLTOOL"; then
 	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
     fi
@@ -207,6 +210,7 @@ else
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, :)
+    AC_PATH_PROGS(LD, ld, :)
     AC_PATH_PROGS(DLLTOOL, dlltool, :)
     AC_PATH_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
@@ -254,6 +258,9 @@ dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
 *-mingw*)
+    ;;
+*-beos*)
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
     ;;
 *)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
@@ -555,6 +562,7 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_BSD_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
+    AC_DEFINE(LINUX)
     CFLAGS="$CFLAGS -pipe -ansi"
     CXXFLAGS="$CXXFLAGS -pipe -ansi"
     MDCPUCFG_H=_linux.cfg
@@ -583,6 +591,7 @@ case "$target" in
 
 *-mingw*)
     AC_DEFINE(XP_PC)
+    AC_DEFINE(NONAMELESSUNION)
     PR_MD_ARCH_DIR=windows
     if test -z "$GNU_CC"; then
 	    OBJ_SUFFIX=obj
@@ -1051,6 +1060,7 @@ AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
+AC_SUBST(LD)
 AC_SUBST(DLLTOOL)
 AC_SUBST(WINDRES)
 AC_SUBST(RANLIB)

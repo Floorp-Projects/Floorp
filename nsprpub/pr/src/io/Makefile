@@ -32,6 +32,7 @@ CSRCS = \
     prfdcach.c \
     prmwait.c \
     priometh.c \
+    pripv6.c \
 	prmapopt.c \
     prlayer.c \
     prlog.c \
@@ -49,10 +50,6 @@ ifndef USE_PTHREADS
 	    prio.c \
 	    prsocket.c \
 	    $(NULL)
-endif
-
-ifdef USE_IPV6
-CSRCS += pripv6.c
 endif
 
 TARGETS	= $(OBJS)

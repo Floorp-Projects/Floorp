@@ -33,12 +33,6 @@ PR_IMPLEMENT(PRInt32) PR_GetOSError()
     return thread->osErrorCode;
 }
 
-PR_IMPLEMENT(const char*) PR_GetErrorString()
-{
-    PRThread *thread = PR_GetCurrentThread();
-    return thread->errorString;
-}
-
 PR_IMPLEMENT(void) PR_SetError(PRErrorCode code, PRInt32 osErr)
 {
     PRThread *thread = PR_GetCurrentThread();

@@ -40,6 +40,7 @@ else
 ifeq ($(OS_TARGET), WIN95)
 CSRCS =          \
     ntmisc.c \
+    ntsec.c   \
     ntsem.c   \
     ntinrval.c \
     ntgc.c \
@@ -58,6 +59,7 @@ else
 CSRCS =          \
     ntdllmn.c \
     ntmisc.c \
+    ntsec.c   \
     ntsem.c   \
     ntinrval.c \
     ntgc.c \

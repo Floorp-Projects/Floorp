@@ -17,6 +17,7 @@
  */
 
 #include "nspr.h"
+#include "pprthred.h"
 #include "plgetopt.h"
 
 #include <stdio.h>

@@ -70,7 +70,7 @@ clientThreadFunc(void *arg)
     char buf[CHUNK_SIZE];
     int i;
     PRIntervalTime unitTime = PR_MillisecondsToInterval(UNIT_TIME);
-    PRIntn optval = 1;
+    PRSocketOptionData optval;
     PRStatus retVal;
     PRInt32 nBytes;
 
@@ -85,7 +85,9 @@ clientThreadFunc(void *arg)
     /* time 1 */
     PR_Sleep(unitTime);
     sock = PR_NewTCPSocket();
-    PR_SetSockOpt(sock, PR_SockOpt_Nonblocking, &optval, sizeof(optval));
+    optval.option = PR_SockOpt_Nonblocking;
+    optval.value.non_blocking = PR_TRUE;
+    PR_SetSocketOption(sock, &optval);
     retVal = PR_Connect(sock, &addr, PR_INTERVAL_NO_TIMEOUT);
     if (retVal == PR_FAILURE && PR_GetError() == PR_IN_PROGRESS_ERROR) {
 #if !defined(USE_PR_SELECT)
@@ -138,7 +140,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     char buf[CHUNK_SIZE];
     PRThread *clientThread;
     PRInt32 retVal;
-    PRIntn optval = 1;
+    PRSocketOptionData optval;
     PRIntn i;
     PRIntervalTime unitTime = PR_MillisecondsToInterval(UNIT_TIME);
 
@@ -184,8 +186,9 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 
     printf("client thread created.\n");
 
-    PR_SetSockOpt(listenSock, PR_SockOpt_Nonblocking, &optval,
-	sizeof(PRIntn));
+    optval.option = PR_SockOpt_Nonblocking;
+    optval.value.non_blocking = PR_TRUE;
+    PR_SetSocketOption(listenSock, &optval);
     /* time 0 */
     sock = PR_Accept(listenSock, NULL, PR_INTERVAL_NO_TIMEOUT);
     if (sock != NULL || PR_GetError() != PR_WOULD_BLOCK_ERROR) {
@@ -208,7 +211,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     fflush(stdout);
     PR_Close(listenSock);
 
-    PR_SetSockOpt(sock, PR_SockOpt_Nonblocking, &optval, sizeof(PRIntn));
+    PR_SetSocketOption(sock, &optval);
 
     /* time 3, 5, 6, 8, etc. */
     for (i = 0; i < NUMBER_ROUNDS; i++) {

@@ -24,6 +24,8 @@
 #include "plerror.h"
 #include "plgetopt.h"
 
+PR_IMPORT(const PRVersionDescription *) libVersionPoint(void);
+
 PRIntn main(PRIntn argc, char **argv)
 {
     PRIntn rv = 1;

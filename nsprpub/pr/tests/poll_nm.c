@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     PRIntn npds;
     PRInt32 retVal;
     PRIntn i, j;
-    PRIntn optval = 1;
+    PRSocketOptionData optval;
 
 	/* The command line argument: -d is used to determine if the test is being run
 	in debug mode. The regress tool requires only one line output:PASS or FAIL.
@@ -177,7 +177,9 @@ int main(int argc, char **argv)
 	goto exit_now;
     }
     listenPort1 = PR_ntohs(addr.inet.port);
-    PR_SetSockOpt(listenSock1, PR_SockOpt_Nonblocking, &optval, sizeof(optval));
+    optval.option = PR_SockOpt_Nonblocking;
+    optval.value.non_blocking = PR_TRUE;
+    PR_SetSocketOption(listenSock1, &optval);
     if (PR_Listen(listenSock1, 5) == PR_FAILURE) {
 	fprintf(stderr, "Can't listen on a socket\n");
 	failed_already=1;
@@ -203,7 +205,7 @@ int main(int argc, char **argv)
 	goto exit_now;
     }
     listenPort2 = PR_ntohs(addr.inet.port);
-    PR_SetSockOpt(listenSock2, PR_SockOpt_Nonblocking, &optval, sizeof(optval));
+    PR_SetSocketOption(listenSock2, &optval);
     if (PR_Listen(listenSock2, 5) == PR_FAILURE) {
 	fprintf(stderr, "Can't listen on a socket\n");
 	failed_already=1;	
