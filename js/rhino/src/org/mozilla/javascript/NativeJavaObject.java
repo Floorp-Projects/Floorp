@@ -837,7 +837,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
 
     static void reportConversionError(Object value, Class type) {
-        Object[] args = { Context.toString(value), 
+        Object[] args = { value.toString(),
                           NativeJavaMethod.javaSignature(type)
                         };
         throw Context.reportRuntimeError(
