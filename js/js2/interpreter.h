@@ -34,8 +34,9 @@ namespace JavaScript {
 		uint64 u64;
 		float32 f32;
 		float64 f64;
+		void* ref;
 		
-		JSValue() : i64(0) {}
+		JSValue() : f64(0.0) {}
 		
 		explicit JSValue(float64 f64) : f64(f64) {}
 	};
