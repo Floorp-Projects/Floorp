@@ -841,13 +841,13 @@ function MsgCanFindAgain()
 function MsgSearchMessages()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable", { folder: preselectedFolder });
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable,centerscreen", { folder: preselectedFolder });
 }
 
 function MsgFilters()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable", { folder: preselectedFolder });
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable,centerscreen", { folder: preselectedFolder });
 }
 
 function MsgViewAllHeaders()
