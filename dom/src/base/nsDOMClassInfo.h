@@ -62,7 +62,7 @@ public:
 
   static void ShutDown();
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsDOMClassInfo(aID);
   }
@@ -207,7 +207,7 @@ public:
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsWindowSH(aID);
   }
@@ -234,7 +234,7 @@ public:
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsNodeSH(aID);
   }
@@ -258,7 +258,7 @@ public:
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     JSObject *obj);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsElementSH(aID);
   }
@@ -285,7 +285,7 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsArraySH(aID);
   }
@@ -337,7 +337,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsNamedNodeMapSH(aID);
   }
@@ -367,7 +367,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLCollectionSH(aID);
   }
@@ -393,7 +393,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsFormControlListSH(aID);
   }
@@ -422,7 +422,7 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsDocumentSH(aID);
   }
@@ -446,7 +446,7 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLDocumentSH(aID);
   }
@@ -471,7 +471,7 @@ public:
                          JSObject *obj, jsval id, jsval *vp,
                          PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLFormElementSH(aID);
   }
@@ -529,7 +529,7 @@ public:
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLPluginObjElementSH(aID);
   }
@@ -555,7 +555,7 @@ protected:
                                      JSObject **plugin_proto);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLAppletElementSH(aID);
   }
@@ -579,7 +579,7 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLOptionCollectionSH(aID);
   }
@@ -609,7 +609,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsPluginSH(aID);
   }
@@ -639,7 +639,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsPluginArraySH(aID);
   }
@@ -669,7 +669,7 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsMimeTypeArraySH(aID);
   }
@@ -715,7 +715,7 @@ protected:
                                nsAWritableString& aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHistorySH(aID);
   }
@@ -739,7 +739,7 @@ protected:
                                nsAWritableString& aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsMediaListSH(aID);
   }
@@ -765,7 +765,7 @@ protected:
                              nsISupports **aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsStyleSheetListSH(aID);
   }
@@ -789,7 +789,7 @@ protected:
                                nsAWritableString& aResult);
 
 public:
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsCSSStyleDeclSH(aID);
   }
@@ -812,7 +812,7 @@ protected:
 public:
   NS_IMETHOD GetHelperForLanguage(PRUint32 language, nsISupports **_retval);
 
-  static nsIClassInfo *Create(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsXMLHttpRequestSH(aID);
   }
