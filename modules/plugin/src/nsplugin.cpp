@@ -44,7 +44,6 @@
 #endif
 
 #include "prthread.h"
-#include "pprthred.h"
 #include "prtypes.h"
 #include "nsHashtable.h"
 #include "nsMalloc.h"

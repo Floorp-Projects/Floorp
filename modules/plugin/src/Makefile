@@ -39,7 +39,7 @@ ifeq ($(subst /,_,$(shell uname -s)),OS2)
 INCLUDES	+= -I$(DEPTH)/cmd/os2fe/nfc/include -I$(DEPTH)/cmd/os2fe -I$(DEPTH)/cmd/winfe
 endif
 
-INCLUDES        += -I. -I$(DIST)/include/private
+INCLUDES        += -I.
 
 
 $(LIBRARY): $(OBJS)
