@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.12 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.13 $ $Date: 2001/11/09 00:36:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -306,7 +306,7 @@ nssToken_TraverseCertificatesByTemplate
   void *arg
 );
 
-NSS_EXTERN PRStatus *
+NSS_EXTERN PRStatus
 nssToken_TraverseCertificates
 (
   NSSToken *tok,

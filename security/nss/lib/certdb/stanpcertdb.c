@@ -238,6 +238,7 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
     usage.anyUsage = PR_TRUE;
     c = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
                                                     NULL, &usage, NULL);
+    if (!c) return NULL;
     return STAN_GetCERTCertificate(c);
 }
 
