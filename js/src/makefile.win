@@ -39,17 +39,9 @@ DEPTH=..\..
 MODULE=js
 include <$(DEPTH)\config\config.mak>
 
-!ifdef MOZ_OJI
-!if !defined(XPCONNECT_STANDALONE)
-DIRS = liveconnect
-!endif
-!endif
-
 # Because WIN95 doesn't support recursive make, still need fdlibm in DIRS
 !if "$(WINOS)" == "WIN95"
-DIRS = $(DIRS) fdlibm xpconnect
-!else
-DIRS = $(DIRS) xpconnect
+DIRS = $(DIRS) fdlibm
 !endif
 
 #//------------------------------------------------------------------------
@@ -198,7 +190,7 @@ $(FDLIBM_LIBRARY):
     @cd $(MAKEDIR) 
 !endif
 
-export:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

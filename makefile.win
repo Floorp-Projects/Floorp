@@ -62,6 +62,10 @@ DIRS =                         \
   netwerk                      \
   widget\timer                 \
   js                           \
+  js\src\xpconnect             \
+!ifdef MOZ_OJI
+  js\src\liveconnect           \
+!endif
 !if !defined(DISABLE_JSD)
   js\jsd                       \
 !endif
