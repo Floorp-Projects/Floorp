@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
 /*
@@ -35,26 +35,28 @@
 
 class nsMIMEService : public nsIMIMEService {
 
-    // nsISupports methods
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIMIMESERVICE
 
     // nsMIMEService methods
     nsMIMEService();
     virtual ~nsMIMEService();
-
-    // nsIMIMEService methods
-    NS_DECL_NSIMIMESERVICE
+    nsresult Init();
+    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
 private:
     nsresult AddMapping(const char* mimeType, 
                         const char* extension,
-                        const char* description);
+                        const char* description,
+                        nsIURI* dataURI = nsnull);
+    nsresult AppendExtension(const char* mimeType, const char* extension);
+
     nsresult InitFromURI(nsIURI *aUri);
     nsresult InitFromFile(const char *aFileName);
     nsresult InitFromHack();
 
     
-    nsHashtable             *mInfoHashtable;
+    nsHashtable             *mInfoObjects;
 };
 
 #endif // ___nsIMIMEService__h___

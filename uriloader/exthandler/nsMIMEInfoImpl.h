@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 #ifndef __nsmimeinfoimpl_h___
 #define __nsmimeinfoimpl_h___
@@ -25,25 +25,26 @@
 #include "nsIMIMEInfo.h"
 #include "nsIAtom.h"
 #include "nsString2.h"
+#include "nsVoidArray.h"
+#include "nsCOMPtr.h"
 
 class nsMIMEInfoImpl : public nsIMIMEInfo {
 
-    // nsISupports methods
     NS_DECL_ISUPPORTS
-
-    // nsMIMEInfoImpl methods
-    nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtensions, const char *aDescription);
-    virtual ~nsMIMEInfoImpl();
-
-    PRBool InExtensions(nsIAtom* anIAtom);
-
-    // nsIMIMEInfo methods
     NS_DECL_NSIMIMEINFO
 
+    // nsMIMEInfoImpl methods
+    nsMIMEInfoImpl(const char *aMIMEType);
+    virtual ~nsMIMEInfoImpl() {};
+
     // member variables
-    nsIAtom*            mMIMEType;
-    nsString2           mFileExtensions;
-    nsString2           mDescription;
+    nsStringArray       mExtensions;  // array of file extensions associated w/ this MIME obj
+    nsAutoString        mDescription; // human readable description
+    nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
+
+protected:
+    nsCOMPtr<nsIAtom>   mMIMEType;
+
 };
 
 #endif //__nsmimeinfoimpl_h___
