@@ -86,6 +86,8 @@ XPC_MSG_DEF(NS_ERROR_XPC_CANT_SET_READ_ONLY_METHOD      , "Property is an interf
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_ADD_PROP_TO_WRAPPED_NATIVE, "Can not add property to WrappedNative object")
 XPC_MSG_DEF(NS_ERROR_XPC_CALL_TO_SCRIPTABLE_FAILED      , "Call to nsIXPCScriptable interface for WrappedNative failed unexpecedly")
 XPC_MSG_DEF(NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED , "JavaScript component does not have a method named:")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_ID_STRING                  , "Bad ID string")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_INITIALIZER_NAME           , "Bad initializer name in Constructor - Component has no method with that name")
 
 /* common global codes (from nsError.h) */
 

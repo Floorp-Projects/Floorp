@@ -41,13 +41,15 @@ nsXPCWrappedNativeScope* nsXPCWrappedNativeScope::gScopes = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsXPCWrappedNativeScope, nsIXPCWrappedNativeScope)
 
-nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc)
+nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
+                                                 nsXPCComponents* comp)
     :   mRuntime(xpcc->GetRuntime()),
         mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
+        mComponents(comp),
         mNext(nsnull)
 {
     NS_INIT_ISUPPORTS();
-
+    NS_IF_ADDREF(mComponents);
     // add ourselves to the scopes list
     {   // scoped lock
         nsAutoLock lock(mRuntime->GetMapLock());  
@@ -83,6 +85,7 @@ nsXPCWrappedNativeScope::~nsXPCWrappedNativeScope()
             }
         }
     }
+    NS_IF_RELEASE(mComponents);
 }        
 
 // static 

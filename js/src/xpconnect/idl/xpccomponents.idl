@@ -35,41 +35,101 @@
 
 #include "nsISupports.idl"
 #include "xpcexception.idl"
+#include "xpcjsid.idl"
 #include "nsIComponentManager.idl"
 
+/**
+* interface of Components.interfaces
+* (interesting stuff only reflected into JavaScript)
+*/
 [scriptable, uuid(4b62a640-d26c-11d2-9842-006008962422)]
-interface nsIXPCInterfaces : nsISupports
+interface nsIXPCComponents_Interfaces : nsISupports
 {
 };
 
+/**
+* interface of Components.classes
+* (interesting stuff only reflected into JavaScript)
+*/
 [scriptable, uuid(978ff520-d26c-11d2-9842-006008962422)]
-interface nsIXPCClasses : nsISupports
+interface nsIXPCComponents_Classes : nsISupports
 {
 };
 
+/**
+* interface of Components.classesByID
+* (interesting stuff only reflected into JavaScript)
+*/
 [scriptable, uuid(336a9590-4d19-11d3-9893-006008962422)]
-interface nsIXPCClassesByID : nsISupports
+interface nsIXPCComponents_ClassesByID : nsISupports
 {
 };
 
+/**
+* interface of Components.results
+* (interesting stuff only reflected into JavaScript)
+*/
 [scriptable, uuid(2fc229a0-5860-11d3-9899-006008962422)]
-interface nsIXPCResults : nsISupports
+interface nsIXPCComponents_Results : nsISupports
 {
 };
 
+/**
+* interface of Components.ID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(7994a6e0-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_ID : nsISupports
+{
+};
+
+/**
+* interface of Components.Exception
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(5bf039c0-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_Exception : nsISupports
+{
+};
+
+/**
+* interface of Components.Constructor 
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(88655640-e028-11d3-8f5d-0010a4e73d9a)]
+interface nsIXPCComponents_Constructor : nsISupports
+{
+};
+
+/**
+* interface of object returned by Components.Constructor 
+* (additional interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(c814ca20-e0dc-11d3-8f5f-0010a4e73d9a)]
+interface nsIXPCConstructor : nsISupports
+{
+    readonly attribute nsIJSCID classID;
+    readonly attribute nsIJSIID interfaceID;
+    readonly attribute string   initializer;
+};
+
+/**
+* interface of JavaScript's 'Components' object
+*/
 [scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents : nsISupports
 {
-    readonly attribute nsIXPCInterfaces         interfaces;
-    readonly attribute nsIXPCClasses            classes;
-    readonly attribute nsIXPCClassesByID        classesByID;
-    readonly attribute nsIJSStackFrameLocation  stack;
-    readonly attribute nsIXPCResults            results;
-    readonly attribute nsIComponentManager      manager;
+    readonly attribute nsIXPCComponents_Interfaces  interfaces;
+    readonly attribute nsIXPCComponents_Classes     classes;
+    readonly attribute nsIXPCComponents_ClassesByID classesByID;
+    readonly attribute nsIJSStackFrameLocation      stack;
+    readonly attribute nsIXPCComponents_Results     results;
+    readonly attribute nsIComponentManager          manager;
+
+    readonly attribute nsIXPCComponents_ID          ID;
+    readonly attribute nsIXPCComponents_Exception   Exception;
+    readonly attribute nsIXPCComponents_Constructor Constructor;
 
     /* 'lastResult' is accessable via JavaScript only */
     /* 'returnCode' is accessable via JavaScript only */
-    /* 'Exception' is accessable via JavaScript only */
-    /* 'ID' is accessable via JavaScript only */
-
 };
