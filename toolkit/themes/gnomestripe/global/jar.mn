@@ -2,6 +2,7 @@ classic.jar:
 +  skin/classic/global/autocomplete.css
 +  skin/classic/global/popup.css
 +  skin/classic/global/menu.css
++  skin/classic/global/menulist.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/button.css
