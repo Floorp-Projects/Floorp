@@ -25,8 +25,8 @@
     
 */
 XPTC_InvokeByIndex:
-        save    %sp,-(64 + 8),%sp   ! room for the register window and
-                                    ! struct pointer, rounded up to 0 % 8
+        save    %sp,-(64 + 16),%sp   ! room for the register window and
+                                    ! struct pointer, rounded up to 0 % 16
         mov     %i2,%o0             ! paramCount
         mov     %i3,%o1             ! params
         call    invoke_count_words  ! returns the required stack size in %o0
@@ -44,9 +44,12 @@ XPTC_InvokeByIndex:
 !
 !   calculate the target address from the vtable
 !
-        sll     %i1,2,%l0           ! index *= 4
+        sll     %i1,3,%l0           ! index *= 8
+        add     %l0,12,%l0          ! += 12 (there's 1 extra entry in the vTable)
+				    ! and we need the fn ptr which is the second
+				    ! half of the 8 byte vTable entry
         ld      [%i0],%l1           ! *that --> address of vtable
-        ld      [%l0 + %l1],%l0     ! that->vtable[index * 4] --> target address
+        ld      [%l0 + %l1],%l0     ! that->vtable[index * 8 + 12] --> target address
 !
 !   set 'that' as the 'this' pointer and then load the next arguments
 !   into the outgoing registers
