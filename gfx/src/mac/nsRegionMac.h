@@ -22,6 +22,34 @@
 #include "nsIRegion.h"
 #include <quickdraw.h>
 
+//------------------------------------------------------------------------
+
+class nsNativeRegionPool
+{
+public:
+	nsNativeRegionPool();
+	~nsNativeRegionPool();
+
+	RgnHandle					GetNewRegion();
+	void							ReleaseRegion(RgnHandle aRgnHandle);
+
+private:
+	static const short	kRegionPoolCount = 200;
+
+	typedef struct nsRegionRec
+	{
+			RgnHandle			mRegion;
+			PRBool				mFree;
+	} nsRegionRec;
+
+	nsRegionRec						mRegionArray[kRegionPoolCount];
+};
+
+//------------------------------------------------------------------------
+
+extern nsNativeRegionPool sNativeRegionPool;
+
+//------------------------------------------------------------------------
 
 class nsRegionMac : public nsIRegion
 {

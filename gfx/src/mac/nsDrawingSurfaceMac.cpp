@@ -18,6 +18,7 @@
 
 
 #include "nsDrawingSurfaceMac.h"
+#include "nsGraphicState.h"
 
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
@@ -34,7 +35,7 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
   NS_INIT_REFCNT();
 
   mPort = NULL;
-	mGS = new GraphicState();
+	mGS = sGraphicStatePool.GetNewGS();	//new nsGraphicState();
   mWidth = mHeight = 0;
   mLockOffset = mLockHeight = 0;
   mLockFlags = 0;
@@ -58,7 +59,7 @@ GWorldPtr offscreenGWorld;
 	}
 
 	if (mGS){
-		delete mGS;
+		sGraphicStatePool.ReleaseGS(mGS); //delete mGS;
 	}
 		
 }

@@ -19,6 +19,65 @@
 #include "nsRegionMac.h"
 #include "prmem.h"
 
+
+nsNativeRegionPool sNativeRegionPool;
+
+//------------------------------------------------------------------------
+
+nsNativeRegionPool::nsNativeRegionPool()
+{
+	for (short i = 0; i < kRegionPoolCount; i ++)
+	{
+		mRegionArray[i].mRegion = ::NewRgn();
+		mRegionArray[i].mFree = PR_TRUE;
+	}
+}
+
+//------------------------------------------------------------------------
+
+nsNativeRegionPool::~nsNativeRegionPool()
+{
+	for (short i = 0; i < kRegionPoolCount; i ++)
+	{
+		::DisposeRgn(mRegionArray[i].mRegion);
+	}
+}
+
+//------------------------------------------------------------------------
+
+RgnHandle nsNativeRegionPool::GetNewRegion()
+{
+	for (short i = 0; i < kRegionPoolCount; i ++)
+	{
+		if (mRegionArray[i].mFree)
+		{
+			mRegionArray[i].mFree = PR_FALSE;
+			return mRegionArray[i].mRegion;
+		}
+	}
+	return (::NewRgn());	// we overflew the pool: return a new region
+}
+
+//------------------------------------------------------------------------
+
+void nsNativeRegionPool::ReleaseRegion(RgnHandle aRgnHandle)
+{
+	for (short i = 0; i < kRegionPoolCount; i ++)
+	{
+		if (mRegionArray[i].mRegion == aRgnHandle)
+		{
+			::SetEmptyRgn(mRegionArray[i].mRegion);
+			mRegionArray[i].mFree = PR_TRUE;
+			return;
+		}
+	}
+	::DisposeRgn(aRgnHandle);	// we overflew the pool: delete the GraphicState
+}
+
+
+#pragma mark -
+//------------------------------------------------------------------------
+
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 //---------------------------------------------------------------------
@@ -35,19 +94,19 @@ nsRegionMac :: nsRegionMac()
 nsRegionMac :: ~nsRegionMac()
 {
   if (mRegion)
-    ::DisposeRgn(mRegion);
+    sNativeRegionPool.ReleaseRegion(mRegion); //::DisposeRgn(mRegion);
   mRegion = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionMac, kRegionIID)
-NS_IMPL_ADDREF(nsRegionMac)
-NS_IMPL_RELEASE(nsRegionMac)
+NS_IMPL_QUERY_INTERFACE(nsRegionMac, kRegionIID);
+NS_IMPL_ADDREF(nsRegionMac);
+NS_IMPL_RELEASE(nsRegionMac);
 
 //---------------------------------------------------------------------
 
 nsresult nsRegionMac :: Init(void)
 {
-	mRegion = ::NewRgn();
+	mRegion = sNativeRegionPool.GetNewRegion(); //::NewRgn();
   mRegionType = eRegionComplexity_empty;
   return NS_OK;
 }
@@ -82,10 +141,10 @@ void nsRegionMac :: Intersect(const nsIRegion &aRegion)
 
 void nsRegionMac :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-	RgnHandle rectRgn = ::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
   ::SectRgn(mRegion, rectRgn, mRegion);
-  ::DisposeRgn(rectRgn);
+  sNativeRegionPool.ReleaseRegion(rectRgn); //::DisposeRgn(rectRgn);
   SetRegionType();
 }
 
@@ -102,10 +161,10 @@ void nsRegionMac :: Union(const nsIRegion &aRegion)
 
 void nsRegionMac :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-	RgnHandle rectRgn = ::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
   ::UnionRgn(mRegion, rectRgn, mRegion);
-  ::DisposeRgn(rectRgn);
+  sNativeRegionPool.ReleaseRegion(rectRgn); //::DisposeRgn(rectRgn);
   SetRegionType();
 }
 
@@ -122,10 +181,10 @@ void nsRegionMac :: Subtract(const nsIRegion &aRegion)
 
 void nsRegionMac :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-	RgnHandle rectRgn = ::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
   ::DiffRgn(mRegion, rectRgn, mRegion);
-  ::DisposeRgn(rectRgn);
+  sNativeRegionPool.ReleaseRegion(rectRgn); //::DisposeRgn(rectRgn);
   SetRegionType();
 }
 
@@ -431,7 +490,7 @@ void nsRegionMac :: SetRegionEmpty()
 
 RgnHandle nsRegionMac :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-	RgnHandle rectRgn = ::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
   return rectRgn;
 }

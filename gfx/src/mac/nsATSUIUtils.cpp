@@ -356,7 +356,7 @@ nsATSUIToolkit::nsATSUIToolkit()
 //
 //------------------------------------------------------------------------
 
-void nsATSUIToolkit::PrepareToDraw(PRBool aFontOrColorChanged, GraphicState* aGS, GrafPtr aPort, nsIDeviceContext* aContext)
+void nsATSUIToolkit::PrepareToDraw(PRBool aFontOrColorChanged, nsGraphicState* aGS, GrafPtr aPort, nsIDeviceContext* aContext)
 {
 	mFontOrColorChanged |= aFontOrColorChanged;
 	mGS = aGS;

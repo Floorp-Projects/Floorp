@@ -22,39 +22,7 @@
 #include "nsIDrawingSurface.h"
 #include "nsIDrawingSurfaceMac.h"
 #include "nsFontMetricsMac.h"
-
-
-class GraphicState
-{
-public:
-  GraphicState();
-  ~GraphicState();
-
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-	void				Clear();
-	void				Init(nsDrawingSurface aSurface);
-	void				Init(GrafPtr aPort);
-	void				Init(nsIWidget* aWindow);
-	void				Duplicate(GraphicState* aGS);	// would you prefer an '=' operator?
-
-protected:
-	RgnHandle		DuplicateRgn(RgnHandle aRgn);
-
-public:
-  nsTransform2D * 			mTMatrix; 					// transform that all the graphics drawn here will obey
-
-	PRInt32               mOffx;
-  PRInt32               mOffy;
-
-  RgnHandle							mMainRegion;
-  RgnHandle			    		mClipRegion;
-
-  nscolor               mColor;
-  PRInt32               mFont;
-  nsIFontMetrics * 			mFontMetrics;
-	PRInt32               mCurrFontHandle;
-};
+#include "nsGraphicState.h"
 
 
 class nsDrawingSurfaceMac : public nsIDrawingSurface,
@@ -84,7 +52,7 @@ public:
 	NS_IMETHOD GetGrafPtr(GrafPtr	*aTheGrafPtr)   	{*aTheGrafPtr = mPort;return NS_OK;}
 
   // locals
-	GraphicState*	GetGS(void) {return mGS;}
+	nsGraphicState*	GetGS(void) {return mGS;}
 
 private:
 	GrafPtr					mPort;						// the onscreen or offscreen GrafPtr;	
@@ -96,7 +64,7 @@ private:
   PRUint32      	mLockFlags;
 	PRBool					mIsOffscreen;	
 
-	GraphicState*		mGS;						// a graphics state for the surface
+	nsGraphicState*	mGS;						// a graphics state for the surface
 };
 
 #endif

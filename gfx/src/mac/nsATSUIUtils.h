@@ -29,7 +29,7 @@
 class ATSUILayoutCache;
 class nsDrawingSurfaceMac;
 class nsIDeviceContext;
-class GraphicState;
+class nsGraphicState;
 
 
 class nsATSUIUtils
@@ -54,7 +54,7 @@ public:
 	nsATSUIToolkit();
 	~nsATSUIToolkit() {};
 
-	void				PrepareToDraw(PRBool aFontOrColorChanged, GraphicState* aGS, GrafPtr aPort, nsIDeviceContext* aContext);
+	void				PrepareToDraw(PRBool aFontOrColorChanged, nsGraphicState* aGS, GrafPtr aPort, nsIDeviceContext* aContext);
 
 	NS_IMETHOD			GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID);
 	NS_IMETHOD			DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing);
@@ -64,9 +64,9 @@ private:
 	
 private:
 	ATSUTextLayout  	mLastTextLayout;
-	PRBool				mFontOrColorChanged;
-	GraphicState*		mGS;
-	GrafPtr				mPort;
+	PRBool						mFontOrColorChanged;
+	nsGraphicState*		mGS;
+	GrafPtr						mPort;
 	nsIDeviceContext*	mContext;
 };
 

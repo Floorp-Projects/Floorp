@@ -22,6 +22,7 @@
 #include "nsIRegion.h"
 #include "nsIEnumerator.h"
 #include "nsRegionMac.h"
+#include "nsGraphicState.h"
 
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
@@ -33,164 +34,11 @@
 #include <Gestalt.h>
 
 
-#pragma mark -
-
-//------------------------------------------------------------------------
-//	GraphicState
-//
-//------------------------------------------------------------------------
-
 #define DrawingSurface	nsDrawingSurfaceMac
-
-
-//------------------------------------------------------------------------
-
-GraphicState::GraphicState()
-{
-	// everything is initialized to 0 through the 'new' operator
-}
-
-//------------------------------------------------------------------------
-
-GraphicState::~GraphicState()
-{
-	Clear();
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Clear()
-{
-	if (mTMatrix)
-	{
-		delete mTMatrix;
-		mTMatrix = nsnull;
-	}
-
-	if (mMainRegion)
-	{
-		::DisposeRgn(mMainRegion);
-		mMainRegion = nsnull;
-	}
-
-	if (mClipRegion)
-	{
-		::DisposeRgn(mClipRegion);
-		mClipRegion = nsnull;
-	}
-
-  NS_IF_RELEASE(mFontMetrics);
-
-  mOffx						= 0;
-  mOffy						= 0;
-  mColor 					= NS_RGB(255,255,255);
-	mFont						= 0;
-  mFontMetrics		= nsnull;
-  mCurrFontHandle	= 0;
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Init(nsDrawingSurface aSurface)
-{
-	// retrieve the grafPort
-	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
-	GrafPtr port;
-	surface->GetGrafPtr(&port);
-
-	// init from grafPort
-	Init(port);
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Init(GrafPtr aPort)
-{
-	// delete old values
-	Clear();
-
-	// init from grafPort (usually an offscreen port)
-	RgnHandle	rgn = ::NewRgn();
-#if TARGET_CARBON
-	if ( rgn ) {
-		Rect bounds;
-		::RectRgn(rgn, ::GetPortBounds(aPort, &bounds));
-	}
-#else
-	if (rgn)
-	  ::RectRgn(rgn, &aPort->portRect);
-#endif
-
-  mMainRegion					= rgn;
-  mClipRegion					= DuplicateRgn(rgn);
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Init(nsIWidget* aWindow)
-{
-	// delete old values
-	Clear();
-
-	// init from widget
-  mOffx						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETX);
-  mOffy						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
-
-	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
-	mMainRegion					= DuplicateRgn(widgetRgn);
-  mClipRegion					= DuplicateRgn(widgetRgn);
-}
-
-//------------------------------------------------------------------------
-
-void GraphicState::Duplicate(GraphicState* aGS)
-{
-	// delete old values
-	Clear();
-
-	// copy new ones
-	if (aGS->mTMatrix)
-		mTMatrix = new nsTransform2D(aGS->mTMatrix);
-	else
-		mTMatrix = nsnull;
-
-	mOffx						= aGS->mOffx;
-	mOffy						= aGS->mOffy;
-
-	mMainRegion					= DuplicateRgn(aGS->mMainRegion);
-	mClipRegion					= DuplicateRgn(aGS->mClipRegion);
-
-	mColor					= aGS->mColor;
-	mFont						= aGS->mFont;
-	mFontMetrics		= aGS->mFontMetrics;
-	NS_IF_ADDREF(mFontMetrics);
-
-	mCurrFontHandle	= aGS->mCurrFontHandle;
-}
-
-
-//------------------------------------------------------------------------
-
-RgnHandle GraphicState::DuplicateRgn(RgnHandle aRgn)
-{
-	RgnHandle dupRgn = nsnull;
-	if (aRgn)
-	{
-		dupRgn = ::NewRgn();
-		if (dupRgn)
-			::CopyRgn(aRgn, dupRgn);
-	}
-	return dupRgn;
-}
-
-
-//------------------------------------------------------------------------
-
-#pragma mark -
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-
+//------------------------------------------------------------------------
 
 nsRenderingContextMac::nsRenderingContextMac()
 {
@@ -241,9 +89,9 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	  PRInt32 cnt = mGSStack->Count();
 	  for (PRInt32 i = 0; i < cnt; i ++)
 	  {
-	    GraphicState* gs = (GraphicState*)mGSStack->ElementAt(i);
+	    nsGraphicState* gs = (nsGraphicState*)mGSStack->ElementAt(i);
     	if (gs)
-    		delete gs;
+    		sGraphicStatePool.ReleaseGS(gs); //delete gs;
 	  }
 	  delete mGSStack;
 	  mGSStack = nsnull;
@@ -405,7 +253,7 @@ NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
 NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
 {
 	// create a GS
-  GraphicState * gs = new GraphicState();
+  nsGraphicState * gs = sGraphicStatePool.GetNewGS();	//new nsGraphicState();
 	if (!gs)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -426,7 +274,7 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
   if (cnt > 0) 
   {
     // get the GS from the stack
-    GraphicState* gs = (GraphicState *)mGSStack->ElementAt(cnt - 1);
+    nsGraphicState* gs = (nsGraphicState *)mGSStack->ElementAt(cnt - 1);
 
 		// copy the GS into the current one and tell the current surface to use it
 		mGS->Duplicate(gs);
@@ -434,7 +282,7 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 
     // remove the GS object from the stack and delete it
     mGSStack->RemoveElementAt(cnt - 1);
-    delete gs;
+    sGraphicStatePool.ReleaseGS(gs); //delete gs;
 	}
 
   aClipEmpty = (::EmptyRgn(mGS->mClipRegion));
@@ -717,7 +565,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCo
 	Rect macRect;
 	::SetRect(&macRect, trect.x, trect.y, trect.x + trect.width, trect.y + trect.height);
 
-	RgnHandle rectRgn = ::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
 	RgnHandle clipRgn = mGS->mClipRegion;
 	if (!clipRgn || !rectRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -743,7 +591,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCo
 	  	::SectRgn(rectRgn, mGS->mMainRegion, clipRgn);
 	  	break;
 	}
-	::DisposeRgn(rectRgn);
+	sNativeRegionPool.ReleaseRegion(rectRgn); //::DisposeRgn(rectRgn);
 
 	StartDraw();
 		::SetClip(clipRgn);
@@ -889,7 +737,7 @@ NS_IMETHODIMP nsRenderingContextMac :: GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextMac :: SetLineStyle(nsLineStyle aLineStyle)
 {
-	// note: the line style must be saved in the GraphicState like font, color, etc...
+	// note: the line style must be saved in the nsGraphicState like font, color, etc...
 	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::SetLineStyle");//¥TODO
   return NS_OK;
 }
