@@ -617,6 +617,9 @@ xpfe/global/resources/locale/en-US/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/communicator/Makefile
 xpfe/communicator/resources/Makefile
+xpfe/communicator/resources/locale/Makefile
+xpfe/communicator/resources/locale/en-US/Makefile
+xpfe/communicator/resources/content/Makefile
 xpfe/communicator/resources/skin/Makefile
 
 #
