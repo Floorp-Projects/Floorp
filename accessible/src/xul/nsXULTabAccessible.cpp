@@ -127,6 +127,15 @@ NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
         *_retval |= STATE_FOCUSABLE;
     }
   }
+  // Check whether the tab is selected
+  *_retval |= STATE_SELECTABLE;
+  *_retval &= ~STATE_SELECTED;
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
+  if (tab) {
+    PRBool selected = PR_FALSE;
+    if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
+      *_retval |= STATE_SELECTED;
+  }
   return NS_OK;
 }
 
@@ -222,7 +231,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetName(nsAString& _retval)
 
 /** Constructor */
 nsXULTabsAccessible::nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
+nsXULSelectableAccessible(aNode, aShell)
 { 
 }
 

@@ -41,6 +41,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsBaseWidgetAccessible.h"
+#include "nsXULSelectAccessible.h"
 
 /** An individual tab */
 class nsXULTabAccessible : public nsLeafAccessible
@@ -90,7 +91,7 @@ protected:
 };
 
 /** merely a container of tab obejcts */
-class nsXULTabsAccessible : public nsAccessibleWrap
+class nsXULTabsAccessible : public nsXULSelectableAccessible
 {
 public:
   nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
