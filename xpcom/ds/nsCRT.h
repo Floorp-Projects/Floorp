@@ -33,7 +33,7 @@
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
 #ifdef XP_MAC
-#  define NS_LINEBREAK             "\015"
+#  define NS_LINEBREAK             "\n"
 #  define NS_LINEBREAK_LEN 1
 #else
 #  ifdef XP_PC
