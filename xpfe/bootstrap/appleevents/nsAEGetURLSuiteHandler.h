@@ -33,6 +33,7 @@ class AEGetURLSuiteHandler
 {
 public:
 	enum {
+		kSuiteSignature		= 'GURL',
 		kGetURLEvent		= 'GURL'
 	};
 	

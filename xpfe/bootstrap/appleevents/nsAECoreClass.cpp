@@ -30,10 +30,6 @@
 #include "nsAEDocumentClass.h"
 #include "nsAEWindowClass.h"
 
-#include "nsAEMozillaSuiteHandler.h"
-#include "nsAEGetURLSuiteHandler.h"
-#include "nsAESpyglassSuiteHandler.h"
-
 /*
 #include "nsAETextClass.h"
 #include "nsAEWordClass.h"
@@ -711,8 +707,7 @@ pascal OSErr AECoreClass::SpyglassSuiteHandler(AppleEvent *appleEvent, AppleEven
 ----------------------------------------------------------------------------*/
 void AECoreClass::HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
 {
-	AEMozillaSuiteHandler		mozEventHandler;
-	mozEventHandler.HandleMozillaSuiteEvent(appleEvent, reply);
+	mMozillaSuiteHandler.HandleMozillaSuiteEvent(appleEvent, reply);
 }
 
 
@@ -723,8 +718,7 @@ void AECoreClass::HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *re
 ----------------------------------------------------------------------------*/
 void AECoreClass::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
 {
-	AEGetURLSuiteHandler		getURLHandler;
-	getURLHandler.HandleGetURLSuiteEvent(appleEvent, reply);
+	mGetURLSuiteHandler.HandleGetURLSuiteEvent(appleEvent, reply);
 }
 
 
@@ -735,8 +729,7 @@ void AECoreClass::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *rep
 ----------------------------------------------------------------------------*/
 void AECoreClass::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
 {
-	AESpyglassSuiteHandler		spyglassHandler;
-	spyglassHandler.HandleSpyglassSuiteEvent(appleEvent, reply);
+	mSpyglassSuiteHandler.HandleSpyglassSuiteEvent(appleEvent, reply);
 }
 
 
@@ -1054,21 +1047,21 @@ void AECoreClass::InstallSuiteHandlers(Boolean suspendEvents)
 	ThrowIfOSErr(err);
 	
 	// install the mozilla suite handler
-	err = ::AEInstallEventHandler(kAEMozillaSuite,  	typeWildCard, 
+	err = ::AEInstallEventHandler(AEMozillaSuiteHandler::kSuiteSignature,  	typeWildCard, 
 											suspendEvents ? mSuspendEventHandlerUPP : mMozillaSuiteHandlerUPP, 
 											(long)this,
 											false);
 	ThrowIfOSErr(err);
 
 	// install the GetURL suite handler
-	err = ::AEInstallEventHandler(kAEUrlSuite,  	typeWildCard, 
+	err = ::AEInstallEventHandler(AEGetURLSuiteHandler::kSuiteSignature,  	typeWildCard, 
 											suspendEvents ? mSuspendEventHandlerUPP : mGetURLSuiteHandlerUPP, 
 											(long)this, 
 											false);
 	ThrowIfOSErr(err);
 	
 	// install the SpyGlass suite handler
-	err = ::AEInstallEventHandler(kAESpyglassSuite,  	typeWildCard, 
+	err = ::AEInstallEventHandler(AESpyglassSuiteHandler::kSuiteSignature,  	typeWildCard, 
 											suspendEvents ? mSuspendEventHandlerUPP : mSpyGlassSuiteHandlerUPP, 
 											(long)this, 
 											false);

@@ -21,17 +21,18 @@
  *  Simon Fraser <sfraser@netscape.com>
  */
 
-
 #include "nsMemory.h"
 
 #include "nsAESpyglassSuiteHandler.h"
 #include "nsCommandLineServiceMac.h"
+#include "nsDocLoadObserver.h"
 
 /*----------------------------------------------------------------------------
 	AESpyglassSuiteHandler 
 	
 ----------------------------------------------------------------------------*/
 AESpyglassSuiteHandler::AESpyglassSuiteHandler()
+:   mDocObserver(nsnull)
 {
 }
 
@@ -41,6 +42,7 @@ AESpyglassSuiteHandler::AESpyglassSuiteHandler()
 ----------------------------------------------------------------------------*/
 AESpyglassSuiteHandler::~AESpyglassSuiteHandler()
 {
+    NS_IF_RELEASE(mDocObserver);
 }
 
 
@@ -72,7 +74,15 @@ void AESpyglassSuiteHandler::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, Ap
 			case kOpenURLEvent:
 				HandleOpenURLEvent(appleEvent, reply);
 				break;
+			
+			case kRegisterURLEchoEvent:
+				HandleRegisterURLEchoEvent(appleEvent, reply);
+				break;
 				
+			case kUnregisterURLEchoEvent:
+				HandleUnregisterURLEchoEvent(appleEvent, reply);
+				break;
+			
 			default:
 				ThrowOSErr(errAEEventNotHandled);
 				break;
@@ -98,14 +108,40 @@ void AESpyglassSuiteHandler::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, Ap
 void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		directParameter;
+	FSSpec		saveToFile;
+	Boolean		gotSaveToFile = false;
+	SInt32		targetWindowID = -1;
+	SInt32		openFlags = 0;
 	OSErr		err;
 	
 	// extract the direct parameter (an object specifier)
 	err = ::AEGetKeyDesc(appleEvent, keyDirectObject, typeWildCard, &directParameter);
 	ThrowIfOSErr(err);
 
-	// we need to look for other parameters, to do with destination etc.
+	// look for the save to file param
+	StAEDesc		targetFileDesc;
+	err = ::AEGetKeyDesc(appleEvent, kParamSaveToFileDest, typeFSS, &targetFileDesc);
+	if (err != errAEDescNotFound)
+	{
+		targetFileDesc.GetFileSpec(saveToFile);
+		gotSaveToFile = true;
+	}
 	
+#if 0
+	// look for the target window param
+	StAEDesc		openInWindowDesc;
+	err = ::AEGetKeyDesc(appleEvent, kParamOpenInWindow, typeLongInteger, &openInWindowDesc);
+	if (err != errAEDescNotFound)
+		targetWindowID = openInWindowDesc.GetLong();
+
+	// look for the open flags
+	StAEDesc		openFlagsDesc;
+	err = ::AEGetKeyDesc(appleEvent, kParamOpenFlags, typeLongInteger, &openFlagsDesc);
+	if (err != errAEDescNotFound)
+		openFlags = openFlagsDesc.GetLong();
+
+        // do something with targetWindowID and openFlags...
+#endif
 	
 	long		dataSize = directParameter.GetDataSize();
 	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
@@ -121,3 +157,40 @@ void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEve
 
 
 
+/*----------------------------------------------------------------------------
+	HandleRegisterURLEchoEvent 
+	
+----------------------------------------------------------------------------*/
+void AESpyglassSuiteHandler::HandleRegisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply)
+{
+	// extract the direct parameter (the requester's signature)
+	StAEDesc directParameter;
+	OSErr err = ::AEGetKeyDesc(appleEvent, keyDirectObject, typeType, &directParameter);
+	ThrowIfOSErr(err);
+
+	if (typeType == directParameter.descriptorType)
+	{
+		mDocObserver = new nsDocLoadObserver;
+		ThrowIfNil(mDocObserver);
+		NS_ADDREF(mDocObserver);        // our owning ref
+		mDocObserver->AddEchoRequester(**(OSType**)directParameter.dataHandle);
+	}
+}
+
+/*----------------------------------------------------------------------------
+	HandleUnregisterURLEchoEvent 
+	
+----------------------------------------------------------------------------*/
+void AESpyglassSuiteHandler::HandleUnregisterURLEchoEvent(AppleEvent *appleEvent, AppleEvent *reply)
+{
+	// extract the direct parameter (the requester's signature)
+	StAEDesc directParameter;
+	OSErr err = ::AEGetKeyDesc(appleEvent, keyDirectObject, typeType, &directParameter);
+	ThrowIfOSErr(err);
+
+	if (typeType == directParameter.descriptorType)
+	{
+	    if (mDocObserver)
+		mDocObserver->RemoveEchoRequester(**(OSType**)directParameter.dataHandle);
+	}
+}

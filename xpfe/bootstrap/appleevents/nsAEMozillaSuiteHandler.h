@@ -33,6 +33,7 @@ class AEMozillaSuiteHandler
 {
 public:
 	enum {
+		kSuiteSignature			= 'MOZZ',
 		kDoJavaScriptEvent		= 'jscr'
 	};
 	
