@@ -504,7 +504,8 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
    var onResponse = function( CalendarData )
    {
       //save the stream to a file.
-      saveDataToFile( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ), CalendarData, "UTF-8" );
+      //saveDataToFile( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ), CalendarData, "UTF-8" );
+       saveDataToFile( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ), CalendarData, null );
       
       if( onResponseExtra )
          onResponseExtra();
