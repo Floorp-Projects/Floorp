@@ -535,8 +535,23 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
   if(theCount) {
     int i=0;
     for(i=0;i<theCount;i++){
-      nsString& key=(nsString&)aNode.GetKeyAt(i);
+      nsString& key = (nsString&)aNode.GetKeyAt(i);
       
+      // See if there's an attribute:
+      // note that we copy here, because we're going to have to trim quotes.
+      nsString value (aNode.GetValueAt(i));
+
+      // strip double quotes from beginning and end
+      value.Trim("\"", PR_TRUE, PR_TRUE);
+
+      // 
+      // Filter out special case of <br type="_moz">,
+      // used by the editor.  Bug 16988.  Yuck.
+      //
+      if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
+          && key.Equals("type", PR_TRUE) && value.Equals("_moz"))
+        continue;
+
       if (mLowerCaseTags == PR_TRUE)
         key.ToLowerCase();
       else
@@ -549,9 +564,6 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
       Write((char*)mBuffer);
       mColPos += 1 + mBuffer.Length() + 1;
       
-        // See if there's an attribute:
-      const nsString& value=aNode.GetValueAt(i);
-
       if (value.Length() > 0)
       {
         Write(char(kEqual));
@@ -830,13 +842,13 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   else
     tagName.ToUpperCase();
 
-  if ((mDoFormat || !mInBody) && mColPos != 0 && BreakBeforeOpen(tag))
+  if (mDoFormat && mColPos != 0 && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
   }
 
-  if ((mDoFormat || !mInBody) && PermitWSBeforeOpen(tag))
+  if (mDoFormat && PermitWSBeforeOpen(tag))
     AddIndent();
 
   mBuffer.SetString(tagName);
@@ -921,7 +933,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent--;
 
-  if ((mDoFormat || !mInBody) && BreakBeforeClose(tag))
+  if (mDoFormat && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
@@ -947,7 +959,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
   
-  if ((mDoFormat || !mInBody) && BreakAfterClose(tag))
+  if ((mDoFormat && BreakAfterClose(tag)) || tag == eHTMLTag_html)
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
