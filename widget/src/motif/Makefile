@@ -60,6 +60,8 @@ CPPSRCS= \
 	nsXtEventHandler.cpp \
 	nsLookAndFeel.cpp \
 	nsToolkit.cpp \
+	nsLabel.cpp \
+	nsDialog.cpp \
         nsXtManageWidget.cpp
 
 CPP_OBJS=				\
