@@ -1097,6 +1097,9 @@ nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
   SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
   SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
 
+  // Activate the window
+  PostMessage(hwndDialog, WM_ACTIVATE, WA_ACTIVE, 0);
+
   gDialogCount++;
 
   return hwndBrowser;
