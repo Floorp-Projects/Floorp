@@ -243,6 +243,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
+
 /*
   if (aParent) {
      parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
@@ -273,9 +274,10 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
 
+  InitDeviceContext(aContext, parentWidget);
   InitCallbacks();
   CreateGC();
-
+  
   return NS_OK;
 }
 
