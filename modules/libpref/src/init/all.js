@@ -319,6 +319,7 @@ pref("intl.collationKeyAsCodePoint",        false);
 pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.cache",      "");
+pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",              "");
 pref("intl.charset.default",                "chrome://navigator/locale/navigator.properties");
 
