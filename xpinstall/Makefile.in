@@ -49,7 +49,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpinstall
 DIRS		= public src stub cleanup
 
-ifndef MOZ_PHOENIX
+ifndef MOZ_XUL_APP
 DIRS		+= res
 endif
 
