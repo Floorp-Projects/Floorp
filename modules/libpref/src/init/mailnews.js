@@ -407,4 +407,8 @@ pref("mailnews.labels.color.5", "#993399"); // default: purple
 //default null headers
 //example "X-Warn: XReply", list of hdrs separated by ": "
 pref("mailnews.customHeaders", ""); 
- 
+
+pref("mailnews.fakeaccount.show", false);
+pref("mailnews.fakeaccount.server", "");
+
+
