@@ -52,7 +52,7 @@ PREF_JS_EXPORTS	= \
 		$(NULL)
 
 ifdef MOZ_DEBUG
-PREF_JS_EXPORTS	+= $(srcdir)/debug-developer.js \
+PREF_JS_EXPORTS	+= $(srcdir)/debug-developer.js
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 PREF_JS_EXPORTS	+= $(srcdir)/os2/os2pref.js
@@ -61,7 +61,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 PREF_JS_EXPORTS	+= $(srcdir)/beos/beos.js
 else
 PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
-endif
 endif
 endif
 
