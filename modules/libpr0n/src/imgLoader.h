@@ -28,6 +28,7 @@
 #endif
 
 class imgRequest;
+class imgRequestProxy;
 class imgIRequest;
 class imgIDecoderObserver;
 class nsILoadGroup;
@@ -78,4 +79,33 @@ public:
 
 private:
   nsCOMPtr<nsIStreamListener> mDestListener;
+};
+
+
+/**
+ * validate checker
+ */
+
+#include "nsSupportsArray.h"
+
+class httpValidateChecker : public nsIStreamListener
+{
+public:
+  httpValidateChecker(imgRequest *request, void *aContext);
+  virtual ~httpValidateChecker();
+
+  void AddProxy(imgRequestProxy *aProxy);
+
+  /* additional members */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+private:
+  nsCOMPtr<nsIStreamListener> mDestListener;
+
+  imgRequest *mRequest;
+  nsSupportsArray mProxies;
+
+  void *mContext;
 };

@@ -55,6 +55,8 @@ public:
 
   /* additional members */
   nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx);
+  nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
+                                               // owner has already sent notifications out!
 
 protected:
   friend class imgRequest;
@@ -76,6 +78,8 @@ protected:
   void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode); 
 
 private:
+  friend class httpValidateChecker;
+
   imgRequest *mOwner;
 
   nsCOMPtr<imgIDecoderObserver> mListener;

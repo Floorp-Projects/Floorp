@@ -45,14 +45,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
-#include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
-
-#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
-#define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
-#else
-#define LITTLE_TO_NATIVE16(x) x
-#endif
-
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
@@ -66,7 +58,7 @@ imgRequest::imgRequest() :
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
   mImageStatus(imgIRequest::STATUS_NONE), mState(0),
-  mContentType(nsnull), mCacheId(0)
+  mContentType(nsnull), mCacheId(0), mValidator(nsnull)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -81,7 +73,8 @@ imgRequest::~imgRequest()
 
 nsresult imgRequest::Init(nsIChannel *aChannel,
                           nsICacheEntryDescriptor *aCacheEntry,
-                          void *aCacheId)
+                          void *aCacheId,
+                          void *aLoadId)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -95,20 +88,83 @@ nsresult imgRequest::Init(nsIChannel *aChannel,
      before OnStartRequest gets called, letting 'this' properly get removed
      from the cache in certain cases.
   */
-  mLoading = PR_TRUE;                      
+  mLoading = PR_TRUE;
 
   mCacheEntry = aCacheEntry;
 
   mCacheId = aCacheId;
 
+  SetLoadId(aLoadId);
+
   return NS_OK;
 }
 
-nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
+nsresult imgRequest::AddProxy(imgRequestProxy *proxy, PRBool aNotify)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
 
   mObservers.AppendElement(NS_STATIC_CAST(void*, proxy));
+
+  if (aNotify)
+    NotifyProxyListener(proxy);
+
+  return NS_OK;
+}
+
+nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify)
+{
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
+
+  mObservers.RemoveElement(NS_STATIC_CAST(void*, proxy));
+
+  /* Check mState below before we potentially call Cancel() below. Since
+     Cancel() may result in OnStopRequest being called back before Cancel()
+     returns, leaving mState in a different state then the one it was in at
+     this point.
+   */
+
+  if (aNotify) {
+    // make sure that observer gets an OnStopDecode message sent to it
+    if (!(mState & onStopDecode)) {
+      proxy->OnStopDecode(aStatus, nsnull);
+    }
+
+    // make sure that observer gets an OnStopRequest message sent to it
+    if (!(mState & onStopRequest)) {
+      proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
+    }
+  }
+
+  if (mObservers.Count() == 0) {
+    if (mImage) {
+      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "stopping animation");
+
+      mImage->StopAnimation();
+    }
+
+    /* If |aStatus| is a failure code, then cancel the load if it is still in progress.
+       Otherwise, let the load continue, keeping 'this' in the cache with no observers.
+       This way, if a proxy is destroyed without calling cancel on it, it won't leak
+       and won't leave a bad pointer in mObservers.
+     */
+    if (mChannel && mLoading && NS_FAILED(aStatus)) {
+      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
+
+      mImageStatus |= imgIRequest::STATUS_LOAD_PARTIAL;
+
+      this->Cancel(NS_BINDING_ABORTED);
+    }
+
+    /* break the cycle from the cache entry. */
+    mCacheEntry = nsnull;
+  }
+
+  return NS_OK;
+}
+
+nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
+{
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
 
   // OnStartDecode
   if (mState & onStartDecode)
@@ -165,55 +221,6 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
   if (mState & onStopRequest) {
     proxy->OnStopRequest(nsnull, nsnull, GetResultFromImageStatus(mImageStatus));
-  } 
-
-  return NS_OK;
-}
-
-nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
-{
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
-
-  mObservers.RemoveElement(NS_STATIC_CAST(void*, proxy));
-
-  /* Check mState below before we potentially call Cancel() below. Since
-     Cancel() may result in OnStopRequest being called back before Cancel()
-     returns, leaving mState in a different state then the one it was in at
-     this point.
-   */
-
-  // make sure that observer gets an OnStopDecode message sent to it
-  if (!(mState & onStopDecode)) {
-    proxy->OnStopDecode(aStatus, nsnull);
-  }
-
-  // make sure that observer gets an OnStopRequest message sent to it
-  if (!(mState & onStopRequest)) {
-    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
-  }
-
-  if (mObservers.Count() == 0) {
-    if (mImage) {
-      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "stopping animation");
-
-      mImage->StopAnimation();
-    }
-
-    /* If |aStatus| is a failure code, then cancel the load if it is still in progress.
-       Otherwise, let the load continue, keeping 'this' in the cache with no observers.
-       This way, if a proxy is destroyed without calling cancel on it, it won't leak
-       and won't leave a bad pointer in mObservers.
-     */
-    if (mChannel && mLoading && NS_FAILED(aStatus)) {
-      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
-
-      mImageStatus |= imgIRequest::STATUS_LOAD_PARTIAL;
-
-      this->Cancel(NS_BINDING_ABORTED);
-    }
-
-    /* break the cycle from the cache entry. */
-    mCacheEntry = nsnull;
   }
 
   return NS_OK;
