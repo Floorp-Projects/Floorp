@@ -482,7 +482,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 // HandleKeyEvent
 //
 //-------------------------------------------------------------------------
-#ifdef tague_keyboard_patch
+#if 1
 void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message)
 {
 	//
