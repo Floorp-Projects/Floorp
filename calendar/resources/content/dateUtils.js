@@ -240,6 +240,110 @@ function DateFormater( )
   } catch (error) {
     this.useLongDateService = false;
   }
+
+  // probe the Time format
+  this.ampmIndex = null;  
+  // Time format in 24-hour format or 12-hour format with am/pm string.
+  // Should match formats
+  //      HH:mm,       H:mm,       HH:mm:ss,       H:mm:ss
+  //      hh:mm tt,    h:mm tt,    hh:mm:ss tt,    h:mm:ss tt
+  //   tt hh:mm,    tt h:mm,    tt hh:mm:ss,    tt h:mm:ss
+  // where
+  // HH is 24 hour digits, with leading 0.  H is 24 hour digits, no leading 0.
+  // hh is 12 hour digits, with leading 0.  h is 12 hour digits, no leading 0.
+  // mm and ss are is minutes and seconds digits, with leading 0.
+  // tt is localized AM or PM string.
+  // ':' may be ':' or a units marker such as 'h', 'm', or 's' in  15h12m00s
+  // or may be omitted as in 151200.
+  //
+  // Digits         HR       sep      MIN     sep      SEC     sep
+  //   Index:       2        3        4       5        6       7    
+  var digitsExpr = "(\\d?\\d)(\\D)?(?:(\\d\\d)(\\D)?(?:(\\d\\d)(\\D)?)?)?";
+  // any letters or '.': non-digit alphanumeric, period (a.m.), or space (P M)
+  var anyAmPmExpr = "(?:[^\\d\\W]|[. ])+"; 
+  // digitsExpr has 6 captures, so index of first ampmExpr is 1, of last is 8.
+  var probeTimeRegExp =
+    new RegExp("^("+anyAmPmExpr+")?\\s?"+digitsExpr+"("+anyAmPmExpr+")?\\s*$");
+  const PRE_INDEX=1, HR_INDEX=2, MIN_INDEX=4, SEC_INDEX=6, POST_INDEX=8;
+
+  var amProbeTime = new Date(2000,0,1,6,12,34);
+  var amProbeString = this.getFormatedTime(amProbeTime);
+  var pmProbeTime = new Date(2000,0,1,18,12,34);
+  var pmProbeString = this.getFormatedTime(pmProbeTime);
+  var amFormatExpr = null, pmFormatExpr = null;
+  if (amProbeString != pmProbeString) {
+    var amProbeArray = probeTimeRegExp.exec(amProbeString);
+    var pmProbeArray = probeTimeRegExp.exec(pmProbeString);
+    if (amProbeArray != null && pmProbeArray != null) {
+      if (amProbeArray[PRE_INDEX] && pmProbeArray[PRE_INDEX] &&
+          amProbeArray[PRE_INDEX] != pmProbeArray[PRE_INDEX]) {
+        this.ampmIndex = PRE_INDEX;
+      } else if (amProbeArray[POST_INDEX] && pmProbeArray[POST_INDEX]) {
+        if (amProbeArray[POST_INDEX] != pmProbeArray[POST_INDEX]) {
+          this.ampmIndex = POST_INDEX;
+        } else {
+          // check if need to append previous character,
+          // captured by the optional separator pattern after seconds digits,
+          // or after minutes if no seconds, or after hours if no minutes.
+          for (var k = SEC_INDEX; k >= HR_INDEX; k -= 2) { 
+            var nextSepI = k + 1;
+            var nextDigitsI = k + 2;
+            if ((k == SEC_INDEX ||
+                 (!amProbeArray[nextDigitsI] && !pmProbeArray[nextDigitsI]))
+                && amProbeArray[nextSepI] && pmProbeArray[nextSepI]
+                && amProbeArray[nextSepI] != pmProbeArray[nextSepI])
+            {
+              amProbeArray[POST_INDEX] =
+                amProbeArray[nextSepI] + amProbeArray[POST_INDEX];
+              pmProbeArray[POST_INDEX] =
+                pmProbeArray[nextSepI] + pmProbeArray[POST_INDEX];
+              this.ampmIndex = POST_INDEX;
+              break;
+            }
+          }
+        }
+      }
+      if (this.ampmIndex) {
+        var makeFormatRegExp = function(string) {
+          // make expr to accept either as provided, lowercased, or uppercased
+          var regExp = string.replace(/(\W)/g, "[$1]"); // escape punctuation
+          var lowercased = string.toLowerCase();
+          if (string != lowercased)
+            regExp += "|"+lowercased;
+          var uppercased = string.toUpperCase();
+          if (string != uppercased)
+            regExp += "|"+uppercased;
+          return regExp;
+        };
+
+        amFormatExpr = makeFormatRegExp(amProbeArray[this.ampmIndex]);
+        pmFormatExpr = makeFormatRegExp(pmProbeArray[this.ampmIndex]);
+      }
+    } 
+  }
+  // International formats ([roman, cyrillic letters]|chinese/kanji characters)
+  var amExpr =
+    "[Aa\u0410\u0430][. ]?[Mm\u041c\u043c][. ]?|\u4e0a\u5348|\u5348\u524d";
+  var pmExpr =
+    "[Pp\u0420\u0440][. ]?[Mm\u041c\u043c][. ]?|\u4e0b\u5348|\u5348\u5f8c";
+  if (this.ampmIndex){
+    amExpr = amFormatExpr+"|"+amExpr;
+    pmExpr = pmFormatExpr+"|"+pmExpr;
+  }
+  var ampmExpr = amExpr+"|"+pmExpr;
+  // Must build am/pm formats into parse time regexp so that it can
+  // match them without mistaking the initial char for an optional divider.
+  // (For example, want to be able to parse both "12:34pm" and
+  // '12H34M56Spm" for any characters H,M,S and any language's "pm".
+  // The character between the last digit and the "pm" is optional.
+  // Must recogize "pm" directly, otherwise in "12:34pm" the "S" pattern
+  // matches the "p" character so only "m" is matched as ampm suffix.)
+  //
+  // digitsExpr has 6 captures, so index of first ampmExpr is 1, of last is 8.
+  this.parseTimeRegExp =
+    new RegExp("("+ampmExpr+")?\\s?"+digitsExpr+"("+ampmExpr+")?\\s*$");
+  this.amRegExp = new RegExp("^(?:"+amExpr+")$");
+  this.pmRegExp = new RegExp("^(?:"+pmExpr+")$");
 }
 
 
@@ -444,41 +548,64 @@ DateFormater.prototype.parseShortDate = function ( dateString )
 // seconds optional:     "02:34"     "02.34"    "02 34"    "02h34m"      "0234"
 // minutes optional:     "12"        "12"       "12"       "12h"         "12"
 // 1st hr digit optional:"9:34"      " 9.34"     "9 34"     "9H34M"       "934am"
-// am/pm optional        "02:34 a.m.""02.34pm"  "02 34 AM" "02H34M P.M." "0234pm"
 // skip nondigit prefix  " 12:34"    "t12.34"   " 12 34"   "T12H34M"     "T0234"
-// Todo: 4x fails if x is localized version of "am" or pm"
+// am/pm optional        "02:34 a.m.""02.34pm"  "02 34 A M" "02H34M P.M." "0234pm"
+// am/pm prefix          "a.m. 02:34""pm02.34"  "A M 02 34" "P.M. 02H34M" "pm0234"
+// am/pm cyrillic        "02:34\u0430.\u043c."  "02 34 \u0420 \u041c"
+// above/below noon      "\u4e0a\u534802:34"    "\u4e0b\u5348 02 34"
+// noon before/after     "\u5348\u524d02:34"    "\u5348\u5f8c 02 34"
 DateFormater.prototype.parseTimeOfDay = function( timeString )
 {
-  var parseTimeRegex =
-    /^\D*(\d?\d)(\D)?(?:(\d\d)(\D)?(?:(\d\d)(\D)?)?)?([AaPp][.]?[Mm][.]?)?\s*$/;
-  var timePartsArray = parseTimeRegex.exec(timeString);
+  var timePartsArray = this.parseTimeRegExp.exec(timeString);
+  const PRE_INDEX=1, HR_INDEX=2, MIN_INDEX=4, SEC_INDEX=6, POST_INDEX=8;
+
   if (timePartsArray != null) {
-    var hoursString   = timePartsArray[1]
+    var hoursString   = timePartsArray[HR_INDEX]
     var hours         = Number(hoursString);
-    var hoursSuffix   = timePartsArray[2];
+    var hoursSuffix   = timePartsArray[HR_INDEX + 1];
     if (!(0 <= hours && hours < 24)) return null;
 
-    var minutesString = timePartsArray[3];
+    var minutesString = timePartsArray[MIN_INDEX];
     var minutes       = (minutesString == null? 0 : Number(minutesString));
-    var minutesSuffix = timePartsArray[4];
+    var minutesSuffix = timePartsArray[MIN_INDEX + 1];
     if (!(0 <= minutes && minutes < 60)) return null;
 
-    var secondsString = timePartsArray[5];
+    var secondsString = timePartsArray[SEC_INDEX];
     var seconds       = (secondsString == null? 0 : Number(secondsString));
-    var secondsSuffix = timePartsArray[6];
+    var secondsSuffix = timePartsArray[SEC_INDEX + 1];
     if (!(0 <= seconds && seconds < 60)) return null;
 
-    var ampmString   = timePartsArray[7];
-    if (ampmString != null) {
-      if (!(1 <= hours && hours <= 12)) return null;
-      if (ampmString.toLowerCase().charAt(0) == 'a') /* a.m. */ {
-        if (hours == 12)
-          hours = 0;
-      } else /* p.m. */ {
-        if (hours < 12) 
-          hours += 12;
+    var ampmCode = null;
+    if (timePartsArray[PRE_INDEX] || timePartsArray[POST_INDEX]) {
+      if (this.ampmIndex && timePartsArray[this.ampmIndex]) {
+        // try current format order first
+        var ampmString = timePartsArray[this.ampmIndex];
+        if (this.amRegExp.test(ampmString)) {
+          ampmCode = "AM";
+        } else if (this.pmRegExp.test(ampmString)) {
+          ampmCode = "PM";
+        }
+      }
+      if (ampmCode == null) { // not yet found
+        // try any format order
+        var preString = timePartsArray[PRE_INDEX];
+        var postString = timePartsArray[POST_INDEX];
+        if ((preString && this.amRegExp.test(preString)) ||
+            (postString && this.amRegExp.test(postString))) {
+          ampmCode = "AM";
+        } else if ((preString && this.pmRegExp.test(preString)) ||
+                   (postString && this.pmRegExp.test(postString))) {
+          ampmCode = "PM";
+        } // else no match, ignore and treat as 24hour time.
       }
     }
+    if (ampmCode == "AM") {
+      if (hours == 12)
+        hours = 0;
+    } else if (ampmCode == "PM") {
+      if (hours < 12) 
+        hours += 12;
+    }      
     return new Date(0, 0, 0, hours, minutes, seconds, 0);
   } else return null; // did not match regex, not valid time
 }
