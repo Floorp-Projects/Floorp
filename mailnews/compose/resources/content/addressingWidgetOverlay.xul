@@ -66,6 +66,7 @@ Rights Reserved.
 							
 							<treecell allowevents="true">
 								<html:input id="msgRecipient#1"
+											flex="100%"
 											class="addressingWidget"
 											type="text"
 											onkeyup="if (event.which == 13)
