@@ -159,25 +159,16 @@
       }
     }
 
-    function PopupAction() {
-      var hostPort = getBrowser().currentURI.hostPort;
-      window.openDialog("chrome://communicator/content/popupManager.xul", "",
-                        "chrome,resizable=yes,modal=yes",
-                        hostPort,
-                        false);
-    }
-
     function OpenAboutPopups() {
       window.openDialog("chrome://communicator/content/aboutPopups.xul", "", 
                         "chrome,centerscreen,dependent", 
                         false);
     }
 
-    function OpenManagePopups() {
+    function OpenManagePopups(hostPort) {
       window.openDialog("chrome://communicator/content/popupManager.xul", "",
                         "chrome,resizable=yes", 
-                        "",
-                        false);
+                        hostPort);
     }
 
   ]]>
@@ -229,14 +220,14 @@
       <menupopup>
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
-                  oncommand="PopupAction();"/>
+                  oncommand="OpenManagePopups(getBrowser().currentURI.hostPort);"/>
         <menuitem id="AboutPopups" label="&cookieAboutPopupBlocking.label;"
                   accesskey="&cookieAboutPopupBlocking.accesskey;"
                   oncommand="OpenAboutPopups();"
                   hidden="true"/>
         <menuitem id="ManagePopups" label="&cookieManagePopups.label;"
                   accesskey="&cookieManagePopups.accesskey;"
-                  oncommand="OpenManagePopups();"
+                  oncommand="OpenManagePopups('');"
                   hidden="true"/>
       </menupopup>
     </menu>
