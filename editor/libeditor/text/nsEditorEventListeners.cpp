@@ -675,10 +675,11 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 
   PRBool canDrop = CanDrop(aDragEvent);
   dragSession->SetCanDrop(canDrop);
-  if (!canDrop) {
-    aDragEvent->PreventDefault(); // consumed
-    return NS_OK;
-  }
+
+  // We need to consume the event to prevent the browser's
+  // default drag listeners from being fired. (Bug 199133)
+
+  aDragEvent->PreventDefault(); // consumed
     
   if (canDrop)
   {
