@@ -95,7 +95,7 @@
       <td>
         <select name="component">
           [% FOREACH x = component_ %]
-            <option value="[% x %]"
+            <option value="[% x FILTER html %]"
               [% " selected" IF x == bug.component %]>[% x FILTER html %]
             </option>
           [% END %]
@@ -116,7 +116,7 @@
       [% IF bug.cc %]
         <select name="cc" multiple size="5">
         [% FOREACH c = bug.cc %]
-          <option value="[% c %]">[% c %]</option>
+          <option value="[% c FILTER html %]">[% c FILTER html %]</option>
         [% END %]
         </select>
         <br>
@@ -383,7 +383,7 @@
       [% IF bug.resolution %]
         <input type="radio" name="knob" value="clearresolution">
         Clear the resolution (remove the current resolution of
-        <b>[% bug.resolution %]</b>)<br>      
+        <b>[% bug.resolution FILTER html %]</b>)<br>      
         [% knum = knum + 1 %]
       [% END %]
 
