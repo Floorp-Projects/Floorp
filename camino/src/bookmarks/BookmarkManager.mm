@@ -149,7 +149,7 @@ static unsigned gFirstUserCollection = 0;
 {
   if ((self = [super init])) {
     BookmarkFolder* root = [[BookmarkFolder alloc] init];
-    [root setParent:self];
+    [root setParent:self];    // XXX why?
     [root setIsRoot:YES];
     [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
     [self setRootBookmarks:root];
@@ -209,18 +209,24 @@ static unsigned gFirstUserCollection = 0;
 
 -(void) dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   [mTop10Container release];
   [mRendezvousContainer release];
   [mAddressBookContainer release];
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [mLastUsedFolder release];
+  
   [mUndoManager release];
   [mRootBookmarks release];
   [mPathToBookmarkFile release];
   [mSmartFolderManager release];
+
   if (mImportDlgController)
     [mImportDlgController release];
+
   if (self == gBookmarksManager)
     gBookmarksManager = nil;
+
   [super dealloc];
 }
 
@@ -363,6 +369,17 @@ static unsigned gFirstUserCollection = 0;
   return mAddressBookContainer;
 }
 
+- (BookmarkFolder*)lastUsedBookmarkFolder
+{
+  return mLastUsedFolder;
+}
+
+- (void)setLastUsedBookmarkFolder:(BookmarkFolder*)inFolder
+{
+  [mLastUsedFolder autorelease];
+  mLastUsedFolder = [inFolder retain];
+}
+
 -(BookmarkItem*) itemWithUUID:(NSString*)uuid
 {
   return [mRootBookmarks itemWithUUID:uuid];
@@ -500,7 +517,7 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:[NSMenuItem separatorItem]];
     // create new folder
     menuTitle = NSLocalizedString(@"Create New Folder...", @"");
-    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:@""] autorelease];
+    menuItem = [[[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addBookmarkFolder:) keyEquivalent:@""] autorelease];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
@@ -533,6 +550,16 @@ static unsigned gFirstUserCollection = 0;
 - (void)bookmarkRemoved:(NSNotification *)note
 {
   [self bookmarkChanged:nil];
+  
+  BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
+  if ([bmItem isKindOfClass:[BookmarkFolder class]])
+  {
+    if ([(BookmarkFolder*)bmItem containsChildItem:mLastUsedFolder])
+    {
+      [mLastUsedFolder release];
+      mLastUsedFolder = nil;
+    }
+  }
 }
 
 - (void)bookmarkChanged:(NSNotification *)aNote
@@ -638,7 +665,7 @@ static unsigned gFirstUserCollection = 0;
 {
   NSData* fileAsData = [[NSData alloc] initWithContentsOfFile:pathToFile];
   if (!fileAsData) {
-    NSLog(@"decodedTextFile: file %@ cannot be read.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ cannot be read.", pathToFile);
     return nil;
   }
   // we're gonna assume for now it's ascii and hope for the best.
@@ -647,7 +674,7 @@ static unsigned gFirstUserCollection = 0;
   // know this for sure.  but we'll have to do 2 decodings.  big whoop.
   NSString *fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
   if (!fileString) {
-    NSLog(@"decodedTextFile: file %@ doesn't want to become a string.  Exiting.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ doesn't want to become a string. Exiting.", pathToFile);
     [fileAsData release];
     return nil;
   }
@@ -683,12 +710,12 @@ static unsigned gFirstUserCollection = 0;
   // if we're here, we don't have a clue as to the encoding.  we'll guess default
   [fileString release];
   if ((fileString = [[NSString alloc] initWithData:fileAsData encoding:[NSString defaultCStringEncoding]])) {
-    NSLog(@"decodedTextFile: file %@ encoding unknown.  Assume default and proceed.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ encoding unknown. Assume default and proceed.", pathToFile);
     [fileAsData release];
     return [fileString autorelease];
   }
   // we suck.  this is almost certainly wrong, but oh well.
-  NSLog(@"decodedTextFile: file %@ encoding unknown, and NOT default.  Use ASCII and proceed.",pathToFile);
+  NSLog(@"decodedTextFile: file %@ encoding unknown, and NOT default. Use ASCII and proceed.", pathToFile);
   fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
   [fileAsData release];
   return [fileString autorelease];
@@ -720,7 +747,7 @@ static unsigned gFirstUserCollection = 0;
       // omniweb setup - start at <bookmarkInfo
       [fileScanner scanUpToString:@"<bookmarkInfo" intoString:NULL];
     else {
-      NSLog(@"Unrecognized style of Bookmark File.  Read fails.");
+      NSLog(@"Unrecognized style of Bookmark File. Read fails.");
       [fileScanner release];
       return NO;
     }
@@ -792,7 +819,7 @@ static unsigned gFirstUserCollection = 0;
         [fileScanner scanUpToString:@">" intoString:NULL];
         [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
         [fileScanner scanUpToString:@"<" intoString:&tokenString];
-        [currentItem setDescription:[tokenString stringByRemovingAmpEscapes]];
+        [currentItem setItemDescription:[tokenString stringByRemovingAmpEscapes]];
         justSetTitle = NO;
       }
       else if ([tokenTag isEqualToString:@"<H3"]) {
@@ -845,7 +872,7 @@ static unsigned gFirstUserCollection = 0;
         if (justSetTitle)
           [currentItem setTitle:[[currentItem title] stringByAppendingString:tempItem]];
         else
-          [currentItem setDescription:[[currentItem description] stringByAppendingString:tempItem]];
+          [currentItem setItemDescription:[[currentItem itemDescription] stringByAppendingString:tempItem]];
         [fileScanner setScanLocation:(scanIndex+1)];
       }
       else if ([tokenTag isEqualToString:@"</H"]) {
@@ -859,7 +886,7 @@ static unsigned gFirstUserCollection = 0;
           if (justSetTitle)
             [currentItem setTitle:[[currentItem title] stringByAppendingString:tempItem]];
           else
-            [currentItem setDescription:[[currentItem description] stringByAppendingString:tempItem]];
+            [currentItem setItemDescription:[[currentItem itemDescription] stringByAppendingString:tempItem]];
           [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
         }
         [tempItem release];
@@ -1016,7 +1043,7 @@ static unsigned gFirstUserCollection = 0;
       // ... followed by Description
       aRange = [aLine rangeOfString:@"DESCRIPTION="];
       if (NSNotFound != aRange.location) {
-        [currentItem setDescription:[aLine substringFromIndex:(aRange.location + aRange.length)]];
+        [currentItem setItemDescription:[aLine substringFromIndex:(aRange.location + aRange.length)]];
       }
     }
   }

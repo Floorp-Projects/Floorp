@@ -111,10 +111,6 @@ typedef enum
   IBOutlet BrowserContentView*  mContentView;
   
   IBOutlet BookmarkToolbar*     mPersonalToolbar;
-  IBOutlet NSWindow*            mAddBookmarkSheetWindow;
-  IBOutlet NSTextField*         mAddBookmarkTitleField;
-  IBOutlet NSPopUpButton*       mAddBookmarkFolderField;
-  IBOutlet NSButton*            mAddBookmarkCheckbox;
 
   IBOutlet SearchTextField*     mSearchBar;
   IBOutlet SearchTextField*     mSearchSheetTextField;
@@ -161,9 +157,6 @@ typedef enum
   int mContextMenuFlags;
   nsIDOMEvent* mContextMenuEvent;
   nsIDOMNode* mContextMenuNode;
-
-  // Cached bookmark ds used when adding through a sheet
-  BookmarkViewController* mCachedBMVC;
 
   // Throbber state variables.
   ThrobberHandler* mThrobberHandler;
@@ -215,11 +208,6 @@ typedef enum
 - (IBAction)endSearchSheet:(id)sender;
 - (IBAction)cancelSearchSheet:(id)sender;
 
-
-- (IBAction)cancelAddBookmarkSheet:(id)sender;
-- (IBAction)endAddBookmarkSheet:(id)sender;
-- (void)cacheBookmarkVC:(BookmarkViewController *)aDS;
-
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize;
 
 - (IBAction)viewSource:(id)aSender;			// focussed frame or page
@@ -246,7 +234,6 @@ typedef enum
 
 - (BOOL)shouldShowBookmarkToolbar;
 
-- (void)addBookmarkExtended: (BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 - (IBAction)manageBookmarks: (id)aSender;
 - (IBAction)manageHistory: (id)aSender;
 
@@ -297,11 +284,6 @@ typedef enum
 -(void)setChromeMask:(unsigned int)aMask;
 -(unsigned int)chromeMask;
 
--(id)getAddBookmarkSheetWindow;
--(id)getAddBookmarkTitle;
--(id)getAddBookmarkFolder;
--(id)getAddBookmarkCheckbox;
-
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
 - (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress;
@@ -323,8 +305,10 @@ typedef enum
 
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
-- (IBAction)bookmarkPage: (id)aSender;
-- (IBAction)bookmarkLink: (id)aSender;
+- (IBAction)addBookmark:(id)aSender;
+- (IBAction)addBookmarkForLink:(id)aSender;
+- (IBAction)addBookmarkFolder:(id)aSender;
+- (IBAction)addBookmarkSeparator:(id)aSender;
 
 - (IBAction)copyLinkLocation:(id)aSender;
 - (IBAction)copyImage:(id)sender;

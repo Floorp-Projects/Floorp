@@ -917,25 +917,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [[BookmarkManager sharedBookmarkManager] writeSafariFile:[savePanel filename]];
 }
 
--(IBAction) addBookmark:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController addBookmarkExtended: NO URL:nil title:nil];
-}
-
--(IBAction) addFolder:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController addBookmarkExtended: YES URL:nil title:nil];
-}
-
--(IBAction) addSeparator:(id)aSender
-{
-  NSLog(@"Separators not implemented yet");
-}
-
 -(IBAction) openMenuBookmark:(id)aSender
 {
   BookmarkItem*  item = [aSender representedObject];
@@ -1088,6 +1069,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
   // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
   
+  // XXX some of these should be wired to the First Responder (like reload:).
   if (action == @selector(printPage:) ||
         /* ... many more items go here ... */
         /* action == @selector(goHome:) || */			// always enabled

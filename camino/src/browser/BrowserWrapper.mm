@@ -58,6 +58,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowser.h"
+#include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"

@@ -53,6 +53,7 @@ typedef enum
 @interface NSString (ChimeraStringUtils)
 
 + (id)ellipsisString;
++ (NSString*)stringWithUUID;
 + (id)escapedURLString:(NSString *)unescapedString;
 + (NSString*)unescapedURLString:(NSString*)escapedString;
 + (id)stringWithPRUnichars:(const PRUnichar*)inString;

@@ -74,6 +74,7 @@ class nsIHistoryItem;
 // a history category item (a folder in the outliner)
 @interface HistoryCategoryItem : HistoryItem
 {
+  NSString*         mUUIDString;  // used to identify folders for outliner state saving
   NSString*         mTitle;
   NSDate*           mStartDate;
   NSMutableArray*   mChildren;    // array of HistoryItems (may be heterogeneous)
@@ -81,6 +82,7 @@ class nsIHistoryItem;
 
 - (id)initWithTitle:(NSString*)title childCapacity:(int)capacity;
 - (NSString*)title;
+- (NSString*)identifier;    // return UUID for this folder
 // start date only valid when grouping by date
 - (NSDate*)startDate;
 - (void)setStartDate:(NSDate*)date;

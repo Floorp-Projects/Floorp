@@ -46,6 +46,7 @@
 #import "BookmarkToolbar.h"
 #import "BookmarkViewController.h"
 #import "BookmarkManager.h"
+#import "AddBookmarkDialogController.h"
 #import "ProgressDlgController.h"
 
 #import "BrowserContentViews.h"
@@ -358,6 +359,7 @@ enum BWCOpenDest {
 - (void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
+- (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
 
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
@@ -1170,7 +1172,7 @@ enum BWCOpenDest {
     return enable;
   }
   else if (action == @selector(reload:))
-    return [mBrowserView isBusy] == NO;
+    return (![mBrowserView isBusy] && ![self bookmarkManagerIsVisible]);
   else if (action == @selector(stop:))
     return [mBrowserView isBusy];
   else if (action == @selector(bookmarkPage:))
@@ -1339,6 +1341,56 @@ enum BWCOpenDest {
   return nil;
 }
 
+// this gets the previous entry in session history if bookmarks are showing
+- (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper
+{
+  *outTitle = nil;
+  *outURLString = nil;
+
+  NSString* curTitle = nil;
+  NSString* curURL = nil;
+  [inWrapper getTitle:&curTitle andHref:&curURL];
+
+  // if we're currently showing history or bookmarks, hand back the last URL.
+  if ([[curURL lowercaseString] isEqualToString:@"about:bookmarks"] ||
+      [[curURL lowercaseString] isEqualToString:@"about:history"])
+  {
+    nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[inWrapper getBrowserView] getWebBrowser]);
+    if (webBrowser)
+    {
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
+
+      nsCOMPtr<nsISHistory> sessionHistory;
+      webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+      if (sessionHistory)
+      {
+        PRInt32 curEntryIndex;
+        sessionHistory->GetIndex(&curEntryIndex);
+        if (curEntryIndex > 0)
+        {
+          nsCOMPtr<nsIHistoryEntry> entry;
+          sessionHistory->GetEntryAtIndex(curEntryIndex - 1, PR_FALSE, getter_AddRefs(entry));
+          
+          nsCAutoString uriSpec;
+          nsCOMPtr<nsIURI> entryURI;
+          entry->GetURI(getter_AddRefs(entryURI));
+          if (entryURI)
+            entryURI->GetSpec(uriSpec);
+          
+          nsXPIDLString textStr;
+          entry->GetTitle(getter_Copies(textStr));
+          
+          curTitle = [NSString stringWith_nsAString:textStr];
+          curURL = [NSString stringWithUTF8String:uriSpec.get()];
+        }
+      }
+    }
+  }
+
+  *outTitle = curTitle;
+  *outURLString = curURL;  
+}
+
 - (void)performAppropriateLocationAction
 {
   NSToolbar *toolbar = [[self window] toolbar];
@@ -1441,25 +1493,6 @@ enum BWCOpenDest {
 {
   [mSearchSheetWindow orderOut:self];
   [NSApp endSheet:mSearchSheetWindow returnCode:0];
-}
-
--(IBAction)cancelAddBookmarkSheet:(id)sender
-{
-  [mAddBookmarkSheetWindow orderOut:self];
-  [NSApp endSheet:mAddBookmarkSheetWindow returnCode:0];
-  [mCachedBMVC endAddBookmark: 0];
-}
-
--(IBAction)endAddBookmarkSheet:(id)sender
-{
-  [mAddBookmarkSheetWindow orderOut:self];
-  [NSApp endSheet:mAddBookmarkSheetWindow returnCode:0];
-  [mCachedBMVC endAddBookmark: 1];
-}
-
-- (void)cacheBookmarkVC:(BookmarkViewController *)aVC
-{
-  mCachedBMVC = aVC;
 }
 
 //
@@ -1841,14 +1874,6 @@ enum BWCOpenDest {
   return [[mBrowserView getBrowserView] lastFindText];
 }
 
-- (void)addBookmarkExtended:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
-{
-  // XXX this should be changed so that we don't need a BookmarksViewController
-  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
-  [bookmarksController ensureBookmarks];
-  [bookmarksController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
-}
-
 - (BOOL)bookmarkManagerIsVisible
 {
   NSString* currentURL = [[[self getBrowserWrapper] getCurrentURLSpec] lowercaseString];
@@ -1869,13 +1894,28 @@ enum BWCOpenDest {
   return ([bookmarksController numberOfSelectedRows] == 1);
 }
 
-- (IBAction)bookmarkPage: (id)aSender
+- (IBAction)addBookmark:(id)aSender
 {
-  [self addBookmarkExtended:NO URL:nil title:nil];
+  int numTabs = [mTabBrowser numberOfTabViewItems];
+  NSMutableArray* itemsArray = [NSMutableArray arrayWithCapacity:numTabs];
+  for (int i = 0; i < numTabs; i++)
+  {
+    BrowserWrapper* browserWrapper = (BrowserWrapper*)[[mTabBrowser tabViewItemAtIndex:i] view];
+    NSString* curTitleString = nil;
+    NSString* hrefString = nil;
+    [self bookmarkableTitle:&curTitleString URL:&hrefString forWrapper:browserWrapper];
+
+    NSDictionary* itemInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          curTitleString, kAddBookmarkItemTitleKey,
+                                              hrefString, kAddBookmarkItemURLKey,
+                                                          nil];
+    [itemsArray addObject:itemInfo];
+  }
+  
+  [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:itemsArray isFolder:NO onWindow:[self window]];
 }
 
-
-- (IBAction)bookmarkLink: (id)aSender
+- (IBAction)addBookmarkForLink:(id)aSender
 {
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
@@ -1884,7 +1924,32 @@ enum BWCOpenDest {
   GeckoUtils::GatherTextUnder(linkContent, linkText);
   NSString* urlStr = [NSString stringWith_nsAString:href];
   NSString* titleStr = [NSString stringWith_nsAString:linkText];
-  [self addBookmarkExtended:NO URL:urlStr title:titleStr];
+
+  NSDictionary* itemInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                            titleStr, kAddBookmarkItemTitleKey,
+                                              urlStr, kAddBookmarkItemURLKey,
+                                                      nil];
+  NSArray* items = [NSArray arrayWithObject:itemInfo];
+  [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:items isFolder:NO onWindow:[self window]];
+}
+
+- (IBAction)addBookmarkFolder:(id)aSender
+{
+  if ([self bookmarkManagerIsVisible])
+  {
+    // if the bookmarks view controller is visible, delegate to it (so that it can use the
+    // selection to set the parent folder)
+    BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+    [bookmarksController addBookmarkFolder:aSender];
+  }
+  
+  [[AddBookmarkDialogController sharedAddBookmarkDialogController] showDialogWithLocationsAndTitles:nil isFolder:YES onWindow:[self window]];
+}
+
+- (IBAction)addBookmarkSeparator:(id)aSender
+{
+  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+  [bookmarksController addBookmarkSeparator:aSender];
 }
 
 //
@@ -2586,26 +2651,6 @@ enum BWCOpenDest {
      return NO;
 
   return YES;
-}
-
--(id)getAddBookmarkSheetWindow
-{
-  return mAddBookmarkSheetWindow;
-}
-
--(id)getAddBookmarkTitle
-{
-  return mAddBookmarkTitleField;
-}
-
--(id)getAddBookmarkFolder
-{
-  return mAddBookmarkFolderField;
-}
-
--(id)getAddBookmarkCheckbox
-{
-  return mAddBookmarkCheckbox;
 }
 
 // Called when a context menu should be shown.

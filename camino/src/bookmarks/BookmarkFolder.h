@@ -114,6 +114,7 @@ enum {
 // searching
 -(NSArray *) resolveKeyword:(NSString *)aString;
 -(NSSet *) bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
+- (BOOL)containsChildItem:(BookmarkItem*)inItem;
 
 //Scripting - should be a protocol we could use for these
 //two, but i'm not sure which one, so we'll declare them here

@@ -243,7 +243,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   [self setAccumulateUpdateNotifications:YES];
   
   [self setTitle:[aDict objectForKey:BMTitleKey]];
-  [self setDescription:[aDict objectForKey:BMDescKey]];
+  [self setItemDescription:[aDict objectForKey:BMDescKey]];
   [self setKeyword:[aDict objectForKey:BMKeywordKey]];
   [self setUrl:[aDict objectForKey:BMURLKey]];
   [self setLastVisit:[aDict objectForKey:BMLastVisitKey]];
@@ -284,7 +284,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
         [self setAccumulateUpdateNotifications:YES];
         [self setTitle:[[attribDict objectForKey:CaminoNameKey] stringByRemovingAmpEscapes]];
         [self setKeyword:[[attribDict objectForKey:CaminoKeywordKey] stringByRemovingAmpEscapes]];
-        [self setDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
+        [self setItemDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
         [self setUrl:[[attribDict objectForKey:CaminoURLKey] stringByRemovingAmpEscapes]];
         //fire an update notification
         [self setAccumulateUpdateNotifications:NO];

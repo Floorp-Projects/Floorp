@@ -1372,6 +1372,12 @@ nsSimpleGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
     if (inNotify)
       NotifyObserversItemRemoved(row);
 
+#if 0
+    nsCAutoString url;
+    GetRowValue(row, kToken_URLColumn, url);
+    printf("Removing row %s\n", url.get());
+#endif
+
     // Officially cut the row *now*, before notifying any observers:
     // that way, any re-entrant calls won't find the row.
     err = mTable->CutRow(mEnv, row);

@@ -59,12 +59,14 @@ enum {
   KindaSmartFolderManager*        mSmartFolderManager;      // brains behind 4 smart folders
   NSUndoManager*                  mUndoManager;             // handles deletes, adds of bookmarks
   BookmarkImportDlgController*    mImportDlgController;
-  NSString*                       mPathToBookmarkFile;      // exactly what it looks like
+  NSString*                       mPathToBookmarkFile;
   
   // smart folders
   BookmarkFolder*                 mTop10Container;
   BookmarkFolder*                 mRendezvousContainer;
   BookmarkFolder*                 mAddressBookContainer;
+  
+  BookmarkFolder*                 mLastUsedFolder;
 }
 
 // Class Methods & shutdown stuff
@@ -85,6 +87,11 @@ enum {
 -(BookmarkFolder *) rendezvousFolder;
 -(BookmarkFolder *) addressBookFolder;
 -(BookmarkFolder *) historyFolder;
+
+// get/set folder last used by "Add Bookmarks"
+- (BookmarkFolder*)lastUsedBookmarkFolder;
+- (void)setLastUsedBookmarkFolder:(BookmarkFolder*)inFolder;
+
 -(BookmarkItem*) itemWithUUID:(NSString*)uuid;
 -(NSUndoManager *) undoManager;
 -(void) setRootBookmarks:(BookmarkFolder *)anArray;

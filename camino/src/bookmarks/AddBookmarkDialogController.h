@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,52 +35,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <Cocoa/Cocoa.h>
 
-#import <AppKit/AppKit.h>
+extern NSString* const kAddBookmarkItemURLKey;
+extern NSString* const kAddBookmarkItemTitleKey;
 
+@class BookmarkFolder;
 @class BookmarkViewController;
-@class BrowserWindowController;
-@class ExtendedOutlineView;
 
-
-// delegate for the history outliner. we use a different delegate from the bookmarks outliner
-// to keep the outline view delegate methods simpler.
-@interface HistoryOutlineViewDelegate : NSObject
+@interface AddBookmarkDialogController : NSWindowController
 {
-  IBOutlet ExtendedOutlineView*     mHistoryOutlineView;
-  IBOutlet NSMenu*                  mOutlinerContextMenu;
+  IBOutlet NSTextField*     mTitleField;
+  IBOutlet NSPopUpButton*   mParentFolderPopup;
+  IBOutlet NSButton*        mTabGroupCheckbox;
   
-  IBOutlet NSMenu*                  mHistorySortMenu;
-  IBOutlet BookmarkViewController*  mBookmarksViewController;
-
-  BrowserWindowController*          mBrowserWindowController;
-  BOOL                              mUpdatesDisabled;
-  BOOL                              mHistoryLoaded;
-
-  NSMutableDictionary*              mExpandedStates;
+  BookmarkViewController*   mBookmarkViewController;    // not retained
+  
+  BookmarkFolder*           mInitialParentFolder;
+  NSArray*                  mBookmarkItems;   // array of NSDictionary
+  BOOL                      mCreatingFolder;
 }
 
-- (void)setBrowserWindowController:(BrowserWindowController*)bwController;
++ (AddBookmarkDialogController*)sharedAddBookmarkDialogController;
 
-- (void)historyViewMadeVisible:(BOOL)visible;
+- (IBAction)confirmAddBookmark:(id)sender;
+- (IBAction)cancelAddBookmark:(id)sender;
+- (IBAction)parentFolderChanged:(id)sender;
 
-- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
-- (void)clearSearchResults;
+- (void)setDefaultParentFolder:(BookmarkFolder*)inFolder;
+- (void)setBookmarkViewController:(BookmarkViewController*)inBMViewController;
 
-- (IBAction)openHistoryItem:(id)sender;
-- (IBAction)openHistoryItemInNewWindow:(id)aSender;
-- (IBAction)openHistoryItemInNewTab:(id)aSender;
-
-- (IBAction)deleteHistoryItems:(id)sender;
-
-- (IBAction)groupByDate:(id)sender;
-- (IBAction)groupBySite:(id)sender;
-- (IBAction)setNoGrouping:(id)sender;
-
-- (IBAction)sortBy:(id)sender;
-
-- (IBAction)sortAscending:(id)sender;
-- (IBAction)sortDescending:(id)sender;
-
+// inItems is an NSArray of NSDictionary, one per possible item
+- (void)showDialogWithLocationsAndTitles:(NSArray*)inItems isFolder:(BOOL)inIsFolder onWindow:(NSWindow*)inWindow;
 
 @end

@@ -143,10 +143,8 @@ typedef enum EBookmarkOpenBehavior
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender;
 -(IBAction) exportBookmarks:(id)aSender;
--(IBAction) addBookmark:(id)aSender;
+
 -(IBAction) openMenuBookmark:(id)aSender;
--(IBAction) addFolder:(id)aSender;
--(IBAction) addSeparator:(id)aSender;
 
 // Window menu actions
 -(IBAction) newTab:(id)aSender;

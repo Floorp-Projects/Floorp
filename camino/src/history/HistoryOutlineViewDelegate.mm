@@ -85,6 +85,12 @@ enum
 
 - (int)tagForSortOrder:(BOOL)sortDescending;
 
+- (NSMutableDictionary *)expandedStateDictionary;
+- (BOOL)hasExpandedState:(HistoryItem*)inItem;
+- (void)setStateOfItem:(HistoryItem*)inItem toExpanded:(BOOL)inExpanded;
+- (void)restoreFolderExpandedStates;
+
+
 @end
 
 @implementation HistoryOutlineViewDelegate
@@ -92,6 +98,9 @@ enum
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  [mExpandedStates release];
+
   [super dealloc];
 }
 
@@ -133,6 +142,7 @@ enum
     
     mUpdatesDisabled = NO;
     [mHistoryOutlineView reloadData];
+    [self restoreFolderExpandedStates];
     [self updateSortMenuState];
   }
   else
@@ -219,6 +229,7 @@ enum
 
   mUpdatesDisabled = NO;
   [mHistoryOutlineView reloadData];
+  [self restoreFolderExpandedStates];
 }
 
 
@@ -338,6 +349,18 @@ enum
   return mOutlinerContextMenu;
 }
 
+- (void)outlineViewItemDidExpand:(NSNotification *)notification
+{
+  id item = [[notification userInfo] objectForKey:@"NSObject"];
+  [self setStateOfItem:item toExpanded:YES];
+}
+
+- (void)outlineViewItemDidCollapse:(NSNotification *)notification
+{
+  id item = [[notification userInfo] objectForKey:@"NSObject"];
+  [self setStateOfItem:item toExpanded:NO];
+}
+
 #pragma mark -
 
 - (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
@@ -369,7 +392,10 @@ enum
   if (rootChangedItem)
     [mHistoryOutlineView reloadItem:rootChangedItem reloadChildren:!itemOnlyChanged];
   else
+  {
     [mHistoryOutlineView reloadData];
+    [self restoreFolderExpandedStates];
+  }
 }
 
 - (NSArray*)selectedItems
@@ -515,6 +541,44 @@ enum
 - (int)tagForSortOrder:(BOOL)sortDescending
 {
   return (sortDescending) ? kSortDescendingItemTag : kSortAscendingItemTag;
+}
+
+#pragma mark -
+
+- (NSMutableDictionary *)expandedStateDictionary
+{
+  if (!mExpandedStates)
+    mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
+  return mExpandedStates;
+}
+
+- (BOOL)hasExpandedState:(HistoryItem*)inItem
+{
+  NSMutableDictionary *dict = [self expandedStateDictionary];
+  return [[dict objectForKey:[inItem identifier]] boolValue];
+}
+
+- (void)setStateOfItem:(HistoryItem*)inItem toExpanded:(BOOL)inExpanded
+{
+  NSMutableDictionary *dict = [self expandedStateDictionary];
+  [dict setObject:[NSNumber numberWithBool:inExpanded] forKey:[inItem identifier]];
+}
+
+- (void)restoreFolderExpandedStates
+{
+  int curRow = 0;
+  while (curRow < [mHistoryOutlineView numberOfRows])
+  {
+    id item = [mHistoryOutlineView itemAtRow:curRow];
+    if ([item isKindOfClass:[HistoryCategoryItem class]])
+    {
+      if ([self hasExpandedState:item])
+        [mHistoryOutlineView expandItem: item];
+      else
+        [mHistoryOutlineView collapseItem: item];
+    }
+    curRow ++;
+  }
 }
 
 @end

@@ -169,12 +169,20 @@ enum
 {
   [mTitle release];
   [mChildren release];
+  [mUUIDString release];
   [super dealloc];
 }
 
 - (NSString*)title
 {
   return mTitle;
+}
+
+- (NSString*)identifier
+{
+  if (!mUUIDString)
+    mUUIDString = [[NSString stringWithUUID] retain];
+  return mUUIDString;
 }
 
 - (NSDate*)startDate

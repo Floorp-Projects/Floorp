@@ -7,10 +7,9 @@
         }, 
         {
             ACTIONS = {
-                addBookmark = id; 
+                addBookmarkFolder = id; 
+                addBookmarkSeparator = id; 
                 addCollection = id; 
-                addFolder = id; 
-                addSeparator = id; 
                 deleteBookmarks = id; 
                 locateBookmark = id; 
                 openBookmark = id; 
@@ -46,10 +45,16 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
+        {CLASS = BookmarksEditingView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
         {
-            ACTIONS = {unimplemented = id; }; 
+            ACTIONS = {
+                addBookmark = id; 
+                addBookmarkFolder = id; 
+                addBookmarkSeparator = id; 
+                unimplemented = id; 
+            }; 
             CLASS = FirstResponder; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSObject; 

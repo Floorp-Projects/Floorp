@@ -55,6 +55,7 @@
 @class BrowserWindowController;
 @class BookmarkOutlineView;
 @class BookmarkFolder;
+@class BookmarkItem;
 
 @class SearchTextField;
 
@@ -110,6 +111,8 @@
   NSArray*                mSearchResultArray;
   int                     mOpenActionFlag;
   
+  BookmarkItem*           mItemToReveal;
+  
   HistoryDataSource*      mHistoryDataSource;
 }
 
@@ -122,9 +125,8 @@
 //
 -(IBAction) setAsDockMenuFolder:(id)aSender;
 -(IBAction) addCollection:(id)aSender;
--(IBAction) addBookmark:(id)aSender;
--(IBAction) addFolder:(id)aSender;
--(IBAction) addSeparator:(id)aSender;
+-(IBAction) addBookmarkSeparator:(id)aSender;
+-(IBAction) addBookmarkFolder:(id)aSender;
 -(IBAction) openBookmark: (id)aSender;
 -(IBAction) openBookmarkInNewTab:(id)aSender;
 -(IBAction) openBookmarkInNewWindow:(id)aSender;
@@ -138,20 +140,17 @@
 -(NSView*)bookmarksEditingView;
 
 -(int) containerCount;
--(void) selectContainer:(int)inRowIndex;
 -(void) selectLastContainer;
--(NSMutableDictionary *)expandedStatusDictionary;
--(void) restoreFolderExpandedStates;
--(BOOL) isExpanded:(id)anItem;
 -(BOOL) haveSelectedRow;
 -(int)numberOfSelectedRows;
--(void) setItem:(BookmarkFolder *)anItem isExpanded:(BOOL)aBool;
+
 -(void) setActiveCollection:(BookmarkFolder *)aFolder;
 -(BookmarkFolder *)activeCollection;
 
--(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
--(void)addItem:(id)aSender withParent:(BookmarkFolder *)parent isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
--(void)endAddBookmark: (int)aCode;
+-(BookmarkFolder *)selectedItemFolderAndIndex:(int*)outIndex;
+-(void)revealItem:(BookmarkItem*)item selecting:(BOOL)inSelectItem;
+
+- (void)setItemToRevealOnLoad:(BookmarkItem*)inItem;
 
 -(void)deleteCollection:(id)aSender;
 -(void)focus;

@@ -94,12 +94,13 @@
         }, 
         {
             ACTIONS = {
+                addBookmark = id; 
+                addBookmarkFolder = id; 
+                addBookmarkForLink = id; 
+                addBookmarkSeparator = id; 
                 addToAddressBook = id; 
                 back = id; 
                 biggerTextSize = id; 
-                bookmarkLink = id; 
-                bookmarkPage = id; 
-                cancelAddBookmarkSheet = id; 
                 cancelLocationSheet = id; 
                 cancelSearchSheet = id; 
                 closeCurrentTab = id; 
@@ -110,10 +111,8 @@
                 copyImage = id; 
                 copyImageLocation = id; 
                 copyLinkLocation = id; 
-                endAddBookmarkSheet = id; 
                 endLocationSheet = id; 
                 endSearchSheet = id; 
-                ensureBrowserVisible = id; 
                 forward = id; 
                 frameToNewTab = id; 
                 frameToNewWindow = id; 
@@ -143,8 +142,6 @@
                 sendURLFromLink = id; 
                 smallerTextSize = id; 
                 stop = id; 
-                toggleBookmarkManager = id; 
-                toggleSidebar = id; 
                 unblockAllSites = id; 
                 unblockSite = id; 
                 viewOnlyThisImage = id; 
@@ -154,10 +151,6 @@
             CLASS = BrowserWindowController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mAddBookmarkCheckbox = NSButton; 
-                mAddBookmarkFolderField = NSPopUpButton; 
-                mAddBookmarkSheetWindow = NSWindow; 
-                mAddBookmarkTitleField = NSTextField; 
                 mAddToAddressBook = NSMenuItem; 
                 mAddToAddressBook2 = NSMenuItem; 
                 mBackItem = NSMenuItem; 
@@ -198,7 +191,12 @@
         }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
-        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {addBookmark = id; addBookmarkFolder = id; addBookmarkSeparator = id; }; 
+            CLASS = FirstResponder; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
         {
             ACTIONS = {deleteHistoryItems = id; openHistoryItem = id; }; 
             CLASS = HistoryDataSource; 

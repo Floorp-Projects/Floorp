@@ -975,6 +975,48 @@
 			settings = {
 			};
 		};
+		0F4752D207DC0F4D002AEE9F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = AddBookmarkDialogController.h;
+			path = src/bookmarks/AddBookmarkDialogController.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F4752D307DC0F4D002AEE9F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = AddBookmarkDialogController.mm;
+			path = src/bookmarks/AddBookmarkDialogController.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F4752D407DC0F4D002AEE9F = {
+			fileRef = 0F4752D207DC0F4D002AEE9F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F4752D507DC0F4D002AEE9F = {
+			fileRef = 0F4752D307DC0F4D002AEE9F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F4752D607DC0F4D002AEE9F = {
+			fileRef = 0F4752D207DC0F4D002AEE9F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F4752D707DC0F4D002AEE9F = {
+			fileRef = 0F4752D307DC0F4D002AEE9F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F66E4A807D6D8D500444E2A = {
 			fileRef = 0FCCE56707D6D7DA006DD3D1;
 			isa = PBXBuildFile;
@@ -1168,6 +1210,36 @@
 			path = ../xpcom/obsolete/component/libxpcom_compat_c.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
+		};
+		0FACBFEC07DC020D00DEE23A = {
+			children = (
+				0FACBFED07DC020D00DEE23A,
+			);
+			isa = PBXVariantGroup;
+			name = AddBookmark.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FACBFED07DC020D00DEE23A = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/AddBookmark.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FACBFEE07DC020D00DEE23A = {
+			fileRef = 0FACBFEC07DC020D00DEE23A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FACBFEF07DC020D00DEE23A = {
+			fileRef = 0FACBFEC07DC020D00DEE23A;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		0FBC0EC90798F92600E8E0E2 = {
 			children = (
@@ -2386,6 +2458,7 @@
 				0FBC0ED60798F96100E8E0E2,
 				0FBC0EE30798FA2700E8E0E2,
 				0F13A30F07D7F3930034B176,
+				0F4752D407DC0F4D002AEE9F,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2987,6 +3060,7 @@
 				0FFE0A82079B147F00966027,
 				0FFE0A83079B147F00966027,
 				0FCCE56807D6D7DA006DD3D1,
+				0FACBFEE07DC020D00DEE23A,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3510,6 +3584,7 @@
 				0FBC0EDD0798F9B400E8E0E2,
 				0FBC0EE00798FA1900E8E0E2,
 				0F13A31007D7F3930034B176,
+				0F4752D507DC0F4D002AEE9F,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6260,6 +6335,7 @@
 				0FBC0ED80798F96100E8E0E2,
 				0FBC0EE40798FA2700E8E0E2,
 				0F13A31107D7F3930034B176,
+				0F4752D607DC0F4D002AEE9F,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6860,6 +6936,7 @@
 				0FFE0A85079B147F00966027,
 				0FFE0A86079B147F00966027,
 				0FCCE56907D6D7DA006DD3D1,
+				0FACBFEF07DC020D00DEE23A,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7384,6 +7461,7 @@
 				0FBC0EDE0798F9B400E8E0E2,
 				0FBC0EE10798FA1900E8E0E2,
 				0F13A31207D7F3930034B176,
+				0F4752D707DC0F4D002AEE9F,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9660,9 +9738,9 @@
 		3FB2BA860545EA80002B9691 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.objc;
-			name = BookmarkItem.m;
-			path = src/bookmarks/BookmarkItem.m;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = BookmarkItem.mm;
+			path = src/bookmarks/BookmarkItem.mm;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -13979,6 +14057,7 @@
 				F507A84103116E1D01026D5D,
 				F507A84403116E5501026D5D,
 				0FBC0EC90798F92600E8E0E2,
+				0FACBFEC07DC020D00DEE23A,
 				F507A84A03116E6E01026D5D,
 				F583E3BB03B820AC01A80166,
 				F507A84D03116E7401026D5D,
@@ -14101,14 +14180,10 @@
 				F53E012C02AEE93601A967F3,
 				3FB2BA7D0545EA80002B9691,
 				3FB2BA7E0545EA80002B9691,
-				3FB2BA7F0545EA80002B9691,
-				3FB2BA800545EA80002B9691,
-				3FB2BA810545EA80002B9691,
-				3FB2BA820545EA80002B9691,
-				3FB2BA830545EA80002B9691,
-				3FB2BA840545EA80002B9691,
 				3FB2BA850545EA80002B9691,
 				3FB2BA860545EA80002B9691,
+				3FB2BA810545EA80002B9691,
+				3FB2BA820545EA80002B9691,
 				3FB2BA870545EA80002B9691,
 				3FB2BA880545EA80002B9691,
 				3FB2BA890545EA80002B9691,
@@ -14118,8 +14193,14 @@
 				3FB2BA8D0545EA80002B9691,
 				3FB2BA8E0545EA80002B9691,
 				3FB2BA8F0545EA80002B9691,
+				3FB2BA7F0545EA80002B9691,
+				3FB2BA800545EA80002B9691,
 				3FB2BA900545EA80002B9691,
 				3FB2BA910545EA80002B9691,
+				0F4752D207DC0F4D002AEE9F,
+				0F4752D307DC0F4D002AEE9F,
+				3FB2BA830545EA80002B9691,
+				3FB2BA840545EA80002B9691,
 			);
 			isa = PBXGroup;
 			name = Bookmarks;

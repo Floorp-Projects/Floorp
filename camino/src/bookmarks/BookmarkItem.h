@@ -55,20 +55,20 @@
 // Setters/Getters
 -(id) parent;
 -(NSString *) title;
--(NSString *) description;
+-(NSString *) itemDescription;    // don't use "description"
 -(NSString *) keyword;
 -(NSImage *) icon;
 -(NSString *) UUID;
 
--(void)	setParent:(id)aParent;
+-(void)	setParent:(id)aParent;    // note that the parent of root items is the BookmarksManager, for some reason
 -(void) setTitle:(NSString *)aString;
--(void) setDescription:(NSString *)aString;
+-(void) setItemDescription:(NSString *)aString;
 -(void) setKeyword:(NSString *)aKeyword;
 -(void) setIcon:(NSImage *)aIcon;
--(void) setUUID:(NSString *)aUUID;
 
 // Status checks
--(BOOL) isChildOfItem:(BookmarkItem *)anItem;
+- (BOOL)isChildOfItem:(BookmarkItem *)anItem;
+- (BOOL)hasAncestor:(BookmarkItem*)inItem;
 
 // Searching
 

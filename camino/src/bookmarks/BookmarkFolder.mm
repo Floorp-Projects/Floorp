@@ -413,7 +413,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [theBookmark setTitle:aTitle];
     [theBookmark setKeyword:aKeyword];
     [theBookmark setUrl:aURL];
-    [theBookmark setDescription:aDescription];
+    [theBookmark setItemDescription:aDescription];
     [theBookmark setLastVisit:aDate];
     [theBookmark setStatus:aStatus];
     [theBookmark setIsSeparator:aSeparator];
@@ -651,28 +651,30 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 -(void)buildFlatFolderList:(NSMenu *)menu depth:(unsigned)depth
 {
   NSEnumerator *children = [mChildArray objectEnumerator];
-  NSMutableString *paddedTitle;
   id aKid;
   while ((aKid = [children nextObject])) {
     if ([aKid isKindOfClass:[BookmarkFolder class]]) {
       if (![aKid isSmartFolder]) {
-        paddedTitle = [[aKid title] mutableCopyWithZone:nil];
-        if ([paddedTitle length] > 80)
-          [paddedTitle stringByTruncatingTo:80 at:kTruncateAtMiddle];
+        NSString* paddedTitle = [[aKid title] stringByTruncatingTo:80 at:kTruncateAtMiddle];
         NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle: paddedTitle action: NULL keyEquivalent: @""];
-        [paddedTitle release];
         [menuItem setRepresentedObject:aKid];
+
         NSImage *curIcon = [aKid icon];
         NSSize iconSize = [curIcon size];
         NSImage *shiftedIcon = [[NSImage alloc] initWithSize:NSMakeSize(depth*(iconSize.width), iconSize.height)];
         [shiftedIcon lockFocus];
-        [curIcon drawInRect:NSMakeRect(([shiftedIcon size].width-iconSize.width),0,iconSize.width,iconSize.height) fromRect:NSMakeRect(0,0,iconSize.width,iconSize.height) operation:NSCompositeCopy fraction:1];
+        [curIcon drawInRect:NSMakeRect(([shiftedIcon size].width - iconSize.width), 0, iconSize.width, iconSize.height)
+                   fromRect:NSMakeRect(0, 0, iconSize.width, iconSize.height)
+                  operation:NSCompositeCopy
+                   fraction:1];
         [shiftedIcon unlockFocus];
         [menuItem setImage:shiftedIcon];
         [shiftedIcon release];
+
         [menu addItem:menuItem];
         [menuItem release];
-        [aKid buildFlatFolderList:menu depth:(depth+1)];
+
+        [aKid buildFlatFolderList:menu depth:(depth + 1)];
       }
     }
   }
@@ -763,6 +765,28 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return foundSet;
 }
 
+- (BOOL)containsChildItem:(BookmarkItem*)inItem
+{
+  if (inItem == self)
+    return YES;
+  
+  unsigned int numChildren = [mChildArray count];
+  for (unsigned int i = 0; i < numChildren; i ++)
+  {
+    BookmarkItem* curChild = [mChildArray objectAtIndex:i];
+    if (curChild == inItem)
+      return YES;
+    
+    if ([curChild isKindOfClass:[BookmarkFolder class]])
+    {
+      if ([curChild containsChildItem:inItem])
+        return YES;
+    }
+  }
+  
+  return NO;
+}
+
 //
 // Notification stuff
 //
@@ -806,7 +830,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   NSEnumerator *enumerator;
   BOOL noErr = YES;
   [self setTitle:[aDict objectForKey:BMTitleKey]];
-  [self setDescription:[aDict objectForKey:BMFolderDescKey]];
+  [self setItemDescription:[aDict objectForKey:BMFolderDescKey]];
   [self setKeyword:[aDict objectForKey:BMFolderKeywordKey]];
   unsigned int flag = [[aDict objectForKey:BMFolderTypeKey] unsignedIntValue];
   // on the off chance we've imported somebody else's bookmarks after startup,
@@ -866,7 +890,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
       if (elementInfoPtr) {
         NSDictionary* attribDict = (NSDictionary*)elementInfoPtr->attributes;
         [self setTitle:[[attribDict objectForKey:CaminoNameKey] stringByRemovingAmpEscapes]];
-        [self setDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
+        [self setItemDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
         if ([[attribDict objectForKey:CaminoTypeKey] isEqualToString:CaminoToolbarKey])
           [self setIsToolbar:YES];
         if ([[attribDict objectForKey:CaminoGroupKey] isEqualToString:CaminoTrueKey])

@@ -60,6 +60,18 @@
   return sEllipsisString;
 }
 
++ (NSString*)stringWithUUID
+{
+  NSString* uuidString = nil;
+  CFUUIDRef newUUID = CFUUIDCreate(kCFAllocatorDefault);
+  if (newUUID)
+  {
+    uuidString = (NSString *)CFUUIDCreateString(kCFAllocatorDefault, newUUID);
+    CFRelease(newUUID);
+  }
+  return [uuidString autorelease];
+}
+
 + (id)escapedURLString:(NSString *)unescapedString
 {
   NSString *escapedString = (NSString *) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)unescapedString, NULL, NULL, kCFStringEncodingUTF8);
