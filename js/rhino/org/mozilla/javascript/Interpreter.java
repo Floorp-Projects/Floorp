@@ -807,7 +807,7 @@ public class Interpreter extends LabelTable {
                         exception object.
                     */
                     while (child != null) {
-                        if (lastChild == catchTarget) {
+                        if (lastChild == catchTarget) {                            
                             itsStackDepth = 1;
                             if (itsStackDepth > itsData.itsMaxStack)
                                 itsData.itsMaxStack = itsStackDepth;
@@ -816,8 +816,8 @@ public class Interpreter extends LabelTable {
                         lastChild = child;
                         child = child.getNextSibling();
                     }
-                    itsStackDepth = 0;
                     iCodeTop = addByte((byte) TokenStream.ENDTRY, iCodeTop);
+                    itsStackDepth = 0;
                     if (finallyTarget != null) {
                         // normal flow goes around the finally handler stublet
                         int skippy = acquireLabel();
@@ -1096,7 +1096,7 @@ public class Interpreter extends LabelTable {
                 
                 for (int pc = 0; pc < iCodeLength; ) {
                     out.print("[" + pc + "] ");
-                    switch (iCode[pc]) {
+                    switch ((int)(iCode[pc] & 0xff)) {
                         case TokenStream.SCOPE :
                         case TokenStream.GETPROTO :
                         case TokenStream.GETPARENT :
@@ -1154,6 +1154,7 @@ public class Interpreter extends LabelTable {
                         case TokenStream.FALSE :
                         case TokenStream.TRUE :
                         case TokenStream.UNDEFINED :
+                        case TokenStream.SOURCEFILE : 
                             out.println(TokenStream.tokenToName(iCode[pc] & 0xff));
                             break;
                         case TokenStream.GOSUB :
@@ -1238,6 +1239,13 @@ public class Interpreter extends LabelTable {
                                 getString(theData.itsStringTable, iCode, pc + 1) +
                                 "\"");
                             pc += 2;
+                            break;
+                        case TokenStream.LINE : {
+                                int line = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
+                                out.println(
+                                    TokenStream.tokenToName(iCode[pc] & 0xff) + " : " + line);
+                                pc += 2;
+                            }
                             break;
                         default :
                             out.close();
@@ -1810,10 +1818,10 @@ public class Interpreter extends LabelTable {
                 stackTop = 0;
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
-                    pc = catchStack[--tryStackTop];
-                    scope = scopeStack[tryStackTop];
+                    pc = catchStack[tryStackTop - 1];
+                    scope = scopeStack[tryStackTop - 1];
                     if (pc == 0) {
-                        pc = finallyStack[tryStackTop];
+                        pc = finallyStack[tryStackTop - 1];
                         if (pc == 0) 
                             throw ee;
                         stack[0] = ee.getErrorObject();
@@ -1831,10 +1839,10 @@ public class Interpreter extends LabelTable {
                 stackTop = 0;
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
-                    pc = catchStack[--tryStackTop];
-                    scope = scopeStack[tryStackTop];
+                    pc = catchStack[tryStackTop - 1];
+                    scope = scopeStack[tryStackTop - 1];
                     if (pc == 0) {
-                        pc = finallyStack[tryStackTop];
+                        pc = finallyStack[tryStackTop - 1];
                         if (pc == 0) 
                             throw jsx;
                         stack[0] = jsx;
@@ -1859,8 +1867,8 @@ public class Interpreter extends LabelTable {
                 if (tryStackTop > 0) {
                     stackTop = 0;
                     stack[0] = jx;
-                    pc = finallyStack[--tryStackTop];
-                    scope = scopeStack[tryStackTop];
+                    pc = finallyStack[tryStackTop - 1];
+                    scope = scopeStack[tryStackTop - 1];
                     if (pc == 0) throw jx;
                 }
                 else
