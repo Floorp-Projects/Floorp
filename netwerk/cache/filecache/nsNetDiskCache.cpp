@@ -682,8 +682,8 @@ nsNetDiskCache::SetDiskCacheFolder(nsIFile * aDiskCacheFolder)
     return InitCacheFolder() ;
   } 
   else {
-		PRBool result;
-    if( NS_SUCCEEDED( mDiskCacheFolder->Equals( aDiskCacheFolder, &result ) ) && result ) {
+	PRBool isEqual;
+    if( NS_SUCCEEDED( mDiskCacheFolder->Equals( aDiskCacheFolder, &isEqual ) ) && !isEqual ) {
       mDiskCacheFolder = aDiskCacheFolder ;
 
       // do we need to blow away old cache before building a new one?
