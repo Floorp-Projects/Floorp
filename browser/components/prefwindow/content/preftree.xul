@@ -23,9 +23,9 @@
      Ben Goodger <ben@netscape.com>
   -->
 
-<?xul-overlay href="chrome://communicator/content/pref/platformPrefOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/pref/platformPrefOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/preftree.dtd" >
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/preftree.dtd" >
 
 <overlay id="prefTreeOverlay"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -44,22 +44,22 @@
   <treechildren id="panelChildren">
     <treeitem container="true" id="appearance">
       <treerow>   
-        <treecell url="chrome://communicator/content/pref/pref-appearance.xul" label="&appear.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-appearance.xul" label="&appear.label;"/> 
       </treerow>
       <treechildren id="appearanceChildren">
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-colors.xul" label="&colors.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-colors.xul" label="&colors.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="themes-panel">
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-themes.xul" label="&themes.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -67,48 +67,48 @@
     <!-- XXX remove this when overlays.rdf works for navigator -->
     <treeitem container="true" id="navigator">
       <treerow>
-        <treecell url="chrome://communicator/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
       </treerow>
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-history.xul" label="&history.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-history.xul" label="&history.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-languages.xul" label="&languages.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-languages.xul" label="&languages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-applications.xul" label="&applications.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-applications.xul" label="&applications.label;"/> 
           </treerow>  
         </treeitem> 
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-smart_browsing.xul" label="&smartBrowse.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-search.xul" label="&search.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-search.xul" label="&search.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabWindows.label;"/>
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-download.xul" label="&download.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-download.xul" label="&download.label;"/>
           </treerow>
         </treeitem>
         <!-- Taking out Policies panel b/c bug 44121
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-policies.xul" label="&policies.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-policies.xul" label="&policies.label;"/>
           </treerow>
         </treeitem> -->
       </treechildren>
@@ -117,44 +117,44 @@
     <!-- Security and Privacy items -->
     <treeitem container="true" id="securityItem">
       <treerow>
-        <treecell url="chrome://communicator/content/pref/pref-security.xul" label="&security.label;" />
+        <treecell url="chrome://browser/content/pref/pref-security.xul" label="&security.label;" />
       </treerow>
       <treechildren id="securityChildren"/>
     </treeitem>
 
     <treeitem container="true" id="advancedItem">
       <treerow>
-        <treecell url="chrome://communicator/content/pref/pref-advanced.xul" label="&advance.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/> 
       </treerow>
       <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-cache.xul" label="&cache.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-cache.xul" label="&cache.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-proxies.xul" label="&proxies.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-http.xul" label="&httpnetworking.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-http.xul" label="&httpnetworking.label;"/> 
           </treerow>
         </treeitem>        
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
           </treerow>
         </treeitem>
         <treeitem id="mousewheelItem">
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-mousewheel.xul" label="&mousewheel.label;"/>
           </treerow>  
         </treeitem> 
       </treechildren>
@@ -162,17 +162,17 @@
 
     <treeitem container="true" id="debugItem">
       <treerow>       
-        <treecell url="chrome://communicator/content/pref/pref-debug.xul" label="&debug.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-debug.xul" label="&debug.label;"/> 
       </treerow>
       <treechildren id="debugChildren">
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-debug1.xul" label="&debug1.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
+            <treecell url="chrome://browser/content/pref/pref-debug2.xul" label="&debug2.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -180,7 +180,7 @@
 
     <treeitem id="offlineItem">
       <treerow>
-        <treecell url="chrome://communicator/content/pref/pref-offline.xul" label="&offline.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-offline.xul" label="&offline.label;"/> 
       </treerow>
     </treeitem>
   </treechildren>

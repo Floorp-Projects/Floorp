@@ -170,7 +170,7 @@ function goPreferences(containerID, paneURL, itemID)
   else {
     var resizability = resizable ? "yes" : "no";
     var features = "chrome,titlebar,resizable=" + resizability;
-    openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
+    openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
                features, paneURL, containerID, itemID);
   }
 }
