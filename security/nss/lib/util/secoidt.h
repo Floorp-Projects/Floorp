@@ -36,7 +36,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.1 2000/03/31 19:40:33 relyea%netscape.com Exp $
+ * $Id: secoidt.h,v 1.2 2000/05/22 15:28:22 chrisk%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -275,6 +275,11 @@ typedef enum {
     /* New PSM certificate management OIDs */
     SEC_OID_CERT_RENEWAL_LOCATOR,
     SEC_OID_NS_CERT_EXT_SCOPE_OF_USE,
+    
+    /* CMS (RFC2630) OIDs */
+    SEC_OID_CMS_EPHEMERAL_STATIC_DIFFIE_HELLMAN,
+    SEC_OID_CMS_3DES_KEY_WRAP,
+    SEC_OID_CMS_RC2_KEY_WRAP,
 
     SEC_OID_TOTAL
 } SECOidTag;

@@ -126,6 +126,8 @@
 #define PKCS12_V2_PBE_IDS	PKCS12, 0x01
 #define PKCS9_CERT_TYPES	PKCS9, 0x16
 #define PKCS9_CRL_TYPES		PKCS9, 0x17
+#define PKCS9_SMIME_IDS		PKCS9, 0x10
+#define PKCS9_SMIME_ALGS	PKCS9_SMIME_IDS, 3
 #define PKCS12_VERSION1		PKCS12, 0x0a
 #define PKCS12_V1_BAG_IDS	PKCS12_VERSION1, 1
 
@@ -383,6 +385,11 @@ static unsigned char netscapeNickname[] = { NETSCAPE_NAME_COMPONENTS, 0x01};
 /* OIDs needed for cert server */
 static unsigned char netscapeRecoveryRequest[] = 
                                         { NETSCAPE_CERT_SERVER_CRMF, 0x01 };
+
+/* RFC2630 (CMS) OIDs */
+static unsigned char cmsESDH[] = { PKCS9_SMIME_ALGS, 5 };
+static unsigned char cms3DESwrap[] = { PKCS9_SMIME_ALGS, 6 };
+static unsigned char cmsRC2wrap[] = { PKCS9_SMIME_ALGS, 7 };
 
 /*
  * NOTE: the order of these entries must mach the SECOidTag enum in secoidt.h!
@@ -1181,6 +1188,23 @@ static SECOidData oids[] = {
         SEC_OID_NS_CERT_EXT_SCOPE_OF_USE,
         "Certificate Scope-of-Use Extension", CKM_INVALID_MECHANISM,
         SUPPORTED_CERT_EXTENSION },
+
+    /* CMS stuff */
+    { { siDEROID, cmsESDH,
+        sizeof(cmsESDH) },
+        SEC_OID_CMS_EPHEMERAL_STATIC_DIFFIE_HELLMAN,
+        "Ephemeral-Static Diffie-Hellman", CKM_INVALID_MECHANISM /* XXX */,
+        INVALID_CERT_EXTENSION },
+    { { siDEROID, cms3DESwrap,
+        sizeof(cms3DESwrap) },
+        SEC_OID_CMS_3DES_KEY_WRAP,
+        "CMS 3DES Key Wrap", CKM_INVALID_MECHANISM /* XXX */,
+        INVALID_CERT_EXTENSION },
+    { { siDEROID, cmsRC2wrap,
+        sizeof(cmsRC2wrap) },
+        SEC_OID_CMS_RC2_KEY_WRAP,
+        "CMS RC2 Key Wrap", CKM_INVALID_MECHANISM /* XXX */,
+        INVALID_CERT_EXTENSION },
 };
 
 /*
