@@ -104,4 +104,12 @@
     </content>
   </binding>
   
+  <binding id="double-box">
+    <content>
+      <xul:box class="db-internal-box" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+  
 </bindings>

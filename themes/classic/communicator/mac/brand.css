@@ -2,34 +2,34 @@
 #navigator-throbber
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
-    border                : 1px solid #DDDDDD;
+    border                : 1px solid #000000;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    margin                : 0px;
-    cursor                : pointer;
+    margin                : 0px 2px 0px 10px;
     min-width             : 0px;
+    cursor                : pointer;
   }  
-  
-#navigator-throbber:hover
-  {
-    border                : 1px solid black;
-  }
   
 #navigator-throbber > .button-internal-box
   {
-    border-left           : 1px solid white;
-    border-top            : 1px solid white;
+    border-left           : 1px solid #FFFFFF;
+    border-top            : 1px solid #FFFFFF;
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
     padding               : 1px;
+  }
+  
+#navigator-throbber > .button-internal-box > .button-text-container
+  {
+    display               : none;
   }  
 
 #navigator-throbber:hover:active > .button-internal-box
   {
-    border-left           : 1px solid #9D9D9D;
-    border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid white;
-    border-bottom         : 1px solid white;
-    padding               : 2px 0xp 0xp 2px;
+    border-left           : 1px solid #9D9D9D !important;
+    border-top            : 1px solid #9D9D9D !important;
+    border-right          : 1px solid #FFFFFF !important;
+    border-bottom         : 1px solid #FFFFFF !important;
+    padding               : 2px 0xp 0xp 2px !important;
   }  
   
 #navigator-throbber[busy="true"]
