@@ -28,7 +28,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=                     \
 	nsMessenger.cpp			 \
-	nsIMessenger.cpp		 \
 	nsMessengerNameSet.cpp	 \
 	nsMsgKeyArray.cpp        \
 	nsUrlListenerManager.cpp \
