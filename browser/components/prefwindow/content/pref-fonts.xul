@@ -29,11 +29,12 @@
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-colors.js"/>
   <script type="application/x-javascript" 
           src="chrome://communicator/content/pref/pref-fonts.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["selectLangs"];
+    var _elementIDs = ["selectLangs", "foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
  
@@ -286,4 +287,59 @@
     </menulist>
 
   </hbox>
+  <hbox>
+    <groupbox flex="1" id="pageColours">
+      <caption label="&color;"/>
+      <hbox align="center">
+        <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
+        <spacer flex="1"/>
+        <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      <hbox align="center" style="margin-top: 5px">
+        <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
+        <spacer flex="1"/>
+        <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox align="center">
+        <checkbox id="browserUseSystemColors" label="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
+                  prefstring="browser.display.use_system_colors"/>
+      </hbox>
+    </groupbox>
+      
+    <groupbox flex="1">
+      <caption label="&links;"/>
+      <hbox align="center">
+        <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
+        <spacer flex="1"/>
+        <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      <hbox align="center" style="margin-top: 5px">
+        <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
+        <spacer flex="1"/>
+        <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <data id="visitedLinks" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox align="center">
+        <checkbox id="browserUnderlineAnchors" label="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
+                  prefstring="browser.underline_anchors"/>
+      </hbox>
+    </groupbox>
+  </hbox>
+  
+  <groupbox>
+    <caption label="&someProvColors;"/>
+  
+    <radiogroup id="browserUseDocumentColors"
+                preftype="bool" prefstring="browser.display.use_document_colors">
+      <radio value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
+      <radio value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
+    </radiogroup>
+    
+  </groupbox>
+
 </page>
