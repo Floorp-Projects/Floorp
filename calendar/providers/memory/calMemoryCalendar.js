@@ -155,8 +155,7 @@ calMemoryCalendar.prototype = {
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
         if (aItem.id == null ||
-            this.mItems[aItem.id] == null ||
-            aItem.parent != this)
+            this.mItems[aItem.id] == null)
         {
             // this is definitely an error
             if (aListener)
@@ -197,7 +196,7 @@ calMemoryCalendar.prototype = {
 
     // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
-        if (aItem.id == null || this.mItems[aItem.id] == null || aItem.parent != this) {
+        if (aItem.id == null || this.mItems[aItem.id] == null) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
@@ -288,6 +287,7 @@ calMemoryCalendar.prototype = {
         const calIEvent = Components.interfaces.calIEvent;
         const calITodo = Components.interfaces.calITodo;
         const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
+        const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 
         var itemsFound = Array();
         var startTime = 0;
@@ -336,37 +336,43 @@ calMemoryCalendar.prototype = {
 
             var itemStartTime = 0;
             var itemEndTime = 0;
-            
+
             var tmpitem = item;
             if (item instanceof calIEvent) {
                 tmpitem = item.QueryInterface(calIEvent);
                 itemStartTime = item.startDate.nativeTime || 0;
                 itemEndTime = item.endDate.nativeTime || END_OF_TIME;
-                
-                if (itemReturnOccurrences)
-                    itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
             } else if (item instanceof calITodo) {
                 // if it's a todo, also filter based on completeness
                 if (item.percentComplete == 100 && !itemCompletedFilter)
                     continue;
                 else if (item.percentComplete < 100 && !itemNotCompletedFilter)
                     continue;
-                    
+
                 itemEndTime = itemStartTime = item.entryTime.nativeTime || 0;
-                
-                if (itemReturnOccurrences)
-                    itemtoadd = makeOccurrence(item, item.entryTime, item.entryTime);
             } else {
                 // XXX unknown item type, wth do we do?
                 continue;
             }
 
-            // determine whether any endpoint falls within the range
-            if (itemStartTime <= endTime && itemEndTime >= startTime) {
-                if (itemtoadd == null)
-                    itemtoadd = item;
-                
-                itemsFound.push(itemtoadd);
+            if (itemStartTime <= endTime) {
+                // figure out if there are recurrences here we care about
+                if (itemReturnOccurrences && item.recurrenceInfo &&
+                    item.recurrenceInfo.recurType != calIRecurrenceInfo.CAL_RECUR_INVALID)
+                {
+                    // there might be some recurrences here that we need to handle
+                    var recs = item.recurrenceInfo.getOccurrencesBetween (item, startTime, endTime, {});
+                    for (var i = 0; i < recs.length; i++) {
+                        itemsFound.push(recs[i]);
+                    }
+                } else if (itemEndTime >= startTime) {
+                    // no occurrences
+                    if (itemReturnOccurrences)
+                        itemtoadd = makeOccurrence(item, itemStartDate, itemEndDate);
+                    else
+                        itemtoadd = item;
+                    itemsFound.push(itemtoadd);
+                }
             }
 
             if (aCount && itemsFound.length >= aCount)
