@@ -232,6 +232,13 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
             }
         }
     }
+    else if (mShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+#ifdef DEBUG_dp
+        NS_WARN_IF_FALSE(PR_FALSE, "Creating new service on shutdown. Denied.");
+#endif /* DEBUG_dp */
+        rv = NS_ERROR_UNEXPECTED;
+    }
     else {
         nsISupports* service;
         // We need to not be holding the service manager's monitor while calling 
