@@ -487,7 +487,7 @@ typedef jsval
 (* JS_DLL_CALLBACK JSGetRequiredSlotOp)(JSContext *cx, JSObject *obj,
                                         uint32 slot);
 
-typedef JSBool
+typedef void
 (* JS_DLL_CALLBACK JSSetRequiredSlotOp)(JSContext *cx, JSObject *obj,
                                         uint32 slot, jsval v);
 
