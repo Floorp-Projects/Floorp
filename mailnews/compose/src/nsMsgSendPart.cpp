@@ -78,9 +78,9 @@ nsMsgSendPart::~nsMsgSendPart()
 		MimeEncoderDestroy(m_encoder_data, FALSE);
 		m_encoder_data = NULL;
 	}
-	for (int i=0 ; i<m_numchildren ; i++) {
+	for (int i=0 ; i < m_numchildren; i++)
 		delete m_children[i];
-	}
+
 	delete [] m_children;
     delete [] m_buffer;
     delete [] m_other;
@@ -94,7 +94,8 @@ int nsMsgSendPart::CopyString(char** dest, const char* src)
     NS_ASSERTION(src, "src null");
     if (!src)
 		src = "";
-    delete [] *dest;
+	if (*dest)
+		delete [] *dest;
     *dest = new char [PL_strlen(src) + 1];
     if (!*dest)
 		return MK_OUT_OF_MEMORY;
