@@ -196,12 +196,14 @@ nsProxyEventClass::~nsProxyEventClass()
     if(mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
 
+    if (nsProxyObjectManager::IsManagerShutdown())
+        return;
+
 #ifndef LIFETIME_CACHE
     nsIDKey key(mIID);
-    
-    nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+                
+    nsCOMPtr<nsProxyObjectManager> manager = getter_AddRefs(nsProxyObjectManager::GetInstance());
     if (manager == nsnull) return;
-	nsAutoLock lock(manager->GetMapLock());
 	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
     if (iidToClassMap != nsnull)

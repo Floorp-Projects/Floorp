@@ -168,15 +168,15 @@ public:
     virtual ~nsProxyObjectManager();
     
     static nsProxyObjectManager *GetInstance();
+    static PRBool IsManagerShutdown();
+
     
-    PRLock*      GetMapLock() const { return mMapLock; }
     nsHashtable* GetRealObjectToProxyObjectMap() const { return mProxyObjectMap;}   
     nsHashtable* GetIIDToProxyClassMap() const { return mProxyClassMap; }   
         
     
 private:
     static nsProxyObjectManager* mInstance;
-    PRLock* mMapLock;
     nsHashtable *mProxyObjectMap;
     nsHashtable *mProxyClassMap;
 };

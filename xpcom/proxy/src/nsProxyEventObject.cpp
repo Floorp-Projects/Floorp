@@ -146,7 +146,6 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     /* get our hash table */    
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     if (manager == nsnull) return nsnull;
-    nsAutoLock lock(manager->GetMapLock());
     nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
     if (realToProxyMap == nsnull) return nsnull;
 
@@ -321,15 +320,17 @@ DebugDump("Delete", 0);
     }
     else
     {
-        nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-        nsAutoLock lock(manager->GetMapLock());
-        nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-
-        if (realToProxyMap != nsnull && mHashKey.HashValue() != 0)
+        if (! nsProxyObjectManager::IsManagerShutdown())
         {
-            realToProxyMap->Remove(&mHashKey);
+            nsCOMPtr<nsProxyObjectManager> manager = nsProxyObjectManager::GetInstance();
+            nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
+
+            if (realToProxyMap != nsnull && mHashKey.HashValue() != 0)
+            {
+                realToProxyMap->Remove(&mHashKey);
+            }
         }
-    }   
+    }
     // I am worried about ordering.
     // do not remove assignments.
     mProxyObject = 0;
