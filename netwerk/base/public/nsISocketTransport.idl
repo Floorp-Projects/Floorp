@@ -48,7 +48,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(ee783990-c87c-4ace-87ca-54e5fcc477b0)]
+[scriptable, uuid(66418cc8-5f5d-4f52-a7f9-db8fb3b2cfe6)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -92,6 +92,18 @@ interface nsISocketTransport : nsITransport
      * Test if this socket transport is (still) connected.
      */
     boolean isAlive();
+
+    /**
+     * Socket timeouts in seconds.
+     */
+    unsigned long getTimeout(in unsigned long aType);
+    void          setTimeout(in unsigned long aType, in unsigned long aValue);
+
+    /**
+     * Values for the aType parameter passed to get/setTimeout.
+     */
+    const unsigned long TIMEOUT_CONNECT    = 0;
+    const unsigned long TIMEOUT_READ_WRITE = 1;
 
     /**
      * nsITransportEventSink status codes.
