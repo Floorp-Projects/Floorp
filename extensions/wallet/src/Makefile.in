@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  appshell \
 		  intl \
+		  unicharutil \
 		  windowwatcher \
 		  $(NULL)
 
