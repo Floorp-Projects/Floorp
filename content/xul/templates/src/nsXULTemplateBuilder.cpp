@@ -1038,7 +1038,27 @@ RDFGenericBuilderImpl::GetPersistentAttributes(nsIContent *element)
 				getter_AddRefs(target))) && (rv != NS_RDF_NO_VALUE))
 			{
 				persistLock = PR_TRUE;
-				OnAssert(elementRes, propertyRes, target);
+
+				// XXX Don't OnAssert the persistant attribute;
+				// just set it in the content model instead
+				// OnAssert(elementRes, propertyRes, target);
+
+				PRInt32			nameSpaceID;
+				nsCOMPtr<nsIAtom>	tag;
+				if (NS_SUCCEEDED(rv = mDocument->SplitProperty(propertyRes, &nameSpaceID, getter_AddRefs(tag))))
+				{
+					nsCOMPtr<nsIRDFLiteral>	literal = do_QueryInterface(target);
+					if (literal)
+					{
+						const	PRUnichar	*uniLiteral = nsnull;
+						literal->GetValueConst(&uniLiteral);
+						if (uniLiteral)
+						{
+							rv = element->SetAttribute(nameSpaceID, tag, uniLiteral, PR_TRUE);
+						}
+					}
+				}
+
 				persistLock = PR_FALSE;
 			}
 		}
@@ -2064,9 +2084,8 @@ RDFGenericBuilderImpl::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             attribValue.Cut(0,4);
 
             nsCOMPtr<nsIRDFResource> property;
-//            rv = gRDFService->GetUnicodeResource(attribValue.GetUnicode(),
-//                                                 getter_AddRefs(property));
-		rv = GetResource(attribNameSpaceID, attribName, getter_AddRefs(property));
+            rv = gRDFService->GetUnicodeResource(attribValue.GetUnicode(),
+                                                 getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             if (property.get() == aProperty) {
