@@ -4,7 +4,7 @@ TemplateToolkit
 [% INCLUDE template.header
     title = 'Login'
     response = '401 Authentication Required'
-    headers = "WWW-Authenticate: Basic realm=\"$app.name\""
+    headers = "WWW-Authenticate: Basic realm=\"$app.name\"\n"
 -%]
 
   <form action="" method="GET"> <!-- XXX POST -->
