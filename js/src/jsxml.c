@@ -79,8 +79,8 @@
  * TODO
  * - XXXbe patrol
  * - fix function::foo vs. x.(foo == 42) collision using proper namespacing
+ * - fix the !TCF_HAS_DEFXMLNS optimization in js_FoldConstants
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
- * - optimize to avoid reparsing when TCF_HAS_DEFXMLNS in js_FoldConstants
  * - JS_TypeOfValue sure could use a cleaner interface to "types"
  */
 
@@ -2319,10 +2319,11 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, JSXMLArray *inScopeNSes)
     if (inScopeNSes) {
         for (i = 0, n = inScopeNSes->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(inScopeNSes, i, JSXMLNamespace);
+            JS_ASSERT(ns->prefix);
 
             /*
-             * Very tricky, and not clearly specified in ECMA-357 13.3.5.4:
-             * if we preserve prefixes, we must match null qn->prefix against
+             * Erratum, very tricky, and not specified in ECMA-357 13.3.5.4:
+             * If we preserve prefixes, we must match null qn->prefix against
              * an empty ns->prefix, in order to avoid generating redundant
              * prefixed and default namespaces for cases such as:
              *
@@ -2330,16 +2331,28 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, JSXMLArray *inScopeNSes)
              *   print(x.toXMLString());
              *
              * Per 10.3.2.1, the namespace attribute in t has an empty string
-             * prefix (*not* a null prefix).  But t's name has a null prefix.
+             * prefix (*not* a null prefix), per 10.3.2.1 Step 6(h)(i)(1):
+             * 
+             *   1. If the [local name] property of a is "xmlns"
+             *      a. Map ns.prefix to the empty string
              *
-             * XXXbe can we assert that ns->prefix is non-null here?
+             * But t's name has a null prefix in this implementation, meaning
+             * *undefined*, per 10.3.2.1 Step 6(c)'s NOTE (which refers to
+             * the http://www.w3.org/TR/xml-infoset/ spec, item 2.2.3, without
+             * saying how "no value" maps to an ECMA-357 value -- but it must
+             * map to the *undefined* prefix value).
+             *
+             * Since "" != undefined (or null, in the current implementation)
+             * the ECMA-357 spec will fail to match in [[GetNamespace]] called
+             * on t with argument {} U {(prefix="", uri="http://foo.com")}.
+             * This spec bug leads to ToXMLString results that duplicate the
+             * declared namespace.
              */
             if (!js_CompareStrings(ns->uri, qn->uri) &&
                 (ns->prefix == qn->prefix ||
-                 (ns->prefix &&
-                  (qn->prefix
-                   ? !js_CompareStrings(ns->prefix, qn->prefix)
-                   : IS_EMPTY(ns->prefix))))) {
+                 (qn->prefix
+                  ? !js_CompareStrings(ns->prefix, qn->prefix)
+                  : IS_EMPTY(ns->prefix)))) {
                 match = ns;
                 break;
             }
