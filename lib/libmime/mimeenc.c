@@ -50,7 +50,7 @@ struct MimeDecoderData {
   void *closure;
 };
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 
 static int
 mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, int32 length)
@@ -177,7 +177,7 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, int32 length)
   else
 	return 1;
 }
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
 static int
 mime_decode_base64_token (const char *in, char *out)
@@ -304,7 +304,7 @@ mime_decode_base64_buffer (MimeDecoderData *data,
 }
 
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 static int
 mime_decode_uue_buffer (MimeDecoderData *data,
 						const char *input_buffer, int32 input_length)
@@ -529,7 +529,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
   return status;
 }
 
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
 int
 MimeDecoderDestroy (MimeDecoderData *data, XP_Bool abort_p)
@@ -574,7 +574,7 @@ MimeB64DecoderInit (int (*output_fn) (const char *, int32, void *),
   return mime_decoder_init (mime_Base64, output_fn, closure);
 }
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 MimeDecoderData *
 MimeQPDecoderInit (int (*output_fn) (const char *, int32, void *),
 				   void *closure)
@@ -588,7 +588,7 @@ MimeUUDecoderInit (int (*output_fn) (const char *, int32, void *),
 {
   return mime_decoder_init (mime_uuencode, output_fn, closure);
 }
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 int
 MimeDecoderWrite (MimeDecoderData *data, const char *buffer, int32 size)
 {
@@ -598,12 +598,12 @@ MimeDecoderWrite (MimeDecoderData *data, const char *buffer, int32 size)
 	{
 	case mime_Base64:
 	  return mime_decode_base64_buffer (data, buffer, size);
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
     case mime_QuotedPrintable:
 	  return mime_decode_qp_buffer (data, buffer, size);
 	case mime_uuencode:
 	  return mime_decode_uue_buffer (data, buffer, size);
-#endif
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 	default:
 	  XP_ASSERT(0);
 	  return -1;
@@ -635,7 +635,7 @@ struct MimeEncoderData {
   void *closure;
 };
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 /* Use what looks like a nice, safe value for a standard uue line length */
 #define UUENCODE_LINE_LIMIT 60
 
@@ -758,7 +758,7 @@ mime_uuencode_finish(MimeEncoderData *data)
 	/* Write 'end' on a line by itself. */
 	return data->write_buffer(endStr, strlen(endStr), data->closure);
 }
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 #undef ENC
 
 int
@@ -865,7 +865,7 @@ mime_encode_base64_buffer (MimeEncoderData *data,
   return 0;
 }
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 int
 mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, int32 size)
 {
@@ -875,7 +875,6 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, int32 size)
   const unsigned char *end = in + size;
   char out_buffer[80];
   char *out = out_buffer;
-  uint32 i = 0, n = 0;
   XP_Bool white = FALSE;
   XP_Bool mb_p = FALSE;
 
@@ -998,7 +997,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, int32 size)
 
   return 0;
 }
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
 
 
@@ -1008,10 +1007,10 @@ MimeEncoderDestroy (MimeEncoderData *data, XP_Bool abort_p)
   int status = 0;
 
   /* If we're uuencoding, we have our own finishing routine. */
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
   if (data->encoding == mime_uuencode)
 	 mime_uuencode_finish(data);
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
   /* Since Base64 (and uuencode) output needs to do some buffering to get 
 	 a multiple of three bytes on each block, there may be a few bytes 
@@ -1088,7 +1087,7 @@ MimeB64EncoderInit (int (*output_fn) (const char *, int32, void *),
   return mime_encoder_init (mime_Base64, output_fn, closure);
 }
 
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 MimeEncoderData *
 MimeQPEncoderInit (int (*output_fn) (const char *, int32, void *),
 				   void *closure)
@@ -1108,7 +1107,7 @@ MimeUUEncoderInit (char *filename,
 	  
   return enc;
 }
-#endif /*MOZ_ENDER_MIME*/
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 
 int
 MimeEncoderWrite (MimeEncoderData *data, const char *buffer, int32 size)
@@ -1119,12 +1118,12 @@ MimeEncoderWrite (MimeEncoderData *data, const char *buffer, int32 size)
 	{
 	case mime_Base64:
 	  return mime_encode_base64_buffer (data, buffer, size);
-#ifndef MOZ_ENDER_MIME
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
     case mime_QuotedPrintable:
 	  return mime_encode_qp_buffer (data, buffer, size);
 	case mime_uuencode:
 	  return mime_uuencode_buffer(data, buffer, size);
-#endif
+#endif /* !MOZ_ENDER_MIME || MOZ_MAIL_COMPOSE */
 	default:
 	  XP_ASSERT(0);
 	  return -1;

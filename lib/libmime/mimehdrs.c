@@ -78,7 +78,7 @@ strip_continuations(char *original);
 ender mime does not need any of this except for strip coninuous
 */
 
-#ifndef MOZ_ENDER_MIME 
+#if !defined(MOZ_ENDER_MIME) || defined(MOZ_MAIL_COMPOSE)
 
 
 MimeHeaders *
