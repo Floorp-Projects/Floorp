@@ -55,7 +55,7 @@
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
 #include "Preferences.h"
-#include "nsIComponentRegistrar.h"
+#include "nsCRT.h"
 #include <io.h>
 #include <fcntl.h>
 
@@ -220,12 +220,6 @@ nsresult CMfcEmbedApp::OverrideComponents()
 {
     nsresult rv = NS_OK;
 
-
-    nsCOMPtr<nsIComponentRegistrar> registrar;
-    rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
-    if (NS_FAILED(rv))
-        return rv;
-
     // replace Mozilla's default PromptService with our own, if the
     // expected override DLL is present
     HMODULE overlib = ::LoadLibrary(kComponentsLibname);
@@ -241,10 +235,11 @@ nsresult CMfcEmbedApp::OverrideComponents()
             nsCOMPtr<nsIFactory> promptFactory;
             rv = MakeFactory(getter_AddRefs(promptFactory));
             if (NS_SUCCEEDED(rv))
-                registrar->RegisterFactory(kPromptServiceCID,
-                                           "Prompt Service",
-                                           "@mozilla.org/embedcomp/prompt-service;1",
-                                           promptFactory); // replace existing
+                nsComponentManager::RegisterFactory(kPromptServiceCID,
+                                                    "Prompt Service",
+                                                    "@mozilla.org/embedcomp/prompt-service;1",
+                                                    promptFactory,
+                                                    PR_TRUE); // replace existing
         } else
           ::FreeLibrary(overlib);
     }
@@ -263,10 +258,11 @@ nsresult CMfcEmbedApp::OverrideComponents()
             nsCOMPtr<nsIFactory> helperAppDlgFactory;
             rv = MakeFactory(getter_AddRefs(helperAppDlgFactory));
             if (NS_SUCCEEDED(rv))
-                registrar->RegisterFactory(kHelperAppLauncherDialogCID,
-                                           "Helper App Launcher Dialog",
-                                           "@mozilla.org/helperapplauncherdialog;1",
-                                           helperAppDlgFactory);
+                nsComponentManager::RegisterFactory(kHelperAppLauncherDialogCID,
+                                                    "Helper App Launcher Dialog",
+                                                    "@mozilla.org/helperapplauncherdialog;1",
+                                                    helperAppDlgFactory,
+                                                    PR_TRUE); // replace existing
         } else
           ::FreeLibrary(overlib);
     }
@@ -286,10 +282,11 @@ nsresult CMfcEmbedApp::OverrideComponents()
             nsCOMPtr<nsIFactory> printingPromptFactory;
             rv = MakeFactory(getter_AddRefs(printingPromptFactory));
             if (NS_SUCCEEDED(rv))
-                registrar->RegisterFactory(kPrintingPromptServiceCID,
-                                           "Printing Prompt Service",
-                                           "@mozilla.org/embedcomp/printingprompt-service;1",
-                                           printingPromptFactory); 
+                nsComponentManager::RegisterFactory(kPrintingPromptServiceCID,
+                                                    "Printing Prompt Service",
+                                                    "@mozilla.org/embedcomp/printingprompt-service;1",
+                                                    printingPromptFactory,
+                                                    PR_TRUE); // replace existing
         } else
           ::FreeLibrary(overlib);
     }
@@ -705,7 +702,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
 {
     nsresult rv = NS_OK;
     
-    if (strcmp(aTopic, "profile-approve-change") == 0)
+    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
         // Ask the user if they want to
         int result = MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
@@ -716,7 +713,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
             status->VetoChange();
         }
     }
-    else if (strcmp(aTopic, "profile-change-teardown") == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -737,13 +734,13 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
 		    }
 	    }
     }
-    else if (strcmp(aTopic, "profile-after-change") == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
     {
         InitializePrefs(); // In case we have just switched to a newly created profile.
         
         // Only make a new browser window on a switch. This also gets
         // called at start up and we already make a window then.
-        if (!strcmp(someData, NS_LITERAL_STRING("switch").get()))      
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("switch").get()))      
             OnNewBrowser();
     }
     return rv;
