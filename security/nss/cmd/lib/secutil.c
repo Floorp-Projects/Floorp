@@ -1739,7 +1739,6 @@ SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
     if (rv)
 	goto loser;
     SECU_PrintExtensions(out, c->extensions, "Signed Extensions", level+1);
-    SECU_PrintFingerprints(out, &c->derCert, "Fingerprint", level);
 loser:
     PORT_FreeArena(arena, PR_FALSE);
     return rv;
@@ -2386,6 +2385,7 @@ int SECU_PrintSignedData(FILE *out, SECItem *der, char *m,
     SECU_PrintAsHex(out, &sd->signature, "Signature", level+1);
 loser:
     PORT_FreeArena(arena, PR_FALSE);
+    SECU_PrintFingerprints(out, der, "Fingerprint", level+1);
     return rv;
 
 }
