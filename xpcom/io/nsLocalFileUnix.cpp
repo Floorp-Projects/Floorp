@@ -43,6 +43,16 @@
 #include "nsLocalFileUnix.h"
 #include "nsIComponentManager.h"
 
+// On some platforms file/directory name comparisons need to
+// be case-blind.
+#if defined(VMS)
+#define FILE_STRCMP strcasecmp
+#define FILE_STRNCMP strncasecmp
+#else
+#define FILE_STRCMP strcmp
+#define FILE_STRNCMP strncmp
+#endif
+
 #define VALIDATE_STAT_CACHE()                   \
   PR_BEGIN_MACRO                                \
   if (!mHaveCachedStat) {                       \
@@ -323,7 +333,11 @@ nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 
     int result;
     /* use creat(2) for NORMAL_FILE, mkdir(2) for DIRECTORY */
+#if defined(VMS)
+    int (*creationFunc)(const char *, mode_t, ...) =
+#else
     int (*creationFunc)(const char *, mode_t) =
+#endif
         type == NORMAL_FILE_TYPE ? creat : mkdir;
 
     result = creationFunc((const char *)mPath, permissions);
@@ -987,7 +1001,7 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
         return rv;
     if (NS_FAILED(rv = inFile->GetPath(getter_Copies(inPath))))
         return rv;
-    *_retval = !strcmp(inPath, myPath);
+    *_retval = !FILE_STRCMP(inPath, myPath);
 
     return NS_OK;
 }
@@ -1008,7 +1022,7 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
     
     ssize_t len = strlen(mPath);
 
-    if ( strncmp( mPath, inPath, len) == 0)
+    if ( FILE_STRNCMP( mPath, inPath, len) == 0)
     {
         // now make sure that the |inFile|'s path has a trailing
         // separator.
