@@ -80,6 +80,13 @@ public:
                           const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,    
                           nsIFrame**     aFrame);
+   
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aModType, 
+                              PRInt32 aHint);
 
 protected:
 
@@ -91,7 +98,11 @@ protected:
 
  nsLeafBoxFrame(nsIPresShell* aShell);
 
+
 private:
+
+ void UpdateMouseThrough();
+
 
 }; // class nsLeafBoxFrame
 

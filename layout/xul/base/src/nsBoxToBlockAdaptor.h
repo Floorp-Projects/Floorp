@@ -78,7 +78,8 @@ protected:
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
-  virtual nsresult Reflow(nsBoxLayoutState& aState,
+private:
+  nsresult Reflow(nsBoxLayoutState& aState,
                    nsIPresContext*   aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
@@ -89,23 +90,41 @@ protected:
                    nscoord aHeight,
                    PRBool aMoveFrame = PR_TRUE);
 
+  void HandleIncrementalReflow(nsBoxLayoutState& aState, 
+                                          const nsHTMLReflowState aReflowState, 
+                                          nsReflowReason& aReason,
+                                          PRBool aPopOffIncremental,
+                                          PRBool& aRedrawNow,
+                                          PRBool& aNeedReflow,
+                                          PRBool& aRedrawAfterReflow,
+                                          PRBool& aMoveFrame);
+
+  PRBool CanSetMaxElementSize(nsBoxLayoutState& aState, nsReflowReason& aReason);
+
+  NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
+
   nsIFrame* mFrame;
   nsSize mPrefSize;
   nsSize mMinSize;
   nsSize mMaxSize;
+
+  nsSize mBlockMinSize;
+  nsSize mBlockPrefSize;
+  nscoord mBlockAscent;
+
   nscoord mFlex;
   nscoord mAscent;
-  PRBool mPrefNeedsRecalc;
+  nscoord mCachedMaxElementHeight;
+
   nsSpaceManager* mSpaceManager;
   nsSize mLastSize;
-  nscoord mMinWidth;
-  PRBool mWasCollapsed;
-  nscoord mCachedMaxElementHeight;
-  PRBool mStyleChange;
-  PRBool mSizeSet;
   nsSize mOverflow;
-  PRBool mIncludeOverflow;
   nsIPresShell* mPresShell;
+
+  PRPackedBool mIncludeOverflow;
+  PRPackedBool mWasCollapsed;
+  PRPackedBool mStyleChange;
+
 };
 
 #endif

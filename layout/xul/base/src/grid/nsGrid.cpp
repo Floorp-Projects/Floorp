@@ -349,8 +349,13 @@ nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputed
 void
 nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsHorizontal)
 {
-  // if not rows then return null
+  // if no rows then return null
   if (aRowCount == 0) {
+
+    // make sure we free up the memory.
+    if (*aRows)
+      delete[] (*aRows);
+
     *aRows = nsnull;
     return;
   }
@@ -574,8 +579,8 @@ nsresult
 nsGrid::GetPrefRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsHorizontal)
 { 
   NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
-  //if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
-  //  return NS_OK;
+  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
+    return NS_OK;
 
   nscoord height = 0;
   GetPrefRowHeight(aState, aRowIndex, height, aIsHorizontal);
@@ -589,8 +594,8 @@ nsGrid::GetMinRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize
 { 
   NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
 
-//  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
-  //  return NS_OK;
+  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
+    return NS_OK;
 
   nscoord height = 0;
   GetMinRowHeight(aState, aRowIndex, height, aIsHorizontal);
@@ -604,8 +609,8 @@ nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize
 { 
   NS_ASSERTION(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal), "Row index out of range!");
 
- // if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
-   // return NS_OK;
+  if (!(aRowIndex >=0 && aRowIndex < GetRowCount(aIsHorizontal)))
+    return NS_OK;
 
   nscoord height = 0;
   GetMaxRowHeight(aState, aRowIndex, height, aIsHorizontal);

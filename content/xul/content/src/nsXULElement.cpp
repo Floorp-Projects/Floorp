@@ -3845,7 +3845,7 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
         aHint = NS_STYLE_HINT_ATTRCHANGE;
     }
     else if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
-        aAttribute == nsXULAtoms::label) {
+        aAttribute == nsXULAtoms::label || aAttribute == nsXULAtoms::mousethrough) {
       // VERY IMPORTANT! This has a huge positive performance impact!
       aHint = NS_STYLE_HINT_ATTRCHANGE;
     }
