@@ -868,6 +868,8 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
         aPresContext->GetCompatibilityMode(&mode);
         while (firstFrame != aPlaceholderFrame) {
           NS_ASSERTION(firstFrame, "Must reach our placeholder before end of list!");
+          if (!firstFrame)   // This can be removed when we split out-of-flow
+            break;           // frames correctly,  see bug 223064
           PRBool isEmpty;
           firstFrame->IsEmpty(mode,
                               firstFrame->GetStyleText()->WhiteSpaceIsSignificant(),
