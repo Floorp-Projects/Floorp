@@ -869,7 +869,6 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
     //-- if uri is an about uri, distinguish 'safe' and 'unsafe' about URIs
     static const char aboutScheme[] = "about";
     if(nsCRT::strcasecmp(scheme.get(), aboutScheme) == 0)
-            *aScheme = nsCRT::strdup(scheme.get());
     {
         nsCAutoString spec;
         if(NS_FAILED(uri->GetAsciiSpec(spec)))
