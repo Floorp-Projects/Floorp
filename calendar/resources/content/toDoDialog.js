@@ -119,7 +119,7 @@ function loadCalendarToDoDialog()
    }
    
    var titleString = titleDataItem.getAttribute( "value" );
-   document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
+   document.getElementById("calendar-new-taskwindow").setAttribute("title", titleString);
 
    // fill in fields from the event
    var dueDate = new Date( gToDo.due.getTime() );
