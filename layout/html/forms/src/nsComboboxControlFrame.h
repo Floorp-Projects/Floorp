@@ -127,6 +127,7 @@ public:
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   //nsIComboboxControlFrame
+  NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext);
 
