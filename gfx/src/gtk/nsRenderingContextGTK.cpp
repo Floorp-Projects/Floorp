@@ -1654,55 +1654,6 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
                       dr.width, dr.height);
 }
 
-
-#ifdef USE_NATIVE_TILING
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 3/16/00 dwc
- */
-NS_IMETHODIMP 
-nsRenderingContextGTK::DrawTile(nsIImage *aImage, 
-                                nscoord aX0, nscoord aY0,
-                                nscoord aX1, nscoord aY1,
-                                nscoord aWidth, nscoord aHeight)
-{
-  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-  mTranMatrix->TransformCoord(&aX1,&aY1);
-
-  nsRect srcRect (0, 0, aWidth,  aHeight);
-  nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
-
-  ((nsImageGTK*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::DrawTile(nsIImage *aImage,
-                                nscoord aSrcXOffset, nscoord aSrcYOffset,
-                                const nsRect &aTileRect)
-{
-  nsImageGTK* image = (nsImageGTK*) aImage;
-
-  nsRect tileRect(aTileRect);
-  nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
-  mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
-                           &srcRect.height);
-  mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y,
-                           &tileRect.width, &tileRect.height);
-
-  if((tileRect.width > 0) && (tileRect.height > 0))
-    image->DrawTile(*this, mSurface, srcRect.width, srcRect.height,
-                    tileRect);
-
-  return NS_OK;
-}
-
-
-#endif
-
-
-
 NS_IMETHODIMP
 nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                          PRInt32 aSrcX, PRInt32 aSrcY,

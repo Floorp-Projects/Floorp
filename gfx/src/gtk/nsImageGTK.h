@@ -79,11 +79,6 @@ public:
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
                       nsDrawingSurface aSurface,
-                      nsRect &aSrcRect,
-                      nsRect &aTileRect);
-
-  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                      nsDrawingSurface aSurface,
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       const nsRect &aTileRect);
 
