@@ -347,10 +347,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifdef DEBUG_aleventhal
   // Very useful for debugging, please leave this here.
   if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
-    printf("debugging events");
+    printf("\ndebugging dommenuitemactive events for %s", NS_ConvertUCS2toUTF8(localName).get());
   }
   if (localName.EqualsIgnoreCase("tree")) {
-    printf("debugging events");
+    printf("\ndebugging events in tree, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
   }
 #endif
 
