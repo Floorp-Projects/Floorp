@@ -125,7 +125,7 @@ static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kCDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -195,7 +195,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kWebShellCID, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDocLoaderServiceCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
