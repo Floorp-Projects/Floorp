@@ -1428,8 +1428,10 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
-  if ((aStatus != NS_FRAME_REFLOW_FINISHED) || IsHidden()) 
+  if (aStatus != NS_FRAME_REFLOW_FINISHED) 
     return rv;
+
+  PRBool bHidden = IsHidden();
 
   nsIView* view = nsnull;
   GetView(aPresContext, &view);
@@ -1437,8 +1439,11 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
     nsCOMPtr<nsIViewManager> vm;
     view->GetViewManager(*getter_AddRefs(vm));
     if (vm)
-      vm->SetViewVisibility(view, nsViewVisibility_kShow);
+      vm->SetViewVisibility(view, bHidden ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
+
+  if (bHidden)
+    return rv;
 
   nsPluginWindow *window;
 
