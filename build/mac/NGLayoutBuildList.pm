@@ -22,7 +22,7 @@ use MacCVS;
 use MANIFESTO;
 
 @ISA		= qw(Exporter);
-@EXPORT		= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
+@EXPORT		= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects BuildOneProject);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -427,31 +427,38 @@ sub BuildClientDist()
 	#LAYERS (IS THIS STILL NEEDED)
 	_InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
 
+	if ( $main::NECKO )
+	{
+	#NETWERK
+		_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
+		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
+	} else {
 	#NETWORK
-    _InstallFromManifest(":mozilla:network:public:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:client:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
-    _InstallFromManifest(":mozilla:network:module:MANIFEST",							"$distdirectory:network:module");
+	    _InstallFromManifest(":mozilla:network:public:MANIFEST",						"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:client:MANIFEST",						"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:cstream:MANIFEST",						"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:main:MANIFEST",							"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:mimetype:MANIFEST",						"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:util:MANIFEST",							"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:about:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:certld:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:dataurl:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:file:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
+	    _InstallFromManifest(":mozilla:network:module:MANIFEST",						"$distdirectory:network:module");
+	}
 
 	#WALLET
 
@@ -734,6 +741,18 @@ sub BuildIDLProjects()
 	_assertRightDirectory();
 
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
+
+	if ( $main::NECKO )
+	{
+		BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","netwerk");
+
+		# protocols
+		BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
+		BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
+		BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
+		BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
+	}
+
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 	BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.mcp",				"libjar");
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
@@ -893,7 +912,24 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",			"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",			"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	if ( $main::NECKO )
+	{
+		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "netwerk.toc", 1, $main::ALIAS_SYM_FILES, 0);
+
+		# utils library
+		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "netwerkUtil.toc", 1, $main::ALIAS_SYM_FILES, 0);
+
+		# protocols
+		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "about.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "file.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "ftp.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "http.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	}
+	else
+	{
+		BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	}
 
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
