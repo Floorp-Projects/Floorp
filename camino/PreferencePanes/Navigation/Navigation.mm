@@ -84,15 +84,17 @@ extern "C" {
 // this is for sorting the web browser bundle ID list by display name
 int compareBundleIDAppDisplayNames(id a, id b, void *context)
 {
-  NSURL *appURLa;
-  NSURL *appURLb;
-  LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)a, NULL, NULL, (CFURLRef*)&appURLa);
-  LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)b, NULL, NULL, (CFURLRef*)&appURLb);
-  if (a && b) {
+  NSURL* appURLa = nil;
+  NSURL* appURLb = nil;
+  
+  if ((LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)a, NULL, NULL, (CFURLRef*)&appURLa) == noErr) &&
+      (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)b, NULL, NULL, (CFURLRef*)&appURLb) == noErr))
+  {
     NSString *aName = [OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURLa];
     NSString *bName = [OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURLb];
     return [aName compare:bName];
   }
+  
   // this shouldn't ever happen, and if it does we handle it correctly when building the menu.
   // there is no way to flag an error condition here and the sort fuctions return void
   return NSOrderedSame;
@@ -249,8 +251,7 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
 - (void)setDefaultBrowser:(NSString*)bundleID
 {
   NSURL *browserURL = nil;
-  LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&browserURL);
-  if (browserURL) {
+  if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&browserURL) == noErr) {
     FSRef browserFSRef;
     CFURLGetFSRef((CFURLRef)browserURL, &browserFSRef);
     
@@ -272,7 +273,7 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   if (repObject) {
     // only change default if the app still exists
     NSURL *appURL = nil;
-    if (!LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)repObject, NULL, NULL, (CFURLRef*)&appURL)) {
+    if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)repObject, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
       if ([[NSFileManager defaultManager] isExecutableFileAtPath:[[appURL path] stringByStandardizingPath]]) {
         // set it as the default browser
         [self setDefaultBrowser:repObject];
@@ -321,40 +322,36 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
 // returns an array of web browser bundle IDs sorted by display name
 + (NSArray*)getWebBrowserList
 {
-  NSMutableArray *browsers = [NSMutableArray arrayWithCapacity:10];
-  NSArray *apps;
-  NSURL *anApp;
+  // use a set for automatic duplicate elimination
+  NSMutableSet* browsersSet = [NSMutableSet setWithCapacity:10];
   
   // using LSCopyApplicationURLsForURL would be nice (its not hidden),
   // but it only exists on Mac OS X >= 10.3
+  NSArray* apps;
   _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"http:"], kLSRolesViewer, &apps);
+  [apps autorelease];
+
   // Put all the browsers into a new array, but only if they also support https and have a bundle ID we can access
   NSEnumerator *appEnumerator = [apps objectEnumerator];
-  while (anApp = [appEnumerator nextObject]) {
+  NSURL* anApp;
+  while ((anApp = [appEnumerator nextObject])) {
     Boolean canHandleHTTPS;
-    if (!LSCanURLAcceptURL((CFURLRef)[NSURL URLWithString:@"https:"], (CFURLRef)anApp, kLSRolesAll, kLSAcceptDefault, &canHandleHTTPS) &&
+    if ((LSCanURLAcceptURL((CFURLRef)[NSURL URLWithString:@"https:"], (CFURLRef)anApp, kLSRolesAll, kLSAcceptDefault, &canHandleHTTPS) == noErr) &&
         canHandleHTTPS) {
       NSString *tmpBundleID = [OrgMozillaChimeraPreferenceNavigation bundleIDForURL:anApp];
       if (tmpBundleID)
-        [browsers addObject:tmpBundleID];
+        [browsersSet addObject:tmpBundleID];
     }
   }
+
   // add user chosen browsers to list
-  [browsers addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
-  
-  // Get rid of any duplicates in the browser list
-  for (unsigned int i = 0; i < [browsers count]; i++) {
-    for (unsigned int j = i + 1; j < [browsers count]; j++) {
-      if ([[browsers objectAtIndex:i] isEqualToString:[browsers objectAtIndex:j]])
-        [browsers removeObjectAtIndex:j];
-    }
-  }
-  
+  [browsersSet addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
+
+  NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
+
   // sort by display name
   [browsers sortUsingFunction:&compareBundleIDAppDisplayNames context:NULL];
-  
-  // release apps since its our responsibility
-  [apps release];
+
   return browsers;
 }
 
@@ -364,7 +361,6 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   NSMenu *menu = [[[NSMenu alloc] initWithTitle:@"Browsers"] autorelease];
   NSMenuItem *selectedBrowserMenuItem = nil;
   NSString *caminoBundleID = [[NSBundle mainBundle] bundleIdentifier];
-  NSMenuItem *item;
   
   // get current default browser's bundle ID
   NSURL *currSetURL = nil;
@@ -379,9 +375,9 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   NSString *bundleID;
   NSEnumerator *browserEnumerator = [browsers objectEnumerator];
   while (bundleID = [browserEnumerator nextObject]) {
-    NSURL *appURL;
-    if (!LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&appURL)) {      
-      item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
+    NSURL *appURL = nil;
+    if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
+      NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
                                                     action:@selector(defaultBrowserChange:) keyEquivalent:@""];
       NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:[[appURL path] stringByStandardizingPath]];
       [icon setSize:NSMakeSize(16.0, 16.0)];
