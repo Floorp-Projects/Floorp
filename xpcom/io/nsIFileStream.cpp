@@ -18,6 +18,7 @@
 
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
+#include "nsCOMPtr.h"
 
 #include "prerror.h"
 
@@ -414,14 +415,14 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
 
     nsresult rv = NS_NewIOFileStream(&supports, inFile, PR_RDONLY, 0700);
 
-    if (NS_OK == rv && 
-        NS_OK == supports->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), 
-        (void**)&inStr)) {
-      *aResult = inStr;
-      return NS_OK;
-    } else {
-      return NS_ERROR_FAILURE;
+    *aResult = nsnull;
+    if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inStr))) {
+        *aResult = inStr;
+      }
+      NS_RELEASE(supports);
     }
+    return rv;
 #else
     return NS_NewIOFileStream(aResult, inFile, PR_RDONLY, 0700);
 #endif
@@ -460,7 +461,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
   // vtable problem on Windows, where we really didn't have the proper pointer
   // to an nsIOutputStream, this ensures that we do 
 #if 1
-    nsISupports     * supports;
+/*    nsISupports     * supports;
     nsIOutputStream * outStr;
 
     nsresult rv = NS_NewIOFileStream(
@@ -469,14 +470,32 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
         (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
         0700);
 
-    if (NS_OK == rv && 
-        NS_OK == supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), 
-                                          (void**)&outStr)) {
-      *aResult = outStr;
-      return NS_OK;
-    } else {
-      return NS_ERROR_FAILURE;
+    *aResult = nsnull;
+    if (NS_SUCCEEDED(rv)) { 
+      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr))) {
+        *aResult = outStr;
+      }
+      NS_RELEASE(supports);
     }
+    return rv;
+    */
+
+    nsCOMPtr<nsISupports> supports;
+    nsIOutputStream * outStr;
+
+    nsresult rv = NS_NewIOFileStream(
+        getter_AddRefs(supports),
+        inFile,
+        (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
+        0700);
+
+    *aResult = nsnull;
+    if (NS_SUCCEEDED(rv)) { 
+      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr))) {
+        *aResult = outStr;
+      }
+    }
+    return rv;
 #else
     return NS_NewIOFileStream(
         aResult,
