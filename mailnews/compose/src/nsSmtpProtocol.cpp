@@ -731,15 +731,19 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
               rv = sslControl->StartTLS();
       }
 
-    if (NS_FAILED(rv)) 
-        // if we fail, should we close the connection?
-        return rv;
-
-    m_nextState = SMTP_EXTN_LOGIN_RESPONSE;
-    m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-    m_tlsEnabled = PR_TRUE;
-    m_flags = 0;
+    if (NS_SUCCEEDED(rv))
+    {
+      m_nextState = SMTP_EXTN_LOGIN_RESPONSE;
+      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+      m_tlsEnabled = PR_TRUE;
+      m_flags = 0; // resetting the flags
+      BackupAuthFlags();
+      return rv;
+    }
   }
+  ClearFlag(SMTP_EHLO_STARTTLS_ENABLED);
+  m_tlsInitiated = PR_FALSE;
+  m_nextState = SMTP_AUTH_PROCESS_STATE;
 
   return rv;
 }
@@ -761,7 +765,6 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
 
                 status = SendData(url, buffer.get());
 
-                m_flags = 0; // resetting the flags
                 m_tlsInitiated = PR_TRUE;
 
                 m_nextState = SMTP_RESPONSE;
