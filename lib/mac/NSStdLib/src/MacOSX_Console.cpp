@@ -100,7 +100,7 @@ short InstallConsole(short fd)
 {
     long version;
     OSErr err = Gestalt(gestaltSystemVersion, &version);
-    if (err == noErr && version < 0x00000A00) {
+    if (err == noErr && version < 0x00001000) {
         // load the "NSConsole" library.
         err = GetSharedLibrary("\pNSConsole", kCompiledCFragArch, kReferenceCFrag,
                                &gConsoleLibrary, NULL, NULL);
