@@ -1140,6 +1140,8 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
   nsCOMPtr<nsIDocument> doc;
 
+  nsISupports *objiSupp = aObject;
+
   if (content) {
     // Try to get context from doc
     doc = content->GetDocument();
@@ -1197,6 +1199,14 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                                  NS_GET_IID(nsISupports),
                                                  getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Since JSEventListeners only have a raw nsISupports pointer, it's
+    // important that it point to the same object that the WrappedNative wraps.
+    // (In the case of a tearoff, the tearoff will not persist).
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(holder);
+    NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
+
+    objiSupp = wrapper->Native();
 
     JSObject *scriptObject = nsnull;
 
@@ -1257,7 +1267,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     }
   }
 
-  return SetJSEventListener(context, aObject, aName, aDeferCompilation);
+  return SetJSEventListener(context, objiSupp, aName, aDeferCompilation);
 }
 
 nsresult
@@ -1320,6 +1330,12 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
                NS_GET_IID(nsISupports), getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Since JSEventListeners only have a raw nsISupports pointer, it's
+  // important that it point to the same object that the WrappedNative wraps.
+  // (In the case of a tearoff, the tearoff will not persist).
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(holder);
+  NS_ASSERTION(wrapper, "wrapper must impl nsIXPConnectWrappedNative");
+
   JSObject *jsobj = nsnull;
 
   rv = holder->GetJSObject(&jsobj);
@@ -1341,7 +1357,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
     }
   }
 
-  return SetJSEventListener(aContext, aObject, aName, PR_FALSE);
+  return SetJSEventListener(aContext, wrapper->Native(), aName, PR_FALSE);
 }
 
 nsresult
