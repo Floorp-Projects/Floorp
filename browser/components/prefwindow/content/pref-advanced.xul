@@ -185,9 +185,7 @@
     
 #ifdef PROVISIONAL_SECURITY_UI
     <expander id="certs" label="&certs.label;" open="false" persist="open" clearhidden="true">      
-      <description>This section is PROVISIONAL and will change or disappear in future releases!
-                   It exists here now only to provide this functionality where no other access point
-                   is available.</description>
+      <description>&securityUIDisclaimer.label;</description>
       <groupbox align="start">
         <caption label="&SSLClientAuthMethod;"/>
         <description>&certselect.description;</description>
@@ -227,9 +225,7 @@
     </expander>
     
     <expander id="validation" label="&validation.label;" open="false" persist="open" clearhidden="true">      
-      <description>This section is PROVISIONAL and will change or disappear in future releases!
-                   It exists here now only to provide this functionality where no other access point
-                   is available.</description>
+      <description>&securityUIDisclaimer.label;</description>
       <groupbox>
         <caption label="&validation.crl.label;"/>
         <description>&validation.crl.description;</description>
