@@ -198,7 +198,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+     if (PeekKeyAndIMEMessage(&msg, NULL) ||
         ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
         ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
