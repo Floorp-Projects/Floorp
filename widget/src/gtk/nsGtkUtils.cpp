@@ -29,7 +29,7 @@
 #include <gdk/gdkprivate.h>
 
 #ifdef NEED_USLEEP_PROTOTYPE
-extern int usleep(useconds_t);
+extern int usleep(unsigned int);
 #endif
 #if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
 /*
