@@ -90,7 +90,8 @@ sub CrossCheck {
 
         Status("... from $t2.$f2");
         
-        SendSQL("SELECT DISTINCT $f2" . ($key2 ? ", $key2" : '') ." FROM $t2");
+        SendSQL("SELECT DISTINCT $f2" . ($key2 ? ", $key2" : '') ." FROM $t2 "
+                . "WHERE $f2 IS NOT NULL");
         while (MoreSQLData()) {
             my ($value, $key) = FetchSQLData();
             if (!$valid{$value} && !$exceptions{$value}) {
@@ -142,7 +143,13 @@ CrossCheck("keyworddefs", "id",
 
 CrossCheck("fielddefs", "fieldid",
            ["bugs_activity", "fieldid"]);
-           
+
+CrossCheck("attachments", "attach_id",
+           ["attachstatuses", "attach_id"],
+           ["bugs_activity", "attach_id"]);
+
+CrossCheck("attachstatusdefs", "id",
+           ["attachstatuses", "statusid"]);
 
 CrossCheck("bugs", "bug_id",
            ["bugs_activity", "bug_id"],
@@ -152,7 +159,9 @@ CrossCheck("bugs", "bug_id",
            ["dependencies", "blocked"],
            ["dependencies", "dependson"],
            ["votes", "bug_id"],
-           ["keywords", "bug_id"]);
+           ["keywords", "bug_id"],
+           ["duplicates", "dupe_of", "dupe"],
+           ["duplicates", "dupe", "dupe_of"]);
 
 CrossCheck("profiles", "userid",
            ["bugs", "reporter", "bug_id"],
@@ -163,9 +172,20 @@ CrossCheck("profiles", "userid",
            ["cc", "who", "bug_id"],
            ["votes", "who", "bug_id"],
            ["longdescs", "who", "bug_id"],
+           ["logincookies", "userid"],
            ["namedqueries", "userid"],
+           ["watch", "watcher"],
+           ["watch", "watched"],
+           ["tokens", "userid"],
            ["components", "initialowner", "value"],
            ["components", "initialqacontact", "value", ["0"]]);
+
+CrossCheck("products", "product",
+           ["bugs", "product", "bug_id"],
+           ["components", "program", "value"],
+           ["milestones", "product", "value"],
+           ["versions", "program", "value"],
+           ["attachstatusdefs", "product", "name"]);
 
 
 Status("Checking groups");
@@ -217,10 +237,27 @@ foreach my $ref (@checklist) {
     my ($product, $milestone) = (@$ref);
     SendSQL("SELECT count(*) FROM milestones WHERE product = " . SqlQuote($product) . " AND value = " . SqlQuote($milestone));
     if(FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalud product/milestone: $product/$milestone");
+        Alert("Bug(s) found with invalid product/milestone: $product/$milestone");
     }
 }
 
+
+Status("Checking default milestone/products");
+
+@checklist = ();
+SendSQL("select product, defaultmilestone from products");
+while (@row = FetchSQLData()) {
+    my @copy = @row;
+    push(@checklist, \@copy);
+}
+
+foreach my $ref (@checklist) {
+    my ($product, $milestone) = (@$ref);
+    SendSQL("SELECT count(*) FROM milestones WHERE product = " . SqlQuote($product) . " AND value = " . SqlQuote($milestone));
+    if(FetchOneColumn() != 1) {
+        Alert("Product(s) found with invalid default milestone: $product/$milestone");
+    }
+}
 
 
 Status("Checking components/products");
