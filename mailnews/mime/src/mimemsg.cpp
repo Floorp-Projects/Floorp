@@ -546,6 +546,15 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 
   outer_p = !obj->headers;	/* is this the outermost message? */
 
+  // Hack for messages with truncated headers (bug 244722)
+  // If there is no empty line in a message, the parser can't figure out where
+  // the headers end, causing parsing to hang. So we insert an extra newline
+  // to keep it happy. This is OK, since a message without any empty lines is
+  // broken anyway...
+  if(outer_p && msg->hdrs && ! msg->hdrs->done_p) {
+    MimeMessage_parse_line("\n", 1, obj);
+  }
+
   // Once we get to the end of parsing the message, we will notify
   // the emitter that we are done the the body.
 
