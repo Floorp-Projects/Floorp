@@ -139,6 +139,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
+            ok = js_InitRuntimeScriptState(cx);
+        if (ok)
             ok = js_InitRuntimeStringState(cx);
         if (!ok) {
             js_DestroyContext(cx, JS_NO_GC);
@@ -237,6 +239,9 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         /* Try to free atom state, now that no unrooted scripts survive. */
         if (rt->atomState.liveAtoms == 0)
             js_FreeAtomState(cx, &rt->atomState);
+
+        /* Now after the last GC can we free the script filename table. */
+        js_FinishRuntimeScriptState(cx);
 
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);
