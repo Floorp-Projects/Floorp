@@ -33,6 +33,7 @@ XPIDLSRCS=						\
 LIBRARY_NAME=nsWebBrowser_s
 
 CPP_OBJS=											\
+		.\$(OBJDIR)\nsDocShellTreeOwner.obj			\
 		.\$(OBJDIR)\nsWebBrowser.obj			\
 		$(NULL)
 
