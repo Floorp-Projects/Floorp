@@ -396,7 +396,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     uintN err;
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
 
-    if (vp)
+    if(vp)
         *vp = JSVAL_NULL;
 
     if(!xpcc)
@@ -589,10 +589,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 goto done;
             }
 
-            if(param.IsRetval()) {
-                // Shouldn't happen?
-                NS_ASSERTION(vp, "CallWrappedMethod called with null vp for param.IsRetval() case");
-                *vp = v;
+            if(param.IsRetval())
+            {
+                if(vp)
+                    *vp = v;
             }
             else
             {
