@@ -54,8 +54,8 @@ pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
 
-pref("font.name.serif.ko", "굴림체"); // "GulimChe" 
-pref("font.name.sans-serif.ko", "굴림체"); // "GulimChe" 
+pref("font.name.serif.ko", "굴림"); // "Gulim" 
+pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
 
 pref("font.name.serif.th", "Times New Roman");
