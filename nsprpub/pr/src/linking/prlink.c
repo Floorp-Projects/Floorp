@@ -162,8 +162,8 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
  * On these platforms, symbols have a leading '_'.
  */
 #if defined(SUNOS4) || defined(DARWIN) || defined(NEXTSTEP) \
-    || defined(OPENBSD) || defined(WIN16) \
-    || (defined(NETBSD) && !defined(__ELF__))
+    || defined(WIN16) \
+    || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
 
