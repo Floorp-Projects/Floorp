@@ -54,7 +54,7 @@ DIRS += \
 endif
 
 
-ifdef MOZ_MAIL_NEWS
+ifdef OLD_MOZ_MAIL_NEWS
 DIRS += \
 	mailbox \
 	smtp \
