@@ -27,4 +27,6 @@ interface nsIController : nsISupports {
 	boolean supportsCommand(in wstring command);
 
 	void doCommand(in wstring command);
+
+	void onEvent(in wstring eventName);
 };

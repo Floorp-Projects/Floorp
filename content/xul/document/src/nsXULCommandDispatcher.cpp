@@ -207,8 +207,11 @@ XULCommandDispatcherImpl::GetFocusedNode(nsIDOMNode** aNode)
 NS_IMETHODIMP
 XULCommandDispatcherImpl::SetFocusedNode(nsIDOMNode* aNode)
 {
+  // XXX On a blur, will need to fire an updatecommands (focus) on the
+  // parent window.
   mCurrentNode = aNode;
-  UpdateCommands(nsAutoString(aNode ? "focus" : "blur"));
+  if (mCurrentNode)
+    UpdateCommands(nsAutoString("focus"));
   return NS_OK;
 }
 
