@@ -160,7 +160,6 @@ extern void mork_assertion_signal(const char* inMessage);
 #define MORK_LIB_IMPL(return) return /*implementation return declaration*/
 
 // { %%%%% begin standard c utility methods %%%%%
-/*define MORK_USE_XP_STDLIB 1*/
 
 #if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS) || defined(MORK_OS2)
 #define MORK_USE_C_STDLIB 1
@@ -196,18 +195,6 @@ MORK_LIB(mork_size) mork_strlen(const void* inString);
 #define MORK_STRNCMP(one,two,length) mork_strncmp(one,two,length)
 #define MORK_STRLEN(string)          mork_strlen(string)
 #endif /*MORK_PROVIDE_STDLIB*/
-
-#ifdef MORK_USE_XP_STDLIB
-#define MORK_MEMCMP(src1,src2,size)  XP_MEMCMP(src1,src2,size)
-#define MORK_MEMCPY(dest,src,size)   XP_MEMCPY(dest,src,size)
-#define MORK_MEMMOVE(dest,src,size)  XP_MEMMOVE(dest,src,size)
-#define MORK_MEMSET(dest,byte,size)  XP_MEMSET(dest,byte,size)
-#define MORK_STRCPY(dest,src)        XP_STRCPY(dest,src)
-#define MORK_STRCMP(one,two)         XP_STRCMP(one,two)
-#define MORK_STRNCMP(one,two,length) XP_STRNCMP(one,two,length)
-#define MORK_STRLEN(string)          XP_STRLEN(string)
-#endif /*MORK_USE_XP_STDLIB*/
-
 
 // } %%%%% end standard c utility methods %%%%%
 

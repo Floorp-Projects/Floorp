@@ -5731,10 +5731,6 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 			nsCOMPtr<nsIRDFResource>	res;
 
-// #define	OLDWAY
-#ifdef	OLDWAY
-			rv = gRDFService->GetResource(nsCAutoString(hrefStr), getter_AddRefs(res));
-#else		
 			// save HREF attribute as URL
 			if (NS_SUCCEEDED(rv = gRDFService->GetAnonymousResource(getter_AddRefs(res))))
 			{
@@ -5748,7 +5744,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 					}
 				}
 			}
-	#endif
+
 			if (NS_FAILED(rv))	continue;
 			
 			// set HTML response chunk
@@ -5849,9 +5845,6 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 			// look for Name (if it isn't already set)
 			nsCOMPtr<nsIRDFNode>		oldNameRes = nsnull;
-#ifdef	OLDWAY
-			mInner->GetTarget(res, kNC_Name, PR_TRUE, getter_AddRefs(oldNameRes));
-#endif
 			if (!oldNameRes)
 			{
 				if (!nameStr.IsEmpty())
@@ -6005,9 +5998,6 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 			// look for Relevance (if it isn't already set)
 			nsCOMPtr<nsIRDFNode>		oldRelRes = nsnull;
-#ifdef	OLDWAY
-			mInner->GetTarget(res, kNC_Relevance, PR_TRUE, getter_AddRefs(oldRelRes));
-#endif
 			if (!oldRelRes)
 			{
 				if (!relItem.IsEmpty())
@@ -6100,9 +6090,6 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 			// set reference to engine this came from (if it isn't already set)
 			nsCOMPtr<nsIRDFNode>		oldEngineRes = nsnull;
-#ifdef	OLDWAY
-			mInner->GetTarget(res, kNC_Engine, PR_TRUE, getter_AddRefs(oldEngineRes));
-#endif
 			if (!oldEngineRes)
 			{
 				if (!engineStr.IsEmpty())
