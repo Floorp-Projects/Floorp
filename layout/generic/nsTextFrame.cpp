@@ -416,6 +416,7 @@ public:
                       nscoord dx, nscoord dy);
 
   nscoord ComputeTotalWordWidth(nsIPresContext* aPresContext,
+                                nsILineBreaker* aLineBreaker,
                                 nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
@@ -425,6 +426,7 @@ public:
                                 PRUint32   aWordBufSize);
 
   nscoord ComputeWordFragmentWidth(nsIPresContext* aPresContext,
+                                   nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
@@ -622,7 +624,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 
   // Setup transform to operate starting in the content at our content
   // offset
-  aTX.Init(this, mContentOffset);
+  aTX.Init(this, mContent, mContentOffset);
 
   PRInt32 strInx = mContentOffset;
 
@@ -2107,7 +2109,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     PRInt32 wordLen, contentLen;
     if (aPos->mDirection == eDirPrevious){
       keepSearching = PR_TRUE;
-      tx.Init(this, aPos->mStartOffset);
+      tx.Init(this, mContent, aPos->mStartOffset);
       if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
         if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
           aPos->mContentOffset = aPos->mStartOffset - contentLen;
@@ -2136,7 +2138,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       start = -1; //start at end
     }
     else if (aPos->mDirection == eDirNext){
-      tx.Init(this, aPos->mStartOffset );
+      tx.Init(this, mContent, aPos->mStartOffset );
 
 #ifdef DEBUGWORDJUMP
 printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
@@ -2372,18 +2374,14 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRBool endsInWhitespace = PR_FALSE;
   PRBool endsInNewline = PR_FALSE;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  mContent->GetDocument(*getter_AddRefs(doc));
   // Setup text transformer to transform this frames text content
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  //nsCOMPtr<nsIWordBreaker> wb;
-  //doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,nsnull);
-  nsresult rv = tx.Init(/**textRun, XXX*/ this, startingOffset);
+  nsresult rv = tx.Init(this, mContent, startingOffset);
   if (NS_OK != rv) {
     return rv;
   }
@@ -2559,7 +2557,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
-          nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lineLayout,
+          nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lb, lineLayout,
                                                     aReflowState, next,
                                                     lastWordWidth,
                                                     pWordBuf,
@@ -2803,6 +2801,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
 
 nscoord
 nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
+                                   nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
@@ -2824,6 +2823,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
       if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
         PRBool stop;
         nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                     aLineBreaker,
                                                      aLineLayout,
                                                      aReflowState,
                                                      aNextFrame, tc,
@@ -2874,6 +2874,7 @@ nsTextFrame::GetCorrectStyleContext(nsIPresContext* aPresContext,
                                     
 nscoord
 nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
+                                      nsILineBreaker* aLineBreaker,
                                       nsLineLayout& aLineLayout,
                                       const nsHTMLReflowState& aReflowState,
                                       nsIFrame* aTextFrame,
@@ -2884,29 +2885,11 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                       PRUint32 aWordBufSize)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
-  nsIDocument* doc;
 
-  mContent->GetDocument(doc);
-  if (!doc) {
-    // Not all content objects have a document pointer. Anonymous content
-    // objects, e.g. generated content, do not live in the document model
-    nsIPresShell* shell;
-
-    aPresContext->GetShell(&shell);
-    shell->GetDocument(&doc);
-    NS_RELEASE(shell);
-  }
-
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
-  //nsCOMPtr<nsIWordBreaker> wb;
-  //doc->GetWordBreaker(getter_AddRefs(wb));
-  NS_IF_RELEASE(doc);
-
-  nsTextTransformer tx(buf, TEXT_BUF_SIZE,lb,nsnull);
+  nsTextTransformer tx(buf, TEXT_BUF_SIZE,aLineBreaker,nsnull);
   // XXX we need the content-offset of the text frame!!! 0 won't
   // always be right when continuations are in action
-  tx.Init(/**textRun, XXX*/ aTextFrame, 0);
+  tx.Init(aTextFrame, mContent, 0);
                        
   PRBool isWhitespace;
   PRInt32 wordLen, contentLen;
@@ -2929,7 +2912,7 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 
     PRUint32 breakP=0;
     PRBool needMore=PR_TRUE;
-    nsresult lres = lb->Next(aWordBuf, aWordBufLen+wordLen, 0, &breakP, &needMore);
+    nsresult lres = aLineBreaker->Next(aWordBuf, aWordBufLen+wordLen, 0, &breakP, &needMore);
     if(NS_SUCCEEDED(lres)) 
     {
        // when we look at two pieces text together, we might decide to break

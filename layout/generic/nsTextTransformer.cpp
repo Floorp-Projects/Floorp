@@ -49,8 +49,6 @@ nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen,
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker)
 {
-  NS_IF_ADDREF(mLineBreaker);
-  NS_IF_ADDREF(mWordBreaker);
 }
 
 nsTextTransformer::~nsTextTransformer()
@@ -58,13 +56,11 @@ nsTextTransformer::~nsTextTransformer()
   if (mBuffer != mAutoBuffer) {
     delete [] mBuffer;
   }
-  NS_IF_RELEASE(mLineBreaker);
-  NS_IF_RELEASE(mWordBreaker);
 }
 
 nsresult
-nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
-                        nsIFrame* aFrame,
+nsTextTransformer::Init(nsIFrame* aFrame,
+                        nsIContent* aContent,
                         PRInt32 aStartingOffset)
 {
   // Make sure we have *some* space in case arguments to the ctor were
@@ -76,16 +72,12 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
   }
 
   // Get the frames text content
-  nsIContent* content;
-  aFrame->GetContent(&content);
   nsITextContent* tc;
-  if (NS_OK != content->QueryInterface(kITextContentIID, (void**) &tc)) {
-    NS_RELEASE(content);
+  if (NS_OK != aContent->QueryInterface(kITextContentIID, (void**) &tc)) {
     return NS_OK;
   }
   tc->GetText(mFrags, mNumFrags);
   NS_RELEASE(tc);
-  NS_RELEASE(content);
   mStartingOffset = aStartingOffset;
   mOffset = mStartingOffset;
 
