@@ -17,6 +17,8 @@
 
 DEPTH = ../..
 
+include $(DEPTH)/config/config.mk
+
 DIRS = unix 
 
 MODULE=shell
@@ -27,10 +29,17 @@ DEFINES = -D_IMPL_NS_SHELL
 
 EXTRA_DSO_LDOPTS+= -L$(DIST)/lib \
 		$(DIST)/bin/libxpcom.so \
-		$(DIST)/bin/libreg.so -lXm -lXt -lX11 $(LIBNSPR)
+		$(DIST)/bin/libreg.so  $(LIBNSPR)
 
 ifeq ($(OS_ARCH),linux)
 EXTRA_DSO_LDOPTS+= /usr/lib/libc.a /usr/lib/libstdc++.a 
+endif
+
+# This should really be done properly in 'config'
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS+=  -L/usr/X11R6/lib -lXm -lXt -lX11
+else
+EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11
 endif
 
 LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
@@ -51,7 +60,6 @@ CPP_OBJS=				\
  ./$(OBJDIR)/nsShellInstance.o		\
  $(NULL)
 
-include $(DEPTH)/config/config.mk
 
 TARGETS = $(LIBRARY)
 
