@@ -909,7 +909,7 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         break;
 
       case eCursor_context_menu:
-        gdkcursor = gdk_cursor_new(GDK_RIGHTBUTTON);
+        newCursor = gdk_cursor_new(GDK_RIGHTBUTTON);
         break;
 
       case eCursor_cell:
@@ -932,48 +932,48 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         break;
 
       case eCursor_zoom_in:
-        gdkcursor = gdk_cursor_new(GDK_PLUS);
+        newCursor = gdk_cursor_new(GDK_PLUS);
         break;
 
       case eCursor_zoom_out:
-        gdkcursor = gdk_cursor_new(GDK_EXCHANGE);
+        newCursor = gdk_cursor_new(GDK_EXCHANGE);
         break;
 
       case eCursor_not_allowed:
       case eCursor_no_drop:
-        gdkcursor = gdk_cursor_new(GDK_X_CURSOR);
+        newCursor = gdk_cursor_new(GDK_X_CURSOR);
         break;
 
       case eCursor_col_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+        newCursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
 
       case eCursor_row_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        newCursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
         break;
 
       case eCursor_vertical_text:
-        gdkcursor = gdk_cursor_new(GDK_XTERM);
+        newCursor = gdk_cursor_new(GDK_XTERM);
         break;
 
       case eCursor_all_scroll:
-        gdkcursor = gdk_cursor_new(GDK_FLEUR);
+        newCursor = gdk_cursor_new(GDK_FLEUR);
         break;
 
       case eCursor_nesw_resize:
-        gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+        newCursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
         break;
 
       case eCursor_nwse_resize:
-        gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+        newCursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
         break;
 
       case eCursor_ns_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        newCursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
         break;
 
       case eCursor_ew_resize:
-        gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+        newCursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
 
       default:
