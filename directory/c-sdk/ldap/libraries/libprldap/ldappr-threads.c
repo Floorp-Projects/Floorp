@@ -43,10 +43,14 @@
  * Structure used by libldap thread callbacks to maintain error information.
  */
 typedef struct prldap_errorinfo {
+    int		plei_magic;	/* must be first in the structure */
     int		plei_lderrno;
     char	*plei_matched;
     char	*plei_errmsg;
 } PRLDAP_ErrorInfo;
+
+#define PRLDAP_ERRORINFO_MAGIC	0x4D4F5A45	/* 'MOZE' */
+
 
 /*
  * Structure used to maintain thread-private data. At the present time,
@@ -284,18 +288,41 @@ prldap_set_ld_error( int err, char *matched, char *errmsg, void *errorarg )
 	    if ( eip == NULL ) {
 		return;	/* punt */
 	    }
+	    eip->plei_magic = PRLDAP_ERRORINFO_MAGIC;
 	    (void)prldap_set_thread_private( map->prtm_index, eip );
 	}
 
 	eip->plei_lderrno = err;
+
 	if ( eip->plei_matched != NULL ) {
 	    ldap_memfree( eip->plei_matched );
 	}
 	eip->plei_matched = matched;
+
 	if ( eip->plei_errmsg != NULL ) {
 	    ldap_memfree( eip->plei_errmsg );
 	}
 	eip->plei_errmsg = errmsg;
+    }
+}
+
+
+/*
+ * Utility function to free a PRLDAP_ErrorInfo structure and everything
+ * it contains.
+ */
+static void
+prldap_free_errorinfo( PRLDAP_ErrorInfo *eip )
+{
+    if ( NULL != eip && PRLDAP_ERRORINFO_MAGIC == eip->plei_magic ) {
+	if ( eip->plei_matched != NULL ) {
+	    ldap_memfree( eip->plei_matched );
+	}
+	if ( eip->plei_errmsg != NULL ) {
+	    ldap_memfree( eip->plei_errmsg );
+	}
+
+	PR_Free( eip );
     }
 }
 
@@ -405,9 +432,15 @@ prldap_allocate_map( LDAP *ld )
 
     if ( map != NULL ) {
 	map->prtm_ld = ld;	/* now marked as "in use" */
-				/* since we are reusing...reset */
-				/* to initial state */
-	(void)prldap_set_thread_private( map->prtm_index, NULL );
+
+	/*
+	 * If old thread-private error information exists, reset it. It may
+	 * have been left behind by an old LDAP session that was used by
+	 * this thread but disposed of by a different thread.
+	 */
+	if ( NULL != prldap_get_thread_private( map->prtm_index )) {
+	    prldap_set_ld_error( LDAP_SUCCESS, NULL, NULL, map );
+	}
     }
 
     PR_Unlock( prldap_map_mutex );
@@ -436,14 +469,7 @@ prldap_return_map( PRLDAP_TPDMap *map )
     if (( eip = (PRLDAP_ErrorInfo *)prldap_get_thread_private(
 		map->prtm_index )) != NULL &&
 		prldap_set_thread_private( map->prtm_index, NULL ) == 0 ) {
-	if ( eip->plei_matched != NULL ) {
-	    ldap_memfree( eip->plei_matched );
-	}
-	if ( eip->plei_errmsg != NULL ) {
-	    ldap_memfree( eip->plei_errmsg );
-	}
-
-	PR_Free( eip );
+	prldap_free_errorinfo( eip );
     }
 
     /* mark map as available for re-use */
@@ -572,13 +598,12 @@ prldap_tsd_realloc( PRLDAP_TPDHeader *tsdhdr, int maxindex )
  * Description: Free a thread-private data array. Installed as an NSPR TPD
  *	destructor function
  * Returns: nothing.
- * Note: this function assumes that each TPD item installed at the PRLDAP
- *	level can be freed with a call to PR_Free().
  */
 static void
 prldap_tsd_destroy( void *priv )
 {
     PRLDAP_TPDHeader	*tsdhdr;
+    PRLDAP_ErrorInfo	*eip;
     int			i;
 
     tsdhdr = (PRLDAP_TPDHeader *)priv;
@@ -586,7 +611,12 @@ prldap_tsd_destroy( void *priv )
 	if ( tsdhdr->ptpdh_dataitems != NULL ) {
 	    for ( i = 0; i < tsdhdr->ptpdh_tpd_count; ++i ) {
 		if ( tsdhdr->ptpdh_dataitems[ i ] != NULL ) {
-		    PR_Free( tsdhdr->ptpdh_dataitems[ i ] );
+		    eip = (PRLDAP_ErrorInfo *)tsdhdr->ptpdh_dataitems[ i ];
+		    if ( PRLDAP_ERRORINFO_MAGIC == eip->plei_magic ) {
+			prldap_free_errorinfo( eip );
+		    } else {
+			PR_Free( tsdhdr->ptpdh_dataitems[ i ] );
+		    }
 		    tsdhdr->ptpdh_dataitems[ i ] = NULL;
 		}
 	    }
