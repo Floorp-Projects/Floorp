@@ -3213,7 +3213,6 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	nsINetService * pNetService;
-	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
 	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
@@ -3639,7 +3638,6 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 		char* sAppName = nsnull;
 
 		nsINetService * pNetService;
-//		nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
 		nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
 		if (NS_SUCCEEDED(rv) && pNetService)
 		{
