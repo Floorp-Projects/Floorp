@@ -1005,7 +1005,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_bars.c
 	$(DEPTH)\lib\libmocha\lm_cmpnt.c
 	$(DEPTH)\lib\libmocha\lm_doc.c
+!ifdef DOM
 	$(DEPTH)\lib\libmocha\lm_dom.c
+!endif
 	$(DEPTH)\lib\libmocha\lm_embed.c
 	$(DEPTH)\lib\libmocha\lm_event.c
 	$(DEPTH)\lib\libmocha\lm_form.c
