@@ -26,7 +26,7 @@
           urlbase="[% Param('urlbase') %]"
           maintainer="[% Param('maintainer') FILTER xml %]"
 [% IF user.id %]
-          exporter="[% user.login FILTER xml %]"
+          exporter="[% user.email FILTER xml %]"
 [% END %]
 >
 

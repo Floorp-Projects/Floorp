@@ -161,8 +161,7 @@ foreach (@fieldlist) {
     $displayfields{$_} = 1;
 }
 
-$template->process("bug/show.xml.tmpl", { user => { login => $exporter },
-                                          bugs => \@bugs,
+$template->process("bug/show.xml.tmpl", { bugs => \@bugs,
                                           displayfields => \%displayfields,
                                         }, \$msg)
   || ThrowTemplateError($template->error());
