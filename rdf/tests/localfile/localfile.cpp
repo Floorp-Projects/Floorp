@@ -138,9 +138,6 @@ main(int argc, char** argv)
                                                     (nsISupports**) &theEventQueueService)))
         goto done;
 
-    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue()))
-        goto done;
-
     if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                                  &mainQueue)))
         goto done;

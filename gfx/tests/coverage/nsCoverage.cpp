@@ -338,12 +338,6 @@ nsresult CoverageTest(int *argc, char **argv)
         return res;
     }
 
-    res = eventQService->CreateThreadEventQueue();
-    if (NS_OK != res) {
-        NS_ASSERTION(PR_FALSE, "Could not create the event queue for the thread");
-        return res;
-    }
-
       // Create a application shell
     nsIAppShell *appShell;
     CallCreateInstance(kCAppShellCID, &appShell);

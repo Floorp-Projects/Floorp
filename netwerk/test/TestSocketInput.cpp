@@ -163,9 +163,6 @@ main(int argc, char* argv[])
            do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_FAILED(rv)) return rv;
-
   nsCOMPtr<nsIEventQueue> eventQ;
   rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
   if (NS_FAILED(rv)) return rv;

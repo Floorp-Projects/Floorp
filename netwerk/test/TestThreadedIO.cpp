@@ -59,16 +59,7 @@ createEventQueue() {
     nsCOMPtr<nsIEventQueueService> eqs = 
              do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
     if ( NS_SUCCEEDED( rv ) ) {
-        // Have service create us an event queue.
-        rv = eqs->CreateThreadEventQueue();
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Get the event queue it created.  BTW, why the heck doesn't
-            // CreateThreadEventQueue just return it?
             eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(result));
-        } else {
-            printf( "%s %d: nsIEventQueueService::CreateThreadEventQueue failed, rv=0x%08X\n",
-                    (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
     } else {
         printf( "%s %d: NS_WITH_SERVICE(nsIEventQueueService) failed, rv=0x%08X\n",
                 (char*)__FILE__, (int)__LINE__, (int)rv );

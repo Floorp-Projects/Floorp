@@ -76,13 +76,6 @@ main(int argc, char* argv[])
   NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
   registrar->AutoRegister(nsnull);
 
-  // Create the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> pEventQService =
-      do_GetService(kEventQueueServiceCID);
-  if (pEventQService)
-    // XXX: What if this fails?
-    pEventQService->CreateThreadEventQueue();
-
   nsIInputStream* in = nsnull;
 
   nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));

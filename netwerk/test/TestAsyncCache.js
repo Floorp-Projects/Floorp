@@ -8,7 +8,6 @@ function getEventQueue()
     var nsIEventQueueService = Components.interfaces.nsIEventQueueService;
     var CID = Components.classes["@mozilla.org/event-queue-service;1"];
     var service = CID.getService(nsIEventQueueService);
-    service.createThreadEventQueue();
     return service.getSpecialEventQueue(nsIEventQueueService.CURRENT_THREAD_EVENT_QUEUE);
 }
 

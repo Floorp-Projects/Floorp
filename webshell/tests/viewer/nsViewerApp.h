@@ -85,7 +85,6 @@ protected:
 
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;
-  nsIEventQueueService* mEventQService;
   nsString mStartURL;
   PRBool mDoPurify;
   PRBool mLoadTestFromFile;

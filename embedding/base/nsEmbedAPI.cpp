@@ -24,7 +24,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
-#include "nsIEventQueueService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIStringBundle.h"
 
@@ -91,19 +90,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
         sXPCOMCleanupHack.mCleanOnExit = PR_TRUE;
 #endif
     }
-
-    // Create the Event Queue for the UI thread...
-    //
-    // If an event queue already exists for the thread, then 
-    // CreateThreadEventQueue(...) will fail...
-    // CreateThread0ueue(...) will fail...
-    nsCOMPtr<nsIEventQueueService> eventQService(
-                do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-
-    eventQService->CreateThreadEventQueue();
-
     // Register components
     if (!sRegistryInitializedFlag)
     {

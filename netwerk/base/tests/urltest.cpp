@@ -47,7 +47,6 @@
 #endif
 
 #include "plstr.h"
-#include "nsIEventQueue.h"
 
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
@@ -56,7 +55,6 @@
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIEventQueueService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
@@ -78,10 +76,6 @@
 
 // Define CIDs...
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-// Define IIDs...
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 //NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
 #ifdef XP_UNIX
@@ -243,7 +237,6 @@ int main(int argc, char **argv)
     nsAutoString url_address;
 //    char buf[256];
 //    nsIStreamListener *pConsumer;
-    nsIEventQueueService* pEventQService;
 //    nsIURL *pURL;
     nsresult result;
     int i;
@@ -262,21 +255,6 @@ int main(int argc, char **argv)
     testURL(argv[1]);
     return 0;
 #if 0
-    nsRepository::RegisterComponent(
-		kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterComponent(
-		kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-    // Create the Event Queue for this thread...
-    pEventQService = nsnull;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
-                                          (nsISupports **)&pEventQService);
-    if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
-
     for (i=1; i < argc; i++) {
         if (PL_strcasecmp(argv[i], "-all") == 0) {
             testURL(0);
@@ -284,11 +262,6 @@ int main(int argc, char **argv)
         } 
 
         testURL(argv[i]);
-    }
-
-    if (nsnull != pEventQService) {
-        pEventQService->DestroyThreadEventQueue();
-        nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
     }
     return 0;
 #endif

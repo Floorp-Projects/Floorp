@@ -2521,13 +2521,6 @@ void PR_CALLBACK scanimage_thread_routine( void * arg )
         return;
     }
 
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Unable to create new thread event queue!\n");
-        // Does this mean that an event queue is already at
-        // our disposal?
-    }
-
     rv = eventQService->GetThreadEventQueue(pthis->mUIThread,
                                             getter_AddRefs(eventQ));
     if (NS_FAILED(rv)) {

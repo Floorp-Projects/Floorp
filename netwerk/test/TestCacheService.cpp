@@ -193,9 +193,6 @@ main(int argc, char* argv[])
              do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) goto error_exit;
 
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) goto error_exit;
-
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(gEventQ));
     
     /**
