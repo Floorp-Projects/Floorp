@@ -346,10 +346,10 @@ int main(int argc, char* argv[])
     goto done;
   }
  
+#if 0 // defined(NS_USING_PROFILES) 
   /* 
    * If default profile is current, launch CreateProfile Wizard. 
    */ 
-#if defined(NS_USING_PROFILES) 
   { 
       int numProfiles = 0; 
 
