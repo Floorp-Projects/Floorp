@@ -631,7 +631,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 							// first, flush buf
 							if (bytesUsed > 0)
 							{
-								buf.SetCharAt(bytesUsed, 0);
+								buf.Truncate(bytesUsed);
 								returnString.Append(buf);
 								bytesUsed = 0;
 							}
@@ -667,7 +667,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 					// first, flush buf
 					if (bytesUsed > 0)
 					{
-						buf.SetCharAt(bytesUsed, 0);
+						buf.Truncate(bytesUsed);
 						returnString.Append(buf);
 						bytesUsed = 0;
 					}
@@ -698,7 +698,9 @@ char *nsIMAPGenericParser::CreateParenGroup()
 				if (!extractReset)
 				{
 					// append this character to the buffer
-					buf.SetCharAt(bytesUsed, *fCurrentTokenPlaceHolder);
+					buf += *fCurrentTokenPlaceHolder;
+
+					//.SetCharAt(*fCurrentTokenPlaceHolder, bytesUsed);
 					bytesUsed++;
 					fCurrentTokenPlaceHolder++;
 				}
@@ -722,7 +724,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 		// flush buf the final time
 		if (bytesUsed > 0)
 		{
-			buf.SetCharAt(bytesUsed, 0);
+			buf.Truncate(bytesUsed);
 			returnString.Append(buf);
 		}
 		fNextToken = GetNextToken();
