@@ -54,6 +54,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgImapSearch.obj\
 			.\$(OBJDIR)\nsMsgSearchSession.obj\
 			.\$(OBJDIR)\nsMsgSearchAdapter.obj\
+			.\$(OBJDIR)\nsMsgSearchValue.obj \
 			.\$(OBJDIR)\nsMsgFilterDataSource.obj \
 			.\$(OBJDIR)\nsMsgFilterDelegateFactory.obj \
 			$(NULL)
