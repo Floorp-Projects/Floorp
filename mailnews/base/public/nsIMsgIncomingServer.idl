@@ -74,6 +74,11 @@ interface nsIMsgIncomingServer : nsISupports {
   /* the root folder for this server */
   attribute nsIFolder RootFolder;
 
+  /* are we already getting new Messages on the current server..
+     This is used to help us prevent multiple get new msg commands from
+	 going off at the same time. */
+  attribute boolean serverBusy;
+
   /* do a biff */
   void PerformBiff();
 

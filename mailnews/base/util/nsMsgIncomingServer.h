@@ -86,12 +86,16 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder);
   NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
 
+  /* attribute boolean gettingNewMail; */
+  NS_IMPL_CLASS_GETSET(ServerBusy, PRBool, m_serverBusy);
+
   NS_IMETHOD PerformBiff();
   NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 private:
   nsIPref *m_prefs;
   char *m_serverKey;
   nsCString m_password;
+  PRBool m_serverBusy;
 
 protected:
   char *getPrefName(const char *serverKey, const char *pref);

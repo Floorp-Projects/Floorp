@@ -45,6 +45,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_rootFolder(0)
 {
   NS_INIT_REFCNT();
+  m_serverBusy = PR_FALSE;
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
