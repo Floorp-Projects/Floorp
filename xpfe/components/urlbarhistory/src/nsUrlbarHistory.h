@@ -28,30 +28,21 @@
 
 //Interfaces Needed
 #include "nsIUrlbarHistory.h"
-#include "nsIAutoCompleteSession.h"
 #include "nsVoidArray.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
 #include "nsRDFCID.h"
 
-class nsUrlbarHistory: public nsIUrlbarHistory,
-                       public nsIAutoCompleteSession
+class nsUrlbarHistory: public nsIUrlbarHistory
 {
 public:
 	nsUrlbarHistory();
 
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIURLBARHISTORY
-	NS_DECL_NSIAUTOCOMPLETESESSION
 
 protected:
    virtual ~nsUrlbarHistory();
-
-   NS_IMETHOD SearchPreviousResults(const PRUnichar *, nsIAutoCompleteResults *);
-   NS_IMETHOD SearchCache(const PRUnichar *, nsIAutoCompleteResults *);
-   NS_IMETHOD GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn);
-   NS_IMETHOD CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteResults * aArray, PRBool * aResult);
-   NS_IMETHOD VerifyAndCreateEntry(const PRUnichar * aItem, const PRUnichar * aMatchItem, nsIAutoCompleteResults * aArray);
 
 private:
     nsVoidArray   mArray;

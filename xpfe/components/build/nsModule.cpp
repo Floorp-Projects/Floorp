@@ -36,63 +36,64 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
-#include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
-#ifndef MOZ_PHOENIX
-#include "nsDownloadManager.h"
-#include "nsDownloadProxy.h"
-#endif
-#include "nsGlobalHistory.h"
 #include "rdf.h"
 #include "nsTimeBomb.h"
 #include "nsLocalSearchService.h"
 #include "nsInternetSearchService.h"
 #include "nsRelatedLinksHandlerImpl.h"
-#include "nsUrlbarHistory.h"
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
 #include "nsFontPackageHandler.h"
 #include "nsWindowDataSource.h"
+#include "nsRDFCID.h"
+#ifndef MOZ_PHOENIX
+#include "nsAutoComplete.h"
+#include "nsGlobalHistory.h"
+#include "nsUrlbarHistory.h"
+#include "nsDownloadManager.h"
+#include "nsDownloadProxy.h"
+#if defined(MOZ_LDAP_XPCOM)
+#include "nsLDAPAutoCompleteSession.h"
+#endif
+#endif
 #if defined(XP_WIN)
 #include "nsAlertsService.h" 
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
-#if defined(MOZ_LDAP_XPCOM)
-#include "nsLDAPAutoCompleteSession.h"
-#endif
 
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
 #include "nsCURILoader.h"
 
 // Factory constructors
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
-#ifndef MOZ_PHOENIX
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
-#endif
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
+#ifndef MOZ_PHOENIX
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
+#if defined(MOZ_LDAP_XPCOM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
+#endif
+#endif
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
-#if defined(MOZ_LDAP_XPCOM)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
@@ -151,10 +152,6 @@ UnregisterProc(nsIComponentManager *aCompMgr,
 }
 
 static const nsModuleComponentInfo components[] = {
-    { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
-      nsAutoCompleteResultsConstructor},
-    { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
-      nsAutoCompleteItemConstructor},
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
@@ -174,13 +171,24 @@ static const nsModuleComponentInfo components[] = {
       nsDownloadManagerConstructor },
     { "Download", NS_DOWNLOAD_CID, NS_DOWNLOAD_CONTRACTID,
       nsDownloadProxyConstructor },
-#endif
+    { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
+      nsAutoCompleteResultsConstructor},
+    { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
+      nsAutoCompleteItemConstructor},
+    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
+      NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
       nsGlobalHistoryConstructor },
+#if defined(MOZ_LDAP_XPCOM)
+    { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
+	  "@mozilla.org/autocompleteSession;1?type=ldap",
+	  nsLDAPAutoCompleteSessionConstructor },
+#endif
+#endif
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
       NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
@@ -192,10 +200,6 @@ static const nsModuleComponentInfo components[] = {
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
 	  RelatedLinksHandlerImplConstructor},
     { "Netscape TimeBomb", NS_TIMEBOMB_CID, NS_TIMEBOMB_CONTRACTID, nsTimeBombConstructor},
-    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
-      NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
-    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
-      NS_URLBARAUTOCOMPLETE_CONTRACTID, nsUrlbarHistoryConstructor },
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
       NS_NewCharsetMenu },
@@ -213,11 +217,6 @@ static const nsModuleComponentInfo components[] = {
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },
 #endif // Windows
-#if defined(MOZ_LDAP_XPCOM)
-    { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
-	  "@mozilla.org/autocompleteSession;1?type=ldap",
-	  nsLDAPAutoCompleteSessionConstructor },
-#endif
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
     NS_BROWSERINSTANCE_CONTRACTID, 
