@@ -77,7 +77,7 @@ Feed.prototype.download = function(parseItems, aCallback) {
   var uri = Components.classes["@mozilla.org/network/standard-url;1"].
                       createInstance(Components.interfaces.nsIURI);
   uri.spec = this.url;
-  if (!uri.schemeIs("http"))
+  if (!(uri.schemeIs("http") || uri.schemeIs("https")))
     return this.onParseError(this); // simulate an invalid feed error
 
   this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
