@@ -3,7 +3,6 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser.js                    (content/browser.js)
         content/browser/browser.css                   (content/browser.css)
-        content/browser/contentAreaClick.js           (content/contentAreaClick.js)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/about.gif                     (content/about.gif)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
