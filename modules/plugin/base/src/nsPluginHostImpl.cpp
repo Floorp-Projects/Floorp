@@ -3491,26 +3491,28 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     * or return failure so layout will replace us.
     *
     * Currently, the default plugin is shown for all EMBED and APPLET
-    * tags and also any OBJECT tag that has a CODEBASE attribute.
+    * tags and also any OBJECT tag that has a PLUGINURL PARAM tag name.
     */
 
-    PRBool bHasCodebase = PR_FALSE;
-    nsCOMPtr<nsIDOMElement> domelement;
-    pti2->GetDOMElement(getter_AddRefs(domelement));
-    if (domelement)
-      domelement->HasAttribute(NS_LITERAL_STRING("codebase"), &bHasCodebase);
+    PRBool bHasPluginURL = PR_FALSE;
+    nsCOMPtr<nsIPluginTagInfo2> pti2(do_QueryInterface(aOwner));
+ 
+    if(pti2) {
+      const char *value;
+      bHasPluginURL = NS_SUCCEEDED(pti2->GetParameter("PLUGINURL", &value));
+    }
 
-    if(tagType == nsPluginTagType_Object && !bHasCodebase)
+    // if we didn't find a pluginURL param on the object tag, 
+    // there's nothing more to do here
+    if(nsPluginTagType_Object == tagType && !bHasPluginURL)
       return rv;
 
-    nsresult result;
+    nsresult result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
 
-    result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
-
-    if(result == NS_OK)
+    if(NS_SUCCEEDED(result))
       result = aOwner->GetInstance(instance);
 
-    if(result != NS_OK) {
+    if(NS_FAILED(result)) {
       nsCOMPtr<nsIPrompt> prompt;
       GetPrompt(aOwner, getter_AddRefs(prompt));
       if(prompt)
