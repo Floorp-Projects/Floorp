@@ -1557,7 +1557,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     si_KeyResetTime();
   }
 
-  nsInputFileStream strmx(dirSpec + signonFileName);
+  nsInputFileStream strmx(fullLoad ? (dirSpec+signonFileName) : dirSpec); // not used if !fullLoad
   if (fullLoad && !strmx.is_open()) {
     return -1;
   }
