@@ -44,7 +44,7 @@ public:
     
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
-    virtual nsresult PushBack(char *data, PRUint32 length) = 0;
+    virtual nsresult PushBack(const char *data, PRUint32 length) = 0;
 };
 
 #endif // nsAHttpConnection_h__

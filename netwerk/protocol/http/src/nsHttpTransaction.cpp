@@ -200,6 +200,15 @@ nsHttpTransaction::TakeResponseHead()
 // nsHttpTransaction::nsAHttpTransaction
 //----------------------------------------------------------------------------
 
+PRUint32
+nsHttpTransaction::GetRequestSize()
+{
+    PRUint32 n = 0;
+    if (mReqHeaderStream)
+        mReqHeaderStream->Available(&n);
+    return n;
+}
+
 // called on the socket transport thread
 nsresult
 nsHttpTransaction::OnDataWritable(nsIOutputStream *os)
@@ -280,6 +289,7 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
             return NS_OK;
     }
 
+    mTransactionDone = 1; // force this flag
     mStatus = status;
 
 	if (mListener) {
@@ -751,10 +761,6 @@ nsHttpTransaction::Cancel(nsresult status)
         return NS_OK;
     }
 
-    // the status must be set immediately as the cancelation may only take
-    // action asynchronously.
-    mStatus = status;
-
     // if the transaction is already "done" then there is nothing more to do.
     // ie., our consumer _will_ eventually receive their OnStopRequest.
     PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
@@ -762,6 +768,10 @@ nsHttpTransaction::Cancel(nsresult status)
         LOG(("ignoring cancel since transaction is already done [this=%x]\n", this));
         return NS_OK;
     }
+
+    // the status must be set immediately as the cancelation may only take
+    // action asynchronously.
+    mStatus = status;
 
     return nsHttpHandler::get()->CancelTransaction(this, status);
 }
@@ -884,8 +894,14 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
 
     // even though count may be 0, we still want to call HandleContent
     // so it can complete the transaction if this is a "no-content" response.
-    if (mHaveAllHeaders)
-        return HandleContent(buf, count, bytesWritten);
+    if (mHaveAllHeaders) {
+        rv = HandleContent(buf, count, bytesWritten);
+        if (NS_FAILED(rv)) return rv;
+        // we may have read more than our share, in which case we must give
+        // the excess bytes back to the connection
+        if (mConnection && (count > *bytesWritten))
+            mConnection->PushBack(buf + *bytesWritten, count - *bytesWritten);
+    }
 
     // wait for more data
     return NS_BASE_STREAM_WOULD_BLOCK;

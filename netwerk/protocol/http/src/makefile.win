@@ -43,6 +43,7 @@ CPP_OBJS=		                         \
 	.\$(OBJDIR)\nsHttpHeaderArray.obj	 \
 	.\$(OBJDIR)\nsHttpConnection.obj	 \
 	.\$(OBJDIR)\nsHttpTransaction.obj	 \
+	.\$(OBJDIR)\nsHttpPipeline.obj	     \
 	.\$(OBJDIR)\nsHttpChannel.obj		 \
 	.\$(OBJDIR)\nsHttpRequestHead.obj	 \
 	.\$(OBJDIR)\nsHttpResponseHead.obj	 \

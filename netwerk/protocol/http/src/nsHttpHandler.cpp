@@ -34,6 +34,7 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttpTransaction.h"
 #include "nsHttpAuthCache.h"
+#include "nsHttpPipeline.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpNotify.h"
 #include "nsIURL.h"
@@ -111,6 +112,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
+    , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
@@ -409,7 +411,7 @@ nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
         PR_Unlock(mConnectionLock);
     }
     else {
-        rv = DispatchTransaction_Locked(trans, conn);
+        rv = DispatchTransaction_Locked(trans, trans->Capabilities(), conn);
         NS_RELEASE(conn);
     }
     return rv;
@@ -420,9 +422,7 @@ nsresult
 nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 {
     NS_ENSURE_ARG_POINTER(conn);
-#ifdef DEBUG
-    NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-#endif
+    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 
     PRBool reusable = conn->CanReuse();
 
@@ -472,9 +472,7 @@ nsresult
 nsHttpHandler::ProcessTransactionQ()
 {
     LOG(("nsHttpHandler::ProcessTransactionQ\n"));
-#ifdef DEBUG
-    NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
-#endif
+    NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 
     PR_Lock(mConnectionLock);
 
@@ -780,7 +778,8 @@ nsHttpHandler::EnqueueTransaction_Locked(nsHttpTransaction *trans,
 
 // dispatch this transaction, return unlocked
 nsresult
-nsHttpHandler::DispatchTransaction_Locked(nsHttpTransaction *trans,
+nsHttpHandler::DispatchTransaction_Locked(nsAHttpTransaction *trans,
+                                          PRUint8 transCaps,
                                           nsHttpConnection *conn)
 {
     nsresult rv;
@@ -800,7 +799,7 @@ nsHttpHandler::DispatchTransaction_Locked(nsHttpTransaction *trans,
     // we must not hold the connection lock while making the call to
     // SetTransaction, as it could lead to deadlocks.
     PR_Unlock(mConnectionLock);
-    rv = conn->SetTransaction(trans, trans->Capabilities());
+    rv = conn->SetTransaction(trans, transCaps);
 
     if (NS_FAILED(rv)) {
         LOG(("nsHttpConnection::SetTransaction failed [rv=%x]\n", rv));
@@ -853,24 +852,47 @@ nsHttpHandler::ProcessTransactionQ_Locked()
     mTransactionQ.RemoveElementAt(i);
 
     // 
-    // step 3: dispatch this transaction
+    // step 3: determine if we can pipeline any other transactions along with
+    // this transaction.  if pipelining is disabled or there are no other
+    // transactions that can be sent with this transaction, then simply send
+    // this transaction.
     //
-    nsresult rv = DispatchTransaction_Locked(pt->Transaction(), conn);
+    nsAHttpTransaction *trans = pt->Transaction();
+    PRUint8 caps = pt->Transaction()->Capabilities();
+    nsPipelineEnqueueState pipelineState;
+    if (conn->SupportsPipelining() &&
+        caps & NS_HTTP_ALLOW_PIPELINING &&
+        BuildPipeline_Locked(pipelineState,
+                             pt->Transaction(),
+                             pt->ConnectionInfo())) {
+        // ok... let's rock!
+        trans = pipelineState.Transaction();
+        caps = pipelineState.TransactionCaps();
+        NS_ASSERTION(trans, "no transaction");
+    }
+
+    // 
+    // step 4: dispatch this transaction
+    //
+    nsresult rv = DispatchTransaction_Locked(trans, caps, conn);
 
     // we're no longer inside mConnectionLock
 
     // 
-    // step 4: handle errors / cleanup
+    // step 5: handle errors / cleanup
     //
     if (NS_FAILED(rv)) {
         LOG((">> DispatchTransaction_Locked failed [rv=%x]\n", rv));
         nsAutoLock lock(mConnectionLock);
         // there must have been something wrong with the connection,
         // requeue... we'll try again later.
+        if (caps & NS_HTTP_ALLOW_PIPELINING)
+            PipelineFailed_Locked(pipelineState);
         mTransactionQ.AppendElement(pt);
     }
     else
         delete pt;
+    pipelineState.Cleanup();
     NS_RELEASE(conn);
 }
 
@@ -956,6 +978,80 @@ nsHttpHandler::DropConnections(nsVoidArray &connections)
         NS_RELEASE(conn);
     }
     connections.Clear();
+}
+
+PRBool
+nsHttpHandler::BuildPipeline_Locked(nsPipelineEnqueueState &state,
+                                    nsHttpTransaction *firstTrans,
+                                    nsHttpConnectionInfo *ci)
+{
+    if (mMaxPipelinedRequests < 2)
+        return PR_FALSE;
+
+    LOG(("BuildPipeline_Locked [trans=%x]\n", firstTrans));
+
+    //
+    // need to search the pending transaction list for other transactions
+    // that can be pipelined along with |firstTrans|.
+    //
+    nsresult rv = NS_ERROR_FAILURE; // by default, nothing to pipeline
+    PRUint8 numAppended = 0;
+    PRInt32 i = 0;
+    while (i < mTransactionQ.Count()) {
+        nsPendingTransaction *pt = (nsPendingTransaction *) mTransactionQ[i];
+        if (pt->Transaction()->Capabilities() & (NS_HTTP_ALLOW_KEEPALIVE |
+                                                 NS_HTTP_ALLOW_PIPELINING) &&
+            pt->ConnectionInfo()->Equals(ci)) {
+
+            //
+            // ok, we can add this transaction to our pipeline
+            //
+            if (numAppended == 0) {
+                rv = state.Init(firstTrans);
+                if (NS_FAILED(rv)) break;
+            }
+            rv = state.AppendTransaction(pt);
+            if (NS_FAILED(rv)) break;
+
+            //
+            // ok, remove the transaction from the pending queue; next time
+            // around the loop we'll still check the i-th element :-)
+            //
+            mTransactionQ.RemoveElementAt(i);
+
+            //
+            // we may have reached the pipelined requests limit...
+            //
+            if (++numAppended == (mMaxPipelinedRequests - 1))
+                break;
+        }
+        else
+            i++; // advance to next pending transaction
+    }
+    if (NS_FAILED(rv)) {
+        LOG(("  unable to pipeline any transactions with this one\n"));
+        state.Cleanup();
+        return PR_FALSE;
+    }
+    LOG(("  pipelined %u transactions\n", numAppended + 1));
+    return PR_TRUE;
+}
+
+void
+nsHttpHandler::PipelineFailed_Locked(nsPipelineEnqueueState &state)
+{
+    if ((mMaxPipelinedRequests < 2) || !state.HasPipeline())
+        return;
+
+    LOG(("PipelineFailed_Locked\n"));
+
+    // need to put any "appended" transactions back on the queue
+    PRInt32 i = 0;
+    while (i < state.NumAppendedTrans()) {
+        mTransactionQ.AppendElement(state.GetAppendedTrans(i));
+        i++;
+    }
+    state.DropAppendedTrans();
 }
 
 void
@@ -1338,10 +1434,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
 
-    /*
-    mPipelineMaxRequests  = DEFAULT_PIPELINE_MAX_REQUESTS;
-    rv = prefs->GetIntPref("network.http.pipelining.maxrequests", &mPipelineMaxRequests );
-    */
+    if (PREF_CHANGED(HTTP_PREF("pipelining.maxrequests"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("pipelining.maxrequests"), &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxPipelinedRequests = CLAMP(val, 1, NS_HTTP_MAX_PIPELINED_REQUESTS);
+    }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
         rv = prefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
@@ -1971,6 +2068,8 @@ nsHttpHandler::Observe(nsISupports *subject,
                        const char *topic,
                        const PRUnichar *data)
 {
+    LOG(("nsHttpHandler::Observe [topic=\"%s\")]\n", topic));
+
     if (!nsCRT::strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
@@ -2023,4 +2122,43 @@ nsPendingTransaction::~nsPendingTransaction()
  
     NS_RELEASE(mTransaction);
     NS_RELEASE(mConnectionInfo);
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpHandler::nsPipelineEnqueueState
+//-----------------------------------------------------------------------------
+
+nsresult nsHttpHandler::
+nsPipelineEnqueueState::Init(nsHttpTransaction *firstTrans)
+{
+    NS_ASSERTION(mPipeline == nsnull, "already initialized");
+
+    mPipeline = new nsHttpPipeline;
+    if (!mPipeline)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mPipeline);
+
+    return mPipeline->Init(firstTrans);
+}
+
+nsresult nsHttpHandler::
+nsPipelineEnqueueState::AppendTransaction(nsPendingTransaction *pt)
+{
+    nsresult rv = mPipeline->AppendTransaction(pt->Transaction());
+    if (NS_FAILED(rv)) return rv;
+
+    // remember this pending transaction object
+    mAppendedTrans.AppendElement(pt);
+    return NS_OK;
+}
+
+void nsHttpHandler::
+nsPipelineEnqueueState::Cleanup()
+{
+    NS_IF_RELEASE(mPipeline);
+
+    // free any appended pending transaction objects
+    for (PRInt32 i=0; i < mAppendedTrans.Count(); i++)
+        delete GetAppendedTrans(i);
+    mAppendedTrans.Clear();
 }

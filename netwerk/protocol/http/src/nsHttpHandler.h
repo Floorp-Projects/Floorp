@@ -25,6 +25,7 @@
 #define nsHttpHandler_h__
 
 #include "nsHttp.h"
+#include "nsHttpPipeline.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIIOService.h"
@@ -49,6 +50,7 @@ class nsHttpConnectionInfo;
 class nsHttpHeaderArray;
 class nsHttpTransaction;
 class nsHttpAuthCache;
+class nsAHttpTransaction;
 class nsIHttpChannel;
 class nsIPrefBranch;
 
@@ -147,7 +149,7 @@ public:
     // Called by the channel once headers are available
     nsresult OnExamineResponse(nsIHttpChannel *);
 
-private:
+public: /* internal */
     //
     // Transactions that have not yet been assigned to a connection are kept
     // in a queue of nsPendingTransaction objects.  nsPendingTransaction 
@@ -172,16 +174,52 @@ private:
     };
 
     //
+    // Data structure used to hold information used during the construction of
+    // a transaction pipeline.
+    //
+    class nsPipelineEnqueueState
+    {
+    public:
+        nsPipelineEnqueueState() : mPipeline(nsnull) {}
+       ~nsPipelineEnqueueState() { Cleanup(); }
+
+        nsresult Init(nsHttpTransaction *);
+        nsresult AppendTransaction(nsPendingTransaction *);
+        void     Cleanup();
+        
+        nsAHttpTransaction   *Transaction() { return mPipeline; }
+        PRUint8               TransactionCaps() { return NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING; }
+        PRBool                HasPipeline() { return (mPipeline != nsnull); }
+        nsPendingTransaction *GetAppendedTrans(PRInt32 i) { return (nsPendingTransaction *) mAppendedTrans[i]; }
+        PRInt32               NumAppendedTrans() { return mAppendedTrans.Count(); }
+        void                  DropAppendedTrans() { mAppendedTrans.Clear(); }
+
+    private:
+        nsHttpPipeline *mPipeline;
+        nsAutoVoidArray mAppendedTrans;
+    };
+
+private:
+
+    //
     // Connection management methods
     //
     nsresult GetConnection_Locked(nsHttpConnectionInfo *, PRUint8 caps, nsHttpConnection **);
     nsresult EnqueueTransaction_Locked(nsHttpTransaction *, nsHttpConnectionInfo *);
-    nsresult DispatchTransaction_Locked(nsHttpTransaction *, nsHttpConnection *); // unlocked on return
+    nsresult DispatchTransaction_Locked(nsAHttpTransaction *, PRUint8 caps, nsHttpConnection *); // unlocked on return
     void     ProcessTransactionQ_Locked(); // unlocked on return
     PRBool   AtActiveConnectionLimit_Locked(nsHttpConnectionInfo *, PRUint8 caps);
     nsresult RemovePendingTransaction_Locked(nsHttpTransaction *);
 
     void     DropConnections(nsVoidArray &);
+
+    //
+    // Pipelining methods - these may fail silently, and that's ok!
+    //
+    PRBool   BuildPipeline_Locked(nsPipelineEnqueueState &,
+                                  nsHttpTransaction *,
+                                  nsHttpConnectionInfo *);
+    void     PipelineFailed_Locked(nsPipelineEnqueueState &);
 
     //
     // Useragent/prefs helper methods
@@ -233,6 +271,7 @@ private:
     PRUint8  mMaxConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerServer;
     PRUint8  mMaxPersistentConnectionsPerProxy;
+    PRUint8  mMaxPipelinedRequests;
 
     PRUint8  mRedirectionLimit;
 
