@@ -63,7 +63,9 @@
 #include "xpgetstr.h"
 extern int XP_EDITOR_NON_HTML;
 
+#ifndef MODULAR_NETLIB
 #include "marimurl.h"
+#endif
 
 #ifdef CRAWLER
 /* crawler converters */
@@ -522,6 +524,7 @@ net_RegisterDefaultDecoders (void)
 #endif /* XP_UNIX */
 
 
+#ifndef MODULAR_NETLIB
   /* Set things up so that the image library gets reconnected once the
 	 internally-handled images have been started. */
   NET_RegisterContentTypeConverter (IMAGE_GIF, FO_INTERNAL_IMAGE,
@@ -569,6 +572,7 @@ net_RegisterDefaultDecoders (void)
                                     IL_ViewStream);
   NET_RegisterContentTypeConverter (IMAGE_XBM3,FO_PRESENT_INLINE,NULL,
                                     IL_ViewStream);
+#endif /* !MODULAR_NETLIB */
 
   /* register default (non)decoders for the text printer
    */
@@ -787,8 +791,10 @@ NET_RegisterMIMEDecoders (void)
 								 NET_MimeEncodingConverter);
 #endif  
 
+#ifndef MODULAR_NETLIB
   NET_RegisterContentTypeConverter ("*", FO_MULTIPART_IMAGE,
 									(void *) 1, IL_ViewStream);
+#endif
 
 #ifdef MOZ_MAIL_NEWS
   /* Decoders for libmsg/compose.c */
