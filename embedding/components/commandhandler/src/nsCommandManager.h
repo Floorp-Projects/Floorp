@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -53,6 +54,7 @@ class nsIController;
 
 class nsCommandManager :  public nsICommandManager,
                           public nsPICommandUpdater,
+                       // public nsISecurityCheckedComponent,
                           public nsSupportsWeakReference
 
 {
@@ -73,7 +75,10 @@ public:
 protected:
 
 
-  nsresult  GetControllerForCommand(const char * aCommand, nsIController** outController);
+  nsresult  IsCallerChrome(PRBool *aIsCallerChrome);
+  nsresult  GetControllerForCommand(const char * aCommand,
+                                    nsIDOMWindow *aDirectedToThisWindow,
+                                    nsIController** outController);
 
 
 protected:
