@@ -29,6 +29,7 @@
 #define LINE_TOP_MARGIN_IS_AUTO       0x10
 #define LINE_BOTTOM_MARGIN_IS_AUTO    0x20
 #define LINE_OUTSIDE_CHILDREN         0x40
+#define LINE_ISA_EMPTY_LINE           0x80
 
 class nsISpaceManager;
 class nsLineBox;
@@ -63,6 +64,17 @@ public:
 #ifdef NS_DEBUG
   PRBool CheckIsBlock() const;
 #endif
+
+  PRBool IsEmptyLine() const {
+    return 0 != (mState & LINE_ISA_EMPTY_LINE);
+  }
+
+  void SetIsEmptyLine(PRBool aSetting) {
+    if (aSetting)
+      mState |= aSetting;
+    else
+      mState &= ~aSetting;
+  }
 
   //----------------------------------------------------------------------
   // XXX old junk
