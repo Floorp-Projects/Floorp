@@ -49,5 +49,18 @@ sub output {
 }
 
 sub hash {
-    return {};
+    # Includes today's date as an RFC822 compliant string with the
+    # exception that the year is returned as four digits. IMHO RFC822
+    # was wrong to specify the year as two digits. Many email systems
+    # generate four-digit years.
+    my ($tsec, $tmin, $thour, $tmday, $tmon, $tyear, $twday, $tyday, $tisdst) = gmtime(time());
+    $tyear += 1900; # as mentioned above, this is not RFC822 compliant, but is Y2K-safe.
+    $tsec = "0$tsec" if $tsec < 10;
+    $tmin = "0$tmin" if $tmin < 10;
+    $thour = "0$thour" if $thour < 10;
+    $tmon = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')[$tmon];
+    $twday = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')[$twday];
+    return {
+        'date' => "$twday, $tmday $tmon $tyear $thour:$tmin:$tsec GMT",
+    };
 }
