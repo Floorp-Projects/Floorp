@@ -2504,7 +2504,7 @@ nsTableFrame::AppendFrames(nsPresContext* aPresContext,
           mColGroups.InsertFrame(nsnull, lastColGroup, f);
       }
       // Insert the colgroup and its cols into the table
-      InsertColGroups(*aPresContext, startColIndex, f);
+      InsertColGroups(*aPresContext, startColIndex, f, f);
     } else if (IsRowGroup(display->mDisplay)) {
       // Append the new row group frame to the sibling chain
       mFrames.AppendFrame(nsnull, f);
