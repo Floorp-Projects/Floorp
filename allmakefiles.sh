@@ -850,11 +850,7 @@ browser/components/downloads/public/Makefile
 browser/components/downloads/src/Makefile
 browser/components/prefwindow/Makefile
 browser/components/prefwindow/content/Makefile
-browser/components/prefwindow/content/unix/Makefile
-browser/components/prefwindow/content/win/Makefile
 browser/components/prefwindow/locale/Makefile
-browser/components/prefwindow/locale/unix/Makefile
-browser/components/prefwindow/locale/win/Makefile
 browser/components/search/Makefile
 browser/components/search/resources/Makefile
 toolkit/Makefile
