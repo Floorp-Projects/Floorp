@@ -13,7 +13,7 @@ my $req  = new CGI::Request;
 
 use vars qw{$value $data $tbox $testname $ua $ip $time};
 $value    = $req->param('value');
-$data     = $req->param('data');
+$data     = $req->param('data');  # Opaque data, anything can go here.
 $tbox     = $req->param('tbox'); $tbox =~ tr/A-Z/a-z/;
 $testname = $req->param('testname');
 $ua       = $req->cgi->var("HTTP_USER_AGENT");
