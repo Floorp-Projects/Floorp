@@ -36,15 +36,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<overlay id="xsltQAMenuID"
+<overlay id="xsltToolsMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="xslt-qa-overlay.js" />
-  <menupopup id="qaMenuPopup">
-    <menuseparator/>
-    <menu label="XSLT QA" accesskey="X">
-      <menupopup>
-        <menuitem label="Xalan Tests" oncommand="onStartBuster()"/>
-      </menupopup>
-    </menu>
+  <menupopup id="toolsPopup">
+    <menuitem label="Xalan Tests" oncommand="onStartBuster()"/>
   </menupopup>
 </overlay>

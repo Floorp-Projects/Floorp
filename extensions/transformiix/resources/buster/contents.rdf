@@ -18,10 +18,10 @@
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
+    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
   </RDF:Seq>
 
-  <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
+  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
     <RDF:li>chrome://xslt-qa/content/xslt-qa-overlay.xul</RDF:li>
   </RDF:Seq>
 
