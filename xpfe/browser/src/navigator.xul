@@ -166,13 +166,37 @@
 
   function BrowserLoadURL()
   {
+	appCore = XPAppCoresManager.Find("BrowserAppCore");
+	if (appCore == null)
+	{
+		dump("BrowserAppCore has not been initialized\n");
+		return;
+	}
 
-      appCore = XPAppCoresManager.Find("BrowserAppCore");
-      if (appCore == null) {
-         dump("BrowserAppCore has not been initialized\n");
-         return;
-      }
-      appCore.loadUrl(document.getElementById('urlbar').value);
+	// rjc: added support for URL shortcuts (3/30/1999)
+
+	// get RDF Core service
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			return(false);
+		}
+		rdfCore.Init("RDFCore");
+		XPAppCoresManager.Add(rdfCore);
+	}
+	var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
+
+	dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
+
+	if ((shortcutURL != null) && (shortcutURL != ""))
+	{
+		document.getElementById('urlbar').value = shortcutURL;
+	}
+
+	appCore.loadUrl(document.getElementById('urlbar').value);
       
   }
 
