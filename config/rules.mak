@@ -775,11 +775,11 @@ CHROME_CONTENT_DIR=.
 !endif
 
 # Export content files by copying to dist.
-export:: $(CHROME_CONTENT:.\=EXPORT\.\)
+install:: $(CHROME_CONTENT:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install content files.
-$(CHROME_CONTENT:.\=EXPORT\.\):
-    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)\$(@D:EXPORT\.=.)
+$(CHROME_CONTENT:.\=INSTALL\.\):
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)\$(@D:INSTALL\.=.)
 
 # Clobber content files.
 clobber_all:: $(CHROME_CONTENT:.\=CLOBBER\.\)
@@ -801,11 +801,11 @@ CHROME_SKIN_DIR=.
 !endif
 
 # Export content files by copying to dist.
-export:: $(CHROME_SKIN:.\=EXPORT\.\)
+install:: $(CHROME_SKIN:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install chrome files.
-$(CHROME_SKIN:.\=EXPORT\.\):
-    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)\$(@D:EXPORT\.=.)
+$(CHROME_SKIN:.\=INSTALL\.\):
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)\$(@D:INSTALL\.=.)
 
 # Clobber content files.
 clobber_all:: $(CHROME_SKIN:.\=CLOBBER\.\)
@@ -827,11 +827,11 @@ CHROME_L10N_DIR=.
 !endif
 
 # Export l10n files by copying to dist.
-export:: $(CHROME_L10N:.\=EXPORT\.\)
+install:: $(CHROME_L10N:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install l10n files.
-$(CHROME_L10N:.\=EXPORT\.\):
-    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@D:EXPORT\.=.)
+$(CHROME_L10N:.\=INSTALL\.\):
+    $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@D:INSTALL\.=.)
 
 # Clobber l10n files.
 clobber_all:: $(CHROME_L10N:.\=CLOBBER\.\)
