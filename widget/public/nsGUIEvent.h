@@ -79,6 +79,8 @@ struct nsEvent {
   PRUint32    time;      
   // flags to hold event flow stage and capture/bubble cancellation status
   PRUint32    flags;
+  // flags for indicating more event state for Mozilla applications.
+  PRUint32    internalAppFlags;
 };
 
 /**
@@ -575,6 +577,9 @@ enum nsDragDropEventStatus {
 #define NS_EVENT_FLAG_NO_DEFAULT    0x0010
 #define NS_EVENT_FLAG_CANT_CANCEL   0x0020
 #define NS_EVENT_FLAG_CANT_BUBBLE   0x0040
+
+#define NS_APP_EVENT_FLAG_NONE      0x0000
+#define NS_APP_EVENT_FLAG_HANDLED   0x0001 // Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
 
 // IME Constants  -- keep in synch with nsIDOMTextRange.h
 #define NS_TEXTRANGE_CARETPOSITION				0x01
