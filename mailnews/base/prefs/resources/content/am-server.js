@@ -35,7 +35,7 @@ function initServerType() {
       verboseName = "IMAP Mail server";
       index = 1;
   } else if (serverType == "nntp") {
-      verboseName = "News server";
+      verboseName = "Newsgroup server (NNTP)";
       index = 2;
   } else if (serverType == "none") {
       verboseName = "Local Mail store";
