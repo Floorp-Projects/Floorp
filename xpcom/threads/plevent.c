@@ -885,8 +885,10 @@ failed:
      */
     char portname[64];
     char semname[64];
-    sprintf(portname, "event%lx", self->handlerThread);
-    sprintf(semname, "sync%lx", self->handlerThread);
+    PR_snprintf(portname, sizeof(portname), "event%lx", 
+                (long unsigned) self->handlerThread);
+    PR_snprintf(semname, sizeof(semname), "sync%lx", 
+                (long unsigned) self->handlerThread);
 
     if((self->eventport = find_port(portname)) < 0)
     {
