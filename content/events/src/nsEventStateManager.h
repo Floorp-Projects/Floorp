@@ -58,7 +58,7 @@ class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 
 // mac uses click-hold context menus, a holdover from 4.x
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define CLICK_HOLD_CONTEXT_MENUS 1
 #endif
 

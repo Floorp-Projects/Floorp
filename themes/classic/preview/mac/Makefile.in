@@ -19,40 +19,12 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (mac,$(MOZ_WIDGET_TOOLKIT))
-THEME_PLATFORM = mac
-else
-THEME_PLATFORM = win
-endif
-
-DIRS  = communicator/bookmarks/$(THEME_PLATFORM) \
-	communicator/search/$(THEME_PLATFORM) \
-	communicator/sidebar/$(THEME_PLATFORM) \
-	communicator/$(THEME_PLATFORM) \
-	global/$(THEME_PLATFORM) \
-	messenger/$(THEME_PLATFORM) \
-	messenger/addressbook/$(THEME_PLATFORM) \
-	preview/$(THEME_PLATFORM) \
-	editor/$(THEME_PLATFORM) \
-	navigator/$(THEME_PLATFORM) \
-	$(NULL)
-
-ifeq ($(THEME_PLATFORM),mac)
-DIRS += communicator/profile/$(THEME_PLATFORM)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-install::
-	@$(REGCHROME) skin classic/communicator classic.jar
-	@$(REGCHROME) skin classic/editor classic.jar
-	@$(REGCHROME) skin classic/global classic.jar
-	@$(REGCHROME) skin classic/messenger classic.jar
-	@$(REGCHROME) skin classic/navigator classic.jar

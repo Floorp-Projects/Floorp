@@ -221,7 +221,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 
   // XXX make sure we are hidden (shouldn't this be done automatically?)
   ourView->SetVisibility(nsViewVisibility_kHide);
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   printf("XP Popups: This is a nag to indicate that an inconsistent hack is being done on the Mac for popups.\n");
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
   ourView->CreateWidget(kCPopupCID, &widgetData, nsnull);

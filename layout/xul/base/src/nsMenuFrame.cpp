@@ -1450,7 +1450,7 @@ nsMenuFrame::BuildAcceleratorText()
   {
     // Compiled-in defaults, in case we can't get LookAndFeel --
     // command for mac, control for all other platforms.
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     accelKey = nsIDOMKeyEvent::DOM_VK_META;
 #else
     accelKey = nsIDOMKeyEvent::DOM_VK_CONTROL;
