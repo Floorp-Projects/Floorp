@@ -34,7 +34,7 @@
 
   <!-- category tree entries for editor -->
   <treechildren id="panelChildren">
-    <treeitem container="true" open="true" id="editor" position="4">
+    <treeitem container="true" open="true" id="editor" position="3">
       <treerow>       
         <treecell class="treecell-indent" url="chrome://editor/content/pref-composer.xul" value="&compose.label;" /> 
       </treerow>
