@@ -81,7 +81,7 @@ public interface KeyWrapper {
      * A permanent private key object resides on a token until it is
      * explicitly deleted from the token.
      *
-     * @publicKey Used to calculate the key identifier that must be stored
+     * @param publicKey Used to calculate the key identifier that must be stored
      *  with the private key. Must be a <code>RSAPublicKey</code> or a
      *  <code>DSAPublicKey</code>.
      * @exception InvalidKeyException If the type of the public key does not
@@ -97,7 +97,7 @@ public interface KeyWrapper {
      * private key is one that does not permanently reside on a token.
      * As soon as it is garbage-collected, it is gone forever.
      *
-     * @publicKey Used to calculate the key identifier that must be stored
+     * @param publicKey Used to calculate the key identifier that must be stored
      *  with the private key. Must be a <code>RSAPublicKey</code> or a
      *  <code>DSAPublicKey</code>.
      * @exception InvalidKeyException If the type of the public key does not

@@ -158,7 +158,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds a common name (CN) to the Name.
-     * @CN The common name.
+     * @param CN The common name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      */
@@ -168,7 +168,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds a country name (C) to the Name. It must be exactly two characters.
-     * @C The country name.
+     * @param C The country name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      * @exception IllegalArgumentException If C.length() != 2.
@@ -183,7 +183,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds a locality name (L) to the Name.
-     * @L The locality name.
+     * @param L The locality name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      */
@@ -193,7 +193,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds a state or province name (S) to the Name.
-     * @S The state or province name.
+     * @param S The state or province name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      */
@@ -205,7 +205,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds an organization name (O) to the Name.
-     * @O The organization name.
+     * @param O The organization name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      */
@@ -215,7 +215,7 @@ public class Name implements ASN1Value {
 
     /**
      * Adds an organizational unit name (OU) to the Name.
-     * @OU The organizational unit name.
+     * @param OU The organizational unit name.
      *      It will be formatted according to the IETF PKIX rules for
      *      directory strings.
      */

@@ -49,20 +49,6 @@ class PK11SecureRandom implements org.mozilla.jss.crypto.JSSSecureRandom
     // construction and finalization
     ////////////////////////////////////////////////////
 
-    /**
-     *  While it would be "nice" to add the following code
-     *  snippet to check initialization of the random
-     *  number generator prior to using any of the functions,
-     *  a circular link dependency prevents this:
-     *
-     *      try {
-     *        CryptoManager.getInstance();
-     *      }
-     *      catch ( CryptoManager.NotInitializedException e ) {
-     *        Assert.notReached("Pseudorandom number generator " +
-     *                          "has not been initialized!" );
-     *      }
-     */
     public
     PK11SecureRandom() {}
 

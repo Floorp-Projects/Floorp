@@ -79,7 +79,7 @@ public class Password implements PasswordCallback, Cloneable,
      * <code>PasswordCallback</code>.  This method simply returns a clone
      * of the password.
      *
-     * @returns A copy of the password.  The caller is responsible for
+     * @return A copy of the password.  The caller is responsible for
      *  clearing this copy.
      */
     public synchronized Password
@@ -205,7 +205,7 @@ public class Password implements PasswordCallback, Cloneable,
 	 *
 	 * @param charArray A character array, which should not be null. It will
 	 *		be wiped with zeroes.
-	 * @returns A copy of the charArray, converted from Unicode to UTF8. It
+	 * @return A copy of the charArray, converted from Unicode to UTF8. It
 	 * 	is the responsibility of the caller to clear the output byte array;
 	 *	<code>wipeBytes</code> is ideal for this purpose.
 	 * @see Password#wipeBytes

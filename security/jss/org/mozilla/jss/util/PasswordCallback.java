@@ -75,7 +75,7 @@ public interface PasswordCallback {
      * throwing a <code>GiveUpException</code>.
      *
 	 * @param info Information about the token that is being logged into.
-	 * @returns The password.  This password object is owned by and will
+	 * @return The password.  This password object is owned by and will
      *      be cleared by the caller.
      * @exception GiveUpException If the callback does not want to supply
      *  a password.  This may often be the case if the first attempt failed.

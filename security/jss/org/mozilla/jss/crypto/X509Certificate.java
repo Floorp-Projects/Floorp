@@ -76,7 +76,7 @@ public interface X509Certificate
     getSerialNumber();
 
     /**
-     * Returns the version number of this X.509 certificate.
+     * @return the version number of this X.509 certificate.
      * 0 means v1, 1 means v2, 2 means v3.
      */
     public abstract int

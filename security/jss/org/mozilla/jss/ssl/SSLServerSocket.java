@@ -307,7 +307,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
     }
 
     /**
-     * @Return the local address of this server socket.
+     * @return the local address of this server socket.
      */
     public InetAddress getInetAddress() {
         return base.getLocalAddress();

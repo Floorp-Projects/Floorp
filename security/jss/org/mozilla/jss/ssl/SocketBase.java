@@ -167,7 +167,7 @@ class SocketBase {
     }
 
     /**
-     * @Return the InetAddress of the peer end of the socket.
+     * @return the InetAddress of the peer end of the socket.
      */
     InetAddress getInetAddress()
     {

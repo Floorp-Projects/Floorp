@@ -68,7 +68,6 @@ org.mozilla.jss.pkix.cmc
 org.mozilla.jss.pkix.cmmf
 org.mozilla.jss.pkix.cms
 org.mozilla.jss.pkix.crmf
-org.mozilla.jss.provider
 org.mozilla.jss.provider.java.security
 org.mozilla.jss.provider.javax.crypto
 org.mozilla.jss.ssl
@@ -282,6 +281,6 @@ sub javadoc {
     ensure_dir_exists("$dist_dir/jssdoc");
     my $targets = join(" ", @packages);
     print "$targets\n";
-    print_do("$javadoc -private -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
+    print_do("$javadoc -private -breakiterator -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
     #print "$javadoc -private -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets" . "\n";
 }

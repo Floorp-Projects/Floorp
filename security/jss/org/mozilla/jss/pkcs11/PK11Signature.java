@@ -43,9 +43,6 @@ import org.mozilla.jss.crypto.PrivateKey;
 
 final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 
-    /*************************************************************
-    ** PK11Signature
-    */
 	public PK11Signature(PK11Token token, SignatureAlgorithm algorithm)
 		throws NoSuchAlgorithmException, TokenException
 	{
@@ -70,9 +67,6 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 		this.state = UNINITIALIZED;
 	}
 
-    /*************************************************************
-    ** engineInitSign
-    */
 	public void engineInitSign(org.mozilla.jss.crypto.PrivateKey privateKey)
 		throws InvalidKeyException, TokenException
 	{
@@ -128,9 +122,7 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 	}
 
     /*************************************************************
-    ** engineInitSign
-    **
-    ** This just here for JCA compliance(?), we don't take randoms this way.
+    ** This is just here for JCA compliance, we don't take randoms this way.
     */
 	public void
     engineInitSign(org.mozilla.jss.crypto.PrivateKey privateKey,
@@ -143,18 +135,13 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 	}
 
     /*************************************************************
-    ** initSigContext
-    **
-    ** This function creates a signing context, initializes it,
+    ** Creates a signing context, initializes it,
     ** and sets the sigContext field.
     */
     protected native void initSigContext()
         throws TokenException;
 
 
-    /*************************************************************
-    ** engineInitVerify
-    */
 	public void engineInitVerify(PublicKey publicKey)
 		throws InvalidKeyException, TokenException
 	{
@@ -203,23 +190,14 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 		state = VERIFY;
 	}
 
-    /*************************************************************
-    ** initVfyContext
-    */
     protected native void initVfyContext() throws TokenException;
 
-    /*************************************************************
-    ** engineUpdate
-    */
 	public void engineUpdate(byte b)
         throws SignatureException, TokenException
     {
         engineUpdate(new byte[] {b}, 0, 1);
     }
 
-    /*************************************************************
-    ** engineUpdate
-    */
     public void engineUpdate(byte[] b, int off, int len)
         throws SignatureException, TokenException
     {
@@ -249,16 +227,10 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
         }
     }
 
-    /*************************************************************
-    ** engineUpdateNative
-    */
     protected native void engineUpdateNative(byte[] b, int off, int len)
         throws TokenException;
     
 
-    /*************************************************************
-    ** engineSign
-    */
     public byte[] engineSign()
         throws SignatureException, TokenException
     {
@@ -289,9 +261,6 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 		return result;
     }
 
-    /*************************************************************
-    ** engineSign
-    */
     public int engineSign(byte[] outbuf, int offset, int len)
         throws SignatureException, TokenException
     {
@@ -321,15 +290,9 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
         PrivateKey key, byte[] hash)
         throws SignatureException, TokenException;
 
-    /*************************************************************
-    ** engineSignNative
-    */
     private native byte[] engineSignNative()
         throws SignatureException, TokenException;
 
-    /*************************************************************
-    ** engineVerify
-    */
     public boolean engineVerify(byte[] sigBytes)
         throws SignatureException, TokenException
     {
@@ -377,15 +340,9 @@ final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
         PublicKey key, byte[] hash, byte[] signature)
         throws SignatureException, TokenException;
 
-	/**********************************************************************
-	** engineVerifyNative
-	*/
 	native protected boolean engineVerifyNative(byte[] sigBytes)
 		throws SignatureException, TokenException;
 
-    /*************************************************************
-    ** engineSetParameter
-    */
     public void engineSetParameter(AlgorithmParameterSpec params)
         throws InvalidAlgorithmParameterException, TokenException
     {

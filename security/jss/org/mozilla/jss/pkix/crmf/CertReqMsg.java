@@ -221,7 +221,7 @@ public class CertReqMsg implements ASN1Value {
          *
          * @return A new <i>CertReqMsg</i>.  The return value may be cast
          *      to a <code>CertReqMsg</code>.
-         * @throw InvalidBERException If the data on the input stream is not
+         * @throws InvalidBERException If the data on the input stream is not
          *      a valid BER encoding of a <i>CertReqMsg</i>.
          */
         public ASN1Value decode(InputStream istream)
@@ -239,7 +239,7 @@ public class CertReqMsg implements ASN1Value {
          *      where it is implicitly tagged.
          * @return A new <i>CertReqMsg</i>.  The return value may be cast
          *      to a <code>CertReqMsg</code>.
-         * @throw InvalidBERException If the data on the input stream is not
+         * @throws InvalidBERException If the data on the input stream is not
          *      a valid BER encoding of a <i>CertReqMsg</i>.
          */
         public ASN1Value decode(Tag implicit, InputStream istream)
