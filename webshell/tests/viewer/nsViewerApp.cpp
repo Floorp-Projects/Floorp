@@ -822,7 +822,6 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
     case NS_PAINT: 
 #ifndef XP_UNIX
         // paint the background
-    //  if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mRobotDialog ) {
         if (aEvent->widget == mRobotDialog ) {
           nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
           drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
