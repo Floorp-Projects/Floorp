@@ -186,7 +186,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mOrigSolidBrush = NULL;
   mOrigFont = NULL;
   mOrigSolidPen = NULL;
-  mOrigPalette = NULL;
   mCurrBrushColor = RGB(255, 255, 255);
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
@@ -420,8 +419,6 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
     if (nsnull != mOrigSolidPen)
       prevpen = (HPEN)::SelectObject(aOldDC, mOrigSolidPen);
 
-    if (nsnull != mOrigPalette)
-      ::SelectPalette(aOldDC, mOrigPalette, PR_TRUE);
   }
   else
   {
@@ -451,10 +448,8 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   if (palInfo.isPaletteDevice && palInfo.palette)
   {
     // Select the palette in the background
-    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, PR_TRUE);
-    // Don't do the realization for an off-screen memory DC
-    if (nsnull == aOldDC)
-      ::RealizePalette(aNewDC);
+    ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, PR_FALSE);
+    ::RealizePalette(aNewDC);
   }
 
   return NS_OK;
@@ -482,7 +477,8 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
                                                           void **aBits, PRInt32 *aStride,
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  PRBool  destructive;
+  PRBool        destructive;
+  nsPaletteInfo palInfo;
 
   PushState();
 
@@ -501,8 +497,12 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
     if (nsnull != mOrigSolidPen)
       mCurrPen = (HPEN)::SelectObject(mDC, mOrigSolidPen);
 
-    if (nsnull != mOrigPalette)
-      ::SelectPalette(mDC, mOrigPalette, PR_TRUE);
+    mContext->GetPaletteInfo(palInfo);
+    if(palInfo.isPaletteDevice && palInfo.palette){
+      ::SelectPalette(mDC,(HPALETTE)palInfo.palette,PR_FALSE);
+      ::RealizePalette(mDC);
+      ::UpdateColors(mDC);
+    }
   }
 
   mSurface->ReleaseDC();
@@ -533,24 +533,6 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
     mOrigSolidBrush = (HBRUSH)::SelectObject(mDC, mCurrBrush);
     mOrigFont = (HFONT)::SelectObject(mDC, mCurrFont);
     mOrigSolidPen = (HPEN)::SelectObject(mDC, mCurrPen);
-
-    // If this is a palette device, then select and realize the palette
-    nsPaletteInfo palInfo;
-    mContext->GetPaletteInfo(palInfo);
-
-    if (palInfo.isPaletteDevice && palInfo.palette)
-    {
-      PRBool  offscr;
-      // Select the palette in the background
-      mOrigPalette = ::SelectPalette(mDC, (HPALETTE)palInfo.palette, PR_TRUE);
-
-      mSurface->IsOffscreen(&offscr);
-
-      // Don't do the realization for an off-screen memory DC
-
-      if (PR_FALSE == offscr)
-        ::RealizePalette(mDC);
-    }
   }
 
   return NS_OK;
@@ -2941,12 +2923,14 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
       // XXX This doesn't seem like the best place to be doing this...
 
       nsPaletteInfo palInfo;
-      HPALETTE      oldPalette;
 
       mContext->GetPaletteInfo(palInfo);
 
-      if (palInfo.isPaletteDevice && palInfo.palette)
-        oldPalette = ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_TRUE);
+      if (palInfo.isPaletteDevice && palInfo.palette){
+        ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_FALSE);
+        ::RealizePalette(destdc);
+        ::UpdateColors(destdc);
+      }
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
         mTranMatrix->TransformCoord(&x, &y);
@@ -2958,8 +2942,6 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                drect.width, drect.height,
                srcdc, x, y, SRCCOPY);
 
-      if (palInfo.isPaletteDevice && palInfo.palette)
-        ::SelectPalette(destdc, oldPalette, PR_TRUE);
 
       //kill the DC
       ((nsDrawingSurfaceWin *)aSrcSurf)->ReleaseDC();
