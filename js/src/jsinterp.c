@@ -1253,6 +1253,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    if (!ok)
 		goto out;
 	    PUSH_OPND(BOOLEAN_TO_JSVAL(prop != NULL));
+            OBJ_DROP_PROPERTY(cx, obj, prop);
 	    break;
 #endif /* JS_HAS_IN_OPERATOR */
 
@@ -1963,7 +1964,6 @@ js_Interpret(JSContext *cx, jsval *result)
 		    ok = JS_FALSE;
 		    goto out;
 		}
-		obj2 = fun->object;
 	    }
 
             clasp = &js_ObjectClass;
