@@ -1412,6 +1412,34 @@
 //4A2
 //4A3
 //4A4
+//790
+//791
+//792
+//793
+//794
+		7919FCF0044631350000010E = {
+			isa = PBXBundleReference;
+			name = PrintPDE.plugin;
+			path = ../dist/PrintPDE.plugin;
+			refType = 2;
+		};
+		7919FCF5044631550000010E = {
+			fileRef = 7919FCF0044631350000010E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		7919FCF6044631C90000010E = {
+			fileRef = 7919FCF0044631350000010E;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//790
+//791
+//792
+//793
+//794
 //A70
 //A71
 //A72
@@ -9972,6 +10000,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				7919FCF5044631550000010E,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9981,6 +10010,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				7919FCF6044631C90000010E,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10412,6 +10442,7 @@
 				F56F242202AC6F7101A967F3,
 				F6BD638901B30F5301A962F7,
 				F6BD64FF01B3184301A962F7,
+				7919FCF0044631350000010E,
 			);
 			isa = PBXGroup;
 			name = Gecko;
