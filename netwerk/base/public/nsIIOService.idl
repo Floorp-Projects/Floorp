@@ -63,15 +63,6 @@ interface nsIIOService : nsISupports
     unsigned long getProtocolFlags(in string scheme);
 
     /**
-     * Returns the value of an attribute of a query string.
-     *
-     * @param searchString (eg "?size=32&contentType=text/html")
-     * @param attributeName (eg "size" or "contentType")
-     * @return new string containing value (eg "32" or "text/html")
-     */
-    string getQueryAttributeValue(in string searchString, in string attributeName);
-
-    /**
      * This method constructs a new URI by first determining the scheme
      * of the URI spec, and then delegating the construction of the URI
      * to the protocol handler for that scheme. QueryInterface can be used

@@ -403,7 +403,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     nsresult rv;
 
     NS_ASSERTION(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH
-                 == strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
+                 == nsCRT::strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
                  "need to fix NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH");
 
     NS_ENSURE_ARG_POINTER(scheme);
@@ -484,7 +484,7 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
         rv = entry->GetData(getter_Copies(entryString));
         if (NS_FAILED(rv)) break;
 
-        if (strcmp(entryString, scheme) == 0) {
+        if (nsCRT::strcmp(entryString, scheme) == 0) {
             nsXPIDLCString contractID;
             rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY,(const char *)entryString, getter_Copies(contractID));
             if (NS_FAILED(rv)) break;
@@ -530,7 +530,7 @@ ExtractUrlPart_Helper(const char *src, PRUint32 pos, PRInt32 len,
         if (endPos)
             *endPos = pos + len;
         if (urlPart)
-            *urlPart = nsCRT::strndup(src + pos, len);
+            *urlPart = PL_strndup(src + pos, len);
     }
 }
 
@@ -699,57 +699,6 @@ nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
     return rv;
 }
 
-static inline const char *
-LocateStartOfAttribute(
-    const char *searchString,
-    char prefix,
-    const char *attr,
-    PRUint32 attrLen)
-{
-    const char *p = strchr(searchString, prefix);
-    if (p && !nsCRT::strncasecmp(p+1, attr, attrLen) && p[attrLen+2] == '=')
-        return p + 1;
-    return nsnull;
-}
-
-nsresult
-nsIOService::GetQueryAttributeValue(
-    const char * searchString,
-    const char * attrName,
-    char ** result)
-{
-    NS_ENSURE_ARG_POINTER(searchString);
-    NS_ENSURE_ARG_POINTER(attrName);
-
-    PRUint32 attrLen = strlen(attrName);
-
-    const char * attrStart;
-
-    attrStart = LocateStartOfAttribute(searchString, '?', attrName, attrLen);
-    if (!attrStart) {
-        attrStart = LocateStartOfAttribute(searchString, '&', attrName, attrLen);
-        if (!attrStart)
-            return NS_ERROR_FAILURE;
-    }
-
-    attrStart += attrLen + 1; // skip over the attrName
-    // is there something after the attribute name?
-    if (*attrStart) {
-        const char *attrEnd = strchr(attrStart, '&');
-        if (result) {
-            *result = attrEnd
-                ? // is there text after attribute value
-                  nsCRT::strndup(attrStart, attrEnd - attrStart)
-                : // there is nothing left so eat up rest of line
-                  nsCRT::strdup(attrStart);
-            if (!*result)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        return NS_OK;
-    }
-
-    return NS_ERROR_FAILURE;
-}
 
 nsresult
 nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI, nsIURI* *result)
@@ -828,7 +777,7 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 
     nsCOMPtr<nsIProtocolHandler> handler;
 
-    if (pi && !strcmp(pi->Type(),"http")) {
+    if (pi && !nsCRT::strcmp(pi->Type(),"http")) {
         // we are going to proxy this channel using an http proxy
         rv = GetProtocolHandler("http", getter_AddRefs(handler));
         if (NS_FAILED(rv)) return rv;
@@ -1027,11 +976,11 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (!prefs) return;
 
     // Look for extra ports to block
-    if (!pref || strcmp(pref, PORT_PREF("banned")) == 0)
+    if (!pref || PL_strcmp(pref, PORT_PREF("banned")) == 0)
         ParsePortList(prefs, PORT_PREF("banned"), PR_FALSE);
 
     // ...as well as previous blocks to remove.
-    if (!pref || strcmp(pref, PORT_PREF("banned.override")) == 0)
+    if (!pref || PL_strcmp(pref, PORT_PREF("banned.override")) == 0)
         ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
 }
 
@@ -1075,18 +1024,18 @@ nsIOService::Observe(nsISupports *subject,
                      const char *topic,
                      const PRUnichar *data)
 {
-    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    if (!nsCRT::strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
     }
-    else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
+    else if (!nsCRT::strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
             SetOffline(PR_TRUE);
             mOfflineForProfileChange = PR_TRUE;
         }
     }
-    else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
+    else if (!nsCRT::strcmp(topic, kProfileChangeNetRestoreTopic)) {
         if (mOfflineForProfileChange) {
             SetOffline(PR_FALSE);
             mOfflineForProfileChange = PR_FALSE;
@@ -1115,7 +1064,7 @@ nsIOService::ParseFileURL(const char* inURL,
 	nsXPIDLCString scheme;
     rv = ExtractScheme(inURL, nsnull, nsnull, getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
-    if (strcmp(scheme.get(), "file") != 0) {
+    if (nsCRT::strcmp(scheme.get(), "file") != 0) {
         NS_ERROR("must be a file:// url");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1152,11 +1101,11 @@ nsIOService::ParseFileURL(const char* inURL,
     if (NS_FAILED(rv)) return rv;
 
     if (directoryLen > 0)
-        *outDirectory = nsCRT::strndup(inURL + filepathPos + directoryPos, directoryLen);
+        *outDirectory = PL_strndup(inURL + filepathPos + directoryPos, directoryLen);
     if (basenameLen > 0)
-        *outFileBaseName = nsCRT::strndup(inURL + filepathPos + basenamePos, basenameLen);
+        *outFileBaseName = PL_strndup(inURL + filepathPos + basenamePos, basenameLen);
     if (extensionLen > 0)
-        *outFileExtension = nsCRT::strndup(inURL + filepathPos + extensionPos, extensionLen);
+        *outFileExtension = PL_strndup(inURL + filepathPos + extensionPos, extensionLen);
     // since we are using a no-auth url parser, there will never be a host
 
     return NS_OK;
