@@ -929,12 +929,14 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       break;
       
     case NS_THEME_TEXTFIELD:
+    {
       // at minimum, we should be tall enough for 9pt text.
       SInt32 shadow = 0, frameOutset = 0;
       ::GetThemeMetric(kThemeMetricEditTextWhitespace, &shadow);
       ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
       aResult->SizeTo(0, (shadow + frameOutset) * 2 + 9);      
       break;
+    }
       
     case NS_THEME_PROGRESSBAR:
     {
