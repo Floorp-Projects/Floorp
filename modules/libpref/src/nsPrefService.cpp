@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrefService.h"
+#include "nsSafeSaveFile.h"
 #include "jsapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -363,7 +364,16 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   if (gErrorOpeningUserPrefs)
     return NS_OK;
 
-  char** valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable.entryCount);
+  // execute a "safe" save by saving through a tempfile
+  PRInt32 numCopies = 1;
+  mRootBranch->GetIntPref("backups.number_of_prefs_copies", &numCopies);
+
+  nsSafeSaveFile safeSave(aFile, numCopies);
+  rv = safeSave.CreateBackup(nsSafeSaveFile::kPurgeNone);
+  if (NS_FAILED(rv))
+    return rv;
+
+  char** valueArray = (char **)PR_Calloc(sizeof(char *), gHashTable.entryCount);
   if (!valueArray)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -378,7 +388,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   PL_DHashTableEnumerate(&gHashTable, pref_savePref, valueArray);
     
   /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char*), pref_CompareStrings, NULL);
+  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, NULL);
   char** walker = valueArray;
   for (PRUint32 valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
     if (*walker) {
@@ -395,6 +405,15 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   PR_Free(valueArray);
   outStream->Close();
 
+  // if save failed replace the original file from backup
+  if (NS_FAILED(rv)) {
+    nsresult rv2;
+    rv2 = safeSave.RestoreFromBackup();
+    if (NS_SUCCEEDED(rv2)) {
+      // we failed to write the file, but managed to restore the previous one...
+      rv = NS_OK;
+    }
+  }
   return rv;
 }
 
