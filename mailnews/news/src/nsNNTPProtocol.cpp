@@ -2437,6 +2437,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 			}
 
 			if (!m_msgWindow) {
+				NS_ASSERTION(m_msgWindow,"unable to get the msg window, so no password dialog");
 				NNTP_LOG_NOTE("unable to get the msg window");
 				rv = NS_ERROR_NULL_POINTER;
 			}

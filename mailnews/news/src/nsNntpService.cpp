@@ -1261,7 +1261,7 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
 
 
 NS_IMETHODIMP
-nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer)
+nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
@@ -1282,7 +1282,7 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer)
 	if (NS_FAILED(rv)) return rv;
 
 	// run the url to update the counts
-    rv = RunNewsUrl(uri, nsnull, nsnull);  
+    rv = RunNewsUrl(uri, aMsgWindow, nsnull);  
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;

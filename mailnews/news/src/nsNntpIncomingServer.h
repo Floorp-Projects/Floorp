@@ -36,6 +36,7 @@
 #include "prprf.h"
 
 #include "nsEnumeratorUtils.h" 
+#include "nsIMsgWindow.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -56,13 +57,13 @@ public:
     
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
-    NS_IMETHOD PerformExpand();
+	NS_IMETHOD PerformBiff();
+    NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
 protected:
   nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
                                              nsIMsgWindow *window);
     PRBool ConnectionTimeOut(nsINNTPProtocol* aNntpConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
-	NS_IMETHOD PerformBiff();
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 
 private:

@@ -652,7 +652,7 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::PerformExpand()
+nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
@@ -663,7 +663,7 @@ nsNntpIncomingServer::PerformExpand()
     if (NS_FAILED(rv)) return rv;
 	if (!nntpService) return NS_ERROR_FAILURE;
 
-	rv = nntpService->UpdateCounts(this);
+	rv = nntpService->UpdateCounts(this, aMsgWindow);
     if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
@@ -752,7 +752,7 @@ nsNntpIncomingServer::PerformBiff()
 #ifdef DEBUG_NEWS
 	printf("PerformBiff for nntp\n");
 #endif
-	return PerformExpand();
+	return PerformExpand(nsnull);
 }
 
 NS_IMETHODIMP 

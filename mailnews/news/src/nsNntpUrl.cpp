@@ -57,6 +57,7 @@ nsNntpUrl::nsNntpUrl()
 	m_newsAction = nsINntpUrl::ActionGetNewNews;
     m_addDummyEnvelope = PR_FALSE;
     m_canonicalLineEnding = PR_FALSE;
+	m_filePath = nsnull;
 }
  
 nsNntpUrl::~nsNntpUrl()

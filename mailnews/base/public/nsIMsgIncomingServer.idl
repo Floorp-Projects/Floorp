@@ -131,7 +131,7 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute boolean serverRequiresPasswordForBiff;
   
   /* this gets called when the server is expanded in the folder pane */
-  void PerformExpand();
+  void PerformExpand(in nsIMsgWindow aMsgWindow);
 
   /* Write out all known folder data to panacea.dat */
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);

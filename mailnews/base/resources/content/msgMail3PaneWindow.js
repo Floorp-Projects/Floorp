@@ -340,7 +340,7 @@ function PerformExpandForAllOpenServers(tree)
 							server = GetServer(uri);
 							if (server) {
 								//dump("PerformExpand on " + uri + "\n");
-								server.PerformExpand();
+								server.PerformExpand(msgWindow);
 							}
 						}
 					}
@@ -691,7 +691,7 @@ function FolderPaneOnClick(event)
 	    			var uri = treeitem.getAttribute("id");
 					var server = GetServer(uri);
 					if (server) {
-						server.PerformExpand();
+						server.PerformExpand(msgWindow);
 					}
 				}
 			}
@@ -718,7 +718,7 @@ function FolderPaneDoubleClick(treeitem)
 				server = GetServer(uri);
 				if (server) {
 					//dump("double clicking open, PerformExpand()\n");
-					server.PerformExpand();
+					server.PerformExpand(msgWindow);
 				}
 			}
 			else {

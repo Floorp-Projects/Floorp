@@ -141,7 +141,7 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::PerformExpand()
+nsMsgIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 #ifdef DEBUG_sspitzer
 	printf("PerformExpand()\n");

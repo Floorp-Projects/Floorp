@@ -44,6 +44,6 @@ interface nsINntpService : nsISupports {
 
   void buildSubscribeDatasource(in nsINntpIncomingServer nntpServer);
 
-  void updateCounts(in nsINntpIncomingServer nntpServer);
+  void updateCounts(in nsINntpIncomingServer nntpServer, in nsIMsgWindow aMsgWindow);
 };
 
