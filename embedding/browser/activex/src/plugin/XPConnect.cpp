@@ -51,10 +51,13 @@
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
 
+// TODO remove me
+#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
+#include "XPCMediaPlayer.h"
+#endif
+
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-static PRUint32 gInstances = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsScriptablePeer
@@ -62,15 +65,12 @@ static PRUint32 gInstances = 0;
 nsScriptablePeer::nsScriptablePeer()
 {
     NS_INIT_ISUPPORTS();
-    if (gInstances == 0)
-      XPCOMGlueStartup(nsnull);
-    gInstances++;
+    xpc_AddRef();
 }
 
 nsScriptablePeer::~nsScriptablePeer()
 {
-    if (--gInstances == 0)
-      XPCOMGlueShutdown();
+    xpc_Release();
 }
 
 NS_IMPL_ADDREF(nsScriptablePeer)
@@ -429,56 +429,6 @@ nsScriptablePeer::InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsI
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-// We must implement nsIClassInfo because it signals the
-// Mozilla Security Manager to allow calls from JavaScript.
-
-NS_IMETHODIMP nsScriptablePeer::GetFlags(PRUint32 *aFlags)
-{
-    *aFlags = nsIClassInfo::PLUGIN_OBJECT | nsIClassInfo::DOM_OBJECT;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
-}
-
-// The rest of the methods can safely return error codes...
-NS_IMETHODIMP nsScriptablePeer::GetInterfaces(PRUint32 *count, nsIID * **array)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsScriptablePeer::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsScriptablePeer::GetContractID(char * *aContractID)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsScriptablePeer::GetClassDescription(char * *aClassDescription)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsScriptablePeer::GetClassID(nsCID * *aClassID)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsScriptablePeer::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// nsDefaultScriptablePeer
-
-// Defines to be used as interface names by nsDefaultScriptablePeer
-
-///////////////////////////////////////////////////////////////////////////////
 // nsIMozAxPlugin
 
 NS_IMETHODIMP 
@@ -614,21 +564,90 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Some public methods
 
-static nsScriptablePeer *
-GetPeerForCLSID(const CLSID &clsid)
+static PRUint32 gInstances = 0;
+
+void xpc_AddRef()
 {
+    if (gInstances == 0)
+      XPCOMGlueStartup(nsnull);
+    gInstances++;
+}
+
+void xpc_Release()
+{
+    if (--gInstances == 0)
+      XPCOMGlueShutdown();
+}
+
+// TODO remove me
+#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
+const CLSID kWindowsMediaPlayer = {
+    0x6BF52A52, 0x394A, 0x11d3, { 0xB1, 0x53, 0x00, 0xC0, 0x4F, 0x79, 0xFA, 0xA6 } };
+#endif
+
+CLSID xpc_GetCLSIDForType(const char *mimeType)
+{
+    if (mimeType == NULL)
+    {
+        return CLSID_NULL;
+    }
+
+    // Read the registry to see if there is a CLSID for an object to be associated with
+    // this MIME type.
+    USES_CONVERSION;
+    CRegKey keyMimeDB;
+    if (keyMimeDB.Open(HKEY_CLASSES_ROOT, _T("MIME\\Database\\Content Type"), KEY_READ) == ERROR_SUCCESS)
+    {
+        CRegKey keyMimeType;
+        if (keyMimeType.Open(keyMimeDB, A2CT(mimeType), KEY_READ) == ERROR_SUCCESS)
+        {
+	        USES_CONVERSION;
+	        TCHAR szGUID[64];
+	        ULONG nCount = 64;
+	        LONG lRes;
+
+            GUID guidValue = GUID_NULL;
+            if (keyMimeType.QueryValue(_T("CLSID"), szGUID, &nCount) == ERROR_SUCCESS &&
+                SUCCEEDED(::CLSIDFromString(T2OLE(szGUID), &guidValue)))
+            {
+                return guidValue;
+            }
+        }
+    }
+    return CLSID_NULL;
+}
+
+nsScriptablePeer *
+xpc_GetPeerForCLSID(const CLSID &clsid)
+{
+// TODO remove me
+#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
+    if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
+    {
+        return new nsWMPScriptablePeer();
+    }
+#endif
     return new nsScriptablePeer();
 }
 
-static nsIID
-GetIIDForCLSID(const CLSID &clsid)
+nsIID
+xpc_GetIIDForCLSID(const CLSID &clsid)
 {
+// TODO remove me
+#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
+    if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
+    {
+        return NS_GET_IID(nsIWMPPlayer2);
+    }
+#endif
     return NS_GET_IID(nsIMozAxPlugin);
 }
 
+// Called by NPP_GetValue to provide the scripting values
 NPError
-xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
+xpc_GetValue(NPP instance, NPPVariable variable, void *value)
 {
     if (instance == NULL)
     {
@@ -647,7 +666,7 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
     {
         if (!pData->pScriptingPeer)
         {
-            nsScriptablePeer *peer  = GetPeerForCLSID(pData->clsid);
+            nsScriptablePeer *peer  = xpc_GetPeerForCLSID(pData->clsid);
             peer->AddRef();
             pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
             peer->mPlugin = pData;
@@ -662,7 +681,7 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
     else if (variable == kVarScriptableIID)
     {
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
-        *piid = GetIIDForCLSID(pData->clsid);
+        *piid = xpc_GetIIDForCLSID(pData->clsid);
         *((nsIID **) value) = piid;
         return NPERR_NO_ERROR;
     }

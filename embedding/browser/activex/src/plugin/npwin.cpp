@@ -323,3 +323,7 @@ jref NPN_GetJavaPeer(NPP instance)
 	return g_pNavigatorFuncs->getJavaPeer(instance);
 }
 
+NPError NPN_GetValue(NPP instance, NPNVariable variable, void *result)
+{
+    return g_pNavigatorFuncs->getvalue(instance, variable, result);
+}

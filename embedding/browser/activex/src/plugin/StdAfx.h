@@ -88,14 +88,10 @@ typedef long int32;
 #include "ItemContainer.h"
 #include "ControlSite.h"
 #include "ControlSiteIPFrame.h"
+#include "ControlEventSink.h"
+#include "ActiveScriptSite.h"
 
 #include "npapi.h"
-//#include "nsIFactory.h"
-//#include "nsIPlugin.h"
-//#include "nsIPluginInstance.h"
-//#include "ActiveXPlugin.h"
-//#include "ActiveXPluginInstance.h"
-#include "ActiveScriptSite.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
