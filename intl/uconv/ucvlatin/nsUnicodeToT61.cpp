@@ -56,17 +56,6 @@ static const PRInt16 g_T61ShiftTable[] =  {
 
 nsUnicodeToT61::nsUnicodeToT61() 
 : nsTableEncoderSupport((uShiftTable*) &g_T61ShiftTable, 
-                        (uMappingTable*) &g_T61MappingTable)
+                        (uMappingTable*) &g_T61MappingTable, 2)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToT61::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2*aSrcLength;
-  return NS_OK;
 }

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToBIG5_h___
 #define nsUnicodeToBIG5_h___
 
-#include "nsUCvTWSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToBIG5 [declaration]
@@ -60,12 +60,6 @@ public:
   nsUnicodeToBIG5();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToBIG5_h___ */

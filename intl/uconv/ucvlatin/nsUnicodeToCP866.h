@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCP866_h___
 #define nsUnicodeToCP866_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP866 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToCP866();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP866_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacGurmukhi_h___
 #define nsUnicodeToMacGurmukhi_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacGurmukhi [declaration]
@@ -56,13 +56,6 @@ public:
    */
   nsUnicodeToMacGurmukhi();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacGurmukhi_h___ */

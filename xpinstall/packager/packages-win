@@ -204,13 +204,6 @@ bin\components\txmgr.xpt
 bin\components\txtsvc.dll
 bin\components\uconv.dll
 bin\components\uconv.xpt
-bin\components\ucvcn.dll
-bin\components\ucvibm.dll
-bin\components\ucvja.dll
-bin\components\ucvko.dll
-bin\components\ucvlatin.dll
-bin\components\ucvtw.dll
-bin\components\ucvtw2.dll
 bin\components\ucvmath.dll
 bin\components\unicharutil.xpt
 bin\components\urildr.dll

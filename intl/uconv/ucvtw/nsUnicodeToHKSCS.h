@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToHKSCS_h___
 #define nsUnicodeToHKSCS_h___
 
-#include "nsUCvTWSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToHKSCS [declaration]
@@ -58,12 +58,6 @@ public:
   nsUnicodeToHKSCS();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength,
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToHKSCS_h___ */

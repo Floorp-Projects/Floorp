@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacHebrew_h___
 #define nsUnicodeToMacHebrew_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacHebrew [declaration]
@@ -56,13 +56,6 @@ public:
    */
   nsUnicodeToMacHebrew();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacHebrew_h___ */

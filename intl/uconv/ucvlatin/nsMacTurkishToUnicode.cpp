@@ -55,18 +55,6 @@ static const PRInt16 g_MacTurkishShiftTable[] =  {
 
 nsMacTurkishToUnicode::nsMacTurkishToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_MacTurkishShiftTable, 
-                        (uMappingTable*) &g_MacTurkishMappingTable)
+                        (uMappingTable*) &g_MacTurkishMappingTable, 1)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsMacTurkishToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }

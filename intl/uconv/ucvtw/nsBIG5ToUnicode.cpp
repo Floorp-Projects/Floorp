@@ -75,19 +75,8 @@ nsBIG5ToUnicode::nsBIG5ToUnicode()
 : nsMultiTableDecoderSupport(2, 
                             (uRange* ) &g_BIG5Ranges,
                             (uShiftTable**) &g_BIG5ShiftTableSet, 
-                            (uMappingTable**) &g_BIG5MappingTableSet)
+                            (uMappingTable**) &g_BIG5MappingTableSet, 1)
 {
 }
 
 
-//----------------------------------------------------------------------
-// Subclassing of nsMultiTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsBIG5ToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
-}

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacRomanian_h___
 #define nsUnicodeToMacRomanian_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacRomanian [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToMacRomanian();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacRomanian_h___ */

@@ -39,7 +39,7 @@
 #ifndef nsMacTurkishToUnicode_h___
 #define nsMacTurkishToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacTurkishToUnicode [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsMacTurkishToUnicode();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsMacTurkishToUnicode_h___ */

@@ -55,18 +55,7 @@ static const PRInt16 g_MacCEShiftTable[] =  {
 
 nsMacCEToUnicode::nsMacCEToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_MacCEShiftTable, 
-                        (uMappingTable*) &g_MacCEMappingTable)
+                        (uMappingTable*) &g_MacCEMappingTable, 1)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsMacCEToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
-}

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCP1254_h___
 #define nsUnicodeToCP1254_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP1254 [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToCP1254();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP1254_h___ */

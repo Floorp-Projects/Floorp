@@ -47,7 +47,7 @@
 #ifndef nsUnicodeToHZ_h___
 #define nsUnicodeToHZ_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "gbku.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeToHZ [declaration]
@@ -77,9 +77,6 @@ protected:
   {
     return NS_OK;
   };  // just make it not abstract;
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 
   PRUint16 mHZState;
 protected:

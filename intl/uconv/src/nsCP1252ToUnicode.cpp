@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCvMinSupport.h"
+#include "nsUCSupport.h"
 #include "nsCP1252ToUnicode.h"
 
 //----------------------------------------------------------------------

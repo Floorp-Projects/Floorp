@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToEUCKR_h___
 #define nsUnicodeToEUCKR_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCKR [declaration]
@@ -60,12 +60,6 @@ public:
   nsUnicodeToEUCKR();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToEUCKR_h___ */

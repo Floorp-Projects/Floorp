@@ -79,28 +79,9 @@ static const PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
 
 nsUnicodeToEUCJP::nsUnicodeToEUCJP() 
 : nsMultiTableEncoderSupport(SIZE_OF_TABLES,
-                         (uShiftTable**) gShiftTables, 
-                         (uMappingTable**) gMappingTables)
+                             (uShiftTable**) gShiftTables, 
+                             (uMappingTable**) gMappingTables,
+                             3 /* max length = src * 3 */)
 {
 }
 
-nsresult nsUnicodeToEUCJP::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToEUCJP();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToEUCJP::GetMaxLength(const PRUnichar * aSrc, 
-                                             PRInt32 aSrcLength,
-                                             PRInt32 * aDestLength)
-{
-  *aDestLength = 3*aSrcLength;
-  return NS_OK;
-}

@@ -41,7 +41,7 @@
 #include "nsISupports.h"
 
 #include "nsUEscapeToUnicode.h"
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUEscapeToUnicode [declaration]
@@ -53,7 +53,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUEscapeToUnicode() { Reset();};
+  nsUEscapeToUnicode() : nsBasicDecoderSupport() { Reset();};
 
   NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength); 
@@ -71,8 +71,5 @@ private:
   PRUnichar mBuffer[2];
   PRUint32  mBufferLen;
 };
-
-nsresult NEW_UEscapeToUnicode(nsISupports **Result);
-
 
 #endif /* nsUEscapeToUnicode_h___ */

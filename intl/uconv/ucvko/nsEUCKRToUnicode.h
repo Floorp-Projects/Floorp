@@ -39,7 +39,7 @@
 #ifndef nsEUCKRToUnicode_h___
 #define nsEUCKRToUnicode_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 #include "nsCP949ToUnicode.h"
 
 //----------------------------------------------------------------------

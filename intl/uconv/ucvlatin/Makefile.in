@@ -27,9 +27,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvlatin
-LIBRARY_NAME	= ucvlatin
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+LIBRARY_NAME	= ucvlatin_s
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsUCvLatinModule
 REQUIRES	= xpcom \
 		  string \
@@ -161,16 +160,15 @@ CPPSRCS		= \
 		nsUnicodeToUserDefined.cpp \
 		nsUnicodeToSymbol.cpp \
 		nsUnicodeToZapfDingbat.cpp \
-		nsUCvLatinSupport.cpp \
-		nsUCvLatinModule.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvLatinCID.h
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES		+= -D_IMPL_NS_INTL
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

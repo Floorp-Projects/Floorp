@@ -52,17 +52,8 @@ static PRInt16 g_ShiftTable[] =  {
 
 nsUnicodeToCNS11643p7::nsUnicodeToCNS11643p7() 
 : nsTableEncoderSupport((uShiftTable*) &g_ShiftTable, 
-                        (uMappingTable*) &g_ufCNS7MappingTable)
+                        (uMappingTable*) &g_ufCNS7MappingTable,
+                        2 /* max length = src * 2 */)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToCNS11643p7::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2 * aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}

@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToCNS11643p6_h___
 #define nsUnicodeToCNS11643p6_h___
 
-#include "nsUCvTW2Support.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCNS11643p6 [declaration]
@@ -60,12 +60,6 @@ public:
   nsUnicodeToCNS11643p6();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCNS11643p6_h___ */

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsJapaneseToUnicode.h"
 
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 static const PRUint16 gJis0208map[] = {
 #include "jis0208.ump" 

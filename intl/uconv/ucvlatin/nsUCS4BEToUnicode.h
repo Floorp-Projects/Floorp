@@ -39,7 +39,7 @@
 #ifndef nsUCS4BEToUnicode_h___
 #define nsUCS4BEToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUCS4BEToUnicode [declaration]
@@ -57,11 +57,6 @@ public:
    * Class constructor.
    */
   nsUCS4BEToUnicode();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 

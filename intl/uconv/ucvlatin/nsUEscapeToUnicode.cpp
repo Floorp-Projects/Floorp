@@ -151,9 +151,3 @@ NS_IMETHODIMP nsUEscapeToUnicode::Reset()
   return NS_OK;
 }
 
-
-nsresult NEW_UEscapeToUnicode(nsISupports **aResult)
-{
-   *aResult = new nsUEscapeToUnicode();
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

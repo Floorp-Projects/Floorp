@@ -39,6 +39,7 @@
 #include "nsUCS2BEToUnicode.h"
 #include "nsUCvLatinDll.h"
 #include <string.h>
+#include "prtypes.h"
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -56,14 +57,8 @@ static const PRInt16 g_UCS2BEShiftTable[] =  {
 
 nsUCS2BEToUnicode::nsUCS2BEToUnicode() 
 : nsTableDecoderSupport((uShiftTable*) &g_UCS2BEShiftTable, 
-                        (uMappingTable*) &g_UCS2BEMappingTable)
+                        (uMappingTable*) &g_UCS2BEMappingTable, 0)
 {
-}
-
-nsresult nsUCS2BEToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUCS2BEToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -228,29 +223,6 @@ NS_IMETHODIMP nsUTF16DiffEndianToUnicode::Convert(
   return res;
 }
 
-static char BOM[] = {(char)0xfe, (char)0xff};
-#define IsBigEndian() (0xFEFF == *((PRUint16*)BOM))
-nsresult NEW_UTF16BEToUnicode(nsISupports **aResult)
-{
-   if(IsBigEndian()) {
-     *aResult = new nsUTF16SameEndianToUnicode();
-   } else {
-     *aResult = new nsUTF16DiffEndianToUnicode();
-   }
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-nsresult NEW_UTF16LEToUnicode(nsISupports **aResult)
-{
-   if(IsBigEndian()) {
-     *aResult = new nsUTF16DiffEndianToUnicode();
-   } else {
-     *aResult = new nsUTF16SameEndianToUnicode();
-   }
-   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-//============== above code is obsolete ==============================
-
 nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
 {
   const char* src = aSrc;
@@ -321,7 +293,7 @@ NS_IMETHODIMP nsUTF16BEToUnicode::Reset()
 NS_IMETHODIMP nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength)
 {
-  if (!IsBigEndian()) {    
+#ifdef IS_LITTLE_ENDIAN
     // process nsUTF16DiffEndianToUnicode
     if(2 == mState) // first time called
     {
@@ -336,11 +308,11 @@ NS_IMETHODIMP nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
       }  
       mState=0;
     }
-  }
+#endif
 
   nsresult res = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest, aDestLength);
 
-  if (!IsBigEndian()) {
+#ifdef IS_LITTLE_ENDIAN
     // process nsUTF16DiffEndianToUnicode
     PRInt32 i;
 
@@ -353,7 +325,7 @@ NS_IMETHODIMP nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
        *(p+1) = *p;
        *(p)= tmp;
     }
-  }
+#endif
   return res;
 }
 
@@ -374,7 +346,7 @@ NS_IMETHODIMP nsUTF16LEToUnicode::Reset()
 NS_IMETHODIMP nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength)
 {
-  if (IsBigEndian()) {    
+#ifdef IS_BIG_ENDIAN
     // process nsUTF16DiffEndianToUnicode
     if(2 == mState) // first time called
     {
@@ -389,11 +361,11 @@ NS_IMETHODIMP nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
       }  
       mState=0;
     }
-  }
-
+#endif
+    
   nsresult res = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest, aDestLength);
 
-  if (IsBigEndian()) {
+#ifdef IS_BIG_ENDIAN
     // process nsUTF16DiffEndianToUnicode
     PRInt32 i;
 
@@ -406,7 +378,7 @@ NS_IMETHODIMP nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
        *(p+1) = *p;
        *(p)= tmp;
     }
-  }
+#endif
   return res;
 }
 

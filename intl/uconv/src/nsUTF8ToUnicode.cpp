@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCvMinSupport.h"
+#include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
 
 NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter, 

@@ -39,7 +39,7 @@
 #ifndef nsISO88598ToUnicode_h___
 #define nsISO88598ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsISO88598ToUnicode [declaration]

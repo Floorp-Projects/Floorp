@@ -39,7 +39,7 @@
 #ifndef nsUserDefinedToUnicode_h___
 #define nsUserDefinedToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUserDefinedToUnicode [declaration]

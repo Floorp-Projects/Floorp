@@ -38,7 +38,7 @@
 #ifndef nsISO2022KRToUnicode_h__
 #define nsISO2022KRToUnicode_h__
 #include "nsISupports.h"
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 
  

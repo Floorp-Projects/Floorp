@@ -39,7 +39,7 @@
 #ifndef nsISOIR111ToUnicode_h___
 #define nsISOIR111ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsISOIR111ToUnicode [declaration]

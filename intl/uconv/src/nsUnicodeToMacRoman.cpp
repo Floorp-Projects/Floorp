@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCvMinSupport.h"
+#include "nsUCSupport.h"
 #include "nsUnicodeToMacRoman.h"
 
 //----------------------------------------------------------------------
@@ -56,17 +56,7 @@ static const PRInt16 g_MacRomanShiftTable[] =  {
 
 nsUnicodeToMacRoman::nsUnicodeToMacRoman() 
 : nsTableEncoderSupport((uShiftTable*) &g_MacRomanShiftTable, 
-                        (uMappingTable*) &g_MacRomanMappingTable)
+                        (uMappingTable*) &g_MacRomanMappingTable, 1)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToMacRoman::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}

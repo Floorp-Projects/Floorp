@@ -39,7 +39,7 @@
 #ifndef nsEUCTWToUnicode_h___
 #define nsEUCTWToUnicode_h___
 
-#include "nsUCvTW2Support.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsEUCTWToUnicode [declaration]
@@ -61,11 +61,6 @@ public:
 
 protected:
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsEUCTWToUnicode_h___ */

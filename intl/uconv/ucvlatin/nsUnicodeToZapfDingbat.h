@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToZapfDingbat_h___
 #define nsUnicodeToZapfDingbat_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToZapfDingbat [declaration]
@@ -57,13 +57,6 @@ public:
    */
   nsUnicodeToZapfDingbat();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToZapfDingbat_h___ */

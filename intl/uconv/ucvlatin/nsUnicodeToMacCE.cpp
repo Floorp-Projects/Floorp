@@ -55,17 +55,7 @@ static const PRInt16 g_MacCEShiftTable[] =  {
 
 nsUnicodeToMacCE::nsUnicodeToMacCE() 
 : nsTableEncoderSupport((uShiftTable*) &g_MacCEShiftTable, 
-                        (uMappingTable*) &g_MacCEMappingTable)
+                        (uMappingTable*) &g_MacCEMappingTable, 1)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToMacCE::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}

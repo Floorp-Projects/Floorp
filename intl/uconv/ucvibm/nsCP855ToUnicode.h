@@ -36,7 +36,7 @@
 #ifndef nsCP855ToUnicode_h___
 #define nsCP855ToUnicode_h___
 
-#include "nsUCvIBMSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsCP855ToUnicode [declaration]

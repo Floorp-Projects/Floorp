@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "gbku.h"
 
 //----------------------------------------------------------------------
@@ -60,7 +60,7 @@ public:
   /**
    * Class constructor.
    */
-  nsGBKToUnicode()
+  nsGBKToUnicode() : nsBufferDecoderSupport(1)
   {
     mExtensionDecoder = nsnull;
     m4BytesDecoder = nsnull;
@@ -71,9 +71,6 @@ protected:
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
   NS_IMETHOD ConvertNoBuff(const char* aSrc, PRInt32 * aSrcLength, PRUnichar *aDest, PRInt32 * aDestLength);
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 
 protected:
   nsGBKConvUtil mUtil;

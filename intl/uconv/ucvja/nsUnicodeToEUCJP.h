@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToEUCJP_h___
 #define nsUnicodeToEUCJP_h___
 
-#include "nsUCvJaSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCJP [declaration]
@@ -59,18 +59,8 @@ public:
    */
   nsUnicodeToEUCJP();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToEUCJP_h___ */

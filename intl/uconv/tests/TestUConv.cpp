@@ -39,6 +39,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsUCSupport.h"
 #include "nsString.h"
 
 //----------------------------------------------------------------------------
@@ -211,8 +212,18 @@ nsresult nsTestUConv::TestEncoders()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  // XXX write me
+  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+           do_GetService(kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsISupportsArray> encoders;
+  res = ccMan->GetEncoderList(getter_AddRefs(encoders));
+  if (NS_FAILED(res)) return res;
 
+  PRUint32 encoderCount;
+  encoders->Count(&encoderCount);
+  printf("There are %d encoders\n", encoderCount);
+  
   mLog.DelTrace(trace);
   return res;
 }
@@ -385,6 +396,9 @@ nsresult nsTestUConv::DisplayCharsets()
 
   printf("***** Character Sets [%d] *****\n", count);
 
+  PRUint32 encCount = 0, decCount = 0;
+  PRUint32 basicEncCount = 0, basicDecCount = 0;
+  
   for (PRUint32 i = 0; i < count; i++) {
     nsCOMPtr<nsIAtom> cs;
     nsAutoString str;
@@ -408,20 +422,47 @@ nsresult nsTestUConv::DisplayCharsets()
     printf("%s", buff.get());
     PrintSpaces(24 - buff.Length());  // align to hard coded column number
 
-    res = ccMan->GetCharsetTitle2(cs, &str);
-    if (NS_FAILED(res)) str.SetLength(0);
-    NS_LossyConvertUCS2toASCII buff2(str);
 
     nsCOMPtr<nsIUnicodeDecoder> dec = NULL;
     res = ccMan->GetUnicodeDecoder(cs, getter_AddRefs(dec));
     if (NS_FAILED(res)) printf (" "); 
-    else printf("D");
+    else {
+      printf("D");
+      decCount++;
+    }
+#ifdef NS_DEBUG
+    // show the "basic" decoder classes
+    if (dec) {
+      nsCOMPtr<nsIBasicDecoder> isBasic = do_QueryInterface(dec);
+      if (isBasic) {
+        basicDecCount++;
+        printf("b");
+      }
+      else printf(" ");
+    }
+    else printf(" ");
+#endif
 
     nsCOMPtr<nsIUnicodeEncoder> enc = NULL;
     res = ccMan->GetUnicodeEncoder(cs, getter_AddRefs(enc));
     if (NS_FAILED(res)) printf (" "); 
-    else printf("E");
+    else {
+      printf("E");
+      encCount++;
+    }
 
+#ifdef NS_DEBUG
+    if (enc) {
+      nsCOMPtr<nsIBasicEncoder> isBasic = do_QueryInterface(enc);
+      if (isBasic) {
+        basicEncCount++;
+        printf("b");
+      }
+      else printf(" ");
+    }
+    else printf(" ");
+#endif
+    
     printf(" ");
 
     prop.Assign(NS_LITERAL_STRING(".notForBrowser"));
@@ -444,9 +485,18 @@ nsresult nsTestUConv::DisplayCharsets()
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
 
-    printf(" \"%s\"\n", buff2);
+    printf("(%3d, %3d) ", encCount, decCount);
+    res = ccMan->GetCharsetTitle2(cs, &str);
+    if (NS_FAILED(res)) str.SetLength(0);
+    NS_LossyConvertUCS2toASCII buff2(str);
+    printf(" \"%s\"\n", buff2.get());
   }
 
+  printf("%u of %u decoders are basic (%d%%)\n",
+         basicDecCount, decCount, (basicDecCount * 100) / decCount);
+
+  printf("%u of %u encoders are basic (%d%%)\n",
+         basicEncCount, encCount, (basicEncCount * 100) / encCount);
   mLog.DelTrace(trace);
   return NS_OK;
 }

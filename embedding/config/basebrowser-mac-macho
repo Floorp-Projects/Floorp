@@ -198,17 +198,8 @@ components/libuconv.dylib
 components/uconv.xpt
 components/liblwbrk.dylib
 components/libnslocale.dylib
-components/libucvlatin.dylib
 components/unicharutil.xpt
 components/libchardet.dylib
-; optional - on english only systems
-; components/libucvja.dylib for japanese
-; components/libucvko.dylib for korean
-; components/libucvcn.dylib for simplified chinese
-; components/libucvtw.dylib for traditional chinese
-; components/libucvtw2.dylib for traditional chinese
-; components/libucvibm.dylib for ibm
-
 
 res/language.properties
 res/langGroups.properties

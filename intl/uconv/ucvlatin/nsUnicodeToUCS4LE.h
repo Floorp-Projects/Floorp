@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToUCS4LE_h___
 #define nsUnicodeToUCS4LE_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToUCS4LE [declaration]
@@ -61,13 +61,6 @@ public:
   
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToUCS4LE_h___ */

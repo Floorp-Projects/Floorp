@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacFarsi_h___
 #define nsUnicodeToMacFarsi_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacFarsi [declaration]
@@ -56,13 +56,6 @@ public:
    */
   nsUnicodeToMacFarsi();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacFarsi_h___ */

@@ -58,7 +58,7 @@ static const PRUint16 gDecomposedHangulShiftTable[] =  {
 };
 
 static const PRUint16 *g_EUCKRMappingTable[3] = {
-  g_AsciiMapping,
+  g_ucvko_AsciiMapping,
   g_ufKSC5601Mapping,
   g_HangulNullMapping
 };
@@ -75,17 +75,9 @@ static const PRUint16 *g_EUCKRShiftTable[3] =  {
 nsUnicodeToEUCKR::nsUnicodeToEUCKR() 
 : nsMultiTableEncoderSupport(3,
                         (uShiftTable**) g_EUCKRShiftTable, 
-                        (uMappingTable**) g_EUCKRMappingTable)
+                        (uMappingTable**) g_EUCKRMappingTable,
+                             // change from 2 to 8 because of composed jamo
+                             8 /* max length = src * 8 */)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToEUCKR::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength * 8; // change from 2 to 8 because of composed jamo
-  return NS_OK;
-}

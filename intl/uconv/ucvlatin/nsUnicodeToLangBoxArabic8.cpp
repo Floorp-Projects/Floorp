@@ -39,7 +39,7 @@
 
 #include "nsUnicodeToLangBoxArabic8.h"
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToLangBoxArabic8 [declaration]
@@ -52,7 +52,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToLangBoxArabic8() {};
+  nsUnicodeToLangBoxArabic8() : nsBasicEncoder(1) {};
   virtual ~nsUnicodeToLangBoxArabic8() {};
 
   NS_IMETHOD Convert(
@@ -61,10 +61,6 @@ public:
 
   NS_IMETHOD Finish(
       char * aDest, PRInt32 * aDestLength);
-
-  NS_IMETHOD GetMaxLength(
-      const PRUnichar * aSrc, PRInt32 aSrcLength,
-      PRInt32 * aDestLength);
 
   NS_IMETHOD Reset();
 
@@ -148,14 +144,6 @@ NS_IMETHODIMP nsUnicodeToLangBoxArabic8::Finish(
       char * aDest, PRInt32 * aDestLength)
 {
    *aDestLength=0;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsUnicodeToLangBoxArabic8::GetMaxLength(
-      const PRUnichar * aSrc, PRInt32 aSrcLength,
-      PRInt32 * aDestLength)
-{
-   *aDestLength = aSrcLength;
    return NS_OK;
 }
 

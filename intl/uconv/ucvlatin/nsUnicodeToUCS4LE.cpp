@@ -56,20 +56,13 @@ static const PRInt16 g_UCS4LEShiftTable[] =  {
 
 nsUnicodeToUCS4LE::nsUnicodeToUCS4LE() 
 : nsTableEncoderSupport((uShiftTable*) &g_UCS4LEShiftTable, 
-                        (uMappingTable*) &g_UCS4LEMappingTable)
+                        (uMappingTable*) &g_UCS4LEMappingTable, 4)
 {
 }
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
-NS_IMETHODIMP nsUnicodeToUCS4LE::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 4*aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
-}
 NS_IMETHODIMP nsUnicodeToUCS4LE::FillInfo(PRUint32 *aInfo)
 {
   memset(aInfo, 0xFF, (0x10000L >> 3));

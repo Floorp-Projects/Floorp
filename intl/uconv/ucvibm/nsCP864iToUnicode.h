@@ -74,7 +74,7 @@
 
 
 
-#include "nsUCvIBMSupport.h"
+#include "nsUCSupport.h"
 
 
 

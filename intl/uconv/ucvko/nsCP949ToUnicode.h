@@ -39,7 +39,7 @@
 #ifndef nsCP949ToUnicode_h___
 #define nsCP949ToUnicode_h___
 
-#include "nsUCvKOSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsCP949ToUnicode [declaration]
@@ -60,12 +60,6 @@ public:
   nsCP949ToUnicode();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsCP949ToUnicode_h___ */

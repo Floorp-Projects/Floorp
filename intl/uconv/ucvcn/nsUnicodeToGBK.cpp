@@ -78,15 +78,8 @@ class nsUnicodeToGB18030Uniq2Bytes : public nsTableEncoderSupport
 public: 
   nsUnicodeToGB18030Uniq2Bytes() 
     : nsTableEncoderSupport((uShiftTable*) &g_2BytesShiftTable,
-                            (uMappingTable*) &g_uf_gb18030_2bytes) {};
+                            (uMappingTable*) &g_uf_gb18030_2bytes, 2) {};
 protected: 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
-                                PRInt32 aSrcLength,
-                                PRInt32 * aDestLength)
-  {
-    *aDestLength = 2 * aSrcLength;
-    return NS_OK;
-  };
 };
 //-----------------------------------------------------------------------
 //  Private class used by nsUnicodeToGB18030
@@ -100,15 +93,8 @@ class nsUnicodeTo4BytesGB18030 : public nsTableEncoderSupport
 public: 
   nsUnicodeTo4BytesGB18030()
     : nsTableEncoderSupport( (uShiftTable*) &g_4BytesGB18030ShiftTable,
-                             (uMappingTable*) &g_uf_gb18030_4bytes) {};
+                             (uMappingTable*) &g_uf_gb18030_4bytes, 4) {};
 protected: 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
-                                PRInt32 aSrcLength,
-                                PRInt32 * aDestLength)
-  {
-    *aDestLength = 4 * aSrcLength;
-    return NS_OK_UDEC_EXACTLENGTH;
-  };
 };
 //-----------------------------------------------------------------------
 //  Private class used by nsUnicodeToGBK
@@ -122,15 +108,8 @@ class nsUnicodeToGBKUniq2Bytes : public nsTableEncoderSupport
 public: 
   nsUnicodeToGBKUniq2Bytes()
     : nsTableEncoderSupport( (uShiftTable*) &g_2BytesShiftTable,
-                             (uMappingTable*) &g_uf_gbk_2bytes) {};
+                             (uMappingTable*) &g_uf_gbk_2bytes, 2) {};
 protected: 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
-                                PRInt32 aSrcLength,
-                                PRInt32 * aDestLength)
-  {
-    *aDestLength = 2 * aSrcLength;
-    return NS_OK_UDEC_EXACTLENGTH;
-  };
 };
 //-----------------------------------------------------------------------
 //  nsUnicodeToGB18030
@@ -143,13 +122,7 @@ void nsUnicodeToGB18030::Create4BytesEncoder()
 {
   m4BytesEncoder = new nsUnicodeTo4BytesGB18030();
 }
-NS_IMETHODIMP nsUnicodeToGB18030::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 4 * aSrcLength;
-  return NS_OK;
-}
+
 PRBool nsUnicodeToGB18030::EncodeSurrogate(
   PRUnichar aSurrogateHigh,
   PRUnichar aSurrogateLow,
@@ -205,17 +178,9 @@ NS_IMETHODIMP nsUnicodeToGB18030Font0::FillInfo(PRUint32 *aInfo)
 //-----------------------------------------------------------------------
 nsUnicodeToGB18030Font1::nsUnicodeToGB18030Font1()
     : nsTableEncoderSupport( (uShiftTable*) &g_2BytesShiftTable,
-                             (uMappingTable*) &g_uf_gb18030_4bytes)
+                             (uMappingTable*) &g_uf_gb18030_4bytes, 4)
 {
 
-}
-
-NS_IMETHODIMP nsUnicodeToGB18030Font1::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 4 * aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH; // font encoding is exactly 4 bytes
 }
 
 NS_IMETHODIMP nsUnicodeToGB18030Font1::FillInfo(PRUint32 *aInfo)
@@ -357,7 +322,8 @@ NS_IMETHODIMP nsUnicodeToGB18030Font1::FillInfo(PRUint32 *aInfo)
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
 
-nsUnicodeToGBK::nsUnicodeToGBK()
+nsUnicodeToGBK::nsUnicodeToGBK(PRUint32 aMaxLength) :
+  nsEncoderSupport(aMaxLength)
 {
   mExtensionEncoder = nsnull;
   m4BytesEncoder = nsnull;
@@ -561,15 +527,6 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToGBK::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2 * aSrcLength;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
 {

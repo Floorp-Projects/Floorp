@@ -105,18 +105,9 @@ static const PRUint16 *g_EUCTWMappingTableSet [] ={
 
 nsUnicodeToEUCTW::nsUnicodeToEUCTW() 
 : nsMultiTableEncoderSupport( 8,
-                        (uShiftTable**) &g_EUCTWShiftTableSet, 
-                        (uMappingTable**) &g_EUCTWMappingTableSet)
+                              (uShiftTable**) &g_EUCTWShiftTableSet, 
+                              (uMappingTable**) &g_EUCTWMappingTableSet,
+                              4 /* max length = src * 4 */)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToEUCTW::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 4 * aSrcLength;
-  return NS_OK;
-}

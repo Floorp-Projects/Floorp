@@ -55,17 +55,6 @@ static const PRInt16 g_ufShiftTable[] =  {
 
 nsUnicodeToMacArabic::nsUnicodeToMacArabic() 
 : nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable)
+                        (uMappingTable*) &g_ufMappingTable, 1)
 {
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToMacArabic::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
 }

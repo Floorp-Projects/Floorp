@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToMacDevanagari_h___
 #define nsUnicodeToMacDevanagari_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToMacDevanagari [declaration]
@@ -56,13 +56,6 @@ public:
    */
   nsUnicodeToMacDevanagari();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToMacDevanagari_h___ */

@@ -58,27 +58,8 @@ static const PRInt16 g_SJISShiftTable[] =  {
 
 nsUnicodeToSJIS::nsUnicodeToSJIS() 
 : nsTableEncoderSupport((uShiftTable*) &g_SJISShiftTable, 
-                        (uMappingTable*) &g_SJISMappingTable)
+                        (uMappingTable*) &g_SJISMappingTable,
+                        2 /* max length = src * 2 */)
 {
 }
 
-nsresult nsUnicodeToSJIS::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToSJIS();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToSJIS::GetMaxLength(const PRUnichar * aSrc, 
-                                            PRInt32 aSrcLength,
-                                            PRInt32 * aDestLength)
-{
-  *aDestLength = 2*aSrcLength;
-  return NS_OK;
-}

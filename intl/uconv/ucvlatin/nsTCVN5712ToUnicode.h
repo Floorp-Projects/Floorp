@@ -39,7 +39,7 @@
 #ifndef nsTCVN5712ToUnicode_h___
 #define nsTCVN5712ToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsTCVN5712ToUnicode [declaration]

@@ -36,7 +36,7 @@
 #ifndef nsUnicodeToCP850_h___
 #define nsUnicodeToCP850_h___
 
-#include "nsUCvIBMSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP850 [declaration]
@@ -52,14 +52,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToCP850();
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP850_h___ */

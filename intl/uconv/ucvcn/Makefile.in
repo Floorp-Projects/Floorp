@@ -27,9 +27,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvcn
-LIBRARY_NAME	= ucvcn
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+LIBRARY_NAME	= ucvcn_s
+FORCE_STATIC_LIB=1
 MODULE_NAME	= nsUCvCnModule
 REQUIRES	= xpcom \
 		  string \
@@ -50,16 +49,16 @@ CPPSRCS		= \
 		nsUnicodeToHZ.cpp \
 		nsCP936ToUnicode.cpp \
 		nsUnicodeToCP936.cpp \
-		nsUCvCnSupport.cpp \
-		nsUCvCnModule.cpp \
 		nsGBKConvUtil.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvCnCID.h
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+LOCAL_INCLUDES = -I$(srcdir)/../util
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_INTL
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN

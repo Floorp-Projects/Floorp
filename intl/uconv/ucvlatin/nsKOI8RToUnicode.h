@@ -39,7 +39,7 @@
 #ifndef nsKOI8RToUnicode_h___
 #define nsKOI8RToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsKOI8RToUnicode [declaration]

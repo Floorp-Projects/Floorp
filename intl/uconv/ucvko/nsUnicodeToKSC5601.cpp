@@ -67,17 +67,8 @@ static const PRUint16 *g_ShiftTable[3] =  {
 
 nsUnicodeToKSC5601::nsUnicodeToKSC5601() 
 : nsMultiTableEncoderSupport(2, (uShiftTable**) g_ShiftTable, 
-                        (uMappingTable**) g_MappingTable)
+                        (uMappingTable**) g_MappingTable,
+                             8 /* max length = src * 8 */)
 {
 }
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToKSC5601::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = aSrcLength * 8;
-  return NS_OK;
-}

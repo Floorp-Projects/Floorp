@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToEUCTW_h___
 #define nsUnicodeToEUCTW_h___
 
-#include "nsUCvTW2Support.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCTW [declaration]
@@ -60,12 +60,6 @@ public:
   nsUnicodeToEUCTW();
 
 protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToEUCTW_h___ */

@@ -76,13 +76,7 @@ static const PRUint16 *g_JohabShiftTable[3] =  {
 nsUnicodeToJohabNoAscii::nsUnicodeToJohabNoAscii() 
 : nsMultiTableEncoderSupport(sizeof(g_JohabShiftTable) / sizeof(g_JohabShiftTable[0]),
                         (uShiftTable**) g_JohabShiftTable, 
-                        (uMappingTable**) g_JohabMappingTable)
+                        (uMappingTable**) g_JohabMappingTable,
+                             2 /* max length = src * 2 */)
 {
-}
-NS_IMETHODIMP nsUnicodeToJohabNoAscii::GetMaxLength(const PRUnichar* aSrc,
-                                             PRInt32 aSrcLength,
-                                             PRInt32 * aDestLength)
-{ 
-  *aDestLength = 2 * aSrcLength;
-  return NS_OK;
 }

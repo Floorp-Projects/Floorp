@@ -39,7 +39,7 @@
 #ifndef nsMacGurmukhiToUnicode_h___
 #define nsMacGurmukhiToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacGurmukhiToUnicode [declaration]

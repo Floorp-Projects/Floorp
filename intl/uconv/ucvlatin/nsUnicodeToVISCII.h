@@ -39,7 +39,7 @@
 #ifndef nsUnicodeToVISCII_h___
 #define nsUnicodeToVISCII_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToVISCII [declaration]
@@ -59,13 +59,6 @@ public:
    */
   nsUnicodeToVISCII();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToVISCII_h___ */

@@ -71,19 +71,10 @@ static const PRUint16 *g_Big5HKSCSShiftTable[] =  {
 
 nsUnicodeToBIG5HKSCS::nsUnicodeToBIG5HKSCS()
 : nsMultiTableEncoderSupport(3,
-                        (uShiftTable**) &g_Big5HKSCSShiftTable,
-                        (uMappingTable**) &g_Big5HKSCSMappingTable)
+                             (uShiftTable**) &g_Big5HKSCSShiftTable,
+                             (uMappingTable**) &g_Big5HKSCSMappingTable,
+                             2 /* max length = src * 2 */)
 {
 }
 
 
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToBIG5HKSCS::GetMaxLength(const PRUnichar * aSrc,
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
-{
-  *aDestLength = 2 * aSrcLength;
-  return NS_OK;
-}

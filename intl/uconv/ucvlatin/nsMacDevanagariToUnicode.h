@@ -39,7 +39,7 @@
 #ifndef nsMacDevanagariToUnicode_h___
 #define nsMacDevanagariToUnicode_h___
 
-#include "nsUCvLatinSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsMacDevanagariToUnicode [declaration]

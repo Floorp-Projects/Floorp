@@ -40,7 +40,7 @@
 #ifndef nsUnicodeToGB2312GL_h___
 #define nsUnicodeToGB2312GL_h___
 
-#include "nsUCvCnSupport.h"
+#include "nsUCSupport.h"
 #include "gbku.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312GL [declaration]
@@ -69,9 +69,6 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
                                 char * aDest, PRInt32 * aDestLength)

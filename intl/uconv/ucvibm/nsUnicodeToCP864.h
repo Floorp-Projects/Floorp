@@ -36,7 +36,7 @@
 #ifndef nsUnicodeToCP864_h___
 #define nsUnicodeToCP864_h___
 
-#include "nsUCvIBMSupport.h"
+#include "nsUCSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToCP864 [declaration]
@@ -53,13 +53,6 @@ public:
    */
   nsUnicodeToCP864();
 
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsEncoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsUnicodeToCP864_h___ */
