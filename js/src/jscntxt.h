@@ -134,6 +134,9 @@ struct JSRuntime {
     /* XXX must come after JSCLists or MSVC alignment bug bites empty lists */
     JSPropertyCache     propertyCache;
 
+    /* Client opaque pointer */
+    void                *data;
+
 #ifdef JS_THREADSAFE
     /* These combine to interlock the GC and new requests. */
     PRLock              *gcLock;
