@@ -194,12 +194,12 @@ function DateFormater( )
     parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\s*$/;
     probeArray = parseShortDateRegex.exec(probeString);
     if (probeArray != null) {
-      for (var i = 1; i <= 3; i++) { 
-        switch (Number(probeArray[i])) {
+      for (var j = 1; j <= 3; j++) { 
+        switch (Number(probeArray[j])) {
           case 02:    this.twoDigitYear = true; // fall thru
-          case 2002:  this.yearIndex = i;       break;
-          case 4:     this.dayIndex = i;        break;
-          default:    this.monthIndex = i;      break;
+          case 2002:  this.yearIndex = j;       break;
+          case 4:     this.dayIndex = j;        break;
+          default:    this.monthIndex = j;      break;
         }
       }
       if (this.yearIndex != -1 && this.dayIndex != -1 && this.monthIndex != -1) {
@@ -352,8 +352,8 @@ DateFormater.prototype.parseShortDate = function ( dateString )
   var year = Number.MIN_VALUE; var month = -1; var day = -1; var timeString = null;
   if (this.alphaMonths == null) {
     // NUMERIC DATE
-    var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
-    var dateNumbersArray = parseShortDateRegex.exec(dateString);
+    var parseNumShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
+    var dateNumbersArray = parseNumShortDateRegex.exec(dateString);
     if (dateNumbersArray != null) {
       year = Number(dateNumbersArray[this.yearIndex]);
       month = Number(dateNumbersArray[this.monthIndex]) - 1; // 0-based
@@ -362,8 +362,8 @@ DateFormater.prototype.parseShortDate = function ( dateString )
     }
   } else {
     // DATE WITH ALPHABETIC MONTH
-    var parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;//digits & nonDigits
-    var datePartsArray = parseShortDateRegex.exec(dateString);
+    var parseAlphShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;//digits & nonDigits
+    var datePartsArray = parseAlphShortDateRegex.exec(dateString);
     if (datePartsArray != null) {
       year = Number(datePartsArray[this.yearIndex]);
       var monthString = datePartsArray[this.monthIndex].toUpperCase();
