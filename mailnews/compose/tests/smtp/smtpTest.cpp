@@ -59,11 +59,11 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib.so"
-#define XPCOM_DLL  "libxpcom.so"
-#define PREF_DLL   "libpref.so"
-#define APPCORES_DLL  "libappcores.so"
-#define APPSHELL_DLL "libnsappshell.so"
+#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
+#define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
+#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
+#define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
 #endif
 #endif
 
@@ -189,7 +189,7 @@ nsresult nsSmtpTestDriver::OnStartRunningUrl(nsIURL * aUrl)
 nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 {
 	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
-	nsresult rv = NS_OK;
+	//nsresult rv = NS_OK;
 	m_runningURL = PR_FALSE;
 	if (aUrl)
 	{
@@ -384,7 +384,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	nsresult rv = NS_OK; 
 	char * fileName = nsnull;
 	char * userName = nsnull;
-	char * userPassword = nsnull;
+	//char * userPassword = nsnull;
 	char * displayString = nsnull;
 	char * recipients = nsnull;
 	
