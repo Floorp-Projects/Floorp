@@ -96,8 +96,8 @@ static nsCString shortAppName() {
 
 static PRBool IsNT()
 {
-    static sInitialized = PR_FALSE;
-    static sIsNT = PR_FALSE;
+    static PRBool sInitialized = PR_FALSE;
+    static PRBool sIsNT = PR_FALSE;
 
     if (!sInitialized) {
         OSVERSIONINFO osversion;
