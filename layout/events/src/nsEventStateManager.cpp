@@ -686,6 +686,25 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
+
+    // Check if selection is tracking drag gestures, if so
+    // don't interfere!
+
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell){
+      nsCOMPtr<nsIFrameSelection> frameSel;
+      rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
+      if (NS_SUCCEEDED(rv) && frameSel){
+        PRBool mouseDownState = PR_TRUE;
+        frameSel->GetMouseDownState(&mouseDownState);
+        if (mouseDownState) {
+          StopTrackingDragGesture();
+          return;
+        }
+      }
+    }
+
     // figure out the delta in twips, since that is how it is in the event.
     // Do we need to do this conversion every time? Will the pres context really change on
     // us or can we cache it?
