@@ -230,6 +230,7 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
 #if !defined(XP_MAC)
     PR_ASSERT(!(me->flags & _PR_IDLE_THREAD));
 #endif
+    PR_ASSERT(lock != NULL);
 #ifdef _PR_GLOBAL_THREADS_ONLY 
     PR_ASSERT(lock->owner != me);
     _PR_MD_LOCK(&lock->ilock);
@@ -336,6 +337,7 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
     PRIntn is;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
+    PR_ASSERT(lock != NULL);
     PR_ASSERT(lock->owner == me);
     PR_ASSERT(me != suspendAllThread); 
 #if !defined(XP_MAC)
