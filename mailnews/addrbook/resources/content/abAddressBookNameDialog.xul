@@ -26,26 +26,25 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abAddressBookNameDialog.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
         onload="abNameOnLoad()"
         style="padding:10px"> 
         
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
 
 	<keyset id="keyset"/>
 
-	<box align="vertical" style="width:36em; min-height:12em">
+	<box orient="vertical" style="width:36em; min-height:12em">
 		
-		<spring flex="100%"/>
+		<spring flex="1"/>
 
-		<html:div style="margin-bottom:.3em">&name.label;</html:div>
+		<text for="name" style="margin-bottom:.3em" value="&name.label;"/>
 		
-		<html:input tabindex="0" type="text" id="name" style="width:100%"/>
+		<textfield tabindex="0" id="name" style="width: 100%"/>
 		
-		<spring flex="100%"/>
+		<spring flex="1"/>
 		
 		<box id="okCancelButtons"/>
 		

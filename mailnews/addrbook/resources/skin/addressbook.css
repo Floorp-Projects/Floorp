@@ -25,47 +25,49 @@ Rights Reserved.
  
 /* CardView styles - used in the Card View Pane*/
 
-box#CardViewBox {
+#CardViewBox {
 	overflow: auto;
 	background-color: #EEEEEE;
 	min-width: 150px;
 	user-focus: ignore;
 }
 
-box#CardViewInnerBox {
+#CardViewInnerBox {
 	margin-top: 2px;
 	margin-bottom: 2px;
 	padding-left: 8px;
 	padding-right: 8px;
 }
 
-html|div#CardTitle {
+#CardTitle {
 	font-size: 150%;
 	font-weight: bold;
 	border-bottom: 2px solid black;
 	min-width: 120px;
+	margin: 0px;
 }
  
-box.cardViewGroup {
+.cardViewGroup {
 	margin-top: 8px;
 	padding-bottom: 5px;
 	min-width: 50px;
 }
 
-html|div[class="CardViewHeading"] {
+[class="CardViewHeading"] {
 	padding: 1px;
 	padding-left: 5px;
-	margin-bottom: 1px;
+	margin: 0px 0px 1px 0px;
 	background-color: #99CCCC;
 	color: black;
 	font-weight: bold;
 	min-width: 30px;
 }
 
-html|div[class="CardViewText"] {
+[class="CardViewText"] {
 	padding-left: 20px;
 	padding-right: 2px;
 	min-width: 30px;
+	margin: 0px;
 }
 
 html|a[class="CardViewText"] {

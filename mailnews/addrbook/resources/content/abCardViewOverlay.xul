@@ -25,70 +25,70 @@ Rights Reserved.
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abCardViewOverlay.js"/>
 
-<box id="CardViewBox" align="vertical" flex="1">
+<box id="CardViewBox" orient="vertical" flex="1">
 	
-	<box id="CardViewInnerBox" align="vertical" flex="1">
+	<box id="CardViewInnerBox" orient="vertical" flex="1">
 		
-		<html:div hide="true" id="CardTitle"/>
+		<html hide="true" id="CardTitle"/>
 
-		<box align="horizontal" style="width:100%" flex="1">
+		<box orient="horizontal" style="width:100%" flex="1">
 			
-			<box align="vertical" flex="1" style="width:200px">
-				<box id="cvbName" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhName"/>
-					<html:div class="CardViewText" hide="true" id="cvDisplayName"/>
-					<html:div class="CardViewText" hide="true" id="cvNickname"/>
-					<html:div class="CardViewText" hide="true" id="cvEmail1"/>
-					<html:div class="CardViewText" hide="true" id="cvEmail2"/>
+			<box orient="vertical" flex="1" style="width:200px">
+				<box id="cvbName" class="cardViewGroup" orient="vertical">
+					<html class="CardViewHeading" hide="true" id="cvhName"/>
+					<html class="CardViewText" hide="true" id="cvDisplayName"/>
+					<html class="CardViewText" hide="true" id="cvNickname"/>
+					<html class="CardViewText" hide="true" id="cvEmail1"/>
+					<html class="CardViewText" hide="true" id="cvEmail2"/>
 				</box>
 				
-				<box id="cvbHome" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvHomeAddress"/>
-					<html:div class="CardViewText" hide="true" id="cvHomeAddress2"/>
-					<html:div class="CardViewText" hide="true" id="cvHomeCityStZip"/>
-					<html:div class="CardViewText" hide="true" id="cvHomeCountry"/>
-					<html:div class="CardViewText"><html:p>
+				<box id="cvbHome" class="cardViewGroup" orient="vertical">
+					<html class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html>
+					<html class="CardViewText" hide="true" id="cvHomeAddress"/>
+					<html class="CardViewText" hide="true" id="cvHomeAddress2"/>
+					<html class="CardViewText" hide="true" id="cvHomeCityStZip"/>
+					<html class="CardViewText" hide="true" id="cvHomeCountry"/>
+					<html class="CardViewText"><html:p>
 						<html:a href="" id="cvHomeWebPage" hide="true"/>
-					</html:p></html:div>
+					</html:p></html>
 				</box>
 
-				<box id="cvbOther" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCustom1"/>
-					<html:div class="CardViewText" hide="true" id="cvCustom2"/>
-					<html:div class="CardViewText" hide="true" id="cvCustom3"/>
-					<html:div class="CardViewText" hide="true" id="cvCustom4"/>
-					<html:div class="CardViewText" hide="true" id="cvNotes"/>
+				<box id="cvbOther" class="cardViewGroup" orient="vertical">
+					<html class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html>
+					<html class="CardViewText" hide="true" id="cvCustom1"/>
+					<html class="CardViewText" hide="true" id="cvCustom2"/>
+					<html class="CardViewText" hide="true" id="cvCustom3"/>
+					<html class="CardViewText" hide="true" id="cvCustom4"/>
+					<html class="CardViewText" hide="true" id="cvNotes"/>
 				</box>
 			</box>
 			
 			<spring style="width:20px"/>
 
-			<box align="vertical" flex="1" style="width:200px">
-				<box id="cvbPhone" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhWork"/>
-					<html:div class="CardViewText" hide="true" id="cvPhHome"/>
-					<html:div class="CardViewText" hide="true" id="cvPhFax"/>
-					<html:div class="CardViewText" hide="true" id="cvPhCellular"/>
-					<html:div class="CardViewText" hide="true" id="cvPhPager"/>
+			<box orient="vertical" flex="1" style="width:200px">
+				<box id="cvbPhone" class="cardViewGroup" orient="vertical">
+					<html class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html>
+					<html class="CardViewText" hide="true" id="cvPhWork"/>
+					<html class="CardViewText" hide="true" id="cvPhHome"/>
+					<html class="CardViewText" hide="true" id="cvPhFax"/>
+					<html class="CardViewText" hide="true" id="cvPhCellular"/>
+					<html class="CardViewText" hide="true" id="cvPhPager"/>
 				</box>
 				
-				<box id="cvbWork" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvJobTitle"/>
-					<html:div class="CardViewText" hide="true" id="cvDepartment"/>
-					<html:div class="CardViewText" hide="true" id="cvCompany"/>
-					<html:div class="CardViewText" hide="true" id="cvWorkAddress"/>
-					<html:div class="CardViewText" hide="true" id="cvWorkAddress2"/>
-					<html:div class="CardViewText" hide="true" id="cvWorkCityStZip"/>
-					<html:div class="CardViewText" hide="true" id="cvWorkCountry"/>
-					<html:div class="CardViewText"><html:p>
+				<box id="cvbWork" class="cardViewGroup" orient="vertical">
+					<html class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html>
+					<html class="CardViewText" hide="true" id="cvJobTitle"/>
+					<html class="CardViewText" hide="true" id="cvDepartment"/>
+					<html class="CardViewText" hide="true" id="cvCompany"/>
+					<html class="CardViewText" hide="true" id="cvWorkAddress"/>
+					<html class="CardViewText" hide="true" id="cvWorkAddress2"/>
+					<html class="CardViewText" hide="true" id="cvWorkCityStZip"/>
+					<html class="CardViewText" hide="true" id="cvWorkCountry"/>
+					<html class="CardViewText"><html:p>
 						<html:a href="" id="cvWorkWebPage" hide="true"/>
-					</html:p></html:div>
+					</html:p></html>
 				</box>
 			</box>
 

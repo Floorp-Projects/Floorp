@@ -29,8 +29,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
         class="dialog"
@@ -39,22 +38,19 @@ Rights Reserved.
         onload="OnLoadSelectAddress()"
         align="vertical">
 
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
+<script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 
 	<keyset id="keyset"/>
 
 	<!-- Thin box across top, show names containing & stop, search buttons -->
 	<box align="horizontal" style="padding:0px; padding-top:2px; padding-bottom:2px">
-		<html:div flex="100%" style="vertical-align: middle;">
-			<html:label for="searchtext" tabindex="0">&search.label;</html:label>
-			<html:input type="text" id="searchtext" flex="100%"/>
-		</html:div>
+		<text for="searchtext" tabindex="0" value="&search.label;"/>
+		<textfield id="searchtext" flex="100%"/>
 		
 		<spring style="width: 1em;"/>
 		

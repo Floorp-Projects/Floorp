@@ -42,12 +42,11 @@ Rights Reserved.
 		persist="width height screenX screenY"
 		onload="OnLoadAddressBook()">
 
-<html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/addressbook.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/msgPrintEngine.js"/>
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script language="JavaScript" src="chrome://messenger/content/addressbook/addressbook.js"/>
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+<script language="JavaScript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_AddressBook"
@@ -228,8 +227,8 @@ Rights Reserved.
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 
-					<!--html:div id="searchlabel">&showNames.label;</html:div>
-					<html:input id="searchtext" type="text" align="bottom"/> 
+					<!--html id="searchlabel">&showNames.label;</html>
+					<textfield id="searchtext" type="text" align="bottom"/> 
 					<spring flex="1"/--> 
 				</box>
 
@@ -251,7 +250,7 @@ Rights Reserved.
 		<box id="sidebar-box">
 			<splitter class="sidebar-main-header" collapse="after"
 			          onclick="sidebarOpenClosePanel(this)"> 
-				<html:div class="panel-bar" style="min-width:1px">&addressbook-sidebar-header.label;</html:div>
+				<text style="min-width:1px" value="&addressbook-sidebar-header.label;"/>
 			</splitter>
 			
 			<tree id="dirTree" flex="1"/>
@@ -273,7 +272,7 @@ Rights Reserved.
 			<box id="status-bar">
 				<!-- replace spring with real stuff later -->
 				<spring style="width:10px"/>
-				<html:div>Status Bar</html:div>
+				<text value="Status Bar"/>
 				<spring flex="100%"/>
 			</box>
 
