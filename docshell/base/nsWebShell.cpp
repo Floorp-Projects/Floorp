@@ -84,7 +84,7 @@ typedef unsigned long HMTX;
 #include "nsplugin.h"
 //#include "nsPluginsCID.h"
 #include "nsIPluginManager.h"
-#include "nsIPref.h"
+#include "nsCDefaultURIFixup.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsIContent.h"
@@ -944,107 +944,91 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
       return NS_OK;
     }  
-      
-    nsXPIDLCString host;
 
-    rv = url->GetHost(getter_Copies(host));
-    if (!host) {
-      return rv;
-    }
-
-    CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
-    nsCAutoString hostStr(buf);
-    PRInt32 dotLoc = hostStr.FindChar('.');
-
-    nsXPIDLCString scheme;
-    url->GetScheme(getter_Copies(scheme));
-
-    PRUint32 schemeLen = PL_strlen((const char*)scheme);
-    CBufDescriptor schemeBuf((const char*)scheme, PR_TRUE, schemeLen+1, schemeLen);
-    nsCAutoString schemeStr(schemeBuf);
-
-    //
-    // First try sending the request to a keyword server (if enabled)...
-    //
-    if(aStatus == NS_ERROR_UNKNOWN_HOST ||
-       aStatus == NS_ERROR_CONNECTION_REFUSED ||
-       aStatus == NS_ERROR_NET_TIMEOUT)
+    // Create the fixup object if necessary
+    if (!mURIFixup)
     {
-      PRBool keywordsEnabled = PR_FALSE;
-
-      if(mPrefs) {
-        rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-        if (NS_FAILED(rv)) return rv;
-      }
-
-      // we should only perform a keyword search under the following conditions:
-      // (0) Pref keyword.enabled is true
-      // (1) the url scheme is http (or https)
-      // (2) the url does not have a protocol scheme
-      // If we don't enforce such a policy, then we end up doing keyword searchs on urls
-      // we don't intend like imap, file, mailbox, etc. This could lead to a security
-      // problem where we send data to the keyword server that we shouldn't be. 
-      // Someone needs to clean up keywords in general so we can determine on a per url basis
-      // if we want keywords enabled...this is just a bandaid...
-      if (keywordsEnabled && !schemeStr.IsEmpty() &&
-         (schemeStr.Find("http") != 0)) {
-          keywordsEnabled = PR_FALSE;
-      }
-
-      if(keywordsEnabled && (-1 == dotLoc)) {
-        // only send non-qualified hosts to the keyword server
-        nsAutoString keywordSpec(NS_LITERAL_STRING("keyword:"));
-        keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
-
-        return LoadURI(keywordSpec.get(), // URI string
-                       LOAD_FLAGS_NONE,   // Load flags
-                       nsnull,            // Refering URI
-                       nsnull,            // Post data stream
-                       nsnull);           // Headers stream
-      } // end keywordsEnabled
+      mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
     }
 
-    //
-    // Next, try rewriting the URI using our www.*.com trick
-    //
-    if(aStatus == NS_ERROR_UNKNOWN_HOST) {
-      // Try our www.*.com trick.
-      nsCAutoString retryHost;
+    if (mURIFixup)
+    {
+      //
+      // Try and make an alternative URI from the old one
+      //
+      nsCOMPtr<nsIURI> newURI;
 
+      nsXPIDLCString oldSpec;
+      url->GetSpec(getter_Copies(oldSpec));
+      nsAutoString oldSpecW; oldSpecW.AssignWithConversion(oldSpec.get());
 
-      if(schemeStr.Find("http") == 0) {
-        if(-1 == dotLoc) {
-          retryHost = "www.";
-          retryHost += hostStr;
-          retryHost += ".com";
-        } else {
-          PRInt32 hostLen = hostStr.Length();
-          if(((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4)) {
-            retryHost = "www.";
-            retryHost += hostStr;
+      //
+      // First try keyword fixup
+      //
+      if (aStatus == NS_ERROR_UNKNOWN_HOST ||
+          aStatus == NS_ERROR_CONNECTION_REFUSED ||
+          aStatus == NS_ERROR_NET_TIMEOUT)
+      {
+        mURIFixup->CreateFixupURI(oldSpecW.get(),
+            nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP, getter_AddRefs(newURI));
+      }
+
+      //
+      // Now try change the address, e.g. turn http://foo into http://www.foo.com
+      //
+      if (aStatus == NS_ERROR_UNKNOWN_HOST)
+      {
+        // Test if keyword lookup produced a new URI or not
+        PRBool doCreateAlternate = PR_TRUE;
+        if (newURI)
+        {
+          PRBool sameURI = PR_FALSE;
+          url->Equals(newURI, &sameURI);
+          if (!sameURI)
+          {
+            // Keyword lookup made a new URI so no need to try an
+            // alternate one.
+            doCreateAlternate = PR_FALSE;
           }
+        }
+        if (doCreateAlternate)
+        {
+          newURI = nsnull;
+          mURIFixup->CreateFixupURI(oldSpecW.get(),
+              nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI, getter_AddRefs(newURI));
         }
       }
 
-      if(!retryHost.IsEmpty()) {
-        // This seems evil, since it is modifying the original URL
-        rv = url->SetHost(retryHost.get());
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = url->GetSpec(getter_Copies(host));
-        if (NS_FAILED(rv)) return rv;
+      //
+      // Did we make a new URI that is different to the old one? If so load it.
+      //
+      if (newURI)
+      {
+        // Make sure the new URI is different from the old one, otherwise
+        // there's little point trying to load it again.
+        PRBool sameURI = PR_FALSE;
+        url->Equals(newURI, &sameURI);
+        if (!sameURI)
+        {
+          nsXPIDLCString newSpec;
+          newURI->GetSpec(getter_Copies(newSpec));
+          nsAutoString newSpecW; newSpecW.AssignWithConversion(newSpec.get());
 
-        // reload the url
-        return LoadURI(NS_ConvertASCIItoUCS2(host).get(), // URI string
-                       LOAD_FLAGS_NONE,                   // Load flags
-                       nsnull,                            // Refering URI
-                       nsnull,                            // Post data stream
-                       nsnull);                           // Header stream
-      } // retry
+          // This seems evil, since it is modifying the original URL
+          rv = url->SetSpec(newSpec.get());
+          if (NS_FAILED(rv)) return rv;
+
+          return LoadURI(newSpecW.get(),      // URI string
+                         LOAD_FLAGS_NONE, // Load flags
+                         nsnull,          // Refering URI
+                         nsnull,          // Post data stream
+                         nsnull);         // Headers stream
+        }
+      }
     }
 
     //
-    // Well, none of the URI rewriting tricks worked :-(
+    // Well, fixup didn't work :-(
     // It is time to throw an error dialog box, and be done with it...
     //
 
@@ -1065,8 +1049,10 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
+      nsXPIDLCString host;
+      url->GetHost(getter_Copies(host));
       if (host) {
-        PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+        PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
         prompter->Alert(nsnull, msg);
@@ -1098,6 +1084,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       if (NS_FAILED(rv)) return rv;
 
       // build up the host:port string.
+      nsXPIDLCString host;
+      url->GetHost(getter_Copies(host));
       nsCAutoString combo(host);
       if (port > 0) {
         combo.Append(':');
@@ -1129,7 +1117,9 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+      nsXPIDLCString host;
+      url->GetHost(getter_Copies(host));
+      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
       if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
       prompter->Alert(nsnull, msg);

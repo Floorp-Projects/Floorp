@@ -41,6 +41,12 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP = 1;
 
     /**
+     * Tell the fixup to make an alternate URI from the input URI, for example
+     * to turn foo into www.foo.com.
+     */
+    const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
+
+    /**
      * Converts the specified string into a URI, first attempting
      * to correct any errors in the syntax or other vagaries. Returns
      * a wellformed URI or nsnull if it can't.

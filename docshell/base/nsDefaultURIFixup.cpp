@@ -113,8 +113,11 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
 
     // Just try to create an URL out of it
     NS_NewURI(aURI, uriString, nsnull);
-    if(*aURI)
+    if(*aURI) {
+        if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
+            MakeAlternateURI(*aURI);
         return NS_OK;
+    }
 
     // See if it is a keyword
     // Test whether keywords need to be fixed up
@@ -152,9 +155,94 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
             uriString.Assign(NS_LITERAL_STRING("http://") + uriString);
     } // end if checkprotocol
 
-    return NS_NewURI(aURI, uriString, nsnull);
+    nsresult rv = NS_NewURI(aURI, uriString, nsnull);
+
+    // Did the caller want us to try an alternative URI?
+    // If so, attempt to fixup http://foo into http://www.foo.com
+
+    if (aURI && aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) {
+        MakeAlternateURI(*aURI);
+    }
+
+    return rv;
 }
 
+
+PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
+{
+    // Code only works for http. Not for any other protocol including https!
+    PRBool isHttp = PR_FALSE;
+    aURI->SchemeIs("http", &isHttp);
+    if (!isHttp) {
+        return PR_FALSE;
+    }
+
+    // Security - URLs with user / password info should NOT be fixed up
+    nsXPIDLCString username;
+    nsXPIDLCString password;
+    aURI->GetUsername(getter_Copies(username));
+    aURI->GetPassword(getter_Copies(password));
+    if (username.Length() > 0 || password.Length() > 0)
+    {
+        return PR_FALSE;
+    }
+
+    nsXPIDLCString host;
+    aURI->GetHost(getter_Copies(host));
+
+    nsCAutoString oldHost(host);
+    nsCAutoString newHost;
+
+    // Count the dots
+    PRInt32 numDots = 0;
+    nsReadingIterator<char> iter;
+    nsReadingIterator<char> iterEnd;
+    oldHost.BeginReading(iter);
+    oldHost.EndReading(iterEnd);
+    while (iter != iterEnd) {
+        if (*iter == '.')
+            numDots++;
+        ++iter;
+    }
+
+    // TODO: Defaulting to www.foo.com is a bit nasty. It should be a pref
+    //       somewhere for people who'd prefer it to default to www.foo.org,
+    //       www.foo.co.uk or whatever.
+    const char *prefix = "www.";
+    const char *suffix = ".com";
+
+    // Hardcoded to .com for the time being
+    if (numDots == 0)
+    {
+        newHost.Assign(prefix);
+        newHost.Append(oldHost);
+        newHost.Append(suffix);
+    }
+    else if (numDots == 1)
+    {
+        if (oldHost.EqualsIgnoreCase(prefix, nsCRT::strlen(prefix))) {
+            newHost.Assign(oldHost);
+            newHost.Append(suffix);
+        }
+        else {
+            newHost.Assign(prefix);
+            newHost.Append(oldHost);
+        }
+    }
+    else
+    {
+        // Do nothing
+        return PR_FALSE;
+    }
+
+    if (newHost.IsEmpty()) {
+        return PR_FALSE;
+    }
+
+    // Assign the new host string over the old one
+    aURI->SetHost(newHost.get());
+    return PR_TRUE;
+}
 
 nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI, 
                                          nsIURI** aURI)
