@@ -215,6 +215,8 @@ nsFilePicker.prototype = {
                         "",
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
+      if (parentWin)
+        parentWin.blurSuppression = false;
 
       this.mFilterIndex = o.retvals.filterIndex;
       this.mFilesEnumerator = o.retvals.files;
