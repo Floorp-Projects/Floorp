@@ -21,6 +21,7 @@
 #
 # Contributors:
 #     Rod Spears <rods@netscape.com>
+#     Pierre Chanial <p_ch@verizon.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -66,13 +67,14 @@ function elipseString(aStr, doFront)
 
 // all progress notifications are done through the nsIWebProgressListener implementation...
 var progressListener = {
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
+
+  onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus)
   {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       window.close();
   },
   
-  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  onProgressChange: function (aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
     if (!progressParams)
       return;
@@ -89,27 +91,19 @@ var progressListener = {
     }
   },
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation)
-  {
-    // we can ignore this notification
-  },
+  onLocationChange: function (aWebProgress, aRequest, aLocation) {},
+  onSecurityChange: function (aWebProgress, aRequest, state) {},
 
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
+  onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage)
   {
-    if (aMessage != "")
+    if (aMessage)
       dialog.title.setAttribute("value", aMessage);
   },
 
-  onSecurityChange: function(aWebProgress, aRequest, state)
-  {
-    // we can ignore this notification
-  },
-
-  QueryInterface : function(iid)
+  QueryInterface: function (iid)
   {
     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
-      return this;
-   
+      return this;   
     throw Components.results.NS_NOINTERFACE;
   }
 }

@@ -18,8 +18,7 @@
               oncommandupdate="goUpdatePasteMenuItems()"/>
   
   <commandset id="mainCommandSet">
-    <command id="cmd_newNavigator"
-             oncommand="OpenBrowserWindow()"/>
+    <command id="cmd_newNavigator"                 oncommand="OpenBrowserWindow()"/>
     <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
     <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
     <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
@@ -29,14 +28,9 @@
     <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
     <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
     <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
-    <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
     <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
     <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
-    <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
-    <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
-    <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
-    <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
 
 #ifdef XP_WIN
     <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
@@ -47,7 +41,7 @@
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
     <command id="Browser:SendLink" oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
                                               Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
-    <command id="Browser:Print" oncommand="BrowserPrint();"/>
+    <command id="Browser:Print" oncommand="PrintUtils.print();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>

@@ -48,26 +48,6 @@ function getBrowserURL()
   return "chrome://browser/content/browser.xul";
 }
 
-function goPageSetup(domwin, printSettings)
-{
-  try {
-    if (printSettings == null) {
-      alert("PrintSettings arg is null!");
-    }
-
-    // This code calls the printoptions service to bring up the printoptions
-    // dialog.  This will be an xp dialog if the platform did not override
-    // the ShowPrintSetupDialog method.
-    var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                             .getService(Components.interfaces.nsIPrintingPromptService);
-    printingPromptService.showPageSetup(domwin, printSettings, null);
-    return true;
-  } catch(e) {
-    return false; 
-  }
-  return true;
-}
-
 function goToggleToolbar( id, elementID )
 {
   var toolbar = document.getElementById(id);

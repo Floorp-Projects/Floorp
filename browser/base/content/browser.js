@@ -90,13 +90,7 @@ var gBrowser = null;
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
 
-var gPrintSettingsAreGlobal = true;
-var gSavePrintSettings = true;
-var gPrintSettings = null;
 var gChromeState = null; // chrome state before we went into print preview
-var gOldCloseHandler = null; // close handler before we went into print preview
-var gInPrintPreviewMode = false;
-var gWebProgress = null;
 var gFormHistory = null;
 var gFormFillEnabled = true;
 
@@ -390,7 +384,6 @@ function delayedStartup()
   // loads the services
   initServices();
   initBMService();
-  
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
@@ -415,7 +408,7 @@ function delayedStartup()
   BMSVC.readBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
-    var btf = BMSVC.getBookmarksToolbarFolder().Value
+    var btf = BMSVC.getBookmarksToolbarFolder().Value;
     bt.ref = btf;
     document.getElementById("bookmarks-chevron").ref = btf;
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
@@ -885,11 +878,9 @@ function openLocation()
 
 function BrowserOpenTab()
 {
-  if (!gInPrintPreviewMode) {
-    gBrowser.selectedTab = gBrowser.addTab('about:blank');
-    if (gURLBar)
-      setTimeout("gURLBar.focus();", 0); 
-  }
+  gBrowser.selectedTab = gBrowser.addTab('about:blank');
+  if (gURLBar)
+    setTimeout("gURLBar.focus();", 0); 
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -1409,7 +1400,6 @@ function BrowserFullScreen()
 function onFullScreen()
 {
   FullScreen.toggle();
-  
 }
 
 function getWebNavigation()
@@ -1449,261 +1439,31 @@ function toggleAffectedChrome(aHide)
   //   (*) menubar
   //   (*) navigation bar
   //   (*) bookmarks toolbar
-  //   (*) tab browser ``strip''
   //   (*) sidebar
 
-  if (!gChromeState)
-    gChromeState = new Object;
   var navToolbox = document.getElementById("navigator-toolbox");
   navToolbox.hidden = aHide;
   if (aHide)
   {
-    // going into print preview mode
-    //deal with tab browser
-    gChromeState.hadTabStrip = gBrowser.getStripVisibility();
-    gBrowser.setStripVisibilityTo(false);
-    
+    gChromeState = {};
     var sidebar = document.getElementById("sidebar-box");
     gChromeState.sidebarOpen = !sidebar.hidden;
-    if (gChromeState.sidebarOpen) {
-      toggleSidebar();
-    }
   }
-  else
-  {
-    // restoring normal mode (i.e., leaving print preview mode)
-    //restore tab browser
-    gBrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
-    if (gChromeState.sidebarOpen) {
-      toggleSidebar();
-    }
-  }
+
+  if (gChromeState.sidebarOpen)
+    toggleSidebar(); //pch doesn't work.
 }
 
-function showPrintPreviewToolbar()
+function onEnterPrintPreview()
 {
   toggleAffectedChrome(true);
-
-  var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
-  printPreviewTB.setAttribute("printpreview", true);
-  printPreviewTB.setAttribute("id", "print-preview-toolbar");
-
-  var navToolbox = document.getElementById("navigator-toolbox");
-  navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
 }
 
-function BrowserExitPrintPreview()
+
+function onExitPrintPreview()
 {
-  gInPrintPreviewMode = false;
-
-  gBrowser.setAttribute("handleCtrlPageUpDown", "true");
-
-  // exit print preview galley mode in content area
-  var ifreq = _content.QueryInterface(
-    Components.interfaces.nsIInterfaceRequestor);
-  var webBrowserPrint = ifreq.getInterface(
-    Components.interfaces.nsIWebBrowserPrint);     
-  webBrowserPrint.exitPrintPreview(); 
-  _content.focus();
-
-  // remove the print preview toolbar
-  var navToolbox = document.getElementById("navigator-toolbox");
-  var printPreviewTB = document.getElementById("print-preview-toolbar");
-  navToolbox.parentNode.removeChild(printPreviewTB);
-
   // restore chrome to original state
   toggleAffectedChrome(false);
-
-  // restore old onclose handler if we found one before previewing
-  var mainWin = document.getElementById("main-window");
-  mainWin.setAttribute("onclose", gOldCloseHandler);
-}
-
-function setPrinterDefaultsForSelectedPrinter(aPrintService)
-{
-  if (gPrintSettings.printerName == "") {
-    gPrintSettings.printerName = aPrintService.defaultPrinterName;
-  }
-
-  // First get any defaults from the printer 
-  aPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
-
-  // now augment them with any values from last time
-  aPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettings.kInitSaveAll);
-}
-
-function GetPrintSettings()
-{
-  var prevPS = gPrintSettings;
-  try {
-    if (gPrintSettings == null) {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      if (pref) {
-        gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
-        gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
-      }
-
-      var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                        .getService(Components.interfaces.nsIPrintSettingsService);
-      if (gPrintSettingsAreGlobal) {
-        gPrintSettings = printService.globalPrintSettings;
-        setPrinterDefaultsForSelectedPrinter(printService);
-      } else {
-        gPrintSettings = printService.newPrintSettings;
-      }
-    }
-  } catch (e) {
-    dump("GetPrintSettings() "+e+"\n");
-  }
-
-  return gPrintSettings;
-}
-
-// This observer is called once the progress dialog has been "opened"
-var gPrintPreviewObs = {
-    observe: function(aSubject, aTopic, aData)
-    {
-      setTimeout(FinishPrintPreview, 0);
-    },
-
-    QueryInterface : function(iid)
-    {
-     if (iid.equals(Components.interfaces.nsIObserver) || iid.equals(Components.interfaces.nsISupportsWeakReference))
-      return this;
-     
-     throw Components.results.NS_NOINTERFACE;
-    }
-};
-
-function BrowserPrintPreview()
-{
-  var ifreq;
-  var webBrowserPrint;  
-  try {
-    ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    gPrintSettings = GetPrintSettings();
-
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-
-  // Here we get the PrintingPromptService tso we can display the PP Progress from script
-  // For the browser implemented via XUL with the PP toolbar we cannot let it be
-  // automatically opened from the print engine because the XUL scrollbars in the PP window
-  // will layout before the content window and a crash will occur.
-  //
-  // Doing it all from script, means it lays out before hand and we can let printing do it's own thing
-  gWebProgress = new Object();
-
-  var printPreviewParams    = new Object();
-  var notifyOnOpen          = new Object();
-  var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                  .getService(Components.interfaces.nsIPrintingPromptService);
-  if (printingPromptService) {
-    // just in case we are already printing, 
-    // an error code could be returned if the Prgress Dialog is already displayed
-    try {
-      printingPromptService.showProgress(this, webBrowserPrint, gPrintSettings, gPrintPreviewObs, false, gWebProgress, 
-                                         printPreviewParams, notifyOnOpen);
-      if (printPreviewParams.value) {
-        var webNav = getWebNavigation();
-        printPreviewParams.value.docTitle = webNav.document.title;
-        printPreviewParams.value.docURL   = webNav.currentURI.spec;
-      }
-
-      // this tells us whether we should continue on with PP or 
-      // wait for the callback via the observer
-      if (!notifyOnOpen.value.valueOf() || gWebProgress.value == null) {
-        FinishPrintPreview();
-      }
-    } catch (e) {
-      FinishPrintPreview();
-    }
-  }
-}
-
-function FinishPrintPreview()
-{
-  try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-      webBrowserPrint.printPreview(gPrintSettings, null, gWebProgress.value);
-    }
-
-    gBrowser.setAttribute("handleCtrlPageUpDown", "false");
-
-    var mainWin = document.getElementById("main-window");
-
-    // save previous close handler to restoreon exiting print preview mode
-    if (mainWin.hasAttribute("onclose"))
-      gOldCloseHandler = mainWin.getAttribute("onclose");
-    else
-      gOldCloseHandler = null;
-    mainWin.setAttribute("onclose", "BrowserExitPrintPreview(); return false;");
- 
-    // show the toolbar after we go into print preview mode so
-    // that we can initialize the toolbar with total num pages
-    showPrintPreviewToolbar();
-
-    _content.focus();
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
-  gInPrintPreviewMode = true;
-}
-
-function BrowserPrintSetup()
-{
-  var didOK = false;
-  try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-    }
-
-    didOK = goPageSetup(window, gPrintSettings);  // from utilityOverlay.js
-    if (didOK) {  // from utilityOverlay.js
-
-      if (webBrowserPrint) {
-        if (gPrintSettingsAreGlobal && gSavePrintSettings) {
-          var psService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                            .getService(Components.interfaces.nsIPrintSettingsService);
-          psService.savePrintSettingsToPrefs(gPrintSettings, false, gPrintSettings.kInitSaveNativeData);
-        }
-      }
-    }
-  } catch (e) {
-    dump("BrowserPrintSetup "+e);
-  }
-  return didOK;
-}
-
-function BrowserPrint()
-{
-  try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
-      webBrowserPrint.print(gPrintSettings, null);
-    }
-  } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-    // causing an exception to be thrown which we catch here.
-    // Unfortunately this will also consume helpful failures, so add a
-    // dump(e); // if you need to debug
-  }
 }
 
 function BrowserFind()
@@ -2736,8 +2496,7 @@ nsBrowserContentListener.prototype =
 // |forceOpen| is a bool that indicates that the sidebar should be forced open.  In other words
 // the toggle won't be allowed to close the sidebar.
 function toggleSidebar(aCommandID, forceOpen) {
-  if (gInPrintPreviewMode)
-    return;
+
   var sidebarBox = document.getElementById("sidebar-box");
   if (!aCommandID)
     aCommandID = sidebarBox.getAttribute("sidebarcommand");

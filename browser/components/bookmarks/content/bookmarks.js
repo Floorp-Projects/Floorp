@@ -1665,6 +1665,18 @@ var BookmarkEditMenuTxnListener =
 }
 
 #ifdef DEBUG
+
+var _dumpTIME;
+function dumpTIME(aString)
+{
+  var now=Date.now();
+  dump(aString);
+  if (_dumpTIME)
+    dump(now-_dumpTIME+'ms\n');
+  else
+    _dumpTIME = now;
+}
+
 function dumpOBJ (aObj) 
 {
   if (!aObj)
