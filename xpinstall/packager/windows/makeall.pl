@@ -44,6 +44,28 @@ if($#ARGV < 2)
 require "$ENV{MOZ_SRC}\\mozilla\\config\\zipcfunc.pl";
 
 $inDefaultVersion     = $ARGV[0];
+# $ARGV[0] has the form maj.min.release.bld where maj, min, release
+#   and bld are numerics representing version information.
+# Other variables need to use parts of the version info also so we'll
+#   split out the dot seperated values into the array @versionParts
+#   such that:
+#
+#   $versionParts[0] = maj
+#   $versionParts[1] = min
+#   $versionParts[2] = release
+#   $versionParts[3] = bld
+@versionParts = split /\./, $inDefaultVersion;
+
+# We allow non-numeric characters to be included as the last 
+#   characters in fields of $ARG[0] for display purposes (mostly to
+#   show that we have moved past a certain version by adding a '+'
+#   character).  Non-numerics must be stripped out of $inDefaultVersion,
+#   however, since this variable is used to identify the the product 
+#   for comparison with other installations, so the values in each field 
+#   must be numeric only:
+$inDefaultVersion =~ s/[^0-9.][^.]*//g;
+print "The raw version id is:  $inDefaultVersion\n";
+
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
@@ -69,14 +91,26 @@ $seuFileNameSpecific  = "MozillaUninstall.exe";
 $seuzFileNameSpecific = "mozillauninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "0.9.7+ (en)"; # ie: "0.9 (en)"
-$ENV{WIZ_userAgentShort}       = "0.9.7+";      # ie: "0.9"
-$ENV{WIZ_xpinstallVersion}     = "0.9.7+";      # ie: "0.9.0"
+if($versionParts[2] eq "0")
+{
+   $versionMain = "$versionParts[0]\.$versionParts[1]";
+}
+else
+{
+   $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
+}
+print "The display version is: $versionMain\n";
+$versionLanguage               = "en";
 $ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
+# The following variables are for displaying version info in the 
+# the installer.
+$ENV{WIZ_userAgent}            = "$versionMain ($versionLanguage)";
+$ENV{WIZ_userAgentShort}       = "$versionMain";
+$ENV{WIZ_xpinstallVersion}     = "$versionMain";
 
 # Set the location of the local tmp stage directory
 $gLocalTmpStage = $inStagePath;
