@@ -19,21 +19,40 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Myk Melez <myk@mozilla.org>
 
 use diagnostics;
 use strict;
 
 require "CGI.pl";
 
+ConnectToDatabase();
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Check whether or not the user is currently logged in. This function 
+# sets the value of $::usergroupset, the binary number that records
+# the set of groups to which the user belongs and which we can use
+# to determine whether or not the user is authorized to access this bug.
+quietly_check_login();
+
+# Make sure the bug ID is a positive integer representing an existing
+# bug that the user is authorized to access.
+ValidateBugID($::FORM{'id'});
+
+######################################################################
+# End Data/Security Validation
+######################################################################
+
 print "Content-type: text/html\n\n";
 
 PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
           "Bug $::FORM{'id'}");
 
-ConnectToDatabase();
-
 DumpBugActivity($::FORM{'id'});
 
-print "<hr><a href=show_bug.cgi?id=$::FORM{'id'}>Back to bug $::FORM{'id'}</a>\n";
+print qq|<hr><a href="show_bug.cgi?id=$::FORM{'id'}">Back to bug $::FORM{'id'}</a>\n|;
 
 PutFooter();
