@@ -601,3 +601,8 @@ autorepeatbutton.up {
 autorepeatbutton.down {
     behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-down");  
 }
+
+splitter.tree-splitter {
+  width: 0px;
+  max-width: 0px;
+}
