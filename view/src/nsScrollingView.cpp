@@ -117,6 +117,18 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
   }
 }
 
+#if 0
+class nsICornerWidget : public nsISupports {
+public:
+  NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds) = 0;
+  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
+  NS_IMETHOD Show() = 0;
+  NS_IMETHOD Hide() = 0;
+  NS_IMETHOD Start() = 0;
+  NS_IMETHOD Stop() = 0;
+};
+#endif
+
 class CornerView : public nsView
 {
 public:
@@ -400,9 +412,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect trect;
 
       trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-      trect.x = aBounds.XMost() - trect.width;
+      trect.x = aBounds.x + aBounds.XMost() - trect.width;
       trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
-      trect.y = aBounds.YMost() - trect.height;
+      trect.y = aBounds.y + aBounds.YMost() - trect.height;
 
       rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1, nsnull, 1.0f, nsViewVisibility_kHide);
 
@@ -420,7 +432,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect trect = aBounds;
 
       trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-      trect.x = aBounds.XMost() - trect.width;
+      trect.x += aBounds.XMost() - trect.width;
       trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
@@ -441,7 +453,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect trect = aBounds;
 
       trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
-      trect.y = aBounds.YMost() - trect.height;
+      trect.y += aBounds.YMost() - trect.height;
       trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarWidth());
 
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
