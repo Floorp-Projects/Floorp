@@ -1071,15 +1071,12 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   }
   *****/
 
-  /***
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->prefs));
   if (! (msd->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(msd);
     return NULL;
   }
-  msd->prefs->Startup(MIME_PREFS_FILE);
-  ***/
 
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
