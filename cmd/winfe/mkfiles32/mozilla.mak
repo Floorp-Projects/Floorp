@@ -462,7 +462,7 @@ LINK_LIBS= \
     $(DIST)\lib\remoturl.lib \
     $(DIST)\lib\netcache.lib \
 !ifdef NU_CACHE # TODO Remove later
-    $(DIST)\lib\cachelib.lib \
+    $(DIST)\lib\cache.lib \
 !endif
     $(DIST)\lib\netcnvts.lib \
     $(DIST)\lib\mimetype.lib \
