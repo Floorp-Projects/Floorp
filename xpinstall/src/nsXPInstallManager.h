@@ -100,6 +100,7 @@ class nsXPInstallManager : public nsIXPIListener,
         PRUint32            mChromeType;
         PRBool              mSelectChrome;
         PRInt32             mContentLength;
+        PRTime              mLastUpdate;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIStringBundle>    mStringBundle;
