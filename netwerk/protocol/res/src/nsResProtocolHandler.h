@@ -37,20 +37,13 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIRESPROTOCOLHANDLER
 
-    // nsResProtocolHandler methods:
     nsResProtocolHandler();
     virtual ~nsResProtocolHandler();
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
     nsresult Init();
-    nsresult SetSpecialDir(const char* rootName, const char* specialDir);
-
-    static nsResProtocolHandler *get() { return mGlobalInstance; }
 
 private:
-    static nsResProtocolHandler *mGlobalInstance;
+    nsresult SetSpecialDir(const char* rootName, const char* specialDir);
 
     nsSupportsHashtable    mSubstitutions;
     nsCOMPtr<nsIIOService> mIOService;

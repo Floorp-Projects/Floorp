@@ -18,66 +18,43 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nsIProtocolHandler.idl"
-
-interface nsISimpleEnumerator;
-interface nsISupportsArray;
-
-%{C++
-
-#define NS_RESPROTOCOLHANDLER_CID                    \
-{ /* e64f152a-9f07-11d3-8cda-0060b0fc14a3 */         \
-    0xe64f152a,                                      \
-    0x9f07,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-%}
 
 [scriptable, uuid(d12c08c6-9ef6-11d3-8cda-0060b0fc14a3)]
 interface nsIResProtocolHandler : nsIProtocolHandler
 {
     /**
-     * Registers a new substitution for root key, e.g.:
-     *   res://<root>/<path> ==> <url>/<path>
-     * This substitution is put at the beginning of the list
-     * so that it overrides existing substitutions.
+     * Sets the substitution for the root key:
+     *   resource://root/path ==> baseURI.resolve(path)
+     *
+     * A null baseURI removes the specified substitution.
+     *
+     * A root key should always be lowercase; however, this may not be
+     * enforced.
      */
-    void prependSubstitution(in string root, in string url);
+    void setSubstitution(in string root, in nsIURI baseURI);
 
     /**
-     * Registers a new substitution for root key, e.g.:
-     *   res://<root>/<path> ==> <url>/<path>
-     * This substitution is put at the end of the list
-     * so that it doesn't override existing substitutions.
+     * Gets the substitution for the root key.
+     *
+     * @returns NS_ERROR_NOT_AVAILABLE if none exists.
      */
-    void appendSubstitution(in string root, in string url);
+    nsIURI getSubstitution(in string root);
 
     /**
-     * Unregisters a previously registered substitution. If the
-     * specified root is not found, or if the url string doesn't match
-     * any registered entries, an error is returned. 
+     * Returns TRUE if the substitution exists and FALSE otherwise.
      */
-    void removeSubstitution(in string root, in string url);
+    boolean hasSubstitution(in string root);
 
     /**
-     * Returns an nsISupportsArray of nsIURIs containing all substitutions
-     * currently registered for the root. This array is a snapshot of the 
-     * registered entries so it can be iterated over without fear of
-     * thread-safety concerns.
+     * Utility function to resolve a resource URI.  A resolved URI is not 
+     * guaranteed to reference a resource that exists (ie. opening a channel to
+     * the resolved URI may fail).
+     *
+     * @returns NS_ERROR_NOT_AVAILABLE if resURI.host() is an unknown root key.
      */
-    nsISupportsArray getSubstitutions(in string root);
-
-    /**
-     * Returns true if substitutions are already defined for the specified root.
-     */
-    boolean hasSubstitutions(in string root);
-    
-    /**
-     * Resolution utility function.
-     */
-    string resolveURI(in nsIURI resourceURI);
+    string resolveURI(in nsIURI resURI);
 };
