@@ -1320,7 +1320,7 @@ NS_IMETHODIMP nsViewManager2::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *a
         
 				//Find the view to which we're initially going to send the event 
 				//for hittesting.
-				if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
+				if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_DRAG_EVENT(aEvent))) {
 					view = mMouseGrabber;
 				}
 				else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {

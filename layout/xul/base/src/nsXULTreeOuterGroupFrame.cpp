@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *  Mike Pinkerton (pinkerton@netscape.com)
  */
 
 #include "nsCOMPtr.h"
@@ -34,11 +35,117 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDocument.h"
 #include "nsTreeItemDragCapturer.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDragService.h"
+#include "nsIServiceManager.h"
 
 
 #define TICK_FACTOR 50
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
+nsresult NS_NewAutoScrollTimer(nsXULTreeOuterGroupFrame* aTree, nsDragAutoScrollTimer **aResult) ;
+
+
+//
+// nsDragOverListener
+//
+// Just a little class that listens for dragOvers to trigger the auto-scrolling
+// code.
+//
+class nsDragOverListener : public nsIDOMDragListener
+{
+public:
+
+  nsDragOverListener ( nsXULTreeOuterGroupFrame* inTree );
+  virtual ~nsDragOverListener() { } ;
+
+  NS_DECL_ISUPPORTS
+
+    // nsIDOMDragListener
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent);
+
+protected:
+
+  nsXULTreeOuterGroupFrame* mTree;
+
+}; // nsDragEnterListener
+
+
+NS_IMPL_ISUPPORTS2(nsDragOverListener, nsIDOMEventListener, nsIDOMDragListener)
+
+nsDragOverListener :: nsDragOverListener ( nsXULTreeOuterGroupFrame* inTree )
+  : mTree ( inTree )
+{
+  NS_INIT_REFCNT();
+}
+
+
+//
+// DragOver
+//
+// Kick off our timer/capturing for autoscrolling, the drag has entered us. We
+// will continue capturing the mouse until the auto-scroll manager tells us to
+// stop (either the drag is over, it left the window, or someone else wants a 
+// crack at auto-scrolling).
+//
+nsresult
+nsDragOverListener :: DragOver(nsIDOMEvent* aDragEvent)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDragEvent) );
+  if ( mouseEvent ) {
+    PRInt32 x = 0, y = 0;
+    mouseEvent->GetClientX ( &x );
+    mouseEvent->GetClientY ( &y );
+    mTree->HandleAutoScrollTracking ( nsPoint(x,y) );
+  }
+  return NS_OK;
+
+} // DragOver
+
+
+//
+// The rest are stubs
+//
+
+nsresult
+nsDragOverListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+nsresult
+nsDragOverListener::DragEnter(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+nsresult
+nsDragOverListener::DragGesture(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+nsresult
+nsDragOverListener::DragExit(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+nsresult
+nsDragOverListener::DragDrop(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 
 //
 // NS_NewXULTreeOuterGroupFrame
@@ -66,14 +173,28 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0),
- mTreeIsSorted(PR_FALSE)
-{}
+ mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0), mAutoScrollTimer(nsnull),
+ mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCurrentlyTrackingAutoScroll(PR_FALSE)
+{
+}
+
 
 // Destructor
 nsXULTreeOuterGroupFrame::~nsXULTreeOuterGroupFrame()
 {
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+
+  // NOTE: the last Remove will delete the drag capturer
+  if ( receiver && mDragOverListener ) 
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragOverListener, PR_TRUE);
+  
   delete mRowGroupInfo;
+
+  StopAutoScrollTimer();
+  NS_IF_RELEASE ( mAutoScrollTimer );
+
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -93,8 +214,15 @@ nsXULTreeOuterGroupFrame::Release(void)
 //
 NS_INTERFACE_MAP_BEGIN(nsXULTreeOuterGroupFrame)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
+  NS_INTERFACE_MAP_ENTRY(nsIDragTracker)
 NS_INTERFACE_MAP_END_INHERITING(nsXULTreeGroupFrame)
 
+
+//
+// Init
+//
+// Setup scrolling and event listeners for drag auto-scrolling
+//
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
                                nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
@@ -124,6 +252,16 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(verticalScrollbar));
   scrollbarFrame->SetScrollbarMediator(this);
 
+  // Our frame's lifetime is bounded by the lifetime of the content model, so we're guaranteed
+  // that the content node won't go away on us. As a result, our listener can't go away before the
+  // frame is deleted. Since the content node holds owning references to our drag capturer, which
+  // we tear down in the dtor, there is no need to hold an owning ref to it ourselves.  
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(aContent));
+  if ( receiver ) {
+    mDragOverListener = new nsDragOverListener(this);
+    receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragOverListener, PR_FALSE);
+  }
+  
   return rv;
 
 } // Init
@@ -290,8 +428,6 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
   if (aOldIndex == aNewIndex)
     return NS_OK;
   
-  printf("Old Index: %d, New Index: %d\n", aOldIndex, aNewIndex);
-
   PRInt32 oldTwipIndex, newTwipIndex;
   oldTwipIndex = (aOldIndex*mOnePixel);
   newTwipIndex = (aNewIndex*mOnePixel);
@@ -793,6 +929,9 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 void
 nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
+  if ( aRowIndex < 0 )
+    return;
+    
   PRInt32 newIndex = aRowIndex;
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
   PRBool up = newIndex < mCurrentIndex;
@@ -917,4 +1056,220 @@ nsXULTreeOuterGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsI
  
 } // AttributeChanged
 
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+
+//
+// StopTracking
+//
+// Stop tracking auto-scrolling
+//
+NS_IMETHODIMP 
+nsXULTreeOuterGroupFrame :: StopTracking ( )
+{
+  // turn off capturing of the mouse.
+  CaptureMouse ( mPresContext, PR_FALSE );
+
+  StopAutoScrollTimer ( );
+  mCurrentlyTrackingAutoScroll = PR_FALSE;
+  
+  return NS_OK;
+}
+
+
+//
+// HandleAutoScrollTracking
+//
+// Do all the setup for tracking drag auto-scrolling. This can be called repeatedly, but the
+// setup will only be done once. Handles capturing the mouse, starting a timer, and registering
+// ourselves with a manager that will let us know when we're to stop tracking.
+//
+nsresult
+nsXULTreeOuterGroupFrame :: HandleAutoScrollTracking ( const nsPoint & aPoint )
+{
+  if ( !mCurrentlyTrackingAutoScroll ) {
+    
+    CaptureMouse ( mPresContext, PR_TRUE );
+
+    // register with the drag auto-scroll manager so we're told when to stop
+    // tracking
+    nsCOMPtr<nsIDragService> dragServ ( do_GetService("component://netscape/widget/dragservice") );
+    if ( dragServ ) {
+      nsCOMPtr<nsIDragSession> session;
+      dragServ->GetCurrentSession ( getter_AddRefs(session) );
+      if ( session )
+        session->StartTracking(this);
+    }
+    
+    mCurrentlyTrackingAutoScroll = PR_TRUE;   // setup complete
+  }
+  
+  // kick off our timer
+  StartAutoScrollTimer ( aPoint, 30 );
+
+  return NS_OK;
+
+} // HandleAutoScrollTracking
+
+
+nsresult
+nsXULTreeOuterGroupFrame::StartAutoScrollTimer(const nsPoint& aPoint, PRUint32 aDelay)
+{
+  nsresult result;
+
+  if (!mAutoScrollTimer) {
+    result = NS_NewAutoScrollTimer(this, &mAutoScrollTimer);
+    if (NS_FAILED(result))
+      return result;
+
+    if (!mAutoScrollTimer)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  result = mAutoScrollTimer->SetDelay(aDelay);
+
+  if (NS_FAILED(result))
+    return result;
+
+  return DoAutoScroll(aPoint);
+}
+
+
+nsresult
+nsXULTreeOuterGroupFrame::StopAutoScrollTimer()
+{
+  if (mAutoScrollTimer)
+    return mAutoScrollTimer->Stop();
+
+  return NS_OK;
+}
+
+
+//
+// DoAutoScroll
+//
+// Given the current mouse position, checks if it is w/in the bounds of the row area
+// of the tree. If not, scroll up or down in increments of one row.
+//
+nsresult
+nsXULTreeOuterGroupFrame::DoAutoScroll ( const nsPoint& aPoint )
+{
+  if ( mAutoScrollTimer )
+    mAutoScrollTimer->Stop();
+
+  float pixelsToTwips = 0.0;
+  mPresContext->GetPixelsToTwips ( &pixelsToTwips );
+  nsPoint mouseInTwips ( NSToIntRound(aPoint.x * pixelsToTwips), NSToIntRound(aPoint.y * pixelsToTwips) );
+  
+  // compute the offset to top level in twips and subtract the offset from
+  // the mouse coord to put it into our coordinates.
+  nscoord frameOffsetX = 0, frameOffsetY = 0;
+  nsIFrame* curr = this;
+  curr->GetParent(&curr);
+  while ( curr ) {
+    nsPoint origin;
+    curr->GetOrigin(origin);      // in twips    
+    frameOffsetX += origin.x;     // build the offset incrementally
+    frameOffsetY += origin.y;    
+    curr->GetParent(&curr);       // moving up the chain
+  } // until we reach the top  
+  mouseInTwips.MoveBy ( -frameOffsetX, -frameOffsetY );
+
+  const int kMarginHeight = NSToIntRound ( 12 * pixelsToTwips );
+
+  if ( mouseInTwips.x <= 0 || mouseInTwips.x >= mRect.width )
+    UnregisterTracking();
+  else {   
+    // scroll up or down, accordingly. if the mouse is outside of the scroll margin, stop the tracking altogether.
+    PRBool continueTracking = PR_TRUE;
+    if ( mouseInTwips.y < 0 ) {
+      if ( mouseInTwips.y > -kMarginHeight )
+        ScrollToIndex ( mCurrentIndex - 1 );
+      else {
+        continueTracking = PR_FALSE;
+        UnregisterTracking();
+      }
+    }
+    else if ( mouseInTwips.y > GetAvailableHeight() ) {
+      if ( mouseInTwips.y < GetAvailableHeight() + kMarginHeight )
+        ScrollToIndex ( mCurrentIndex + 1 ); 
+      else {
+        continueTracking = PR_FALSE;
+        UnregisterTracking();
+      }
+    }
+
+    // restart the timer
+    if ( mAutoScrollTimer && continueTracking )
+      mAutoScrollTimer->Start(aPoint);
+  }
+
+  return NS_OK;
+}
+
+
+//
+// UnregisterTracking
+//
+// Tell the drag session that we're done tracking the mouse
+//
+void
+nsXULTreeOuterGroupFrame :: UnregisterTracking ( )
+{
+  nsCOMPtr<nsIDragService> dragService ( do_GetService("component://netscape/widget/dragservice") );
+  if ( dragService ) {
+    // tell anyone interested to stop tracking drags
+    nsCOMPtr<nsIDragSession> session;
+    dragService->GetCurrentSession ( getter_AddRefs(session) );
+    if ( session )
+      session->StopTracking();
+  }
+
+} // UnregisterTracking
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+//
+// nsDragAutoScrollTimer Impl
+//
+
+
+NS_IMPL_ISUPPORTS1(nsDragAutoScrollTimer, nsITimerCallback)
+
+
+//
+// Notify
+//
+// Called when the timer fires. Tells the tree to try to scroll.
+//
+void
+nsDragAutoScrollTimer :: Notify(nsITimer *timer)
+{
+  mTree->DoAutoScroll(mPoint);
+}
+
+
+nsresult
+NS_NewAutoScrollTimer(nsXULTreeOuterGroupFrame* aTree, nsDragAutoScrollTimer **aResult)
+{
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+  *aResult = new nsDragAutoScrollTimer(aTree);
+
+  if (!aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
 

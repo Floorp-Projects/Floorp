@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 #include "nsITransferable.idl"
+#include "nsIDragTracker.idl"
+
 
 %{ C++
 #include "nsSize.h"
@@ -72,6 +74,22 @@ interface nsIDragSession : nsISupports
     */
   boolean isDataFlavorSupported ( in string aDataFlavor ) ;
   
+  /**
+    * Tell the session who needs to know when the drag completes so that it can 
+    * stop tracking the mouse. There can be only one object tracking the drag at
+    * a time.
+    *
+    * @param  aTracker - object who needs to know when tracking
+    *                       should cease.
+    */
+  void startTracking ( in nsIDragTracker aScroller );
+
+  /**
+    * Call to tell the object that is tracking the drag that it
+    * can forget about it (mouse left the window or the drop completed).
+    */
+  void stopTracking ( ) ;
+
 };
 
 

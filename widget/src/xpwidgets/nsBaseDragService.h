@@ -53,7 +53,9 @@ protected:
   PRBool             mCanDrop;
   PRBool             mDoingDrag;
   nsSize             mTargetSize;
-  PRUint32           mDragAction;
+  PRUint32           mDragAction;  
+  nsCOMPtr<nsIDragTracker> mCurrentlyTracking;
+
 };
 
 #endif // nsBaseDragService_h__
