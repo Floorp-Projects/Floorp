@@ -1,0 +1,43 @@
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-minimo
+
+#ac_add_options --enable-default-toolkit=gtk2
+
+ac_add_options --disable-xul
+ac_add_options --disable-profilesharing
+
+#MOZ_ENABLE_COREXFONTS=0
+#ac_add_options --enable-xft
+#ac_add_options --disable-freetype2
+#ac_add_options --enable-native-uconv
+
+ac_add_options --enable-extensions=cookie
+ac_add_options --disable-mailnews
+ac_add_options --disable-ldap	
+ac_add_options --disable-postscript
+ac_add_options --disable-xprint
+ac_add_options --enable-crypto
+ac_add_options --disable-jsd
+ac_add_options --disable-accessibility
+ac_add_options --disable-composer
+ac_add_options --disable-mathml
+ac_add_options --enable-plaintext-editor-only
+ac_add_options --disable-installer
+ac_add_options --disable-tests
+ac_add_options --disable-dtd-debug
+ac_add_options --disable-logging
+ac_add_options --disable-shared
+ac_add_options --enable-static
+ac_add_options --disable-xpinstall
+ac_add_options --disable-jsloader
+ac_add_options --enable-single-profile
+ac_add_options --disable-xpfe-components
+ac_add_options --disable-necko-disk-cache
+ac_add_options --enable-necko-protocols=http,file,res,jar
+ac_add_options --enable-image-decoders=png,gif,jpeg
+
+ac_add_options --enable-reorder
+ac_add_options --enable-elf-dynstr-gc
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-debug
+ac_add_options --enable-strip
