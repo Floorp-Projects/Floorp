@@ -218,7 +218,6 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 		if(NS_FAILED(rv)) return rv;
 
 		PRBool prune = PR_FALSE;
-		printf("this this has assertion code, you rat bastard\n");
 #if 0
 		rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &prune);
 		if(NS_FAILED(rv)) return rv;
