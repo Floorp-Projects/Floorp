@@ -9699,6 +9699,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       restyle = PR_TRUE;
       break;
     case NS_STYLE_HINT_NONE:
+    case NS_STYLE_HINT_ATTRCHANGE:
       break;
   }
 
@@ -9728,7 +9729,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 #endif // INCLUDE_XUL
 
   // apply changes
-  if (PR_TRUE == reconstruct) {
+  if (primaryFrame && aHint == NS_STYLE_HINT_ATTRCHANGE)
+    result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aHint);
+  else if (PR_TRUE == reconstruct) {
     result = ReconstructDocElementHierarchy(aPresContext);
   }
   else if (PR_TRUE == reframe) {

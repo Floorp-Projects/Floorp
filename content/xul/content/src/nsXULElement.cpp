@@ -4040,7 +4040,11 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
-    if (aAttribute == nsXULAtoms::style) {
+    if (aAttribute == nsXULAtoms::value) {
+      // VERY IMPORTANT! This has a huge positive performance impact!
+      aHint = NS_STYLE_HINT_ATTRCHANGE;
+    }
+    else if (aAttribute == nsXULAtoms::style) {
         // well, okay, "style=" maps to style. This is totally
         // non-optimal, because it's very likely that the frame
         // *won't* change. Oh well, you're a tool for setting the
