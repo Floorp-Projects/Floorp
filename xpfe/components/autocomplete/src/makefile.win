@@ -36,8 +36,8 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= autocomplete
-DLL1NAME	= autocomplete
+DLLNAME		= autocomp
+DLL1NAME	= autocomp
 PDBFILE		= $(DLLNAME).pdb
 MAPFILE		= $(DLLNAME).map
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
