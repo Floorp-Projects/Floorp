@@ -514,8 +514,12 @@ inSearchModule.prototype =
     } catch (ex) {
       basefile = inSearchUtils.createLocalFile(aURL);      
     }
+
     var file = XPCU.QI(file, "nsIFile");
-    this.mDialogURL = basefile.URL;
+
+    var ioService = XPCU.getService("@mozilla.org/network/io-service;1", "nsIIOService");
+
+    this.mDialogURL = ioService.getURLSpecFromFile(basefile);
     */
   }  
 

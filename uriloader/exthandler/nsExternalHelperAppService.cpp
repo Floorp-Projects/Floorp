@@ -192,7 +192,7 @@ nsresult nsExternalHelperAppService::InitDataSource()
   
   // Get file url spec to be used to initialize the DS.
   nsXPIDLCString urlSpec;
-  rv = mimeTypesFile->GetURL(getter_Copies(urlSpec));
+  rv = NS_GetURLSpecFromFile(mimeTypesFile, getter_Copies(urlSpec));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the data source; if it is going to be created, then load is synchronous.

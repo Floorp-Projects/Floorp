@@ -707,8 +707,10 @@ function GetLocalFileURL(filterType)
   }
   SaveFilePickerDirectory(fp, fileType);
   
-  // Note: fp.file.URL = fp.fileURL.spec
-  return fp.file ? fp.file.URL : null;
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+  // Note: ioService.getURLSpecFromFile(fp.file) = fp.fileURL.spec
+
+  return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
 }
 
 function GetMetaElement(name)

@@ -302,7 +302,9 @@ function loadDialog()
       sourceUrl = persistArgs.source;
     }
     catch (e) {
-      sourceUrl = { spec: persistArgs.source.URL };
+      // must be an nsIFile
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      sourceUrl = { spec: ioService.getURLSpecFromFile(persistArgs.source) };
     }
   
     // When saving web pages, we don't need to do anything special to receive the time

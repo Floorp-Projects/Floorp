@@ -42,6 +42,7 @@ const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}")
 const CONTAINER_CONTRACTID = "@mozilla.org/rdf/container;1";
 const DIR_SERV_CONTRACTID  = "@mozilla.org/file/directory_service;1"
 const NETSEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch"
+const IO_SERV_CONTRACTID   = "@mozilla.org/network/io-service;1";
 const nsISupports      = Components.interfaces.nsISupports;
 const nsIFactory       = Components.interfaces.nsIFactory;
 const nsISidebar       = Components.interfaces.nsISidebar;
@@ -400,9 +401,7 @@ function getSidebarDatasourceURI(panels_file_id)
         /* use the fileLocator to look in the profile directory 
          * to find 'panels.rdf', which is the
          * database of the user's currently selected panels. */
-        var directory_service = Components.classes[DIR_SERV_CONTRACTID].getService();
-        if (directory_service)
-            directory_service = directory_service.QueryInterface(Components.interfaces.nsIProperties);
+        var directory_service = Components.classes[DIR_SERV_CONTRACTID].getService(Components.interfaces.nsIProperties);
 
         /* if <profile>/panels.rdf doesn't exist, get will copy
          *bin/defaults/profile/panels.rdf to <profile>/panels.rdf */
@@ -416,8 +415,10 @@ function getSidebarDatasourceURI(panels_file_id)
             return null;
         }
 
-        debug("sidebar uri is " + sidebar_file.URL);
-        return sidebar_file.URL;
+        var io_service = Components.classes[IO_SERV_CONTRACTID].getService(Components.interfaces.nsIIOService);
+        var sidebar_uri = io_service.getURLSpecFromFile(sidebar_file);
+        debug("sidebar uri is " + sidebar_uri);
+        return sidebar_uri;
     }
     catch (ex)
     {

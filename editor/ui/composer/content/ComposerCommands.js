@@ -440,8 +440,10 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   // set the file picker's current directory
   // assuming we have information needed (like prior saved location)
   try {
-    var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
-    fileLocation.URL = aDocumentURLString;
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    
+    var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+    ioService.initFileFromURLSpec(fileLocation, aDocumentURLString);
     var parentLocation = fileLocation.parent;
     if (parentLocation)
     {
@@ -463,7 +465,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   if (dialogResult.filepickerClick != nsIFilePicker.returnCancel)
   {
     // reset urlstring to new save location
-    dialogResult.resultingURIString = fp.file.URL;
+    dialogResult.resultingURIString = ioService.getURLSpecFromFile(fp.file);
     dialogResult.resultingLocalFile = fp.file;
     SaveFilePickerDirectory(fp, aEditorType);
   }
@@ -648,7 +650,9 @@ if (!success)
     if (!tempLocalFile)
     {
       tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-      tempLocalFile.URL = urlstring;
+
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      ioService.initFileFromURLSpec(tempLocalFile, urlstring);
     }
 
     var parentDir;
@@ -1149,7 +1153,8 @@ var nsValidateCommand =
     // See if it's a file:
     var ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
     try {
-      ifile.URL = URL2Validate;
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      ioService.initFileFromURLSpec(ifile, URL2Validate);
       // nsIFile throws an exception if it's not a file url
     } catch (e) { ifile = null; }
     if (ifile)

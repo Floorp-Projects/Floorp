@@ -225,8 +225,11 @@ function onOK()
       const kLFIID = Components.interfaces.nsILocalFile;
       const kLF = Components.classes[kLFContractID].createInstance(kLFIID);
       kLF.initWithUnicodePath(url);
-      if (kLF.exists()) 
-          url = kLF.URL;
+      if (kLF.exists()) {
+          var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.classes.nsIIOService);
+          
+          url = ioService.getURLSpecFromFile(kLF);
+      }
     }
     catch (e) {
     }

@@ -707,7 +707,10 @@ function sidebar_revert_to_default_panels() {
 function get_sidebar_datasource_uri() {
   try {
     var sidebar_file = sidebar_get_panels_file();
-    return sidebar_file.URL;
+    
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    
+    return ioService.getURLSpecFromFile(sidebar_file);
   } catch (ex) {
     // This should not happen
     debug("Error: Unable to load panels file.\n");
