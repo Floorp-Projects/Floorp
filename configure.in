@@ -455,6 +455,17 @@ if test $ac_cv_cpp_explicit = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
+AC_CACHE_CHECK(for C++ \"exceptions\",
+               ac_cv_cpp_exceptions,
+               [AC_TRY_COMPILE(class X { public: X() {} };
+                               static void F() { throw X(); },
+                               try { F(); } catch(X & e) { },
+                               ac_cv_cpp_exceptions=yes,
+                               ac_cv_cpp_exceptions=no)])
+if test $ac_cv_cpp_exceptions = yes ; then
+   AC_DEFINE(HAVE_CPP_EXCEPTIONS)
+fi
+
 AC_CACHE_CHECK(for C++ \"using\" keyword,
                ac_cv_cpp_using,
                [AC_TRY_COMPILE(class X { public: int go() {return 3;} };
