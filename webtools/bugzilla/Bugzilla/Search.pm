@@ -586,7 +586,8 @@ sub init {
              # negative conditions (f.e. "flag isn't review+").
              my $flags = "flags_$chartid";
              push(@supptables, "LEFT JOIN flags $flags " . 
-                               "ON bugs.bug_id = $flags.bug_id");
+                               "ON bugs.bug_id = $flags.bug_id " .
+                               "AND $flags.is_active = 1");
              my $flagtypes = "flagtypes_$chartid";
              push(@supptables, "LEFT JOIN flagtypes $flagtypes " . 
                                "ON $flags.type_id = $flagtypes.id");

@@ -308,6 +308,7 @@ sub update {
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
         WHERE flags.type_id = $::FORM{'id'} 
         AND flags.bug_id = bugs.bug_id
+        AND flags.is_active = 1
         AND i.type_id IS NULL
     ");
     Bugzilla::Flag::clear(FetchOneColumn()) while MoreSQLData();
@@ -318,6 +319,7 @@ sub update {
         WHERE flags.type_id = $::FORM{'id'}
         AND flags.bug_id = bugs.bug_id
         AND flags.type_id = e.type_id 
+        AND flags.is_active = 1
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)
     ");
@@ -340,7 +342,8 @@ sub confirmDelete
   validateID();
   # check if we need confirmation to delete:
   
-  my $count = Bugzilla::Flag::count({ 'type_id' => $::FORM{'id'} });
+  my $count = Bugzilla::Flag::count({ 'type_id' => $::FORM{'id'},
+                                      'is_active' => 1 });
   
   if ($count > 0) {
     $vars->{'flag_type'} = Bugzilla::FlagType::get($::FORM{'id'});

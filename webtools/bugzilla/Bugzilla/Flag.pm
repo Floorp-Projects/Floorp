@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Jouni Heikniemi <jouni@heikniemi.net>
 
 ################################################################################
 # Module Initialization
@@ -52,8 +53,8 @@ use vars qw($template $vars);
 # basic sets of columns and tables for getting flags from the database
 
 my @base_columns = 
-  ("1", "id", "type_id", "bug_id", "attach_id", "requestee_id", "setter_id",
-   "status");
+  ("is_active", "id", "type_id", "bug_id", "attach_id", "requestee_id", 
+   "setter_id", "status");
 
 # Note: when adding tables to @base_tables, make sure to include the separator 
 # (i.e. a comma or words like "LEFT OUTER JOIN") before the table name, 
@@ -154,6 +155,11 @@ sub validate {
         my $flag = get($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
+        # Note that the deletedness of the flag (is_active or not) is not 
+        # checked here; we do want to allow changes to deleted flags in
+        # certain cases. Flag::modify() will revive the modified flags.
+        # See bug 223878 for details.
+
         # Make sure the user chose a valid status.
         grep($status eq $_, qw(X + - ?))
           || ThrowCodeError("flag_status_invalid", 
@@ -226,7 +232,8 @@ sub process {
     
     # Take a snapshot of flags before any changes.
     my $flags = match({ 'bug_id'    => $target->{'bug'}->{'id'} , 
-                        'attach_id' => $target->{'attachment'}->{'id'} });
+                        'attach_id' => $target->{'attachment'}->{'id'} ,
+                        'is_active' => 1 });
     my @old_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
@@ -249,6 +256,7 @@ sub process {
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
         WHERE bugs.bug_id = $target->{'bug'}->{'id'} 
+        AND flags.is_active = 1
         AND i.type_id IS NULL
     ");
     clear(&::FetchOneColumn()) while &::MoreSQLData();
@@ -257,7 +265,8 @@ sub process {
         FROM flags, bugs, flagexclusions e
         WHERE bugs.bug_id = $target->{'bug'}->{'id'}
         AND flags.bug_id = bugs.bug_id
-        AND flags.type_id = e.type_id 
+        AND flags.type_id = e.type_id
+        AND flags.is_active = 1 
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)
     ");
@@ -265,7 +274,8 @@ sub process {
     
     # Take a snapshot of flags after changes.
     $flags = match({ 'bug_id'    => $target->{'bug'}->{'id'} , 
-                     'attach_id' => $target->{'attachment'}->{'id'} });
+                     'attach_id' => $target->{'attachment'}->{'id'} ,
+                     'is_active' => 1 });
     my @new_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
@@ -340,6 +350,9 @@ sub migrate {
 
 sub modify {
     # Modifies flags in the database when a user changes them.
+    # Note that modified flags are always set active (is_active = 1) -
+    # this will revive deleted flags that get changed through 
+    # attachment.cgi midairs. See bug 223878 for details.
 
     my ($data, $timestamp) = @_;
 
@@ -385,7 +398,8 @@ sub modify {
                         SET    setter_id = $::userid , 
                                requestee_id = NULL , 
                                status = '$status' , 
-                               modification_date = $timestamp
+                               modification_date = $timestamp ,
+                               is_active = 1
                         WHERE  id = $flag->{'id'}");
             
             # Send an email notifying the relevant parties about the fulfillment.
@@ -409,7 +423,8 @@ sub modify {
                         SET    setter_id = $::userid , 
                                requestee_id = $requestee_id , 
                                status = '$status' , 
-                               modification_date = $timestamp
+                               modification_date = $timestamp ,
+                               is_active = 1
                         WHERE  id = $flag->{'id'}");
             
             # Send an email notifying the relevant parties about the request.
@@ -420,7 +435,7 @@ sub modify {
                 notify($flag, "request/email.txt.tmpl");
             }
         }
-        # The user unset the flag, so delete it from the database.
+        # The user unset the flag; set is_active = 0
         elsif ($status eq 'X') {
             clear($flag->{'id'});
         }
@@ -437,9 +452,10 @@ sub clear {
     my $flag = get($id);
     
     &::PushGlobalSQLState();
-    &::SendSQL("DELETE FROM flags WHERE id = $id");
+    &::SendSQL("UPDATE flags SET is_active = 0 WHERE id = $id");
     &::PopGlobalSQLState();
-    
+
+    $flag->{'exists'} = 0;    
     # Set the flag's status to "cleared" so the email template
     # knows why email is being sent about the request.
     $flag->{'status'} = "X";
@@ -625,6 +641,7 @@ sub sqlify_criteria {
         elsif ($field eq 'requestee_id') { push(@criteria, "requestee_id = $value") }
         elsif ($field eq 'setter_id')    { push(@criteria, "setter_id    = $value") }
         elsif ($field eq 'status')       { push(@criteria, "status       = '$value'") }
+        elsif ($field eq 'is_active')    { push(@criteria, "is_active    = $value") }
     }
     
     return @criteria;
@@ -634,6 +651,8 @@ sub perlify_record {
     # Converts a row from the database into a Perl record.
     my ($exists, $id, $type_id, $bug_id, $attach_id, 
         $requestee_id, $setter_id, $status) = @_;
+    
+    return undef unless defined($exists);
     
     my $flag =
       {

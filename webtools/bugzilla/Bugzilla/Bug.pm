@@ -226,7 +226,8 @@ sub initBug  {
       $flag_type->{'flags'} = 
         Bugzilla::Flag::match({ 'bug_id'      => $self->{bug_id},
                                 'type_id'     => $flag_type->{'id'},
-                                'target_type' => 'bug' });
+                                'target_type' => 'bug',
+                                'is_active'   => 1 });
   }
   $self->{'flag_types'} = $flag_types;
   $self->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
@@ -238,11 +239,11 @@ sub initBug  {
   my $num_attachment_flag_types =
     Bugzilla::FlagType::count({ 'target_type'  => 'attachment',
                                 'product_id'   => $self->{'product_id'},
-                                'component_id' => $self->{'component_id'},
-                                'is_active'    => 1 });
+                                'component_id' => $self->{'component_id'} });
   my $num_attachment_flags =
     Bugzilla::Flag::count({ 'target_type'  => 'attachment',
-                            'bug_id'       => $self->{bug_id} });
+                            'bug_id'       => $self->{bug_id},
+                            'is_active'    => 1 });
 
   $self->{'show_attachment_flags'}
     = $num_attachment_flag_types || $num_attachment_flags;

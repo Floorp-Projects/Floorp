@@ -768,7 +768,8 @@ sub viewall
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'},
      $a{'datasize'}) = FetchSQLData();
     $a{'isviewable'} = isViewable($a{'contenttype'});
-    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'} });
+    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},
+                                          'is_active' => 1 });
 
     # Add the hash representing the attachment to the array of attachments.
     push @attachments, \%a;
@@ -880,7 +881,9 @@ sub insert
       SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
                VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, NOW(), $fieldid, '0', '1')");
       # If the obsolete attachment has pending flags, migrate them to the new attachment.
-      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id , 'status' => 'pending' })) {
+      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id , 
+                                  'status' => 'pending',
+                                  'is_active' => 1 })) {
         Bugzilla::Flag::migrate($obsolete_id, $attachid);
       }
   }
@@ -984,7 +987,8 @@ sub edit
                                                'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
     $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'}, 
-                                                    'attach_id' => $::FORM{'id'} });
+                                                    'attach_id' => $::FORM{'id'},
+                                                    'is_active' => 1 });
   }
   $vars->{'flag_types'} = $flag_types;
   $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);

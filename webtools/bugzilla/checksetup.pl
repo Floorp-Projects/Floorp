@@ -1609,6 +1609,8 @@ $table{flags} =
      
      setter_id          MEDIUMINT     NULL , 
      requestee_id       MEDIUMINT     NULL , 
+     
+     is_active          TINYINT       NOT NULL  DEFAULT 1, 
    
      INDEX(bug_id, attach_id) , 
      INDEX(setter_id) , 
@@ -3934,6 +3936,11 @@ if (GetFieldDef("user_group_map", "isderived")) {
         }
     }
 }
+
+# 2004-07-03 - Make it possible to disable flags without deleting them
+# from the database. Bug 223878, jouni@heikniemi.net
+
+AddField('flags', 'is_active', 'tinyint not null default 1');
 
     
 

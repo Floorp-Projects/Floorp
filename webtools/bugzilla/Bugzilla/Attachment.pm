@@ -90,7 +90,8 @@ sub query
      $a{'datasize'}) = &::FetchSQLData();
 
     # Retrieve a list of flags for this attachment.
-    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'} });
+    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},
+                                          'is_active' => 1 });
     
     # We will display the edit link if the user can edit the attachment;
     # ie the are the submitter, or they have canedit.
