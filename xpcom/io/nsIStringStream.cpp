@@ -240,6 +240,7 @@ class CharImpl
                                             }
                                             memcpy(mString + mOffset, buf, aCount);
                                             mOffset += aCount;
+                                            mLength += aCount;
                                             if (mOffset > mOriginalLength)
                                                 mString[mOffset] = 0;
                                             return aCount;
