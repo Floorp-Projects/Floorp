@@ -823,7 +823,7 @@ CMimeMapper* CreateUnknownMimeTypeMapper( URL_Struct* request )
 	// Notify the user with nice names
 	newName = CFileMgr::FileNameFromURL( request->address );
 	fileName = newName;
-	content_type = NET_URLStruct_ContentType( request );
+	content_type = request->content_type;
 	
 	::ParamText( newName, content_type, CStr255::sEmptyString, CStr255::sEmptyString );
 
@@ -837,14 +837,14 @@ CMimeMapper* CreateUnknownMimeTypeMapper( URL_Struct* request )
 		case ALRT_UnknownMimeType_Cancel:
 			return NULL;
 		case ALRT_UnknownMimeType_Save:
-			mapper = CPrefs::CreateDefaultUnknownMapper( NET_URLStruct_ContentType(request), TRUE );
+			mapper = CPrefs::CreateDefaultUnknownMapper( request->content_type, TRUE );
 			mapper->SetLoadAction( CMimeMapper::Save );
 			return mapper;
 		case ALRT_UnknownMimeType_PickApp:
 			StandardFileReply reply;
 			CFilePicker::DoCustomGetFile( reply, CFilePicker::Applications, FALSE );
 			if ( reply.sfGood )
-				mapper = CPrefs::CreateDefaultAppMapper( reply.sfFile,NET_URLStruct_ContentType(request), TRUE );
+				mapper = CPrefs::CreateDefaultAppMapper( reply.sfFile, request->content_type, TRUE );
 			return mapper;
 		case ALRT_UnknownMimeType_MoreInfo:
 		{
@@ -855,7 +855,7 @@ CMimeMapper* CreateUnknownMimeTypeMapper( URL_Struct* request )
 			cstring url;
 			url = (const char*) string;		// cstringÕs operator= expects unsigned char* to be a P string, so we have to cast
 			url += "?";
-			url += NET_URLStruct_ContentType( request );
+			url += request->content_type;
 
 			AppleEvent getURLEvent;
 			UAppleEventsMgr::MakeAppleEvent( AE_url_suite, AE_url_getURL, getURLEvent );
@@ -889,7 +889,7 @@ NET_StreamClass * NewFilePipe (
 
 	// 97-06-15 pkc -- We really should make a function to determine if a URL is a
 	// mail attachment instead of duplicating this code.
-	const char* urlAddress = request ? NET_URLStruct_Address(request) : nil;
+	const char* urlAddress = request ? request->address : nil;
 	Boolean isMailMessage = false;
 	if (urlAddress)
 		{

@@ -290,7 +290,7 @@ void CURLDispatcher::DispatchToDiskAsText(CURLDispatchInfo* inDispatchInfo)
 		if ((theErr != noErr) && (theErr != dupFNErr))
 			ThrowIfOSErr_(theErr);
 		
-		CFileMgr::FileSetComment(destSpec, NET_URLStruct_Address(inURL));
+		CFileMgr::FileSetComment(destSpec, inURL->address);
 		
 		char* thePath = CFileMgr::EncodedPathNameFromFSSpec(destSpec, TRUE);
 		ThrowIfNULL_(thePath);
@@ -840,7 +840,7 @@ CURLDispatchInfo::CURLDispatchInfo(
 #endif
 
 	if (inURLStruct)
-		mURLType = NET_URL_Type(NET_URLStruct_Address(inURLStruct));
+		mURLType = NET_URL_Type(inURLStruct->address);
 	else
 		mURLType = 0;
 }
@@ -863,7 +863,7 @@ URL_Struct* CURLDispatchInfo::ReleaseURLStruct()
 char* CURLDispatchInfo::GetURL()
 {
 	if (mURLStruct)
-		return NET_URLStruct_Address(mURLStruct);
+		return mURLStruct->address;
 	else
 		return NULL;
 }
