@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.29 $ 
-# $Date: 2002/05/01 04:12:29 $ 
+# $Revision: 1.30 $ 
+# $Date: 2002/05/03 19:41:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -298,8 +298,17 @@ sub max {
   return $sorted[0];
 }
 
+# send all the rounding functions through here.
 
+sub round {
+ my ($number) = @_;
 
+ my $out = sprintf ("%.2f",         # round
+                    $number);
+ return $out;
+}
+ 
+ 
 # make a directory (and all of its parents if need be).
 
 # You can optionally specify the permssions for all the directories
