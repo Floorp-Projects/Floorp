@@ -476,6 +476,15 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
 
     // XXX Cache Device
     // File on disk
+    nsCOMPtr<nsIFile> cacheFile;
+    rv = descriptor->GetFile(getter_AddRefs(cacheFile));
+    if (NS_SUCCEEDED(rv)) {
+        nsAutoString filePath;
+        cacheFile->GetPath(filePath);
+        APPEND_ROW("file on disk", NS_ConvertUCS2toUTF8(filePath));
+    }
+    else
+        APPEND_ROW("file on disk", "none");
 
     // Security Info
     str.Adopt(0);
