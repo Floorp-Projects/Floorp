@@ -72,7 +72,7 @@ NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_show(mCheckButton);
 
-  gtk_widget_set_name(mCheckButton, "nsCheckButton");
+  gtk_widget_set_name(mWidget, "nsCheckButton");
 
   return NS_OK;
 }
@@ -237,4 +237,31 @@ nsCheckButton::ToggledSignal(GtkWidget *      aWidget,
 
   return PR_TRUE;
 }
+
 //////////////////////////////////////////////////////////////////////
+// SetBackgroundColor for CheckButton
+/*virtual*/
+void nsCheckButton::SetBackgroundColorNative(GdkColor *aColorNor,
+                                        GdkColor *aColorBri,
+                                        GdkColor *aColorDark)
+{
+  // use same style copy as SetFont
+  GtkStyle *style = gtk_style_copy(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0))->style);
+  
+  style->bg[GTK_STATE_NORMAL]=*aColorNor;
+  
+  // Mouse over button
+  style->bg[GTK_STATE_PRELIGHT]=*aColorBri;
+
+  // Button is down
+  style->bg[GTK_STATE_ACTIVE]=*aColorDark;
+
+  // other states too? (GTK_STATE_ACTIVE, GTK_STATE_PRELIGHT,
+  //               GTK_STATE_SELECTED, GTK_STATE_INSENSITIVE)
+  gtk_widget_set_style(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0)), style);
+  // set style for eventbox too
+  gtk_widget_set_style(mWidget, style);
+
+  gtk_style_unref(style);
+}
+

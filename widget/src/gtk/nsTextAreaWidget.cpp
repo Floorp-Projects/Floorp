@@ -89,3 +89,22 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
+//-------------------------------------------------------------------------
+//
+// set font for textarea
+//
+//-------------------------------------------------------------------------
+/* virtual */
+void nsTextAreaWidget::SetFontNative(GdkFont *aFont)
+{
+  GtkStyle *style = gtk_style_copy(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0))->style);
+  // gtk_style_copy ups the ref count of the font
+  gdk_font_unref (style->font);
+  
+  style->font = aFont;
+  gdk_font_ref(style->font);
+  
+  gtk_widget_set_style(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0)), style);
+  
+  gtk_style_unref(style);
+}

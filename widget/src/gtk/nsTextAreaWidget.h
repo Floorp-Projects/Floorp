@@ -41,6 +41,8 @@ public:
   virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
   virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
+  virtual void SetFontNative(GdkFont *aFont);
+
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
 };
