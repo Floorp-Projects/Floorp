@@ -61,8 +61,8 @@
 	</broadcasterset>
 
   <popupset>
-    <popup id="TextColorPicker"/>
-    <popup id="BackColorPicker"/>
+    <popup id="TextColorPopup"/>
+    <popup id="BackColorPopup"/>
   </popupset>
 	
 	<!-- keys are appended from the overlay -->

@@ -75,26 +75,12 @@ function Startup()
 //   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
-//******** Debuggin weird RegExp problems
-  var stringIn = "123abc456";
-  dump("Test string = "+stringIn+"\n");
-  var pat = new RegExp("/\D+/g");
-  if (pat.test(stringIn)) {
-    var tempStr = stringIn.replace(pat,"");
-    dump("Replaced pattern = "+tempStr+"\n");
-  } else {
-    dump("Failed test for nonnumeral characters\n");
-  }
-//***************** end of test
-
-
   // Just to be confusing, "size" is used instead of height
   var height = globalElement.getAttribute("size");
   if(!height) {
     dump("NO SIZE FOUND FOR HLINE");
     height = 2; //Default value
   }
-dump("HLine size = "+height+"\n");
 
   // We will use "height" here and in UI
   dialog.heightInput.value = height;

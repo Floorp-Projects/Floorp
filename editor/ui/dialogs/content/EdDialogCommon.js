@@ -367,18 +367,15 @@ function forceInteger(elementID)
     return;
 
   var stringIn = editField.value;
-  var pat = new RegExp("/\D+/g");
-  if (pat.test(stringIn)) {
-dump("TEST SUCCEEDED\n")
-    editField.value = stringIn.replace(pat,"");
+  if (stringIn && stringIn.length > 0)
+  {
+    // Strip out all nonnumeric characters
+    editField.value = stringIn.replace(/\D+/g,"");
 
     // we hope to remove the following line for blur() once xp widgets land
     // cmanske (9/15) testing this now that GFX ender widget is active
     //editField.blur();
     sysBeep.Beep();
-  }
-  else {
-dump("TEST didn't SUCCEEDED\n")
   }
 }
 
