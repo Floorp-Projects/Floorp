@@ -1229,7 +1229,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			}
 
 			/* smart sorting (sort within separators) on name column */
-			if (sortInfo->sortProperty == kNC_Name)
+			if (sortInfo->sortProperty.get() == kNC_Name)
 			{
 				PRUint32	startIndex=0;
 				for (loop=0; loop<numElements; loop++)
