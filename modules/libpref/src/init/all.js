@@ -308,6 +308,7 @@ pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator
 pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.cache",             "");
 pref("intl.charset.detector",              "");
+pref("intl.charset.default",                "chrome://navigator/locale/navigator.properties");
 
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);

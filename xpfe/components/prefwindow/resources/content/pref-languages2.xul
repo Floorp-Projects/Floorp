@@ -83,8 +83,8 @@
     <title><text value="&languages.customize.Charset.grouplabel;"/></title>
     <box autostretch="never">
       <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
-      <menulist id="DefaultCharsetList" ref="NC:BrowserCharsetMenuRoot" datasources="rdf:charset-menu"
-          pref="true" preftype="string" prefstring="intl.browser.default_charset"
+      <menulist id="DefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+          pref="true" preftype="string" prefstring="intl.charset.default"
           prefattribute="data" wsm_attributes="data">
           <template>
             <menupopup>

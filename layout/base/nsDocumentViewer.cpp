@@ -1614,7 +1614,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
   NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
   NS_ENSURE_STATE(mContainer);
 
-  static char *gDefCharset = nsnull;    // XXX: memory leak!
+  static PRUnichar *gDefCharset = nsnull;    // XXX: memory leak!
 
   if (0 == mDefaultCharacterSet.Length()) 
   {
@@ -1626,13 +1626,13 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
       {
         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
         if(prefs)
-          prefs->CopyCharPref("intl.charset.default", &gDefCharset);
+          prefs->GetLocalizedUnicharPref("intl.charset.default", &gDefCharset);
       }
     }
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
       mDefaultCharacterSet.AssignWithConversion("ISO-8859-1");
     else
-      mDefaultCharacterSet.AssignWithConversion(gDefCharset);
+      mDefaultCharacterSet.Assign(gDefCharset);
   }
   *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
   return NS_OK;
