@@ -416,7 +416,13 @@ ifdef MOZILLA_OFFICIAL
 	/bin/find $(DIST) -name "*.EXE" -exec splitsym {} \;
 endif # MOZILLA_OFFICIAL
 
-deliver: splitsymbols rebase
+signnss:
+ifdef MOZILLA_OFFICIAL
+	echo signing NSS libs
+	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
+endif # MOZILLA_OFFICIAL
+
+deliver: splitsymbols rebase signnss
 
 endif # WINNT
 
