@@ -91,6 +91,21 @@ class nsFormControlList;
 
 // nsHTMLFormElement
 
+//
+// PLDHashTable entry for radio button
+//
+class PLDHashStringRadioEntry : public PLDHashStringEntry
+{
+public:
+  PLDHashStringRadioEntry(const void* key) : PLDHashStringEntry(key), mVal(nsnull) { }
+  ~PLDHashStringRadioEntry() { }
+
+  nsCOMPtr<nsIDOMHTMLInputElement> mVal;
+};
+
+DECL_DHASH_WRAPPER(nsDoubleHashtableStringRadio, PLDHashStringRadioEntry, nsAString&)
+DHASH_WRAPPER(nsDoubleHashtableStringRadio, PLDHashStringRadioEntry, nsAString&)
+
 class nsHTMLFormElement : public nsGenericHTMLContainerElement,
                           public nsSupportsWeakReference,
                           public nsIDOMHTMLFormElement,
@@ -231,7 +246,7 @@ protected:
   // Data members
   //
   nsFormControlList *mControls;
-  nsDoubleHashtableStringSupports mSelectedRadioButtons;
+  nsDoubleHashtableStringRadio mSelectedRadioButtons;
   PRPackedBool mGeneratingSubmit;
   PRPackedBool mGeneratingReset;
   PRPackedBool mIsSubmitting;
@@ -387,7 +402,7 @@ nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
   }
   NS_ADDREF(mControls);
 
-  rv = mSelectedRadioButtons.Init();
+  rv = mSelectedRadioButtons.Init(1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1300,12 +1315,6 @@ nsHTMLFormElement::OnSecurityChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
-
-
-
-
-
-
 NS_IMETHODIMP
 nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
 {
@@ -1318,14 +1327,21 @@ NS_IMETHODIMP
 nsHTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
                                          nsIDOMHTMLInputElement* aRadio)
 {
-  return mSelectedRadioButtons.Put(aName, (nsISupports*)aRadio);
+  PLDHashStringRadioEntry* entry = mSelectedRadioButtons.AddEntry(aName);
+  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  entry->mVal = aRadio;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
                                          nsIDOMHTMLInputElement** aRadio)
 {
-  *aRadio = (nsIDOMHTMLInputElement*)mSelectedRadioButtons.Get(aName).get();
+  PLDHashStringRadioEntry* entry = mSelectedRadioButtons.GetEntry(aName);
+  if (entry) {
+    *aRadio = entry->mVal;
+    NS_IF_ADDREF(*aRadio);
+  }
   return NS_OK;
 }
 
