@@ -23,7 +23,7 @@
   <button value=".." onclick="goUp();"/>
 </box>
 
-<box align="horizontal">
+<box align="horizontal" flex="1">
   <tree id="directoryList" onclick="onClick(event);" flex="1">
     <treecol/>
     <treecol/>
