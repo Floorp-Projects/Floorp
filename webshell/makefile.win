@@ -24,7 +24,9 @@ DEPTH=..
 
 DIRS=public        \
      src           \
+!if !defined(DISABLE_TESTS)
      tests         \
+!endif
      embed         \
      $(NULL)
 include <$(DEPTH)\config\rules.mak>

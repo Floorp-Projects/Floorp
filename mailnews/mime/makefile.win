@@ -21,6 +21,10 @@
 
 DEPTH=..\..
 
-DIRS=public src cthandlers emitters build resources tests
+DIRS=public src cthandlers emitters build resources \
+!if !defined(DISABLE_TESTS)
+     tests \
+!endif
+     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

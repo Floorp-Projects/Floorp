@@ -32,7 +32,9 @@ DIRS=              \
 	streamconv \
 	build      \
 	protocol   \
-	test       \
-	$(NULL)
+!if !defined(DISABLE_TESTS)
+        test \
+!endif
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
