@@ -45,9 +45,12 @@ public:
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem)=0;
   NS_IMETHOD    SetCurrentItem(nsIDOMXULElement* aCurrentItem)=0;
 
+  NS_IMETHOD    GetSuppressOnSelect(PRBool* aSuppressOnSelect)=0;
+  NS_IMETHOD    SetSuppressOnSelect(PRBool aSuppressOnSelect)=0;
+
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem)=0;
 
-  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem)=0;
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem, PRInt32 aTimeout)=0;
 
   NS_IMETHOD    ClearItemSelection()=0;
 
@@ -69,8 +72,10 @@ public:
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems);  \
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem);  \
   NS_IMETHOD    SetCurrentItem(nsIDOMXULElement* aCurrentItem);  \
+  NS_IMETHOD    GetSuppressOnSelect(PRBool* aSuppressOnSelect);  \
+  NS_IMETHOD    SetSuppressOnSelect(PRBool aSuppressOnSelect);  \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem);  \
-  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem);  \
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem, PRInt32 aTimeout);  \
   NS_IMETHOD    ClearItemSelection();  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem);  \
@@ -85,8 +90,10 @@ public:
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems) { return _to GetSelectedItems(aSelectedItems); } \
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem) { return _to GetCurrentItem(aCurrentItem); } \
   NS_IMETHOD    SetCurrentItem(nsIDOMXULElement* aCurrentItem) { return _to SetCurrentItem(aCurrentItem); } \
+  NS_IMETHOD    GetSuppressOnSelect(PRBool* aSuppressOnSelect) { return _to GetSuppressOnSelect(aSuppressOnSelect); } \
+  NS_IMETHOD    SetSuppressOnSelect(PRBool aSuppressOnSelect) { return _to SetSuppressOnSelect(aSuppressOnSelect); } \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem) { return _to SelectItem(aTreeItem); }  \
-  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem) { return _to TimedSelect(aTreeItem); }  \
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem, PRInt32 aTimeout) { return _to TimedSelect(aTreeItem, aTimeout); }  \
   NS_IMETHOD    ClearItemSelection() { return _to ClearItemSelection(); }  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem) { return _to AddItemToSelection(aTreeItem); }  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem) { return _to RemoveItemFromSelection(aTreeItem); }  \

@@ -217,7 +217,7 @@
          var n = this.getPreviousItem(this.selectedItems[0], 1);
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])-1);
-           this.timedSelect(n);
+           this.timedSelect(n, 500);
          }
         ]]>
       </handler>
@@ -228,7 +228,7 @@
          var n = this.getNextItem(this.selectedItems[0], 1);
          if (n) {
            this.ensureIndexIsVisible(this.getIndexOfItem(this.selectedItems[0])+1);
-           this.timedSelect(n);
+           this.timedSelect(n, 500);
          }
         ]]>
       </handler>
@@ -334,6 +334,7 @@
              parentNode.currentItem = event.target.parentNode.parentNode;
            }
            else {
+		     parentNode.suppressOnSelect = true;
              var selectedItems = parentNode.selectedItems;
              var i = 0;
              while (i < selectedItems.length) {
@@ -342,6 +343,7 @@
                else
                  i++;
               }
+			 parentNode.suppressOnSelect = false;
            }
          }
       ]]>

@@ -73,12 +73,6 @@ public:
 
 protected:
     // Helpers
-    nsresult SetSelectionInternal(nsIDOMXULElement* aTreeItem, PRBool aTimedFlag);
-
-    void ClearItemSelectionInternal();
-    void AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem);
-    void RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem);
-     
     static nsresult IndexOfContent(nsIContent *aRoot, nsIContent *aContent,
                                    PRBool aDescendIntoRows,
                                    PRBool aParentIsOpen,
@@ -90,6 +84,7 @@ protected:
     nsRDFDOMNodeList* mSelectedItems;
     nsIDOMXULElement* mCurrentItem;
     nsIDOMXULElement* mSelectionStart;
+    PRBool mSuppressOnSelect;
 
     nsCOMPtr<nsITimer> mSelectTimer;
 };
