@@ -346,9 +346,11 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
  
     // If the doc is a chrome URI, then we put it into the XUL cache.
     PRBool cached = PR_FALSE;
-    if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
-      cached = PR_TRUE;
-      gXULCache->PutXBLDocumentInfo(info);
+    if (IsChromeURI(uri)) {
+      if (gXULUtils && gXULUtils->UseXULCache()) {
+        cached = PR_TRUE;
+        gXULCache->PutXBLDocumentInfo(info);
+      }
 
       // Cache whether or not this chrome XBL can execute scripts.
       nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
@@ -1095,9 +1097,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
  
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
-        if (IsChromeURI(uri) && gXULUtils && gXULUtils->UseXULCache()) {
-          cached = PR_TRUE;
-          gXULCache->PutXBLDocumentInfo(info);
+        if (IsChromeURI(uri)) {
+          if (gXULUtils && gXULUtils->UseXULCache()) {
+            cached = PR_TRUE;
+            gXULCache->PutXBLDocumentInfo(info);
+          }
 
           // Cache whether or not this chrome XBL can execute scripts.
           nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
