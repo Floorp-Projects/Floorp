@@ -37,32 +37,22 @@
 
 class NS_COM nsWorkString : public nsString
   {
-    private:
-      typedef nsString inherited;
-
     public:
-      static const PRUint32 kInitialWorkStringCapacity = 32;
-
-      nsWorkString() : inherited() { }
-      nsWorkString( const nsAReadableString& aReadable ) : inherited(aReadable) { }
-      nsWorkString( const PRUnichar* aString, PRUint32 aLength ) : inherited(aString, PRInt32(aLength)) { }
-      nsWorkString( const PRUnichar* aString ) : inherited(aString) { }
+      nsWorkString() : nsString() { }
+      nsWorkString( const nsAReadableString& aReadable ) : nsString(aReadable) { }
+      nsWorkString( const PRUnichar* aString, PRUint32 aLength ) : nsString(aString, PRInt32(aLength)) { }
+      nsWorkString( const PRUnichar* aString ) : nsString(aString) { }
       
       virtual void SetLength( PRUint32 aNewLength );
   };
 
 class NS_COM nsWorkCString : public nsCString
   {
-    private:
-      typedef nsCString inherited;
-
     public:
-      static const PRUint32 kInitialWorkCStringCapacity = 32;
-
-      nsWorkCString() : inherited() { }
-      nsWorkCString( const nsAReadableCString& aReadable ) : inherited(aReadable) { }
-      nsWorkCString( const char* aString, PRUint32 aLength ) : inherited(aString, PRInt32(aLength)) { }
-      nsWorkCString( const char* aString ) : inherited(aString) { }
+      nsWorkCString() : nsCString() { }
+      nsWorkCString( const nsAReadableCString& aReadable ) : nsCString(aReadable) { }
+      nsWorkCString( const char* aString, PRUint32 aLength ) : nsCString(aString, PRInt32(aLength)) { }
+      nsWorkCString( const char* aString ) : nsCString(aString) { }
       
       virtual void SetLength( PRUint32 aNewLength );
   };

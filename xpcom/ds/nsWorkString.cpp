@@ -25,6 +25,8 @@
 
 #include "nsWorkString.h"
 
+static const PRUint32 kInitialWorkStringCapacity = 32;
+
 void
 nsWorkString::SetLength( PRUint32 aNewLength )
   {
@@ -35,7 +37,7 @@ nsWorkString::SetLength( PRUint32 aNewLength )
           newCapacity += newCapacity;
         SetCapacity(newCapacity);
       }
-    inherited::SetLength(aNewLength);
+    nsString::SetLength(aNewLength);
   }
 
 void
@@ -43,10 +45,10 @@ nsWorkCString::SetLength( PRUint32 aNewLength )
   {
     if ( aNewLength > mCapacity )
       {
-        PRUint32 newCapacity = mCapacity ? mCapacity : kInitialWorkCStringCapacity;
+        PRUint32 newCapacity = mCapacity ? mCapacity : kInitialWorkStringCapacity;
         while ( newCapacity < aNewLength )
           newCapacity += newCapacity;
         SetCapacity(newCapacity);
       }
-    inherited::SetLength(aNewLength);
+    nsCString::SetLength(aNewLength);
   }
