@@ -462,6 +462,9 @@ nsHTMLFormElement::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
     result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
     NS_RELEASE(node);
   }
+  else {
+    *aReturn = nsnull;
+  }
 
   return result;
 }
