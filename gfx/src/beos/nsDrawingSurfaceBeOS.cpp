@@ -191,8 +191,8 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
   if(aView->LockLooper()) 
   { 
     //remember dimensions 
-    mWidth=nscoord(aView->Bounds().Width()); 
-    mHeight=nscoord(aView->Bounds().Height()); 
+    mWidth=nscoord(aView->Bounds().Width()+1); 
+    mHeight=nscoord(aView->Bounds().Height()+1); 
     
     mView = aView;
 

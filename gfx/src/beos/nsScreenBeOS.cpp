@@ -67,8 +67,8 @@ nsScreenBeOS :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PR
 	
   *outTop = 0;
   *outLeft = 0;
-  *outWidth = PRInt32(screen.Frame().Width());
-  *outHeight = PRInt32(screen.Frame().Height());
+  *outWidth = PRInt32(screen.Frame().Width()+1);
+  *outHeight = PRInt32(screen.Frame().Height()+1);
 
   return NS_OK;
   
@@ -82,8 +82,8 @@ nsScreenBeOS :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidt
 
   *outTop = 0;
   *outLeft = 0;
-  *outWidth = PRInt32(screen.Frame().Width());
-  *outHeight = PRInt32(screen.Frame().Height());
+  *outWidth = PRInt32(screen.Frame().Width()+1);
+  *outHeight = PRInt32(screen.Frame().Height()+1);
 
   return NS_OK;
   
