@@ -26,7 +26,6 @@ class nsString;
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
   nsHTMLContainerFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
                        nsIFrame* aParent);
 
   NS_IMETHOD  Paint(nsIPresContext& aPresContext,
@@ -63,8 +62,7 @@ protected:
                    const nsString& aTargetSpec);
 
   nsIFrame* CreateFrameFor(nsIPresContext* aPresContext,
-                           nsIContent*     aContent,
-                           PRInt32         aIndexInParent);
+                           nsIContent*     aContent);
 };
 
 #endif /* nsHTMLContainerFrame_h___ */

@@ -44,9 +44,8 @@ static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 /**
   */
 nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
-                                   PRInt32     aIndexInParent,
                                    nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame)
 {
 }
 
@@ -180,7 +179,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    nsBodyFrame::NewFrame(&mFirstChild, mContent, mIndexInParent, this);
+    nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
 
     // Resolve style and set the style context
@@ -339,7 +338,7 @@ NS_METHOD nsTableCellFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                   nsIFrame*       aParent,
                                                   nsIFrame*&      aContinuingFrame)
 {
-  nsTableCellFrame* cf = new nsTableCellFrame(mContent, mIndexInParent, aParent);
+  nsTableCellFrame* cf = new nsTableCellFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;
@@ -491,14 +490,13 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 
 nsresult nsTableCellFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                     nsIContent* aContent,
-                                    PRInt32     aIndexInParent,
                                     nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableCellFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableCellFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

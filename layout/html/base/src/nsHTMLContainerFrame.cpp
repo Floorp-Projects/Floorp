@@ -43,10 +43,8 @@ static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 
-nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent,
-                                           PRInt32 aIndexInParent,
-                                           nsIFrame* aParent)
-  : nsContainerFrame(aContent, aIndexInParent, aParent)
+nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsContainerFrame(aContent, aParent)
 {
 }
 
@@ -228,8 +226,9 @@ static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
     } else {
       PRInt32 index;
 
-      childFrame->GetIndexInParent(index);
+      childFrame->GetContentIndex(index);
 
+#if 0
       if (::ContentInserted == aChange) {
         if (index >= aIndexInParent) {
           childFrame->SetIndexInParent(index + 1);
@@ -239,13 +238,13 @@ static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
           childFrame->SetIndexInParent(index - 1);
         }
       }
+#endif
     }
   }
 }
 
 nsIFrame* nsHTMLContainerFrame::CreateFrameFor(nsIPresContext* aPresContext,
-                                               nsIContent*     aContent,
-                                               PRInt32         aIndexInParent)
+                                               nsIContent*     aContent)
 {
   // Get the style content for the frame
   nsIStyleContextPtr  styleContext = aPresContext->ResolveStyleContextFor(aContent, this);
@@ -255,18 +254,18 @@ nsIFrame* nsHTMLContainerFrame::CreateFrameFor(nsIPresContext* aPresContext,
 
   // See whether it wants any special handling
   if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    AbsoluteFrame::NewFrame(&result, aContent, aIndexInParent, this);
+    AbsoluteFrame::NewFrame(&result, aContent, this);
   } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
-    PlaceholderFrame::NewFrame(&result, aContent, aIndexInParent, this);
+    PlaceholderFrame::NewFrame(&result, aContent, this);
   } else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-    nsFrame::NewFrame(&result, aContent, aIndexInParent, this);
+    nsFrame::NewFrame(&result, aContent, this);
   } else {
     nsIContentDelegate* delegate;
 
     // Ask the content delegate to create the frame
     // XXX The delegate will also resolve the style context...
     delegate = aContent->GetDelegate(aPresContext);
-    result = delegate->CreateFrame(aPresContext, aContent, aIndexInParent, this);
+    result = delegate->CreateFrame(aPresContext, aContent, this);
     NS_RELEASE(delegate);
   }
 
@@ -331,7 +330,7 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   }
 
   // Create the new frame
-  nsIFrame* newFrame = parent->CreateFrameFor(aPresContext, aChild, aIndexInParent);
+  nsIFrame* newFrame = parent->CreateFrameFor(aPresContext, aChild);
 
   // Insert the frame
   if (nsnull == prevSibling) {

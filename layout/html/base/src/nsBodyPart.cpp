@@ -28,7 +28,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
 protected:
@@ -59,12 +58,10 @@ nsrefcnt BodyPart::Release(void)
 }
 
 nsIFrame* BodyPart::CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame)
 {
   nsIFrame* rv;
-  nsresult status = nsBodyFrame::NewFrame(&rv, this, aIndexInParent,
-                                          aParentFrame);
+  nsresult status = nsBodyFrame::NewFrame(&rv, this, aParentFrame);
   return rv;
 }
 

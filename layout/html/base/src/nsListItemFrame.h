@@ -25,7 +25,6 @@ class nsListItemFrame : public nsBlockFrame
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   // nsIFrame
@@ -48,7 +47,6 @@ public:
 
 protected:
   nsListItemFrame(nsIContent* aContent,
-                  PRInt32     aIndexInParent,
                   nsIFrame*   aParent);
 
   virtual ~nsListItemFrame();

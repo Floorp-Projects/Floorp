@@ -29,7 +29,6 @@ class nsBodyFrame : public nsHTMLContainerFrame, public nsIAnchoredItems {
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -69,9 +68,7 @@ public:
   NS_IMETHOD VerifyTree() const;
 
 protected:
-  nsBodyFrame(nsIContent* aContent,
-              PRInt32     aIndexInParent,
-              nsIFrame*   aParentFrame);
+  nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsBodyFrame();
 

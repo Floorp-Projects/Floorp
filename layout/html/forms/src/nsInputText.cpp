@@ -37,7 +37,6 @@
 class nsInputTextFrame : public nsInputFrame {
 public:
   nsInputTextFrame(nsIContent* aContent,
-                   PRInt32 aIndexInParent,
                    nsIFrame* aParentFrame);
 
   virtual nsInputWidgetData* GetWidgetInitData();
@@ -61,9 +60,8 @@ protected:
 };
 
 nsInputTextFrame::nsInputTextFrame(nsIContent* aContent,
-                                   PRInt32 aIndexInParent,
                                    nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -206,10 +204,9 @@ nsInputText::GetTextType() const
 
 nsIFrame* 
 nsInputText::CreateFrame(nsIPresContext* aPresContext,
-                         PRInt32 aIndexInParent,
                          nsIFrame* aParentFrame)
 {
-  return new nsInputTextFrame(this, aIndexInParent, aParentFrame);
+  return new nsInputTextFrame(this, aParentFrame);
 }
 
 PRInt32 

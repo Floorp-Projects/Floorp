@@ -29,7 +29,6 @@ public:
   nsInputCheckbox (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);

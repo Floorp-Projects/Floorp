@@ -87,9 +87,8 @@ struct RowReflowState {
 /* ----------- nsTableRowpFrame ---------- */
 
 nsTableRowFrame::nsTableRowFrame(nsIContent* aContent,
-                                 PRInt32     aIndexInParent,
                                  nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame),
+  : nsContainerFrame(aContent, aParentFrame),
     mTallestCell(0)
 {
 }
@@ -444,7 +443,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
   PRInt32   lastIndexInParent;
 
   LastChild(lastChild);
-  lastChild->GetIndexInParent(lastIndexInParent);
+  lastChild->GetContentIndex(lastIndexInParent);
 	NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
 #endif
 
@@ -809,7 +808,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
       kidDel = cell->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, cell, kidIndex, this);
+      kidFrame = kidDel->CreateFrame(aPresContext, cell, this);
       NS_RELEASE(kidDel);
       kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else {
@@ -1036,7 +1035,7 @@ NS_METHOD nsTableRowFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                  nsIFrame*&      aContinuingFrame)
 {
   if (gsDebug1==PR_TRUE) printf("nsTableRowFrame::CreateContinuingFrame\n");
-  nsTableRowFrame* cf = new nsTableRowFrame(mContent, mIndexInParent, aParent);
+  nsTableRowFrame* cf = new nsTableRowFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;
@@ -1044,14 +1043,13 @@ NS_METHOD nsTableRowFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
 
 nsresult nsTableRowFrame::NewFrame( nsIFrame** aInstancePtrResult,
                                     nsIContent* aContent,
-                                    PRInt32     aIndexInParent,
                                     nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableRowFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableRowFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

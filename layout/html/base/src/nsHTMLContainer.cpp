@@ -183,7 +183,6 @@ void nsHTMLContainer::Compact()
 }
 
 nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
-                                       PRInt32 aIndexInParent,
                                        nsIFrame* aParentFrame)
 {
   // Resolve style for the piece of content
@@ -199,18 +198,18 @@ nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
   nsresult fr;
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
-    fr = nsBlockFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    fr = nsBlockFrame::NewFrame(&rv, this, aParentFrame);
     break;
   case NS_STYLE_DISPLAY_INLINE:
-    fr = nsInlineFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    fr = nsInlineFrame::NewFrame(&rv, this, aParentFrame);
     break;
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    fr = nsListItemFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    fr = nsListItemFrame::NewFrame(&rv, this, aParentFrame);
     break;
   default:
     // Create an empty frame for holding content that is not being
     // reflowed.
-    fr = nsFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    fr = nsFrame::NewFrame(&rv, this, aParentFrame);
     break;
   }
 

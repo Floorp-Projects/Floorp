@@ -33,7 +33,6 @@ class nsTableColGroupFrame : public nsContainerFrame
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -54,9 +53,7 @@ public:
 
 protected:
 
-  nsTableColGroupFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
-          					   nsIFrame* aParentFrame);
+  nsTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsTableColGroupFrame();
 

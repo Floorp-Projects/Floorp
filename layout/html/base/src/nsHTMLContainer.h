@@ -39,7 +39,6 @@ public:
   virtual void Compact();
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);

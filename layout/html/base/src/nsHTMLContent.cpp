@@ -46,7 +46,6 @@ public:
   NS_DECL_ISUPPORTS
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 protected:
   ~ContentDelegate();
@@ -65,7 +64,6 @@ ContentDelegate::~ContentDelegate()
 
 nsIFrame* ContentDelegate::CreateFrame(nsIPresContext* aPresContext,
                                        nsIContent* aContent,
-                                       PRInt32 aIndexInParent,
                                        nsIFrame* aParentFrame)
 {
   NS_PRECONDITION(nsnull != aContent, "null ptr");
@@ -78,12 +76,12 @@ nsIFrame* ContentDelegate::CreateFrame(nsIPresContext* aPresContext,
     // This means that *somehow* somebody which is not an html
     // content object got ahold of this delegate and tried to
     // create a frame with it. Give them back an nsFrame.
-    status = nsFrame::NewFrame(&rv, aContent, aIndexInParent, aParentFrame);
+    status = nsFrame::NewFrame(&rv, aContent, aParentFrame);
     return rv;
   }
 
   // Ask the content object to create the frame
-  rv = hc->CreateFrame(aPresContext, aIndexInParent, aParentFrame);
+  rv = hc->CreateFrame(aPresContext, aParentFrame);
   NS_RELEASE(hc);
   return rv;
 }

@@ -101,10 +101,8 @@ struct OuterTableReflowState {
 
 /**
   */
-nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent,
-                                     PRInt32     aIndexInParent,
-                                     nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame),
+nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsContainerFrame(aContent, aParentFrame),
   mInnerTableFrame(nsnull),
   mCaptionFrames(nsnull),
   mBottomCaptions(nsnull),
@@ -939,7 +937,7 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
 void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 {
   nsIFrame *prevKidFrame = nsnull;
-  nsresult frameCreated = nsTableFrame::NewFrame((nsIFrame **)(&mInnerTableFrame), mContent, 0, this);
+  nsresult frameCreated = nsTableFrame::NewFrame((nsIFrame **)(&mInnerTableFrame), mContent, this);
   if (NS_OK!=frameCreated)
     return;  // SEC: an error!!!!
   // Resolve style
@@ -966,7 +964,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
     if (contentType==nsITableContent::kTableCaptionType)
     {
       nsIFrame *captionFrame=nsnull;
-      frameCreated = nsTableCaptionFrame::NewFrame(&captionFrame, caption, 0, this);
+      frameCreated = nsTableCaptionFrame::NewFrame(&captionFrame, caption, this);
       if (NS_OK!=frameCreated)
         return;  // SEC: an error!!!!
       // Resolve style
@@ -1084,7 +1082,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
           mInnerTableFrame->MoveTo(0, topCaptionY);
           PRInt32 captionIndexInParent;
 
-          captionFrame->GetIndexInParent(captionIndexInParent);
+          captionFrame->GetContentIndex(captionIndexInParent);
           if (0==captionIndexInParent)
           {
             SetFirstContentOffset(captionFrame);
@@ -1208,7 +1206,7 @@ NS_METHOD nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                    nsIFrame*       aParent,
                                                    nsIFrame*&      aContinuingFrame)
 {
-  nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, mIndexInParent, aParent);
+  nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   cf->SetFirstPassValid(PR_TRUE);
   if (PR_TRUE==gsDebug)
@@ -1358,7 +1356,7 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    mInnerTableFrame = new nsTableFrame(mContent, mIndexInParent, this);
+    mInnerTableFrame = new nsTableFrame(mContent, this);
     mChildCount++;
 
     // Resolve style and set the style context
@@ -1387,14 +1385,13 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
 
 nsresult nsTableOuterFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                     nsIContent* aContent,
-                                    PRInt32     aIndexInParent,
                                     nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableOuterFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableOuterFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -96,10 +96,9 @@ public:
   NS_IMETHOD  GetContent(nsIContent*& aContent) const = 0;
 
   /**
-   * Get/Set the frame's index in parent.
+   * Get the index in parent of the frame's content object
    */
-  NS_IMETHOD  GetIndexInParent(PRInt32& aIndexInParent) const = 0;
-  NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent) = 0;
+  NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const = 0;
 
   /**
    * Get the style context associated with this frame. Note that GetStyleContext()

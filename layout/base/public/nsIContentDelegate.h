@@ -38,7 +38,6 @@ public:
    */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame) = 0;
 };
 

@@ -46,9 +46,7 @@ static NS_DEFINE_IID(kListBoxIID, NS_ILISTBOX_IID);
 
 class nsSelectFrame : public nsInputFrame {
 public:
-  nsSelectFrame(nsIContent* aContent,
-                PRInt32 aIndexInParent,
-                nsIFrame* aParentFrame);
+  nsSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   virtual nsInputWidgetData* GetWidgetInitData();
 
@@ -77,7 +75,6 @@ public:
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -112,7 +109,6 @@ public:
   nsOption (nsIAtom* aTag);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -140,9 +136,8 @@ protected:
 
 
 nsSelectFrame::nsSelectFrame(nsIContent* aContent,
-                             PRInt32 aIndexInParent,
                              nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -306,10 +301,9 @@ void nsSelect::GetType(nsString& aResult) const
 
 nsIFrame* 
 nsSelect::CreateFrame(nsIPresContext* aPresContext,
-                     PRInt32 aIndexInParent,
                      nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new nsSelectFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new nsSelectFrame(this, aParentFrame);
   return rv;
 }
 
@@ -468,11 +462,10 @@ void nsOption::GetType(nsString& aResult) const
 
 nsIFrame* 
 nsOption::CreateFrame(nsIPresContext* aPresContext,
-                      PRInt32 aIndexInParent,
                       nsIFrame* aParentFrame)
 {
   nsIFrame* frame;
-  nsFrame::NewFrame(&frame, this, aIndexInParent, aParentFrame);
+  nsFrame::NewFrame(&frame, this, aParentFrame);
   return frame;
 }
 

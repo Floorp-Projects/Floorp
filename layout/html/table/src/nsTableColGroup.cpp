@@ -332,12 +332,10 @@ PRBool nsTableColGroup::IsCol(nsIContent * aContent) const
 }
 
 nsIFrame* nsTableColGroup::CreateFrame(nsIPresContext* aPresContext,
-                                       PRInt32 aIndexInParent,
                                        nsIFrame* aParentFrame)
 {
   nsIFrame* rv;
-  nsresult status = nsTableColGroupFrame::NewFrame(&rv, this, aIndexInParent,
-                                                   aParentFrame);
+  nsresult status = nsTableColGroupFrame::NewFrame(&rv, this, aParentFrame);
   NS_ASSERTION(nsnull!=rv, "can't allocate a new frame");
   return rv;
 }

@@ -41,9 +41,7 @@ static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 class ImageFrame : public nsLeafFrame {
 public:
-  ImageFrame(nsIContent* aContent,
-             PRInt32 aIndexInParent,
-             nsIFrame* aParentFrame);
+  ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -79,7 +77,6 @@ public:
   ImagePart(nsIAtom* aTag);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -117,10 +114,8 @@ protected:
 
 //----------------------------------------------------------------------
 
-ImageFrame::ImageFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
-                       nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aIndexInParent, aParentFrame)
+ImageFrame::ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsLeafFrame(aContent, aParentFrame)
 {
 }
 
@@ -571,10 +566,9 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
 }
 
 nsIFrame* ImagePart::CreateFrame(nsIPresContext* aPresContext,
-                                 PRInt32 aIndexInParent,
                                  nsIFrame* aParentFrame)
 {
-  ImageFrame* rv = new ImageFrame(this, aIndexInParent, aParentFrame);
+  ImageFrame* rv = new ImageFrame(this, aParentFrame);
   return rv;
 }
 

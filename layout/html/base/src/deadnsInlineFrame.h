@@ -28,7 +28,6 @@ class nsInlineFrame : public nsHTMLContainerFrame
 public:
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
@@ -47,9 +46,7 @@ public:
                                nsReflowMetrics& aMetrics);
 
 protected:
-  nsInlineFrame(nsIContent* aContent,
-                PRInt32     aIndexInParent,
-                nsIFrame*   aParent);
+  nsInlineFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsInlineFrame();
 

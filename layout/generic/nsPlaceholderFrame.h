@@ -29,13 +29,10 @@ public:
    */
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
-
-  NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent);
 
   // Resize reflow methods
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
@@ -48,9 +45,7 @@ public:
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  PlaceholderFrame(nsIContent* aContent,
-                   PRInt32     aIndexInParent,
-                   nsIFrame*   aParent);
+  PlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~PlaceholderFrame();
 

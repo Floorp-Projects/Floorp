@@ -96,12 +96,10 @@ nsrefcnt nsTableRowGroup::Release(void)
 
 // nsTableRowGroupFrame checks arguments
 nsIFrame* nsTableRowGroup::CreateFrame( nsIPresContext* aPresContext,
-                                        PRInt32 aIndexInParent,
                                         nsIFrame* aParentFrame)
 {
   nsIFrame* rv;
-  nsresult status = nsTableRowGroupFrame::NewFrame(&rv, this, aIndexInParent,
-                                                   aParentFrame);
+  nsresult status = nsTableRowGroupFrame::NewFrame(&rv, this, aParentFrame);
   return rv;
 }
 

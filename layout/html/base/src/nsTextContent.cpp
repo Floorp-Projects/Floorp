@@ -108,9 +108,7 @@ public:
 
 class TextFrame : public nsSplittableFrame {
 public:
-  TextFrame(nsIContent* aContent,
-            PRInt32 aIndexInParent,
-            nsIFrame* aParentFrame);
+  TextFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -220,9 +218,7 @@ public:
 
   virtual void ToHTMLString(nsString& aBuf) const;
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aCX,
-                                PRInt32 aIndexInParent,
-                                nsIFrame* aParentFrame);
+  virtual nsIFrame* CreateFrame(nsIPresContext* aCX, nsIFrame* aParentFrame);
 
   // nsIScriptObjectOwner interface
   virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject);
@@ -357,10 +353,8 @@ void TextTimer::Notify(nsITimer *timer)
 
 //----------------------------------------------------------------------
 
-TextFrame::TextFrame(nsIContent* aContent,
-                     PRInt32 aIndexInParent,
-                     nsIFrame* aParentFrame)
-  : nsSplittableFrame(aContent, aIndexInParent, aParentFrame)
+TextFrame::TextFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsSplittableFrame(aContent, aParentFrame)
 {
   if (nsnull == gTextBlinker) {
     // Create text timer the first time out
@@ -1148,8 +1142,10 @@ NS_METHOD TextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
   fprintf(out, "Text(%d)@%p[%d,%d] ", 
-          mIndexInParent, this,
+          contentIndex, this,
           mContentOffset, mContentOffset+mContentLength-1);
   out << mRect;
   aIndent++;
@@ -1312,11 +1308,9 @@ void Text::GetText(nsString& aBuf, PRInt32 aOffset, PRInt32 aCount)
 }
 #endif
 
-nsIFrame* Text::CreateFrame(nsIPresContext* aCX,
-                            PRInt32 aIndexInParent,
-                            nsIFrame* aParentFrame)
+nsIFrame* Text::CreateFrame(nsIPresContext* aCX, nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new TextFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new TextFrame(this, aParentFrame);
   return rv;
 }
 

@@ -77,7 +77,6 @@ public:
 
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   /** return the number of columns this content object represents.  always >= 1*/

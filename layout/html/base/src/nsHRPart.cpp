@@ -48,7 +48,6 @@ public:
   virtual nsrefcnt Release(void);
 #endif
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -70,7 +69,6 @@ protected:
 class HRuleFrame : public nsLeafFrame {
 public:
   HRuleFrame(nsIContent* aContent,
-             PRInt32 aIndexInParent,
              nsIFrame* aParentFrame);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -99,9 +97,8 @@ protected:
 };
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
                        nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aIndexInParent, aParentFrame)
+  : nsLeafFrame(aContent, aParentFrame)
 {
 }
 
@@ -421,10 +418,9 @@ nsContentAttr HRulePart::AttributeToString(nsIAtom* aAttribute,
 //----------------------------------------------------------------------
 
 nsIFrame* HRulePart::CreateFrame(nsIPresContext* aPresContext,
-                                 PRInt32 aIndexInParent,
                                  nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new HRuleFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new HRuleFrame(this, aParentFrame);
   return rv;
 }
 

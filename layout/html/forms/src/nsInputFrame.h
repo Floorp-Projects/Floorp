@@ -80,12 +80,9 @@ public:
   /**
     * Main constructor
     * @param aContent the content representing this frame
-    * @param aIndexInParent the position in the parent frame's children which this frame occupies
     * @param aParentFrame the parent frame
     */
-  nsInputFrame(nsIContent* aContent,
-               PRInt32 aIndexInParent,
-               nsIFrame* aParentFrame);
+  nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   static nscoord CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 

@@ -41,9 +41,8 @@ static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 /**
   */
 nsTableCaptionFrame::nsTableCaptionFrame(nsIContent* aContent,
-                                         PRInt32     aIndexInParent,
                                          nsIFrame*   aParentFrame)
-  : nsContainerFrame(aContent, aIndexInParent, aParentFrame),
+  : nsContainerFrame(aContent, aParentFrame),
   mMinWidth(0),
   mMaxWidth(0)
 {
@@ -76,7 +75,7 @@ void nsTableCaptionFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    nsBodyFrame::NewFrame(&mFirstChild, mContent, mIndexInParent, this);
+    nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
 
     // Resolve style and set the style context
@@ -330,7 +329,7 @@ NS_METHOD nsTableCaptionFrame::CreateContinuingFrame(nsIPresContext* aPresContex
                                                      nsIFrame*&      aContinuingFrame)
 {
   if (PR_TRUE==gsDebug) printf("nsTableCaptionFrame::CreateContinuingFrame called\n");
-  nsTableCaptionFrame* cf = new nsTableCaptionFrame(mContent, mIndexInParent, aParent);
+  nsTableCaptionFrame* cf = new nsTableCaptionFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;
@@ -340,14 +339,13 @@ NS_METHOD nsTableCaptionFrame::CreateContinuingFrame(nsIPresContext* aPresContex
 
 nsresult nsTableCaptionFrame::NewFrame( nsIFrame** aInstancePtrResult,
                                         nsIContent* aContent,
-                                        PRInt32     aIndexInParent,
                                         nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableCaptionFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableCaptionFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -145,14 +145,13 @@ nsBlockReflowState::Initialize(nsIPresContext* aPresContext,
 nsresult
 nsBlockFrame::NewFrame(nsIFrame** aInstancePtrResult,
                        nsIContent* aContent,
-                       PRInt32     aIndexInParent,
                        nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsBlockFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsBlockFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -160,10 +159,8 @@ nsBlockFrame::NewFrame(nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
-nsBlockFrame::nsBlockFrame(nsIContent* aContent,
-                           PRInt32 aIndexInParent,
-                           nsIFrame* aParent)
-  : nsHTMLContainerFrame(aContent, aIndexInParent, aParent)
+nsBlockFrame::nsBlockFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsHTMLContainerFrame(aContent, aParent)
 {
 }
 
@@ -210,7 +207,7 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext* aCX,
                                     nsIFrame* aParent,
                                     nsIFrame*& aContinuingFrame)
 {
-  nsBlockFrame* cf = new nsBlockFrame(mContent, mIndexInParent, aParent);
+  nsBlockFrame* cf = new nsBlockFrame(mContent, aParent);
   PrepareContinuingFrame(aCX, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;
@@ -227,7 +224,9 @@ nsBlockFrame::ListTag(FILE* out) const
       atom->ToString(tmp);
       fputs(tmp, out);
     }
-    fprintf(out, ">(%d)@%p", mIndexInParent, this);
+    PRInt32 contentIndex;
+    GetContentIndex(contentIndex);
+    fprintf(out, ">(%d)@%p", contentIndex, this);
   } else {
     nsHTMLContainerFrame::ListTag(out);
   }
@@ -357,7 +356,7 @@ nsBlockFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
         nsIFrame* nextKid;
         aNextInFlow->GetNextSibling(nextKid);
         line->mFirstChild = nextKid;
-        nextKid->GetIndexInParent(line->mFirstContentOffset);
+        nextKid->GetContentIndex(line->mFirstContentOffset);
       }
       break;
     }
@@ -399,7 +398,7 @@ nsBlockFrame::CreateLineForOverflowList(nsIFrame* aOverflowList)
   if (nsnull != newLine) {
     nsIFrame* kid = aOverflowList;
     newLine->mFirstChild = kid;
-    kid->GetIndexInParent(newLine->mFirstContentOffset);
+    kid->GetContentIndex(newLine->mFirstContentOffset);
     newLine->mLastContentOffset = -1;
     newLine->mLastContentIsComplete = PRPackedBool(0x255);
     PRInt32 kids = 0;
@@ -704,7 +703,7 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState, nsLineData* aLine)
     nextInFlow->mLines = aLine;
     nextInFlow->mFirstChild = firstKid;
     nextInFlow->mChildCount += pushCount;
-    firstKid->GetIndexInParent(nextInFlow->mFirstContentOffset);
+    firstKid->GetContentIndex(nextInFlow->mFirstContentOffset);
 
 #ifdef NS_DEBUG
     nextInFlow->VerifyLines(PR_FALSE);

@@ -36,9 +36,7 @@
 class SpacerFrame : public nsFrame
 {
 public:
-  SpacerFrame(nsIContent* aContent,
-              PRInt32 aIndexInParent,
-              nsIFrame* aParentFrame);
+  SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
                                     nsReflowMetrics& aDesiredSize,
@@ -53,7 +51,6 @@ public:
   SpacerPart(nsIAtom* aTag);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
@@ -72,10 +69,8 @@ protected:
 
 //----------------------------------------------------------------------
 
-SpacerFrame::SpacerFrame(nsIContent* aContent,
-                       PRInt32 aIndexInParent,
-                       nsIFrame* aParentFrame)
-  : nsFrame(aContent, aIndexInParent, aParentFrame)
+SpacerFrame::SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsFrame(aContent, aParentFrame)
 {
 }
 
@@ -205,11 +200,9 @@ SpacerPart::~SpacerPart()
 {
 }
 
-nsIFrame* SpacerPart::CreateFrame(nsIPresContext* aPresContext,
-                                  PRInt32 aIndexInParent,
-                                  nsIFrame* aParentFrame)
+nsIFrame* SpacerPart::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
 {
-  nsIFrame* rv = new SpacerFrame(this, aIndexInParent, aParentFrame);
+  nsIFrame* rv = new SpacerFrame(this, aParentFrame);
   return rv;
 }
 

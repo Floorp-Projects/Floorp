@@ -50,14 +50,12 @@ public:
   /** instantiate a new instance of nsTableFrame.
     * @param aInstancePtrResult  the new object is returned in this out-param
     * @param aContent            the table object to map
-    * @param aIndexInParent      which child is the new frame?
     * @param aParent             the parent of the new frame
     *
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   /** @see nsIFrame::Paint */
@@ -173,9 +171,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableFrame(nsIContent* aContent,
-                PRInt32 aIndexInParent,
-                nsIFrame* aParentFrame);
+  nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   /** destructor, responsible for mColumnLayoutData and mColumnWidths */
   virtual ~nsTableFrame();

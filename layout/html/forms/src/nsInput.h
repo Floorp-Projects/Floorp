@@ -47,7 +47,6 @@ public:
     * @see nsIContentDelegate CreateFrame
     */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void MapAttributesInto(nsIStyleContext* aContext, 

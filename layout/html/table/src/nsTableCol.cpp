@@ -39,7 +39,6 @@ class nsTableColFrame : public nsFrame {
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
-                           PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -60,9 +59,7 @@ public:
 
 protected:
 
-  nsTableColFrame(nsIContent* aContent,
-                  PRInt32 aIndexInParent,
-					        nsIFrame* aParentFrame);
+  nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsTableColFrame();
 
@@ -70,10 +67,8 @@ protected:
 
 
 
-nsTableColFrame::nsTableColFrame(nsIContent* aContent,
-                     PRInt32     aIndexInParent,
-                     nsIFrame*   aParentFrame)
-  : nsFrame(aContent, aIndexInParent, aParentFrame)
+nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+  : nsFrame(aContent, aParentFrame)
 {
 }
 
@@ -126,14 +121,13 @@ NS_METHOD nsTableColFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
 nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                    nsIContent* aContent,
-                                   PRInt32     aIndexInParent,
                                    nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsTableColFrame(aContent, aIndexInParent, aParent);
+  nsIFrame* it = new nsTableColFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -326,12 +320,10 @@ nsString * nsTableCol::GetAllInternalAttributeNames ()
 }
 
 nsIFrame* nsTableCol::CreateFrame(nsIPresContext* aPresContext,
-                                  PRInt32 aIndexInParent,
                                   nsIFrame* aParentFrame)
 {
   nsIFrame* rv;
-  nsresult status = nsTableColFrame::NewFrame(&rv, this, aIndexInParent,
-                                              aParentFrame);
+  nsresult status = nsTableColFrame::NewFrame(&rv, this, aParentFrame);
   return rv;
 }
 

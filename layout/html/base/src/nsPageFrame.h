@@ -23,7 +23,7 @@
 // Pseudo frame created by the root content frame
 class PageFrame : public nsContainerFrame {
 public:
-  PageFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent);
+  PageFrame(nsIContent* aContent, nsIFrame* aParent);
 
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,

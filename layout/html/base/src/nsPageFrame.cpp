@@ -23,8 +23,8 @@
 #include "nsReflowCommand.h"
 #include "nsIRenderingContext.h"
 
-PageFrame::PageFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aIndexInParent, aParent)
+PageFrame::PageFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsContainerFrame(aContent, aParent)
 {
 }
 
@@ -38,7 +38,7 @@ void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
       // Create a frame
       nsIContentDelegate* cd = child->GetDelegate(aPresContext);
       if (nsnull != cd) {
-        mFirstChild = cd->CreateFrame(aPresContext, child, 0, this);
+        mFirstChild = cd->CreateFrame(aPresContext, child, this);
         if (nsnull != mFirstChild) {
           mChildCount = 1;
           mLastContentOffset = mFirstContentOffset;
@@ -158,7 +158,7 @@ NS_METHOD PageFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
                                            nsIFrame*       aParent,
                                            nsIFrame*&      aContinuingFrame)
 {
-  PageFrame* cf = new PageFrame(mContent, mIndexInParent, aParent);
+  PageFrame* cf = new PageFrame(mContent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
   return NS_OK;

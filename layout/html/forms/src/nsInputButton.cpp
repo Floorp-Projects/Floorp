@@ -64,7 +64,6 @@ public:
                  nsButtonType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   virtual void GetDefaultLabel(nsString& aLabel);
@@ -93,9 +92,7 @@ public:
 class nsInputButtonFrame : public nsInputFrame {
 public:
   typedef nsInputFrame nsInputButtonFrameSuper;
-  nsInputButtonFrame(nsIContent* aContent,
-                     PRInt32 aIndexInParent,
-                     nsIFrame* aParentFrame);
+  nsInputButtonFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -211,16 +208,15 @@ nsInputButton::GetDefaultLabel(nsString& aString)
 
 nsIFrame* 
 nsInputButton::CreateFrame(nsIPresContext* aPresContext,
-                           PRInt32 aIndexInParent,
                            nsIFrame* aParentFrame)
 {
   if (kButton_Hidden == mType) {
     nsIFrame* frame;
-    nsFrame::NewFrame(&frame, this, aIndexInParent, aParentFrame);
+    nsFrame::NewFrame(&frame, this, aParentFrame);
     return frame;
   } 
   else {
-   return new nsInputButtonFrame(this, aIndexInParent, aParentFrame);
+   return new nsInputButtonFrame(this, aParentFrame);
   }
  
 }
@@ -281,9 +277,8 @@ nsInputButton::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 // nsInputButtonFrame Implementation
 
 nsInputButtonFrame::nsInputButtonFrame(nsIContent* aContent,
-                           PRInt32 aIndexInParent,
                            nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aIndexInParent, aParentFrame)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 

@@ -71,7 +71,6 @@ public:
 
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
   /** return the row group that contains me (my parent) */
