@@ -38,9 +38,7 @@ sub sillyness {
 }
 
 # Use global template variables.
-use vars qw($template $vars);
-
-my $userid;
+use vars qw($template $vars $userid);
 
 # The default email flags leave all email on.
 my $defaultflagstring = "ExcludeSelf~on~";
@@ -304,8 +302,6 @@ sub DoPermissions {
 confirm_login();
 
 GetVersionTable();
-
-$userid = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
 
 $vars->{'login'} = $::COOKIE{'Bugzilla_login'};
 $vars->{'changes_saved'} = $::FORM{'dosave'};
