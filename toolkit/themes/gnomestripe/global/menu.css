@@ -70,7 +70,7 @@ menuitem[disabled="true"] {
 }
 
 menubar > menu {
-  padding: 0px 6px 0px 4px;
+  padding: 0px 4px;
 }
 
 menubar > menu[_moz-menuactive="true"] {
@@ -141,7 +141,7 @@ menulist > menupopup > menu {
 }
 
 .menubar-text {
-  margin: 0px 2px 0px 0px !important;
+  margin: 0 1px !important;
   color: inherit;
 }
 
