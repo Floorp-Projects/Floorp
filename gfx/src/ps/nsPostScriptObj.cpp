@@ -62,9 +62,9 @@
 
 #include "prenv.h"
 #include "prprf.h"
+#include "prerror.h"
 
 #include <locale.h>
-#include <limits.h>
 #include <errno.h>
 
 #ifdef VMS
@@ -324,12 +324,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
          * - which means that if the ${MOZ_PRINTER_NAME} env var is not empty
          * the "-P" option of lpr will be set to the printer name.
          */
-#ifndef ARG_MAX
-#define ARG_MAX 4096
-#endif /* !ARG_MAX */
-        /* |putenv()| will use the pointer to this buffer directly and will not
-         * |strdup()| the content!!!! */
-        static char envvar[ARG_MAX];
 
         /* get printer name */
         aSpec->GetPrinterName(&printername);
@@ -347,26 +341,34 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         else 
           printername = "";
 
-        /* We're using a |static| buffer (|envvar|) here to ensure that the
-         * memory "remembered" in the env var pool does still exist when we
-         * leave this context.
-         * However we can't write to the buffer while it's memory is linked
-         * to the env var pool - otherwise we may corrupt the pool.
-         * Therefore we're feeding a "dummy" env name/value string to the pool
-         * to "unlink" our static buffer (if it was set by an previous print
-         * job), then we write to the buffer and finally we |putenv()| our
-         * static buffer again.
+        /* Construct an environment string MOZ_PRINTER_NAME=<printername>
+         * and add it to the environment.
+         * On a POSIX system the original buffer becomes part of the
+         * environment, so it must remain valid until replaced. To preserve
+         * the ability to unload shared libraries, we have to either remove
+         * the string from the environment at unload time or else store the
+         * string in the heap, where it'll be left behind after unloading
+         * the library.
          */
-        PR_SetEnv("MOZ_PRINTER_NAME=dummy_value_to_make_putenv_happy");
-        PRInt32 nchars = PR_snprintf(envvar, ARG_MAX,
-                                  "MOZ_PRINTER_NAME=%s", printername);
-        if (nchars < 0 || nchars >= ARG_MAX)
-            sprintf(envvar, "MOZ_PRINTER_NAME=");
-
+        static char *moz_printer_string;
+        char *old_printer_string = moz_printer_string;
+        moz_printer_string = PR_smprintf("MOZ_PRINTER_NAME=%s", printername);
 #ifdef DEBUG
-        printf("setting printer name via '%s'\n", envvar);
-#endif /* DEBUG */
-        PR_SetEnv(envvar);
+        printf("setting '%s'\n", moz_printer_name);
+#endif
+
+        if (!moz_printer_string) {
+          /* We're probably out of memory */
+          moz_printer_string = old_printer_string;
+          return (PR_OUT_OF_MEMORY_ERROR == PR_GetError()) ? 
+            NS_ERROR_OUT_OF_MEMORY : NS_ERROR_UNEXPECTED;
+        }
+        else {
+          PR_SetEnv(moz_printer_string);
+          if (old_printer_string)
+            PR_smprintf_free(old_printer_string);
+        }
+
         
         aSpec->GetCommand(&mPrintSetup->print_cmd);
         mPrintSetup->out = tmpfile();
