@@ -855,8 +855,6 @@ public class TokenStream {
                      * permissive, so we warn about it.
                      */
                     if (base == 8 && c >= '8') {
-                        System.err.println("foo");
-
                         Object[] errArgs = { c == '8' ? "8" : "9" };
                         Context.reportWarning(
                             Context.getMessage("msg.bad.octal.literal",
