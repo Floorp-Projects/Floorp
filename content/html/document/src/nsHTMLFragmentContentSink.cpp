@@ -169,12 +169,8 @@ class nsHTMLFragmentContentSink2 : public nsHTMLFragmentContentSink
 public:
   nsHTMLFragmentContentSink2() { mHitSentinel = PR_TRUE; mSeenBody = PR_FALSE;}
   virtual ~nsHTMLFragmentContentSink2() {}
-  NS_IMETHODIMP OpenHead(const nsIParserNode& aNode)  { return OpenContainer(aNode);  }
-  NS_IMETHODIMP CloseHead(const nsIParserNode& aNode) 
-  { 
-    nsHTMLTag tag = nsHTMLTag(aNode.GetNodeType());
-    return CloseContainer(tag); 
-  }
+  NS_IMETHODIMP OpenHead(const nsIParserNode& aNode) { return OpenContainer(aNode); }
+  NS_IMETHODIMP CloseHead() { return CloseContainer(eHTMLTag_body); }
 };
 
 nsresult
