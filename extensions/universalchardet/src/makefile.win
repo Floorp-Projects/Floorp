@@ -1,0 +1,77 @@
+#!nmake
+#
+# CONFIDENTIAL AND PROPRIETARY SOURCE CODE
+# OF NETSCAPE COMMUNICATIONS CORPORATION
+#
+# Copyright (c) 1998, 1999 Netscape Communications Corporation.
+# All Rights Reserved.
+#
+# Use of this Source Code is subject to the terms of the applicable
+# license agreement from Netscape Communications Corporation.
+#
+# The copyright notice(s) in this Source Code does not indicate actual
+# or intended publication of this Source Code.
+DEPTH=..\..\..
+MOZ_DEPTH=$(DEPTH)\..\mozilla\intl\chardet\src
+
+LCFLAGS= $(LCFLAGS) -D__STDC__
+
+DEFINES= -DWIN32_LEAN_AND_MEAN 
+LIBRARY_NAME= universalchardet
+
+OBJS= \
+	$(NULL)
+
+CSRCS= \
+	$(NULL)
+
+CPP_OBJS= \
+        .\$(OBJDIR)\nsUniversalCharDetModule.obj \
+        .\$(OBJDIR)\nsUniversalDetector.obj \
+        .\$(OBJDIR)\nsMBCSGroupProber.obj \
+        .\$(OBJDIR)\nsSBCSGroupProber.obj \
+        .\$(OBJDIR)\nsMBCSSM.obj \
+        .\$(OBJDIR)\nsEscSM.obj \
+        .\$(OBJDIR)\nsUTF8Prober.obj \
+        .\$(OBJDIR)\nsSJISProber.obj \
+        .\$(OBJDIR)\nsEUCJPProber.obj \
+        .\$(OBJDIR)\JpCntx.obj \
+        .\$(OBJDIR)\CharDistribution.obj \
+        .\$(OBJDIR)\nsGB2312Prober.obj \
+        .\$(OBJDIR)\nsEUCKRProber.obj \
+        .\$(OBJDIR)\nsBig5Prober.obj \
+        .\$(OBJDIR)\nsEUCTWProber.obj \
+        .\$(OBJDIR)\nsSBCharSetProber.obj \
+        .\$(OBJDIR)\nsEscCharsetProber.obj \
+        .\$(OBJDIR)\LangCyrillicModel.obj \
+        .\$(OBJDIR)\LangGreekModel.obj \
+        .\$(OBJDIR)\LangBulgarianModel.obj \
+        .\$(OBJDIR)\LangHungarianModel.obj \
+	$(NULL)
+
+MODULE=universalchardet
+
+REQUIRES=xpcom
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet  \
+     -I$(DEPTH)\public 
+
+MAKE_OBJ_TYPE=DLL
+DLLNAME=universalchrdet
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+
+
+LLIBS= \
+	$(DIST)\lib\xpcom.lib \
+  	$(LIBNSPR)	
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\bin\$(DLLNAME).lib
+
