@@ -532,7 +532,8 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
-		nsMsgDisplayMessageByID(rv);
+    	if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
+			nsMsgDisplayMessageByID(rv);
 	}
 	
 	return rv;
@@ -614,7 +615,8 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
-		nsMsgDisplayMessageByID(rv);
+    	if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
+			nsMsgDisplayMessageByID(rv);
 	}
 	return rv;
 }

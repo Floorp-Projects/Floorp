@@ -1192,7 +1192,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
                aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
                rv = aMsgUrl->SetUrlState(PR_FALSE /* we aren't running the url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER); // set the url as a url currently being run...
            }
-            return NS_OK;
+            return NS_ERROR_BUT_DONT_SHOW_ALERT;
         }
 
 
