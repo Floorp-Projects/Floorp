@@ -46,6 +46,8 @@
 <!ENTITY taskbarCmd.accesskey "S">
 <!ENTITY componentbarCmd.label "Component Bar">
 <!ENTITY componentbarCmd.accesskey "C">
+<!ENTITY locationbarCmd.label "Location Bar">
+<!ENTITY locationbarCmd.accesskey "L">
 
 <!ENTITY useStyleSheetMenu.label "Use Style">
 <!ENTITY useStyleSheetMenu.accesskey "u">
