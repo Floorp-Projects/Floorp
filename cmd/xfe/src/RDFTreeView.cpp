@@ -543,6 +543,12 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
              HT_GetNodeName(n)););
     break;
     }
+  case HT_EVENT_NODE_EDIT:
+    {
+        int row = HT_GetNodeIndex(_ht_rdfView, n);
+        XmLGridEditBegin(m_widget, True, row, 0);
+        break;
+    }
   case HT_EVENT_VIEW_REFRESH:
     {
        int row = HT_GetNodeIndex(_ht_rdfView, n);
@@ -551,7 +557,13 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
        if (expands) 
           HT_GetOpenState(n, &isExpanded);
        if (expands && isExpanded)
-         XmLTreeDeleteChildren(m_widget, row);
+       {
+         if (n == HT_TopNode(_ht_rdfView))
+           /* It is the top most node. Delete all rows */
+           XmLGridDeleteAllRows(m_widget, XmCONTENT);
+         else
+           XmLTreeDeleteChildren(m_widget, row);
+       }
 
         refresh(n);
 
@@ -676,7 +688,6 @@ XFE_RDFTreeView::add_row
 
     /*D( fprintf(stderr,"XFE_RDFTreeView::add_row(0x%x %d) name(%s) depth(%d)\n",
              node,row, name, depth);)*/
-
     Pixmap pixmap, mask;
 
 	//pixmap = XmUNSPECIFIED_PIXMAP;
