@@ -51,13 +51,6 @@ mailnews/compose/Makefile
 mailnews/compose/public/Makefile
 mailnews/compose/src/Makefile
 mailnews/compose/build/Makefile
-mailnews/compose/tests/Makefile
-mailnews/compose/tests/compose/Makefile
-mailnews/compose/tests/compose2/Makefile
-mailnews/compose/tests/geturl/Makefile
-mailnews/compose/tests/sendlater/Makefile
-mailnews/compose/tests/sendpage/Makefile
-mailnews/compose/tests/smtp/Makefile
 mailnews/public/Makefile
 mailnews/import/Makefile
 mailnews/import/public/Makefile
