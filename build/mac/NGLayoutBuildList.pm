@@ -277,7 +277,6 @@ sub BuildDist()
     InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
 
 	#GFX
-    InstallFromManifest(":mozilla:gfx:src:MANIFEST",								"$distdirectory:gfx:");
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:");
 
 	#VIEW
