@@ -234,7 +234,10 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = dir.Spec();
 
-    nsMsgGetNativePathString(currentFolderPath.GetLeafName(),currentFolderNameStr);
+    char *leafName = currentFolderPath.GetLeafName();
+    nsMsgGetNativePathString(leafName, currentFolderNameStr);
+    PR_FREEIF(leafName);
+
 		if (nsShouldIgnoreFile(currentFolderNameStr))
 			continue;
 
@@ -771,7 +774,11 @@ nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpe
    for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
    {
       nsFileSpec currentFolderPath = dir.Spec();
-      nsMsgGetNativePathString(currentFolderPath.GetLeafName(),leafName);
+
+      char *leaf = currentFolderPath.GetLeafName();
+      nsMsgGetNativePathString(leaf,leafName);
+      PR_FREEIF(leaf);
+
       if (!leafName.IsEmpty() &&
           Compare(nsDependentString(folderName), leafName,
                   nsCaseInsensitiveStringComparator()) == 0)
