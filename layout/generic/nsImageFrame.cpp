@@ -252,12 +252,6 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     fixedContentHeight = PR_FALSE;
   }
 
- //~~~
-  if(aDesiredSize.width == NS_UNCONSTRAINEDSIZE)
-    fixedContentWidth = PR_FALSE;
-  if(aDesiredSize.height == NS_UNCONSTRAINEDSIZE)
-    fixedContentHeight = PR_FALSE;
-
   // Choose reflow size
   if (fixedContentWidth || fixedContentHeight) {
     if (fixedContentWidth && fixedContentHeight) {
