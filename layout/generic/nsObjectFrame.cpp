@@ -146,9 +146,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #undef KeyPress
 #endif
 
-static nsresult GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock);
-
-
 // special class for handeling DOM context menu events
 // because for some reason it starves other mouse events if implemented on the same class
 class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener,
@@ -912,8 +909,43 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
       aMetrics.height = NSToCoordRound (factor * aReflowState.availableHeight);
-    else // unconstrained percent case
-      aMetrics.height = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ? 0 : aReflowState.mComputedHeight;
+    else {// unconstrained percent case
+      nsCOMPtr<nsIAtom>  fType;
+      const nsHTMLReflowState* cbrs = aReflowState.parentReflowState;
+      nsIFrame* f = cbrs->parentReflowState->frame;
+      f->GetFrameType(getter_AddRefs(fType));
+      if (fType.get() == nsLayoutAtoms::tableCellFrame || fType.get() == nsLayoutAtoms::bcTableCellFrame) {
+        if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE)
+          aMetrics.height = aReflowState.mComputedHeight;
+      }
+      else {
+        // Make it nicely fit in the viewport considering margins
+        nsRect rect;
+        aPresContext->GetVisibleArea(rect);
+        nscoord h = rect.height;
+        // Get the containing block reflow state
+        const nsHTMLReflowState* containingBlockRS = aReflowState.parentReflowState;
+        for ( ; containingBlockRS; containingBlockRS = containingBlockRS->parentReflowState) {
+          PRBool isPercentBase;
+          containingBlockRS->frame->IsPercentageBase(isPercentBase);
+          if (isPercentBase)
+            break;
+        }
+        // Substract out top and bottom margins from the containing block up to the canvas
+        if (containingBlockRS) {
+          for (const nsHTMLReflowState* rs = containingBlockRS; rs; rs = rs->parentReflowState) {
+            nsCOMPtr<nsIAtom> fType;
+            rs->frame->GetFrameType(getter_AddRefs(fType));
+            if (nsLayoutAtoms::canvasFrame == fType) 
+              break;
+            h -= rs->mComputedMargin.top + rs->mComputedMargin.bottom;
+          }
+        }
+        else NS_ASSERTION(containingBlockRS, "no containing block");
+
+        aMetrics.height = NSToCoordRound (factor * h);
+      }
+    }
   }
   
   // accent
@@ -2735,32 +2767,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 
   return NS_OK;
 }
-
-// it would indicate a serious error in the frame model if aContainingBlock were null when 
-// GetContainingBlock returns
-static nsresult
-GetContainingBlock(nsIFrame *aFrame, nsIFrame **aContainingBlock)
-{
-  NS_ENSURE_ARG_POINTER(aFrame);
-  NS_ENSURE_ARG_POINTER(aContainingBlock);
-
-  *aContainingBlock = nsnull;
-  nsIFrame *containingBlock = aFrame;
-  while (containingBlock) {
-    PRBool isContainingBlock=PR_FALSE;
-    nsresult rv = containingBlock->IsPercentageBase(isContainingBlock);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (isContainingBlock) 
-    {
-      *aContainingBlock = containingBlock;
-      break;
-    }
-    containingBlock->GetParent(&containingBlock);
-  }
-  NS_POSTCONDITION(*aContainingBlock, "bad frame model, this object frame has no containing block");
-  return NS_OK;
-}
-
 
   
 NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
