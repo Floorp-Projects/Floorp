@@ -2282,7 +2282,23 @@ void nsWindow::GetNonClientBounds(nsRect &aRect)
   }
 }
 
-           
+// like GetBounds, but don't offset by the parent
+NS_METHOD nsWindow::GetScreenBounds(nsRect &aRect)
+{
+  if (mWnd) {
+    RECT r;
+    VERIFY(::GetWindowRect(mWnd, &r));
+
+    aRect.width  = r.right - r.left;
+    aRect.height = r.bottom - r.top;
+    aRect.x = r.left;
+    aRect.y = r.top;
+  } else
+    aRect = mBounds;
+
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Set the background color
