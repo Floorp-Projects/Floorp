@@ -134,6 +134,7 @@ RAPTOR_DIRS =			\
   widget			\
   layout			\
   rdf                           \
+  silentdl                      \
   webshell			
 
 # Main rules
