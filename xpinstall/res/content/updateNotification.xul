@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/updateNotification.dtd" >
+
+<overlay id="updateNotificationMenuID"
+xmlns:html="http://www.w3.org/TR/REC-html40"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript">
+
+function ShowUpdateFromResource( node )
+{
+	var url = node.getAttribute('updateURL');
+	dump (url + '\n' ); 
+    //window.open( url );
+}
+
+</html:script>
+
+
+<menupopup id="taskPopup">
+    <menu value="&updateNotification.label;" datasources="rdf:xpinstall-update-notifier" ref="http://home.netscape.com/NC-rdf#SoftwareNotificationRoot">
+        <template>
+            <rule>
+                <menupopup>                                                     
+                    <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#name" updateURL="rdf:http://home.netscape.com/NC-rdf#url" oncommand="ShowUpdateFromResource( event.target )"/>
+                </menupopup>                                                          
+            </rule>                                                                 
+        </template>                                                               
+    </menu> 
+    <menuseparator/>
+</menupopup>                                                                
+
+</overlay>
