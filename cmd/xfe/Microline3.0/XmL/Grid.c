@@ -227,6 +227,7 @@ static void EditTimer(XtPointer, XtIntervalId *);
 static void CreateHideUnhideButtons(XmLGridWidget g);
 static void HideAction(Widget w, XEvent *event, String *, Cardinal *);
 static void UnhideAction(Widget w, XEvent *event, String *, Cardinal *);
+static void setHideUnhideSensitivity(Widget w);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuDisarm(Widget w, XEvent *event, String *, Cardinal *);
 static int SizeColumnsToFit(XmLGridWidget g, int start_at);
@@ -2806,6 +2807,8 @@ PlaceScrollbars(XmLGridWidget g)
 				  y + st,
 				  buttonWidth,
 				  headingRowHeight - st, 0);
+
+        setHideUnhideSensitivity((Widget)g);
 
 		/* once we've positioned it, make sure it's managed.
 		   Doing it in this order (position, then manage) reduces
@@ -10840,6 +10843,8 @@ XmLGridSetVisibleColumnCount(Widget w, int new_num_visible)
   else
       g->grid.visibleCols = 0;
 
+  setHideUnhideSensitivity(w);
+
   HorizLayout(g, 1);
   DrawArea(g, DrawAll, 0, 0);
 }
@@ -10890,12 +10895,12 @@ CreateHideUnhideButtons(XmLGridWidget g)
 		    XmNbottomShadowColor, g->manager.bottom_shadow_color,
 		    NULL);
 
-    XmLDrawnButtonSetType(g->grid.hideButton,
-                          XmDRAWNB_SMALLARROW,
+    XmLDrawnButtonSetType(g->grid.hideButton,   XmDRAWNB_SMALLARROW,
                           XmDRAWNB_RIGHT);
-    XmLDrawnButtonSetType(g->grid.unhideButton,
-                          XmDRAWNB_SMALLARROW,
+    XmLDrawnButtonSetType(g->grid.unhideButton, XmDRAWNB_SMALLARROW,
                           XmDRAWNB_LEFT);
+
+
     XtAddCallback(g->grid.hideButton, XmNactivateCallback,
                   HideColumn, (XtPointer)g);
     XtAddCallback(g->grid.unhideButton, XmNactivateCallback,
@@ -10926,17 +10931,38 @@ UnhideAction(Widget w,
   XmLGridUnhideRightColumn(w);
 }
 
+static void
+setHideUnhideSensitivity(Widget w)
+{
+  XmLGridWidget g = (XmLGridWidget)w;
+  int total_columns = XmLArrayGetCount(g->grid.colArray);
+  Boolean can_unhide, can_hide;
+
+  if (!g->grid.hideUnhideButtons) return;
+
+  /* If visibleCols is zero, that means all the columns are visible. */
+  if (g->grid.visibleCols == 0) {
+      can_unhide = 0;
+      can_hide   = (total_columns > 1);
+  } else {
+      can_unhide = (g->grid.visibleCols < total_columns);
+      can_hide   = (g->grid.visibleCols > 1);
+  }
+  XtSetSensitive(g->grid.unhideButton, can_unhide);
+  XtSetSensitive(g->grid.hideButton, can_hide);
+}
+
 void
 XmLGridHideRightColumn(Widget w)
 {
   XmLGridWidget g = (XmLGridWidget)w;
-  int colCount = XmLArrayGetCount(g->grid.colArray);
-  if (colCount <= 1)
+  int total_columns = XmLArrayGetCount(g->grid.colArray);
+  if (total_columns <= 1)
       return;
 
   /* If visibleCols is zero, that means all the columns are visible. */
-  if (g->grid.visibleCols == 0 || g->grid.visibleCols > colCount)
-      XmLGridSetVisibleColumnCount(w, colCount - 1);
+  if (g->grid.visibleCols == 0 || g->grid.visibleCols > total_columns)
+      XmLGridSetVisibleColumnCount(w, total_columns - 1);
   else 
       XmLGridSetVisibleColumnCount(w, g->grid.visibleCols - 1);
 }
@@ -10945,10 +10971,10 @@ void
 XmLGridUnhideRightColumn(Widget w)
 {
   XmLGridWidget g = (XmLGridWidget)w;
-  int colCount = XmLArrayGetCount(g->grid.colArray);
+  int total_columns = XmLArrayGetCount(g->grid.colArray);
 
   /* If visibleCols is zero, that means all the columns are visible. */
-  if ( g->grid.visibleCols != 0 && g->grid.visibleCols < colCount)
+  if ( g->grid.visibleCols != 0 && g->grid.visibleCols < total_columns)
       XmLGridSetVisibleColumnCount(w, g->grid.visibleCols + 1);
 }
 
