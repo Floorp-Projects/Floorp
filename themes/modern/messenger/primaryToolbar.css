@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *  Joe Hewitt <hewitt@netscape.com>
+ *  Adam Becevello <abecevello@sympatico.ca>
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -167,19 +169,19 @@
 } 
 
 #button-delete {
-  -moz-image-region: rect(0, 49px 34px 0);
+  -moz-image-region: rect(0, 49px 33px 0);
 }
 
 #button-delete:hover {
-  -moz-image-region: rect(0, 99px 34px 50px);
+  -moz-image-region: rect(0, 99px 33px 50px);
 } 
 
 #button-delete:hover:active {
-  -moz-image-region: rect(0 149px 34px 100px);
+  -moz-image-region: rect(0 149px 33px 100px);
 }
 
 #button-delete[disabled] {
-  -moz-image-region: rect(0 199px 34px 150px) !important;
+  -moz-image-region: rect(0 199px 33px 150px) !important;
 } 
 
 #button-mark {
@@ -197,6 +199,22 @@
 #button-mark[disabled] {
   -moz-image-region: rect(136px 199px 169px 150px) !important;
 } 
+
+#button-junk {
+  -moz-image-region: rect(544px 49px 577px 0);
+}
+
+#button-junk:hover {
+  -moz-image-region: rect(544px 99px 577px 50px);
+} 
+
+#button-junk:hover:active {
+  -moz-image-region: rect(544px 149px 577px 100px);
+}
+
+#button-junk[disabled="true"] {
+  -moz-image-region: rect(544px 199px 577px 150px) !important;
+}
 
 #button-print {
   list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
@@ -230,22 +248,6 @@
 
 #button-stop[disabled="true"] {
   -moz-image-region: rect(68px 199px 101px 150px) !important;
-}
-
-#button-junk{
-  list-style-image: url("chrome://messenger/skin/icons/junk.gif");
-}
-
-#button-junk:hover {
-  list-style-image: url("chrome://messenger/skin/icons/junk-hov.gif");
-} 
-
-#button-junk:hover:active {
-  list-style-image: url("chrome://messenger/skin/icons/junk-act.gif");
-}
-
-#button-junk[disabled="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/junk-dis.gif");
 }
 
 #junkBarImage {
