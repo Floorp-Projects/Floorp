@@ -102,7 +102,6 @@ nsresult nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       break;
     default:
       // XXX Replace with x-platform NS-virtkeycode transform.
-      char mChar;
       if (NS_OK == GetCharFromKeyCode(mKeyCode, mIsShift, &mChar)) {
         nsString* key = new nsString();
         *key += mChar;
