@@ -43,6 +43,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIDocCharset.h"
 
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
@@ -109,7 +110,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (nsIContentViewer*)getContentViewer;		// addrefs return value
 - (float)getTextZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
-
+- (nsIDocShell*)getDocShell;							// addrefs return value
 @end
 
 @implementation CHBrowserView
@@ -480,7 +481,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     if (!sniffer)
         return;
     webPersist->SetProgressListener(sniffer);  // owned
-    webPersist->SaveURI(aURI, nsnull, tmpFile);
+    webPersist->SaveURI(aURI, nsnull, nsnull, nsnull, nsnull, tmpFile);
 }
 
 -(void)printDocument
@@ -678,8 +679,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   PRBool	isEnabled = PR_FALSE;
   nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(_webBrowser));
   if (commandMgr) {
-    nsresult rv = commandMgr->IsCommandEnabled(commandName, nsnull,
-                                               &isEnabled);
+    nsresult rv = commandMgr->IsCommandEnabled(commandName, nsnull, &isEnabled);
 #if DEBUG
     if (NS_FAILED(rv))
       NSLog(@"IsCommandEnabled failed");
@@ -916,7 +916,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 }
 
 
-- (nsIContentViewer*)getContentViewer		// addrefs return value
+- (nsIDocShell*)getDocShell
 {
   if (!_webBrowser)
     return NULL;
@@ -925,11 +925,14 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(domWindow));
   if (!global)
     return NULL;
-  nsCOMPtr<nsIDocShell> docShell;
-  global->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell)
-    return NULL;
-  
+  nsIDocShell* docShell = NULL;
+  global->GetDocShell(&docShell);     // addrefs
+  return docShell;
+}
+
+- (nsIContentViewer*)getContentViewer		// addrefs return value
+{
+  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
   nsIContentViewer* cv = NULL;
   docShell->GetContentViewer(&cv);		// addrefs
   return cv;
@@ -1126,10 +1129,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
   if (!params) return NO;
   
-  params->SetStringValue("format",   NS_LITERAL_STRING("text/plain"));
+  params->SetStringValue("format", NS_LITERAL_STRING("text/plain"));
   params->SetBooleanValue("selection_only", PR_TRUE);
   
-  nsresult rv = cmdManager->DoCommand("cmd_getContents", params, nsnull);
+  nsresult rv = cmdManager->DoCommand("cmd_GetContents", params, nsnull);
   if (NS_FAILED(rv))
     return NO;
  
@@ -1164,6 +1167,54 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsresult rv = cmdManager->DoCommand("cmd_insertText", params, nsnull);
   
   return (BOOL)NS_SUCCEEDED(rv);
+}
+
+- (IBAction)reloadWithNewCharset:(NSString*)inCharset
+{
+  // set charset on document then reload the page (hopefully not hitting the network)
+  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
+  nsCOMPtr<nsIDocCharset> charset ( do_QueryInterface(docShell) );
+  if ( charset ) {
+    nsAutoString charsetStr;
+    [inCharset assignTo_nsAString:charsetStr];
+    charset->SetCharset(charsetStr.get());
+    [self reload:nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE];
+  }
+}
+
+- (NSString*)currentCharset
+{
+#if 0
+  nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
+  if ( wbf ) {
+    nsCOMPtr<nsIDOMWindow> focusedWindow;
+    wbf->GetFocusedWindow(getter_AddRefs(focusedWindow));
+    if ( focusedWindow ) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      focusedWindow->GetDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
+      if ( doc ) {
+        nsAutoString charset;
+        doc->GetDocumentCharacterSet(charset);
+        return [NSString stringWith_nsAString:charset];
+      }
+    }
+  }
+#endif
+
+  nsCOMPtr<nsIDOMWindow> wind;
+  _webBrowser->GetContentDOMWindow(getter_AddRefs(wind));
+  if ( wind ) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    wind->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
+    if ( doc ) {
+      nsAutoString charset;
+      doc->GetDocumentCharacterSet(charset);
+      return [NSString stringWith_nsAString:charset];
+    }
+  }
+  return nil;
 }
 
 @end

@@ -271,7 +271,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   //
   attr.tag = kAccountKCItemAttr;
   attr.data = (char*)[username UTF8String];
-  attr.length = strlen(attr.data);
+  attr.length = strlen(NS_REINTERPRET_CAST(const char*, attr.data));
   status = KCSetAttribute(inItemRef, &attr);
   if(status != noErr)
     NSLog(@"Couldn't update keychain item account");
@@ -522,7 +522,6 @@ NS_IMPL_ISUPPORTS2(KeychainPrompt,
 
 KeychainPrompt::KeychainPrompt() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 KeychainPrompt::~KeychainPrompt()
@@ -532,13 +531,14 @@ KeychainPrompt::~KeychainPrompt()
 
 
 //
-// TODO: add support for ftp username/password. The given realm for
-// an ftp server has the form ftp://<username>@<server>/<path>, see
-// netwerk/protocol/ftp/src/nsFtpConnectionThread.cpp.
+// TODO: add support for ftp username/password. 
 //
 // Get server name and port from the realm ("hostname:port (realm)",
 // see nsHttpChannel.cpp). we can't use CFURL routines or nsIURI
 // routines because they require a protocol, and we don't have one.
+//
+// The given realm for an ftp server has the form ftp://<username>@<server>/<path>, see
+// netwerk/protocol/ftp/src/nsFtpConnectionThread.cpp).
 //
 void
 KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost, PRInt32* outPort)
@@ -548,20 +548,40 @@ KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost,
   *outHost = @"";
   *outPort = kAnyPort;
   
-  // strip off the "(realm)" part
   NSString* realmStr = [NSString stringWithPRUnichars:inRealm];
-  NSRange firstParen = [realmStr rangeOfString:@"("];
-  if ( firstParen.location == NSNotFound )
-    firstParen.location = [realmStr length];
-  realmStr = [realmStr substringToIndex:firstParen.location-1];
-  
-  // separate the host and the port
-  NSRange endOfHost = [realmStr rangeOfString:@":"];
-  if ( endOfHost.location == NSNotFound )
-    *outHost = realmStr;
+
+  // first check for an ftp url and pull out the server from the realm
+  if ( [realmStr rangeOfString:@"ftp://"].location != NSNotFound ) {
+    // cut out ftp://
+    realmStr = [realmStr substringFromIndex:strlen("ftp://")];
+    
+    // cut out any of the path
+    NSRange pathDelimeter = [realmStr rangeOfString:@"/"];
+    if ( pathDelimeter.location != NSNotFound )
+      realmStr = [realmStr substringToIndex:pathDelimeter.location-1];
+    
+    // now we're left with "username@server" with username being optional
+    NSRange usernameMarker = [realmStr rangeOfString:@"@"];
+    if ( usernameMarker.location != NSNotFound )
+      *outHost = [realmStr substringFromIndex:usernameMarker.location+1];
+    else
+      *outHost = realmStr;
+  }
   else {
-    *outHost = [realmStr substringToIndex:endOfHost.location];
-    *outPort = [[realmStr substringFromIndex:endOfHost.location+1] intValue];
+    // we're an http url, strip off the "(realm)" part
+    NSRange firstParen = [realmStr rangeOfString:@"("];
+    if ( firstParen.location == NSNotFound )
+      firstParen.location = [realmStr length];
+    realmStr = [realmStr substringToIndex:firstParen.location-1];
+    
+    // separate the host and the port
+    NSRange endOfHost = [realmStr rangeOfString:@":"];
+    if ( endOfHost.location == NSNotFound )
+      *outHost = realmStr;
+    else {
+      *outHost = [realmStr substringToIndex:endOfHost.location];
+      *outPort = [[realmStr substringFromIndex:endOfHost.location+1] intValue];
+    }
   }
 }
 
@@ -712,7 +732,6 @@ NS_IMPL_ISUPPORTS2(KeychainFormSubmitObserver,
 
 KeychainFormSubmitObserver::KeychainFormSubmitObserver()
 {
-  NS_INIT_ISUPPORTS();
   //NSLog(@"Keychain form submit observer created.");
 }
 
@@ -755,7 +774,9 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     passwordElement->GetValue(pword);
     NSString* username = [NSString stringWith_nsAString:uname];
     NSString* password = [NSString stringWith_nsAString:pword];
-    
+    if ( ![username length] || ![password length] )      // bail if either is empty
+      return NS_OK;
+
     nsCOMPtr<nsIDocument> doc;
     node->GetDocument(*getter_AddRefs(doc));
     if (!doc)
@@ -950,8 +971,16 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
         [username assignTo_nsAString:user];
         [password assignTo_nsAString:pwd];
         
-        rv = usernameElement->SetValue(user);
-        rv = passwordElement->SetValue(pwd);
+        // if the server specifies a value attribute (bug 169760), only autofill
+        // the password if what we have in keychain matches what the server supplies,
+        // otherwise don't. Don't bother checking the password field for a value; i can't
+        // imagine the server ever prefilling a password
+        nsAutoString userValue;
+        usernameElement->GetAttribute(NS_LITERAL_STRING("value"), userValue);
+        if (!userValue.Length() || userValue.Equals(user)) {
+          rv = usernameElement->SetValue(user);
+          rv = passwordElement->SetValue(pwd);
+        }
       }
         
       // We found the sign-in form so return now. This means we don't
@@ -1015,6 +1044,13 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
     return NS_ERROR_FAILURE;
   *outUsername = *outPassword = nsnull;
 
+  // pages can specify that they don't want autofill by setting a
+  // "autocomplete=off" attribute on the form. 
+  nsAutoString autocomplete;
+  inFormElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+  if ( autocomplete.EqualsIgnoreCase("off") )
+    return NS_OK;
+  
   //
   // Search the form the password field and the preceding text field
   // We are only interested in signon forms, so we require
@@ -1056,6 +1092,9 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
 
     bool isText = (type.IsEmpty() || type.Equals(NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()));
     bool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
+    inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+    if ( autocomplete.EqualsIgnoreCase("off") )
+      isPassword = false;
 
     if(!isText && !isPassword)
       continue;

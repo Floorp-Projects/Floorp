@@ -54,7 +54,6 @@ class AutoCompleteListener : public nsIAutoCompleteListener
 public:
   AutoCompleteListener(AutoCompleteTextField* aTextField)
   {
-    NS_INIT_ISUPPORTS();
     mTextField = aTextField;
   }
   
@@ -79,6 +78,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 ////////////////////////////////////////////////////////////////////////
 @interface AutoCompleteTextField(Private)
 - (void)cleanup;
+- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
 @end
 
 @implementation AutoCompleteTextField
@@ -372,6 +372,18 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   return [mPopupWin isVisible];
 }
 
+//
+// -userHasTyped
+//
+// Returns whether the user has typed anything into the url bar since the last 
+// time the url was set (by loading a page). We know this is the case by looking
+// at if there is a search string.
+//
+- (BOOL) userHasTyped
+{
+  return ( mSearchString != nil );
+}
+
 // url completion ////////////////////////////
 
 - (void) completeDefaultResult
@@ -445,6 +457,25 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [fieldEditor setString:url];
     [fieldEditor selectAll:self];
   }
+}
+
+
+//
+// -setURI
+//
+// the public way to change the url string so that it does the right thing for handling
+// autocomplete and completions in progress
+//
+- (void) setURI:(NSString*)aURI
+{
+  // if the urlbar has focus (actually if its field editor has focus), we
+  // need to use one of its routines to update the autocomplete status or
+  // we could find ourselves with stale results and the popup still open. If
+  // it doesn't have focus, we can bypass all that and just use normal routines.
+  if ( [[self window] firstResponder] == [self fieldEditor] )
+    [self setStringUndoably:aURI fromLocation:0];		// updates autocomplete correctly
+  else
+    [self setStringValue:aURI];
 }
 
 - (void) setStringUndoably:(NSString *)aString fromLocation:(unsigned int)aLocation
@@ -554,16 +585,23 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void)controlTextDidChange:(NSNotification *)aNote
 {
   NSTextView *fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
+
+  // we are here either because the user is typing or they are selecting
+  // an item in the autocomplete popup. When they are typing, the location of
+  // the selection will be non-zero (wherever the insertion point is). When
+  // they autocomplete, the length and the location will both be zero.
+  // We use this info in the following way: if they are typing or backspacing,
+  // restart the search and no longer use the selection in the popup.
   NSRange range = [fieldEditor selectedRange];
-  // make sure we're typing at the end of the string
-  if (range.location == [[fieldEditor string] length]) {
+  NSString* currentText = [fieldEditor string];
+  if ([currentText length] && range.location) {
     // when we ask for a NSTextView string, Cocoa returns
     // a pointer to the view's backing store.  So, the value
     // of the string continually changes as we edit the text view.
     // Since we'll edit the text view as we add in autocomplete results,
     // we've got to make a copy of the string as it currently stands
     // to know what we were searching for in the first place.
-    NSString *searchString = [[fieldEditor string] copyWithZone:nil];
+    NSString *searchString = [currentText copyWithZone:nil];
     [self startSearch:searchString complete:!mBackspaced];
     [searchString release];
   }
@@ -575,7 +613,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void)controlTextDidEndEditing:(NSNotification *)aNote
 {
-  [self closePopup];
+  [self clearResults];
   [[[[aNote userInfo] objectForKey:@"NSFieldEditor"] undoManager] removeAllActions];
 }
   

@@ -215,6 +215,9 @@ enum {
   // point is over.
 - (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind;
 
+- (IBAction)reloadWithNewCharset:(NSString*)charset;
+- (NSString*)currentCharset;
+
 @end
 
 #endif // __nsCocoaBrowserView_h__

@@ -162,8 +162,7 @@ nsAlertController*
 CHBrowserService::GetAlertController()
 {
   if (!sController) {
-    NSBundle* bundle = [NSBundle bundleForClass:[CHBrowserView class]];
-    [bundle loadNibFile:@NS_ALERT_NIB_NAME externalNameTable:nsnull withZone:[NSApp zone]];
+    sController = [[nsAlertController alloc] init];
   }
   return sController;
 }

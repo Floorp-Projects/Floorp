@@ -81,13 +81,14 @@
 - (void) closePopup;
 - (void) resizePopup;
 - (BOOL) isOpen;
+- (BOOL) userHasTyped;
 
 - (void) onRowClicked:(NSNotification *)aNote;
 - (void) onBlur:(NSNotification *)aNote;
 - (void) onResize:(NSNotification *)aNote;
 - (void) onUndoOrRedo:(NSNotification *)aNote;
 
-- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
+- (void) setURI:(NSString*)aURI;
 - (id) fieldEditor;
 
 @end

@@ -55,7 +55,7 @@ class nsIRDFService;
                                       // cached values are valid
     BOOL            mExpandable;
     int             mNumChildren;
-    NSArray*        mChildNodes;
+    NSArray*        mChildNodes;      // array of |RDFOutlineViewItem|'s
 }
 
 - (nsIRDFResource*)resource;  // addRefs the result

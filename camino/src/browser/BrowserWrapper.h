@@ -40,10 +40,11 @@
 
 @class BrowserWindowController;
 @class ToolTip;
+@class AutoCompleteTextField;
 
 @interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
-  NSTextField*              mUrlbar;
+  AutoCompleteTextField*    mUrlbar;
   NSTextField*              mStatus;
   BrowserWindowController*  mWindowController;
   NSTabViewItem*            mTabItem;
@@ -97,6 +98,9 @@
 - (void)disconnectView;
 - (void)setTab: (NSTabViewItem*)tab;
 - (NSTabViewItem*) tab;
+
+- (IBAction)reloadWithNewCharset:(NSString*)charset;
+- (NSString*)currentCharset;
 
 - (NSWindow*)getNativeWindow;
 - (NSMenu*)getContextMenu;

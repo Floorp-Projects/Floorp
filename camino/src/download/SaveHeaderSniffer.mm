@@ -347,7 +347,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   { // Tell web persist we want no decoding on this data
     flags |= nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
     webPersist->SetPersistFlags(flags);
-    rv = webPersist->SaveURI(sourceURI, mPostData, destFile);
+    rv = webPersist->SaveURI(sourceURI, nsnull, nsnull, mPostData, nsnull, destFile);
   }
   else
   {

@@ -47,11 +47,12 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIOutputStream.h"
-#include "nsIAtom.h"
+#include "nsNetUtil.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIContent.h"
+#include "nsIAtom.h"
 
 /*
   Netscape HTML bookmarks format is:

@@ -39,44 +39,13 @@
 
 @interface nsAlertController : NSObject
 {
-    IBOutlet id alertCheckPanel;
-    IBOutlet id alertCheckPanelCheck;
-    IBOutlet id alertCheckPanelText;
-    IBOutlet id alertPanel;
-    IBOutlet id alertPanelText;
-    IBOutlet id confirmCheckPanel;
-    IBOutlet id confirmCheckPanelCheck;
-    IBOutlet id confirmCheckPanelText;
-    IBOutlet id confirmCheckPanelButton1;
-    IBOutlet id confirmCheckPanelButton2;
-    IBOutlet id confirmPanel;
-    IBOutlet id confirmPanelText;
-    IBOutlet id confirmPanelButton1;
-    IBOutlet id confirmPanelButton2;
-    IBOutlet id promptPanel;
-    IBOutlet id promptPanelCheck;
-    IBOutlet id promptPanelText;
-    IBOutlet id promptPanelInput;
-    IBOutlet id passwordPanel;
-    IBOutlet id passwordPanelCheck;
-    IBOutlet id passwordPanelText;
-    IBOutlet id passwordPanelInput;
-    IBOutlet id postToInsecureFromSecurePanel;
-    IBOutlet id securityMismatchPanel;
-    IBOutlet id expiredCertPanel;
-    IBOutlet id securityUnknownPanel;
-    IBOutlet id usernamePanel;
-    IBOutlet id usernamePanelCheck;
-    IBOutlet id usernamePanelText;
-    IBOutlet id usernamePanelPassword;    
-    IBOutlet id usernamePanelUserName;    
-    IBOutlet id owner;
+  // all dialogs are now created on the fly and sized to fit
 }
+
 - (IBAction)hitButton1:(id)sender;
 - (IBAction)hitButton2:(id)sender;
 - (IBAction)hitButton3:(id)sender;
 
-- (void)awakeFromNib;
 - (void)alert:(NSWindow*)parent title:(NSString*)title text:(NSString*)text;
 - (void)alertCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
 

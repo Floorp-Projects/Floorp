@@ -86,15 +86,15 @@ nsDownloadListenerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult
 
 static const nsModuleComponentInfo gAppComponents[] = {
   {
-    "Security Dialogs",
+    "PSM Security Warnings",
     NS_SECURITYDIALOGS_CID,
-    NS_BADCERTLISTENER_CONTRACTID,
+    NS_SECURITYWARNINGDIALOGS_CONTRACTID,
     SecurityDialogsConstructor
   },
   {
-    "Security Dialogs",
+    "Bad Cert Handler",
     NS_SECURITYDIALOGS_CID,
-    NS_SECURITYWARNINGDIALOGS_CONTRACTID,
+    NS_BADCERTLISTENER_CONTRACTID,
     SecurityDialogsConstructor
   },
   {

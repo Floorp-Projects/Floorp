@@ -57,12 +57,11 @@ SecurityDialogs::~SecurityDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS2(SecurityDialogs, nsIBadCertListener, nsISecurityWarningDialogs)
+NS_IMPL_ISUPPORTS2(SecurityDialogs, nsIBadCertListener, nsISecurityWarningDialogs);
 
 // nsIBadCertListener implementation
 /* boolean confirmUnknownIssuer (in nsIInterfaceRequestor socketInfo,
-                                 in nsIX509Cert cert,
-                                 out short certAddType); */
+                                 in nsIX509Cert cert, out addType); */
 NS_IMETHODIMP
 SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
                                       nsIX509Cert *cert, PRInt16 *outAddType,
@@ -148,9 +147,11 @@ SecurityDialogs::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo,
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
 
+// XXXbryner should we make these real confirmation dialogs?
+
 NS_IMETHODIMP
 SecurityDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx,
-                                       PRBool *canceled)
+                                       PRBool *_retval)
 {
   // I don't think any user cares they're entering a secure site.
   #if 0
@@ -159,15 +160,15 @@ SecurityDialogs::ConfirmEnteringSecure(nsIInterfaceRequestor *ctx,
                    NS_LITERAL_STRING("EnterSecureShowAgain").get());
   #endif
 
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SecurityDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx,
-                                     PRBool *canceled)
+                                     PRBool *_retval)
 {
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return AlertDialog(ctx, WEAK_SITE_PREF,
                      NS_LITERAL_STRING("WeakSecureMessage").get(),
                      NS_LITERAL_STRING("WeakSecureShowAgain").get());
@@ -175,9 +176,9 @@ SecurityDialogs::ConfirmEnteringWeak(nsIInterfaceRequestor *ctx,
 
 NS_IMETHODIMP
 SecurityDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx,
-                                      PRBool *canceled)
+                                      PRBool *_retval)
 {
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return AlertDialog(ctx, LEAVE_SITE_PREF,
                      NS_LITERAL_STRING("LeaveSecureMessage").get(),
                      NS_LITERAL_STRING("LeaveSecureShowAgain").get());
@@ -185,9 +186,9 @@ SecurityDialogs::ConfirmLeavingSecure(nsIInterfaceRequestor *ctx,
 
 
 NS_IMETHODIMP
-SecurityDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *canceled)
+SecurityDialogs::ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval)
 {
-  *canceled = PR_FALSE;
+  *_retval = PR_TRUE;
   return AlertDialog(ctx, MIXEDCONTENT_PREF,
                      NS_LITERAL_STRING("MixedContentMessage").get(),
                      NS_LITERAL_STRING("MixedContentShowAgain").get());

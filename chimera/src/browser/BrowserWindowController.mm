@@ -47,6 +47,7 @@
 #import "BrowserTabView.h"
 #import "UserDefaults.h"
 #import "PageProxyIcon.h"
+#import "AutoCompleteTextField.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMDocument.h"
@@ -1316,16 +1317,9 @@ static NSArray* sToolbarDefaults = nil;
 - (void)updateLocationFields:(NSString *)locationString
 {
     if ( [locationString isEqual:@"about:blank"] )
-      locationString = @"";
+      locationString = @""; // return;
 
-    // if the urlbar has focus (actually if its field editor has focus), we
-    // need to use one of its routines to update the autocomplete status or
-    // we could find ourselves with stale results and the popup still open. If
-    // it doesn't have focus, we can bypass all that and just use normal routines.
-    if ( [[self window] firstResponder] == [mURLBar fieldEditor] )
-      [mURLBar setStringUndoably:locationString fromLocation:0];		// updates autocomplete correctly
-    else
-      [mURLBar setStringValue:locationString];
+    [mURLBar setURI:locationString];
     [mLocationSheetURLField setStringValue:locationString];
 
     // don't call [window display] here, no matter how much you might want
@@ -1619,10 +1613,13 @@ static NSArray* sToolbarDefaults = nil;
 
   [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
 
-  [newView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
-
+  // unless we're told to load this tab in the bg, select the tab
+  // before we load so that it's the primary and will push the url into
+  // the url bar immediately rather than waiting for the server.
   if (!aLoadInBG)
     [mTabBrowser selectTabViewItem: newTab];
+
+  [newView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
 }
 
 - (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
@@ -1815,8 +1812,11 @@ static NSArray* sToolbarDefaults = nil;
   {
     menuPrototype = mImageMenu;
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0)
+  else if (!mContextMenuFlags || (mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0)
   {
+    // if there aren't any flags or we're in the background of a page,
+    // show the document menu. This prevents us from failing to find a case
+    // and not showing the context menu.
     menuPrototype = mPageMenu;
     [mBackItem 		setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
@@ -2056,7 +2056,7 @@ static NSArray* sToolbarDefaults = nil;
   BOOL oldResponderIsGecko = [self isResponderGeckoView:oldResponder];
   BOOL newResponderIsGecko = [self isResponderGeckoView:newResponder];
 
-  if (oldResponderIsGecko != newResponderIsGecko)
+  if (oldResponderIsGecko != newResponderIsGecko && [[self window] isKeyWindow])
     [[mBrowserView getBrowserView] setActive:newResponderIsGecko];
 }
 
@@ -2087,6 +2087,18 @@ static NSArray* sToolbarDefaults = nil;
   }
   return nil;
 }
+
+
+- (IBAction)reloadWithNewCharset:(NSString*)charset
+{
+  [mBrowserView reloadWithNewCharset:charset];
+}
+
+- (NSString*)currentCharset
+{
+  return [mBrowserView currentCharset];
+}
+
 
 @end
 

@@ -150,6 +150,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 @interface HistoryDataSource(Private)
 
 - (void)cleanupHistory;
+- (void)removeItemFromHistory:(id)inItem withService:(nsIBrowserHistory*)inHistService;
 
 @end
 
@@ -398,15 +399,27 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   
   nsCOMPtr<nsIBrowserHistory> history = do_GetService("@mozilla.org/browser/global-history;1");
   if ( history ) {
+    // Even though it looks like relying on row numbers as we delete will get us in trouble 
+    // and out of sync, until we actually invalidate the table, the rows keep their prior values.
+    // If children are selected as well as the parent, we'll just end up trying to remove the
+    // host string from history which will silently fail. It's extra work, but harmless.
     history->StartBatchUpdate();
     NSEnumerator* rowEnum = [mOutlineView selectedRowEnumerator];
     for ( NSNumber* currIndex = [rowEnum nextObject]; currIndex; currIndex = [rowEnum nextObject]) {
       index = [currIndex intValue];
       RDFOutlineViewItem* item = [mOutlineView itemAtRow: index];
-      if (![mOutlineView isExpandable: item]) {
-        NSString* urlString = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
-        history->RemovePage([urlString UTF8String]);
+      if ([mOutlineView isExpandable: item]) {
+        // delete a folder by iterating over each of its children and deleting them. There
+        // should be a better way, but the history api's don't really support them. Expand
+        // the folder before we delete it otherwise we don't get any child nodes to delete. 
+        [mOutlineView expandItem:item];
+        NSEnumerator* childEnum = [item->mChildNodes objectEnumerator];
+        RDFOutlineViewItem* currChild = nil;
+        while ( (currChild = [childEnum nextObject]) )
+          [self removeItemFromHistory:currChild withService:history];
       }
+      else
+        [self removeItemFromHistory:item withService:history];
     }
     history->EndBatchUpdate();
     if ( clearSelectionWhenDone )
@@ -416,6 +429,13 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     [mOutlineView reloadData];     // necessary or the outline is really horked
   }
 }
+
+-(void)removeItemFromHistory:(id)inItem withService:(nsIBrowserHistory*)inHistService;
+{
+  NSString* urlString = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
+  inHistService->RemovePage([urlString UTF8String]);
+}
+
 
 //
 // outlineView:tooltipForString
