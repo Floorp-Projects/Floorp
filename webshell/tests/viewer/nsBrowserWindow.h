@@ -29,6 +29,10 @@
 #include "nsCRT.h"
 
 
+class nsILabel;
+class nsICheckButton;
+class nsIRadioButton;
+class nsIDialog;
 class nsITextWidget;
 class nsIButton;
 class nsIThrobber;
@@ -124,6 +128,7 @@ public:
   void DoEditorMode(nsIWebShell* aWebShell);
   nsIPresShell* GetPresShell();
 
+  void DoFind();
   void DoSelectAll();
   void ForceRefresh();
 
@@ -145,6 +150,9 @@ public:
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
 
+  nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
+
+
   void SetApp(nsViewerApp* aApp) {
     mApp = aApp;
   }
@@ -165,6 +173,16 @@ public:
 
   // "Status bar"
   nsITextWidget* mStatus;
+
+  // Find Dialog
+  nsIDialog      * mDialog;
+  nsIButton      * mCancelBtn;
+  nsIButton      * mFindBtn;
+  nsITextWidget  * mTextField;
+  nsICheckButton * mMatchCheckBtn;
+  nsIRadioButton * mUpRadioBtn;
+  nsIRadioButton * mDwnRadioBtn;
+  nsILabel       * mLabel;
 
   //for creating more instances
   nsIAppShell* mAppShell;   //not addref'ed!
