@@ -115,7 +115,7 @@ namespace fd {
     inline double pow(double x, double y)        { return fd_pow(x, y); }
 }
 
-#elif defined(macintosh)
+#elif defined(macintosh) || defined(__APPLE_CC__)
 
 // the macintosh MSL provides acceptable implementations for all of these.
 namespace fd {
