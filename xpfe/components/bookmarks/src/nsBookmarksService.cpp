@@ -4138,10 +4138,11 @@ nsBookmarksService::initDatasource()
   
 	// the profile manager might call Readbookmarks() in certain circumstances
 	// so we need to forget about any previous bookmarks
-	mInner = nsnull;
-	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-				nsnull, NS_GET_IID(nsIRDFDataSource), (void**) &mInner)))
-		return(rv);
+  NS_IF_RELEASE(mInner);
+
+  rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
+	if (NS_FAILED(rv))
+		return rv;
 
 	rv = mInner->AddObserver(this);
 	if (NS_FAILED(rv)) return rv;
