@@ -277,7 +277,11 @@ RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PR
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static PRInt32
+static
+#ifdef __SUNPRO_CC
+inline
+#endif /* __SUNPRO_CC */
+PRInt32
 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
@@ -303,7 +307,11 @@ Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCa
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static PRInt32
+static 
+#ifdef __SUNPRO_CC
+inline
+#endif /* __SUNPRO_CC */
+PRInt32
 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
   PRInt32 result;
   
@@ -339,7 +347,11 @@ Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static PRInt32
+static
+#ifdef __SUNPRO_CC
+inline
+#endif /* __SUNPRO_CC */
+PRInt32
 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   const PRUnichar* s1 = aStr1;
   const char *s2 = aStr2;
@@ -565,7 +577,10 @@ static const char* kWhitespace="\b\t\r\n ";
 
 // This function is used to implement FindCharInSet and friends
 template <class CharT>
-static CharT
+#ifndef __SUNPRO_CC
+static
+#endif /* !__SUNPRO_CC */
+CharT
 GetFindInSetFilter( const CharT* set)
   {
     CharT filter = ~CharT(0); // All bits set
@@ -681,7 +696,10 @@ struct nsBufferRoutines<PRUnichar>
 //-----------------------------------------------------------------------------
 
 template <class L, class R>
-static PRInt32
+#ifndef __SUNPRO_CC
+static
+#endif /* !__SUNPRO_CC */
+PRInt32
 FindSubstring( const L* big, PRUint32 bigLen,
                const R* little, PRUint32 littleLen,
                PRBool ignoreCase )
@@ -700,7 +718,10 @@ FindSubstring( const L* big, PRUint32 bigLen,
   }
 
 template <class L, class R>
-static PRInt32
+#ifndef __SUNPRO_CC
+static
+#endif /* !__SUNPRO_CC */
+PRInt32
 RFindSubstring( const L* big, PRUint32 bigLen,
                 const R* little, PRUint32 littleLen,
                 PRBool ignoreCase )
@@ -721,7 +742,10 @@ RFindSubstring( const L* big, PRUint32 bigLen,
   }
 
 template <class CharT, class SetCharT>
-static PRInt32
+#ifndef __SUNPRO_CC
+static
+#endif /* !__SUNPRO_CC */
+PRInt32
 FindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
   {
     CharT filter = nsBufferRoutines<CharT>::get_find_in_set_filter(set);
@@ -748,7 +772,10 @@ FindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
   }
 
 template <class CharT, class SetCharT>
-static PRInt32
+#ifndef __SUNPRO_CC
+static
+#endif /* !__SUNPRO_CC */
+PRInt32
 RFindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
   {
     CharT filter = nsBufferRoutines<CharT>::get_find_in_set_filter(set);
