@@ -50,13 +50,13 @@
 #include "property.h"
 
 #include "tracer.h"
+#include "collector.h"
 
 namespace JavaScript {
 namespace JS2Runtime {
 
     class ByteCodeGen;
     class ByteCodeModule;
-
 
 #ifdef IS_LITTLE_ENDIAN
 #define JSDOUBLE_HI32(x)        (((uint32 *)&(x))[1])
@@ -150,11 +150,6 @@ static const double two31 = 2147483648.0;
         } Tag;
         Tag tag;
         
-#ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSValue", s, t); return t; }
-        void operator delete(void* t) { trace_release("JSValue", t); STD::free(t); }
-#endif
-
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
         explicit JSValue(JSObject *object) : object(object), tag(object_tag) {}
@@ -226,6 +221,46 @@ static const double two31 = 2147483648.0;
         static uint32 float64ToUInt32(float64 d);
 
         int operator==(const JSValue& value) const;
+    
+        class Owner : public Collector::ObjectOwner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSValue* value = (JSValue*) object;
+                switch (value->tag) {
+                case object_tag:	value->object = (JSObject*) collector->copy(value->object); break;
+                case function_tag:	value->function = (JSFunction*) collector->copy(value->function); break;
+                case type_tag:		value->type = (JSType*) collector->copy(value->type); break;
+                default:			break;
+                }
+                return sizeof(JSValue);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                JSValue* newValue = (JSValue*) newObject;
+                JSValue* oldValue = (JSValue*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(JSValue);
+            }
+        };            
+
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSValue", s, t); return t; }
+        void operator delete(void* t) { trace_release("JSValue", t); STD::free(t); }
+#endif
 
     };
     Formatter& operator<<(Formatter& f, const JSValue& value);
@@ -508,11 +543,6 @@ XXX ...couldn't get this to work...
         
         virtual ~JSObject() { } // keeping gcc happy
         
-#ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSObject", s, t); return t; }
-        void operator delete(void* t)   { trace_release("JSObject", t); STD::free(t); }
-#endif
-
         // every object has a type
         JSType        *mType;
 
@@ -614,6 +644,47 @@ XXX ...couldn't get this to work...
             }
         }
 
+    private:
+        class Owner : public Collector::ObjectOwner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSObject* ref = (JSObject*) object;
+                ref->mType = (JSType*) collector->copy(ref->mType);
+                // enumerate property map elements.
+                // what is mPrivate?
+                ref->mPrivate = collector->copy(ref->mPrivate);
+                ref->mPrototype = (JSObject*) collector->copy(ref->mPrototype);
+                return sizeof(JSObject);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                JSObject* newValue = (JSObject*) newObject;
+                JSObject* oldValue = (JSObject*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(JSObject);
+            }
+        };            
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSObject", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSObject", t); STD::free(t); }
+#endif
+
         static uint32 tempVarCount;
     };
 
@@ -640,11 +711,6 @@ XXX ...couldn't get this to work...
 
         virtual ~JSInstance() { } // keeping gcc happy
 
-#ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSInstance", s, t); return t; }
-        void operator delete(void* t)   { trace_release("JSInstance", t); STD::free(t); }
-#endif
-
         void initInstance(Context *cx, JSType *type);
 
         void getProperty(Context *cx, const String &name, NamespaceList *names);
@@ -664,6 +730,47 @@ XXX ...couldn't get this to work...
 
 
         JSValue         *mInstanceValues;
+
+    private:
+        class Owner : public JSObject::Owner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSObject::Owner::scan(collector, object);
+                JSInstance* ref = (JSInstance*) object;
+                // FIXME: need some kind of array operator new[] (gc) thing.
+                // this will have to use an extra word to keep track of the
+                // element count.
+                ref->mInstanceValues = (JSValue*) collector->copy(ref->mInstanceValues);
+                return sizeof(JSInstance);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                JSInstance* newValue = (JSInstance*) newObject;
+                JSInstance* oldValue = (JSInstance*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(JSInstance);
+            }
+        };            
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSInstance", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSInstance", t); STD::free(t); }
+#endif
     };
     Formatter& operator<<(Formatter& f, const JSInstance& obj);
 
@@ -1219,11 +1326,6 @@ XXX ...couldn't get this to work...
         ~JSFunction() { }  // keeping gcc happy
         
 #ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSFunction", s, t); return t; }
-        void operator delete(void* t)   { trace_release("JSFunction", t); STD::free(t); }
-#endif
-
-#ifdef DEBUG
         uint32 maxParameterIndex()              { return mRequiredParameters + mOptionalParameters + mNamedParameters + ((mHasRestParameter) ? 1 : 0); } 
 #endif
         void setByteCode(ByteCodeModule *b)     { ASSERT(!isNative()); mByteCode = b; }
@@ -1295,8 +1397,7 @@ XXX ...couldn't get this to work...
         ParameterBarrel *mParameterBarrel;
         Activation mActivation;                 // not used during execution  (XXX so maybe we should handle it differently, hmmm?)
 
-
-    private:
+ /* private: */
         ByteCodeModule *mByteCode;
         NativeCode *mCode;
         JSType *mResultType;
@@ -1311,6 +1412,46 @@ XXX ...couldn't get this to work...
         bool mHasRestParameter;
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;
+
+        class Owner : public JSObject::Owner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSObject::Owner::scan(collector, object);
+                JSFunction* ref = (JSFunction*) object;
+                ref->mParameterBarrel = (ParameterBarrel*) collector->copy(ref->mParameterBarrel);
+                ref->mResultType = (JSType*) collector->copy(ref->mResultType);
+                ref->mClass = (JSType*) collector->copy(ref->mClass);
+                ref->mPrototype = (JSObject*) collector->copy(ref->mPrototype);
+                return sizeof(JSFunction);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                JSFunction* newValue = (JSFunction*) newObject;
+                JSFunction* oldValue = (JSFunction*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(JSFunction);
+            }
+        };            
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSFunction", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSFunction", t); STD::free(t); }
+#endif
     };
 
     class JSBoundFunction : public JSFunction {
@@ -1376,6 +1517,42 @@ XXX ...couldn't get this to work...
 
         JSFunction *getFunction()       { return mFunction; }
 
+    private:
+        class Owner : public JSFunction::Owner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSFunction::Owner::scan(collector, object);
+                JSBoundFunction* ref = (JSBoundFunction*) object;
+                return sizeof(JSBoundFunction);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                JSBoundFunction* newValue = (JSBoundFunction*) newObject;
+                JSBoundFunction* oldValue = (JSBoundFunction*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(JSBoundFunction);
+            }
+        };            
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBoundFunction", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSBoundFunction", t); STD::free(t); }
+#endif
     };
 
     // This is for binary operators, it collects together the operand
@@ -1760,6 +1937,45 @@ XXX ...couldn't get this to work...
 
         JSType *mExtendArgument;
         NamespaceList *mNamespaceList;
+
+    private:
+        class Owner : public JSObject::Owner {
+        public:
+            /**
+            * Scans through the object, and copies all references.
+            */
+            virtual Collector::size_type scan(Collector* collector, void* object)
+            {
+                JSObject::Owner::scan(collector, object);
+                Attribute* ref = (Attribute*) object;
+                if (ref->mExtendArgument)
+                    ref->mExtendArgument = (JSType*) collector->copy(ref->mExtendArgument);
+                return sizeof(Attribute);
+            }
+            
+            /**
+            * Performs a bitwise copy of the old object into the new object.
+            */
+            virtual Collector::size_type copy(void* newObject, void* oldObject)
+            {
+                Attribute* newValue = (Attribute*) newObject;
+                Attribute* oldValue = (Attribute*) oldObject;
+                *newValue = *oldValue;
+                return sizeof(Attribute);
+            }
+        };            
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static Owner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("Attribute", s, t); return t; }
+        void operator delete(void* t)   { trace_release("Attribute", t); STD::free(t); }
+#endif
     };
     
     
