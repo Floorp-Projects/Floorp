@@ -29,7 +29,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDeviceContext.h"
 #include "nsCURILoader.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
@@ -41,6 +40,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
+#include "nsGfxCIID.h"
 #include "nsIPrompt.h" // as long as ReportScriptError raises an alert box.
 
 // Interfaces Needed
@@ -56,6 +56,8 @@
 #else
 #define WEB_TRACE(_bit,_args)
 #endif
+
+static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -412,34 +414,39 @@ NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
 NS_IMETHODIMP nsDocShell::GetZoom(float* zoom)
 {
    NS_ENSURE_ARG_POINTER(zoom);
-   NS_ENSURE_STATE(mContentViewer);
+   NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIPresContext> presContext;
-   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
-      NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIDeviceContext> deviceContext;
-   NS_ENSURE_SUCCESS(presContext->GetDeviceContext(getter_AddRefs(deviceContext)),
-      NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(deviceContext->GetZoom(*zoom), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(mDeviceContext->GetZoom(*zoom), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetZoom(float zoom)
 {
-   NS_ENSURE_STATE(mContentViewer);
+   NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
+   mDeviceContext->SetZoom(zoom);
 
-   nsCOMPtr<nsIPresContext> presContext;
-   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
-      NS_ERROR_FAILURE);
+   // get the pres shell
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIDeviceContext> deviceContext;
-   NS_ENSURE_SUCCESS(presContext->GetDeviceContext(getter_AddRefs(deviceContext)),
-      NS_ERROR_FAILURE);
+   // get the view manager
+   nsCOMPtr<nsIViewManager> vm;
+   NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(deviceContext->SetZoom(zoom), NS_ERROR_FAILURE);
+   // get the root scrollable view
+   nsIScrollableView* scrollableView = nsnull;
+   vm->GetRootScrollableView(&scrollableView);
+   if(scrollableView)
+      scrollableView->ComputeScrollOffsets();
+
+   // get the root view
+   nsIView *rootView=nsnull; // views are not ref counted
+   vm->GetRootView(rootView);
+   if(rootView)
+      vm->UpdateView(rootView, 0);
 
    return NS_OK;
 }
@@ -1869,6 +1876,30 @@ NS_IMETHODIMP nsDocShell::EnsureContentViewer()
    return CreateAboutBlankContentViewer();
 }
 
+NS_IMETHODIMP nsDocShell::EnsureDeviceContext()
+{
+   if(mDeviceContext)
+      return NS_OK;
+
+   mDeviceContext = do_CreateInstance(kDeviceContextCID);
+   NS_ENSURE_TRUE(mDeviceContext, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIWidget> widget;
+   GetMainWidget(getter_AddRefs(widget));
+   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+
+   mDeviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
+   float dev2twip;
+   mDeviceContext->GetDevUnitsToTwips(dev2twip);
+   mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
+   float twip2dev;
+   mDeviceContext->GetTwipsToDevUnits(twip2dev);
+   mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
+   mDeviceContext->SetGamma(1.0f);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::CreateAboutBlankContentViewer()
 {
    // XXX
@@ -2048,9 +2079,9 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
    NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
    nsRect bounds(x, y, cx, cy);
-   nsCOMPtr<nsIDeviceContext> deviceContext(dont_AddRef(widget->GetDeviceContext()));
+   NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
    if(NS_FAILED(mContentViewer->Init(widget->GetNativeData(NS_NATIVE_WIDGET),
-      deviceContext, bounds, nsScrollPreference_kAuto)))
+      mDeviceContext, bounds, nsScrollPreference_kAuto)))
       {
       mContentViewer = nsnull;
       NS_ERROR("ContentViewer Initialization failed");

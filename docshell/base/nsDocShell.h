@@ -38,6 +38,7 @@
 #include "nsCDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
+#include "nsIDeviceContext.h"
 
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
@@ -112,6 +113,7 @@ protected:
 
    // Content Viewer Management
    NS_IMETHOD EnsureContentViewer();
+   NS_IMETHOD EnsureDeviceContext();
    NS_IMETHOD CreateAboutBlankContentViewer();
    NS_IMETHOD CreateContentViewer(const char* aContentType, 
       nsURILoadCommand aCommand, nsIChannel* aOpenedChannel,
@@ -182,6 +184,7 @@ protected:
    nsDSURIContentListener*    mContentListener;
    nsDocShellInitInfo*        mInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
+   nsCOMPtr<nsIDeviceContext> mDeviceContext;
    nsCOMPtr<nsIDocumentLoader>mDocLoader;
    nsCOMPtr<nsIDocumentLoaderObserver> mDocLoaderObserver;
    nsCOMPtr<nsIWidget>        mParentWidget;
