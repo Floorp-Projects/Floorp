@@ -229,6 +229,8 @@ final class LineBuffer {
             result = new String(buffer, stringStart, 
                                 offset - stringStart - loseCR);
         } else {
+            if (stringSoFar == null) 
+                stringSoFar = new StringBuffer();
             // Exclude cr as well as nl of newline.  If offset is 0, then
             // hopefully fill() did the right thing.
             result = (stringSoFar.append(buffer, 0, offset - loseCR)).toString();
