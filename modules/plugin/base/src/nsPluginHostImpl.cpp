@@ -41,11 +41,6 @@
 
 #include "nscore.h"
 #include "nsPluginHostImpl.h"
-#ifdef MOZ_WIDGET_QT
-#undef CursorShape /*X.h defines it as 0,
-                     qnamespace.h makes an enum type by that name
-                   */
-#endif
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
