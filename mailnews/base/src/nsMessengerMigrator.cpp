@@ -57,6 +57,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsINntpIncomingServer.h"
 #include "nsINoIncomingServer.h"
+#include "nsEscape.h"
 
 #define BUF_STR_LEN 1024
 
@@ -150,6 +151,9 @@ static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 #define PREF_4X_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_4X_NEWS_NOTIFY_ON "news.notify.on"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
+
+#define ESCAPE_USER_NAME(outName,inName) \
+    *((char **)getter_Copies(outName)) = nsEscape((const char *)inName, url_XAlphas);
 
 #define CONVERT_4X_URI(IDENTITY,FOR_NEWS,USERNAME,HOSTNAME,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER) \
 { \
@@ -727,34 +731,29 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
   }
   else if (m_oldMailType == POP_4X_MAIL_TYPE) {
-    char *pop_username = nsnull;
-    char *pop_hostname = nsnull;
+    nsXPIDLCString pop_username;
+    nsXPIDLCString pop_hostname;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME,getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &pop_hostname);
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, (const char *)pop_hostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
-
-    PR_FREEIF(pop_username);
-    PR_FREEIF(pop_hostname);
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
-    char *pop_username = nsnull;
+    nsXPIDLCString pop_username;
 
-	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
-
-	PR_FREEIF(pop_username);
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, (const char *)pop_username, MOVEMAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
   }
 #endif /* HAVE_MOVEMAIL */
   else {
@@ -828,14 +827,18 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 #endif /* NEWS_FCC_DEFAULT_TO_IMAP_SENT */
 
 	if ((m_oldMailType == IMAP_4X_MAIL_TYPE) && !for_news) {
-		*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA,aUsername,aHostname,default_folder_name);
+        nsXPIDLCString escaped_aUsername;
+        ESCAPE_USER_NAME(escaped_aUsername,aUsername);
+		*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA,(const char *)escaped_aUsername,aHostname,default_folder_name);
 	}
 	else if ((m_oldMailType == POP_4X_MAIL_TYPE) 
 #ifdef HAVE_MOVEMAIL
 		|| (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE)
 #endif /* HAVE_MOVEMAIL */
 		|| (m_oldMailType == IMAP_4X_MAIL_TYPE)) {
-		*new_uri = PR_smprintf("%s/%s@%s/%s",MAILBOX_SCHEMA,aUsername,aHostname,default_folder_name);
+        nsXPIDLCString escaped_aUsername;
+        ESCAPE_USER_NAME(escaped_aUsername,aUsername);
+		*new_uri = PR_smprintf("%s/%s@%s/%s",MAILBOX_SCHEMA,(const char *)escaped_aUsername,aHostname,default_folder_name);
 	}
 	else {
 		*new_uri = PR_smprintf("");
@@ -923,33 +926,35 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   }
 
   if (m_oldMailType == POP_4X_MAIL_TYPE) {
-    char *pop_username = nsnull;
-    char *pop_hostname = nsnull;
+    nsXPIDLCString pop_username;
+    nsXPIDLCString pop_hostname;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(pop_username));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &pop_hostname);
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
-    usernameAtHostname = PR_smprintf("%s@%s",pop_username, pop_hostname);
+    nsXPIDLCString escaped_pop_username;
+    ESCAPE_USER_NAME(escaped_pop_username,pop_username);
 
-    PR_FREEIF(pop_username);
-    PR_FREEIF(pop_hostname);
+    usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_pop_username, (const char *)pop_hostname);
   }
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
     usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,LOCAL_MAIL_FAKE_HOST_NAME);
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
-	char *movemail_username = nsnull; 
+	nsXPIDLCString movemail_username;
 
-	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &movemail_username);
+	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(movemail_username));
 	if (NS_FAILED(rv)) return rv; 
 	
-	usernameAtHostname = PR_smprintf("%s@%s",movemail_username,MOVEMAIL_FAKE_HOST_NAME);
+    nsXPIDLCString escaped_movemail_username;
 
-	PR_FREEIF(movemail_username);
+    ESCAPE_USER_NAME(escaped_movemail_username,movemail_username);
+
+	usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_movemail_username,MOVEMAIL_FAKE_HOST_NAME);
   }
 #endif /* HAVE_MOVEMAIL */
   else {
