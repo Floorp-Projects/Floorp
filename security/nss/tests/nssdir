@@ -17,7 +17,7 @@ else if ( "$QAYEAR" == ""  ) then
 	
 endif
 
-setenv D1 /h/redbuild/export/builds/mccrel/nss/nss$NSSVER
+setenv D1 /h/blds-sca15a/export/builds/mccrel/nss/nss$NSSVER
 setenv NTDIST ${D1}/builds/${QAYEAR}${BUILDDATE}.1/blowfish_NT4.0_Win95/mozilla/dist
 setenv UXDIST ${D1}/builds/${QAYEAR}${BUILDDATE}.1/y2sun2_Solaris8/mozilla/dist
 setenv TESTSCRIPTDIR ${D1}/builds/${QAYEAR}${BUILDDATE}.1/y2sun2_Solaris8/mozilla/security/nss/tests
