@@ -890,7 +890,7 @@ struct MessageWindow {
              }
              nsCOMPtr<nsIWindowsHooks> winHooksService ( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID, &rv ) );
              if ( NS_SUCCEEDED( rv ) )
-                 winHooksService->StartupTurboDisable();
+                 winHooksService->StartupRemoveOption("-turbo");
 
              nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
              if ( NS_SUCCEEDED( rv ) ) {

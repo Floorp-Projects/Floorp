@@ -173,23 +173,24 @@ interface nsIWindowsHooks : nsISupports {
     boolean checkSettings( in nsIDOMWindowInternal aParent );
 
     /**
-     * Returns true if the "(appname) QuickLaunch" value is in the
+     * Returns true if command is in the "(appname) QuickLaunch" value in the
      * HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
-     * key (indicating that the app will preload when Windows starts).
+     * key.
      */
-    boolean isStartupTurboEnabled();
+    boolean isOptionEnabled(in string option);
 
     /**
-     * Adds the "(appname) QuickLaunch" value to the key mentioned above,
-     * with data "(path\to\app.exe) -turbo", if not done already.
+     * Adds the option to the "(appname) QuickLaunch" value to the key mentioned above,
+     * with data "(path\to\app.exe) option", if not done already.
      */
-    void startupTurboEnable();
+    void startupAddOption(in string option);
 
     /**
-     * Removes the "(appname) QuickLaunch" value from the key mentioned above,
-     * if not done already.
+     * Removes the commnand from the "(appname) QuickLaunch" value from
+	 * the key mentioned above, if not done already. And deletes the
+	 * "(appname) QuickLaunch" value entirely if there are no options left
      */
-    void startupTurboDisable();
+    void startupRemoveOption(in string option);
 
     /**
      * Accepts an element, either an HTML img element or an element with

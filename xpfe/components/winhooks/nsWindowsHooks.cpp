@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Bill Law    <law@netscape.com>
  *  Syd Logan   <syd@netscape.com> added turbo mode stuff
+ *  Joe Elwell  <jelwell@netscape.com>
  *  Håkan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -75,6 +76,8 @@
 #include "gfxIImageFrame.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
+
+#define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
 // Objects that describe the Windows registry entries that we need to tweak.
 static ProtocolRegistryEntry
@@ -646,55 +649,154 @@ nsWindowsHooks::SetRegistry() {
 
 // nsIWindowsHooks.idl for documentation
 
-NS_IMETHODIMP nsWindowsHooks::IsStartupTurboEnabled(PRBool *_retval)
-{
-	*_retval = PR_FALSE;
-    HKEY key;
-    LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
-    if ( result == ERROR_SUCCESS ) {
-        result = ::RegQueryValueEx( key, NS_QUICKLAUNCH_RUN_KEY, NULL, NULL, NULL, NULL );
-        ::RegCloseKey( key );
-        if ( result == ERROR_SUCCESS )
-          *_retval = PR_TRUE;
-    }
+/*
+  * Name: IsOptionEnabled
+  * Arguments:
+  *     PRUnichar* option - the option line switch we check to see if it is in the registry key
+  *
+  * Return Value:
+  *     PRBool* _retval - PR_TRUE if option is already in the registry key, otherwise PR_FALSE
+  *
+  * Description:
+  *     This function merely checks if the passed in string exists in the (appname) Quick Launch Key or not.
+  *
+  * Author:
+  *     Joseph Elwell 3/1/2002
+*/
+NS_IMETHODIMP nsWindowsHooks::IsOptionEnabled(const char* option, PRBool *_retval) { 
+    NS_ASSERTION(option, "nsWindowsHooks::IsOptionEnabled requires something like \"-turbo\"");
+  	*_retval = PR_FALSE;
+    RegistryEntry startup ( HKEY_CURRENT_USER, RUNKEY, NS_QUICKLAUNCH_RUN_KEY, NULL );
+    nsCString cargs = startup.currentSetting();
+    if (cargs.Find(option, PR_TRUE) != kNotFound)
+        *_retval = PR_TRUE;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWindowsHooks::StartupTurboEnable()
-{
-    PRBool startupFound;
-    IsStartupTurboEnabled( &startupFound );
-
-    if ( startupFound == PR_TRUE )
-        return NS_OK;               // already enabled, no need to do this
-
-    HKEY hKey;
-    LONG res = ::RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL );
-    if ( res != ERROR_SUCCESS )
-      return NS_OK;
-    char fileName[_MAX_PATH];
-    int rv = ::GetModuleFileName( NULL, fileName, sizeof fileName );
-    if ( rv ) {
-      strcat( fileName, " -turbo" );
-      ::RegSetValueEx( hKey, NS_QUICKLAUNCH_RUN_KEY, 0, REG_SZ, ( LPBYTE )fileName, strlen( fileName ) );
-    }
-    ::RegCloseKey( hKey );
-    return NS_OK;
+/*
+  * Name: grabArgs
+  * Arguments:
+  *     char* optionline  - the full optionline as read from the (appname) Quick Launch registry key
+  *
+  * Return Value:
+  *     char** args - A pointer to the arguments (string in optionline)
+  *                   passed to the executable in the (appname) Quick Launch registry key
+  *
+  * Description:
+  *     This function seperates out the arguments from the optinline string
+  *     Returning a pointer into the first arguments buffer.
+  *     This function is used only locally, and is meant to reduce code size and readability.
+  *
+  * Author:
+  *     Joseph Elwell 3/1/2002
+*/
+void grabArgs(char* optionline, char** args) {
+    nsCRT::strtok(optionline, "\"", &optionline);
+    if (optionline != NULL)
+        *args = nsCRT::strtok(optionline, "\"", &optionline);
 }
 
-NS_IMETHODIMP nsWindowsHooks::StartupTurboDisable()
-{
+/*
+  * Name: StartupAddOption
+  * Arguments:
+  *     PRUnichar* option - the option line switch we want to add to the registry key
+  *
+  * Return Value: none
+  *
+  * Description:
+  *     This function adds the given option line argument to the (appname) Quick Launch registry key
+  *
+  * Author:
+  *     Joseph Elwell 3/1/2002
+*/
+NS_IMETHODIMP nsWindowsHooks::StartupAddOption(const char* option) {
+    NS_ASSERTION(option, "nsWindowsHooks::StartupAddOption requires something like \"-turbo\"");
+    PRBool retval;
+    IsOptionEnabled(option, &retval);
+    if (retval) return NS_OK; //already in there
+    
+    RegistryEntry startup ( HKEY_CURRENT_USER, RUNKEY, NS_QUICKLAUNCH_RUN_KEY, NULL );
+    nsCString cargs = startup.currentSetting();
+    nsCAutoString newsetting;
+    newsetting.Assign('\"');
+    newsetting.Append(thisApplication());
+    newsetting.Append('\"');
+    if (!cargs.IsEmpty())
+    {
+        char* args;
+        // exploiting the fact that nsString's storage is also a char* buffer.
+        // NS_CONST_CAST is safe here because nsCRT::strtok will only modify
+        // the existing buffer
+        grabArgs(NS_CONST_CAST(char *, cargs.get()), &args);
+        if (args != NULL)
+            newsetting.Append(args);
+        else
+        {
+            // check for the old style registry key that doesnot quote its executable
+            IsOptionEnabled("-turbo", &retval);
+            if (retval)
+                newsetting.Append(" -turbo");
+        }
+    }
+    newsetting.Append(' ');
+    newsetting.Append(option);
+    startup.setting = newsetting;
+    startup.set();    
+}
+
+/*
+  * Name: StartupRemoveOption
+  * Arguments:
+  *     PRUnichar* option - the option line switch we want to remove from the registry key
+  *
+  * Return Value: none.
+  *
+  * Description:
+  *     This function removes the given option from the (appname) Quick Launch Key.
+  *     And deletes the key entirely if no options are left.
+  *
+  * Author:
+  *     Joseph Elwell 3/1/2002
+*/
+NS_IMETHODIMP nsWindowsHooks::StartupRemoveOption(const char* option) {
+    NS_ASSERTION(option, "nsWindowsHooks::StartupRemoveOption requires something like \"-turbo\"");
     PRBool startupFound;
-    IsStartupTurboEnabled( &startupFound );
+    IsOptionEnabled(option, &startupFound );
     if ( !startupFound )
-        return NS_OK;               // already disabled, no need to do this
+        return NS_OK;               // already disabled, no need to do anything
 
-    HKEY hKey;
-    LONG res = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_SET_VALUE, &hKey );
-    if ( res != ERROR_SUCCESS )
-      return NS_OK;
-    res = ::RegDeleteValue( hKey, NS_QUICKLAUNCH_RUN_KEY );
-    ::RegCloseKey( hKey );
+    RegistryEntry startup ( HKEY_CURRENT_USER, RUNKEY, NS_QUICKLAUNCH_RUN_KEY, NULL );
+    nsCString cargs = startup.currentSetting();
+    char* args;
+    // exploiting the fact that nsString's storage is also a char* buffer.
+    // NS_CONST_CAST is safe here because nsCRT::strtok will only modify
+    // the existing buffer
+    grabArgs(NS_CONST_CAST(char *, cargs.get()), &args);
+
+    nsCAutoString launchcommand;
+    if (args)
+    {
+        launchcommand.Assign(args);
+        PRInt32 optionlocation = launchcommand.Find(option, PR_TRUE);
+        // modify by one to get rid of the space we prepended in StartupAddOption
+        if (optionlocation != kNotFound)
+            launchcommand.Cut(optionlocation - 1, nsCRT::strlen(option) + 1);
+    }
+	
+    if (launchcommand.IsEmpty())
+    {
+        startup.set();
+    }
+    else
+    {
+        nsCAutoString ufileName;
+        ufileName.Assign('\"');
+        ufileName.Append(thisApplication());
+        ufileName.Append('\"');
+        ufileName.Append(launchcommand);
+        startup.setting = ufileName;
+        startup.set();
+    }
     return NS_OK;
 }
 
