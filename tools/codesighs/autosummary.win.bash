@@ -105,7 +105,7 @@ find ./mozilla -type f -name *.map > $ALLMAPSFILE
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $ALLMAPSFILE > $RAWTSVFILE
+xargs -n 1 ./mozilla/dist/bin/msmap2tsv --input < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
 
 
 #
