@@ -23,28 +23,26 @@
 
 #include "nsIInterfaceRequestor.h"
 
-#if 0
 nsresult
 nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
-	{
-		nsresult status;
+{
+	nsresult status;
 
-		if ( mSource )
-			{
-				nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource, &status);
-				NS_ASSERTION(factoryPtr, "Did you know you were calling |do_GetInterface()| on an object that doesn't support the |nsIInterfaceRequestor| interface?");
+	if ( mSource )
+		{
+			nsCOMPtr<nsIInterfaceRequestor> factoryPtr = do_QueryInterface(mSource, &status);
+			NS_ASSERTION(factoryPtr, "Did you know you were calling |do_GetInterface()| on an object that doesn't support the |nsIInterfaceRequestor| interface?");
 
-				if ( factoryPtr )
-					status = factoryPtr->GetInterface(aIID, aInstancePtr);
+			if ( factoryPtr )
+				status = factoryPtr->GetInterface(aIID, aInstancePtr);
 
-				if ( !NS_SUCCEEDED(status) )
-					*aInstancePtr = 0;
-			}
-		else
-			status = NS_ERROR_NULL_POINTER;
+			if ( !NS_SUCCEEDED(status) )
+				*aInstancePtr = 0;
+		}
+	else
+		status = NS_ERROR_NULL_POINTER;
 
-		if ( mErrorPtr )
-			*mErrorPtr = status;
-		return status;
-	}
-#endif
+	if ( mErrorPtr )
+		*mErrorPtr = status;
+	return status;
+}
