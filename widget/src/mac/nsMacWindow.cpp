@@ -32,6 +32,7 @@
 #include "nsIDragSessionMac.h"
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
+#include "nsGFXUtils.h"
 
 #include <Quickdraw.h>
 
@@ -667,7 +668,8 @@ NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-
+  StPortSetter setOurPortForLocalToGlobal ( mWindowPtr );
+  
 	if (eWindowType_popup == mWindowType) {
 		PRInt32	xOffset=0,yOffset=0;
 		nsRect	localRect,globalRect;
