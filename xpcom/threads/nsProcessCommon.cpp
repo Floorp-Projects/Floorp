@@ -38,6 +38,13 @@
 
 #include <stdlib.h>
 
+#if defined( XP_WIN )
+#include "nsString.h"
+#include "nsLiteralString.h"
+#include "nsReadableUtils.h"
+#include <windows.h>
+#endif
+
 //-------------------------------------------------------------------//
 // nsIProcess implementation
 //-------------------------------------------------------------------//
@@ -102,14 +109,74 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
     // null terminate the array
     my_argv[count+1] = NULL;
 
-    if (blocking)
-    {
+ #if defined(XP_WIN)
+    STARTUPINFO startupInfo;
+    PROCESS_INFORMATION procInfo;
+    BOOL retVal;
+
+    ZeroMemory(&startupInfo, sizeof(startupInfo));
+    startupInfo.cb = sizeof(startupInfo);
+
+    retVal = CreateProcess(NULL,
+                           NS_CONST_CAST(char*, mTargetPath.get()),
+                           NULL,  /* security attributes for the new
+                                   * process */
+                           NULL,  /* security attributes for the primary
+                                   * thread in the new process */
+                           FALSE,  /* inherit handles */
+                           0,     /* creation flags */
+                           NULL,  /* env */
+                           NULL,  /* current drive and directory */
+                           &startupInfo,
+                           &procInfo
+                          );
+
+    if (blocking) {
+ 
+        // if success, wait for process termination. the early returns and such
+        // are a bit ugly but preserving the logic of the nspr code I copied to 
+        // minimize our risk abit.
+
+        if ( retVal == TRUE ) {
+            DWORD dwRetVal;
+            unsigned long exitCode;
+
+            dwRetVal = WaitForSingleObject(procInfo.hProcess, INFINITE);
+            if (dwRetVal == WAIT_FAILED) {
+                nsMemory::Free(my_argv);
+                return PR_FAILURE;
+            }
+            if (GetExitCodeProcess(procInfo.hProcess, &exitCode) == FALSE) {
+                mExitValue = exitCode;
+                nsMemory::Free(my_argv);
+               return PR_FAILURE;
+            }
+            mExitValue = exitCode;
+            CloseHandle(procInfo.hProcess);
+        }
+        else
+            rv = PR_FAILURE;
+    } 
+    else {
+
+        // map return value into success code
+
+        if ( retVal == TRUE ) 
+            rv = PR_SUCCESS;
+        else
+            rv = PR_FAILURE;
+    }
+
+#else
+    if ( blocking ) {
         mProcess = PR_CreateProcess(mTargetPath, my_argv, NULL, NULL);
         if (mProcess)
             rv = PR_WaitProcess(mProcess, &mExitValue);
     }
-    else
+    else {
         rv = PR_CreateProcessDetached(mTargetPath, my_argv, NULL, NULL);
+    }
+#endif
 
     // free up our argv
     nsMemory::Free(my_argv);
