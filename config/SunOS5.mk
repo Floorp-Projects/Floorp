@@ -179,8 +179,15 @@ FC_PLATFORM		= SolarisSparc
 FC_PLATFORM_DIR		= SunOS5_sparc
 endif
 
+# use g++ to make shared libs
+ifdef NS_USE_GCC
+MKSHLIB			= $(CCC) $(DSO_LDOPTS)
+DSO_LDOPTS		= -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so) -L$(MOTIF)/lib -L/usr/openwin/lib
+else
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
+DSO_LDOPTS		= -G -L$(MOTIF)/lib -L/usr/openwin/lib
+endif
+
 DSO_BIND_REFERENCES	= -Bsymbolic
 
-DSO_LDOPTS		= -G -L$(MOTIF)/lib -L/usr/openwin/lib
 DSO_LDFLAGS		=
