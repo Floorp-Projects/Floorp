@@ -75,7 +75,7 @@ public:
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
-                  const nsAReadableString& aString,
+                  const nsAString& aString,
                   nsIEditor *aEditor);
 
 private:
@@ -90,7 +90,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 // nsISupports declarations
 

@@ -69,11 +69,11 @@ public:
     * @param aValue  the new value for document title
     */
   NS_IMETHOD Init(nsIHTMLEditor  *aEditor,
-                  const nsAReadableString *aValue);
+                  const nsAString *aValue);
 private:
   SetDocTitleTxn();
-  nsresult SetDocTitle(const nsAReadableString& aTitle);
-  nsresult SetDomTitle(const nsAReadableString& aTitle);
+  nsresult SetDocTitle(const nsAString& aTitle);
+  nsresult SetDomTitle(const nsAString& aTitle);
 
 public:
   NS_IMETHOD DoTransaction(void);
@@ -86,7 +86,7 @@ public:
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 protected:
 

@@ -167,7 +167,7 @@ NS_IMETHODIMP DeleteElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteElementTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP DeleteElementTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("DeleteElementTxn"));
   return NS_OK;

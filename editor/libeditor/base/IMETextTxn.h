@@ -81,7 +81,7 @@ public:
                   PRUint32 aOffset,
 				  PRUint32 aReplaceLength,
 				  nsIPrivateTextRangeList* aTextRangeList,
-                  const nsAReadableString& aString,
+                  const nsAString& aString,
                   nsWeakPtr aSelCon);
 
 private:
@@ -96,7 +96,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
   NS_IMETHOD MarkFixed(void);
 

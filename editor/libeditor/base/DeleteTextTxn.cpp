@@ -126,7 +126,7 @@ NS_IMETHODIMP DeleteTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("DeleteTextTxn: "));
   aString += mDeletedText;

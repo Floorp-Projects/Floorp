@@ -74,7 +74,7 @@ InsertTextTxn::~InsertTextTxn()
 
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   PRUint32             aOffset,
-                                  const nsAReadableString      &aStringToInsert,
+                                  const nsAString     &aStringToInsert,
                                   nsIEditor           *aEditor)
 {
 #if 0 //def DEBUG_cmanske
@@ -204,7 +204,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
   return result;
 }
 
-NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP InsertTextTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("InsertTextTxn: "));
   aString += mStringToInsert;

@@ -72,7 +72,7 @@ public:
   NS_IMETHOD Init(nsIEditor      * aEditor,
                   nsIDOMElement  * aElement,
                   nsIAtom        * aProperty,
-                  const nsAReadableString & aValue,
+                  const nsAString & aValue,
                   PRBool aRemoveProperty);
 
   /** returns true if the list of white-space separated values contains aValue
@@ -82,14 +82,14 @@ public:
     * @param aValue          [IN] the value to look for in the list
     * @param aCaseSensitive  [IN] a boolean being true if a case-sensitive search is needed
     */
-  static PRBool ValueIncludes(const nsAReadableString & aValueList, const nsAReadableString & aValue, PRBool aCaseSensitive);
+  static PRBool ValueIncludes(const nsAString & aValueList, const nsAString & aValue, PRBool aCaseSensitive);
 
   /** adds the value aNewValue to the list of white-space separated values aValues
     *
     * @param aValues         [IN/OUT] a list of wite-space separated values
     * @param aNewValue       [IN] a value this code adds to aValues if it is not already in
     */
-  NS_IMETHOD AddValueToMultivalueProperty(nsAWritableString & aValues, const nsAReadableString  & aNewValue);
+  NS_IMETHOD AddValueToMultivalueProperty(nsAString & aValues, const nsAString  & aNewValue);
 
 private:
   ChangeCSSInlineStyleTxn();
@@ -105,7 +105,7 @@ private:
     * @param aValues         [IN] a list of white-space separated values
     * @param aRemoveValue    [IN] the value to remove from the list
     */
-  void   RemoveValueFromListOfValues(nsAWritableString & aValues, const nsAReadableString  & aRemoveValue);
+  void   RemoveValueFromListOfValues(nsAString & aValues, const nsAString  & aRemoveValue);
 
   /** appends 'property : value' to the string
     *
@@ -113,9 +113,9 @@ private:
     * @param aPropert        [IN] the css property string
     * @param aValues         [IN] the value string for the css property
     */
-  void   AppendDeclaration(nsAWritableString & aOutputString,
-                           nsAReadableString & aProperty,
-                           nsAReadableString & aValues);
+  void   AppendDeclaration(nsAString & aOutputString,
+                           const nsAString & aProperty,
+                           const nsAString & aValues);
 
 public:
 
@@ -127,7 +127,7 @@ public:
 
   NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
+  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription);
 
 protected:
 

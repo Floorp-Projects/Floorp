@@ -66,7 +66,7 @@ public:
     * replacing the selected text (if any).
     * @param aQuotedText  The actual text to be quoted
     */
-  NS_IMETHOD InsertAsQuotation(const nsAReadableString& aQuotedText,
+  NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText,
                                nsIDOMNode** aNodeInserted)=0;
 
   /** Paste a string as quoted text,
@@ -75,7 +75,7 @@ public:
     * @param aCitation    The "mid" URL of the source message
     * @param aSelectionType Text or html?
     */
-  NS_IMETHOD PasteAsCitedQuotation(const nsAReadableString& aCitation,
+  NS_IMETHOD PasteAsCitedQuotation(const nsAString& aCitation,
                                    PRInt32 aSelectionType)=0;
 
   /** Insert a string as quoted text
@@ -87,10 +87,10 @@ public:
     * @param aInsertHTML  Insert as html?  (vs plaintext)
     * @param aCharset     The charset of the text to be inserted
     */
-  NS_IMETHOD InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
-                                    const nsAReadableString& aCitation,
+  NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText,
+                                    const nsAString& aCitation,
                                     PRBool aInsertHTML,
-                                    const nsAReadableString& aCharset,
+                                    const nsAString& aCharset,
                                     nsIDOMNode** aNodeInserted)=0;
 
   /**

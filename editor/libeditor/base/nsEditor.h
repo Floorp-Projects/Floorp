@@ -144,7 +144,7 @@ public:
   
   NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
   NS_IMETHOD QueryComposition(nsTextEventReply* aReply);
-  NS_IMETHOD SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD ForceCompositionEnd(void);
   NS_IMETHOD GetReconversionString(nsReconversionEventReply *aReply);
@@ -152,31 +152,31 @@ public:
 public:
 
   
-  NS_IMETHOD InsertTextImpl(const nsAReadableString& aStringToInsert, 
+  NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                PRInt32 *aInOutOffset,
                                nsIDOMDocument *aDoc);
-  NS_IMETHOD InsertTextIntoTextNodeImpl(const nsAReadableString& aStringToInsert, 
+  NS_IMETHOD InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
                                            nsIDOMCharacterData *aTextNode, 
                                            PRInt32 aOffset);
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction);
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsAReadableString& aTag,
+  NS_IMETHOD DeleteSelectionAndCreateNode(const nsAString& aTag,
                                            nsIDOMNode ** aNewNode);
 
   /* helper routines for node/parent manipulations */
   nsresult ReplaceContainer(nsIDOMNode *inNode, 
                             nsCOMPtr<nsIDOMNode> *outNode, 
-                            const nsAReadableString &aNodeType,
-                            const nsAReadableString *aAttribute = nsnull,
-                            const nsAReadableString *aValue = nsnull,
+                            const nsAString &aNodeType,
+                            const nsAString *aAttribute = nsnull,
+                            const nsAString *aValue = nsnull,
                             PRBool aCloneAttributes = PR_FALSE);
 
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
-                                const nsAReadableString &aNodeType,
-                                const nsAReadableString *aAttribute = nsnull,
-                                const nsAReadableString *aValue = nsnull);
+                                const nsAString &aNodeType,
+                                const nsAString *aAttribute = nsnull,
+                                const nsAString *aValue = nsnull);
   nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
 
   /* Method to replace certain CreateElementNS() calls. 
@@ -184,7 +184,7 @@ public:
       nsString& aTag          - tag you want
       nsIContent** aContent   - returned Content that was created with above namespace.
   */
-  nsresult CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent);
+  nsresult CreateHTMLContent(const nsAString& aTag, nsIContent** aContent);
 
 protected:
 
@@ -196,19 +196,19 @@ protected:
   /** create a transaction for setting aAttribute to aValue on aElement
     */
   NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                      const nsAReadableString &  aAttribute, 
-                                      const nsAReadableString &  aValue,
+                                      const nsAString &  aAttribute, 
+                                      const nsAString &  aValue,
                                       ChangeAttributeTxn ** aTxn);
 
   /** create a transaction for removing aAttribute on aElement
     */
   NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
-                                         const nsAReadableString &  aAttribute,
+                                         const nsAString &  aAttribute,
                                          ChangeAttributeTxn ** aTxn);
 
   /** create a transaction for creating a new child node of aParent of type aTag.
     */
-  NS_IMETHOD CreateTxnForCreateElement(const nsAReadableString & aTag,
+  NS_IMETHOD CreateTxnForCreateElement(const nsAString & aTag,
                                        nsIDOMNode     *aParent,
                                        PRInt32         aPosition,
                                        CreateElementTxn ** aTxn);
@@ -237,12 +237,12 @@ protected:
   /** create a transaction for inserting aStringToInsert into aTextNode
     * if aTextNode is null, the string is inserted at the current selection.
     */
-  NS_IMETHOD CreateTxnForInsertText(const nsAReadableString & aStringToInsert,
+  NS_IMETHOD CreateTxnForInsertText(const nsAString & aStringToInsert,
                                     nsIDOMCharacterData *aTextNode,
                                     PRInt32 aOffset,
                                     InsertTextTxn ** aTxn);
 
-  NS_IMETHOD CreateTxnForIMEText(const nsAReadableString & aStringToInsert,
+  NS_IMETHOD CreateTxnForIMEText(const nsAString & aStringToInsert,
                                  IMETextTxn ** aTxn);
 
   /** create a transaction for adding a style sheet
@@ -338,7 +338,7 @@ public:
 
 
   /** return the string that represents text nodes in the content tree */
-  static nsresult GetTextNodeTag(nsAWritableString& aOutString);
+  static nsresult GetTextNodeTag(nsAString& aOutString);
 
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
@@ -442,12 +442,12 @@ public:
 
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
-  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAReadableString &aTag);
+  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAString &aTag);
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
-  PRBool CanContainTag(nsIDOMNode* aParent, const nsAReadableString &aTag);
-  PRBool TagCanContain(const nsAReadableString &aParentTag, nsIDOMNode* aChild);
-  virtual PRBool TagCanContainTag(const nsAReadableString &aParentTag, const nsAReadableString &aChildTag);
+  PRBool CanContainTag(nsIDOMNode* aParent, const nsAString &aTag);
+  PRBool TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild);
+  virtual PRBool TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildTag);
 
   /** returns PR_TRUE if aNode is our root node */
   PRBool IsRootNode(nsIDOMNode *inNode);
@@ -478,7 +478,7 @@ public:
 
 
   /** from html rules code - migration in progress */
-  static nsresult GetTagString(nsIDOMNode *aNode, nsAWritableString& outString);
+  static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
   virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
@@ -512,7 +512,7 @@ public:
                          nsCOMPtr<nsIDOMNode> *outRightNode = 0);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, PRInt32 *outOffset); 
 
-  nsresult GetString(const nsAReadableString& name, nsAWritableString& value);
+  nsresult GetString(const nsAString& name, nsAString& value);
 
   nsresult BeginUpdateViewBatch(void);
   nsresult EndUpdateViewBatch(void);

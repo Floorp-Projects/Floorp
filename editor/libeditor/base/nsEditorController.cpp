@@ -190,24 +190,24 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
  * nsIController
  * ======================================================================= */
 
-NS_IMETHODIMP nsEditorController::IsCommandEnabled(const nsAReadableString & aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::IsCommandEnabled(const nsAString & aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::SupportsCommand(const nsAReadableString & aCommand, PRBool *aResult)
+NS_IMETHODIMP nsEditorController::SupportsCommand(const nsAString & aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
 }
 
-NS_IMETHODIMP nsEditorController::DoCommand(const nsAReadableString & aCommand)
+NS_IMETHODIMP nsEditorController::DoCommand(const nsAString & aCommand)
 {
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
-NS_IMETHODIMP nsEditorController::OnEvent(const nsAReadableString & aEventName)
+NS_IMETHODIMP nsEditorController::OnEvent(const nsAString & aEventName)
 {
   return NS_OK;
 }

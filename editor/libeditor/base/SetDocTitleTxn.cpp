@@ -54,7 +54,7 @@ SetDocTitleTxn::SetDocTitleTxn()
 }
 
 NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
-                                   const nsAReadableString *aValue)
+                                   const nsAString *aValue)
 
 {
   NS_ASSERTION(aEditor && aValue, "null args");
@@ -88,7 +88,7 @@ NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
   return SetDocTitle(mValue);
 }
 
-nsresult SetDocTitleTxn::SetDocTitle(const nsAReadableString& aTitle)
+nsresult SetDocTitleTxn::SetDocTitle(const nsAString& aTitle)
 {
   NS_ASSERTION(mEditor, "bad state");
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
@@ -105,7 +105,7 @@ nsresult SetDocTitleTxn::SetDocTitle(const nsAReadableString& aTitle)
   return HTMLDoc->SetTitle(aTitle);
 }
 
-nsresult SetDocTitleTxn::SetDomTitle(const nsAReadableString& aTitle)
+nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 {
   nsCOMPtr<nsIDOMDocument>  domDoc;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -229,7 +229,7 @@ NS_IMETHODIMP SetDocTitleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("SetDocTitleTxn: "));
   aString += mValue;

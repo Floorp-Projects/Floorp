@@ -60,7 +60,7 @@ CreateElementTxn::CreateElementTxn()
 }
 
 NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
-                                     const nsAReadableString &aTag,
+                                     const nsAString &aTag,
                                      nsIDOMNode     *aParent,
                                      PRUint32        aOffsetInParent)
 {
@@ -225,7 +225,7 @@ NS_IMETHODIMP CreateElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
   return NS_OK;
 }
 
-NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAWritableString& aString)
+NS_IMETHODIMP CreateElementTxn::GetTxnDescription(nsAString& aString)
 {
   aString.Assign(NS_LITERAL_STRING("CreateElementTxn: "));
   aString += mTag;
