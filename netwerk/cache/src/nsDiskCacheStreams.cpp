@@ -178,7 +178,6 @@ nsDiskCacheInputStream::ReadSegments(nsWriteSegmentFun writer,
                                      PRUint32          count,
                                      PRUint32 *        bytesRead)
 {
-    NS_NOTREACHED("ReadSegments");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
