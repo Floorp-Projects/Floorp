@@ -37,35 +37,57 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Header file for ensuring that C99 types ([u]int32_t and boolean)
- * are available.
+ * Header file for ensuring that C99 types ([u]int32_t and bool) are
+ * available.
  */
 
 #if defined(WIN32) || defined(OS2)
-typedef int int32_t;
-typedef unsigned int uint32_t;
+  /*
+   * Win32 and OS/2 don't know C99, so define [u]int_32 here. The bool
+   * is predefined tho, both in C and C++.
+   */
+  typedef int int32_t;
+  typedef unsigned int uint32_t;
 #elif defined(_AIX) || defined(__sun)
-#include <inttypes.h>
-#ifndef __cplusplus
-typedef int bool;
-#endif /* __cplusplus */
+  /*
+   * AIX and SunOS ship a inttypes.h header that defines [u]int32_t,
+   * but not bool for C.
+   */
+  #include <inttypes.h>
+
+  #ifndef __cplusplus
+    typedef int bool;
+  #endif
 #elif defined(bsdi)
-#define bool int
+  /*
+   * BSD/OS ships headers that define [u]int32_t, but no header that
+   * defines bool for C
+   */
+
+  #if !defined(__cplusplus)
+    typedef int bool;
+  #endif
 #else
-#include <stdint.h>
+  /*
+   * For those that ship a standard C99 stdint.h header file, include
+   * it. Can't do the same for stdbool.h tho, since some systems ship
+   * with a stdbool.h file that doesn't compile!
+   */
+  #include <stdint.h>
 
-#if !defined(__GNUC__) || (__GNUC__ > 2 || __GNUC_MINOR__ > 91)
-
-#ifndef __cplusplus
-
-#ifndef bool
-typedef int bool;
-#endif /* bool */
-
-#endif /* __cplusplus */
-
-#else
-#define bool int
-#endif
-
+  #if !defined(__GNUC__) || (__GNUC__ > 2 || __GNUC_MINOR__ > 91)
+    /*
+     * Non-GCC compilers, or GCC > 2.91 need a typedef for bool
+     * (unless one already exists) for C code.
+     */
+    #if !defined(__cplusplus) && !defined(bool)
+      typedef int bool;
+    #endif
+  #else
+    /*
+     * GCC 2.91 can't deal with a typedef for bool, but a #define
+     * works.
+     */
+    #define bool int
+  #endif
 #endif
