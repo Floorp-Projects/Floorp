@@ -41,6 +41,7 @@
 #include "nsIPref.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsINetSupportDialogService.h"
 
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLDocument.h"
@@ -50,6 +51,7 @@
 
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 ///////////////////
 
 /* locks for signon cache */
@@ -76,6 +78,11 @@ struct LO_FormSubmitData_struct {
 };
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
+
+extern PRBool Wallet_GetUsingDialogsPref(void);
+extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
+extern PRBool Wallet_Confirm(char * szMessage);
+extern void Wallet_Alert(char * szMessage);
 
 /* StrAllocCopy and StrAllocCat should really be defined elsewhere */
 #include "plstr.h"
@@ -167,123 +174,94 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 
 /* temporary */
 
-extern PRBool
-Wallet_GetUsingDialogsPref(void);
-
-PRIVATE PRBool
-si_GetUsingDialogsPref(void)
-{
-    return Wallet_GetUsingDialogsPref();
-}
-
 PRBool
-MyFE_PromptUsernameAndPassword
-        (char *msg, char **username, char **password) {
-
-  if (!si_GetUsingDialogsPref()) {
-    *username = PL_strdup("your name");
-    *password = PL_strdup("your password");
-    return PR_TRUE;
+si_PromptUsernameAndPassword
+        (char *szMessage, char **szUsername, char **szPassword) {
+    nsString username;
+    nsString password;
+    PRBool retval;
+    nsINetSupportDialogService* dialog = NULL;
+    nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+    nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+    if (NS_FAILED(res)) {
+        return NULL; /* failure value */
+    }
+    if (dialog) {
+        const nsString message = szMessage;
+        dialog->PromptUserAndPassword(message, username, password, &retval);
   }
-
-  XP_Bool bResult = FALSE;
-  char buf[256];
-
-  printf("%s\n", msg);
-  printf("%cUser (default=%s): ", '\007', *username);
-  gets(buf);
-  if (strlen(buf)) {
-    *username = PL_strdup(buf);
-  }
-
-  printf("%cPassword (default=%s): ", '\007', *password);
-  gets(buf);
-  if (strlen(buf)) {
-    *password = PL_strdup(buf);
-  }
-
-  if (**username) {
-     bResult = TRUE;
-  } else {
-    PR_FREEIF(*username);
-    PR_FREEIF(*password);
-  }
-  return bResult;
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  *szUsername = username.ToNewCString();
+  *szPassword = password.ToNewCString();
+  return retval;
 }
 
 char*
-MyFE_PromptPassword (char *msg) {
-  if (!si_GetUsingDialogsPref()) {
-    return "your password";
+si_PromptPassword (char *szMessage) {
+  nsString password;
+  PRBool retval;
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
   }
-
-  char *result = nsnull;
-  char buf[256];
-  printf("%s\n", msg);
-  printf("%cPassword: ", '\007');
-  gets(buf);
-  if (PL_strlen(buf)) {
-    result = PL_strdup(buf);
+  if (dialog) {
+    const nsString message = szMessage;
+#ifdef xxx
+    /* temporary until PromptPassword is implemented */
+    nsString username;
+    dialog->PromptUserAndPassword(message, username, password, &retval);
+#else
+    dialog->PromptPassword(message, password, &retval);
+#endif
   }
-  return result;
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  if (retval) {
+    return password.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
 }
 
 char*
-MyFE_Prompt(char *msg, char* defaultUsername) {
-  if (!si_GetUsingDialogsPref()) {
-    return "your name";
+si_Prompt(char *szMessage, char* szDefaultUsername) {
+  nsString defaultUsername = szDefaultUsername;
+  nsString username;
+  PRBool retval;
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
   }
-
-  char *result = nsnull;
-  char buf[256];
-  printf("%s\n", msg);
-  printf("%cPrompt (default=%s): ", '\007', defaultUsername);
-  fgets(buf, sizeof buf, stdin);
-  if (PL_strlen(buf)) {
-    result = PL_strdup(buf);
+  if (dialog) {
+    const nsString message = szMessage;
+#ifdef xxx
+    /* temporary until Prompt is implemented */
+    nsString password;
+    dialog->PromptUser(message, username, password, &retval);
+#else
+    dialog->Prompt(message, defaultUsername, username, &retval);
+#endif
+  }
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  if (retval) {
+    return username.ToNewCString();
   } else {
-    result = PL_strdup(defaultUsername);
+    return NULL; /* user pressed cancel */
   }
-  return result;
 }
 
 PRBool
-MyFE_Confirm(const char* szMessage)
-{
-    if (!si_GetUsingDialogsPref()) {
-      return PR_TRUE;
-    }
-
-    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
-    PRBool result;
-    char c;
-    for (;;) {
-        c = getchar();
-        if (tolower(c) == 'y') {
-            result = PR_TRUE;
-            break;
-        }
-        if (tolower(c) == 'n') {
-            result = PR_FALSE;
-            break;
-        }
-    }
-
-    while (c != '\n') {
-        c = getchar();
-    }
-    return result;
-}
-
-PRBool
-MyFE_SelectDialog
+si_SelectDialog
     (const char* szMessage, char** pList, int16* pCount)
 {
     char c;
     int i;
     PRBool result;
 
-    if (!si_GetUsingDialogsPref()) {
+    if (!Wallet_GetUsingDialogsPref()) {
       *pCount = 0;
       return PR_TRUE;
     }
@@ -321,8 +299,6 @@ extern char Wallet_GetKey();
 extern PRBool Wallet_BadKey();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
-
-extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 
 void
 si_RestartKey() {
@@ -845,7 +821,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
             } else if (user_count == 1) {
                 /* only one user for this form at this url, so select it */
                 user = users[0];
-            } else if ((user_count > 1) && MyFE_SelectDialog(
+            } else if ((user_count > 1) && si_SelectDialog(
                     selectUser,
                     list, &user_count)) {
                 /* user pressed OK */
@@ -955,7 +931,7 @@ si_GetURLAndUserForChangeForm(char* password)
 
     /* query user */
     char * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
-    if (user_count && MyFE_SelectDialog(msg, list, &user_count)) {
+    if (user_count && si_SelectDialog(msg, list, &user_count)) {
         user = users[user_count];
         url = urls[user_count];
         /*
@@ -1119,7 +1095,7 @@ si_OkToSave(char *URLName, char *userName) {
         StrAllocCat(notification, message);
         PR_FREEIF(message);
         SI_SetBoolPref("signon.Notified", PR_TRUE);
-        if (!MyFE_Confirm(notification)) {
+        if (!Wallet_Confirm(notification)) {
             XP_FREE (notification);
             SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
             return PR_FALSE;
@@ -1135,7 +1111,7 @@ si_OkToSave(char *URLName, char *userName) {
     }
 
     char * message = Wallet_Localize("WantToSavePassword?");
-    if (!MyFE_Confirm(message)) {
+    if (!Wallet_Confirm(message)) {
         si_PutReject(strippedURLName, userName, PR_TRUE);
         XP_FREE(strippedURLName);
         PR_FREEIF(message);
@@ -1751,11 +1727,11 @@ SI_LoadSignonData(PRBool fullLoad) {
 
     if (fullLoad) {
       si_RestartKey();
+      char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+      char * failed = Wallet_Localize("KeyFailure");
       while (!si_SetKey()) {
-          if (!si_GetUsingDialogsPref()) {
-            return 1;
-          } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
-              MyFE_Confirm("Key failure -- password file will not be opened");
+          if (!Wallet_Confirm(message)) {
+              Wallet_Alert(failed);
               return 1;
           }
       }
@@ -2065,11 +2041,11 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
     if (fullSave) {
         si_RestartKey();
+        char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+        char * failed = Wallet_Localize("KeyFailure");
         while (!si_SetKey()) {
-            if (!si_GetUsingDialogsPref()) {
-              return 1;
-            } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
-                MyFE_Confirm("Key failure -- password file will not be opened");
+            if (!Wallet_Confirm(message)) {
+                Wallet_Alert(failed);
                 return 1;
             }
         }
@@ -2489,7 +2465,7 @@ SINGSIGN_PromptUsernameAndPassword
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        status = MyFE_PromptUsernameAndPassword
+        status = si_PromptUsernameAndPassword
                      (copyOfPrompt, username, password);
         XP_FREEIF(copyOfPrompt);
         return status;
@@ -2500,7 +2476,7 @@ SINGSIGN_PromptUsernameAndPassword
         (URLName, PR_FALSE, username, password);
 
     /* get new username/password from user */
-    status = MyFE_PromptUsernameAndPassword
+    status = si_PromptUsernameAndPassword
                  (copyOfPrompt, username, password);
 
     /* remember these values for next time */
@@ -2527,7 +2503,7 @@ SINGSIGN_PromptPassword
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        result = MyFE_PromptPassword(copyOfPrompt);
+        result = si_PromptPassword(copyOfPrompt);
         XP_FREEIF(copyOfPrompt);
         return result;
     }
@@ -2563,7 +2539,7 @@ SINGSIGN_PromptPassword
     }
 
     /* if no password found, get new password from user */
-    password = MyFE_PromptPassword(copyOfPrompt);
+    password = si_PromptPassword(copyOfPrompt);
 
     /* if username wasn't even found, extract it from URLName */
     if (!username) {
@@ -2611,7 +2587,7 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
 
     /* do the FE thing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
-        result = MyFE_Prompt(copyOfPrompt, defaultUsername);
+        result = si_Prompt(copyOfPrompt, defaultUsername);
         XP_FREEIF(copyOfPrompt);
         return result;
     }
@@ -2625,7 +2601,7 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
     }
 
     /* prompt for new username */
-    result = MyFE_Prompt(copyOfPrompt, username);
+    result = si_Prompt(copyOfPrompt, username);
 
     /* remember this username for next time */
     if (result && XP_STRLEN(result)) {
@@ -2903,625 +2879,6 @@ SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
 extern void Wallet_GetNocaptureListForViewer(nsString& aNocaptureList);
 extern void Wallet_GetNopreviewListForViewer(nsString& aNopreviewList);
 
-#ifdef xxx
-#define BUFLEN 50000
-
-PUBLIC void
-SI_MakeDialog(char* S) {
-  nsFileSpec dialogPath("res");
-  dialogPath += "samples";
-  dialogPath += "htmldlgs.htm";
-  nsOutputFileStream strm(dialogPath);
-  strm << S;
-//strm.write(S, PL_strlen(S));
-  strm.flush();
-  strm.close();
-}
-
-PUBLIC void
-SINGSIGN_DisplaySignonInfoAsHTML()
-{
-    char *buffer = (char*)XP_ALLOC(BUFLEN);
-    int g = 0;
-    char * view_signons = NULL;
-    char * view_rejects = NULL;
-    char * view_nopreview = NULL;
-    char * view_nocapture = NULL;
-    char * heading = NULL;
-
-#ifdef APPLE_KEYCHAIN
-        /* If the Keychain has been locked or an item deleted or updated,
-           we need to reload the signon data */
-        if (si_list_invalid)
-        {
-                /* set si_list_invalid to PR_FALSE first because si_RemoveAllSignonData
-                   calls si_GetSignonRememberingPref */
-            si_list_invalid = PR_FALSE;
-            si_RemoveAllSignonData();
-            SI_LoadSignonData(TRUE);
-        }
-#endif
-
-    StrAllocCopy (view_signons, Wallet_Localize("ViewSavedSignons"));
-    StrAllocCopy (view_rejects, Wallet_Localize("ViewSavedRejects"));
-    StrAllocCopy (view_nopreview, Wallet_Localize("ViewSavedNopreview"));
-    StrAllocCopy (view_nocapture, Wallet_Localize("ViewSavedNocapture"));
-
-    /* generate initial section of html file */
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"<HTML>\n"
-"<HEAD>\n"
-"  <TITLE>Signons</TITLE>\n"
-"  <SCRIPT language=\"javascript\" src=\"SignonWindow.js\"></SCRIPT>\n"
-"  <SCRIPT>\n"
-"    index_frame = 0;\n"
-"    title_frame = 1;\n"
-"    spacer1_frame = 2;\n"
-"    list_frame = 3;\n"
-"    spacer2_frame = 4;\n"
-"    button_frame = 5;\n"
-"\n"
-"    var signon_mode;\n"
-"    var signonList = [];\n"
-"    var rejectList =  [];\n"
-"    var nopreviewList =  [];\n"
-"    var nocaptureList =  [];\n"
-"    deleted_signons = new Array;\n"
-"    deleted_rejects = new Array;\n"
-"    deleted_nopreviews = new Array;\n"
-"    deleted_nocaptures = new Array;\n"
-"\n"
-"    function DeleteItemSelected() {\n"
-"      if (signon_mode == 0) {\n"
-"        DeleteSignonSelected();\n"
-"      } else if (signon_mode == 1) {\n"
-"        DeleteRejectSelected();\n"
-"      } else if (signon_mode == 2) {\n"
-"        DeleteNopreviewSelected();\n"
-"      } else if (signon_mode == 3) {\n"
-"        DeleteNocaptureSelected();\n"
-"      }\n"
-"    }\n"
-"\n"
-"    function DeleteSignonSelected() {\n"
-"      selname = top.frames[list_frame].document.fSelectSignon.selname;\n"
-"      goneS = top.frames[button_frame].document.buttons.goneS;\n"
-"      var p;\n"
-"      var i;\n"
-"      for (i=selname.options.length; i>0; i--) {\n"
-"        if (selname.options[i-1].selected) {\n"
-"          selname.options[i-1].selected = 0;\n"
-"          goneS.value = goneS.value + selname.options[i-1].value + \",\";\n"
-"          deleted_signons[selname.options[i-1].value] = 1;\n"
-"          for (j=i ; j<selname.options.length ; j++) {\n"
-"            selname.options[j-1] = selname.options[j];\n"
-"          }\n"
-"          selname.options[selname.options.length-1] = null;\n"
-"        }\n"
-"      }\n"
-"      top.loadSignonsList(); /* not needed in 4.5 */\n"
-"    }\n"
-"\n"
-"    function DeleteRejectSelected() {\n"
-"      selname = top.frames[list_frame].document.fSelectReject.selname;\n"
-"      goneR = top.frames[button_frame].document.buttons.goneR;\n"
-"      var p;\n"
-"      var i;\n"
-"      for (i=selname.options.length; i>0; i--) {\n"
-"        if (selname.options[i-1].selected) {\n"
-"          selname.options[i-1].selected = 0;\n"
-"          goneR.value = goneR.value + selname.options[i-1].value + \",\";\n"
-"          deleted_rejects[selname.options[i-1].value] = 1;\n"
-"          for (j=i; j < selname.options.length; j++) {\n"
-"            selname.options[j-1] = selname.options[j];\n"
-"          }\n"
-"          selname.options[selname.options.length-1] = null;\n"
-"        }\n"
-"      }\n"
-"      top.loadRejectsList(); /* not needed in 4.5 */\n"
-"    }\n"
-"\n"
-"    function DeleteNopreviewSelected() {\n"
-"      selname = top.frames[list_frame].document.fSelectNopreview.selname;\n"
-"      goneP = top.frames[button_frame].document.buttons.goneP;\n"
-"      var p;\n"
-"      var i;\n"
-"      for (i=selname.options.length; i>0; i--) {\n"
-"        if (selname.options[i-1].selected) {\n"
-"          selname.options[i-1].selected = 0;\n"
-"          goneP.value = goneP.value + selname.options[i-1].value + \",\";\n"
-"          deleted_nopreviews[selname.options[i-1].value] = 1;\n"
-"          for (j=i; j < selname.options.length; j++) {\n"
-"            selname.options[j-1] = selname.options[j];\n"
-"          }\n"
-"          selname.options[selname.options.length-1] = null;\n"
-"        }\n"
-"      }\n"
-"      top.loadNopreviewsList(); /* not needed in 4.5 */\n"
-"    }\n"
-"\n"
-"    function DeleteNocaptureSelected() {\n"
-"      selname = top.frames[list_frame].document.fSelectNocapture.selname;\n"
-"      goneC = top.frames[button_frame].document.buttons.goneC;\n"
-"      var p;\n"
-"      var i;\n"
-"      for (i=selname.options.length; i>0; i--) {\n"
-"        if (selname.options[i-1].selected) {\n"
-"          selname.options[i-1].selected = 0;\n"
-"          goneC.value = goneC.value + selname.options[i-1].value + \",\";\n"
-"          deleted_nocaptures[selname.options[i-1].value] = 1;\n"
-"          for (j=i; j < selname.options.length; j++) {\n"
-"            selname.options[j-1] = selname.options[j];\n"
-"          }\n"
-"          selname.options[selname.options.length-1] = null;\n"
-"        }\n"
-"      }\n"
-"      top.loadNocapturesList(); /* not needed in 4.5 */\n"
-"    }\n"
-"\n"
-        );
-
-    /* force loading of the signons file */
-    si_RegisterSignonPrefCallbacks();
-    si_lock_signon_list();
-
-    StrAllocCopy (heading, Wallet_Localize("SavedSignons"));
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"    function loadSignons(){\n"
-"      signon_mode = 0;\n"
-"      top.frames[index_frame].document.open();\n"
-"      top.frames[index_frame].document.write(\n"
-"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>\" +\n"
-"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
-"                  \"<B>%s</B>\" +\n"
-"                \"</FONT>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadRejects();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNopreviews();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNocaptures();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</BODY>\"\n"
-"      );\n"
-"      top.frames[index_frame].document.close();\n"
-"\n"
-"      top.frames[title_frame].document.open();\n"
-"      top.frames[title_frame].document.write\n"
-"        (\"&nbsp;%s\");\n"
-"      top.frames[title_frame].document.close();\n"
-"\n"
-"      loadSignonsList();\n"
-"    }\n"
-"\n"
-"    function loadSignonsList(){\n"
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.write(\n"
-"        \"<FORM name=fSelectSignon>\" +\n"
-"          \"<P>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
-"                \"<CENTER>\" +\n"
-"                  \"<P>\" +\n"
-"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
-"      );\n",
-        view_signons, view_rejects, view_nopreview, view_nocapture, heading);
-    PR_FREEIF(heading);
-
-    /* generate the html for the list of signons */
-
-            g += PR_snprintf(buffer+g, BUFLEN-g,
-"      for (i=1; i<signonList.length; i++) {\n"
-"        if (!deleted_signons[i-1]) {\n"
-"          top.frames[list_frame].document.write(signonList[i]);\n"
-"        }\n"
-"      }\n"
-            );
-
-    /* generate next section of html file */
-    StrAllocCopy (heading, Wallet_Localize("SavedRejects"));
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"      top.frames[list_frame].document.write(\n"
-"                  \"</SELECT>\" +\n"
-"                \"</CENTER>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[list_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadRejects(){\n"
-"      signon_mode = 1;\n"
-"      top.frames[index_frame].document.open();\n"
-"      top.frames[index_frame].document.write(\n"
-"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadSignons();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>\" +\n"
-"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
-"                  \"<B>%s</B>\" +\n"
-"                \"</FONT>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
-"            \"</TR>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNopreviews();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNocaptures();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</BODY>\"\n"
-"      );\n"
-"      top.frames[index_frame].document.close();\n"
-"\n"
-"      top.frames[title_frame].document.open();\n"
-"      top.frames[title_frame].document.write\n"
-"        (\"&nbsp;%s\");\n"
-"      top.frames[title_frame].document.close();\n"
-"\n"
-"      loadRejectsList();\n"
-"    }\n"
-"\n"
-"    function loadRejectsList(){\n"
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.write(\n"
-"        \"<FORM name=fSelectReject>\" +\n"
-"          \"<P>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
-"                \"<CENTER>\" +\n"
-"                  \"<P>\" +\n"
-"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
-"      );\n",
-        view_signons, view_rejects, view_nopreview, view_nocapture, heading);
-    PR_FREEIF(heading);
-
-    /* generate the html for the list of rejects */
-
-            g += PR_snprintf(buffer+g, BUFLEN-g,
-"      for (i=1; i<rejectList.length; i++) {\n"
-"        if (!deleted_rejects[i-1]) {\n"
-"          top.frames[list_frame].document.write(rejectList[i]);\n"
-"        }\n"
-"      }\n"
-            );
-
-    /* generate next section of html file */
-    StrAllocCopy (heading, Wallet_Localize("SavedNopreviews"));
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"      top.frames[list_frame].document.write(\n"
-"                  \"</SELECT>\" +\n"
-"                \"</CENTER>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[list_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadNopreviews(){\n"
-"      signon_mode = 2;\n"
-"      top.frames[index_frame].document.open();\n"
-"      top.frames[index_frame].document.write(\n"
-"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadSignons();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadRejects();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>\" +\n"
-"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
-"                  \"<B>%s</B>\" +\n"
-"                \"</FONT>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNocaptures();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</BODY>\"\n"
-"      );\n"
-"      top.frames[index_frame].document.close();\n"
-"\n"
-"      top.frames[title_frame].document.open();\n"
-"      top.frames[title_frame].document.write\n"
-"        (\"&nbsp;%s\");\n"
-"      top.frames[title_frame].document.close();\n"
-"\n"
-"      loadNopreviewsList();\n"
-"    }\n"
-"\n"
-"    function loadNopreviewsList(){\n"
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.write(\n"
-"        \"<FORM name=fSelectNopreview>\" +\n"
-"          \"<P>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
-"                \"<CENTER>\" +\n"
-"                  \"<P>\" +\n"
-"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
-"      );\n",
-        view_signons, view_rejects, view_nopreview, view_nocapture, heading);
-    PR_FREEIF(heading);
-
-    /* generate the html for the list of nopreviews */
-
-            g += PR_snprintf(buffer+g, BUFLEN-g,
-"      for (i=1; i<nopreviewList.length; i++) {\n"
-"        if (!deleted_nopreviews[i-1]) {\n"
-"          top.frames[list_frame].document.write(nopreviewList[i]);\n"
-"        }\n"
-"      }\n"
-            );
-
-    /* generate next section of html file */
-    StrAllocCopy (heading, Wallet_Localize("SavedNocaptures"));
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"      top.frames[list_frame].document.write(\n"
-"                  \"</SELECT>\" +\n"
-"                \"</CENTER>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[list_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadNocaptures(){\n"
-"      signon_mode = 3;\n"
-"      top.frames[index_frame].document.open();\n"
-"      top.frames[index_frame].document.write(\n"
-"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadSignons();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadRejects();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
-"                \"<A HREF=javascript:top.loadNopreviews();>\" +\n"
-"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
-"                \"</A>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>\" +\n"
-"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
-"                  \"<B>%s</B>\" +\n"
-"                \"</FONT>\" +\n"
-"              \"</TD>\" +\n"
-"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</BODY>\"\n"
-"      );\n"
-"      top.frames[index_frame].document.close();\n"
-"\n"
-"      top.frames[title_frame].document.open();\n"
-"      top.frames[title_frame].document.write\n"
-"        (\"&nbsp;%s\");\n"
-"      top.frames[title_frame].document.close();\n"
-"\n"
-"      loadNocapturesList();\n"
-"    }\n"
-"\n"
-"    function loadNocapturesList(){\n"
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.write(\n"
-"        \"<FORM name=fSelectNocapture>\" +\n"
-"          \"<P>\" +\n"
-"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
-"                \"<CENTER>\" +\n"
-"                  \"<P>\" +\n"
-"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
-"      );\n",
-        view_signons, view_rejects, view_nopreview, view_nocapture, heading);
-    PR_FREEIF(heading);
-
-    /* generate the html for the list of nocaptures */
-
-            g += PR_snprintf(buffer+g, BUFLEN-g,
-"      for (i=1; i<nocaptureList.length; i++) {\n"
-"        if (!deleted_nocaptures[i-1]) {\n"
-"          top.frames[list_frame].document.write(nocaptureList[i]);\n"
-"        }\n"
-"      }\n"
-            );
-
-    /* generate next section of html file */
-    StrAllocCopy (heading, Wallet_Localize("SavedRejects"));
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"      top.frames[list_frame].document.write(\n"
-"                  \"</SELECT>\" +\n"
-"                \"</CENTER>\" +\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[list_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadButtons(){\n"
-"      top.frames[button_frame].document.open();\n"
-"      top.frames[button_frame].document.write(\n"
-"        \"<FORM name=buttons>\" +\n"
-"          \"<BR>\" +\n"
-"          \"&nbsp;\" +\n"
-"          \"<INPUT type=BUTTON \" +\n"
-"                 \"value=Remove \" +\n"
-"                 \"onclick=top.DeleteItemSelected();>\" +\n"
-"          \"<DIV align=right>\" +\n"
-"            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.Save()>\" +\n"
-"            \" &nbsp;&nbsp;\" +\n"
-"            \"<INPUT type=BUTTON value=Cancel width=80 onclick=parent.DoCancel()>\" +\n"
-"          \"</DIV>\" +\n"
-        );
-
-    /* generate remainder of html */
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"          \"<INPUT TYPE=HIDDEN NAME=goneS VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=goneR VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=goneP VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=goneC VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=signonList VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=rejectList VALUE=\\\"\\\" SIZE=-1>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[button_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadFrames(){\n"
-"      StartUp(\"Signons\");\n"
-"      list = DoGetSignonList();\n"
-"      BREAK = list[0];\n"
-"      signonList = list.split(BREAK);\n"
-"      list = DoGetRejectList();\n"
-"      BREAK = list[0];\n"
-"      rejectList = list.split(BREAK);\n"
-"      list = DoGetNopreviewList();\n"
-"      BREAK = list[0];\n"
-"      nopreviewList = list.split(BREAK);\n"
-"      list = DoGetNocaptureList();\n"
-"      BREAK = list[0];\n"
-"      nocaptureList = list.split(BREAK);\n"
-"      loadSignons();\n"
-"      loadButtons();\n"
-"    }\n"
-"\n"
-"    function Save(){\n"
-"      var goneS = top.frames[button_frame].document.buttons.goneS;\n"
-"      var goneR = top.frames[button_frame].document.buttons.goneR;\n"
-"      var goneP = top.frames[button_frame].document.buttons.goneP;\n"
-"      var goneC = top.frames[button_frame].document.buttons.goneC;\n"
-"      var result = \"|goneS|\"+goneS.value+\"|goneR|\"+goneR.value;\n"
-"      result += \"|goneC|\"+goneC.value+\"|goneP|\"+goneP.value+\"|\";\n"
-"      DoSave(result);\n"
-"    }\n"
-"\n"
-"  </SCRIPT>\n"
-"</HEAD>\n"
-"<FRAMESET ROWS = 50,25,*,75\n"
-"         BORDER=0\n"
-"         FRAMESPACING=0\n"
-"         onLoad=loadFrames()>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=index_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=title_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"  <FRAMESET COLS=5,*,5\n"
-"           BORDER=0\n"
-"           FRAMESPACING=0>\n"
-"    <FRAME SRC=about:blank\n"
-"          NAME=spacer1_frame\n"
-"          SCROLLING=AUTO\n"
-"          MARGINWIDTH=0\n"
-"          MARGINHEIGHT=0\n"
-"          NORESIZE>\n"
-"    <FRAME SRC=about:blank\n"
-"          NAME=list_frame\n"
-"          SCROLLING=AUTO\n"
-"          MARGINWIDTH=0\n"
-"          MARGINHEIGHT=0\n"
-"          NORESIZE>\n"
-"    <FRAME SRC=about:blank\n"
-"          NAME=spacer2_frame\n"
-"          SCROLLING=AUTO\n"
-"          MARGINWIDTH=0\n"
-"          MARGINHEIGHT=0\n"
-"          NORESIZE>\n"
-"  </FRAMESET>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=button_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"</FRAMESET>\n"
-"\n"
-"<NOFRAMES>\n"
-"  <BODY> <P> </BODY>\n"
-"</NOFRAMES>\n"
-"</HTML>\n"
-        );
-
-    si_unlock_signon_list();
-
-    /* free some strings that are no longer needed */
-    PR_FREEIF(view_signons);
-    PR_FREEIF(view_rejects);
-
-    SI_MakeDialog(buffer);
-    PR_FREEIF(buffer);
-}
-
-#else // not xxx
 PUBLIC void
 SINGSIGN_DisplaySignonInfoAsHTML()
 {
@@ -3541,7 +2898,6 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     /* force loading of the signons file */
     si_RegisterSignonPrefCallbacks();
 }
-#endif
 
 #else
 #include "prtypes.h"

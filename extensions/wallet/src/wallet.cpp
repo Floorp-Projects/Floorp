@@ -37,6 +37,7 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
+#include "nsINetSupportDialogService.h"
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
 #include "nsIFileLocator.h"
@@ -53,6 +54,8 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -419,48 +422,89 @@ Wallet_Localize(char* genericString) {
   return v.ToNewCString();
 }
 
-/*********************************************/
-/* Temporary until we have a real dialog box */
-/*********************************************/
+/**********************/
+/* Modal dialog boxes */
+/**********************/
 
-PRBool FE_Confirm(char * szMessage) {
-  if (!Wallet_GetUsingDialogsPref()) {
-    return PR_TRUE;
+PUBLIC PRBool
+Wallet_Confirm(char * szMessage) {
+  PRBool retval = PR_TRUE; /* default value */
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return retval;
   }
-  fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
-  PRBool result;
-  char c;
-  for (;;) {
-    c = getchar();
-    if (tolower(c) == 'y') {
-      result = PR_TRUE;
-      break;
-    }
-    if (tolower(c) == 'n') {
-      result = PR_FALSE;
-      break;
-    }
+  if (dialog) {
+    const nsString message = szMessage;
+    dialog->Confirm(message, &retval);
   }
-  while (c != '\n') {
-    c = getchar();
-  }
-  return result;
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  return retval;
 }
 
-char * FE_GetString(char * szMessage) {
-  nsAutoString v("");
-  if (Wallet_GetUsingDialogsPref()) {
-    fprintf(stdout, "%c%s", '\007', szMessage);
-    char c;
-    for (;;) {
-      c = getchar();
-      if (c == '\n') {
-        break;
-      }
-      v += c;
+PUBLIC void
+Wallet_Alert(char * szMessage) {
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return;
+  }
+  if (dialog) {
+    const nsString message = szMessage;
+    dialog->Alert(message);
+  }
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  return;
+}
+
+PUBLIC PRBool
+Wallet_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
+  PRBool retval = PR_TRUE; /* default value */
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+  if (dialog) {
+    const nsString message = szMessage;
+    const nsString checkMessage = szCheckMessage;
+    dialog->ConfirmCheck(message, checkMessage, &retval, checkValue);
+    if (*checkValue!=0 && *checkValue!=1) {
+      *checkValue = 0; /* this should never happen but it is happening!!! */
     }
   }
-  return v.ToNewCString();
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  return retval;
+}
+
+char * wallet_GetString(char * szMessage) {
+  nsString password;
+  PRBool retval;
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return NULL; /* failure value */
+  }
+  if (dialog) {
+    const nsString message = szMessage;
+#ifdef xxx
+    /* temporary until PromptPassword is implemented */
+    nsString username;
+    dialog->PromptUserAndPassword(message, username, password, &retval);
+#else
+    dialog->PromptPassword(message, password, &retval);
+#endif
+  }
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  if (retval) {
+    return password.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
 }
 
 /**********************************************************************************/
@@ -726,35 +770,34 @@ wallet_KeyExists() {
 }
 
 PUBLIC PRBool
-Wallet_SetKey(PRBool newkey) {
-  if (keySet && !newkey) {
+Wallet_SetKey(PRBool isNewkey) {
+  if (keySet && !isNewkey) {
     return PR_TRUE;
   }
 
   Wallet_RestartKey();
 
   /* ask the user for his key */
-  if (!Wallet_GetUsingDialogsPref()) {
-    key[keyPosition++] = '~';
+  char * password;
+  if (isNewkey) {
+    password = Wallet_Localize("newPassword");
   } else {
-    char * password;
-    if (newkey) {
-      password = Wallet_Localize("newPassword");
-    } else {
-      password = Wallet_Localize("password");
-    }
-    char * newkey = FE_GetString(password);
-    PR_FREEIF(password);
-    for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
-      key[keyPosition] = newkey[keyPosition];
-    }
-    key[keyPosition] = '\0';
-    PR_FREEIF(newkey);
+    password = Wallet_Localize("password");
   }
+  char * newkey = wallet_GetString(password);
+  if (newkey == NULL) {
+    return PR_FALSE;
+  }
+  PR_FREEIF(password);
+  for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
+    key[keyPosition] = newkey[keyPosition];
+  }
+  key[keyPosition] = '\0';
+  PR_FREEIF(newkey);
   Wallet_RestartKey();
 
   /* verify this with the saved key */
-  if (newkey || !wallet_KeyExists()) {
+  if (isNewkey || !wallet_KeyExists()) {
 
     /*
      * Either key is to be changed or the file containing the saved key doesn' exist.
@@ -1443,8 +1486,8 @@ wallet_Initialize() {
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     char * failed = Wallet_Localize("KeyFailure");
     while (!Wallet_SetKey(PR_FALSE)) {
-      if (!FE_Confirm(message) || !Wallet_GetUsingDialogsPref()) {
-        FE_Confirm(failed);
+      if (!Wallet_Confirm(message)) {
+        Wallet_Alert(failed);
         PR_FREEIF(message);
         PR_FREEIF(failed);
         return;
@@ -2425,10 +2468,11 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   /* ask user if we should capture the values on this form */
   if (!isWalletEditor && wallet_GetFormsCapturingPref() && (count>=3)) {
     char * message = Wallet_Localize("WantToCaptureForm?");
-    *result = FE_Confirm(message);
+    char * checkMessage = Wallet_Localize("NeverSave");
+    PRBool checkValue;
+    *result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
     if (!(*result)) {
-      char * message2 = Wallet_Localize("RememberThisDecision");
-      if (FE_Confirm(message2)) {
+      if (checkValue) {
         /* add URL to list with NO_CAPTURE indicator set */
         value->SetCharAt('y', NO_CAPTURE);
         wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
@@ -2436,8 +2480,8 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
       } else {
         delete url;
       }
-      PR_FREEIF(message2);
     }
+    PR_FREEIF(checkMessage);
     PR_FREEIF(message);
   } else {
     *result = PR_FALSE;
