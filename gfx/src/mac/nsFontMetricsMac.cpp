@@ -71,8 +71,6 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   FontInfo fInfo;
   GetFontInfo(&fInfo);
   
-  FetchFontInfo(theStyle.tsFont, theStyle.tsSize, theStyle.tsFace, &fInfo);
-  
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
 
