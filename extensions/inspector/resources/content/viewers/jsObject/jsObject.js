@@ -193,11 +193,12 @@ JSObjectViewer.prototype =
   
   buildPropertyTree: function(aTreeChildren, aObject)
   {
-    try {
-      for (var prop in aObject)
+    for (var prop in aObject) {
+      try {
         this.addTreeItem(aTreeChildren, prop, aObject[prop], aObject);
-    } catch (ex) {
-      // hide unsightly NOT YET IMPLEMENTED errors when accessing certain properties
+      } catch (ex) {
+        // hide unsightly NOT YET IMPLEMENTED errors when accessing certain properties
+      }
     }
   },
   
@@ -207,12 +208,21 @@ JSObjectViewer.prototype =
     ti.__JSObject__ = aObject;
     ti.__JSValue__ = aValue;
     
-    var value = aValue.toString();
-    value = value.replace(/\n|\r|\t/, " ");
+    var value;
+    if (aValue === null) {
+      value = "(null)"
+    } else {
+      try {
+        value = aValue.toString();
+        value = value.replace(/\n|\r|\t|\v/g, " ");
+      } catch (ex) {
+        value = "";
+      }
+    }
     
     ti.setAttribute("typeOf", typeof(aValue));
 
-    if (typeof(aValue) == "object") {
+    if (typeof(aValue) == "object" && aValue !== null) {
       ti.setAttribute("container", "true");
     } else if (typeof(aValue) == "string")
       value = "\"" + value + "\"";
@@ -225,6 +235,9 @@ JSObjectViewer.prototype =
     tr.appendChild(tc);
     tc = document.createElement("treecell");
     tc.setAttribute("label", value);
+    if (aValue === null) {
+      tc.setAttribute("class", "inspector-null-value-treecell");
+    }
     if (aName == "nodeType")
       tc.setAttribute("tooltiptext", nodeTypeToText(aValue));
     tr.appendChild(tc);
