@@ -58,7 +58,6 @@ EX_LIBS = \
 	$(DIST)/bin/libpng.so \
 	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
 	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libgmbaseunix.so \
@@ -79,9 +78,11 @@ ifdef MOZ_OJI
 endif
 
 ifeq ($(USE_NGLAYOUT_GTK),1)
-EX_LIBS += $(DIST)/bin/libgfxgtk.so
+EX_LIBS += $(DIST)/bin/libgfxgtk.so \
+	$(DIST)/bin/libwidgetgtk.so
 else
-EX_LIBS += $(DIST)/bin/libgfxunix.so
+EX_LIBS += $(DIST)/bin/libgfxunix.so \
+	$(DIST)/bin/libwidgetunix.so
 endif
 
 EX_LIBS += \
