@@ -51,7 +51,6 @@ protected:
     nsCAutoString mBuf;
     PRInt32 mOffset;
 
-    nsCOMPtr<nsIFile> mDir;
     PRInt32 mPos;
     nsVoidArray mArray;
     
@@ -61,10 +60,16 @@ protected:
     nsCOMPtr<nsITextToSubURI> mTextToSubURI;
 
     nsDirectoryIndexStream();
+    /**
+     * aDir will only be used on the calling thread.
+     */ 
     nsresult Init(nsIFile* aDir);
     virtual ~nsDirectoryIndexStream();
 
 public:
+    /**
+     * aDir will only be used on the calling thread.
+     */ 
     static nsresult
     Create(nsIFile* aDir, nsIInputStream** aStreamResult);
 
