@@ -79,6 +79,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
+#include "nsIBrowserHistory.h"
 #include "nsIUrlbarHistory.h"
 
 #include "nsIDOMXULDocument.h"
@@ -1467,7 +1468,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
             break;
           }
           case 2: {
-            nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+            nsCOMPtr<nsIBrowserHistory> history(do_GetService(kCGlobalHistoryCID));
             if (history) {
               nsXPIDLCString curl;
               rv = history->GetLastPageVisited(getter_Copies(curl));
