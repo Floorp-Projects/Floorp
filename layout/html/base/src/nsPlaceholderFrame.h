@@ -34,6 +34,7 @@ public:
   nsIFrame*   GetAnchoredItem() const { return mFirstChild; }
 
   // nsIFrame overrides
+  NS_IMETHOD  DeleteFrame();
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,

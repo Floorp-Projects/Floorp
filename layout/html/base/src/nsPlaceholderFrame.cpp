@@ -53,6 +53,17 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 NS_IMETHODIMP
+nsPlaceholderFrame::DeleteFrame()
+{
+  // XXX This is sick, but because the frame that we wrap is *also*
+  // added to the body as a direct child, we must not delete the child
+  // twice.
+  mFirstChild = nsnull;
+
+  return nsContainerFrame::DeleteFrame();
+}
+
+NS_IMETHODIMP
 nsPlaceholderFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
@@ -92,6 +103,7 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
       if (tmp.EqualsIgnoreCase("select")) {
         select = PR_TRUE;
       }
+      NS_RELEASE(atom);
     }
     // XXX end hack
 
