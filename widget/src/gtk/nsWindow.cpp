@@ -1020,8 +1020,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   // set our background color to make people happy.
 
-  SetBackgroundColor(NS_RGB(192,192,192));
-  //gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+  // SetBackgroundColor(NS_RGB(192,192,192));
+
+  gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
   // track focus in and focus out events for the shell
   if (mShell) {
@@ -1131,6 +1132,15 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   if (mSuperWin) {
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
+    // hard process the expose events.  this will force the handling
+    // of the Expose and ConfigureNotify events that we just created
+    // by scrolling the window
+    gdk_superwin_hard_process_exposes(mSuperWin);
+    // sync the update
+    mIsUpdating = PR_FALSE;
+    Update();
+    // flush the event queue to make sure that the draw events get there.
+    XFlush(GDK_DISPLAY());
   }
   return NS_OK;
 }
@@ -2004,6 +2014,7 @@ nsWindow::HandleXlibCrossingEvent(XCrossingEvent * aCrossingEvent)
 void
 nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
 {
+#if 0
   XEvent    config_event;
 
   while (XCheckTypedWindowEvent(event->xany.display, 
@@ -2028,7 +2039,9 @@ nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
 #endif
   }
 
-  gdk_superwin_clear_translate_queue(mSuperWin, event->xany.serial);
+  // gdk_superwin_clear_translate_queue(mSuperWin, event->xany.serial);
+
+#endif
 
   if (mIsToplevel) {
     nsSizeEvent sevent;

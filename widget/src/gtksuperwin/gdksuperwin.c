@@ -360,3 +360,63 @@ gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial)
   }
 }
 
+/* This function is generally used after you scroll the window.  It
+ * will hunt through the translation queue for this window and make
+ * sure that all of the Expose and ConfigureNotify events that could
+ * have been part of the translation queue get processed.
+ *
+ * Additionally, it makes sure that any Expose events that are still
+ * in the queue get processed for good measure.  When scrolling this
+ * make it look a lot smoother in Mozilla along the edges. */
+
+void gdk_superwin_hard_process_exposes(GdkSuperWin *superwin)
+{
+  XEvent xevent;
+  
+  GList *tmp_list;
+
+  GdkSuperWinTranslate *translate;
+  
+  // wait for the window event
+  while (superwin->translate_queue)
+  {
+    XWindowEvent(GDK_DISPLAY(),
+                 GDK_WINDOW_XWINDOW(superwin->bin_window),
+                 ( ExposureMask | SubstructureNotifyMask ),
+                 &xevent);
+    switch(xevent.xany.type) {
+    case Expose:
+      tmp_list = superwin->translate_queue;
+      while (tmp_list)
+      {
+        translate = tmp_list->data;
+        xevent.xexpose.x += translate->dx;
+        xevent.xexpose.y += translate->dy;
+        tmp_list = tmp_list->next;
+      }
+      if (superwin->bin_func)
+        superwin->bin_func(superwin, &xevent, superwin->func_data);
+      break;
+    case ConfigureNotify:
+      gdk_superwin_clear_translate_queue(superwin, xevent.xany.serial);
+      break;
+    }
+  }
+  /* try to pull all the exposes out, too. */
+  while (XCheckTypedWindowEvent(GDK_DISPLAY(),
+                                GDK_WINDOW_XWINDOW(superwin->bin_window),
+                                Expose,
+                                &xevent) == True)
+  {
+   tmp_list = superwin->translate_queue;
+   while (tmp_list)
+   {
+     translate = tmp_list->data;
+     xevent.xexpose.x += translate->dx;
+     xevent.xexpose.y += translate->dy;
+     tmp_list = tmp_list->next;
+   }
+   if (superwin->bin_func)
+     superwin->bin_func(superwin, &xevent, superwin->func_data);
+  }
+}

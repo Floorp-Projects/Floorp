@@ -83,6 +83,7 @@ void gdk_superwin_resize (GdkSuperWin *superwin,
 void gdk_superwin_destroy(GdkSuperWin *superwin);
 void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin,
                                         unsigned long serial);
+void gdk_superwin_hard_process_exposes(GdkSuperWin *superwin);
 
 #ifdef __cplusplus
 }
