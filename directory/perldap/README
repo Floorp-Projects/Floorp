@@ -93,11 +93,14 @@ Mozilla::LDAP::LDIF - Perl methods for utilizing LDIF
 test_api/search.pl - Tests low level API search calls
 test_api/write.pl  - Tests low level API write calls
 test_api/api.pl - Tests ALL low level LDAPv2 calls
-examples/lfinger.pl
-examples/qsearch.pl
-examples/monitor.pl
-examples/ldappasswd.pl
-examples/rmentry.pl
+examples/lfinger.pl - LDAP version of the regular Unix finger command.
+examples/qsearch.pl - Simple ldapsearch replacement.
+examples/monitor.pl - Retrieve status information from an LDAP server.
+examples/ldappasswd.pl - Change the LDAP password for a user.
+examples/rmentry.pl - Remove an entire entry from the database.
+examples/rename.pl - Rename (modRDN) an entry.
+examples/tabdump.pl - Dump LDAP information into a tab separated file.
+examples/psoftsync.pl - Synchronize LDAP with a PeopleSoft "dump" file.
 
 
 License/Copyright
@@ -119,5 +122,3 @@ of these are already in the process of being resolved.
  - The Rebind operation on NT does NOT work properly when set to a Perl
    function.  This is being investigated.
  - Some of the documentation is incomplete.
-
-
