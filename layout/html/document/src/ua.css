@@ -517,3 +517,19 @@ NOFRAMES {
   margin-bottom: inherit;
   background: inherit;
 }
+
+:TABLE-COLUMN {
+	display: table-column;
+}
+
+:TABLE-COLUMN-GROUP {
+	display: table-column-group;
+}
+
+:TABLE-ROW {
+	display: table-row;
+}
+
+:TABLE-ROW-GROUP {
+	display: table-row-group;
+}
