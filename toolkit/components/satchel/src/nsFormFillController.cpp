@@ -45,6 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChromeEventHandler.h"
 #include "nsPIDOMWindow.h"
