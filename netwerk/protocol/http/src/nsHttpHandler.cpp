@@ -1597,7 +1597,7 @@ nsHttpHandler::GetVendor(char **aVendor)
 NS_IMETHODIMP
 nsHttpHandler::SetVendor(const char *aVendor)
 {
-    mVendor.Adopt(nsCRT::strdup(aVendor));
+    mVendor.Adopt(aVendor ? nsCRT::strdup(aVendor) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1610,7 +1610,7 @@ nsHttpHandler::GetVendorSub(char **aVendorSub)
 NS_IMETHODIMP
 nsHttpHandler::SetVendorSub(const char *aVendorSub)
 {
-    mVendorSub.Adopt(nsCRT::strdup(aVendorSub));
+    mVendorSub.Adopt(aVendorSub ? nsCRT::strdup(aVendorSub) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1623,7 +1623,7 @@ nsHttpHandler::GetVendorComment(char **aVendorComment)
 NS_IMETHODIMP
 nsHttpHandler::SetVendorComment(const char *aVendorComment)
 {
-    mVendorComment.Adopt(nsCRT::strdup(aVendorComment));
+    mVendorComment.Adopt(aVendorComment ? nsCRT::strdup(aVendorComment) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1636,7 +1636,7 @@ nsHttpHandler::GetProduct(char **aProduct)
 NS_IMETHODIMP
 nsHttpHandler::SetProduct(const char *aProduct)
 {
-    mProduct.Adopt(nsCRT::strdup(aProduct));
+    mProduct.Adopt(aProduct ? nsCRT::strdup(aProduct) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1649,7 +1649,7 @@ nsHttpHandler::GetProductSub(char **aProductSub)
 NS_IMETHODIMP
 nsHttpHandler::SetProductSub(const char *aProductSub)
 {
-    mProductSub.Adopt(nsCRT::strdup(aProductSub));
+    mProductSub.Adopt(aProductSub ? nsCRT::strdup(aProductSub) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1662,7 +1662,7 @@ nsHttpHandler::GetProductComment(char **aProductComment)
 NS_IMETHODIMP
 nsHttpHandler::SetProductComment(const char *aProductComment)
 {
-    mProductComment.Adopt(nsCRT::strdup(aProductComment));
+    mProductComment.Adopt(aProductComment ? nsCRT::strdup(aProductComment) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1687,7 +1687,7 @@ nsHttpHandler::GetLanguage(char **aLanguage)
 NS_IMETHODIMP
 nsHttpHandler::SetLanguage(const char *aLanguage)
 {
-    mLanguage.Adopt(nsCRT::strdup(aLanguage));
+    mLanguage.Adopt(aLanguage ? nsCRT::strdup(aLanguage) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
@@ -1700,7 +1700,7 @@ nsHttpHandler::GetMisc(char **aMisc)
 NS_IMETHODIMP
 nsHttpHandler::SetMisc(const char *aMisc)
 {
-    mMisc.Adopt(nsCRT::strdup(aMisc));
+    mMisc.Adopt(aMisc ? nsCRT::strdup(aMisc) : 0);
     mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }

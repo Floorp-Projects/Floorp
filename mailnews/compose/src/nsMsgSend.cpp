@@ -1133,7 +1133,10 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 
   nsXPIDLCString turl;
   if (!ma->mURL)
-    turl.Adopt(nsCRT::strdup(ma->m_uri));
+    {
+      if (ma->m_uri)
+        turl.Adopt(nsCRT::strdup(ma->m_uri));
+    }
   else
     ma->mURL->GetSpec(getter_Copies(turl));
   hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,

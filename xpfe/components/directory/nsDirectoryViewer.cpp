@@ -1295,7 +1295,7 @@ void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
   if (!url) {
      const char* temp;
      r->GetValueConst(&temp);
-     dest.Adopt(nsCRT::strdup(temp));
+     dest.Adopt(temp ? nsCRT::strdup(temp) : 0);
   } else {
     const PRUnichar* uri;
     url->GetValueConst(&uri);

@@ -152,7 +152,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetDestinationFolderURI(char * *aDestin
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetDestinationFolderURI(const char * aDestinationFolderURI)
 {
-  m_moveDestination.Adopt(nsCRT::strdup(aDestinationFolderURI));
+  m_moveDestination.Adopt(aDestinationFolderURI ? nsCRT::strdup(aDestinationFolderURI) : 0);
   return m_mdb->SetProperty(m_mdbRow, PROP_MOVE_DEST_FOLDER_URI, aDestinationFolderURI);
 }
 
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetSourceFolderURI(char * *aSourceFolde
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSourceFolderURI)
 {
-  m_sourceFolder.Adopt(nsCRT::strdup(aSourceFolderURI));
+  m_sourceFolder.Adopt(aSourceFolderURI ? nsCRT::strdup(aSourceFolderURI) : 0);
   SetOperation(kMoveResult);
 
   return m_mdb->SetProperty(m_mdbRow, PROP_SRC_FOLDER_URI, aSourceFolderURI);

@@ -4742,7 +4742,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
         nsXPIDLCString sourceFolderURI;
         srcFolder->GetURI(getter_Copies(sourceFolderURI));
         nsXPIDLCString originalSrcFolderURI;
-        originalSrcFolderURI.Adopt(nsCRT::strdup(sourceFolderURI.get()));
+        if (sourceFolderURI.get())
+          originalSrcFolderURI.Adopt(nsCRT::strdup(sourceFolderURI.get()));
         nsCOMPtr<nsISupports> msgSupports;
         nsCOMPtr<nsIMsgDBHdr> message;
         
@@ -4782,7 +4783,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
               srcFolder->GetURI(getter_Copies(srcFolderURI));
               sourceOp->GetSourceFolderURI(getter_Copies(originalString));
               sourceOp->GetMessageKey(&originalKey);
-              originalSrcFolderURI.Adopt(nsCRT::strdup(originalString.get()));
+              originalSrcFolderURI.Adopt(originalString.get() ? nsCRT::strdup(originalString.get()) : 0);
               
               if (isMove)
                 sourceMailDB->RemoveOfflineOp(sourceOp);
