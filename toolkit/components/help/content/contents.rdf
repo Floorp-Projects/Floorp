@@ -39,11 +39,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE RDF:RDF [
-    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
-    %brandDTD;
-]>
-
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
@@ -54,14 +49,7 @@
 
 # Package Description
     <RDF:Description RDF:about="urn:mozilla:package:help"
-        chrome:displayName="&brandFullName; Help"
-        chrome:author="mozilla.org"
-        chrome:name="help"
-        chrome:localeVersion="0.6"
-        chrome:authorURL="http://www.mozilla.org/"
-        chrome:skinVersion="1.5"
-        chrome:description="Help Documentation for &brandFullName;"
-        chrome:extension="false"/>
+        chrome:name="help" />
 
 # Overlays Points
     <RDF:Seq RDF:about="urn:mozilla:overlays">
@@ -82,9 +70,4 @@
         <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
     </RDF:Seq>
 #endif
-# Version Information.  State that we work only with major version 1 of this
-# package.
-    <RDF:Description about="urn:mozilla:skin:classic/1.0:help"
-        chrome:skinVersion="1.5"/>
-
 </RDF:RDF>
