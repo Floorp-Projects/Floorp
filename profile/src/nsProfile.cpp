@@ -145,6 +145,7 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
+static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 
@@ -356,21 +357,26 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
 	// if we get here, and we don't have a current profile, 
 	// return a failure so we will exit
 	// this can happen, if the user hits Exit in the profile manager dialog
-	char *currentProfileStr = nsnull;
-	rv = GetCurrentProfile(&currentProfileStr);
-	if (NS_FAILED(rv) || !currentProfileStr || (PL_strlen(currentProfileStr) == 0)) {
+    nsXPIDLCString currentProfileStr;
+	rv = GetCurrentProfile(getter_Copies(currentProfileStr));
+	if (NS_FAILED(rv) || !((const char *)currentProfileStr) || (PL_strlen((const char *)currentProfileStr) == 0)) {
 		return NS_ERROR_FAILURE;
 	}
     mCurrentProfileAvailable = PR_TRUE;
 
     if (pregEnabled)
-	    TriggerActivation(currentProfileStr);
+	    TriggerActivation((const char *)currentProfileStr);
 
     // Now we have the right profile, read the user-specific prefs.
     rv = prefs->ReadUserPrefs();
+    if (NS_FAILED(rv)) return rv;
 
-    PR_FREEIF(currentProfileStr); 
-    
+    nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
+
+    if (NS_FAILED(rv)) return rv;
+    if (!pPrefConverter) return NS_ERROR_FAILURE;
+
+    rv = pPrefConverter->ConvertPrefsToUTF8IfNecessary();
 	return rv;
 }
 
@@ -382,7 +388,9 @@ nsProfile::AutoMigrate()
 	rv = MigrateAllProfiles();
 	if (NS_FAILED(rv)) 
 	{
+#ifdef DEBUG_profile
 		printf("AutoMigration failed. Let's create a default 5.0 profile.\n");
+#endif
         
 		rv = CreateDefaultProfile();
 		if (NS_FAILED(rv)) return rv;
@@ -1182,16 +1190,15 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProg
     newSpec->GetFileSpec(&newProfDir);
 	newProfDir += profileName;
 
-
 	// Call migration service to do the work.
-	nsCOMPtr <nsIPrefMigration> pPrefMigrator;
+    nsCOMPtr <nsIPrefMigration> pPrefMigrator;
+    rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
+        nsnull,
+        NS_GET_IID(nsIPrefMigration),
+        getter_AddRefs(pPrefMigrator));
 
-
-	rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
-                                          nsnull,
-					NS_GET_IID(nsIPrefMigration),
-					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
+    if (!pPrefMigrator) return NS_ERROR_FAILURE;
         
     nsXPIDLCString oldProfDirStr;
     nsXPIDLCString newProfDirStr;
@@ -1664,7 +1671,7 @@ nsProfile::FreeProfileStruct(ProfileStruct* aProfile)
 }
 
 nsresult
-nsProfile::TriggerActivation(char *profileName)
+nsProfile::TriggerActivation(const char *profileName)
 {
 	nsresult rv = NS_OK;
     char *isPregInfoSet = nsnull;
