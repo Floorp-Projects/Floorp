@@ -43,7 +43,7 @@ interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
 
-[scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
+[scriptable, uuid(f914492c-0138-4123-a634-6ef8e3f126f8)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
