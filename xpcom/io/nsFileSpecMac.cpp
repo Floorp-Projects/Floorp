@@ -790,23 +790,6 @@ void nsFileSpec::MakeUnique(ConstStr255Param inSuggestedLeafName)
     MakeUnique();
 } // nsFileSpec::MakeUnique
 
-//---------------------------------------------------------------------------------------- 
-void nsFileSpec::ResolveAlias(PRBool& wasAliased) 
-//---------------------------------------------------------------------------------------- 
-{ 
-    NS_ASSERTION(0, "Use ResolveSymlink not ResolveAlias!");
-
-	Boolean wasAliased2; // Type conversion Boolean <--> PRBool 
-	OSErr err = MacFileHelpers::ResolveAliasFile(mSpec, wasAliased2); 
-	if (wasAliased2) 
-	{ 
-		mError = NS_FILE_RESULT(err); 
-		wasAliased = PR_TRUE; 
-	} 
-	else 
-		wasAliased = PR_FALSE; 
-} // nsFileSpec::ResolveAlias 
-
 //----------------------------------------------------------------------------------------
 PRBool nsFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
