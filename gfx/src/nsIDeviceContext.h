@@ -108,6 +108,7 @@ public:
                            PRInt32              aId,
                            nsIImage*&           aImage) = 0;
 
+  NS_IMETHOD CheckFontExistence(const char * aFontName) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

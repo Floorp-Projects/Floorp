@@ -59,4 +59,28 @@ nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aC
   return mSurface;
 }
 
+int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
+                          int FontType, LPARAM lParam)  
+{
+  if (NULL != lpelf)
+    *((PRBool *)lParam) = PR_TRUE;
+
+  return 0;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const char * aFontName)
+{
+  HWND    hwnd = (HWND)GetNativeWidget();
+  HDC     hdc = ::GetDC(hwnd);
+  PRBool  isthere = PR_FALSE;
+
+  ::EnumFontFamilies(hdc, aFontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
+
+  ::ReleaseDC(hwnd, hdc);
+
+  if (PR_TRUE == isthere)
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
+}
 
