@@ -1149,7 +1149,6 @@ nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
     m_Url        = nsnull;
     m_NextStream = nsnull;
     m_Command    = (nsnull != aCommand) ? PL_strdup(aCommand) : nsnull;
-    m_ExtraInfo  = aExtraInfo;
 
     m_DocLoader = aDocLoader;
     NS_ADDREF(m_DocLoader);
@@ -1162,8 +1161,8 @@ nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
-    mStatus = NS_OK;
 
+    mStatus = NS_OK;
     return NS_OK;
 }
 
