@@ -44,15 +44,17 @@ public:
 	NS_IMETHOD Abort ();
 	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
 	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,
-                                         nsMsgSearchTermArray &termList,
+                                         nsISupportsArray *termList,
                                          nsIMsgSearchScopeTerm *scope, 
                                          nsIMsgDatabase * db, 
                                          const char * headers,
                                          PRUint32 headerSize,
 										 PRBool *pResult);
 
-	static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch, nsMsgSearchTermArray & termList, nsIMsgSearchScopeTerm *scope,
-                                                nsIMsgDatabase *db, PRBool *pResult);
+  static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch,
+                                      nsISupportsArray * termList,
+                                      nsIMsgSearchScopeTerm *scope,
+                                      nsIMsgDatabase *db, PRBool *pResult);
 
 	virtual nsresult BuildSummaryFile ();
 	virtual nsresult OpenSummaryFile ();
@@ -62,7 +64,7 @@ public:
 
 protected:
 	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
-                                nsMsgSearchTermArray &termList,
+                                nsISupportsArray *termList,
                                 nsIMsgSearchScopeTerm *scope, 
                                 nsIMsgDatabase * db, 
                                 const char * headers,

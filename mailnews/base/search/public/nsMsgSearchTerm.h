@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,10 +31,11 @@
 // its own cpp file, nsMsgSearchTerm.cpp
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgSearchScopeTerm.h"
+#include "nsIMsgSearchTerm.h"
 
 #define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
 
-class nsMsgSearchTerm
+class nsMsgSearchTerm : public nsIMsgSearchTerm
 {
 public:
 	nsMsgSearchTerm();
@@ -45,31 +46,34 @@ public:
 
 	virtual ~nsMsgSearchTerm ();
 
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGSEARCHTERM
+
+    
 	void StripQuotedPrintable (unsigned char*);
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsIMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 
-						nsIMsgDBHdr * msg, nsIMsgDatabase * db, PRBool *pResult);
-	nsresult MatchArbitraryHeader (nsIMsgSearchScopeTerm *,
-                                   PRUint32 offset,
-                                   PRUint32 length,
-                                   const char *charset,
-                                   nsIMsgDBHdr * msg,
-                                   nsIMsgDatabase *db,
-                                   const char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
-                                   PRUint32 headersSize, /* size of the NULL terminated list of headers */
-                                   PRBool ForFilters /* true if we are filtering */,
-								   PRBool *pResult);
-	nsresult MatchString (nsCString *, const char *charset, PRBool body, PRBool *result);
-	nsresult MatchDate (PRTime, PRBool *result);
-	nsresult MatchStatus (PRUint32, PRBool *result);
-	nsresult MatchPriority (nsMsgPriorityValue, PRBool *result);
-	nsresult MatchSize (PRUint32, PRBool *result);
-	nsresult MatchRfc822String(const char *, const char *charset, PRBool *pResult);
-	nsresult MatchAge (PRTime, PRBool *result);
-
-	nsresult EnStreamNew (nsCString &stream);
+    //	nsresult MatchBody (nsIMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 
+    //						nsIMsgDBHdr * msg, nsIMsgDatabase * db, PRBool *pResult);
+    //	nsresult MatchArbitraryHeader (nsIMsgSearchScopeTerm *,
+    //                                   PRUint32 offset,
+    //                                   PRUint32 length,
+    //                                   const char *charset,
+    //                                   nsIMsgDBHdr * msg,
+    //                                   nsIMsgDatabase *db,
+    //                                   const char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
+    //                                   PRUint32 headersSize, /* size of the NULL terminated list of headers */
+    //                                   PRBool ForFilters /* true if we are filtering */,
+    //								   PRBool *pResult);
+    //	nsresult MatchString (nsCString *, const char *charset, PRBool body, PRBool *result);
+	// nsresult MatchDate (PRTime, PRBool *result);
+	// nsresult MatchStatus (PRUint32, PRBool *result);
+	// nsresult MatchPriority (nsMsgPriorityValue, PRBool *result);
+	// nsresult MatchSize (PRUint32, PRBool *result);
+    //	nsresult MatchRfc822String(const char *, const char *charset, PRBool *pResult);
+	// nsresult MatchAge (PRTime, PRBool *result);
+    
 	nsresult DeStream (char *, PRInt16 length);
 	nsresult DeStreamNew (char *, PRInt16 length);
 
@@ -81,7 +85,6 @@ public:
 	const char * GetArbitraryHeader() {return m_arbitraryHeader.GetBuffer();}
 
 	static char *	EscapeQuotesInStr(const char *str);
-	PRBool MatchAllBeforeDeciding ();
 
 	nsCOMPtr<nsIMsgHeaderParser> m_headerAddressParser;
 

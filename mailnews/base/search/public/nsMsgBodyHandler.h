@@ -21,8 +21,10 @@ public:
     // filtering...we need the list of headers and the header size as well
 	// if we are doing filtering...if ForFilters is false, headers and
     // headersSize is ignored!!!
-	nsMsgBodyHandler (nsIMsgSearchScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
-					 const char * headers /* NULL terminated list of headers */, PRUint32 headersSize, PRBool ForFilters);
+	nsMsgBodyHandler (nsIMsgSearchScopeTerm *, PRUint32 offset,
+                      PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
+					 const char * headers /* NULL terminated list of headers */,
+                      PRUint32 headersSize, PRBool ForFilters);
 
 	virtual ~nsMsgBodyHandler();
 

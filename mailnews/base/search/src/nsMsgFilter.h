@@ -71,7 +71,6 @@ public:
 
 	PRInt16			GetVersion();
     void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}
-    nsMsgSearchTermArray* GetTermList() {return &m_termList;}       /* linked list of criteria terms */
 #ifdef DEBUG
 	void	Dump();
 #endif
@@ -90,7 +89,7 @@ protected:
     PRBool         m_dontFileMe;
 
 	nsIMsgFilterList *m_filterList;	/* owning filter list */
-    nsMsgSearchTermArray m_termList;       /* linked list of criteria terms */
+    nsCOMPtr<nsISupportsArray> m_termList;       /* linked list of criteria terms */
     nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */
 

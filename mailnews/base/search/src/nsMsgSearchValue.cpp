@@ -29,13 +29,13 @@ nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
     NS_INIT_ISUPPORTS();
     mValue = *aInitialValue;
     if (IS_STRING_ATTRIBUTE(aInitialValue->attribute))
-        mValue.u.string = nsCRT::strdup(aInitialValue->u.string);
+        mValue.string = nsCRT::strdup(aInitialValue->string);
 }
 
 nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
 {
     if (IS_STRING_ATTRIBUTE(mValue.attribute))
-        nsCRT::free(mValue.u.string);
+        nsCRT::free(mValue.string);
 
 }
 
@@ -46,7 +46,7 @@ nsMsgSearchValueImpl::GetStr(char** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
-    *aResult = nsCRT::strdup(mValue.u.string);
+    *aResult = nsCRT::strdup(mValue.string);
     return NS_OK;
 }
 
@@ -54,9 +54,9 @@ NS_IMETHODIMP
 nsMsgSearchValueImpl::SetStr(const char* aValue)
 {
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
-    if (mValue.u.string)
-        nsCRT::free(mValue.u.string);
-    mValue.u.string = nsCRT::strdup(aValue);
+    if (mValue.string)
+        nsCRT::free(mValue.string);
+    mValue.string = nsCRT::strdup(aValue);
     return NS_OK;
 }
 
@@ -200,7 +200,7 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     NS_ENSURE_ARG_POINTER(aResult);
     
     if (IS_STRING_ATTRIBUTE(mValue.attribute)) {
-        nsCAutoString str(mValue.u.string);
+        nsCAutoString str(mValue.string);
         *aResult = str.ToNewUnicode();
         return NS_OK;
     }

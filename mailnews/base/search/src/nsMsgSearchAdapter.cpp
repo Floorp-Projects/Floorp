@@ -551,12 +551,12 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 				dest_csid = INTL_DefaultMailCharSetID(dest_csid);
 #endif
 
-			unconvertedValue = TryToConvertCharset(term->m_value.u.string,
+			unconvertedValue = TryToConvertCharset(term->m_value.string,
 										srcCharset,
 										destCharset,
 										reallyDredd);
 			if (!unconvertedValue)
-				unconvertedValue = nsCRT::strdup(term->m_value.u.string); // couldn't convert, send as is
+				unconvertedValue = nsCRT::strdup(term->m_value.string); // couldn't convert, send as is
 
 			value = reallyDredd ? EscapeSearchUrl (unconvertedValue) : EscapeImapSearchProtocol(unconvertedValue);
 			PR_Free(unconvertedValue);

@@ -158,7 +158,7 @@ char *nsMsgSearchNews::EncodeTerm (nsMsgSearchTerm *term)
 
 	// Do INTL_FormatNNTPXPATInRFC1522Format trick for non-ASCII string
 //	unsigned char *intlNonRFC1522Value = INTL_FormatNNTPXPATInNonRFC1522Format (wincsid, (unsigned char*)term->m_value.u.string);
-    char *intlNonRFC1522Value = nsCRT::strdup((const char*)term->m_value.u.string);
+    char *intlNonRFC1522Value = nsCRT::strdup((const char*)term->m_value.string);
 	if (!intlNonRFC1522Value)
 		return nsnull;
 		
@@ -427,7 +427,7 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
             pHeaders->GetFlags(&flags);
             char *reString = (flags & MSG_FLAG_HAS_RE) ? (char *)"Re:" : (char *)"";
             pHeaders->GetSubject(getter_Copies(subject));
-            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
+            pValue->string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
 	    }
 	    pValue = new nsMsgSearchValue;
@@ -435,11 +435,11 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 	    {
 		    pValue->attribute = nsMsgSearchAttrib::Sender;
         nsXPIDLCString author;
-        pValue->u.string = (char*) PR_Malloc(64);
-        if (pValue->u.string)
+        pValue->string = (char*) PR_Malloc(64);
+        if (pValue->string)
         {
             pHeaders->GetAuthor(getter_Copies(author));
-            PL_strncpy(pValue->u.string, (const char *) author, 64);
+            PL_strncpy(pValue->string, (const char *) author, 64);
             newResult->AddValue (pValue);
         }
 		    else
@@ -470,7 +470,7 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 	    if (pValue)
 	    {
 			    pValue->attribute = nsMsgSearchAttrib::Location;
-			    pValue->u.string = PL_strdup(location); 
+			    pValue->string = PL_strdup(location); 
 			    newResult->AddValue (pValue);
 	    }
 	    pValue = new nsMsgSearchValue;
@@ -484,12 +484,12 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 		  if (pValue)
 		  {
         nsXPIDLCString messageId;
-        pValue->u.string = (char*) PR_Malloc(64);
-        if (pValue->u.string)
+        pValue->string = (char*) PR_Malloc(64);
+        if (pValue->string)
         {
   			  pValue->attribute = nsMsgSearchAttrib::MessageId;
             pHeaders->GetMessageId(getter_Copies(messageId));
-            PL_strncpy(pValue->u.string, (const char *) messageId, 64);
+            PL_strncpy(pValue->string, (const char *) messageId, 64);
             newResult->AddValue (pValue);
         }
 	    }

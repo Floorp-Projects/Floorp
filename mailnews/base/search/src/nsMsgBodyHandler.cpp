@@ -154,6 +154,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
 		// #mscott. Ugly hack! filter headers list have CRs & LFs inside the NULL delimited list of header
 		// strings. It is possible to have: To NULL CR LF From. We want to skip over these CR/LFs if they start
 		// at the beginning of what we think is another header.
+
 		while ((m_headers[0] == CR || m_headers[0] == LF || m_headers[0] == ' ' || m_headers[0] == '\0') && m_headersSize > 0)
 		{
 			m_headers++;  // skip over these chars...

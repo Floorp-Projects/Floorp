@@ -52,6 +52,7 @@ nsMsgFilter::nsMsgFilter() :
     m_filterList(nsnull)
 {
 	NS_INIT_REFCNT();
+    NS_NewISupportsArray(getter_AddRefs(m_termList));
 }
 
 nsMsgFilter::~nsMsgFilter()
@@ -140,12 +141,21 @@ NS_IMETHODIMP nsMsgFilter::AddTerm(
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
+{
+    NS_ENSURE_TRUE(aTerm, NS_ERROR_NULL_POINTER);
+    
+    return m_termList->AppendElement(aTerm);
+}
+
 NS_IMETHODIMP nsMsgFilter::GetNumTerms(PRInt32 *aResult)
 {
 	if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-	*aResult = m_termList.Count();
+    PRUint32 count;
+    m_termList->Count(&count);
+    *aResult = count;
 	return NS_OK;
 }
 
@@ -159,26 +169,47 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	char ** arbitraryHeader) /* arbitrary header specified by user.
                                 ignore unless attrib = attribOtherHeader */
 {
+    nsresult rv;
 	if (!attrib || !op || !value || !booleanAnd || !arbitraryHeader)
 		return NS_ERROR_NULL_POINTER;
 
-	nsMsgSearchTerm *term = m_termList.ElementAt (termIndex);
-	if (term)
+    nsCOMPtr<nsIMsgSearchTerm> term;
+    rv = m_termList->QueryElementAt(termIndex, NS_GET_IID(nsIMsgSearchTerm),
+                                    (void **)getter_AddRefs(term));
+	if (NS_SUCCEEDED(rv) && term)
 	{
-		*attrib = term->m_attribute;
-		*op = term->m_operator;
+        term->GetAttrib(attrib);
+        term->GetOp(op);
 
-        // create the search value object
-        nsMsgSearchValueImpl *searchValue =
-            new nsMsgSearchValueImpl(&term->m_value);
-		*value = (nsIMsgSearchValue*)searchValue;
-        NS_ADDREF(*value);
-        
-		*booleanAnd = term->m_booleanOp;
-		if (term->m_attribute == nsMsgSearchAttrib::OtherHeader)
-			*arbitraryHeader = PL_strdup(term->m_arbitraryHeader.GetBuffer());
+        term->GetValue(value);
+
+        term->GetBooleanAnd(booleanAnd);
+
+		if (*attrib == nsMsgSearchAttrib::OtherHeader)
+            term->GetArbitraryHeader(arbitraryHeader);
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::GetSearchTerms(PRUint32 *aLength,
+                                          nsIMsgSearchTerm ***aResult)
+{
+    NS_ENSURE_ARG_POINTER(aLength);
+    NS_ENSURE_ARG_POINTER(aResult);
+    
+    PRUint32 terms; m_termList->Count(&terms);
+    
+    nsIMsgSearchTerm** resultList = (nsIMsgSearchTerm**)
+        nsAllocator::Alloc(sizeof(nsIMsgSearchTerm*) * terms);
+    *aLength = terms;
+
+    PRUint32 i;
+    for (i=0; i<terms; i++)
+        m_termList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                                   (void **)resultList[i]);
+
+    *aResult = resultList;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
@@ -480,24 +511,30 @@ nsresult nsMsgFilter::SaveRule()
 		break;
 	}
 	// and here the fun begins - file out term list...
-	int searchIndex;
+	PRUint32 searchIndex;
 	nsCAutoString  condition;
-	for (searchIndex = 0; searchIndex < m_termList.Count() && NS_SUCCEEDED(err);
+    PRUint32 count;
+    m_termList->Count(&count);
+	for (searchIndex = 0; searchIndex < count && NS_SUCCEEDED(err);
 			searchIndex++)
 	{
 		nsCAutoString	stream;
 
-		nsMsgSearchTerm * term = (nsMsgSearchTerm *) m_termList.ElementAt(searchIndex);
-		if (term == NULL)
+        nsCOMPtr<nsIMsgSearchTerm> term;
+        m_termList->QueryElementAt(searchIndex, NS_GET_IID(nsIMsgSearchTerm),
+                                   (void **)getter_AddRefs(term));
+		if (!term)
 			continue;
 		
 		if (condition.Length() > 1)
 			condition += ' ';
 
-		if (term->m_booleanOp == nsMsgSearchBooleanOp::BooleanOR)
-			condition += "OR (";
-		else
+        PRBool booleanAnd;
+        term->GetBooleanAnd(&booleanAnd);
+		if (booleanAnd)
 			condition += "AND (";
+		else
+			condition += "OR (";
 
 		nsresult searchError = term->EnStreamNew(stream);
 		if (!NS_SUCCEEDED(searchError))

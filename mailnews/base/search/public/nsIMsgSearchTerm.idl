@@ -56,13 +56,16 @@ interface nsIMsgSearchTerm : nsISupports {
                       in nsIMsgDBHdr msg,
                       in nsIMsgDatabase db);
 
+    // marking noscript because headers is a null-seperated list of strings,
+    // which is not scriptable
+    [noscript]
     boolean matchArbitraryHeader(in nsIMsgSearchScopeTerm scopeTerm,
                                  in unsigned long offset,
                                  in unsigned long length,
                                  in string charset,
                                  in nsIMsgDBHdr msg,
                                  in nsIMsgDatabase db,
-                                 [array, size_is(headerLength)]
+                                 //[array, size_is(headerLength)] in string headers,
                                  in string headers,
                                  in unsigned long headerLength,
                                  in boolean forFilters);

@@ -60,10 +60,10 @@ class nsMsgSearchBoolExpression
 public:
 
 	// create a leaf node expression
-	nsMsgSearchBoolExpression(nsMsgSearchTerm * newTerm,
+	nsMsgSearchBoolExpression(nsIMsgSearchTerm * newTerm,
                               PRBool EvaluationValue = PR_TRUE,
                               char * encodingStr = NULL);         
-	nsMsgSearchBoolExpression(nsMsgSearchTerm * newTerm, char * encodingStr);
+	nsMsgSearchBoolExpression(nsIMsgSearchTerm * newTerm, char * encodingStr);
 
 	// create a non-leaf node expression containing 2 expressions
     // and a boolean operator
@@ -78,9 +78,9 @@ public:
 	// accesors
     
     // Offline
-	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm,
+	nsMsgSearchBoolExpression * AddSearchTerm (nsIMsgSearchTerm * newTerm,
                                                PRBool EvaluationValue = PR_TRUE);
-	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm,
+	nsMsgSearchBoolExpression * AddSearchTerm (nsIMsgSearchTerm * newTerm,
                                                char * encodingStr); // IMAP/NNTP
 
     // parses the expression tree and all
@@ -103,7 +103,7 @@ protected:
 	// if we are a leaf node, all we have is a search term
     // and a Evaluation value for that search term
     
-	nsMsgSearchTerm * m_term;
+    nsIMsgSearchTerm * m_term;
 	PRBool m_evalValue;
     
     // store IMAP/NNTP encoding for the search term if applicable
@@ -124,7 +124,7 @@ protected:
     // left to right evaluation so the tree is constructed to represent
     // that by calling leftToRightAddTerm. If future forms of evaluation
     // need to be supported, add new methods here for proper tree construction.
-	nsMsgSearchBoolExpression * leftToRightAddTerm(nsMsgSearchTerm * newTerm,
+	nsMsgSearchBoolExpression * leftToRightAddTerm(nsIMsgSearchTerm * newTerm,
                                                    PRBool EvaluationValue,
                                                    char * encodingStr); 
 };

@@ -25,6 +25,7 @@
 #include "nsMsgFilterCore.idl"
 #include "nsIMsgSearchScopeTerm.idl"
 #include "nsIMsgSearchValue.idl"
+#include "nsIMsgSearchTerm.idl"
 
 interface nsOutputStream;
 
@@ -51,6 +52,12 @@ interface nsIMsgFilter : nsISupports {
                  out boolean BooleanAND,
                  out string arbitraryHeader);
 
+    void appendTerm(in nsIMsgSearchTerm term);
+    
+    void getSearchTerms(out unsigned long length,
+                        [array, size_is(length), retval]
+                        out nsIMsgSearchTerm termList);
+    
     attribute nsIMsgSearchScopeTerm scope;
 
     attribute nsMsgRuleActionType action;
@@ -60,9 +67,13 @@ interface nsIMsgFilter : nsISupports {
 
     // target folder.. throws an exception if the action is not move to folder
     attribute string actionTargetFolderUri;
-    
-    void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
-                  in nsIMsgDatabase db, in string headers,
+
+    // marking noscript because "headers" is actually a null-seperated
+    // list of headers, which is not scriptable
+    [noscript] void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
+                  in nsIMsgDatabase db,
+                  in string headers,
+                  //                  [array, size_is(headerSize)] in string headers,
                   in unsigned long headerSize, out boolean result);
 
     void LogRuleHit(in nsOutputStream stream, in nsIMsgDBHdr header);

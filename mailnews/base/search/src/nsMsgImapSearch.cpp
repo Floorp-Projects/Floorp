@@ -87,7 +87,7 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
             pHeaders->GetFlags(&flags);
             char *reString = (flags & MSG_FLAG_HAS_RE) ? (char *)"Re:" : (char *)"";
             pHeaders->GetSubject(getter_Copies(subject));
-            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
+            pValue->string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
@@ -95,11 +95,11 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         {
             nsXPIDLCString author;
             pValue->attribute = nsMsgSearchAttrib::Sender;
-            pValue->u.string = (char*) PR_Malloc(64);
-            if (pValue->u.string)
+            pValue->string = (char*) PR_Malloc(64);
+            if (pValue->string)
             {
                 pHeaders->GetAuthor(getter_Copies(author));
-                PL_strncpy(pValue->u.string, (const char *) author, 64);
+                PL_strncpy(pValue->string, (const char *) author, 64);
                 newResult->AddValue (pValue);
             }
             else
@@ -257,7 +257,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 			nsMsgSearchTerm *term = searchTerms.ElementAt(i);
 			if (IsStringAttribute(term->m_attribute))
 			{
-				char *pchar = term->m_value.u.string;
+				char *pchar = term->m_value.string;
 				for (; *pchar ; pchar++)
 				{
 					if (*pchar & 0x80)

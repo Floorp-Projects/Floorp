@@ -189,7 +189,6 @@ typedef struct nsMsgSearchValue
     nsMsgSearchAttribValue attribute;
     union
     {
-        char *string;
         nsMsgPriorityValue priority;
         PRTime date;
         PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
@@ -198,6 +197,7 @@ typedef struct nsMsgSearchValue
 		PRUint32 age; /* in days */
 		nsIMsgFolder *folder;
     } u;
+    char *string;
 } nsMsgSearchValue;
 %}
 

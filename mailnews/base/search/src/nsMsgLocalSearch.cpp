@@ -57,7 +57,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression()
     m_rightChild = nsnull;
 }
 
-nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr) 
+nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsIMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr) 
 // we are creating an expression which contains a single search term (newTerm) 
 // and the search term's IMAP or NNTP encoding value for online search expressions AND
 // a boolean evaluation value which is used for offline search expressions.
@@ -93,14 +93,16 @@ nsMsgSearchBoolExpression::~nsMsgSearchBoolExpression()
         delete m_rightChild;
 }
 
-nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearchTerm * newTerm, char * encodingStr)
+nsMsgSearchBoolExpression *
+nsMsgSearchBoolExpression::AddSearchTerm(nsIMsgSearchTerm * newTerm, char * encodingStr)
 // appropriately add the search term to the current expression and return a pointer to the
 // new expression. The encodingStr is the IMAP/NNTP encoding string for newTerm.
 {
     return leftToRightAddTerm(newTerm,PR_FALSE,encodingStr);
 }
 
-nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearchTerm * newTerm, PRBool evalValue)
+nsMsgSearchBoolExpression *
+nsMsgSearchBoolExpression::AddSearchTerm(nsIMsgSearchTerm * newTerm, PRBool evalValue)
 // appropriately add the search term to the current expression
 // Returns: a pointer to the new expression which includes this new search term
 {
@@ -108,7 +110,8 @@ nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearch
                                                           // evaluate left to right.
 }
 
-nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::leftToRightAddTerm(nsMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr)
+nsMsgSearchBoolExpression *
+nsMsgSearchBoolExpression::leftToRightAddTerm(nsIMsgSearchTerm * newTerm, PRBool evalValue, char * encodingStr)
 {
     // we have a base case where this is the first term being added to the expression:
     if (!m_term && !m_leftChild && !m_rightChild)
@@ -122,7 +125,9 @@ nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::leftToRightAddTerm(nsMsgS
     nsMsgSearchBoolExpression * tempExpr = new nsMsgSearchBoolExpression (newTerm,evalValue,encodingStr);
     if (tempExpr)  // make sure creation succeeded
     {
-        nsMsgSearchBoolExpression * newExpr = new nsMsgSearchBoolExpression (this, tempExpr, newTerm->GetBooleanOp());  
+      PRBool booleanAnd;
+      newTerm->GetBooleanAnd(&booleanAnd);
+        nsMsgSearchBoolExpression * newExpr = new nsMsgSearchBoolExpression (this, tempExpr, booleanAnd);  
         if (newExpr)
             return newExpr;
         else
@@ -468,29 +473,31 @@ nsresult nsMsgSearchOfflineMail::SummaryFileError ()
     return  NS_OK;// SearchError_ScopeDone;
 }
 
-nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
-                                                           nsMsgSearchTermArray & termList,
-                                                           nsIMsgSearchScopeTerm * scope,
-                                                           nsIMsgDatabase * db, 
-                                                           const char * headers,
-                                                           PRUint32 headerSize,
-														   PRBool *pResult)
+nsresult
+nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
+                                            nsISupportsArray *termList,
+                                            nsIMsgSearchScopeTerm * scope,
+                                            nsIMsgDatabase * db, 
+                                            const char * headers,
+                                            PRUint32 headerSize,
+                                            PRBool *pResult)
 {
     return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, PR_TRUE, pResult);
 }
 
 // static method which matches a header against a list of search terms.
-nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch, 
-                                                nsMsgSearchTermArray &termList,
-                                                nsIMsgSearchScopeTerm *scope,
-                                                nsIMsgDatabase *db,
-												PRBool *pResult)
+nsresult
+nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch, 
+                                            nsISupportsArray* termList,
+                                            nsIMsgSearchScopeTerm *scope,
+                                            nsIMsgDatabase *db,
+                                            PRBool *pResult)
 {
     return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, PR_FALSE, pResult);
 }
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
-                                            nsMsgSearchTermArray & termList,
+                                            nsISupportsArray * termList,
                                             nsIMsgSearchScopeTerm * scope,
                                             nsIMsgDatabase * db, 
                                             const char * headers,
@@ -523,34 +530,40 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
     if (!expression)
         return NS_ERROR_OUT_OF_MEMORY;
-    for (int i = 0; i < termList.Count(); i++)
+    PRUint32 count;
+    termList->Count(&count);
+    for (PRUint32 i = 0; i < count; i++)
     {
-        nsMsgSearchTerm *pTerm = termList.ElementAt(i);
+        nsCOMPtr<nsIMsgSearchTerm> pTerm;
+        termList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
+                                 (void **)getter_AddRefs(pTerm));
 //        NS_ASSERTION (pTerm->IsValid(), "invalid search term");
         NS_ASSERTION (msgToMatch, "couldn't get term to match");
 
-        switch (pTerm->m_attribute)
+        nsMsgSearchAttribValue attrib;
+        pTerm->GetAttrib(&attrib);
+        switch (attrib)
         {
         case nsMsgSearchAttrib::Sender:
             msgToMatch->GetAuthor(getter_Copies(matchString));
-            err = pTerm->MatchRfc822String (nsCAutoString(matchString), charset, &result);
+            err = pTerm->MatchRfc822String (matchString, charset, &result);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
-			nsCAutoString singleByteString(matchString); 
-            err = pTerm->MatchString (&singleByteString, charset, PR_FALSE, &result);
+            err = pTerm->MatchString (matchString, charset, PR_FALSE, &result);
 			}
             break;
         case nsMsgSearchAttrib::ToOrCC:
         {
-            PRBool boolKeepGoing = pTerm->MatchAllBeforeDeciding();
+            PRBool boolKeepGoing;
+            pTerm->GetMatchAllBeforeDeciding(&boolKeepGoing);
             msgToMatch->GetRecipients(getter_Copies(recipients));
-            err = pTerm->MatchRfc822String (nsCAutoString(recipients), charset, &result);
+            err = pTerm->MatchRfc822String (recipients, charset, &result);
             if (boolKeepGoing == result)
             {
                 msgToMatch->GetCcList(getter_Copies(ccList));
-                err = pTerm->MatchRfc822String (nsCAutoString(ccList), charset, &result);
+                err = pTerm->MatchRfc822String (ccList, charset, &result);
             }
         }
             break;
@@ -730,7 +743,7 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
             pValue->attribute = nsMsgSearchAttrib::Subject;
             char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? (char *)"Re: " : (char *)"";
             pHeaders->GetSubject(getter_Copies(subject));
-            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*)subject);
+            pValue->string = PR_smprintf ("%s%s", reString, (const char*)subject);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
@@ -739,7 +752,7 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
             pValue->attribute = nsMsgSearchAttrib::Sender;
 			nsXPIDLCString author;
             pHeaders->GetAuthor(getter_Copies(author));
-			pValue->u.string = PL_strdup(author);
+			pValue->string = PL_strdup(author);
             newResult->AddValue (pValue);
             err = NS_ERROR_OUT_OF_MEMORY;
         }

@@ -234,6 +234,7 @@ PRInt32 NS_MsgGetStatusValueFromName(char *name)
 // Needed for DeStream method.
 nsMsgSearchTerm::nsMsgSearchTerm()
 {
+    NS_INIT_REFCNT();
 }
 
 #if 0
@@ -244,6 +245,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	PRBool booleanAND,
 	char * arbitraryHeader) 
 {
+    NS_INIT_REFCNT();
 	m_operator = op;
 	m_booleanOp = (booleanAND) ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
 	if (attrib == nsMsgSearchAttrib::OtherHeader && arbitraryHeader)
@@ -261,6 +263,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchBooleanOperator boolOp,
 	const char * arbitraryHeader) 
 {
+    NS_INIT_REFCNT();
 	m_operator = op;
 	m_attribute = attrib;
 	m_booleanOp = boolOp;
@@ -273,9 +276,12 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 
 nsMsgSearchTerm::~nsMsgSearchTerm ()
 {
-	if (IS_STRING_ATTRIBUTE (m_attribute))
-		PR_Free(m_value.u.string);
+	if (IS_STRING_ATTRIBUTE (m_attribute) && m_value.string)
+		PR_Free(m_value.string);
 }
+
+NS_IMPL_ISUPPORTS1(nsMsgSearchTerm, nsIMsgSearchTerm)
+
 
 // Perhaps we could find a better place for this?
 // Caller needs to free.
@@ -304,18 +310,18 @@ nsMsgSearchTerm::~nsMsgSearchTerm ()
 
 nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 {
-	if (IS_STRING_ATTRIBUTE(m_attribute))
+	if (IS_STRING_ATTRIBUTE(m_attribute) && m_value.string)
 	{
 		PRBool	quoteVal = PR_FALSE;
 		// need to quote strings with ')' - filter code will escape quotes
-		if (PL_strchr(m_value.u.string, ')'))
+		if (PL_strchr(m_value.string, ')'))
 		{
 			quoteVal = PR_TRUE;
 			outputStr += "\"";
 		}
-		if (PL_strchr(m_value.u.string, '"'))
+		if (PL_strchr(m_value.string, '"'))
 		{
-			char *escapedString = nsMsgSearchTerm::EscapeQuotesInStr(m_value.u.string);
+			char *escapedString = nsMsgSearchTerm::EscapeQuotesInStr(m_value.string);
 			if (escapedString)
 			{
 				outputStr += escapedString;
@@ -325,7 +331,7 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 		}
 		else
 		{
-			outputStr += m_value.u.string;
+			outputStr += m_value.string;
 		}
 		if (quoteVal)
 			outputStr += "\"";
@@ -420,9 +426,9 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 		if (quoteVal && inStream[valueLen - 1] == '"')
 			valueLen--;
 
-		m_value.u.string = (char *) PR_Malloc(valueLen + 1);
-		PL_strncpy(m_value.u.string, inStream, valueLen + 1);
-		m_value.u.string[valueLen] = '\0';
+		m_value.string = (char *) PR_Malloc(valueLen + 1);
+		PL_strncpy(m_value.string, inStream, valueLen + 1);
+		m_value.string[valueLen] = '\0';
 	}
 	else
 	{
@@ -581,9 +587,16 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
-nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
-														nsIMsgDBHdr *msg, nsIMsgDatabase* db, const char * headers, 
-														PRUint32 headersSize, PRBool ForFiltering, PRBool *pResult)
+nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
+                                                PRUint32 offset,
+                                                PRUint32 length /* in lines*/,
+                                                const char *charset,
+                                                nsIMsgDBHdr *msg,
+                                                nsIMsgDatabase* db,
+                                                const char * headers, 
+                                                PRUint32 headersSize,
+                                                PRBool ForFiltering,
+                                                PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -597,10 +610,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope, PR
 
 	bodyHandler->SetStripHeaders (PR_FALSE);
 
-	if (MatchAllBeforeDeciding())
-		result = PR_TRUE;
-	else
-		result = PR_FALSE;
+    GetMatchAllBeforeDeciding(&result);
 
 	const int kBufSize = 512; // max size of a line??
 	char * buf = (char *) PR_Malloc(kBufSize);
@@ -631,9 +641,8 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope, PR
 					
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
-					nsCAutoString headerStr (headerValue);
 					PRBool result2;
-					err = MatchString(&headerStr, charset, PR_FALSE, &result2);  // match value with the other info...
+					err = MatchString(headerValue, charset, PR_FALSE, &result2);  // match value with the other info...
 					if (result != result2) // if we found a match
 					{
 						searchingHeaders = PR_FALSE;   // then stop examining the headers
@@ -670,7 +679,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 	// Small hack so we don't look all through a message when someone has
 	// specified "BODY IS foo"
 	if ((length > 0) && (m_operator == nsMsgSearchOp::Is || m_operator == nsMsgSearchOp::Isnt))
-		length = PL_strlen (m_value.u.string);
+		length = PL_strlen (m_value.string);
 
 	nsMsgBodyHandler * bodyHan  = new nsMsgBodyHandler (scope, offset, length, msg, db);
 	if (!bodyHan)
@@ -694,10 +703,8 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 		// Change the sense of the loop so we don't bail out prematurely
 		// on negative terms. i.e. opDoesntContain must look at all lines
 		PRBool boolContinueLoop;
-		if (MatchAllBeforeDeciding())
-			result = boolContinueLoop = PR_TRUE;
-		else
-			result = boolContinueLoop = PR_FALSE;
+        GetMatchAllBeforeDeciding(&boolContinueLoop);
+        result = boolContinueLoop;
 
 		// If there's a '=' in the search term, then we're not going to do
 		// quoted printable decoding. Otherwise we assume everything is
@@ -708,7 +715,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 		// bug fix #88935: for stateful csids like JIS, we don't want to decode
 		// quoted printable since it contains '='.
 		PRBool isQuotedPrintable =  /*!(mail_csid & STATEFUL) && */
-										(PL_strchr (m_value.u.string, '=') == nsnull);
+            (PL_strchr (m_value.string, '=') == nsnull);
 
 		while (!endOfFile && result == boolContinueLoop)
 		{
@@ -736,7 +743,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 				char startChar = (char) compare.CharAt(0);
 				if (startChar != CR && startChar != LF)
 				{
-					err = MatchString (&compare, nsnull, PR_TRUE, &result);
+					err = MatchString (compare, nsnull, PR_TRUE, &result);
 					lines++; 
 				}
 			}
@@ -758,7 +765,9 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 
 
 // *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
-nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *charset, PRBool body, PRBool *pResult)
+nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
+                                       const char *charset,
+                                       PRBool body, PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -772,27 +781,27 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 #ifdef DO_I18N
 		n_str = INTL_GetNormalizeStr(csid , (unsigned char*)m_value.u.string);	// Always new buffer unless not enough memory
 		if (!body)
-			n_header = INTL_GetNormalizeStrFromRFC1522(csid , (unsigned char*)stringToMatch);	// Always new buffer unless not enough memory
+			n_header = INTL_GetNormalizeStrFromRFC1522(csid , stringToMatch);	// Always new buffer unless not enough memory
 		else
-			n_header = INTL_GetNormalizeStr(csid , (unsigned char*)stringToMatch);	// Always new buffer unless not enough memory
+			n_header = INTL_GetNormalizeStr(csid , stringToMatch);	// Always new buffer unless not enough memory
 
 		NS_ASSERTION(n_str, "failed get normalized string");
 		NS_ASSERTION(n_header, "failed get normalized header");
 #else
-		n_header = *stringToMatch;
-		n_str = m_value.u.string;
+		n_header = stringToMatch;
+		n_str = m_value.string;
 #endif // DO_I18N
 	}
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::Contains:
 		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			stringToMatch->Find(n_str, PR_TRUE) != -1)
+			PL_strstr(stringToMatch, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			stringToMatch->Find(n_str, PR_TRUE) == -1)
+			PL_strstr(stringToMatch, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
@@ -800,7 +809,7 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (n_str.Equals(*stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (n_str.Equals(stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
 			else if (n_header[0] == '\0') // Special case for "is <the empty string>"
@@ -812,7 +821,7 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (!n_str.Equals(*stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (!n_str.Equals(stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
 			else if (n_header[0] != '\0') // Special case for "isn't <the empty string>"
@@ -820,7 +829,7 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 		}
 		break;
 	case nsMsgSearchOp::IsEmpty:
-		if (stringToMatch->Length() == 0)
+		if (PL_strlen(stringToMatch))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::BeginsWith:
@@ -829,7 +838,7 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 			result = PR_TRUE;
 #else
 		// ### DMB - not the  most efficient way to do this.
-		if (stringToMatch->Find(n_str, PR_TRUE) == 0)
+		if (PL_strncmp(stringToMatch, n_str, PL_strlen(stringToMatch)) == 0)
 			result = PR_TRUE;
 #endif
 		break;
@@ -851,11 +860,14 @@ nsresult nsMsgSearchTerm::MatchString (nsCString *stringToMatch, const char *cha
 	return err;
 }
 
-PRBool nsMsgSearchTerm::MatchAllBeforeDeciding ()
+nsresult nsMsgSearchTerm::GetMatchAllBeforeDeciding (PRBool *aResult)
 {
 	if (m_operator == nsMsgSearchOp::DoesntContain || m_operator == nsMsgSearchOp::Isnt)
-		return PR_TRUE;
-	return PR_FALSE;
+		*aResult = PR_TRUE;
+    else
+        *aResult = PR_FALSE;
+
+    return NS_OK;
 }
 
 
@@ -877,10 +889,8 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 	// Change the sense of the loop so we don't bail out prematurely
 	// on negative terms. i.e. opDoesntContain must look at all recipients
 	PRBool boolContinueLoop;
-	if (MatchAllBeforeDeciding())
-		result = boolContinueLoop = PR_TRUE;
-	else
-		result = boolContinueLoop = PR_FALSE;
+    GetMatchAllBeforeDeciding(&boolContinueLoop);
+    result = boolContinueLoop;
 
 	PRUint32 count;
 	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, &count) ;
@@ -898,9 +908,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		PRInt32 addressPos = 0;
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
-			err = MatchString (&walkNames, charset, PR_FALSE, &result);
+			err = MatchString (walkNames, charset, PR_FALSE, &result);
 			if (boolContinueLoop == result)
-				err = MatchString (&walkAddresses, charset, PR_FALSE, &result);
+				err = MatchString (walkAddresses, charset, PR_FALSE, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;
@@ -1132,6 +1142,47 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 	return res;
 }
 
+NS_IMETHODIMP
+nsMsgSearchTerm::GetAttrib(nsMsgSearchAttribValue *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_attribute;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::GetOp(nsMsgSearchOpValue *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_operator;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::GetValue(nsIMsgSearchValue **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = new nsMsgSearchValueImpl(&m_value);
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::GetBooleanAnd(PRBool *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = (m_booleanOp == nsMsgSearchBooleanOp::BooleanAND);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::GetArbitraryHeader(char* *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_arbitraryHeader.ToNewCString();
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsMsgSearchScopeTerm implementation
 //-----------------------------------------------------------------------------
@@ -1317,32 +1368,6 @@ nsMsgResultElement::nsMsgResultElement(nsIMsgSearchAdapter *adapter)
 
 nsMsgResultElement::~nsMsgResultElement () 
 {
-#if 0                           // this should happen automatically
-                                // when the nsISupportsArray goes away
-    nsresult rv;
-
-    PRUint32 count;
-    m_valueList->Count(&count);
-	for (PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIMsgSearchValue> value;
-        rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
-                                         (void **)getter_AddRefs(value));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
-#ifdef HUH_WHATS_THIS
-		if (value->attribute == nsMsgSearchAttrib::JpegFile)
-		{
-			char *url = XP_PlatformFileToURL (value->u.string);
-			char *tmp = url + PL_strlen("file://");
-			XP_FileRemove (tmp, xpMailFolder /*###phil hacky*/);
-			XP_FREE(url);
-		}
-#endif
-#if 0
-        nsMsgResultElement::DestroyValue (value);
-#endif
-	}
-#endif
 }
 
 
@@ -1360,12 +1385,6 @@ nsresult nsMsgResultElement::AddValue (nsMsgSearchValue *value)
     return AddValue(valueImpl);
 }
 
-#if 0
-nsresult nsMsgResultElement::DestroyValue (nsIMsgSearchValue *value)
-{
-	return NS_OK;
-}
-#endif
 
 nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchValue *dst)
 {
@@ -1394,7 +1413,7 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{
 			NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
-			err = src->GetStr(&dst->u.string);
+			err = src->GetStr(&dst->string);
 		}
 		else
 			err = NS_ERROR_INVALID_ARG;

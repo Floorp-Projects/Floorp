@@ -549,7 +549,7 @@ nsresult nsMsgFilterList::ParseCondition(nsCString &value)
                 }
                 
                 if (newTerm->DeStreamNew(termDup, PL_strlen(termDup)) == NS_OK)
-                    m_curFilter->GetTermList()->AppendElement(newTerm);
+                    m_curFilter->AppendTerm(newTerm);
             }
 			PR_FREEIF(termDup);
 		}

@@ -30,6 +30,7 @@
 class nsMsgSearchValueImpl : public nsIMsgSearchValue {
   public:
     nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue);
+
     virtual ~nsMsgSearchValueImpl();
                                   
     NS_DECL_ISUPPORTS

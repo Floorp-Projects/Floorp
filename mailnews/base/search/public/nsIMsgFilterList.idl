@@ -73,12 +73,16 @@ interface nsIMsgFilterList : nsISupports {
 
     void saveToFile(in nsIOFileStream stream);
 
+    // marking noscript because headers is a null-seperated list
+    // of strings, which is not scriptable
+    [noscript]
     void applyFiltersToHdr(in nsMsgFilterTypeType filterType,
                            in nsIMsgDBHdr msgHdr,
                            in nsIMsgFolder folder,
                            in nsIMsgDatabase db,
                            in string headers,
-                           in unsigned long headersSize,
+                           //[array, size_is(headerSize)] in string headers,
+                           in unsigned long headerSize,
                            in nsIMsgFilterHitNotify listener);
 
 	// IO routines, used by filter object filing code.
