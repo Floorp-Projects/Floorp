@@ -25,6 +25,7 @@
 <!ENTITY down.label "Download">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
+<!ENTITY httpnetworking.label "HTTP Networking">
 <!ENTITY smart.label "Software Installation">
 <!ENTITY debug.label  "Debug">
 <!ENTITY debug1.label "Events">
