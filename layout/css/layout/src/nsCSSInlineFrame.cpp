@@ -267,6 +267,12 @@ nsCSSInlineFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
+    // XXX For now we drain our overflow list in case our parent
+    // reflowed our prev-in-flow and our prev-in-flow pushed some
+    // children forward to us (e.g. a speculative pullup from us that
+    // failed)
+    DrainOverflowLists();
+
     NS_ASSERTION(nsnull == mOverflowList, "unexpected overflow list");
     nsIFrame* target;
     state.reflowCommand->GetTarget(target);
