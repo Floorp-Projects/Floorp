@@ -400,6 +400,9 @@ public:
   NS_IMETHOD    GetZIndex(nsString& aZIndex)=0;
   NS_IMETHOD    SetZIndex(const nsString& aZIndex)=0;
 
+  NS_IMETHOD    GetOpacity(nsString& aOpacity)=0;
+  NS_IMETHOD    SetOpacity(const nsString& aOpacity)=0;
+
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn)=0;
 
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn)=0;
@@ -656,6 +659,8 @@ public:
   NS_IMETHOD    SetWordSpacing(const nsString& aWordSpacing);  \
   NS_IMETHOD    GetZIndex(nsString& aZIndex);  \
   NS_IMETHOD    SetZIndex(const nsString& aZIndex);  \
+  NS_IMETHOD    GetOpacity(nsString& aOpacity);  \
+  NS_IMETHOD    SetOpacity(const nsString& aOpacity);  \
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn);  \
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn);  \
   NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority);  \
@@ -909,6 +914,8 @@ public:
   NS_IMETHOD    SetWordSpacing(const nsString& aWordSpacing) { return _to##SetWordSpacing(aWordSpacing); } \
   NS_IMETHOD    GetZIndex(nsString& aZIndex) { return _to##GetZIndex(aZIndex); } \
   NS_IMETHOD    SetZIndex(const nsString& aZIndex) { return _to##SetZIndex(aZIndex); } \
+  NS_IMETHOD    GetOpacity(nsString& aOpacity) { return _to##GetOpacity(aOpacity); } \
+  NS_IMETHOD    SetOpacity(const nsString& aOpacity) { return _to##SetOpacity(aOpacity); } \
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn) { return _to##GetPropertyValue(aPropertyName, aReturn); }  \
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn) { return _to##GetPropertyPriority(aPropertyName, aReturn); }  \
   NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority) { return _to##SetProperty(aPropertyName, aValue, aPriority); }  \

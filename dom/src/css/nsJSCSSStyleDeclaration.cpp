@@ -161,7 +161,8 @@ enum CSSStyleDeclaration_slots {
   CSSSTYLEDECLARATION_WIDOWS = -120,
   CSSSTYLEDECLARATION_WIDTH = -121,
   CSSSTYLEDECLARATION_WORDSPACING = -122,
-  CSSSTYLEDECLARATION_ZINDEX = -123
+  CSSSTYLEDECLARATION_ZINDEX = -123,
+  CSSSTYLEDECLARATION_OPACITY = -124
 };
 
 /***********************************************************************/
@@ -1768,6 +1769,19 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetZIndex(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case CSSSTYLEDECLARATION_OPACITY:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetOpacity(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
@@ -3650,6 +3664,21 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         
         break;
       }
+      case CSSSTYLEDECLARATION_OPACITY:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetOpacity(prop);
+        
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -4075,6 +4104,7 @@ static JSPropertySpec CSSStyleDeclarationProperties[] =
   {"width",    CSSSTYLEDECLARATION_WIDTH,    JSPROP_ENUMERATE},
   {"wordSpacing",    CSSSTYLEDECLARATION_WORDSPACING,    JSPROP_ENUMERATE},
   {"zIndex",    CSSSTYLEDECLARATION_ZINDEX,    JSPROP_ENUMERATE},
+  {"opacity",    CSSSTYLEDECLARATION_OPACITY,    JSPROP_ENUMERATE},
   {0}
 };
 

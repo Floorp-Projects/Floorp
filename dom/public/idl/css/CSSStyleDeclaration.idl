@@ -131,6 +131,9 @@
       attribute wstring width; 
       attribute wstring wordSpacing; 
       attribute wstring zIndex;       
+
+      /* XXX: kipp was here */
+      attribute wstring opacity;       
     };
 
 
