@@ -50,7 +50,6 @@ CSRCS		= xp_stub.c
 endif
 
 CSRCS		+= \
-		  xp_qsort.c \
 		  xp_file.c \
 		  xp_list.c \
 		  xp_hash.c \
@@ -62,14 +61,6 @@ EXPORTS		= xp_linebuf.h
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES	= js dbm security img util jtools layer java lay style pref rdf privacy parse
-
-ifeq ($(STAND_ALONE_JAVA),1)
-CSRCS		= xp_qsort.c
-endif
-
-#ifeq ($(MOZ_MAIL_NEWS),1)
-#CSRCS		+= xp_md5.c
-#endif
 
 include $(topsrcdir)/config/rules.mk
 
