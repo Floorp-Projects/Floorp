@@ -38,8 +38,11 @@ DEPTH=..
 #//
 #//------------------------------------------------------------------------
 #DIRS=libi18n layout libstyle liblayer libmocha
-DIRS=libi18n htmldlgs libparse layout libstyle
+DIRS=   libi18n htmldlgs libparse layout libstyle
 
+!ifdef MOZ_OJI
+DIRS=   $(DIRS) plugin
+!endif
 
 #//------------------------------------------------------------------------
 #//
