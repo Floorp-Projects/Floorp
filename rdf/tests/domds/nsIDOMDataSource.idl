@@ -23,10 +23,16 @@
 
 %{C++
 #include "nsIDOMWindow.h"
+#include "nsIDOMNode.h"
 %}
 
 [scriptable, uuid(0b96297e-2459-11d3-8aad-006008948010)]
 interface nsIDOMDataSource : nsISupports {
     void SetWindow(in nsIDOMWindow window);
+};
+
+[scriptable, uuid(2842a0ba-4bd8-11d3-ac84-00a0c900d445)]
+interface nsIDOMViewerElement : nsISupports {
+    attribute nsIDOMNode node;
 };
 
