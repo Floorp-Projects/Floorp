@@ -282,16 +282,26 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  char* iidString = NS_GET_IID(nsIXMLHttpRequest).ToString();
+  if (!iidString)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
                                 "nsIXMLHttpRequest",
-                                NS_GET_IID(nsIXMLHttpRequest).ToString(),
+                                iidString,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
+  nsCRT::free(iidString);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  iidString = NS_GET_IID(nsIJSXMLHttpRequest).ToString();
+  if (!iidString)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
                                 "nsIJSXMLHttpRequest",
-                                NS_GET_IID(nsIJSXMLHttpRequest).ToString(),
+                                iidString,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
+  nsCRT::free(iidString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
