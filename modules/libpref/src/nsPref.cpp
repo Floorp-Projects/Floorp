@@ -915,7 +915,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
 	    	"component://netscape/filespec",
 	    	(nsISupports*)nsnull,
 	    	nsIFileSpec::GetIID(),
-	    	&tmp);
+	    	(void**)&tmp);
 	    if (NS_FAILED(rv))
 	    	return rv;
 	    if (!tmp)
@@ -1345,7 +1345,7 @@ extern "C" JSBool pref_InitInitialObjects()
     	"component://netscape/directoryiterator",
     	(nsISupports*)nsnull,
     	nsIDirectoryIterator::GetIID(),
-    	&i);
+    	(void**)&i);
     if (NS_FAILED(i->Init(componentsDir)))
     	return JS_FALSE;
 
