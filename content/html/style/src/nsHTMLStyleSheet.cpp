@@ -1138,6 +1138,8 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     // Construct the root frame object
     frame = ConstructRootFrame(aPresContext, aContent);
 
+    frame->SetStyleContext(aPresContext, styleContext);
+
     // Process the child content
     ProcessChildren(aPresContext, frame, aContent, childList);
 
@@ -1181,6 +1183,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     else if (nsHTMLAtoms::body == tag) {
       rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
 
+      frame->SetStyleContext(aPresContext, styleContext);
       // Process the child content
       rv = ProcessChildren(aPresContext, frame, aContent, childList);
     }
@@ -1215,6 +1218,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_LIST_ITEM:
         rv = NS_NewBlockFrame(&frame, aContent, aParentFrame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1222,6 +1226,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_INLINE:
         rv = NS_NewInlineFrame(&frame, aContent, aParentFrame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1238,6 +1243,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // table then create an anonynmous table frame
         rv = NS_NewTableRowGroupFrame(aContent, aParentFrame, frame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1246,6 +1252,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX We should check for being inside of a table column group...
         rv = NS_NewTableColFrame(aContent, aParentFrame, frame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1254,6 +1261,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX We should check for being inside of a table...
         rv = NS_NewTableColGroupFrame(aContent, aParentFrame, frame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1262,6 +1270,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX We should check for being inside of a table row group...
         rv = NS_NewTableRowFrame(aContent, aParentFrame, frame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
@@ -1270,6 +1279,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX We should check for being inside of a table row frame...
         rv = NS_NewTableCellFrame(aContent, aParentFrame, frame);
 
+        frame->SetStyleContext(aPresContext, styleContext);
         // Process the child content
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;

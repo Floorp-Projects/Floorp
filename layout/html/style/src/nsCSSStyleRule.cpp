@@ -28,6 +28,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsStyleUtil.h"
+#include "nsIFontMetrics.h"
 
 //#define DEBUG_REFS
 
@@ -553,16 +554,27 @@ nscoord CalcLength(const nsCSSValue& aValue,
   nsCSSUnit unit = aValue.GetUnit();
   switch (unit) {
     case eCSSUnit_EM:
-      return aFont->mFont.size;
+      return NSToCoordRound(aValue.GetFloatValue() * (float)aFont->mFont.size);
     case eCSSUnit_EN:
-      return (aFont->mFont.size / 2);
-    case eCSSUnit_XHeight:
-//      NS_NOTYETIMPLEMENTED("x height unit");
-      return ((aFont->mFont.size / 3) * 2); // XXX HACK!
-    case eCSSUnit_CapHeight:
+      return NSToCoordRound((aValue.GetFloatValue() * (float)aFont->mFont.size) / 2.0f);
+    case eCSSUnit_XHeight: {
+      nsIFontMetrics* fm = aPresContext->GetMetricsFor(aFont->mFont);
+      NS_ASSERTION(nsnull != fm, "can't get font metrics");
+      nscoord xHeight;
+      if (nsnull != fm) {
+        fm->GetXHeight(xHeight);
+        NS_RELEASE(fm);
+      }
+      else {
+        xHeight = ((aFont->mFont.size / 3) * 2);
+      }
+      return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
+    }
+    case eCSSUnit_CapHeight: {
       NS_NOTYETIMPLEMENTED("cap height unit");
-      return ((aFont->mFont.size / 3) * 2); // XXX HACK!
-
+      nscoord capHeight = ((aFont->mFont.size / 3) * 2); // XXX HACK!
+      return NSToCoordRound(aValue.GetFloatValue() * (float)capHeight);
+    }
     case eCSSUnit_Pixel:
       return NSFloatPixelsToTwips(aValue.GetFloatValue(), aPresContext->GetPixelsToTwips());
   }
@@ -781,9 +793,16 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         if ((ourText->mDecoration.GetUnit() == eCSSUnit_Enumerated) ||
             (ourText->mDecoration.GetUnit() == eCSSUnit_Integer)) {
           PRInt32 td = ourText->mDecoration.GetIntValue();
-          font->mFont.decorations = td;
-          font->mFixedFont.decorations = td;
-          text->mTextDecoration = td;
+          if (NS_STYLE_TEXT_DECORATION_NONE == td) {
+            font->mFont.decorations = td;
+            font->mFixedFont.decorations = td;
+            text->mTextDecoration = td;
+          }
+          else {
+            font->mFont.decorations |= td;
+            font->mFixedFont.decorations |= td;
+            text->mTextDecoration |= td;
+          }
         }
 
         // text-transform
