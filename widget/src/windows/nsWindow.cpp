@@ -2260,7 +2260,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
-#ifdef 1
+#if 1
 		case WM_SYSCHAR:
 		case WM_CHAR: 
 			{
