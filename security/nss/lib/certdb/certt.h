@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.7 2001/05/02 21:34:09 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.8 2001/10/17 14:37:10 ian.mcgreer%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -48,6 +48,9 @@
 #include "nssilock.h"
 #include "prio.h"
 #include "prmon.h"
+
+#define NSS_3_4_CODE
+#include "nsspkit.h"
 
 /* Non-opaque objects */
 typedef struct CERTAVAStr                        CERTAVA;
@@ -294,6 +297,9 @@ struct CERTCertificateStr {
     PK11SlotInfo *slot;		/*if this cert came of a token, which is it*/
     CK_OBJECT_HANDLE pkcs11ID;	/*and which object on that token is it */
     PRBool ownSlot;		/*true if the cert owns the slot reference */
+
+    /* This is Stan stuff. */
+    NSSCertificate *nssCertificate;
 };
 #define SEC_CERTIFICATE_VERSION_1		0	/* default created */
 #define SEC_CERTIFICATE_VERSION_2		1	/* v2 */
