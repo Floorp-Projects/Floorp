@@ -14,7 +14,17 @@
   list-style-image            : url("chrome://global/skin/flat-right-arrow-disabled.gif");
 }
 
-box#wizardButtons {
+#wizardButtons {
   margin-top                  : 3px;
 }
 
+/** each wizard has it's own scheme for displaying content. Must account for every variation **/
+
+#contentarea > #content,
+#wizard-box > #content,
+#contentsink > #content,
+#contentarea > #wizardContents {
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 5px;
+}
