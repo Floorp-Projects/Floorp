@@ -17,22 +17,22 @@ function OnLoadNewCard()
 
 	if (window.arguments && window.arguments[0])
 	{
-		if ( window.arguments[0].GetAddressBooksAndURIs )
-			editCard.GetAddressBooksAndURIs = window.arguments[0].GetAddressBooksAndURIs;
+		if ( window.arguments[0].selectedAB )
+			editCard.selectedAB = window.arguments[0].selectedAB;
 	}
-	
-	var abArray = new Array();
-	var uriArray = new Array();
-	var selected = editCard.GetAddressBooksAndURIs(abArray, uriArray);
 
-	// fill popup with address book names
-	var popup = document.getElementById('chooseAddressBook');
-	for ( var index = 0; index < abArray.length; index++ )
-	{
-		var option = new Option(abArray[index], uriArray[index]);
-		popup.add(option, null);
-	}
-	popup.value = uriArray[selected];
+	// set popup with address book names
+	var abPopup = document.getElementById('abPopup');
+	if ( editCard.selectedAB )
+		abPopup.value = editCard.selectedAB;
+	
+	//// FIX ME - looks like we need to focus on both the text field and the tab widget
+	//// probably need to do the same in the addressing widget
+	
+	// focus on first name
+	var firstName = document.getElementById('FirstName');
+	if ( firstName )
+		firstName.focus();
 }
 
 
@@ -106,7 +106,7 @@ function InitEditCard()
 
 function NewCardOKButton()
 {
-	var popup = document.getElementById('chooseAddressBook');
+	var popup = document.getElementById('abPopup');
 	if ( popup )
 	{
 		var uri = popup.value;

@@ -1,68 +1,16 @@
 // functions needed from abMainWindow and abSelectAddresses
 
-function AbNewCardDialog()
+function AbNewCard()
 {
-	window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
-					  "",
-					  "chrome,resizeable=no,modal",
-					  {GetAddressBooksAndURIs:GetAddressBooksAndURIs});
-}
-
-function GetAddressBooksAndURIs(abArray, uriArray)
-{
-	var numAddressBooks = 0;
-	var selected = 0;
+	var selectedAB = 0;
 	var tree = document.getElementById('dirTree');
-	if ( tree )
-	{
-		var body = document.getElementById('dirTreeBody')
-
-		if ( body )
-		{
-			var treeitems = body.getElementsByTagName('treeitem');
-			if ( treeitems )
-			{
-				var name, uri, item, selectedItem = 0;
-				
-				if ( tree.selectedItems && (tree.selectedItems.length == 1) )
-					selectedItem = tree.selectedItems[0];
-
-				for ( var index = 0; index < treeitems.length; index++ ) 
-				{ 
-					item = treeitems[index];
-					uri = item.getAttribute('id');
-					if ( item == selectedItem )
-						selected = numAddressBooks;
-					var buttons = item.getElementsByTagName('titledbutton');
-					if ( uri && buttons && buttons.length == 1 )
-					{
-						name = buttons[0].getAttribute('value');
-						if ( name )
-						{
-							abArray[numAddressBooks] = name;
-							uriArray[numAddressBooks] = uri;
-							numAddressBooks++;
-						}
-					}
-				}
-			}
-		}
-	}
-	return selected;
+	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+		selectedAB = tree.selectedItems[0].getAttribute('id');
+		
+	goNewCardDialog(selectedAB);
 }
 
-function AbEditCardDialog(card, okCallback)
-{
-	var dialog = window.openDialog("chrome://addressbook/content/abEditCardDialog.xul",
-								   "",
-								   "chrome,resizeable=no,modal",
-								   {abURI:document.getElementById('resultsTree').getAttribute('ref'),
-								    card:card, okCallback:okCallback});
-	
-	return dialog;
-}
-
-function EditCard()
+function AbEditCard()
 {
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -74,7 +22,11 @@ function EditCard()
 		var uri = resultsTree.selectedItems[0].getAttribute('id');
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
-		AbEditCardDialog(card, UpdateCardView);
+		var editCardCallback = 0;
+		if ( top.addressbook && top.addressbook.editCardCallback )
+			editCardCallback = top.addressbook.editCardCallback;
+		goEditCardDialog(document.getElementById('resultsTree').getAttribute('ref'),
+						 card, editCardCallback);
 	}
 }
 

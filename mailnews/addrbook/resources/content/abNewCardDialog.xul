@@ -36,24 +36,24 @@ Rights Reserved.
 		style="padding:0px"
 		align="vertical">
 
-<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 
-	<!--box align="horizontal">
-		<html:label for="abPopup">Test: </html:label>
+	<box align="horizontal">
+		<html:label for="abPopup">&chooseAddressBook.label;</html:label>
 		<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 
 			<template> 
-				<html:option uri="..."
-							 value="rdf:http://home.netscape.com/NC-rdf#DirName"
-							 name="rdf:http://home.netscape.com/NC-rdf#URL"/> 
+				<html:option uri="..." value="...">
+					<text value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+				</html:option>
 			</template> 
 		</html:select> 
-	</box-->
+	</box>
 	
-	<box align="horizontal">
+	<!--box align="horizontal">
 		<html:label for="chooseAddressBook">&chooseAddressBook.label;</html:label>
 		<html:select id="chooseAddressBook">
 		</html:select>
-	</box>
+	</box-->
 	
 	<spring style="height:1em"/>
 		

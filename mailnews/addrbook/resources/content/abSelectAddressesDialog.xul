@@ -41,6 +41,7 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/abSelectAddressesDialog.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
+<html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 <!--
 <html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 -->
@@ -117,9 +118,9 @@ Rights Reserved.
 		<box align="vertical" style="padding: .5em; padding-right: 0px">
 			<box align="vertical" flex="50%">
 				<spring style="height:10px"/>
-				<titledbutton id="new" value="&newButton.label;" class="push" onclick="SelectAddressNewButton()"/>	
+				<titledbutton id="new" value="&newButton.label;" class="push" onclick="AbNewCard()"/>	
 				<spring style="height:10px"/>
-				<titledbutton id="edit" value="&editButton.label;" class="push" onclick="SelectAddressEditButton()"/>	
+				<titledbutton id="edit" value="&editButton.label;" class="push" onclick="AbEditCard()"/>	
 				<spring style="height:10px"/>
 				<titledbutton id="view" value="&viewButton.label;" class="push" onclick="SelectAddressViewButton()"/>
 				<spring flex="100%"/>

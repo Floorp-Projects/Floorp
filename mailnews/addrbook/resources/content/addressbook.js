@@ -9,6 +9,7 @@ function OnLoadAddressBook()
 	
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+	top.addressbook.editCardCallback = UpdateCardView;
 
 	try {
 		top.addressbook.SetWebShellWindow(window)
@@ -16,6 +17,14 @@ function OnLoadAddressBook()
 	catch (ex) {
 		dump("failed to set webshell window\n");
 	}
+
+	document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+}
+
+
+function CommandUpdate_AddressBook()
+{
+	dump("CommandUpdate_AddressBook\n");
 }
 
 

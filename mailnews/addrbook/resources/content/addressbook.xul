@@ -44,6 +44,8 @@ Rights Reserved.
 <!--
 <html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 -->
+<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
+<broadcaster id="cmd_NewMessage"/>
 
   <toolbox>
   <menubar>
@@ -55,7 +57,7 @@ Rights Reserved.
 				<menuitem value="&newMessageCmd.label;" oncommand="AbNewMessage();"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&newCardCmd.label;" oncommand="AbNewCardDialog()"/>
+			<menuitem value="&newCardCmd.label;" oncommand="AbNewCard()"/>
 			<menuitem value="&newListCmd.label;" oncommand="AbNewList()"/>
 			<menuitem value="&newAddressBookCmd.label;" oncommand="AbNewAddressBook()"/>
 			<menuitem value="&newDirectoryCmd.label;" oncommand="AbNewDirectoryt()"/>
@@ -86,7 +88,7 @@ Rights Reserved.
 			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
 			<menuseparator/>
 			<menuitem value="&htmlDomainCmd.label;" oncommand="AbHTMLDomain();"/>
-			<menuitem value="&abPropsCmd.label;" oncommand="EditCard();"/>
+			<menuitem value="&abPropsCmd.label;" oncommand="AbEditCard();"/>
 			<menuseparator/>
 			<menuitem value="&prefsCmd.label;" oncommand="MsgPreferences();"/>
 		  </menupopup>
@@ -122,9 +124,9 @@ Rights Reserved.
 		<spring flex="100%"/>
 	</menubar>
 		<toolbar>
-			<titledbutton src="&newcardButton.img;" align="top" value="&newcardButton.label;" onclick="AbNewCardDialog()"/>
+			<titledbutton src="&newcardButton.img;" align="top" value="&newcardButton.label;" onclick="AbNewCard()"/>
 			<titledbutton src="&newlistButton.img;" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
-			<titledbutton src="&editButton.img;" align="top" value="&editButton.label;" onclick="EditCard()"/>
+			<titledbutton src="&editButton.img;" align="top" value="&editButton.label;" onclick="AbEditCard()"/>
 			<titledbutton src="&newmsgButton.img;" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
 			<titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
 

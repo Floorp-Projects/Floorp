@@ -67,30 +67,12 @@ box[class="CardView"] {
 
 /* Custom Trees */
 
-tree[class="abDirectory"] treeitem > treerow > treecell > titledbutton {
-	 vertical-align: bottom;
-	 min-height: 1px;
-	 min-width: 1px;
-	 height: 1em;
-	 width: 1em;
-	 margin:0px;
-	 padding:0px;
-	 border:none;
-	 list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
-	 color:inherit;
+tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
+	list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
 
-tree[class="abResults"] treeitem > treerow  > treecell > titledbutton {
-	 vertical-align: middle;
-	 min-height: 1px;
-	 min-width: 1px;
-	 height: 1em;
-	 width: 2em;
-	 margin:0px;
-	 padding:0px;
-	 border:none;
+tree[class="abResults"] treeitem > treerow > treecell > .tree-icon {
 	 list-style-image: url("chrome://addressbook/skin/person.gif");
-	 color:inherit;
 }
 
 

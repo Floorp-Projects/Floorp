@@ -39,12 +39,9 @@ Rights Reserved.
 				<rule>
 		          <treechildren>
 					<treeitem uri="...">
-						<treerow >
-							<treecell>
-								<treeindentation />
-								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DirName" align="left" />
-							</treecell>
-						</treerow>
+					  <treerow >
+					    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+					  </treerow>
 					</treeitem>
 		          </treechildren>
 				</rule>

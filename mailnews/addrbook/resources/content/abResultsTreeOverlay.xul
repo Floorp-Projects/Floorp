@@ -33,7 +33,7 @@ Rights Reserved.
 		  flex="100%"
 		  rdf:datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange()"
-		  ondblclick="top.EditCard()"
+		  ondblclick="top.AbEditCard()"
 		  rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
 
 		<template>
@@ -41,16 +41,9 @@ Rights Reserved.
 				<treechildren>
 					<treeitem uri="...">
 						<treerow >
-							<treecell>
-								<treeindentation />
-								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DisplayName" align="left" />
-							</treecell>
-							<treecell>
-								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail" align="right" style="list-style-image: none;" />
-								</treecell>
-							<treecell>
-								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#WorkPhone" align="right" style="list-style-image: none;" />
-							</treecell>
+					    	<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#DisplayName"/>
+					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
 						</treerow>
 					</treeitem>
 				</treechildren>

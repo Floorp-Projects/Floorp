@@ -123,11 +123,6 @@ function SelectAddressBccButton()
 	AddSelectedAddressesIntoBucket(prefixBcc);
 }
 
-function SelectAddressNewButton()
-{
-	AbNewCardDialog();
-}
-
 function AddSelectedAddressesIntoBucket(prefix)
 {
 	var item, uri, rdf, cardResource, card, address;
