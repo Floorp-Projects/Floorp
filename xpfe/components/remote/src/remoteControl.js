@@ -64,28 +64,18 @@ var browserRemoteControl = {
         msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
         if ( !msgComposeService ) return(false);
 
-        if ( mailToList )
+        params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+        if (params)
         {
-            msgComposeService.OpenComposeWindowWithValues(null,
-                                                          Components.interfaces.nsIMsgCompType.New,
-                                                          Components.interfaces.nsIMsgCompFormat.Default,
-                                                          mailToList,
-                                                          null,
-                                                          null,
-                                                          null,
-                                                          null,
-                                                          null,
-                                                          null,
-                                                          null);
-        }
-        else
+            params.type = Components.interfaces.nsIMsgCompType.New;
+            params.format = Components.interfaces.nsIMsgCompFormat.Default;
+            composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+            if (composeFields)
         {
-            msgComposeService.OpenComposeWindow(null,
-                                                null,
-                                                Components.interfaces.nsIMsgCompType.New,
-                                                Components.interfaces.nsIMsgCompFormat.Default,
-                                                null,
-                                                null);
+                if (mailToList)
+                   params.composeFields = composeFields;
+                msgComposeService.OpenComposeWindowWithParams(null, params);
+            }
         }
         return(true);
     },

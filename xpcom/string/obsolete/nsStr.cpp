@@ -241,7 +241,7 @@ void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PR
                 StrAppend(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
               } 
               
-              StrAppend(theTempStr,aSource,0,aSource.mLength); //next copy inserted (new) data
+              StrAppend(theTempStr,aSource,aSrcOffset,theLength); //next copy inserted (new) data
             
               PRUint32 theRemains=aDest.mLength-aDestOffset;
               if(theRemains) {
