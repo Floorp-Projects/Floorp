@@ -22,7 +22,7 @@
 
 CControlSite::CControlSite()
 {
-	m_hwndParent = NULL;
+	m_hWndParent = NULL;
 	m_bSetClientSiteFirst = FALSE;
 	m_bVisibleAtRuntime = TRUE;
 	memset(&m_rcObjectPos, 0, sizeof(m_rcObjectPos));
@@ -31,6 +31,7 @@ CControlSite::CControlSite()
 	m_bUIActive = FALSE;
 	m_bInPlaceLocked = FALSE;
 	m_bWindowless = FALSE;
+	m_bSupportWindowlessActivation = TRUE;
 
 	// Initialise ambient properties
 	m_nAmbientLocale = 0;
@@ -49,7 +50,13 @@ CControlSite::~CControlSite()
 
 HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos, IStream *pInitStream)
 {
-	m_hwndParent = hwndParent;
+	if (hwndParent == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	m_hWndParent = hwndParent;
 	m_rcObjectPos = rcPos;
 
 	// TODO see if object is script safe
@@ -101,6 +108,8 @@ HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos,
 	}
 
 	m_spIOleInPlaceObject = m_spObject;
+	m_spIOleInPlaceObjectWindowless = m_spObject;
+
 	m_spIOleInPlaceObject->SetObjectRects(&m_rcObjectPos, &m_rcObjectPos);
 
 	// In-place activate the object
@@ -122,6 +131,11 @@ HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos,
 
 HRESULT CControlSite::Detach()
 {
+	if (m_spIOleInPlaceObjectWindowless)
+	{
+		m_spIOleInPlaceObjectWindowless.Release();
+	}
+
 	if (m_spIOleInPlaceObject)
 	{
 		m_spIOleInPlaceObject->InPlaceDeactivate();
@@ -130,6 +144,7 @@ HRESULT CControlSite::Detach()
 
 	if (m_spIOleObject)
 	{
+		m_spIOleObject->Close(OLECLOSE_NOSAVE);
 		m_spIOleObject->SetClientSite(this);
 		m_spIOleObject.Release();
 	}
@@ -173,7 +188,7 @@ HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 		return E_FAIL;
 	}
 
-	return m_spIOleObject->DoVerb(nVerb, lpMsg, this, 0, m_hwndParent, &m_rcObjectPos);
+	return m_spIOleObject->DoVerb(nVerb, lpMsg, this, 0, m_hWndParent, &m_rcObjectPos);
 }
 
 
@@ -260,7 +275,8 @@ void STDMETHODCALLTYPE CControlSite::OnDataChange(/* [unique][in] */ FORMATETC _
 
 void STDMETHODCALLTYPE CControlSite::OnViewChange(/* [in] */ DWORD dwAspect, /* [in] */ LONG lindex)
 {
-	// TODO redraw
+	// Redraw the control
+	InvalidateRect(NULL, FALSE);
 }
 
 
@@ -299,7 +315,7 @@ void STDMETHODCALLTYPE CControlSite::OnViewStatusChange(/* [in] */ DWORD dwViewS
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetWindow(/* [out] */ HWND __RPC_FAR *phwnd)
 {
-	*phwnd = m_hwndParent;
+	*phwnd = m_hWndParent;
 	return S_OK;
 }
 
@@ -424,6 +440,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnPosRectChange(/* [in] */ LPCRECT lprcP
 	return S_OK;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // IOleInPlaceSiteEx implementation
 
@@ -449,8 +466,8 @@ HRESULT STDMETHODCALLTYPE CControlSite::RequestUIActivate(void)
 
 HRESULT STDMETHODCALLTYPE CControlSite::CanWindowlessActivate(void)
 {
-	// TODO allow windowless activation
-	return S_FALSE;
+	// Allow windowless activation?
+	return (m_bSupportWindowlessActivation) ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetCapture(void)
@@ -477,37 +494,196 @@ HRESULT STDMETHODCALLTYPE CControlSite::SetFocus(/* [in] */ BOOL fFocus)
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] */ DWORD grfFlags, /* [out] */ HDC __RPC_FAR *phDC)
 {
-	return E_NOTIMPL;
+	if (phDC == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Can't do nested painting
+	if (m_hDCBuffer != NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	m_rcBuffer = m_rcObjectPos;
+	if (pRect != NULL)
+	{
+		m_rcBuffer = *pRect;
+	}
+
+	m_hBMBuffer = NULL;
+	m_dwBufferFlags = grfFlags;
+
+	// See if the control wants a DC that is onscreen or offscreen
+	
+	if (m_dwBufferFlags & OLEDC_OFFSCREEN)
+	{
+		m_hDCBuffer = CreateCompatibleDC(NULL);
+		if (m_hDCBuffer == NULL)
+		{
+			// Error
+			return E_OUTOFMEMORY;
+		}
+
+		long cx = m_rcBuffer.right - m_rcBuffer.left;
+		long cy = m_rcBuffer.bottom - m_rcBuffer.top;
+
+		m_hBMBuffer = CreateCompatibleBitmap(m_hDCBuffer, cx, cy);
+		m_hBMBufferOld = (HBITMAP) SelectObject(m_hDCBuffer, m_hBMBuffer);
+		SetViewportOrgEx(m_hDCBuffer, m_rcBuffer.left, m_rcBuffer.top, NULL);
+
+		// TODO When OLEDC_PAINTBKGND we must draw every site behind this one
+	}
+	else
+	{
+		// TODO When OLEDC_PAINTBKGND we must draw every site behind this one
+
+		// Get the window DC
+		m_hDCBuffer = GetWindowDC(m_hWndParent);
+		if (m_hDCBuffer == NULL)
+		{
+			// Error
+			return E_OUTOFMEMORY;
+		}
+
+		// Clip the control so it can't trash anywhere it isn't allowed to draw
+		if (!(m_dwBufferFlags & OLEDC_NODRAW))
+		{
+			m_hRgnBuffer = CreateRectRgnIndirect(&m_rcBuffer);
+
+			// TODO Clip out opaque areas of sites behind this one
+
+			SelectClipRgn(m_hDCBuffer, m_hRgnBuffer);
+		}
+	}
+
+	*phDC = m_hDCBuffer;
+
+	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::ReleaseDC(/* [in] */ HDC hDC)
 {
-	return E_NOTIMPL;
+	// Release the DC
+	NG_ASSERT(hDC);
+	if (hDC == NULL || hDC != m_hDCBuffer)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Test if the DC was offscreen or onscreen
+	if (m_dwBufferFlags & OLEDC_OFFSCREEN)
+	{
+		// BitBlt the buffer into the control's object
+		SetViewportOrgEx(m_hDCBuffer, 0, 0, NULL);
+		HDC hdc = GetWindowDC(m_hWndParent);
+
+		long cx = m_rcBuffer.right - m_rcBuffer.left;
+		long cy = m_rcBuffer.bottom - m_rcBuffer.top;
+
+		BitBlt(hdc, m_rcBuffer.left, m_rcBuffer.top, cx, cy, m_hDCBuffer, 0, 0, SRCCOPY);
+		
+		::ReleaseDC(m_hWndParent, hdc);
+	}
+	else
+	{
+		// TODO If OLEDC_PAINTBKGND is set draw the DVASPECT_CONTENT of every object above this one
+	}
+
+	// Clean up settings ready for next drawing
+
+	if (m_hRgnBuffer)
+	{
+		SelectClipRgn(m_hDCBuffer, NULL);
+		DeleteObject(m_hRgnBuffer);
+		m_hRgnBuffer = NULL;
+	}
+	
+	SelectObject(m_hDCBuffer, m_hBMBufferOld);
+	if (m_hBMBuffer)
+	{
+		DeleteObject(m_hBMBuffer);
+		m_hBMBuffer = NULL;
+	}
+
+	::ReleaseDC(m_hWndParent, m_hDCBuffer);
+	m_hDCBuffer = NULL;
+
+	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::InvalidateRect(/* [in] */ LPCRECT pRect, /* [in] */ BOOL fErase)
 {
-	return E_NOTIMPL;
+	// Clip the rectangle against the object's size and invalidate it
+	RECT rcI = { 0, 0, 0, 0 };
+	if (pRect == NULL)
+	{
+		rcI = m_rcObjectPos;
+	}
+	else
+	{
+		IntersectRect(&rcI, &m_rcObjectPos, pRect);
+	}
+	::InvalidateRect(m_hWndParent, &rcI, fErase);
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CControlSite::InvalidateRgn(/* [in] */ HRGN hRGN, /* [in] */ BOOL fErase)
 {
-	return E_NOTIMPL;
+	if (hRGN == NULL)
+	{
+		::InvalidateRect(m_hWndParent, &m_rcObjectPos, fErase);
+	}
+	else
+	{
+		// Clip the region with the object's bounding area
+		HRGN hrgnClip = CreateRectRgnIndirect(&m_rcObjectPos);
+		if (CombineRgn(hrgnClip, hrgnClip, hRGN, RGN_AND) != ERROR)
+		{
+			::InvalidateRgn(m_hWndParent, hrgnClip, fErase);
+		}
+		DeleteObject(hrgnClip);
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CControlSite::ScrollRect(/* [in] */ INT dx, /* [in] */ INT dy, /* [in] */ LPCRECT pRectScroll, /* [in] */ LPCRECT pRectClip)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CControlSite::AdjustRect(/* [out][in] */ LPRECT prc)
 {
-	return E_NOTIMPL;
+	if (prc == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Clip the rectangle against the object position
+	RECT rcI = { 0, 0, 0, 0 };
+	IntersectRect(&rcI, &m_rcObjectPos, prc);
+	*prc = rcI;
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnDefWindowMessage(/* [in] */ UINT msg, /* [in] */ WPARAM wParam, /* [in] */ LPARAM lParam, /* [out] */ LRESULT __RPC_FAR *plResult)
 {
-	return E_NOTIMPL;
+	if (plResult == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
+	// Pass the message to the windowless control
+	if (m_bWindowless && m_spIOleInPlaceObjectWindowless)
+	{
+		return m_spIOleInPlaceObjectWindowless->OnWindowMessage(msg, wParam, lParam, plResult);
+	}
+
+	return S_FALSE;
 }
 
 
@@ -546,7 +722,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::TransformCoords(/* [out][in] */ POINTL _
 		return E_INVALIDARG;
 	}
 
-	HDC hdc = ::GetDC(m_hwndParent);
+	HDC hdc = ::GetDC(m_hWndParent);
 	::SetMapMode(hdc, MM_HIMETRIC);
 	POINT rgptConvert[2];
 	rgptConvert[0].x = 0;
@@ -597,7 +773,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::TransformCoords(/* [out][in] */ POINTL _
 		hr = E_INVALIDARG;
 	}
 
-	::ReleaseDC(m_hwndParent, hdc);
+	::ReleaseDC(m_hWndParent, hdc);
 
 	return hr;
 }
