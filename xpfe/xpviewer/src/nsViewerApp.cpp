@@ -173,10 +173,10 @@ nsViewerApp::SetupRegistry()
   // Register our browser window factory
   nsIFactory* bwf;
   NS_NewBrowserWindowFactory(&bwf);
-  nsRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
+  nsRepository::RegisterFactory(kBrowserWindowCID, NULL, NULL, bwf, PR_FALSE);
 
   NS_NewXPBaseWindowFactory(&bwf);
-  nsRepository::RegisterFactory(kXPBaseWindowCID, bwf, PR_FALSE);
+  nsRepository::RegisterFactory(kXPBaseWindowCID, NULL, NULL, bwf, PR_FALSE);
 
   return NS_OK;
 }

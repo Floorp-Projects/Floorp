@@ -57,13 +57,13 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores is being registered\n");
-    nsRepository::RegisterFactory(kAppCoresManagerCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kMailCoreCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kRDFCoreCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kToolbarCoreCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kToolkitCoreCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kBrowserAppCoreCID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kEditorAppCoreCID, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kMailCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     return NS_OK;
 }
 

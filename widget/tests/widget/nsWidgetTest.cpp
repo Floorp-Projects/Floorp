@@ -1192,32 +1192,32 @@ nsresult WidgetTest(int *argc, char **argv)
 
     
     // register widget classes
-    nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     
-    nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCTooltipWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCCheckButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCHorzScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCVertScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCTabWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCTooltipWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    nsRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsRepository::RegisterComponent(kCImageIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
 
       // Create a application shell
     nsIAppShell *appShell;
