@@ -1,5 +1,5 @@
 #!perl
-package CodeWarriorLib;
+package Moz::CodeWarriorLib;
 
 =pod
 
