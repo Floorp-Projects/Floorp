@@ -37,13 +37,14 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
+#include <math.h>
+
 #include "nsSVGGraphicFrame.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsASVGPathBuilder.h"
 #include "nsIDOMSVGMatrix.h"
-#include <math.h>
 
 class nsSVGPathFrame : public nsSVGGraphicFrame
 {
