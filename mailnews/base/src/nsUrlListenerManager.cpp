@@ -48,7 +48,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID
 
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {
-	if (m_listeners)
+	if (m_listeners && aUrlListener)
 		m_listeners->AppendElement(aUrlListener);
 
 	return NS_OK;
