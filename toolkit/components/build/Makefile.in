@@ -85,7 +85,7 @@ SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifdef MOZ_PHOENIX
+ifneq (,$(MOZ_PHOENIX)($MOZ_SUNBIRD))
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
