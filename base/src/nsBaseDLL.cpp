@@ -53,7 +53,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kPropertiesCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kPersistentPropertiesCID, NULL, NULL,
                                   path, PR_TRUE, PR_TRUE);
 
   rv = compMgr->RegisterComponent(kObserverServiceCID,
@@ -84,7 +84,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kPropertiesCID, path);
+  rv = compMgr->UnregisterFactory(kPersistentPropertiesCID, path);
 
 
   rv = compMgr->UnregisterFactory(kObserverServiceCID, path);
@@ -108,8 +108,8 @@ NSGetFactory(nsISupports* aServMgr,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aClass.Equals(kPropertiesCID)) {
-    nsPropertiesFactory *propsFactory = new nsPropertiesFactory();
+  if (aClass.Equals(kPersistentPropertiesCID)) {
+    nsPersistentPropertiesFactory *propsFactory = new nsPersistentPropertiesFactory();
     if (!propsFactory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

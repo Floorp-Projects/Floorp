@@ -204,9 +204,9 @@ static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
 
 #if defined(NS_USING_PROFILES)
 static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
@@ -408,7 +408,7 @@ NS_SetupRegistry()
 
   nsComponentManager::RegisterComponent(kUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
 
-  nsComponentManager::RegisterComponent(kPropertiesCID,           NULL, NULL, BASE_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL, NULL, BASE_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kCollationCID,            NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCollationFactoryCID,     NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);

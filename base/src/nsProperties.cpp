@@ -17,6 +17,130 @@
  */
 
 #define NS_IMPL_IDS
+
+#include "nsIProperties.h"
+#include "nsHashtable.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsProperties : public nsIProperties, public nsHashtable {
+public:
+
+    NS_DECL_ISUPPORTS
+
+    // nsIProperties methods:
+    NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
+    NS_IMETHOD UndefineProperty(const char* prop);
+    NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
+    NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
+    NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
+
+    // nsProperties methods:
+    nsProperties();
+    virtual ~nsProperties();
+
+    static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
+
+};
+
+NS_IMPL_ISUPPORTS(nsProperties, nsIProperties::GetIID());
+
+nsProperties::nsProperties()
+{
+}
+
+PRBool
+nsProperties::ReleaseValues(nsHashKey* key, void* data, void* closure)
+{
+    nsISupports* value = (nsISupports*)data;
+    NS_IF_RELEASE(value);
+    return PR_TRUE;
+}
+
+nsProperties::~nsProperties()
+{
+    Enumerate(ReleaseValues);
+}
+
+NS_IMETHODIMP
+nsProperties::DefineProperty(const char* prop, nsISupports* initialValue)
+{
+    nsCStringKey key(prop);
+    if (Exists(&key))
+        return NS_ERROR_FAILURE;
+
+    nsISupports* prevValue = (nsISupports*)Put(&key, initialValue);
+    NS_ASSERTION(prevValue == NULL, "hashtable error");
+    NS_IF_ADDREF(initialValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProperties::UndefineProperty(const char* prop)
+{
+    nsCStringKey key(prop);
+    if (!Exists(&key))
+        return NS_ERROR_FAILURE;
+
+    nsISupports* prevValue = (nsISupports*)Remove(&key);
+    NS_IF_RELEASE(prevValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProperties::GetProperty(const char* prop, nsISupports* *result)
+{
+    nsCStringKey key(prop);
+    if (!Exists(&key))
+        return NS_ERROR_FAILURE;
+
+    nsISupports* value = (nsISupports*)Get(&key);
+    NS_IF_ADDREF(value);
+    *result = value;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProperties::SetProperty(const char* prop, nsISupports* value)
+{
+    nsCStringKey key(prop);
+    if (!Exists(&key))
+        return NS_ERROR_FAILURE;
+
+    nsISupports* prevValue = (nsISupports*)Put(&key, value);
+    NS_IF_RELEASE(prevValue);
+    NS_IF_ADDREF(value);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProperties::HasProperty(const char* prop, nsISupports* expectedValue)
+{
+    nsISupports* value;
+    nsresult rv = GetProperty(prop, &value);
+    if (NS_FAILED(rv)) return NS_COMFALSE;
+    rv = (value == expectedValue) ? NS_OK : NS_COMFALSE;
+    NS_IF_RELEASE(value);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewIProperties(nsIProperties* *result)
+{
+    nsProperties* props = new nsProperties();
+    if (props == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(props);
+    *result = props;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Persistent Properties (should go in a separate file)
+////////////////////////////////////////////////////////////////////////////////
+
 #include "nsID.h"
 
 #include "nsBaseDLL.h"
@@ -28,36 +152,48 @@
 #include "plhash.h"
 #include "pratom.h"
 
-class nsProperties : public nsIProperties
+class nsPersistentProperties : public nsIPersistentProperties
 {
 public:
-  nsProperties();
-  virtual ~nsProperties();
+  nsPersistentProperties();
+  virtual ~nsPersistentProperties();
 
   NS_DECL_ISUPPORTS
 
+  // nsIProperties methods:
+  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
+  NS_IMETHOD UndefineProperty(const char* prop);
+  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
+  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
+  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
+
+  // nsIPersistentProperties methods:
   NS_IMETHOD Load(nsIInputStream* aIn);
+  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
+  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
+
+  // XXX these 2 methods will be subsumed by the ones from 
+  // nsIProperties once we figure this all out
   NS_IMETHOD GetProperty(const nsString& aKey, nsString& aValue);
   NS_IMETHOD SetProperty(const nsString& aKey, nsString& aNewValue,
                          nsString& aOldValue);
-  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
-  NS_IMETHOD Subclass(nsIProperties* aSubclass);
 
+  // nsPersistentProperties methods:
   PRInt32 Read();
   PRInt32 SkipLine(PRInt32 c);
   PRInt32 SkipWhiteSpace(PRInt32 c);
 
   nsIUnicharInputStream* mIn;
-  nsIProperties*         mSubclass;
+  nsIPersistentProperties* mSubclass;
   struct PLHashTable*    mTable;
 };
 
-nsProperties::nsProperties()
+nsPersistentProperties::nsPersistentProperties()
 {
   NS_INIT_REFCNT();
 
   mIn = nsnull;
-  mSubclass = NS_STATIC_CAST(nsIProperties*, this);
+  mSubclass = NS_STATIC_CAST(nsIPersistentProperties*, this);
   mTable = nsnull;
 }
 
@@ -69,7 +205,7 @@ FreeHashEntries(PLHashEntry* he, PRIntn i, void* arg)
   return HT_ENUMERATE_REMOVE;
 }
 
-nsProperties::~nsProperties()
+nsPersistentProperties::~nsPersistentProperties()
 {
   if (mTable) {
     // Free the PRUnicode* pointers contained in the hash table entries
@@ -81,17 +217,19 @@ nsProperties::~nsProperties()
 
 NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
 
-NS_IMPL_ISUPPORTS(nsProperties, kIPropertiesIID)
+NS_IMPL_ISUPPORTS(nsPersistentProperties, kIPropertiesIID)
 
 NS_IMETHODIMP
-nsProperties::Load(nsIInputStream *aIn)
+nsPersistentProperties::Load(nsIInputStream *aIn)
 {
   PRInt32  c;
   nsresult ret;
 
   ret = NS_NewConverterStream(&mIn, nsnull, aIn);
   if (ret != NS_OK) {
+#ifdef NS_DEBUG
     cout << "NS_NewConverterStream failed" << endl;
+#endif
     return NS_ERROR_FAILURE;
   }
   c = Read();
@@ -155,7 +293,7 @@ CompareKeys(const PRUnichar *aStr1, const PRUnichar *aStr2)
 }
 
 NS_IMETHODIMP
-nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
+nsPersistentProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   nsString& aOldValue)
 {
   // XXX The ToNewCString() calls allocate memory using "new" so this code
@@ -177,7 +315,7 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
-  if (he && aOldValue.Length()) {
+  if (he && aOldValue) {
     // XXX fix me
   }
   PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
@@ -187,13 +325,13 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
 }
 
 NS_IMETHODIMP
-nsProperties::Save(nsIOutputStream* aOut, const nsString& aHeader)
+nsPersistentProperties::Save(nsIOutputStream* aOut, const nsString& aHeader)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsProperties::Subclass(nsIProperties* aSubclass)
+nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 {
   if (aSubclass) {
     mSubclass = aSubclass;
@@ -203,9 +341,9 @@ nsProperties::Subclass(nsIProperties* aSubclass)
 }
 
 NS_IMETHODIMP
-nsProperties::GetProperty(const nsString& aKey, nsString& aValue)
+nsPersistentProperties::GetProperty(const nsString& aKey, nsString& aValue)
 {
-  const PRUnichar *key = aKey.GetUnicode();
+  const PRUnichar *key = aKey;
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
@@ -219,7 +357,7 @@ nsProperties::GetProperty(const nsString& aKey, nsString& aValue)
 }
 
 PRInt32
-nsProperties::Read()
+nsPersistentProperties::Read()
 {
   PRUnichar  c;
   PRUint32  nRead;
@@ -237,7 +375,7 @@ nsProperties::Read()
   (((c) == ' ') || ((c) == '\t') || ((c) == '\r') || ((c) == '\n'))
 
 PRInt32
-nsProperties::SkipWhiteSpace(PRInt32 c)
+nsPersistentProperties::SkipWhiteSpace(PRInt32 c)
 {
   while ((c >= 0) && IS_WHITE_SPACE(c)) {
     c = Read();
@@ -247,7 +385,7 @@ nsProperties::SkipWhiteSpace(PRInt32 c)
 }
 
 PRInt32
-nsProperties::SkipLine(PRInt32 c)
+nsPersistentProperties::SkipLine(PRInt32 c)
 {
   while ((c >= 0) && (c != '\r') && (c != '\n')) {
     c = Read();
@@ -262,21 +400,55 @@ nsProperties::SkipLine(PRInt32 c)
   return c;
 }
 
-nsPropertiesFactory::nsPropertiesFactory()
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP 
+nsPersistentProperties::DefineProperty(const char* prop, nsISupports* initialValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsPersistentProperties::UndefineProperty(const char* prop)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsPersistentProperties::GetProperty(const char* prop, nsISupports* *result)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsPersistentProperties::SetProperty(const char* prop, nsISupports* value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsPersistentProperties::HasProperty(const char* prop, nsISupports* value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
+////////////////////////////////////////////////////////////////////////////////
+
+nsPersistentPropertiesFactory::nsPersistentPropertiesFactory()
 {
   NS_INIT_REFCNT();
 }
 
-nsPropertiesFactory::~nsPropertiesFactory()
+nsPersistentPropertiesFactory::~nsPersistentPropertiesFactory()
 {
 }
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-NS_IMPL_ISUPPORTS(nsPropertiesFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS(nsPersistentPropertiesFactory, kIFactoryIID);
 
 NS_IMETHODIMP
-nsPropertiesFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
+nsPersistentPropertiesFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   void** aResult)
 {
   if (aOuter) {
@@ -286,7 +458,7 @@ nsPropertiesFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = nsnull;
-  nsProperties* props = new nsProperties();
+  nsPersistentProperties* props = new nsPersistentProperties();
   if (!props) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -299,7 +471,7 @@ nsPropertiesFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsPropertiesFactory::LockFactory(PRBool aLock)
+nsPersistentPropertiesFactory::LockFactory(PRBool aLock)
 {
   if (aLock) {
     PR_AtomicIncrement(&gLockCount);
@@ -310,3 +482,5 @@ nsPropertiesFactory::LockFactory(PRBool aLock)
 
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////

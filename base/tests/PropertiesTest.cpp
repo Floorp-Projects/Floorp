@@ -29,7 +29,7 @@
 #include "plevent.h"
 #endif
 
-#define TEST_URL "resource:/res/test.properties"
+#define TEST_URL "resource:/res/test.PersistentProperties"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -49,7 +49,7 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
+static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 
@@ -101,11 +101,11 @@ main(int argc, char *argv[])
     printf("cannot open stream\n");
     return 1;
   }
-  nsIProperties *props = nsnull;
-  ret = nsComponentManager::CreateInstance(kPropertiesCID, NULL,
-    kIPropertiesIID, (void**) &props);
+  nsIPersistentProperties *props = nsnull;
+  ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+    kIPersistentPropertiesIID, (void**) &props);
   if (NS_FAILED(ret)) {
-    printf("create nsIProperties failed\n");
+    printf("create nsIPersistentProperties failed\n");
     return 1;
   }
   props->Load(in);
