@@ -58,10 +58,10 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
  * object.
  */
 
-class nsLoadListenerProxy : public nsIDOMLoadListener {
+class txLoadListenerProxy : public nsIDOMLoadListener {
 public:
-    nsLoadListenerProxy(nsWeakPtr aParent);
-    virtual ~nsLoadListenerProxy();
+    txLoadListenerProxy(nsWeakPtr aParent);
+    virtual ~txLoadListenerProxy();
 
     NS_DECL_ISUPPORTS
 
@@ -78,20 +78,20 @@ protected:
     nsWeakPtr  mParent;
 };
 
-nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent)
+txLoadListenerProxy::txLoadListenerProxy(nsWeakPtr aParent)
 {
     NS_INIT_ISUPPORTS();
     mParent = aParent;
 }
 
-nsLoadListenerProxy::~nsLoadListenerProxy()
+txLoadListenerProxy::~txLoadListenerProxy()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
+NS_IMPL_ISUPPORTS1(txLoadListenerProxy, nsIDOMLoadListener)
 
 NS_IMETHODIMP
-nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
+txLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
 {
     nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
 
@@ -103,7 +103,7 @@ nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
+txLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 {
     nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
 
@@ -115,7 +115,7 @@ nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
+txLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 {
     nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
 
@@ -127,7 +127,7 @@ nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
+txLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
 {
     nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
 
@@ -139,7 +139,7 @@ nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
+txLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 {
     nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
 
@@ -217,7 +217,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
     nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(DOMDocument);
     if (target) {
         nsWeakPtr requestWeak = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIDOMLoadListener*, this)));
-        nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
+        txLoadListenerProxy* proxy = new txLoadListenerProxy(requestWeak);
         if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
         // This will addref the proxy
