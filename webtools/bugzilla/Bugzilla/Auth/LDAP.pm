@@ -78,7 +78,7 @@ sub authenticate {
     if($mesg->code) {
         return (AUTH_ERROR, undef,
                 "connect_failed",
-                { errstr => $mesg->err });
+                { errstr => $mesg->error });
     }
 
     # We've got our anonymous bind;  let's look up this user.
