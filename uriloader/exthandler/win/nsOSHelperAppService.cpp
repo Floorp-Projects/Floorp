@@ -224,6 +224,13 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
     nsCAutoString urlSpec;
     aURL->GetAsciiSpec(urlSpec);
 
+    // Some versions of windows (Win2k before SP3, Win XP before SP1)
+    // crash in ShellExecute on long URLs (bug 161357).
+    // IE 5 and 6 support URLS of 2083 chars in length, 2K is safe
+    const PRUint32 maxSafeURL(2048);
+    if (urlSpec.Length() > maxSafeURL)
+      return NS_ERROR_FAILURE;
+
     LONG r = (LONG) ::ShellExecute( NULL, "open", urlSpec.get(), NULL, NULL, SW_SHOWNORMAL);
     if (r < 32) 
       rv = NS_ERROR_FAILURE;
