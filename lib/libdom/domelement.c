@@ -92,8 +92,7 @@ element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     DOM_Element *element;
     JSString *name;
-    const char *value;
-    JSBool cache;
+    DOM_AttributeEntry *entry;
 
     if (!JS_ConvertArguments(cx, argc, argv, "S", &name))
         return JS_FALSE;
@@ -102,10 +101,12 @@ element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!element)
         return JS_TRUE;
 
-    value = element->ops->getAttribute(cx, element, JS_GetStringBytes(name),
-                                       &cache);
-    if (value) {
-        *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, value));
+    if (!DOM_GetElementAttribute(cx, element, JS_GetStringBytes(name),
+                                 &entry))
+        return JS_FALSE;
+
+    if (entry && entry->value) {
+        *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, entry->value));
         if (!JSVAL_TO_STRING(*rval))
             return JS_FALSE;
     } else {
@@ -120,17 +121,16 @@ element_setAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
     DOM_Element *element;
-    JSString *name, *value;
+    char *name, *value;
 
-    if (!JS_ConvertArguments(cx, argc, argv, "SS", &name, &value))
+    if (!JS_ConvertArguments(cx, argc, argv, "ss", &name, &value))
         return JS_FALSE;
 
     element = (DOM_Element *)JS_GetPrivate(cx, obj);
     if (!element)
         return JS_TRUE;
-
-    return element->ops->setAttribute(cx, element, JS_GetStringBytes(name),
-                                      JS_GetStringBytes(value));
+    
+    return DOM_SetElementAttribute(cx, element, name, value);
 
 }
 
@@ -187,7 +187,7 @@ static JSFunctionSpec element_methods[] = {
 
 DOM_Element *
 DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
-               DOM_NodeOps *nodeops, uintN nattrs)
+               DOM_NodeOps *nodeops)
 {
     DOM_Node *node;
     DOM_Element *element = XP_NEW_ZAP(DOM_Element);
@@ -201,7 +201,6 @@ DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
     
     element->tagName = tagName;
     element->ops = eleops;
-    element->nattrs = nattrs;
     return element;
 }
 
@@ -227,6 +226,110 @@ DOM_ObjectForElement(JSContext *cx, DOM_Element *element)
     if (element->node.mocha_object)
         return element->node.mocha_object;
     return DOM_NewElementObject(cx, element);
+}
+
+static void
+DestroyAttrs(JSContext *cx, DOM_Element *element)
+{
+    uintN i;
+    DOM_AttributeEntry *entry;
+    for (i = 0; i < element->nattrs; i++) {
+        entry = element->attrs + i;
+        JS_free(cx, (char *)entry->name);
+        JS_free(cx, (char *)entry->value);
+        JS_free(cx, entry);
+    }
+    JS_free(cx, element->attrs);
+    element->attrs = NULL;
+    element->nattrs = 0;
+}
+
+JSBool
+DOM_SetElementAttributes(JSContext *cx, DOM_Element *element,
+                         const char **names, const char **values, uintN count)
+{
+    DOM_AttributeEntry *entry;
+    uintN i;
+
+    if (element->attrs)
+        DestroyAttrs(cx, element);
+    if (!(count && names && values))
+        return JS_TRUE;
+    element->attrs =
+        (DOM_AttributeEntry *)JS_malloc(cx,count * sizeof(DOM_AttributeEntry));
+    if (!element->attrs)
+        return JS_FALSE;
+    element->nattrs = count;
+
+    for (i = 0; i < count; i++) {
+        entry = element->attrs + i;
+        entry->name = names[i];
+        entry->value = values[i];
+        entry->dirty = entry->data = 0;
+    }
+    return JS_TRUE;
+}
+
+JSBool
+DOM_GetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        DOM_AttributeEntry **entryp)
+{
+    DOM_AttributeEntry *entry;
+    uintN i;
+
+    for (i = 0, entry = element->attrs;
+         i < element->nattrs && entry->name;
+         i++, entry++) {
+        if (!strcmp(name, entry->name)) {
+            *entryp = entry;
+            return JS_TRUE;
+        }
+    }
+    *entryp = NULL;
+    return JS_TRUE;
+}
+
+static JSBool
+AddAttribute(JSContext *cx, DOM_Element *element, const char *name,
+             const char *value)
+{
+    DOM_AttributeEntry *entry;
+
+    if (!element->attrs) {
+        element->attrs = JS_malloc(cx, sizeof(DOM_AttributeEntry));
+        if (!element->attrs)
+            return JS_FALSE;
+        element->nattrs = 1;
+    } else {
+        element->attrs = XP_REALLOC(element->attrs,
+                             (element->nattrs++) * sizeof(DOM_AttributeEntry));
+        if (!element->attrs)
+            return JS_FALSE;
+    }
+    entry = element->attrs + element->nattrs - 1;
+    entry->name = name;
+    entry->value = value;
+    return JS_TRUE;
+}
+
+JSBool
+DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        const char *value)
+{
+    DOM_AttributeEntry *entry;
+    if (!DOM_GetElementAttribute(cx, element, name, &entry))
+        return JS_FALSE;
+    if (!entry) {
+        if (!AddAttribute(cx, element, name, value))
+            return JS_FALSE;
+    } else {
+        if (entry->value)
+            JS_free(cx, (char *)entry->value);
+        entry->value = value;
+    }
+    entry->dirty = JS_TRUE;
+
+    return element->ops->setAttribute(cx, element, name, value);
 }
 
 static JSBool

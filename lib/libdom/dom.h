@@ -203,9 +203,17 @@ DOM_PushNode(DOM_Node *node, DOM_Node *parent);
 DOM_Node *
 DOM_PopNode(DOM_Node *node);
 
+/*
+ * An attribute entry, for name="value".
+ * data is for use by the underlying embedding, to keep it from having to parse
+ * "value" every time.  Dirty is set to true when a set operation happens
+ * through the DOM interface, and the embedding can key on that to reparse
+ * "value", and reset data and dirty.
+ */
+
 struct DOM_AttributeEntry {
-    char *name;
-    char *value;
+    const char *name;
+    const char *value;
     uint32 data;
     JSBool dirty;
 };
@@ -216,6 +224,7 @@ struct DOM_Element {
     const char		   *tagName;
     uintN			   nattrs;
     DOM_AttributeEntry *attrs;
+    void               *style;  /* later, later... */
 };
 
 /*
@@ -225,7 +234,7 @@ struct DOM_Element {
 
 DOM_Element *
 DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
-               DOM_NodeOps *nodeops, uintN nattrs);
+               DOM_NodeOps *nodeops);
 
 JSObject *
 DOM_NewElementObject(JSContext *cx, DOM_Element *element);
@@ -233,9 +242,48 @@ DOM_NewElementObject(JSContext *cx, DOM_Element *element);
 JSObject *
 DOM_ObjectForElement(JSContext *cx, DOM_Element *element);
 
+JSBool
+DOM_GetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        DOM_AttributeEntry **entryp);
+
+JSBool
+DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
+                        const char *value);
+
+/*
+ * Set the attributes from a pair of synchronized lists.
+ * (This is what PA_FetchAllNameValues provides, handily enough.)
+ *
+ * The names and values lists should be malloc'd by the caller, and will
+ * be freed by the engine as appropriate.
+ */
+JSBool
+DOM_SetElementAttributes(JSContext *cx, DOM_Element *element,
+                         const char **names, const char **values, uintN count);
+
+/*
+ * Set the attributes from a list that looks like:
+ * name1, value1, name2, value2, ..., name<n>, value<n>, NULL.
+ *
+ * By pure coincidence, this is what the expat start-element callback
+ * provides.  What luck!
+ * 
+ * The attrs list should be malloc'd by the caller, as well as all the
+ * entries.  The DOM engine will free them as appropriate.
+ */
+JSBool
+DOM_SetElementAttributes2(JSContext *cx, DOM_Element *element,
+                          const char **attrs);
+
+/*
+ * Remove all attributes from an element.
+ */
+JSBool
+DOM_ClearElementAttributes(JSContext *cx, DOM_Element *element);
+
 struct DOM_Attribute {
     DOM_Node node;
-    char * value;
+    char * name;
     DOM_Element *element;
 };
 

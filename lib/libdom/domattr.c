@@ -78,12 +78,6 @@ DOM_NewAttributeObject(JSContext *cx, DOM_Attribute *attr)
         !JS_SetProperty(cx, obj, "name", &v))
         return NULL;
 
-    str = JS_NewStringCopyZ(cx, attr->value);
-    v = STRING_TO_JSVAL(str);
-    if (!str ||
-        !JS_SetProperty(cx, obj, "value", &v))
-        return NULL;
-
     v = JSVAL_TRUE;
     if (!JS_SetProperty(cx, obj, "specified", &v))
         return NULL;
@@ -100,7 +94,6 @@ DOM_NewAttribute(const char *name, const char *value, DOM_Element *element)
 	return NULL;
     
     attr->node.name = XP_STRDUP(name);
-    attr->value = XP_STRDUP(value);
     attr->element = element;
     return attr;
 }
