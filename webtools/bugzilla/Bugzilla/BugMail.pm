@@ -831,7 +831,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
 # since if the bug didn't change, you wouldn't be getting mail
 # in the first place! see http://bugzilla.mozilla.org/show_bug.cgi?id=29820 
 # for details.
-    $substs{"neworchanged"} = $isnew ? 'New: ' : '';
+    $substs{"neworchanged"} = $isnew ? ' New: ' : '';
     $substs{"to"} = $person;
     $substs{"cc"} = '';
     $substs{"bugid"} = $id;
