@@ -290,8 +290,12 @@ protected:
 
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
+  NS_IMETHOD IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
+  void       AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOldIndex, 
+                                       PRBool &aDoSetNewIndex, PRBool &aWasDisabled,
+                                       PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
 
   nsGfxListControlFrame();
   virtual ~nsGfxListControlFrame();
