@@ -64,7 +64,8 @@
 	z = __ieee754_sinh(x);
 	if(_LIB_VERSION == _IEEE_) return z;
 	if(!fd_finite(z)&&fd_finite(x)) {
-	    return __kernel_standard(x,x,25); /* sinh overflow */
+        int err;
+	    return __kernel_standard(x,x,25,&err); /* sinh overflow */
 	} else
 	    return z;
 #endif

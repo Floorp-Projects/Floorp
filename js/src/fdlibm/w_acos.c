@@ -65,7 +65,8 @@
 	z = __ieee754_acos(x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x)) return z;
 	if(fd_fabs(x)>1.0) {
-	        return __kernel_standard(x,x,1); /* acos(|x|>1) */
+        int err;
+        return __kernel_standard(x,x,1,&err); /* acos(|x|>1) */
 	} else
 	    return z;
 #endif

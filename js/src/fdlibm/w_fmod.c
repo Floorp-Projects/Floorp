@@ -65,7 +65,8 @@
 	z = __ieee754_fmod(x,y);
 	if(_LIB_VERSION == _IEEE_ ||fd_isnan(y)||fd_isnan(x)) return z;
 	if(y==0.0) {
-	        return __kernel_standard(x,y,27); /* fmod(x,0) */
+        int err;
+        return __kernel_standard(x,y,27,&err); /* fmod(x,0) */
 	} else
 	    return z;
 #endif

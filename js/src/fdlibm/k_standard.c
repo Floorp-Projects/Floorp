@@ -117,10 +117,10 @@ static double zero = 0.0;	/* used as const */
 
 
 #ifdef __STDC__
-	double __kernel_standard(double x, double y, int type) 
+	double __kernel_standard(double x, double y, int type, int *err)
 #else
-	double __kernel_standard(x,y,type) 
-	double x,y; int type;
+	double __kernel_standard(x,y,type, err)
+     double x,y; int type;int *err;
 #endif
 {
 	struct exception exc;
@@ -134,6 +134,8 @@ static double zero = 0.0;	/* used as const */
         inf = u.d;
 #endif
 
+    *err = 0;
+
 #ifdef _USE_WRITE
 	(void) fflush(stdout);
 #endif
@@ -146,12 +148,12 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "acos";
 		exc.retval = zero;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if(_LIB_VERSION == _SVID_) {
 		    (void) WRITE2("acos: DOMAIN error\n", 19);
 		  }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 2:
@@ -160,12 +162,12 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "asin";
 		exc.retval = zero;
 		if(_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if(_LIB_VERSION == _SVID_) {
 		    	(void) WRITE2("asin: DOMAIN error\n", 19);
 		  }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 3:
@@ -176,12 +178,12 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "atan2";
 		exc.retval = zero;
 		if(_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if(_LIB_VERSION == _SVID_) {
 			(void) WRITE2("atan2: DOMAIN error\n", 20);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 4:
@@ -193,9 +195,9 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 5:
@@ -207,9 +209,9 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 6:
@@ -221,9 +223,9 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 7:
@@ -232,9 +234,9 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "exp";
 		exc.retval = zero;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 8:
@@ -246,12 +248,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("y0: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 9:
@@ -263,12 +265,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("y0: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 10:
@@ -280,12 +282,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("y1: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 11:
@@ -297,12 +299,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("y1: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 12:
@@ -314,12 +316,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("yn: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 13:
@@ -331,12 +333,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("yn: DOMAIN error\n", 17);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 14:
@@ -348,9 +350,9 @@ static double zero = 0.0;	/* used as const */
                 else
                   exc.retval = HUGE_VAL;
                 if (_LIB_VERSION == _POSIX_)
-			errno = ERANGE;
+			*err = ERANGE;
                 else if (!fd_matherr(&exc)) {
-                        errno = ERANGE;
+                        *err = ERANGE;
 		}
 		break;
 	    case 15:
@@ -362,12 +364,12 @@ static double zero = 0.0;	/* used as const */
                 else
                   exc.retval = HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("lgamma: SING error\n", 19);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 16:
@@ -379,12 +381,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("log: SING error\n", 16);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 17:
@@ -396,12 +398,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("log: DOMAIN error\n", 18);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 18:
@@ -413,12 +415,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("log10: SING error\n", 18);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 19:
@@ -430,12 +432,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("log10: DOMAIN error\n", 20);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 20:
@@ -447,7 +449,7 @@ static double zero = 0.0;	/* used as const */
 		if (_LIB_VERSION != _SVID_) exc.retval = 1.0;
 		else if (!fd_matherr(&exc)) {
 			(void) WRITE2("pow(0,0): DOMAIN error\n", 23);
-			errno = EDOM;
+			*err = EDOM;
 		}
 		break;
 	    case 21:
@@ -464,9 +466,9 @@ static double zero = 0.0;	/* used as const */
 		  if(x<zero&&fd_rint(y)!=y) exc.retval = -HUGE_VAL;
 		}
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 22:
@@ -475,9 +477,9 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "pow";
 		exc.retval =  zero;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 23:
@@ -489,12 +491,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("pow(0,neg): DOMAIN error\n", 25);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 24:
@@ -506,12 +508,12 @@ static double zero = 0.0;	/* used as const */
 		else 
 		    exc.retval = zero/zero;	/* X/Open allow NaN */
 		if (_LIB_VERSION == _POSIX_) 
-		   errno = EDOM;
+		   *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("neg**non-integral: DOMAIN error\n", 32);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 25:
@@ -523,9 +525,9 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = ( (x>zero) ? HUGE_VAL : -HUGE_VAL);
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 26:
@@ -537,12 +539,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		  exc.retval = zero/zero;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("sqrt: DOMAIN error\n", 19);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
             case 27:
@@ -554,12 +556,12 @@ static double zero = 0.0;	/* used as const */
 		else
 		    exc.retval = zero/zero;
                 if (_LIB_VERSION == _POSIX_)
-                  errno = EDOM;
+                  *err = EDOM;
                 else if (!fd_matherr(&exc)) {
                   if (_LIB_VERSION == _SVID_) {
                     (void) WRITE2("fmod:  DOMAIN error\n", 20);
                   }
-                  errno = EDOM;
+                  *err = EDOM;
                 }
                 break;
             case 28:
@@ -568,12 +570,12 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "remainder";
                 exc.retval = zero/zero;
                 if (_LIB_VERSION == _POSIX_)
-                  errno = EDOM;
+                  *err = EDOM;
                 else if (!fd_matherr(&exc)) {
                   if (_LIB_VERSION == _SVID_) {
                     (void) WRITE2("remainder: DOMAIN error\n", 24);
                   }
-                  errno = EDOM;
+                  *err = EDOM;
                 }
                 break;
             case 29:
@@ -582,12 +584,12 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "acosh";
                 exc.retval = zero/zero;
                 if (_LIB_VERSION == _POSIX_)
-                  errno = EDOM;
+                  *err = EDOM;
                 else if (!fd_matherr(&exc)) {
                   if (_LIB_VERSION == _SVID_) {
                     (void) WRITE2("acosh: DOMAIN error\n", 20);
                   }
-                  errno = EDOM;
+                  *err = EDOM;
                 }
                 break;
             case 30:
@@ -596,12 +598,12 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "atanh";
                 exc.retval = zero/zero;
                 if (_LIB_VERSION == _POSIX_)
-                  errno = EDOM;
+                  *err = EDOM;
                 else if (!fd_matherr(&exc)) {
                   if (_LIB_VERSION == _SVID_) {
                     (void) WRITE2("atanh: DOMAIN error\n", 20);
                   }
-                  errno = EDOM;
+                  *err = EDOM;
                 }
                 break;
             case 31:
@@ -610,12 +612,12 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "atanh";
 		exc.retval = x/zero;	/* sign(x)*inf */
                 if (_LIB_VERSION == _POSIX_)
-                  errno = EDOM;
+                  *err = EDOM;
                 else if (!fd_matherr(&exc)) {
                   if (_LIB_VERSION == _SVID_) {
                     (void) WRITE2("atanh: SING error\n", 18);
                   }
-                  errno = EDOM;
+                  *err = EDOM;
                 }
                 break;
 	    case 32:
@@ -624,9 +626,9 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "scalb";
 		exc.retval = x > zero ? HUGE_VAL : -HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 33:
@@ -635,9 +637,9 @@ static double zero = 0.0;	/* used as const */
 		exc.name = "scalb";
 		exc.retval = fd_copysign(zero,x);
 		if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
 		else if (!fd_matherr(&exc)) {
-			errno = ERANGE;
+			*err = ERANGE;
 		}
 		break;
 	    case 34:
@@ -646,13 +648,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "j0";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 35:
@@ -661,13 +663,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "y0";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 36:
@@ -676,13 +678,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "j1";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 37:
@@ -691,13 +693,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "y1";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 38:
@@ -706,13 +708,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "jn";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 39:
@@ -721,13 +723,13 @@ static double zero = 0.0;	/* used as const */
                 exc.name = "yn";
                 exc.retval = zero;
                 if (_LIB_VERSION == _POSIX_)
-                        errno = ERANGE;
+                        *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
                         if (_LIB_VERSION == _SVID_) {
                                 (void) WRITE2(exc.name, 2);
                                 (void) WRITE2(": TLOSS error\n", 14);
                         }
-                        errno = ERANGE;
+                        *err = ERANGE;
                 }        
 		break;
 	    case 40:
@@ -739,9 +741,9 @@ static double zero = 0.0;	/* used as const */
                 else
                   exc.retval = HUGE_VAL;
                 if (_LIB_VERSION == _POSIX_)
-		  errno = ERANGE;
+		  *err = ERANGE;
                 else if (!fd_matherr(&exc)) {
-                  errno = ERANGE;
+                  *err = ERANGE;
                 }
 		break;
 	    case 41:
@@ -753,12 +755,12 @@ static double zero = 0.0;	/* used as const */
                 else
                   exc.retval = HUGE_VAL;
 		if (_LIB_VERSION == _POSIX_)
-		  errno = EDOM;
+		  *err = EDOM;
 		else if (!fd_matherr(&exc)) {
 		  if (_LIB_VERSION == _SVID_) {
 			(void) WRITE2("gamma: SING error\n", 18);
 		      }
-		  errno = EDOM;
+		  *err = EDOM;
 		}
 		break;
 	    case 42:
@@ -770,7 +772,7 @@ static double zero = 0.0;	/* used as const */
 		if (_LIB_VERSION == _IEEE_ ||
 		    _LIB_VERSION == _POSIX_) exc.retval = 1.0;
 		else if (!fd_matherr(&exc)) {
-			errno = EDOM;
+			*err = EDOM;
 		}
 		break;
 	}

@@ -67,7 +67,8 @@
 	z = __ieee754_asin(x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x)) return z;
 	if(fd_fabs(x)>1.0) {
-	        return __kernel_standard(x,x,2); /* asin(|x|>1) */
+        int err;
+        return __kernel_standard(x,x,2,&err); /* asin(|x|>1) */
 	} else
 	    return z;
 #endif

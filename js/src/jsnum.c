@@ -611,7 +611,6 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 	*dp = *JSVAL_TO_DOUBLE(v);
     } else if (JSVAL_IS_STRING(v)) {
 	str = JSVAL_TO_STRING(v);
-	errno = 0;
 	/*
          * Note that ECMA doesn't treat a string beginning with a '0' as an
          * octal number here.  This works because all such numbers will be
@@ -801,9 +800,9 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 	d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
 	estr = istr + 8;
     } else {
-	errno = 0;
-	d = JS_strtod(cstr, &estr);
-	if (errno == ERANGE) {
+	int err;
+	d = JS_strtod(cstr, &estr, &err);
+	if (err == ERANGE) {
 	    if (d == HUGE_VAL)
 		d = *cx->runtime->jsPositiveInfinity;
 	    else if (d == -HUGE_VAL)
@@ -924,6 +923,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	    size_t length = s1 - start;
 	    char *cstr = (char *) malloc(length + 1);
 	    char *estr;
+            int err=0;
 
 	    if (!cstr)
 		return JS_FALSE;
@@ -931,9 +931,8 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 		cstr[i] = (char)start[i];
 	    cstr[length] = 0;
 
-	    errno = 0;
-	    value = JS_strtod(cstr, &estr);
-	    if (errno == ERANGE && value == HUGE_VAL)
+	    value = JS_strtod(cstr, &estr, &err);
+	    if (err == ERANGE && value == HUGE_VAL)
 		value = *cx->runtime->jsPositiveInfinity;
 	    free(cstr);
 	} else if ((base & (base - 1)) == 0) {

@@ -88,7 +88,7 @@
 /* strtod for IEEE-arithmetic machines.
  *
  * This strtod returns a nearest machine number to the input decimal
- * string (or sets errno to ERANGE).  With IEEE arithmetic, ties are
+ * string (or sets err to ERANGE).  With IEEE arithmetic, ties are
  * broken by the IEEE round-even rule.  Otherwise ties are broken by
  * biased rounding (add half and chop).
  *
@@ -1087,7 +1087,7 @@ void js_FinishDtoa(void)
 /* nspr2 watcom bug ifdef omitted */
 
 JS_FRIEND_API(double)
-JS_strtod(CONST char *s00, char **se)
+JS_strtod(CONST char *s00, char **se, int *err)
 {
     int32 scale;
     int32 bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
@@ -1101,6 +1101,8 @@ JS_strtod(CONST char *s00, char **se)
 #ifdef JS_THREADSAFE
     if (!initialized) InitDtoa();
 #endif
+
+    *err = 0;
 
 	bb = bd = bs = delta = NULL;
     sign = nz0 = nz = 0;
@@ -1293,7 +1295,7 @@ dig_done:
         if (e1 &= ~15) {
             if (e1 > DBL_MAX_10_EXP) {
             ovfl:
-                errno = ERANGE;
+                *err = ERANGE;
 #ifdef __STDC__
                 rv = HUGE_VAL;
 #else
@@ -1364,7 +1366,7 @@ dig_done:
                 if (!rv) {
                 undfl:
                     rv = 0.;
-                    errno = ERANGE;
+                    *err = ERANGE;
                     if (bd0)
                         goto retfree;
                     goto ret;
