@@ -142,6 +142,7 @@ function loadCalendarEventDialog()
         /* uh... */
         dump("got a bogus event\n");
     }
+    debug("title: "+title);
 
     //document.getElementById("calendar-new-component-window").setAttribute("title", title);
     document.title = title;
@@ -1529,6 +1530,7 @@ function processAlarmType()
 
 function processComponentType()
 {
+    var title;
     var componentMenu = document.getElementById("component-type");
     if( componentMenu.selectedItem) {
         debug("processComponentType: " + componentMenu.selectedItem.value );
@@ -1565,11 +1567,12 @@ function processComponentType()
 
             // Set menubar title correctly - New vs. Edit
             if( "new" == args.mode )
-              title = document.getElementById( "data-event-title-new" );
+              title = document.getElementById( "data-event-title-new" ).getAttribute("value");
             else
-              title = document.getElementById( "data-event-title-edit" );
-            //document.title = title;
-            document.getElementById("calendar-new-component-window").setAttribute("title", title);
+              title = document.getElementById( "data-event-title-edit" ).getAttribute("value");
+            debug("title: "+title);
+            //document.getElementById("calendar-new-component-window").setAttribute("title", title);
+            document.title = title;
             break;
 
         case "ICAL_COMPONENT_TODO":
@@ -1601,11 +1604,12 @@ function processComponentType()
 
             // Set menubar title correctly - New vs. Edit
             if( "new" == args.mode )
-              title = document.getElementById( "data-todo-title-new" );
+              title = document.getElementById( "data-todo-title-new" ).getAttribute("value");
             else
-              title = document.getElementById( "data-todo-title-edit" );
-            //document.title = title;
-            document.getElementById("calendar-new-component-window").setAttribute("title", title);
+              title = document.getElementById( "data-todo-title-edit" ).getAttribute("value");
+            debug("title: "+title);
+            //document.getElementById("calendar-new-component-window").setAttribute("title", title);
+            document.title = title;
             break;
 
             //case "ICAL_COMPONENT_JOURNAL":
