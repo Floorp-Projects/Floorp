@@ -1123,3 +1123,14 @@
    -moz-box-align       : start;
 }
 
+/* TO DO ITEMS */
+
+#unifinder-todo-listbox > listitem[overdue="true"] > listcell
+{
+   color                  : red;
+}
+
+#unifinder-todo-listbox > listitem[completed="true"] > listcell
+{
+   text-decoration        : line-through;
+}

@@ -216,11 +216,24 @@ function refreshToDoTree( eventArray )
       var completed = calendarToDo.completed.getTime();
 
       if( completed > 0 )
+      {
          treeItem.getElementsByTagName( "checkbox" )[0].checked = true;
+         
+         /* for setting some css */
+         treeItem.setAttribute( "completed", "true" );
+      }
 
       treeItem.getElementsByAttribute( "name", "title-listcell" )[0].setAttribute( "label", calendarToDo.title );
 
       var dueDate = new Date( calendarToDo.due.getTime() );
+
+      var now = new Date();
+
+      if( now.getTime() > dueDate.getTime() )
+      {
+         /* for setting some css */
+         treeItem.setAttribute( "overdue", "true" );
+      }
 
       var FormattedDueDate = formatUnifinderEventDate( dueDate );
 
