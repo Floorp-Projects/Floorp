@@ -240,16 +240,7 @@ JVMMgr::StartupJVM(void)
             return ShutdownJVM();
         }
 #else        
-        VR_Initialize(env);
-        if (JRI_ExceptionOccurred(env)) {
-#ifdef DEBUG
-            fJVM->PrintToConsole("LJ:  VR_Initialize failed.  Bugs to dveditz.\n");
-            JRI_ExceptionDescribe(env);
-#endif	
-            JRI_ExceptionClear(env);
-            return ShutdownJVM();
-        }
-	
+
         SU_Initialize(env);
         if (JRI_ExceptionOccurred(env)) {
 #ifdef DEBUG
