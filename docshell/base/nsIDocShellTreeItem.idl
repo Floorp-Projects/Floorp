@@ -40,6 +40,17 @@ interface nsIDocShellTreeItem : nsISupports
 	attribute wstring name;
 
 	/*
+	Definitions for the item types.
+	*/
+	const long typeChrome=0;
+	const long typeContent=1;
+
+	/*
+	The type this item is.  
+	*/
+	attribute long itemType;
+
+	/*
 	Parent DocShell..  Note Implementers of this interface should NOT effect
 	the lifetime of the parent DocShellTreeItem by holding this reference as it
 	creates a cycle.  Parents when releasing this interface should set the
@@ -52,11 +63,25 @@ interface nsIDocShellTreeItem : nsISupports
 	attribute nsIDocShellTreeItem parent;
 
 	/*
+	This is call returns the same thing parent does however if the parent is
+	of a different itemType, it will instead return nsnull.  This call is a
+	convience function for those wishing to not cross the boundaries at which
+	item types change.
+	*/
+	readonly attribute nsIDocShellTreeItem sameTypeParent;
+
+	/*
 	Returns the root DocShellTreeItem.  This is a convience equivalent to 
 	getting the parent and it's parent until there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem rootTreeItem;
 
+	/*
+	Returns the root DocShellTreeItem of the same type.  This is a convience 
+	equivalent to getting the parent of the same type and it's parent until 
+	there isn't a parent.
+	*/
+	readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
 	/*
 	The owner of the DocShell Tree.  This interface will be called upon when
 	the docshell has things it needs to tell to the owner of the docshell.
