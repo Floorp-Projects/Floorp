@@ -16,6 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ *   2000/10/02     IBM Corp.                          Sync-up to M18 level
  *
  */
 
@@ -25,31 +26,42 @@
 #include "nsWidgetDefs.h"
 #include "nsBaseClipboard.h"
 
-// Clipboard service.
+class nsITransferable;
+class nsIClipboardOwner;
+class nsIWidget;
+struct IDataObject;
+
+/**
+ * Native OS/2 Clipboard wrapper
+ */
 
 struct FormatRecord;
 
 class nsClipboard : public nsBaseClipboard
 {
- public:
-   nsClipboard();
-   virtual ~nsClipboard();
 
- protected:
-   // nsBaseClipboard
-   NS_IMETHOD SetNativeClipboardData();
-   NS_IMETHOD GetNativeClipboardData( nsITransferable *aTransferable);
+public:
+  nsClipboard();
+  virtual ~nsClipboard();
 
-   enum ClipboardAction
-   {
-      Read,
-      Write
-   };
+  // nsIClipboard
+  NS_IMETHOD ForceDataToClipboard(PRInt32 aWhichClipboard);
+  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval);
 
-   ULONG    GetFormatID( nsString *aMimeStr, FormatRecord **ppRecord);
-   void     GetClipboardData( nsString *aFlavour);
-   void     SetClipboardData( nsString *aFlavour);
-   nsresult DoClipboardAction( ClipboardAction aAction);
+protected:
+  NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
+  NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable, PRInt32 aWhichClipboard);
+
+  enum ClipboardAction
+  {
+    Read,
+    Write
+  };
+
+  ULONG    GetFormatID(const char *aMimeStr, FormatRecord **ppRecord);
+  PRBool   GetClipboardData(const char *aFlavour);
+  void     SetClipboardData(const char *aFlavour);
+  nsresult DoClipboardAction(ClipboardAction aAction);
 };
 
 #endif

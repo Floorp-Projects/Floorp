@@ -239,10 +239,10 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
     }
 
-#if 0 // OS2TODO
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
     }
+#if 0 // OS2TODO
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)(nsIDragService *)new nsDragService();
     }
