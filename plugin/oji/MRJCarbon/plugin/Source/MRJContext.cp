@@ -1196,29 +1196,41 @@ jobject MRJContext::getApplet()
 {
 #if TARGET_CARBON
     if (appletLoaded() && mAppletObject == NULL) {
-        // mAppletFrame implements the interface java.applet.AppletContext, as of Mac OS X 10.1.
-        // This code simply looks for the getApplet(String) accessor method of whatever class the object happens
-        // to be. Hopefully Apple will maintain this level of compatibility.
+        // mAppletFrame is an instance of javap com.apple.mrj.JavaEmbedding.JE_AppletViewer, as of Mac OS X 10.1.
+        // In Mac OS X 10.1, it implemented the java.applet.AppletContext interface, but this is no longer true
+        // in Mac OS X 10.2 (Jaguar). However both versions of JE_AppletViewer have a public field panel, which
+        // is an instance of com.apple.mrj.JavaEmbedding.JE_AppletViewerPanel, which extends sun.applet.AppletPanel,
+        // which contains the method public java.applet.Applet getApplet(). Apple needs to provide us with an API
+        // that we can use, but for now this is the best that we can do.
         JNIEnv* env = mSession->getCurrentEnv();
         jclass frameClass = env->GetObjectClass(mAppletFrame);
         if (frameClass) {
-            jmethodID getAppletMethod = env->GetMethodID(frameClass, "getApplet", "(Ljava/lang/String;)Ljava/applet/Applet;");
-            if (getAppletMethod) {
-                jstring name = env->NewStringUTF(getAttribute(mPeer, "name"));
-                if (name) {
-                    jobject applet = env->CallObjectMethod(mAppletFrame, getAppletMethod, name);
-                    env->DeleteLocalRef(name);
-                    if (applet) {
-                        mAppletObject = env->NewGlobalRef(applet);
-                        env->DeleteLocalRef(applet);
+            jfieldID panelID = env->GetFieldID(frameClass, "panel", "Lcom/apple/mrj/JavaEmbedding/JE_AppletViewerPanel;");
+            if (panelID) {
+                jobject appletPanel = env->GetObjectField(mAppletFrame, panelID);
+                if (appletPanel) {
+                    jclass panelClass = env->GetObjectClass(appletPanel);
+                    jmethodID getAppletMethod = env->GetMethodID(panelClass, "getApplet", "()Ljava/applet/Applet;");
+                    if (getAppletMethod) {
+                        jobject applet = env->CallObjectMethod(appletPanel, getAppletMethod);
+                        if (applet) {
+                            mAppletObject = env->NewGlobalRef(applet);
+                            env->DeleteLocalRef(applet);
+                        }
+                    } else {
+                        env->ExceptionClear();
                     }
+                    env->DeleteLocalRef(panelClass);
+                    env->DeleteLocalRef(appletPanel);
                 } else {
-                    // FIXME:  use the getApplets() call when we don't have the name of the apple in question.
+                    env->ExceptionClear();
                 }
             } else {
                 env->ExceptionClear();
             }
             env->DeleteLocalRef(frameClass);
+        } else {
+            env->ExceptionClear();
         }
     }
     return mAppletObject;
