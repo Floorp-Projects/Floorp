@@ -1617,7 +1617,11 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                   textFrame->CheckFireOnChange();
                 }
               }
+            }
 
+            // mForm is null if the event handler (CheckFireOnChange above)
+            // removed us from the document (bug 194582).
+            if (mForm) {
               // Find the first submit control in elements[]
               // and also check how many text controls we have in the form
               nsCOMPtr<nsIContent> submitControl;
