@@ -1777,7 +1777,7 @@ ItemToIndex(Widget item)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static int
@@ -1794,7 +1794,7 @@ TabToIndex(Widget tab)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 
@@ -1903,7 +1903,7 @@ FirstManagedIndex(Widget w)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static int
@@ -1920,7 +1920,7 @@ LastManagedIndex(Widget w)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static int
@@ -1940,7 +1940,7 @@ NextManagedIndex(Widget w,int index)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static int
@@ -1960,7 +1960,7 @@ PreviousManagedIndex(Widget w,int index)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -2068,7 +2068,7 @@ FindItemUnder(Widget w,int over_index)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 static Boolean
@@ -2338,7 +2338,7 @@ XfeToolBoxItemGetIndex(Widget w,Widget item)
 		}
 	}
 
-	return -1;
+	return XmTOOL_BOX_NOT_FOUND;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Widget
@@ -2363,7 +2363,7 @@ XfeToolBoxItemGetTab(Widget w,Widget item,Boolean opened)
 	XfeToolBoxPart *	tp = _XfeToolBoxPart(w);
 	Cardinal			i = XfeToolBoxItemGetIndex(w,item);
 
-	if (i != -1)
+	if (i != XmTOOL_BOX_NOT_FOUND)
 	{
 		return opened ? tp->opened_tabs[i] : tp->closed_tabs[i];
 	}
