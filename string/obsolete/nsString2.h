@@ -570,7 +570,7 @@ private:
   void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
 };
 
-NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
+// NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);

@@ -821,7 +821,7 @@ class basic_nsLiteralString
       const CharT* mEnd;
   };
 
-NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsLiteralString<CharT>, CharT)
+// NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsLiteralString<CharT>, CharT)
 
 template <class CharT>
 const CharT*
@@ -1050,7 +1050,7 @@ class nsPromiseConcatenation
       PRUint32 mFragmentIdentifierMask;
   };
 
-NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseConcatenation<CharT>, CharT)
+// NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseConcatenation<CharT>, CharT)
 
 template <class CharT>
 PRUint32
@@ -1198,7 +1198,7 @@ class nsPromiseSubstring
       PRUint32 mLength;
   };
 
-NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseSubstring<CharT>, CharT)
+// NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseSubstring<CharT>, CharT)
 
 template <class CharT>
 PRUint32

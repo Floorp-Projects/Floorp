@@ -494,7 +494,7 @@ private:
   void InsertWithConversion( char, PRUint32 );
 };
 
-NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
+// NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsCString& aString);
