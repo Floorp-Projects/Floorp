@@ -170,6 +170,24 @@ verify_const_declaration(IDL_tree const_tree) {
         if (!IDL_TYPE_INTEGER(real_type).f_signed &&
             IDL_INTEGER(dcl->const_exp).value < 0)
         {
+#ifndef G_HAVE_GINT64
+            /*
+             * For platforms without longlong support turned on we can get
+             * confused by the high bit of the long value and think that it
+             * represents a negative value in an unsigned declaration.
+             * In that case we don't know if it is the programmer who is 
+             * confused or the compiler. So we issue a warning instead of 
+             * an error.
+             */
+            if (IDL_TYPE_INTEGER(real_type).f_type == IDL_INTEGER_TYPE_LONG)
+            {
+                XPIDL_WARNING((const_tree, IDL_WARNING1,
+                              "unsigned const declaration \'%s\' "
+                              "initialized with (possibly) negative constant",
+                              name));
+                return TRUE;
+            }
+#endif
             IDL_tree_error(const_tree,
                            "unsigned const declaration \'%s\' initialized with "
                            "negative constant",
