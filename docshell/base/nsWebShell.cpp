@@ -808,24 +808,33 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
-/*  nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
+  //
+  // Copy content viewer state from previous or parent content viewer.
   //
   // The following logic is mirrored in nsHTMLDocument::StartDocumentLoad!
   //
-  if (mContentViewer) // && (eCharsetReloadInit!=mCharsetReloadState))
-  { // get any interesting state from the old content viewer
-    // XXX: it would be far better to just reuse the document viewer ,
-    //      since we know we're just displaying the same document as before
-    oldMUDV = do_QueryInterface(mContentViewer);
-  }
-  else
-  { // If we don't have an old content viewer, get state from our parent
-    // in this block of code, if we get an error result, we return it
-    // but if we get a null pointer, that's perfectly legal for parent and parentContentViewer
-    nsCOMPtr<nsIWebShell> parent;
-    rv = GetParent(*getter_AddRefs(parent));
-    if (NS_FAILED(rv)) { return rv; }
-    if (parent) {
+  // Do NOT to maintain a reference to the old content viewer outside
+  // of this "copying" block, or it will not be destroyed until the end of
+  // this routine and all <SCRIPT>s and event handlers fail! (bug 20315)
+  //
+  // In this block of code, if we get an error result, we return it
+  // but if we get a null pointer, that's perfectly legal for parent
+  // and parentContentViewer.
+  //
+  nsCOMPtr<nsIWebShell> parent;
+  rv = GetParent(*getter_AddRefs(parent));
+  if (NS_FAILED(rv)) { return rv; }
+  
+  if (mContentViewer || parent) 
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
+    if (mContentViewer) { // Get any interesting state from old content viewer
+      // XXX: it would be far better to just reuse the document viewer ,
+      //      since we know we're just displaying the same document as before
+      oldMUDV = do_QueryInterface(mContentViewer);
+    }
+    else
+    { // No old content viewer, so get state from parent's content viewer
       nsCOMPtr<nsIContentViewer> parentContentViewer;
       rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
       if (NS_FAILED(rv)) { return rv; }
@@ -833,11 +842,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
         oldMUDV = do_QueryInterface(parentContentViewer);
       }
     }
-  }
-*/
-  if (mContentViewer) {
 
-    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV = do_QueryInterface(mContentViewer);
     PRUnichar *defaultCharset=nsnull;
     PRUnichar *forceCharset=nsnull;
     PRUnichar *hintCharset=nsnull;
@@ -868,6 +873,8 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       }
     }
   }
+  // End copying block (Don't hold content/document viewer ref beyond here!!)
+
   mContentViewer = nsnull;
   if (nsnull != mScriptContext) {
     mScriptContext->GC();
