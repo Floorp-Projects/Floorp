@@ -830,6 +830,8 @@
            oncommand="editorShell.StripCites()"/>
     <menuitem value="&insertTextCmd.label;"
            oncommand="EditorInsertText('All good things come to those who wait. ')"/>
+    <menuitem value="Tableize"
+           oncommand="EditorTableize()"/>
     <menuseparator />
     <menuitem value="&testSelectionCmd.label;"
            oncommand="EditorTestSelection()"/>
