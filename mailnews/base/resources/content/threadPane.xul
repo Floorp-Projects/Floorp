@@ -24,14 +24,13 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">
 
-<window
+<overlay
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="top.OnLoadThreadPane(document.getElementById('threadTree'))">
+>
 
-<html:div flex="100%">
-<tree style="height: 100%" datasources="rdf:null" id="threadTree"
+<tree datasources="rdf:null" id="threadTree" style="width: 100%; height: 100%"
 	  		  onselect="top.ThreadPaneSelectionChange(event.target)"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
@@ -66,12 +65,12 @@ Rights Reserved.
   <treecol style="width:13%" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol style="width:20px" id="UnreadButtonColumn"/>
   <treecol style="width:10%" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol style="width:8%" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
+  <treecol style="width:7%" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
   <treecol style="width:20px" id="FlaggedButtonColumn"/>
-  <treecol style="width:8%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
-  <treecol style="width:8%" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
-  <treecol style="width:8%" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol style="width:8%" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecol style="width:7%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treecol style="width:7%" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
+  <treecol style="width:7%" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol style="width:7%" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
 		<treecell onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
@@ -88,5 +87,4 @@ Rights Reserved.
     </treerow>
   </treehead>
 </tree>
-</html:div>
-</window>
+</overlay>
