@@ -1594,8 +1594,9 @@ theContext->mTransferBufferSize;
           theContext->mScanner->Append(theContext->mTransferBuffer,theNumRead); 
 
 #if 0
-          int dump=0;
+          static int dump=0;
           if(dump) {
+            theContext->mTransferBuffer[theNumRead]=0;
             printf("\n-----------------\n%s",theContext->mTransferBuffer);
           }
 #endif
