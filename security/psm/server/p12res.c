@@ -507,13 +507,14 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
             ssm_switch_endian(inBuf, inBufLen);
         }
 #endif
+        memset(outBuf, 0, maxOutBufLen);
     	retval = nlsUnicodeToUTF8(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
         /* The value in *outBufLen isn't right, so we'll force it to be
          * right.
          */
-        *outBufLen = inBufLen/2;
-	outBuf[*outBufLen] ='\0';
+        *outBufLen = PL_strlen(outBuf);
+
 	}
 #ifdef DEBUG
     fprintf(stderr,"Output: \n");
