@@ -17,42 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-
-#define NS_IMPL_IDS
-
 #include "nsIPlatformCharset.h"
-#include "nsPlatformCharsetFactory.h"
+#include "nsURLProperties.h"
 #include "pratom.h"
-
 #include <windows.h>
 #include "nsUConvDll.h"
+#include "nsPlatformCharsetFactory.h"
 
-
-
-// We should put the data into a wincharset.properties file
-// so we can easily extend it.
-static const char* ACPToCharset(UINT aACP)
-{
-  switch(aACP)
-  {
-        case 874:  return "tis-620"; break;
-        case 932:  return "Shift_JIS"; break;
-        case 936:  return "GB2312"; break;
-        case 949:  return "EUC-KR"; break;
-        case 950:  return "Big5"; break;
-        case 1250:  return "windows-1250"; break;
-        case 1251:  return "windows-1251"; break;
-        case 1252:  return "ISO-8859-1"; break;
-        case 1253:  return "windows-1253"; break;
-        case 1254:  return "ISO-8859-4"; break;
-        case 1255:  return "windows-1255"; break;
-        case 1256:  return "windows-1256"; break;
-        case 1257:  return "windows-1257"; break;
-        case 1258:  return "windows-1258"; break;
-        default:
-           return "ISO-8859-1";
-  };
-}
 
 class nsWinCharset : public nsIPlatformCharset
 {
@@ -64,7 +35,8 @@ public:
   virtual ~nsWinCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
-
+private:
+  nsString mCharset;
 };
 
 NS_IMPL_ISUPPORTS(nsWinCharset, kIPlatformCharsetIID);
@@ -73,6 +45,26 @@ nsWinCharset::nsWinCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
+  nsAutoString propertyURL("resource://res/wincharset.properties");
+
+  nsURLProperties *info = new nsURLProperties( propertyURL );
+
+  if( info ) 
+  {
+          UINT acp = ::GetACP();
+          PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
+          nsAutoString acpKey("acp.");
+          acpKey.Append(acpint, 10);
+
+          nsresult res = info->Get(acpKey, mCharset);
+          if(NS_FAILED(res)) {
+              mCharset = "windows-1252";
+          }
+
+          delete info;
+  } else {
+        mCharset = "windows-1252";
+  }
 }
 nsWinCharset::~nsWinCharset()
 {
@@ -82,7 +74,7 @@ nsWinCharset::~nsWinCharset()
 NS_IMETHODIMP 
 nsWinCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
-   oResult = ACPToCharset(GetACP());
+   oResult = mCharset;
    return NS_OK;
 }
 
