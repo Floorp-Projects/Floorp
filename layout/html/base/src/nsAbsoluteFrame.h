@@ -42,6 +42,31 @@ public:
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
+
+  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer);
+  NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer,
+                              nsIContent*     aChild,
+                              PRInt32         aIndexInParent);
+  NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer,
+                              nsIContent*     aOldChild,
+                              nsIContent*     aNewChild,
+                              PRInt32         aIndexInParent);
+  NS_IMETHOD  ContentDeleted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent);
+  NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent);
+
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:

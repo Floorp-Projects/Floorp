@@ -132,7 +132,88 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-NS_METHOD nsPlaceholderFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsPlaceholderFrame::ContentAppended(nsIPresShell*   aShell,
+                                                  nsIPresContext* aPresContext,
+                                                  nsIContent*     aContainer)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-appended target");
+
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->ContentAppended(aShell, aPresContext, aContainer);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaceholderFrame::ContentInserted(nsIPresShell*   aShell,
+                                                  nsIPresContext* aPresContext,
+                                                  nsIContent*     aContainer,
+                                                  nsIContent*     aChild,
+                                                  PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-inserted target");
+
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->ContentInserted(aShell, aPresContext, aContainer,
+                                          aChild, aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaceholderFrame::ContentReplaced(nsIPresShell*   aShell,
+                                                  nsIPresContext* aPresContext,
+                                                  nsIContent*     aContainer,
+                                                  nsIContent*     aOldChild,
+                                                  nsIContent*     aNewChild,
+                                                  PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-replaced target");
+
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->ContentReplaced(aShell, aPresContext, aContainer,
+                                          aOldChild, aNewChild, aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaceholderFrame::ContentDeleted(nsIPresShell*   aShell,
+                                                 nsIPresContext* aPresContext,
+                                                 nsIContent*     aContainer,
+                                                 nsIContent*     aChild,
+                                                 PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-deleted target");
+
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->ContentDeleted(aShell, aPresContext, aContainer,
+                                         aChild, aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
+                                                 nsIPresContext* aPresContext,
+                                                 nsIContent*     aChild,
+                                                 nsISupports*    aSubContent)
+{
+  NS_ASSERTION(mContent == aChild, "bad content-changed target");
+
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->ContentChanged(aShell, aPresContext, aChild, aSubContent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
   PRInt32 contentIndex;
