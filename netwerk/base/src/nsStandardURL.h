@@ -78,7 +78,7 @@ public:
     static void InitGlobalObjects();
     static void ShutdownGlobalObjects();
 
-private:
+public: /* internal -- HPUX compiler can't handle this being private */
     //
     // location and length of an url segment relative to mSpec
     //
@@ -130,6 +130,7 @@ private:
     };
     friend class nsSegmentEncoder;
 
+private:
     PRInt32  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
     void     Clear();
