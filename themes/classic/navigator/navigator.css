@@ -320,10 +320,8 @@
   list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
 }
 
-#security-button[level="high"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
-}
-
+/* |high| and |low| styles could be different, to better reflect the secure level... */
+#security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
 }
