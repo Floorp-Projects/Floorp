@@ -25,7 +25,6 @@
 #include "nsStringUtil.h"
 #include "nsUnitConversion.h"
 
-#include <Controls.h>
 #include <quickdraw.h>
 
 
@@ -103,10 +102,6 @@ void nsButton::Create(nsIWidget *aParent,
 		Rect r;
 		nsRectToMacRect(aRect,r);
 				
-		//mControl = NewControl ( window, &r, title, visible, 
-												    //initialValue, minValue, maxValue, 
-												    //ctrlType, (long)this);
-
 		mWindowRegion = NewRgn();
 		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
 
@@ -214,7 +209,7 @@ PRBool 	result;
 
 
 //-------------------------------------------------------------------------
-/*  Track this control and draw in the different modes depending on the state of the mouse and buttons
+/*  Draw in the different modes depending on the state of the mouse and buttons
  *  @update  dc 08/31/98
  *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
  *  @return  nothing is returned

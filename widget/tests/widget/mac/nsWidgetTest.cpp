@@ -1252,13 +1252,13 @@ nsresult WidgetTest(int *argc, char **argv)
     nsRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
     
 #ifdef NOTNOW       
     nsRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1415,41 +1415,32 @@ nsresult WidgetTest(int *argc, char **argv)
 	  	widget->Show(PR_TRUE);
     NS_RELEASE(widget);   
     
-#ifdef NOTNOW
     //NS_RELEASE(checkButton);
     y += rect.height + 5;
 
+
+    
     //
-    // create a text widget
+    // create a scrollbar
     //
+    		x+=200;
 
-    nsITextWidget * textWidget;
-    rect.SetRect(x, y, 100, TEXT_HEIGHT);  
+    rect.SetRect(x, 10, 25, 300);  
+    nsRepository::CreateInstance(kCVertScrollbarCID, nsnull, kIScrollbarIID, (void**)&scrollbar);
+    NS_CreateScrollBar(window,scrollbar,rect,HandleEvent);
+    scrollbar->SetMaxRange(300);
+    scrollbar->SetThumbSize(50);
+    scrollbar->SetPosition(100);
+    x += rect.width + 5;
 
-    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
-    textWidget->Create(window, rect, HandleEvent, deviceContext);
 
-
-    nsFont font("Times", NS_FONT_STYLE_NORMAL,
-                         NS_FONT_VARIANT_NORMAL,
-                         NS_FONT_WEIGHT_BOLD,
-                         0,
-                         12);
-
-    textWidget->SetFont(font);
-    nsString initialText("0123456789");
-    textWidget->SetText(initialText);
-    textWidget->SetMaxTextLength(12);
-    textWidget->SelectAll();
-    textWidget->Show(PR_TRUE);
-
-    //NS_RELEASE(textWidget); 
-    y += rect.height + 5;
+#ifdef NOTNOW
 
      //
     // create a text password widget
     //
 
+		
     nsITextWidget * ptextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
@@ -1510,16 +1501,6 @@ nsresult WidgetTest(int *argc, char **argv)
     int saveY = y;
     saveX = x;
 
-    //
-    // create a scrollbar
-    //
-    rect.SetRect(x, 10, 25, 300);  
-    nsRepository::CreateInstance(kCVertScrollbarCID, nsnull, kIScrollbarIID, (void**)&scrollbar);
-    scrollbar->Create(window, rect, HandleEvent, NULL);
-    scrollbar->SetMaxRange(300);
-    scrollbar->SetThumbSize(50);
-    scrollbar->SetPosition(100);
-    x += rect.width + 5;
  
     //
     // create a Status Text
