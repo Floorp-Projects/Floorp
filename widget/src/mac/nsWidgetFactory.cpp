@@ -39,6 +39,7 @@
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
+#include "nsFileWidget.h"
 
 #include "nsClipboard.h"
 #include "nsTransferable.h"
@@ -70,6 +71,7 @@ static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_CID(kCFilePicker,    NS_FILEPICKER_CID);
+static NS_DEFINE_CID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_CID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_CID(kCRadioButton,   NS_RADIOBUTTON_CID);
@@ -181,6 +183,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCFilePicker)) {
        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
+    }
+    else if (mClassID.Equals(kCFileOpen)) {
+       inst = (nsISupports*)(nsBaseWidget*)new nsFileWidget();
     }
 #if USE_NATIVE_VERSION
     else if (mClassID.Equals(kCCheckButton)) {
