@@ -50,8 +50,9 @@
 #define ucs2tis(wc)	(unsigned int)((unsigned int)(wc) - 0x0E00 + 0xA0)
 #define tis2uni(c)	((gunichar2)(c) - 0xA0 + 0x0E00)
 
-#define MAX_CLUSTER_CHRS	256
-#define MAX_GLYPHS		    256
+#define MAX_CLUSTER_CHRS 256
+#define MAX_GLYPHS       256
+#define GLYPH_COMBINING  256
 
 /* Define TACTIS character classes */
 #define CTRL		0
@@ -104,28 +105,6 @@
 
 typedef guint16 PangoliteXSubfont;
 #define PANGO_MOZ_MAKE_GLYPH(index) ((guint32)0 | (index))
-
-#ifdef MOZ_WIDGET_GTK2
-char g_utf8_skip_array[256] = {
-#else
-char g_utf8_skip[256] = {
-#endif
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,0,0
-};
-
-#ifdef MOZ_WIDGET_GTK2
-extern const gchar * const g_utf8_skip = g_utf8_skip_array;
-#else
-#define g_utf8_next_char(p) (char*)((p) + g_utf8_skip[*(unsigned char*)(p)])
-#endif
-
 
 /* We handle the range U+0e01 to U+0e5b exactly
  */
@@ -397,7 +376,7 @@ get_font_info (const char *fontCharset)
   };
   
   ThaiFontInfo *font_info = g_new(ThaiFontInfo, 1);
-  gint         subfontId, i;
+  guint        i;
 
   font_info->type = THAI_FONT_NONE;
   for (i = 0; i < G_N_ELEMENTS(charsets); i++) {
@@ -411,17 +390,20 @@ get_font_info (const char *fontCharset)
 }
 
 static void
-add_glyph(ThaiFontInfo     *font_info,
+add_glyph(ThaiFontInfo         *font_info,
           PangoliteGlyphString *glyphs,
-          gint             cluster_start,
+          gint                 cluster_start,
           PangoliteGlyph       glyph,
-          gboolean         combining)
+          gint                 combining)
 {
   gint           index = glyphs->num_glyphs;
 
+  if ((cluster_start == 0) && (index != 0))
+     cluster_start++;
+
   pangolite_glyph_string_set_size(glyphs, index + 1);  
   glyphs->glyphs[index].glyph = glyph;
-  glyphs->glyphs[index].attr.is_cluster_start = combining ? 0 : 1;  
+  glyphs->glyphs[index].is_cluster_start = combining;
   glyphs->log_clusters[index] = cluster_start;
 }
 
@@ -653,20 +635,24 @@ get_glyphs_list(ThaiFontInfo *font_info,
 }
 
 static void
-add_cluster (ThaiFontInfo	    *font_info,
-             PangoliteGlyphString	*glyphs,
-             gint		          cluster_start,
-             gunichar2		      *cluster,
-             gint		          num_chrs)
+add_cluster(ThaiFontInfo         *font_info,
+            PangoliteGlyphString *glyphs,
+            gint                 cluster_start,
+            gunichar2            *cluster,
+            gint                 num_chrs)
 	     
 {
   PangoliteGlyph glyphs_list[MAX_GLYPHS];
-  gint       i, num_glyphs;
+  gint           i, num_glyphs, ClusterStart=0;
   
   num_glyphs = get_glyphs_list(font_info, cluster, num_chrs, glyphs_list);
-  for (i=0; i<num_glyphs; i++)
-    add_glyph(font_info, glyphs, cluster_start, glyphs_list[i],
-              i == 0 ? FALSE : TRUE);
+  for (i=0; i<num_glyphs; i++) {
+    ClusterStart = (gint)GLYPH_COMBINING;
+    if (i == 0)
+      ClusterStart = num_chrs;
+
+    add_glyph(font_info, glyphs, cluster_start, glyphs_list[i], ClusterStart);
+  }
 }
 
 static gboolean
@@ -734,8 +720,6 @@ thai_engine_shape(const char       *fontCharset,
   gunichar2       cluster[MAX_CLUSTER_CHRS];
   gint           num_chrs;
 
-  pangolite_glyph_string_set_size(glyphs, 0);
-  
   font_info = get_font_info(fontCharset);
 
   p = text;

@@ -1,4 +1,5 @@
-/* Pango
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * Pangolite
  * dvng-x.c:
  * 
  * The contents of this file are subject to the Mozilla Public
@@ -27,12 +28,13 @@
 #include "pango-coverage.h"
 
 #define G_N_ELEMENTS(arr) (sizeof (arr) / sizeof ((arr)[0]))
-#define MAX_CLUSTER_CHRS  256
-#define MAX_GLYPHS        256
+#define MAX_CLUSTER_CHRS 256
+#define MAX_GLYPHS       256
+#define GLYPH_COMBINING  256
 
 /*************************************************************************
  *         CHARACTER TYPE CONSTANTS - What they represent                *
- *         -----------------------------------------------               *
+ *         ----------------------------------------------                *
  *                                                                       *
  * _NP : Vowel-Modifier Visarg(U+0903) (Displayed to the right).         *
  * _UP : Vowel-Modifer Chandrabindu(U+0901) and Anuswar (U+0902).        *
@@ -286,21 +288,21 @@ static const gint DvngChrTypeTbl[128] = {
  * Devanagari character composible table
  */
 static const gint DvngComposeTbl[14][14] = {
-  /*      ND, UP, NP, IV, CN, CK, RC, NM, RM, IM, HL, NK, VD, HD, */
-  /* 0  */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* ND */
-  /* 1  */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* UP */
-  /* 2  */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* NP */
-  /* 3  */ 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* IV */
-  /* 4  */ 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0, /* CN */
-  /* 5  */ 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  1,  0,  0, /* CK */
-  /* 6  */ 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0, /* RC */
-  /* 7  */ 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* NM */
-  /* 8  */ 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* RM */
-  /* 9  */ 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* IM */
-  /* 10 */ 0,  0,  0,  0,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0, /* HL */
-  /* 11 */ 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0, /* NK */
-  /* 12 */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* VD */
-  /* 13 */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, /* HD */
+  /*        ND, UP, NP, IV, CN, CK, RC, NM, RM, IM, HL, NK, VD, HD,  */
+  /* 0  */ { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* ND */
+  /* 1  */ { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* UP */
+  /* 2  */ { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* NP */
+  /* 3  */ { 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* IV */
+  /* 4  */ { 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0,}, /* CN */
+  /* 5  */ { 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  1,  0,  0,}, /* CK */
+  /* 6  */ { 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0,}, /* RC */
+  /* 7  */ { 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* NM */
+  /* 8  */ { 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* RM */
+  /* 9  */ { 0,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* IM */
+  /* 10 */ { 0,  0,  0,  0,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,}, /* HL */
+  /* 11 */ { 0,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0,}, /* NK */
+  /* 12 */ { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* VD */
+  /* 13 */ { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,}, /* HD */
 };
 
 StateType DvngStateTbl[MAX_STATE][MAX_DEVA_TYPE] = {
@@ -308,68 +310,68 @@ StateType DvngStateTbl[MAX_STATE][MAX_DEVA_TYPE] = {
   /* ND,   UP,   NP,   IV,   CN,   CK,   RC,   NM,   RM,
      IM,   HL,   NK,   VD,   HD */
                                            /* State 0 */
-    St11, St1, St1,  St2,  St4,  St4, St12,  St1,  St1,
-    St1,  St1, St1,  St1, St11,
+ {  St11, St1, St1,  St2,  St4,  St4, St12,  St1,  St1,
+    St1,  St1, St1,  St1, St11, },
                                            /* State 1 */
-    St1,  St1,  St1,  St1,  St1,  St1,  St1,  St1,  St1,
-    St1,  St1,  St1,  St1,  St1,
+ {  St1,  St1,  St1,  St1,  St1,  St1,  St1,  St1,  St1,
+    St1,  St1,  St1,  St1,  St1, },
                                            /* State 2 */
-    St2,  St3,  St3,  St2,  St2,  St2,  St2,  St2,  St2,
-    St2,  St2,  St2,  St2,  St2,
+ {  St2,  St3,  St3,  St2,  St2,  St2,  St2,  St2,  St2,
+    St2,  St2,  St2,  St2,  St2, },
                                            /* State 3 */
-    St3,  St3,  St3,  St3,  St3,  St3,  St3,  St3,  St3,
-    St3,  St3,  St3,  St3,  St3,
+ {  St3,  St3,  St3,  St3,  St3,  St3,  St3,  St3,  St3,
+    St3,  St3,  St3,  St3,  St3, },
                                            /* State 4 */
-    St4,  St8,  St8,  St4,  St4,  St4,  St4,  St6,  St6,
-    St9,  St5,  St4,  St4,  St4,
+ {  St4,  St8,  St8,  St4,  St4,  St4,  St4,  St6,  St6,
+    St9,  St5,  St4,  St4,  St4, },
                                            /* State 5 */
-    St5,  St5,  St5,  St5,  St4,  St4,  St4,  St5,  St5,
-    St5,  St5,  St5,  St5,  St5,
+ {  St5,  St5,  St5,  St5,  St4,  St4,  St4,  St5,  St5,
+    St5,  St5,  St5,  St5,  St5, },
                                            /* State 6 */
-    St6,  St7,  St7,  St6,  St6,  St6,  St6,  St6,  St6,
-    St6,  St6,  St6,  St6,  St6,
+ {  St6,  St7,  St7,  St6,  St6,  St6,  St6,  St6,  St6,
+    St6,  St6,  St6,  St6,  St6, },
                                            /* State 7 */
-    St7,  St7,  St7,  St7,  St7,  St7,  St7,  St7,  St7,
-    St7,  St7,  St7,  St7,  St7,
+ {  St7,  St7,  St7,  St7,  St7,  St7,  St7,  St7,  St7,
+    St7,  St7,  St7,  St7,  St7, },
                                            /* State 8 */
-    St8,  St8,  St8,  St8,  St8,  St8,  St8,  St8,  St8,
-    St8,  St8,  St8,  St8,  St8,
+ {  St8,  St8,  St8,  St8,  St8,  St8,  St8,  St8,  St8,
+    St8,  St8,  St8,  St8,  St8, },
                                            /* State 9 */
-    St9, St10, St10,  St9,  St9,  St9,  St9,  St9,  St9,
-    St9,  St9,  St9,  St9,  St9,
+ {  St9, St10, St10,  St9,  St9,  St9,  St9,  St9,  St9,
+    St9,  St9,  St9,  St9,  St9, },
                                           /* State 10 */
-   St10, St10, St10, St10, St10, St10, St10, St10, St10,
-   St10, St10, St10, St10, St10,
+ { St10, St10, St10, St10, St10, St10, St10, St10, St10,
+   St10, St10, St10, St10, St10, },
                                           /* State 11 */
-   St11, St11, St11, St11, St11, St11, St11, St11, St11,
-   St11, St11, St11, St11, St11,
+ { St11, St11, St11, St11, St11, St11, St11, St11, St11,
+   St11, St11, St11, St11, St11, },
                                           /* State 12 */
-   St12,  St8,  St8, St12, St12, St12, St12,  St6,  St6,
-    St9, St13, St12, St12, St12,
+ { St12,  St8,  St8, St12, St12, St12, St12,  St6,  St6,
+    St9, St13, St12, St12, St12, },
                                           /* State 13 */
-   St13, St13, St13, St13, St14, St14, St14, St13, St13,
-   St13, St13, St13, St13, St13,
+ { St13, St13, St13, St13, St14, St14, St14, St13, St13,
+   St13, St13, St13, St13, St13, },
                                            /* State 14 */
-   St14, St18, St18, St14, St14, St14, St14, St16, St16,
-   St19, St15, St14, St14, St14,
+ { St14, St18, St18, St14, St14, St14, St14, St16, St16,
+   St19, St15, St14, St14, St14, },
                                            /* State 15 */
-   St15, St15, St15, St15, St14, St14, St14, St15, St15,
-   St15, St15, St15, St15, St15,
+ { St15, St15, St15, St15, St14, St14, St14, St15, St15,
+   St15, St15, St15, St15, St15, },
                                            /* State 16 */
-   St16, St17, St17, St16, St16, St16, St16, St16, St16,
-   St16, St16, St16, St16, St16,
+ { St16, St17, St17, St16, St16, St16, St16, St16, St16,
+   St16, St16, St16, St16, St16, },
                                            /* State 17 */
-   St17, St17, St17, St17, St17, St17, St17, St17, St17,
-   St17, St17, St17, St17, St17,
+ { St17, St17, St17, St17, St17, St17, St17, St17, St17,
+   St17, St17, St17, St17, St17, },
                                            /* State 18 */
-   St18, St18, St18, St18, St18, St18, St18, St18, St18,
-   St18, St18, St18, St18, St18,
+ { St18, St18, St18, St18, St18, St18, St18, St18, St18,
+   St18, St18, St18, St18, St18, },
                                            /* State 19 */
-   St19, St20, St20, St19, St19, St19, St19, St19, St19,
-   St19, St19, St19, St19, St19,
+ { St19, St20, St20, St19, St19, St19, St19, St19, St19,
+   St19, St19, St19, St19, St19, },
                                            /* State 20 */
-   St20, St20, St20, St20, St20, St20, St20, St20, St20,
-   St20, St20, St20, St20, St20,
+ { St20, St20, St20, St20, St20, St20, St20, St20, St20,
+   St20, St20, St20, St20, St20, },
 };
 
 int DvngRuleTbl[128] = {
@@ -943,7 +945,7 @@ get_font_info(const char *fontCharset)
   };
   
   DvngFontInfo *font_info = g_new(DvngFontInfo, 1);
-  gint         subfontId, i;
+  guint        i; 
 
   font_info->type = DVNG_FONT_NONE;
   for (i = 0; i < G_N_ELEMENTS(charsets); i++) {
@@ -959,15 +961,18 @@ get_font_info(const char *fontCharset)
 
 static void
 add_glyph(PangoliteGlyphString *glyphs,
-          gint              clusterStart, 
-          PangoliteGlyph        glyph,
-          gboolean          combining)
+          gint                 clusterStart,
+          PangoliteGlyph       glyph,
+          gint                 combining)
 {
   gint index = glyphs->num_glyphs;
 
+  if ((clusterStart == 0) && (index != 0))
+    clusterStart++;
+
   pangolite_glyph_string_set_size (glyphs, index + 1);  
   glyphs->glyphs[index].glyph = glyph;
-  glyphs->glyphs[index].attr.is_cluster_start = combining ? 0 : 1;
+  glyphs->glyphs[index].is_cluster_start = combining;
   glyphs->log_clusters[index] = clusterStart;
 }
 
@@ -1070,7 +1075,9 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
       if (IsDvngCharCls(cluster[nChars - 1], _UP)) {
 
         if (IsDvngCharCls(cluster[nChars - 2], _RM))
-          GetBaseConsGlyphs(cluster, nChars - 2,gLst, &nGlyphs);
+          GetBaseConsGlyphs(cluster, nChars - 2, gLst, &nGlyphs);
+        else
+          GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
 
         if (IsDvngCharCls(cluster[nChars - 2], _RM)) {
 
@@ -1096,25 +1103,26 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
             gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
             gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF82D);
           }
-        }
 
-        else if (IsDvngCharCls(cluster[nChars - 2], _O_M)) {
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF824);
-        }
+          else if (IsDvngCharCls(cluster[nChars - 2], _O_M)) {
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF824);
+          }
 
-        else if (IsDvngCharCls(cluster[nChars - 2], _OW1_M)) {
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF827);
-        }
+          else if (IsDvngCharCls(cluster[nChars - 2], _OW1_M)) {
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF827);
+          }
 
-        else if (IsDvngCharCls(cluster[nChars - 2], _OW2_M)) {
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E); 
-          gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF82A);
+          else if (IsDvngCharCls(cluster[nChars - 2], _OW2_M)) {
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0x093E);
+            gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF82A);
+          }
         }
       }
-      else
+      else {
         GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
+      }
       break;
 
     case St8:
@@ -1330,11 +1338,16 @@ add_cluster(DvngFontInfo     *fontInfo,
             StateType        *clustState)
 {
   PangoliteGlyph glyphsList[MAX_GLYPHS];
-  gint       i, numGlyphs;
+  gint           i, numGlyphs, ClusterStart=0;
   
   numGlyphs = get_glyphs_list(fontInfo, cluster, numChars, glyphsList, clustState);
-  for (i = 0; i < numGlyphs; i++)
-    add_glyph(glyphs, clusterBeg, glyphsList[i], i == 0 ? FALSE : TRUE);
+  for (i = 0; i < numGlyphs; i++) {
+
+    ClusterStart = (gint)GLYPH_COMBINING;
+    if (i == 0)
+      ClusterStart = numChars;
+    add_glyph(glyphs, clusterBeg, glyphsList[i], ClusterStart);
+  }
 }
 
 static const gunichar2 *
@@ -1380,7 +1393,6 @@ dvng_engine_shape(const char       *fontCharset,
   gint            num_chrs;
   StateType       aSt = St0;
 
-  pangolite_glyph_string_set_size(glyphs, 0);
   fontInfo = get_font_info(fontCharset);
 
   p = text;

@@ -23,7 +23,6 @@
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
-
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
@@ -35,88 +34,7 @@
 
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-// XPCOM stuff
-NS_IMPL_ADDREF(nsUnicodeToTIS620)
-NS_IMPL_RELEASE(nsUnicodeToTIS620)
-
-PRInt32
-nsUnicodeToTIS620::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList) 
-{
-  int            ct = 0, start = 0;
-  PRBool         isTis = PR_FALSE;
-  struct textRun *tmpChunk;
-
-  // Handle Simple Case Now : Multiple Ranges later
-  PRUnichar thaiBeg = 3585; // U+0x0E01;
-  PRUnichar thaiEnd = 3675; // U+0x0E5b
-
-  for (ct = 0; ct < aSrcLen;) {
-    tmpChunk = new textRun;
-    if (!tmpChunk)
-      break;
-
-    if (aRunList->numRuns == 0)
-      aRunList->head = tmpChunk;
-    else
-      aRunList->cur->next = tmpChunk;
-    aRunList->cur = tmpChunk;
-    aRunList->numRuns++;
-    
-    tmpChunk->start = &aSrcBuf[ct];
-    start = ct;
-    isTis = (aSrcBuf[ct] >= thaiBeg && aSrcBuf[ct] <= thaiEnd);
-
-    if (isTis) {
-      while (isTis && ct < aSrcLen) {
-        isTis = (aSrcBuf[ct] >= thaiBeg && aSrcBuf[ct] <= thaiEnd);
-        if (isTis)
-          ct++;
-      }
-      tmpChunk->isOther = PR_FALSE;
-    }
-    else {
-      while (!isTis && ct < aSrcLen) {
-        isTis = (aSrcBuf[ct] >= thaiBeg && aSrcBuf[ct] <= thaiEnd);
-        if (!isTis)
-          ct++;
-      }
-      tmpChunk->isOther = PR_TRUE;
-    }
-    
-    tmpChunk->length = ct - start;
-  }
-  return (PRInt32)aRunList->numRuns;
-}
-
-nsresult nsUnicodeToTIS620::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstancePtr = NULL;
-  
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(NS_GET_IID(nsIUnicodeEncoder))) {
-    *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsICharRepresentable))) {
-    *aInstancePtr = (void*) ((nsICharRepresentable*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsUnicodeToTIS620, nsIUnicodeEncoder, nsICharRepresentable)
 
 NS_IMETHODIMP nsUnicodeToTIS620::SetOutputErrorBehavior(PRInt32 aBehavior,
                                                         nsIUnicharEncoder * aEncoder, 
@@ -125,20 +43,19 @@ NS_IMETHODIMP nsUnicodeToTIS620::SetOutputErrorBehavior(PRInt32 aBehavior,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// constructor and destroctor
-
 nsUnicodeToTIS620::nsUnicodeToTIS620()
 {
   static   NS_DEFINE_CID(kLECID, NS_ULE_CID);
   nsresult rv;
 
+  NS_INIT_ISUPPORTS();
+
   mCtlObj = do_CreateInstance(kLECID, &rv);
   if (NS_FAILED(rv)) {
-#ifdef DEBUG_prabhat
-    // No other error handling needed here since we 
+#ifdef DEBUG_prabhath
+    // No other error handling needed here since we
     // handle absence of mCtlObj in Convert
-    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", 
-           rv);
+    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", rv);
 #endif
     NS_WARNING("Thai Text Layout Will Not Be Supported\n");
     mCtlObj = nsnull;
@@ -161,15 +78,12 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
                                          char*            output,
                                          PRInt32*         aDestLength)
 {
-  textRunList txtRuns;
-  textRun     *aPtr, *aTmpPtr;
-  int i;
-  
+   PRSize outLen = 0;
 #ifdef DEBUG_prabhath_no_shaper
   printf("Debug/Test Case of No thai pango shaper Object\n");
   // Comment out mCtlObj == nsnull for test purposes
 #endif
-  
+
   if (mCtlObj == nsnull) {
     nsICharsetConverterManager*  gCharSetManager = nsnull;
     nsIUnicodeEncoder*           gDefaultTISConverter = nsnull;
@@ -193,54 +107,27 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
       NS_IF_RELEASE(gCharSetManager);
       return NS_ERROR_FAILURE;
     }
-    
+
     gDefaultTISConverter->Convert(input, aSrcLength, output, aDestLength);
     NS_IF_RELEASE(gCharSetManager);
     NS_IF_RELEASE(gDefaultTISConverter);
-    return NS_OK;    
+    return NS_OK;
   }
 
   // CTLized shaping conversion starts here
   // No question of starting the conversion from an offset
   mCharOff = mByteOff = 0;
 
-  txtRuns.numRuns = 0;
-  Itemize(input, *aSrcLength, &txtRuns);
+  // Charset tis620-0, tis620.2533-1, tis620.2529-1 & iso8859-11
+  // are equivalent and have the same presentation forms
 
-  aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {
-    PRInt32 tmpSrcLen = aPtr->length;
-    
-    if (aPtr->isOther) {
-      // PangoThaiShaper does not handle ASCII + thai in same shaper
-      for (int j = 0; j < tmpSrcLen; j++)
-        output[j + mByteOff] = (char)(*(aPtr->start + j));
-      mByteOff += tmpSrcLen;
-    }
-    else {
-      PRSize outLen = *aDestLength - mByteOff;
-      // Charset tis620-0, tis620.2533-1, tis620.2529-1 & iso8859-11
-      // are equivalent and have the same presentation forms
+  // tis620-2 is hard-coded since we only generate presentation forms
+  // in Windows-Stye as it is the current defacto-standard for the
+  // presentation of thai content
+  mCtlObj->GetPresentationForm(input, *aSrcLength, "tis620-2",
+                               &output[mByteOff], &outLen);
 
-      // tis620-2 is hard-coded since we only generate presentation forms
-      // in Windows-Stye as it is the current defacto-standard for the
-      // presentation of thai content
-      mCtlObj->GetPresentationForm(aPtr->start, tmpSrcLen, "tis620-2",
-                                   &output[mByteOff], &outLen);
-      mByteOff += outLen;
-    }
-    aPtr = aPtr->next;
-  }
-  
-  // Cleanup Run Info;
-  aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {
-    aTmpPtr = aPtr;
-    aPtr = aPtr->next;
-    delete aTmpPtr;
-  }
-
-  *aDestLength = mByteOff;
+  *aDestLength = outLen;
   return NS_OK;
 }
 
@@ -260,16 +147,16 @@ NS_IMETHODIMP nsUnicodeToTIS620::Reset()
 }
 
 //================================================================
-NS_IMETHODIMP nsUnicodeToTIS620::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToTIS620::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = (aSrcLength + 1) *  2; // Each Thai character can generate
+  *aDestLength = (aSrcLength + 1) * 2; // Each Thai character can generate
                                         // atmost two presentation forms
   return NS_OK;
 }
-//================================================================
 
+//================================================================
 NS_IMETHODIMP nsUnicodeToTIS620::FillInfo(PRUint32* aInfo)
 {
   PRUint16 i;
@@ -279,9 +166,9 @@ NS_IMETHODIMP nsUnicodeToTIS620::FillInfo(PRUint32* aInfo)
     SET_REPRESENTABLE(aInfo, i);
 
   // 0x0e01-0x0e7f
-  for (i = 0x0e01; i <= 0xe3a; i++)    
+  for (i = 0x0e01; i <= 0xe3a; i++)
     SET_REPRESENTABLE(aInfo, i);
-   
+
   // U+0E3B - U+0E3E is undefined
   // U+0E3F - U+0E5B
   for (i = 0x0e3f; i <= 0x0e5b; i++)

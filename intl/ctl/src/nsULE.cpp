@@ -22,6 +22,7 @@
  * 
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
+ *   Jungshik Shin (jshin@mailmaps.org)
  */
 
 #include "nsULE.h"
@@ -32,437 +33,251 @@
 #include "pango-modules.h"
 #include "pango-utils.h"
 
+#define GLYPH_COMBINING 256
+
 /* 
- * To Do: (Last Updated by prabhat - 08/24/02)
- * A> Extend shapers to support ASCII + Script
- * B> Eliminate Separate Script
- * C> Look at improving the speed of cursor handling logic
- *
+ * To Do:(prabhat-04/01/03) Cache GlyphString
 */
 
-#define CLEAN_RUN \
-  aPtr = aRun.head; \
-  for (int ct=0; (ct < aRun.numRuns); ct++) { \
-    aTmpPtr = aPtr; \
-    aPtr = aPtr->next; \
-    delete(aTmpPtr); \
-  }
-
-/*
- * Start of nsULE Public Functions
- */
 nsULE::nsULE() {
 }
 
 nsULE::~nsULE() {
-  // No data to cleanup.
 }
 
-NS_IMPL_ISUPPORTS1(nsULE, nsILE)
-
-/* Caller needs to ensure that GetEngine is called with valid state */
-PangoliteEngineShape* 
-nsULE::GetShaper(const PRUnichar *inBuf,
-                 PRUint32        aLength,
-                 const char      *lang)
-{
-  PangoliteEngineShape *aEngine = NULL;
-  PangoliteMap         *aMap = NULL;
-  guint            engine_type_id = 0, render_type_id = 0;
-  PRUnichar        wc = inBuf[0];
-
-  if ((inBuf == (PRUnichar*)NULL) || (aLength <= 0)) {
-    aEngine = (PangoliteEngineShape*)NULL;
-  }
-  else {
-
-    if (engine_type_id == 0) {
-      engine_type_id = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
-      render_type_id = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
-    }
-
-    // Do not care about lang for now
-    aMap = pangolite_find_map("en_US", engine_type_id, render_type_id);  
-    aEngine = (PangoliteEngineShape*)pangolite_map_get_engine(aMap, (PRUint32)wc);
-  }
-  return aEngine;
-}
-
-PRInt32
-nsULE::ScriptsByRun(const PRUnichar *aSrcBuf, 
-                      PRInt32         aSrcLen, 
-                      textRunList     *aRunList)
-{
-  int              ct = 0, start = 0;
-  PRBool           sameCtlRun = PR_FALSE;
-  struct textRun   *tmpChunk;
-  PangoliteEngineShape *curEngine = NULL, *prevEngine = NULL;
-  PangoliteMap         *aMap = NULL;
-  guint            engine_type_id = 0, render_type_id = 0;
-
-  engine_type_id = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
-  render_type_id = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
-  aMap = pangolite_find_map("en_US", engine_type_id, render_type_id);
-
-  for (ct = 0; ct < aSrcLen;) {
-    tmpChunk = new textRun;
-    if (!tmpChunk)
-      break;
-
-    if (aRunList->numRuns == 0)
-      aRunList->head = tmpChunk;
-    else
-      aRunList->cur->next = tmpChunk;
-    aRunList->cur = tmpChunk;
-    aRunList->numRuns++;
-    
-    tmpChunk->start = &aSrcBuf[ct];
-    start = ct;
-    curEngine = (PangoliteEngineShape*)
-      pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
-    sameCtlRun = (curEngine != NULL);
-    prevEngine = curEngine;
-
-    if (sameCtlRun) {
-      while (sameCtlRun && ct < aSrcLen) {
-        curEngine = (PangoliteEngineShape*)
-          pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
-        sameCtlRun = ((curEngine != NULL) && (curEngine == prevEngine));
-        if (sameCtlRun)
-          ct++;
-      }
-      tmpChunk->isOther = PR_FALSE;
-    }
-    else {
-      while (!sameCtlRun && ct < aSrcLen) {
-        curEngine = (PangoliteEngineShape*)
-          pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
-        sameCtlRun = (curEngine != NULL);       
-        if (!sameCtlRun)
-          ct++;
-      }
-      tmpChunk->isOther = PR_TRUE;
-    }
-    
-    tmpChunk->length = ct - start;
-  }
-  return (PRInt32)aRunList->numRuns;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsULE, nsILE)
 
 // Default font encoding by code-range
-// At the moment pangoliteLite only supports 2 shapers/scripts
+// At the moment pangoLite only supports 2 shapers/scripts
 const char*
 nsULE::GetDefaultFont(const PRUnichar aString)
 {
   if ((aString >= 0x0e01) && (aString <= 0x0e5b))
     return "tis620-2";
-  else if ((aString >= 0x0901) && (aString <= 0x0970))
+  if ((aString >= 0x0901) && (aString <= 0x0970))
     return "sun.unicode.india-0";
-  else
-    return "iso8859-1";
-           
+  return "iso8859-1";
 }
 
-// Analysis needs to have valid direction
 PRInt32
-nsULE::GetCtlData(const PRUnichar  *aString,
-                  PRUint32         aLength,
-                  PangoliteGlyphString *aGlyphs,
-                  const char       *fontCharset)
+nsULE::GetGlyphInfo(const PRUnichar      *aSrcBuf,
+                    PRInt32              aSrcLen,
+                    PangoliteGlyphString *aGlyphData,
+                    const char           *aFontCharset)
 {
-  PangoliteEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
-  PangoliteAnalysis    aAnalysis;  
+  int                  ct=0, start=0, i, index, startgid, lastCluster=0;
+  PRBool               sameCtlRun=PR_FALSE;
+  PangoliteEngineShape *curShaper=NULL, *prevShaper=NULL;
+  PangoliteMap         *pngMap=NULL;
+  PangoliteAnalysis    pngAnalysis;
+  guint                enginetypeId=0, rendertypeId=0;
 
-  aAnalysis.shape_engine = aShaper;
-  aAnalysis.aDir = PANGO_DIRECTION_LTR;
-  
+  pngAnalysis.aDir = PANGO_DIRECTION_LTR;
+ 
   // Maybe find a better way to handle font encodings
-  if (fontCharset == NULL)
-    aAnalysis.fontCharset = strdup(GetDefaultFont(aString[0]));
+  if (aFontCharset == NULL)
+    pngAnalysis.fontCharset = strdup(GetDefaultFont(aSrcBuf[0]));
   else
-    aAnalysis.fontCharset = strdup(fontCharset);
+    pngAnalysis.fontCharset = strdup(aFontCharset);
 
-  if (aShaper != NULL) {
-    aShaper->script_shape(aAnalysis.fontCharset, aString, aLength,
-                          &aAnalysis, aGlyphs);
-    nsMemory::Free(aAnalysis.fontCharset);
+  enginetypeId = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
+  rendertypeId = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
+  pngMap = pangolite_find_map("en_US", enginetypeId, rendertypeId);
+
+  for (ct=0; ct < aSrcLen;) {
+    start = ct;
+    curShaper = (PangoliteEngineShape*)
+      pangolite_map_get_engine(pngMap, (PRUint32)aSrcBuf[ct++]);
+    sameCtlRun = (curShaper != NULL);
+    prevShaper = curShaper;
+
+    if (sameCtlRun) {
+      while (sameCtlRun && ct < aSrcLen) {
+        curShaper = (PangoliteEngineShape*)
+          pangolite_map_get_engine(pngMap, (PRUint32)aSrcBuf[ct]);
+        sameCtlRun = ((curShaper != NULL) && (curShaper == prevShaper));
+        if (sameCtlRun)
+          ct++;
+      }
+      startgid = aGlyphData->num_glyphs;
+      pngAnalysis.shape_engine = curShaper;
+      prevShaper->script_shape(pngAnalysis.fontCharset,
+                               &aSrcBuf[start], (ct-start),
+                               &pngAnalysis, aGlyphData);
+      if (lastCluster > 0) {
+         for (i=startgid; i < aGlyphData->num_glyphs; i++)
+           aGlyphData->log_clusters[i] += lastCluster;
+      }
+    }
+    else {
+      while (!sameCtlRun && ct < aSrcLen) {
+        curShaper = (PangoliteEngineShape*)
+          pangolite_map_get_engine(pngMap, (PRUint32)aSrcBuf[ct]);
+        sameCtlRun = (curShaper != NULL);
+        if (!sameCtlRun)
+          ct++;
+      }
+      index = aGlyphData->num_glyphs;
+      for (i=0; i < (ct-start); i++) {
+        pangolite_glyph_string_set_size(aGlyphData, index+1);
+        aGlyphData->glyphs[index].glyph = aSrcBuf[start+i];
+        aGlyphData->glyphs[index].is_cluster_start = (gint)1;
+        aGlyphData->log_clusters[index] = i+lastCluster;
+        index++;
+      }
+    }
+    lastCluster = aGlyphData->log_clusters[aGlyphData->num_glyphs-1];
   }
-  else {
-    /* No Shaper - Copy Input to output */
-    return 0;
-  }
-  return aGlyphs->num_glyphs;
+  nsMemory::Free(pngAnalysis.fontCharset);
+  return aGlyphData->num_glyphs;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsULE::NeedsCTLFix(const PRUnichar *aString,
+                   const PRInt32   aBeg,
+                   const PRInt32   aEnd,
+                   PRBool          *aCTLNeeded)
+{
+  PangoliteEngineShape *BegShaper=NULL, *EndShaper=NULL;
+  PangoliteMap         *pngMap=NULL;
+  guint                enginetypeId=0, rendertypeId=0;
+
+  enginetypeId = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
+  rendertypeId = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
+  pngMap = pangolite_find_map("en_US", enginetypeId, rendertypeId);
+
+  *aCTLNeeded = PR_FALSE;
+  if (aBeg >= 0)
+    BegShaper = (PangoliteEngineShape*)
+      pangolite_map_get_engine(pngMap, (PRUint32)aString[aBeg]);
+
+  if (!BegShaper) {
+
+    if ((aEnd < 0) && ((aBeg+aEnd) >= 0)) {
+      EndShaper = (PangoliteEngineShape*)
+        pangolite_map_get_engine(pngMap, (PRUint32)aString[aBeg+aEnd]);
+    }
+    else {
+      EndShaper = (PangoliteEngineShape*)
+        pangolite_map_get_engine(pngMap, (PRUint32)aString[aEnd]);
+    }
+  }
+
+  if (BegShaper || EndShaper)
+    *aCTLNeeded = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsULE::GetPresentationForm(const PRUnichar *aString,
                            PRUint32        aLength,
-                           const char      *fontCharset,
+                           const char      *aFontCharset,
                            char            *aGlyphs,
-                           PRSize          *aOutLength)
+                           PRSize          *aOutLength,
+                           PRBool          aIsWide)
 {
-  PangoliteGlyphString *tmpGlyphs = pangolite_glyph_string_new();
+  PangoliteGlyphString *tmpGlyphs=pangolite_glyph_string_new();
 
-  GetCtlData(aString, aLength, tmpGlyphs, fontCharset);
-    
+  GetGlyphInfo(aString, aLength, tmpGlyphs, aFontCharset);
+
   if (tmpGlyphs->num_glyphs > 0) {
-    guint i = 0, glyphCt = 0;
-    for (i = 0; i < tmpGlyphs->num_glyphs; i++, glyphCt++) {
-      if (tmpGlyphs->glyphs[i].glyph > 0xFF) {
-        aGlyphs[glyphCt]=(unsigned char)((tmpGlyphs->glyphs[i].glyph & 0xFF00) >> 8);
-        glyphCt++;
-      }
+    gint i=0, glyphCt=0;
+    for (i=0; i < tmpGlyphs->num_glyphs; i++, glyphCt++) {
+      if (aIsWide)
+         aGlyphs[glyphCt++]=(unsigned char)
+                            ((tmpGlyphs->glyphs[i].glyph & 0xFF00) >> 8);
       aGlyphs[glyphCt]=(unsigned char)(tmpGlyphs->glyphs[i].glyph & 0x00FF);
     }
- 
     *aOutLength = (PRSize)glyphCt;
   }
-  else {
-    /* No Shaper - Copy Input to output */
-  }
+  pangolite_glyph_string_free(tmpGlyphs);
   return NS_OK;
 }
 
 // This routine returns the string index of the next cluster
 // corresponding to the cluster at string index 'aIndex'
-// Note : Index returned is the end-offset
-// Cursor position iterates between 0 and (position - 1)
 NS_IMETHODIMP
 nsULE::NextCluster(const PRUnichar *aString,
                    PRUint32        aLength,
                    const PRInt32   aIndex,
-                   PRInt32         *nextOffset)
+                   PRInt32         *aNextOffset)
 {
-  textRunList      aRun;
-  textRun          *aPtr, *aTmpPtr;
-  PRInt32          aStrCt=0;
-  PRBool           isBoundary=PR_FALSE;
-  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
- 
-  if (aIndex >= aLength-1) {
-    *nextOffset = aLength; // End
+  int mStart, mEnd;
+
+  if (aIndex < 0) {
+    *aNextOffset = 0;
     return NS_OK;
   }
 
-  aRun.numRuns = 0;
-  ScriptsByRun(aString, aLength, &aRun);
-
-  aPtr = aRun.head;
-  for (int i=0; (i < aRun.numRuns); i++) {
-    PRInt32 runLen=0;
-
-    runLen = aPtr->length;    
-    
-    if ((aStrCt+runLen) < aIndex) /* Skip Run and continue */
-      aStrCt += runLen;
-
-    else if ((aStrCt+runLen) == aIndex) {
-      isBoundary = PR_TRUE;/* Script Boundary - Skip a cell in next iteration */
-      aStrCt += runLen;
-    }
-
-    else {
-      if (aPtr->isOther) {
-        *nextOffset = aIndex+1;
-        CLEAN_RUN
-        return NS_OK;
-      }
-      else {  /* CTL Cell Movement */
-        PRInt32 j, startCt, beg, end, numCur;
-        
-        startCt=aStrCt;
-        GetCtlData(aPtr->start, runLen, aGlyphData);
-        
-        numCur=beg=0;
-        for (j=0; j<aGlyphData->num_glyphs; j++) {
-          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
-                 j<aGlyphData->num_glyphs)
-            j++;
-          if (j>=aGlyphData->num_glyphs)
-            end=runLen;
-          else
-            end=aGlyphData->log_clusters[j];
-          numCur += end-beg;
-          if (startCt+numCur > aIndex)
-            break;
-          else
-            beg=end;
-        }
-
-        // Found Cluster - Start of Next == End Of Current
-        *nextOffset = startCt+numCur;
-        CLEAN_RUN
-        return NS_OK;
-      }
-    }
-    aPtr = aPtr->next;
+  if (aIndex >= aLength) {
+    *aNextOffset = aLength;
+    return NS_OK;
   }
-  /* UNUSED */
-  CLEAN_RUN
+  this->GetRangeOfCluster(aString, aLength, aIndex, &mStart, &mEnd);
+  *aNextOffset = mEnd;
+  return NS_OK;
 }
 
 // This routine returns the end-offset of the previous block
 // corresponding to string index 'aIndex'
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsULE::PrevCluster(const PRUnichar *aString,
                    PRUint32        aLength,
                    const PRInt32   aIndex,
-                   PRInt32         *prevOffset)
+                   PRInt32         *aPrevOffset)
 {
-  textRunList      aRun;
-  textRun          *aPtr, *aTmpPtr;
-  PRInt32          aStrCt=0, startCt=0, glyphct=0;
-  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
- 
-  if (aIndex<=1) {
-    *prevOffset=0; // End
+  int                  gCt, pCluster, cCluster;
+  PangoliteGlyphString *GlyphInfo=pangolite_glyph_string_new();
+
+  if (aIndex <= 1) {
+    *aPrevOffset = 0;
     return NS_OK;
   }
+  pCluster=cCluster=0;
+  GetGlyphInfo(aString, aLength, GlyphInfo, NULL);
+  for (gCt=0; gCt < GlyphInfo->num_glyphs; gCt++) {
 
-  aRun.numRuns=0;
-  ScriptsByRun(aString, aLength, &aRun);
+    if (GlyphInfo->glyphs[gCt].is_cluster_start != GLYPH_COMBINING)
+       cCluster += GlyphInfo->glyphs[gCt].is_cluster_start;
 
-  // Get the index of current cluster  
-  aPtr=aRun.head;
-  for (int i=0; i<aRun.numRuns; i++) {
-    PRInt32 runLen=aPtr->length;
-    
-    if ((aStrCt+runLen) < aIndex) /* Skip Run */
-      aStrCt += runLen;
-    
-    else if ((aStrCt+runLen) == aIndex) {
-      if (aPtr->isOther) {
-        *prevOffset=aIndex-1;
-        CLEAN_RUN
-        return NS_OK;
-      }
-      else { /* Move back a cluster */
-        startCt=aStrCt;
-        GetCtlData(aPtr->start, runLen, aGlyphData); 
-
-        glyphct=aGlyphData->num_glyphs-1;
-        while (glyphct > 0) {
-          if (aGlyphData->glyphs[glyphct].attr.is_cluster_start) {
-            *prevOffset=startCt+aGlyphData->log_clusters[glyphct];
-            CLEAN_RUN
-            return NS_OK;
-          }
-          --glyphct;
-        }
-        *prevOffset=startCt;
-        CLEAN_RUN
-        return NS_OK;
-      }
+    if (cCluster >= aIndex) {
+       *aPrevOffset = pCluster;
+       pangolite_glyph_string_free(GlyphInfo);
+       return NS_OK;
     }
-    else {
-      if (aPtr->isOther) {
-        *prevOffset=aIndex-1;
-        CLEAN_RUN
-        return NS_OK;
-      }
-      else {
-        PRInt32 j,beg,end,numPrev,numCur;
-
-        startCt=aStrCt;
-        GetCtlData(aPtr->start, runLen, aGlyphData);
-        
-        numPrev=numCur=beg=0;
-        for (j=1; j<aGlyphData->num_glyphs; j++) {
-          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
-                 j<aGlyphData->num_glyphs)
-            j++;
-          if (j>=aGlyphData->num_glyphs)
-            end=runLen;
-          else
-            end=aGlyphData->log_clusters[j];
-          numCur += end-beg;
-          if (numCur+startCt >= aIndex)
-            break;
-          else {
-            beg=end;
-            numPrev=numCur;
-          }
-        }
-        *prevOffset=startCt+numPrev;
-        CLEAN_RUN
-        return NS_OK;
-      }
-    }
-    aPtr=aPtr->next;
+    pCluster = cCluster;
   }
-  /* UNUSED */
-  CLEAN_RUN
+  *aPrevOffset = pCluster;
+  pangolite_glyph_string_free(GlyphInfo);
+  return NS_OK;
 }
 
-// This routine returns the end-offset of the previous block
-// corresponding to string index 'aIndex'
-NS_IMETHODIMP 
+// This routine gets the bounds of a cluster given a index
+NS_IMETHODIMP
 nsULE::GetRangeOfCluster(const PRUnichar *aString,
                          PRUint32        aLength,
                          const PRInt32   aIndex,
                          PRInt32         *aStart,
                          PRInt32         *aEnd)
 {
-  textRunList      aRun;
-  textRun          *aPtr, *aTmpPtr;
-  PRInt32          aStrCt=0, startCt=0,j;
-  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
+  PangoliteGlyphString *GlyphInfo=pangolite_glyph_string_new();
+  int                  gCt=0;
 
-  *aStart = *aEnd = 0;
-  aRun.numRuns=0;
-  ScriptsByRun(aString, aLength, &aRun);
+  GetGlyphInfo(aString, aLength, GlyphInfo, NULL);
 
-  // Get the index of current cluster  
-  aPtr=aRun.head;
-  for (int i=0; i<aRun.numRuns; i++) {
-    PRInt32 runLen=aPtr->length;
-    
-    if ((aStrCt+runLen) < aIndex) /* Skip Run */
-      aStrCt += runLen;        
-    else {
-      if (aPtr->isOther) {
-        *aStart = *aEnd = aIndex;
-        CLEAN_RUN
-        return NS_OK;
-      }
-      else {
-        PRInt32 beg,end,numCur;
+  *aStart=*aEnd=0;
+  for (gCt=0; gCt < GlyphInfo->num_glyphs; gCt++) {
 
-        startCt=aStrCt;
-        GetCtlData(aPtr->start, runLen, aGlyphData);
-        
-        numCur=beg=0;
-        for (j=1; j<aGlyphData->num_glyphs; j++) {
-          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
-                 j<aGlyphData->num_glyphs)
-            j++;
-          if (j>=aGlyphData->num_glyphs)
-            end=runLen;
-          else
-            end=aGlyphData->log_clusters[j];
-         
-          numCur += end-beg;
-          if (numCur+startCt >= aIndex)
-            break;
-          else
-            beg=end;
-        }
+    if (GlyphInfo->glyphs[gCt].is_cluster_start != GLYPH_COMBINING)
+       *aEnd += GlyphInfo->glyphs[gCt].is_cluster_start;
 
-        *aEnd = startCt+numCur;
-        if (beg == 0)
-          *aStart = beg;
-        else {
-          if ((end-beg) == 1) /* n=n Condition */
-            *aStart = *aEnd;
-          else
-            *aStart = startCt+beg+1; /* Maintain Mozilla Convention */
-        }
-        CLEAN_RUN
-        return NS_OK;
-      }
+    if (*aEnd >= aIndex+1) {
+      pangolite_glyph_string_free(GlyphInfo);
+      return NS_OK;
     }
-    aPtr=aPtr->next;
+    *aStart = *aEnd;
   }
-  CLEAN_RUN
-    /* UNUSED */
+  *aEnd = aLength;
+  pangolite_glyph_string_free(GlyphInfo);
+  return NS_OK;
 }

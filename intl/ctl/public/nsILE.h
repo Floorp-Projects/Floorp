@@ -39,8 +39,12 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILE_IID)
   
+  NS_IMETHOD NeedsCTLFix(const PRUnichar*, const PRInt32,
+                         const PRInt32, PRBool *) = 0;
+
   NS_IMETHOD GetPresentationForm(const PRUnichar*, PRUint32,
-                                 const char*, char*, PRSize*) = 0;
+                                 const char*, char*, PRSize*,
+                                 PRBool = PR_FALSE) = 0;
 
   NS_IMETHOD PrevCluster(const PRUnichar*, PRUint32, 
                          const PRInt32, PRInt32*) = 0;

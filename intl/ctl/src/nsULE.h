@@ -23,7 +23,6 @@
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
-
 #ifndef nsULE_H
 #define nsULE_H
 
@@ -36,66 +35,53 @@
 #include "pango-types.h"
 #include "pango-glyph.h"
 
-struct textRun {
-  PRInt32         length; /* Length of a chunk */  
-  PRBool          isOther; /* Outside the range */
-  const PRUnichar *start; /* Address of start offset */
-  struct textRun  *next;
-};
-
-struct textRunList {
-  struct textRun *head;
-  struct textRun *cur;
-  PRInt32        numRuns;
-};
-
 /* Class nsULE : Declaration */
-class nsULE : public nsILE {  
+class nsULE : public nsILE {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ULE_IID)
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_ULE_CID)  
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_ULE_CID)
   NS_DECL_ISUPPORTS
 
   nsULE(void);
-  
-  // Destructor
   virtual ~nsULE(void);
-  
+
   // Public Methods of nsULE - Used to handle CTL operations including
   // A> API used to generate Presentation Forms based on supported fonts
-  // B> API used by common text operations such as cursor positioning 
+  // B> API used by common text operations such as cursor positioning
   //    and selection
+
+  NS_IMETHOD NeedsCTLFix(const PRUnichar         *aString,
+                         const PRInt32           aBeg,
+                         const PRInt32           aEnd,
+                         PRBool                  *aCTLNeeded);
 
   NS_IMETHOD GetPresentationForm(const PRUnichar *aString,
                                  PRUint32        aLength,
-                                 const char      *fontCharset,
+                                 const char      *aFontCharset,
                                  char            *aGlyphs,
-                                 PRSize          *aOutLength);
+                                 PRSize          *aOutLength,
+                                 PRBool          aIsWide = PR_FALSE);
 
   NS_IMETHOD PrevCluster(const PRUnichar         *aString,
                          PRUint32                aLength,
                          const PRInt32           aIndex,
-                         PRInt32                 *prevOffset);
+                         PRInt32                 *aPrevOffset);
 
   NS_IMETHOD NextCluster(const PRUnichar         *aString,
                          PRUint32                aLength,
                          const PRInt32           aIndex,
-                         PRInt32                 *nextOffset);
+                         PRInt32                 *aNextOffset);
 
-  NS_IMETHOD GetRangeOfCluster(const PRUnichar *aString,
-                               PRUint32        aLength,
-                               const PRInt32   aIndex,
-                               PRInt32         *aStart,
-                               PRInt32         *aEnd);
+  NS_IMETHOD GetRangeOfCluster(const PRUnichar   *aString,
+                               PRUint32          aLength,
+                               const PRInt32     aIndex,
+                               PRInt32           *aStart,
+                               PRInt32           *aEnd);
 
  private:
-  // Housekeeping Members
-  void Init(void);
-  void CleanUp(void);
-
-  const char*       GetDefaultFont(const PRUnichar);
-  PangoliteEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);  
-  PRInt32           GetCtlData(const PRUnichar*, PRUint32, PangoliteGlyphString*, const char* = (const char*)NULL);
-  PRInt32           ScriptsByRun(const PRUnichar*, PRInt32, textRunList*);
+  const char* GetDefaultFont(const PRUnichar);
+  PRInt32     GetGlyphInfo(const PRUnichar*, PRInt32,
+                           PangoliteGlyphString*,
+                           const char* = (const char*)NULL);
 };
 #endif /* !nsULE_H */
