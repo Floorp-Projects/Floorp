@@ -2161,6 +2161,13 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
+  nsCOMPtr<nsIScriptContext> scx;
+  sgo->GetContext(getter_AddRefs(scx));
+
+  if (!scx || NS_FAILED(scx->IsContextInitialized())) {
+    return NS_OK;
+  }
+
   JSObject *global = sgo->GetGlobalJSObject();
 
   rv = sSecMan->CheckPropertyAccess(cx, global, "Window",
@@ -2203,6 +2210,13 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIScriptContext> scx;
+  sgo->GetContext(getter_AddRefs(scx));
+
+  if (!scx || NS_FAILED(scx->IsContextInitialized())) {
+    return NS_OK;
+  }
 
   JSObject *global = sgo->GetGlobalJSObject();
 
