@@ -68,6 +68,8 @@ sub init {
     my @specialchart;
     my @andlist;
 
+    &::GetVersionTable();
+    
     # First, deal with all the old hard-coded non-chart-based poop.
     if (lsearch($fieldsref, 'map_assigned_to.login_name') >= 0 || 
         lsearch($fieldsref, 'map_assigned_to.realname') >= 0) {
@@ -116,6 +118,24 @@ sub init {
         push(@specialchart, ["bug_id", $type, join(',', $params->param('bug_id'))]);
     }
 
+    # If the user has selected all of either status or resolution, change to
+    # selecting none. This is functionally equivalent, but quite a lot faster.
+    if ($params->param('bug_status')) {
+        my @bug_statuses = $params->param('bug_status');
+        
+        if (scalar(@bug_statuses) == scalar(@::legal_bug_status)) {
+            $params->delete('bug_status');
+        }
+    }
+    
+    if ($params->param('resolution')) {
+        my @resolutions = $params->param('resolution');
+        
+        if (scalar(@resolutions) == scalar(@::legal_resolution)) {
+            $params->delete('resolution');
+        }
+    }
+    
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
                         "assigned_to", "reporter", "component",
