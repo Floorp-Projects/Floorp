@@ -1414,6 +1414,14 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
     // dispatch a got focus event
     DispatchGotFocusEvent();
 
+    // send the activate event if it wasn't already sent via any
+    // SetFocus() calls that were the result of the GOTFOCUS event
+    // above.
+    if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        DispatchActivateEvent();
+    }
+
 #ifdef USE_XIM
     nsWindow * aTmpWindow;
     aTmpWindow = this;
