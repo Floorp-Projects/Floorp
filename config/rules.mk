@@ -299,7 +299,7 @@ endif # IS_COMPONENT
 #
 ifeq ($(OS_ARCH),BeOS)
 ifdef SHARED_LIBRARY
-BEOS_LIB_LIST		= $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).dependencies)
+BEOS_LIB_LIST		= $(shell cat $(DEPTH)/dependencies.beos/$(LIBRARY_NAME).dependencies)
 BEOS_LINK_LIBS		= $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
 LDFLAGS			+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
@@ -476,12 +476,13 @@ clean clobber:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all:: $(SUBMAKEFILES)
-	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
+	rm -rf $(wildcard *.OBJ) dist dependencies.beos $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
 distclean:: $(SUBMAKEFILES)
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH) $(wildcard *.map) \
-	Makefile config.log config.cache depend.mk .md .deps .HSancillary _xpidlgen
+	Makefile config.log config.cache depend.mk .md .deps \
+	.HSancillary _xpidlgen dependencies.beos
 	+$(LOOP_OVER_DIRS)
 
 alltags:
