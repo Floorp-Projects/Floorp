@@ -1350,7 +1350,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 {
   nsPresContext *context = mShell->GetPresContext();
   if (!context)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> weakNodeUsed;
   PRInt32 offsetused = 0;
