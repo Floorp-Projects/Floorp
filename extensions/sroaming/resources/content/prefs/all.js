@@ -73,22 +73,22 @@ function Unload()
 function RoamingPrefs()
 {
   // init
-    this.loaded = false; // already read from registry
-    this.changed = false; // any of the values changed, so save all
-    // user data
-    this.Enabled = false;
-    this.Method = 0; // int, reall enum: 0=stream, 1=copy
-    this.Files = new Array(); // of strings, will get another default below
-    this.Stream = new Object();
-    this.Stream.BaseURL = "";
-    this.Stream.Username = "";
-    this.Stream.SavePW = false;
-    this.Stream.Password = "";
-    this.Copy = new Object();
-    this.Copy.RemoteDir = "";
-    // caching(have to add that here or it will disappear during pane switches)
-    this.regkeyProf = undefined;
-    this.registry = undefined;
+  this.loaded = false; // already read from registry
+  this.changed = false; // any of the values changed, so save all
+  // user data
+  this.Enabled = false;
+  this.Method = 0; // int, reall enum: 0=stream, 1=copy
+  this.Files = new Array(); // of strings, will get another default below
+  this.Stream = new Object();
+  this.Stream.BaseURL = "";
+  this.Stream.Username = "";
+  this.Stream.SavePW = false;
+  this.Stream.Password = "";
+  this.Copy = new Object();
+  this.Copy.RemoteDir = "";
+  // caching(have to add that here or it will disappear during pane switches)
+  this.regkeyProf = undefined;
+  this.registry = undefined;
 
   this.registryToData();
 
@@ -244,7 +244,8 @@ RoamingPrefs.prototype =
     if (!registry || !this.regkeyProf)
       // arg, we had a fatal error during read, so bail out
       return;
-    try {
+    try
+    {
       var regkey = this.saveRegBranch(this.regkeyProf, this.kRegTreeRoaming);
 
       // enabled
@@ -290,7 +291,9 @@ RoamingPrefs.prototype =
       registry.setString(regkey, this.kRegKeyCopyDir, this.Copy.RemoteDir);
 
       this.changed = false;
-    } catch (e) {
+    }
+    catch (e)
+    {
       this.showError("ErrorRegWrite", undefined, e.message);
       return;
     }
@@ -300,9 +303,12 @@ RoamingPrefs.prototype =
   // getKey/addKey returns either the regkey for branch or nothing, if failed
   saveRegBranch : function(baseregkey, branchname)
   {
-    try {
+    try
+    {
       return this.registry.getKey(baseregkey, branchname);
-    } catch (e) { // XXX catch selectively
+    }
+    catch (e) // XXX catch selectively
+    {
       dumpError("got (expected?) exception " + e + "\n");
       return this.registry.addKey(baseregkey, branchname);
       // if that fails with an exception, throw it to caller
@@ -414,7 +420,9 @@ RoamingPrefs.prototype =
       if (tech) // should we show exceptions to user?
         text += "\n" + tech;
       GetPromptService().alert(window, dialogTitle, text);
-    } catch(e) {
+    }
+    catch(e)
+    {
       dumpError("Error while trying to display an error: " + e
                 + " (original error: " + prop + " " + tech + ")\n");
     }
