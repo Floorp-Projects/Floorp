@@ -294,7 +294,7 @@
   <broadcaster id="Browser:Status"/>
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
-  <broadcaster id="args" value="http://www.mozilla.org/quality/smoketests/"/>
+  <broadcaster id="args" value="http://www.browserwatch.com"/>
 
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
