@@ -183,10 +183,10 @@ class nsWritingIterator
 
           while ( n )
             {
+              normalize_backward();
               difference_type one_hop = NS_MIN(n, size_backward());
               NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a writable iterator beyond the end of a string");
               mPosition -= one_hop;
-              normalize_backward();
               n -= one_hop;
             }
 
@@ -199,7 +199,7 @@ class nsWritingIterator
           NS_ASSERTION(size_forward() > 0, "You can't |write| into an |nsWritingIterator| with no space!");
 
           n = NS_MIN(n, PRUint32(size_forward()));
-          nsCharTraits<value_type>::copy(mPosition, s, n);
+          nsCharTraits<value_type>::move(mPosition, s, n);
           operator+=( difference_type(n) );
           return n;
         }
@@ -233,24 +233,43 @@ class basic_nsAWritableString
 
 
       nsWritingIterator<CharT>
-      BeginWriting( PRUint32 aOffset = 0 )
+      BeginWriting()
         {
           nsWritableFragment<CharT> fragment;
-          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, aOffset);
+          CharT* startPos = GetWritableFragment(fragment, kFirstFragment);
           return nsWritingIterator<CharT>(fragment, startPos, *this);
         }
 
 
       nsWritingIterator<CharT>
-      EndWriting( PRUint32 aOffset = 0 )
+      EndWriting()
         {
           nsWritableFragment<CharT> fragment;
-          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, this->Length()-aOffset));
-          return nsWritingIterator<CharT>(fragment, startPos, *this);
+          GetWritableFragment(fragment, kLastFragment);
+          return nsWritingIterator<CharT>(fragment, fragment.mEnd, *this);
         }
 
 
-      virtual void SetCapacity( PRUint32 ) = 0;
+        /**
+         * |SetCapacity| is not required to do anything; however, it can be used
+         * as a hint to the implementation to reduce allocations.
+         * |SetCapacity(0)| is a suggestion to discard all associated storage.
+         */
+      virtual void SetCapacity( PRUint32 ) { }
+
+        /**
+         * |SetLength| is used in two ways:
+         *   1) to |Cut| a suffix of the string;
+         *   2) to prepare to |Append| or move characters around.
+         *
+         * External callers are not allowed to use |SetLength| is this latter capacity.
+         * Should this really be a public operation?
+         * Additionally, your implementation of |SetLength| need not satisfy (2) if and only if you
+         * override the |do_...| routines to not need this facility.
+         *
+         * This distinction makes me think the two different uses should be split into
+         * two distinct functions.
+         */
       virtual void SetLength( PRUint32 ) = 0;
 
 
@@ -315,6 +334,10 @@ class basic_nsAWritableString
       basic_nsAWritableString<CharT>& operator+=( CharT aChar )                                     { Append(aChar); return *this; }
 
 
+
+        /**
+         * The following index based routines need to be recast with iterators.
+         */
 
         //
         // |Insert()|
@@ -548,7 +571,7 @@ basic_nsAWritableString<CharT>::do_AppendFromReadable( const basic_nsAReadableSt
   {
     PRUint32 oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
-    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(oldLength));
+    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting()+=oldLength);
   }
 
 template <class CharT>
@@ -569,10 +592,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_AppendFromElement( CharT aChar )
   {
-    PRUint32 oldLength = this->Length();
-    SetLength(oldLength+1);
-    nsWritableFragment<CharT> fragment;
-    *GetWritableFragment(fragment, kFragmentAt, oldLength) = aChar;
+    do_AppendFromReadable(basic_nsLiteralChar<CharT>(aChar));
   }
 
 
@@ -618,10 +638,10 @@ basic_nsAWritableString<CharT>::do_InsertFromReadable( const basic_nsAReadableSt
     PRUint32 oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
     if ( atPosition < oldLength )
-      copy_string_backward(this->BeginReading(atPosition), this->BeginReading(oldLength), EndWriting());
+      copy_string_backward(this->BeginReading()+=atPosition, this->BeginReading()+=oldLength, EndWriting());
     else
       atPosition = oldLength;
-    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(atPosition));
+    copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting()+=atPosition);
   }
 
 template <class CharT>
@@ -659,7 +679,7 @@ basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
     cutLength = NS_MIN(cutLength, myLength-cutStart);
     PRUint32 cutEnd = cutStart + cutLength;
     if ( cutEnd < myLength )
-      copy_string(this->BeginReading(cutEnd), this->EndReading(), BeginWriting(cutStart));
+      copy_string(this->BeginReading()+=cutEnd, this->EndReading(), BeginWriting()+=cutStart);
     SetLength(myLength-cutLength);
   }
 
@@ -715,12 +735,12 @@ basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUin
     PRUint32 newLength = oldLength - cutLength + replacementLength;
 
     if ( cutLength > replacementLength )
-      copy_string(this->BeginReading(cutEnd), this->EndReading(), BeginWriting(replacementEnd));
+      copy_string(this->BeginReading()+=cutEnd, this->EndReading(), BeginWriting()+=replacementEnd);
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_string_backward(this->BeginReading(cutEnd), this->BeginReading(oldLength), BeginWriting(replacementEnd));
+      copy_string_backward(this->BeginReading()+=cutEnd, this->BeginReading()+=oldLength, BeginWriting()+=replacementEnd);
 
-    copy_string(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
+    copy_string(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting()+=cutStart);
   }
 
 
