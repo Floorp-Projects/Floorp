@@ -2178,8 +2178,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
 
       nsRect imageSize(0,0,0,0);
 
-      PRInt32 x = currX;
-      PRInt32 y = (aRowIndex - mTopRowIndex) * mRowHeight;
+      PRInt32 lineX = currX;
+      PRInt32 lineY = (aRowIndex - mTopRowIndex) * mRowHeight;
 
       // Compute the maximal level to paint.
       PRInt32 maxLevel = level;
@@ -2208,15 +2208,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
             imageSize.width = mIndentation;
 
           // Line up line with the parent image.
-          x = currX + twistySize.width + imageSize.width / 2;
+          lineX = currX + twistySize.width + imageSize.width / 2;
 
-          // Paint full vertical line only if we have next sibling.
-          PRBool hasNextSibling;
-          mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
-          if (hasNextSibling)
-            aRenderingContext.DrawLine(x - (level - i + 1) * mIndentation, y, x - (level - i + 1) * mIndentation, y + mRowHeight);
-          else if (i == level)
-            aRenderingContext.DrawLine(x - (level - i + 1) * mIndentation, y, x - (level - i + 1) * mIndentation, y + mRowHeight / 2);
+          nscoord srcX = lineX - (level - i + 1) * mIndentation;
+          if (srcX <= cellRect.x + cellRect.width) {
+            // Paint full vertical line only if we have next sibling.
+            PRBool hasNextSibling;
+            mView->HasNextSibling(currentParent, aRowIndex, &hasNextSibling);
+            if (hasNextSibling)
+              aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight);
+            else if (i == level)
+              aRenderingContext.DrawLine(srcX, lineY, srcX, lineY + mRowHeight / 2);
+          }
         }
 
         PRInt32 parent;
@@ -2227,8 +2230,15 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
       }
 
       // Don't paint off our cell.
-      if (level == maxLevel)
-        aRenderingContext.DrawLine(x - mIndentation + 16, y + mRowHeight / 2, x - imageSize.width / 2, y + mRowHeight / 2);
+      if (level == maxLevel) {
+        nscoord srcX = lineX - mIndentation + 16;
+        if (srcX <= cellRect.x + cellRect.width) {
+          nscoord destX = lineX - imageSize.width / 2;
+          if (destX > cellRect.x + cellRect.width)
+            destX = cellRect.x + cellRect.width;
+          aRenderingContext.DrawLine(srcX, lineY + mRowHeight / 2, destX, lineY + mRowHeight / 2);
+        }
+      }
 
       PRBool clipState;
       aRenderingContext.PopState(clipState);
@@ -2313,7 +2323,12 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   // a -moz-apperance involved, adjust the rect by the minimum widget size provided by
   // the theme implementation.
   nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID().get(), twistyContext);
-  twistyRect.width = imageSize.width;
+  if (imageSize.height > twistyRect.height)
+    imageSize.height = twistyRect.height;
+  if (imageSize.width > twistyRect.width)
+    imageSize.width = twistyRect.width;
+  else
+    twistyRect.width = imageSize.width;
   if ( useTheme ) {
     nsSize minTwistySize(0,0);
     PRBool canOverride = PR_TRUE;
@@ -2412,8 +2427,13 @@ nsOutlinerBodyFrame::PaintImage(int                  aRowIndex,
   // we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail.
   nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID().get(), imageContext);
-  if (!aColumn->IsCycler())
-   imageRect.width = imageSize.width;
+
+  if (imageSize.height > imageRect.height)
+    imageSize.height = imageRect.height;
+  if (imageSize.width > imageRect.width)
+    imageSize.width = imageRect.width;
+  else if (!aColumn->IsCycler())
+    imageRect.width = imageSize.width;
 
   // Subtract out the remaining width.
   nsRect copyRect(imageRect);
