@@ -188,7 +188,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     nsresult rv;
 
     PRUnichar buf[128];
-    nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+    nsFixedString id(buf, NS_ARRAY_LENGTH(buf), 0);
 
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
@@ -220,7 +220,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     // fallback on an "id" attribute.
     nsresult rv;
     PRUnichar buf[128];
-    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+    nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
 
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, uri);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
@@ -369,7 +369,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAString& 
     nsresult rv;
 
     char buf[256];
-    nsCAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf), 0));
+    nsFixedCString uri(buf, sizeof(buf), 0);
     rv = MakeElementURI(aDocument, aID, uri);
     if (NS_FAILED(rv)) return rv;
 
@@ -439,7 +439,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute
     nsresult rv;
 
     PRUnichar buf[256];
-    nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
+    nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
         rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"

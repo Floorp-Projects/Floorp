@@ -389,6 +389,15 @@ class nsTSubstring_CharT : public nsTAString_CharT
           return ( start < (mData + mLength) && end > mData );
         }
 
+        /**
+         * this helper function stores the specified dataFlags in mFlags
+         */
+      void SetDataFlags(PRUint32 dataFlags)
+        {
+          NS_ASSERTION((dataFlags & 0xFFFF0000) == 0, "bad flags");
+          mFlags = dataFlags | (mFlags & 0xFFFF0000);
+        }
+
     public:
 
       // mFlags is a bitwise combination of the following flags.  the meaning
@@ -399,12 +408,17 @@ class nsTSubstring_CharT : public nsTAString_CharT
       
       enum
         {
-          F_NONE       = 0,       // no flags
-          F_TERMINATED = 1 << 0,  // IsTerminated returns true
-          F_VOIDED     = 1 << 1,  // IsVoid returns true
-          F_SHARED     = 1 << 2,  // mData points to a heap-allocated, shared buffer
-          F_OWNED      = 1 << 3,  // mData points to a heap-allocated, raw buffer
-          F_FIXED      = 1 << 4   // mData points to a fixed-size writable, dependent buffer
+          F_NONE         = 0,       // no flags
+
+          // data flags are in the lower 16-bits
+          F_TERMINATED   = 1 << 0,  // IsTerminated returns true
+          F_VOIDED       = 1 << 1,  // IsVoid returns true
+          F_SHARED       = 1 << 2,  // mData points to a heap-allocated, shared buffer
+          F_OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
+          F_FIXED        = 1 << 4,  // mData points to a fixed-size writable, dependent buffer
+
+          // class flags are in the upper 16-bits
+          F_CLASS_FIXED  = 1 << 16   // indicates that |this| is of type nsTFixedString
         };
 
       //

@@ -665,7 +665,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // actual value of the 'rdf:resource' attribute for the
             // given node.
             PRUnichar attrbuf[128];
-            nsAutoString attrValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
+            nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
             rv = tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
             if (NS_FAILED(rv)) return rv;
 
@@ -734,7 +734,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     // going to be an RDF URI, which is usually
                     // longish.
                     PRUnichar attrbuf[128];
-                    nsAutoString attribValue(CBufDescriptor(attrbuf, PR_TRUE, sizeof(attrbuf) / sizeof(PRUnichar), 0));
+                    nsFixedString attribValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
                     rv = tmplKid->GetAttr(attribNameSpaceID, attribName, attribValue);
                     if (NS_FAILED(rv)) return rv;
 

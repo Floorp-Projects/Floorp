@@ -67,8 +67,6 @@
 #define IGNORE_CASE     (PR_TRUE)
 #endif
 
-class CBufDescriptor;
-
 
   // declare nsString, et. al.
 #include "string-template-def-unichar.h"
@@ -79,68 +77,6 @@ class CBufDescriptor;
 #include "string-template-def-char.h"
 #include "nsTString.h"
 #include "string-template-undef.h"
-
-
-  /**
-   * CBufDescriptor
-   *
-   * Allows a nsC?AutoString to be configured to use a custom buffer.
-   */
-class CBufDescriptor
-  {
-    public:
-
-      CBufDescriptor(char* aString, PRBool aStackBased, PRUint32 aCapacity, PRInt32 aLength=-1)
-        {
-          mStr = aString;
-          mCapacity = aCapacity;
-          mLength = aLength;
-          mFlags = F_SINGLE_BYTE | (aStackBased ? F_STACK_BASED : 0);
-        }
-
-      CBufDescriptor(const char* aString, PRBool aStackBased, PRUint32 aCapacity, PRInt32 aLength=-1)
-        {
-          mStr = NS_CONST_CAST(char*, aString);
-          mCapacity = aCapacity;
-          mLength = aLength;
-          mFlags = F_SINGLE_BYTE | F_CONST | (aStackBased ? F_STACK_BASED : 0);
-        }
-
-      CBufDescriptor(PRUnichar* aString, PRBool aStackBased, PRUint32 aCapacity, PRInt32 aLength=-1)
-        {
-          mUStr = aString;
-          mCapacity = aCapacity;
-          mLength = aLength;
-          mFlags = F_DOUBLE_BYTE | (aStackBased ? F_STACK_BASED : 0);
-        }
-
-      CBufDescriptor(const PRUnichar* aString, PRBool aStackBased, PRUint32 aCapacity, PRInt32 aLength=-1)
-        {
-          mUStr = NS_CONST_CAST(PRUnichar*, aString);
-          mCapacity = aCapacity;
-          mLength = aLength;
-          mFlags = F_DOUBLE_BYTE | F_CONST | (aStackBased ? F_STACK_BASED : 0);
-        }
-
-      union
-        {
-          char*      mStr;
-          PRUnichar* mUStr;
-        };
-
-      PRUint32  mCapacity;
-      PRInt32   mLength;
-
-      enum
-        {
-          F_CONST       = (1 << 0),
-          F_STACK_BASED = (1 << 1),
-          F_SINGLE_BYTE = (1 << 2),
-          F_DOUBLE_BYTE = (1 << 3)
-        };
-
-      PRUint32  mFlags;
-  };
 
 
   /**

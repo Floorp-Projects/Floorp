@@ -2434,8 +2434,7 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
         rv = literal->GetValueConst(&value);
         if (NS_FAILED(rv)) return rv;
 
-        PRInt32 len = nsCRT::strlen(value);
-        CBufDescriptor wrapper(value, PR_TRUE, len + 1, len);
+        nsDependentString wrapper(value);
 
         PRUint32 cnt;
         rv = aElements->Count(&cnt);
@@ -2451,7 +2450,7 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
 
             rv = element->SetAttr(/* XXX */ kNameSpaceID_None,
                                   attr,
-                                  nsAutoString(wrapper),
+                                  wrapper,
                                   PR_TRUE);
         }
     }

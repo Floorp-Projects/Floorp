@@ -62,7 +62,8 @@
  */
 
 // XXXdarin what is wrong with STDC's tolower?
-inline char ascii_tolower(char aChar)
+inline char
+ascii_tolower(char aChar)
 {
   if (aChar >= 'A' && aChar <= 'Z')
     return aChar + ('a' - 'A');
@@ -86,7 +87,8 @@ inline char ascii_tolower(char aChar)
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
+static PRInt32
+FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset < 0)
     anOffset=0;
@@ -134,7 +136,8 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
+static PRInt32
+FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset < 0)
     anOffset=0;
@@ -178,7 +181,8 @@ inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anO
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
+static PRInt32
+RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset < 0)
     anOffset=(PRInt32)aDestLength-1;
@@ -223,7 +227,8 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
+static PRInt32
+RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset < 0)
     anOffset=(PRInt32)aDestLength-1;
@@ -272,8 +277,8 @@ inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 an
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static inline PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
+static PRInt32
+Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
     result=PRInt32(PL_strncasecmp(aStr1, aStr2, aCount));
@@ -298,8 +303,8 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
-PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
+static PRInt32
+Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
   PRInt32 result;
   
   if ( aStr1 && aStr2 )
@@ -334,8 +339,8 @@ PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCoun
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+static PRInt32
+Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   const PRUnichar* s1 = aStr1;
   const char *s2 = aStr2;
   
@@ -384,8 +389,8 @@ PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRB
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-static inline PRInt32 Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+inline PRInt32
+Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   return Compare2To1(aStr2, aStr1, aCount, aIgnoreCase) * -1;
 }
 
@@ -407,8 +412,8 @@ PRInt32 Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRB
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet);
-PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
+static PRInt32
+CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
   char*  from = aString;
   char*  end =  aString + aLength;
@@ -452,8 +457,8 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet);
-PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
+static PRInt32
+CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
 
   PRUnichar*  from = aString;
   PRUnichar*  end =  from + aLength;
@@ -495,8 +500,8 @@ PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet);
-PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
+static PRInt32
+StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
   // XXXdarin this code should defer writing until necessary.
 
@@ -529,8 +534,8 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet);
-PRInt32 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
+static PRInt32
+StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
 
   // XXXdarin this code should defer writing until necessary.
 

@@ -459,13 +459,63 @@ class nsTString_CharT : public nsTSubstring_CharT
   };
 
 
+class nsTFixedString_CharT : public nsTString_CharT
+  {
+    public:
+
+      typedef nsTFixedString_CharT    self_type;
+      typedef nsTFixedString_CharT    fixed_string_type;
+
+    public:
+
+        /**
+         * @param data
+         *        fixed-size buffer to be used by the string (the contents of
+         *        this buffer may be modified by the string)
+         * @param storageSize
+         *        the size of the fixed buffer
+         * @param length (optional)
+         *        the length of the string already contained in the buffer
+         */
+
+      nsTFixedString_CharT( char_type* data, size_type storageSize )
+        : string_type(data, char_traits::length(data), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+        , mFixedCapacity(storageSize - 1)
+        , mFixedBuf(data)
+        {}
+
+      nsTFixedString_CharT( char_type* data, size_type storageSize, size_type length )
+        : string_type(data, length, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+        , mFixedCapacity(storageSize - 1)
+        , mFixedBuf(data)
+        {
+          // null-terminate
+          mFixedBuf[length] = char_type(0);
+        }
+
+        // |operator=| does not inherit, so we must define our own
+      self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
+      self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
+      self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
+      self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
+      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
+
+    protected:
+
+      friend class nsTSubstring_CharT;
+
+      size_type  mFixedCapacity;
+      char_type *mFixedBuf;
+  };
+
+
   /**
    * nsTAutoString_CharT
    *
    * Subclass of nsTString_CharT that adds support for stack-based string
    * allocation.  Do not allocate this class on the heap! ;-)
    */
-class nsTAutoString_CharT : public nsTString_CharT
+class nsTAutoString_CharT : public nsTFixedString_CharT
   {
     public:
 
@@ -478,56 +528,47 @@ class nsTAutoString_CharT : public nsTString_CharT
          */
 
       nsTAutoString_CharT()
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
-        {
-          mFixedBuf[0] = char_type(0);
-        }
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
+        {}
 
       explicit
       nsTAutoString_CharT( char_type c )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(c);
         }
 
       explicit
       nsTAutoString_CharT( const char_type* data, size_type length = size_type(-1) )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(data, length);
         }
 
       nsTAutoString_CharT( const self_type& str )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(str);
         }
 
       explicit
       nsTAutoString_CharT( const substring_type& str )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(str);
         }
 
       nsTAutoString_CharT( const substring_tuple_type& tuple )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(tuple);
         }
 
       explicit
       nsTAutoString_CharT( const abstract_string_type& readable )
-        : string_type(mFixedBuf, 0, F_TERMINATED | F_FIXED), mFixedCapacity(kDefaultStringSize - 1)
+        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
           Assign(readable);
-        }
-
-      explicit
-      nsTAutoString_CharT( const CBufDescriptor& aBufDesc )
-        : string_type(PRUint32(F_TERMINATED))
-        {
-          Init(aBufDesc);
         }
 
         // |operator=| does not inherit, so we must define our own
@@ -538,16 +579,11 @@ class nsTAutoString_CharT : public nsTString_CharT
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
       self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
 
-      enum { kDefaultStringSize = 64 };
+      enum { kDefaultStorageSize = 64 };
 
     private:
 
-      friend class nsTSubstring_CharT;
-
-      NS_COM void Init( const CBufDescriptor& aBufDesc );
-
-      size_type mFixedCapacity;
-      char_type mFixedBuf[kDefaultStringSize];
+      char_type mStorage[kDefaultStorageSize];
   };
 
 
