@@ -4503,7 +4503,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       NS_RELEASE(kidSC);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mBullet->Init(aPresContext, mContent, this, kidSC);
+    mBullet->Init(aPresContext, mContent, this, kidSC, nsnull);
     NS_RELEASE(kidSC);
 
     // If the list bullet frame should be positioned inside then add
@@ -4551,9 +4551,8 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   cf->SetFlags(mFlags);
-  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
 }

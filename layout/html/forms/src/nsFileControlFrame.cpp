@@ -209,10 +209,10 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
 
     if (NS_SUCCEEDED(rv)) {
         // Found the pseudo style for the text field
-      childFrame->Init(aPresContext, text, this, textFieldStyleContext);
+      childFrame->Init(aPresContext, text, this, textFieldStyleContext, nsnull);
     } else {
         // Can't find pseduo style so use the style set for the file updload element
-      childFrame->Init(aPresContext, mContent, this, mStyleContext);
+      childFrame->Init(aPresContext, mContent, this, mStyleContext, nsnull);
     }
     mTextFrame = (nsTextControlFrame*)childFrame;
     mFrames.SetFrames(childFrame);
@@ -236,10 +236,10 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
                                                        getter_AddRefs(buttonStyleContext));
     if (NS_SUCCEEDED(rv)) {
        // Found pseduo style for the button
-      childFrame->Init(aPresContext, browse, this, buttonStyleContext);
+      childFrame->Init(aPresContext, browse, this, buttonStyleContext, nsnull);
     } else {
        // Can't find pseudo style for the button so use the style set for the file upload element
-      childFrame->Init(aPresContext, mContent, this, mStyleContext);
+      childFrame->Init(aPresContext, mContent, this, mStyleContext, nsnull);
     }
 
     mFrames.FirstChild()->SetNextSibling(childFrame);

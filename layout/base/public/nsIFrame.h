@@ -163,18 +163,25 @@ public:
    * Called to initialize the frame. This is called immediately after creating
    * the frame.
    *
-   * If you want a view associated with your frame you should create the view
+   * If the frame is a continuing frame, then aPrevInFlow indicates the previous
+   * frame (the frame that was split). You should connect the continuing frame to
+   * its prev-in-flow, e.g. by using the AppendToFlow() function
+   *
+   * If you want a view associated with your frame, you should create the view
    * now.
    *
    * @param   aContent the content object associated with the frame
    * @param   aGeometricParent  the geometric parent frame
    * @param   aContentParent  the content parent frame
    * @param   aContext the style context associated with the frame
+   * @param   aPrevInFlow the prev-in-flow frame
+   * @see #AppendToFlow()
    */
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext) = 0;
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow) = 0;
 
   /**
    * Called to set the initial list of frames. This happens after the frame

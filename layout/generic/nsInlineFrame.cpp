@@ -413,7 +413,7 @@ nsInlineFrame::CreateAnonymousBlock(nsIPresContext& aPresContext,
                                               mStyleContext,
                                               PR_FALSE,
                                               getter_AddRefs(newSC));
-    rv = bf->Init(aPresContext, mContent, this, newSC);
+    rv = bf->Init(aPresContext, mContent, this, newSC, nsnull);
     if (NS_FAILED(rv)) {
       bf->DeleteFrame(aPresContext);
       delete bf;
@@ -1773,8 +1773,7 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
-  cf->AppendToFlow(this);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   aContinuingFrame = cf;
   return NS_OK;
 }

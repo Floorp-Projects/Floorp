@@ -941,7 +941,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                                               PR_FALSE, &kidSC);
           if (nsHTMLAtoms::frameset == tag) {
             result = NS_NewHTMLFramesetFrame(frame);
-            frame->Init(aPresContext, child, this, kidSC);
+            frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAMESET;
             nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
@@ -951,7 +951,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
           } else { // frame
             result = NS_NewHTMLFrameOuterFrame(frame);
-            frame->Init(aPresContext, child, this, kidSC);
+            frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAME;
             //
@@ -988,7 +988,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                                                   mStyleContext,
                                                   PR_FALSE,
                                                   &pseudoStyleContext);
-        blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
+        blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
         NS_RELEASE(pseudoStyleContext);
 
         if (nsnull == lastChild) {
@@ -1028,7 +1028,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
                                                     mStyleContext, PR_FALSE,
                                                     &pseudoStyleContext);
-          borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
+          borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
           NS_RELEASE(pseudoStyleContext);
 
           mChildCount++;
@@ -1056,7 +1056,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                                                       mStyleContext,
                                                       PR_FALSE,
                                                       &pseudoStyleContext);
-            borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
+            borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
             NS_RELEASE(pseudoStyleContext);
 
             mChildCount++;

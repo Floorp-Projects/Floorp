@@ -769,11 +769,13 @@ nsListControlFrame::DoRemoveFrame(nsBlockReflowState& aState,
 //----------------------------------------------------------------------
 NS_IMETHODIMP  
 nsListControlFrame::Init(nsIPresContext&  aPresContext,
-                        nsIContent*      aContent,
-                        nsIFrame*        aParent,
-                        nsIStyleContext* aContext)
+                         nsIContent*      aContent,
+                         nsIFrame*        aParent,
+                         nsIStyleContext* aContext,
+                         nsIFrame*        aPrevInFlow)
 {
-  nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext);
+  nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext,
+                                        aPrevInFlow);
   /*if (NS_OK == result) {
     nsIDOMNode* node;
     if (mContent && (NS_OK == mContent->QueryInterface(kIDOMNodeIID, (void**) &node))) {

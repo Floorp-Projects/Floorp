@@ -367,7 +367,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned
-  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                            aStyleContext, PR_FALSE);
   nsCOMPtr<nsIStyleContext> parentStyleContext;
@@ -389,7 +389,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
   aNewFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame); 
   childList = innerFrame;
 
-  innerFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
+  innerFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext, nsnull);
 
   nsIFrame* lastChildFrame = nsnull;
   PRInt32   count;
@@ -502,7 +502,8 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
                                                  getter_AddRefs(outerStyleContext));
       result = NS_NewTableOuterFrame(aOuterFrame);
       if (NS_SUCCEEDED(result)) {
-        aOuterFrame->Init(*aPresContext, aContent, aParentFrame, outerStyleContext);
+        aOuterFrame->Init(*aPresContext, aContent, aParentFrame, outerStyleContext,
+                          nsnull);
 
         // create the inner table frames
         nsCOMPtr<nsIStyleContext> innerStyleContext;
@@ -512,7 +513,8 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
                                                    getter_AddRefs(innerStyleContext));
         result = aTableCreator.CreateTableFrame(aInnerFrame);
         if (NS_SUCCEEDED(result)) {
-          aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext);
+          aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext,
+                            nsnull);
         }
       }
     }
@@ -541,20 +543,23 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
 
     if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
       aParentFrame->FirstChild(nsnull, &innerFrame);
-      aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+      aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                             nsnull);
       innerFrame->SetNextSibling(aNewCaptionFrame);
       // the caller is responsible for calling SetInitialChildList on the outer, inner frames
       aNewTopMostFrame = aNewCaptionFrame;
     } else { // parent is not a table, need to create a new table
       nsIFrame* outerFrame;
-      ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame, innerFrame, aFixedItems, aTableCreator);
+      ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame,
+                                   innerFrame, aFixedItems, aTableCreator);
       nsCOMPtr<nsIStyleContext> outerStyleContext;
       outerFrame->GetStyleContext(getter_AddRefs(outerStyleContext));
       nsCOMPtr<nsIStyleContext> adjStyleContext;
       aPresContext->ResolveStyleContextFor(aContent, outerStyleContext,
                                            PR_FALSE,
                                            getter_AddRefs(adjStyleContext));
-      aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, adjStyleContext);
+      aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, adjStyleContext,
+                             nsnull);
       innerFrame->SetNextSibling(aNewCaptionFrame);
       outerFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame);
       innerFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
@@ -663,7 +668,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
     // Create a scroll frame and initialize it
     rv = NS_NewScrollFrame(aNewTopMostFrame);
     if (NS_SUCCEEDED(rv)) {
-      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                             nsnull);
 
       // The scroll frame gets the original style context, the scrolled frame gets  
       // a pseudo element style context that inherits the background properties
@@ -679,7 +685,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
       if (NS_SUCCEEDED(rv)) {
 
         // Initialize the frame and force it to have a view
-        aNewGroupFrame->Init(*aPresContext, aContent, aNewTopMostFrame, scrolledPseudoStyle);
+        aNewGroupFrame->Init(*aPresContext, aContent, aNewTopMostFrame, scrolledPseudoStyle,
+                             nsnull);
         nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewGroupFrame,
                                                  scrolledPseudoStyle, PR_TRUE);
         aNewTopMostFrame->SetInitialChildList(*aPresContext, nsnull, aNewGroupFrame);
@@ -689,7 +696,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
     rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewTopMostFrame)
                        : aTableCreator.CreateTableColGroupFrame(aNewTopMostFrame);
     if (NS_SUCCEEDED(rv)) {
-      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                             nsnull);
       aNewGroupFrame = aNewTopMostFrame;
     }
   }
@@ -769,7 +777,8 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
       rv = ConstructTableRowFrameOnly(aPresContext, aContent, groupFrame, styleContext, 
                                       aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, aFixedItems, aTableCreator);
       if (NS_SUCCEEDED(rv)) {
-        aNewRowFrame->Init(*aPresContext, aContent, groupFrame, styleContext);
+        aNewRowFrame->Init(*aPresContext, aContent, groupFrame, styleContext,
+                           nsnull);
         if (aToDo) {
           aToDo->Push(groupFrame);
           aToDo->Push(aNewRowFrame);
@@ -799,7 +808,8 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
 {
   nsresult rv = aTableCreator.CreateTableRowFrame(aNewRowFrame);
   if (NS_SUCCEEDED(rv)) {
-    aNewRowFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    aNewRowFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                       nsnull);
     if (aProcessChildren) {
       nsFrameItems childItems;
       rv = TableProcessChildren(aPresContext, aContent, aNewRowFrame, aAbsoluteItems, 
@@ -829,7 +839,8 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == parentDisplay->mDisplay) {
     rv = aTableCreator.CreateTableColFrame(aNewColFrame);
-    aNewColFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    aNewColFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                       nsnull);
     aNewTopMostFrame = aNewColFrame;
   } else { // construct anonymous col group frame
     nsIFrame* groupFrame;
@@ -844,7 +855,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                            PR_FALSE,
                                            getter_AddRefs(styleContext));
       rv = aTableCreator.CreateTableColFrame(aNewColFrame);
-      aNewColFrame->Init(*aPresContext, aContent, groupFrame, styleContext);
+      aNewColFrame->Init(*aPresContext, aContent, groupFrame, styleContext, nsnull);
       if (NS_SUCCEEDED(rv)) {
         groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewColFrame);
       }
@@ -947,7 +958,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
   rv = aTableCreator.CreateTableCellFrame(aNewFrame);
   if (NS_SUCCEEDED(rv)) {
     // Initialize the table cell frame
-    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
     // Create an area frame that will format the cell's content
     nsIFrame*   cellBodyFrame;
@@ -964,7 +975,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::cellContentPseudo,
                                                aStyleContext, PR_FALSE,
                                                getter_AddRefs(bodyPseudoStyle));
-    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle);
+    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle, nsnull);
 
     nsFrameItems childItems;
     if (aWrapContent) {
@@ -1233,7 +1244,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     nsIFrame* areaFrame;
 
     NS_NewAreaFrame(areaFrame, 0);
-    areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext);
+    areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
@@ -1265,7 +1276,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     if (IsScrollable(aPresContext, display)) {
       NS_NewScrollFrame(scrollFrame);
-      scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext);
+      scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext,
+                        nsnull);
     
       // The scrolled frame gets a pseudo element style context
       nsCOMPtr<nsIStyleContext>  scrolledPseudoStyle;
@@ -1285,7 +1297,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // flag that says that this is the body...
     NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
     areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
-                    aParentFrame, styleContext);
+                    aParentFrame, styleContext, nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
 
@@ -1343,7 +1355,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
                                              getter_AddRefs(viewportPseudoStyle));
 
   // Initialize the viewport frame. It has a NULL content object
-  viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle);
+  viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle, nsnull);
 
   // Bind the viewport frame to the root view
   nsCOMPtr<nsIPresShell> presShell;
@@ -1384,7 +1396,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   if (isScrollable) {
     NS_NewScrollFrame(scrollFrame);
     // XXX should probably be a scrolled content pseudo style context
-    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle);
+    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle,
+                      nsnull);
 
     // Inform the view manager about the root scrollable view
     nsIView*            scrollFrameView;
@@ -1405,7 +1418,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     NS_NewSimplePageSequenceFrame(pageSequenceFrame);
     // XXX should probably be a page sequence pseudo style context
     pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                            viewportFrame, viewportPseudoStyle);
+                            viewportFrame, viewportPseudoStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
                                                viewportPseudoStyle, PR_TRUE);
@@ -1428,7 +1441,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
                                                viewportPseudoStyle, PR_FALSE,
                                                getter_AddRefs(pagePseudoStyle));
 
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle);
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle,
+                    nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
                                              pagePseudoStyle, PR_TRUE);
 
@@ -1461,7 +1475,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     // XXX this should be a root pseudo style context
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                    viewportFrame, viewportPseudoStyle);
+                    viewportFrame, viewportPseudoStyle, nsnull);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
                                                viewportPseudoStyle, PR_TRUE);
@@ -1504,7 +1518,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
                                                PR_FALSE,
                                                getter_AddRefs(placeholderPseudoStyle));
     placeholderFrame->Init(*aPresContext, aContent, aParentFrame,
-                           placeholderPseudoStyle);
+                           placeholderPseudoStyle, nsnull);
   
     // Add mapping from absolutely positioned frame to its placeholder frame
     nsCOMPtr<nsIPresShell> presShell;
@@ -1701,7 +1715,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewObjectFrame(newFrame);
         nsIFrame *blockFrame;
         NS_NewBlockFrame(blockFrame, 0);
-        blockFrame->Init(*aPresContext, aContent, newFrame, aStyleContext);
+        blockFrame->Init(*aPresContext, aContent, newFrame, aStyleContext, nsnull);
         newFrame = blockFrame;
         processChildren = PR_TRUE;
       }
@@ -1752,7 +1766,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         }
       }
       
-      newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+      newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                     nsnull);
 
       // See if we need to create a view, e.g. the frame is absolutely positioned
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -1993,7 +2008,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
     nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
                                                          aParentFrame;
-    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext, nsnull);
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -2056,7 +2071,8 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
     } else if (aIsFixedPositioned) {
       geometricParent = aFixedItems.containingBlock;
     }
-    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                      nsnull);
 
     // The scroll frame gets the original style context, and the scrolled
     // frame gets a SCROLLED-CONTENT pseudo element style context that
@@ -2071,7 +2087,8 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
     NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
     // Initialize the frame and force it to have a view
-    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
+    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle,
+                        nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
                                              scrolledPseudoStyle, PR_TRUE);
 
@@ -2223,7 +2240,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     NS_NewAreaFrame(newFrame, 0);
     newFrame->Init(*aPresContext, aContent, isAbsolutelyPositioned ?
                    aAbsoluteItems.containingBlock : aFixedItems.containingBlock,
-                   aStyleContext);
+                   aStyleContext, nsnull);
 
     // Create a view
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -2254,7 +2271,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     NS_NewAreaFrame(newFrame, NS_BLOCK_SHRINK_WRAP);
 
     // Initialize the frame
-    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
     // See if we need to create a view
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -2274,7 +2291,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Create an area frame. No space manager, though
     NS_NewAreaFrame(newFrame, NS_AREA_NO_SPACE_MGR);
-    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
     // Create a view
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -2398,7 +2415,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     // If we succeeded in creating a frame then initialize the frame and
     // process children if requested
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-      newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+      newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
       // See if we need to create a view, e.g. the frame is absolutely positioned
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -3443,8 +3460,9 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext* aPresContext
                                                  getter_AddRefs(textStyleContext));
   
       // Initialize the frames
-      inlineFrame->Init(*aPresContext, aContent, aParentFrame, textStyleContext);
-      textFrame->Init(*aPresContext, altTextContent, inlineFrame, textStyleContext);
+      inlineFrame->Init(*aPresContext, aContent, aParentFrame, textStyleContext, nsnull);
+      textFrame->Init(*aPresContext, altTextContent, inlineFrame,
+                      textStyleContext, nsnull);
       inlineFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
 
       // Return the inline frame

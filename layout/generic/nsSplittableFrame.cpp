@@ -22,6 +22,35 @@
 #include "nsISizeOfHandler.h"
 
 NS_IMETHODIMP
+nsSplittableFrame::Init(nsIPresContext&  aPresContext,
+                        nsIContent*      aContent,
+                        nsIFrame*        aParent,
+                        nsIStyleContext* aContext,
+                        nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv;
+  
+  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  if (aPrevInFlow) {
+    // Hook the frame into the flow
+    AppendToFlow(aPrevInFlow);
+
+    // Make sure the general flags bits are the same
+    nsFrameState  state;
+    aPrevInFlow->GetFrameState(&state);
+    if (state & NS_FRAME_SYNC_FRAME_AND_VIEW) {
+      mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
+    }
+    if (state & NS_FRAME_REPLACED_ELEMENT) {
+      mState |= NS_FRAME_REPLACED_ELEMENT;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_SPLITTABLE;

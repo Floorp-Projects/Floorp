@@ -93,7 +93,8 @@ NS_IMETHODIMP
 nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsIStyleContext* aContext)
+                      nsIStyleContext* aContext,
+                      nsIFrame*        aPrevInFlow)
 {
   // Determine if we're a column header or not.
   
@@ -120,9 +121,8 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 		}
   }
 
-  nsresult rv = nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext);
-
-  return rv;
+  return nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext,
+                                aPrevInFlow);
 }
 
 nsTableFrame* nsTreeCellFrame::GetTreeFrame()

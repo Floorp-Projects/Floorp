@@ -336,9 +336,10 @@ NS_IMETHODIMP
 nsImageFrame::Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext)
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext);
+  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // Set the image loader's source URL and base URL
   nsAutoString src;

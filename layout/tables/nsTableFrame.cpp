@@ -305,7 +305,8 @@ NS_IMETHODIMP
 nsTableFrame::Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext)
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow)
 {
   float p2t;
   aPresContext.GetPixelsToTwips(&p2t);
@@ -313,7 +314,8 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
   mDefaultCellSpacingY = NSIntPixelsToTwips(2, p2t);
   mDefaultCellPadding = NSIntPixelsToTwips(1, p2t);
 
-  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext);
+  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
+                                    aPrevInFlow);
 }
 
 
@@ -768,7 +770,8 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       // Create a col group frame
       nsIFrame* newFrame;
       NS_NewTableColGroupFrame(newFrame);
-      newFrame->Init(aPresContext, lastColGroupElement, this, colGroupStyleContext);
+      newFrame->Init(aPresContext, lastColGroupElement, this, colGroupStyleContext,
+                     nsnull);
       lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
       NS_RELEASE(colGroupStyleContext);                                         // kidStyleContenxt: REFCNT--
 
@@ -802,7 +805,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
                                                  &colStyleContext);             // colStyleContext: REFCNT++
       NS_NewTableColFrame(colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
-                     colStyleContext);
+                     colStyleContext, nsnull);
       NS_RELEASE(colStyleContext);
       colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
@@ -4459,8 +4462,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
-  cf->AppendToFlow(this);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   if (PR_TRUE==gsDebug) printf("nsTableFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   // set my width, because all frames in a table flow are the same width
   // code in nsTableOuterFrame depends on this being set
@@ -4492,7 +4494,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 
       nsIFrame* duplicateFrame;
       NS_NewTableRowGroupFrame(duplicateFrame);
-      duplicateFrame->Init(aPresContext, content, cf, kidStyleContext);
+      duplicateFrame->Init(aPresContext, content, cf, kidStyleContext, nsnull);
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
       
       if (nsnull==lastSib)

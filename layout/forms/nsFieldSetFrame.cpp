@@ -132,7 +132,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                             nsHTMLAtoms::fieldsetContentPseudo,
                                             mStyleContext, PR_FALSE,
                                             &styleContext);
-  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
+  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;
