@@ -2369,7 +2369,7 @@ js_Interpret(JSContext *cx, jsval *result)
             {
                 uintN nframeslots, nvars;
                 jsval *oldsp;
-                void *mark;
+                void *newmark;
                 JSInlineFrame *newifp;
                 JSInterpreterHook hook;
 
@@ -2390,7 +2390,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 /* Allocate the frame and space for vars and operands. */
                 oldsp = newsp;
                 newsp = js_AllocStack(cx, nframeslots + nvars + 2 * depth,
-                                      &mark);
+                                      &newmark);
                 if (!newsp) {
                     ok = JS_FALSE;
                     goto bad_inline_call;
@@ -2410,12 +2410,12 @@ js_Interpret(JSContext *cx, jsval *result)
                 newifp->frame.down = fp;
                 newifp->frame.scopeChain = OBJ_GET_PARENT(cx, obj);
                 newifp->oldsp = oldsp;
-                newifp->mark = mark;
+                newifp->mark = newmark;
 
                 /* Compute the 'this' parameter now that argv is set. */
                 ok = ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &newifp->frame);
                 if (!ok) {
-                    js_FreeStack(cx, mark);
+                    js_FreeStack(cx, newmark);
                     goto bad_inline_call;
                 }
 
