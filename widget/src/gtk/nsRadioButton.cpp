@@ -174,7 +174,9 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
   if (mWidget) {
     NS_ALLOC_STR_BUF(label, aText, 256);
+#ifdef DEBUG
     g_print("nsRadioButton::SetLabel(%s)\n",label);
+#endif
     if (mLabel) {
       gtk_label_set(GTK_LABEL(mLabel), label);
     } else {

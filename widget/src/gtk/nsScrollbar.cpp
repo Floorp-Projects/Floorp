@@ -65,7 +65,9 @@ NS_IMETHODIMP nsScrollbar::CreateNative (GtkObject * parentWindow)
   mAdjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0, 0, 100, 1, 25, 25));
   
   if (!GDK_IS_SUPERWIN(parentWindow)) {
+#ifdef DEBUG
     g_print("Damn, brother.  That's not a superwin.\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   

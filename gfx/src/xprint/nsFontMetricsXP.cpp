@@ -1478,14 +1478,23 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
           }
         }
       }
-      else 
+      else {
+#ifdef DEBUG
        fprintf(stderr, "=== nsICharRepresentable %s failed\n", aSelf->mCharSet);
+#endif      
+      }
     }
-    else
+    else{
+#ifdef DEBUG
        fprintf(stderr, "=== GetUnicodeEncoder %s failed\n", aSelf->mCharSet);
+#endif      
+    }
   }
-  else
+  else{
+#ifdef DEBUG
     fprintf(stderr, "=== GetCharsetAtom2 %s failed\n", aSelf->mCharSet);
+#endif      
+  }
 }
 
 #undef DEBUG_DUMP_TREE

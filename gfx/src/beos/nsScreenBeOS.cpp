@@ -98,8 +98,10 @@ nsScreenBeOS :: GetPixelDepth(PRInt32 *aPixelDepth)
 			pixelDepth = 16;
 			break;
 		default:
+#ifdef DEBUG
 			printf("FIXME:  Please add this screen depth to the code nsScreenBeOS.cpp\n");
-			pixelDepth = 32;
+#endif
+      pixelDepth = 32;
 			break;	
 	}
   *aPixelDepth = pixelDepth;

@@ -594,7 +594,9 @@ nsIMEStatus::CreateNative() {
   }
 
   if (!mFontset) {
+#ifdef DEBUG
     printf("Error : XCreateFontSet() !\n");
+#endif
     return;
   }
   int screen = DefaultScreen(display);

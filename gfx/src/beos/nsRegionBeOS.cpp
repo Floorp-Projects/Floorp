@@ -134,7 +134,9 @@ PRBool nsRegionBeOS :: IsEmpty(void)
 
 PRBool nsRegionBeOS :: IsEqual(const nsIRegion &aRegion)
 {
+#ifdef DEBUG
   printf(" - nsRegionBeOS :: IsEqual not implemented!\n");
+#endif
   return PR_FALSE;
 }
 

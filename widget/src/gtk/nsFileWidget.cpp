@@ -77,7 +77,9 @@ nsFileWidget::~nsFileWidget()
 
 static void file_ok_clicked(GtkWidget *w, PRBool *ret)
 {
+#ifdef DEBUG
   g_print("user hit ok\n");
+#endif
 #if 0
   struct stat buf;
 
@@ -103,14 +105,18 @@ static void file_ok_clicked(GtkWidget *w, PRBool *ret)
 
 static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 {
+#ifdef DEBUG
   g_print("user hit cancel\n");
+#endif 
   *ret = PR_FALSE;
   gtk_main_quit();
 }
 
 static gint file_delete_window(GtkWidget *w, gpointer data)
 {
+#ifdef DEBUG
   printf("window closed\n");
+#endif
   gtk_main_quit();
   return PR_TRUE;
 }
@@ -126,7 +132,9 @@ static void filter_item_activated(GtkWidget *w, gpointer data)
 {
   //  nsFileWidget *f = (nsFileWidget*)data;
   gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
+#ifdef DEBUG
   g_print("filter_item_activated(): %s\n", foo);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -302,8 +310,9 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
     // we need *.{htm, html, xul, etc}
     char *foo = aTitles[i].ToNewCString();
     char *filters = aFilters[i].ToNewCString();
+#ifdef DEBUG
     printf("%20s %s\n", foo, filters);
-
+#endif
     menu_item = gtk_menu_item_new_with_label(nsAutoCString(aTitles[i]));
 
     gtk_object_set_data(GTK_OBJECT(menu_item), "filters", filters);

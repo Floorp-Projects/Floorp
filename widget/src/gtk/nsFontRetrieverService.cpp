@@ -238,7 +238,9 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
   }
 
   if (fonts == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "pattern \"%s\" unmatched\n", pattern);
+#endif
     return NS_ERROR_FAILURE;
   }
 

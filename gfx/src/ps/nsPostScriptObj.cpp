@@ -255,9 +255,10 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
       aSpec->GetBottomMargin( bottom );
       aSpec->GetLeftMargin( left );
       aSpec->GetRightMargin( right );
-
+#ifdef DEBUG
 printf("\nPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n");
 printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
+#endif
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
@@ -301,8 +302,10 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     aSpec->GetPageDimensions( fwidth, fheight );
     mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
     mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
+#ifdef DEBUG
     printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
     printf("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
+#endif
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
@@ -316,7 +319,9 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     mPrintSetup->bottom = (int) (bottom * mPrintSetup->dpi);
     mPrintSetup->left = (int) (left * mPrintSetup->dpi);
     mPrintSetup->right = (int) (right * mPrintSetup->dpi); 
-printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
+#ifdef DEBUG
+    printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
+#endif DEBUG
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
     mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 

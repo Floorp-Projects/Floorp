@@ -497,7 +497,9 @@ nsClipboard::SelectionReceivedCB (GtkWidget        *aWidget,
                                                       "cb");
   if (!cb)
   {
+#ifdef DEBUG_CLIPBOARD
     g_print("no clipboard found.. this is bad.\n");
+#endif
     return;
   }
   cb->SelectionReceiver(aWidget, aSelectionData);

@@ -65,7 +65,9 @@ NS_IMETHODIMP nsTextWidget::CreateNative(GtkObject *parentWindow)
   mWidget = gtk_entry_new();
 
   if (!GDK_IS_SUPERWIN(parentWindow)) {
+#ifdef DEBUG
     g_print("Damn, brother.  That's not a superwin.\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   
