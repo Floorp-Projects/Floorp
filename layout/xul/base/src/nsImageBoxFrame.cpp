@@ -359,11 +359,7 @@ nsImageBoxFrame::GetImageSource()
       return;
 
     // get the list-style-image
-    imgIRequest *imgReq = GetStyleList()->mListStyleImage;
-    if (imgReq)
-      imgReq->GetURI(getter_AddRefs(mURI));
-    else
-      mURI = nsnull;
+    mURI = GetStyleList()->mListStyleImage;
   }
 }
 
@@ -551,10 +547,7 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
     return NS_OK;
 
   // If list-style-image changes, we have a new image.
-  imgIRequest *imgReq = myList->mListStyleImage;
-  nsCOMPtr<nsIURI> newURI;
-  if (imgReq)
-    imgReq->GetURI(getter_AddRefs(newURI));
+  nsIURI *newURI = myList->mListStyleImage;
   PRBool equal;
   if (newURI == mURI ||   // handles null==null
       (newURI && mURI && NS_SUCCEEDED(newURI->Equals(mURI, &equal)) && equal))
