@@ -374,6 +374,22 @@ static nsIFrame* InitScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aCur
   return nsnull;
 }
 
+static void
+GetBorderPadding(nsStyleContext* aContext, nsMargin& aMargin)
+{
+  nsStyleBorderPadding  borderPaddingStyle;
+  aContext->GetBorderPaddingFor(borderPaddingStyle);
+  borderPaddingStyle.GetBorderPadding(aMargin);
+}
+
+static void
+AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
+{
+  nsMargin borderPadding(0, 0, 0, 0);
+  GetBorderPadding(aContext, borderPadding);
+  aRect.Deflate(borderPadding);
+}
+
 NS_IMETHODIMP
 nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
                           nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
@@ -449,9 +465,7 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
 
   nsStyleContext* rowContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow);
   nsMargin rowMargin(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  rowContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(rowMargin);
+  GetBorderPadding(rowContext, rowMargin);
 
   PRInt32 numRows;
   mView->GetRowCount(&numRows);
@@ -630,7 +644,7 @@ NS_IMETHODIMP
 nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
   if (mView) {
-    mInnerBox = GetInnerBox();
+    CalcInnerBox();
     if (!mHasFixedRowCount)
       mPageCount = mInnerBox.height / mRowHeight;
 
@@ -661,16 +675,6 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
   return NS_OK;
 }
 
-
-static void 
-AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
-{
-  nsMargin m(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  aContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(m);
-  aRect.Deflate(m);
-}
 
 NS_IMETHODIMP nsTreeBodyFrame::GetView(nsITreeView * *aView)
 {
@@ -1384,10 +1388,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     nscoord height;
     fm->GetHeight(height);
 
-    nsStyleBorderPadding borderPadding;
-    textContext->GetBorderPaddingFor(borderPadding);
     nsMargin bp(0,0,0,0);
-    borderPadding.GetBorderPadding(bp);
+    GetBorderPadding(textContext, bp);
     
     textRect.height = height + bp.top + bp.bottom;
 
@@ -1551,13 +1553,11 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
 
     // Adjust borders and padding for the cell.
     nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
-    nsMargin m(0,0,0,0);
-    nsStyleBorderPadding  bPad;
-    cellContext->GetBorderPaddingFor(bPad);
-    bPad.GetBorderPadding(m);
+    nsMargin bp(0,0,0,0);
+    GetBorderPadding(cellContext, bp);
 
     aCurrentSize = cellRect.width;
-    aDesiredSize = m.left + m.right;
+    aDesiredSize = bp.left + bp.right;
 
     if (currCol->IsPrimary()) {
       // If the current Column is a Primary, then we need to take into account 
@@ -1597,10 +1597,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
     nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
 
     // Get the borders and padding for the text.
-    nsStyleBorderPadding borderPadding;
-    textContext->GetBorderPaddingFor(borderPadding);
-    nsMargin bp(0,0,0,0);
-    borderPadding.GetBorderPadding(bp);
+    GetBorderPadding(textContext, bp);
     
     // Get the font style for the text and pass it to the rendering context.
     const nsStyleFont* fontStyle = (const nsStyleFont*) textContext->GetStyleData(eStyleStruct_Font);
@@ -1910,11 +1907,9 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
   // use the default image width for the twisty.  If no image is found, it defaults
   // to border+padding.
   nsRect r(0,0,0,0);
-  nsMargin m(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  aStyleContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(m);
-  r.Inflate(m);
+  nsMargin bp(0,0,0,0);
+  GetBorderPadding(aStyleContext, bp);
+  r.Inflate(bp);
 
   // Now r contains our border+padding info.  We now need to get our width and
   // height.
@@ -2044,15 +2039,10 @@ PRInt32 nsTreeBodyFrame::GetIndentation()
   return NSIntPixelsToTwips(16, p2t); // As good a default as any.
 }
 
-nsRect nsTreeBodyFrame::GetInnerBox()
+void nsTreeBodyFrame::CalcInnerBox()
 {
-  nsRect r(0,0,mRect.width, mRect.height);
-  nsMargin m(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  mStyleContext->GetBorderPaddingFor(bPad);
-  bPad.GetBorderPadding(m);
-  r.Deflate(m);
-  return r;
+  mInnerBox.SetRect(0, 0, mRect.width, mRect.height);
+  AdjustForBorderPadding(mStyleContext, mInnerBox);
 }
 
 nsLineStyle nsTreeBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
@@ -2099,7 +2089,7 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
   PRBool clipState = PR_FALSE;
   
   // Update our available height and our page count.
-  mInnerBox = GetInnerBox();
+  CalcInnerBox();
   PRInt32 oldPageCount = mPageCount;
   if (!mHasFixedRowCount)
     mPageCount = mInnerBox.height/mRowHeight;
@@ -2608,8 +2598,10 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
       else {
         // Time to paint the twisty.
         // Adjust the rect for its border and padding.
-        AdjustForBorderPadding(twistyContext, twistyRect);
-        AdjustForBorderPadding(twistyContext, imageSize);
+        nsMargin bp(0,0,0,0);
+        GetBorderPadding(twistyContext, bp);
+        twistyRect.Deflate(bp);
+        imageSize.Deflate(bp);
 
         // Get the image for drawing.
         nsCOMPtr<imgIContainer> image;
@@ -2682,8 +2674,10 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
   else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Time to paint the twisty.
     // Adjust the rect for its border and padding.
-    AdjustForBorderPadding(imageContext, imageRect);
-    AdjustForBorderPadding(imageContext, imageSize);
+    nsMargin bp(0,0,0,0);
+    GetBorderPadding(imageContext, bp);
+    imageRect.Deflate(bp);
+    imageSize.Deflate(bp);
 
     // Get the image for drawing.
     PRBool useImageRegion = PR_TRUE;
@@ -2742,6 +2736,11 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   nsMargin textMargin;
   textMarginData->GetMargin(textMargin);
   textRect.Deflate(textMargin);
+
+  // Adjust the rect for its border and padding.
+  nsMargin bp(0,0,0,0);
+  GetBorderPadding(textContext, bp);
+  textRect.Deflate(bp);
 
   // Compute our text size.
   const nsStyleFont* fontStyle = (const nsStyleFont*)textContext->GetStyleData(eStyleStruct_Font);
@@ -2873,12 +2872,12 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 
   // If the layer is the background layer, we must paint our borders and background for our
   // text rect.
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    textRect.Inflate(bp);
     PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
+  }
   else if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Time to paint our text. 
-    // Adjust the rect for its border and padding.
-    AdjustForBorderPadding(textContext, textRect);
 
     // Set our color.
     const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
