@@ -177,7 +177,17 @@ NS_IMETHODIMP
 nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 {
 	if(!aWin)
+	{
+		if (mMsgWindow)
+		{
+			nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
+
+			mMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
+			if (aStatusFeedback)
+				aStatusFeedback->SetWebShell(nsnull, nsnull);
+		}
 		return NS_ERROR_NULL_POINTER;
+	}
 
   mMsgWindow = aMsgWindow;
 

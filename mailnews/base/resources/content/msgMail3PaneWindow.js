@@ -211,6 +211,7 @@ function OnUnloadMessenger()
 		{
 			mailSession.RemoveFolderListener(folderListener);
 			mailSession.RemoveMsgWindow(msgWindow);
+			messenger.SetWindow(null, null);
 		}
 	}
 
