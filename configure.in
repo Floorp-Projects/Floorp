@@ -89,6 +89,7 @@ LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
 LIBART_VERSION=2.3.4
 GTK2_VERSION=1.3.7
+MAKE_VERSION=3.78
 
 dnl Set various checks
 dnl ========================================================
@@ -140,6 +141,7 @@ case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=1
+    MAKE_VERSION=3.79
     AC_CHECK_PROGS(CC, cl)
     AC_CHECK_PROGS(CXX, cl)
     AC_CHECK_PROGS(LD, link)
@@ -431,16 +433,16 @@ then
 	echo
 	exit 1
 fi
-dnl Now warn about version 3.77 if we find it.
+dnl Now exit if version if < MAKE_VERSION
 _make_vers=`$MAKE --version | grep Make | $AWK '{ print \$4 }' | sed 's/,//'`
-if test "$_make_vers" = "3.77"
-then
-	echo
-	echo "*** Found GNU Make 3.77.  This version is known to have problems with the"
-	echo "*** wildcard function in certain circumstances.  You may experience infinite"
-	echo "*** looping while building Mozilla with 3.77.  If this happens, you can"
-	echo "*** either downgrade to 3.76.1 or try configuring with --disable-md."
-	echo
+_MAKE_MAJOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $1 }'`
+_MAKE_MINOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $2 }'`
+MAKE_MAJOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $1 }'`
+MAKE_MINOR_VERSION=`echo $MAKE_VERSION | $AWK -F\. '{ print $2 }'`
+if test "$_MAKE_MAJOR_VERSION" -lt "$MAKE_MAJOR_VERSION" || \
+   test "$_MAKE_MAJOR_VERSION" = "$MAKE_MAJOR_VERSION" -a \
+        "$_MAKE_MINOR_VERSION" -lt "$MAKE_MINOR_VERSION"; then
+   AC_MSG_ERROR([GNU Make $MAKE_VERSION or higher is required to build Mozilla.])
 fi
 
 AC_PATH_XTRA
