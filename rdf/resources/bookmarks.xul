@@ -9,17 +9,45 @@
   <html:script>
   function BookmarksNewWindow()
   {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    var toolkitCore = XPAppCoresManager.Find("toolkitCore");
     if (!toolkitCore) {
       toolkitCore = new ToolkitCore();
       if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
+        toolkitCore.Init("toolkitCore");
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/rdf/bookmarks.xul",
-                             window);
+      toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
     }
+  }
+  function BookmarkProperties()
+  {
+    var tree = document.getElementById('bookmarksTree');
+    var select_list = tree.getElementsByAttribute("selected", "true");
+
+    if (select_list.length >= 1) {
+      dump("Bookmark Properties: Have selection\n");
+      var propsCore = XPAppCoresManager.Find(select_list[0].id);
+      if (!propsCore) {
+        dump("Bookmark Properties: no existing appcore\n");
+        var propsCore = new DOMPropsCore();
+        if (propsCore) {
+          dump("Bookmark Properties: initing new appcore\n");
+          propsCore.Init(select_list[0].id);
+        } else {
+          dump("Bookmark Properties: failed to create new appcore\n");
+        }
+      }
+      if (propsCore) {
+        dump("Bookmark Properties: opening new window\n");
+        propsCore.showProperties("resource://res/rdf/bm-props.xul",
+                                 window, select_list[0]);
+        return true;
+      }
+    } else {
+      dump("nothing selected!\n"); 
+    }
+    return false;
   }
   function OpenURL(event,node)
   {
@@ -110,10 +138,12 @@ function doSort(sortColName)
       <separator/>
       <menuitem name="Find in Bookmarks..."/>
       <menuitem name="Find Again"/>
+      <separator/>
+      <menuitem name="Bookmark Properties..." onclick="return BookmarkProperties();"/>
     </menu>
   </menubar>
 
-<tree datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
+<tree datasources="rdf:bookmarks" id="bookmarksTree" ondblclick="return OpenURL(event,event.target.parentNode);">
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>

@@ -26,6 +26,7 @@ include $(topsrcdir)/config/config.mk
 EXPORTS =                       \
 		nsIDOMAppCoresManager.h \
 		nsIDOMBaseAppCore.h     \
+		nsIDOMDOMPropsCore.h    \
 		nsIDOMEditorAppCore.h   \
 		nsIDOMMailCore.h        \
 		nsIDOMPrefsCore.h       \

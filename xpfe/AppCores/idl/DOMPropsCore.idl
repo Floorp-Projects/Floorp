@@ -1,0 +1,14 @@
+interface DOMPropsCore : BaseAppCore
+{
+/* IID: { 0xd23ec5d6, 0xe91e, 0x11d2, \
+    {0xaa, 0xd6, 0x0, 0x80, 0x5f, 0x8a, 0x49, 0x5}} *\
+
+	attribute Node node;
+
+	void DOMPropsCore();
+
+	void showProperties(in wstring url, in Window parent, in Node node);
+
+	void commit();
+	void cancel();
+};

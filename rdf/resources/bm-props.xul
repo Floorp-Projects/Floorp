@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.w3.org/TR/REC-html40"
+  onload="onLoad();">
+
+
+  <xul:data>
+    <xul:broadcaster id="properties_node"/>
+  </xul:data>
+
+  <script>
+    var node;
+    var form_ids;
+    var bm_attrs;
+
+    function onLoad() {
+      node = new Object;
+      node = document.getElementById("properties_node");
+
+      form_ids = new Array("name", "url", "shortcut",    "description");
+      bm_attrs = new Array("Name", "url", "ShortcutURL", "Description");
+
+      var element;
+      var value;
+      for (var ii=0; ii < form_ids.length; ii++) {
+        element = document.getElementById(form_ids[ii]);
+        value = node.getAttribute(bm_attrs[ii]);
+        element.setAttribute("value", value);
+      }
+    }
+    function commit() {
+      var element;
+      var value;
+      for (var ii=0; ii < form_ids.length; ii++) {
+        element = document.getElementById(form_ids[ii]);
+        node.setAttribute(bm_attrs[ii], element.value);
+      }
+      closeDialog();
+    }
+
+    function cancel() {
+      closeDialog();
+    }
+    function closeDialog() {
+      var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore) {
+          toolkitCore.Init("toolkitCore");
+        }
+      }
+      if (toolkitCore) {
+        toolkitCore.CloseWindow(window);
+      }
+    }
+  </script>
+<html:form>
+   <table><tr><td>
+    <table>
+     <tr>
+      <td align="right">
+       Name:
+      </td><td>
+       <input type="text" id="name" size="60"/>
+      </td>
+     </tr><tr>
+      <td align="right">
+       Location:
+      </td><td>
+       <input type="text" id="url" size="60"/>
+      </td>
+     </tr><tr>
+      <td align="right">
+       Shortcut:
+      </td><td>
+       <input type="text" id="shortcut" size="60"/>
+      </td>
+     </tr><tr valign="top">
+      <td align="right">
+       Description:
+      </td><td>
+       <textarea id="description" rows="7" cols="60" wrap="hard">
+       </textarea>
+      </td>
+     </tr>
+    </table>
+  </td></tr><tr><td>
+   <table width="100%"><tr align=center><td>
+    <input type="button" value="Ok" onclick="return commit();"/>
+   </td><td>
+    <input type="button" value="Cancel" onclick="return cancel();"/>
+   </td></tr></table>
+  </td></tr></table>
+</html:form>
+</xul:window>

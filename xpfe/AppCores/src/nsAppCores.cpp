@@ -19,6 +19,7 @@
 
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
+#include "nsDOMPropsCoreFactory.h"
 #include "nsMailCoreFactory.h"
 #include "nsPrefsCoreFactory.h"
 #include "nsRDFCoreFactory.h"
@@ -37,6 +38,7 @@ static PRInt32 gInstanceCnt = 0;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
+static NS_DEFINE_IID(kDOMPropsCoreCID,    NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kMailCoreCID,        NS_MAILCORE_CID);
 static NS_DEFINE_IID(kPrefsCoreCID,       NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
@@ -62,6 +64,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores object is being registered\n");
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kDOMPropsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kMailCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kPrefsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -78,6 +81,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     printf("*** AppCores object is being unregistered\n");
     
     nsComponentManager::UnregisterFactory(kAppCoresManagerCID, path);
+    nsComponentManager::UnregisterFactory(kDOMPropsCoreCID, path);
     nsComponentManager::UnregisterFactory(kMailCoreCID, path);
     nsComponentManager::UnregisterFactory(kPrefsCoreCID, path);
     nsComponentManager::UnregisterFactory(kRDFCoreCID, path);
@@ -106,10 +110,13 @@ NSGetFactory(nsISupports* serviceMgr,
 
     *aFactory = NULL;
     nsISupports *inst;
-
     if ( aClass.Equals(kAppCoresManagerCID) )
     {
         inst = new nsAppCoresManagerFactory();        
+    }
+    else if ( aClass.Equals(kDOMPropsCoreCID) )
+    {
+        inst = new nsDOMPropsCoreFactory();      
     }
     else if ( aClass.Equals(kMailCoreCID) )
     {
