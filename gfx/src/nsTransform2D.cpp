@@ -486,7 +486,7 @@ void nsTransform2D :: Transform(float *aX, float *aY, float *aWidth, float *aHei
       x = *aWidth;
       y = *aHeight;
 
-      *aHeight = x * m00 + y * m10;
+      *aWidth = x * m00 + y * m10;
       *aHeight = x * m01 + y * m11;
 
       break;
@@ -548,7 +548,7 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       x = (float)*aWidth;
       y = (float)*aHeight;
 
-      *aHeight = NSToCoordRound(x * m00 + y * m10);
+      *aWidth = NSToCoordRound(x * m00 + y * m10);
       *aHeight = NSToCoordRound(x * m01 + y * m11);
 
       break;
