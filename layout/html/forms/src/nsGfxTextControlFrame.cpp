@@ -2863,7 +2863,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   }
 
   // finish initializing editor
-  mEditor->EnableUndo(PR_TRUE);
+  // turn in undo, *except* for password fields.
+  if (!IsPasswordTextControl())
+    mEditor->EnableUndo(PR_TRUE);
 
   // set readonly and disabled states
   if (mContent)
