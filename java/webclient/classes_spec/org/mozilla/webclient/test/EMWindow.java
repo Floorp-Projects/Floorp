@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.41 2003/05/06 01:49:57 kyle.yuan%sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.42 2003/05/13 15:21:54 edburns%acm.org Exp $
  *
  * @see org.mozilla.webclient.BrowserControlFactory
 
@@ -86,7 +86,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
     private Panel           controlPanel;
     private Panel           statusPanel;
     private Panel           buttonsPanel;
-    private UniversalDialogData dlgData = null;
     private FindDialog           findDialog = null;
     private PasswordDialog           passDialog = null;
     private UniversalDialog           uniDialog = null;
@@ -310,9 +309,6 @@ private void createMenubar()
     menuBar.add(fileMenu);
 
     Menu viewMenu = new Menu("View");
-        MenuItem pageSourceItem = new MenuItem("View Page Source");
-        viewMenu.add(pageSourceItem);
-        pageSourceItem.addActionListener(this);
         MenuItem sourceItem = new MenuItem("View Page Source as String");
         viewMenu.add(sourceItem);
         sourceItem.addActionListener(this);
@@ -469,9 +465,6 @@ public void actionPerformed (ActionEvent evt)
         else if (command.equals("New Window2")) {
             creator.CreateEMWindow("", chromeFlag);
         }
-        else if (command.equals("Dialog")) {
-            execUniversalDialog();
-        }
         else if (command.equals("Close")) {
             System.out.println("Got windowClosing");
             System.out.println("destroying the BrowserControl");
@@ -500,12 +493,6 @@ public void actionPerformed (ActionEvent evt)
         }
         else if (command.equals("Find Next")) {
             currentPage.findNextInPage();
-        }
-        else if (command.equals("View Page Source")) {
-            creator.CreateEMWindow("view-source:" + urlField.getText(),
-                NewWindowListener.CHROME_WINDOW_BORDERS |
-                NewWindowListener.CHROME_TITLEBAR |
-                NewWindowListener.CHROME_WINDOW_RESIZE);
         }
         else if (command.equals("View Page Source as String")) {
             String sou = currentPage.getSource();
@@ -624,15 +611,9 @@ public void actionPerformed (ActionEvent evt)
 
 
 public void dialogDismissed(Dialog d) {
-  System.out.println("dialogDismissed");
-  if (d == passDialog) {
-    return;
-  }
-  if (d == uniDialog) {
-    dlgData.mProps.put(Prompt.FINISHED_KEY, "true");
-    uniDialog = null;
-    return;
-  }
+    if (d == passDialog || d == uniDialog) {
+        return;
+    }
   if(findDialog.wasClosed()) {
     System.out.println("Find Dialog Closed");
   }
@@ -669,7 +650,7 @@ public void dialogDismissed(Dialog d) {
 }
 
 public void dialogCancelled(Dialog d) {
-  System.out.println("dialogCancelled");
+  System.out.println("Find Dialog Closed");
 }
 
 
@@ -724,35 +705,24 @@ public void eventDispatched(WebclientEvent event)
     if (event instanceof DocumentLoadEvent) {
         switch ((int) event.getType()) {
         case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
-            if (null != stopButton)
-                stopButton.setEnabled(true);
-            if (null != refreshButton)
-                refreshButton.setEnabled(true);
+            stopButton.setEnabled(true);
+            refreshButton.setEnabled(true);
             currentURL = (String) event.getEventData();
             System.out.println("debug: edburns: Currently Viewing: " +
                                currentURL);
-            if (null != statusLabel && null != urlField) {
-                statusLabel.setText("Starting to load " + currentURL);
-                urlField.setText(currentURL);
-            }
+            statusLabel.setText("Starting to load " + currentURL);
+            urlField.setText(currentURL);
             currentDocument = null;
             break;
         case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
-            if (null != stopButton)
-                stopButton.setEnabled(false);
-            if (null != backButton)
-                backButton.setEnabled(history.canBack());
-            if (null != backMenuItem)
-                backMenuItem.setEnabled(history.canBack());
-            if (null != forwardButton)
-                forwardButton.setEnabled(history.canForward());
-            if (null != forwardMenuItem)
-                forwardMenuItem.setEnabled(history.canForward());
+            stopButton.setEnabled(false);
+            backButton.setEnabled(history.canBack());
+            backMenuItem.setEnabled(history.canBack());
+            forwardButton.setEnabled(history.canForward());
+            forwardMenuItem.setEnabled(history.canForward());
             populateHistoryMenu();
-            if (null != statusLabel && null != urlField) {
-                statusLabel.setText("Done.");
-                urlStatusLabel.setText("");
-            }
+            statusLabel.setText("Done.");
+            urlStatusLabel.setText("");
             currentDocument = currentPage.getDOM();
             // add the new document to the domViewer
             if (null != currentDocument && null != domViewer) {
@@ -762,23 +732,19 @@ public void eventDispatched(WebclientEvent event)
             break;
         case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
             status = "Status: " + (String) event.getEventData();
-            if (null != statusLabel)
-                statusLabel.setText(status);
+            statusLabel.setText(status);
             break;
         case ((int) DocumentLoadEvent.STATUS_URL_LOAD_EVENT_MASK):
             status = "Status: " + (String) event.getEventData();
-            if (null != statusLabel)
-                statusLabel.setText(status);
+            statusLabel.setText(status);
             break;
         case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
             status = (String) event.getEventData();
-            if (null != urlStatusLabel)
-                urlStatusLabel.setText("startURL: " + status);
+            urlStatusLabel.setText("startURL: " + status);
             break;
         case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
             status = (String) event.getEventData();
-            if (null != urlStatusLabel)
-                urlStatusLabel.setText(" endURL: " + status);
+            urlStatusLabel.setText(" endURL: " + status);
             break;
         }
     }
@@ -958,34 +924,42 @@ public boolean universalDialog(String titleMessage,
                                boolean editfield1Password,
                                Properties fillThis)
 {
-    if (dialogTitle.equals("")) {
-        dialogTitle = "Universal Dialog";
+    System.out.println("titleMessage " + titleMessage);
+    System.out.println("dialogTitle " + dialogTitle);
+    System.out.println("text " + text);
+    System.out.println("checkboxMsg " + checkboxMsg);
+    System.out.println("button0Text " + button0Text);
+    System.out.println("button1Text " + button1Text);
+    System.out.println("button2Text " + button2Text);
+    System.out.println("button3Text " + button3Text);
+    System.out.println("editfield1Msg " + editfield1Msg);
+    System.out.println("editfield2Msg " + editfield2Msg);
+    System.out.println("numButtons " + numButtons);
+    System.out.println("numEditfields " + numEditfields);
+    System.out.println("editfield1Password " + editfield1Password);
+
+    fillThis.put("editfield1Value", "edit1");
+    fillThis.put("editfield2Value", "edit2");
+    fillThis.put("checkboxState", "true");
+    if (null == fillThis) {
+        return false;
     }
-
-    dlgData = new UniversalDialogData(titleMessage, dialogTitle, text, checkboxMsg,
-                                      button0Text, button1Text, button2Text,
-                                      editfield1Msg, editfield2Msg,
-                                      numButtons, numEditfields, editfield1Password, fillThis);
-    // send a "new window" event to the window
-    Toolkit.getDefaultToolkit().
-            getSystemEventQueue().
-            postEvent(new ActionEvent(newItem,
-                                      ActionEvent.ACTION_PERFORMED,
-                                      "Dialog"));
-    return true;
-}
-
-public boolean execUniversalDialog()
-{
     if (null == uniDialog) {
-        uniDialog = new UniversalDialog(this, this, dlgData.mDialogTitle);
+        if (dialogTitle.equals("")) {
+            dialogTitle = "Universal Dialog";
+        }
+        uniDialog = new UniversalDialog(this, this, dialogTitle);
         if (null == uniDialog) {
             return false;
         }
-        uniDialog.setParms(dlgData);
+        uniDialog.setParms(titleMessage, dialogTitle, text, checkboxMsg,
+                           button0Text, button1Text, button2Text,
+                           editfield1Msg, editfield2Msg, numButtons,
+                           numEditfields, editfield1Password, fillThis);
         uniDialog.setModal(true);
-        uniDialog.setVisible(true);
     }
+
+    uniDialog.setVisible(true);
 
     return true;
 }

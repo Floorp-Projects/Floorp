@@ -39,6 +39,7 @@ public:
     wsPromptUsernameAndPasswordEvent (WebShellInitContext *yourInitContext,
                    jobject yourPromptGlobalRef,
                    wsStringStruct *inStrings,
+                   PRUint32 savePassword, 
                    PRUnichar **outUser, 
                    PRUnichar **outPwd, 
                    PRBool *_retval);
@@ -48,6 +49,7 @@ protected:
     WebShellInitContext *mInitContext;
     jobject mPromptGlobalRef;
     wsStringStruct *mInStrings;
+    PRUint32 mSavePassword;
     PRUnichar **mOutUser;
     PRUnichar **mOutPwd;
     PRBool *mRetVal;
@@ -60,9 +62,11 @@ public:
                                   wsStringStruct *inStrings,
                                   PRUnichar **fieldOne, 
                                   PRUnichar **fieldTwo, 
+                                  PRBool *checkboxState,
                                   PRInt32 numButtons,
                                   PRInt32 numFields,
-                                  PRInt32 fieldIsPasswd);
+                                  PRInt32 fieldIsPasswd,
+                                  PRInt32 *buttonPressed);
     void    *       handleEvent    (void);
     
 protected:
@@ -71,9 +75,11 @@ protected:
     wsStringStruct *mInStrings;
     PRUnichar **mFieldOne;
     PRUnichar **mFieldTwo;
+    PRBool *mCheckboxState;
     PRInt32 mNumButtons;
     PRInt32 mNumFields;
     PRInt32 mFieldIsPasswd;
+    PRInt32 *mButtonPressed;
 };
 
 

@@ -16,13 +16,12 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  *
  * Contributor(s): Ashutosh Kulkarni <ashuk@eng.sun.com>
  *                 Ed Burns <edburns@acm.org>
- *                 Jason Mawdsley <jason@macadamian.com>
- *                 Louis-Philippe Gagnon <louisphilippe@macadamian.com>
- *                 Kyle Yuan <kyle.yuan@sun.com>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 #include <limits.h>
@@ -38,8 +37,8 @@
 #include "nsIPromptService.h"
 
 #include "prprf.h" // for PR_snprintf
-#include "nsReadableUtils.h"
-#include "nsXPIDLString.h"
+#include "nsReadableUtils.h" 
+#include "nsXPIDLString.h" 
 #include "nsFileSpec.h" // for nsAutoCString
 
 #include "dom_util.h"
@@ -54,11 +53,12 @@ PRInt32 CBrowserContainer::mInstanceCount = 0;
 
 CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
                                      WebShellInitContext *yourInitContext) :
-    m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext),
+    m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext), 
     mDocTarget(nsnull), mMouseTarget(nsnull), mPrompt(nsnull),
-    mDomEventTarget(nsnull), inverseDepth(-1),
+    mDomEventTarget(nsnull), inverseDepth(-1), 
     properties(nsnull), currentDOMEvent(nsnull)
 {
+  	NS_INIT_ISUPPORTS();
     // initialize the string constants (including properties keys)
     if (!util_StringConstantsAreInitialized()) {
         util_InitStringConstants();
@@ -96,10 +96,13 @@ NS_INTERFACE_MAP_BEGIN(CBrowserContainer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
     NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIAuthPrompt)
+    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
     NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
     NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
     NS_INTERFACE_MAP_ENTRY(wcIBrowserContainer)
@@ -122,64 +125,457 @@ NS_IMETHODIMP CBrowserContainer::GetInterface(const nsIID & uuid, void * *result
     return QueryInterface(uuid, result);
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
-// nsIEmbeddingSiteWindow
+// nsIAuthPrompt
 
-NS_IMETHODIMP CBrowserContainer::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
+/* boolean prompt (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, in wstring defaultText, out wstring result); */
+NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle, 
+                                        const PRUnichar *text, 
+                                        const PRUnichar *passwordRealm, 
+                                        PRUint32 savePassword, 
+                                        const PRUnichar *defaultText, 
+                                        PRUnichar **result, 
+                                        PRBool *_retval)
 {
-    printf ("SetDimensions\n");
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
+/* boolean promptPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, 
+                                                const PRUnichar *text, 
+                                                const PRUnichar *passwordRealm, 
+                                                PRUint32 savePassword, 
+                                                PRUnichar **pwd, 
+                                                PRBool *_retval)
 {
-    printf ("GetDimensions\n");
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetSiteWindow(void** aSiteWindow)
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring user, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
+                                                           const PRUnichar *text, 
+                                                           const PRUnichar *passwordRealm, 
+                                                           PRUint32 savePassword, 
+                                                           PRUnichar **user, 
+                                                           PRUnichar **pwd, 
+                                                           PRBool *_retval)
 {
-  if (!aSiteWindow)
-    return NS_ERROR_NULL_POINTER;
+    nsresult rv = NS_ERROR_FAILURE;
 
-  *aSiteWindow = NS_REINTERPRET_CAST(void *, this);
-  return NS_OK;
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUsernameAndPasswordEvent *actionEvent = nsnull;
+
+    wsStringStruct strings[3] = { 
+        {dialogTitle, nsnull},
+        {text, nsnull},
+        {passwordRealm, nsnull} };
+
+    rv = ::util_CreateJstringsFromUnichars(strings, 3);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: PromptUserNameAndPassword: can't create jstrings from Unichars");
+        goto PUAP_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for authentitication");
+            rv = NS_ERROR_NULL_POINTER;
+            goto PUAP_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUsernameAndPasswordEvent(mInitContext, mPrompt, 
+                                          strings, savePassword,
+                                          user, pwd, _retval))) {
+        ::util_ThrowExceptionToJava(env, "Exception: PromptUserNameAndPassword: can't create wsPromptUsernameAndPasswordEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto PUAP_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, 
+                                (PLEvent *) *actionEvent);
+    rv = NS_OK;
+ PUAP_CLEANUP:
+
+    ::util_DeleteJstringsFromUnichars(strings, 3);
+
+    return rv;
 }
 
-NS_IMETHODIMP CBrowserContainer::SetFocus()
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIPrompt
+
+NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle, 
+                                           const PRUnichar *text, 
+                                           PRUint32 buttonFlags, 
+                                           const PRUnichar *button0Title, 
+                                           const PRUnichar *button1Title, 
+                                           const PRUnichar *button2Title, 
+                                           const PRUnichar *checkMsg, 
+                                           PRBool *checkValue, 
+                                           PRInt32 *buttonPressed)
 {
-    printf ("SetFocus\n");
-    return NS_OK;
+    /** dialogTitle: Confirm
+        text: the site yahoo.com wants to set a cookie, blah blah
+        buttonFlags: 1027
+        button0Title: ""
+        button1Title: ""
+        button2Title: ""
+        checkMsg: Remember This Decision
+    */
+    nsresult rv = NS_ERROR_FAILURE;
+    printf("debug: edburns: CBrowserContainer::ConfirmEx()\n");
+    
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+    
+    PRInt32 i;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUniversalDialogEvent *actionEvent = nsnull;
+    
+    // the offset, into the following strings array, of the first button;
+    const PRInt32 buttonOffset = 4; 
+    // the maximum number of buttons we expect
+    const PRInt32 maxButtons = 3;
+
+    wsStringStruct strings[10] = { 
+        {text, nsnull},
+        {dialogTitle, nsnull},
+        {nsnull, nsnull},
+        {checkMsg, nsnull},
+        {button0Title, nsnull},
+        {button1Title, nsnull},
+        {button2Title, nsnull},
+        {nsnull, nsnull},
+        {nsnull, nsnull},
+        {nsnull, nsnull} };
+
+    const PRUnichar* buttonStrings[] = { button0Title, button1Title, 
+                                         button2Title };
+
+    // This array contains the button strings that are dynamically
+    // allocated and need to be freed.
+    const PRUnichar *buttonStringsToFree[maxButtons];
+    memset(buttonStringsToFree, nsnull, 
+           maxButtons * sizeof(PRUnichar *));
+    
+
+    PRInt32 numberButtons = 0;
+    // this code cribbed from nsPromptService.cpp::ConfirmEx
+
+    for (i = 0; i < maxButtons; i++) { 
+        
+        nsXPIDLString buttonTextStr;
+        nsString tempStr;
+        const PRUnichar* buttonText = 0;
+        switch (buttonFlags & 0xff) {
+        case BUTTON_TITLE_OK:
+            util_GetLocaleString("OK", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_CANCEL:
+            util_GetLocaleString("Cancel", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_YES:
+            util_GetLocaleString("Yes", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_NO:
+            util_GetLocaleString("No", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_SAVE:
+            util_GetLocaleString("Save", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_DONT_SAVE:
+            util_GetLocaleString("DontSave", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_REVERT:
+            util_GetLocaleString("Revert", getter_Copies(buttonTextStr));
+            break;
+        case BUTTON_TITLE_IS_STRING:
+            buttonText = buttonStrings[i];
+            break;
+        }
+        if (!buttonText && buttonTextStr.get()) {
+            // This means the button text did not come from the argument
+            // list to this method.  Rather, it came from the
+            // localization bundle.  In this case, we must copy the
+            // string and free it.
+            tempStr = buttonTextStr.get();
+            strings[buttonOffset + i].uniStr = ToNewUnicode(tempStr);
+            buttonStringsToFree[i] = strings[buttonOffset + i].uniStr;
+        }
+        else {
+            // This means the button text DID come from the argument
+            // list, and we do not need to free it!
+            strings[buttonOffset + i].uniStr = buttonTextStr.get();
+        }
+        
+        if (strings[buttonOffset + i].uniStr) {
+            ++numberButtons;
+        }
+        buttonFlags >>= 8;
+    }
+    
+    rv = ::util_CreateJstringsFromUnichars(strings, 10);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: ConfirmEx: can't create jstrings from Unichars");
+        goto UD_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for ConfirmEx");
+            rv = NS_ERROR_NULL_POINTER;
+            goto UD_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUniversalDialogEvent(mInitContext, 
+                                                         mPrompt, 
+                                                         strings, 
+                                                         nsnull,
+                                                         nsnull,
+                                                         checkValue,
+                                                         numberButtons, 
+                                                         0, 
+                                                         PR_FALSE,
+                                                         buttonPressed))) {
+        ::util_ThrowExceptionToJava(env, "Exception: ConfirmEx: can't create wsPromptUniversalDialogEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto UD_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, (PLEvent *) *actionEvent);
+    
+    rv = NS_OK;
+ UD_CLEANUP:
+    
+    ::util_DeleteJstringsFromUnichars(strings, 10);
+    // free any button strings copied from localized strings
+    for (i = 0; i < maxButtons; i++) { 
+        if (buttonStringsToFree[i]) {
+            nsMemory::Free((void *) buttonStringsToFree[i]);
+        }
+    }
+    
+    return rv;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetTitle(PRUnichar** aTitle)
+
+/* void alert (in wstring text); */
+NS_IMETHODIMP CBrowserContainer::Alert(const PRUnichar *dialogTitle, 
+                                       const PRUnichar *text)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::SetTitle(const PRUnichar* aTitle)
+NS_IMETHODIMP CBrowserContainer::AlertCheck(const PRUnichar *dialogTitle, 
+                                            const PRUnichar *text, 
+                                            const PRUnichar *checkMsg, 
+                                            PRBool *checkValue)
 {
-    // PENDING(kyle): set the browser window title here
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetVisibility(PRBool *aVisibility)
+/* boolean confirm (in wstring text); */
+NS_IMETHODIMP CBrowserContainer::Confirm(const PRUnichar *dialogTitle,
+                                         const PRUnichar *text, 
+                                         PRBool *_retval)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::SetVisibility(PRBool aVisibility)
+/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP CBrowserContainer::ConfirmCheck(const PRUnichar *dialogTitle,
+                                              const PRUnichar *text, 
+                                              const PRUnichar *checkMsg, 
+                                              PRBool *checkValue, 
+                                              PRBool *_retval)
 {
-    printf ("SetVisibility\n");
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
+NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle, 
+                                        const PRUnichar *text, 
+                                        PRUnichar **value, 
+                                        const PRUnichar *checkMsg, 
+                                        PRBool *checkValue, 
+                                        PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
+                                                           const PRUnichar *text, 
+                                                           PRUnichar **username, 
+                                                           PRUnichar **password, 
+                                                           const PRUnichar *checkMsg, 
+                                                           PRBool *checkValue, 
+                                                           PRBool *_retval)
+{
+    // We Implement the PromptUsernameAndPassword as declared in nsIAuthPrompt
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, 
+                                                const PRUnichar *text, 
+                                                PRUnichar **password, 
+                                                const PRUnichar *checkMsg, 
+                                                PRBool *checkValue, 
+                                                PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean select (in wstring inDialogTitle, in wstring inMsg, in PRUint32 inCount, [array, size_is (inCount)] in wstring inList, out long outSelection); */
+NS_IMETHODIMP CBrowserContainer::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+#if 0
+NS_IMETHODIMP CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, 
+                                   const PRUnichar *inDialogTitle, 
+                                   const PRUnichar *inMsg, 
+                                   const PRUnichar *inCheckboxMsg, 
+                                   const PRUnichar *inButton0Text, 
+                                   const PRUnichar *inButton1Text, 
+                                   const PRUnichar *inButton2Text, 
+                                   const PRUnichar *inButton3Text, 
+                                   const PRUnichar *inEditfield1Msg, 
+                                   const PRUnichar *inEditfield2Msg, 
+                                   PRUnichar **inoutEditfield1Value, 
+                                   PRUnichar **inoutEditfield2Value, 
+                                   const PRUnichar *inIConURL, 
+                                   PRBool *inoutCheckboxState, 
+                                   PRInt32 inNumberButtons, 
+                                   PRInt32 inNumberEditfields, 
+                                   PRInt32 inEditField1Password, 
+                                   PRInt32 *outButtonPressed)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    printf("debug: edburns: CBrowserContainer::UniversalDialog()\n");
+    
+    // if the user hasn't given us a prompt, oh well
+    if	 (!mPrompt) {
+        return NS_OK;
+    }
+    
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    wsPromptUniversalDialogEvent *actionEvent = nsnull;
+
+    wsStringStruct strings[10] = { 
+        {inTitleMessage, nsnull},
+        {inDialogTitle, nsnull},
+        {inMsg, nsnull},
+        {inCheckboxMsg, nsnull},
+        {inButton0Text, nsnull},
+        {inButton1Text, nsnull},
+        {inButton2Text, nsnull},
+        {inButton3Text, nsnull},
+        {inEditfield1Msg, nsnull},
+        {inEditfield2Msg, nsnull} };
+
+    rv = ::util_CreateJstringsFromUnichars(strings, 10);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: UniversalDialog: can't create jstrings from Unichars");
+        goto UD_CLEANUP;
+    }
+
+
+    // PENDING(edburns): uniformly apply checks for this throughout the
+    // code
+    PR_ASSERT(mInitContext);
+    PR_ASSERT(mInitContext->initComplete); 
+
+    // try to initialize the properties object for basic auth and cookies
+    if (!gPromptProperties) {
+        gPromptProperties = 
+            ::util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext));
+        if (!gPromptProperties) {
+            printf("Error: can't create properties object for authentitication");
+            rv = NS_ERROR_NULL_POINTER;
+            goto UD_CLEANUP;
+        }
+    }
+    else {
+        ::util_ClearPropertiesObject(env, gPromptProperties, (jobject) 
+                                     &(mInitContext->shareContext));
+    }
+    
+    if (!(actionEvent = new wsPromptUniversalDialogEvent(mInitContext, 
+                                                         mPrompt, 
+                                                         strings, 
+                                                         inoutEditfield1Value,
+                                                         inoutEditfield2Value,
+                                                         inoutCheckboxState,
+                                                         inNumberButtons, 
+                                                         inNumberEditfields, 
+                                                         inEditField1Password,
+                                                         outButtonPressed))) {
+        ::util_ThrowExceptionToJava(env, "Exception: UniversalDialog: can't create wsPromptUniversalDialogEvent");
+        rv = NS_ERROR_NULL_POINTER;
+        goto UD_CLEANUP;
+    }
+    // the out params to this method are set in wsPromptUsernameAndPasswordEvent::handleEvent()
+    ::util_PostSynchronousEvent(mInitContext, (PLEvent *) *actionEvent);
+
+    rv = NS_OK;
+ UD_CLEANUP:
+
+    ::util_DeleteJstringsFromUnichars(strings, 10);
+
+    return rv;
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
-NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
-                                               nsIRequest *aRequest,
-                                               PRUint32 aStateFlags,
+NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress, 
+                                               nsIRequest *aRequest, 
+                                               PRUint32 aStateFlags, 
                                                PRUint32 aStatus)
 {
     nsCAutoString name;
@@ -193,7 +589,7 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
 
     uname.AssignWithConversion(name.get());
 
-    //
+    // 
     // document states
     //
     if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
@@ -201,7 +597,7 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
             !domWin) {
             return rv;
         }
-
+        
         domWin->GetDocument(getter_AddRefs(mInitContext->currentDocument));
         doStartDocumentLoad(uname.get());
     }
@@ -230,18 +626,18 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
 }
 
 NS_IMETHODIMP CBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
-                                                  nsIRequest *aRequest,
+                                                  nsIRequest *aRequest, 
                                                   PRUint32 state)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void onProgressChange (in nsIChannel channel, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
-NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
-                                                  nsIRequest *aRequest,
-                                                  PRInt32 aCurSelfProgress,
-                                                  PRInt32 aMaxSelfProgress,
-                                                  PRInt32 curTotalProgress,
+NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress, 
+                                                  nsIRequest *aRequest, 
+                                                  PRInt32 aCurSelfProgress, 
+                                                  PRInt32 aMaxSelfProgress, 
+                                                  PRInt32 curTotalProgress, 
                                                   PRInt32 maxTotalProgress)
 {
     PRInt32 percentComplete = 0;
@@ -249,20 +645,20 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
     nsAutoString autoName;
     jobject msgJStr = nsnull;
     nsresult rv;
-
+    
     if (!mDocTarget) {
         return NS_OK;
     }
-
+    
     // PENDING(edburns): Allow per fetch progress reporting.  Right now
     // we only have coarse grained support.
     if (maxTotalProgress) {
         percentComplete = curTotalProgress / maxTotalProgress;
     }
-
+    
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnProgressURLLoad\n"));
     }
 #endif
@@ -278,28 +674,28 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
 
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-
-    msgJStr = (jobject) ::util_NewString(env, autoName.get(),
+    
+    msgJStr = (jobject) ::util_NewString(env, autoName.get(), 
                                          autoName.Length());
-
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
                          msgJStr);
 
     if (msgJStr) {
         ::util_DeleteString(mInitContext->env, (jstring) msgJStr);
     }
 
-
+    
     return NS_OK;
 }
 
 /* void onStatusChange (in nsIChannel channel, in long progressStatusFlags); */
-NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress,
-                                                nsIRequest *aRequest,
-                                                nsresult aStatus,
+NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress, 
+                                                nsIRequest *aRequest, 
+                                                nsresult aStatus, 
                                                 const PRUnichar *aMessage)
 {
     if (!mDocTarget) {
@@ -307,36 +703,36 @@ NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress,
     }
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnStatusURLLoad\n"));
     }
 #endif
     nsAutoString aMsg(aMessage);
     int length = aMsg.Length();
-
+    
     // IMPORTANT: do not use initContext->env here since it comes
     // from another thread.  Use JNU_GetEnv instead.
-
+    
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-    jstring statusMessage = ::util_NewString(env, (const jchar *)
+    jstring statusMessage = ::util_NewString(env, (const jchar *) 
                                              aMsg.get(), length);
-
-    util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread,
-                         mDocTarget,
+    
+    util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
+                         mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
                          (jobject) statusMessage);
-
+    
     if (statusMessage) {
         ::util_DeleteString(mInitContext->env, statusMessage);
     }
-
-    return NS_OK;
+    
+	return NS_OK; 
 }
 
 /* void onLocationChange (in nsIURI location); */
-NS_IMETHODIMP CBrowserContainer::OnLocationChange(nsIWebProgress *aWebProgress,
-                                                  nsIRequest *aRequest,
+NS_IMETHODIMP CBrowserContainer::OnLocationChange(nsIWebProgress *aWebProgress, 
+                                                  nsIRequest *aRequest, 
                                                   nsIURI *location)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -351,7 +747,7 @@ CBrowserContainer::doStartDocumentLoad(const PRUnichar *aDocumentName)
 {
     // remove the old mouse listener for the old document
     if (mDomEventTarget) {
-        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"),
+        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
                                              this, PR_FALSE);
         mDomEventTarget = nsnull;
     }
@@ -361,38 +757,38 @@ CBrowserContainer::doStartDocumentLoad(const PRUnichar *aDocumentName)
     }
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnStartDocumentLoad\n"));
     }
 #endif
     jobject urlJStr = nsnull;
     if (nsnull != aDocumentName) {
-
+        
         // IMPORTANT: do not use initContext->env here since it comes
         // from another thread.  Use JNU_GetEnv instead.
-
+        
         JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-
-        urlJStr = (jobject) ::util_NewString(env, aDocumentName,
+        
+        urlJStr = (jobject) ::util_NewString(env, aDocumentName, 
                                              nsCRT::strlen(aDocumentName));
-    }
-
+    }  
+    
     // maskValues array comes from ../src_share/jni_util.h
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
                          urlJStr);
-
-
+    
+    
     if (urlJStr) {
         ::util_DeleteString(mInitContext->env, (jstring) urlJStr);
     }
+    
+	return NS_OK; 
+} 
 
-    return NS_OK;
-}
-
-// we need this to fire the document complete
+// we need this to fire the document complete 
 nsresult JNICALL
 CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
 {
@@ -401,7 +797,7 @@ CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
     focus->Activate();
 
     nsCOMPtr<nsIDOMWindow> domWin;
-
+    
     if (nsnull != aWebProgress) {
         if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
             && domWin) {
@@ -409,11 +805,11 @@ CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
                 // if we have a mouse listener
                 if (mMouseTarget) {
                     // turn the currentDocument into an nsIDOMEventTarget
-                    mDomEventTarget =
+                    mDomEventTarget = 
                         do_QueryInterface(mInitContext->currentDocument);
                     // if successful
                     if (mDomEventTarget) {
-                        mDomEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"),
+                        mDomEventTarget->AddEventListener(NS_LITERAL_STRING("mouseover"), 
                                                           this, PR_FALSE);
                     }
                 }
@@ -425,25 +821,25 @@ CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
     }
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnEndDocumentLoad\n"));
     }
 #endif
 
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
                          nsnull);
+    
 
-
-    return NS_OK;
-}
+	return NS_OK; 
+} 
 
 nsresult JNICALL
 CBrowserContainer::doStartURLLoad(const PRUnichar *aDocumentName)
 {
-    //NOTE: This appears to get fired once for each individual item on a page.
+	//NOTE: This appears to get fired once for each individual item on a page.
     if (!mDocTarget) {
         return NS_OK;
     }
@@ -451,32 +847,32 @@ CBrowserContainer::doStartURLLoad(const PRUnichar *aDocumentName)
 
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnStartURLLoad\n"));
     }
 #endif
     nsAutoString nameAutoStr(aDocumentName);
-    jstring nameJStr = ::util_NewString(env, (const jchar *)
-                                             nameAutoStr.get(),
+    jstring nameJStr = ::util_NewString(env, (const jchar *) 
+                                             nameAutoStr.get(), 
                                              nameAutoStr.Length());
-
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
                          nameJStr);
 
     if (nameJStr) {
         ::util_DeleteString(mInitContext->env, nameJStr);
     }
-
-    return NS_OK;
+    
+	return NS_OK; 
 }
 
 nsresult JNICALL
 CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
 {
-    //NOTE: This appears to get fired once for each individual item on a page.
+	//NOTE: This appears to get fired once for each individual item on a page.
     if (!mDocTarget) {
         return NS_OK;
     }
@@ -484,26 +880,26 @@ CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
 
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnStartURLLoad\n"));
     }
 #endif
     nsAutoString nameAutoStr(aDocumentName);
-    jstring nameJStr = ::util_NewString(env, (const jchar *)
-                                             nameAutoStr.get(),
+    jstring nameJStr = ::util_NewString(env, (const jchar *) 
+                                             nameAutoStr.get(), 
                                              nameAutoStr.Length());
-
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK],
+                         DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], 
                          nameJStr);
 
     if (nameJStr) {
         ::util_DeleteString(mInitContext->env, nameJStr);
     }
-
-    return NS_OK;
+    
+	return NS_OK; 
 }
 
 
@@ -513,7 +909,7 @@ CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
 
 NS_IMETHODIMP CBrowserContainer::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
@@ -559,6 +955,218 @@ NS_IMETHODIMP CBrowserContainer::SetParentContentListener(nsIURIContentListener 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIDocShellTreeOwner
+
+NS_IMETHODIMP
+CBrowserContainer::SetPersistence(PRBool aPersistPosition, 
+                                  PRBool aPersistSize, PRBool aPersistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CBrowserContainer::GetPersistence(PRBool *aPersistPosition, 
+                                  PRBool *aPersistSize, 
+                                  PRBool *aPersistSizeMode)
+{
+    return NS_ERROR_FAILURE;
+}
+
+
+
+
+
+NS_IMETHODIMP
+CBrowserContainer::FindItemWithName(const PRUnichar* aName,
+   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
+{
+	return NS_ERROR_FAILURE;
+
+}
+
+
+NS_IMETHODIMP
+CBrowserContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   PRBool aPrimary, const PRUnichar* aID)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CBrowserContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
+{
+	nsCOMPtr<nsIDocShell> docShell = do_GetInterface(m_pOwner);
+	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+	*aShell = (nsIDocShellTreeItem *) docShellAsItem;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
+   PRInt32 aCX, PRInt32 aCY)
+{
+	// Ignore request to be resized
+	return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIBaseWindow
+
+NS_IMETHODIMP CBrowserContainer::GetEnabled(PRBool *aEnabled)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserContainer::SetEnabled(PRBool aEnabled)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+CBrowserContainer::InitWindow(nativeWindow parentNativeWindow, nsIWidget * parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::Create(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::Destroy(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetPosition(PRInt32 x, PRInt32 y)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetPosition(PRInt32 *x, PRInt32 *y)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetSize(PRInt32 *cx, PRInt32 *cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetPositionAndSize(PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::Repaint(PRBool force)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetParentWidget(nsIWidget * *aParentWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetParentWidget(nsIWidget * aParentWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetParentNativeWindow(nativeWindow aParentNativeWindow)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetVisibility(PRBool *aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetVisibility(PRBool aVisibility)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetMainWidget(nsIWidget * *aMainWidget)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetFocus(void)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::GetTitle(PRUnichar * *aTitle)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP 
+CBrowserContainer::SetTitle(const PRUnichar * aTitle)
+{
+	return NS_ERROR_FAILURE;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebBrowserChrome implementation
 
@@ -566,7 +1174,7 @@ NS_IMETHODIMP
 CBrowserContainer::DestroyBrowserWindow()
 {
     PR_ASSERT(PR_FALSE);
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -576,27 +1184,27 @@ CBrowserContainer::IsWindowModal(PRBool *retVal)
         return NS_ERROR_NULL_POINTER;
     }
     *retVal = PR_FALSE;
-    return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 CBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CBrowserContainer::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CBrowserContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 {
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -614,14 +1222,14 @@ CBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP
 CBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CBrowserContainer::ShowAsModal(void)
 {
-    return NS_ERROR_FAILURE;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -631,17 +1239,17 @@ CBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIDocumentLoaderObserver implementation
+// nsIDocumentLoaderObserver implementation 
 #if 0
 
 // PENDING(edburns): when you figure out how to do this, implement it
 // with nsIWebProgressListener.
 
 NS_IMETHODIMP
-CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader,
+CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, 
                                   nsIRequest* aRequest)
-{
-}
+{ 
+} 
 
 NS_IMETHODIMP
 CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, nsresult aStatus)
@@ -652,25 +1260,25 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, 
     }
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4,
+        PR_LOG(prLogModuleInfo, 4, 
                ("CBrowserContainer: OnStartURLLoad\n"));
     }
 #endif
 
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread, mDocTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
-
-    return NS_OK;
-}
+    
+	return NS_OK; 
+} 
 
 #endif
 
 NS_IMETHODIMP
 CBrowserContainer::HandleEvent(nsIDOMEvent* aEvent)
 {
-    return NS_OK;
+	return NS_OK; 
 }
 
 
@@ -681,15 +1289,15 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 
@@ -700,15 +1308,15 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -718,21 +1326,21 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     ::util_StoreIntoPropertiesObject(env, properties,  CLICK_COUNT_KEY,
-                                     ONE_VALUE, (jobject)
+                                     ONE_VALUE, (jobject) 
                                      &(mInitContext->shareContext));
 
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -742,7 +1350,7 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
@@ -750,13 +1358,13 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
                                      TWO_VALUE, (jobject)
                                      &(mInitContext->shareContext));
 
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -766,15 +1374,15 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -784,20 +1392,20 @@ CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
         return NS_OK;
     }
     PR_ASSERT(nsnull != aMouseEvent);
-
+    
     getPropertiesFromEvent(aMouseEvent);
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
-                         mMouseTarget,
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, 
+                         mMouseTarget, 
                          MOUSE_LISTENER_CLASSNAME,
-                         DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK],
+                         DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
-    return NS_OK;
+	return NS_OK; 
 }
 
 //
 // From wcIBrowserContainer
-//
+// 
 
 
 NS_IMETHODIMP CBrowserContainer::AddMouseListener(jobject target)
@@ -809,7 +1417,7 @@ NS_IMETHODIMP CBrowserContainer::AddMouseListener(jobject target)
 
     if (-1 == DOMMouseListener_maskValues[0]) {
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/WCMouseEvent",
-                                                DOMMouseListener_maskNames,
+                                                DOMMouseListener_maskNames, 
                                                 DOMMouseListener_maskValues);
     }
     mMouseTarget = target;
@@ -826,7 +1434,7 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
 
     if (-1 == DocumentLoader_maskValues[0]) {
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
-                                                DocumentLoader_maskNames,
+                                                DocumentLoader_maskNames, 
                                                 DocumentLoader_maskValues);
     }
     mDocTarget = target;
@@ -847,7 +1455,7 @@ NS_IMETHODIMP CBrowserContainer::SetPrompt(jobject target)
         ::util_ThrowExceptionToJava(env, "Exception: Navigation.nativeSetPrompt(): can't create NewGlobalRef\n\tfor argument");
         rv = NS_ERROR_NULL_POINTER;
     }
-
+    
     return rv;
 }
 
@@ -887,10 +1495,10 @@ NS_IMETHODIMP CBrowserContainer::GetInstanceCount(PRInt32 *outCount)
 NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 {
     if (mDomEventTarget) {
-        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"),
+        mDomEventTarget->RemoveEventListener(NS_LITERAL_STRING("mouseover"), 
                                              this, PR_FALSE);
         mDomEventTarget = nsnull;
-    }
+    }   
 
     ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mDocTarget);
     ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mMouseTarget);
@@ -905,7 +1513,7 @@ NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 //
 // Methods from nsIWebShellContainer
 //
-
+ 
 NS_IMETHODIMP CBrowserContainer::WillLoadURL(nsIWebShell* aShell,
                                              const PRUnichar* aURL,
                                              nsLoadType aReason)
@@ -945,17 +1553,17 @@ jobject JNICALL CBrowserContainer::getPropertiesFromEvent(nsIDOMEvent *event)
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
     if (properties) {
-        util_ClearPropertiesObject(env, properties, (jobject)
+        util_ClearPropertiesObject(env, properties, (jobject) 
                                    &(mInitContext->shareContext));
     }
     else {
-        if (!(properties =
+        if (!(properties = 
               util_CreatePropertiesObject(env, (jobject)
                                           &(mInitContext->shareContext)))) {
             return properties;
         }
     }
-    dom_iterateToRoot(currentNode, CBrowserContainer::takeActionOnNode,
+    dom_iterateToRoot(currentNode, CBrowserContainer::takeActionOnNode, 
                       (void *)this);
     addMouseEventDataToProperties(aMouseEvent);
 
@@ -972,7 +1580,7 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
 
     // Add modifiers, keys, mouse buttons, etc, to the properties table
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
-
+    
     rv = aMouseEvent->QueryInterface(nsIDOMMouseEvent::GetIID(),
                                      getter_AddRefs(mouseEvent));
     if (NS_FAILED(rv)) {
@@ -985,48 +1593,48 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
     char buf[20];
     jstring strVal;
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-
+    
     // PENDING(edburns): perhaps use a macro to speed this up?
     rv = mouseEvent->GetScreenX(&intVal);
     if (NS_SUCCEEDED(rv)) {
         WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_X_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetScreenY(&intVal);
     if (NS_SUCCEEDED(rv)) {
         WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_Y_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetClientX(&intVal);
     if (NS_SUCCEEDED(rv)) {
         WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_X_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetClientY(&intVal);
     if (NS_SUCCEEDED(rv)) {
         WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_Y_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     int16Val = 0;
     rv = mouseEvent->GetButton(&int16Val);
     if (NS_SUCCEEDED(rv)) {
@@ -1034,43 +1642,43 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, BUTTON_KEY,
                                          (jobject) strVal,
-                                         (jobject)
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetAltKey(&boolVal);
     if (NS_SUCCEEDED(rv)) {
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, ALT_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetCtrlKey(&boolVal);
     if (NS_SUCCEEDED(rv)) {
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, CTRL_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetShiftKey(&boolVal);
     if (NS_SUCCEEDED(rv)) {
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, SHIFT_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
-
+    
     rv = mouseEvent->GetMetaKey(&boolVal);
     if (NS_SUCCEEDED(rv)) {
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, META_KEY,
-                                         (jobject) strVal,
-                                         (jobject)
+                                         (jobject) strVal, 
+                                         (jobject) 
                                          &(mInitContext->shareContext));
     }
 }
@@ -1089,7 +1697,7 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
 
     PR_ASSERT(nsnull != myObject);
     curThis = (CBrowserContainer *) myObject;
-    depth = curThis->inverseDepth++;
+    depth = curThis->inverseDepth++; 
 
     if (!(curThis->properties)) {
         return rv;
@@ -1109,13 +1717,13 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         //        nodeName = nodeDepth;
         //        nodeName += nodeInfo;
         nodeName = nodeInfo;
-
+        
         if (prLogModuleInfo) {
             char * nodeInfoCStr = ToNewCString(nodeName);
             PR_LOG(prLogModuleInfo, 4, ("%s", nodeInfoCStr));
             nsMemory::Free(nodeInfoCStr);
         }
-
+        
         rv = currentNode->GetNodeValue(nodeInfo);
         if (NS_FAILED(rv)) {
             return rv;
@@ -1123,22 +1731,22 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         //        nodeValue = nodeDepth;
         //        nodeValue += nodeInfo;
         nodeValue = nodeInfo;
-
+        
         if (prLogModuleInfo) {
             char * nodeInfoCStr = ToNewCString(nodeName);
             PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
             nsMemory::Free(nodeInfoCStr);
         }
-
-        jNodeName = ::util_NewString(env, nodeName.get(),
+        
+        jNodeName = ::util_NewString(env, nodeName.get(), 
                                      nodeName.Length());
-        jNodeValue = ::util_NewString(env, nodeValue.get(),
+        jNodeValue = ::util_NewString(env, nodeValue.get(), 
                                       nodeValue.Length());
-
+        
         util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
-                                       (jobject) jNodeName,
-                                       (jobject) jNodeValue,
-                                       (jobject)
+                                       (jobject) jNodeName, 
+                                       (jobject) jNodeValue, 
+                                       (jobject) 
                                        &(curThis->mInitContext->shareContext));
         if (jNodeName) {
             ::util_DeleteString(env, jNodeName);
@@ -1162,11 +1770,11 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         }
         for (i = 0; i < length; i++) {
             rv = nodeMap->Item(i, getter_AddRefs(currentNode));
-
+            
             if (nsnull == currentNode) {
                 return rv;
             }
-
+            
             rv = currentNode->GetNodeName(nodeInfo);
             if (NS_FAILED(rv)) {
                 return rv;
@@ -1177,11 +1785,11 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
 
             if (prLogModuleInfo) {
                 char * nodeInfoCStr = ToNewCString(nodeName);
-                PR_LOG(prLogModuleInfo, 4,
+                PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d], %s", i, (const char *)nodeInfoCStr));
                 nsMemory::Free(nodeInfoCStr);
             }
-
+            
             rv = currentNode->GetNodeValue(nodeInfo);
             if (NS_FAILED(rv)) {
                 return rv;
@@ -1189,22 +1797,22 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             //            nodeValue = nodeDepth;
             //            nodeValue += nodeInfo;
             nodeValue = nodeInfo;
-
+            
             if (prLogModuleInfo) {
                 char * nodeInfoCStr = ToNewCString(nodeName);
-                PR_LOG(prLogModuleInfo, 4,
+                PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d] %s", i,(const char *)nodeInfoCStr));
                 nsMemory::Free(nodeInfoCStr);
             }
-            jNodeName = ::util_NewString(env, nodeName.get(),
+            jNodeName = ::util_NewString(env, nodeName.get(), 
                                          nodeName.Length());
-            jNodeValue = ::util_NewString(env, nodeValue.get(),
+            jNodeValue = ::util_NewString(env, nodeValue.get(), 
                                           nodeValue.Length());
-
+            
             util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
-                                           (jobject) jNodeName,
-                                           (jobject) jNodeValue,
-                                           (jobject)
+                                           (jobject) jNodeName, 
+                                           (jobject) jNodeValue, 
+                                           (jobject) 
                                            &(curThis->mInitContext->shareContext));
             if (jNodeName) {
                 ::util_DeleteString(env, jNodeName);
@@ -1214,11 +1822,11 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             }
         }
     } // end of storing the attributes
-
+        
     return rv;
 }
 
-//
+// 
 // Local functions
 //
 

@@ -82,7 +82,6 @@ extern jobject EDIT_FIELD_1_KEY;
 extern jobject EDIT_FIELD_2_KEY;
 extern jobject CHECKBOX_STATE_KEY;
 extern jobject BUTTON_PRESSED_KEY;
-extern jobject FINISHED_KEY;
 extern jobject TRUE_VALUE;
 extern jobject FALSE_VALUE;
 extern jobject ONE_VALUE;

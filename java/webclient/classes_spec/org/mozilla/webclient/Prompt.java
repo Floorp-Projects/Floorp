@@ -44,7 +44,6 @@ public static final String EDIT_FIELD_1_KEY = "editfield1Value";
 public static final String EDIT_FIELD_2_KEY = "editfield2Value";
 public static final String CHECKBOX_STATE_KEY = "checkboxState";
 public static final String BUTTON_PRESSED_KEY = "buttonPressed";
-public static final String FINISHED_KEY = "finished";
 
 /**
 

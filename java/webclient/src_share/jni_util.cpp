@@ -67,7 +67,6 @@ jobject EDIT_FIELD_1_KEY;
 jobject EDIT_FIELD_2_KEY;
 jobject CHECKBOX_STATE_KEY;
 jobject BUTTON_PRESSED_KEY;
-jobject FINISHED_KEY;
 jobject TRUE_VALUE;
 jobject FALSE_VALUE;
 jobject ONE_VALUE;
@@ -210,12 +209,6 @@ jboolean util_InitStringConstants()
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            "buttonPressed")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (FINISHED_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, 
-                                                           "finished")))) {
         return JNI_FALSE;
     }
     if (nsnull == (TRUE_VALUE = 

@@ -16,7 +16,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): Ashutosh Kulkarni <ashuk@eng.sun.com>
  *                 Ed Burns <edburns@acm.org>
  *
@@ -40,7 +40,8 @@
 #include "nsIURIContentListener.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIEmbeddingSiteWindow.h"
+#include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsCWebBrowser.h"
 #include "nsWeakReference.h"
 
@@ -54,13 +55,16 @@ class nsIURI;
 // interfaces into the web shell and so forth.
 
 class CBrowserContainer :
-    public nsIWebBrowserChrome,
-    public nsIEmbeddingSiteWindow,
-    public nsIWebProgressListener,
-    public nsIWebShellContainer,
-    public nsIURIContentListener,
-    public nsIInterfaceRequestor,
-    public nsIDOMMouseListener,
+		public nsIBaseWindow,
+		public nsIWebBrowserChrome,
+		public nsIWebProgressListener,
+		public nsIWebShellContainer,
+		public nsIURIContentListener,
+		public nsIDocShellTreeOwner,
+		public nsIInterfaceRequestor,
+		public nsIPrompt,
+    public nsIAuthPrompt,
+		public nsIDOMMouseListener,
     public wcIBrowserContainer,
     public nsSupportsWeakReference
 {
@@ -90,7 +94,7 @@ protected:
 //
 // The following arguments are used in the takeActionOnNode method.
 //
-
+    
 /**
 
  * 0 is the leaf depth.  That's why we call it the inverse depth.
@@ -121,34 +125,39 @@ protected:
 
 
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBBROWSERCHROME
-    NS_DECL_NSIEMBEDDINGSITEWINDOW
-    NS_DECL_NSIURICONTENTLISTENER
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIWEBPROGRESSLISTENER
+  	NS_DECL_ISUPPORTS
+	NS_DECL_NSIBASEWINDOW
+	NS_DECL_NSIWEBBROWSERCHROME
+	NS_DECL_NSIDOCSHELLTREEOWNER
+	NS_DECL_NSIURICONTENTLISTENER
+	NS_DECL_NSIINTERFACEREQUESTOR
+	NS_DECL_NSIWEBPROGRESSLISTENER
 
-    NS_DECL_WCIBROWSERCONTAINER
+	NS_DECL_WCIBROWSERCONTAINER
 
-    // nsIDOMMouseListener
+	// "Services" accessed through nsIInterfaceRequestor
+	NS_DECL_NSIPROMPT
+  NS_DECL_NSIAUTHPROMPT
 
-    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-    NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
+	// nsIDOMMouseListener
+  
+	NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+	NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+	NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+	NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+	NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
+	NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
+	NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
                          nsLoadType aReason);
-
+  
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
                           const PRUnichar* aURL);
-
-
+  
+  
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                         const PRUnichar* aURL,
                         nsresult aStatus);
@@ -165,17 +174,16 @@ void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
 
  * Called from our nsIWebProgressListener.OnStateChanged()
 
- */
+ */ 
 
 nsresult JNICALL doStartDocumentLoad(const PRUnichar *documentName);
 nsresult JNICALL doEndDocumentLoad(nsIWebProgress *aWebProgress);
 nsresult JNICALL doStartURLLoad(const PRUnichar *documentName);
 nsresult JNICALL doEndURLLoad(const PRUnichar *documentName);
 
-static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode,
+static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode, 
                                           void *yourObject);
 
-friend class PromptService;
 };
 
 #endif

@@ -114,8 +114,6 @@ CPPSRCS = \
 	PreferencesActionEvents.cpp \
 	WrapperFactoryImpl.cpp \
 	WindowCreator.cpp \
-	PromptService.cpp \
-	AppComponents.cpp \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
