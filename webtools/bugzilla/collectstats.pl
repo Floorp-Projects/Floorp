@@ -37,7 +37,7 @@ unlink <*.gif>;
 unlink <*.png>;
 chdir("../..");
  
-ConnectToDatabase();
+ConnectToDatabase(1);
 GetVersionTable();
 
 my @myproducts;
@@ -101,7 +101,7 @@ sub collect_stats {
 #
 # Do not edit me! This file is generated.
 # 
-# Fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|FIXED|INVALID|WONTFIX|LATER|REMIND|DUPLICATE|WORKSFORME|MOVED
+# fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|FIXED|INVALID|WONTFIX|LATER|REMIND|DUPLICATE|WORKSFORME|MOVED
 # Product: $product
 # Created: $when
 FIN
