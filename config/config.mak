@@ -52,6 +52,10 @@ WINOS=$(WINOS: =)^
 # need this everywhere jsapi.h might be included
 LCFLAGS=$(LCFLAGS) -DJS_THREADSAFE
 
+!ifndef JAVA_HOME
+JAVA_HOME=$(JDKHOME)
+!endif
+
 !if "$(STAND_ALONE_JAVA)" == "1"
 LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 !endif
@@ -315,16 +319,16 @@ PATH_SEPARATOR = ;
 
 # where the bytecode will go
 !if "$(AWT_11)" == "1"
-JAVA_DESTPATH = $(DEPTH)\dist\classes11
+JAVA_DESTPATH = $(MOZ_SRC)\mozilla\dist\classes11
 !else
-JAVA_DESTPATH = $(DEPTH)\dist\classes
+JAVA_DESTPATH = $(MOZ_SRC)\mozilla\dist\classes
 !endif
 
 # where the source are
-DEFAULT_JAVA_SOURCEPATH = $(DEPTH)\sun-java\classsrc
+DEFAULT_JAVA_SOURCEPATH = $(MOZ_SRC)\mozilla\sun-java\classsrc
 !ifndef JAVA_SOURCEPATH
 !if "$(AWT_11)" == "1"
-JAVA_SOURCEPATH = $(DEPTH)\sun-java\classsrc11;$(DEFAULT_JAVA_SOURCEPATH)
+JAVA_SOURCEPATH = $(MOZ_SRC)\mozilla\sun-java\classsrc11;$(DEFAULT_JAVA_SOURCEPATH)
 !else
 JAVA_SOURCEPATH = $(DEFAULT_JAVA_SOURCEPATH)
 !endif
@@ -333,7 +337,7 @@ JAVA_SOURCEPATH = $(DEFAULT_JAVA_SOURCEPATH)
 JAVA_PROG=$(MOZ_TOOLS)\bin\java.exe
 #JAVA_PROG=$(DIST)\bin\java
 
-JAVAC_ZIP=$(MOZ_TOOLS)/lib/javac.zip
+JAVAC_ZIP=$(JAVA_HOME)\lib\classes.zip
 
 ZIP_PROG = $(MOZ_TOOLS)\bin\zip
 UNZIP_PROG = $(MOZ_TOOLS)\bin\unzip
