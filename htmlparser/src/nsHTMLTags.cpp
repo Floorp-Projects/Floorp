@@ -269,20 +269,24 @@ static const PRUnichar sHTMLTagUnicodeName_xmp[] =
   {'x', 'm', 'p', '\0'};
 
 // static array of unicode tag names
-#define HTML_TAG(_tag) sHTMLTagUnicodeName_##_tag,
+#define HTML_TAG(_tag, _classname) sHTMLTagUnicodeName_##_tag,
+#define HTML_OTHER(_tag, _classname)
 static const PRUnichar* const kTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
+#undef HTML_OTHER
 
 
 #ifdef DEBUG
 // static array of ASCII tag names for debugging purposes
-#define HTML_TAG(_tag) #_tag,
+#define HTML_TAG(_tag, _classname) #_tag,
+#define HTML_OTHER(_tag, _classname)
 static const char* const kTagASCIIDebugTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
+#undef HTML_OTHER
 #endif
 
 static PRInt32 gTableRefCount;
