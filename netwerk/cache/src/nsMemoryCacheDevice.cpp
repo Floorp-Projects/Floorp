@@ -22,6 +22,7 @@
  */
 
 #include "nsMemoryCacheDevice.h"
+#include "nsMemoryCacheTransport.h"
 #include "nsICacheService.h"
 
 
@@ -103,7 +104,25 @@ nsresult
 nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
                                            nsITransport **transport )
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(entry);
+    NS_ENSURE_ARG_POINTER(transport);
+
+    nsCOMPtr<nsISupports> data;
+
+    nsresult rv = entry->GetData(getter_AddRefs(data));
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (data)
+        return CallQueryInterface(data, transport);
+    else {
+        // create a new transport for this entry
+        NS_NEWXPCOM(*transport, nsMemoryCacheTransport);
+        if (!*transport)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(*transport);
+        return entry->SetData(*transport);
+    }
 }
 
 nsresult
