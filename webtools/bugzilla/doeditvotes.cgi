@@ -110,7 +110,7 @@ if (scalar(@buglist)) {
         if ($::FORM{$id} > $max) {
             PutHeader("Don't overstuff!", "Illegal vote");
             print "You may only use at most $max votes for a single bug in the\n";
-            print "<tt>$prod</tt> product, but you are using $::FORM{$id}.\n";
+            print "<tt>$prod</tt> product, but you are trying to use $::FORM{$id}.\n";
             print "<P>Please click <b>Back</b> and try again.<hr>\n";
             PutFooter();
             exit();
@@ -121,7 +121,7 @@ if (scalar(@buglist)) {
         if ($prodcount{$prod} > $::prodmaxvotes{$prod}) {
             PutHeader("Don't overstuff!", "Illegal vote");
             print "You may only use $::prodmaxvotes{$prod} votes for bugs in the\n";
-            print "<tt>$prod</tt> product, but you are using $prodcount{$prod}.\n";
+            print "<tt>$prod</tt> product, but you are trying to use $prodcount{$prod}.\n";
             print "<P>Please click <b>Back</b> and try again.<hr>\n";
             PutFooter();
             exit();
