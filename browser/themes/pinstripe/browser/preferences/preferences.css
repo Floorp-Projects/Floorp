@@ -20,6 +20,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Kevin Gerich <webmail@kmgerich.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -68,38 +69,27 @@ radio[pane][selected="true"] {
 }
 
 radio[pane=paneGeneral] {
-	-moz-image-region: rect(0px, 32px,  32px, 0px)
-}
-radio[pane=paneGeneral][selected="true"]  {
-
+	-moz-image-region: rect(0px, 32px, 32px, 0px)
 }
 
 radio[pane=panePrivacy] {
-	-moz-image-region: rect(0px, 64px,  32px, 32px)
-}
-radio[pane=panePrivacy][selected="true"]  {
-	
+	-moz-image-region: rect(0px, 64px, 32px, 32px)
 }
 
 radio[pane=paneContent] {
-	-moz-image-region: rect(0px, 96px,  32px, 64px)
+	-moz-image-region: rect(0px, 96px, 32px, 64px)
 }
-radio[pane=paneContent][selected="true"]  {
 
+radio[pane=paneTabs] {
+	-moz-image-region: rect(0px, 128px, 32px, 96px)
 }
 
 radio[pane=paneDownloads] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px)
 }
-radio[pane=paneDownloads][selected="true"] {
-
-}
 
 radio[pane=paneAdvanced] {
 	-moz-image-region: rect(0px, 192px, 32px, 160px)
-}
-radio[pane=paneAdvanced][selected="true"] {
-
 }
 
 #browserStartupHomepage {
@@ -143,6 +133,14 @@ prefpane .groupbox-body {
   
 }
 
+#paneTabs > groupbox {
+  margin: 0;
+}
+
+#paneTabs > vbox {
+  margin: 8px;
+}
+
 prefpane .groupbox-title {
   background: url("chrome://global/skin/50pct_transparent_grey.png") repeat-x bottom left;
   margin-bottom: 4px;
@@ -167,6 +165,18 @@ caption {
 
 #advancedPrefs {
   margin: 0 8px;
+}
+
+#privacyPrefs {
+  padding: 0 4px;
+}
+
+#privacyPrefs .tab-text {
+  font: message-box;
+}
+
+#privacyPrefs > tabpanels {
+  padding: 18px 10px 10px 10px;
 }
 
 #browserStartupHomepage {
