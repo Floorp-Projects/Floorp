@@ -36,14 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// Define _IMPL_NS_LAYOUT to avoid link errors having to do with
-// nsTextFragment methods, on Win32 platforms.
-//
-#define _IMPL_NS_LAYOUT
 #include "nsTextFragment.h"
-#undef _IMPL_NS_LAYOUT
-
 #include "nsWSRunObject.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMNode.h"
