@@ -247,7 +247,7 @@ function onDeleteAccount(event) {
       currentServerId = currentPageId = null;
       
       accountManager.removeAccount(account);
-      selectFirstAccount();
+      selectServer(null);
     }
     catch (ex) {
       dump("failure to delete account: " + ex + "\n");
