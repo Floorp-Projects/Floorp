@@ -264,6 +264,8 @@ nsBoxFrame::~nsBoxFrame()
 
 NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
 {
+  nsresult rv = nsContainerFrame::SetParent(aParent);
+
   // our box parent can only be a box. Make sure its a box and set it
   // if its not a box then its nsnull
 
@@ -276,7 +278,9 @@ NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
   if (parent)
      parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&boxParent);
 
-  return nsBox::SetParentBox(boxParent);
+  nsBox::SetParentBox(boxParent);
+
+  return rv;
 }
 
 
