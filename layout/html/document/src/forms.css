@@ -400,5 +400,6 @@ input[type="submit"][disabled] {
     -moz-user-input: none !important;
   }
 
+  input[type="file"] { height: 2em; }
 }
 
