@@ -192,6 +192,30 @@ public:
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing, PRBool aIsUnicode);
 
+#ifdef XP_WIN
+// this define is here only so the postscript can be compiled
+// and tested on the windows platform. 
+  NS_IMETHOD GetWidth(const char *aString,
+                      PRInt32     aLength,
+                      PRInt32     aAvailWidth,
+                      PRInt32*    aBreaks,
+                      PRInt32     aNumBreaks,
+                      nscoord&    aWidth,
+                      PRInt32&    aNumCharsFit,
+                      PRInt32*    aFontID = nsnull) {return NS_OK;}
+
+  NS_IMETHOD GetWidth(const PRUnichar *aString,
+                      PRInt32          aLength,
+                      PRInt32          aAvailWidth,
+                      PRInt32*         aBreaks,
+                      PRInt32          aNumBreaks,
+                      nscoord&         aWidth,
+                      PRInt32&         aNumCharsFit,
+                      PRInt32*         aFontID = nsnull) {return NS_OK;}
+
+#endif
+
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string

@@ -72,6 +72,17 @@ public:
 
   PRInt16 GetFontIndex() { return mFontIndex; }
 
+#if defined(XP_WIN)
+// this routine is defined here so the PostScript module can be debugged
+// on the windows platform
+
+  /**
+   * Returns the average character width
+   */
+  NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth){return NS_OK;}
+#endif
+
+
 private:
   nsCOMPtr<nsIAtom> mLangGroup;
 
