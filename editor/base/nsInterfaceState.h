@@ -42,6 +42,10 @@ public:
   
   NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIWebShell *aChromeWebShell);
 
+  // force an update of the UI. At some point, we could pass flags
+  // here to target certain things for updating.
+  NS_IMETHOD    ForceUpdate();
+  
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged();
   
@@ -54,6 +58,8 @@ protected:
     eStateOff             = PR_FALSE,
     eStateOn              = PR_TRUE
   };
+  
+  PRBool        SelectionIsCollapsed();
   
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
   nsresult      UnsetNodeAttribute(const char* nodeID, const char* attributeName);
