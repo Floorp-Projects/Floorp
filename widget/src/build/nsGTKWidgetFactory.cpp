@@ -220,13 +220,13 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWidget *)new nsLabel();
     }
     else if (mClassID.Equals(kCMenuBar)) {
-        inst = (nsISupports*)(nsWidget *)new nsMenuBar();
+        inst = (nsISupports*)(nsIMenuBar *)new nsMenuBar();
     }
     else if (mClassID.Equals(kCMenu)) {
-        inst = (nsISupports*)(nsWidget *)new nsMenu();
+        inst = (nsISupports*)(nsIMenu *)new nsMenu();
     }
     else if (mClassID.Equals(kCMenuItem)) {
-        inst = (nsISupports*)(nsWidget *)new nsMenuItem();
+        inst = (nsISupports*)(nsIMenuItem *)new nsMenuItem();
     }
     else if (mClassID.Equals(kCImageButton)) {
         inst = (nsISupports*)(nsWidget *)new nsImageButton();
