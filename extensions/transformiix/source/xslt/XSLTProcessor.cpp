@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.18 2000/07/06 12:35:42 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.19 2000/07/10 12:08:00 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.18 $ $Date: 2000/07/06 12:35:42 $
+ * @version $Revision: 1.19 $ $Date: 2000/07/10 12:08:00 $
 **/
 
 /**
@@ -418,23 +418,13 @@ void XSLTProcessor::processTopLevel
                     }
 
                     //-- get document base
-                    String documentBase;
-                    String currentHref;
-                    //ps->getDocumentHref(element->getOwnerDocument(),
-                    //        currentHref);
-                    if (currentHref.length() == 0) {
-                        documentBase.append(ps->getDocumentBase());
-                    }
-                    else {
-                        //-- Fix for relative URIs (npride)
-                        documentBase.append(ps->getDocumentBase());
-                        documentBase.append('/');
-                        //-- End fix
-                        URIUtils::getDocumentBase(currentHref, documentBase);
-                    }
+                    String realHref;
+                    String thisDocBase = ps->getDocumentBase();
+                    URIUtils::resolveHref(href,thisDocBase,realHref);
+		    
+                    String errMsg,voidBase;
+                    istream* xslInput = URIUtils::getInputStream(realHref,voidBase,errMsg);
 
-                    String errMsg;
-                    istream* xslInput = URIUtils::getInputStream(href,documentBase,errMsg);
                     Document* xslDoc = 0;
                     XMLParser xmlParser;
                     if ( xslInput ) {
@@ -451,7 +441,11 @@ void XSLTProcessor::processTopLevel
                     else {
                         //-- add stylesheet to list of includes
                         ps->addInclude(href, xslDoc);
+                        String newDocBase;
+                        URIUtils::getDocumentBase(realHref, newDocBase);
+                        ps->setDocumentBase(newDocBase);
                         processTopLevel(xslDoc, ps);
+                        ps->setDocumentBase(thisDocBase);
                     }
                     break;
 
