@@ -27,6 +27,7 @@
 
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroupList.h"
+#include "nsINNTPNewsgroup.h"
 
 #include "nsNNTPArticleSet.h"
 
@@ -56,6 +57,6 @@ typedef struct MSG_NewsKnown {
 extern NS_COM nsresult
 NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult,
                     nsINNTPHost *newsHost,
-                    nsIMsgNewsgroup *newsgroup);
+                    nsINNTPNewsgroup *newsgroup);
     
 #endif

@@ -28,7 +28,7 @@
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
 #include "nsINNTPHost.h"
-#include "nsIMsgNewsgroup.h"
+#include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
 
 
@@ -177,7 +177,7 @@ private:
     nsINNTPArticleList *	m_articleList;
 
 	nsINNTPHost			* m_newsHost;
-	nsIMsgNewsgroup			* m_newsgroup;
+	nsINNTPNewsgroup			* m_newsgroup;
 	nsIMsgOfflineNewsState  * m_offlineNewsState;
 
 	// Ouput stream for writing commands to the socket

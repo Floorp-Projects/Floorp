@@ -849,7 +849,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		PRUint32 number = 0;
 
 		nsresult rv;
-        nsIMsgNewsgroup *newsgroup;
+        nsINNTPNewsgroup *newsgroup;
         rv = m_newsHost->GetNewsGroupAndNumberOfID(m_path, &newsgroup, &number);
 		if (NS_SUCCEEDED(rv) && newsgroup && number)
 		  {
@@ -3083,7 +3083,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
           if (m_typeWanted == NEW_GROUPS &&
               NS_SUCCEEDED(rv) && xactive)
 			{
-                nsIMsgNewsgroup* old_newsgroup = m_newsgroup;
+                nsINNTPNewsgroup* old_newsgroup = m_newsgroup;
                 m_newsHost->GetFirstGroupNeedingExtraInfo(&m_newsgroup);
                 if (old_newsgroup && m_newsgroup &&
                     old_newsgroup != m_newsgroup)

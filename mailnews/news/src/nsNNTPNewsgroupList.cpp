@@ -87,7 +87,7 @@ public:
   NS_DECL_ISUPPORTS
 
   
-  // nsIMsgNewsArticleList
+  // nsINNTPArticleList
   NS_IMETHOD GetRangeOfArtsToDownload(nsINNTPHost* host,
                                       const char* group_name,
                                       PRInt32 first_possible,
@@ -729,7 +729,7 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 			}
 #endif
 		}
-		nsIMsgNewsgroup *newsFolder = NULL;
+		nsINNTPNewsgroup *newsFolder = NULL;
 #ifdef HAVE_PANES
 		newsFolder = (m_pane) ? savePane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE) : 0;
 		FE_PaneChanged(m_pane, PR_FALSE, MSG_PaneNotifyFolderLoaded, (PRUint32)newsFolder);
