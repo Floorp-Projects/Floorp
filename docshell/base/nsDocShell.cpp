@@ -46,10 +46,17 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadInfo.h"
 
+// Helper Classes
+#include "nsDOMError.h"
+#include "nsEscape.h"
+#include "nsHTTPEnums.h"
+
 // Interfaces Needed
+#include "nsICharsetConverterManager.h"
 #include "nsIGlobalHistory.h"
 #include "nsIHTTPChannel.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIPlatformCharset.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -57,6 +64,8 @@
 #include "nsIScriptError.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_CID(kPlatformCharsetCID,  NS_PLATFORMCHARSET_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -999,6 +1008,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
    nsCOMPtr<nsIURI> uri;
 
    CreateFixupURI(aURI, getter_AddRefs(uri));
+
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(LoadURI(uri, nsnull), NS_ERROR_FAILURE);
@@ -2242,7 +2252,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
    if(loadLink == aLoadType)
       loadCmd = nsIURILoader::viewUserClick;
-   NS_ENSURE_SUCCESS(DoURILoad(aURI, loadCmd, aWindowTarget), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, loadCmd, aWindowTarget, 
+      aPostData), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2250,14 +2261,202 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI, 
    nsIURI** aURI)
 {
-   NS_ERROR("Not Implemented");
+   *aURI = nsnull;
+   nsAutoString uriString(aStringURI);
+   uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
+
+   // Check for if it is a file URL
+   FileURIFixup(uriString.GetUnicode(), aURI);
+   if(*aURI)
+      return NS_OK;
+
+   // Just try to create an URL out of it
+   NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
+   if(*aURI)
+      return NS_OK;
+
+   // See if it is a keyword
+   KeywordURIFixup(uriString.GetUnicode(), aURI);
+   if(*aURI)
+      return NS_OK;
+
+   // See if a protocol needs to be added
+   PRInt32 colon = -1;
+   PRInt32 fSlash = uriString.FindChar('/');
+   PRUnichar port;
+   // if no scheme (protocol) is found, assume http.
+   if((colon=uriString.FindChar(':') == -1) ||// no colon at all
+      ((fSlash > -1) && (colon > fSlash)) ||// the only colon comes after the first slash
+      ((colon < uriString.Length()-1) && // the first char after the first colon is a digit (i.e. a port)
+       ((port=uriString.CharAt(colon+1)) <= '9') && (port > '0'))) 
+      {
+      // find host name
+      PRInt32 hostPos = uriString.FindCharInSet("./:");
+      if(hostPos == -1) 
+         hostPos = uriString.Length();
+
+      // extract host name
+      nsAutoString hostSpec;
+      uriString.Left(hostSpec, hostPos);
+
+      // insert url spec corresponding to host name
+      if(hostSpec.EqualsIgnoreCase("ftp")) 
+         uriString.Insert("ftp://", 0, 6);
+      else 
+         uriString.Insert("http://", 0, 7);
+      } // end if colon
+
+   return NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
+}
+
+NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI, 
+   nsIURI** aURI)
+{
+   nsAutoString uriSpec(aStringURI);
+
+   ConvertFileToStringURI(uriSpec, uriSpec);
+   return NS_OK;
+}
+
+#define FILE_PROTOCOL "file://"
+
+NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
+{
+   aOut = aIn;
+#ifdef XP_PC
+   // Check for \ in the url-string (PC)
+   if(kNotFound != aIn.FindChar(PRUnichar('\\')))
+      {
+#elif XP_UNIX
+   // Check if it starts with / or \ (UNIX)
+   const PRUnichar * up = aIn.GetUnicode();
+   if((PRUnichar('/') == *up) || (PRUnichar('\\') == *up))
+      {
+#else
+   if(0) 
+      {  
+      // Do nothing (All others for now) 
+#endif
+
+#ifdef XP_PC
+      // Translate '\' to '/'
+      aOut.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
+      aOut.ReplaceChar(PRUnichar(':'), PRUnichar('|'));
+#endif
+
+      // Build the file URL
+      aOut.Insert(FILE_PROTOCOL,0);
+      }
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::ConvertStringURIToFileCharset(nsString& aIn, 
+   nsCString& aOut)
+{
+   nsresult rv=NS_OK;
+   aOut = "";
+   // for file url, we need to convert the nsString to the file system
+   // charset before we pass to NS_NewURI
+   static nsAutoString fsCharset("");
+   // find out the file system charset first
+   if(0 == fsCharset.Length())
+      {
+      fsCharset = "ISO-8859-1"; // set the fallback first.
+      nsCOMPtr<nsIPlatformCharset> plat(do_GetService(kPlatformCharsetCID));
+      NS_ENSURE_TRUE(plat, NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset),
+         NS_ERROR_FAILURE);
+      }
+   // We probably should cache ccm here.
+   // get a charset converter from the manager
+   nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(kCharsetConverterManagerCID));
+   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
+   
+   nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
+   NS_ENSURE_SUCCESS(ccm->GetUnicodeEncoder(&fsCharset, 
+      getter_AddRefs(fsEncoder)), NS_ERROR_FAILURE);
+
+   PRInt32 bufLen = 0;
+   NS_ENSURE_SUCCESS(fsEncoder->GetMaxLength(aIn.GetUnicode(), aIn.Length(),
+      &bufLen), NS_ERROR_FAILURE);
+   aOut.SetCapacity(bufLen+1);
+   PRInt32 srclen = aIn.Length();
+   NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
+      (char*)aOut.GetBuffer(), &bufLen), NS_ERROR_FAILURE);
+
+   ((char*)aOut.GetBuffer())[bufLen]='\0';
+   aOut.SetLength(bufLen);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::KeywordURIFixup(const PRUnichar* aStringURI, 
+   nsIURI** aURI)
+{
+   NS_ENSURE_STATE(mPrefs);
+
+   PRBool keywordsEnabled = PR_FALSE;
+   NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
+      NS_ERROR_FAILURE);
+
+   if(!keywordsEnabled)
+      return NS_ERROR_FAILURE;
+
+   // These are keyword formatted strings
+   // "what is mozilla"
+   // "what is mozilla?"
+   // "?mozilla"
+   // "?What is mozilla"
+
+   // These are not keyword formatted strings
+   // "www.blah.com" - anything with a dot in it 
+   // "nonQualifiedHost:80" - anything with a colon in it
+   // "nonQualifiedHost?"
+   // "nonQualifiedHost?args"
+   // "nonQualifiedHost?some args"
+
+   nsAutoString uriString(aStringURI);
+   if(uriString.FindChar('.') == -1 && uriString.FindChar(':') == -1)
+      {
+      PRInt32 qMarkLoc = uriString.FindChar('?');
+      PRInt32 spaceLoc = uriString.FindChar(' ');
+
+      PRBool keyword = PR_FALSE;
+      if(qMarkLoc == 0)
+         keyword = PR_TRUE;
+      else if((spaceLoc > 0) && ((qMarkLoc == -1) || (spaceLoc < qMarkLoc)))
+         keyword = PR_TRUE;
+
+      if(keyword)
+         {
+         nsCAutoString keywordSpec("keyword:");
+         char *utf8Spec = uriString.ToNewUTF8String();
+         if(utf8Spec)
+            {
+            char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
+            if(escapedUTF8Spec) 
+               {
+               keywordSpec.Append(escapedUTF8Spec);
+               NS_NewURI(aURI, keywordSpec.GetBuffer(), nsnull);
+               nsAllocator::Free(escapedUTF8Spec);
+               } // escapedUTF8Spec
+            nsAllocator::Free(utf8Spec);
+            } // utf8Spec
+         } // keyword 
+      } // FindChar
+
+   if(*aURI)
+      return NS_OK;
+
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsURILoadCommand aLoadCmd,
-   const char* aWindowTarget)
+NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI, 
+   nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
+   nsIInputStream* aPostData)
 {
-   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
    // we need to get the load group from our load cookie so we can pass it into open uri...
@@ -2268,9 +2467,41 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsURILoadCommand aLoadCmd,
 
    // open a channel for the url
    nsCOMPtr<nsIChannel> channel;
-   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup, 
-                                NS_STATIC_CAST(nsIInterfaceRequestor*, this)),
-                     NS_ERROR_FAILURE);
+   nsresult rv;
+   rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup, 
+                     NS_STATIC_CAST(nsIInterfaceRequestor*, this));
+   if(NS_FAILED(rv))
+      {
+      if(NS_ERROR_DOM_RETVAL_UNDEFINED == rv) // if causing the channel changed the
+         return NS_OK;                        // dom and there is nothing else to do
+      else
+         return NS_ERROR_FAILURE;
+      }
+
+   //XXX Wrong, but needed for now
+   channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
+   
+   // Mark the channel as being a document URI...
+   nsLoadFlags loadAttribs = 0;
+   channel->GetLoadAttributes(&loadAttribs);
+   loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+   channel->SetLoadAttributes(loadAttribs);
+
+   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+   if(httpChannel)
+      {
+      // figure out if we need to set the post data stream on the channel...
+      // right now, this is only done for http channels.....
+      if(aPostData)
+         {
+         httpChannel->SetRequestMethod(HM_POST);
+         httpChannel->SetPostDataStream(aPostData);
+         }
+      // Set the referrer explicitly
+      if(aReferrerURI) // Referrer is currenly only set for link clicks here.
+         httpChannel->SetReferrer(aReferrerURI, 
+                                    nsIHTTPChannel::REFERRER_LINK_CLICK);
+      }
 
    NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, aLoadCmd,
       aWindowTarget, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);

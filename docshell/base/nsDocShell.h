@@ -140,12 +140,17 @@ protected:
       loadLink
    } loadType;
 
-   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI,
       const char* aWindowTarget=nsnull, nsIInputStream* aPostData=nsnull, 
       loadType aLoadType=loadNormal);
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
-   NS_IMETHOD DoURILoad(nsIURI* aURI, nsURILoadCommand aLoadCmd,
-      const char* aWindowTarget);
+   NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
+   NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
+   NS_IMETHOD ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
+   NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
+   NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, 
+      nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
+      nsIInputStream* aPostData);
    NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
