@@ -149,7 +149,8 @@ public:
   tokenPair(const char *aName, PRUint32 aNameLen,
             const char *aValue, PRUint32 aValueLen) :
     tokenName(aName), tokenNameLength(aNameLen),
-    tokenValue(aValue), tokenValueLength(aValueLen) {}
+    tokenValue(aValue), tokenValueLength(aValueLen) { MOZ_COUNT_CTOR(tokenPair); }
+  ~tokenPair() { MOZ_COUNT_DTOR(tokenPair); }
   const char* tokenName;
   PRUint32 tokenNameLength;
   const char* tokenValue;
@@ -167,9 +168,13 @@ public:
     property(aProperty, aProperty+aPropertyLen),
     method(aMethod, aMethod+aMethodLen)
   {
+    MOZ_COUNT_CTOR(searchTerm);
     // need to do UTF8-conversion/unescaping here, using
     // nsITextToSubURI
     text.AssignWithConversion(aText, aTextLen);
+  }
+  ~searchTerm() {
+    MOZ_COUNT_DTOR(searchTerm);
   }
   
   nsDependentSingleFragmentCSubstring datasource;  // should always be "history" ?
@@ -505,6 +510,9 @@ nsGlobalHistory::~nsGlobalHistory()
   nsresult rv;
   rv = CloseDB();
 
+  NS_IF_RELEASE(mTable);
+  NS_IF_RELEASE(mStore);
+  
   if (--gRefCnt == 0) {
     if (gRDFService) {
       nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -528,6 +536,7 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(gMdbFactory);
   }
 
+  NS_IF_RELEASE(mEnv);
   if (mSyncTimer)
     mSyncTimer->Cancel();
 
@@ -865,7 +874,10 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   if (err != 0) return NS_ERROR_FAILURE;
 
   const char* startPtr = (const char*)yarn.mYarn_Buf;
-  aResult.Assign(Substring(startPtr, startPtr + yarn.mYarn_Fill));
+  if (startPtr)
+    aResult.Assign(Substring(startPtr, startPtr + yarn.mYarn_Fill));
+  else
+    aResult.Truncate();
   
   return NS_OK;
 }
@@ -1842,6 +1854,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     }
     
     *aHasAssertion = RowMatches(row, &query);
+    FreeSearchQuery(query);
     return NS_OK;
   }
   
@@ -2850,6 +2863,18 @@ nsGlobalHistory::FreeTokenList(nsVoidArray& tokens)
   tokens.Clear();
 }
 
+void nsGlobalHistory::FreeSearchQuery(searchQuery& aQuery)
+{
+  // free up the token pairs
+  PRInt32 i;
+  for (i=0; i<aQuery.terms.Count(); i++) {
+    searchTerm *term = (searchTerm*)aQuery.terms.ElementAt(i);
+    delete term;
+  }
+  // clean out the array, just for good measure
+  aQuery.terms.Clear();
+}
+
 //
 // helper function to figure out if something starts with "find"
 //
@@ -3111,10 +3136,6 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-    // XXX |sourceStr| unused ... why are we doing this?
-  const char* sourceStr;
-  aSource->GetValueConst(&sourceStr);
-
   gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
   
   NotifyUnassert(findResource, kNC_child, aSource);
@@ -3149,9 +3170,9 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   if (query.terms.Count() < 1)
     return NS_OK;
 
-  // now build up a string from the query
+  // now build up a string from the query (using only the last term)
   searchTerm *term = (searchTerm*)query.terms[query.terms.Count()-1];
-    
+
   // automatically build up string in the form
   // findurl-<property>-<method>[-<text>]
   // such as "finduri-AgeInDays-is" or "find-uri-AgeInDays-is-0"
@@ -3198,6 +3219,8 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
     rv = gRDFService->GetLiteral(term->text.get(),
                                  getter_AddRefs(literal));
   }
+  FreeSearchQuery(query);
+    
   if (NS_FAILED(rv)) return rv;
   
   *aResult = literal;
@@ -3311,8 +3334,8 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 
 nsGlobalHistory::SearchEnumerator::~SearchEnumerator()
 {
-  // free up the query
-  
+  nsGlobalHistory::FreeSearchQuery(*mQuery);
+  delete mQuery;
 }
 
 
@@ -3414,6 +3437,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     
     err = aRow->AliasCellYarn(mEnv, mQuery->groupBy, &groupColumnValue);
     if (err!=0) return PR_FALSE;
+    if (!groupColumnValue.mYarn_Buf) return PR_FALSE;
 
     nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
                                       groupColumnValue.mYarn_Fill));
@@ -3482,11 +3506,20 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       
       // match the term directly against the column?
       mdbYarn yarn;
-      aRow->AliasCellYarn(mEnv, property_column, &yarn);
+      err = aRow->AliasCellYarn(mEnv, property_column, &yarn);
+      if (err != 0 || !yarn.mYarn_Buf) return PR_FALSE;
 
-      const char* startPtr = (const char *)yarn.mYarn_Buf;
+      const char* startPtr;
+      PRInt32 yarnLength = yarn.mYarn_Fill;
+
+      // account for null strings
+      if (yarn.mYarn_Buf)
+        startPtr = (const char *)yarn.mYarn_Buf;
+      else 
+        startPtr = "";
+      
       const nsASingleFragmentCString& rowVal =
-          Substring(startPtr, startPtr + yarn.mYarn_Fill);
+          Substring(startPtr, startPtr + yarnLength);
 
       // set up some iterators
       nsASingleFragmentCString::const_iterator start, end;
@@ -3646,7 +3679,7 @@ nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsI
   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
 
-  newItem->SetValue(NS_ConvertASCIItoUCS2(url.get()));
+  newItem->SetValue(NS_ConvertUTF8toUCS2(url.get()));
   
   newItem->SetComment(comments.get());
 
@@ -3954,12 +3987,11 @@ AutoCompleteSortComparison(const void *v1, const void *v2, void *unused)
 {
   nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
   nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
-  
+
   nsAutoString s1;
   item1->GetValue(s1);
   nsAutoString s2;
   item2->GetValue(s2);
-  
   return nsCRT::strcmp(s1.get(), s2.get());
 }
 
