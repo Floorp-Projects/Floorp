@@ -137,8 +137,6 @@ static const PRBool gNoisy = PR_FALSE;
 
 PRInt32 nsEditor::gInstanceCount = 0;
 
-MOZ_DECL_CTOR_COUNTER(nsEditor);
-
 
 //class implementations are in order they are declared in nsEditor.h
 
@@ -146,18 +144,16 @@ nsEditor::nsEditor()
 :  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
+,  mActionListeners(nsnull)
+,  mDocDirtyState(-1)
+,  mDocWeak(nsnull)
 ,  mPlaceHolderTxn(nsnull)
 ,  mPlaceHolderName(nsnull)
 ,  mPlaceHolderBatch(0)
 ,  mTxnStartNode(nsnull)
 ,  mTxnStartOffset(0)
-,  mActionListeners(nsnull)
-,  mDocDirtyState(-1)
-,  mDocWeak(nsnull)
 
 {
-  MOZ_COUNT_CTOR(nsEditor);
-
   //initialize member variables here
   NS_INIT_REFCNT();
   PR_EnterMonitor(GetEditorMonitor());
@@ -167,8 +163,6 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
-  MOZ_COUNT_DTOR(nsEditor);
-
   // not sure if this needs to be called earlier.
   NotifyDocumentListeners(eDocumentToBeDestroyed);
 
@@ -359,10 +353,9 @@ nsEditor::Do(nsITransaction *aTxn)
   {
     // it's pretty darn amazing how many different types of pointers
     // this transcation goes through here.  I bet this is a record.
-    nsCOMPtr<EditTxn> editTxn;
+    EditTxn *editTxn;
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
-    result = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(),
-                                                   getter_AddRefs(editTxn));
+    result = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(), &editTxn);
     if (NS_FAILED(result)) { return result; }
     if (!editTxn) { return NS_ERROR_NULL_POINTER; }
     editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
@@ -375,7 +368,6 @@ nsEditor::Do(nsITransaction *aTxn)
     // we will recurse, but will not hit this case in the nested call
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
     nsITransaction* txn = theTxn;
-
     // we want to escape from this routine with a positive refcount
     txn->AddRef();
     Do(txn);
@@ -852,9 +844,8 @@ nsEditor::GetProperties(nsVoidArray *aPropList)
 NS_IMETHODIMP 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
 {
-  nsCOMPtr<ChangeAttributeTxn> txn;
-  nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue,
-                                             getter_AddRefs(txn));
+  ChangeAttributeTxn *txn;
+  nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
@@ -886,9 +877,8 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
 NS_IMETHODIMP 
 nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
 {
-  nsCOMPtr<ChangeAttributeTxn> txn;
-  nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute,
-                                                getter_AddRefs(txn));
+  ChangeAttributeTxn *txn;
+  nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
@@ -901,9 +891,8 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
                                    PRInt32         aPosition,
                                    nsIDOMNode **   aNewNode)
 {
-  nsCOMPtr<CreateElementTxn> txn;
-  nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition,
-                                              getter_AddRefs(txn));
+  CreateElementTxn *txn;
+  nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
   if (NS_SUCCEEDED(result)) 
   {
     result = Do(txn);  
@@ -1015,9 +1004,8 @@ nsEditor::InsertNoneditableTextNode(nsIDOMNode* parent, PRInt32 offset,
 
   // Can't call CreateNode, because that will call us recursively.
   // So duplicate what it does:
-  nsCOMPtr<CreateElementTxn> txn;
-  res = CreateTxnForCreateElement(textNodeTag, parent, offset,
-                                  getter_AddRefs(txn));
+  CreateElementTxn *txn;
+  res = CreateTxnForCreateElement(textNodeTag, parent, offset, &txn);
   if (NS_FAILED(res))
     return res;
 
@@ -1149,8 +1137,8 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
     }
   }
 
-  nsCOMPtr<DeleteElementTxn> txn;
-  nsresult result = CreateTxnForDeleteElement(aElement, getter_AddRefs(txn));
+  DeleteElementTxn *txn;
+  nsresult result = CreateTxnForDeleteElement(aElement, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
@@ -1611,18 +1599,14 @@ nsresult nsEditor::GetTextNodeTag(nsString& aOutString)
 
 NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
 {
-  nsCOMPtr<EditAggregateTxn> aggTxn;
+  EditAggregateTxn *aggTxn = nsnull;
   // Create the "delete current selection" txn
-  nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName,
-                                                         getter_AddRefs(aggTxn));
-  if (NS_FAILED(result) || !aggTxn) {
+  nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, &aggTxn);
+  if ((NS_FAILED(result)) || (nsnull==aggTxn)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  // insert at the current selection
-  nsCOMPtr<InsertTextTxn> txn;
-  result = CreateTxnForInsertText(aStringToInsert, nsnull, 
-                                  getter_AddRefs(txn));
+  InsertTextTxn *txn;
+  result = CreateTxnForInsertText(aStringToInsert, nsnull, &txn); // insert at the current selection
   if ((NS_SUCCEEDED(result)) && txn)  {
     BeginUpdateViewBatch();
 //    aggTxn->AppendChild(txn);
@@ -1997,12 +1981,11 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
     { // now we've got the body tag.
       // create transaction to insert the text node, 
       // and create a transaction to insert the text
-      nsCOMPtr<CreateElementTxn> txn;
+      CreateElementTxn *txn;
       nsAutoString textNodeTag;
       result = GetTextNodeTag(textNodeTag);
       if (NS_FAILED(result)) { return result; }
-      result = CreateTxnForCreateElement(textNodeTag, node, 0,
-                                         getter_AddRefs(txn));
+      result = CreateTxnForCreateElement(textNodeTag, node, 0, &txn);
       if ((NS_SUCCEEDED(result)) && txn)
       {
         result = Do(txn);
@@ -2037,9 +2020,8 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
                               PRUint32             aLength)
 {
-  nsCOMPtr<DeleteTextTxn> txn;
-  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength,
-                                           getter_AddRefs(txn));
+  DeleteTextTxn *txn;
+  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
     // HACKForceRedraw();
@@ -3341,12 +3323,11 @@ NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToIns
     {  // now we've got the body tag.
       // create transaction to insert the text node, 
       // and create a transaction to insert the text
-      nsCOMPtr<CreateElementTxn> txn;
+      CreateElementTxn *txn;
       nsAutoString textNodeTag;
       result = GetTextNodeTag(textNodeTag);
       if (NS_FAILED(result)) { return result; }
-      result = CreateTxnForCreateElement(textNodeTag, node, 0,
-                                         getter_AddRefs(txn));
+      result = CreateTxnForCreateElement(textNodeTag, node, 0, &txn);
       if ((NS_SUCCEEDED(result)) && txn)
       {
         result = Do(txn);
@@ -4109,8 +4090,8 @@ nsEditor::DeleteSelectionImpl(ESelectionCollapseDirection aAction)
 {
   nsresult result;
 
-  nsCOMPtr<EditAggregateTxn> txn;
-  result = CreateTxnForDeleteSelection(aAction, getter_AddRefs(txn));
+  EditAggregateTxn *txn;
+  result = CreateTxnForDeleteSelection(aAction, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
