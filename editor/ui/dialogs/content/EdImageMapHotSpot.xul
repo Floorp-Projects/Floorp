@@ -19,8 +19,8 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-   -    Brian King
-   -    Dan Haddix (dan6992@hotmail.com)
+	 -   Brian King
+	 -   Dan Haddix
   -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
@@ -31,100 +31,62 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMapHotSpot.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
-    xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
+<xul:window class="dialog" title="&windowTitle.label;"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdImageMapHotSpot.js"/>
 
-  <html:script language="JavaScript" src="chrome://editor/content/EdImageMapHotSpot.js" />
+  <xul:broadcaster id="args" value=""/>
 
-  <broadcaster id="args" value=""/>
 
-  <html:table>
-  <html:tr>
-  <html:td>
-    <html:label for="urlInput" id="urlLabel">&urlFieldset.label;</html:label>
+  <table border="1" cellspacing="0" cellpadding="0">
+    <tr>
+      <td>
+        <label for="urlInput" id="urlLabel">&urlFieldset.label;</label>
+        <br/>
+        <input type="text" id="urlInput" value="http://" size="30"/>
+      </td>
+      <td valign="bottom">
+        <xul:titledbutton class="push dialog" id="Browse" onclick = "chooseFile()" value="&browseButton.label;"/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="altInput" id="titleLabel">&altFieldset.label;</label>
+        <br/>
+        <input type="text" id="altInput" size="30"/>
+      </td>
+    </tr>
+    <tr>
+      <td valign="middle">
+        <fieldset style="height:100%; padding:5">
+          <legend class="dialog" id="targetLabel" align="left">&targetFieldset.label;</legend>
+          <label for="targetInput" id="targetLabel">&target.label;</label>
+          <br/>
+          <input type="text" id="targetInput" size="20"/>
+        </fieldset>
+      </td>
+      <td>
+        <fieldset style="height:100%; padding:5">
+          <legend class="dialog" id="commonLabel" align="center">&commonFieldset.label;</legend>
+          <select name="common_targets" id="commonInput" size="4" onclick="changeTarget()" onchange="changeTarget()">
+            <option value="_self">Same Frame</option>
+            <option value="_top">Whole Page</option>
+            <option value="_blank">New Window</option>
+            <option value="_parent">Parent Frame</option>
+          </select>
+        </fieldset>
+      </td>
+    </tr>
+  </table>
 
-  <html:br/>
-
-    <html:td valign="left">
-    <html:input 
-	type="text" 
-	id="urlInput" 
-	size="30"/>
-    </html:td>
-
-    <html:td valign="right">
-    <titledbutton 
-      class   = "push dialog" 
-      id      = "Browse" 
-      onclick = "chooseFile()"
-      value   = "&browseButton.label;"/>
-    </html:td>
-  </html:td>
-  </html:tr>
-
-  <html:tr>
-  <html:td>
-    <html:label for="titleInput" id="titleLabel">&titleFieldset.label;</html:label>
-
-    <html:br/>
-
-    <html:input type="text" id="titleInput" size="30"/>
-  </html:td>
-  </html:tr>
-
-  <html:tr>
-  <html:td>
-    <html:fieldset>
-      <html:legend
-        class = "dialog"
-        id    = "targetLabel"
-        align = "left"> 
-        &targetFieldset.label; 
-      </html:legend>
-
-      <html:label for="targetInput" id="targetLabel">&target.label;</html:label>
-
-      <html:br/>
-
-      <html:input type="text" id="targetInput" size="20"/>
-
-    </html:fieldset>
-  </html:td>
-
-  <html:td>
-    <html:fieldset>
-      <html:legend
-        class = "dialog"
-        id    = "commonLabel"
-        align = "center"> 
-        &commonFieldset.label; 
-      </html:legend>
-
-      <html:select name="common_targets" id="commonInput" size="4">
-        <html:option selected="true">Same Frame</html:option>
-        <html:option>Whole Page</html:option>
-        <html:option>New Window</html:option>
-        <html:option>Parent Frame</html:option>
-      </html:select>
-
-      </html:fieldset>
-  </html:td>
-  </html:tr>
-
-  </html:table>
-
-  <box align="horizontal">
-
-    <!-- from global dialogOverlay -->
-    <box id="okCancelButtons"/>
-
-  </box>
-
-</window>
+  <xul:box align="horizontal">
+   <xul:box id="okCancelButtons"/>
+  </xul:box>
+</xul:window>

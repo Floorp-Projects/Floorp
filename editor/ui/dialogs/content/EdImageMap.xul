@@ -19,14 +19,14 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-   -    Brian King
-   -    Dan Haddix (dan6992@hotmail.com)
+	- Brian King
+	- Dan Haddix
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/EdImageMap.css" type="text/css"?> 
 
-<!-- <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> -->
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -57,7 +57,9 @@
 
   <keyset id="defaultKeySet">
 
-    <key id="mapclearkb"   xulkey="true" key="a" observes="Map:Clear" />
+    <key id="deletespot"   keycode="VK_DELETE" onkeypress="deleteElement(currentElement)" />
+    <key id="mapclearkb"   xulkey="true" key="d" observes="Map:Clear" />
+    <key id="mapselectkb"  xulkey="true" key="a" observes="Map:SelectAll" />
     <key id="mapclosekb"   xulkey="true" key="l" observes="Map:Close" />
     <key id="mapcutkb"     xulkey="true" key="x" observes="Map:Cut" />
     <key id="mapcopykb"    xulkey="true" key="c" observes="Map:Copy" />
@@ -69,17 +71,19 @@
 
   <broadcaster id="Map:Clear" value="&clearCmd.label;" oncommand=""/>
   <broadcaster id="Map:Close" value="&closeCmd.label;" oncommand="exitImageMap()"/>
-  <broadcaster id="Map:Cut" value="&cutCmd.label;" oncommand=""/>
-  <broadcaster id="Map:Copy" value="&copyCmd.label;" oncommand=""/>
-  <broadcaster id="Map:Paste" value="&pasteCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Copy" value="&copyCmd.label;" disabled="true" oncommand="cutCopy()"/>
+  <broadcaster id="Map:Cut" value="&cutCmd.label;" disabled="true" oncommand="cutCopy(true)"/>
+  <broadcaster id="Map:Paste" value="&pasteCmd.label;" disabled="true" oncommand="paste()"/>
   <broadcaster id="Map:Props" value="&propsCmd.label;" oncommand="hotSpotProps(currentElement[0])"/>
   <broadcaster id="Map:ViewToolbar" value="&showhideTbarCmd.label;" oncommand="hideToolbar()"/>
-  <broadcaster id="Map:Apercent" value="&apercentCmd.label;" oncommand=""/>
-  <broadcaster id="Map:Bpercent" value="&bpercentCmd.label;" oncommand=""/>
-  <broadcaster id="Map:Cpercent" value="&cpercentCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Apercent" value="&apercentCmd.label;" checked="true" oncommand="zoom('', 1)"/>
+  <broadcaster id="Map:Bpercent" value="&bpercentCmd.label;" oncommand="zoom('', 2)"/>
+  <broadcaster id="Map:Cpercent" value="&cpercentCmd.label;" oncommand="zoom('', 4)"/>
   <broadcaster id="Map:Contrast" value="&contrastCmd.label;" onaction=""/>
   <broadcaster id="Map:About" value="&aboutCmd.label;" onaction=""/>
-
+  <broadcaster id="Map:ZoomIn" value="&zoominCmd.label;" oncommand="zoom('in')"/>
+  <broadcaster id="Map:ZoomOut" value="&zoomoutCmd.label;" disabled="true" oncommand="zoom('out')"/>
+  <broadcaster id="Map:SelectAll" value="&selectallCmd.label;" oncommand="selectAll()"/>
 
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
@@ -97,6 +101,7 @@
   <!-- Edit menu -->
   <menu id="mapeditMenu" value="&mapeditMenu.label;" accesskey="&mapeditmenu.accesskey;">
     <menupopup>
+      <menuitem accesskey="&mapselectall.accesskey;" key="mapselectkb" observes="Map:SelectAll"/>
       <menuitem accesskey="&mapeditcut.accesskey;" key="mapcutkb" observes="Map:Cut"/>
       <menuitem accesskey="&mapeditcopy.accesskey;" key="mapcopykb" observes="Map:Copy"/>
       <menuitem accesskey="&mapeditpaste.accesskey;" key="mappastekb" observes="Map:Paste"/>
@@ -132,11 +137,11 @@
 
 
 <toolbar id="toolbar" class="standard" persist="collapsed">
-  <titledbutton id="cutButton" class="button28" onclick=""/>
-  <titledbutton id="copyButton" class="button28" onclick=""/>
-  <titledbutton id="pasteButton" class="button28" onclick=""/>
-  <titledbutton id="zoomInButton" class="button28" onclick=""/>
-  <titledbutton id="zoomOutButton" class="button28" onclick=""/>
+  <titledbutton id="cutButton" class="button28" observes="Map:Cut"/>
+  <titledbutton id="copyButton" class="button28" observes="Map:Copy"/>
+  <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
+  <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
+  <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
   <titledbutton id="contrastButton" class="button28" toggled="0" onclick="highContrast()"/>
   <spring flex="100%"/>
 </toolbar> 
@@ -145,10 +150,10 @@
 <box align="horizontal" flex="100">
 
   <toolbar id="toolbox" align="vertical">
-    <titledbutton id="pointer" class="other28" onclick="changeTool(event, 'pointer')"/>
-    <titledbutton id="rect" class="other28" onclick="changeTool(event, 'rect')"/>
-    <titledbutton id="cir" class="other28" onclick="changeTool(event, 'cir')"/>
-    <titledbutton id="poly" class="other28" onclick="changeTool(event, 'poly')"/>
+    <titledbutton id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
+    <titledbutton id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
+    <titledbutton id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
+    <titledbutton id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
     <spring flex="100%"/>
   </toolbar>
 
@@ -163,12 +168,12 @@
 
   <box align="horizontal">
 
-    <!-- Cheap hack untill I get key events hooked up -->
+    <!-- Cheap hack until I get key events hooked up
     <titledbutton 
     class   = "push dialog"
     id	    = "DelButton"
     value="&delSpotCmd.label;" 
-    onclick="deleteElement(currentElement)"/>
+    onclick="deleteElement(currentElement)"/> -->
     
     <spring flex="100%"/>
 

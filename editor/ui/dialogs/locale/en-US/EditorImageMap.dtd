@@ -44,6 +44,8 @@
 <!ENTITY mapeditcopy.accesskey "c">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY mapeditpaste.accesskey "p">
+<!ENTITY selectallCmd.label "Select All">
+<!ENTITY mapselectall.accesskey "s">
 <!ENTITY propsCmd.label "Hotspot Properties">
 <!ENTITY mapeditprops.accesskey "h">
 
@@ -54,13 +56,13 @@
 <!ENTITY mapviewtbar.accesskey "t">
 <!-- Scaling -->
 <!ENTITY mapviewScale.label "Scale">
-<!ENTITY mapviewscale.accesskey "v">
+<!ENTITY mapviewscale.accesskey "S">
 <!ENTITY apercentCmd.label "100">
 <!ENTITY zoomone.accesskey "1">
 <!ENTITY bpercentCmd.label "200">
 <!ENTITY zoomtwo.accesskey "2">
 <!ENTITY cpercentCmd.label "400">
-<!ENTITY zoomthree.accesskey "3">
+<!ENTITY zoomthree.accesskey "4">
 <!-- end scaling-->
 <!ENTITY contrastCmd.label "Contrast">
 <!ENTITY contrast.accesskey "n">
@@ -71,4 +73,6 @@
 <!ENTITY aboutCmd.label "About">
 <!ENTITY about.accesskey "b">
 
+<!ENTITY zoominCmd.label "Zoom In">
+<!ENTITY zoomoutCmd.label "Zoom Out">
 <!ENTITY delSpotCmd.label "Delete Spot">
