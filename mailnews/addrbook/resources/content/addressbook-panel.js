@@ -27,11 +27,9 @@ function GetAbViewListener()
   return null;
 }
 
-function abPanelLoad() 
+function AbPanelLoad() 
 {
   InitCommonJS(); 
-
-  var selectedAB = "moz-abmdbdirectory://abook.mab";
 
   // XXX duplicated code, see OnLoadMailList()
   // set popup with address book names
@@ -39,7 +37,10 @@ function abPanelLoad()
   if ( abPopup )
   {
     var menupopup = document.getElementById('addressbookList-menupopup');
-
+    var selectedAB = abPopup.getAttribute("selectedAB");
+    if (!selectedAB.length) 
+      selectedAB = "moz-abmdbdirectory://abook.mab";
+      
     if ( selectedAB && menupopup && menupopup.childNodes )
     {
       for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
@@ -57,7 +58,15 @@ function abPanelLoad()
   ChangeDirectoryByDOMNode(abPopup.selectedItem);
 }
 
-function abPanelUnload()
+
+function AbPanelOnChange(event)
+{
+  ChangeDirectoryByDOMNode(event.target);
+  var abPopup = document.getElementById('addressbookList');
+  abPopup.setAttribute("selectedAB", abPopup.value);
+}
+
+function AbPanelUnload()
 {
   CloseAbView();
 }
