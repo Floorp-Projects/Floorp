@@ -774,15 +774,16 @@ pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 {
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE id;
-    CK_ULONG out = dataLen;
+    CK_ULONG out;
     PRBool owner = PR_TRUE;
     CK_SESSION_HANDLE session;
     CK_RV crv;
 
-    if (key->keyType != rsaKey) {
+    if (!key || key->keyType != rsaKey) {
 	PORT_SetError( SEC_ERROR_BAD_KEY );
 	return SECFailure;
     }
+    out = SECKEY_PublicKeyStrength(key);
 
     slot = PK11_GetBestSlot(mech->mechanism, wincx);
     if (slot == NULL) {
