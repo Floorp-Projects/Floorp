@@ -50,6 +50,8 @@
 #include "cert.h"
 #include "ssl.h"
 #include "sslproto.h"
+#include "secmod.h"
+#include "nss.h"
 
 /* define this if you want telnet capability! */
 
@@ -172,7 +174,7 @@ void SetPolicy(char *c,int policy) {  /* policy==1 : domestic,   policy==0, expo
   }
   
 
-  for (i=0;i<PL_strlen(c);i++) {
+  for (i=0;i<(int)PL_strlen(c);i++) {
     for (j=0;j<(sizeof(ciphers)/sizeof(struct CipherPolicy));j++) {
       if (ciphers[j].number == c[i]) {
 	cpolicy = policy?ciphers[j].domestic:ciphers[j].export;
@@ -337,21 +339,18 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
 
   PR_fprintf(PR_STDOUT,"Using %s policy\n",policy?"domestic":"export");
   
-  /* use current directory for certificate database if not set */
-  
-  if (! certdir) {   
-    certdir = PR_smprintf(".");
-  }
-  
-  SECU_ConfigDirectory(certdir);
-  
-  
   /* allow you to set env var SSLDIR to set the cert directory */
   if (! certdir) certdir = SECU_DefaultSSLDir();  
-  if (certdir) SECU_ConfigDirectory(certdir);
-  
-  /* PR_Init(progname, 1, 1, 0); */
-  SECU_PKCS11Init(PR_FALSE /*readOnly==PR_FALSE*/);
+
+  /* if we don't have one still, initialize with no databases */
+  if (!certdir) {
+    rv = NSS_NoDB_Init(NULL);
+
+    (void) SECMOD_AddNewModule("Builtins", DLL_PREFIX"nssckbi."DLL_SUFFIX,0,0);
+  } else {
+    rv = NSS_Init(certdir);
+    SECU_ConfigDirectory(certdir);
+  }
   
   /* Lookup host */
   r = PR_GetHostByName(hostname,netdbbuf,PR_NETDB_BUF_SIZE,&hp);
@@ -382,9 +381,6 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
     return -1;
   }
   
-  /* Initialize all the libsec goodies */
-  SEC_Init();
-  
   dbmsg("10: About to enable security\n");
   
   rv = SSL_OptionSet(s, SSL_SECURITY, PR_TRUE);
@@ -413,24 +409,6 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
     PrintErrString(progname, "error enabling client handshake");
     return -1;
   }
-  
-  handle = (CERTCertDBHandle *)PORT_ZAlloc(sizeof(CERTCertDBHandle));
-  if (!handle) {
-    PrintErrString(progname, "could not allocate database handle");
-    return -1;
-  }
-  
-  dbmsg("20: About to open certificate database\n");
-  
-  
-  /* Open up the certificate database */
-  rv = CERT_OpenCertDBFilename(handle, "cert7.db", PR_TRUE);
-  if ( rv ) {
-    PrintErrString(progname, "unable to open cert database");
-    rv = CERT_OpenVolatileCertDB(handle);
-  }
-  
-	     CERT_SetDefaultCertDB(handle);
   
   dbmsg("30: About to set AuthCertificateHook\n");
   
