@@ -17,6 +17,7 @@ New Tinderbox Features:
 - does not bother building if there were no changes (build can be forced with build command)--minimum cycle time
 - uploaded binaries are intelligently deleted to keep a hard quota but still have a useful range of binaries around
 - a nice log viewer that lets you look at the log page by page and see a summary of progress
+- client can be a switching tinderbox (lets you have multiple builds with different configurations / branches / etc., cycles through them one at a time)
 
 Todo:
 - tests
@@ -43,7 +44,6 @@ Would be nice:
 - auto-reload feature
 - "C" checkin list on a build
 - allow Netscape to build as well as Mozilla, based on server you connect to (server specifies that Netscape should build, maybe cvsroot too) - close, needs testing
-- Allow switching tinderboxen (a machine connects to tbox a, cycles, then moves to tbox b, etc.) (this allows you to prepare your work machine with multiple builds *and* to help the tinderbox server out--mooost excellent, dude.)
 - make Kinderbox possible (build on one machine and test on another)
 - upload installer builds
 - page showing a list of all builds for a particular time range or even forever (possibly using ShowBuilds)
