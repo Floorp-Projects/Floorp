@@ -338,7 +338,7 @@
       <separator />
       <menuitem name="&reloadCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&showImagesCmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&stopCmd.label;" onclick="BrowserStop();"/>
+      <menuitem name="&stopCmd.label;" id="menuitem-stop" onclick="BrowserStop();"/>
       <separator />
       <menuitem name="&pageSourceCmd.label;" onclick="BrowserViewSource();"/>
       <menuitem name="&pageInfoCmd.label;" onclick="BrowserReload();"/>
@@ -429,8 +429,8 @@
       <menuitem name="&searchComputerCmd.label;" onclick="BrowserReload();"/>
     </menu>
     <menu name="&goMenu.label;">
-      <menuitem id="menuitem-back;" name="&goBackCmd.label;" onclick="BrowserBack();"/>
-      <menuitem id="menuitem-forward;" name="&goForwardCmd.label;" onclick="BrowserForward();" />
+      <menuitem id="menuitem-back" name="&goBackCmd.label;" onclick="BrowserBack();"/>
+      <menuitem id="menuitem-forward" name="&goForwardCmd.label;" onclick="BrowserForward();" />
       <menuitem name="&goHomeCmd.label;" onclick="BrowserHome();"/>
       <separator />
       <menuitem name="&goPrev1Cmd.label;" onclick="BrowserBack();"/>
@@ -578,7 +578,7 @@
 			<spring flex="100%"/>
 	      </box>
 	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
-				onclick="">
+				onclick="BrowserPrint()">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 
