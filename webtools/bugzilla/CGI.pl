@@ -865,7 +865,6 @@ sub PutFooter {
 # ThrowTemplateError instead.
 sub DisplayError {
   ($vars->{'error'}, $vars->{'title'}) = (@_);
-  $vars->{'title'} ||= "Error";
 
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
@@ -878,11 +877,10 @@ sub DisplayError {
 # $vars->{'variables'} is a reference to a hash of useful debugging info.
 sub ThrowCodeError {
   ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
-  $vars->{'title'} = "Code Error";
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
-  # We may optionally log something to file here.
+  # We may one day log something to file here.
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)
@@ -892,9 +890,12 @@ sub ThrowCodeError {
 }
 
 # For errors made by the user.
+# The correct use of this function is to pass an error tag, defined in
+# user-error.html.tmpl, as the first parameter, and then, optionally,
+# undef as the second parameter and $unlock_tables as the third.
+# The second parameter will eventually go away.
 sub ThrowUserError {
   ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
-  $vars->{'title'} ||= "Error";
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
@@ -905,18 +906,20 @@ sub ThrowUserError {
   exit;
 }
 
-# If the template system isn't working, we can't use a template.
-# This should only be called if a template->process() fails.
+# This function should only be called if a template->process() fails.
+# It tries another template first, because often one template being
+# broken or missing doesn't mean that they all are. But it falls back on
+# a print statement.
 # The Content-Type will already have been printed.
 sub ThrowTemplateError {
-    ($vars->{'error'}) = (@_);
-    $vars->{'title'} = "Template Error";
+    ($vars->{'template_error_msg'}) = (@_);
+    $vars->{'error'} = "template_error";
     
     # Try a template first; but if this one fails too, fall back
     # on plain old print statements.
     if (!$template->process("global/code-error.html.tmpl", $vars)) {
         my $maintainer = Param('maintainer');
-        my $error = html_quote($vars->{'error'});
+        my $error = html_quote($vars->{'template_error_msg'});
         my $error2 = html_quote($template->error());
         print <<END;
         <tt>

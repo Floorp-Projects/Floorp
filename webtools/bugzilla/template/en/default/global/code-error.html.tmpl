@@ -21,11 +21,43 @@
 
 [%# INTERFACE:
   # header_done: boolean. True if the header has already been printed.
-  # error: string. The error message to be printed. May contain HTML.
+  # error: string. The tag of the error, or the error message to be displayed
+  # (deprecated). May contain HTML if it's an error message.
+  # title: string. If error is an error message, the title (deprecated.)
   # variables: hash. Useful data about the problem. The keys are the variable
   #  names, and the values the variable values.
   #%]
   
+[%# This is a list of all the possible code errors. Please keep them in
+  # alphabetical order by error tag, and leave a blank line between errors.
+  #%]  
+
+[% DEFAULT title = "Internal Error" %]
+  
+[% error_message = BLOCK %]
+  [% IF    error == "aaa_example_error_tag" %]
+    [% title = "Example Error" %]    
+    This is an example error. The title is set above. This text is the body
+    of the error. It can contain arbitrary <b>HTML</b>, and also references
+    to any [% parameters %] which you may have set before calling
+    ThrowCodeError.
+
+  [% ELSIF error == "another_error_tag" %]
+    This is another sample error, without a special title. This 
+    should be the usual usage for this file. This sample can be removed.
+
+  [% ELSIF error == "template_error" %]
+    [% template_error_msg %]
+
+  [% ELSE %]
+    [%# Cope with legacy calling convention, where "error" was the string
+      # to print. 
+      #%]
+        
+    [% error %]
+  [% END %]
+[% END %]
+
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]
@@ -46,7 +78,7 @@
   <tr>
     <td bgcolor="#ff0000">
       <font size="+2">
-        [% error %]
+        [% error_message %]
       </font>
     </td>
   </tr>
