@@ -937,6 +937,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         }
         _pt_thread_death(me);
         _PR_CleanupLayerCache();
+        _PR_CleanupEnv();
         _pr_initialized = PR_FALSE;
         return PR_SUCCESS;
     }
