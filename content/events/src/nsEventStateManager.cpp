@@ -38,6 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
+#include "nsEventListenerManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
@@ -3929,7 +3930,11 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           nsCOMPtr<nsIContent> temp = gLastFocusedContent;
           NS_RELEASE(gLastFocusedContent);
           gLastFocusedContent = nsnull;
+
+          nsCxPusher pusher(temp);
           temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+          pusher.Pop();
+
           esm->SetFocusedContent(nsnull);
         }
       }
@@ -3979,7 +3984,12 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       nsCOMPtr<nsIDocument> temp = gLastFocusedDocument;
       NS_RELEASE(gLastFocusedDocument);
       gLastFocusedDocument = nsnull;
+
+      nsCxPusher pusher(temp);
       temp->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      pusher.Pop();
+
+      pusher.Push(globalObject);
       globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
     }
   }
@@ -4026,6 +4036,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     event.message = NS_FOCUS_CONTENT;
 
     if (nsnull != mPresContext) {
+      nsCxPusher pusher(aContent);
       aContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
     
@@ -4047,6 +4058,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     event.eventStructType = NS_EVENT;
     event.message = NS_FOCUS_CONTENT;
     if (nsnull != mPresContext && mDocument) {
+      nsCxPusher pusher(mDocument);
       mDocument->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
