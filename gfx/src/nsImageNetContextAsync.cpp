@@ -27,6 +27,7 @@
 #ifdef NECKO
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
+#include "nsCOMPtr.h"
 #else
 #include "nsIURLGroup.h"
 #endif
@@ -93,7 +94,12 @@ public:
   virtual int GetURL (ilIURL * aUrl, NET_ReloadMethod aLoadMethod,
 		      ilINetReader *aReader);
 
+#ifdef NECKO
+  nsresult RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
+                       nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
+#else
   void RequestDone(ImageConsumer *aConsumer);
+#endif
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
@@ -397,8 +403,12 @@ ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMs
   reader->NetRequestDone(mURL, mStatus);
   NS_RELEASE(reader);
   
+#ifdef NECKO
+  return mContext->RequestDone(this, channel, aContext, status, aMsg);
+#else
   mContext->RequestDone(this);
   return NS_OK;
+#endif
 }
 
 void
@@ -577,7 +587,14 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
     else {
 #ifdef NECKO
-      nsresult rv = NS_OpenURI(ic, nsnull, nsurl);
+      nsCOMPtr<nsIChannel> channel;
+      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl);
+      if (NS_SUCCEEDED(rv)) {
+        rv = mLoadGroup->AddChannel(channel, nsnull);
+        if (NS_SUCCEEDED(rv)) {
+          rv = channel->AsyncRead(0, -1, nsnull, ic);
+        }
+      }
 #else
       nsresult rv = NS_OpenURL(nsurl, ic);
 #endif
@@ -595,14 +612,23 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
   return 0;
 }
 
+#ifdef NECKO
+nsresult
+ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
+                                 nsISupports* ctxt, nsresult status, const PRUnichar* aMsg)
+#else
 void 
 ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
+#endif
 {
   if (mRequests != nsnull) {
     if (mRequests->RemoveElement((void *)aConsumer) == PR_TRUE) {
       NS_RELEASE(aConsumer);
     }
   }
+#ifdef NECKO
+  return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
+#endif
 }
 
 extern "C" NS_GFX_(nsresult)
