@@ -57,6 +57,7 @@
 #include "plevent.h"
 #include "prmem.h"
 #include "prnetdb.h"
+#include "prenv.h"
 
 #include "nsCOMPtr.h"
 #include "nsIAppShell.h"
@@ -1263,7 +1264,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp)
   nsCOMPtr<nsIXRemoteService> remoteService;
   remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
   if (remoteService)
-    remoteService->Startup();
+    remoteService->Startup(MOZ_APP_NAME);
 #endif /* MOZ_ENABLE_XREMOTE */
 
   // remove the nativeApp as an XPCOM autoreg observer
@@ -1423,43 +1424,104 @@ static nsresult DumpTurbo(char *appname)
 static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
 {
   int i = 0;
+
+  const char *remote = 0;
+  const char *profile = 0;
+  const char *program = 0;
+  const char *username = 0;
+
   for (i=1; i < argc; i++) {
     if (PL_strcasecmp(argv[i], "-remote") == 0) {
       // someone used a -remote flag
       *aArgUsed = PR_TRUE;
       // check to make sure there's another arg
       if (argc-1 == i) {
-        PR_fprintf(PR_STDERR, "-remote requires an argument\n");
+        PR_fprintf(PR_STDERR, "Error: -remote requires an argument\n");
         return 1;
       }
-      // try to get the X remote client
-      nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
-      if (!client)
-        return 1;
-      nsresult rv;
-      // try to init - connects to the X server and stuff
-      rv = client->Init();
-      if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Failed to connect to X server.\n");
-        return 1;
+
+      // Get the remote argument and advance past it.
+      remote = argv[++i];
+    }
+    else if (PL_strcasecmp(argv[i], "-p") == 0) {
+      // someone used the -p <profile> flag - save the contents
+      if (argc-1 == i) {
+        continue;
       }
-      PRBool success = PR_FALSE;
-      rv = client->SendCommand(argv[i+1], &success);
-      // did the command fail?
-      if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Failed to send command.\n");
-        return 1;
+
+      // Get the argument
+      profile = argv[++i];
+    }
+    else if (PL_strcasecmp(argv[i], "-a") == 0) {
+      // someone used the -a application flag - save the contents
+      if (argc-1 == i) {
+        continue;
       }
-      // was there a window not running?
-      if (!success) {
-        PR_fprintf(PR_STDERR, "No running window found.\n");
-        return 2;
+
+      // Get the argument
+      program = argv[++i];
+    }
+    else if (PL_strcasecmp(argv[i], "-u") == 0) {
+      // someone used the -u <username> flag - save the contents
+      if (argc-1 == i) {
+        continue;
       }
-      client->Shutdown();
-      // success
-      return 0;
+
+      // Get the argument
+      username = argv[++i];
     }
   }
+
+  // try to get the X remote client
+  nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
+  if (!client)
+    return 1;
+
+  nsresult rv;
+  // try to init - connects to the X server and stuff
+  rv = client->Init();
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: Failed to connect to X server.\n");
+    return 1;
+  }
+
+  // Make sure to set a username if possible
+  if (!username) {
+    username = PR_GetEnv("LOGNAME");
+  }
+
+  // Same with the program name
+  if (!program) {
+    program = MOZ_APP_NAME;
+  }
+
+  char *response = NULL;
+  PRBool success = PR_FALSE;
+  rv = client->SendCommand(program, username, profile, remote,
+                           &response, &success);
+
+  // did the command fail?
+  if (NS_FAILED(rv)) {
+    PR_fprintf(PR_STDERR, "Error: Failed to send command: ");
+    if (response) {
+      PR_fprintf(PR_STDERR, "%s\n", response);
+      free(response);
+    }
+    else {
+      PR_fprintf(PR_STDERR, "No response included.\n");
+    }
+
+    return 1;
+  }
+
+  // was there no window running?
+  if (!success) {
+    PR_fprintf(PR_STDERR, "Error: No running window found.\n");
+    return 2;
+  }
+
+  client->Shutdown();
+  // success
   return 0;
 }
 #endif /* XP_UNIX */

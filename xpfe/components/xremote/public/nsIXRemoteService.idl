@@ -30,8 +30,12 @@ interface nsIWidget;
 interface nsIXRemoteService : nsISupports {
 
   // this is called once the browser starts up so that we can create a
-  // dummy window to respond to requests on
-  [noscript] void startup      ();
+  // dummy window to respond to requests on.
+  //
+  // @param aProgram This is the name of the program that will be
+  // advertised to clients.  This is so we can seperate the various
+  // Mozilla products.
+  [noscript] void startup      (in string aProgram);
 
   // this is called right before shutdown so we can destroy the window
   // that we are receving requests on

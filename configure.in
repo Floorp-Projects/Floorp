@@ -3378,6 +3378,7 @@ fi
 
 AC_SUBST(MOZ_STANDALONE_COMPOSER)
 AC_SUBST(MOZ_XUL_APP)
+AC_DEFINE_UNQUOTED(MOZ_APP_NAME, "$MOZ_APP_NAME")
 
 dnl ========================================================
 dnl = FreeType2

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -32,7 +35,9 @@ class nsIXRemoteWidgetHelper : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXREMOTEWIDGETHELPER_IID)
 
-  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget) = 0;
+  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget,
+                                   const char *aProfile,
+                                   const char *aProgram) = 0;
 
 };
 

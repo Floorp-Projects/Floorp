@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* vim:set ts=8 sw=2 et cindent: */
 /*
  * The contents of this file are subject to the Mozilla Public
@@ -44,6 +47,8 @@
 #define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
 #define MOZILLA_USER_PROP      "_MOZILLA_USER"
+#define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
+#define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
 
 static PRLogModuleInfo *sRemoteLm = NULL;
 
@@ -92,7 +97,9 @@ XRemoteClient::Init (void)
   mMozCommandAtom  = XInternAtom(mDisplay, MOZILLA_COMMAND_PROP, False);
   mMozResponseAtom = XInternAtom(mDisplay, MOZILLA_RESPONSE_PROP, False);
   mMozWMStateAtom  = XInternAtom(mDisplay, "WM_STATE", False);
-  mMozUserAtom      = XInternAtom(mDisplay, MOZILLA_USER_PROP, False);
+  mMozUserAtom     = XInternAtom(mDisplay, MOZILLA_USER_PROP, False);
+  mMozProfileAtom  = XInternAtom(mDisplay, MOZILLA_PROFILE_PROP, False);
+  mMozProgramAtom  = XInternAtom(mDisplay, MOZILLA_PROGRAM_PROP, False);
 
   mInitialized = PR_TRUE;
 
@@ -118,113 +125,45 @@ XRemoteClient::Shutdown (void)
 }
 
 NS_IMETHODIMP
-XRemoteClient::SendCommand (const char *aCommand, PRBool *aWindowFound)
+XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
+                            const char *aProfile, const char *aCommand,
+                            char **aResponse, PRBool *aWindowFound)
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
 
-  Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
-  Window root2, parent, *kids;
-  unsigned int nkids;
-  int i;
-
   *aWindowFound = PR_FALSE;
-  
-  if (!XQueryTree(mDisplay, root, &root2, &parent, &kids, &nkids)) {
-    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	   ("XQueryTree failed in XRemoteClient::SendCommand"));
-    return NS_OK;
-  }
 
-  if (!(kids && nkids)) {
-    PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("root window has no children"));
-    return NS_OK;
-  }
+  Window w = FindBestWindow(aProgram, aUsername, aProfile);
 
   nsresult rv = NS_OK;
-  for (i=nkids-1; i >= 0; i--) {
-    Atom type;
-    int format;
-    unsigned long nitems, bytesafter;
-    unsigned char *data_return = 0;
-    Window w, result = 0;
-    w = kids[i];
-    // find the inner window with WM_STATE on it
-    w = CheckWindow(w);
 
-    int status = XGetWindowProperty(mDisplay, w, mMozVersionAtom,
-				    0, (65536 / sizeof (long)),
-				    False, XA_STRING,
-				    &type, &format, &nitems, &bytesafter,
-				    &data_return);
+  if (w) {
+    // ok, let the caller know that we at least found a window.
+    *aWindowFound = PR_TRUE;
 
-    if (!data_return)
-      continue;
-
-    XFree(data_return);
-    data_return = 0;
-
-    if (status == Success && type != None) {
-      // Check to see if it has the user atom on that window.  If there
-      // is then we need to make sure that it matches what we have.
-      char *logname;
-      logname = PR_GetEnv("LOGNAME");
-
-      if (logname) {
-	status = XGetWindowProperty(mDisplay, w, mMozUserAtom,
-				    0, (65536 / sizeof(long)),
-				    False, XA_STRING,
-				    &type, &format, &nitems, &bytesafter,
-				    &data_return);
-
-	// if there's a username compare it with what we have
-	if (data_return) {
-
-	  // if the IDs are equal then this is the window we want.  if
-	  // they aren't fall through to the next loop iteration.
-	  if (!strcmp(logname, (const char *)data_return))
-	    result = w;
-
-	  XFree(data_return);
-	}
-      }
-
-      // ok, this is the one we want since there's no username attribute on
-      // it.
-      else {
-	result = w;
-      }
-
-      if (result) {
-        // ok, let the caller know that we at least found a window.
-        *aWindowFound = PR_TRUE;
-
-        // make sure we get the right events on that window
-        XSelectInput(mDisplay, result,
-                     (PropertyChangeMask|StructureNotifyMask));
+    // make sure we get the right events on that window
+    XSelectInput(mDisplay, w,
+                 (PropertyChangeMask|StructureNotifyMask));
         
-        PRBool destroyed = PR_FALSE;
+    PRBool destroyed = PR_FALSE;
 
-        // get the lock on the window
-        rv = GetLock(result, &destroyed);
+    // get the lock on the window
+    rv = GetLock(w, &destroyed);
 
-        if (NS_SUCCEEDED(rv)) {
-          // send our command
-          rv = DoSendCommand(result, aCommand, &destroyed);
+    if (NS_SUCCEEDED(rv)) {
+      // send our command
+      rv = DoSendCommand(w, aCommand, aResponse, &destroyed);
 
-          // if the window was destroyed, don't bother trying to free the
-          // lock.
-          if (!destroyed)
-            FreeLock(result); // doesn't really matter what this returns
+      // if the window was destroyed, don't bother trying to free the
+      // lock.
+      if (!destroyed)
+          FreeLock(w); // doesn't really matter what this returns
 
-          // if accepted then we're done...
-          if (NS_SUCCEEDED(rv))
-            break;
-        }
-      }
     }
   }
 
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("SendCommand returning 0x%x\n", rv));
+
   return rv;
 }
 
@@ -416,6 +355,145 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
   return NS_OK;
 }
 
+Window
+XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
+                              const char *aProfile)
+{
+  Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
+  Window bestWindow = 0;
+  Window root2, parent, *kids;
+  unsigned int nkids;
+  int i;
+
+  // Get a list of the children of the root window, walk the list
+  // looking for the best window that fits the criteria.
+  if (!XQueryTree(mDisplay, root, &root2, &parent, &kids, &nkids)) {
+    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+           ("XQueryTree failed in XRemoteClient::FindBestWindow"));
+    return 0;
+  }
+
+  if (!(kids && nkids)) {
+    PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("root window has no children"));
+    return 0;
+  }
+
+  // We'll walk the list of windows looking for a window that best
+  // fits the criteria here.
+
+  for (i=nkids-1; i >= 0; i--) {
+    Atom type;
+    int format;
+    unsigned long nitems, bytesafter;
+    unsigned char *data_return = 0;
+    Window w;
+    w = kids[i];
+    // find the inner window with WM_STATE on it
+    w = CheckWindow(w);
+
+    int status = XGetWindowProperty(mDisplay, w, mMozVersionAtom,
+                                    0, (65536 / sizeof (long)),
+                                    False, XA_STRING,
+                                    &type, &format, &nitems, &bytesafter,
+                                    &data_return);
+
+    if (!data_return)
+      continue;
+
+    XFree(data_return);
+    data_return = 0;
+
+    if (status != Success || type == None)
+      continue;
+
+    // If someone passed in a program name, check it against this one
+    // unless it's "any" in which case, we don't care.  If someone did
+    // pass in a program name and this window doesn't support that
+    // protocol, we don't include it in our list.
+    if (aProgram && strcmp(aProgram, "any")) {
+        status = XGetWindowProperty(mDisplay, w, mMozProgramAtom,
+                                    0, (65536 / sizeof(long)),
+                                    False, XA_STRING,
+                                    &type, &format, &nitems, &bytesafter,
+                                    &data_return);
+        
+        // If the return name is not the same as what someone passed in,
+        // we don't want this window.
+        if (data_return) {
+            if (strcmp(aProgram, (const char *)data_return)) {
+                XFree(data_return);
+                continue;
+            }
+
+            // This is actually the success condition.
+            XFree(data_return);
+        }
+        else {
+            // Doesn't support the protocol, even though the user
+            // requested it.  So we're not going to use this window.
+            continue;
+        }
+    }
+
+    // Check to see if it has the user atom on that window.  If there
+    // is then we need to make sure that it matches what we have.
+    const char *username;
+    if (aUsername) {
+      username = aUsername;
+    }
+    else {
+      username = PR_GetEnv("LOGNAME");
+    }
+
+    if (username) {
+        status = XGetWindowProperty(mDisplay, w, mMozUserAtom,
+                                    0, (65536 / sizeof(long)),
+                                    False, XA_STRING,
+                                    &type, &format, &nitems, &bytesafter,
+                                    &data_return);
+
+        // if there's a username compare it with what we have
+        if (data_return) {
+            // If the IDs aren't equal, we don't want this window.
+            if (strcmp(username, (const char *)data_return)) {
+                XFree(data_return);
+                continue;
+            }
+
+            XFree(data_return);
+        }
+    }
+
+    // Check to see if there's a profile name on this window.  If
+    // there is, then we need to make sure it matches what someone
+    // passed in.
+    if (aProfile) {
+        status = XGetWindowProperty(mDisplay, w, mMozProfileAtom,
+                                    0, (65536 / sizeof(long)),
+                                    False, XA_STRING,
+                                    &type, &format, &nitems, &bytesafter,
+                                    &data_return);
+
+        // If there's a profile compare it with what we have
+        if (data_return) {
+            // If the profiles aren't equal, we don't want this window.
+            if (strcmp(aProfile, (const char *)data_return)) {
+                XFree(data_return);
+                continue;
+            }
+
+            XFree(data_return);
+        }
+    }
+
+    // If we got this far, this is the best window so far.  It passed
+    // all the tests.
+    bestWindow = w;
+  }
+
+  return bestWindow;
+}
+
 nsresult
 XRemoteClient::FreeLock(Window aWindow)
 {
@@ -426,40 +504,40 @@ XRemoteClient::FreeLock(Window aWindow)
   unsigned char *data = 0;
 
   result = XGetWindowProperty(mDisplay, aWindow, mMozLockAtom,
-			      0, (65536 / sizeof(long)),
-			      True, /* atomic delete after */
-			      XA_STRING,
-			      &actual_type, &actual_format,
-			      &nitems, &bytes_after,
-			      &data);
+                              0, (65536 / sizeof(long)),
+                              True, /* atomic delete after */
+                              XA_STRING,
+                              &actual_type, &actual_format,
+                              &nitems, &bytes_after,
+                              &data);
   if (result != Success) {
-    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	   ("unable to read and delete " MOZILLA_LOCK_PROP
-	    " property\n"));
-    return NS_ERROR_FAILURE;
+      PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+             ("unable to read and delete " MOZILLA_LOCK_PROP
+              " property\n"));
+      return NS_ERROR_FAILURE;
   }
   else if (!data || !*data){
-    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	   ("invalid data on " MOZILLA_LOCK_PROP
-	    " of window 0x%x.\n",
-	    (unsigned int) aWindow));
-    return NS_ERROR_FAILURE;
+      PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+             ("invalid data on " MOZILLA_LOCK_PROP
+              " of window 0x%x.\n",
+              (unsigned int) aWindow));
+      return NS_ERROR_FAILURE;
   }
   else if (strcmp((char *)data, mLockData)) {
-    PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	   (MOZILLA_LOCK_PROP " was stolen!  Expected \"%s\", saw \"%s\"!\n",
-	    mLockData, data));
-    return NS_ERROR_FAILURE;
+      PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+             (MOZILLA_LOCK_PROP " was stolen!  Expected \"%s\", saw \"%s\"!\n",
+              mLockData, data));
+      return NS_ERROR_FAILURE;
   }
 
   if (data)
-    XFree(data);
+      XFree(data);
   return NS_OK;
 }
 
 nsresult
 XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
-			     PRBool *aDestroyed)
+                             char **aResponse, PRBool *aDestroyed)
 {
   PRBool done = PR_FALSE;
   PRBool accepted = PR_FALSE;
@@ -482,6 +560,7 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
       PR_LOG(sRemoteLm, PR_LOG_DEBUG,
 	     ("window 0x%x was destroyed.\n",
 	      (unsigned int) aWindow));
+      *aResponse = strdup("Window was destroyed while reading response.");
       *aDestroyed = PR_TRUE;
       goto DONE;
     }
@@ -506,6 +585,7 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
 	       ("failed reading " MOZILLA_RESPONSE_PROP
 		" from window 0x%0x.\n",
 		(unsigned int) aWindow));
+    *aResponse = strdup("Internal error reading response from window.");
 	done = PR_TRUE;
       }
       else if (!data || strlen((char *) data) < 5) {
@@ -513,6 +593,7 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
 	       ("invalid data on " MOZILLA_RESPONSE_PROP
 		" property of window 0x%0x.\n",
 		(unsigned int) aWindow));
+    *aResponse = strdup("Server returned invalid data in response.");
 	done = PR_TRUE;
       }
       else if (*data == '1') {	/* positive preliminary reply */
@@ -522,12 +603,14 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
       }
 
       else if (!strncmp ((char *)data, "200", 3)) { /* positive completion */
+	*aResponse = strdup((char *)data);
 	accepted = PR_TRUE;
 	done = PR_TRUE;
       }
 
       else if (*data == '2') {	/* positive completion */
 	PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
+    *aResponse = strdup((char *)data);
 	accepted = PR_TRUE;
 	done = PR_TRUE;
       }
@@ -537,12 +620,14 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
 	       ("internal error: "
 		"server wants more information?  (%s)\n",
 		data));
+	*aResponse = strdup((char *)data);
 	done = PR_TRUE;
       }
 
       else if (*data == '4' ||	/* transient negative completion */
 	       *data == '5') {	/* permanent negative completion */
 	PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
+	*aResponse = strdup((char *)data);
 	done = PR_TRUE;
       }
 
@@ -551,6 +636,7 @@ XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
 	       ("unrecognised " MOZILLA_RESPONSE_PROP
 		" from window 0x%x: %s\n",
 		(unsigned int) aWindow, data));
+	*aResponse = strdup((char *)data);
 	done = PR_TRUE;
       }
 

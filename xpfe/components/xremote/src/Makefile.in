@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  rdf \
 		  exthandler \
+		  profile \
 		  $(NULL)
 
 CPPSRCS		= \
