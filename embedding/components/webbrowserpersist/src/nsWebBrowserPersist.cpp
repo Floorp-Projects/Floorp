@@ -426,14 +426,9 @@ NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 
 
 nsresult
-nsWebBrowserPersist::StartUpload(nsIOutputStream *aOutStream, 
+nsWebBrowserPersist::StartUpload(nsIStorageStream *storStream, 
     nsIURI *aDestinationURI, const char *aContentType)
 {
-    // if we don't have the right type of output stream then it's probably a local file
-    nsCOMPtr<nsIStorageStream> storStream(do_QueryInterface(aOutStream));
-    if (!storStream)
-      return NS_OK;
- 
      // setup the upload channel if the destination is not local
     nsCOMPtr<nsIInputStream> inputstream;
     nsresult rv = storStream->NewInputStream(0, getter_AddRefs(inputstream));
@@ -726,10 +721,17 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
                 // we're done with this pass; see if we need to do upload
                 nsXPIDLCString contentType;
                 channel->GetContentType(getter_Copies(contentType));
-                rv = StartUpload(data->mStream, data->mFile, contentType.get());
-                if (NS_FAILED(rv))
+                // if we don't have the right type of output stream then it's a local file
+                nsCOMPtr<nsIStorageStream> storStream(do_QueryInterface(data->mStream));
+                if (storStream)
                 {
-                    cancel = PR_TRUE;
+                    data->mStream->Close();
+                    data->mStream = nsnull; // null out stream so we don't close it later
+                    rv = StartUpload(storStream, data->mFile, contentType.get());
+                    if (NS_FAILED(rv))
+                    {
+                        cancel = PR_TRUE;
+                    }
                 }
             }
         }
@@ -2254,8 +2256,13 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     
     if (!localFile)
     {
-        rv = StartUpload(outputStream, aFile, aFormatType);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIStorageStream> storStream(do_QueryInterface(outputStream));
+        if (storStream)
+        {
+            outputStream->Close();
+            rv = StartUpload(storStream, aFile, aFormatType);
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        }
     }
 
     return rv;
