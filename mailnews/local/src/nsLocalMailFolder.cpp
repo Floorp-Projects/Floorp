@@ -366,7 +366,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 			}
 		}
 	}
-
+	return NS_OK;
 }
 
 NS_IMETHODIMP
