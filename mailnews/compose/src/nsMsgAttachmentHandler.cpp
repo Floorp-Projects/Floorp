@@ -663,24 +663,32 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // then, if we have a resource fork, check the filename extension, maybe we don't need the resource fork!
       if (sendResourceFork)
       {
-        nsAutoString urlStr; urlStr.AssignWithConversion(url_string);
-        char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
-        if (ext && *ext)
+        nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+        if (fileUrl)
         {
-          sendResourceFork = 
-             PL_strcasecmp(ext, "TXT") &&
-             PL_strcasecmp(ext, "JPG") &&
-             PL_strcasecmp(ext, "GIF") &&
-             PL_strcasecmp(ext, "TIF") &&
-             PL_strcasecmp(ext, "HTM") &&
-             PL_strcasecmp(ext, "HTML") &&
-             PL_strcasecmp(ext, "ART") &&
-             PL_strcasecmp(ext, "XUL") &&
-             PL_strcasecmp(ext, "XML") &&
-             PL_strcasecmp(ext, "CSS") &&
-             PL_strcasecmp(ext, "JS");
+          nsresult rv = fileUrl->SetSpec(url_string);
+          if (NS_SUCCEEDED(rv))
+          {
+            char  *ext;
+            rv = fileUrl->GetFileExtension(&ext);
+            if (NS_SUCCEEDED(rv) && ext && *ext)
+            {
+              sendResourceFork =
+                 PL_strcasecmp(ext, "TXT") &&
+                 PL_strcasecmp(ext, "JPG") &&
+                 PL_strcasecmp(ext, "GIF") &&
+                 PL_strcasecmp(ext, "TIF") &&
+                 PL_strcasecmp(ext, "HTM") &&
+                 PL_strcasecmp(ext, "HTML") &&
+                 PL_strcasecmp(ext, "ART") &&
+                 PL_strcasecmp(ext, "XUL") &&
+                 PL_strcasecmp(ext, "XML") &&
+                 PL_strcasecmp(ext, "CSS") &&
+                 PL_strcasecmp(ext, "JS");
+            }
+            PR_FREEIF(ext);
+          }
         }
-        PR_FREEIF(ext);
       }
     }
 
