@@ -30,7 +30,6 @@ REQUIRES	+= util jpeg xpcom img
 CPPSRCS		= \
 		jpeg.cpp \
 		nsJPGDecoder.cpp \
-		nsJPGCallback.cpp \
 		dllcompat.cpp \
 		$(NULL)
 
