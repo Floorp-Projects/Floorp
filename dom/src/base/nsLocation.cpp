@@ -431,7 +431,7 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
     // anywhere else. This is part of solution for bug # 39938
     PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
     mDocShell->GetBusyFlags(&busyFlags);
- 
+
     if (aReplace || (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)) {
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
     }
@@ -739,9 +739,6 @@ LocationImpl::Replace(const nsAReadableString& aUrl)
 
     rv = stack->Peek(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (NS_FAILED(rv))
-      return rv;
 
     if (cx) {
       return SetHrefWithContext(cx, aUrl, PR_TRUE);
