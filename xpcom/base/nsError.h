@@ -39,7 +39,7 @@
 #define nsError_h__
 
 #ifndef nscore_h___
-#include "nscore.h"  // needed for nsresult
+#include "nscore.h"  /* needed for nsresult */
 #endif
 
 /*
@@ -88,12 +88,14 @@
 #define NS_ERROR_MODULE_SECURITY   21
 #define NS_ERROR_MODULE_DOM_XPATH  22
 #define NS_ERROR_MODULE_DOM_RANGE  23
-// NS_ERROR_MODULE_GENERAL should be used by modules that do not
-// care if return code values overlap. Callers of methods that
-// return such codes should be aware that they are not
-// globally unique. Implementors should be careful about blindly
-// returning codes from other modules that might also use
-// the generic base.
+
+/* NS_ERROR_MODULE_GENERAL should be used by modules that do not
+ * care if return code values overlap. Callers of methods that
+ * return such codes should be aware that they are not
+ * globally unique. Implementors should be careful about blindly
+ * returning codes from other modules that might also use
+ * the generic base.
+ */
 #define NS_ERROR_MODULE_GENERAL    51  
 
 /**
@@ -236,18 +238,17 @@
 
 /*@}*/
 
-////////////////////////////////////////////////////////////////////////////////
-// I/O Errors
+ /* I/O Errors */
 
-/// Stream closed
+ /*  Stream closed */
 #define NS_BASE_STREAM_CLOSED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 2)
-/// Error from the operating system
+ /*  Error from the operating system */
 #define NS_BASE_STREAM_OSERROR        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 3)
-/// Illegal arguments
+ /*  Illegal arguments */
 #define NS_BASE_STREAM_ILLEGAL_ARGS   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 4)
-/// For unichar streams
+ /*  For unichar streams */
 #define NS_BASE_STREAM_NO_CONVERTER   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 5)
-/// For unichar streams
+ /*  For unichar streams */
 #define NS_BASE_STREAM_BAD_CONVERSION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 6)
 
 #define NS_BASE_STREAM_WOULD_BLOCK    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 7)
@@ -275,8 +276,7 @@
 #define NS_ERROR_FILE_DIR_NOT_EMPTY             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 20)
 #define NS_ERROR_FILE_ACCESS_DENIED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 21)
 
-////////////////////////////////////////////////////////////////////////////////
-// Result codes used by nsIVariant
+ /* Result codes used by nsIVariant */
 
 #define NS_ERROR_CANNOT_CONVERT_DATA            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  1)
 #define NS_ERROR_OBJECT_IS_IMMUTABLE            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  2)
@@ -285,19 +285,22 @@
 #define NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM,  1)
 
 
-////////////////////////////////////////////////////////////////////////////////
-// This will return the nsresult corresponding to the most recent NSPR failure
-// returned by PR_GetError.
-
-// do not depend on this function as it will be going away!
+ /*
+  * This will return the nsresult corresponding to the most recent NSPR failure
+  * returned by PR_GetError.
+  *
+  ***********************************************************************
+  *      Do not depend on this function. It will be going away!
+  ***********************************************************************
+  */
 extern NS_COM nsresult
 NS_ErrorAccordingToNSPR();
 
-////////////////////////////////////////////////////////////////////////////////
 
 #if defined(XP_WIN)
-#pragma warning(disable: 4251) // 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream'
-#pragma warning(disable: 4275) // non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode'
+#pragma warning(disable: 4251) /* 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream' */
+#pragma warning(disable: 4275) /* non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode' */
 #endif
 
 #endif
+
