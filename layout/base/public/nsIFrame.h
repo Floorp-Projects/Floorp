@@ -160,7 +160,8 @@ enum nsSelectionAmount {
   eSelectLine      = 2,  //previous drawn line in flow.
   eSelectBeginLine = 3,
   eSelectEndLine   = 4,
-  eSelectNoAmount  = 5   //just bounce back current offset.
+  eSelectNoAmount  = 5,   //just bounce back current offset.
+  eSelectDir       = 6    //select next/previous frame based on direction
 };
 
 enum nsDirection {
