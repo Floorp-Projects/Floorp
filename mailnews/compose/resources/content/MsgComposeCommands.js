@@ -1799,11 +1799,11 @@ function PriorityMenuSelect(target)
     if (msgCompFields)
       switch (target.getAttribute('id'))
       {
-        case "priority_lowest":  msgCompFields.priority = "lowest";   break;
-        case "priority_low":     msgCompFields.priority = "low";      break;
-        case "priority_normal":  msgCompFields.priority = "normal";   break;
-        case "priority_high":    msgCompFields.priority = "high";     break;
-        case "priotity_highest": msgCompFields.priority = "highest";  break;
+        case "priority_lowest":  msgCompFields.priority = "Lowest";   break;
+        case "priority_low":     msgCompFields.priority = "Low";      break;
+        case "priority_normal":  msgCompFields.priority = "Normal";   break;
+        case "priority_high":    msgCompFields.priority = "High";     break;
+        case "priotity_highest": msgCompFields.priority = "Highest";  break;
       }
   }
 }
