@@ -41,6 +41,24 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 
 
+inline void nsCollationUnix::DoSetLocale()
+{
+  char *locale = setlocale(LC_COLLATE, "");
+  mSavedLocale.SetString(locale ? locale : "");
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
+    char newLocale[128];
+    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, 128));
+  }
+}
+
+inline void nsCollationUnix::DoRestoreLocale()
+{
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
+    char oldLocale[128];
+    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, 128));
+  }
+}
+
 nsCollationUnix::nsCollationUnix() 
 {
   NS_INIT_REFCNT(); 
@@ -193,23 +211,5 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   }
 
   return res;
-}
-
-inline void nsCollationUnix::DoSetLocale()
-{
-  char *locale = setlocale(LC_COLLATE, "");
-  mSavedLocale.SetString(locale ? locale : "");
-  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
-    char newLocale[128];
-    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, 128));
-  }
-}
-
-inline void nsCollationUnix::DoRestoreLocale()
-{
-  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
-    char oldLocale[128];
-    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, 128));
-  }
 }
 
