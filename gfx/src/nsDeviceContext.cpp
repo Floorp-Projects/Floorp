@@ -178,7 +178,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
 {
 #ifdef NS_PRINT_PREVIEW
   // AltDC NEVER use widgets to create their DCs
-  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATERC_PAINT)) {
     return mAltDC->CreateRenderingContext(aContext);
   }
 #endif
@@ -212,7 +212,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
   // AltDC NEVER use widgets to create their DCs
   // NOTE: The mAltDC will call it;s own init
   // so we can return here
-  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATERC_REFLOW)) {
     return mAltDC->CreateRenderingContext(aContext);
   }
 #endif
@@ -234,7 +234,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
 NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
 #ifdef NS_PRINT_PREVIEW
-  // there are a couple of cases where the kUseAltDCFor_CREATE_RC flag has been turned off
+  // there are a couple of cases where the kUseAltDCFor_CREATERC_xxx flag has been turned off
   // but we still need to initialize with the Alt DC
   if (mAltDC) {
     return aContext->Init(mAltDC, aWin);
