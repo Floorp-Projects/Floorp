@@ -142,12 +142,39 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
 
 #ifdef XP_PC
         // Not a file URL, so translate '\' to '/' for convenience in the common protocols
+        // e.g. catch
+        //
+        //   http:\\broken.com\address
+        //   http:\\broken.com/blah
+        //   broken.com\blah
+        //
+        // Code will also do partial fix up the following urls
+        //
+        //   http:\\broken.com\address/somewhere\image.jpg (stops at first forward slash)
+        //   http:\\broken.com\blah?arg=somearg\foo.jpg (stops at question mark)
+        //   http:\\broken.com#odd\ref (stops at hash)
+        //  
         if (uriString.FindChar(':') == -1 ||
             uriString.EqualsIgnoreCase("http:", 5) ||
             uriString.EqualsIgnoreCase("https:", 6) ||
             uriString.EqualsIgnoreCase("ftp:", 4))
         {
-            uriString.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
+            // Walk the string replacing backslashes with forward slashes until
+            // the end is reached, or a question mark, or a hash, or a forward
+            // slash. The forward slash test is to stop before trampling over
+            // URIs which legitimately contain a mix of both forward and
+            // backward slashes.
+            nsAFlatString::iterator start;
+            nsAFlatString::iterator end;
+            uriString.BeginWriting(start);
+            uriString.EndWriting(end);
+            while (start != end) {
+                if (*start == '?' || *start == '#' || *start == '/')
+                    break;
+                if (*start == '\\')
+                    *start = '/';
+                ++start;
+            }
         }
 #endif
     }
