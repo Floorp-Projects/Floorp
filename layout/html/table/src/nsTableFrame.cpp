@@ -1196,7 +1196,8 @@ void nsTableFrame::SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aL
   // the object on the right/bottom gets the extra portion
 
 /* compute the horizontal collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-void nsTableFrame::ComputeHorizontalCollapsingBorders(PRInt32 aStartRowIndex,
+void nsTableFrame::ComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
+                                                      PRInt32 aStartRowIndex,
                                                       PRInt32 aEndRowIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
@@ -1216,15 +1217,16 @@ void nsTableFrame::ComputeHorizontalCollapsingBorders(PRInt32 aStartRowIndex,
     {
       if (0==rowIndex)
       { // table is top neighbor
-        ComputeTopBorderForEdgeAt(rowIndex, colIndex);
+        ComputeTopBorderForEdgeAt(aPresContext, rowIndex, colIndex);
       }
-      ComputeBottomBorderForEdgeAt(rowIndex, colIndex);
+      ComputeBottomBorderForEdgeAt(aPresContext, rowIndex, colIndex);
     }
   }
 }
 
 /* compute the vertical collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-void nsTableFrame::ComputeVerticalCollapsingBorders(PRInt32 aStartRowIndex,
+void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext,
+                                                    PRInt32 aStartRowIndex,
                                                     PRInt32 aEndRowIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
@@ -1244,14 +1246,16 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(PRInt32 aStartRowIndex,
     {
       if (0==colIndex)
       { // table is left neighbor
-        ComputeLeftBorderForEdgeAt(rowIndex, colIndex);
+        ComputeLeftBorderForEdgeAt(aPresContext, rowIndex, colIndex);
       }
-      ComputeRightBorderForEdgeAt(rowIndex, colIndex);
+      ComputeRightBorderForEdgeAt(aPresContext, rowIndex, colIndex);
     }
   }
 }
 
-void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
+                                              PRInt32 aRowIndex, 
+                                              PRInt32 aColIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_LEFT].Count();
@@ -1302,19 +1306,30 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
   }
   ComputeCollapsedBorderSegment(NS_SIDE_LEFT, &styles, *border, PR_FALSE);
   // now give half the computed border to the table segment, and half to the cell
-  // XXX give half to the cell
-  border->mWidth = (border->mWidth)/2;
+  // to avoid rounding errors, we convert up to pixels, divide by 2, and 
+  // we give the odd pixel to the table border
+  float t2p = aPresContext.GetTwipsToPixels();
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
+  nscoord widthToAdd = 0;
+  border->mWidth = widthAsPixels/2;
+  if ((border->mWidth*2)!=widthAsPixels)
+    widthToAdd = NSToCoordCeil(p2t);
+  border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = rowRect.height;
-  mBorderEdges.mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.left);
   printf("table computed left border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
           border->mWidth, border->mLength, border->mColor, border->mStyle, mBorderEdges.mMaxBorderWidth.left);
   if (nsnull!=cellFrame)
   {
-    cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border);  // set the left edge of the cell frame
+    cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border, 0);  // set the left edge of the cell frame
   }
+  border->mWidth += widthToAdd;
+  mBorderEdges.mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.left);
 }
 
-void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
+                                               PRInt32 aRowIndex, 
+                                               PRInt32 aColIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 colCount = mCellMap->GetColCount();
@@ -1405,8 +1420,16 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIn
   ComputeCollapsedBorderSegment(NS_SIDE_RIGHT, &styles, border, PRBool(nsnull!=rightNeighborFrame));
   // now give half the computed border to each of the two neighbors 
   // (the 2 cells, or the cell and the table)
-  // XXX give half to the cell
-  border.mWidth = (border.mWidth)/2;  //XXX: rounding
+  // to avoid rounding errors, we convert up to pixels, divide by 2, and 
+  // we give the odd pixel to the right cell border
+  float t2p = aPresContext.GetTwipsToPixels();
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
+  nscoord widthToAdd = 0;
+  border.mWidth = widthAsPixels/2;
+  if ((border.mWidth*2)!=widthAsPixels)
+    widthToAdd = NSToCoordCeil(p2t);
+  border.mWidth *= NSToCoordCeil(p2t);
   border.mLength = rowRect.height;
   if (nsnull==rightNeighborFrame)
   {
@@ -1415,16 +1438,18 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIn
     mBorderEdges.mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.right);
   }
   else
-    rightNeighborFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, &border);
+    rightNeighborFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, &border, 0);
   if (nsnull!=cellFrame)
   {
-    cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border);
+    cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border, widthToAdd);
   }
   printf("table computed right border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
           border.mWidth, border.mLength, border.mColor, border.mStyle, mBorderEdges.mMaxBorderWidth.right);
 }
 
-void nsTableFrame::ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
+                                             PRInt32 aRowIndex, 
+                                             PRInt32 aColIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_TOP].Count();
@@ -1473,18 +1498,30 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInde
   }
   ComputeCollapsedBorderSegment(NS_SIDE_TOP, &styles, *border, PR_FALSE);
   // now give half the computed border to the table segment, and half to the cell
-  border->mWidth = (border->mWidth)/2;
+  // to avoid rounding errors, we convert up to pixels, divide by 2, and 
+  // we give the odd pixel to the right border
+  float t2p = aPresContext.GetTwipsToPixels();
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
+  nscoord widthToAdd = 0;
+  border->mWidth = widthAsPixels/2;
+  if ((border->mWidth*2)!=widthAsPixels)
+    widthToAdd = NSToCoordCeil(p2t);
+  border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = GetColumnWidth(aColIndex);
-  mBorderEdges.mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.top);
   if (nsnull!=cellFrame)
   {
-    cellFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, border);  // set the top edge of the cell frame
+    cellFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, border, 0);  // set the top edge of the cell frame
   }
+  border->mWidth += widthToAdd;
+  mBorderEdges.mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.top);
   printf("table computed top border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
           border->mWidth, border->mLength, border->mColor, border->mStyle, mBorderEdges.mMaxBorderWidth.top);
 }
 
-void nsTableFrame::ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
+                                                PRInt32 aRowIndex, 
+                                                PRInt32 aColIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 rowCount = mCellMap->GetRowCount();
@@ -1575,8 +1612,16 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColI
   ComputeCollapsedBorderSegment(NS_SIDE_BOTTOM, &styles, border, PRBool(nsnull!=bottomNeighborFrame));
   // now give half the computed border to each of the two neighbors 
   // (the 2 cells, or the cell and the table)
-  // XXX give half to the cell
-  border.mWidth = (border.mWidth)/2;  //XXX: rounding
+  // to avoid rounding errors, we convert up to pixels, divide by 2, and 
+  // we give the odd pixel to the right cell border
+  float t2p = aPresContext.GetTwipsToPixels();
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
+  nscoord widthToAdd = 0;
+  border.mWidth = widthAsPixels/2;
+  if ((border.mWidth*2)!=widthAsPixels)
+    widthToAdd = NSToCoordCeil(p2t);
+  border.mWidth *= NSToCoordCeil(p2t);
   border.mLength = GetColumnWidth(aColIndex);
   if (nsnull==bottomNeighborFrame)
   {
@@ -1585,10 +1630,10 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColI
     mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges.mMaxBorderWidth.bottom);
   }
   else
-    bottomNeighborFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, &border);
+    bottomNeighborFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, &border, 0);
   if (nsnull!=cellFrame)
   {
-    cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border);
+    cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border, widthToAdd);
   }
   printf("table computed bottom border width=%d length=%d, color=%d style=%d maxWidth=%d \n",
           border.mWidth, border.mLength, border.mColor, border.mStyle, mBorderEdges.mMaxBorderWidth.bottom);
@@ -1829,7 +1874,7 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide,
 
 }
 
-void nsTableFrame::RecalcLayoutData()
+void nsTableFrame::RecalcLayoutData(nsIPresContext& aPresContext)
 {
   nsCellMap *cellMap = GetCellMap();
   if (nsnull==cellMap)
@@ -1842,7 +1887,7 @@ void nsTableFrame::RecalcLayoutData()
   const nsStyleTable *tableStyle=nsnull;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
-    ComputeVerticalCollapsingBorders(0, rowCount-1);
+    ComputeVerticalCollapsingBorders(aPresContext, 0, rowCount-1);
 
   //XXX need to determine how much of what follows is really necessary
   //    it does collapsing margins between table elements
@@ -2247,7 +2292,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     {
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: needs recalc. Calling BuildColumnCache...\n");
       BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
-      RecalcLayoutData();  // Recalculate Layout Dependencies
+      RecalcLayoutData(aPresContext);  // Recalculate Layout Dependencies
       // if we needed to rebuild the column cache, the data stored in the layout strategy is invalid
       if (nsnull!=mTableLayoutStrategy)
       {
@@ -3467,7 +3512,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
   mColumnWidthsSet=PR_TRUE;
   if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
   {
-    ComputeHorizontalCollapsingBorders(0, mCellMap->GetRowCount()-1);
+    ComputeHorizontalCollapsingBorders(aPresContext, 0, mCellMap->GetRowCount()-1);
   }
 }
 

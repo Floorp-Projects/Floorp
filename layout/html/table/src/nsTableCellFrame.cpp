@@ -82,7 +82,9 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
   }
 }
 
-void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength)
+void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide, 
+                                           PRInt32 aIndex, 
+                                           nscoord aLength)
 {
   if ((NS_SIDE_LEFT==aSide) || (NS_SIDE_RIGHT==aSide))
   {
@@ -177,7 +179,8 @@ nsTableCellFrame::GetSkipSides() const
 void nsTableCellFrame::SetBorderEdge(PRUint8       aSide, 
                                      PRInt32       aRowIndex, 
                                      PRInt32       aColIndex, 
-                                     nsBorderEdge *aBorder)
+                                     nsBorderEdge *aBorder,
+                                     nscoord       aOddAmountToAdd)
 {
   nsBorderEdge *border = nsnull;
   switch (aSide)
@@ -216,6 +219,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   }
   if (nsnull!=border) {
     *border=*aBorder;
+    border->mWidth += aOddAmountToAdd;
   }
   else {
     NS_ASSERTION(PR_FALSE, "bad border edge state");
