@@ -131,7 +131,7 @@ nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, ns
 
        count++;
        aLast = aFirst;
-       aFrameList->GetNextSibling(&aFrameList);
+       aFrameList = aFrameList->GetNextSibling();
        nsIBox* last = aLast;
 
        while(aFrameList) {
@@ -151,7 +151,7 @@ nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, ns
          
          last->SetNextBox(aLast);
          last = aLast;
-         aFrameList->GetNextSibling(&aFrameList);       
+         aFrameList = aFrameList->GetNextSibling();
          count++;
        }
     }
@@ -429,7 +429,7 @@ nsContainerBox::SanityCheck(nsFrameList& aFrameList)
        NS_ASSERTION(NS_SUCCEEDED(box->GetFrame(&frame)) && frame == child,"nsBox::ERROR!! box info list and child info lists don't match!!!"); 
        NS_ASSERTION(NS_SUCCEEDED(box->GetParentBox(&parent)) && parent == this,"nsBox::ERROR!! parent's don't match!!!"); 
        box->GetNextBox(&box);
-       child->GetNextSibling(&child);
+       child = child->GetNextSibling();
        count++;
     }
 #endif

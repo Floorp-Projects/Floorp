@@ -141,13 +141,6 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsIPresContext* aPresContext)
   nsStyleContext* context = frame->GetStyleContext();
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, frame,
                                            context, nsnull, PR_TRUE);
-
-  // We need to allow the view's position to be different than the
-  // frame's position
-  nsFrameState  state;
-  frame->GetFrameState(&state);
-  state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-  frame->SetFrameState(state);
 }
 
 NS_IMETHODIMP
@@ -158,12 +151,8 @@ nsScrollBoxFrame::AppendFrames(nsIPresContext* aPresContext,
 {
   nsresult rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
 
-#ifdef DEBUG
   // make sure we only have 1 child.
-  nsIFrame* frame = mFrames.FirstChild();
-  frame->GetNextSibling(&frame);
-  NS_ASSERTION(!frame, "Error ScrollBoxes can only have 1 child");
-#endif
+  NS_ASSERTION(!mFrames.FirstChild()->GetNextSibling(), "Error ScrollBoxes can only have 1 child");
 
   SetUpScrolledFrame(aPresContext);
 
@@ -179,13 +168,8 @@ nsScrollBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 {
   nsresult rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
 
-
-#ifdef DEBUG
   // make sure we only have 1 child.
-  nsIFrame* frame = mFrames.FirstChild();
-  frame->GetNextSibling(&frame);
-  NS_ASSERTION(!frame, "Error ScrollBoxes can only have 1 child");
-#endif
+  NS_ASSERTION(!mFrames.FirstChild()->GetNextSibling(), "Error ScrollBoxes can only have 1 child");
 
   SetUpScrolledFrame(aPresContext);
 
@@ -222,8 +206,8 @@ nsScrollBoxFrame::GetScrollingParentView(nsIPresContext* aPresContext,
                                           nsIFrame* aParent,
                                           nsIView** aParentView)
 {
-  *aParentView = aParent->GetView(aPresContext);
-  NS_ASSERTION(aParentView, "GetParentWithView failed");
+  *aParentView = aParent->GetView();
+  NS_ASSERTION(*aParentView, "GetParentWithView failed");
   return NS_OK;
 }
 
@@ -233,8 +217,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
   nsIView*  view;
 
    //Get parent frame
-  nsIFrame* parent;
-  GetParentWithView(aPresContext, &parent);
+  nsIFrame* parent = GetAncestorWithView();
   NS_ASSERTION(parent, "GetParentWithView failed");
 
   // Get parent view
@@ -242,11 +225,11 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
   GetScrollingParentView(aPresContext, parent, &parentView);
  
   // Get the view manager
-  nsCOMPtr<nsIViewManager> viewManager;
-  parentView->GetViewManager(*getter_AddRefs(viewManager));
+  nsIViewManager* viewManager = parentView->GetViewManager();
 
   // Create the scrolling view
   nsresult rv = CallCreateInstance(kScrollBoxViewCID, &view);
+
   if (NS_SUCCEEDED(rv)) {
     // Initialize the scrolling view
     view->Init(viewManager, mRect, parentView);
@@ -280,7 +263,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
     scrollingView->SetControlInsets(border);
 
     // Remember our view
-    SetView(aPresContext, view);
+    SetView(view);
   }
   return rv;
 }
@@ -385,15 +368,14 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   if (adaptor) {
      nsIFrame* frame;
      kid->GetFrame(&frame);
-     nsIView* view = frame->GetView(presContext);
 
      nsRect r(0, 0, childRect.width, childRect.height);
-     nsContainerFrame::SyncFrameViewAfterReflow(presContext, frame, view, &r,
-                                                NS_FRAME_NO_MOVE_VIEW);
+     nsContainerFrame::SyncFrameViewAfterReflow(presContext, frame,
+       frame->GetView(), &r, NS_FRAME_NO_MOVE_VIEW);
   }
 
+  nsIView* view = GetView();
   nsIScrollableView* scrollingView;
-  nsIView* view = GetView(presContext);
   if (NS_SUCCEEDED(CallQueryInterface(view, &scrollingView))) {
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
@@ -465,8 +447,6 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     // make sure our scroll position did not change for where we last put
     // it. if it does then the user must have moved it, and we no longer
     // need to restore.
-    nsIPresContext* presContext = aState.GetPresContext();
-    nsIView* view = GetView(presContext);
     if (!view)
       return NS_OK; // don't freak out if we have no view
 
@@ -483,7 +463,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
         nsIView* child = nsnull;
         nsresult rv = scrollingView->GetScrolledView(child);
         if (NS_SUCCEEDED(rv) && child)
-          child->GetBounds(childRect);
+          childRect = child->GetBounds();
 
         PRInt32 cx, cy, x, y;
         scrollingView->GetScrollPosition(cx,cy);
@@ -622,7 +602,9 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
 nsresult 
 nsScrollBoxFrame::GetContentOf(nsIContent** aContent)
 {
-    return GetContent(aContent);
+  *aContent = GetContent();
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -674,7 +656,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresState> state;
   nsresult res = NS_OK;
 
-  nsIView* view = GetView(aPresContext);
+  nsIView* view = GetView();
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
   PRInt32 x,y;
@@ -690,8 +672,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     scrollingView->GetScrolledView(child);
     NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
 
-    nsRect childRect(0,0,0,0);
-    child->GetBounds(childRect);
+    nsRect childRect = child->GetBounds();
 
     res = NS_NewPresState(getter_AddRefs(state));
     NS_ENSURE_SUCCESS(res, res);
@@ -771,7 +752,7 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
     // don't do it now, store it later and do it in layout.
     if (NS_SUCCEEDED(res)) {
       mRestoreRect.SetRect(x, y, w, h);
-      nsIView* view = GetView(aPresContext);
+      nsIView* view = GetView();
       if (!view)
         return NS_ERROR_FAILURE;
 

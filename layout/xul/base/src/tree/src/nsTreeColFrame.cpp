@@ -138,13 +138,12 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     nsIFrame* child;
     if (left)
       child = frames.GetPrevSiblingFor(this);
-    else GetNextSibling(&child);
+    else
+      child = GetNextSibling();
 
     nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIContent> content;
     if (child) {
-      child->GetContent(getter_AddRefs(content));
-      content->GetTag(getter_AddRefs(tag));
+      child->GetContent()->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::splitter) {
         *aFrame = child;
         return NS_OK;
@@ -153,9 +152,8 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
-  nsCOMPtr<nsIContent> content;
   if (result == NS_OK) {
-    (*aFrame)->GetContent(getter_AddRefs(content));
+    nsIContent* content = (*aFrame)->GetContent();
     if (content) {
       // This allows selective overriding for subcontent.
       nsAutoString value;

@@ -167,12 +167,12 @@ NS_IMETHODIMP
 nsMenuFrame::SetParent(const nsIFrame* aParent)
 {
   nsBoxFrame::SetParent(aParent);
-  nsIFrame* currFrame = (nsIFrame*)aParent;
+  const nsIFrame* currFrame = aParent;
   while (!mMenuParent && currFrame) {
     // Set our menu parent.
-    CallQueryInterface(currFrame, &mMenuParent);
+    CallQueryInterface(NS_CONST_CAST(nsIFrame*, currFrame), &mMenuParent);
 
-    currFrame->GetParent(&currFrame);
+    currFrame = currFrame->GetParent();
   }
 
   return NS_OK;
@@ -194,7 +194,7 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
     // Set our menu parent.
     CallQueryInterface(currFrame, &mMenuParent);
 
-    currFrame->GetParent(&currFrame);
+    currFrame = currFrame->GetParent();
   }
 
   // Do the type="checkbox" magic
@@ -297,7 +297,7 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
         rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
         return rv;
       }
-      frame->GetNextSibling(&frame);
+      frame = frame->GetNextSibling();
     }
 
     // Didn't find it.
@@ -333,7 +333,7 @@ nsMenuFrame::DestroyPopupFrames(nsIPresContext* aPresContext)
     nsIFrame* curFrame = mPopupFrames.FirstChild();
     while (curFrame) {
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, curFrame, nsnull);
-      curFrame->GetNextSibling(&curFrame);
+      curFrame = curFrame->GetNextSibling();
     }
   }
 
@@ -367,8 +367,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if ((result != NS_OK) || (*aFrame == this)) {
     return result;
   }
-  nsCOMPtr<nsIContent> content;
-  (*aFrame)->GetContent(getter_AddRefs(content));
+  nsIContent* content = (*aFrame)->GetContent();
   if (content) {
     // This allows selective overriding for subcontent.
     nsAutoString value;
@@ -655,11 +654,9 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
     return NS_OK;
 
   if (aActivateFlag) {
-      nsRect rect;
-      menuPopup->GetRect(rect);
-      nsIView* view = menuPopup->GetView(mPresContext);
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
+      nsRect rect = menuPopup->GetRect();
+      nsIView* view = menuPopup->GetView();
+      nsIViewManager* viewManager = view->GetViewManager();
       rect.x = rect.y = 0;
       viewManager->ResizeView(view, rect);
 
@@ -678,15 +675,13 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
 
   } else {
-    nsIView* view = menuPopup->GetView(mPresContext);
+    nsIView* view = menuPopup->GetView();
     NS_ASSERTION(view, "View is gone, looks like someone forgot to rollup the popup!");
     if (view) {
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
+      nsIViewManager* viewManager = view->GetViewManager();
       if (viewManager) { // the view manager can be null during widget teardown
         viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-        nsRect r(0, 0, 0, 0);
-        viewManager->ResizeView(view, r);
+        viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
       }
     }
     // set here so hide chain can close the menu as well.
@@ -718,9 +713,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
         UpdateMenuSpecialState(aPresContext);
   } else if (aAttribute == nsXULAtoms::acceltext) {
     // someone reset the accelText attribute, so clear the bit that says *we* set it
-    nsFrameState state;
-    GetFrameState(&state);
-    SetFrameState(state & ~NS_STATE_ACCELTEXT_IS_DERIVED);
+    AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
     BuildAcceleratorText();
   } else if (aAttribute == nsXULAtoms::key) {
     BuildAcceleratorText();
@@ -798,8 +791,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (mMenuParent)
         mMenuParent->SetActive(PR_TRUE);
 
-      nsCOMPtr<nsIContent> menuPopupContent;
-      menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+      nsIContent* menuPopupContent = menuPopup->GetContent();
 
       // Sync up the view.
       nsAutoString popupAnchor, popupAlign;
@@ -837,9 +829,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       menuPopup->SetBounds(state, nsRect(0,0,mLastPref.width, mLastPref.height));
 
-      nsIView* view = menuPopup->GetView(mPresContext);
-      nsCOMPtr<nsIViewManager> vm;
-      view->GetViewManager(*getter_AddRefs(vm));
+      nsIView* view = menuPopup->GetView();
+      nsIViewManager* vm = view->GetViewManager();
       if (vm) {
         vm->SetViewVisibility(view, nsViewVisibility_kHide);
       }
@@ -905,12 +896,10 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
       // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
       // This code may not the best solution, but we can leave it here untill we find the better approach.
-      nsCOMPtr<nsIContent> menuPopupContent;
-      menuPopup->GetContent(getter_AddRefs(menuPopupContent));
       nsCOMPtr<nsIEventStateManager> esm;
       mPresContext->GetEventStateManager(getter_AddRefs(esm));
       PRInt32 state;
-      esm->GetContentState(menuPopupContent, state);
+      esm->GetContentState(menuPopup->GetContent(), state);
       if (state & NS_EVENT_STATE_HOVER)
         esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
     }
@@ -1071,11 +1060,9 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
     // Only size the popups view if open.
     if (mMenuOpen) {
-      nsIView* view = popupChild->GetView(aState.GetPresContext());
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
+      nsIView* view = popupChild->GetView();
       nsRect r(0, 0, bounds.width, bounds.height);
-      viewManager->ResizeView(view, r);
+      view->GetViewManager()->ResizeView(view, r);
     }
 
   }
@@ -1134,7 +1121,7 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
               ibox->SetDebug(aState, aDebug);
           }
 
-          aList->GetNextSibling(&aList);
+          aList = aList->GetNextSibling();
       }
 
       return NS_OK;
@@ -1194,8 +1181,7 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   if (mMenuOpen && menuPopup) {
-    nsCOMPtr<nsIContent> menuPopupContent;
-    menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+    nsIContent* menuPopupContent = menuPopup->GetContent();
     nsAutoString popupAnchor, popupAlign;
       
     menuPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
@@ -1437,20 +1423,16 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
    */
 
   /* walk siblings, looking for the other checked item with the same name */
-  nsIFrame *parent, *sib;
+  nsIFrame *sib;
   nsIMenuFrame *sibMenu;
   nsMenuType sibType;
   nsAutoString sibGroup;
   PRBool sibChecked;
   
-  nsresult rv = GetParent(&parent);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't get parent of radio menu frame\n");
-  if (NS_FAILED(rv)) return;
-  
   // get the first sibling in this menu popup. This frame may be it, and if we're
   // being called at creation time, this frame isn't yet in the parent's child list.
   // All I'm saying is that this may fail, but it's most likely alright.
-  rv = parent->FirstChild(aPresContext, NULL, &sib);
+  nsresult rv = GetParent()->FirstChild(aPresContext, NULL, &sib);
   if ( NS_FAILED(rv) || !sib )
     return;
 
@@ -1458,8 +1440,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   // are known to break if we declare nsCOMPtrs inside this loop.  
   // Moving the declaration out of the loop works around this problem.
   // http://bugzilla.mozilla.org/show_bug.cgi?id=80988
-
-  nsCOMPtr<nsIContent> content;
 
   do {
     if (NS_FAILED(sib->QueryInterface(NS_GET_IID(nsIMenuFrame),
@@ -1471,29 +1451,24 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
         (sibMenu->MenuIsChecked(sibChecked), sibChecked) &&
         (sibMenu->GetRadioGroupName(sibGroup), sibGroup == mGroupName)) {
       
-      if (NS_FAILED(sib->GetContent(getter_AddRefs(content))))
-        continue;             // break?
-      
       /* uncheck the old item */
-      content->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
-                         PR_TRUE);
+      sib->GetContent()->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
+                                   PR_TRUE);
 
       /* XXX in DEBUG, check to make sure that there aren't two checked items */
       return;
     }
 
-  } while(NS_SUCCEEDED(sib->GetNextSibling(&sib)) && sib);
+  } while ((sib = sib->GetNextSibling()) != nsnull);
 
 }
 
 void 
 nsMenuFrame::BuildAcceleratorText()
 {
-  nsFrameState state;
   nsAutoString accelText;
 
-  GetFrameState(&state);
-  if ((state & NS_STATE_ACCELTEXT_IS_DERIVED) == 0) {
+  if ((GetStateBits() & NS_STATE_ACCELTEXT_IS_DERIVED) == 0) {
     mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
     if (!accelText.IsEmpty())
       return;
@@ -1501,7 +1476,7 @@ nsMenuFrame::BuildAcceleratorText()
   // accelText is definitely empty here.
 
   // Now we're going to compute the accelerator text, so remember that we did.
-  SetFrameState(state | NS_STATE_ACCELTEXT_IS_DERIVED);
+  AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
 
   // If anything below fails, just leave the accelerator text blank.
   mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, PR_FALSE);
@@ -1696,12 +1671,11 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // important below.  We want the pres shell to get released before the
   // associated view manager on exit from this function.
   // See bug 54233.
-  nsCOMPtr<nsIViewManager> kungFuDeathGrip;
+  nsCOMPtr<nsIViewManager> kungFuDeathGrip = mPresContext->GetViewManager();
   nsCOMPtr<nsIPresShell> shell;
   nsresult result = mPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* me = this;
   if (NS_SUCCEEDED(result) && shell) {
-    shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
 
@@ -2081,9 +2055,7 @@ nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
   else {
     nsIFrame* f;
     menuFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&f);
-    nsCOMPtr<nsIContent> c;
-    f->GetContent(getter_AddRefs(c));
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(c));
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(f->GetContent()));
     *aResult = elt;
     NS_IF_ADDREF(*aResult);
   }
@@ -2132,9 +2104,7 @@ nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView**
   popup->FirstChild(mPresContext, nsnull, &childFrame);
   if (childFrame) {
     *aView = popup->GetScrollableView(childFrame);
-    nsRect itemRect;
-    childFrame->GetRect(itemRect);
-    (*aView)->SetLineHeight(itemRect.height);
+    (*aView)->SetLineHeight(childFrame->GetSize().height);
   }
 
   return NS_OK;

@@ -148,10 +148,7 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   void *block;
   mFrame->QueryInterface(kBlockFrameCID, &block);
   if (block) {
-    nsFrameState state;
-    mFrame->GetFrameState(&state);
-    state |= NS_BLOCK_SPACE_MGR;
-    mFrame->SetFrameState(state);
+    mFrame->AddStateBits(NS_BLOCK_SPACE_MGR);
   }
 #ifdef DEBUG_waterson
   else {
@@ -181,12 +178,9 @@ nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
           nsStyleContext* style = mFrame->GetStyleContext();
           nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
         }
-        nsIView* view = mFrame->GetView(context);
+        nsIView* view = mFrame->GetView();
 
-        nsCOMPtr<nsIWidget> widget;
-        view->GetWidget(*getter_AddRefs(widget));
-
-        if (!widget)
+        if (!view->HasWidget())
            view->CreateWidget(kWidgetCID);   
     }
   }
@@ -297,8 +291,7 @@ UseHTMLReflowConstraints(nsBoxToBlockAdaptor* aAdaptor, nsBoxLayoutState& aState
   if (!frame) {
     return PR_FALSE;
   }
-  nsIFrame* parentFrame;
-  frame->GetParent(&parentFrame);
+  nsIFrame* parentFrame = frame->GetParent();
   if (!parentFrame) {
     return PR_FALSE;
   }
@@ -356,8 +349,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
      return NS_OK;
 
     // get the old rect.
-    nsRect oldRect;
-    mFrame->GetRect(oldRect);
+    nsRect oldRect = mFrame->GetRect();
 
     // the rect we plan to size to.
     nsRect rect(oldRect);
@@ -398,8 +390,7 @@ nsBoxToBlockAdaptor::RefreshSizeCache(nsBoxLayoutState& aState)
                 rect.width,
                 rect.height);
 
-    nsRect newRect;
-    mFrame->GetRect(newRect);
+    nsRect newRect = mFrame->GetRect();
 
     // make sure we draw any size change
     if (reason == eReflowReason_Incremental && (oldRect.width != newRect.width || oldRect.height != newRect.height)) {
@@ -649,7 +640,7 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
     PRBool collapsed = PR_FALSE;
     IsCollapsed(aState, collapsed);
     if (collapsed) {
-      mFrame->SizeTo(presContext, 0, 0);
+      mFrame->SetSize(nsSize(0, 0));
     } else {
 
       // if our child needs to be bigger. This might happend with
@@ -674,7 +665,7 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
 
       // ensure our size is what we think is should be. Someone could have
       // reset the frame to be smaller or something dumb like that. 
-      mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
+      mFrame->SetSize(nsSize(ourRect.width, ourRect.height));
     }
   }
 
@@ -730,10 +721,8 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   GetParentBox(&parent);
   nsIFrame* frame;
   parent->GetFrame(&frame);
-  nsFrameState frameState = 0;
-  frame->GetFrameState(&frameState);
 
- // if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
+ // if (frame->GetStateBits() & NS_STATE_CURRENTLY_IN_DEBUG)
   //   printf("In debug\n");
   */
 
@@ -768,7 +757,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                needsReflow = PR_FALSE;
                aDesiredSize.width = aWidth; 
                aDesiredSize.height = aHeight; 
-               mFrame->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
+               mFrame->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
           } else {
             aDesiredSize.width = mLastSize.width;
             aDesiredSize.height = mLastSize.height;
@@ -907,14 +896,11 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
       mAscent = aDesiredSize.ascent;
     }
 
-    nsFrameState  kidState;
-    mFrame->GetFrameState(&kidState);
-
    // printf("width: %d, height: %d\n", aDesiredSize.mCombinedArea.width, aDesiredSize.mCombinedArea.height);
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
-       if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+       if (mFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
          // make sure we store the overflow size
          mOverflow.width  = aDesiredSize.mOverflowArea.width;
          mOverflow.height = aDesiredSize.mOverflowArea.height;
@@ -940,8 +926,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  #endif
                  mFrame->WillReflow(aPresContext);
                  mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-                 mFrame->GetFrameState(&kidState);
-                 if (kidState & NS_FRAME_OUTSIDE_CHILDREN)
+                 if (mFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
                     aDesiredSize.height = aDesiredSize.mOverflowArea.height;
 
               }
@@ -955,8 +940,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     if (redrawAfterReflow) {
        nsIFrame* frame = nsnull;
        GetFrame(&frame);
-       nsRect r;
-       frame->GetRect(r);
+       nsRect r = frame->GetRect();
        r.width = aDesiredSize.width;
        r.height = aDesiredSize.height;
        Redraw(aState, &r);
@@ -1041,8 +1025,7 @@ nsBoxToBlockAdaptor::HandleIncrementalReflow(nsBoxLayoutState& aState,
                                              PRBool& aRedrawAfterReflow,
                                              PRBool& aMoveFrame)
 {
-  nsFrameState childState;
-  mFrame->GetFrameState(&childState);
+  nsFrameState childState = mFrame->GetStateBits();
 
   aReason = aReflowState.reason;
 

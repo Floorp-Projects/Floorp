@@ -117,12 +117,9 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
         if (!HasView()) {
            nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,nsnull,PR_TRUE); 
         }
-        nsIView* view = GetView(aPresContext);
+        nsIView* view = GetView();
 
-        nsCOMPtr<nsIWidget> widget;
-        view->GetWidget(*getter_AddRefs(widget));
-
-        if (!widget)
+        if (!view->HasWidget())
            view->CreateWidget(kWidgetCID);   
     }
   }

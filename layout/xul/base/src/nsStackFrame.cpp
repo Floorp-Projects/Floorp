@@ -174,12 +174,11 @@ nsStackFrame::GetStackedFrameForPoint(nsIPresContext* aPresContext,
 {
     // look at all the children is reverse order. Use the stack to do 
     // this.
-    nsIFrame* next;
     nsresult rv;
-    aChild->GetNextSibling(&next);   
-    if (next != nsnull) {
+    nsIFrame* next = aChild->GetNextSibling();
+    if (next) {
        rv = GetStackedFrameForPoint(aPresContext, next, aRect, aPoint, aFrame);
-       if (NS_SUCCEEDED(rv) && *aFrame)  
+       if (NS_SUCCEEDED(rv) && *aFrame)
            return rv;
     }
 

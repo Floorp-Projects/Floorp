@@ -182,11 +182,9 @@ NS_IMPL_ISUPPORTS2(nsSplitterFrameInner, nsIDOMMouseListener, nsIDOMMouseMotionL
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
-    nsCOMPtr<nsIContent> content;  
-    mOuter->GetContent(getter_AddRefs(content));
-
     nsString value;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::resizebefore, value);
+    mOuter->GetContent()->GetAttr(kNameSpaceID_None,
+                                  nsXULAtoms::resizebefore, value);
     if (value.EqualsIgnoreCase("farthest"))
       return Farthest;
     else
@@ -202,11 +200,9 @@ nsSplitterFrameInner::~nsSplitterFrameInner()
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
-    nsCOMPtr<nsIContent> content;  
-    mOuter->GetContent(getter_AddRefs(content));
-
     nsString value;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::resizeafter, value);
+    mOuter->GetContent()->GetAttr(kNameSpaceID_None,
+                                  nsXULAtoms::resizeafter, value);
     if (value.EqualsIgnoreCase("farthest"))
       return Farthest;
     else if (value.EqualsIgnoreCase("grow"))
@@ -218,11 +214,9 @@ nsSplitterFrameInner::GetResizeAfter()
 nsSplitterFrameInner::State
 nsSplitterFrameInner::GetState()
 {
-    nsCOMPtr<nsIContent> content;  
-    mOuter->GetContent(getter_AddRefs(content));
-
     nsString value;
-    content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, value);
+    mOuter->GetContent()->GetAttr(kNameSpaceID_None,
+                                  nsXULAtoms::state, value);
     if (value.EqualsIgnoreCase("dragging"))
       return Dragging;
     else if (value.EqualsIgnoreCase("collapsed"))
@@ -367,10 +361,9 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   mPresContext = aPresContext; 
 
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,nsnull,PR_TRUE);
-  nsIView* view = GetView(aPresContext);
+  nsIView* view = GetView();
 
-  nsCOMPtr<nsIViewManager> viewManager;
-  view->GetViewManager(*getter_AddRefs(viewManager));
+  nsIViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewContentTransparency(view, PR_TRUE);
   viewManager->SetViewZIndex(view, PR_FALSE, kMaxZ);
 
@@ -394,10 +387,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
   nsIFrame* frame;
   GetFrame(&frame);
 
-  nsFrameState childState;
-  frame->GetFrameState(&childState);
-
-  if (childState & NS_FRAME_FIRST_REFLOW) 
+  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) 
   {
     GetParentBox(&mInner->mParentBox);
     mInner->UpdateState();
@@ -549,7 +539,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
            {
               // if we hit a scrollable view make sure we take into account
               // how much we are scrolled.
-              nsIView* view = parent->GetView(aPresContext);
+              nsIView* view = parent->GetView();
               if (view) {
                 nsIScrollableView* scrollingView;
                 nsresult result = CallQueryInterface(view, &scrollingView);
@@ -561,10 +551,9 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                 }
               }
        
-             nsRect r;
-             parent->GetRect(r);
+             nsRect r = parent->GetRect();
              isHorizontal ? start -= r.x : start -= r.y;
-             parent->GetParent(&parent);
+             parent = parent->GetParent();
            }
 
            // take our current position and substract the start location
@@ -669,25 +658,22 @@ nsSplitterFrameInner::AddListener(nsIPresContext* aPresContext)
 {
   nsIFrame* thumbFrame = nsnull;
   mOuter->FirstChild(aPresContext, nsnull,&thumbFrame);
-  nsCOMPtr<nsIContent> content;
-  mOuter->GetContent(getter_AddRefs(content));
 
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMEventReceiver>
+    receiver(do_QueryInterface(mOuter->GetContent()));
 
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this), NS_GET_IID(nsIDOMMouseListener));
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), NS_GET_IID(nsIDOMMouseMotionListener));
+  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this), NS_GET_IID(nsIDOMMouseListener));
+  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 void
 nsSplitterFrameInner::RemoveListener()
 {
-  nsCOMPtr<nsIContent> content;
-  mOuter->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver>
+    receiver(do_QueryInterface(mOuter->GetContent()));
 
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
-
-  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),NS_GET_IID(nsIDOMMouseListener));
-  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),NS_GET_IID(nsIDOMMouseMotionListener));
+  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),NS_GET_IID(nsIDOMMouseListener));
+  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 /*
@@ -695,15 +681,13 @@ nsresult
 nsSplitterFrameInner :: CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
-  nsIView* view = mOuter->GetView(aPresContext);
-  nsCOMPtr<nsIViewManager> viewMan;
+  nsIView* view = mOuter->GetView();
   PRBool result;
-  //nsCOMPtr<nsIWidget> widget;
 
   if (view) {
-    view->GetViewManager(*getter_AddRefs(viewMan));
-    //view->GetWidget(*getter_AddRefs(widget));
+    nsIViewManager* viewMan = view->GetViewManager();
     if (viewMan) {
+      // nsIWidget* widget = view->GetWidget();
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
       //  if (widget)
@@ -724,11 +708,10 @@ PRBool
 nsSplitterFrameInner :: IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
-  nsIView* view = mOuter->GetView(aPresContext);
-  nsCOMPtr<nsIViewManager> viewMan;
+  nsIView* view = mOuter->GetView();
   
   if (view) {
-    view->GetViewManager(*getter_AddRefs(viewMan));
+    nsIViewManager* viewMan = view->GetViewManager();
 
     if (viewMan) {
         nsIView* grabbingView;
@@ -764,11 +747,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (button != 0)
      return NS_OK;
 
-  nsCOMPtr<nsIContent> content;  
-  mOuter->GetContent(getter_AddRefs(content));
-
   nsAutoString disabled;
-  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  mOuter->GetContent()->GetAttr(kNameSpaceID_None,
+                                nsHTMLAtoms::disabled, disabled);
   if (disabled.Equals(NS_LITERAL_STRING("true")))
     return NS_OK;
 
@@ -815,7 +796,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsIFrame* childFrame = nsnull;
     childBox->GetFrame(&childFrame);
 
-    childFrame->GetContent(getter_AddRefs(content));
+    nsIContent* content = childFrame->GetContent();
     nsCOMPtr<nsIAtom> atom;
     nsresult rv;
     nsCOMPtr<nsIXBLService> xblService = 
@@ -918,9 +899,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (resizeAfter == Grow)
      mChildInfosAfterCount = 0;
 
-  nsRect vr(0,0,0,0);
-  nsIView *v = mOuter->GetView(mOuter->mPresContext);
-  v->GetBounds(vr);
+  nsRect vr = mOuter->GetView()->GetBounds();
 
   PRInt32 c = 0;
   if (isHorizontal) {
@@ -1018,9 +997,8 @@ nsSplitterFrameInner::UpdateState()
       if (splitterSibling) {
         nsIFrame* splitterSiblingFrame = nsnull;
         splitterSibling->GetFrame(&splitterSiblingFrame);
-        nsCOMPtr<nsIContent> sibling;
-        if (NS_SUCCEEDED(splitterSiblingFrame->GetContent(getter_AddRefs(sibling)))
-            && sibling) {
+        nsIContent* sibling = splitterSiblingFrame->GetContent();
+        if (sibling) {
           if (mState == Collapsed) {
             // Collapsed -> Open
             // Collapsed -> Dragging
@@ -1045,10 +1023,8 @@ nsSplitterFrameInner::EnsureOrient()
 {
   nsIFrame* frame = nsnull;
   mParentBox->GetFrame(&frame);
-  nsFrameState state;
-  frame->GetFrameState(&state);
 
-  PRBool isHorizontal = !(state & NS_STATE_IS_HORIZONTAL);
+  PRBool isHorizontal = !(frame->GetStateBits() & NS_STATE_IS_HORIZONTAL);
   if (isHorizontal)
       mOuter->mState |= NS_STATE_IS_HORIZONTAL;
   else
@@ -1074,15 +1050,14 @@ if (realTimeDrag) {
     nsIFrame* frame = nsnull;
     mParentBox->GetFrame(&frame);
 
-    nsCOMPtr<nsIViewManager> viewManager;
-    nsIView* view = frame->GetView(aPresContext);
+    nsIView* view = frame->GetView();
 
     if (!view) {
         nsPoint   offset;
         frame->GetOffsetFromView(aPresContext, offset, &view);
         NS_ASSERTION(nsnull != view, "no view");
     }
-    view->GetViewManager(*getter_AddRefs(viewManager));
+    nsIViewManager* viewManager = view->GetViewManager();
 
     viewManager->DisableRefresh();
     shell->FlushPendingNotifications(PR_FALSE);
@@ -1170,8 +1145,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   nsIFrame* childFrame = nsnull;
   aChildBox->GetFrame(&childFrame);
 
-  nsCOMPtr<nsIContent> content;
-  childFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = childFrame->GetContent();
 
   // set its preferred size.
   nsAutoString prefValue;
@@ -1257,20 +1231,18 @@ void
 nsSplitterFrameInner::MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff)
 {
   const nsRect& r = mOuter->mRect;
-  nsRect vr;
-  nsCOMPtr<nsIViewManager> vm;
-  nsIView *v = mOuter->GetView(aPresContext);
-  v->GetViewManager(*getter_AddRefs(vm));
-  v->GetBounds(vr);
+  nsIView *v = mOuter->GetView();
+  nsIViewManager* vm = v->GetViewManager();
+  nsRect vr = v->GetBounds();
   nsRect invalid;
   EnsureOrient();
   PRBool isHorizontal = !mOuter->IsHorizontal();
   if (isHorizontal) {
-      mOuter->MoveTo(aPresContext, mSplitterPos + aDiff, r.y);
+      mOuter->SetPosition(nsPoint(mSplitterPos + aDiff, r.y));
       vm->MoveViewTo(v, mSplitterViewPos + aDiff, vr.y);
       invalid.UnionRect(r,mOuter->mRect);
   } else {
-      mOuter->MoveTo(aPresContext, r.x, mSplitterPos + aDiff);
+      mOuter->SetPosition(nsPoint(r.x, mSplitterPos + aDiff));
       vm->MoveViewTo(v, vr.x, mSplitterViewPos + aDiff);
       invalid.UnionRect(r,mOuter->mRect);
   }

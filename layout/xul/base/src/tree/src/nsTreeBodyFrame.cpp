@@ -287,9 +287,7 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
 inline nscoord nsTreeColumn::GetWidth()
 {
   if (mColFrame) {
-    nsRect rect;
-    mColFrame->GetRect(rect);
-    return rect.width;
+    return mColFrame->GetSize().width;
   }
   return 0;
 }
@@ -376,7 +374,7 @@ static nsIFrame* InitScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aCur
     nsIFrame* result = InitScrollbarFrame(aPresContext, child, aSM);
     if (result)
       return result;
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
 
   return nsnull;
@@ -405,12 +403,12 @@ nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
   mPresContext = aPresContext;
   nsresult rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   nsBoxFrame::CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
-  nsIView* ourView = nsLeafBoxFrame::GetView(aPresContext);
+  nsIView* ourView = nsLeafBoxFrame::GetView();
 
   static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
   ourView->CreateWidget(kWidgetCID);
-  ourView->GetWidget(*getter_AddRefs(mTreeWidget));
+  mTreeWidget = ourView->GetWidget();
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
   return rv;
@@ -1030,15 +1028,13 @@ nsTreeBodyFrame::UpdateScrollbar()
   // Update the scrollbar.
   if (!EnsureScrollbar())
     return;
-  nsCOMPtr<nsIContent> scrollbarContent;
-  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   nsAutoString curPos;
   curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-  scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  mScrollbar->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
 }
 
 nsresult nsTreeBodyFrame::CheckVerticalOverflow()
@@ -1076,8 +1072,7 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
   if (!EnsureScrollbar() || !mView)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> scrollbar;
-  mScrollbar->GetContent(getter_AddRefs(scrollbar));
+  nsIContent* scrollbar = mScrollbar->GetContent();
 
   nsAutoString maxposStr;
 
@@ -1128,9 +1123,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   // Take into account the parent's scroll offset, since clientX and clientY
   // are relative to the viewport.
 
-  nsIView* parentView = nsLeafBoxFrame::GetView(mPresContext);
-  parentView->GetParent(parentView);
-  parentView->GetParent(parentView);
+  nsIView* parentView = nsLeafBoxFrame::GetView()->GetParent()->GetParent();
 
   if (parentView) {
     nsIScrollableView* scrollView = nsnull;
@@ -3376,11 +3369,10 @@ nsTreeBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
   // Go exactly where we're supposed to
   // Update the scrollbar.
-  nsCOMPtr<nsIContent> scrollbarContent;
-  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
   nsAutoString curPos;
   curPos.AppendInt(aNewIndex);
-  scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
+  mScrollbar->GetContent()->SetAttr(kNameSpaceID_None,
+                                    nsXULAtoms::curpos, curPos, PR_TRUE);
 
   return NS_OK;
 }
@@ -3485,8 +3477,7 @@ nsTreeBodyFrame::EnsureColumns()
     while (colBox) {
       nsIFrame* frame = nsnull;
       colBox->GetFrame(&frame);
-      nsCOMPtr<nsIContent> content;
-      frame->GetContent(getter_AddRefs(content));
+      nsIContent* content = frame->GetContent();
       nsCOMPtr<nsIAtom> tag;
       content->GetTag(getter_AddRefs(tag));
       if (tag == nsXULAtoms::treecol) {

@@ -151,9 +151,7 @@ nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)
     // move up the chain
     nsIFrame* currAsFrame = nsnull;
     if ( NS_SUCCEEDED(CallQueryInterface(curr, &currAsFrame)) ) {
-      nsIFrame* parentFrame = nsnull;
-      currAsFrame->GetParent(&parentFrame);
-      nsCOMPtr<nsIMenuFrame> menuFrame ( do_QueryInterface(parentFrame) );
+      nsCOMPtr<nsIMenuFrame> menuFrame ( do_QueryInterface(currAsFrame->GetParent()) );
       if ( menuFrame ) {
         menuFrame->GetMenuParent ( &curr );       // Advance to next parent
       }
