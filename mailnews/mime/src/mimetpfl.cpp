@@ -251,18 +251,14 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   status = MimeObject_grow_obuffer (obj, buffersizeneeded);
   if (status < 0) return status;
 
-  char *templine = (char *)PR_MALLOC(buffersizeneeded);
+  char *templine = (char *)PR_CALLOC(buffersizeneeded);
   if(!templine) 
     return MIME_OUT_OF_MEMORY;
-  
-  nsCRT::memset(templine, 0, buffersizeneeded);
-  /* Copy `line' to `templine', quoting HTML along the way.
-	 Note: this function does no charset conversion; that has already
-	 been done.
-   */
-  templine[0] = '\0';
-  //  *obj->obuffer = 0;
 
+  // Copy `line' to `templine', quoting HTML along the way.
+	// Note: this function does no charset conversion; that has already
+	// been done.
+  //
   uint32 linequotelevel = 0;
   char *linep = line;
   // Space stuffed?
@@ -295,7 +291,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       return -1;
 
     //XXX I18N Converting char* to PRUnichar*
-    nsString strline(linep);
+    nsString strline(linep, (length - (linep - line)) );
 
     PRUnichar* wresult;
     rv = conv->ScanTXT(strline.GetUnicode(),

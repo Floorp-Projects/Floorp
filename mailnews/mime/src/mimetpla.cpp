@@ -164,7 +164,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     if (NS_FAILED(rv))
       return -1;
 
-    nsString strline(line);
+    nsString strline(line, length);
 
     PRUnichar* wresult;
     rv = conv->ScanTXT(strline.GetUnicode(),
