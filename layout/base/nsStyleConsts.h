@@ -332,8 +332,9 @@
 #define NS_STYLE_FONT_SIZE_LARGE                4
 #define NS_STYLE_FONT_SIZE_XLARGE               5
 #define NS_STYLE_FONT_SIZE_XXLARGE              6
-#define NS_STYLE_FONT_SIZE_LARGER               7
-#define NS_STYLE_FONT_SIZE_SMALLER              8
+#define NS_STYLE_FONT_SIZE_XXXLARGE             7  // Only used by <font size="7">. Not specifiable in CSS.
+#define NS_STYLE_FONT_SIZE_LARGER               8
+#define NS_STYLE_FONT_SIZE_SMALLER              9
 
 // See nsStyleFont
 #define NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED   -4

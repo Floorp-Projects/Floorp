@@ -348,10 +348,11 @@ void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsIRuleNode** aRes
 }
 
 nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
-    :mPresContext(aContext), mRule(aRule), mParent(aParent), mChildren(nsnull), mInheritBits(0), mNoneBits(0)
+    :mPresContext(aContext), mParent(aParent), mChildren(nsnull), mInheritBits(0), mNoneBits(0)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
+  mRule = aRule;
 }
 
 nsRuleNode::~nsRuleNode()
@@ -1432,7 +1433,7 @@ nsRuleNode::ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData,
     }
 
     if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
-        (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
+        (value <= NS_STYLE_FONT_SIZE_XXXLARGE)) {
       font->mFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFont.size, scaleFactor, mPresContext, eFontSize_CSS);
       font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFixedFont.size, scaleFactor, mPresContext, eFontSize_CSS);
     }

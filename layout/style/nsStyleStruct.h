@@ -123,7 +123,7 @@ struct nsStyleFont : public nsStyleStruct {
 struct nsStyleColor : public nsStyleStruct {
   nsStyleColor(nsIPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
-  ~nsStyleColor(void);
+  ~nsStyleColor(void) {};
 
   PRInt32 CalcDifference(const nsStyleColor& aOther) const;
   
@@ -133,6 +133,7 @@ struct nsStyleColor : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleColor();
     aContext->FreeToShell(sizeof(nsStyleColor), this);
   };
 
@@ -152,6 +153,7 @@ struct nsStyleBackground : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleBackground();
     aContext->FreeToShell(sizeof(nsStyleBackground), this);
   };
 
@@ -374,6 +376,7 @@ struct nsStyleOutline: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleOutline();
     aContext->FreeToShell(sizeof(nsStyleOutline), this);
   };
 
@@ -450,6 +453,7 @@ struct nsStyleList : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleList();
     aContext->FreeToShell(sizeof(nsStyleList), this);
   };
 
@@ -471,6 +475,7 @@ struct nsStylePosition : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStylePosition();
     aContext->FreeToShell(sizeof(nsStylePosition), this);
   };
 
@@ -499,6 +504,7 @@ struct nsStyleTextReset : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleTextReset();
     aContext->FreeToShell(sizeof(nsStyleTextReset), this);
   };
 
@@ -519,6 +525,7 @@ struct nsStyleText : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleText();
     aContext->FreeToShell(sizeof(nsStyleText), this);
   };
 
@@ -552,6 +559,7 @@ struct nsStyleVisibility : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleVisibility();
     aContext->FreeToShell(sizeof(nsStyleVisibility), this);
   };
 
@@ -575,7 +583,7 @@ struct nsStyleVisibility : public nsStyleStruct {
 struct nsStyleDisplay : public nsStyleStruct {
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther); 
-  ~nsStyleDisplay();
+  ~nsStyleDisplay() {};
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
@@ -583,6 +591,7 @@ struct nsStyleDisplay : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleDisplay();
     aContext->FreeToShell(sizeof(nsStyleDisplay), this);
   };
 
@@ -633,6 +642,7 @@ struct nsStyleTable: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleTable();
     aContext->FreeToShell(sizeof(nsStyleTable), this);
   };
 
@@ -656,6 +666,7 @@ struct nsStyleTableBorder: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleTableBorder();
     aContext->FreeToShell(sizeof(nsStyleTableBorder), this);
   };
 
@@ -704,6 +715,7 @@ struct nsStyleQuotes : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleQuotes();
     aContext->FreeToShell(sizeof(nsStyleQuotes), this);
   };
 
@@ -762,6 +774,7 @@ struct nsStyleContent: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleContent();
     aContext->FreeToShell(sizeof(nsStyleContent), this);
   };
 
@@ -898,6 +911,7 @@ struct nsStyleUIReset: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleUIReset();
     aContext->FreeToShell(sizeof(nsStyleUIReset), this);
   };
 
@@ -919,6 +933,7 @@ struct nsStyleUserInterface: public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleUserInterface();
     aContext->FreeToShell(sizeof(nsStyleUserInterface), this);
   };
 
@@ -944,6 +959,7 @@ struct nsStyleXUL : public nsStyleStruct {
     return result;
   }
   void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleXUL();
     aContext->FreeToShell(sizeof(nsStyleXUL), this);
   };
 
