@@ -1404,20 +1404,20 @@ sub DiffStrings {
     my @old = split(" ", $oldstr);
     my @new = split(" ", $newstr);
 
-    my (@remove, @add) = ();
+    # For each pair of (old, new) entries: 
+    # If they're equal, set them to empty. When done, @old contains entries
+    # that were removed; @new contains ones that got added.
 
-    # Find values that were removed
-    foreach my $value (@old) {
-        push (@remove, $value) if !grep($_ eq $value, @new);
+    foreach my $oldv (@old) {
+      foreach my $newv (@new) {
+        next if ($newv eq '');
+        if ($oldv eq $newv) {
+          $newv = $oldv = '';
+        }
+      }
     }
-
-    # Find values that were added
-    foreach my $value (@new) {
-        push (@add, $value) if !grep($_ eq $value, @old);
-    }
-
-    my $removed = join (", ", @remove);
-    my $added = join (", ", @add);
+    my $removed = join (", ", grep { $_ ne '' } @old);
+    my $added = join (", ", grep { $_ ne '' } @new);
 
     return ($removed, $added);
 }
