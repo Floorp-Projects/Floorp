@@ -169,7 +169,6 @@ PR_STATIC_CALLBACK(JSBool)
 DOMPropsCoreShowProperties(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDOMPropsCore *nativeThis = (nsIDOMDOMPropsCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsIDOMWindowPtr b1;
   nsIDOMNodePtr b2;
@@ -223,7 +222,6 @@ PR_STATIC_CALLBACK(JSBool)
 DOMPropsCoreCommit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDOMPropsCore *nativeThis = (nsIDOMDOMPropsCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -256,7 +254,6 @@ PR_STATIC_CALLBACK(JSBool)
 DOMPropsCoreCancel(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDOMPropsCore *nativeThis = (nsIDOMDOMPropsCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
