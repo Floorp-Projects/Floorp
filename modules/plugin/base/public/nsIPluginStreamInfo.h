@@ -27,8 +27,18 @@
 #include "nsplugindefs.h"
 #include "nsISupports.h"
 
+#define NS_IPLUGINSTREAMINFO_IID                     \
+{ /* ed7d4ca0-b005-11d2-adaa-00805f6dec49 */         \
+    0xed7d4ca0,                                      \
+    0xb005,                                          \
+    0x11d2,                                          \
+    {0xad, 0xaa, 0x00, 0x80, 0x5f, 0x6d, 0xec, 0x49} \
+}
+
 class nsIPluginStreamInfo : public nsISupports {
 public:
+
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINSTREAMINFO_IID)
 
 	NS_IMETHOD
 	GetContentType(nsMIMEType* result) = 0;
@@ -48,14 +58,6 @@ public:
 	NS_IMETHOD
 	RequestRead(nsByteRange* rangeList) = 0;
 };
-
-#define NS_IPLUGINSTREAMINFO_IID                 \
-{ /* ed7d4ca0-b005-11d2-adaa-00805f6dec49 */         \
-    0xed7d4ca0,                                      \
-    0xb005,                                          \
-    0x11d2,                                          \
-    {0xad, 0xaa, 0x00, 0x80, 0x5f, 0x6d, 0xec, 0x49} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
