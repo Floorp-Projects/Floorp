@@ -17,3 +17,4 @@ nsIDOMDragListener.h
 nsIDOMPaintListener.h
 nsIDOMEventTarget.h
 nsIDOMTextListener.h
+nsIDOMCompositionListener.h

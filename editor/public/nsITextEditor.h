@@ -289,6 +289,11 @@ public:
    * trigger off of ContentChanged notifications.
    */
 
+// IME Editing Methods
+  NS_IMETHOD BeginComposition(void)=0;
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString)=0;
+  NS_IMETHOD EndComposition(void)=0;
+
 };
 
 #endif //nsIEditor_h__

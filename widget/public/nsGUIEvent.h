@@ -143,6 +143,10 @@ struct nsTextEvent : public nsInputEvent {
 	PRBool				commitText;
 };
 
+struct nsCompositionEvent : public nsInputEvent {
+	PRUint32			compositionMessage;
+};
+
 struct nsTooltipEvent : public nsGUIEvent {
                 /// Index of tooltip area which generated the event. @see SetTooltips in nsIWidget
     PRUint32        tipIndex;           
@@ -162,6 +166,18 @@ struct nsMenuEvent : public nsGUIEvent {
 
 
 /**
+ * Event status for D&D Event
+ */
+enum nsDragDropEventStatus {  
+    /// The event is a enter
+  nsDragDropEventStatus_eDragEntered,            
+    /// The event is exit
+  nsDragDropEventStatus_eDragExited, 
+    /// The event is drop
+  nsDragDropEventStatus_eDrop  
+};
+
+/**
  * Event Struct Types
  */
 #define NS_EVENT            1
@@ -175,7 +191,9 @@ struct nsMenuEvent : public nsGUIEvent {
 #define NS_TOOLTIP_EVENT    9
 #define NS_MENU_EVENT       10
 #define NS_DRAGDROP_EVENT   11
-#define NS_TEXT_EVENT		    12
+#define NS_TEXT_EVENT		12
+#define NS_COMPOSITION_START	13
+#define NS_COMPOSITION_END		14
  
  /**
  * GUI MESSAGES

@@ -189,6 +189,8 @@ protected:
 
     void GetNonClientBounds(nsRect &aRect);
 	void HandleTextEvent(PRBool commit);
+	void HandleStartComposition(void);
+	void HandleEndComposition(void);
 
 protected:
     static      nsWindow* gCurrentWindow;

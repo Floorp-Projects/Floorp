@@ -93,6 +93,9 @@ public:
 
 // Input/Output
   NS_IMETHOD Insert(nsString& aInputString);
+  NS_IMETHOD BeginComposition(void);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
+  NS_IMETHOD EndComposition(void);
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);

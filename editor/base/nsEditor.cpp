@@ -61,7 +61,6 @@
 #include "DeleteRangeTxn.h"
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
-
 #include "nsIStringStream.h"
 
 #define HACK_FORCE_REDRAW 1
@@ -130,6 +129,7 @@ static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
 
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
@@ -294,10 +294,12 @@ nsEditor::nsEditor()
 {
   //initialize member variables here
   NS_INIT_REFCNT();
+  mIMEFirstTransaction=PR_FALSE;
   PR_EnterMonitor(getEditorMonitor());
   gInstanceCount++;
   mActionListeners = 0;
   PR_ExitMonitor(getEditorMonitor());
+
 }
 
 
@@ -2287,6 +2289,94 @@ NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayout
 }
 
 NS_IMETHODIMP
+nsEditor::BeginComposition(void)
+{
+
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
+  {
+#ifdef DEBUG_tague
+	printf("nsEditor::StartComposition -- begin batch.\n");
+#endif
+    mTxnMgr->BeginBatch();
+  }
+
+  if (!mIMESelectionRange)
+  {
+    nsresult result = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+                                                         nsIDOMRange::GetIID(), 
+                                                         getter_AddRefs(mIMESelectionRange));
+	if (NS_FAILED(result))
+	{
+	  mTxnMgr->EndBatch();
+	  return result;
+	}
+  }
+
+  mIMEFirstTransaction=PR_TRUE;
+ 
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsEditor::EndComposition(void)
+{
+ if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
+  {
+#ifdef DEBUG_tague
+	printf("nsEditor::EndComposition -- end batch.\n");
+#endif
+	mTxnMgr->EndBatch();
+	mIMEFirstTransaction=PR_TRUE;
+	return NS_OK;
+  }
+
+  // mIMESelectionRange = nsCOMPtr<nsIDOMRange>();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::SetCompositionString(const nsString& aCompositionString)
+{
+
+	if (mIMEFirstTransaction==PR_TRUE) {
+		mIMEFirstTransaction = PR_FALSE;
+	} else {
+		// printf("Undo!\n");
+		// mTxnMgr->Undo();
+
+		nsCOMPtr<nsIDOMSelection> selection;
+		nsresult result;
+
+        result = mPresShell->GetSelection(getter_AddRefs(selection));
+
+		if (NS_FAILED(result))
+		{
+			return result;
+		}
+
+		nsCOMPtr<nsIDOMNode> node;
+		PRInt32 offset;
+
+		result = mIMESelectionRange->GetStartParent(getter_AddRefs(node));
+		result = mIMESelectionRange->GetStartOffset(&offset);
+
+		result = selection->Collapse(node, offset);
+
+
+		result = mIMESelectionRange->GetEndParent(getter_AddRefs(node));
+		result = mIMESelectionRange->GetEndOffset(&offset);
+
+		result = selection->Extend(node, offset);
+	}
+#ifdef DEBUG_tague
+	printf("nsEditor::SetCompositionString: string=%s\n",aCompositionString);
+#endif
+	return SetPreeditText(aCompositionString);
+}
+
+NS_IMETHODIMP
 nsEditor::DebugDumpContent() const
 {
   nsCOMPtr<nsIContent>content;
@@ -2345,7 +2435,169 @@ NS_IMETHODIMP GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode
 
 /* ----- END TEST METHODS ----- */
 
+NS_IMETHODIMP nsEditor::DoInitialPreeeditInsert(const nsString& aStringToInsert)
+{
+  if (!mDoc) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  
+  nsCOMPtr<nsIDOMNodeList>nodeList;
+  nsAutoString bodyTag = "body";
+  nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if ((NS_SUCCEEDED(result)) && nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+    nsCOMPtr<nsIDOMNode>node;
+    result = nodeList->Item(0, getter_AddRefs(node));
+    if ((NS_SUCCEEDED(result)) && node)
+    { // now we've got the body tag.
+      // create transaction to insert the text node, 
+      // and create a transaction to insert the text
+      CreateElementTxn *txn;
+      result = CreateTxnForCreateElement(GetTextNodeTag(), node, 0, &txn);
+      if ((NS_SUCCEEDED(result)) && txn)
+      {
+        result = Do(txn);
+        if (NS_SUCCEEDED(result))
+        {
+          nsCOMPtr<nsIDOMNode>newNode;
+          txn->GetNewNode(getter_AddRefs(newNode));
+          if ((NS_SUCCEEDED(result)) && newNode)
+          {
+            nsCOMPtr<nsIDOMCharacterData>newTextNode;
+            newTextNode = do_QueryInterface(newNode);
+            if (newTextNode)
+            {
+              InsertTextTxn *insertTxn;
+              result = CreateTxnForInsertText(aStringToInsert, newTextNode, &insertTxn);
+              if (NS_SUCCEEDED(result)) {
+                result = Do(insertTxn);
+              }
+            }
+            else {
+              result = NS_ERROR_UNEXPECTED;
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
 
+NS_IMETHODIMP 
+nsEditor::SetPreeditText(const nsString& aStringToInsert)
+{
+  nsresult result;
 
+  EditAggregateTxn *aggTxn = nsnull;
+  // Create the "delete current selection" txn
+  nsCOMPtr<nsIDOMSelection> selection;
 
+  BeginTransaction();
 
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+
+  if (NS_SUCCEEDED(result) && selection)
+  {
+    PRBool collapsed;
+    result = selection->GetIsCollapsed(&collapsed);
+    if (NS_SUCCEEDED(result) && !collapsed) {
+      EditAggregateTxn *delSelTxn;
+      result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+      if (NS_SUCCEEDED(result) && delSelTxn) {
+        result = Do(delSelTxn);
+
+		if (NS_FAILED(result)) {
+			EndTransaction();
+			return result;
+		}
+      }
+    }
+  }
+
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+
+  if (NS_FAILED(result))
+  {
+	  EndTransaction();
+	  return result;
+  }
+
+  nsCOMPtr<nsIDOMRange> startRange;
+  nsCOMPtr<nsIDOMRange> endRange;
+
+  result = selection->GetRangeAt(0, getter_AddRefs(startRange));
+
+  if (NS_FAILED(result))
+  {
+	  EndTransaction();
+	  return result;
+  }
+
+  InsertTextTxn *txn;
+  result = CreateTxnForInsertText(aStringToInsert, nsnull, &txn); // insert at the current selection
+  if ((NS_SUCCEEDED(result)) && txn)  {
+    result = Do(txn);  
+  }
+  else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
+    result = DoInitialInsert(aStringToInsert);
+  }
+  else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      PRInt32 offset;
+      result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
+      if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
+      {
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = CreateNode(GetTextNodeTag(), selectedNode, offset+1, 
+                            getter_AddRefs(newNode));
+        if (NS_SUCCEEDED(result) && newNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>newTextNode;
+          newTextNode = do_QueryInterface(newNode);
+          if (newTextNode)
+          {
+            nsAutoString placeholderText(" ");
+            newTextNode->SetData(placeholderText);
+            selection->Collapse(newNode, 0);
+            selection->Extend(newNode, 1);
+            result = SetPreeditText(aStringToInsert);
+          }
+        }
+      }
+    }
+
+  }
+
+  result = mPresShell->GetSelection(getter_AddRefs(selection));
+
+  if (NS_FAILED(result))
+  {
+	 EndTransaction();
+	 return result;
+  }
+
+  result = selection->GetRangeAt(0, getter_AddRefs(endRange));
+
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+
+  startRange->GetStartParent(getter_AddRefs(node));
+  startRange->GetStartOffset(&offset);
+  mIMESelectionRange->SetStart(node, offset);
+
+  endRange->GetStartParent(getter_AddRefs(node));
+  endRange->GetStartOffset(&offset);
+  mIMESelectionRange->SetEnd(node, offset);
+
+  EndTransaction();
+  return result;
+}

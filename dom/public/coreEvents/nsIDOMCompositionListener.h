@@ -15,20 +15,28 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsDOMEVENTSIIDs_h___
-#define nsDOMEVENTSIIDs_h___
 
-#include "nsISupports.h"
+#ifndef nsIDOMCompositionListener_h__
+#define nsIDOMCompositionListener_h__
 
-extern const nsIID kIDOMMouseListenerIID;
-extern const nsIID kIDOMKeyListenerIID;
-extern const nsIID kIDOMMouseMotionListenerIID;
-extern const nsIID kIDOMFocusListenerIID;
-extern const nsIID kIDOMFormListenerIID;
-extern const nsIID kIDOMLoadListenerIID;
-extern const nsIID kIDOMDragListenerIID;
-extern const nsIID kIDOMPaintListenerIID;
-extern const nsIID kIDOMTextListenerIID;
-extern const nsIID kIDOMCompositionListenerIID;
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventListener.h"
 
-#endif /* nsDOMEVENTSIIDs_h___ */
+/*
+ * Key pressed / released / typed listener interface.
+ */
+// {F14B6491-E95B-11d2-9E85-0060089FE59B}
+#define NS_IDOMCOMPOSITIONLISTENER_IID	\
+{ 0xf14b6491, 0xe95b, 0x11d2, \
+{ 0x9e, 0x85, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b } }
+
+
+class nsIDOMCompositionListener : public nsIDOMEventListener {
+
+public:
+
+    virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
+	virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
+
+};
+#endif // nsIDOMCompositionListener_h__
