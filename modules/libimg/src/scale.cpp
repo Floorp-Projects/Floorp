@@ -52,9 +52,6 @@ typedef struct _IL_IRGBGA {
     uint8 red, green, blue, gray, alpha;
 } IL_IRGBGA;
 
-
-static nsVoidArray *gTimeouts = NULL;
-
 static void
 il_timeout_callback(void *closure)
 {
@@ -823,7 +820,7 @@ il_emit_row(
    
 	PR_ASSERT(row >= 0);
 
-	if(row >= src_header->height) {
+	if(row >= (int) src_header->height) {
 		ILTRACE(2,("il: ignoring extra row (%d)", row));
 		return;
 	}
@@ -849,13 +846,13 @@ il_emit_row(
              * Except that the bottom line of pixels can never be
              * overwritten by a subsequent line.
              */
-            if (d != (src_header->height - 1))
+            if (d != (int) (src_header->height - 1))
                 return;
             else
                 drow_end = drow_start;
         } else {
             drow_end = next_drow_start - 1;
-            if (drow_end >= img_header->height)
+            if (drow_end >= (int)img_header->height)
                 drow_end = img_header->height - 1;
         }
     }
@@ -876,13 +873,13 @@ il_emit_row(
              * Except that the right column of pixels can never be
              * overwritten by a subsequent column.
              */
-            if (d != (src_header->width - 1))
+            if (d != (int)(src_header->width - 1))
                 return;
             else
                 dcolumn_end = dcolumn_start;
         } else {
             dcolumn_end = next_dcolumn_start - 1;
-            if (dcolumn_end >= img_header->width)
+            if (dcolumn_end >= (int)img_header->width)
                 dcolumn_end = img_header->width - 1;
         }
     }

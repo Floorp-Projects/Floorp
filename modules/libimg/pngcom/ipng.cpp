@@ -30,7 +30,6 @@
 #define MINIMUM_DELAY_TIME 10
 
 
-static void il_png_delay_time_callback(void *closure);
 static void info_callback(png_structp png_ptr, png_infop info);
 static void row_callback(png_structp png_ptr, png_bytep new_row,
                          png_uint_32 row_num, int pass);
@@ -121,7 +120,7 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     return 0;
 }
 
-
+#if 0
 static void
 il_png_delay_time_callback(void *closure)
 {
@@ -137,7 +136,7 @@ il_png_delay_time_callback(void *closure)
     ipng_p->delay_time = 0;         /* Reset for next image */
     return;
 }
-
+#endif /* 0 */
 
 #define WE_DONT_HAVE_SUBSEQUENT_IMAGES
 
@@ -210,7 +209,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     png_uint_32 width, height;
     int bit_depth, color_type, interlace_type, compression_type, filter_type;
     int channels;
-    double LUT_exponent, CRT_exponent = 2.2, display_exponent, gamma;
+    double LUT_exponent, CRT_exponent = 2.2, display_exponent, aGamma;
 
     il_container *ic;
     ipng_structp ipng_p;
@@ -258,8 +257,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     /* (alternatively, could check for SCREEN_GAMMA environment variable) */
     display_exponent = LUT_exponent * CRT_exponent;
 
-    if (png_get_gAMA(png_ptr, info_ptr, &gamma))
-        png_set_gamma(png_ptr, display_exponent, gamma);
+    if (png_get_gAMA(png_ptr, info_ptr, &aGamma))
+        png_set_gamma(png_ptr, display_exponent, aGamma);
     else
         png_set_gamma(png_ptr, display_exponent, 0.45455);
 
