@@ -87,7 +87,11 @@ namespace ICG {
             its_iCode(iCode), itsVariables(variables),
             itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
             mID(++sMaxID) { }
-        ~ICodeModule()      { delete its_iCode; delete itsVariables; }
+        ~ICodeModule()
+        {
+            delete its_iCode;
+            delete itsVariables;
+        }
 
         Formatter& print(Formatter& f);
         
@@ -112,6 +116,7 @@ namespace ICG {
     class ICodeGenerator {
     private:
         InstructionStream *iCode;
+        bool iCodeOwner;
         LabelList labels;
         std::vector<ICodeState *> stitcher;
         StatementLabels *labelSet;
@@ -167,7 +172,11 @@ namespace ICG {
                             bool hasTryStatement = false, 
                             uint32 switchStatementNesting = 0);
         
-        virtual ~ICodeGenerator() { if (iCode) delete iCode; }
+        ~ICodeGenerator()
+        {
+            if (iCodeOwner)
+                delete iCode;
+        }
         
         void mergeStream(InstructionStream *sideStream);
         
