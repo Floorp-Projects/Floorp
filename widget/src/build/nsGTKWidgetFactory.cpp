@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -187,7 +187,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)(nsWidget *)new nsRadioButton();
     }
     else if (mClassID.Equals(kCFileOpen)) {
-      inst = (nsISupports*)new nsFileWidget();
+        inst = (nsISupports*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
         inst = (nsISupports*)(nsWidget *)new nsListBox();
@@ -251,12 +251,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsTransferable();
     }
     else if (mClassID.Equals(kCClipboard)) {
-        printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  CLIPBOARD!\n");
         inst = (nsISupports*)new nsClipboard();
-    } else {
-      printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Class not found.\n");
-    }
-
+    } 
 #if 0
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)new nsDragService();
@@ -271,6 +267,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsDraggedObject();
     }
 #endif
+    else {
+        printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
+    }
   
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
