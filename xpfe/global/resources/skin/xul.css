@@ -2,6 +2,8 @@
     a particular application should be in that application's style sheet.
 	For example style definitions for navigator can be found in navigator.css
 
+   THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
+   CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
 window { 
@@ -560,40 +562,19 @@ titledbutton[class~=plain][disabled]:active {
 /* special class for borderless buttons */
 /* titled button on toolbars are automatically set to be borderless (see below) */
 
-titledbutton[class~=borderless] {
+titledbutton.image {
   border: 1px solid transparent;
+  text-decoration: none;
 }
 
-titledbutton[class~=borderless]:hover {
-  border: 1px outset white;
-  color:#333366;
-  text-decoration: underline;
+titledbutton.image:hover {
+  border: 1px solid transparent;
+  text-decoration: none;
 }
  
-titledbutton[class~=borderless]:hover:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton[class~=borderless]:active {
-  text-decoration:none;
-  border: 1px inset;
-}
-
-titledbutton[class~=borderless]:active:-moz-outline {
-   border : 1px solid black;
-}
- 
-titledbutton[class~=borderless][disabled] {
-	border: 1px solid transparent;
-}
-
-titledbutton[class~=borderless][disabled]:hover {
-	border: 1px solid transparent;
-}
-
-titledbutton[class~=borderless][disabled]:active {
-	border: 1px solid transparent;
-	padding: 2px;
+titledbutton.image:active {
+  border: 1px solid transparent;
+  text-decoration: none;
 }
 
 /* as a convenience predefined for toolbar as being same as class borderless */
@@ -680,6 +661,7 @@ treecell {
  display: table-cell; 
  white-space: nowrap;
  font: inherit;
+ vertical-align: middle;
 } 
 
 treehead treerow treecell { 
@@ -1139,6 +1121,14 @@ treeitem > treerow > treecell > .tree-icon > .twisty {
  width: 16px;
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  visibility: visible;
+}
+
+.twisty:hover {
+ text-decoration: none;
+}
+
+.twisty:active {
+ text-decoration: none;
 }
 
 treeitem[empty="true"] > treerow > treecell > .tree-icon > titledbutton.twisty {
