@@ -356,9 +356,20 @@ private:
 
 };
 
-//---------------------------------------------------
-//-- PrintData Class
-//---------------------------------------------------
+//------------------------------------------------------------------------
+// PrintData Class
+//
+// mPreparingForPrint - indicates that we have started Printing but 
+//   have not gone to the timer to start printing the pages. It gets turned 
+//   off right before we go to the timer.
+//
+// mDocWasToBeDestroyed - Gets set when "someone" tries to unload the document
+//   while we were prparing to Print. This typically happens if a user starts 
+//   to print while a page is still loading. If they start printing and pause 
+//   at the print dialog and then the page comes in, we then abort printing 
+//   because the document is no longer stable.
+// 
+//------------------------------------------------------------------------
 class PrintData {
 public:
 
@@ -396,7 +407,9 @@ public:
   PRPackedBool                mIsParentAFrameSet;
   PRPackedBool                mPrintingAsIsSubDoc;
   PRPackedBool                mOnStartSent;
-  PRPackedBool                mIsAborted;
+  PRPackedBool                mIsAborted;           // tells us the document is being aborted
+  PRPackedBool                mPreparingForPrint;   // see comments above
+  PRPackedBool                mDocWasToBeDestroyed; // see comments above
   PRBool                      mShrinkToFit;
   PRInt16                     mPrintFrameType;
   PRInt32                     mNumPrintableDocs;
@@ -794,7 +807,8 @@ PrintData::PrintData() :
   mPrintView(nsnull), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
   mShowProgressDialog(PR_TRUE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
   mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE), mOnStartSent(PR_FALSE), 
-  mIsAborted(PR_FALSE), mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
+  mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
+  mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
   mShrinkRatio(1.0), mOrigDCScale(1.0)
 {
@@ -1405,6 +1419,19 @@ DocumentViewerImpl::Close()
 NS_IMETHODIMP
 DocumentViewerImpl::Destroy()
 {
+  // Here is where we check to see if the docment was still being prepared 
+  // for printing when it was asked to be destroy from someone externally
+  // This usually happens if the document is unloaded while the user is in the Print Dialog
+  //
+  // So we flip the bool to remember that the document is going away
+  // and we can clean up and abort later after returning from the Print Dialog
+  if (mPrt && mPrt->mPreparingForPrint) {
+    mPrt->mDocWasToBeDestroyed = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Don't let the document get unloaded while we are printing
+  // this could happen if we hit the back button during printing
   if (mDestroyRefCount != 0) {
     --mDestroyRefCount;
     return NS_OK;
@@ -4311,6 +4338,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             PRInt32 printPageDelay = 500;
             mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
+            // We are done preparing for printing, so we can turn this off
+            mPrt->mPreparingForPrint = PR_FALSE;
+
             // Schedule Page to Print
             PRINT_DEBUG_MSG3("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
             StartPagePrintTimer(poPresContext, mPrt->mPrintSettings, aPO, printPageDelay);
@@ -5531,8 +5561,19 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
+  // Get the webshell for this documentviewer
+  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
+  // Get the DocShell and see if it is busy
+  // We can't Print or Print Preview this document if it is still busy
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webContainer));
+  NS_ASSERTION(docShell.get(), "This has to be a docshell");
+  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  if (NS_FAILED(docShell->GetBusyFlags(&busyFlags)) || busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+    ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP, PR_FALSE);
+    return NS_ERROR_FAILURE;
+  }
   nsresult rv = NS_OK;
-printf("DocumentViewerImpl::PrintPreview\n");
+
 #if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
   if (!mIsDoingPrintPreview) {
     RemoveFilesInDir(".\\");
@@ -5603,9 +5644,6 @@ printf("DocumentViewerImpl::PrintPreview\n");
   } else {
     mPrt->mPrintDocList->Clear();
   }
-
-  // Get the webshell for this documentviewer
-  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
 
   // Add Root Doc to Tree and List
   mPrt->mPrintObject             = new PrintObject;
@@ -5929,6 +5967,11 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   // Let's print ...
   mIsDoingPrinting = PR_TRUE;
 
+  // We need to  make sure this document doesn't get unloaded
+  // before we have a chance to print, so this stops the Destroy from
+  // being called
+  mPrt->mPreparingForPrint = PR_TRUE;
+
   if (aWebProgressListener != nsnull) {
     mPrt->mPrintProgressListeners.AppendElement((void*)aWebProgressListener);
     NS_ADDREF(aWebProgressListener);
@@ -6039,7 +6082,22 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     PRBool printSilently;
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
     rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, *getter_AddRefs(devspec), printSilently);
-	    if (NS_SUCCEEDED(rv)) {
+
+    // If the page was intended to be destroyed while we were in the print dialog 
+    // then we need to clean up and abort the printing.
+    if (mPrt->mDocWasToBeDestroyed) {
+      mPrt->mPreparingForPrint = PR_FALSE;
+      Destroy();
+      mIsDoingPrinting = PR_FALSE;
+      // If they hit cancel then rv will equal NS_ERROR_ABORT and 
+      // then we don't want to display the message
+      if (rv != NS_ERROR_ABORT) {
+        ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED);
+      }
+      return NS_ERROR_ABORT;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
       rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
       if (NS_SUCCEEDED(rv)) {
         rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
@@ -6300,6 +6358,8 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED)
 
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
