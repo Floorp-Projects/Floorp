@@ -32,14 +32,14 @@
 class nsCacheEntryDescriptor :
     public PRCList,
     public nsICacheEntryDescriptor
- {
+{
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHEENTRYDESCRIPTOR
     
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
     virtual ~nsCacheEntryDescriptor();
-
+    
     static nsresult Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
                            nsICacheEntryDescriptor ** result);
 
@@ -48,11 +48,12 @@ public:
      * utility method to attempt changing data size of associated entry
      */
     nsresult  RequestDataSizeChange(PRInt32 deltaSize);
-
+    
     /**
      * methods callbacks for nsCacheService
      */
-    nsCacheEntry * CacheEntry(void) { return mCacheEntry; }    
+    nsCacheEntry * CacheEntry(void)      { return mCacheEntry; }
+    void           ClearCacheEntry(void) { mCacheEntry = nsnull; }
 
 private:
 

@@ -134,6 +134,16 @@ private:
 
     nsresult         ProcessPendingRequests(nsCacheEntry * entry);
 
+    void             ClearPendingRequests(nsCacheEntry * entry);
+    void             ClearDoomList(void);
+    void             ClearActiveEntries(void);
+
+    static
+    PLDHashOperator  DeactiveateAndClearEntry(PLDHashTable *    table,
+                                              PLDHashEntryHdr * hdr,
+                                              PRUint32          number,
+                                              void *            arg);
+
     /**
      *  Data Members
      */
@@ -152,6 +162,14 @@ private:
     //    nsCacheClientHashTable  mClientIDs;
     nsCacheEntryHashTable   mActiveEntries;
     PRCList                 mDoomedEntries;
+
+    // stats
+    PRUint32                mTotalEntries;
+    PRUint32                mCacheHits;
+    PRUint32                mCacheMisses;
+    PRUint32                mMaxKeyLength;
+    PRUint32                mMaxDataSize;
+    PRUint32                mMaxMetaSize;
 
     // Unexpected error totals
     PRUint32                mDeactivateFailures;

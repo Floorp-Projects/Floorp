@@ -48,6 +48,12 @@ nsCacheService::nsCacheService()
     : mCacheServiceLock(nsnull),
       mMemoryDevice(nsnull),
       mDiskDevice(nsnull),
+      mTotalEntries(0),
+      mCacheHits(0),
+      mCacheMisses(0),
+      mMaxKeyLength(0),
+      mMaxDataSize(0),
+      mMaxMetaSize(0),
       mDeactivateFailures(0),
       mDeactivatedUnboundEntries(0)
 {
@@ -66,6 +72,9 @@ nsCacheService::~nsCacheService()
         (void) Shutdown();
 
     gService = nsnull;
+#if DEBUG
+    printf("### nsCacheService is now destroyed.\n");
+#endif
 }
 
 
@@ -128,9 +137,16 @@ nsCacheService::Shutdown()
                  "can't shutdown nsCacheService unless it has been initialized.");
 
     if (mCacheServiceLock) {
-        // XXX check for pending requests...
+        // XXX this is not sufficient
+        PRLock * tempLock = mCacheServiceLock;
+        mCacheServiceLock = nsnull;
+#if DEBUG
+        printf("### beging nsCacheService::Shutdown()\n");
+#endif
 
-        // XXX finalize active entries
+        // Clear entries
+        ClearDoomList();
+        ClearActiveEntries();
 
         // deallocate memory and disk caches
         delete mMemoryDevice;
@@ -139,8 +155,7 @@ nsCacheService::Shutdown()
         delete mDiskDevice;
         mDiskDevice = nsnull;
 
-        PR_DestroyLock(mCacheServiceLock);
-        mCacheServiceLock = nsnull;
+        PR_DestroyLock(tempLock);
     }
     return NS_OK;
 }
@@ -219,7 +234,9 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
                                     nsLiteralCString(clientKey));
     if (!key)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
+    if (mMaxKeyLength < key->Length()) mMaxKeyLength = key->Length();
+
     // create request
     *request = new  nsCacheRequest(key, listener, accessRequested, session);    
     if (!*request) {
@@ -384,6 +401,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (entry)  entry->MarkInitialized();
     }
 
+    if (entry)  ++mCacheHits;
+    else        ++mCacheMisses;
+
     if (!entry && !(request->AccessRequested() & nsICache::ACCESS_WRITE)) {
         // this is a READ-ONLY request
         rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
@@ -410,6 +430,8 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
                                  request->StoragePolicy());
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
+        
+        ++mTotalEntries;
         
         // XXX  we could perform an early bind in some cases based on storage policy
     }
@@ -590,7 +612,10 @@ void
 nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 {
     nsresult  rv = NS_OK;
-    NS_ASSERTION(entry->IsNotInUse(), "deactivating an entry while in use!");
+    NS_ASSERTION(entry->IsNotInUse(), "### deactivating an entry while in use!");
+
+    if (mMaxDataSize < entry->DataSize() )     mMaxDataSize = entry->DataSize();
+    if (mMaxMetaSize < entry->MetaDataSize() ) mMaxMetaSize = entry->MetaDataSize();
 
     if (entry->IsDoomed()) {
         // remove from Doomed list
@@ -688,6 +713,64 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
 
     return NS_OK;
 }
+
+
+void
+nsCacheService::ClearPendingRequests(nsCacheEntry * entry)
+{
+    nsCacheRequest * request = (nsCacheRequest *)PR_LIST_HEAD(&entry->mRequestQ);
+    
+    while (request != &entry->mRequestQ) {
+        nsCacheRequest * next = (nsCacheRequest *)PR_NEXT_LINK(request);
+
+        // XXX we're just dropping these on the floor for now...definitely wrong.
+        PR_REMOVE_AND_INIT_LINK(request);
+        delete request;
+        request = next;
+    }
+}
+
+
+void
+nsCacheService::ClearDoomList()
+{
+    nsCacheEntry * entry = (nsCacheEntry *)PR_LIST_HEAD(&mDoomedEntries);
+
+    while (entry != &mDoomedEntries) {
+        nsCacheEntry * next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+        
+         entry->DetachDescriptors();
+         DeactivateEntry(entry);
+         entry = next;
+    }        
+}
+
+
+void
+nsCacheService::ClearActiveEntries()
+{
+    // XXX really we want a different finalize callback for mActiveEntries
+    PL_DHashTableEnumerate(&mActiveEntries.table, DeactiveateAndClearEntry, nsnull);
+}
+
+
+PLDHashOperator
+nsCacheService::DeactiveateAndClearEntry(PLDHashTable *    table,
+                                         PLDHashEntryHdr * hdr,
+                                         PRUint32          number,
+                                         void *            arg)
+{
+    nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
+    NS_ASSERTION(entry, "### active entry = nsnull!");
+    gService->ClearPendingRequests(entry);
+    entry->DetachDescriptors();
+    gService->DeactivateEntry(entry);
+    
+    ((nsCacheEntryHashTableEntry *)hdr)->keyHash    = 1; // mark removed
+    ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry = nsnull;
+    return PL_DHASH_NEXT;
+}
+
 
 NS_IMETHODIMP nsCacheService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {

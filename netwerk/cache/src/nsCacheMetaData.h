@@ -59,6 +59,8 @@ public:
     nsresult              SetElement(const nsAReadableCString& key,
                                      const nsAReadableCString& value);
 
+    PRUint32              Size(void);
+
     nsresult              FlattenMetaData(char ** data, PRUint32 * size);
     
     nsresult              UnflattenMetaData(char * data, PRUint32 size);
