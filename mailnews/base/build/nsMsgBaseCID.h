@@ -385,6 +385,18 @@
 
 
 //
+// nsMsgSearchDataSource
+//
+#define NS_MSGSEARCHDATASOURCE_PROGID \
+  NS_RDF_DATASOURCE_PROGID_PREFIX "msgsearch"
+
+/* f713896e-3a48-44a8-a7e0-8dde5b4b6461 */
+#define NS_MSGSEARCHDATASOURCE_CID \
+  { 0xf713896e, 0x3a48, 0x44a8, \
+    {0xa7, 0xe0, 0x8d, 0xde, 0x5b, 0x4b, 0x64, 0x61}}
+
+
+//
 // nsMsgFilterDataSource
 //
 #define NS_MSGFILTERDATASOURCE_PROGID \
