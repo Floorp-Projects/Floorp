@@ -5,7 +5,8 @@
 <!DOCTYPE window
 [
 <!ENTITY mainWindow.title "Mozilla"> 
-<!ENTITY mainWindow.titlemodifier " - Mozilla"> 
+<!ENTITY mainWindow.titlemodifier "Mozilla"> 
+<!ENTITY mainWindow.titlemodifierseperator " - ">
 <!ENTITY throbber.url "http://www.mozilla.org"> 
 <!ENTITY fileMenu.label "File">
 <!ENTITY browserCmd.label "New Browser Window">
@@ -24,7 +25,7 @@
 <!ENTITY printSetupCmd.label "Print Setup">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printCmd.label "Print">
-<!ENTITY closeCmd.label ".Close">
+<!ENTITY closeCmd.label "Close">
 <!ENTITY quitCmd.label "Quit">
 <!ENTITY editMenu.label "Edit">
 <!ENTITY undoCmd.label "Undo">
@@ -156,9 +157,6 @@
 <!ENTITY toolsServerToolsCmd.label "Server Tools">
 <!ENTITY toolsJsDebuggerCmd.label "JavaScipt Debugger">
 <!ENTITY securityInfo.label "Security Info">
-<!ENTITY window1Cmd.label "Window 1">
-<!ENTITY window2Cmd.label "Window 2">
-<!ENTITY window3Cmd.label "Window 3">
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpContentsCmd.label "Help Contents">
 <!ENTITY howTutorialCmd.label "How to Tutorial">
@@ -262,7 +260,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()"
         onunload="if (appCore) appCore.close()"
-        title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;"> 
+        title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
+        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:browser"> 
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
@@ -503,7 +502,7 @@
 		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
-	 <menu name="&tasksMenu.label;">
+	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" id="NC:WindowMediatorRoot" open="true" >
       <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
@@ -521,9 +520,7 @@
       <separator />
       <menuitem name="&securityInfo.label;" onclick="BrowserReload();"/>
       <separator/>
-      <menuitem name="&window1Cmd.label;" onclick="BrowserReload();" key="1"/>
-      <menuitem name="&window2Cmd.label;" onclick="BrowserReload();" />
-      <menuitem name="&window3Cmd.label;" onclick="BrowserReload();" />
+      
     </menu>
     
      <menu name="&helpMenuCmd.label;">
