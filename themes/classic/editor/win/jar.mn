@@ -1,2 +1,2 @@
-skins/classic.jar:
-    editor/skin/EditModeTabs.css                                 (EditModeTabs.css)
+classic.jar:
+    skin/classic/editor/EditModeTabs.css                                 (EditModeTabs.css)

@@ -31,6 +31,7 @@ DIRS =  communicator\search\win  \
         global\win               \
         messenger\win            \
         preview\win              \
+        editor\win               \
         navigator\win
 
 include <$(DEPTH)\config\rules.mak>
