@@ -380,6 +380,20 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	m_knownArts.first_possible = first_possible;
 	m_knownArts.last_possible = last_possible;
 
+    nsresult rv = NS_OK;
+
+	// get the incoming msg server
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv)
+	if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = accountManager->FindServer(m_username,m_hostname,"nntp", getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+		
+	// QI to get the nntp incoming msg server
+	nsCOMPtr<nsINntpIncomingServer> nntpServer;
+	rv = server->QueryInterface(nsINntpIncomingServer::GetIID(), getter_AddRefs(nntpServer));
+	if (NS_FAILED(rv)) return rv;
+
 	/* Determine if we only want to get just new articles or more messages.
 	If there are new articles at the end we haven't seen, we always want to get those first.  
 	Otherwise, we get the newest articles we haven't gotten, if we're getting more. 
@@ -388,16 +402,16 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
-        nsresult rv = NS_OK;
         NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
         if (NS_FAILED(rv) || (!prefs)) {
             return rv;
         }    
-#ifdef HAVE_PANES
-		PRBool notifyMaxExceededOn = (m_pane && !m_finishingXover && m_pane->GetPrefs() && m_pane->GetPrefs()->GetNewsNotifyOn());
-#else
-        PRBool notifyMaxExceededOn = PR_TRUE;   // check prefs GetPrefs()->GetNewsNotifyOn
-#endif
+
+		
+		PRBool notifyMaxExceededOn = PR_TRUE;
+		rv = nntpServer->GetNotifyOn(&notifyMaxExceededOn);
+		if (NS_FAILED(rv)) notifyMaxExceededOn = PR_TRUE;
+
 		// if the preference to notify when downloading more than x headers is not on,
 		// and we're downloading new headers, set maxextra to a very large number.
 		if (!m_getOldMessages && !notifyMaxExceededOn)
@@ -434,18 +448,6 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 
 				PRInt32 dialogMaxArticles = 0;
 				PRBool dialogMarkOldRead = PR_FALSE;
-
-				// get the incoming msg server
-				NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv)
-				if (NS_FAILED(rv)) return rv;
-				nsCOMPtr<nsIMsgIncomingServer> server;
-				rv = accountManager->FindServer(m_username,m_hostname,"nntp", getter_AddRefs(server));
-				if (NS_FAILED(rv)) return rv;
-		
-				// QI to get the nntp incoming msg server
-				nsCOMPtr<nsINntpIncomingServer> nntpServer;
-				rv = server->QueryInterface(nsINntpIncomingServer::GetIID(), getter_AddRefs(nntpServer));
-				if (NS_FAILED(rv)) return rv;
 
 				// get the max articles for this server
 				rv = nntpServer->GetMaxArticles(&dialogMaxArticles);
