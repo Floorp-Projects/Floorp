@@ -534,76 +534,10 @@ GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
     }
 
     if (isArray) {
-      // If we are already building an array or if this is known to be a
-      // multi-dimensional array, then punt by calling this inner
-      // array an nsIVariant.
-
-      PRUint32 arrayDimension;
-      if (!depth) {
-        rv = complexType->GetArrayDimension(&arrayDimension);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-      }
-
-      if (depth || arrayDimension > 1) {
-        NS_ASSERTION(depth==1, "bad depth");
-        paramDesc->type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
-        paramDesc->type.type.iface = iidx.Get(IIDX::IDX_nsIVariant);
-        return NS_OK;
-      }
-
-      // else, recur to figure out the type for the array elements
-      
-      nsCOMPtr<nsISchemaType> arrayType;
-      rv = complexType->GetArrayType(getter_AddRefs(arrayType));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      
-      ParamAccumulator arrayTypeParams;
-      rv = GetParamDescOfType(iism, aSet, arrayType, iidx, defaultResult,
-                              qualifier, depth+1, &arrayTypeParams);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      rv = aSet->AllocateAdditionalType(&typeIndex, &additionalType);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      // If we needed to build an array to hold the array elements 
-      // (e.g. BUILTIN_TYPE_BASE64BINARY) then punt by making these elements
-      // be variant.
-
-      if(arrayTypeParams.GetCount() != 1) {
-        additionalType->prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
-        additionalType->type.iface = iidx.Get(IIDX::IDX_nsIVariant);
-      }
-      else {
-        // Copy the gathered type into the referenced additional type.
-        *additionalType = arrayTypeParams.GetArray()->type;
-      
-        // We don't support arrays of AString. So, if the element type is
-        // AString then we poke in wstring instead.
-        if (additionalType->prefix.flags == (TD_DOMSTRING | XPT_TDP_POINTER)) {
-          additionalType->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
-        } 
-      }
-
-      // Add the leading 'length' param.
-      paramDesc->type.prefix.flags = TD_UINT32;
-      
-      // Alloc another param descriptor to hold the array info.
-      paramDesc = aParams->GetNextParam();
-      if (!paramDesc) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      // Set this *second* param as an array and return.
-      paramDesc->type.prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
-      paramDesc->type.type.additional_type = typeIndex;
+      // Punt by calling this array an nsIVariant.
+      // Fix bug 202485
+      paramDesc->type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+      paramDesc->type.type.iface = iidx.Get(IIDX::IDX_nsIVariant);
       return NS_OK;
     }
 
