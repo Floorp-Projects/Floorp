@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-pref("accessibility.typeaheadfind", false);
+pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
