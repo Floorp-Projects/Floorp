@@ -164,7 +164,8 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
   outMacRect.bottom = aRect.y + aRect.height;
 }
 
-static PRUint32 underlineAttributeToTextRangeType(PRUint32 aUnderlineStyle)
+static PRUint32
+UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
 {
 #ifdef DEBUG_IME
   NSLog(@"****in underlineAttributeToTextRangeType = %d", aUnderlineStyle);
@@ -178,11 +179,35 @@ static PRUint32 underlineAttributeToTextRangeType(PRUint32 aUnderlineStyle)
   // ftang will ask apple for more details
   //
   // it probably means show 1-pixel thickness underline vs 2-pixel thickness
-
-  return aUnderlineStyle == 1 ? NS_TEXTRANGE_CONVERTEDTEXT : NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+  
+  PRUint32 attr;
+  if (selRange.length == 0) {
+    switch (aUnderlineStyle) {
+      case 1:
+        attr = NS_TEXTRANGE_RAWINPUT;
+        break;
+      case 2:
+      default:
+        attr = NS_TEXTRANGE_SELECTEDRAWTEXT;
+        break;
+    }
+  }
+  else {
+    switch (aUnderlineStyle) {
+      case 1:
+        attr = NS_TEXTRANGE_CONVERTEDTEXT;
+        break;
+      case 2:
+      default:
+        attr = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+        break;
+    }
+  }
+  return attr;
 }
 
-static PRUint32 countRanges(NSAttributedString *aString)
+static PRUint32
+CountRanges(NSAttributedString *aString)
 {
   // Iterate through aString for the NSUnderlineStyleAttributeName and count the 
   // different segments adjusting limitRange as we go.
@@ -201,7 +226,8 @@ static PRUint32 countRanges(NSAttributedString *aString)
   return count;
 }
 
-static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
+static void
+ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
 {
   // Convert the Cocoa range into the nsTextRange Array used in Gecko.
   // Iterate through the attributed string and map the underline attribute to Gecko IME textrange attributes.
@@ -216,7 +242,7 @@ static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange ma
                               inRange:limitRange];
     aRanges[i].mStartOffset = effectiveRange.location;                         
     aRanges[i].mEndOffset = NSMaxRange(effectiveRange);                         
-    aRanges[i].mRangeType = underlineAttributeToTextRangeType([attributeValue intValue]); 
+    aRanges[i].mRangeType = UnderlineAttributeToTextRangeType([attributeValue intValue], selRange); 
     limitRange = NSMakeRange(NSMaxRange(effectiveRange), 
                              NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
     i++;
@@ -228,17 +254,18 @@ static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange ma
   aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 }
 
-static void fillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
+static void
+FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
 { 
   // Count the number of segments in the attributed string and add one more count for sending current caret position to Gecko.
   // Allocate the right size of nsTextRange and draw caret at right position.
   // Convert the attributed string into an array of nsTextRange and get current caret position by calling above functions.
-  PRUint32 count = countRanges(aString) + 1;
+  PRUint32 count = CountRanges(aString) + 1;
   aTextEvent->rangeArray = new nsTextRange[count];
   if (aTextEvent->rangeArray)
   {
     aTextEvent->rangeCount = count;
-    convertAttributeToGeckoRange(aString, markRange, selRange, aTextEvent->rangeCount,  aTextEvent->rangeArray);
+    ConvertAttributeToGeckoRange(aString, markRange, selRange, aTextEvent->rangeCount,  aTextEvent->rangeArray);
   } 
 }
 
@@ -2912,7 +2939,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aBuffer;
   if (!doCommit)
-    fillTextRangeInTextEvent(&textEvent, aString, markRange, selRange);
+    FillTextRangeInTextEvent(&textEvent, aString, markRange, selRange);
 
   mGeckoChild->DispatchWindowEvent(textEvent);
   if ( textEvent.rangeArray )
