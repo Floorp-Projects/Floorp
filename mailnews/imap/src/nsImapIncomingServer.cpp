@@ -3363,9 +3363,10 @@ nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     NS_ENSURE_SUCCESS(rv,rv);
 
     // Is the server secure ?
-    PRBool isSecure = PR_FALSE;
-    rv = GetIsSecure(&isSecure);
+    PRInt32 socketType;
+    rv = GetSocketType(&socketType);
     NS_ENSURE_SUCCESS(rv,rv);
+    PRBool isSecure = (socketType == nsIMsgIncomingServer::useSSL);
 
     // Is server port a default port ?
     PRBool isItDefaultPort = PR_FALSE;

@@ -178,6 +178,14 @@ interface nsIMsgIncomingServer : nsISupports {
   /* should we use secure authentication? */
   attribute boolean useSecAuth;
 
+  const long defaultSocket = 0;
+  const long tryTLS = 1;
+  const long alwaysUseTLS = 2;
+  const long useSSL = 3;
+
+  /* use above values */
+  attribute long socketType;
+
   /* if a logon mechanism fails, should we fallback to a different
      mechanism?
   */

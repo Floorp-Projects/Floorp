@@ -356,6 +356,7 @@ nsImapProtocol::nsImapProtocol() : nsMsgProtocol(nsnull),
   m_useIdle = PR_TRUE; // by default, use it
   m_ignoreExpunges = PR_FALSE;
   m_useSecAuth = PR_FALSE;
+  m_socketType = nsIMsgIncomingServer::tryTLS;
   m_connectionStatus = 0;
   m_hostSessionList = nsnull;
   m_flagState = nsnull;
@@ -721,6 +722,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     GetServerStateParser().SetCapabilityFlag(capability);
 
     (void) server->GetUseSecAuth(&m_useSecAuth);
+    (void) server->GetSocketType(&m_socketType);
     if (imapServer)
     {
       nsXPIDLCString redirectorType;
@@ -737,12 +739,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
       if (port <= 0)
       {
-        PRBool isSecure = PR_FALSE;
+        PRInt32 socketType;
         // Be a bit smarter about setting the default port
-        if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
-          port = SECURE_IMAP_PORT;
-        else
-          port = IMAP_PORT;
+        port = (NS_SUCCEEDED(server->GetSocketType(&socketType)) 
+                  && socketType == nsIMsgIncomingServer::useSSL)
+           ? SECURE_IMAP_PORT :IMAP_PORT;
       }
       
       nsXPIDLCString hostName;
@@ -759,8 +760,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         PRBool isSecure = PR_FALSE;
         const char *connectionType = nsnull;
         
-        if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
+        if (m_socketType == nsIMsgIncomingServer::useSSL) 
           connectionType = "ssl";
+        else if ((m_socketType == nsIMsgIncomingServer::tryTLS && (capability & kHasStartTLSCapability))
+          || m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+          connectionType = "starttls";
 
         nsCOMPtr<nsIProxyInfo> proxyInfo;
         rv = NS_ExamineForProxy("imap", hostName.get(), port, getter_AddRefs(proxyInfo));
@@ -782,7 +786,13 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         rv = socketService->CreateTransport(&connectionType, connectionType != nsnull,
                                             *socketHost, socketPort, proxyInfo,
                                             getter_AddRefs(m_transport));
-        
+        if (NS_FAILED(rv) && m_socketType == nsIMsgIncomingServer::tryTLS)
+        {
+          connectionType = nsnull;
+          rv = socketService->CreateTransport(&connectionType, connectionType != nsnull,
+                                              *socketHost, socketPort, proxyInfo,
+                                              getter_AddRefs(m_transport));
+        }
         if (m_transport)
         {
           // Ensure that the socket can get the notification callbacks

@@ -1791,6 +1791,37 @@ NS_IMETHODIMP nsMsgIncomingServer::GetIntAttribute(const char *aName, PRInt32 *v
   return GetIntValue(aName, val);
 }
 
+
+NS_IMETHODIMP nsMsgIncomingServer::GetSocketType(PRInt32 *aSocketType)
+{
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey.get(), "socketType", fullPrefName);
+  nsresult rv = m_prefBranch->GetIntPref(fullPrefName.get(), aSocketType);
+
+  // socketType is set to default value. Look at isSecure setting
+  if (NS_FAILED(rv))
+  {
+    PRBool isSecure;
+    rv = GetBoolValue("isSecure", &isSecure);
+    if (NS_SUCCEEDED(rv) && isSecure)
+    {
+       *aSocketType = nsIMsgIncomingServer::useSSL;
+       SetSocketType(*aSocketType);
+    }
+    else
+    {
+       getDefaultIntPref("socketType", aSocketType);
+    }
+  }
+  return rv;
+  
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::SetSocketType(PRInt32 aSocketType)
+{
+  return SetIntValue("socketType", aSocketType);
+}
+
 // Check if the password is available and return a boolean indicating whether 
 // it is being authenticated or not.
 NS_IMETHODIMP 
