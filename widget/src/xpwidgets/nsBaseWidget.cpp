@@ -505,7 +505,7 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
   mParent.mChildren->Count(&itemCount);
   if (mCurrentPosition >= 0 && mCurrentPosition < itemCount ) {
     nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
-    NS_IF_ADDREF(widget);
+//  NS_IF_ADDREF(widget);		already addref'd in nsSupportsArray::ElementAt()
     *aItem = widget;
   }
   else
