@@ -547,7 +547,7 @@ sub LoadDirList {
 
      if (-f $modules) {
           if ((!(-f $dirsfile)) ||
-              ((-M $dirsfile) < (-M $modules))) {
+              ((-M $dirsfile) > (-M $modules))) {
                system("./createlegaldirs.pl", $::TreeID);
           }
      }
