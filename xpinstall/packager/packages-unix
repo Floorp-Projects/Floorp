@@ -195,6 +195,7 @@ bin/components/windowds.xpt
 bin/components/xpcom_base.xpt
 bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
+bin/components/xpcom_obsolete.xpt
 bin/components/xpconnect.xpt
 bin/components/chrome.xpt
 bin/components/docshell.xpt

@@ -161,6 +161,7 @@ bin/components/uconv.xpt
 bin/components/util.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_threads.xpt
+bin/components/xpcom_obsolete.xpt
 bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsProxyAutoConfig.js
