@@ -47,10 +47,10 @@
 
 /* DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath */
 
-#define NS_ERROR_DOM_INVALID_EXPRESSION_ERR      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_XPATH, 1)
-#define NS_ERROR_DOM_TYPE_ERR                    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_XPATH, 2)
+#define NS_ERROR_DOM_INVALID_EXPRESSION_ERR      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_XPATH, 51)
+#define NS_ERROR_DOM_TYPE_ERR                    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_XPATH, 52)
 
-#define NS_ERROR_DOM_INVALID_EXPRESSION_MSG "The expression is not a legal expression or it contains namespace prefixes that can't be resolved."
+#define NS_ERROR_DOM_INVALID_EXPRESSION_MSG "The expression is not a legal expression."
 #define NS_ERROR_DOM_TYPE_MSG "The expression cannot be converted to return the specified type."
 
 class nsXPathExceptionProvider : public nsIExceptionProvider
