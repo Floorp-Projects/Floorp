@@ -69,6 +69,7 @@
 #ifdef DEBUG
 #include "nsBlockDebugFlags.h"
 
+
 PRBool nsBlockFrame::gLamePaintMetrics;
 PRBool nsBlockFrame::gLameReflowMetrics;
 PRBool nsBlockFrame::gNoisy;
@@ -698,7 +699,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 #ifdef IBMBIDI
     if (mLines) {
       PRBool bidiEnabled;
-      aPresContext->BidiEnabled(bidiEnabled);
+      aPresContext->GetBidiEnabled(&bidiEnabled);
       if (bidiEnabled) {
         nsBidiPresUtils* bidiUtils;
         aPresContext->GetBidiUtils(&bidiUtils);
@@ -3838,7 +3839,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #ifdef IBMBIDI
   else {
     PRBool bidiEnabled;
-    aState.mPresContext->BidiEnabled(bidiEnabled);
+    aState.mPresContext->GetBidiEnabled(&bidiEnabled);
 
     if (bidiEnabled) {
       PRBool isVisual;

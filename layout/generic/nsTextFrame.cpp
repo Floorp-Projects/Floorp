@@ -1381,7 +1381,7 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
 
 #ifdef IBMBIDI
       PRBool bidiEnabled;
-      aPresContext->BidiEnabled(bidiEnabled);
+      aPresContext->GetBidiEnabled(&bidiEnabled);
       if (bidiEnabled) {
         PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       } else
@@ -2142,7 +2142,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     aRenderingContext.GetHints(hints);
     isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
     PRBool bidiEnabled;
-    aPresContext->BidiEnabled(bidiEnabled);
+    aPresContext->GetBidiEnabled(&bidiEnabled);
     //ahmed
     aPresContext->SetIsBidiSystem(isBidiSystem);
     if (bidiEnabled) {
@@ -2795,7 +2795,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
     PRBool isRightToLeft = PR_FALSE;
     PRBool bidiEnabled;
-    aPresContext->BidiEnabled(bidiEnabled);
+    aPresContext->GetBidiEnabled(&bidiEnabled);
 
     if (bidiEnabled) {
       nsBidiPresUtils* bidiUtils;

@@ -893,7 +893,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (context)
     {
       PRBool bidiEnabled;
-      context->BidiEnabled(bidiEnabled);
+      context->GetBidiEnabled(&bidiEnabled);
       if (bidiEnabled)
       {
         nsCOMPtr<nsIFrameSelection> frameSelection;

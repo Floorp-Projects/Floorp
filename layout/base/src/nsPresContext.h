@@ -177,8 +177,8 @@ public:
                      const PRUnichar* aData);
 
 #ifdef IBMBIDI
-  NS_IMETHOD BidiEnabled(PRBool& aBidiEnabled) const;
-  NS_IMETHOD EnableBidi(void) const;
+  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
+  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) const;
   NS_IMETHOD IsVisualMode(PRBool& aIsVisual) const;
   NS_IMETHOD SetVisualMode(PRBool aIsVisual);
   NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils);

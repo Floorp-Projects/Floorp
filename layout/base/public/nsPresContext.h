@@ -393,14 +393,14 @@ public:
    *
    *  @lina 07/12/2000
    */
-  NS_IMETHOD BidiEnabled(PRBool& aBidiEnabled) const = 0;
+  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const = 0;
 
   /**
    *  Set bidi enabled. This means we should apply the Unicode Bidi Algorithm
    *
    *  @lina 07/12/2000
    */
-  NS_IMETHOD EnableBidi(void) const  = 0;
+  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) const  = 0;
 
   /**
    *  Set visual or implicit mode into the pres context.

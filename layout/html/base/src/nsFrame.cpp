@@ -2855,7 +2855,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
 #ifdef IBMBIDI
       PRBool bidiEnabled;
-      aPresContext->BidiEnabled(bidiEnabled);
+      aPresContext->GetBidiEnabled(&bidiEnabled);
       result = it->FindFrameAt(searchingLine, newDesiredX, bidiEnabled, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
 #else
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
