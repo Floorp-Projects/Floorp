@@ -947,7 +947,13 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 		PRBool didFind;
 		nsresult rv = finder->FindNext(&didFind);
 		
-		return (NS_SUCCEEDED(rv) && didFind);
+        if(!didFind)
+        {
+            AfxMessageBox(IDS_SRCH_STR_NOT_FOUND);
+            dlg->SetFocus();
+        }
+
+        return (NS_SUCCEEDED(rv) && didFind);
 	}
 
     return 0;

@@ -459,6 +459,7 @@ BEGIN
     IDS_ENCRYPTION_HIGH_GRADE "High-grade Encryption (%1% %2!d! bit)"
     IDS_ENCRYPTION_LOW_GRADE "Low-grade Encryption (%1% %2!d! bit)"
     IDS_ENCRYPTION_NONE     "Connection Not Encrypted"
+    IDS_SRCH_STR_NOT_FOUND  "The text you entered was not found"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
