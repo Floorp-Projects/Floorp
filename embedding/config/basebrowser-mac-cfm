@@ -272,4 +272,11 @@ res:entityTables:html40Special.properties
 res:entityTables:html40Symbols.properties
 res:entityTables:htmlEntityVersions.properties
 res:entityTables:transliterate.properties
+res:fonts:*
+
+;
+; MathML
+;
+res:mathml.css
+Components:ucvmath.shlb
 
