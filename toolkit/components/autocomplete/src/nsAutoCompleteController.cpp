@@ -113,9 +113,12 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   // Nothing more to do if the input was just being set to null.
   if (!aInput)
     return NS_OK;
+
+  nsAutoString newValue;
+  mInput->GetTextValue(newValue);
   
   // Reset all search state members to default values
-  mSearchString.Truncate(0);
+  mSearchString = newValue;
   mEnterAfterSearch = PR_FALSE;
   mNeedToComplete = PR_FALSE;
   mDefaultIndexCompleted = PR_FALSE;
@@ -944,7 +947,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
     mInput->SelectTextRange(mSearchString.Length(), aValue.Length());
   } else {
     mInput->SetTextValue(mSearchString + Substring(aValue, mSearchString.Length()+findIndex, aValue.Length()));
-    mInput->SelectTextRange(mSearchString.Length(), -1);
+    mInput->SelectTextRange(mSearchString.Length(), aValue.Length() - findIndex);
 
     // XXX There might be a pref someday for doing it this way instead.
     // The textbox value does not match the beginning of the default value, so we
