@@ -124,27 +124,27 @@ enum
   return nil;
 }
 
-- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
 }
 
-- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
 }
 
-- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
 }
 
-- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
 }
 
-- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
 }
@@ -185,16 +185,9 @@ enum
   return mUUIDString;
 }
 
-- (NSDate*)startDate
+- (NSString*)categoryIdentifier
 {
-  return mStartDate;
-}
-
-- (void)setStartDate:(NSDate*)date
-{
-  NSDate* oldDate = mStartDate;
-  mStartDate = [date retain];
-  [oldDate release];
+  return [self identifier];
 }
 
 - (NSString*)url
@@ -240,60 +233,161 @@ enum
   return nil;
 }
 
-- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
-  // sort categories before sites
+  // always sort categories before sites
   if ([aItem isKindOfClass:[HistorySiteItem class]])
     return NSOrderedAscending;
 
-  // sort on title
-  return [self compareTitle:aItem];
+  // sort category items on title, always ascending
+  return [self compareTitle:aItem sortDescending:inDescending];
 }
 
-- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
-  // sort categories before sites
+  // always sort categories before sites
   if ([aItem isKindOfClass:[HistorySiteItem class]])
     return NSOrderedAscending;
 
-  // if we have dates, they override other sorts
-  if ([self startDate] && [aItem startDate])
-    return [[self startDate] compare:[aItem startDate]];
-  else
-    return [mTitle compare:[aItem title] options:NSCaseInsensitiveSearch];
+  NSComparisonResult result = [[self title] compare:[aItem title] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
-  // sort categories before sites
+  // always sort categories before sites
   if ([aItem isKindOfClass:[HistorySiteItem class]])
     return NSOrderedAscending;
 
-  // sort on title
-  return [self compareTitle:aItem];
+  // sort on title, always ascending
+  return [[self title] compare:[aItem title] options:NSCaseInsensitiveSearch];
 }
 
-- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
-  // sort categories before sites
+  // always sort categories before sites
   if ([aItem isKindOfClass:[HistorySiteItem class]])
     return NSOrderedAscending;
 
-  // sort on title
-  return [self compareTitle:aItem];
+  // sort on title, always ascending
+  return [[self title] compare:[aItem title] options:NSCaseInsensitiveSearch];
 }
 
-- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
-  // sort categories before sites
+  // always sort categories before sites
   if ([aItem isKindOfClass:[HistorySiteItem class]])
     return NSOrderedAscending;
 
-  // sort on title
-  return [self compareTitle:aItem];
+  // sort on title, always ascending
+  return [[self title] compare:[aItem title] options:NSCaseInsensitiveSearch];
 }
 
 @end
+
+#pragma mark -
+
+@implementation HistorySiteCategoryItem
+
+- (id)initWithSite:(NSString*)site title:(NSString*)title childCapacity:(int)capacity
+{
+  if ((self = [super initWithTitle:title childCapacity:capacity]))
+  {
+    mSite = [site retain];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mSite release];
+  [super dealloc];
+}
+
+- (NSString*)site
+{
+  return mSite;
+}
+
+- (NSString*)identifier
+{
+  return [NSString stringWithFormat:@"site:%d", mSite];
+}
+
+@end // HistorySiteCategoryItem
+
+#pragma mark -
+
+@implementation HistoryDateCategoryItem
+
+- (id)initWithStartDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity
+{
+  if ((self = [super initWithTitle:title childCapacity:capacity]))
+  {
+    mStartDate = [startDate retain];
+    mAgeInDays = days;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mStartDate release];
+  [super dealloc];
+}
+
+- (NSDate*)startDate
+{
+  return mStartDate;
+}
+
+- (NSString*)identifier
+{
+  return [NSString stringWithFormat:@"age_in_days:%d", mAgeInDays];
+}
+
+- (NSComparisonResult)startDateCompare:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  // always sort categories before sites
+  if (![aItem isKindOfClass:[HistoryDateCategoryItem class]])
+    return NSOrderedAscending;
+
+  // sort category items on date, always ascending
+  return (NSComparisonResult)(-1 * (int)[[self startDate] compare:[(HistoryDateCategoryItem*)aItem startDate]]);
+}
+
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return [self startDateCompare:aItem sortDescending:inDescending];
+}
+
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return [self startDateCompare:aItem sortDescending:inDescending];
+}
+
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return [self startDateCompare:aItem sortDescending:inDescending];
+}
+
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  // always sort categories before sites
+  if (![aItem isKindOfClass:[HistoryDateCategoryItem class]])
+    return NSOrderedAscending;
+
+  // sort category items on date, always ascending
+  NSComparisonResult result = [[self startDate] compare:[aItem startDate]];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return [self startDateCompare:aItem sortDescending:inDescending];
+}
+
+@end // HistoryDateCategoryItem
 
 #pragma mark -
 
@@ -319,6 +413,9 @@ enum
     if (NS_SUCCEEDED(inItem->GetHostname(hostname)))
       mHostname = [[NSString stringWith_nsACString:hostname] retain];
 
+    if ([mHostname length] == 0 && [mURL hasPrefix:@"file://"])
+      mHostname = [[NSString stringWithString:@"local_file"] retain];
+    
     PRTime firstVisit;
     if (NS_SUCCEEDED(inItem->GetFirstVisitDate(&firstVisit)))
       mFirstVisitDate = [[NSDate dateWithPRTime:firstVisit] retain];
@@ -414,49 +511,67 @@ enum
   return [NSImage imageNamed:@"smallbookmark"];
 }
 
-- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+// ideally, we'd strip the protocol from the URL before comparing so that https:// doesn't
+// sort after http://
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
+  NSComparisonResult result;
   // sort categories before sites
   if ([aItem isKindOfClass:[HistoryCategoryItem class]])
-    return NSOrderedDescending;
+    result = NSOrderedDescending;
+  else
+    result = [mURL compare:[aItem url] options:NSCaseInsensitiveSearch];
 
-  return [mURL compare:[aItem url] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
+  NSComparisonResult result;
   // sort categories before sites
   if ([aItem isKindOfClass:[HistoryCategoryItem class]])
-    return NSOrderedDescending;
+    result = NSOrderedDescending;
+  else
+    result = [mTitle compare:[aItem title] options:NSCaseInsensitiveSearch];
 
-  return [mTitle compare:[aItem title] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
+  NSComparisonResult result;
   // sort categories before sites
   if ([aItem isKindOfClass:[HistoryCategoryItem class]])
-    return NSOrderedDescending;
+    result = NSOrderedDescending;
+  else
+    result = [mFirstVisitDate compare:[aItem firstVisit]];
 
-  return [mFirstVisitDate compare:[aItem firstVisit]];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
+  NSComparisonResult result;
   // sort categories before sites
   if ([aItem isKindOfClass:[HistoryCategoryItem class]])
-    return NSOrderedDescending;
+    result = NSOrderedDescending;
+  else
+    result = [mLastVisitDate compare:[aItem lastVisit]];
 
-  return [mLastVisitDate compare:[aItem lastVisit]];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
-- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
+  NSComparisonResult result;
+
   // sort categories before sites
   if ([aItem isKindOfClass:[HistoryCategoryItem class]])
-    return NSOrderedDescending;
+    result = NSOrderedDescending;
+  else
+    result = [mHostname compare:[aItem hostname] options:NSCaseInsensitiveSearch];
 
-  return [mHostname compare:[aItem hostname] options:NSCaseInsensitiveSearch];
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }
 
 - (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag

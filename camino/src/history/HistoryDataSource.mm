@@ -75,16 +75,14 @@ NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly  = 
 
 struct SortData
 {
-  SEL   mSortSelector;
-  BOOL  mReverseSort;
+  SEL       mSortSelector;
+  NSNumber* mReverseSort;
 };
 
 static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
   SortData* sortData = (SortData*)context;
-  int comp = (int)[firstItem performSelector:sortData->mSortSelector withObject:secondItem];
-  if (sortData->mReverseSort)
-    comp *= -1;
+  int comp = (int)[firstItem performSelector:sortData->mSortSelector withObject:secondItem withObject:sortData->mReverseSort];
   return comp;
 }
 
@@ -123,7 +121,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   NSMutableDictionary*    mSiteDictionary;
 }
 
-- (void)addSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname;
+- (HistoryCategoryItem*)ensureHostCategoryForItem:(HistorySiteItem*)inItem;
 - (void)removeSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname;
 
 @end
@@ -264,7 +262,10 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 // recursive sort
 - (void)resortFromItem:(HistoryItem*)item
 {
-  SortData sortData = { mSortSelector, mSortDescending };
+  SortData sortData;
+  sortData.mSortSelector = mSortSelector;
+  sortData.mReverseSort = [NSNumber numberWithBool:mSortDescending];
+  
   if (!item)
     item = mRootItem;
     
@@ -298,10 +299,22 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   return [mSiteDictionary objectForKey:[item hostname]];
 }
 
-- (void)addSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname
+- (HistoryCategoryItem*)ensureHostCategoryForItem:(HistorySiteItem*)inItem
 {
-  [mSiteDictionary setObject:item forKey:hostname];
-  [[mRootItem children] addObject:item];
+  NSString* itemHostname = [inItem hostname];
+  HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
+  if (!hostCategory)
+  {
+    NSString* itemTitle = itemHostname;
+    if ([itemHostname isEqualToString:@"local_file"])
+      itemTitle = NSLocalizedString(@"LocalFilesCategoryTitle", @"");
+    
+    hostCategory = [[HistorySiteCategoryItem alloc] initWithSite:itemHostname title:itemTitle childCapacity:10];
+    [mSiteDictionary setObject:hostCategory forKey:itemHostname];
+    [[mRootItem children] addObject:hostCategory];
+    [hostCategory release];
+  }
+  return hostCategory;
 }
 
 - (void)removeSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname
@@ -312,16 +325,12 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 - (HistoryItem*)addItem:(HistorySiteItem*)item
 {
-  BOOL newHost = NO;
-  NSString* itemHostname = [item hostname];
-  HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
+  HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:[item hostname]];
+  BOOL newHost = (hostCategory == nil);
+
   if (!hostCategory)
-  {
-    hostCategory = [[HistoryCategoryItem alloc] initWithTitle:itemHostname childCapacity:10];
-    [self addSiteCategory:hostCategory forHostname:itemHostname];
-    [hostCategory release];
-    newHost = YES;
-  }
+    hostCategory = [self ensureHostCategoryForItem:item];
+
   [[hostCategory children] addObject:item];
 
   [self resortFromItem:newHost ? mRootItem : hostCategory];
@@ -351,23 +360,16 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   else
     [mSiteDictionary removeAllObjects];
   
+  [mRootItem release];
+  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:100];
+
   NSEnumerator* itemsEnum = [items objectEnumerator];
   HistorySiteItem* item;
   while ((item = [itemsEnum nextObject]))
   {
-    NSString* itemHostname = [item hostname];
-    HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
-    if (!hostCategory)
-    {
-      hostCategory = [[HistoryCategoryItem alloc] initWithTitle:itemHostname childCapacity:10];
-      [mSiteDictionary setObject:hostCategory forKey:itemHostname];
-      [hostCategory release];
-    }
+    HistoryCategoryItem* hostCategory = [self ensureHostCategoryForItem:item];
     [[hostCategory children] addObject:item];
   }
-
-  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[mSiteDictionary count]];
-  [[mRootItem children] addObjectsFromArray:[mSiteDictionary allValues]];
 
   [self resortFromItem:mRootItem];
 }
@@ -414,8 +416,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                                    minute:0
                                                    second:0
                                                  timeZone:[nowDate timeZone]];
-  HistoryCategoryItem* todayItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"Today", @"") childCapacity:10];
-  [todayItem setStartDate:lastMidnight];
+  HistoryCategoryItem* todayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:lastMidnight ageInDays:0 title:NSLocalizedString(@"Today", @"") childCapacity:10];
   [mDateCategories addObject:todayItem];
   [todayItem release];
   
@@ -425,8 +426,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                                     hours:0
                                                   minutes:0
                                                   seconds:0];
-  HistoryCategoryItem* yesterdayItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
-  [yesterdayItem setStartDate:startYesterday];
+  HistoryCategoryItem* yesterdayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:startYesterday ageInDays:1 title:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
   [mDateCategories addObject:yesterdayItem];
   [yesterdayItem release];
 
@@ -442,16 +442,14 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                          minutes:0
                                          seconds:0];
 
-    HistoryCategoryItem* dayItem = [[HistoryCategoryItem alloc] initWithTitle:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
-    [dayItem setStartDate:curDayStart];
+    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithStartDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
     [mDateCategories addObject:dayItem];
     [dayItem release];
   }
   
   // do "older"
   NSDate* oldDate = [NSDate distantPast];
-  HistoryCategoryItem* olderItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
-  [olderItem setStartDate:oldDate];
+  HistoryCategoryItem* olderItem = [[HistoryDateCategoryItem alloc] initWithStartDate:oldDate ageInDays:-1 title:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
   [mDateCategories addObject:olderItem];
   [olderItem release];
 }
@@ -462,7 +460,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   unsigned int numDateCategories = [mDateCategories count];
   for (unsigned int i = 0; i < numDateCategories; i ++)
   {
-    HistoryCategoryItem* curItem = [mDateCategories objectAtIndex:i];
+    HistoryDateCategoryItem* curItem = [mDateCategories objectAtIndex:i];
     NSComparisonResult comp = [date compare:[curItem startDate]];
     if (comp == NSOrderedDescending)
       return curItem;
@@ -720,9 +718,9 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   if ([mCurrentViewIdentifier isEqualToString:kHistoryViewFlat])
     mTreeBuilder = [[HistoryTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   else if ([mCurrentViewIdentifier isEqualToString:kHistoryViewBySite])
-    mTreeBuilder = [[HistoryBySiteTreeBuilder alloc] initWithItems:mHistoryItems  sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+    mTreeBuilder = [[HistoryBySiteTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   else    // default to by date
-    mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithItems:mHistoryItems  sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+    mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
   
   [self notifyChanged:nil itemOnly:NO];
 }
@@ -898,21 +896,21 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 - (SEL)selectorForSortColumn
 {
   if ([mSortColumn isEqualToString:@"url"])
-    return @selector(compareURL:);
+    return @selector(compareURL:sortDescending:);
 
   if ([mSortColumn isEqualToString:@"title"])
-    return @selector(compareTitle:);
+    return @selector(compareTitle:sortDescending:);
 
   if ([mSortColumn isEqualToString:@"first_visit"])
-    return @selector(compareFirstVisitDate:);
+    return @selector(compareFirstVisitDate:sortDescending:);
 
   if ([mSortColumn isEqualToString:@"last_visit"])
-    return @selector(compareLastVisitDate:);
+    return @selector(compareLastVisitDate:sortDescending:);
 
   if ([mSortColumn isEqualToString:@"hostname"])
-    return @selector(compareHostname:);
+    return @selector(compareHostname:sortDescending:);
 
-  return @selector(compareLastVisitDate:);
+  return @selector(compareLastVisitDate:sortDescending:);
 }
 
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier
@@ -972,10 +970,9 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 {
   if (!mSearchResultsArray) return;
 
-  SortData sortData = {
-    [self selectorForSortColumn],
-    mSortDescending
-  };
+  SortData sortData;
+  sortData.mSortSelector = [self selectorForSortColumn];
+  sortData.mReverseSort = [NSNumber numberWithBool:mSortDescending];
 
   [mSearchResultsArray sortUsingFunction:HistoryItemSort context:&sortData];
 }

@@ -63,11 +63,11 @@ class nsIHistoryItem;
 - (BOOL)isSiteItem;
 
 // we put sort comparators on the base class for convenience
-- (NSComparisonResult)compareURL:(HistoryItem *)aItem;
-- (NSComparisonResult)compareTitle:(HistoryItem *)aItem;
-- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem;
-- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem;
-- (NSComparisonResult)compareHostname:(HistoryItem *)aItem;
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
 
 @end
 
@@ -76,19 +76,38 @@ class nsIHistoryItem;
 {
   NSString*         mUUIDString;  // used to identify folders for outliner state saving
   NSString*         mTitle;
-  NSDate*           mStartDate;
   NSMutableArray*   mChildren;    // array of HistoryItems (may be heterogeneous)
 }
 
 - (id)initWithTitle:(NSString*)title childCapacity:(int)capacity;
 - (NSString*)title;
 - (NSString*)identifier;    // return UUID for this folder
-// start date only valid when grouping by date
-- (NSDate*)startDate;
-- (void)setStartDate:(NSDate*)date;
 
 @end
 
+
+// a history site category item (a folder in the outliner)
+@interface HistorySiteCategoryItem : HistoryCategoryItem
+{
+  NSString*         mSite;    // not user-visible; used for state tracking
+}
+
+- (id)initWithSite:(NSString*)site title:(NSString*)title childCapacity:(int)capacity;
+- (NSString*)site;
+
+@end
+
+// a history site category item (a folder in the outliner)
+@interface HistoryDateCategoryItem : HistoryCategoryItem
+{
+  NSDate*           mStartDate;
+  int               mAgeInDays;   // -1 is used for "distant past"
+}
+
+- (id)initWithStartDate:(NSDate*)startDate ageInDays:(int)days title:(NSString*)title childCapacity:(int)capacity;
+- (NSDate*)startDate;
+
+@end
 
 // a specific history entry
 @interface HistorySiteItem : HistoryItem

@@ -67,6 +67,8 @@ enum
   kSortDescendingItemTag    = 2
 };
 
+static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_state";
+
 @interface HistoryOutlineViewDelegate(Private)
 
 - (void)historyChanged:(NSNotification *)notification;
@@ -86,6 +88,7 @@ enum
 - (int)tagForSortOrder:(BOOL)sortDescending;
 
 - (NSMutableDictionary *)expandedStateDictionary;
+- (void)saveExpandedStateDictionary;
 - (BOOL)hasExpandedState:(HistoryItem*)inItem;
 - (void)setStateOfItem:(HistoryItem*)inItem toExpanded:(BOOL)inExpanded;
 - (void)restoreFolderExpandedStates;
@@ -97,6 +100,8 @@ enum
 
 - (void)dealloc
 {
+  [self saveExpandedStateDictionary];
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   [mExpandedStates release];
@@ -548,8 +553,18 @@ enum
 - (NSMutableDictionary *)expandedStateDictionary
 {
   if (!mExpandedStates)
-    mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
+  {
+    mExpandedStates = [[[NSUserDefaults standardUserDefaults] dictionaryForKey:kExpandedHistoryStatesDefaultsKey] mutableCopy];
+    if (!mExpandedStates)
+      mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
+  }
   return mExpandedStates;
+}
+
+- (void)saveExpandedStateDictionary
+{
+  if (mExpandedStates)
+    [[NSUserDefaults standardUserDefaults] setObject:mExpandedStates forKey:kExpandedHistoryStatesDefaultsKey];
 }
 
 - (BOOL)hasExpandedState:(HistoryItem*)inItem
@@ -561,7 +576,10 @@ enum
 - (void)setStateOfItem:(HistoryItem*)inItem toExpanded:(BOOL)inExpanded
 {
   NSMutableDictionary *dict = [self expandedStateDictionary];
-  [dict setObject:[NSNumber numberWithBool:inExpanded] forKey:[inItem identifier]];
+  if (inExpanded)
+    [dict setObject:[NSNumber numberWithBool:YES] forKey:[inItem identifier]];
+  else
+    [dict removeObjectForKey:[inItem identifier]];
 }
 
 - (void)restoreFolderExpandedStates

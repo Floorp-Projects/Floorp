@@ -749,7 +749,10 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)setStateOfItem:(BookmarkFolder *)anItem toExpanded:(BOOL)aBool
 {
   NSMutableDictionary *dict = [self expandedStateDictionary];
-  [dict setObject:[NSNumber numberWithBool:aBool] forKey:[anItem UUID]];
+  if (aBool)
+    [dict setObject:[NSNumber numberWithBool:YES] forKey:[anItem UUID]];
+  else
+    [dict removeObjectForKey:[anItem UUID]];
 }
 
 - (void)restoreFolderExpandedStates
