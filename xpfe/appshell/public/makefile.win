@@ -33,6 +33,7 @@ XPIDLSRCS =                        \
 EXPORTS =                         \
         nsIWebShellWindow.h       \
         nsAppShellCIDs.h          \
+	nsBuildID.h		  \
         nsICmdLineService.h       \
         nsIXULWindowCallbacks.h   \
         nsIDOMXPConnectFactory.h  \
