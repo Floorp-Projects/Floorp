@@ -115,25 +115,6 @@ CStartToken::CStartToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTa
 #endif
 }
 
-nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mIDAttributeAtom;
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-
-nsresult CStartToken::SetIDAttributeAtom(nsIAtom* aID)
-{
-  NS_ENSURE_ARG(aID);
-  mIDAttributeAtom = aID;
-
-  return NS_OK;
-}
-
-
 /*
  *  This method returns the typeid (the tag type) for this token.
  *  
@@ -146,17 +127,6 @@ PRInt32 CStartToken::GetTypeID(){
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
   return mTypeID;
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CStartToken::GetClassName(void) {
-  return "start";
 }
 
 /*
@@ -372,17 +342,6 @@ PRInt32 CEndToken::GetTypeID(){
  *  @param   
  *  @return  
  */
-const char*  CEndToken::GetClassName(void) {
-  return "/end";
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
 PRInt32 CEndToken::GetTokenType(void) {
   return eToken_end;
 }
@@ -445,17 +404,6 @@ CTextToken::CTextToken() : CHTMLToken(eHTMLTag_text) {
  */
 CTextToken::CTextToken(const nsAString& aName) : CHTMLToken(eHTMLTag_text) {
   mTextValue.Rebind(aName);
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CTextToken::GetClassName(void) {
-  return "text";
 }
 
 /*
@@ -717,17 +665,6 @@ CCDATASectionToken::CCDATASectionToken(const nsAString& aName) : CHTMLToken(eHTM
 
 /*
  *  
- *  
- *  @update  vidur 11/12/98
- *  @param   
- *  @return  
- */
-const char*  CCDATASectionToken::GetClassName(void) {
-  return "cdatasection";
-}
-
-/*
- *  
  *  @update  vidur 11/12/98
  *  @param   
  *  @return  
@@ -843,15 +780,6 @@ CMarkupDeclToken::CMarkupDeclToken(const nsAString& aName) : CHTMLToken(eHTMLTag
   mTextValue.Rebind(aName);
 }
 
-/*
- *  
- *  
- *  @param   
- *  @return  
- */
-const char*  CMarkupDeclToken::GetClassName(void) {
-  return "markupdeclaration";
-}
 
 /*
  *  
@@ -1255,17 +1183,6 @@ const nsAString& CCommentToken::GetStringValue(void)
   return mComment.AsString();
 }
 
-/* 
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char* CCommentToken::GetClassName(void){
-  return "/**/";
-}
-
 /*
  *  
  *  
@@ -1285,18 +1202,6 @@ PRInt32 CCommentToken::GetTokenType(void) {
  *  @return  
  */
 CNewlineToken::CNewlineToken() : CHTMLToken(eHTMLTag_newline) {
-}
-
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CNewlineToken::GetClassName(void) {
-  return "crlf";
 }
 
 /*
@@ -1424,17 +1329,6 @@ CAttributeToken::CAttributeToken(const nsAString& aKey, const nsAString& aName) 
 #ifdef DEBUG
   mLastAttribute = PR_FALSE;
 #endif
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CAttributeToken::GetClassName(void) {
-  return "attr";
 }
 
 /*
@@ -1887,17 +1781,6 @@ CWhitespaceToken::CWhitespaceToken(const nsAString& aName) : CHTMLToken(eHTMLTag
  *  @param   
  *  @return  
  */
-const char*  CWhitespaceToken::GetClassName(void) {
-  return "ws";
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
 PRInt32 CWhitespaceToken::GetTokenType(void) {
   return eToken_whitespace;
 }
@@ -1964,18 +1847,6 @@ nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFla
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 }
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CEntityToken::GetClassName(void) {
-  return "&entity";
-}
-
 
 /*
  *  
@@ -2245,18 +2116,6 @@ CScriptToken::CScriptToken(const nsAString& aString) : CHTMLToken(eHTMLTag_scrip
   mTextValue.Assign(aString);
 }
                         
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CScriptToken::GetClassName(void) {
-  return "script";
-}
-
 /*
  *  
  *  
@@ -2285,17 +2144,6 @@ CStyleToken::CStyleToken() : CHTMLToken(eHTMLTag_style) {
 
 CStyleToken::CStyleToken(const nsAString& aString) : CHTMLToken(eHTMLTag_style) {
   mTextValue.Assign(aString);
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CStyleToken::GetClassName(void) {
-  return "style";
 }
 
 /*
@@ -2377,17 +2225,6 @@ nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 
  *  @param   
  *  @return  
  */
-const char* CInstructionToken::GetClassName(void){
-  return "instruction";
-}
-
-/**
- *  
- *  
- *  @update  gess 9/23/98
- *  @param   
- *  @return  
- */
 PRInt32 CInstructionToken::GetTokenType(void){
   return eToken_instruction;
 }
@@ -2410,10 +2247,6 @@ CErrorToken::~CErrorToken()
 
 PRInt32 CErrorToken::GetTokenType(void){
   return eToken_error;
-}
-
-const char* CErrorToken::GetClassName(void){
-  return "error";
 }
 
 void CErrorToken::SetError(nsParserError *aError) {
@@ -2486,10 +2319,6 @@ nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32
   }
   
   return result;
-}
-
-const char*  CDoctypeDeclToken::GetClassName(void) {
-  return "doctype";
 }
 
 PRInt32 CDoctypeDeclToken::GetTokenType(void) {
