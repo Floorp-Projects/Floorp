@@ -36,7 +36,7 @@ var expectedvalues = [ ];
 var a = '';
 
 
-status = 'Section A of test';
+status = inSection(1);
 function f()
 {
   delete arguments.length;
@@ -58,7 +58,7 @@ addThis();
 
 
 
-status = 'Section B of test';
+status = inSection(2);
 a = f(1,2,3);
 actual = a instanceof Object;
 expect = true;
@@ -86,7 +86,7 @@ addThis();
 
 
 
-status = 'Section C of test';
+status = inSection(3);
 /*
  * Brendan:
  *
