@@ -28,6 +28,7 @@ CPPSRCS =				\
 	nsHTMLMeta.cpp			\
 	nsHTMLObject.cpp		\
 	nsHTMLTitle.cpp			\
+	nsObjectContent.cpp		\
 	$(NULL)
 
 MODULE = raptor
