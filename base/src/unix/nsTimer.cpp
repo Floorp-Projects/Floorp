@@ -21,7 +21,7 @@
 #include "prlog.h"
 #include <stdio.h>
 #include <limits.h>
-#include "Xm/Xm.h"
+#include <X11/Intrinsic.h>
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
