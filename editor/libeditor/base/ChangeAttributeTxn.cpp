@@ -33,8 +33,8 @@ nsresult ChangeAttributeTxn::Init(nsIEditor      *aEditor,
 {
   if (nsnull!=aEditor && nsnull!=aElement)
   {
-    mEditor = aEditor;
-    mElement = aElement;
+    mEditor = do_QueryInterface(aEditor);
+    mElement = do_QueryInterface(aElement);
     mAttribute = aAttribute;
     mValue = aValue;
     mRemoveAttribute = aRemoveAttribute;

@@ -36,7 +36,7 @@ DeleteElementTxn::DeleteElementTxn()
 nsresult DeleteElementTxn::Init(nsIDOMNode *aElement)
 {
   if (nsnull!=aElement)  {
-    mElement = aElement;
+    mElement = do_QueryInterface(aElement);
   }
   else 
     return NS_ERROR_NULL_POINTER;

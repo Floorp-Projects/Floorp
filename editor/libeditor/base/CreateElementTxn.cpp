@@ -31,12 +31,12 @@ nsresult CreateElementTxn::Init(nsIDOMDocument *aDoc,
 {
   if ((nsnull!=aDoc) && (nsnull!=aParent))
   {
-    mDoc = aDoc;
+    mDoc = do_QueryInterface(aDoc);
     mTag = aTag;
-    mParent = aParent;
+    mParent = do_QueryInterface(aParent);
     mOffsetInParent = aOffsetInParent;
-    mNewNode = nsnull;
-    mRefNode = nsnull;
+    mNewNode = do_QueryInterface(nsnull);
+    mRefNode = do_QueryInterface(nsnull);
 #ifdef NS_DEBUG
     {
       nsCOMPtr<nsIDOMNodeList> testChildNodes;

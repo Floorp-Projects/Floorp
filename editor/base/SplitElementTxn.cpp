@@ -33,8 +33,8 @@ nsresult SplitElementTxn::Init(nsIEditor  *aEditor,
                                nsIDOMNode *aNode,
                                PRInt32     aOffset)
 {
-  mEditor = aEditor;
-  mExistingRightNode = aNode;
+  mEditor = do_QueryInterface(aEditor);
+  mExistingRightNode = do_QueryInterface(aNode);
   mOffset = aOffset;
   return NS_OK;
 }

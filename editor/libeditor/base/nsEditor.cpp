@@ -1169,7 +1169,7 @@ nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   // otherwise, walk up the parent change until there is a child that comes before 
   // the ancestor of aCurrentNode.  Then return that node's rightmost child
 
-  nsCOMPtr<nsIDOMNode> parent(aCurrentNode);
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
   do {
     nsCOMPtr<nsIDOMNode> node(parent);
     result = node->GetParentNode(getter_AddRefs(parent));
@@ -1200,7 +1200,7 @@ nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   // otherwise, walk up the parent change until there is a child that comes before 
   // the ancestor of aCurrentNode.  Then return that node's rightmost child
 
-  nsCOMPtr<nsIDOMNode> parent(aCurrentNode);
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
   do {
     nsCOMPtr<nsIDOMNode> node(parent);
     result = node->GetParentNode(getter_AddRefs(parent));
@@ -1221,7 +1221,7 @@ nsresult
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> resultNode(aCurrentNode);
+  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
   PRBool hasChildren;
   resultNode->HasChildNodes(&hasChildren);
   while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
@@ -1242,7 +1242,7 @@ nsresult
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> resultNode(aCurrentNode);
+  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
   PRBool hasChildren;
   resultNode->HasChildNodes(&hasChildren);
   while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))

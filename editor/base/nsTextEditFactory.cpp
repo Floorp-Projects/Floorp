@@ -39,7 +39,7 @@ GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass)
   if (!g_pNSIFactory)
   {
     nsTextEditFactory *factory = new nsTextEditFactory(aClass);
-    g_pNSIFactory = factory;
+    g_pNSIFactory = do_QueryInterface(factory);
     if (factory)
       result = NS_OK;
   }

@@ -32,9 +32,9 @@ nsresult JoinElementTxn::Init(nsIEditor  *aEditor,
                               nsIDOMNode *aLeftNode,
                               nsIDOMNode *aRightNode)
 {
-  mEditor = aEditor;
-  mLeftNode = aLeftNode;
-  mRightNode = aRightNode;
+  mEditor = do_QueryInterface(aEditor);
+  mLeftNode = do_QueryInterface(aLeftNode);
+  mRightNode = do_QueryInterface(aRightNode);
   mOffset=0;
   return NS_OK;
 }

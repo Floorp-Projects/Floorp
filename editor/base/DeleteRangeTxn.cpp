@@ -49,7 +49,7 @@ nsresult DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
 {
   if (aEditor && aRange)
   {
-    mEditor = aEditor;
+    mEditor = do_QueryInterface(aEditor);
     nsresult result = aRange->GetStartParent(getter_AddRefs(mStartParent));
     NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
     result = aRange->GetEndParent(getter_AddRefs(mEndParent));
@@ -372,7 +372,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
   // Walk up the parent list of aFirstChild to aCommonParent,
   // deleting all siblings to the right of the ancestors of aFirstChild.
   BuildAncestorList(aLastChild, ancestorList); 
-  child = aFirstChild;
+  child = do_QueryInterface(aFirstChild);
   result = child->GetParentNode(getter_AddRefs(parent));
   while ((NS_SUCCEEDED(result)) && parent)
   {
@@ -442,7 +442,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
   BuildAncestorList(aFirstChild, ancestorList);
   if (PR_TRUE==needToProcessLastChild)
   {
-    child = aLastChild;
+    child = do_QueryInterface(aLastChild);
     result = child->GetParentNode(getter_AddRefs(parent));
     while ((NS_SUCCEEDED(result)) && parent)
     {
@@ -511,7 +511,7 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
   {
     aList->Clear();
     nsCOMPtr<nsIDOMNode> parent;
-    nsCOMPtr<nsIDOMNode> child(aNode);
+    nsCOMPtr<nsIDOMNode> child(do_QueryInterface(aNode));
     result = child->GetParentNode(getter_AddRefs(parent));
     while ((NS_SUCCEEDED(result)) && child && parent)
     {
