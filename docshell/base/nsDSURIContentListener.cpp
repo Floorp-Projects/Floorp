@@ -43,6 +43,7 @@
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsAutoPtr.h"
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
@@ -209,13 +210,20 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-    return mDocShell->GetLoadCookie(aLoadCookie);
+    NS_ADDREF(*aLoadCookie = NS_STATIC_CAST(nsIDocumentLoader*, mDocShell));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
 {
-    return mDocShell->SetLoadCookie(aLoadCookie);
+#ifdef DEBUG
+    nsRefPtr<nsDocLoader> cookieAsDocLoader =
+        nsDocLoader::GetAsDocLoader(aLoadCookie);
+    NS_ASSERTION(cookieAsDocLoader && cookieAsDocLoader == mDocShell,
+                 "Invalid load cookie being set!");
+#endif
+    return NS_OK;
 }
 
 NS_IMETHODIMP 

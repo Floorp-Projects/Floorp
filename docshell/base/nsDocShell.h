@@ -56,7 +56,7 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDeviceContext.h"
 
-#include "nsIDocumentLoader.h"
+#include "nsDocLoader.h"
 #include "nsIURILoader.h"
 #include "nsIEditorDocShell.h"
 
@@ -179,7 +179,8 @@ protected:
 //***    nsDocShell
 //*****************************************************************************
 
-class nsDocShell : public nsIDocShell,
+class nsDocShell : public nsDocLoader,
+                   public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
                    public nsIDocShellHistory,
@@ -189,14 +190,12 @@ class nsDocShell : public nsIDocShell,
                    public nsITextScroll, 
                    public nsIDocCharset, 
                    public nsIContentViewerContainer,
-                   public nsIInterfaceRequestor,
                    public nsIScriptGlobalObjectOwner,
                    public nsIRefreshURI,
                    public nsIWebProgressListener,
                    public nsIEditorDocShell,
                    public nsIWebPageDescriptor,
-                   public nsIAuthPromptProvider,
-                   public nsSupportsWeakReference
+                   public nsIAuthPromptProvider
 {
 friend class nsDSURIContentListener;
 
@@ -204,7 +203,9 @@ public:
     // Object Management
     nsDocShell();
 
-    NS_DECL_ISUPPORTS
+    virtual nsresult Init();
+
+    NS_DECL_ISUPPORTS_INHERITED
 
     NS_DECL_NSIDOCSHELL
     NS_DECL_NSIDOCSHELLTREEITEM
@@ -223,8 +224,16 @@ public:
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
 
-    nsresult SetLoadCookie(nsISupports * aCookie);
-    nsresult GetLoadCookie(nsISupports ** aResult);
+    NS_IMETHOD Stop() {
+        // Need this here because otherwise nsIWebNavigation::Stop
+        // overrides the docloader's Stop()
+        return nsDocLoader::Stop();
+    }
+
+    // Need to implement (and forward) nsISecurityEventSink, because
+    // nsIWebProgressListener has methods with identical names...
+    NS_FORWARD_NSISECURITYEVENTSINK(nsDocLoader::)
+
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
     PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
 
@@ -233,7 +242,7 @@ public:
 protected:
     // Object Management
     virtual ~nsDocShell();
-    NS_IMETHOD DestroyChildren();
+    virtual void DestroyChildren();
 
     // Content Viewer Management
     NS_IMETHOD EnsureContentViewer();
@@ -333,6 +342,9 @@ protected:
     nsresult CheckLoadingPermissions();
 
 protected:
+    // Override the parent setter from nsDocLoader
+    virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
+
     PRPackedBool               mAllowSubframes;
     PRPackedBool               mAllowPlugins;
     PRPackedBool               mAllowJavascript;
@@ -383,7 +395,6 @@ protected:
      * session history entries.
      */
     nsCString                  mContentTypeHint;
-    nsVoidArray                mChildren;
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
     nsDSURIContentListener *   mContentListener;
     nsRect                     mBounds; // Dimensions of the docshell
@@ -398,7 +409,6 @@ protected:
     nsCOMPtr<nsIScriptContext> mScriptContext;
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;
-    nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
     nsCOMPtr<nsIWebBrowserFind> mFind;
     nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
     // Reference to the SHEntry for this docshell until the page is destroyed.
@@ -418,7 +428,6 @@ protected:
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
     // For that reasons don't use nsCOMPtr.
 
-    nsIDocShellTreeItem *      mParent;  // Weak Reference
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
 

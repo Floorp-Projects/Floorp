@@ -269,16 +269,12 @@ NS_IMETHODIMP nsMsgWindow::SetOpenFolder(nsIMsgFolder * aOpenFolder)
 
 NS_IMETHODIMP nsMsgWindow::GetRootDocShell(nsIDocShell * *aDocShell)
 {
-  if(!aDocShell)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
-
-  if (rootShell == nsnull)
+  if (mRootDocShellWeak) {
+    CallQueryReferent(mRootDocShellWeak.get(), aDocShell);
+  } else {
     *aDocShell = nsnull;
-  else
-    rootShell->QueryInterface(nsIDocShell::GetIID(), (void **) aDocShell);
-
+  }
+  
   return NS_OK;
 }
 
@@ -382,30 +378,12 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 NS_IMETHODIMP nsMsgWindow::StopUrls()
 {
   m_stopped = PR_TRUE;
-  nsCOMPtr<nsIDocShell> docShell;
-  GetRootDocShell(getter_AddRefs(docShell));
-  if (docShell)
+  nsCOMPtr<nsIWebNavigation> webnav(do_QueryReferent(mRootDocShellWeak));
+  if (webnav)
   {
-    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docShell));
     return webnav->Stop(nsIWebNavigation::STOP_NETWORK);
   }
   
-  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
-  nsCOMPtr <nsIWebShell> rootWebShell(do_QueryInterface(rootShell));
-	if (rootWebShell)
-	{
-		nsCOMPtr <nsIDocumentLoader> docLoader;
-		nsCOMPtr <nsILoadGroup> loadGroup;
-
-		rootWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-		if (docLoader)
-		{
-			docLoader->GetLoadGroup(getter_AddRefs(loadGroup));
-			if (loadGroup)
-				loadGroup->Cancel(NS_BINDING_ABORTED);
-		}
-		return NS_OK;
-	}
 	return NS_ERROR_NULL_POINTER;
 }
 

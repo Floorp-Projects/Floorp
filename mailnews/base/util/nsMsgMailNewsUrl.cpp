@@ -272,9 +272,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
   {
     if (m_msgWindow)
     {
+            // XXXbz This is really weird... why are we getting some
+            // random loadgroup we're not really a part of?
             nsCOMPtr<nsIDocShell> docShell;
             m_msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-            nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
 
 #if 0   // since we're not going through the doc loader for most mail/news urls,
        //, this code isn't useful
@@ -299,13 +300,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
               }
             }
 #endif
-      if (webShell)
-      {
-        nsCOMPtr <nsIDocumentLoader> docLoader;
-        webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-        if (docLoader)
-          docLoader->GetLoadGroup(getter_AddRefs(m_loadGroup));
-      }
+            m_loadGroup = do_GetInterface(docShell);
     }
   }
 

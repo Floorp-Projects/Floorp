@@ -72,9 +72,6 @@ protected:
    */
   nsCOMArray<nsIWeakReference> m_listeners;
 
-  /** prepare the load cookie for the window context */
-  nsresult SetupLoadCookie(nsIInterfaceRequestor * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
-
 #ifdef PR_LOGGING
   /**
    * NSPR logging.  The module is called "URILoader"

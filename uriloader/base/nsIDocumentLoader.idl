@@ -43,28 +43,26 @@ interface nsIWebProgress;
 interface nsIRequest;
 
 /**
- * An nsIDocumentLoader is a component responsible for tracking groups of loads
- * that belong together (images, external scripts, etc) and subdocuments
+ * An nsIDocumentLoader is an interface responsible for tracking groups of
+ * loads that belong together (images, external scripts, etc) and subdocuments
  * (<iframe>, <frame>, etc). It is also responsible for sending
  * nsIWebProgressListener notifications.
+ * XXXbz this interface should go away, we think...
  */
-[scriptable, uuid(8cb3d66d-a39c-46d4-9786-373b6b052e6d)]
+[scriptable, uuid(bbe961ee-59e9-42bb-be50-0331979bb79f)]
 interface nsIDocumentLoader : nsISupports
 {
+  // Stop all loads in the loadgroup of this docloader
   void stop();
-  
-  // XXXbiesi this seems like not such a good method here
-  void createDocumentLoader(out nsIDocumentLoader anInstance);
 
-  attribute nsISupports container;
-  
-  nsILoadGroup getLoadGroup();
+  // XXXbz is this needed?  For embedding?  What this does is does is not
+  // defined by this interface!
+  readonly attribute nsISupports container;
 
-  void destroy();
+  // The loadgroup associated with this docloader
+  readonly attribute nsILoadGroup loadGroup;
+
+  // The defaultLoadRequest of the loadgroup associated with this docloader
   readonly attribute nsIChannel documentChannel;
-
-  void fireOnLocationChange(in nsIWebProgress aWebProgress,
-                            in nsIRequest aRequest,
-                            in nsIURI aUri);
 };
 

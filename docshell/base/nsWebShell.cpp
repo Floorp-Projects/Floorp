@@ -183,13 +183,6 @@ nsWebShell::~nsWebShell()
 {
    Destroy();
 
-  // Stop any pending document loads and destroy the loader...
-  if (mDocLoader) {
-    mDocLoader->Stop();
-    mDocLoader->SetContainer(nsnull);
-    mDocLoader->Destroy();
-    mDocLoader = nsnull;
-  }
   // Cancel any timers that were set for this loader.
   CancelRefreshURITimers();
 
@@ -264,55 +257,19 @@ NS_INTERFACE_MAP_END_INHERITING(nsDocShell)
 NS_IMETHODIMP
 nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-   NS_ENSURE_ARG_POINTER(aInstancePtr);
-   nsresult rv = NS_OK;
+   NS_PRECONDITION(aInstancePtr, "null out param");
+
    *aInstancePtr = nsnull;
 
-   if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
-      {
-      // Note: If we ever allow for registering other link handlers,
-      // we need to make sure that link handler implementations take
-      // the necessary precautions to prevent the security compromise
-      // that is blocked by nsWebSell::OnLinkClickSync().
-
-      *aInstancePtr = NS_STATIC_CAST(nsILinkHandler*, this);
-      NS_ADDREF((nsISupports*)*aInstancePtr);
-      return NS_OK;
-      }
-   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObjectOwner)))
-      {
-      *aInstancePtr = NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this);
-      NS_ADDREF((nsISupports*)*aInstancePtr);
-      return NS_OK;
-      }
-   else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)))
-      {
-      NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
-      *aInstancePtr = mScriptGlobal;
-      NS_ADDREF((nsISupports*)*aInstancePtr);
-      return NS_OK;
-      }
-   else if(aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)) ||
-           aIID.Equals(NS_GET_IID(nsIDOMWindow)))
-
-      {
-      NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(aIID, aInstancePtr),
-                        NS_ERROR_FAILURE);
-      return NS_OK;
-      }
-   else if(aIID.Equals(NS_GET_IID(nsICommandManager)))
+   if(aIID.Equals(NS_GET_IID(nsICommandManager)))
       {
       NS_ENSURE_SUCCESS(EnsureCommandHandler(), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(mCommandManager->QueryInterface(NS_GET_IID(nsICommandManager),
-         aInstancePtr), NS_ERROR_FAILURE);
+      *aInstancePtr = mCommandManager;
+      NS_ADDREF((nsISupports*) *aInstancePtr);
       return NS_OK;
       }
 
-   if (!*aInstancePtr || NS_FAILED(rv))
-     return nsDocShell::GetInterface(aIID,aInstancePtr);
-   else
-     return rv;
+   return nsDocShell::GetInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -339,19 +296,6 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
-
-/**
- * Document Load methods
- */
-NS_IMETHODIMP
-nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
-{
-  aResult = mDocLoader;
-  if (!mDocLoader)
-    return NS_ERROR_FAILURE;
-  NS_ADDREF(aResult);
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // Web Shell Services API
@@ -1194,22 +1138,6 @@ NS_IMETHODIMP nsWebShell::Create()
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 
-  // HACK....force the uri loader to give us a load cookie for this webshell...then get its
-  // doc loader and store it...as more of the docshell lands, we'll be able to get rid
-  // of this hack...
-  nsresult rv;
-  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = uriLoader->GetDocumentLoaderForContext(this,
-                                              getter_AddRefs(mDocLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContentViewerContainer> shellAsContainer;
-  CallQueryInterface(this, NS_STATIC_CAST(nsIContentViewerContainer**, getter_AddRefs(shellAsContainer)));
-  // Set the webshell as the default IContentViewerContainer for the loader...
-  mDocLoader->SetContainer(shellAsContainer);
-
   return nsDocShell::Create();
 }
 
@@ -1217,7 +1145,7 @@ NS_IMETHODIMP nsWebShell::Destroy()
 {
   nsDocShell::Destroy();
 
-  SetContainer(nsnull);
+  NS_IF_RELEASE(mContainer);
 
   return NS_OK;
 }

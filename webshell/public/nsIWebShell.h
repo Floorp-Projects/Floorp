@@ -43,8 +43,9 @@ class nsIDocumentLoader;
 class nsIURI;
 
 // Interface ID for nsIWebShell
+// e1c77239-eb80-42bb-8b94-54b49fe1b25b
 #define NS_IWEB_SHELL_IID \
- { 0xa6cf9058, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+ { 0xe1c77239, 0xeb80, 0x42bb,{0x8b, 0x94, 0x54, 0xb4, 0x9f, 0xe1, 0xb2, 0x5b}}
 
 // Interface ID for nsIWebShellContainer
 #define NS_IWEB_SHELL_CONTAINER_IID \
@@ -92,6 +93,15 @@ public:
    * THIS INTERFACE IS DEPRECATED. DO NOT ADD STUFF OR CODE TO IT!!!!
    */
 
+  // XXXbz there is no need for this interface anymore... Callers can either
+  // just get the parent treeitem, or when they want the container of the root
+  // docshell can get the treeowner and GetInterface nsIXULWindow to get what
+  // GetContainer currently returns...
+
+  // XXXbz oh, and the Show() method on nsIWebShellWindow is just redundant
+  // with SetVisibility on nsIBaseWindow....  Mailnews uses this interface for
+  // that stuff, but it doesn't have to.
+    
   /**
    * Set the nsIWebShellContainer for the WebShell.
    */
@@ -101,11 +111,6 @@ public:
    * Return the current nsIWebShellContainer.
    */
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
-
-  /**
-   * Return the nsIDocumentLoader associated with the WebShell.
-   */
-  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
 };
 
 #endif /* nsIWebShell_h___ */

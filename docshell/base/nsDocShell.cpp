@@ -230,6 +230,7 @@ nsDocShellFocusController nsDocShellFocusController::mDocShellFocusControllerSin
 //*****************************************************************************
 
 nsDocShell::nsDocShell():
+    nsDocLoader(),
     mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
@@ -256,7 +257,6 @@ nsDocShell::nsDocShell():
     mContentListener(nsnull),
     mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
     mEditorData(nsnull),
-    mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
 {
@@ -286,37 +286,59 @@ nsDocShell::~nsDocShell()
     }
 }
 
-NS_IMETHODIMP
+nsresult
+nsDocShell::Init()
+{
+    nsresult rv = nsDocLoader::Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(mLoadGroup, "Something went wrong!");
+
+    // We want to hold a strong ref to the loadgroup, so it better hold a weak
+    // ref to us...  use an InterfaceRequestorProxy to do this.
+    nsCOMPtr<InterfaceRequestorProxy> proxy =
+        new InterfaceRequestorProxy(NS_STATIC_CAST(nsIInterfaceRequestor*,
+                                                   this));
+    NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
+    mLoadGroup->SetNotificationCallbacks(proxy);
+
+    rv = nsDocLoader::AddDocLoaderAsChildOfRoot(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // Add as |this| a progress listener to itself.  A little weird, but
+    // simpler than reproducing all the listener-notification logic in
+    // overrides of the various methods via which nsDocLoader can be
+    // notified.   Note that this holds an nsWeakPtr to ourselves, so it's ok.
+    return AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                     nsIWebProgress::NOTIFY_STATE_NETWORK);
+    
+}
+
+void
 nsDocShell::DestroyChildren()
 {
-    PRInt32 i, n = mChildren.Count();
     nsCOMPtr<nsIDocShellTreeItem> shell;
-    for (i = 0; i < n; i++) {
-        shell = dont_AddRef((nsIDocShellTreeItem *) mChildren.ElementAt(i));
+    PRInt32 n = mChildList.Count();
+    for (PRInt32 i = 0; i < n; i++) {
+        shell = do_QueryInterface(ChildAt(i));
         NS_WARN_IF_FALSE(shell, "docshell has null child");
 
         if (shell) {
-            shell->SetParent(nsnull);
             shell->SetTreeOwner(nsnull);
-            // just clear out the array.  When the nsFrameFrame that holds
-            // the subshell is destroyed, then the Destroy() method of
-            // that subshell will actually get called.
         }
     }
 
-    mChildren.Clear();
-    return NS_OK;
+    nsDocLoader::DestroyChildren();
 }
 
 //*****************************************************************************
 // nsDocShell::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_THREADSAFE_ADDREF(nsDocShell)
-NS_IMPL_THREADSAFE_RELEASE(nsDocShell)
+NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
+NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
 
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
@@ -326,7 +348,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
     NS_INTERFACE_MAP_ENTRY(nsIDocCharset)
-    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
     NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
@@ -335,7 +356,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
-NS_INTERFACE_MAP_END_THREADSAFE
+NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
 // nsDocShell::nsIInterfaceRequestor
@@ -343,6 +364,8 @@ NS_INTERFACE_MAP_END_THREADSAFE
 NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
 {
     NS_PRECONDITION(aSink, "null out param");
+
+    *aSink = nsnull;
 
     if (aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
         NS_SUCCEEDED(EnsureContentListener())) {
@@ -354,35 +377,25 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     }
     else if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
-        NS_ENSURE_SUCCESS(mScriptGlobal->
-                          QueryInterface(NS_GET_IID(nsIDOMWindowInternal),
-                                         aSink), NS_ERROR_FAILURE);
-        return NS_OK;
+        return mScriptGlobal->QueryInterface(aIID, aSink);
     }
     else if (aIID.Equals(NS_GET_IID(nsPIDOMWindow)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
-        NS_ENSURE_SUCCESS(mScriptGlobal->
-                          QueryInterface(NS_GET_IID(nsPIDOMWindow), aSink),
-                          NS_ERROR_FAILURE);
-        return NS_OK;
+        return mScriptGlobal->QueryInterface(aIID, aSink);
     }
     else if (aIID.Equals(NS_GET_IID(nsIDOMWindow)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
-        NS_ENSURE_SUCCESS(mScriptGlobal->
-                          QueryInterface(NS_GET_IID(nsIDOMWindow), aSink),
-                          NS_ERROR_FAILURE);
-        return NS_OK;
+        return mScriptGlobal->QueryInterface(aIID, aSink);
     }
     else if (aIID.Equals(NS_GET_IID(nsIDOMDocument)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
         mContentViewer->GetDOMDocument((nsIDOMDocument **) aSink);
-        return NS_OK;
+        return *aSink ? NS_OK : NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
         nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mTreeOwner));
         if (prompter) {
-            *aSink = prompter;
-            NS_ADDREF((nsISupports *) * aSink);
+            prompter.swap((nsIPrompt*) *aSink);
             return NS_OK;
         }
         else
@@ -393,27 +406,6 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
                 GetAuthPrompt(PROMPT_NORMAL, (nsIAuthPrompt **) aSink)) ?
                 NS_OK : NS_NOINTERFACE;
 
-    }
-    else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))
-             || aIID.Equals(NS_GET_IID(nsIHttpEventSink))
-             || aIID.Equals(NS_GET_IID(nsIWebProgress))
-             || aIID.Equals(NS_GET_IID(nsISecurityEventSink))) {
-        nsCOMPtr<nsIURILoader>
-            uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
-        NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-        nsCOMPtr<nsIDocumentLoader> docLoader;
-        NS_ENSURE_SUCCESS(uriLoader->
-                          GetDocumentLoaderForContext(this,
-                                                      getter_AddRefs
-                                                      (docLoader)),
-                          NS_ERROR_FAILURE);
-        if (docLoader) {
-            nsCOMPtr<nsIInterfaceRequestor>
-                requestor(do_QueryInterface(docLoader));
-            return requestor->GetInterface(aIID, aSink);
-        }
-        else
-            return NS_ERROR_FAILURE;
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistory))) {
         nsCOMPtr<nsISHistory> shistory;
@@ -466,11 +458,11 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         return treeOwner->QueryInterface(aIID, aSink);
     }
     else {
-        return QueryInterface(aIID, aSink);
+        return nsDocLoader::GetInterface(aIID, aSink);
     }
 
     NS_IF_ADDREF(((nsISupports *) * aSink));
-    return NS_OK;
+    return *aSink ? NS_OK : NS_NOINTERFACE;
 }
 
 PRUint32
@@ -838,11 +830,9 @@ nsDocShell::FireUnloadNotification()
 
         mContentViewer->Unload();
 
-        PRInt32 i, n = mChildren.Count();
+        PRInt32 i, n = mChildList.Count();
         for (i = 0; i < n; i++) {
-            nsIDocShellTreeItem* item = (nsIDocShellTreeItem*) mChildren.ElementAt(i);
-
-            nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
+            nsCOMPtr<nsIDocShell> shell(do_QueryInterface(ChildAt(i)));
             if (shell) {
                 shell->FireUnloadNotification();
             }
@@ -1373,11 +1363,6 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
     PRBool isSubFrame = PR_FALSE;  // Is this a subframe navigation?
 
-    if (!mLoadCookie)
-      return NS_OK; 
-
-    nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie)); 
-    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
     nsCOMPtr<nsIDocShellTreeItem> root;
 
     GetSameTypeRootTreeItem(getter_AddRefs(root));
@@ -1404,10 +1389,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
       return NS_OK; 
     }
     
-    NS_ASSERTION(loader, "No document loader");
-    if (loader) {
-        loader->FireOnLocationChange(webProgress, nsnull, aURI);
-    }
+    FireOnLocationChange(this, nsnull, aURI);
 
     return NS_OK; 
 }
@@ -1756,7 +1738,14 @@ NS_IMETHODIMP
 nsDocShell::SetItemType(PRInt32 aItemType)
 {
     NS_ENSURE_ARG((aItemType == typeChrome) || (typeContent == aItemType));
-    NS_ENSURE_STATE(!mParent);
+
+    // Only allow setting the type on root docshells.  Those would be the ones
+    // that have the docloader service as mParent or have no mParent at all.
+    nsCOMPtr<nsIDocumentLoader> docLoaderService =
+        do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(docLoaderService, NS_ERROR_UNEXPECTED);
+    
+    NS_ENSURE_STATE(!mParent || mParent == docLoaderService);
 
     mItemType = aItemType;
 
@@ -1769,28 +1758,27 @@ nsDocShell::SetItemType(PRInt32 aItemType)
 NS_IMETHODIMP
 nsDocShell::GetParent(nsIDocShellTreeItem ** aParent)
 {
-    NS_ENSURE_ARG_POINTER(aParent);
-
-    *aParent = mParent;
-    NS_IF_ADDREF(*aParent);
-
+    if (!mParent) {
+        *aParent = nsnull;
+    } else {
+        CallQueryInterface(mParent, aParent);
+    }
+    // Note that in the case when the parent is not an nsIDocShellTreeItem we
+    // don't want to throw; we just want to return null.
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetParent(nsIDocShellTreeItem * aParent)
+nsresult
+nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 {
-    // null aParent is ok
-    /*
-       Note this doesn't do an addref on purpose.  This is because the parent
-       is an implied lifetime.  We don't want to create a cycle by refcounting
-       the parent.
-     */
-    mParent = aParent;
+    nsDocLoader::SetDocLoaderParent(aParent);
+
+    // Curse ambiguous nsISupports inheritance!
+    nsISupports* parent = GetAsSupports(aParent);
 
     // If parent is another docshell, we inherit all their flags for
     // allowing plugins, scripting etc.
-    nsCOMPtr<nsIDocShell> parentAsDocShell = do_QueryInterface(mParent);
+    nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
     if (parentAsDocShell)
     {
         PRBool value;
@@ -1816,8 +1804,7 @@ nsDocShell::SetParent(nsIDocShellTreeItem * aParent)
         }
     }
 
-    nsCOMPtr<nsIURIContentListener>
-        parentURIListener(do_GetInterface(aParent));
+    nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(parent));
     if (parentURIListener)
         SetParentURIContentListener(parentURIListener);
     return NS_OK;
@@ -1829,15 +1816,16 @@ nsDocShell::GetSameTypeParent(nsIDocShellTreeItem ** aParent)
     NS_ENSURE_ARG_POINTER(aParent);
     *aParent = nsnull;
 
-    if (!mParent)
+    nsCOMPtr<nsIDocShellTreeItem> parent =
+        do_QueryInterface(GetAsSupports(mParent));
+    if (!parent)
         return NS_OK;
 
     PRInt32 parentType;
-    NS_ENSURE_SUCCESS(mParent->GetItemType(&parentType), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(parent->GetItemType(&parentType), NS_ERROR_FAILURE);
 
     if (parentType == mItemType) {
-        *aParent = mParent;
-        NS_ADDREF(*aParent);
+        parent.swap(*aParent);
     }
     return NS_OK;
 }
@@ -1929,22 +1917,24 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
     // and let the parent do the rest.
     // If we don't have a parent, then we should ask the docShellTreeOwner to do
     // the search.
-    if (mParent) {
-        if (mParent == reqAsTreeItem.get())
+    
+    nsCOMPtr<nsIDocShellTreeItem> parentAsTreeItem =
+        do_QueryInterface(GetAsSupports(mParent));
+    if (parentAsTreeItem) {
+        if (parentAsTreeItem == reqAsTreeItem)
             return NS_OK;
 
         PRInt32 parentType;
-        mParent->GetItemType(&parentType);
+        parentAsTreeItem->GetItemType(&parentType);
         if (parentType == mItemType) {
-            NS_ENSURE_SUCCESS(mParent->FindItemWithName(aName,
-                                                        NS_STATIC_CAST
-                                                        (nsIDocShellTreeItem *,
-                                                         this), _retval),
-                              NS_ERROR_FAILURE);
-            return NS_OK;
+            return parentAsTreeItem->FindItemWithName(aName,
+                                                      NS_STATIC_CAST
+                                                      (nsIDocShellTreeItem *,
+                                                       this), _retval);
         }
-        // If the parent isn't of the same type fall through and ask tree owner.
     }
+    // If the parent is null or not of the same type fall through and ask tree
+    // owner.
 
     // This may fail, but comparing against null serves the same purpose
     nsCOMPtr<nsIDocShellTreeOwner>
@@ -2057,7 +2047,8 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 
     // Don't automatically set the progress based on the tree owner for frames
     if (!IsFrame()) {
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+        nsCOMPtr<nsIWebProgress> webProgress =
+            do_QueryInterface(GetAsSupports(this));
 
         if (webProgress) {
             nsCOMPtr<nsIWebProgressListener>
@@ -2078,9 +2069,9 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 
     mTreeOwner = aTreeOwner;    // Weak reference per API
 
-    PRInt32 i, n = mChildren.Count();
+    PRInt32 i, n = mChildList.Count();
     for (i = 0; i < n; i++) {
-        nsIDocShellTreeItem *child = (nsIDocShellTreeItem *) mChildren.ElementAt(i);    // doesn't addref the result
+        nsCOMPtr<nsIDocShellTreeItem> child = do_QueryInterface(ChildAt(i));
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
         PRInt32 childType = ~mItemType; // Set it to not us in case the get fails
         child->GetItemType(&childType); // We don't care if this fails, if it does we won't set the owner
@@ -2114,7 +2105,7 @@ NS_IMETHODIMP
 nsDocShell::GetChildCount(PRInt32 * aChildCount)
 {
     NS_ENSURE_ARG_POINTER(aChildCount);
-    *aChildCount = mChildren.Count();
+    *aChildCount = mChildList.Count();
     return NS_OK;
 }
 
@@ -2125,15 +2116,35 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
 
-    NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-    mChildren.AppendElement(aChild);
-    NS_ADDREF(aChild);
+    nsRefPtr<nsDocLoader> childAsDocLoader = GetAsDocLoader(aChild);
+    NS_ENSURE_TRUE(childAsDocLoader, NS_ERROR_UNEXPECTED);
+
+    // Make sure we're not creating a loop in the docshell tree
+    nsDocLoader* ancestor = this;
+    do {
+        if (childAsDocLoader == ancestor) {
+            return NS_ERROR_ILLEGAL_VALUE;
+        }
+        ancestor = ancestor->GetParent();
+    } while (ancestor);
+    
+    // Make sure to remove the child from its current parent.
+    nsDocLoader* childsParent = childAsDocLoader->GetParent();
+    if (childsParent) {
+        childsParent->RemoveChildLoader(childAsDocLoader);
+    }
+
+    // Make sure to clear the treeowner in case this child is a different type
+    // from us.
+    aChild->SetTreeOwner(nsnull);
+    
+    nsresult res = AddChildLoader(childAsDocLoader);
+    NS_ENSURE_SUCCESS(res, res);
 
     // Set the child's index in the parent's children list 
     // XXX What if the parent had different types of children?
-    // XXX in that case docshell hierarchyand SH hierarchy won't match.
-    PRInt32 childCount = mChildren.Count();
-    aChild->SetChildOffset(childCount - 1);
+    // XXX in that case docshell hierarchy and SH hierarchy won't match.
+    aChild->SetChildOffset(mChildList.Count() - 1);
 
     /* Set the child's global history if the parent has one */
     if (mGlobalHistory) {
@@ -2170,8 +2181,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     // we are NOT going to propagate the charset is this Chrome's docshell
     if (mItemType == nsIDocShellTreeItem::typeChrome)
         return NS_OK;
-
-    nsresult res = NS_OK;
 
     // get the child's docCSInfo object
     nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
@@ -2226,15 +2235,15 @@ nsDocShell::RemoveChild(nsIDocShellTreeItem * aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
 
-    if (mChildren.RemoveElement(aChild)) {
-        aChild->SetParent(nsnull);
-        aChild->SetTreeOwner(nsnull);
-        NS_RELEASE(aChild);
-    }
-    else
-        NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+    nsRefPtr<nsDocLoader> childAsDocLoader = GetAsDocLoader(aChild);
+    NS_ENSURE_TRUE(childAsDocLoader, NS_ERROR_UNEXPECTED);
+    
+    nsresult rv = RemoveChildLoader(childAsDocLoader);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    aChild->SetTreeOwner(nsnull);
 
-    return NS_OK;
+    return nsDocLoader::AddDocLoaderAsChildOfRoot(childAsDocLoader);
 }
 
 NS_IMETHODIMP
@@ -2242,11 +2251,13 @@ nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem ** aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
 
-    NS_WARN_IF_FALSE(aIndex >=0 && aIndex < mChildren.Count(), "index of child element is out of range!");
-    *aChild = (nsIDocShellTreeItem *) mChildren.SafeElementAt(aIndex);
-    NS_IF_ADDREF(*aChild);
+    NS_WARN_IF_FALSE(aIndex >=0 && aIndex < mChildList.Count(),
+                     "index of child element is out of range!");
 
-    return NS_OK;
+    nsIDocumentLoader* child = SafeChildAt(aIndex);
+    NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
+    
+    return CallQueryInterface(child, aChild);
 }
 
 NS_IMETHODIMP
@@ -2261,9 +2272,9 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
     *_retval = nsnull;          // if we don't find one, we return NS_OK and a null result 
 
     nsXPIDLString childName;
-    PRInt32 i, n = mChildren.Count();
+    PRInt32 i, n = mChildList.Count();
     for (i = 0; i < n; i++) {
-        nsIDocShellTreeItem *child = (nsIDocShellTreeItem *) mChildren.ElementAt(i);    // doesn't addref the result
+        nsCOMPtr<nsIDocShellTreeItem> child = do_QueryInterface(ChildAt(i));
         NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
         PRInt32 childType;
         child->GetItemType(&childType);
@@ -2418,7 +2429,8 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
     }
     else {
         /* Just pass this along */
-        nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(mParent, &rv));
+        nsCOMPtr<nsIDocShellHistory> parent =
+            do_QueryInterface(GetAsSupports(mParent), &rv);
         if (parent) {
             rv = parent->AddChildSHEntry(aCloneRef, aNewEntry, aChildOffset);
         }          
@@ -2437,7 +2449,8 @@ nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
      */
 
     nsresult rv;
-    nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(mParent, &rv));
+    nsCOMPtr<nsIDocShellHistory> parent =
+        do_QueryInterface(GetAsSupports(mParent), &rv);
     if (parent) {
         rv = parent->AddChildSHEntry(mOSHE, aNewEntry, aChildOffset);
     }
@@ -2921,21 +2934,16 @@ nsDocShell::Stop(PRUint32 aStopFlags)
         // Cancel any timers that were set for this loader.
         CancelRefreshURITimers();
 
-        if (mLoadCookie) {
-            nsCOMPtr<nsIURILoader> uriLoader;
-
-            uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
-            if (uriLoader)
-                uriLoader->Stop(mLoadCookie);
-        }
+        // XXXbz We could also pass |this| to nsIURILoader::Stop.  That will
+        // just call Stop() on us as an nsIDocumentLoader... We need fewer
+        // redundant apis!
+        Stop();
     }
 
     PRInt32 n;
-    PRInt32 count = mChildren.Count();
+    PRInt32 count = mChildList.Count();
     for (n = 0; n < count; n++) {
-        nsIDocShellTreeItem *shell =
-            (nsIDocShellTreeItem *) mChildren.ElementAt(n);
-        nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(shell));
+        nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(ChildAt(n)));
         if (shellAsNav)
             shellAsNav->Stop(aStopFlags);
     }
@@ -3163,8 +3171,8 @@ nsDocShell::Destroy()
     PersistLayoutHistoryState();
 
     // Remove this docshell from its parent's child list
-    nsCOMPtr<nsIDocShellTreeNode>
-        docShellParentAsNode(do_QueryInterface(mParent));
+    nsCOMPtr<nsIDocShellTreeNode> docShellParentAsNode =
+        do_QueryInterface(GetAsSupports(mParent));
     if (docShellParentAsNode)
         docShellParentAsNode->RemoveChild(this);
 
@@ -3174,8 +3182,8 @@ nsDocShell::Destroy()
         mContentViewer = nsnull;
     }
 
-    DestroyChildren();
-
+    nsDocLoader::Destroy();
+    
     mParentWidget = nsnull;
     mCurrentURI = nsnull;
 
@@ -3191,8 +3199,6 @@ nsDocShell::Destroy()
 
     mSessionHistory = nsnull;
     SetTreeOwner(nsnull);
-
-    SetLoadCookie(nsnull);
 
     if (mContentListener) {
         mContentListener->DocShell(nsnull);
@@ -4224,7 +4230,8 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
     // Update the busy cursor
     if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
         nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+        nsCOMPtr<nsIWebProgress> webProgress =
+            do_QueryInterface(GetAsSupports(this));
 
         // Was the wyciwyg document loaded on this docshell?
         if (wcwgChannel && !mLSHE && (mItemType == typeContent) && aProgress == webProgress.get()) {
@@ -4271,7 +4278,8 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
         }
     }
     if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+        nsCOMPtr<nsIWebProgress> webProgress =
+            do_QueryInterface(GetAsSupports(this));
         // Is the document stop notification for this document?
         if (aProgress == webProgress.get()) {
             nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
@@ -4280,7 +4288,8 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
     }
     else if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_REDIRECTING)) == 0) {
         // XXX Is it enough if I check just for the above 2 flags for redirection 
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+        nsCOMPtr<nsIWebProgress> webProgress =
+            do_QueryInterface(GetAsSupports(this));
 
         // Is the document stop notification for this document?
         if (aProgress == webProgress.get()) {
@@ -4462,11 +4471,8 @@ nsDocShell::CreateAboutBlankContentViewer()
 
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory(do_GetService(contractId));
   if (docFactory) {
-
-    nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
-
     // generate (about:blank) document to load
-    docFactory->CreateBlankDocument(loadGroup, getter_AddRefs(blankDoc));
+    docFactory->CreateBlankDocument(mLoadGroup, getter_AddRefs(blankDoc));
     if (blankDoc) {
       blankDoc->SetContainer(NS_STATIC_CAST(nsIDocShell *, this));
 
@@ -4500,12 +4506,11 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // Can we check the content type of the current content viewer
     // and reuse it without destroying it and re-creating it?
 
-    nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
-    NS_ENSURE_TRUE(loadGroup, NS_ERROR_FAILURE);
+    NS_ASSERTION(mLoadGroup, "Someone ignored return from Init()?");
 
     // Instantiate the content viewer object
     nsCOMPtr<nsIContentViewer> viewer;
-    nsresult rv = NewContentViewerObj(aContentType, request, loadGroup,
+    nsresult rv = NewContentViewerObj(aContentType, request, mLoadGroup,
                                       aContentHandler, getter_AddRefs(viewer));
 
     if (NS_FAILED(rv))
@@ -4536,7 +4541,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
                       GetLoadGroup(getter_AddRefs(currentLoadGroup)),
                       NS_ERROR_FAILURE);
 
-    if (currentLoadGroup.get() != loadGroup.get()) {
+    if (currentLoadGroup != mLoadGroup) {
         nsLoadFlags loadFlags = 0;
 
         //Cancel any URIs that are currently loading...
@@ -4550,7 +4555,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
          * we don't null-out mLSHE in OnStateChange() for 
          * all redirected urls
          */
-        aOpenedChannel->SetLoadGroup(loadGroup);
+        aOpenedChannel->SetLoadGroup(mLoadGroup);
 
         // Mark the channel as being a document URI...
         aOpenedChannel->GetLoadFlags(&loadFlags);
@@ -4558,7 +4563,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
         aOpenedChannel->SetLoadFlags(loadFlags);
 
-        loadGroup->AddRequest(request, nsnull);
+        mLoadGroup->AddRequest(request, nsnull);
         if (currentLoadGroup)
             currentLoadGroup->RemoveRequest(request, nsnull,
                                             NS_BINDING_RETARGETED);
@@ -6581,53 +6586,6 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferr
 // nsDocShell: Helper Routines
 //*****************************************************************************
 
-nsresult
-nsDocShell::SetLoadCookie(nsISupports * aCookie)
-{
-    // Remove the DocShell as a listener of the old WebProgress...
-    if (mLoadCookie) {
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-
-        if (webProgress) {
-            webProgress->RemoveProgressListener(this);
-        }
-    }
-
-    mLoadCookie = aCookie;
-
-    // Add the DocShell as a listener to the new WebProgress...
-    if (mLoadCookie) {
-        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-
-        if (webProgress) {
-            webProgress->AddProgressListener(this,
-                                     nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                     nsIWebProgress::NOTIFY_STATE_NETWORK);
-        }
-
-        nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
-        NS_ENSURE_TRUE(loadGroup, NS_ERROR_FAILURE);
-        if (loadGroup) {
-            nsIInterfaceRequestor *ifPtr = NS_STATIC_CAST(nsIInterfaceRequestor *, this);
-            nsCOMPtr<InterfaceRequestorProxy> ptr(new InterfaceRequestorProxy(ifPtr)); 
-            if (ptr) {
-                loadGroup->SetNotificationCallbacks(ptr);
-            }
-        }
-    }
-    return NS_OK;
-}
-
-
-nsresult
-nsDocShell::GetLoadCookie(nsISupports ** aResult)
-{
-    *aResult = mLoadCookie;
-    NS_IF_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocShell::SetLoadType(PRUint32 aLoadType)
 {
@@ -6831,9 +6789,11 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
 PRBool
 nsDocShell::IsFrame()
 {
-    if (mParent) {
+    nsCOMPtr<nsIDocShellTreeItem> parent =
+        do_QueryInterface(GetAsSupports(mParent));
+    if (parent) {
         PRInt32 parentType = ~mItemType;        // Not us
-        mParent->GetItemType(&parentType);
+        parent->GetItemType(&parentType);
         if (parentType == mItemType)    // This is a frame
             return PR_TRUE;
     }
