@@ -213,6 +213,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     if (rv == SECSuccess) {
 	fputs("strsclnt: -- SSL: Server Certificate Validated.\n", stderr);
     } 
+    CERT_DestroyCertificate(peerCert);
     /* error, if any, will be displayed by the Bad Cert Handler. */
     return rv;  
 }

@@ -276,6 +276,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 	FPRINTF(stderr, "selfserv: -- SSL3: Certificate Invalid, err %d.\n%s\n", 
                 err, SECU_Strerror(err));
     }
+    CERT_DestroyCertificate(peerCert);
     FLUSH;
     return rv;  
 }
