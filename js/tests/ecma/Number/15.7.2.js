@@ -53,9 +53,7 @@
 
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-    testcases[tc++] = getTestCases();
+    var testcases = getTestCases();
     test();
 
 function getTestCases() {
