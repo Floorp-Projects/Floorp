@@ -16,11 +16,12 @@
     (deftag compile-expression-error)
     (deftag reference-error)
     (deftag uninitialised-error)
+    (deftag range-error)
     (deftag bad-value-error)
     (deftag property-access-error)
     (deftag definition-error)
     (deftag argument-mismatch-error)
-    (deftype semantic-error (tag syntax-error compile-expression-error reference-error uninitialised-error bad-value-error property-access-error
+    (deftype semantic-error (tag syntax-error compile-expression-error reference-error uninitialised-error range-error bad-value-error property-access-error
                                  definition-error argument-mismatch-error))
     
     (deftuple break (value object) (label label))
@@ -38,14 +39,17 @@
     (deftag inaccessible)
     (deftag uninitialised)
     
-    (deftype object (union undefined null boolean float64 string namespace compound-attribute class method-closure prototype instance package global))
-    (deftype primitive-object (union undefined null boolean float64 string))
+    (deftype object (union undefined null boolean float64 long u-long character string namespace compound-attribute class method-closure prototype instance package global))
+    (deftype general-number (union float64 long u-long))
+    (deftype primitive-object (union undefined null boolean float64 long u-long character string))
     (deftype dynamic-object (union prototype dynamic-instance global))
     
     (deftype object-opt (union object (tag none)))
     (deftype object-i (union object (tag inaccessible)))
     (deftype object-i-opt (union object (tag inaccessible none)))
     (deftype object-u (union object (tag uninitialised)))
+    
+    (deftype boolean-opt (union boolean (tag none)))
     
     
     (%heading (3 :semantics) "Undefined")
@@ -56,6 +60,14 @@
     (%heading (3 :semantics) "Null")
     (deftag null)
     (deftype null (tag null))
+    
+    
+    (%heading (3 :semantics) "Signed and Unsigned Long Integers")
+    (deftuple long
+      (value (integer-range (neg (expt 2 63)) (- (expt 2 63) 1))))
+    
+    (deftuple u-long
+      (value (integer-range 0 (- (expt 2 64) 1))))
     
     
     (%heading (3 :semantics) "Strings")
@@ -80,10 +92,9 @@
     (%heading (3 :semantics) "Attributes")
     (deftag static)
     (deftag constructor)
-    (deftag operator)
     (deftag virtual)
     (deftag final)
-    (deftype member-modifier (tag none static constructor operator virtual final))
+    (deftype member-modifier (tag none static constructor virtual final))
     
     (deftype override-modifier (tag none true false undefined))
     
@@ -112,10 +123,10 @@
       (prototype object)
       (private-namespace namespace)
       (dynamic boolean)
-      (primitive boolean)
+      (allow-null boolean)
       (final boolean)
       (call (-> (object argument-list phase) object))
-      (construct (-> (object argument-list phase) object)))
+      (construct (-> (argument-list phase) object)))
     (deftype class-opt (union class (tag none)))
     
     (%text :comment "Return an ordered list of class " (:local c) :apostrophe "s ancestors, including " (:local c) " itself.")
@@ -162,16 +173,16 @@
     
     (defrecord fixed-instance
       (type class)
-      (call invoker)
-      (construct invoker)
+      (call (-> (object argument-list environment phase) object))
+      (construct (-> (argument-list environment phase) object))
       (env environment)
       (typeof-string string)
       (slots (list-set slot) :var))
     
     (defrecord dynamic-instance
       (type class)
-      (call invoker)
-      (construct invoker)
+      (call (-> (object argument-list environment phase) object))
+      (construct (-> (argument-list environment phase) object))
       (env environment)
       (typeof-string string)
       (slots (list-set slot) :var)
@@ -221,7 +232,7 @@
     (deftuple lexical-reference
       (env environment)
       (variable-multiname multiname)
-      (cxt context))
+      (strict boolean))
     
     (deftuple dot-reference
       (base obj-optional-limit)
@@ -235,33 +246,27 @@
     (deftype obj-or-ref (union object reference))
     
     
-    (deftuple limited-obj-or-ref
-      (ref obj-or-ref)
-      (limit class))
-    
-    (deftype obj-or-ref-optional-limit (union obj-or-ref limited-obj-or-ref))
-    
-    
     (%heading (2 :semantics) "Function Support")
     (deftag normal)
     (deftag get)
     (deftag set)
-    (deftype function-kind (tag normal get set operator))
+    (deftype function-kind (tag normal get set))
     
     (deftuple signature
-      (required-positional (vector parameter))
+      (positional (vector parameter))
       (optional-positional (vector parameter))
       (optional-named (list-set named-parameter))
       (rest (union parameter (tag none)))
       (rest-allows-names boolean)
       (return-type class))
     
+    
     (deftuple parameter
-      (local-name string-opt)
+      (local-name qualified-name-opt)
       (type class))
     
     (deftuple named-parameter
-      (local-name string-opt)
+      (local-name qualified-name-opt)
       (type class)
       (name string))
     
@@ -272,23 +277,6 @@
     (deftuple argument-list
       (positional (vector object))
       (named (list-set named-argument)))
-    
-    (%text :comment "The first " (:type object) " is the " (:character-literal "this") " value. When the "
-           (:type phase) " parameter is " (:tag compile) ", only compile-time expressions are allowed.")
-    (deftype invoker (-> (object argument-list environment phase) object))
-    
-    
-    (%heading (2 :semantics) "Unary Operators")
-    (deftuple unary-method 
-      (operand-type class)
-      (f (-> (object object argument-list phase) object)))
-    
-    
-    (%heading (2 :semantics) "Binary Operators")
-    (deftuple binary-method
-      (left-type class)
-      (right-type class)
-      (f (-> (object object phase) object)))
     
     
     (%heading (2 :semantics) "Modes of expression evaluation")
@@ -325,18 +313,20 @@
            :apostrophe "s scope. The last frame is always the " (:type system-frame)
            ". The next-to-last frame is always a " (:type package) " or " (:type global) " frame.")
     (deftype environment (vector frame))
-    (deftype frame (union system-frame global package function-frame class block-frame))
+    (deftype environment-i (union environment (tag inaccessible)))
+    (deftype frame (union system-frame global package parameter-frame class block-frame))
     
     (defrecord system-frame
       (static-read-bindings (list-set static-binding) :var)
       (static-write-bindings (list-set static-binding) :var))
     
-    (defrecord function-frame
+    (defrecord parameter-frame
       (static-read-bindings (list-set static-binding) :var)
       (static-write-bindings (list-set static-binding) :var)
       (plurality plurality)
       (this object-i-opt)
-      (prototype boolean))
+      (prototype boolean)
+      (signature signature :opt-const))
     
     (defrecord block-frame
       (static-read-bindings (list-set static-binding) :var)
@@ -357,17 +347,11 @@
       (content instance-member))
     
     (deftag forbidden)
-    (deftype static-member (union (tag forbidden) variable hoisted-var constructor-method accessor))
+    (deftype static-member (union (tag forbidden) variable hoisted-var constructor-method getter setter))
     (deftype static-member-opt (union static-member (tag none)))
     
-    (defrecord future-type
-      (eval-type (-> () class)))
-    
-    (defrecord future-value
-      (eval-value (-> () object)))
-    
-    (deftype variable-type (union class (tag inaccessible) future-type))
-    (deftype variable-value (union object (tag inaccessible uninitialised) open-instance future-value))
+    (deftype variable-type (union class (tag inaccessible) (-> () class)))
+    (deftype variable-value (union object (tag inaccessible uninitialised) open-instance (-> () object)))
     (defrecord variable
       (type variable-type :var)
       (value variable-value :var)
@@ -380,12 +364,18 @@
     (defrecord constructor-method
       (code instance))  ;Constructor code
     
-    (defrecord accessor
+    (defrecord getter
       (type class)
-      (code (union instance open-instance))) ;Getter or setter function code
+      (call (-> (environment phase) object))
+      (env environment-i))
+    
+    (defrecord setter
+      (type class)
+      (call (-> (object environment phase) void))
+      (env environment-i))
     
     
-    (deftype instance-member (union instance-variable instance-method instance-accessor))
+    (deftype instance-member (union instance-variable instance-method instance-getter instance-setter))
     (deftype instance-member-opt (union instance-member (tag none)))
     
     (defrecord instance-variable
@@ -399,27 +389,96 @@
       (signature signature)
       (final boolean))
     
-    (defrecord instance-accessor
+    (defrecord instance-getter
       (type class :opt-const)
-      (code instance)  ;Getter or setter function code
+      (call (-> (object environment phase) object))
+      (env environment)
+      (final boolean))
+    
+    (defrecord instance-setter
+      (type class :opt-const)
+      (call (-> (object object environment phase) void))
+      (env environment)
       (final boolean))
     
     
     (%heading (1 :semantics) "Data Operations")
     (%heading (2 :semantics) "Numeric Utilities")
     
-    (define (u-int32-to-int32 (i integer)) integer
-      (if (< i (expt 2 31))
-        (return i)
-        (return (- i (expt 2 32)))))
+    (%text :comment (:global-call unsigned-wrap32 i) " returns " (:local i) " converted to a value between 0 and 2" (:superscript "32") :minus
+           "1 inclusive, wrapping around modulo 2" (:superscript "32") " if necessary.")
+    (define (unsigned-wrap32 (i integer)) (integer-range 0 (- (expt 2 32) 1))
+      (return (bitwise-and i (hex #xFFFFFFFF))))
     
-    (define (to-u-int32 (x float64)) integer
-      (rwhen (in x (tag +infinity -infinity nan) :narrow-false)
-        (return 0))
-      (return (mod (truncate-finite-float64 x) (expt 2 32))))
+    (%text :comment (:global-call signed-wrap32 i) " returns " (:local i) " converted to a value between " :minus "2" (:superscript "31")
+           " and 2" (:superscript "31") :minus "1 inclusive, wrapping around modulo 2" (:superscript "32") " if necessary.")
+    (define (signed-wrap32 (i integer)) (integer-range (neg (expt 2 31)) (- (expt 2 31) 1))
+      (var j integer (bitwise-and i (hex #xFFFFFFFF)))
+      (when (>= j (expt 2 31))
+        (<- j (- j (expt 2 32))))
+      (return j))
     
-    (define (to-int32 (x float64)) integer
-      (return (u-int32-to-int32 (to-u-int32 x))))
+    (%text :comment (:global-call unsigned-wrap64 i) " returns " (:local i) " converted to a value between 0 and 2" (:superscript "64") :minus
+           "1 inclusive, wrapping around modulo 2" (:superscript "64") " if necessary.")
+    (define (unsigned-wrap64 (i integer)) (integer-range 0 (- (expt 2 64) 1))
+      (return (bitwise-and i (hex #xFFFFFFFFFFFFFFFF))))
+    
+    (%text :comment (:global-call signed-wrap64 i) " returns " (:local i) " converted to a value between " :minus "2" (:superscript "63")
+           " and 2" (:superscript "63") :minus "1 inclusive, wrapping around modulo 2" (:superscript "64") " if necessary.")
+    (define (signed-wrap64 (i integer)) (integer-range (neg (expt 2 63)) (- (expt 2 63) 1))
+      (var j integer (bitwise-and i (hex #xFFFFFFFFFFFFFFFF)))
+      (when (>= j (expt 2 63))
+        (<- j (- j (expt 2 64))))
+      (return j))
+    
+    (define (truncate-to-integer (x general-number)) integer
+      (case x
+        (:select (tag +infinity -infinity nan) (return 0))
+        (:narrow finite-float64 (return (truncate-finite-float64 x)))
+        (:narrow (union long u-long) (return (& value x)))))
+    
+    (define (check-integer (x general-number)) integer
+      (rwhen (in x (tag nan) :narrow-false)
+        (throw bad-value-error))
+      (rwhen (in x (tag +infinity -infinity) :narrow-false)
+        (throw range-error))
+      (const r rational (to-rational x))
+      (rwhen (not-in r integer :narrow-false)
+        (throw bad-value-error))
+      (return r))
+    
+    (define (check-long (i integer)) long
+      (if (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 63) 1))
+        (return (new long i))
+        (throw range-error)))
+    
+    (define (check-u-long (i integer)) u-long
+      (if (cascade integer 0 <= i <= (- (expt 2 64) 1))
+        (return (new u-long i))
+        (throw range-error)))
+    
+    (define (to-rational (x (union finite-float64 long u-long))) rational
+      (case x
+        (:select (tag +zero -zero) (return 0))
+        (:narrow nonzero-finite-float64 (return x))
+        (:narrow (union long u-long) (return (& value x)))))
+    
+    (define (general-number-compare (x general-number) (y general-number)) order
+      (cond
+       ((and (in x float64 :narrow-true) (in y float64 :narrow-true))
+        (return (float64-compare x y)))
+       ((or (in x (tag nan) :narrow-false) (in y (tag nan) :narrow-false))
+        (return unordered))
+       ((or (in x (tag +infinity) :narrow-false) (in y (tag -infinity) :narrow-false))
+        (return greater))
+       ((or (in x (tag -infinity) :narrow-false) (in y (tag +infinity) :narrow-false))
+        (return less))
+       (nil (return (rational-compare (to-rational x) (to-rational y))))))
+    
+    
+    ;***** Make me into a built-in
+    (define (float64-to-string (x float64)) string
+      (todo))
     
     
     (%heading (2 :semantics) "Object Utilities")
@@ -436,10 +495,10 @@
         (:select null (return null-class))
         (:select boolean (return boolean-class))
         (:select float64 (return number-class))
-        (:narrow string
-          (if (= (length o) 1)
-            (return character-class)
-            (return string-class)))
+        (:select long (return long-class))
+        (:select u-long (return u-long-class))
+        (:select character (return character-class))
+        (:select string (return string-class))
         (:select namespace (return namespace-class))
         (:select compound-attribute (return attribute-class))
         (:select class (return class-class))
@@ -467,7 +526,7 @@
     (define (relaxed-has-type (o object) (c class)) boolean
       (const t class (object-type o))
       (return (or (is-ancestor c t)
-                  (and (= o null object) (not (& primitive c))))))
+                  (and (= o null object) (& allow-null c)))))
     
     
     (%heading (3 :semantics) (:global to-boolean nil))
@@ -478,21 +537,21 @@
         (:select (union undefined null) (return false))
         (:narrow boolean (return o))
         (:narrow float64 (return (not-in o (tag +zero -zero nan))))
+        (:narrow (union long u-long) (return (/= (& value o) 0)))
         (:narrow string (return (/= o "" string)))
-        (:select (union namespace compound-attribute class method-closure prototype package global) (return true))
-        (:select instance (todo))))
+        (:select (union character namespace compound-attribute class method-closure prototype instance package global) (return true))))
     
     
-    (%heading (3 :semantics) (:global to-number nil))
-    (%text :comment (:global-call to-number o phase) " coerces an object " (:local o) " to a number. If "
+    (%heading (3 :semantics) (:global to-general-number nil))
+    (%text :comment (:global-call to-general-number o phase) " coerces an object " (:local o) " to a " (:type general-number) ". If "
            (:local phase) " is " (:tag compile) ", only compile-time conversions are permitted.")
-    (define (to-number (o object) (phase phase :unused)) float64
+    (define (to-general-number (o object) (phase phase :unused)) general-number
       (case o
         (:select undefined (return nan))
         (:select (union null (tag false)) (return +zero))
         (:select (tag true) (return 1.0))
-        (:narrow float64 (return o))
-        (:select string (todo))
+        (:narrow general-number (return o))
+        (:select (union character string) (todo))
         (:select (union namespace compound-attribute class method-closure package global) (throw bad-value-error))
         (:select (union prototype instance) (todo))))
     
@@ -506,7 +565,9 @@
         (:select null (return "null"))
         (:select (tag false) (return "false"))
         (:select (tag true) (return "true"))
-        (:select float64 (todo))
+        (:narrow float64 (return (float64-to-string o)))
+        (:narrow (union long u-long) (return (integer-to-string (& value o))))
+        (:narrow character (return (vector o)))
         (:narrow string (return o))
         (:select namespace (todo))
         (:select compound-attribute (todo))
@@ -514,6 +575,19 @@
         (:select method-closure (todo))
         (:select (union prototype instance) (todo))
         (:select (union package global) (todo))))
+    
+    
+    (%text :comment (:global-call integer-to-string i) " converts an integer " (:local i) " to a string of one or more decimal digits. If "
+           (:local i) " is negative, the string is preceded by a minus sign.")
+    (define (integer-to-string (i integer)) string
+      (rwhen (< i 0)
+        (return (cons #\- (integer-to-string (neg i)))))
+      (const q integer (floor (rat/ i 10)))
+      (const r integer (- i (* q 10)))
+      (const c character (code-to-character (+ r (character-to-code #\0))))
+      (if (= q 0)
+        (return (vector c))
+        (return (append (integer-to-string q) (vector c)))))
     
     
     (%heading (3 :semantics) (:global to-primitive nil))
@@ -528,19 +602,6 @@
       (rwhen (relaxed-has-type o type)
         (return o))
       (todo))
-    
-    
-    (%heading (3 :semantics) (:global unary-plus nil))
-    (%text :comment (:global-call unary-plus o phase) " returns the value of the unary expression " (:character-literal "+") (:local o) ". If "
-           (:local phase) " is " (:tag compile) ", only compile-time operations are permitted.")
-    (define (unary-plus (a obj-optional-limit) (phase phase)) object
-      (return (unary-dispatch plus-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase)))
-    
-    (%heading (3 :semantics) (:global unary-not nil))
-    (%text :comment (:global-call unary-not o phase) " returns the value of the unary expression " (:character-literal "!") (:local o) ". If "
-           (:local phase) " is " (:tag compile) ", only compile-time operations are permitted.")
-    (define (unary-not (a object) (phase phase)) object
-      (return (not (to-boolean a phase))))
     
     
     (%heading (3 :semantics) "Attributes")
@@ -584,20 +645,6 @@
         (:narrow compound-attribute (return a))))
     
     
-    (%heading (2 :semantics) "Objects with Limits")
-    (%text :comment (:global-call get-object o) " returns " (:local o) " without its limit, if any.")
-    (define (get-object (o obj-optional-limit)) object
-      (case o
-        (:narrow object (return o))
-        (:narrow limited-instance (return (& instance o)))))
-    
-    (%text :comment (:global-call get-object-limit o) " returns " (:local o) :apostrophe "s limit or " (:tag none) " if none is provided.")
-    (define (get-object-limit (o obj-optional-limit)) class-opt
-      (case o
-        (:narrow object (return none))
-        (:narrow limited-instance (return (& limit o)))))
-    
-    
     (%heading (2 :semantics) "References")
     (%text :comment "If " (:local r) " is an " (:type object) ", " (:global-call read-reference r phase) " returns it unchanged.  If "
            (:local r) " is a " (:type reference) ", this function reads " (:local r) " and returns the result. If "
@@ -608,66 +655,70 @@
         (:narrow lexical-reference (return (lexical-read (& env r) (& variable-multiname r) phase)))
         (:narrow dot-reference
           (const result object-opt (read-property (& base r) (& property-multiname r) property-lookup phase))
-          (if (in result (tag none) :narrow-false)
-            (throw property-access-error)
-            (return result)))
-        (:narrow bracket-reference (return (unary-dispatch bracket-read-table null (& base r) (& args r) phase)))))
+          (if (not-in result (tag none) :narrow-true)
+            (return result)
+            (throw property-access-error)))
+        (:narrow bracket-reference (return (bracket-read (& base r) (& args r) phase)))))
+    
+    (define (bracket-read (a obj-optional-limit) (args argument-list) (phase phase)) object
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const name string (to-string (nth (& positional args) 0) phase))
+      (const result object-opt (read-property a (list-set (new qualified-name public-namespace name)) property-lookup phase))
+      (if (not-in result (tag none) :narrow-true)
+        (return result)
+        (throw property-access-error)))
     
     
-    (%text :comment (:global-call read-ref-with-limit r phase) " reads the reference, if any, inside " (:local r)
-           " and returns the result, retaining the same limit as " (:local r) ". If " (:local r)
-           " has a limit " (:local limit) ", then the object read from the reference is checked to make sure that it is an instance of " (:local limit)
-           " or one of its descendants. If "
-           (:local phase) " is " (:tag compile) ", only compile-time expressions can be evaluated in the process of reading " (:local r) ".")
-    (define (read-ref-with-limit (r obj-or-ref-optional-limit) (phase phase)) obj-optional-limit
-      (case r
-        (:narrow obj-or-ref (return (read-reference r phase)))
-        (:narrow limited-obj-or-ref
-          (const o object (read-reference (& ref r) phase))
-          (const limit class (& limit r))
-          (rwhen (= o null object)
-            (return null))
-          (rwhen (or (not-in o instance :narrow-false) (not (has-type o limit)))
-            (throw bad-value-error))
-          (return (new limited-instance o limit)))))
-    
-    
-    (%text :comment "If " (:local r) " is a reference, " (:global-call write-reference r o) " writes " (:local o) 
+    (%text :comment "If " (:local r) " is a reference, " (:global-call write-reference r new-value) " writes " (:local new-value) 
            " into " (:local r) ". An error occurs if " (:local r) " is not a reference. "
            (:local r) :apostrophe "s limit, if any, is ignored. "
            (:global write-reference) " is never called from a compile-time expression.")
-    (define (write-reference (r obj-or-ref-optional-limit) (o object) (phase (tag run))) void
+    (define (write-reference (r obj-or-ref) (new-value object) (phase (tag run))) void
+      (var result (tag none ok))
       (case r
         (:select object (throw reference-error))
-        (:narrow lexical-reference (lexical-write (& env r) (& variable-multiname r) o (not (& strict (& cxt r))) phase))
-        (:narrow dot-reference
-          (const result (tag none ok) (write-property (& base r) (& property-multiname r) property-lookup true o phase))
-          (rwhen (in result (tag none))
-            (throw property-access-error)))
-        (:narrow bracket-reference
-          (const args argument-list (new argument-list (cons o (& positional (& args r))) (& named (& args r))))
-          (exec (unary-dispatch bracket-write-table null (& base r) args phase)))
-        (:narrow limited-obj-or-ref (write-reference (& ref r) o phase))))
+        (:narrow lexical-reference
+          (lexical-write (& env r) (& variable-multiname r) new-value (not (& strict r)) phase)
+          (return))
+        (:narrow dot-reference (<- result (write-property (& base r) (& property-multiname r) property-lookup true new-value phase)))
+        (:narrow bracket-reference (<- result (bracket-write (& base r) (& args r) new-value phase))))
+      (rwhen (in result (tag none))
+        (throw property-access-error)))
+    
+    (define (bracket-write (a obj-optional-limit) (args argument-list) (new-value object) (phase phase)) (tag none ok)
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw compile-expression-error))
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const name string (to-string (nth (& positional args) 0) phase))
+      (return (write-property a (list-set (new qualified-name public-namespace name)) property-lookup true new-value phase)))
     
     
     (%text :comment "If " (:local r) " is a " (:type reference) ", " (:global-call delete-reference r) " deletes it. If "
-           (:local r) " is an " (:type object) ", this function signals an error. "
+           (:local r) " is an " (:type object) ", this function signals an error in strict mode or returns " (:type true) " in non-strict mode. "
            (:global delete-reference) " is never called from a compile-time expression.")
-    (define (delete-reference (r obj-or-ref) (phase (tag run))) object
+    (define (delete-reference (r obj-or-ref) (strict boolean) (phase (tag run))) boolean
+      (var result boolean-opt)
       (case r
-        (:select object (throw reference-error))
+        (:select object
+          (if strict
+            (throw reference-error)
+            (return true)))
         (:narrow lexical-reference (return (lexical-delete (& env r) (& variable-multiname r) phase)))
-        (:narrow dot-reference (return (delete-property (& base r) (& property-multiname r) phase)))
-        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table null (& base r) (& args r) phase)))))
+        (:narrow dot-reference (<- result (delete-property (& base r) (& property-multiname r) property-lookup phase)))
+        (:narrow bracket-reference (<- result (bracket-delete (& base r) (& args r) phase))))
+      (if (not-in result (tag none) :narrow-true)
+        (return result)
+        (return true)))
     
-    
-    (%text :comment (:global-call reference-base r) " returns " (:type reference) " " (:local r) :apostrophe "s base or "
-           (:tag null) " if there is none. " (:local r) :apostrophe "s limit and the base" :apostrophe "s limit, if any, are ignored.")
-    (define (reference-base (r obj-or-ref-optional-limit)) object
-      (case r
-        (:select (union object lexical-reference) (return null))
-        (:narrow (union dot-reference bracket-reference) (return (get-object (& base r))))
-        (:narrow limited-obj-or-ref (return (reference-base (& ref r))))))
+    (define (bracket-delete (a obj-optional-limit) (args argument-list) (phase phase)) boolean-opt
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw compile-expression-error))
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const name string (to-string (nth (& positional args) 0) phase))
+      (return (delete-property a (list-set (new qualified-name public-namespace name)) property-lookup phase)))
     
     
     (%heading (2 :semantics) "Slots")
@@ -782,17 +833,24 @@
     (define (define-hoisted-var (env environment) (id string)) void
       (const qname qualified-name (new qualified-name public-namespace id))
       (const regional-env (vector frame) (get-regional-environment env))
-      (const regional-frame frame (nth regional-env (- (length regional-env) 1)))
-      (assert (in regional-frame (union global function-frame) :narrow-true)
-              (:local env) " is either the " (:type global) " frame or a " (:type function-frame)
+      (var regional-frame frame (nth regional-env (- (length regional-env) 1)))
+      (assert (in regional-frame (union global parameter-frame) :narrow-true)
+              (:local env) " is either the " (:type global) " frame or a " (:type parameter-frame)
               " because hoisting only occurs into global or function scope.")
-      (const existing-bindings (list-set static-binding) (map (static-bindings-with-access regional-frame read-write) b b
-                                                              (= (& qname b) qname qualified-name)))
+      (var existing-bindings (list-set static-binding) (map (static-bindings-with-access regional-frame read-write) b b
+                                                            (= (& qname b) qname qualified-name)))
+      (when (empty existing-bindings)
+        (case regional-frame
+          (:narrow global
+            (rwhen (some (& dynamic-properties regional-frame) dp (= (& name dp) id string))
+              (throw definition-error)))
+          (:select parameter-frame
+            (when (>= (length regional-env) 2)
+              (<- regional-frame (nth regional-env (- (length regional-env) 2)) :end-narrow)
+              (<- existing-bindings (map (static-bindings-with-access regional-frame read-write) b b
+                                         (= (& qname b) qname qualified-name)))))))
       (cond
        ((empty existing-bindings)
-        (rwhen (and (in regional-frame global :narrow-true)
-                    (some (& dynamic-properties regional-frame) dp (= (& name dp) id string)))
-          (throw definition-error))
         (const v hoisted-var (new hoisted-var undefined false))
         (add-static-bindings regional-frame read-write (list-set (new static-binding qname v false))))
        ((some existing-bindings b (not-in (& content b) hoisted-var))
@@ -807,8 +865,9 @@
       (write-status override-status))
     
     (deftag potential-conflict)
+    (deftype overridden-member (union instance-member (tag none potential-conflict)))
     (deftuple override-status
-      (overridden-member (union instance-member (tag none potential-conflict)))
+      (overridden-member overridden-member)
       (multiname multiname))
     
     
@@ -852,7 +911,7 @@
       (if expect-method
         (rwhen (not-in (& overridden-member os) (union (tag none potential-conflict) instance-method))
           (throw definition-error))
-        (rwhen (not-in (& overridden-member os) (union (tag none potential-conflict) instance-variable instance-accessor))
+        (rwhen (not-in (& overridden-member os) (union (tag none potential-conflict) instance-variable instance-getter instance-setter))
           (throw definition-error)))
       (return os))
     
@@ -924,18 +983,21 @@
             (<- value (instantiate-open-instance value env) :end-narrow))
           (return (new hoisted-var value (& has-function-initialiser m))))
         (:narrow constructor-method (return m))
-        (:narrow accessor
-          (var code (union instance open-instance) (& code m))
-          (when (in code open-instance :narrow-true)
-            (<- code (instantiate-open-instance code env) :end-narrow))
-          (return (new accessor (& type m) code)))))
+        (:narrow getter
+          (case (& env m)
+            (:select environment (return m))
+            (:select (tag inaccessible) (return (new getter (& type m) (& call m) env)))))
+        (:narrow setter
+          (case (& env m)
+            (:select environment (return m))
+            (:select (tag inaccessible) (return (new setter (& type m) (& call m) env)))))))
     
     
     (deftuple member-instantiation
       (plural-member static-member)
       (singular-member static-member))
     
-    (define (instantiate-frame (plural-frame (union function-frame block-frame)) (singular-frame (union function-frame block-frame)) (env environment))
+    (define (instantiate-frame (plural-frame (union parameter-frame block-frame)) (singular-frame (union parameter-frame block-frame)) (env environment))
             void
       (const plural-members (list-set static-member)
         (map (set+ (& static-read-bindings plural-frame) (& static-write-bindings plural-frame)) b (& content b)))
@@ -958,7 +1020,7 @@
            " to be defined only by an instance member of a class.")
     (define (find-this (env environment) (allow-prototype-this boolean)) object-i-opt
       (for-each env frame
-        (when (and (in frame function-frame :narrow-true) (not-in (& this frame) (tag none)))
+        (when (and (in frame parameter-frame :narrow-true) (not-in (& this frame) (tag none)))
           (when (or allow-prototype-this (not (& prototype frame)))
             (return (& this frame)))))
       (return none))
@@ -995,8 +1057,16 @@
       (throw reference-error))
     
     
-    (define (lexical-delete (env environment :unused) (multiname multiname :unused) (phase (tag run) :unused)) boolean
-      (todo))
+    (define (lexical-delete (env environment) (multiname multiname) (phase (tag run))) boolean
+      (const kind lookup-kind (new lexical-lookup (find-this env false)))
+      (var i integer 0)
+      (while (< i (length env))
+        (const frame frame (nth env i))
+        (const result boolean-opt (delete-property frame multiname kind phase))
+        (rwhen (not-in result (tag none) :narrow-true)
+          (return result))
+        (<- i (+ i 1)))
+      (return true))
     
     
     
@@ -1102,13 +1172,13 @@
     (define (read-property (container (union obj-optional-limit frame)) (multiname multiname) (kind lookup-kind) (phase phase))
             object-opt
       (case container
-        (:narrow (union undefined null boolean float64 string namespace compound-attribute method-closure instance)
+        (:narrow (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
           (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
             (return (read-dynamic-property container multiname kind phase))
             (return (read-instance-member container c qname phase))))
-        (:narrow (union system-frame global package function-frame block-frame)
+        (:narrow (union system-frame global package parameter-frame block-frame)
           (const m static-member-opt (find-flat-member container multiname read phase))
           (if (and (in m (tag none)) (in container global :narrow-true))
             (return (read-dynamic-property container multiname kind phase))
@@ -1154,9 +1224,10 @@
           (return v))
         (:narrow instance-method
           (return (new method-closure this m)))
-        (:narrow instance-accessor
-          (const code instance (& code m))
-          (return ((& call (resolve-alias code)) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
+        (:narrow instance-getter
+          (return ((& call m) this (& env m) phase)))
+        (:narrow instance-setter
+          (bottom (:local m) " cannot be an " (:type instance-setter) " because these are only represented as write-only members."))))
     
     
     (define (read-static-member (m static-member-opt) (phase phase)) object-opt
@@ -1172,12 +1243,13 @@
                   " phase, which was ruled out above.")
           (return value))
         (:narrow constructor-method (return (& code m)))
-        (:narrow accessor
-          (const code (union instance open-instance) (& code m))
-          (rwhen (in code open-instance :narrow-false)
-            (assert (in phase (tag compile)) "Note that an " (:type open-instance) " can only be found when " (:assertion) ".")
+        (:narrow getter
+          (const env environment-i (& env m))
+          (rwhen (in env (tag inaccessible) :narrow-false)
             (throw compile-expression-error))
-          (return ((& call (resolve-alias code)) null (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
+          (return ((& call m) env phase)))
+        (:narrow setter
+          (bottom (:local m) " cannot be a " (:type setter) " because these are only represented as write-only members."))))
     
     
     (define (read-dynamic-property (container dynamic-object) (multiname multiname) (kind lookup-kind) (phase phase))
@@ -1214,11 +1286,11 @@
         (:select open-instance
           (assert (in phase (tag compile)) "Note that an uninstantiated function can only be found when " (:assertion) ".")
           (throw compile-expression-error))
-        (:narrow future-value
+        (:narrow (-> () object)
           (assert (in phase (tag compile)) "Note that " (:assertion) " because all futures are resolved by the end of the compilation phase.")
           (&= value v inaccessible)
           (const type class (get-variable-type v phase))
-          (const new-value object ((& eval-value value)))
+          (const new-value object (value))
           (const coerced-value object (assignment-conversion new-value type))
           (&= value v coerced-value)
           (return new-value))))
@@ -1229,9 +1301,9 @@
                             (new-value object) (phase (tag run)))
             (tag none ok)
       (case container
-        (:select (union undefined null boolean float64 string namespace compound-attribute method-closure)
+        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure)
           (return none))
-        (:narrow (union system-frame global package function-frame block-frame)
+        (:narrow (union system-frame global package parameter-frame block-frame)
           (const m static-member-opt (find-flat-member container multiname write phase))
           (if (and (in m (tag none)) (in container global :narrow-true))
             (return (write-dynamic-property container multiname create-if-missing new-value phase))
@@ -1283,10 +1355,11 @@
           (return ok))
         (:select instance-method
           (throw property-access-error))
-        (:narrow instance-accessor
+        (:narrow instance-getter
+          (bottom (:local m) " cannot be an " (:type instance-getter) " because these are only represented as read-only members."))
+        (:narrow instance-setter
           (const coerced-value object (assignment-conversion new-value (&opt type m)))
-          (const code instance (& code m))
-          (exec ((& call (resolve-alias code)) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
+          ((& call m) this coerced-value (& env m) phase)
           (return ok))))
     
     
@@ -1300,11 +1373,13 @@
         (:narrow hoisted-var
           (&= value m new-value)
           (return ok))
-        (:narrow accessor
+        (:narrow getter
+          (bottom (:local m) " cannot be a " (:type getter) " because these are only represented as read-only members."))
+        (:narrow setter
           (const coerced-value object (assignment-conversion new-value (& type m)))
-          (const code (union instance open-instance) (& code m))
-          (assert (not-in code open-instance :narrow-true) "Note that all instances are resolved for the " (:tag run) " phase, so " (:assertion) ".")
-          (exec ((& call (resolve-alias code)) null (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
+          (const env environment-i (& env m))
+          (assert (not-in env (tag inaccessible) :narrow-true) "Note that all instances are resolved for the " (:tag run) " phase, so " (:assertion) ".")
+          ((& call m) coerced-value env phase)
           (return ok))))
     
     
@@ -1341,10 +1416,10 @@
           (assert (in phase (tag compile)) "Note that this can only happen when " (:assertion)
                   " because the compilation phase ensures that all types are valid, so invalid types will not occur during the run phase.")
           (throw compile-expression-error))
-        (:narrow future-type
+        (:narrow (-> () class)
           (assert (in phase (tag compile)) "Note that " (:assertion) " because all futures are resolved by the end of the compilation phase.")
           (&= type v inaccessible)
-          (const new-type class ((& eval-type type)))
+          (const new-type class (type))
           (&= type v new-type)
           (return new-type))))
     
@@ -1359,78 +1434,79 @@
     
     
     (%heading (3 :semantics) "Deleting a Property")
+    (define (delete-property (container (union obj-optional-limit frame)) (multiname multiname) (kind lookup-kind) (phase (tag run))) boolean-opt
+      (case container
+        (:narrow (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure instance)
+          (const c class (object-type container))
+          (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
+          (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
+            (return (delete-dynamic-property container multiname))
+            (return (delete-instance-member c qname))))
+        (:narrow (union system-frame global package parameter-frame block-frame)
+          (const m static-member-opt (find-flat-member container multiname read phase))
+          (if (and (in m (tag none)) (in container global :narrow-true))
+            (return (delete-dynamic-property container multiname))
+            (return (delete-static-member m))))
+        (:narrow class
+          (var this (union object (tag none generic)))
+          (case kind
+            (:select (tag property-lookup)
+              (<- this generic))
+            (:narrow lexical-lookup
+              (<- this (assert-not-in (& this kind) (tag inaccessible)))
+              (// "Note that " (:local this) " cannot be " (:tag inaccessible) " during the " (:tag run) " phase.")))
+          (const m2 (union (tag none) static-member qualified-name) (find-static-member container multiname read phase))
+          (rwhen (not-in m2 qualified-name :narrow-both)
+            (return (delete-static-member m2)))
+          (case this
+            (:select (tag none) (throw property-access-error))
+            (:select (tag generic) (return false))
+            (:narrow object (return (delete-instance-member (object-type this) m2)))))
+        (:narrow prototype
+          (return (delete-dynamic-property container multiname)))
+        (:narrow limited-instance
+          (const superclass class-opt (& super (& limit container)))
+          (rwhen (in superclass (tag none) :narrow-false)
+            (return none))
+          (const qname qualified-name-opt (resolve-instance-member-name superclass multiname read phase))
+          (return (delete-instance-member superclass qname)))))
     
-    (define (delete-property (o obj-optional-limit :unused) (multiname multiname :unused) (phase (tag run) :unused)) boolean
-      (todo))
     
-    (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused)
-                                       (kind lookup-kind :unused) (phase (tag run) :unused)) boolean
-      (todo))
+    (define (delete-instance-member (c class) (qname qualified-name-opt)) boolean-opt
+      (const m instance-member-opt (find-instance-member c qname read))
+      (rwhen (in m (tag none))
+        (return none))
+      (return false))
+    
+    
+    (define (delete-static-member (m static-member-opt)) boolean-opt
+      (case m
+        (:select (tag none) (return none))
+        (:select (tag forbidden) (throw property-access-error))
+        (:select (union variable hoisted-var constructor-method getter setter) (return false))))
+    
+    
+    (define (delete-dynamic-property (container dynamic-object) (multiname multiname)) boolean-opt
+      (const name string-opt (select-public-name multiname))
+      (rwhen (in name (tag none) :narrow-false)
+        (return none))
+      (reserve dp)
+      (cond
+       ((some (& dynamic-properties container) dp (= (& name dp) name string) :define-true)
+        (&= dynamic-properties container (set- (& dynamic-properties container) (list-set dp)))
+        (return true))
+       (nil (return none))))
     
     
     
     (%heading (2 :semantics) "Invocation")
-    (define (bad-invoke (this object :unused) (args argument-list :unused) (runtime-env environment :unused) (phase phase :unused)) object
+    (define (bad-construct (args argument-list :unused) (runtime-env environment :unused) (phase phase :unused)) object
       (throw property-access-error))
     
     
     
-    (%heading (2 :semantics) "Operator Dispatch")
-    (%heading (3 :semantics) "Unary Operators")
-    (%text :comment (:global-call unary-dispatch table this operand args phase) " dispatches the unary operator described by " (:local table)
-           " applied to the " (:character-literal "this") " value " (:local this) ", the operand " (:local operand)
-           ", and zero or more positional and/or named arguments " (:local args)
-           ". If " (:local operand) " has a limit class, lookup is restricted to operators defined on the proper ancestors of that limit. If "
-           (:local phase) " is " (:tag compile) ", only compile-time expressions can be evaluated in the process of dispatching and calling the operator.")
-    (define (unary-dispatch (table (list-set unary-method)) (this object) (operand obj-optional-limit) (args argument-list) (phase phase)) object
-      (const applicable-ops (list-set unary-method)
-        (map table m m (limited-has-type operand (& operand-type m))))
-      (reserve best)
-      (rwhen (some applicable-ops best
-                   (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
-        (return ((& f best) this (get-object operand) args phase)))
-      (throw property-access-error))
-    
-    
-    (%text :comment (:global-call limited-has-type o c) " returns " (:tag true) " if " (:local o) " is a member of class " (:local c)
-           " with the added condition that, if " (:local o) " has a limit class " (:local limit) ", "
-           (:local c) " is a proper ancestor of " (:local limit) ".")
-    (define (limited-has-type (o obj-optional-limit) (c class)) boolean
-      (const a object (get-object o))
-      (const limit class-opt (get-object-limit o))
-      (if (has-type a c)
-        (if (in limit (tag none) :narrow-false)
-          (return true)
-          (return (is-proper-ancestor c limit)))
-        (return false)))
-    
-    
-    (%heading (3 :semantics) "Binary Operators")
-    (%text :comment (:global-call is-binary-descendant m1 m2) " is " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2)
-           " as defined by the procedure below.")
-    (define (is-binary-descendant (m1 binary-method) (m2 binary-method)) boolean
-      (return (and (is-ancestor (& left-type m2) (& left-type m1))
-                   (is-ancestor (& right-type m2) (& right-type m1)))))
-    
-    (%text :comment (:global-call binary-dispatch table left right phase) " dispatches the binary operator described by " (:local table)
-           " applied to the operands " (:local left) " and " (:local right) ". If " (:local left) " has a limit " (:local left-limit)
-           ", the lookup is restricted to operator definitions with an ancestor of " (:local left-limit)
-           " for the left operand. Similarly, if " (:local right) " has a limit " (:local right-limit)
-           ", the lookup is restricted to operator definitions with an ancestor of " (:local right-limit) " for the right operand. If "
-           (:local phase) " is " (:tag compile) ", only compile-time expressions can be evaluated in the process of dispatching and calling the operator.")
-    (define (binary-dispatch (table (list-set binary-method)) (left obj-optional-limit) (right obj-optional-limit) (phase phase)) object
-      (const applicable-ops (list-set binary-method)
-        (map table m m (and (limited-has-type left (& left-type m))
-                            (limited-has-type right (& right-type m)))))
-      (reserve best)
-      (rwhen (some applicable-ops best
-                   (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
-        (return ((& f best) (get-object left) (get-object right) phase)))
-      (throw property-access-error))
-    
-    
-    (%heading (2 :semantics) "Deferred Validation")
-    (defvar deferred-validators (vector (-> () void)) (vector-of (-> () void)))
+    (%heading (2 :semantics) "Pre-Evaluation")
+    (defvar pre-evaluators (vector (-> () void)) (vector-of (-> () void)))
     
     
     
@@ -1508,19 +1584,6 @@
     (%print-actions ("Validation and Evaluation" multiname validate))
     
     
-    (%heading 2 "Unit Expressions")
-    (rule :unit-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
-      (production :unit-expression (:paren-list-expression) unit-expression-paren-list-expression
-        ((validate cxt env) ((validate :paren-list-expression) cxt env))
-        ((eval env phase) (return ((eval :paren-list-expression) env phase))))
-      (production :unit-expression ($number :no-line-break $string) unit-expression-number-with-unit
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((eval (env :unused) (phase :unused)) (todo)))
-      (production :unit-expression (:unit-expression :no-line-break $string) unit-expression-unit-expression-with-unit
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((eval (env :unused) (phase :unused)) (todo))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
-    
     (%heading 2 "Primary Expressions")
     (rule :primary-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :primary-expression (null) primary-expression-null
@@ -1554,15 +1617,15 @@
       (production :primary-expression ($regular-expression) primary-expression-regular-expression
         ((validate (cxt :unused) (env :unused)))
         ((eval (env :unused) (phase :unused)) (todo)))
-      (production :primary-expression (:unit-expression) primary-expression-unit-expression
-        ((validate cxt env) ((validate :unit-expression) cxt env))
-        ((eval env phase) (return ((eval :unit-expression) env phase))))
+      (production :primary-expression (:paren-list-expression) primary-expression-paren-list-expression
+        ((validate cxt env) ((validate :paren-list-expression) cxt env))
+        ((eval env phase) (return ((eval :paren-list-expression) env phase))))
       (production :primary-expression (:array-literal) primary-expression-array-literal
         ((validate (cxt :unused) (env :unused)) (todo))
         ((eval (env :unused) (phase :unused)) (todo)))
       (production :primary-expression (:object-literal) primary-expression-object-literal
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((eval (env :unused) (phase :unused)) (todo)))
+        ((validate cxt env) ((validate :object-literal) cxt env))
+        ((eval env phase) (return ((eval :object-literal) env phase))))
       (production :primary-expression (:function-expression) primary-expression-function-expression
         ((validate cxt env) ((validate :function-expression) cxt env))
         ((eval env phase) (return ((eval :function-expression) env phase)))))
@@ -1610,11 +1673,40 @@
     
     
     (%heading 2 "Object Literals")
-    (production :object-literal (\{ \}) object-literal-empty)
-    (production :object-literal (\{ :field-list \}) object-literal-list)
+    (rule :object-literal ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+      (production :object-literal (\{ \}) object-literal-empty
+        ((validate (cxt :unused) (env :unused)))
+        ((eval (env :unused) phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (return (new prototype object-prototype (list-set-of dynamic-property)))))
+      (production :object-literal (\{ :field-list \}) object-literal-list
+        ((validate cxt env) (exec ((validate :field-list) cxt env)))
+        ((eval env phase)
+         (rwhen (in phase (tag compile))
+           (throw compile-expression-error))
+         (const properties (list-set dynamic-property) ((eval :field-list) env phase))
+         (return (new prototype object-prototype properties)))))
     
-    (production :field-list (:literal-field) field-list-one)
-    (production :field-list (:field-list \, :literal-field) field-list-more)
+    (rule :field-list ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) (list-set dynamic-property))))
+      (production :field-list (:literal-field) field-list-one
+        ((validate cxt env) (return ((validate :literal-field) cxt env)))
+        ((eval env phase)
+         (const na named-argument ((eval :literal-field) env phase))
+         (return (list-set (new dynamic-property (& name na) (& value na))))))
+      (production :field-list (:field-list \, :literal-field) field-list-more
+        ((validate cxt env)
+         (const names1 (list-set string) ((validate :field-list) cxt env))
+         (const names2 (list-set string) ((validate :literal-field) cxt env))
+         (rwhen (nonempty (set* names1 names2))
+           (throw syntax-error))
+         (return (set+ names1 names2)))
+        ((eval env phase)
+         (const properties (list-set dynamic-property) ((eval :field-list) env phase))
+         (const na named-argument ((eval :literal-field) env phase))
+         (rwhen (some properties p (= (& name p) (& name na) string))
+           (throw argument-mismatch-error))
+         (return (set+ properties (list-set (new dynamic-property (& name na) (& value na))))))))
     
     (rule :literal-field ((validate (-> (context environment) (list-set string))) (eval (-> (environment phase) named-argument)))
       (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression
@@ -1636,12 +1728,17 @@
         ((validate (cxt :unused) (env :unused)) (return (list-set (value $string))))
         ((eval (env :unused) (phase :unused)) (return (value $string))))
       (production :field-name ($number) field-name-number
-        ((validate (cxt :unused) (env :unused)) (todo))
-        ((eval (env :unused) (phase :unused)) (todo)))
+        ((validate (cxt :unused) (env :unused)) (return (list-set (float64-to-string (value $number)))))
+        ((eval (env :unused) (phase :unused)) (return (float64-to-string (value $number)))))
       (? js2
         (production :field-name (:paren-expression) field-name-paren-expression
-          ((validate (cxt :unused) (env :unused)) (todo))
-          ((eval (env :unused) (phase :unused)) (todo)))))
+          ((validate cxt env)
+           ((validate :paren-expression) cxt env)
+           (return (list-set-of string)))
+          ((eval env phase)
+           (const r obj-or-ref ((eval :paren-expression) env phase))
+           (const a object (read-reference r phase))
+           (return (to-string a phase))))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1657,25 +1754,20 @@
     
     
     (%heading 2 "Super Expressions")
-    (rule :super-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
+    (rule :super-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-optional-limit)))
       (production :super-expression (super) super-expression-super
         ((validate (cxt :unused) env)
          (rwhen (or (in (get-enclosing-class env) (tag none)) (in (find-this env false) (tag none)))
            (throw syntax-error)))
-        ((eval env (phase :unused))
+        ((eval env phase)
          (const this object-i-opt (find-this env false))
          (assert (not-in this (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
          (rwhen (in this (tag inaccessible) :narrow-false)
            (throw compile-expression-error))
          (const limit class-opt (get-enclosing-class env))
          (assert (not-in limit (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local limit) " cannot be " (:tag none) " at this point.")
-         (return (new limited-obj-or-ref this limit))))
-      (production :super-expression (:full-super-expression) super-expression-full-super-expression
-        ((validate cxt env) ((validate :full-super-expression) cxt env))
-        ((eval env phase) (return ((eval :full-super-expression) env phase)))))
-    
-    (rule :full-super-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :full-super-expression (super :paren-expression) full-super-expression-super-paren-expression
+         (return (read-limited-reference this limit phase))))
+      (production :super-expression (super :paren-expression) super-expression-super-paren-expression
         ((validate cxt env)
          (rwhen (in (get-enclosing-class env) (tag none))
            (throw syntax-error))
@@ -1684,8 +1776,22 @@
          (const r obj-or-ref ((eval :paren-expression) env phase))
          (const limit class-opt (get-enclosing-class env))
          (assert (not-in limit (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local limit) " cannot be " (:tag none) " at this point.")
-         (return (new limited-obj-or-ref r limit)))))
+         (return (read-limited-reference r limit phase)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    
+    (%text :comment (:global-call read-limited-reference r phase) " reads the reference, if any, inside " (:local r)
+           " and returns the result, retaining " (:local limit)
+           ". The object read from the reference is checked to make sure that it is an instance of " (:local limit)
+           " or one of its descendants. If "
+           (:local phase) " is " (:tag compile) ", only compile-time expressions can be evaluated in the process of reading " (:local r) ".")
+    (define (read-limited-reference (r obj-or-ref) (limit class) (phase phase)) obj-optional-limit
+      (const o object (read-reference r phase))
+      (rwhen (= o null object)
+        (return null))
+      (rwhen (or (not-in o instance :narrow-false) (not (has-type o limit)))
+        (throw bad-value-error))
+      (return (new limited-instance o limit)))
     
     
     (%heading 2 "Postfix Expressions")
@@ -1700,21 +1806,13 @@
         (validate (validate :short-new-expression))
         (eval (eval :short-new-expression))))
     
-    (rule :postfix-expression-or-super ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression
-        (validate (validate :postfix-expression))
-        (eval (eval :postfix-expression)))
-      (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
-    
-    (rule :attribute-expression ((context (writable-cell context)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :attribute-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
         ((validate cxt env)
          ((validate :simple-qualified-identifier) cxt env)
-         (action<- (context :attribute-expression 0) cxt))
+         (action<- (strict :attribute-expression 0) (& strict cxt)))
         ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :simple-qualified-identifier) (context :attribute-expression 0)))))
+         (return (new lexical-reference env (multiname :simple-qualified-identifier) (strict :attribute-expression 0)))))
       (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator
         ((validate cxt env)
          ((validate :attribute-expression) cxt env)
@@ -1732,18 +1830,18 @@
          (const f object (read-reference r phase))
          (const base object (reference-base r))
          (const args argument-list ((eval :arguments) env phase))
-         (return (unary-dispatch call-table base f args phase)))))
+         (return (call base f args phase)))))
     
-    (rule :full-postfix-expression ((context (writable-cell context)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :full-postfix-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression
         ((validate cxt env) ((validate :primary-expression) cxt env))
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier
         ((validate cxt env)
          ((validate :expression-qualified-identifier) cxt env)
-         (action<- (context :full-postfix-expression 0) cxt))
+         (action<- (strict :full-postfix-expression 0) (& strict cxt)))
         ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :expression-qualified-identifier) (context :full-postfix-expression 0)))))
+         (return (new lexical-reference env (multiname :expression-qualified-identifier) (strict :full-postfix-expression 0)))))
       (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
@@ -1760,8 +1858,7 @@
          ((validate :super-expression) cxt env)
          ((validate :dot-operator) cxt env))
         ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :super-expression) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
+         (const a obj-optional-limit ((eval :super-expression) env phase))
          (return ((eval :dot-operator) env a phase))))
       (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
         ((validate cxt env)
@@ -1772,37 +1869,29 @@
          (const f object (read-reference r phase))
          (const base object (reference-base r))
          (const args argument-list ((eval :arguments) env phase))
-         (return (unary-dispatch call-table base f args phase))))
-      (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call
-        ((validate cxt env)
-         ((validate :full-super-expression) cxt env)
-         ((validate :arguments) cxt env))
-        ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :full-super-expression) env phase))
-         (const f obj-optional-limit (read-ref-with-limit r phase))
-         (const base object (reference-base r))
-         (const args argument-list ((eval :arguments) env phase))
-         (return (unary-dispatch call-table base f args phase))))
-      (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment
-        ((validate cxt env) ((validate :postfix-expression-or-super) cxt env))
+         (return (call base f args phase))))
+      (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment
+        ((validate cxt env) ((validate :postfix-expression) cxt env))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
-         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (const b object (unary-dispatch increment-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))
-         (write-reference r b phase)
-         (return (get-object a))))
-      (production :full-postfix-expression (:postfix-expression-or-super :no-line-break --) full-postfix-expression-decrement
-        ((validate cxt env) ((validate :postfix-expression-or-super) cxt env))
+         (const r obj-or-ref ((eval :postfix-expression) env phase))
+         (const a object (read-reference r phase))
+         (const b object (plus a phase))
+         (const c object (add b 1.0 phase))
+         (write-reference r c phase)
+         (return b)))
+      (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement
+        ((validate cxt env) ((validate :postfix-expression) cxt env))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
-         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (const b object (unary-dispatch decrement-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))
-         (write-reference r b phase)
-         (return (get-object a)))))
+         (const r obj-or-ref ((eval :postfix-expression) env phase))
+         (const a object (read-reference r phase))
+         (const b object (plus a phase))
+         (const c object (subtract b 1.0 phase))
+         (write-reference r c phase)
+         (return b))))
     
     (rule :full-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new
@@ -1813,27 +1902,18 @@
          (const r obj-or-ref ((eval :full-new-subexpression) env phase))
          (const f object (read-reference r phase))
          (const args argument-list ((eval :arguments) env phase))
-         (return (unary-dispatch construct-table null f args phase))))
-      (production :full-new-expression (new :full-super-expression :arguments) full-new-expression-super-new
-        ((validate cxt env)
-         ((validate :full-super-expression) cxt env)
-         ((validate :arguments) cxt env))
-        ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :full-super-expression) env phase))
-         (const f obj-optional-limit (read-ref-with-limit r phase))
-         (const args argument-list ((eval :arguments) env phase))
-         (return (unary-dispatch construct-table null f args phase)))))
+         (return (construct f args phase)))))
     
-    (rule :full-new-subexpression ((context (writable-cell context)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :full-new-subexpression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression
         ((validate cxt env) ((validate :primary-expression) cxt env))
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier
         ((validate cxt env)
          ((validate :qualified-identifier) cxt env)
-         (action<- (context :full-new-subexpression 0) cxt))
+         (action<- (strict :full-new-subexpression 0) (& strict cxt)))
         ((eval env (phase :unused))
-         (return (new lexical-reference env (multiname :qualified-identifier) (context :full-new-subexpression 0)))))
+         (return (new lexical-reference env (multiname :qualified-identifier) (strict :full-new-subexpression 0)))))
       (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression
         ((validate cxt env) ((validate :full-new-expression) cxt env))
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
@@ -1850,8 +1930,7 @@
          ((validate :super-expression) cxt env)
          ((validate :dot-operator) cxt env))
         ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :super-expression) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
+         (const a obj-optional-limit ((eval :super-expression) env phase))
          (return ((eval :dot-operator) env a phase)))))
     
     (rule :short-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
@@ -1860,13 +1939,7 @@
         ((eval env phase)
          (const r obj-or-ref ((eval :short-new-subexpression) env phase))
          (const f object (read-reference r phase))
-         (return (unary-dispatch construct-table null f (new argument-list (vector-of object) (list-set-of named-argument)) phase))))
-      (production :short-new-expression (new :super-expression) short-new-expression-super-new
-        ((validate cxt env) ((validate :super-expression) cxt env))
-        ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :super-expression) env phase))
-         (const f obj-optional-limit (read-ref-with-limit r phase))
-         (return (unary-dispatch construct-table null f (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
+         (return (construct f (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
     
     (rule :short-new-subexpression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
@@ -1875,7 +1948,39 @@
       (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short
         (validate (validate :short-new-expression))
         (eval (eval :short-new-expression))))
-    (%print-actions ("Validation" context validate) ("Evaluation" eval))
+    (%print-actions ("Validation" strict validate) ("Evaluation" eval))
+    
+    
+    (%text :comment (:global-call reference-base r) " returns " (:type reference) " " (:local r) :apostrophe "s base or "
+           (:tag null) " if there is none. The base" :apostrophe "s limit, if any, is ignored.")
+    (define (reference-base (r obj-or-ref)) object
+      (case r
+        (:select (union object lexical-reference) (return null))
+        (:narrow (union dot-reference bracket-reference)
+          (const o obj-optional-limit (& base r))
+          (case o
+            (:narrow object (return o))
+            (:narrow limited-instance (return (& instance o)))))))
+    
+    
+    (define (call (this object) (a object) (args argument-list) (phase phase)) object
+      (case a
+        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute prototype package global) (throw bad-value-error))
+        (:narrow class (return ((& call a) this args phase)))
+        (:narrow instance
+          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
+          (return ((& call (resolve-alias a)) this args (& env a) phase)))
+        (:narrow method-closure
+          (const code instance (& code (& method a)))
+          (return (call (& this a) code args phase)))))
+    
+    (define (construct (a object) (args argument-list) (phase phase)) object
+      (case a
+        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
+        (:narrow class (return ((& construct a) args phase)))
+        (:narrow instance
+          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
+          (return ((& construct (resolve-alias a)) args (& env a) phase)))))
     
     
     (%heading 2 "Member Operators")
@@ -1959,17 +2064,19 @@
     
     
     (%heading 2 "Unary Operators")
-    (rule :unary-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
+    (rule :unary-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :unary-expression (:postfix-expression) unary-expression-postfix
         ((validate cxt env) ((validate :postfix-expression) cxt env))
         ((eval env phase) (return ((eval :postfix-expression) env phase))))
       (production :unary-expression (delete :postfix-expression) unary-expression-delete
-        ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((validate cxt env)
+         ((validate :postfix-expression) cxt env)
+         (action<- (strict :unary-expression 0) (& strict cxt)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
-         (return (delete-reference r phase))))
+         (return (delete-reference r (strict :unary-expression 0) phase))))
       (production :unary-expression (void :unary-expression) unary-expression-void
         ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
@@ -1986,110 +2093,177 @@
            (:select (union null prototype package global) (return "object"))
            (:select boolean (return "boolean"))
            (:select float64 (return "number"))
+           (:select long (return "long"))
+           (:select u-long (return "ulong"))
+           (:select character (return "character"))
            (:select string (return "string"))
            (:select namespace (return "namespace"))
            (:select compound-attribute (return "attribute"))
            (:select (union class method-closure) (return "function"))
            (:narrow instance (return (& typeof-string (resolve-alias a)))))))
-      (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
-        ((validate cxt env) ((validate :postfix-expression-or-super) cxt env))
+      (production :unary-expression (++ :postfix-expression) unary-expression-increment
+        ((validate cxt env) ((validate :postfix-expression) cxt env))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
-         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (const b object (unary-dispatch increment-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))
-         (write-reference r b phase)
-         (return b)))
-      (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement
-        ((validate cxt env) ((validate :postfix-expression-or-super) cxt env))
+         (const r obj-or-ref ((eval :postfix-expression) env phase))
+         (const a object (read-reference r phase))
+         (const b object (plus a phase))
+         (const c object (add b 1.0 phase))
+         (write-reference r c phase)
+         (return c)))
+      (production :unary-expression (-- :postfix-expression) unary-expression-decrement
+        ((validate cxt env) ((validate :postfix-expression) cxt env))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
-         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (const b object (unary-dispatch decrement-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))
-         (write-reference r b phase)
-         (return b)))
-      (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus
-        ((validate cxt env) ((validate :unary-expression-or-super) cxt env))
+         (const r obj-or-ref ((eval :postfix-expression) env phase))
+         (const a object (read-reference r phase))
+         (const b object (plus a phase))
+         (const c object (subtract b 1.0 phase))
+         (write-reference r c phase)
+         (return c)))
+      (production :unary-expression (+ :unary-expression) unary-expression-plus
+        ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (return (unary-plus a phase))))
-      (production :unary-expression (- :unary-expression-or-super) unary-expression-minus
-        ((validate cxt env) ((validate :unary-expression-or-super) cxt env))
+         (const r obj-or-ref ((eval :unary-expression) env phase))
+         (const a object (read-reference r phase))
+         (return (plus a phase))))
+      (production :unary-expression (- :unary-expression) unary-expression-minus
+        ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (return (unary-dispatch minus-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))))
-      (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not
-        ((validate cxt env) ((validate :unary-expression-or-super) cxt env))
+         (const r obj-or-ref ((eval :unary-expression) env phase))
+         (const a object (read-reference r phase))
+         (return (minus a phase))))
+      (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not
+        ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const r obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit r phase))
-         (return (unary-dispatch bitwise-not-table null a (new argument-list (vector-of object) (list-set-of named-argument)) phase))))
+         (const r obj-or-ref ((eval :unary-expression) env phase))
+         (const a object (read-reference r phase))
+         (return (bit-not a phase))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
         ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
-         (return (unary-not a phase)))))
-    
-    (rule :unary-expression-or-super ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :unary-expression-or-super (:unary-expression) unary-expression-or-super-unary-expression
-        (validate (validate :unary-expression))
-        (eval (eval :unary-expression)))
-      (production :unary-expression-or-super (:super-expression) unary-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
+         (return (logical-not a phase)))))
+    (%print-actions ("Validation" strict validate) ("Evaluation" eval))
     
     
+    (%text :comment (:global-call plus a phase) " returns the value of the unary expression " (:character-literal "+") (:local a) ". If "
+           (:local phase) " is " (:tag compile) ", only compile-time operations are permitted.")
+    (define (plus (a object) (phase phase)) object
+      (return (to-general-number a phase)))
+    
+    (define (minus (a object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (case x
+        (:narrow float64 (return (float64-negate x)))
+        (:narrow (union long u-long)
+          (const i integer (neg (& value x)))
+          (return (check-long i)))))
+    
+    (define (bit-not (a object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (case x
+        (:narrow float64
+          (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+          (return (real-to-float64 (bitwise-xor i -1))))
+        (:narrow long
+          (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (& value x))
+          (return (new long (bitwise-xor i -1))))
+        (:narrow u-long
+          (const i (integer-range 0 (- (expt 2 64) 1)) (& value x))
+          (return (new u-long (bitwise-xor i (hex #xFFFFFFFFFFFFFFFF)))))))
+    
+    (%text :comment (:global-call logical-not a phase) " returns the value of the unary expression " (:character-literal "!") (:local a) ". If "
+           (:local phase) " is " (:tag compile) ", only compile-time operations are permitted.")
+    (define (logical-not (a object) (phase phase)) object
+      (return (not (to-boolean a phase))))
+    
+        
     (%heading 2 "Multiplicative Operators")
     (rule :multiplicative-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary
         ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase) (return ((eval :unary-expression) env phase))))
-      (production :multiplicative-expression (:multiplicative-expression-or-super * :unary-expression-or-super) multiplicative-expression-multiply
+      (production :multiplicative-expression (:multiplicative-expression * :unary-expression) multiplicative-expression-multiply
         ((validate cxt env)
-         ((validate :multiplicative-expression-or-super) cxt env)
-         ((validate :unary-expression-or-super) cxt env))
+         ((validate :multiplicative-expression) cxt env)
+         ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :multiplicative-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch multiply-table a b phase))))
-      (production :multiplicative-expression (:multiplicative-expression-or-super / :unary-expression-or-super) multiplicative-expression-divide
+         (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :unary-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (multiply a b phase))))
+      (production :multiplicative-expression (:multiplicative-expression / :unary-expression) multiplicative-expression-divide
         ((validate cxt env)
-         ((validate :multiplicative-expression-or-super) cxt env)
-         ((validate :unary-expression-or-super) cxt env))
+         ((validate :multiplicative-expression) cxt env)
+         ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :multiplicative-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch divide-table a b phase))))
-      (production :multiplicative-expression (:multiplicative-expression-or-super % :unary-expression-or-super) multiplicative-expression-remainder
+         (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :unary-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (divide a b phase))))
+      (production :multiplicative-expression (:multiplicative-expression % :unary-expression) multiplicative-expression-remainder
         ((validate cxt env)
-         ((validate :multiplicative-expression-or-super) cxt env)
-         ((validate :unary-expression-or-super) cxt env))
+         ((validate :multiplicative-expression) cxt env)
+         ((validate :unary-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :multiplicative-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :unary-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch remainder-table a b phase)))))
-    
-    (rule :multiplicative-expression-or-super ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :multiplicative-expression-or-super (:multiplicative-expression) multiplicative-expression-or-super-multiplicative-expression
-        (validate (validate :multiplicative-expression))
-        (eval (eval :multiplicative-expression)))
-      (production :multiplicative-expression-or-super (:super-expression) multiplicative-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
+         (const ra obj-or-ref ((eval :multiplicative-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :unary-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (remainder a b phase)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    (define (multiply (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i integer (check-integer x))
+        (const j integer (check-integer y))
+        (const k integer (* i j))
+        (if (or (in x u-long) (in y u-long))
+          (return (check-u-long k))
+          (return (check-long k))))
+       (nil (return (float64-multiply x y)))))
+    
+    (define (divide (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i integer (check-integer x))
+        (const j integer (check-integer y))
+        (rwhen (= j 0)
+          (throw range-error))
+        (const q rational (rat/ i j))
+        (const k integer (if (>= q 0 rational) (floor q) (ceiling q)))
+        (if (or (in x u-long) (in y u-long))
+          (return (check-u-long k))
+          (return (check-long k))))
+       (nil (return (float64-divide x y)))))
+    
+    (define (remainder (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i integer (check-integer x))
+        (const j integer (check-integer y))
+        (rwhen (= j 0)
+          (throw range-error))
+        (const q rational (rat/ i j))
+        (const k integer (if (>= q 0 rational) (floor q) (ceiling q)))
+        (const r integer (- i (* j k)))
+        (if (in x u-long)
+          (return (new u-long r))
+          (return (new long r))))
+       (nil (return (float64-remainder x y)))))
     
     
     (%heading 2 "Additive Operators")
@@ -2097,35 +2271,57 @@
       (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative
         ((validate cxt env) ((validate :multiplicative-expression) cxt env))
         ((eval env phase) (return ((eval :multiplicative-expression) env phase))))
-      (production :additive-expression (:additive-expression-or-super + :multiplicative-expression-or-super) additive-expression-add
+      (production :additive-expression (:additive-expression + :multiplicative-expression) additive-expression-add
         ((validate cxt env)
-         ((validate :additive-expression-or-super) cxt env)
-         ((validate :multiplicative-expression-or-super) cxt env))
+         ((validate :additive-expression) cxt env)
+         ((validate :multiplicative-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :additive-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :multiplicative-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch add-table a b phase))))
-      (production :additive-expression (:additive-expression-or-super - :multiplicative-expression-or-super) additive-expression-subtract
+         (const ra obj-or-ref ((eval :additive-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :multiplicative-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (add a b phase))))
+      (production :additive-expression (:additive-expression - :multiplicative-expression) additive-expression-subtract
         ((validate cxt env)
-         ((validate :additive-expression-or-super) cxt env)
-         ((validate :multiplicative-expression-or-super) cxt env))
+         ((validate :additive-expression) cxt env)
+         ((validate :multiplicative-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :additive-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :multiplicative-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch subtract-table a b phase)))))
-    
-    (rule :additive-expression-or-super ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :additive-expression-or-super (:additive-expression) additive-expression-or-super-additive-expression
-        (validate (validate :additive-expression))
-        (eval (eval :additive-expression)))
-      (production :additive-expression-or-super (:super-expression) additive-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
+         (const ra obj-or-ref ((eval :additive-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :multiplicative-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (subtract a b phase)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    (define (add (a object) (b object) (phase phase)) object
+      (const ap primitive-object (to-primitive a null phase))
+      (const bp primitive-object (to-primitive b null phase))
+      (rwhen (or (in ap (union character string)) (in bp (union character string)))
+        (return (append (to-string ap phase) (to-string bp phase))))
+      (const x general-number (to-general-number ap phase))
+      (const y general-number (to-general-number bp phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i integer (check-integer x))
+        (const j integer (check-integer y))
+        (const k integer (+ i j))
+        (if (or (in x u-long) (in y u-long))
+          (return (check-u-long k))
+          (return (check-long k))))
+       (nil (return (float64-add x y)))))
+    
+    (define (subtract (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i integer (check-integer x))
+        (const j integer (check-integer y))
+        (const k integer (- i j))
+        (if (in x u-long)
+          (return (check-u-long k))
+          (return (check-long k))))
+       (nil (return (float64-subtract x y)))))
     
     
     (%heading 2 "Bitwise Shift Operators")
@@ -2133,45 +2329,91 @@
       (production :shift-expression (:additive-expression) shift-expression-additive
         ((validate cxt env) ((validate :additive-expression) cxt env))
         ((eval env phase) (return ((eval :additive-expression) env phase))))
-      (production :shift-expression (:shift-expression-or-super << :additive-expression-or-super) shift-expression-left
+      (production :shift-expression (:shift-expression << :additive-expression) shift-expression-left
         ((validate cxt env)
-         ((validate :shift-expression-or-super) cxt env)
-         ((validate :additive-expression-or-super) cxt env))
+         ((validate :shift-expression) cxt env)
+         ((validate :additive-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :additive-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch shift-left-table a b phase))))
-      (production :shift-expression (:shift-expression-or-super >> :additive-expression-or-super) shift-expression-right-signed
+         (const ra obj-or-ref ((eval :shift-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :additive-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (shift-left a b phase))))
+      (production :shift-expression (:shift-expression >> :additive-expression) shift-expression-right-signed
         ((validate cxt env)
-         ((validate :shift-expression-or-super) cxt env)
-         ((validate :additive-expression-or-super) cxt env))
+         ((validate :shift-expression) cxt env)
+         ((validate :additive-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :additive-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch shift-right-table a b phase))))
-      (production :shift-expression (:shift-expression-or-super >>> :additive-expression-or-super) shift-expression-right-unsigned
+         (const ra obj-or-ref ((eval :shift-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :additive-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (shift-right a b phase))))
+      (production :shift-expression (:shift-expression >>> :additive-expression) shift-expression-right-unsigned
         ((validate cxt env)
-         ((validate :shift-expression-or-super) cxt env)
-         ((validate :additive-expression-or-super) cxt env))
+         ((validate :shift-expression) cxt env)
+         ((validate :additive-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :additive-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch shift-right-unsigned-table a b phase)))))
-    
-    (rule :shift-expression-or-super ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production :shift-expression-or-super (:shift-expression) shift-expression-or-super-shift-expression
-        (validate (validate :shift-expression))
-        (eval (eval :shift-expression)))
-      (production :shift-expression-or-super (:super-expression) shift-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
+         (const ra obj-or-ref ((eval :shift-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :additive-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (shift-right-unsigned a b phase)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    (define (shift-left (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (var count integer (truncate-to-integer (to-general-number b phase)))
+      (case x
+        (:narrow float64
+          (var i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+          (<- count (bitwise-and count (hex #x1F)))
+          (<- i (signed-wrap32 (bitwise-shift i count)))
+          (return (real-to-float64 i)))
+        (:narrow long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (bitwise-shift (& value x) count)))
+          (return (new long i)))
+        (:narrow u-long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range 0 (- (expt 2 64) 1)) (unsigned-wrap64 (bitwise-shift (& value x) count)))
+          (return (new u-long i)))))
+    
+    (define (shift-right (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (var count integer (truncate-to-integer (to-general-number b phase)))
+      (case x
+        (:narrow float64
+          (var i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+          (<- count (bitwise-and count (hex #x1F)))
+          (<- i (bitwise-shift i (neg count)))
+          (return (real-to-float64 i)))
+        (:narrow long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-shift (& value x) (neg count)))
+          (return (new long i)))
+        (:narrow u-long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-shift (signed-wrap64 (& value x)) (neg count)))
+          (return (new u-long (unsigned-wrap64 i))))))
+    
+    (define (shift-right-unsigned (a object) (b object) (phase phase)) object
+      (const x general-number (to-general-number a phase))
+      (var count integer (truncate-to-integer (to-general-number b phase)))
+      (case x
+        (:narrow float64
+          (var i (integer-range 0 (- (expt 2 32) 1)) (unsigned-wrap32 (truncate-to-integer x)))
+          (<- count (bitwise-and count (hex #x1F)))
+          (<- i (bitwise-shift i (neg count)))
+          (return (real-to-float64 i)))
+        (:narrow long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range 0 (- (expt 2 64) 1)) (bitwise-shift (unsigned-wrap64 (& value x)) (neg count)))
+          (return (new long (signed-wrap64 i))))
+        (:narrow u-long
+          (<- count (bitwise-and count (hex #x3F)))
+          (const i (integer-range 0 (- (expt 2 64) 1)) (bitwise-shift (& value x) (neg count)))
+          (return (new u-long i)))))
     
     
     (%heading 2 "Relational Operators")
@@ -2179,46 +2421,46 @@
       (production (:relational-expression :beta) (:shift-expression) relational-expression-shift
         ((validate cxt env) ((validate :shift-expression) cxt env))
         ((eval env phase) (return ((eval :shift-expression) env phase))))
-      (production (:relational-expression :beta) ((:relational-expression-or-super :beta) < :shift-expression-or-super) relational-expression-less
+      (production (:relational-expression :beta) ((:relational-expression :beta) < :shift-expression) relational-expression-less
         ((validate cxt env)
-         ((validate :relational-expression-or-super) cxt env)
-         ((validate :shift-expression-or-super) cxt env))
+         ((validate :relational-expression) cxt env)
+         ((validate :shift-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch less-table a b phase))))
-      (production (:relational-expression :beta) ((:relational-expression-or-super :beta) > :shift-expression-or-super) relational-expression-greater
+         (const ra obj-or-ref ((eval :relational-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :shift-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-less a b phase))))
+      (production (:relational-expression :beta) ((:relational-expression :beta) > :shift-expression) relational-expression-greater
         ((validate cxt env)
-         ((validate :relational-expression-or-super) cxt env)
-         ((validate :shift-expression-or-super) cxt env))
+         ((validate :relational-expression) cxt env)
+         ((validate :shift-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch less-table b a phase))))
-      (production (:relational-expression :beta) ((:relational-expression-or-super :beta) <= :shift-expression-or-super) relational-expression-less-or-equal
+         (const ra obj-or-ref ((eval :relational-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :shift-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-less b a phase))))
+      (production (:relational-expression :beta) ((:relational-expression :beta) <= :shift-expression) relational-expression-less-or-equal
         ((validate cxt env)
-         ((validate :relational-expression-or-super) cxt env)
-         ((validate :shift-expression-or-super) cxt env))
+         ((validate :relational-expression) cxt env)
+         ((validate :shift-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch less-or-equal-table a b phase))))
-      (production (:relational-expression :beta) ((:relational-expression-or-super :beta) >= :shift-expression-or-super) relational-expression-greater-or-equal
+         (const ra obj-or-ref ((eval :relational-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :shift-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-less-or-equal a b phase))))
+      (production (:relational-expression :beta) ((:relational-expression :beta) >= :shift-expression) relational-expression-greater-or-equal
         ((validate cxt env)
-         ((validate :relational-expression-or-super) cxt env)
-         ((validate :shift-expression-or-super) cxt env))
+         ((validate :relational-expression) cxt env)
+         ((validate :shift-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :shift-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch less-or-equal-table b a phase))))
+         (const ra obj-or-ref ((eval :relational-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :shift-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-less-or-equal b a phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
         ((validate cxt env)
          ((validate :relational-expression) cxt env)
@@ -2229,25 +2471,31 @@
          ((validate :relational-expression) cxt env)
          ((validate :shift-expression) cxt env))
         ((eval (env :unused) (phase :unused)) (todo)))
-      (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression-or-super) relational-expression-in
+      (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression) relational-expression-in
         ((validate cxt env)
          ((validate :relational-expression) cxt env)
-         ((validate :shift-expression-or-super) cxt env))
+         ((validate :shift-expression) cxt env))
         ((eval (env :unused) (phase :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
         ((validate cxt env)
          ((validate :relational-expression) cxt env)
          ((validate :shift-expression) cxt env))
         ((eval (env :unused) (phase :unused)) (todo))))
-    
-    (rule (:relational-expression-or-super :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production (:relational-expression-or-super :beta) ((:relational-expression :beta)) relational-expression-or-super-relational-expression
-        (validate (validate :relational-expression))
-        (eval (eval :relational-expression)))
-      (production (:relational-expression-or-super :beta) (:super-expression) relational-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    (define (is-less (a object) (b object) (phase phase)) boolean
+      (const ap primitive-object (to-primitive a null phase))
+      (const bp primitive-object (to-primitive b null phase))
+      (rwhen (and (in ap (union character string) :narrow-true) (in bp (union character string) :narrow-true))
+        (return (< (to-string ap phase) (to-string bp phase) string)))
+      (return (= (general-number-compare (to-general-number ap phase) (to-general-number bp phase)) less order)))
+    
+    (define (is-less-or-equal (a object) (b object) (phase phase)) boolean
+      (const ap primitive-object (to-primitive a null phase))
+      (const bp primitive-object (to-primitive b null phase))
+      (rwhen (and (in ap (union character string) :narrow-true) (in bp (union character string) :narrow-true))
+        (return (<= (to-string ap phase) (to-string bp phase) string)))
+      (return (in (general-number-compare (to-general-number ap phase) (to-general-number bp phase)) (tag less equal))))
     
     
     (%heading 2 "Equality Operators")
@@ -2255,130 +2503,184 @@
       (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational
         ((validate cxt env) ((validate :relational-expression) cxt env))
         ((eval env phase) (return ((eval :relational-expression) env phase))))
-      (production (:equality-expression :beta) ((:equality-expression-or-super :beta) == (:relational-expression-or-super :beta)) equality-expression-equal
+      (production (:equality-expression :beta) ((:equality-expression :beta) == (:relational-expression :beta)) equality-expression-equal
         ((validate cxt env)
-         ((validate :equality-expression-or-super) cxt env)
-         ((validate :relational-expression-or-super) cxt env))
+         ((validate :equality-expression) cxt env)
+         ((validate :relational-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :equality-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch equal-table a b phase))))
-      (production (:equality-expression :beta) ((:equality-expression-or-super :beta) != (:relational-expression-or-super :beta)) equality-expression-not-equal
+         (const ra obj-or-ref ((eval :equality-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :relational-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-equal a b phase))))
+      (production (:equality-expression :beta) ((:equality-expression :beta) != (:relational-expression :beta)) equality-expression-not-equal
         ((validate cxt env)
-         ((validate :equality-expression-or-super) cxt env)
-         ((validate :relational-expression-or-super) cxt env))
+         ((validate :equality-expression) cxt env)
+         ((validate :relational-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :equality-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (const c object (binary-dispatch equal-table a b phase))
-         (return (unary-not c phase))))
-      (production (:equality-expression :beta) ((:equality-expression-or-super :beta) === (:relational-expression-or-super :beta)) equality-expression-strict-equal
+         (const ra obj-or-ref ((eval :equality-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :relational-expression) env phase))
+         (const b object (read-reference rb phase))
+         (const c boolean (is-equal a b phase))
+         (return (not c))))
+      (production (:equality-expression :beta) ((:equality-expression :beta) === (:relational-expression :beta)) equality-expression-strict-equal
         ((validate cxt env)
-         ((validate :equality-expression-or-super) cxt env)
-         ((validate :relational-expression-or-super) cxt env))
+         ((validate :equality-expression) cxt env)
+         ((validate :relational-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :equality-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch strict-equal-table a b phase))))
-      (production (:equality-expression :beta) ((:equality-expression-or-super :beta) !== (:relational-expression-or-super :beta)) equality-expression-strict-not-equal
+         (const ra obj-or-ref ((eval :equality-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :relational-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (is-strictly-equal a b phase))))
+      (production (:equality-expression :beta) ((:equality-expression :beta) !== (:relational-expression :beta)) equality-expression-strict-not-equal
         ((validate cxt env)
-         ((validate :equality-expression-or-super) cxt env)
-         ((validate :relational-expression-or-super) cxt env))
+         ((validate :equality-expression) cxt env)
+         ((validate :relational-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :equality-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :relational-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (const c object (binary-dispatch strict-equal-table a b phase))
-         (return (unary-not c phase)))))
-    
-    (rule (:equality-expression-or-super :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production (:equality-expression-or-super :beta) ((:equality-expression :beta)) equality-expression-or-super-equality-expression
-        (validate (validate :equality-expression))
-        (eval (eval :equality-expression)))
-      (production (:equality-expression-or-super :beta) (:super-expression) equality-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
+         (const ra obj-or-ref ((eval :equality-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :relational-expression) env phase))
+         (const b object (read-reference rb phase))
+         (const c boolean (is-strictly-equal a b phase))
+         (return (not c)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
+    (define (is-equal (a object) (b object) (phase phase)) boolean
+      (case a
+        (:select (union undefined null)
+          (return (in b (union undefined null))))
+        (:narrow boolean
+          (if (in b boolean :narrow-true)
+            (return (= a b boolean))
+            (return (is-equal (to-general-number a phase) b phase))))
+        (:narrow general-number
+          (const bp primitive-object (to-primitive b null phase))
+          (case bp
+            (:select (union undefined null) (return false))
+            (:select (union boolean general-number character string) (return (= (general-number-compare a (to-general-number bp phase)) equal order)))))
+        (:narrow (union character string)
+          (const bp primitive-object (to-primitive b null phase))
+          (case bp
+            (:select (union undefined null) (return false))
+            (:select (union boolean general-number) (return (= (general-number-compare (to-general-number a phase) (to-general-number bp phase)) equal order)))
+            (:narrow (union character string) (return (= (to-string a phase) (to-string bp phase) string)))))
+        (:select (union namespace compound-attribute class method-closure prototype instance package global)
+          (case b
+            (:select (union undefined null) (return false))
+            (:select (union namespace compound-attribute class method-closure prototype instance package global) (return (is-strictly-equal a b phase)))
+            (:select (union boolean general-number character string)
+              (const ap primitive-object (to-primitive a null phase))
+              (return (is-equal ap b phase)))))))
     
-    (%heading 2 "Binary Bitwise Operators")
+    (define (is-strictly-equal (a object) (b object) (phase phase)) boolean
+      (cond
+       ((in a alias-instance :narrow-true)
+        (return (is-strictly-equal (& original a) b phase)))
+       ((in b alias-instance :narrow-true)
+        (return (is-strictly-equal a (& original b) phase)))
+       ((and (in a float64 :narrow-true) (in b float64 :narrow-true))
+        (return (= (float64-compare a b) equal order)))
+       (nil
+        (// "Note that a " (:type long) " 5 is strictly equal to itself but not to " (:type u-long) " 5 or " (:type float64) " 5.")
+        (return (= a b object)))))
+    
+    
+    (%heading 2 "Binary Bit Operators")
     (rule (:bitwise-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
         ((validate cxt env) ((validate :equality-expression) cxt env))
         ((eval env phase) (return ((eval :equality-expression) env phase))))
-      (production (:bitwise-and-expression :beta) ((:bitwise-and-expression-or-super :beta) & (:equality-expression-or-super :beta)) bitwise-and-expression-and
+      (production (:bitwise-and-expression :beta) ((:bitwise-and-expression :beta) & (:equality-expression :beta)) bitwise-and-expression-and
         ((validate cxt env)
-         ((validate :bitwise-and-expression-or-super) cxt env)
-         ((validate :equality-expression-or-super) cxt env))
+         ((validate :bitwise-and-expression) cxt env)
+         ((validate :equality-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :bitwise-and-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :equality-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch bitwise-and-table a b phase)))))
+         (const ra obj-or-ref ((eval :bitwise-and-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :equality-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (bit-and a b phase)))))
     
     (rule (:bitwise-xor-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
         ((validate cxt env) ((validate :bitwise-and-expression) cxt env))
         ((eval env phase) (return ((eval :bitwise-and-expression) env phase))))
-      (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression-or-super :beta) ^ (:bitwise-and-expression-or-super :beta)) bitwise-xor-expression-xor
+      (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor
         ((validate cxt env)
-         ((validate :bitwise-xor-expression-or-super) cxt env)
-         ((validate :bitwise-and-expression-or-super) cxt env))
+         ((validate :bitwise-xor-expression) cxt env)
+         ((validate :bitwise-and-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :bitwise-xor-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :bitwise-and-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch bitwise-xor-table a b phase)))))
+         (const ra obj-or-ref ((eval :bitwise-xor-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :bitwise-and-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (bit-xor a b phase)))))
     
     (rule (:bitwise-or-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
         ((validate cxt env) ((validate :bitwise-xor-expression) cxt env))
         ((eval env phase) (return ((eval :bitwise-xor-expression) env phase))))
-      (production (:bitwise-or-expression :beta) ((:bitwise-or-expression-or-super :beta) \| (:bitwise-xor-expression-or-super :beta)) bitwise-or-expression-or
+      (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or
         ((validate cxt env)
-         ((validate :bitwise-or-expression-or-super) cxt env)
-         ((validate :bitwise-xor-expression-or-super) cxt env))
+         ((validate :bitwise-or-expression) cxt env)
+         ((validate :bitwise-xor-expression) cxt env))
         ((eval env phase)
-         (const ra obj-or-ref-optional-limit ((eval :bitwise-or-expression-or-super) env phase))
-         (const a obj-optional-limit (read-ref-with-limit ra phase))
-         (const rb obj-or-ref-optional-limit ((eval :bitwise-xor-expression-or-super) env phase))
-         (const b obj-optional-limit (read-ref-with-limit rb phase))
-         (return (binary-dispatch bitwise-or-table a b phase)))))
-    
-    
-    (rule (:bitwise-and-expression-or-super :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression
-        (validate (validate :bitwise-and-expression))
-        (eval (eval :bitwise-and-expression)))
-      (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
-    
-    (rule (:bitwise-xor-expression-or-super :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression
-        (validate (validate :bitwise-xor-expression))
-        (eval (eval :bitwise-xor-expression)))
-      (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
-    
-    (rule (:bitwise-or-expression-or-super :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref-optional-limit)))
-      (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression
-        (validate (validate :bitwise-or-expression))
-        (eval (eval :bitwise-or-expression)))
-      (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super
-        (validate (validate :super-expression))
-        (eval (eval :super-expression))))
+         (const ra obj-or-ref ((eval :bitwise-or-expression) env phase))
+         (const a object (read-reference ra phase))
+         (const rb obj-or-ref ((eval :bitwise-xor-expression) env phase))
+         (const b object (read-reference rb phase))
+         (return (bit-or a b phase)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
+    
+    (define (bit-and (a object) (b object) (phase phase)) general-number
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-and i j))
+        (if (or (in x u-long) (in y u-long))
+          (return (new u-long (unsigned-wrap64 k)))
+          (return (new long k))))
+       (nil
+        (const i integer (signed-wrap32 (truncate-to-integer x)))
+        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (return (real-to-float64 (bitwise-and i j))))))
+    
+    (define (bit-xor (a object) (b object) (phase phase)) general-number
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-xor i j))
+        (if (or (in x u-long) (in y u-long))
+          (return (new u-long (unsigned-wrap64 k)))
+          (return (new long k))))
+       (nil
+        (const i integer (signed-wrap32 (truncate-to-integer x)))
+        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (return (real-to-float64 (bitwise-xor i j))))))
+    
+    (define (bit-or (a object) (b object) (phase phase)) general-number
+      (const x general-number (to-general-number a phase))
+      (const y general-number (to-general-number b phase))
+      (cond
+       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-or i j))
+        (if (or (in x u-long) (in y u-long))
+          (return (new u-long (unsigned-wrap64 k)))
+          (return (new long k))))
+       (nil
+        (const i integer (signed-wrap32 (truncate-to-integer x)))
+        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (return (real-to-float64 (bitwise-or i j))))))
     
     
     (%heading 2 "Binary Logical Operators")
@@ -2495,22 +2797,20 @@
          (const b object (read-reference rb phase))
          (write-reference ra b phase)
          (return b)))
-      (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment (:assignment-expression :beta)) assignment-expression-compound
+      (production (:assignment-expression :beta) (:postfix-expression :compound-assignment (:assignment-expression :beta)) assignment-expression-compound
         ((validate cxt env)
-         ((validate :postfix-expression-or-super) cxt env)
+         ((validate :postfix-expression) cxt env)
          ((validate :assignment-expression) cxt env))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw compile-expression-error))
-         (return (eval-assignment-op (table :compound-assignment) (eval :postfix-expression-or-super) (eval :assignment-expression) env phase))))
-      (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super
-        ((validate cxt env)
-         ((validate :postfix-expression-or-super) cxt env)
-         ((validate :super-expression) cxt env))
-        ((eval env phase)
-         (rwhen (in phase (tag compile) :narrow-false)
-           (throw compile-expression-error))
-         (return (eval-assignment-op (table :compound-assignment) (eval :postfix-expression-or-super) (eval :super-expression) env phase))))
+         (const r-left obj-or-ref ((eval :postfix-expression) env phase))
+         (const o-left object (read-reference r-left phase))
+         (const r-right obj-or-ref ((eval :assignment-expression) env phase))
+         (const o-right object (read-reference r-right phase))
+         (const result object ((op :compound-assignment) o-left o-right phase))
+         (write-reference r-left result phase)
+         (return result)))
       (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound
         ((validate cxt env)
          ((validate :postfix-expression) cxt env)
@@ -2535,18 +2835,18 @@
          (write-reference r-left result phase)
          (return result))))
     
-    (rule :compound-assignment ((table (list-set binary-method)))
-      (production :compound-assignment (*=) compound-assignment-multiply (table multiply-table))
-      (production :compound-assignment (/=) compound-assignment-divide (table divide-table))
-      (production :compound-assignment (%=) compound-assignment-remainder (table remainder-table))
-      (production :compound-assignment (+=) compound-assignment-add (table add-table))
-      (production :compound-assignment (-=) compound-assignment-subtract (table subtract-table))
-      (production :compound-assignment (<<=) compound-assignment-shift-left (table shift-left-table))
-      (production :compound-assignment (>>=) compound-assignment-shift-right (table shift-right-table))
-      (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned (table shift-right-unsigned-table))
-      (production :compound-assignment (&=) compound-assignment-bitwise-and (table bitwise-and-table))
-      (production :compound-assignment (^=) compound-assignment-bitwise-xor (table bitwise-xor-table))
-      (production :compound-assignment (\|=) compound-assignment-bitwise-or (table bitwise-or-table)))
+    (rule :compound-assignment ((op (-> (object object phase) object)))
+      (production :compound-assignment (*=) compound-assignment-multiply (op multiply))
+      (production :compound-assignment (/=) compound-assignment-divide (op divide))
+      (production :compound-assignment (%=) compound-assignment-remainder (op remainder))
+      (production :compound-assignment (+=) compound-assignment-add (op add))
+      (production :compound-assignment (-=) compound-assignment-subtract (op subtract))
+      (production :compound-assignment (<<=) compound-assignment-shift-left (op shift-left))
+      (production :compound-assignment (>>=) compound-assignment-shift-right (op shift-right))
+      (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned (op shift-right-unsigned))
+      (production :compound-assignment (&=) compound-assignment-bit-and (op bit-and))
+      (production :compound-assignment (^=) compound-assignment-bit-xor (op bit-xor))
+      (production :compound-assignment (\|=) compound-assignment-bit-or (op bit-or)))
     
     (rule :logical-assignment ((operator (tag and-eq xor-eq or-eq)))
       (production :logical-assignment (&&=) logical-assignment-logical-and (operator and-eq))
@@ -2556,20 +2856,7 @@
     (deftag and-eq)
     (deftag xor-eq)
     (deftag or-eq)
-    (%print-actions ("Validation" validate) ("Evaluation" eval))
-    
-    (define (eval-assignment-op (table (list-set binary-method))
-                                (left-eval (-> (environment phase) obj-or-ref-optional-limit))
-                                (right-eval (-> (environment phase) obj-or-ref-optional-limit))
-                                (env environment)
-                                (phase (tag run))) obj-or-ref
-      (const r-left obj-or-ref-optional-limit (left-eval env phase))
-      (const o-left obj-optional-limit (read-ref-with-limit r-left phase))
-      (const r-right obj-or-ref-optional-limit (right-eval env phase))
-      (const o-right obj-optional-limit (read-ref-with-limit r-right phase))
-      (const result object (binary-dispatch table o-left o-right phase))
-      (write-reference r-left result phase)
-      (return result))
+    (%print-actions ("Validation" validate) ("Evaluation" op operator eval))
     
     
     (%heading 2 "Comma Expressions")
@@ -2955,12 +3242,12 @@
     (rule :return-statement ((validate (-> (context environment) void)) (eval (-> (environment) object)))
       (production :return-statement (return) return-statement-default
         ((validate (cxt :unused) env)
-         (rwhen (not-in (get-regional-frame env) function-frame)
+         (rwhen (not-in (get-regional-frame env) parameter-frame)
            (throw syntax-error)))
         ((eval (env :unused)) (throw (new returned-value undefined))))
       (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression
         ((validate cxt env)
-         (rwhen (not-in (get-regional-frame env) function-frame)
+         (rwhen (not-in (get-regional-frame env) parameter-frame)
            (throw syntax-error))
          ((validate :list-expression) cxt env))
         ((eval env)
@@ -3057,7 +3344,7 @@
          ((validate :variable-definition) cxt env attr)
          (return cxt))
         ((eval env d) (return ((eval :variable-definition) env d))))
-      (production (:annotatable-directive :omega_2) ((:function-definition :omega_2)) annotatable-directive-function-definition
+      (production (:annotatable-directive :omega_2) (:function-definition) annotatable-directive-function-definition
         ((validate cxt env pl attr)
          ((validate :function-definition) cxt env pl attr)
          (return cxt))
@@ -3333,15 +3620,47 @@
     (deftag hoisted)
     (deftag instance)
     (rule (:variable-binding :beta) ((kind (writable-cell (tag hoisted static instance))) (multiname (writable-cell multiname))
+                                     (pre-eval (-> (environment (union variable instance-variable) overridden-member overridden-member) void))
                                      (validate (-> (context environment attribute-opt-not-false boolean) void))
                                      (eval (-> (environment boolean) void)))
       (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initialisation :beta)) variable-binding-full
+        ((pre-eval env v overridden-read overridden-write)
+         (case v
+           (:narrow variable
+             (const type class (get-variable-type v compile))
+             (const value variable-value (& value v))
+             (when (in value (-> () object) :narrow-true)
+               (&= value v inaccessible)
+               (catch ((const new-value object (value))
+                       (const coerced-value object (assignment-conversion new-value type))
+                       (&= value v coerced-value))
+                 (x)
+                 (rwhen (not-in x (tag compile-expression-error))
+                   (throw x))
+                 (// "If a " (:tag compile-expression-error) " occurred, then the initialiser is not a compile-time constant expression. "
+                     "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time."))))
+           (:narrow instance-variable
+             (var t class-opt ((eval :typed-identifier) env))
+             (when (in t (tag none))
+               (cond
+                ((not-in overridden-read (tag none potential-conflict) :narrow-true)
+                 (assert (not-in overridden-read instance-method :narrow-true) "Note that " (:global define-instance-member)
+                         " already ensured that " (:assertion) ".")
+                 (<- t (&opt type overridden-read)))
+                ((not-in overridden-write (tag none potential-conflict) :narrow-true)
+                 (assert (not-in overridden-write instance-method :narrow-true) "Note that " (:global define-instance-member)
+                         " already ensured that " (:assertion) ".")
+                 (<- t (&opt type overridden-write)))
+                (nil
+                 (<- t object-class))))
+             (&const= type v (assert-not-in t (tag none))))))
+        
         ((validate cxt env attr immutable)
          ((validate :typed-identifier) cxt env)
          ((validate :variable-initialisation) cxt env)
          (const name string (name :typed-identifier))
          (cond
-          ((and (not (& strict cxt)) (in (get-regional-frame env) (union global function-frame))
+          ((and (not (& strict cxt)) (in (get-regional-frame env) (union global parameter-frame))
                 (not immutable) (in attr (tag none)) (not (type-present :typed-identifier)))
            (action<- (kind :variable-binding 0) hoisted)
            (const qname qualified-name (new qualified-name public-namespace name))
@@ -3357,6 +3676,9 @@
                (<- member-mod final))
              (rwhen (not-in member-mod (tag none))
                (throw definition-error)))
+           (var v (union variable instance-variable))
+           (var overridden-read overridden-member none)
+           (var overridden-write overridden-member none)
            (case member-mod
              (:select (tag none static)
                (function (eval-type) class
@@ -3371,57 +3693,28 @@
                  (return value))
                (var initial-value variable-value inaccessible)
                (when immutable
-                 (<- initial-value (new future-value eval-initialiser)))
-               (const v variable (new variable (new future-type eval-type) initial-value immutable))
-               (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v))
+                 (<- initial-value eval-initialiser))
+               (<- v (new variable eval-type initial-value immutable))
+               (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write (assert-in v variable)))
                (action<- (multiname :variable-binding 0) multiname)
-               (function (deferred-static-validate) void
-                 (const type class (get-variable-type v compile))
-                 (const value variable-value (& value v))
-                 (when (in value future-value :narrow-true)
-                   (&= value v inaccessible)
-                   (catch ((const new-value object ((& eval-value value)))
-                           (const coerced-value object (assignment-conversion new-value type))
-                           (&= value v coerced-value))
-                     (x)
-                     (rwhen (not-in x (tag compile-expression-error))
-                       (throw x))
-                     (// "If a " (:tag compile-expression-error) " occurred, then the initialiser is not a compile-time constant expression. "
-                         "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time."))))
-               (<- deferred-validators (append deferred-validators (vector deferred-static-validate)))
                (action<- (kind :variable-binding 0) static))
              (:narrow (tag virtual final)
                (const c class (assert-in (nth env 0) class))
                (function (eval-initial-value) object-opt
                  (return ((eval :variable-initialisation) env run)))
-               (var m (union instance-variable instance-accessor))
-               (case member-mod
-                 (:select (tag virtual)
-                   (<- m (new instance-variable :uninit eval-initial-value immutable false)))
-                 (:select (tag final)
-                   (<- m (new instance-variable :uninit eval-initial-value immutable true))))
-               (const os override-status-pair (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a) read-write m))
-               (function (deferred-instance-validate) void
-                 (var t class-opt ((eval :typed-identifier) env))
-                 (when (in t (tag none))
-                   (const overridden-read (union instance-member (tag none potential-conflict)) (& overridden-member (& read-status os)))
-                   (const overridden-write (union instance-member (tag none potential-conflict)) (& overridden-member (& write-status os)))
-                   (cond
-                    ((not-in overridden-read (tag none potential-conflict) :narrow-true)
-                     (assert (not-in overridden-read instance-method :narrow-true) "Note that " (:global define-instance-member)
-                             " already ensured that " (:assertion) ".")
-                     (<- t (&opt type overridden-read)))
-                    ((not-in overridden-write (tag none potential-conflict) :narrow-true)
-                     (assert (not-in overridden-write instance-method :narrow-true) "Note that " (:global define-instance-member)
-                             " already ensured that " (:assertion) ".")
-                     (<- t (&opt type overridden-write)))
-                    (nil
-                     (<- t object-class))))
-                 (&const= type m (assert-not-in t (tag none))))
-               (<- deferred-validators (append deferred-validators (vector deferred-instance-validate)))
+               (<- v (new instance-variable :uninit eval-initial-value immutable (in member-mod (tag final))))
+               (const os override-status-pair (define-instance-member c cxt name (& namespaces a) (& override-mod a) (& explicit a)
+                                                read-write (assert-in v instance-variable)))
+               (<- overridden-read (& overridden-member (& read-status os)))
+               (<- overridden-write (& overridden-member (& write-status os)))
                (action<- (kind :variable-binding 0) instance))
-             (:select (tag constructor operator)
-               (throw definition-error))))))
+             (:select (tag constructor)
+               (throw definition-error)))
+           (// "The following sets up " (:action pre-eval) " to be called during the pre-evaluation pass.")
+           (function (pre-evaluate) void
+             ((pre-eval :variable-binding 0) env v overridden-read overridden-write))
+           (<- pre-evaluators (append pre-evaluators (vector pre-evaluate))))))
+        
         ((eval env immutable)
          (case (kind :variable-binding 0)
            (:select (tag hoisted)
@@ -3479,7 +3772,7 @@
         ((validate cxt env) ((validate :type-expression) cxt env))
         ((eval env) (return ((eval :type-expression) env)))))
     ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
-    (%print-actions ("Validation" name type-present immutable kind multiname validate) ("Evaluation" eval))
+    (%print-actions ("Validation" name type-present immutable kind multiname validate) ("Pre-Evaluation" pre-eval) ("Evaluation" eval))
     
     
     (%heading 2 "Simple Variable Definition")
@@ -3490,7 +3783,7 @@
     (rule :simple-variable-definition ((validate (-> (context environment) void)) (eval (-> (environment object) object)))
       (production :simple-variable-definition (var :untyped-variable-binding-list) simple-variable-definition-definition
         ((validate cxt env)
-         (rwhen (or (& strict cxt) (not-in (get-regional-frame env) (union global function-frame)))
+         (rwhen (or (& strict cxt) (not-in (get-regional-frame env) (union global parameter-frame)))
            (throw syntax-error))
          ((validate :untyped-variable-binding-list) cxt env))
         ((eval env d)
@@ -3523,16 +3816,19 @@
     
     
     (%heading 2 "Function Definition")
-    (rule (:function-definition :omega_2) ((signature (writable-cell signature)) (validate (-> (context environment plurality attribute-opt-not-false) void)))
-      (production (:function-definition :omega_2) (function :function-name :function-signature :block) function-definition-definition
+    (rule :function-definition ((pre-eval (-> (context environment parameter-frame boolean) void))
+                                (validate (-> (context environment plurality attribute-opt-not-false) void)))
+      (production :function-definition (function :function-name :function-signature :block) function-definition-definition
+        ((pre-eval cxt compile-env compile-frame unchecked)
+         (&const= signature compile-frame ((pre-eval :function-signature) cxt compile-env unchecked)))
+        
         ((validate cxt env pl attr)
-         ((validate :function-signature) cxt env)
          (const name string (name :function-name))
          (const kind function-kind (kind :function-name))
          (const a compound-attribute (to-compound-attribute attr))
          (rwhen (& dynamic a)
            (throw definition-error))
-         (const unchecked boolean (and (not (& strict cxt)) (not-in (nth env 0) class) (in kind (tag normal)) (unchecked :function-signature)))
+         (const unchecked boolean (and (not (& strict cxt)) (not-in (nth env 0) class) (in kind (tag normal)) (untyped :function-signature)))
          (const prototype boolean (or unchecked (& prototype a)))
          (var member-mod member-modifier (& member-mod a))
          (if (in (nth env 0) class)
@@ -3545,12 +3841,12 @@
          (var compile-this (tag none inaccessible) none)
          (when (or prototype (in member-mod (tag constructor virtual final)))
            (<- compile-this inaccessible))
-         (const compile-frame function-frame (new function-frame (list-set-of static-binding) (list-set-of static-binding) plural compile-this prototype))
+         (const compile-frame parameter-frame (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) plural compile-this prototype :uninit))
          (const compile-env environment (cons compile-frame env))
-         ((collect-arguments :function-signature) compile-frame unchecked)
-         ((validate-using-frame :block) cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural compile-frame)
+         ((validate :function-signature) cxt compile-env)
+         ((validate :block) cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural)
          (cond
-          ((and unchecked (in (nth env 0) (union global function-frame)) (in attr (tag none)))
+          ((and unchecked (in (nth env 0) (union global parameter-frame)) (in attr (tag none)))
            (const v hoisted-var (new hoisted-var undefined true))
            (define-hoisted-var env name)
            (todo))
@@ -3568,26 +3864,27 @@
                      (const g (union package global) (get-package-or-global-frame runtime-env))
                      (when (and prototype (in runtime-this (tag null undefined)) (in g global :narrow-true))
                        (<- runtime-this g))))
-                 (const runtime-frame function-frame
-                   (new function-frame (list-set-of static-binding) (list-set-of static-binding) singular runtime-this prototype))
+                 (const runtime-frame parameter-frame
+                   (new parameter-frame (list-set-of static-binding) (list-set-of static-binding) singular runtime-this prototype (&opt signature compile-frame)))
                  (instantiate-frame compile-frame runtime-frame (cons runtime-frame runtime-env))
-                 ((assign-arguments :function-signature) runtime-frame unchecked args)
-                 (catch ((exec ((eval-using-frame :block) runtime-env runtime-frame undefined))
-                         (return undefined))
-                   (x) (if (in x returned-value :narrow-true)
-                         (return (& value x))
-                         (throw x))))
-               (function (construct (this object) (args argument-list) (runtime-env environment) (phase phase)) object
+                 (assign-arguments runtime-frame (&opt signature compile-frame) unchecked args)
+                 (catch ((exec ((eval :block) (cons runtime-frame runtime-env) undefined))
+                         (throw (new returned-value undefined)))
+                   (x) (cond
+                        ((in x returned-value :narrow-true)
+                         (return (& value x)))
+                        (nil (throw x)))))
+               (function (construct (args argument-list) (runtime-env environment) (phase phase)) object
                  (todo))
                (var f (union instance open-instance))
                (cond
-                ((in kind (tag get set operator))
+                ((in kind (tag get set))
                  (todo))
                 (prototype
                  (todo))
                 (nil
                  (function (instantiate (runtime-env environment)) non-alias-instance
-                   (return (new fixed-instance function-class call bad-invoke env "Function" (list-set-of slot))))
+                   (return (new fixed-instance function-class call bad-construct env "Function" (list-set-of slot))))
                  (<- f (new open-instance instantiate none))))
                (when (in pl (tag singular))
                  (<- f (instantiate-open-instance (assert-in f open-instance) env)))
@@ -3595,9 +3892,12 @@
                (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))
              (:narrow (tag virtual final)
                (todo))
-             (:select (tag constructor operator)
-               (todo))))))))
-    ;(production (:function-definition :omega_2) (function :function-name :function-signature (:semicolon :omega_2)) function-definition-declaration)
+             (:select (tag constructor)
+               (todo)))))
+         (// "The following sets up " (:action pre-eval) " to be called during the pre-evaluation pass.")
+         (function (pre-evaluate) void
+           ((pre-eval :function-definition 0) cxt compile-env compile-frame unchecked))
+         (<- pre-evaluators (append pre-evaluators (vector pre-evaluate))))))
     
     (rule :function-name ((kind function-kind) (name string))
       (production :function-name (:identifier) function-name-function
@@ -3608,20 +3908,20 @@
         (name (name :identifier)))
       (production :function-name (set :no-line-break :identifier) function-name-setter
         (kind set)
-        (name (name :identifier)))
-      (production :function-name ($string) function-name-string
-        (kind operator)
-        (name (value $string))))
-    (%print-actions ("Validation" kind name signature validate))
+        (name (name :identifier))))
+    (%print-actions ("Validation" kind name signature validate) ("Pre-Evaluation" pre-eval))
+    
+    (define (assign-arguments (runtime-frame parameter-frame) (sig signature) (unchecked boolean) (args argument-list)) void
+      (todo))
     
     
-    (rule :function-signature ((unchecked boolean) (validate (-> (context environment) void))
-                               (collect-arguments (-> (function-frame boolean) void)) (assign-arguments (-> (function-frame boolean argument-list) void)))
+    (rule :function-signature ((untyped boolean)
+                               (validate (-> (context environment) void))
+                               (pre-eval (-> (context environment boolean) signature)))
       (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures
-        (unchecked false)
-        ((validate cxt env) (todo))
-        ((collect-arguments frame unchecked) (todo))
-        ((assign-arguments frame unchecked args) (todo))))
+        (untyped false)
+        ((validate (cxt :unused) (env :unused)) (todo))
+        ((pre-eval (cxt :unused) (env :unused) (unchecked :unused)) (todo))))
     
     (production :parameter-signature (\( :parameters \)) parameter-signature-parameters)
     
@@ -3665,7 +3965,7 @@
     (production :result-signature () result-signature-none)
     (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
     ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
-    (%print-actions ("Validation" unchecked validate collect-arguments) ("Evaluation" assign-arguments eval))
+    (%print-actions ("Validation" validate) ("Pre-Evaluation" pre-eval))
     
     
     (%heading 2 "Class Definition")
@@ -3681,7 +3981,7 @@
            (throw definition-error))
          (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
            (todo))
-         (function (construct (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+         (function (construct (args argument-list :unused) (phase phase :unused)) object
            (todo))
          (var prototype object null)
          (when (& prototype a)
@@ -3694,11 +3994,11 @@
                (throw definition-error))
              (<- final false))
            (:select (tag final) (<- final true))
-           (:select (tag constructor operator virtual) (throw definition-error)))
+           (:select (tag constructor virtual) (throw definition-error)))
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
          (const c class (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                             (vector-of instance-variable) false superclass prototype private-namespace dynamic false final call construct))
+                             (vector-of instance-variable) false superclass prototype private-namespace dynamic true final call construct))
          (action<- (class :class-definition 0) c)
          (const v variable (new variable class-class c true))
          (exec (define-static-member env (name :identifier) (& namespaces a) (& override-mod a) (& explicit a) read-write v))
@@ -3767,11 +4067,11 @@
       (production :program (:directives) program-directives
         (eval-program
          (begin
-          (const saved-deferred-validators (vector (-> () void)) deferred-validators)
-          (<- deferred-validators (vector-of (-> () void)))
+          (const saved-pre-evaluators (vector (-> () void)) pre-evaluators)
+          (<- pre-evaluators (vector-of (-> () void)))
           (exec ((validate :directives) initial-context initial-environment (new jump-targets (list-set-of label) (list-set-of label)) singular none))
-          (for-each deferred-validators v (v))
-          (<- deferred-validators saved-deferred-validators)
+          (for-each pre-evaluators v (v))
+          (<- pre-evaluators saved-pre-evaluators)
           (return ((eval :directives) initial-environment undefined))))))
     (%print-actions ("Evaluation" eval-program))
     
@@ -3781,242 +4081,38 @@
     
     
     (%heading (1 :semantics) "Built-in Classes")
-    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (primitive boolean) (final boolean)) class
+    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (allow-null boolean) (final boolean)) class
       (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
         (todo))
-      (function (construct (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+      (function (construct (args argument-list :unused) (phase phase :unused)) object
         (todo))
       (const private-namespace namespace (new namespace "private"))
       (return (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
-                   (vector-of instance-variable) true superclass null private-namespace dynamic primitive final call construct)))
+                   (vector-of instance-variable) true superclass null private-namespace dynamic allow-null final call construct)))
     
     (define object-class class (make-built-in-class none false true false))
-    (define undefined-class class (make-built-in-class object-class false true true))
+    (define undefined-class class (make-built-in-class object-class false false true))
     (define null-class class (make-built-in-class object-class false true true))
-    (define boolean-class class (make-built-in-class object-class false true true))
-    (define number-class class (make-built-in-class object-class false true true))
-    (define string-class class (make-built-in-class object-class false false true))
-    (define character-class class (make-built-in-class string-class false false true))
-    (define namespace-class class (make-built-in-class object-class false false true))
-    (define attribute-class class (make-built-in-class object-class false false true))
-    (define class-class class (make-built-in-class object-class false false true))
-    (define function-class class (make-built-in-class object-class false false true))
-    (define prototype-class class (make-built-in-class object-class true false true))
-    (define package-class class (make-built-in-class object-class true false true))
+    (define boolean-class class (make-built-in-class object-class false false true))
+    (define general-number-class class (make-built-in-class object-class false false false))
+    (define number-class class (make-built-in-class general-number-class false false true))
+    (define long-class class (make-built-in-class general-number-class false false true))
+    (define u-long-class class (make-built-in-class general-number-class false false true))
+    (define character-class class (make-built-in-class object-class false false true))
+    (define string-class class (make-built-in-class object-class false true true))
+    (define namespace-class class (make-built-in-class object-class false true true))
+    (define attribute-class class (make-built-in-class object-class false true true))
+    (define class-class class (make-built-in-class object-class false true true))
+    (define function-class class (make-built-in-class object-class false true true))
+    (define prototype-class class (make-built-in-class object-class true true true))
+    (define package-class class (make-built-in-class object-class true true true))
     
     
+    (define object-prototype prototype (new prototype none (list-set-of dynamic-property))) ;***** Add some properties here
     
     (%heading (1 :semantics) "Built-in Functions")
     (%heading (1 :semantics) "Built-in Attributes")
-    (%heading (1 :semantics) "Built-in Operators")
-    (%heading (2 :semantics) "Unary Operators")
-    
-    (define (plus-object (this object :unused) (a object) (args argument-list :unused) (phase phase)) object
-      (return (to-number a phase)))
-    
-    (define (minus-object (this object :unused) (a object) (args argument-list :unused) (phase phase)) object
-      (return (float64-negate (to-number a phase))))
-    
-    (define (bitwise-not-object (this object :unused) (a object) (args argument-list :unused) (phase phase)) object
-      (const i integer (to-int32 (to-number a phase)))
-      (return (real-to-float64 (bitwise-xor i -1))))
-    
-    (define (increment-object (this object :unused) (a object) (args argument-list :unused) (phase phase)) object
-      (const x object (unary-plus a phase))
-      (return (binary-dispatch add-table x 1.0 phase)))
-    
-    (define (decrement-object (this object :unused) (a object) (args argument-list :unused) (phase phase)) object
-      (const x object (unary-plus a phase))
-      (return (binary-dispatch subtract-table x 1.0 phase)))
-    
-    (define (call-object (this object) (a object) (args argument-list) (phase phase)) object
-      (case a
-        (:select (union undefined null boolean float64 string namespace compound-attribute prototype package global) (throw bad-value-error))
-        (:narrow class (return ((& call a) this args phase)))
-        (:narrow instance
-          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
-          (return ((& call (resolve-alias a)) this args (& env a) phase)))
-        (:narrow method-closure
-          (const code instance (& code (& method a)))
-          (return (call-object (& this a) code args phase)))))
-    
-    (define (construct-object (this object) (a object) (args argument-list) (phase phase)) object
-      (case a
-        (:select (union undefined null boolean float64 string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
-        (:narrow class (return ((& construct a) this args phase)))
-        (:narrow instance
-          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
-          (return ((& construct (resolve-alias a)) this args (& env a) phase)))))
-    
-    (define (bracket-read-object (this object :unused) (a object) (args argument-list) (phase phase)) object
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0) phase))
-      (const result object-opt (read-property a (list-set (new qualified-name public-namespace name)) property-lookup phase))
-      (if (in result (tag none) :narrow-false)
-        (throw property-access-error)
-        (return result)))
-    
-    (define (bracket-write-object (this object :unused) (a object) (args argument-list) (phase phase)) object
-      (rwhen (in phase (tag compile) :narrow-false)
-        (throw compile-expression-error))
-      (rwhen (or (/= (length (& positional args)) 2) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const new-value object (nth (& positional args) 0))
-      (const name string (to-string (nth (& positional args) 1) phase))
-      (const result (tag none ok) (write-property a (list-set (new qualified-name public-namespace name)) property-lookup true new-value phase))
-      (rwhen (in result (tag none))
-        (throw property-access-error))
-      (return undefined))
-    
-    (define (bracket-delete-object (this object :unused) (a object) (args argument-list) (phase phase)) object
-      (rwhen (in phase (tag compile) :narrow-false)
-        (throw compile-expression-error))
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0) phase))
-      (return (delete-qualified-property a name public-namespace property-lookup phase)))
-    
-    
-    (defvar plus-table (list-set unary-method) (list-set (new unary-method object-class plus-object)))
-    (defvar minus-table (list-set unary-method) (list-set (new unary-method object-class minus-object)))
-    (defvar bitwise-not-table (list-set unary-method) (list-set (new unary-method object-class bitwise-not-object)))
-    (defvar increment-table (list-set unary-method) (list-set (new unary-method object-class increment-object)))
-    (defvar decrement-table (list-set unary-method) (list-set (new unary-method object-class decrement-object)))
-    (defvar call-table (list-set unary-method) (list-set (new unary-method object-class call-object)))
-    (defvar construct-table (list-set unary-method) (list-set (new unary-method object-class construct-object)))
-    (defvar bracket-read-table (list-set unary-method) (list-set (new unary-method object-class bracket-read-object)))
-    (defvar bracket-write-table (list-set unary-method) (list-set (new unary-method object-class bracket-write-object)))
-    (defvar bracket-delete-table (list-set unary-method) (list-set (new unary-method object-class bracket-delete-object)))
-    
-    
-    (%heading (2 :semantics) "Binary Operators")
-    
-    (define (add-objects (a object) (b object) (phase phase)) object
-      (const ap primitive-object (to-primitive a null phase))
-      (const bp primitive-object (to-primitive b null phase))
-      (if (or (in ap string) (in bp string))
-        (return (append (to-string ap phase) (to-string bp phase)))
-        (return (float64-add (to-number ap phase) (to-number bp phase)))))
-    
-    (define (subtract-objects (a object) (b object) (phase phase)) object
-      (return (float64-subtract (to-number a phase) (to-number b phase))))
-    
-    (define (multiply-objects (a object) (b object) (phase phase)) object
-      (return (float64-multiply (to-number a phase) (to-number b phase))))
-    
-    (define (divide-objects (a object) (b object) (phase phase)) object
-      (return (float64-divide (to-number a phase) (to-number b phase))))
-    
-    (define (remainder-objects (a object) (b object) (phase phase)) object
-      (return (float64-remainder (to-number a phase) (to-number b phase))))
-    
-    
-    (define (less-objects (a object) (b object) (phase phase)) object
-      (const ap primitive-object (to-primitive a null phase))
-      (const bp primitive-object (to-primitive b null phase))
-      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
-        (return (< ap bp string))
-        (return (= (float64-compare (to-number ap phase) (to-number bp phase)) less order))))
-    
-    (define (less-or-equal-objects (a object) (b object) (phase phase)) object
-      (const ap primitive-object (to-primitive a null phase))
-      (const bp primitive-object (to-primitive b null phase))
-      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
-        (return (<= ap bp string))
-        (return (in (float64-compare (to-number ap phase) (to-number bp phase)) (tag less equal)))))
-    
-    (define (equal-objects (a object) (b object) (phase phase)) object
-      (case a
-        (:select (union undefined null)
-          (return (in b (union undefined null))))
-        (:narrow boolean
-          (if (in b boolean :narrow-true)
-            (return (= a b boolean))
-            (return (equal-objects (to-number a phase) b phase))))
-        (:narrow float64
-          (const bp primitive-object (to-primitive b null phase))
-          (case bp
-            (:select (union undefined null) (return false))
-            (:select (union boolean float64 string) (return (= (float64-compare a (to-number bp phase)) equal order)))))
-        (:narrow string
-          (const bp primitive-object (to-primitive b null phase))
-          (case bp
-            (:select (union undefined null) (return false))
-            (:select (union boolean float64) (return (= (float64-compare (to-number a phase) (to-number bp phase)) equal order)))
-            (:narrow string (return (= a bp string)))))
-        (:select (union namespace compound-attribute class method-closure prototype instance package global)
-          (case b
-            (:select (union undefined null) (return false))
-            (:select (union namespace compound-attribute class method-closure prototype instance package global) (return (strict-equal-objects a b phase)))
-            (:select (union boolean float64 string)
-              (const ap primitive-object (to-primitive a null phase))
-              (case ap
-                (:select (union undefined null) (return false))
-                (:select (union boolean float64 string) (return (equal-objects ap b phase)))))))))
-    
-    (define (strict-equal-objects (a object) (b object) (phase phase)) object
-      (cond
-       ((in a alias-instance :narrow-true)
-        (return (strict-equal-objects (& original a) b phase)))
-       ((in b alias-instance :narrow-true)
-        (return (strict-equal-objects a (& original b) phase)))
-       ((and (in a float64 :narrow-true) (in b float64 :narrow-true))
-        (return (= (float64-compare a b) equal order)))
-       (nil
-        (return (= a b object)))))
-    
-    
-    (define (shift-left-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-u-int32 (to-number a phase)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b phase)) (hex #x1F)))
-      (return (real-to-float64 (u-int32-to-int32 (bitwise-and (bitwise-shift i count) (hex #xFFFFFFFF))))))
-    
-    (define (shift-right-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-int32 (to-number a phase)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b phase)) (hex #x1F)))
-      (return (real-to-float64 (bitwise-shift i (neg count)))))
-    
-    (define (shift-right-unsigned-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-u-int32 (to-number a phase)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b phase)) (hex #x1F)))
-      (return (real-to-float64 (bitwise-shift i (neg count)))))
-    
-    (define (bitwise-and-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-int32 (to-number a phase)))
-      (const j integer (to-int32 (to-number b phase)))
-      (return (real-to-float64 (bitwise-and i j))))
-    
-    (define (bitwise-xor-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-int32 (to-number a phase)))
-      (const j integer (to-int32 (to-number b phase)))
-      (return (real-to-float64 (bitwise-xor i j))))
-    
-    (define (bitwise-or-objects (a object) (b object) (phase phase)) object
-      (const i integer (to-int32 (to-number a phase)))
-      (const j integer (to-int32 (to-number b phase)))
-      (return (real-to-float64 (bitwise-or i j))))
-    
-    
-    (defvar add-table (list-set binary-method) (list-set (new binary-method object-class object-class add-objects)))
-    (defvar subtract-table (list-set binary-method) (list-set (new binary-method object-class object-class subtract-objects)))
-    (defvar multiply-table (list-set binary-method) (list-set (new binary-method object-class object-class multiply-objects)))
-    (defvar divide-table (list-set binary-method) (list-set (new binary-method object-class object-class divide-objects)))
-    (defvar remainder-table (list-set binary-method) (list-set (new binary-method object-class object-class remainder-objects)))
-    (defvar less-table (list-set binary-method) (list-set (new binary-method object-class object-class less-objects)))
-    (defvar less-or-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class less-or-equal-objects)))
-    (defvar equal-table (list-set binary-method) (list-set (new binary-method object-class object-class equal-objects)))
-    (defvar strict-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class strict-equal-objects)))
-    (defvar shift-left-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-left-objects)))
-    (defvar shift-right-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-objects)))
-    (defvar shift-right-unsigned-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-unsigned-objects)))
-    (defvar bitwise-and-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-and-objects)))
-    (defvar bitwise-xor-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-xor-objects)))
-    (defvar bitwise-or-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-or-objects)))
-    
-    
     (%heading (1 :semantics) "Built-in Namespaces")
-    (%heading (1 :semantics) "Built-in Units")
     ))
 
 
