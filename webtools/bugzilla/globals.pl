@@ -1440,7 +1440,13 @@ sub Param ($) {
     # If it's still not defined, we're pimped.
     die "Can't find param named $value" if (! defined $::param{$value});
 
-    if ($::param_type{$value} eq "m") {
+    ## Check to make sure the entry in $::param_type is there; if we don't, we
+    ## get 'use of uninitialized constant' errors (see bug 162217). 
+    ## Interestingly  enough, placing this check in the die above causes 
+    ## deaths on some params (the "languages" param?) because they don't have
+    ## a type? Odd... seems like a bug to me... but what do I know? -jpr
+
+    if (defined $::param_type{$value} && $::param_type{$value} eq "m") {
         my $valueList = eval($::param{$value});
         return $valueList if (!($@) && ref($valueList) eq "ARRAY");
         die "Multi-list param '$value' eval() failure ('$@'); data/params is horked";
