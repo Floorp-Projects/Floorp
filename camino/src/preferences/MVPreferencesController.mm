@@ -151,7 +151,9 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     // the window visible. Too bad cocoa doesn't give us any notifications of this.
     CHBrowserService::InitEmbedding();
   }
-  [self showAll:nil];
+  // If neither a pref pane nor the group pane is showing, then show the group pane
+  if (!currentPaneIdentifier && (![[window contentView] isEqual:mainView]))
+    [self showAll:nil];
   [window makeKeyAndOrderFront:nil];
 }
 
@@ -261,11 +263,10 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 - (void) windowWillClose:(NSNotification *) notification
 {
+  // we want to behave as if we're unselecting, but we're not really unselecting. We are leaving
+  // the current pref pane selected per Apple's recommendation.
   [[loadedPanes objectForKey:currentPaneIdentifier] willUnselect];
   [[loadedPanes objectForKey:currentPaneIdentifier] didUnselect];
-  [currentPaneIdentifier autorelease];
-  currentPaneIdentifier = nil;
-  //[loadedPanes removeAllObjects];
   
   // write out prefs and user defaults
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
