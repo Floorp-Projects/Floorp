@@ -139,9 +139,14 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  // Set our menu parent.
-  nsCOMPtr<nsIMenuParent> menuparent = do_QueryInterface(aParent);
-  mMenuParent = menuparent.get();
+  nsIFrame* currFrame = aParent;
+  while (!mMenuParent && currFrame) {
+    // Set our menu parent.
+    nsCOMPtr<nsIMenuParent> menuparent(do_QueryInterface(currFrame));
+    mMenuParent = menuparent.get();
+
+    currFrame->GetParent(&currFrame);
+  }
 
   // Do the type="checkbox" magic
   UpdateMenuType(aPresContext);
