@@ -106,13 +106,6 @@ typedef struct ASFileDates      /* entry ID 8, file dates info */
 #define MAC_ERR_CHECK(_funcCall) 	\
 	err = _funcCall; 				\
 	if (err!=noErr) 				\
-		if (err==-37)				\
-			DebugStr("\perror -37:bdNamErr\r");		\
-		else if (err==-43)			\
-			DebugStr("\perror -43: fnfErr\r");	\
-		else if (err==-48)			\
-			DebugStr("\p error -48: dupFNErr");	\
-		else						\
 			return err;
 	
 	
