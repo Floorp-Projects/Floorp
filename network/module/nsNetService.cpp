@@ -694,8 +694,8 @@ nsNetlibService::SI_DisplaySignonInfoAsHTML(){
 
 NS_IMETHODIMP
 nsNetlibService::SI_RememberSignonData
-        (char* URLName, LO_FormSubmitData *submit) {
-    ::SI_RememberSignonData(URLName, submit);
+       (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
+   ::SI_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
     return NS_OK;
 }
 

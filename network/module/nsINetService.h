@@ -109,7 +109,7 @@ struct nsINetService : public nsISupports
 #ifdef SingleSignon
     NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;
     NS_IMETHOD SI_RememberSignonData
-        (char* URLName, LO_FormSubmitData *submit)=0;
+        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)=0;
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value)=0;
 #endif

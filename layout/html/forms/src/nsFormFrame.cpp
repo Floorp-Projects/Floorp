@@ -57,7 +57,8 @@
 #include "prenv.h"
 
 #ifdef SingleSignon
-#include "proto.h"
+#define FORM_TYPE_TEXT          1
+#define FORM_TYPE_PASSWORD      7
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
@@ -603,12 +604,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   char* name_array[MAX_ARRAY_SIZE];
   char* value_array[MAX_ARRAY_SIZE];
   uint8 type_array[MAX_ARRAY_SIZE];
-  LO_FormSubmitData submit;
-
-  submit.value_cnt = 0;
-  submit.type_array = (PA_Block)type_array;
-  submit.name_array = (PA_Block)name_array;
-  submit.value_array = (PA_Block)value_array;
+  PRInt32 value_cnt = 0;
 
   /* get url name as ascii string */
   char *URLName;
@@ -643,15 +639,15 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 				child->GetType(&type);
 				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {
 					if (type == NS_FORM_INPUT_PASSWORD) {
-						type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
+						type_array[value_cnt] = FORM_TYPE_PASSWORD;
 					} else {
-						type_array[submit.value_cnt] = FORM_TYPE_TEXT;
+						type_array[value_cnt] = FORM_TYPE_TEXT;
 					}
-					value_array[submit.value_cnt] =
+					value_array[value_cnt] =
 						values[0].ToNewCString();
-					name_array[submit.value_cnt] =
+					name_array[value_cnt] =
 						names[0].ToNewCString();
-					submit.value_cnt++;
+					value_cnt++;
 				}
 #endif
 				for (int valueX = 0; valueX < numValues; valueX++) {
@@ -680,13 +676,14 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
                                           kINetServiceIID,
                                           (nsISupports **)&service);
   if ((NS_OK == res) && (nsnull != service)) {
-	  res = service->SI_RememberSignonData(URLName, &submit);
+	  res = service->SI_RememberSignonData
+		(URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 	  NS_RELEASE(service);
   }
   PR_FREEIF(URLName);
-  while (submit.value_cnt--) {
-	PR_FREEIF(name_array[submit.value_cnt]);
-	PR_FREEIF(value_array[submit.value_cnt]);
+  while (value_cnt--) {
+	PR_FREEIF(name_array[value_cnt]);
+	PR_FREEIF(value_array[value_cnt]);
   }
 #endif
 
