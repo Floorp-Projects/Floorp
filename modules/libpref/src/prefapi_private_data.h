@@ -64,7 +64,7 @@ PR_EXTERN(PrefResult) PREF_SavePrefFileSpecWith(
 #elif defined(XP_PC) || defined(XP_OS2)
 #  define LINEBREAK           "\015\012"
 #  define LINEBREAK_LEN       2
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #  define LINEBREAK           "\012"
 #  define LINEBREAK_LEN       1
 #endif /* XP_MAC */

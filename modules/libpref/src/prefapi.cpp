@@ -1004,7 +1004,7 @@ pref_useDefaultPrefFile(void)
 {
 #ifdef PREF_BACKOUT
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
   return PREF_Init("preferences.js");
 #elif defined(XP_MAC)
   return PREF_Init("Netscape Preferences");
@@ -2313,7 +2313,7 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 {
 #ifdef MOZ_ADMIN_LIB
 	ldap_func get_ldap_attributes = NULL;
-#if (defined (XP_MAC) && defined(powerc)) || defined (XP_PC) || defined(XP_UNIX)
+#if (defined (XP_MAC) && defined(powerc)) || defined (XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
 	if (!gAutoAdminLib)
 		gAutoAdminLib = pref_LoadAutoAdminLib();
 		
@@ -2535,7 +2535,7 @@ void pref_Alert(char* msg)
 /* Platform specific alert messages */
 void pref_Alert(char* msg)
 {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 #if defined(XP_UNIX)
     if ( getenv("NO_PREF_SPAM") == NULL )
 #endif
@@ -2557,7 +2557,7 @@ void pref_Alert(char* msg)
 #define ADMNLIBNAME "adm1640.dll"
 #elif defined XP_PC || defined XP_OS2
 #define ADMNLIBNAME "adm3240.dll"
-#elif defined XP_UNIX
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #define ADMNLIBNAME "libAutoAdmin.so"
 extern void fe_GetProgramDirectory(char *path, int len);
 #else
