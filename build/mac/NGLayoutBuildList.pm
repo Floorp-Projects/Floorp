@@ -593,7 +593,7 @@ sub MakeLibAliases()
 		if ($main::PROFILE)
 		{
 			my($profilerlibpath) = $appath;
-			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
+			$profilerlibpath =~ s/[^:]*$/MacOS Support:Profiler:Profiler Common:ProfilerLib/;
 			MakeAlias("$profilerlibpath", "$dist_dir"."Essential Files:");
 		}
 	}
