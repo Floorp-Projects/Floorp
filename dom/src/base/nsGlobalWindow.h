@@ -199,6 +199,8 @@ protected:
       float* aT2P);
    PRBool CheckForEventListener(JSContext* aContext, nsString& aPropName);
    void FlushPendingNotifications();
+   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
+   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
 
 protected:
    nsCOMPtr<nsIScriptContext>    mContext;

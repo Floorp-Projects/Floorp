@@ -908,6 +908,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
       docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
       NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
+      NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aInnerWidth, nsnull),
+         NS_ERROR_FAILURE);
+
       nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
       PRInt32 cy = 0;
       docShellAsWin->GetSize(nsnull, &cy);
@@ -949,6 +952,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
       docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
       NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
+      NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nsnull, &aInnerHeight),
+         NS_ERROR_FAILURE);
+
       nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
       PRInt32 cx = 0;
       docShellAsWin->GetSize(&cx, nsnull);
@@ -980,6 +986,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aOuterWidth, nsnull),
+      NS_ERROR_FAILURE);
+
    PRInt32 cy;
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, &cy),
       NS_ERROR_FAILURE);
@@ -1009,6 +1018,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nsnull, &aOuterHeight),
+      NS_ERROR_FAILURE);
 
    PRInt32 cx;
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, nsnull),
@@ -1040,6 +1052,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&aScreenX, nsnull),
+      NS_ERROR_FAILURE);
+
    PRInt32 y;
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(nsnull, &y),
       NS_ERROR_FAILURE);
@@ -1070,6 +1085,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(nsnull, &aScreenY),
+      NS_ERROR_FAILURE);
+
    PRInt32 x;
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, nsnull),
       NS_ERROR_FAILURE);
@@ -1078,6 +1096,83 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
       NS_ERROR_FAILURE);
 
    return NS_OK;
+}
+
+nsresult
+GlobalWindowImpl::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
+{
+  //This one is easy.  Just ensure the variable is greater than 100;
+  if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
+    nsresult res;
+    PRBool enabled;
+
+    //Check security state for use in determing window dimensions
+    nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+    NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+    res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+
+    if (NS_FAILED(res) || !enabled) {
+      //sec check failed
+      if (aWidth && *aWidth < 100) {
+        *aWidth = 100;
+      }
+      if (aHeight && *aHeight < 100) {
+        *aHeight = 100;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
+{
+  //This one is harder.  We have to get the screen size and window dimensions.
+  nsresult res;
+  PRBool enabled;
+  PRInt32 screenWidth = 0, screenHeight = 0;
+  PRInt32 winWidth, winHeight;
+
+  //Check security state for use in determing window dimensions
+  nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+  res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+  if (NS_FAILED(res)) {
+   enabled = PR_FALSE;
+  }
+
+  if (!enabled) {
+    //Get the screen dimensions
+    //XXX This should use nsIScreenManager once its fully fleshed out.
+    nsCOMPtr<nsIDOMScreen> screen;
+    if (NS_SUCCEEDED(GetScreen(getter_AddRefs(screen)))) {
+     screen->GetAvailWidth(&screenWidth);
+     screen->GetAvailHeight(&screenHeight);
+    }
+
+    //Get the window size
+    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+    FlushPendingNotifications();
+    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&winWidth, &winHeight),
+      NS_ERROR_FAILURE);
+
+    if (aLeft) {
+      *aLeft = screenWidth < *aLeft + winWidth ? screenWidth - winWidth : *aLeft;
+      *aLeft = *aLeft < 0 ? 0 : *aLeft;
+    }
+    if (aTop) {
+      *aTop = screenHeight < *aTop + winHeight ? screenHeight - winHeight : *aTop;
+      *aTop = *aTop < 0 ? 0 : *aTop;
+    }
+  }   
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetPageXOffset(PRInt32* aPageXOffset)
@@ -1374,6 +1469,9 @@ NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&aXPos, &aYPos),
+      NS_ERROR_FAILURE);
+
    NS_ENSURE_SUCCESS(treeOwnerAsWin->SetPosition(aXPos, aYPos), 
       NS_ERROR_FAILURE);
 
@@ -1390,7 +1488,12 @@ NS_IMETHODIMP GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(&x, &y),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetPosition(x + aXDif, y + aYDif), 
+   PRInt32 newX = x + aXDif;
+   PRInt32 newY = y + aYDif;
+   NS_ENSURE_SUCCESS(CheckSecurityLeftAndTop(&newX, &newY),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetPosition(newX, newY), 
       NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1401,6 +1504,9 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aWidth, &aHeight),
+      NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aWidth, aHeight, PR_TRUE), 
       NS_ERROR_FAILURE);
@@ -1418,7 +1524,12 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, &cy),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx + aWidthDif, cy + aHeightDif,
+   PRInt32 newCX = cx + aWidthDif;
+   PRInt32 newCY = cy + aHeightDif;
+   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&newCX, &newCY),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(newCX, newCY,
       PR_TRUE), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -2868,10 +2979,22 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
       }
    */
 
-   /* XXX Add security check on z-ordering, modal, hide title, disable hotkeys */
+   nsresult res;
+   PRBool enabled;
 
-   /* XXX Add security check for sizing and positioning.  
-      * See mozilla/lib/libmocha/lm_win.c for current constraints */
+   //Check security state for use in determing window dimensions
+   nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+   NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+ 
+   if (NS_FAILED(res) || !enabled) {
+     //If priv check fails, set all elements to minimum reqs., else leave them alone.
+     chromeFlags |= nsIWebBrowserChrome::titlebarOn;
+     chromeFlags &= ~nsIWebBrowserChrome::windowLowered;
+     chromeFlags &= ~nsIWebBrowserChrome::windowRaised;
+     chromeFlags &= ~nsIWebBrowserChrome::modal;
+   }
 
    return chromeFlags;
 }
@@ -2965,6 +3088,54 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
          sizeSpecified = PR_TRUE;
          }
       }
+
+   nsresult res;
+   PRBool enabled;
+   PRInt32 screenWidth = 0, screenHeight = 0;
+   PRInt32 winWidth, winHeight;
+
+   //Check security state for use in determing window dimensions
+   nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_PROGID));
+   NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+ 
+   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+   if (NS_FAILED(res)) {
+     enabled = PR_FALSE;
+   }
+ 
+   if (!enabled) {
+     //sec check failed.  ensure all args meet minimum reqs.
+
+     if (sizeSpecified) {
+       if (sizeChrome) {
+         chromeCX = chromeCX < 100 ? 100 : chromeCX;
+         chromeCY = chromeCY < 100 ? 100 : chromeCY;
+       }
+       else {
+         contentCX = contentCX < 100 ? 100 : contentCX;
+         contentCY = contentCY < 100 ? 100 : contentCY;
+       }
+     }
+
+     if (positionSpecified) {
+       //We'll also need the screen dimensions
+       //XXX This should use nsIScreenManager once its fully fleshed out.
+       nsCOMPtr<nsIDOMScreen> screen;
+       if (NS_SUCCEEDED(GetScreen(getter_AddRefs(screen)))) {
+         screen->GetAvailWidth(&screenWidth);
+         screen->GetAvailHeight(&screenHeight);
+       }
+
+       //This isn't strictly true but close enough
+       winWidth = sizeSpecified ? (sizeChrome ? chromeCX : contentCX) : 100;
+       winHeight = sizeSpecified ? (sizeChrome ? chromeCY : contentCY) : 100;
+
+       chromeX = screenWidth < chromeX + winWidth ? screenWidth - winWidth : chromeX;
+       chromeX = chromeX < 0 ? 0 : chromeX;
+       chromeY = screenHeight < chromeY + winHeight ? screenHeight - winHeight : chromeY;
+       chromeY = chromeY < 0 ? 0 : chromeY;
+     }
+   }
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    aDocShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
