@@ -161,6 +161,10 @@ protected:
   NS_IMETHOD HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
                                          nsGUIEvent*     aEvent,
                                          nsEventStatus&  aEventStatus);
+  PRBool HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
+  void HandleListSelection(nsIPresContext& aPresContext, 
+                           nsGUIEvent*     aEvent,
+                           nsEventStatus&  aEventStatus);
   NS_IMETHOD HandleLikeListEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus&  aEventStatus);
@@ -180,6 +184,8 @@ protected:
   nsIFrame*    mContentFrame;
   nsIComboboxControlFrame *mComboboxFrame;
   PRBool       mDisplayed;
+  PRBool       mButtonDown;
+  nsIFrame*    mLastFrame;
 };
 
 #endif /* nsListControlFrame_h___ */
