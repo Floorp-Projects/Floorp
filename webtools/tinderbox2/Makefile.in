@@ -16,10 +16,8 @@
 # Rights Reserved.
 #
 
-# Complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): Stephen Lamm (slamm@yahoo-inc.com)
 
 # Files are processed by the perl script ./config.out as they are copied
