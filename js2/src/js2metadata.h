@@ -633,14 +633,14 @@ public:
 };
 
 
-template<class Binding> class BindingEntry {
+class LocalBindingEntry {
 public:
-    BindingEntry(const StringAtom &s) : name(s) { }
+    LocalBindingEntry(const StringAtom &s) : name(s) { }
 
-    BindingEntry *clone();
+    LocalBindingEntry *clone();
     void clear();
 
-    typedef std::pair<Namespace *, Binding *> NamespaceBinding;
+    typedef std::pair<Namespace *, LocalBinding *> NamespaceBinding;
     typedef std::vector<NamespaceBinding> NamespaceBindingList;
     typedef NamespaceBindingList::iterator NS_Iterator;
 
@@ -653,8 +653,6 @@ public:
 
 };
 
-typedef BindingEntry<LocalBinding> LocalBindingEntry;
-
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
@@ -662,7 +660,29 @@ typedef HashTable<LocalBindingEntry *, const StringAtom &> LocalBindingMap;
 typedef TableIterator<LocalBindingEntry *, const StringAtom &> LocalBindingIterator;
 
 
-typedef BindingEntry<InstanceBinding> InstanceBindingEntry;
+
+
+
+
+class InstanceBindingEntry {
+public:
+    InstanceBindingEntry(const StringAtom &s) : name(s) { }
+
+    typedef std::pair<Namespace *, InstanceBinding *> NamespaceBinding;
+    typedef std::vector<NamespaceBinding> NamespaceBindingList;
+    typedef NamespaceBindingList::iterator NS_Iterator;
+
+    NS_Iterator begin() { return bindingList.begin(); }
+    NS_Iterator end() { return bindingList.end(); }
+
+
+    const StringAtom &name;
+    NamespaceBindingList bindingList;
+
+};
+
+
+
 
 typedef HashTable<InstanceBindingEntry *, const StringAtom &> InstanceBindingMap;
 typedef TableIterator<InstanceBindingEntry *, const StringAtom &> InstanceBindingIterator;
