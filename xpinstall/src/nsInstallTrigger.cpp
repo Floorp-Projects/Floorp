@@ -20,6 +20,7 @@
 #include "nsSoftwareUpdate.h"
 #include "nsXPInstallManager.h"
 #include "nsInstallTrigger.h"
+#include "nsInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 
 #include "nscore.h"
@@ -33,6 +34,8 @@
 #include "nsIServiceManager.h"
 
 #include "nsSpecialSystemDirectory.h"
+
+#include "VerReg.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -217,54 +220,157 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRIn
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aVersion);
+    return ConditionalSoftwareUpdate(aURL, aRegName, aDiffLevel, &inVersion, aMode, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
 {
+    PRBool needJar = PR_FALSE;
+
+    if (aURL == "" || aVersion == nsnull)
+    {
+        needJar = PR_TRUE;
+    }
+    else
+    {
+        char * regNameCString = aRegName.ToNewCString();
+
+        REGERR status = VR_ValidateComponent( regNameCString );
+        
+        if ( status == REGERR_NOFIND || status == REGERR_NOFILE )
+        {
+            // either component is not in the registry or it's a file
+            // node and the physical file is missing
+            needJar = true;
+        }
+        else
+        {
+            VERSION oldVersion;
+            PRInt32 diffValue;
+
+            status = VR_GetVersion( regNameCString, &oldVersion );
+            nsInstallVersion oldInstallVersion;
+
+            oldInstallVersion.Init(oldVersion.major, 
+                                oldVersion.minor, 
+                                oldVersion.release, 
+                                oldVersion.build);
+
+
+            if ( status != REGERR_OK )
+                needJar = true;
+            else if ( aDiffLevel < 0 )
+            {
+                aVersion->CompareTo(&oldInstallVersion, &diffValue); 
+                needJar = (diffValue <= aDiffLevel);
+            }
+            else
+            {
+                aVersion->CompareTo(&oldInstallVersion, &diffValue);
+                needJar = (diffValue >= aDiffLevel);
+            }
+        }
+    }
+
+    if (needJar)
+        return StartSoftwareUpdate(aURL, aMode, aReturn);
+    else
+        *aReturn = 0;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
 {
-    return NS_OK;
+    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, aVersion, aMode, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aVersion);
+    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, &inVersion, aMode, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aVersion);;
+    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, &inVersion, 0, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
-    return NS_OK;
+    return ConditionalSoftwareUpdate(aURL, aRegName, BLD_DIFF, aVersion, 0, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aMajor, aMinor, aRelease, aBuild);
+
+    return CompareVersion(aRegName, &inVersion, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aVersion);
+
+    return CompareVersion(aRegName, &inVersion, aReturn);
 }
 
 NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
+    *aReturn = EQUAL;  // assume failure.
+
+    PRBool enabled;
+
+    UpdateEnabled(&enabled);
+    if (!enabled)
+        return NS_OK;
+
+    VERSION              cVersion;
+    char*                tempCString;
+    REGERR               status;
+    
+    tempCString = aRegName.ToNewCString();
+
+    status = VR_GetVersion( tempCString, &cVersion );
+
+    /* if we got the version */
+    if ( status == REGERR_OK ) 
+    {
+        nsInstallVersion regNameVersion;
+
+        if ( VR_ValidateComponent( tempCString ) == REGERR_NOFILE ) 
+        {
+            regNameVersion.Init(0,0,0,0);
+        }
+        else
+        {
+            regNameVersion.Init(cVersion.major, 
+                                cVersion.minor, 
+                                cVersion.release, 
+                                cVersion.build);
+        }
+
+        regNameVersion.CompareTo( aVersion, aReturn );
+    }
+        
+    if (tempCString)
+        delete [] tempCString;
+    
     return NS_OK;
 }
 
