@@ -667,7 +667,7 @@ nsChromeRegistry::FindProvider(const nsACString& aPackage, const nsACString& aPr
 }
 
 nsresult
-nsChromeRegistry::TrySubProvider(const nsACString& aPackage, PRBool aIsLocale,
+nsChromeRegistry::TrySubProvider(const nsACString& aPackage,
                                  nsIRDFResource* aProviderResource,
                                  nsCOMPtr<nsIRDFResource> &aSelectedProvider)
 {
@@ -722,20 +722,65 @@ nsChromeRegistry::TrySubProvider(const nsACString& aPackage, PRBool aIsLocale,
     if (NS_FAILED(rv)) continue; // don't fail if package has not yet been installed
 
     if (packageName.Equals(aPackage)) {
-      // we found the locale, cache it in memory
-      if (aIsLocale) {
-        mSelectedLocales.Put(aPackage, kid);
-      }
-      else {
-        mSelectedSkins.Put(aPackage, kid);
-      }
-
       aSelectedProvider = kid;
       return NS_OK;
     }
   }
 
   return NS_ERROR_FAILURE;
+}
+
+// We use a "best-fit" algorithm for matching locales and themes. 
+// ANY:       any available locale/theme
+// LANGUAGE:  (locales only) same language, different country
+//            e.g. en-GB is the selected locale, only en-US is available
+// PRECISE:   the exact selected locale/theme
+
+enum nsProviderQuality {
+  MISSING  = 0,
+  ANY      = 1,
+  LANGUAGE = 2,
+  PRECISE  = 3
+};
+
+/**
+ * Match the language-part of two lang-COUNTRY codes, hopefully but
+ * not guaranteed to be in the form ab-CD or abz-CD. "ab" should also
+ * work, any other garbage-in will produce undefined results as long
+ * as it does not crash.
+ */
+static PRBool
+LanguagesMatch(const nsACString& a, const nsACString& b)
+{
+  if (a.Length() < 2 || b.Length() < 2)
+    return PR_FALSE;
+
+  nsACString::const_iterator as, ae, bs, be;
+  a.BeginReading(as);
+  a.EndReading(ae);
+  b.BeginReading(bs);
+  b.EndReading(be);
+
+  while (*as == *bs) {
+    if (*as == '-')
+      return PR_TRUE;
+ 
+    // reached the end
+    if (as == ae && bs == be)
+      return PR_TRUE;
+
+    // "a" is short
+    if (as == ae)
+      return (*++bs == '-');
+
+    // "b" is short
+    if (bs == be)
+      return (*++as == '-');
+
+    ++as; ++bs;
+  }
+
+  return PR_FALSE;
 }
 
 nsresult
@@ -746,28 +791,13 @@ nsChromeRegistry::FindSubProvider(const nsACString& aPackage,
   nsresult rv;
 
   PRBool isLocale = aProvider.Equals(NS_LITERAL_CSTRING("locale"));
+  nsACString &selectedProvider = isLocale ? mSelectedLocale : mSelectedSkin;
 
   nsCAutoString rootStr(NS_LITERAL_CSTRING("urn:mozilla:"));
   rootStr += aProvider;
-  rootStr += ":";
-  rootStr += isLocale ? mSelectedLocale : mSelectedSkin;
-
-  // obtain the provider root resource
-  nsCOMPtr<nsIRDFResource> resource;
-  rv = GetResource(rootStr, getter_AddRefs(resource));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = TrySubProvider(aPackage, isLocale, resource, aSelectedProvider);
-  if (NS_SUCCEEDED(rv)) return rv;
-
-  // If the default locale doesn't have a matching package, try any locale.
-  // This means that we will probably end up with mixed locales/skins. Mixed
-  // is better than none.
-
-  rootStr = NS_LITERAL_CSTRING("urn:mozilla:");
-  rootStr += aProvider;
   rootStr += ":root";
 
+  nsCOMPtr<nsIRDFResource> resource;
   rv = GetResource(rootStr, getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -786,8 +816,11 @@ nsChromeRegistry::FindSubProvider(const nsACString& aPackage,
   PRBool moreElements;
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIRDFResource> kid;
+  nsCAutoString name;
+  nsProviderQuality quality = MISSING;
 
-  while (NS_SUCCEEDED(arcs->HasMoreElements(&moreElements)) && moreElements) {
+  while (quality < PRECISE &&
+         NS_SUCCEEDED(arcs->HasMoreElements(&moreElements)) && moreElements) {
     // get next arc resource
     rv = arcs->GetNext(getter_AddRefs(supports));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -795,11 +828,37 @@ nsChromeRegistry::FindSubProvider(const nsACString& aPackage,
     kid = do_QueryInterface(supports);
     if (!kid) continue;
 
-    rv = TrySubProvider(aPackage, isLocale, kid, aSelectedProvider);
-    if (NS_SUCCEEDED(rv)) return rv;
+    rv = FollowArc(mChromeDataSource, name, kid, mName);
+    if (NS_FAILED(rv))
+      continue; // don't fail if package has not yet been installed
+
+    nsProviderQuality thisQuality = ANY;
+
+    if (name.Equals(selectedProvider))
+      thisQuality = PRECISE;
+    else if (isLocale && LanguagesMatch(name, selectedProvider))
+      thisQuality = LANGUAGE;
+
+    if (thisQuality <= quality)
+      continue;
+
+    rv = TrySubProvider(aPackage, kid, aSelectedProvider);
+    if (NS_FAILED(rv))
+      continue;
+
+    quality = thisQuality;
   }
 
-  return NS_ERROR_FAILURE;
+  if (quality == MISSING)
+    return NS_ERROR_FAILURE;
+
+  // we found the locale/skin, cache it in memory
+  if (isLocale)
+    mSelectedLocales.Put(aPackage, aSelectedProvider);
+  else
+    mSelectedSkins.Put(aPackage, aSelectedProvider);
+
+  return NS_OK;
 }
 
 nsresult

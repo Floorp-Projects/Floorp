@@ -152,7 +152,7 @@ private:
                         nsCOMPtr<nsIRDFResource> &aProviderResource,
                         nsCOMPtr<nsIRDFResource> &aPackageResource);
 
-  nsresult TrySubProvider(const nsACString& aPackage, PRBool aIsLocale,
+  nsresult TrySubProvider(const nsACString& aPackage,
                           nsIRDFResource* aProviderResource,
                           nsCOMPtr<nsIRDFResource> &aSelectedProvider);
 
