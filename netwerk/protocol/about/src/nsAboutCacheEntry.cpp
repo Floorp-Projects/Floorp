@@ -21,6 +21,8 @@
  *   Darin Fisher <darin@netscape.com> (original author)
  */
 
+#ifdef MOZ_NEW_CACHE
+
 #include "nsAboutCacheEntry.h"
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -445,3 +447,5 @@ nsAboutCacheEntry::ParseURI(nsCString &clientID, nsCString &key)
     key.Assign(Substring(c, end));
     return NS_OK;
 }
+
+#endif // MOZ_NEW_CACHE
