@@ -1853,6 +1853,9 @@ nsDocument::ContentAppended(nsIContent* aContainer,
 {
   NS_ABORT_IF_FALSE(aContainer, "Null container!");
 
+#ifdef XP_OS2_VACPP
+  volatile
+#endif
   PRInt32 i;
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
