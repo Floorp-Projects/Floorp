@@ -585,7 +585,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Win_HomeDirectory:
         {    
             char path[_MAX_PATH];
-            if (GetEnvironmentVariable(TEXT("HOME"), path, _MAX_PATH) >= 0)
+            if (GetEnvironmentVariable(TEXT("HOME"), path, _MAX_PATH) > 0)
             {
                 PRInt32 len = PL_strlen(path);
                 // Need enough space to add the trailing backslash
@@ -599,12 +599,12 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                 break;
             }
 
-            if (GetEnvironmentVariable(TEXT("HOMEDRIVE"), path, _MAX_PATH) >= 0)
+            if (GetEnvironmentVariable(TEXT("HOMEDRIVE"), path, _MAX_PATH) > 0)
             {
                 char temp[_MAX_PATH];
                 if (GetEnvironmentVariable(TEXT("HOMEPATH"), temp, _MAX_PATH) > 0)
-                    PL_strcatn(path, _MAX_PATH, temp);
-
+                   PL_strcatn(path, _MAX_PATH, temp);
+        
                 PRInt32 len = PL_strlen(path);
 
                 // Need enough space to add the trailing backslash
