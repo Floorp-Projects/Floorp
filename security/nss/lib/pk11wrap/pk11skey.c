@@ -2427,6 +2427,12 @@ PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
     mechanism.ulParameterLen = 0;
 
     id = PK11_ImportPublicKey(slot,pubKey,PR_FALSE);
+    if (id == CK_INVALID_HANDLE) {
+	if (newKey) {
+	    PK11_FreeSymKey(newKey);
+	}
+	return SECFailure;   /* Error code has been set. */
+    }
 
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
