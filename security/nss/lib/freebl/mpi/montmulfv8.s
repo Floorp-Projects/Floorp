@@ -29,7 +29,7 @@
 !  may use your version of this file under either the MPL or the
 !  GPL.
 !  
-!   $Id: montmulfv8.s,v 1.2 2000/12/01 03:53:13 nelsonb%netscape.com Exp $
+!   $Id: montmulfv8.s,v 1.3 2001/10/17 20:35:04 nelsonb%netscape.com Exp $
 !  
 
 	.section	".text",#alloc,#execinstr
@@ -836,7 +836,7 @@ TwoToMinus32:
 
 !  191		      ! else
 !  192		      !   {
-!  193		      !     for(i=len-1; i>=0; i++)
+!  193		      !     for(i=len-1; i>=0; i--)
 
 /* 0x0024	 193 */		sub	%o2,1,%g4
 /* 0x0028	     */		sll	%g4,2,%g1
@@ -852,9 +852,9 @@ TwoToMinus32:
 /* 0x0040	 193 */		add	%o0,%g1,%g3
                        .L900000510:
 /* 0x0044	 195 */		ld	[%g3],%o2
-/* 0x0048	     */		add	%g4,1,%g1
-/* 0x004c	     */		add	%g2,4,%g2
-/* 0x0050	     */		add	%g3,4,%g3
+/* 0x0048	     */		sub	%g4,1,%g1
+/* 0x004c	     */		sub	%g2,4,%g2
+/* 0x0050	     */		sub	%g3,4,%g3
 /* 0x0054	     */		cmp	%o2,%o5
 /* 0x0058	     */		bne,pn	%icc,.L77000182
 /* 0x005c	     */		nop
@@ -1758,9 +1758,9 @@ TwoToMinus32:
 /* 0x0a14	     */		ld	[%o1],%g2
                        .L900000648:
 /* 0x0a18	     */		ld	[%o4],%g3
-/* 0x0a1c	     */		add	%o5,1,%o0
-/* 0x0a20	     */		add	%o1,4,%o1
-/* 0x0a24	     */		add	%o4,4,%o4
+/* 0x0a1c	     */		sub	%o5,1,%o0
+/* 0x0a20	     */		sub	%o1,4,%o1
+/* 0x0a24	     */		sub	%o4,4,%o4
 /* 0x0a28	     */		cmp	%g3,%g2
 /* 0x0a2c	     */		bne,pn	%icc,.L77000244
 /* 0x0a30	     */		nop

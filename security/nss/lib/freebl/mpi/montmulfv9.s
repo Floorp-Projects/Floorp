@@ -29,7 +29,7 @@
 !  may use your version of this file under either the MPL or the
 !  GPL.
 !  
-!   $Id: montmulfv9.s,v 1.2 2000/12/01 03:53:13 nelsonb%netscape.com Exp $
+!   $Id: montmulfv9.s,v 1.3 2001/10/17 20:35:04 nelsonb%netscape.com Exp $
 !  
 
 	.section	".text",#alloc,#execinstr
@@ -134,7 +134,7 @@ TwoToMinus32:
 !   30		      ! * may use your version of this file under either the MPL or the
 !   31		      ! * GPL.
 !   32		      ! *
-!   33		      ! *  $Id: montmulfv9.s,v 1.2 2000/12/01 03:53:13 nelsonb%netscape.com Exp $
+!   33		      ! *  $Id: montmulfv9.s,v 1.3 2001/10/17 20:35:04 nelsonb%netscape.com Exp $
 !   34		      ! */
 !   36		      !#define RF_INLINE_MACROS
 !   38		      !static const double TwoTo16=65536.0;
@@ -1164,7 +1164,7 @@ TwoToMinus32:
 
 !  191		      ! else
 !  192		      !   {
-!  193		      !     for(i=len-1; i>=0; i++)
+!  193		      !     for(i=len-1; i>=0; i--)
 
 /* 0x0030	 193 */		sub	%o1,1,%o2
 /* 0x0034	     */		cmp	%o2,0
@@ -1176,7 +1176,7 @@ TwoToMinus32:
 !  195		      !	 if(i32[i]!=nint[i]) break;
 
 /* 0x0040	 195 */		sllx	%g2,2,%g2
-/* 0x0044	     */		add	%o2,1,%o0
+/* 0x0044	     */		sub	%o2,1,%o0
 /* 0x0048	     */		ld	[%i1+%g2],%g3
 /* 0x004c	     */		ld	[%i2+%g2],%g2
 /* 0x0050	     */		cmp	%g2,%g3
@@ -2240,7 +2240,7 @@ TwoToMinus32:
 /* 0x0bcc	     */		sra	%o1,0,%g2
                        .L900000645:
 /* 0x0bd0	     */		sllx	%g2,2,%g2
-/* 0x0bd4	     */		add	%o1,1,%o0
+/* 0x0bd4	     */		sub	%o1,1,%o0
 /* 0x0bd8	     */		ld	[%l3+%g2],%g3
 /* 0x0bdc	     */		ld	[%l2+%g2],%g2
 /* 0x0be0	     */		cmp	%g2,%g3
