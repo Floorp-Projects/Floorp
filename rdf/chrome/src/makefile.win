@@ -25,6 +25,7 @@ LIBRARY_NAME=chrome_s
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsChromeRegistry.obj    \
+		.\$(OBJDIR)\nsChromeEntry.obj    \
         .\$(OBJDIR)\nsChromeProtocolHandler.obj    \
 	$(NULL)
 
