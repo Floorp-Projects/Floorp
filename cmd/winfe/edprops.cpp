@@ -5439,34 +5439,20 @@ void CParagraphPage::OnOK()
     	}
     }
 
-    //TODO: CHECK THIS -- WE MAY NOT WANT TO DO IT
-    // We don't want a container but had one before
-    if( m_pListData && m_iContainerStyle == ED_NO_CONTAINER ){
-        // TODO: SHOULD WE UNDO INDENT FOR LIST ITEMS ALSO?
-//        if ( iTagType == P_BLOCKQUOTE ) {
-            EDT_ListData * pListData;
-            // Repeat removing indent until last Unnumbered list is gone
-            while ( (pListData = EDT_GetListData(m_pMWContext)) ){
-                EDT_FreeListData(pListData);
-                EDT_Outdent(m_pMWContext);
-            }
-//        }
-    }
-
     // We should have been maintaining paragraph style
     //  to match container/list style, so this should work
     // But if "Don't change" style, NEVER set the container style
+    // NOTE: This will remove any list if new container format is not appropriate
     if( m_iParagraphStyle != m_iMixedStyle ){
         TagType NewFormat = FEED_nParagraphTags[m_iParagraphStyle];
         if( m_ParagraphFormat != NewFormat ){
             EDT_MorphContainer( m_pMWContext, NewFormat);
+            // Get the list data for the new list we might have created 
+            //   or if we destroyed the list by changing paragraph style
+            m_pListData = EDT_GetListData(m_pMWContext);
+            // Save the new format 
+            m_ParagraphFormat = NewFormat;
         }
-    }
-
-    // We didn't already have a container but want one - create it
-    if( ! m_pListData && m_iContainerStyle != ED_NO_CONTAINER) {
-        EDT_Indent(m_pMWContext);
-        m_pListData = EDT_GetListData(m_pMWContext);
     }
 
     // Set List type and attributes

@@ -98,9 +98,7 @@ extern char * ed_pDontChange;
 // Optionally returns width of longest string found
 extern int wfe_FillFontComboBox(CComboBox * pCombo, int * pMaxWidth = NULL);
 
-// Total font sizes with Netscape extension -- SHOULD GET THIS FROM A COMMON H FILE!
-#define	  MAX_FONT_SIZE            7
-#define	  MIN_FONT_SIZE            7    // XXX I don't know where this is supposed to come from, but it's breaking my build.
+// Note: MIN_FONT_SIZE and MAX_FONT_SIZE are defined in lib\layout\layout.h (copyied to dist/public/lay)
 
 // We map {-2 ... +4} onto absolute sizes {1 ... 7}
 // This is minimum of scale
