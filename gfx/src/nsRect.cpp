@@ -61,14 +61,18 @@ PRBool nsRect::IntersectRect(const nsRect &aRect1, const nsRect &aRect2)
 
   // Compute the destination width
   temp = MIN(xmost1, xmost2);
-  if (temp <= x)
+  if (temp <= x) {
+    Empty();
     return PR_FALSE;
+  }
   width = temp - x;
 
   // Compute the destination height
   temp = MIN(ymost1, ymost2);
-  if (temp <= y)
+  if (temp <= y) {
+    Empty();
     return PR_FALSE;
+  }
   height = temp - y;
 
   return PR_TRUE;

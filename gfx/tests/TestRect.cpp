@@ -66,6 +66,14 @@ TestEqualityOperator()
     return PR_FALSE;
   }
 
+  // Make sure that two empty rects are equal
+  rect1.Empty();
+  rect2.Empty();
+  if (!(rect1 == rect2)) {
+    printf("rect equality operator failed for empty rects!\n");
+    return PR_FALSE;
+  }
+
   return PR_TRUE;
 }
 
@@ -272,6 +280,11 @@ TestIntersection()
     printf("rect intersection test #4 failed!\n");
     return PR_FALSE;
   }
+  // Make sure an empty rect is returned
+  if (!dest.IsEmpty()) {
+    printf("rect intersection test #4 no empty rect!\n");
+    return PR_FALSE;
+  }
   rect2.x += rect2.width;
 
   // Test against a rect that overlaps the top edge of rect1
@@ -287,6 +300,11 @@ TestIntersection()
   rect2.y -= rect2.height;
   if (dest.IntersectRect(rect1, rect2)) {
     printf("rect intersection test #6 failed!\n");
+    return PR_FALSE;
+  }
+  // Make sure an empty rect is returned
+  if (!dest.IsEmpty()) {
+    printf("rect intersection test #6 no empty rect!\n");
     return PR_FALSE;
   }
   rect2.y += rect2.height;
@@ -306,6 +324,11 @@ TestIntersection()
     printf("rect intersection test #8 failed!\n");
     return PR_FALSE;
   }
+  // Make sure an empty rect is returned
+  if (!dest.IsEmpty()) {
+    printf("rect intersection test #8 no empty rect!\n");
+    return PR_FALSE;
+  }
   rect2.x -= rect2.width;
 
   // Test against a rect that overlaps the bottom edge of rect1
@@ -321,6 +344,11 @@ TestIntersection()
   rect2.y += rect2.height;
   if (dest.IntersectRect(rect1, rect2)) {
     printf("rect intersection test #10 failed!\n");
+    return PR_FALSE;
+  }
+  // Make sure an empty rect is returned
+  if (!dest.IsEmpty()) {
+    printf("rect intersection test #10 no empty rect!\n");
     return PR_FALSE;
   }
   rect2.y -= rect2.height;
