@@ -100,6 +100,8 @@ public:
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
   NS_IMETHOD Exit();
+  NS_IMETHOD Close();
+  NS_IMETHOD OnUnload();
   NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
@@ -223,6 +225,8 @@ nsMessenger::nsMessenger() : m_folderPath("")
 
 nsMessenger::~nsMessenger()
 {
+    NS_IF_RELEASE(mWindow);
+    NS_IF_RELEASE(mWebShell);
 }
 
 //
@@ -320,6 +324,7 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 		return NS_ERROR_NULL_POINTER;
 
   nsAutoString  webShellName("browser.webwindow");
+  NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
 
@@ -631,6 +636,43 @@ nsMessenger::Exit()
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessenger::OnUnload()
+{
+    // ** clean up
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessenger::Close()
+{
+    nsresult rv = NS_OK;
+    if (mWindow)
+    {
+        nsCOMPtr<nsIScriptGlobalObject>
+            globalScript(do_QueryInterface(mWindow));
+        nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+        if (globalScript)
+            globalScript->GetWebShell(getter_AddRefs(webshell));
+        if (webshell)
+            webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
+        if (rootWebshell) 
+        {
+            nsCOMPtr<nsIWebShellContainer> webshellContainer;
+            nsCOMPtr<nsIWebShellWindow> webWindow;
+            rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
+            webWindow = do_QueryInterface(webshellContainer);
+            if (webWindow) 
+			{
+				webWindow->Show(PR_FALSE);
+                webWindow->Close();
+			}
+         }
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP

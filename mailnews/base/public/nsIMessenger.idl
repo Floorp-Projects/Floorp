@@ -41,6 +41,8 @@ interface nsIMessenger : nsISupports {
 					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
 	void Exit();
+    void Close();
+    void OnUnload();
 	void ViewAllMessages(in nsIRDFCompositeDataSource database);
 	void ViewUnreadMessages(in nsIRDFCompositeDataSource database);
 	void ViewAllThreadMessages(in nsIRDFCompositeDataSource database);
