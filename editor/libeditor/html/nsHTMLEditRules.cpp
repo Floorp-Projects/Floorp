@@ -1732,7 +1732,10 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
 
   nsCOMPtr<nsIDOMNode> sibling;
   nsresult res = NS_OK;
-  
+
+//bombs away - nuking this for now...
+#if 0
+
   // easy case, in a text node:
   if (mEditor->IsTextNode(aNode))
   {
@@ -1799,7 +1802,8 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
   }
   
   // not in a text node.  are we next to BR's?
-  // XXX  
+  // XXX 
+#endif
   
   return res;
 }
