@@ -89,7 +89,6 @@ WindowPtr			whichwindow;
 				case keyDown:
 				case autoKey:
 					doKey(&theevent);
-					break;
 					this->Exit();
 					break;
 				case mouseDown:
