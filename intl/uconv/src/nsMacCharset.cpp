@@ -65,8 +65,11 @@ class nsMacCharsetFactory : public nsIFactory {
 
 public:
    nsMacCharsetFactory() {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(&g_InstanceCount);
    }
    ~nsMacCharsetFactory() {
+     PR_AtomicDecrement(&g_InstanceCount);
    }
 
    NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);

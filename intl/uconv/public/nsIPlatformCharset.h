@@ -35,16 +35,15 @@ NS_DECLARE_ID(kIPlatformCharsetIID,
 NS_DECLARE_ID(kPlatformCharsetCID,  
  0x84b0f182, 0xc6c7, 0x11d2, 0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
 
+typedef enum {
+     kPlatformCharsetSel_PlainTextInClipboard = 0,
+     kPlatformCharsetSel_FileName = 1,
+     kPlatformCharsetSel_Menu = 2
+} nsPlatformCharsetSel;
 
 class nsIPlatformCharset : public nsISupports
 {
 public:
-
-  typedef enum {
-     kPlatformCharsetSel_PlainTextInClipboard = 0,
-     kPlatformCharsetSel_FileName = 1,
-     kPlatformCharsetSel_Menu = 2
-  } nsPlatformCharsetSel;
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult) = 0;
 

@@ -73,7 +73,14 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
   }
 
   if (aCID.Equals(kPlatformCharsetCID)) {
-    *aFactory = NEW_PLATFORMCHARSETFACTORY();
+    nsIFactory *factory = NEW_PLATFORMCHARSETFACTORY();
+	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
   }
 
   return NS_NOINTERFACE;
