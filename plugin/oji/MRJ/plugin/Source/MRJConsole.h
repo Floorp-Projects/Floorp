@@ -42,20 +42,21 @@ public:
 	virtual ~MRJConsole();
 
 	// NS_DECL_ISUPPORTS
-	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+	// DECL_SUPPORTS_MIXIN
+	NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 	NS_IMETHOD_(nsrefcnt) AddRef(void);
 	NS_IMETHOD_(nsrefcnt) Release(void);
 
 	// nsIJVMConsole methods.
 
     NS_IMETHOD
-    ShowConsole(void);
+    Show(void);
 
     NS_IMETHOD
-    HideConsole(void);
+    Hide(void);
 
     NS_IMETHOD
-    IsConsoleVisible(PRBool* isVisible);
+    IsVisible(PRBool* isVisible);
 
     // Prints a message to the Java console. The encodingName specifies the
     // encoding of the message, and if NULL, specifies the default platform
@@ -98,6 +99,7 @@ private:
 	JMAWTContextRef mContext;
 	TopLevelFrame* mFrame;
 
-	// support for nsISupports.
-	static nsID sInterfaceIDs[];
+	// support for SupportsMixin.
+	static const InterfaceInfo sInterfaces[];
+	static const UInt32 kInterfaceCount;
 };

@@ -39,10 +39,14 @@ extern nsIPluginManager2* thePluginManager2;
 
 MRJConsole* theConsole = NULL;
 
-nsID MRJConsole::sInterfaceIDs[] = { NS_IJVMCONSOLE_IID };
+const InterfaceInfo MRJConsole::sInterfaces[] = {
+	{ NS_IJVMCONSOLE_IID, INTERFACE_OFFSET(MRJConsole, nsIJVMConsole) },
+	{ NS_IEVENTHANDLER_IID, INTERFACE_OFFSET(MRJConsole, nsIEventHandler) },
+};
+const UInt32 MRJConsole::kInterfaceCount = sizeof(sInterfaces) / sizeof(InterfaceInfo);
 
 MRJConsole::MRJConsole(MRJPlugin* plugin)
-	:	SupportsMixin((nsIJVMConsole*)this, sInterfaceIDs, sizeof(sInterfaceIDs) / sizeof(nsID)),
+	:	SupportsMixin(this, sInterfaces, kInterfaceCount, (nsIPlugin*) plugin),
 		mPlugin(plugin), mSession(NULL), mIsInitialized(PR_FALSE),
 		mConsoleClass(NULL), mInitMethod(NULL), mDisposeMethod(NULL),
 		mShowMethod(NULL), mHideMethod(NULL), mVisibleMethod(NULL), mPrintMethod(NULL), mFinishMethod(NULL),
@@ -84,13 +88,12 @@ NS_METHOD MRJConsole::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 		result = mPlugin->queryInterface(aIID, aInstancePtr);
 	return result;
 }
-
 nsrefcnt MRJConsole::AddRef() { return addRef(); }
 nsrefcnt MRJConsole::Release() { return release(); }
 
 #pragma mark ***** MRJConsole *****
 
-NS_METHOD MRJConsole::ShowConsole()
+NS_METHOD MRJConsole::Show()
 {
 	Initialize();
 
@@ -102,7 +105,7 @@ NS_METHOD MRJConsole::ShowConsole()
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD MRJConsole::HideConsole()
+NS_METHOD MRJConsole::Hide()
 {
 	Initialize();
 
@@ -114,7 +117,7 @@ NS_METHOD MRJConsole::HideConsole()
 	return NS_ERROR_FAILURE;
 }
 
-NS_METHOD MRJConsole::IsConsoleVisible(PRBool* isVisible)
+NS_METHOD MRJConsole::IsVisible(PRBool* isVisible)
 {
 	// don't initialize here, because if we haven't been initialized, it can't be visible.
 	*isVisible = PR_FALSE;

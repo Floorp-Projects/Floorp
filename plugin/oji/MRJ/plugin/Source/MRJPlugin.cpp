@@ -29,27 +29,36 @@
 #include "MRJFrame.h"
 #include "MRJConsole.h"
 
-#include "nsIMalloc.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
 #include "nsRepository.h"
 #include "nsIJVMManager.h"
 #include "nsIPluginManager2.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIWindowlessPlugInstPeer.h"
 #include "LiveConnectNativeMethods.h"
-#include "CSecureJNI2.h"
+#include "CSecureEnv.h"
 
+nsIServiceManager* theServiceManager = NULL;
+
+extern nsIServiceManager* theServiceManager;	// needs to be in badaptor.cpp.
 extern nsIPluginManager* thePluginManager;		// now in badaptor.cpp.
 extern nsIPlugin* thePlugin;
 
 nsIPluginManager2* thePluginManager2 = NULL;
-nsIMalloc* theMemoryAllocator = NULL;
+nsIAllocator* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
+
 
 // Common interface IDs.
 
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
+static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
-static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
+static NS_DEFINE_IID(kIMallocCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kIMallocIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
 static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
 static NS_DEFINE_IID(kIRunnableIID, NS_IRUNNABLE_IID);
@@ -66,14 +75,25 @@ static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININST
 	return nsPluginError_NoError;
 } */
 
-nsresult NSGetFactory(const nsCID &classID, nsIFactory **aFactory)
+nsresult NSGetFactory(const nsCID &classID, nsISupports* serviceManager, nsIFactory **aFactory)
 {
+	nsresult result = NS_OK;
+
+	if (theServiceManager == NULL) {
+		if (serviceManager->QueryInterface(kIServiceManagerIID, &theServiceManager) != NS_OK)
+			return NS_ERROR_FAILURE;
+
+		// Our global operator new wants to use nsIMalloc to do all of its allocation.
+		// This should be available from the Service Manager.
+		if (theServiceManager->GetService(kIMallocCID, kIMallocIID, (nsISupports**)&theMemoryAllocator) != NS_OK)
+			return NS_ERROR_FAILURE;
+	}
+
 	if (classID.Equals(kIPluginIID)) {
-		static MRJPlugin thePluginSingleton;
-		*aFactory = &thePluginSingleton;
-		thePlugin = &thePluginSingleton;
-		thePlugin->AddRef();
-		// *aFactory = new MRJPlugin();
+		MRJPlugin* pluginFactory = new MRJPlugin();
+		thePlugin = pluginFactory;
+		pluginFactory->AddRef();
+		*aFactory = pluginFactory;
 		return NS_OK;
 	}
 	return NS_NOINTERFACE;
@@ -98,10 +118,15 @@ void cfm_NSShutdownPlugin()
 
 #pragma mark *** MRJPlugin ***
 
-nsID MRJPlugin::sInterfaceIDs[] = { NS_IPLUGIN_IID, NS_IJVMPLUGIN_IID };
+const InterfaceInfo MRJPlugin::sInterfaces[] = {
+	{ NS_IPLUGIN_IID, INTERFACE_OFFSET(MRJPlugin, nsIPlugin) },
+	{ NS_IJVMPLUGIN_IID, INTERFACE_OFFSET(MRJPlugin, nsIJVMPlugin) },
+	{ NS_IRUNNABLE_IID, INTERFACE_OFFSET(MRJPlugin, nsIRunnable) },
+};
+const UInt32 MRJPlugin::kInterfaceCount = sizeof(sInterfaces) / sizeof(InterfaceInfo);
 
 MRJPlugin::MRJPlugin()
-	:	SupportsMixin((nsIJVMPlugin*)this, sInterfaceIDs, sizeof(sInterfaceIDs) / sizeof(nsID)),
+	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(0)
 {
 }
@@ -135,15 +160,15 @@ MRJPlugin::~MRJPlugin()
 	}
 }
 
-// PCB:  Metrowerks pre-processor bug? The following macro won't compile.
-// NS_IMPL_ISUPPORTS(MRJPlugin, NP_IPLUGIN_IID)
-
+/**
+ * MRJPlugin aggregates MRJConsole, so that it can be QI'd to be an nsIJVMConsole.
+ * To save code size, we use the SupportsMixin class instead of the macros in 
+ * nsAgg.h. SupportsMixin::queryInterface, addRef, and release are all local
+ * operations, regardless of aggregation. The capitalized versions take aggregation
+ * into account.
+ */
 NS_METHOD MRJPlugin::QueryInterface(const nsIID& aIID, void** instancePtr)
 {
-	if (aIID.Equals(kIRunnableIID)) {
-		*instancePtr = (void*) (nsIRunnable*) this;
-		return NS_OK;
-	}
 	nsresult result = queryInterface(aIID, instancePtr);
 	if (result == NS_NOINTERFACE) {
 		result = mConsole->queryInterface(aIID, instancePtr);
@@ -151,13 +176,10 @@ NS_METHOD MRJPlugin::QueryInterface(const nsIID& aIID, void** instancePtr)
 	return result;
 }
 
-nsrefcnt MRJPlugin::AddRef(void) { return addRef(); }
-nsrefcnt MRJPlugin::Release(void) { return release(); }
-
 NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void **aResult)
 {
 	if (aIID.Equals(kIPluginInstanceIID) || aIID.Equals(kIJVMPluginInstanceIID)) {
-		if (StartupJVM(NULL) == NS_OK) {
+		if (StartupJVM() == NS_OK) {
 			MRJPluginInstance* instance = new MRJPluginInstance(this);
 			instance->AddRef();		// if not us, then who will take this burden?
 			*aResult = instance;
@@ -168,38 +190,31 @@ NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void
 	return NS_NOINTERFACE;
 }
 
-NS_METHOD MRJPlugin::Initialize(nsISupports* browserInterfaces)
+NS_METHOD MRJPlugin::Initialize()
 {
 	nsresult result = NS_OK;
-	
+
 	// try to get a plugin manager.
 	if (thePluginManager == NULL) {
-		result = browserInterfaces->QueryInterface(kIPluginManagerIID, &thePluginManager);
+		result = theServiceManager->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&thePluginManager);
 		if (result != NS_OK || thePluginManager == NULL)
 			return NS_ERROR_FAILURE;
 	}
 
 	// see if the enhanced plugin manager exists.
 	if (thePluginManager2 == NULL) {
-		result = browserInterfaces->QueryInterface(kIPluginManager2IID, &thePluginManager2);
+		result = thePluginManager->QueryInterface(kIPluginManager2IID, &thePluginManager2);
 		if (result != NS_OK)
 			thePluginManager2 = NULL;
 	}
 
-	// see if IMalloc exists.
-	if (theMemoryAllocator == NULL) {
-		result = browserInterfaces->QueryInterface(kIMallocIID, &theMemoryAllocator);
-		if (result != NS_OK)
-			theMemoryAllocator = NULL;
-	}
-	
 	// try to get a JVM manager. we have to be able to run without one.
-	result = browserInterfaces->QueryInterface(kIJVMManagerIID, &mManager);
+	result = theServiceManager->GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)&mManager);
 	if (result != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
-	result = browserInterfaces->QueryInterface(kIThreadManagerIID, &mThreadManager);
+	result = mManager->QueryInterface(kIThreadManagerIID, &mThreadManager);
 	if (result != NS_OK)
 		mThreadManager = NULL;
 
@@ -212,18 +227,18 @@ NS_METHOD MRJPlugin::Initialize(nsISupports* browserInterfaces)
 		mConsole->AddRef();
 	}
 
-	return NS_OK;
+	return result;
 }
 
 NS_METHOD MRJPlugin::GetMIMEDescription(const char* *result)
 {
-	*result = NPJVM_MIME_TYPE;
+	*result = NS_JVM_MIME_TYPE;
 	return NS_OK;
 }
 
 MRJSession* MRJPlugin::getSession()
 {
-	StartupJVM(NULL);
+	StartupJVM();
 	return mSession;
 }
 
@@ -237,7 +252,7 @@ nsIThreadManager* MRJPlugin::getThreadManager()
 	return mThreadManager;
 }
 
-NS_METHOD MRJPlugin::StartupJVM(nsJVMInitArgs* initArgs)
+NS_METHOD MRJPlugin::StartupJVM()
 {
 	if (mSession == NULL) {
 		// start a session with MRJ.
@@ -248,6 +263,7 @@ NS_METHOD MRJPlugin::StartupJVM(nsJVMInitArgs* initArgs)
 			mSession = NULL;
 			return NS_ERROR_FAILURE;
 		}
+#if 0
 		// Apply the initialization args.
 		if (initArgs != NULL && initArgs->version >= nsJVMInitArgs_Version) {
 			const char* classPathAdditions = initArgs->classpathAdditions;
@@ -271,6 +287,7 @@ NS_METHOD MRJPlugin::StartupJVM(nsJVMInitArgs* initArgs)
 				}
 			}
 		}
+#endif
 
 		InitLiveConnectSupport(this);
 
@@ -304,7 +321,7 @@ NS_METHOD MRJPlugin::AddToClassPath(const char* dirPath)
 		mSession->addToClassPath(dirPath);
 		return NS_OK;
 	}
-	return NS_JVM_ERROR_WRONG_CLASSES;
+	return NS_ERROR_FAILURE;
 }
 
 NS_METHOD MRJPlugin::GetClassPath(const char* *result)
@@ -325,7 +342,7 @@ NS_METHOD MRJPlugin::GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj)
 NS_METHOD MRJPlugin::GetJavaVM(JavaVM* *result)
 {
 	*result = NULL;
-	if (StartupJVM(NULL) == NS_OK) {
+	if (StartupJVM() == NS_OK) {
 		*result = mSession->getJavaVM();
 		return NS_OK;
 	}
@@ -335,7 +352,7 @@ NS_METHOD MRJPlugin::GetJavaVM(JavaVM* *result)
 nsrefcnt MRJPlugin::GetJNIEnv(JNIEnv* *result)
 {
 	JNIEnv* env = NULL;
-	if (StartupJVM(NULL) == NS_OK) {
+	if (StartupJVM() == NS_OK) {
 #if 1
 		env = mSession->getCurrentEnv();
 #else
@@ -355,11 +372,11 @@ nsrefcnt MRJPlugin::ReleaseJNIEnv(JNIEnv* env)
 	return 0;
 }
 
-NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv)
+NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv)
 {
 	// Need to spawn a new JVM communication thread here.
-	NS_DEFINE_IID(kISecureJNI2IID, NS_ISECUREJNI2_IID);
-	return CSecureJNI2::Create(NULL, this, proxyEnv, kISecureJNI2IID, (void**)outSecureEnv);
+	NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
+	return CSecureEnv::Create(this, proxyEnv, kISecureEnvIID, (void**)outSecureEnv);
 }
 
 NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
@@ -367,7 +384,7 @@ NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
 	nsresult result = NS_OK;
 	// Only do this if there aren't any plugin instances.
 	// if (true || MRJPluginInstance::getInstances() == NULL) {
-	result = StartupJVM(NULL);
+	result = StartupJVM();
 	if (result == NS_OK)
 		mSession->idle(timeMillis);
 	// }
@@ -432,18 +449,15 @@ Boolean MRJPlugin::inPluginThread()
 
 #pragma mark *** MRJPluginInstance ***
 
-NS_METHOD MRJPluginInstance::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	return queryInterface(aIID, aInstancePtr);
-}
-
-nsrefcnt MRJPluginInstance::AddRef() { return addRef(); }
-nsrefcnt MRJPluginInstance::Release() { return release(); }
-
-nsID MRJPluginInstance::sInterfaceIDs[] = { NS_IPLUGININSTANCE_IID, NS_IJVMPLUGININSTANCE_IID };
+const InterfaceInfo MRJPluginInstance::sInterfaces[] = {
+	{ NS_IPLUGININSTANCE_IID, INTERFACE_OFFSET(MRJPluginInstance, nsIPluginInstance) },
+	{ NS_IJVMPLUGININSTANCE_IID, INTERFACE_OFFSET(MRJPluginInstance, nsIJVMPluginInstance) },
+	{ NS_IEVENTHANDLER_IID, INTERFACE_OFFSET(MRJPluginInstance, nsIEventHandler) },
+};
+const UInt32 MRJPluginInstance::kInterfaceCount = sizeof(sInterfaces) / sizeof(InterfaceInfo);
 
 MRJPluginInstance::MRJPluginInstance(MRJPlugin* plugin)
-	:	SupportsMixin(this, sInterfaceIDs, sizeof(sInterfaceIDs) / sizeof(nsID)),
+	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mPeer(NULL), mWindowlessPeer(NULL),
 		mPlugin(plugin), mSession(plugin->getSession()),
 		mContext(NULL), mApplet(NULL),
