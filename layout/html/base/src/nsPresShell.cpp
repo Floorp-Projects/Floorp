@@ -4438,7 +4438,7 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
       nsIFrame* firstChildFrame = GetFirstChildFrame(mPresContext, primaryFrame, aContent);
       if (firstChildFrame && IsGeneratedContentFrame(firstChildFrame)) {
         // Create an iterator
-        rv = NS_NewGeneratedContentIterator(mPresContext, firstChildFrame, aIterator);
+        rv = NS_NewFrameContentIterator(mPresContext, firstChildFrame, aIterator);
       }
       
     } else {
@@ -4460,7 +4460,7 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
           NS_ASSERTION(IsGeneratedContentFrame(lastChildFrame),
                        "can't find generated content frame");
           // Create an iterator
-          rv = NS_NewGeneratedContentIterator(mPresContext, lastChildFrame, aIterator);
+          rv = NS_NewFrameContentIterator(mPresContext, lastChildFrame, aIterator);
         }
       }
     }

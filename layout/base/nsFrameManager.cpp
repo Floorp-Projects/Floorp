@@ -319,8 +319,6 @@ public:
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName);
 
-  NS_IMETHOD GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIContent* aChild, nsIFrame** aResult);
-
 #ifdef NS_DEBUG
   NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame);
 #endif
@@ -807,26 +805,6 @@ FrameManager::AppendFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aFrameList)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  nsIFrame* insertionPoint = nsnull;
-  nsCOMPtr<nsIContent> child;
-  aFrameList->GetContent(getter_AddRefs(child));
-  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
-  if (insertionPoint && (insertionPoint != aParentFrame)) {
-    // First append the frames.
-    nsresult rv = insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
-
-    // Now reparent the style contexts to keep the frames in sync.
-    nsIFrame* walkit = aFrameList;
-    nsCOMPtr<nsIStyleContext> styleContext;
-    insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
-    while (walkit) {
-      walkit->SetParent(insertionPoint);
-      aPresContext->ReParentStyleContext(walkit, styleContext);
-      walkit->GetNextSibling(&walkit);
-    }
-    return rv;
-  }
-
   return aParentFrame->AppendFrames(aPresContext, aPresShell, aListName,
                                     aFrameList);
 }
@@ -840,26 +818,6 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aFrameList)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  nsIFrame* insertionPoint = nsnull;
-  nsCOMPtr<nsIContent> child;
-  aFrameList->GetContent(getter_AddRefs(child));
-  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
-  if (insertionPoint && (insertionPoint != aParentFrame)) {
-    // First insert the frames.
-    nsresult rv = insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
-    
-    // Now reparent the style contexts to keep the frames in sync.
-    nsIFrame* walkit = aFrameList;
-    nsCOMPtr<nsIStyleContext> styleContext;
-    insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
-    while (walkit) {
-      walkit->SetParent(insertionPoint);
-      aPresContext->ReParentStyleContext(walkit, styleContext);
-      walkit->GetNextSibling(&walkit);
-    }
-    return rv;
-  }
-
 #ifdef IBMBIDI
   if (aPrevFrame) {
     // Insert aFrameList after the last bidi continuation of aPrevFrame.
@@ -886,12 +844,6 @@ FrameManager::RemoveFrame(nsIPresContext* aPresContext,
                           nsIFrame*       aOldFrame)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  nsIFrame* insertionPoint = nsnull;
-  nsCOMPtr<nsIContent> child;
-  aOldFrame->GetContent(getter_AddRefs(child));
-  GetInsertionPoint(&aPresShell, aParentFrame, child, &insertionPoint);
-  if (insertionPoint && (insertionPoint != aParentFrame))
-    return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
 
 #ifdef IBMBIDI
   // Don't let the parent remove next bidi. In the other cases the it should NOT be removed.
@@ -2644,74 +2596,6 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
   }
 
   return result;
-}
-
-NS_IMETHODIMP
-FrameManager::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIContent* aChild, nsIFrame** aResult)
-{
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-  *aResult = aParent;
-
-  nsCOMPtr<nsIContent> content;
-  aParent->GetContent(getter_AddRefs(content));
-  if (!content)
-    return NS_OK;
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
-  if (!document)
-    return NS_OK;
-
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
-  if (!bindingManager)
-    return NS_OK;
-
-  nsCOMPtr<nsIContent> insertionElement;
-  nsIFrame* frame = nsnull;
-  if (aChild) {
-    // Check to see if the content is anonymous.
-    nsCOMPtr<nsIContent> bindingParent;
-    aChild->GetBindingParent(getter_AddRefs(bindingParent));
-    if (bindingParent == content)
-      return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
-                    // for the explicit kids.
-
-    PRUint32 index;
-    bindingManager->GetInsertionPoint(content, aChild, getter_AddRefs(insertionElement), &index);
-    if (insertionElement) {
-      aShell->GetPrimaryFrameFor(insertionElement, &frame);
-      if (frame) {
-        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
-        if (scroll)
-          scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent) 
-          GetInsertionPoint(aShell, frame, aChild, aResult);
-      }
-      else
-        *aResult = nsnull; // There was no frame created yet for the insertion point.
-      return NS_OK;
-    }
-  }
-  else {
-    PRBool dummy;
-    PRUint32 index;
-    bindingManager->GetSingleInsertionPoint(content, getter_AddRefs(insertionElement), &index, &dummy);
-    if (insertionElement) {
-      aShell->GetPrimaryFrameFor(insertionElement, &frame);
-      if (frame) {
-        nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
-        if (scroll)
-          scroll->GetScrolledFrame(nsnull, frame);
-        if (frame != aParent)
-          GetInsertionPoint(aShell, frame, aChild, aResult);
-      }
-      else 
-        *aResult = nsnull; // No frame yet.
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -324,6 +324,24 @@ public:
                                  nsIContent*      aContent,
                                  nsIFrame**       aFrame,
                                  nsFindFrameHint* aHint=nsnull) = 0;
+
+
+  /**
+   * Return the point in the frame hierarchy where the frame that
+   * will be constructed for |aChildContent| ought be inserted.
+   *
+   * @param aPresShell      the presentation shell
+   * @param aParentFrame    the frame that will parent the frame that is
+   *                        created for aChildContent
+   * @param aChildContent   the child content for which a frame is to be
+   *                        created
+   * @param aInsertionPoint [OUT] the frame that should parent the frame
+   *                              for |aChildContent|.
+   */
+  NS_IMETHOD GetInsertionPoint(nsIPresShell* aPresShell,
+                               nsIFrame*     aParentFrame,
+                               nsIContent*   aChildContent,
+                               nsIFrame**    aInsertionPoint) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */

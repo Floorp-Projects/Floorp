@@ -237,7 +237,7 @@ void
 nsContainerBox::Insert(nsBoxLayoutState& aState, nsIFrame* aPrevFrame, nsIFrame* aFrameList)
 {
    nsIBox* prevBox = GetBox(aPrevFrame);
-   //NS_ASSERTION(aPrevFrame == nsnull || prevBox,"Error! The previous frame given is not in our list!");
+   NS_ASSERTION(aPrevFrame == nsnull || prevBox,"Error! The previous frame given is not in our list!");
 
    // find the frame before this one
    // if no previous frame then we are inserting in front

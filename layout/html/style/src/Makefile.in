@@ -33,6 +33,7 @@ REQUIRES	= xpcom string dom content widget timer locale view necko webshell pref
 CPPSRCS		= \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
+		nsFrameContentIterator.cpp \
 		$(NULL)
 
 EXPORTS		= \
