@@ -78,6 +78,8 @@ const char *nsMsgSearchAdapter::m_kImapAnswered = " ANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapNotSeen = " UNSEEN ";
 const char *nsMsgSearchAdapter::m_kImapNotAnswered = " UNANSWERED ";
 const char *nsMsgSearchAdapter::m_kImapCharset = " CHARSET ";
+const char *nsMsgSearchAdapter::m_kImapNew = " NEW "; 
+const char *nsMsgSearchAdapter::m_kImapNotNew = " OLD SEEN "; 
 
 #define PREF_CUSTOM_HEADERS "mailnews.customHeaders"
 
@@ -491,6 +493,9 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
         case MSG_FLAG_REPLIED:
           whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapAnswered : m_kImapNotAnswered;
           break;
+        case MSG_FLAG_NEW:                         
+          whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapNew : m_kImapNotNew;
+          break; 
         default:
           NS_ASSERTION(PR_FALSE, "invalid search operator");
           return NS_ERROR_INVALID_ARG;
