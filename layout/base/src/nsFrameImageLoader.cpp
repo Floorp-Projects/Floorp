@@ -26,12 +26,15 @@
 #include "nsIImageGroup.h"
 #include "nsIImageRequest.h"
 #include "nsString.h"
+#include "prlog.h"
 
 #undef NOISY
 
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+static PRLogModuleInfo* gFrameImageLoaderLMI;
 
 NS_LAYOUT nsresult
 NS_NewFrameImageLoader(nsIFrameImageLoader** aInstancePtrResult)
@@ -55,6 +58,11 @@ nsFrameImageLoader::nsFrameImageLoader()
   mPresContext = nsnull;
   mImageRequest = nsnull;
   mImageLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
+#ifdef NS_DEBUG
+  if (nsnull == gFrameImageLoaderLMI) {
+    gFrameImageLoaderLMI = PR_NewLogModule("frameimageloader");
+  }
+#endif
 }
 
 nsFrameImageLoader::~nsFrameImageLoader()
@@ -114,13 +122,16 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   if (aNeedSizeUpdate) {
     mImageLoadStatus = NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED;
   }
-#ifdef NOISY
-  printf("loading for %p (%x)\n", mTargetFrame, mImageLoadStatus);
-#endif
 
-  // Start image load request
+  // Translate url to a C string
   mURL = aURL;
   char* cp = aURL.ToNewCString();
+
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+    ("nsFrameImageLoader::Init start loading for '%s', frame=%p loadStatus=%x",
+     cp ? cp : "(null)", mTargetFrame, mImageLoadStatus));
+
+  // Start image load request
   mImageRequest = aGroup->GetImage(cp, this, NS_RGB(255,255,255), 0, 0, 0);
   delete cp;
 
@@ -130,6 +141,10 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
 nsresult
 nsFrameImageLoader::StopImageLoad()
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::StopImageLoad frame=%p loadStatus=%x",
+          mTargetFrame, mImageLoadStatus));
+
   if (nsnull != mImageRequest) {
     mImageRequest->RemoveObserver(this);
     NS_RELEASE(mImageRequest);
@@ -140,6 +155,10 @@ nsFrameImageLoader::StopImageLoad()
 nsresult
 nsFrameImageLoader::AbortImageLoad()
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::AbortImageLoad frame=%p loadStatus=%x",
+          mTargetFrame, mImageLoadStatus));
+
   if (nsnull != mImageRequest) {
     mImageRequest->Interrupt();
   }
@@ -153,6 +172,10 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
                            PRInt32 aParam1, PRInt32 aParam2,
                            void *aParam3)
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::Notify frame=%p type=%x p1=%x p2=%x p3=%x",
+          mTargetFrame, aNotificationType, aParam1, aParam2, aParam3));
+
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
 #ifdef NOISY
@@ -183,6 +206,10 @@ void
 nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
                                 nsImageError aErrorType)
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::NotifyError frame=%p error=%x",
+          mTargetFrame, aErrorType));
+
   mError = aErrorType;
   mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
   if (0 != (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED)) {
@@ -198,6 +225,10 @@ static PRBool gXXXInstalledColorMap;
 void
 nsFrameImageLoader::DamageRepairFrame()
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::DamageRepairFrame frame=%p status=%x",
+          mTargetFrame, mImageLoadStatus));
+
   // XXX this should be done somewhere else, like when the window
   // is created or something???
   // XXX maybe there should be a seperate notification service for
@@ -229,6 +260,10 @@ nsFrameImageLoader::DamageRepairFrame()
 void
 nsFrameImageLoader::ReflowFrame()
 {
+  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
+         ("nsFrameImageLoader::ReflowFrame frame=%p status=%x",
+          mTargetFrame, mImageLoadStatus));
+
   nsIContent* content = nsnull;
   mTargetFrame->GetContent(content);
   if (nsnull != content) {
