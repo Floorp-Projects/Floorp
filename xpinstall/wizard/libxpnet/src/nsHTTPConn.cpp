@@ -91,7 +91,8 @@ nsHTTPConn::nsHTTPConn(char *aURL, int (*aEventPumpCB)(void)) :
     mProxyPswd(NULL),
     mDestFile(NULL),
     mHostPathAllocd(FALSE),
-    mSocket(NULL)
+    mSocket(NULL),
+    mResponseCode(0)
 {
     // parse URL
     if (ParseURL(kHTTPProto, aURL, &mHost, &mPort, &mPath) == OK)
@@ -115,7 +116,8 @@ nsHTTPConn::nsHTTPConn(char *aURL) :
     mProxyPswd(NULL),
     mDestFile(NULL),
     mHostPathAllocd(FALSE),
-    mSocket(NULL)
+    mSocket(NULL),
+    mResponseCode(0)
 {
     // parse URL
     if (ParseURL(kHTTPProto, aURL, &mHost, &mPort, &mPath) == OK)
@@ -412,6 +414,16 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
             }
             else
             {
+                ParseResponseCode((const char *)resp, &mResponseCode);
+                
+                if ( mResponseCode < 200 || mResponseCode >=300 )
+                {
+                  // if we don't get a response code in the 200 range then fail
+                  // TODO: handle the response codes in the 300 range
+                  rv = nsHTTPConn::E_HTTP_RESPONSE;
+                  break;
+                }
+
                 ParseContentLength((const char *)resp, &expectedSize);
 
                 // move past hdr-body delimiter
@@ -443,7 +455,7 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
 
     } while ( rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
     
-    if ( bytesWritten == expectedSize )
+    if ( bytesWritten == expectedSize && rv != nsHTTPConn::E_HTTP_RESPONSE)
         rv = nsSocket::E_EOF_FOUND;
         
     if (rv == nsSocket::E_EOF_FOUND)
@@ -544,6 +556,26 @@ nsHTTPConn::ParseURL(const char *aProto, char *aURL, char **aHost,
     strncpy(*aPath, pos, end - pos);
 
     return OK;
+}
+
+void
+nsHTTPConn::ParseResponseCode(const char *aBuf, int *aCode)
+{
+  char codeStr[4];
+  char *pos;
+
+  if (!aBuf || !aCode)
+    return;
+
+  // make sure the beginning of the buffer is the HTTP status code
+  if (strncmp(aBuf,"HTTP/",5) == 0)
+  {
+    pos = strstr(aBuf," ");  // find the space before the code
+    ++pos;                   // move to the beginning of the code
+    strncpy((char *)codeStr,pos, 3);
+    codeStr[3] = '\0';
+    *aCode = atoi(codeStr);
+  }
 }
 
 void
