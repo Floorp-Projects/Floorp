@@ -5,12 +5,12 @@
 
 pkg="org.mozilla"
 
-CATALINA_HOME=/usr/local/tomcat
-AXIS_LIB=$(AXIS_HOME)/lib
-AXISCLASSPATH=$(AXIS_LIB)/axis.jar:$(AXIS_LIB)/commons-discovery.jar:$(AXIS_LIB)/commons-logging.jar:$(AXIS_LIB)/jaxrpc.jar:$(AXIS_LIB)/saaj.jar:$(AXIS_LIB)/log4j-1.2.8.jar:$(AXIS_LIB)/wsdl4j.jar:$(CATALINA_HOME)/webapps/axis/WEB-INF/lib/mysql-connector.jar
-CLASSPATH=$(AXIS_HOME):$(CATALINA_HOME)/webapps/axis/WEB-INF/classes:$(AXISCLASSPATH)
-JAVA_ENDORSED_DIRS=$CATALINA_HOME/bin
-JAVA_HOME=/usr/java/j2sdk1.4.2_04
+export CATALINA_HOME=/usr/local/tomcat
+export AXIS_LIB=$(AXIS_HOME)/lib
+export AXISCLASSPATH=$(AXIS_LIB)/axis.jar:$(AXIS_LIB)/commons-discovery.jar:$(AXIS_LIB)/commons-logging.jar:$(AXIS_LIB)/jaxrpc.jar:$(AXIS_LIB)/saaj.jar:$(AXIS_LIB)/log4j-1.2.8.jar:$(AXIS_LIB)/wsdl4j.jar:$(CATALINA_HOME)/webapps/axis/WEB-INF/lib/mysql-connector.jar
+export CLASSPATH=$(AXIS_HOME):$(CATALINA_HOME)/webapps/axis/WEB-INF/classes:$(AXISCLASSPATH):$(CLASSPATH)
+export JAVA_ENDORSED_DIRS=$CATALINA_HOME/bin
+export JAVA_HOME=/usr/java/j2sdk1.4.2_04
 
 name=$1
 if [ "x$name" = "x" ]; then
