@@ -24,6 +24,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsFormFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsFormFrame.h"
 
 
 static NS_DEFINE_IID(kIRadioControlFrameIID,  NS_IRADIOCONTROLFRAME_IID);
@@ -178,6 +179,10 @@ nsRadioControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                  nsEventStatus& aEventStatus)
 {
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
+  }
+
+  if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
   }
 

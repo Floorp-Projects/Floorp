@@ -22,6 +22,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
+#include "nsFormFrame.h"
 
 
 
@@ -113,6 +114,9 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                               nsEventStatus& aEventStatus)
 {
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
+  }
+  if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
   }
 
