@@ -54,7 +54,6 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
                             const PRUnichar* aData)
 {
   if (!strcmp(aTopic, "profile-before-change")) {
-    mScrollbarsSheet = nsnull;
     mUserContentSheet = nsnull;
     mUserChromeSheet  = nsnull;
   }
@@ -63,7 +62,8 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
   }
   else if (strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
            strcmp(aTopic, "chrome-flush-caches") == 0) {
-    InitFromSkin();
+    mScrollbarsSheet = nsnull;
+    mFormsSheet = nsnull;
   }
   else {
     NS_NOTREACHED("Unexpected observer topic.");
@@ -78,6 +78,17 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   if (!gStyleCache)
     return nsnull;
 
+  if (!gStyleCache->mScrollbarsSheet) {
+    nsCOMPtr<nsIURI> sheetURI;
+    NS_NewURI(getter_AddRefs(sheetURI),
+              NS_LITERAL_CSTRING("chrome://global/skin/scrollbars.css"));
+
+    if (sheetURI)
+      LoadSheet(sheetURI, gStyleCache->mScrollbarsSheet);
+
+    NS_ASSERTION(gStyleCache->mScrollbarsSheet, "Could not load scrollbars.css.");
+  }
+
   return gStyleCache->mScrollbarsSheet;
 }
 
@@ -87,6 +98,17 @@ nsLayoutStylesheetCache::FormsSheet()
   EnsureGlobal();
   if (!gStyleCache)
     return nsnull;
+
+  if (!gStyleCache->mFormsSheet) {
+    nsCOMPtr<nsIURI> sheetURI;
+      NS_NewURI(getter_AddRefs(sheetURI),
+                NS_LITERAL_CSTRING("resource://gre/res/platform-forms.css"));
+
+    if (sheetURI)
+      LoadSheet(sheetURI, gStyleCache->mFormsSheet);
+
+    NS_ASSERTION(gStyleCache->mFormsSheet, "Could not load platform-forms.css.");
+  }
 
   return gStyleCache->mFormsSheet;
 }
@@ -130,14 +152,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
     obsSvc->AddObserver(this, "chrome-flush-caches", PR_FALSE);
   }
 
-  nsCOMPtr<nsIURI> formsSheetURI;
-  NS_NewURI(getter_AddRefs(formsSheetURI),
-            NS_LITERAL_CSTRING("resource://gre/res/platform-forms.css"));
-  LoadSheet(formsSheetURI, mFormsSheet);
-  NS_ASSERTION(mFormsSheet, "Could not load platform-forms.css stylesheet.");
-
   InitFromProfile();
-  InitFromSkin();
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()
@@ -177,18 +192,6 @@ nsLayoutStylesheetCache::InitFromProfile()
 
   LoadSheetFile(contentFile, mUserContentSheet);
   LoadSheetFile(chromeFile, mUserChromeSheet);
-}
-
-void
-nsLayoutStylesheetCache::InitFromSkin()
-{
-  nsCOMPtr<nsIURI> scrollbarsSheetURI;
-  NS_NewURI(getter_AddRefs(scrollbarsSheetURI),
-            NS_LITERAL_CSTRING("chrome://global/skin/scrollbars.css"));
-  if (scrollbarsSheetURI) {
-    LoadSheet(scrollbarsSheetURI, mScrollbarsSheet);
-  }
-  NS_ASSERTION(mScrollbarsSheet, "Could not loade scrollbars.css stylesheet.");
 }
 
 void
