@@ -497,7 +497,7 @@ sub who_menu {
   $treeflag .= "&branchtype=regexp" if $td->{cvs_branch} =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
-      . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
+      . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate|$maxdate";
 
   return "<a href='$qr' onclick=\"return who(event);\">";
 }
