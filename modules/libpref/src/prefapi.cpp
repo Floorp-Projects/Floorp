@@ -406,16 +406,11 @@ PRBool PREF_Init(const char *filename)
     {
         gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
         if (!gMochaContext)
-                return PR_FALSE;
-
-        JS_BeginRequest(gMochaContext);
+            return PR_FALSE;
 
         gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
         if (!gGlobalConfigObject)
-        {
-            JS_EndRequest(gMochaContext);
             return PR_FALSE;
-        }
 
         /* MLM - need a global object for set version call now. */
         JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
@@ -423,10 +418,7 @@ PRBool PREF_Init(const char *filename)
         JS_SetVersion(gMochaContext, JSVERSION_1_5);
 
         if (!JS_InitStandardClasses(gMochaContext, gGlobalConfigObject))
-        {
-            JS_EndRequest(gMochaContext);
             return PR_FALSE;
-        }
 
         JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
         JS_SetErrorReporter(gMochaContext, NULL);
@@ -444,22 +436,18 @@ PRBool PREF_Init(const char *filename)
                                      gMochaPrefObject,
                                      autoconf_props))
             {
-                JS_EndRequest(gMochaContext);
-                    return PR_FALSE;
+                return PR_FALSE;
             }
             if (!JS_DefineFunctions(gMochaContext,
                                     gMochaPrefObject,
                                     autoconf_methods))
             {
-                JS_EndRequest(gMochaContext);
-                    return PR_FALSE;
+                return PR_FALSE;
             }
         }
 
         ok = pref_InitInitialObjects();
     }
-    else 
-        JS_BeginRequest(gMochaContext);
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
     if (ok && gFileName)
@@ -468,23 +456,16 @@ PRBool PREF_Init(const char *filename)
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
     if (!ok)
         gErrorOpeningUserPrefs = PR_TRUE;
-    JS_EndRequest(gMochaContext);
     return ok;
 } /*PREF_Init*/
 
 PrefResult
 PREF_GetConfigContext(JSContext **js_context)
 {
-	if (!js_context) return PREF_ERROR;
+    if (!js_context) return PREF_ERROR;
 
-	*js_context = NULL;
-    if (gMochaContext)
-    {
-		*js_context = gMochaContext;
-		JS_SetContextThread(gMochaContext);
-    }
-
-	return PREF_NOERROR;
+    *js_context = gMochaContext;
+    return PREF_NOERROR;
 }
 
 PrefResult
@@ -599,7 +580,6 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	if (!gMochaContext || !scope)
 		return JS_FALSE;
 
-	JS_BeginRequest(gMochaContext);
 	errReporter = JS_SetErrorReporter(gMochaContext, pref_ErrorReporter);
 	gCallbacksEnabled = bCallbacks;
 
@@ -638,7 +618,6 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	gCallbacksEnabled = PR_TRUE;		/* ?? want to enable after reading user/lock file */
 	JS_SetErrorReporter(gMochaContext, errReporter);
 	
-	JS_EndRequest(gMochaContext);
 	return ok;
 }
 
@@ -665,11 +644,9 @@ PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 	if (!gMochaContext || !gMochaPrefObject)
 		return JS_FALSE;
 
-	JS_BeginRequest(gMochaContext);
 	ok = JS_EvaluateScript(gMochaContext, gMochaPrefObject,
 			js_buffer, length, NULL, 0, &result);
 	
-	JS_EndRequest(gMochaContext);
 	/* Hey, this really returns a JSBool */
 	return ok;
 }
@@ -685,10 +662,8 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 	if (!gMochaContext || !gGlobalConfigObject)
 		return JS_FALSE;
 	
-	JS_BeginRequest(gMochaContext);
 	ok = JS_EvaluateScript(gMochaContext, gGlobalConfigObject,
 			js_buffer, length, NULL, 0, &result);
-	JS_EndRequest(gMochaContext);
 	
 	/* Hey, this really returns a JSBool */
 	return ok;

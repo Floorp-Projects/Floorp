@@ -245,11 +245,9 @@ nsresult nsPref::useUserPrefFile()
                 if (NS_FAILED(StartUp()))
     	            return NS_ERROR_FAILURE;
 
-	            JS_BeginRequest(gMochaContext);
                 if (pref_OpenFileSpec(userPrefFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE)
                     != PREF_NOERROR)
                     rv = NS_ERROR_FAILURE;
-                JS_EndRequest(gMochaContext);
             }
         }
     }
@@ -330,11 +328,9 @@ NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
     	return NS_ERROR_FAILURE;
 
 	nsresult rv = NS_OK;
-	JS_BeginRequest(gMochaContext);
     if (pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE)
         != PREF_NOERROR)
         rv = NS_ERROR_FAILURE;
-    JS_EndRequest(gMochaContext);
     // pref_OpenFileSpec will set this for us, we don't need to.
     //    gErrorOpeningUserPrefs = NS_FAILED(rv);
     return rv;
