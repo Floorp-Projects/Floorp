@@ -12,7 +12,7 @@
             <xul:popupset ignorekeys="true"
 				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
 			>
-                <xul:popup id="ac_menupopup" oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false'">
+                <xul:popup oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false'">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
@@ -225,8 +225,7 @@
 			},
 
 			closePopupMenu: function(me) {
-				popup = document.getElementById("ac_menupopup");
-dump("CLOSE POPUP MENU, popup=" + popup + ", menuOpen=" + me.menuOpen + "\n");
+				popup = me.anonymousContent[0].childNodes[1].firstChild;
 				if (popup && me.menuOpen == "true")
 					popup.closePopup();
 			},
@@ -290,7 +289,7 @@ dump("CLOSE POPUP MENU, popup=" + popup + ", menuOpen=" + me.menuOpen + "\n");
 					me.autoCompleteTimer = 0;
 				}
 
-				var popup = document.getElementById("ac_menupopup");
+				var popup = me.anonymousContent[0].childNodes[1].firstChild;
  				if (popup && me.menuOpen != "true")
 					popup = null;
 
