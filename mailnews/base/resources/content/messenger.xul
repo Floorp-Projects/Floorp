@@ -98,12 +98,6 @@ Rights Reserved.
 </keyset>
 
   <!-- The main mail three pane frame -->
-  <box align="horizontal" style="height:100px" flex="1">
-      <box id="sidebar-box">
-        <html:div id="folder-panel"/>
-      </box>
-      <splitter id="sidebar-splitter" collapse="before" persist="state"/>
-    <box align="vertical"  flex="1"  style="border-left:solid black 1px">
       <toolbox>
         <menubar>
           <menu id="menu_File">
@@ -169,7 +163,6 @@ Rights Reserved.
               <menuseparator/>
             </menupopup>
           </menu>
->>>>>>> 1.79
 	
 	<menu id="menu_Edit">
 		<menupopup>
@@ -468,8 +461,6 @@ Rights Reserved.
 	<spring flex="100%"/>
   </menubar>
 
-    </toolbox>
-	  <toolbox>
         <toolbar id="msgToolbar" persist="collapsed">
 		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
 		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
@@ -489,6 +480,15 @@ Rights Reserved.
 
 		  </toolbar>
 		</toolbox>
+
+
+        <box align="horizontal" style="height:100px" flex="1">
+          <box id="sidebar-box">
+            <html:div id="folder-panel"/>
+           </box>
+          <splitter id="sidebar-splitter" collapse="before" persist="state"/>
+          <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+
 
 		<html:div style="width:100px;height:0px" flex="2" >
 		  <tree id="threadTree"/>

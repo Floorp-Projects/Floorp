@@ -338,6 +338,25 @@ function ThreadPaneSelectionChange(selectedElement)
 
 }
 
+function FolderPaneSelectionChange()
+{
+	var tree = GetFolderTree();
+	
+	if(tree)
+	{
+		var selArray = tree.selectedItems;
+		if ( selArray && (selArray.length == 1) )
+			ChangeFolderByDOMNode(selArray[0]);
+		else
+		{
+			var threadTree = GetThreadTree();
+			ClearThreadTreeSelection();
+			threadTree.setAttribute('ref', null);
+			ClearMessagePane();
+		}
+	}
+}
+
 function OpenFolderTreeToFolder(folderURI)
 {
 	var tree = GetFolderTree();
