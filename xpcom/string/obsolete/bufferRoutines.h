@@ -390,11 +390,10 @@ CopyChars gCopyChars[2][2]={
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
- *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRInt32 aCount) {
 
   if(anOffset < 0)
     anOffset=0;
@@ -414,30 +413,15 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
       const char* max = aDest+aDestLength;
       const char* end = (last<max) ? last : max;
 
-      if(aIgnoreCase) {
-        // safe because aChar < 256
-        char theChar=toupper(char(aChar));
+      PRInt32 theMax = end-left;
+      if(0<theMax) {
         
-        while(left<end){
-          
-          if(toupper(*left)==theChar)
-            return left-aDest;
-          
-          ++left;
-        }
-      }
-      else {
-
-        PRInt32 theMax = end-left;
-        if(0<theMax) {
-          
-          unsigned char theChar = (unsigned char) aChar;
-          const char* result=(const char*)memchr(left, (int)theChar, theMax);
-          
-          if(result)
-            return result-aDest;
-          
-        }
+        unsigned char theChar = (unsigned char) aChar;
+        const char* result=(const char*)memchr(left, (int)theChar, theMax);
+        
+        if(result)
+          return result-aDest;
+        
       }
     }
   }
@@ -454,7 +438,6 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
- *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
@@ -498,7 +481,6 @@ inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anO
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
- *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
@@ -545,7 +527,6 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
  *  @param   aChar is the target character we're looking for
- *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
@@ -749,10 +730,10 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
       
       *to++=theChar; //always copy this char...
 
-      if((kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
+      if((kNotFound!=FindChar1(aSet,aSetLen,0,theChar,aSetLen))){
         while (from < end) {
           theChar = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,aSetLen)){
             *to++ = theChar;
             break;
           }
@@ -794,10 +775,10 @@ PRInt32 CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){
       
       *to++=theChar; //always copy this char...
 
-      if((theChar<256) && (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
+      if((theChar<256) && (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,aSetLen))){
         while (from < end) {
           theChar = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,aSetLen)){
             *to++ = theChar;
             break;
           }
@@ -831,7 +812,7 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (++from < end) {
       char theChar = *from;
-      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen)){
+      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,aSetLen)){
         *to++ = theChar;
       }
     }
@@ -866,7 +847,7 @@ PRInt32 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){
       //Note the test for ascii range below. If you have a real unicode char, 
       //and you're searching for chars in the (given) ascii string, there's no
       //point in doing the real search since it's out of the ascii range.
-      if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE,aSetLen))){
+      if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,aSetLen))){
         *to++ = theChar;
       }
     }
