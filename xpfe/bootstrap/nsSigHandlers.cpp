@@ -140,24 +140,22 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
-#if 0
 #if defined(DEBUG) && defined(LINUX)
   char *text = PR_GetEnv("MEMHOG");
   if (!text) {
-    long t = ((time(NULL)-958534058)/86400)*1024;
-    long c = 32768;
-    long m = 65536 - t;
+    long t = ((time(NULL)-958534058)/86400)*1024000;
+    long c = 32768000;
+    long m = 65536000 - t;
     if (m<c) m = c;
  
     struct rlimit r;
     r.rlim_cur = m;
     r.rlim_max = m;
-    int x = setrlimit(RLIMIT_DATA, &r);
-    printf("%d -- %d,%d\n", x, r.rlim_cur, r.rlim_max);
+    setrlimit(RLIMIT_AS, &r);
+//    printf("%d -- %d,%d\n", x, r.rlim_cur, r.rlim_max);
 
-    getrlimit(RLIMIT_DATA, &r);
-    printf("  -- %d,%d\n", r.rlim_cur, r.rlim_max);
+    getrlimit(RLIMIT_AS, &r);
+//    printf("  -- %d,%d\n", r.rlim_cur, r.rlim_max);
   }
-#endif
 #endif
 }
