@@ -1819,6 +1819,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   if (!aSelection || !aDoc) return NS_ERROR_NULL_POINTER;
   if (!mEditor->mTypeInState) return NS_ERROR_NULL_POINTER;
   
+  PRBool weDidSometing = PR_FALSE;
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
   nsresult res = mEditor->GetStartNodeAndOffset(aSelection, &node, &offset);
@@ -1834,6 +1835,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
     // we own item now (TakeClearProperty hands ownership to us)
     delete item;
     mEditor->mTypeInState->TakeClearProperty(&item);
+    weDidSometing = PR_TRUE;
   }
   
   // then process setting any styles
@@ -1860,6 +1862,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
     if (NS_FAILED(res)) return res;
     node = newNode;
     offset = 0;
+    weDidSometing = PR_TRUE;
   }
   
   while (item)
@@ -1871,7 +1874,10 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
     mEditor->mTypeInState->TakeSetProperty(&item);
   }
   
-  return aSelection->Collapse(node, offset);
+  if (weDidSometing)
+    return aSelection->Collapse(node, offset);
+    
+  return res;
 }
 
 
