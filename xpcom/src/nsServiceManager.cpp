@@ -557,7 +557,7 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
         if (NS_FAILED(rv)) return rv;
         nsServiceManager::mGlobalServiceManager = servMgr;
         NS_ADDREF(servMgr);
-        if (result && *result) *result = servMgr;
+        if (result) *result = servMgr;
     }
 
     // 2. Create the Component Manager and register with global service manager
