@@ -28,11 +28,10 @@ import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.CurrentPage;
-import org.mozilla.webclient.ImplObject;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 
-public class CurrentPageImpl extends ImplObject implements CurrentPage
+public class CurrentPageImpl extends ImplObjectNative implements CurrentPage
 {
 //
 // Protected Constants
@@ -50,14 +49,6 @@ public class CurrentPageImpl extends ImplObject implements CurrentPage
 
 // Relationship Instance Variables
 
-/** 
-      
- * a handle to the actual mozilla webShell, obtained from WindowControl
-   
- */
-  
-private int nativeWebShell = -1;
-
 //
 // Constructors and Initializers    
 //
@@ -66,16 +57,6 @@ public CurrentPageImpl(WrapperFactory yourFactory,
                        BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
-
-    // save the native webshell ptr
-    try {
-        WindowControl windowControl = (WindowControl)
-            myBrowserControl.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
-        nativeWebShell = windowControl.getNativeWebShell();
-    }
-    catch (Exception e) {
-        System.out.println(e.getMessage());
-    }
 }
 
 //
@@ -209,7 +190,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.1 2000/03/04 01:10:55 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.2 2000/03/09 23:22:50 edburns%acm.org Exp $");
     
 }
 

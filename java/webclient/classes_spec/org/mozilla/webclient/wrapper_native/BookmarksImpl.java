@@ -29,7 +29,6 @@ import org.mozilla.util.ParameterCheck;
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.Bookmarks;
 import org.mozilla.webclient.BookmarkEntry;
-import org.mozilla.webclient.ImplObject;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 
@@ -37,7 +36,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
-public class BookmarksImpl extends ImplObject implements Bookmarks
+public class BookmarksImpl extends ImplObjectNative implements Bookmarks
 {
 //
 // Constants
@@ -54,14 +53,6 @@ public class BookmarksImpl extends ImplObject implements Bookmarks
 // Attribute Instance Variables
 
 // Relationship Instance Variables
-
-/** 
-      
- * a handle to the actual mozilla webShell, obtained from WindowControl
-   
- */
-  
-private int nativeWebShell = -1;
 
 /**
 
@@ -80,16 +71,6 @@ public BookmarksImpl(WrapperFactory yourFactory,
                      BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
-
-    // save the native webshell ptr
-    try {
-        WindowControl windowControl = (WindowControl)
-            myBrowserControl.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
-        nativeWebShell = windowControl.getNativeWebShell();
-    }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
 }
 
 //
@@ -218,7 +199,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarksImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.1 2000/03/04 01:10:55 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarksImpl.java,v 1.2 2000/03/09 23:22:50 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
