@@ -832,6 +832,8 @@ nsPICS::OnStateChange(nsIWebProgress* aWebProgress,
                 if(0 == PL_strcmp(spec1, spec2)) {
                   if(!urlData->notified) {
                     currentURLList->RemoveElementAt(i);
+                    i--; // will get bumped back to i for next iteration
+                    count--; // we have one fewer entry
                     if (nsnull != aURL) {
                       nsXPIDLCString uProtocol;
                       nsXPIDLCString uHost;
