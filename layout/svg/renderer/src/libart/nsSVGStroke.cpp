@@ -46,6 +46,8 @@
 #include "nsIDOMSVGMatrix.h"
 #include <math.h>
 
+#define SVG_STROKE_FLATNESS 0.5
+
 void
 nsSVGStroke::Build(ArtVpath* path, nsISVGPathGeometrySource* source)
 {
@@ -185,22 +187,7 @@ nsSVGStroke::Build(ArtVpath* path, nsISVGPathGeometrySource* source)
                               captype,
                               width,
                               miterlimit,
-                              getFlatness());
+                              SVG_STROKE_FLATNESS);
   art_free(path);
 }
 
-double nsSVGStroke::getFlatness()
-{
-  double flatness = 0.5;
-  
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-	if (!prefs) return flatness;
-
-  // XXX: wouldn't it be great if nsIPref had a 'GetFloatPref()'-function?
-  char	*valuestr = nsnull;
-  if (NS_SUCCEEDED(prefs->CopyCharPref("svg.stroke_flatness",&valuestr)) && (valuestr)) {
-    flatness = PR_strtod(valuestr, nsnull);
-    nsMemory::Free(valuestr);
-  }
-  return flatness;
-}

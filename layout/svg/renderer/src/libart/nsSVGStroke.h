@@ -51,10 +51,7 @@ class nsISVGPathGeometrySource;
 class nsSVGStroke : public nsSVGRenderItem
 {
 public:
-  void Build(ArtVpath* path, nsISVGPathGeometrySource* source);
-  
-protected:
-  double getFlatness();
+  void Build(ArtVpath* path, nsISVGPathGeometrySource* source);  
 };
 
 /** @} */
