@@ -35,7 +35,7 @@ CPP_OBJS =					\
 
 MODULE=security
 
-LIBRARY_NAME = strres
+LIBRARY_NAME = nlslayer
 LIBRARY=.\$(OBJDIR)\$(DLLNAME).dll
 
 include <$(DEPTH)\config\rules.mak>
