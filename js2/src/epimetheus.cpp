@@ -235,6 +235,17 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
     return JS2VAL_UNDEFINED;
 }
 
+void accessAccess(AccessSet access)
+{
+    if (access & ReadAccess)
+        if (access & WriteAccess)
+            stdOut << " [read/write] ";
+        else
+            stdOut << " [read-only] ";
+    else
+        stdOut << " [write-only] ";
+}
+
 void printLocalBindings(LocalBindingMap *lMap)
 {
     stdOut << " Local Bindings:\n";   
@@ -244,13 +255,7 @@ void printLocalBindings(LocalBindingMap *lMap)
         for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
             LocalBindingEntry::NamespaceBinding ns = *i;
             stdOut << "\t" << *(ns.first->name) << "::" << lbe->name;
-            if (ns.second->accesses & ReadAccess)
-                if (ns.second->accesses & WriteAccess)
-                    stdOut << " [read/write]\n";
-                else
-                    stdOut << " [read-only]\n";
-            else
-                stdOut << " [write-only]\n";
+            accessAccess(ns.second->accesses);
         }
     }
 }
@@ -265,20 +270,13 @@ void printInstanceVariables(JS2Class *c, Slot *slots)
         for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
             InstanceBindingEntry::NamespaceBinding ns = *i;
             if (ns.second->content->memberKind == Member::InstanceVariableMember) {
-                stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
-                if (ns.second->accesses & ReadAccess)
-                    if (ns.second->accesses & WriteAccess)
-                        stdOut << " [read/write] ";
-                    else
-                        stdOut << " [read-only] ";
-                else
-                    stdOut << " [write-only] ";
                 InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
-                stdOut << *metadata->toString(slots[iv->slotIndex].value);
+                stdOut << "\t" << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->getName();
+                accessAccess(ns.second->accesses);
+                stdOut << *metadata->toString(slots[iv->slotIndex].value) << "\n";
             }
         }
     }
-    stdOut << "\n";
 }
 
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
@@ -325,22 +323,32 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << "\n";
                     stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
                     stdOut << " slotCount = " << c->slotCount << "\n";
-
                     printLocalBindings(&c->localBindings);
-
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {
                         InstanceBindingEntry *ibe = *rib;
                         for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
                             InstanceBindingEntry::NamespaceBinding ns = *i;
-                            stdOut << "\t" << *(ns.first->name) << "::" << ibe->name;
-                            if (ns.second->accesses & ReadAccess)
-                                if (ns.second->accesses & WriteAccess)
-                                    stdOut << " [read/write]\n";
-                                else
-                                    stdOut << " [read-only]\n";
-                            else
-                                stdOut << " [write-only]\n";
+                            switch (ns.second->content->memberKind) {
+                            case Member::InstanceVariableMember:
+                                {
+                                    InstanceVariable *iv = checked_cast<InstanceVariable *>(ns.second->content);
+                                    stdOut << "\tVariable " << *(ns.first->name) << "::" << ibe->name << ":" << *iv->type->getName();
+                                    accessAccess(ns.second->accesses);
+                                    stdOut << ((iv->immutable) ? " immutable, " : " non-immutable, ") << ((iv->final) ? "final, " : "non-final, ") << ((iv->enumerable) ? "enumerable, " : "non-enumerable, ") ;
+                                    stdOut << "slot:" << iv->slotIndex << ", defaultValue:" << *metadata->toString(iv->defaultValue) << "\n";
+                                }
+                                break;
+                            case Member::InstanceMethodMember:
+                                {
+                                    InstanceMethod *im = checked_cast<InstanceMethod *>(ns.second->content);
+                                    stdOut << "\tMethod " << *(ns.first->name) << "::" << ibe->name; // XXX << *iv->type; the signature
+                                    accessAccess(ns.second->accesses);
+                                    stdOut << ((im->final) ? "final, " : "non-final, ") << ((im->enumerable) ? "enumerable, " : "non-enumerable, ") ;
+                                    printFormat(stdOut, "function = 0x%08X\n", im->fInst);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
@@ -355,7 +363,6 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                         stdOut << "super = " << *metadata->toString(pkg->super) << '\n';
                     stdOut << ((pkg->sealed) ? "sealed " : "not-sealed ") << '\n';
                     printLocalBindings(&pkg->localBindings);
-
                 }
                 break;
             default:

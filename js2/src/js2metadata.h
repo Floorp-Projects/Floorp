@@ -959,9 +959,6 @@ public:
     virtual ~MethodClosure()            { }
 };
 
-class ReferencePool {
-};
-
 // Base class for all references (lvalues)
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
 class Reference : public ArenaObject {

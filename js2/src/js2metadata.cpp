@@ -451,7 +451,7 @@ namespace MetaData {
                             FunctionInstance *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                             Multiname *mn = new Multiname(f->function.name, a->namespaces);
-                            InstanceMember *m = new InstanceMethod(mn, checked_cast<SimpleInstance *>(fObj), true, true);
+                            InstanceMember *m = new InstanceMethod(mn, checked_cast<SimpleInstance *>(fObj), (memberMod == Attribute::Final), true);
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, m, p->pos);
                         }
                         break;
@@ -3039,12 +3039,12 @@ doUnary:
             if (mBase || searchForOverrides(c, &openMultiname, access, pos))
                 reportError(Exception::definitionError, "Illegal override", pos);
             break;
-        case Attribute::DoOverride: 
+        case Attribute::DontOverride:
             if (mBase)
                 reportError(Exception::definitionError, "Illegal override", pos);
             break;
-        case Attribute::DontOverride:
-            if (mBase == NULL)
+        case Attribute::DoOverride: 
+            if (!mBase)
                 reportError(Exception::definitionError, "Illegal override", pos);
             break;
         }
