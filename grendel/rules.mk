@@ -42,7 +42,7 @@ OBJS	= $(subst .java,.class,$(SRCS))
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) -g $*.java
+	$(JAVAC) -J-mx64m -classpath $(MOZILLA_BUILD):$(GRENDEL_BUILD) -g $*.java
 
 all:: $(OBJS)
 
@@ -63,5 +63,5 @@ all clean distclean::
 	done
 
 run::
-	java grendel.Main
+	java -cp $(MOZILLA_BUILD):$(GRENDEL_BUILD) grendel.Main
 
