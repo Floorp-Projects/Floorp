@@ -117,63 +117,6 @@ nsCacheEntryChannel::OpenInputStream(PRUint32 aStartPosition, PRInt32 aReadCount
     return mChannel->OpenInputStream(aStartPosition, aReadCount, aInputStream);
 }
 
-class CacheManagerStreamListener: public nsIStreamListener  {
-
-    public:
-    
-    CacheManagerStreamListener()
-        { NS_INIT_REFCNT(); }
-
-    virtual ~CacheManagerStreamListener() {}
-    
-    nsresult Init(nsIStreamListener *aListener, nsILoadGroup *aLoadGroup, 
-                  nsIChannel *aChannel, nsISupports *aContext)
-    {
-        mListener = aListener;
-        mLoadGroup = aLoadGroup;
-        mChannel = aChannel;
-        //it's legal to not have a load group...
-        if (!mListener || !mChannel) return NS_ERROR_NOT_INITIALIZED;
-        if (mLoadGroup)
-          return mLoadGroup->AddChannel(mChannel, aContext);
-        else
-          return NS_OK;
-    }
-
-    private:
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD
-    OnDataAvailable(nsIChannel *channel, nsISupports *aContext,
-                    nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
-        return mListener->OnDataAvailable(mChannel, aContext, inStr, sourceOffset, count);
-    }
-
-    NS_IMETHOD
-    OnStartRequest(nsIChannel *channel, nsISupports *aContext) {
-        return mListener->OnStartRequest(mChannel, aContext);
-    }
-
-    NS_IMETHOD
-    OnStopRequest(nsIChannel *channel, nsISupports *aContext,
-                  nsresult status, const PRUnichar *errorMsg) {
-        nsresult rv;
-        rv = mListener->OnStopRequest(mChannel, aContext, status, errorMsg);
-        if (mLoadGroup)
-            mLoadGroup->RemoveChannel(mChannel, aContext, status, errorMsg);
-        return rv;
-    }
-
-    private:
-    
-    nsCOMPtr<nsIStreamListener>  mListener;
-    nsCOMPtr<nsILoadGroup>       mLoadGroup;
-    nsCOMPtr<nsIChannel>         mChannel;
-};
-
-NS_IMPL_ISUPPORTS2(CacheManagerStreamListener, nsIStreamListener, nsIStreamObserver)
-
 NS_IMETHODIMP
 nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
                                nsISupports *aContext, nsIStreamListener *aListener)
@@ -184,37 +127,11 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
 
     mCacheEntry->NoteAccess();
 
-    nsCOMPtr<nsIStreamListener> headListener = aListener;
     if (mLoadGroup) {
         mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-
-        // Create a load group "proxy" listener...
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (NS_SUCCEEDED(rv) && factory) {
-            rv = factory->CreateLoadGroupListener(aListener, 
-                                                  getter_AddRefs(headListener));
-            if (NS_FAILED(rv)) return rv;
-        }
     }
 
-    CacheManagerStreamListener* cacheManagerStreamListener;
-    nsIChannel *channelForListener;
-
-    channelForListener = mProxyChannel ? mProxyChannel.get() : NS_STATIC_CAST(nsIChannel*, this);
-    cacheManagerStreamListener = new CacheManagerStreamListener();
-    if (!cacheManagerStreamListener) return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = cacheManagerStreamListener->Init(headListener, mLoadGroup, channelForListener, aContext);
-    if (NS_FAILED(rv)) {
-        delete cacheManagerStreamListener;
-        return rv;
-    }
-    
-    NS_ADDREF(cacheManagerStreamListener);
-    rv = mChannel->AsyncRead(aStartPosition, aReadCount, aContext,
-                             cacheManagerStreamListener);
-    NS_RELEASE(cacheManagerStreamListener);
+    rv = mChannel->AsyncRead(aStartPosition, aReadCount, aContext, aListener);
 
     return rv;
 }
