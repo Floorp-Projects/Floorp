@@ -42,7 +42,6 @@
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
 #include "nsIPref.h"
-#include "nsGtkIMEHelper.h"
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -67,18 +66,11 @@ private:
                   *mLast; // valid only for head of list
 };
 
-static nsWidget *GetShellWidget(GdkWindow *gdkWindow);
-
 PRUint32 nsWidget::sWidgetCount = 0;
 
 // this is the nsWindow with the focus
 nsWidget *nsWidget::sFocusWindow = 0;
 
-#ifdef USE_XIM
-GdkFont *nsWidget::gPreeditFontset = nsnull;
-GdkFont *nsWidget::gStatusFontset = nsnull;
-GdkIMStyle nsWidget::gInputStyle = (GdkIMStyle)nsnull;
-#endif // USE_XIM 
 // this is the last time that an event happened.  we keep this
 // around so that we can synth drag events properly
 guint32 nsWidget::sLastEventTime = 0;
@@ -117,89 +109,6 @@ void nsWidget::GetLastEventTime(guint32 *aTime)
   if (aTime)
     *aTime = sLastEventTime;
 }
-
-#ifdef USE_XIM
-nsresult nsWidget::KillICSpotTimer ()
-{
-   if(mICSpotTimer)
-   {
-     mICSpotTimer->Cancel();
-     mICSpotTimer = nsnull;
-   }
-   return NS_OK;
-}
-nsresult nsWidget::PrimeICSpotTimer ()
-{
-   KillICSpotTimer();
-   nsresult err;
-   mICSpotTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
-   if (NS_FAILED(err))
-     return err;
-   mICSpotTimer->Init(ICSpotCallback, this, 1000);
-   return NS_OK;
-}
-void nsWidget::ICSpotCallback(nsITimer * aTimer, void * aClosure)
-{
-   nsWidget *widget= NS_REINTERPRET_CAST(nsWidget*, aClosure);
-   if( ! widget) return;
-   nsresult res = widget->UpdateICSpot();
-   if(NS_SUCCEEDED(res))
-   {
-      widget->PrimeICSpotTimer();
-   }
-}
-nsresult nsWidget::UpdateICSpot()
-{
-   // set spot location
-   nsCompositionEvent compEvent;
-   compEvent.widget = (nsWidget*)this;
-   compEvent.point.x = 0;
-   compEvent.point.y = 0;
-   compEvent.time = 0;
-   compEvent.message = NS_COMPOSITION_QUERY;
-   compEvent.eventStructType = NS_COMPOSITION_QUERY;
-   compEvent.compositionMessage = NS_COMPOSITION_QUERY;
-   static gint oldx =0;
-   static gint oldy =0;
-   static gint oldw =0;
-   static gint oldh =0;
-   compEvent.theReply.mCursorPosition.x=-1;
-   compEvent.theReply.mCursorPosition.y=-1;
-   this->OnComposition(compEvent);
-   // set SpotLocation
-   if((compEvent.theReply.mCursorPosition.x < 0) &&
-      (compEvent.theReply.mCursorPosition.y < 0))
-     return NS_ERROR_FAILURE;
-
-   // In over-the-spot style, pre-edit can not be drawn properly when
-   // IMESetFocusWidget() is called at height=1 and width=1
-   // After resizing, we need to call SetPreeditArea() again
-   if((oldw != mBounds.width) || (oldh != mBounds.height)) {
-     GdkWindow *gdkWindow = (GdkWindow*)this->GetNativeData(NS_NATIVE_WINDOW);
-     if (mXIC && gdkWindow) {
-       mXIC->SetPreeditArea(0, 0,
-          (int)((GdkWindowPrivate*)gdkWindow)->width,
-          (int)((GdkWindowPrivate*)gdkWindow)->height);
-     }
-     oldw = mBounds.width;
-     oldh = mBounds.height;
-   }
-
-   if((compEvent.theReply.mCursorPosition.x != oldx)||
-      (compEvent.theReply.mCursorPosition.y != oldy))
-   {
-       nsPoint spot;
-       spot.x = compEvent.theReply.mCursorPosition.x;
-       spot.y = compEvent.theReply.mCursorPosition.y + 
-                compEvent.theReply.mCursorPosition.height;
-       SetXICBaseFontSize( compEvent.theReply.mCursorPosition.height - 1);
-       SetXICSpotLocation(spot);
-       oldx = compEvent.theReply.mCursorPosition.x;
-       oldy = compEvent.theReply.mCursorPosition.y;
-   } 
-   return NS_OK;
-}
-#endif // USE_XIM 
 
 nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
 nsWeakPtr          nsWidget::gRollupWidget;
@@ -268,20 +177,6 @@ nsWidget::nsWidget()
   
   sWidgetCount++;
 
-#ifdef USE_XIM
-  mIMEEnable = PR_TRUE;
-  mXIC = 0;
-
-  mIMEShellWidget = 0;
-  mIMECallComposeStart = PR_FALSE;
-  mIMECallComposeEnd = PR_TRUE;
-  mIMEIsBeingActivate = PR_FALSE;
-
-  mICSpotTimer = nsnull;
-#endif // USE_XIM 
-  mIMECompositionUniString = nsnull;
-  mIMECompositionUniStringSize = 0;
-
   mListenForResizes = PR_FALSE;
   mHasFocus = PR_FALSE;
   if (mGDKHandlerInstalled == PR_FALSE) {
@@ -320,11 +215,6 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
-#ifdef USE_XIM
-  mXIC = 0;
-  KillICSpotTimer();
-#endif // USE_XIM 
-
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
   printf("nsWidget::~nsWidget:%p\n", this);
@@ -336,10 +226,6 @@ nsWidget::~nsWidget()
   // to be called once
   Destroy();
 
-  if (mIMECompositionUniString) {
-    delete[] mIMECompositionUniString;
-    mIMECompositionUniString = nsnull;
-  }
   NS_ASSERTION(!ModalWidgetList::Find(this), "destroying widget without first clearing modality.");
 #ifdef NS_DEBUG
   if (mIsToplevel) {
@@ -727,10 +613,6 @@ nsWidget::LoseFocus(void)
   if (mHasFocus == PR_FALSE)
     return;
 
-#ifdef USE_XIM
-  IMEUnsetFocusWidget();
-#endif // USE_XIM
-  
   sFocusWindow = 0;
   mHasFocus = PR_FALSE;
 
@@ -2521,136 +2403,10 @@ void nsWidget::SetBackgroundColorNative(GdkColor *aColorNor,
 
 //////////////////////////////////////////////////////////////////////
 
-#ifdef USE_XIM
-void
-nsWidget::GetXIC()
-{
-  if (gInputStyle == nsnull) {
-    gInputStyle = nsIMEGtkIC::GetInputStyle();
-  }
-  if (gPreeditFontset == nsnull) {
-    gPreeditFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
-    mXICFontSize = 16;          // default
-  }
-  if (gStatusFontset == nsnull) {
-    gStatusFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
-  }
-  IMEGetShellWidget();
-  if (!gInputStyle || !gPreeditFontset || !gStatusFontset || !mIMEShellWidget) {
-    return;
-  }
-
-  if (mIMEShellWidget->mXIC){
-    mXIC = mIMEShellWidget->mXIC;
-  } else {
-    mXIC = nsIMEGtkIC::GetXIC(mIMEShellWidget, gPreeditFontset,
-							gStatusFontset);
-    if (mXIC) {
-      // fix me! need to know how to get spot location
-      mXIC->SetPreeditSpotLocation(0, 14);
-      mIMEShellWidget->mXIC = mXIC;
-    }
-  }
-  return;
-}
-#endif // USE_XIM 
-
 NS_IMETHODIMP nsWidget::ResetInputState()
 {
-#ifdef USE_XIM
-  if (mIMEEnable == PR_FALSE) return NS_OK;
-
-  if (mXIC) {
-    IMEGetShellWidget();
-    if (!mIMEShellWidget) return NS_OK;
-
-    // while being called for NS_ACTIVE and NS_DEACTIVATE,
-    // ignore ResetInputState() call
-    if (mIMEShellWidget->mIMEIsBeingActivate == PR_TRUE) {
-      return NS_OK;
-    }
-
-    PRInt32 uniCharSize = 
-      mXIC->ResetIC(&(mIMECompositionUniString),
-                    &(mIMECompositionUniStringSize));
-
-    if (uniCharSize) {
-      mIMECompositionUniString[uniCharSize] = 0;
-
-      IMEComposeStart(nsnull);
-      IMEComposeText(nsnull,
-                     mIMECompositionUniString,
-                     uniCharSize,
-                     nsnull);
-    }
-
-    // Call IMEComposeEnd() to reset the state of field
-    IMEComposeEnd(nsnull);
-    if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
-      UpdateICSpot();
-    }
-  }
-#endif // USE_XIM 
   return NS_OK;
 }
-
-#ifdef USE_XIM
-void
-nsWidget::GetXYFromPosition(unsigned long *aX,
-                            unsigned long *aY)
-{
-  if (mIMEEnable == PR_FALSE) return;
-  if (nsnull == mXIC) return;
-  if (mXIC) {
-    GdkFont *gfontset = mXIC->GetPreeditFont();
-    if (gfontset) {
-      // this is currently not working well
-      // We change from += ascent to -= descent because we change the nsCaret
-      // code to return the nsPoint from the top of the cursor to the bottom
-      // of the cursor
-      *aY -= gfontset->descent;
-    }
-  }
-  return;
-}
-
-void
-nsWidget::SetXICBaseFontSize(int height)
-{
-  if (mIMEEnable == PR_FALSE) return;
-  if (nsnull == mXIC) return;
-  if (mXIC) {
-    if (height == mXICFontSize) return;
-    if (height%2) {
-      height-=1;
-    }
-    if (height<2) return;
-    if (gPreeditFontset) {
-      gdk_font_unref(gPreeditFontset);
-    }
-    char xlfdbase[128];
-    sprintf(xlfdbase, "-*-*-medium-r-*-*-%d-*-*-*-*-*-*-*", height);
-    gPreeditFontset = gdk_fontset_load(xlfdbase);
-    if (gPreeditFontset) {
-      mXIC->SetPreeditFont(gPreeditFontset);
-    }
-    mXICFontSize = height;
-  }
-}
-void
-nsWidget::SetXICSpotLocation(nsPoint aPoint)
-{
-  if (mIMEEnable == PR_FALSE) return;
-  if (nsnull == mXIC) return;
-  if (mXIC) {
-    unsigned long x, y;
-    x = aPoint.x, y = aPoint.y;
-    GetXYFromPosition(&x, &y);
-    mXIC->SetPreeditSpotLocation(x, y);
-  }
-  return;
-}
-#endif // USE_XIM 
 
 /********************** class ModalWidgetList ***********************/
 /* This silly little thing is a linked list of widgets that have been
@@ -2904,266 +2660,9 @@ static gint debugHandleWindowClose(GtkWidget *window, void *data)
 
 #endif /* NS_DEBUG */
 
-#ifdef USE_XIM
-void
-nsWidget::ime_preedit_start() {
-  IMEComposeStart(nsnull);
+void nsWidget::IMECommitEvent(GdkEventKey *aEvent) {
+  NS_ASSERTION(0, "nsWidget::IMECommitEvent() shouldn't be called!\n");
 }
-
-void
-nsWidget::ime_preedit_draw() {
-  IMEComposeStart(nsnull);
-  nsIMEPreedit *preedit = mXIC->GetPreedit();
-  IMEComposeText(nsnull,
-                 preedit->GetPreeditString(),
-                 preedit->GetPreeditLength(),
-                 preedit->GetPreeditFeedback());
-  if (mXIC->IsPreeditComposing() == PR_FALSE) {
-    IMEComposeEnd(nsnull);
-  }
-}
-
-void
-nsWidget::ime_preedit_done() {
-  IMEComposeEnd(nsnull);
-}
-
-void
-nsWidget::IMEUnsetFocusWidget()
-{
-  KillICSpotTimer();
-}
-
-void
-nsWidget::IMESetFocusWidget()
-{
-  if (!mXIC) {
-    GetXIC();
-  }
-
-  IMEGetShellWidget();
-  if (!mIMEShellWidget) return;
-
-  if (mXIC) {
-    if (mXIC->IsPreeditComposing() == PR_FALSE) {
-      IMEComposeEnd(nsnull);
-    }
-    mXIC->SetFocusWidget(this);
-    if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
-      UpdateICSpot();
-      PrimeICSpotTimer();
-    }
-  }
-}
-
-void
-nsWidget::IMEBeingActivate(PRBool aActive)
-{
-  IMEGetShellWidget();
-  if (!mIMEShellWidget) return;
-  mIMEShellWidget->mIMEIsBeingActivate = aActive;
-}
-#endif // USE_XIM 
-
-void
-nsWidget::IMEComposeStart(guint aTime)
-{
-#ifdef USE_XIM
-  if (mIMECallComposeStart == PR_TRUE) {
-    return;
-  }
-#endif // USE_XIM 
-  nsCompositionEvent compEvent;
-  compEvent.widget = (nsWidget *) this;
-  compEvent.point.x = compEvent.point.y = 0;
-  compEvent.time = aTime;
-  compEvent.message = compEvent.eventStructType
-    = compEvent.compositionMessage = NS_COMPOSITION_START;
-
-  OnComposition(compEvent);
-
-#ifdef USE_XIM
-  mIMECallComposeStart = PR_TRUE;
-  mIMECallComposeEnd = PR_FALSE;
-#endif // USE_XIM 
-}
-
-void
-nsWidget::IMECommitEvent(GdkEventKey *aEvent) {
-  PRInt32 srcLen = aEvent->length;
-
-  if (srcLen && aEvent->string && aEvent->string[0] &&
-      nsGtkIMEHelper::GetSingleton()) {
-
-    PRInt32 uniCharSize;
-    uniCharSize = nsGtkIMEHelper::GetSingleton()->MultiByteToUnicode(
-                                aEvent->string,
-                                srcLen,
-                                &(mIMECompositionUniString),
-                                &(mIMECompositionUniStringSize));
-
-    if (uniCharSize) {
-      mIMECompositionUniString[uniCharSize] = 0;
-      if(sFocusWindow == 0 && mXIC != 0) {
-        // Commit event happens when Mozilla window does not have
-        // input focus but Lookup window (candidate) window has the focus
-        // At the case, we have to call IME events with focused widget
-        nsWidget *widget = mXIC->GetFocusWidget();
-        if (widget) {
-          widget->IMEComposeStart(aEvent->time);
-          widget->IMEComposeText(aEvent,
-                   mIMECompositionUniString,
-                   uniCharSize,
-                   nsnull);
-          widget->IMEComposeEnd(aEvent->time);
-        }
-      } else {
-        IMEComposeStart(aEvent->time);
-        IMEComposeText(aEvent,
-                   mIMECompositionUniString,
-                   uniCharSize,
-                   nsnull);
-        IMEComposeEnd(aEvent->time);
-      }
-    }
-  }
-
-#ifdef USE_XIM
-  if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
-    // update spot location
-    IMEGetShellWidget();
-    if (!mIMEShellWidget) return;
-    nsIMEGtkIC *XIC_tmp = mXIC ? mXIC : mIMEShellWidget->mXIC;
-    if (XIC_tmp) {
-      nsWidget *widget = XIC_tmp->GetFocusWidget();
-      if (widget) {
-        widget->UpdateICSpot();
-        widget->PrimeICSpotTimer();
-      }
-    }
-  }
-#endif // USE_XIM 
-}
-
-void
-nsWidget::IMEComposeText(GdkEventKey *aEvent,
-                         const PRUnichar *aText, const PRInt32 aLen,
-                         const char *aFeedback) {
-  nsTextEvent textEvent;
-  if (aEvent) {
-    textEvent.isShift = (aEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-    textEvent.isControl = (aEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-    textEvent.isAlt = (aEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    // XXX
-    textEvent.isMeta = PR_FALSE; //(aEvent->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
-    textEvent.time = aEvent->time;
-  } else {
-    textEvent.time = 0;
-    textEvent.isShift = textEvent.isControl =
-      textEvent.isAlt = textEvent.isMeta = PR_FALSE;
-  }
-  textEvent.message = textEvent.eventStructType = NS_TEXT_EVENT;
-  textEvent.widget = (nsWidget *)this;
-  textEvent.point.x = textEvent.point.y = 0;
-
-  if (aLen == 0) {
-    textEvent.theText = nsnull;
-    textEvent.rangeCount = 0;
-    textEvent.rangeArray = nsnull;
-  } else {
-    textEvent.theText = (PRUnichar*)aText;
-    textEvent.rangeCount = 0;
-    textEvent.rangeArray = nsnull;
-#ifdef USE_XIM
-    if (aFeedback) {
-      nsIMEPreedit::IMSetTextRange(aLen,
-                                   aFeedback,
-                                   &(textEvent.rangeCount),
-                                   &(textEvent.rangeArray));
-    }
-#endif // USE_XIM 
-  }
-  OnText(textEvent);
-#ifdef USE_XIM
-  if (textEvent.rangeArray) {
-    delete[] textEvent.rangeArray;
-  }
-#endif // USE_XIM 
-}
-
-void
-nsWidget::IMEComposeEnd(guint aTime)
-{
-#ifdef USE_XIM
-  if (mIMECallComposeEnd == PR_TRUE) {
-    return;
-  }
-#endif // USE_XIM 
-
-  nsCompositionEvent compEvent;
-  compEvent.widget = (nsWidget *) this;
-  compEvent.point.x = compEvent.point.y = 0;
-  compEvent.time = aTime;
-  compEvent.message = compEvent.eventStructType
-    = compEvent.compositionMessage = NS_COMPOSITION_END;
-  OnComposition(compEvent);
-
-#ifdef USE_XIM
-  mIMECallComposeStart = PR_FALSE;
-  mIMECallComposeEnd = PR_TRUE;
-#endif // USE_XIM 
-}
-
-#ifdef USE_XIM
-void
-nsWidget::IMEGetShellWidget(void)
-{
-  if (!mIMEShellWidget) {
-    mIMEShellWidget = GetShellWidget((GdkWindow*)
-                                GetNativeData(NS_NATIVE_WINDOW));
-    NS_ASSERTION(mIMEShellWidget, "GetShellWidget() fails");
-  }
-}
-
-// FIXME: need to find more efficient way for finding the shell widget
-static nsWidget *
-GetShellWidget(GdkWindow *gdkWindow)
-{
-  GdkWindow *parent = gdk_window_get_parent(gdkWindow);
-  nsWidget *root_win = nsnull;
-  gpointer data;
-
-  while (parent) {
-    gdk_window_get_user_data(parent, &data);
-    if (GTK_IS_OBJECT(data)) {
-      root_win = (nsWidget *) gtk_object_get_data(GTK_OBJECT(data), "nsWindow");
-      if(root_win && root_win->mIsToplevel == PR_TRUE){
-	return root_win;
-      }
-    }
-    parent = gdk_window_get_parent(parent);
-  }
-  return nsnull;
-}
-
-void
-nsWidget::IMEDestroyIC()
-{
-  if (!mXIC) return;
-  if (mIsToplevel == PR_TRUE) {
-    delete mXIC;
-  } else {
-    // see discussion in bug 53989
-    nsWidget *widget = mXIC->GetFocusWidget();
-    if (widget && widget == this && mIMEShellWidget) {
-      mXIC->SetFocusWidget(mIMEShellWidget);
-      mXIC->UnsetFocusWidget();
-    }
-  }
-  mXIC = 0;
-}
-
-#endif // USE_XIM 
 
 void nsWidget::DispatchSetFocusEvent(void)
 {

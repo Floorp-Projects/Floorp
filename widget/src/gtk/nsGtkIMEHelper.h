@@ -110,7 +110,7 @@ typedef struct {
   XIMProc1 callback;
 } XIMCallback1;
 
-class nsWidget;
+class nsWindow;
 
 enum nsIMEPolicy {
   NSIME_UNKNOWN=0,
@@ -130,10 +130,10 @@ class nsIMEGtkIC {
   static GdkIMStyle gInputStyle;
   static nsIMEPolicy gInputPolicy;
   static nsIMEStatus *gStatus;
-  nsWidget *mClientWidget;
-  nsWidget *mFocusWidget;
-  nsIMEGtkIC(nsWidget*, GdkFont*, GdkFont*);
-  nsIMEGtkIC(nsWidget*, GdkFont*);
+  nsWindow *mClientWindow;
+  nsWindow *mFocusWindow;
+  nsIMEGtkIC(nsWindow*, GdkFont*, GdkFont*);
+  nsIMEGtkIC(nsWindow*, GdkFont*);
   GdkICPrivate *mIC;
   GdkICPrivate *mIC_backup;
   nsIMEPreedit *mPreedit;
@@ -141,11 +141,11 @@ class nsIMEGtkIC {
  public:
   nsIMEPreedit *GetPreedit() {return mPreedit;}
   ~nsIMEGtkIC();
-  static nsIMEGtkIC *GetXIC(nsWidget*, GdkFont*, GdkFont*);
-  static nsIMEGtkIC *GetXIC(nsWidget*, GdkFont*);
-  void SetFocusWidget(nsWidget * aFocusWidget);
-  nsWidget* GetFocusWidget();
-  static void UnsetFocusWidget();
+  static nsIMEGtkIC *GetXIC(nsWindow*, GdkFont*, GdkFont*);
+  static nsIMEGtkIC *GetXIC(nsWindow*, GdkFont*);
+  void SetFocusWindow(nsWindow * aFocusWindow);
+  nsWindow* GetFocusWindow();
+  static void UnsetFocusWindow();
   static GdkIMStyle GetInputStyle();
   static nsIMEPolicy GetInputPolicy();
 
