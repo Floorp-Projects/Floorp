@@ -42,14 +42,39 @@ var nsNewsBlogFeedDownloader =
     if (!gExternalScriptsLoaded)
       loadScripts();
 
-    // we don't yet support thee ability to check for new articles while we are in the middle of 
+    // we don't yet support the ability to check for new articles while we are in the middle of 
     // subscribing to a feed. For now, abort the check for new feeds. 
     if (progressNotifier.mSubscribeMode)
     {
       debug('Aborting RSS New Mail Check. Feed subscription in progress\n');
       return;
     }
-
+    // if folder seems to have lost its feeds, look in DS for feeds.
+    if (!aUrl.length)
+    {
+      var ds = getSubscriptionsDS(aFolder.server);
+      var enumerator = ds.GetSources(FZ_DESTFOLDER, aFolder, true);
+      var concatenatedUris = "";
+      while (enumerator.hasMoreElements())
+      {
+        var containerArc = enumerator.getNext();
+        var uri = containerArc.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+        if (concatenatedUris.length > 0)
+          concatenatedUris += "|";
+        concatenatedUris += uri;
+      }
+      if (concatenatedUris.length > 0)
+      {
+        aUrl = concatenatedUris;
+        try
+        {
+          var msgdb = aFolder.getMsgDatabase(null);
+          var folderInfo = msgdb.dBFolderInfo;
+          folderInfo.setCharPtrProperty("feedUrl", concatenatedUris);
+        }
+        catch (ex) {dump(ex);}
+      }
+    }
     // aUrl may be a delimited list of feeds for a particular folder. We need to kick off a download
     // for each feed.
 

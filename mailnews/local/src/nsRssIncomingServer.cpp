@@ -216,9 +216,8 @@ NS_IMETHODIMP nsRssIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLi
         aFolder->GetName(getter_Copies(folderName));
         folderInfo->GetCharPtrProperty("feedUrl", getter_Copies(url));
 
-        if (!url.IsEmpty())
-          rv = rssDownloader->DownloadFeed(url.get(), 
-                                           aFolder, PR_FALSE, folderName.get(), aUrlListener, aMsgWindow);
+        rv = rssDownloader->DownloadFeed(url.get(), 
+                                         aFolder, PR_FALSE, folderName.get(), aUrlListener, aMsgWindow);
       }
     }
   }
