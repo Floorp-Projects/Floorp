@@ -17,9 +17,7 @@
  */
 #include "nsCSSValue.h"
 #include "nsString.h"
-//#include "nsCRT.h"
 #include "nsCSSProps.h"
-#include "nsCSSPropIDs.h"
 #include "nsUnitConversion.h"
 
 //#include "nsStyleConsts.h"
@@ -186,6 +184,9 @@ nscoord nsCSSValue::GetLengthTwips(void) const
       return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Cicero:
       return NS_CICEROS_TO_TWIPS(mValue.mFloat);
+    default:
+      NS_ERROR("should never get here");
+      break;
     }
   }
   return 0;
@@ -271,14 +272,14 @@ void nsCSSValue::SetNormalValue(void)
   mUnit = eCSSUnit_Normal;
 }
 
-void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
+void nsCSSValue::AppendToString(nsString& aBuffer, nsCSSProperty aPropID) const
 {
   if (eCSSUnit_Null == mUnit) {
     return;
   }
 
   if (-1 < aPropID) {
-    aBuffer.Append(nsCSSProps::kNameTable[aPropID].name);
+    aBuffer.Append(nsCSSProps::GetStringValue(aPropID));
     aBuffer.Append(": ");
   }
 
@@ -366,7 +367,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
   aBuffer.Append(' ');
 }
 
-void nsCSSValue::ToString(nsString& aBuffer, PRInt32 aPropID) const
+void nsCSSValue::ToString(nsString& aBuffer, nsCSSProperty aPropID) const
 {
   aBuffer.Truncate();
   AppendToString(aBuffer, aPropID);
