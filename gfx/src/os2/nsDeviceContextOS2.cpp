@@ -876,6 +876,11 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   PRTQUEUE *pq;
 
   aContext = new nsDeviceContextOS2();
+  if(nsnull != aContext){
+    NS_ADDREF(aContext);
+  } else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   ((nsDeviceContextOS2 *)aContext)->mSpec = aDevice;
   NS_ADDREF(aDevice);
