@@ -23,6 +23,9 @@
 
 #include "ns4xPluginStream.h"
 #include "prlog.h"             // for PR_ASSERT
+#include "nsPluginSafety.h"
+
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -52,10 +55,14 @@ ns4xPluginStream::~ns4xPluginStream(void)
 
     if (callbacks->destroystream != NULL)
     {
-        CallNPP_DestroyStreamProc(callbacks->destroystream,
-                                  npp,
-                                  &fNPStream,
-                                  reason);
+        PRLibrary* lib = nsnull;
+        if(fInstance)
+          lib = fInstance->fLibrary;
+
+        NS_TRY_SAFE_CALL_VOID(CallNPP_DestroyStreamProc(callbacks->destroystream,
+                                                        npp,
+                                                        &fNPStream,
+                                                        reason), lib);
     }
 
     NS_IF_RELEASE(fPeer);
@@ -147,17 +154,22 @@ NS_IMETHODIMP ns4xPluginStream::Initialize(ns4xPluginInstance* instance,
 
     PRUint16 streamType = (PRUint16) fStreamType;
 
-    nsresult error
-        = (nsresult)CallNPP_NewStreamProc(callbacks->newstream,
-                                          npp,
-                                          (char *)mimetype,
-                                          &fNPStream,
-                                          fSeekable,
-                                          &streamType);
+    PRLibrary* lib = nsnull;
+    if(fInstance)
+      lib = fInstance->fLibrary;
+
+    NP_ERROR error = NS_OK;
+
+    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
+                                                          npp,
+                                                          (char *)mimetype,
+                                                          &fNPStream,
+                                                          fSeekable,
+                                                          &streamType), lib);
 
     fStreamType = (nsPluginStreamType) streamType;
 
-    return error;
+    return (nsresult)error;
 }
 
 NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRUint32 offset, PRUint32 len, PRUint32 *aWriteCount)
@@ -178,9 +190,13 @@ NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRUint32 offset, PRUin
 
       if (callbacks->writeready != NULL)
       {
-        numtowrite = CallNPP_WriteReadyProc(callbacks->writeready,
-                                            npp,
-                                            &fNPStream);
+        PRLibrary* lib = nsnull;
+        if(fInstance)
+          lib = fInstance->fLibrary;
+
+        NS_TRY_SAFE_CALL_RETURN(numtowrite, CallNPP_WriteReadyProc(callbacks->writeready,
+                                                                    npp,
+                                                                    &fNPStream), lib);
 
         if (numtowrite > remaining)
           numtowrite = remaining;
@@ -188,12 +204,16 @@ NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRUint32 offset, PRUin
       else
         numtowrite = (int32)len;
 
-      *aWriteCount = CallNPP_WriteProc(callbacks->write,
-                                       npp,
-                                       &fNPStream, 
-                                       fPosition,
-                                       numtowrite,
-                                       (void *)buffer);
+      PRLibrary* lib = nsnull;
+      if(fInstance)
+        lib = fInstance->fLibrary;
+
+      NS_TRY_SAFE_CALL_RETURN(*aWriteCount, CallNPP_WriteProc(callbacks->write,
+                                                               npp,
+                                                               &fNPStream, 
+                                                               fPosition,
+                                                               numtowrite,
+                                                               (void *)buffer), lib);
 
       remaining -= numtowrite;
     }
@@ -220,10 +240,14 @@ NS_IMETHODIMP ns4xPluginStream::AsFile(const char* filename)
     if (callbacks->asfile == NULL)
         return NS_OK;
 
-    CallNPP_StreamAsFileProc(callbacks->asfile,
-                             npp,
-                             &fNPStream,
-                             filename);
+    PRLibrary* lib = nsnull;
+    if(fInstance)
+      lib = fInstance->fLibrary;
+
+    NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
+                                                   npp,
+                                                   &fNPStream,
+                                                   filename), lib);
 
     return NS_OK;
 }

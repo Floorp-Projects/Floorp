@@ -34,6 +34,7 @@
 #include "nsplugin.h"
 #include "npupp.h"
 #include "jri.h"
+#include "prlink.h"  // for PRLibrary
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
@@ -99,7 +100,7 @@ public:
      * Construct a new 4.x plugin instance with the specified peer
      * and callbacks.
      */
-    ns4xPluginInstance(NPPluginFuncs* callbacks);
+    ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary);
 
     // Use Release() to destroy this
     virtual ~ns4xPluginInstance(void);
@@ -140,10 +141,9 @@ protected:
     PRBool  mWindowless;
     PRBool  mTransparent;
     PRBool  mStarted;
+
+public:
+    PRLibrary* fLibrary;
 };
 
-
 #endif // ns4xPluginInstance_h__
-
-
-
