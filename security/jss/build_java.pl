@@ -97,12 +97,15 @@ sub setup_vars {
 
     $dist_dir = $cmdline_vars{SOURCE_PREFIX};
 
+    $class_release_dir = $cmdline_vars{SOURCE_RELEASE_PREFIX};
     if( $ENV{BUILD_OPT} ) {
         $class_dir = "$dist_dir/classes";
+        $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DIR}";
         $javac_opt_flag = "-O";
         $debug_source_file = "org/mozilla/jss/util/Debug_ship.java";
     } else {
         $class_dir = "$dist_dir/classes_DBG";
+        $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DBG_DIR}";
         $javac_opt_flag = "-g";
         $debug_source_file = "org/mozilla/jss/util/Debug_debug.java";
     }
@@ -236,5 +239,7 @@ sub ensure_dir_exists {
 }
 
 sub release {
-    print "Arguments: " . join(",", @_) . "\n";
+    # copy all class files into release directory
+    ensure_dir_exists("$class_release_dir");
+    print_do("cp -r $class_dir/* $class_release_dir");
 }
