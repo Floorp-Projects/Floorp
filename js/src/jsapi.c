@@ -3472,8 +3472,15 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     CHECK_REQUEST(cx);
     if (!js_Execute(cx, obj, script, NULL, 0, rval)) {
 #if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
+        if (!cx->fp) {
+            JSStackFrame frame;
+            memset(&frame, 0, sizeof frame);
+            frame.script = script;
+            frame.pc = script->main;
+            cx->fp = &frame;
             js_ReportUncaughtException(cx);
+            cx->fp = NULL;
+        }
 #endif
         return JS_FALSE;
     }
@@ -3581,8 +3588,15 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, 0, rval);
 #if JS_HAS_EXCEPTIONS
-    if (!ok && !cx->fp)
+    if (!ok && !cx->fp) {
+        JSStackFrame frame;
+        memset(&frame, 0, sizeof frame);
+        frame.script = script;
+        frame.pc = script->main;
+        cx->fp = &frame;
         js_ReportUncaughtException(cx);
+        cx->fp = NULL;
+    }
 #endif
     JS_DestroyScript(cx, script);
     return ok;
@@ -3630,8 +3644,19 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
     CHECK_REQUEST(cx);
     if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
 #if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
+        if (!cx->fp) {
+            JSStackFrame frame;
+            JSFunction *fun = JS_ValueToFunction(cx, fval);
+            memset(&frame, 0, sizeof frame);
+            if (fun) {
+                JSScript *script = fun->u.script;
+                frame.script = script;
+                frame.pc = script->main;
+                cx->fp = &frame;
+            }
             js_ReportUncaughtException(cx);
+            cx->fp = NULL;
+        }
 #endif
         return JS_FALSE;
     }
