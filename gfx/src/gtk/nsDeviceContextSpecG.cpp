@@ -37,6 +37,7 @@
 #include "nsIDialogParamBlock.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
@@ -181,8 +182,16 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
 
       nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
       if (wwatch) {
+
+        nsCOMPtr<nsIDOMWindowInternal> parent;
+        nsCOMPtr<nsIDOMWindow> active;
+        wwatch->GetActiveWindow(getter_AddRefs(active));
+        if (active) {
+          active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(parent));
+        }
+
         nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
+        rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
                       "_blank", "chrome,modal", paramBlockWrapper,
                       getter_AddRefs(newWindow));
       }
