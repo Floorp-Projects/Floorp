@@ -16,8 +16,16 @@ User Agent=$UserAgent$
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\$CompanyName$
-Sub Path=$ProductName$
+Path=[PROGRAMFILESDIR]\$CompanyName$\$ProductName$
+
+; Sub Path, when set will indicate to Setup to create a subfolder from
+; what is offered to the user to change.  It will not be shown to the user
+; but simply created:
+;
+; ie: shown to user   : [Path]
+;     actually created: [Path]\[Sub Path]
+;     (where [Path] is the Path= key above)
+Sub Path=
 Program Name=$MainExeFile$
 
 ; Program Folder Path values:
@@ -363,9 +371,9 @@ Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
 [Component Navigator]
-Description Short=Mozilla Navigator
+Description Short=Navigator
 ;*** LOCALIZE ME BABY ***
-Description Long=The Mozilla internet browser
+Description Long=Web Browser
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
@@ -376,7 +384,7 @@ Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 [Component MailNews]
 Description Short=Mail & News
 ;*** LOCALIZE ME BABY ***
-Description Long=Mozilla Mail & News
+Description Long=Email and Newsgroup Software
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
@@ -403,7 +411,7 @@ Path=[WINDIR]
 [Component Chatzilla]
 Description Short=Chatzilla
 ;*** LOCALIZE ME BABY ***
-Description Long=Chatzilla IRC client
+Description Long=IRC Client
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
 $InstallSizeSystem$
