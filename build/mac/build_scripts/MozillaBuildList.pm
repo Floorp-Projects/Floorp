@@ -279,6 +279,9 @@ sub InstallComponentFiles()
     # embedding UI
     InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
 
+    # intl
+    InstallResources(":mozilla:embedding:components:intl:MANIFEST",                        "$components_dir");
+    
     print("--- Done Text Components copying ----\n");
 }
 
