@@ -46,7 +46,7 @@ function clicked(event, target)
 	if (target.getAttribute("container") == "true")
 		return(false);
 
-	OpenBookmarkURL(event, target, document.getElementById('bookmarksTree').database);
+	sidebarOpenURL(event, target, document.getElementById('bookmarksTree').database);
 	return(true);
 }
 
@@ -162,5 +162,19 @@ function sidebarOpenURL(event, treeitem, root)
 	catch(ex)
 	{
 	}
-  openTopWin(id);
+    // Ignore "NC:" urls.
+	if (id.substring(0, 3) == "NC:")
+	{
+		return(false);
+	}	
+	if (event.metaKey) 
+	  {
+	  // if metaKey is down, open in a new browser window
+  		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id ); 
+	  } 
+	  else 
+	  {
+		openTopWin(id);
+	  }
 }
+
