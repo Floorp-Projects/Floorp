@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Paul Ashford <arougthopher@lizardland.net>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -127,6 +129,7 @@ public:
 	NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
 	                                          PRInt32 *aX, PRInt32 *aY);
 	NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
+	virtual nsresult        Move(PRInt32 aX, PRInt32 aY, PRBool unlockLooper);
 	NS_IMETHOD              Resize(PRInt32 aWidth,
 	                               PRInt32 aHeight,
 	                               PRBool   aRepaint);
@@ -139,9 +142,9 @@ public:
 	NS_IMETHOD              IsEnabled(PRBool *aState);
 	NS_IMETHOD              SetFocus(PRBool aRaise);
 	NS_IMETHOD              GetBounds(nsRect &aRect);
-	NS_IMETHOD              GetClientBounds(nsRect &aRect);
 	NS_IMETHOD              GetScreenBounds(nsRect &aRect);
 	NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
+	NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
 	virtual nsIFontMetrics* GetFont(void);
 	NS_IMETHOD              SetFont(const nsFont &aFont);
 	NS_IMETHOD              SetCursor(nsCursor aCursor);
@@ -154,11 +157,8 @@ public:
 	NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
 	NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 	NS_IMETHOD              SetTitle(const nsString& aTitle);
-	NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
-	NS_IMETHOD              ShowMenuBar(PRBool aShow);
-	NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
-	NS_IMETHOD              RemoveTooltips();
-	NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
+	NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; }
+	NS_IMETHOD              ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
 	NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
 	NS_IMETHOD              BeginResizingChildren(void);
@@ -177,11 +177,12 @@ public:
 	                                           nsPoint aPoint, 
 	                                           PRUint32 clicks, 
 	                                           PRUint32 mod);
+
+
 	virtual PRBool          AutoErase();
-
-	//    PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId;}
-
-	void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+	void                    InitEvent(nsGUIEvent& event, 
+	                                  PRUint32 aEventType, 
+	                                  nsPoint* aPoint = nsnull);
 
 protected:
 
@@ -212,33 +213,13 @@ protected:
 	virtual PRBool          OnScroll();
 	static PRBool           ConvertStatus(nsEventStatus aStatus);
 	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
-	void                    AddTooltip(BView *hwndOwner, nsRect* aRect, int aId);
 
 	virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
 	virtual BView          *CreateBeOSView();
 
-#if 0
-	virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
-	nsIMenuItem            *FindMenuItem(nsIMenu * aMenu, PRUint32 aId);
-	nsIMenu                *FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth);
-	nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
-
-	virtual LPCTSTR         WindowClass();
-	virtual DWORD           WindowStyle();
-	virtual DWORD           WindowExStyle();
-
-	static LRESULT CALLBACK WindowProc(BWindow * hWnd,
-	                                   UINT msg,
-	                                   WPARAM wParam,
-	                                   LPARAM lParam);
-
-	void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
-
-	BWindow         *mTooltip;
-#endif
 
 	BView           *mView;
-
+	nsIWidget       *mParent;
 	PRBool           mIsTopWidgetWindow;
 	BView           *mBorderlessParent;
 
@@ -254,21 +235,9 @@ protected:
 	PRInt32          mPreferredWidth;
 	PRInt32          mPreferredHeight;
 
-	nsIMenuBar      *mMenuBar;
-	PRInt32          mMenuCmdId;
-	nsIMenu         *mHitMenu;
-	nsVoidArray     *mHitSubMenus;
-
-#if 0
-	// Drag & Drop
-
-#ifdef DRAG_DROP
-	//nsDropTarget * mDropTarget;
-	CfDropSource * mDropSource;
-	CfDropTarget * mDropTarget;
-	CfDragDrop   * mDragDrop;
-#endif
-#endif
+	PRBool           mEnabled;
+	PRBool           mJustGotActivate;
+	PRBool           mJustGotDeactivate;	
 
 public:	// public on BeOS to allow BViews to access it
 	// Enumeration of the methods which are accessable on the "main GUI thread"
@@ -372,6 +341,7 @@ public:
 	void                    KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
+	virtual void            FrameResized(float width, float height);
 };
 
 //
