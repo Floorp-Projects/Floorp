@@ -30,6 +30,7 @@ IDLSRCS = \
 	nsIBaseStream.idl	\
 	nsIInputStream.idl	\
 	nsICollection.idl \
+	nsIEnumerator.idl \
 	$(NULL)
 
 # for testing purposes

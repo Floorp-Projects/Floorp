@@ -22,7 +22,7 @@
 [uuid(83b6019c-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsICollection : nsISupports {
 
-  readonly attribute unsigned int count;  // XXX wrong
+  readonly attribute unsigned long count;  // XXX wrong
 
   void AppendElement(in nsISupports element);
   void RemoveElement(in nsISupports element);
