@@ -80,6 +80,8 @@ private:
 	PRUint32					m_capability;
 	nsCString					m_manageMailAccountUrl;
 	PRBool						m_waitingForConnectionInfo;
+	PRInt32						m_redirectedLogonRetries;
+	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
 };
 
 

@@ -16,7 +16,7 @@ interface nsMsgLogonRedirectionStates
 interface nsIMsgLogonRedirectionRequester : nsISupports
 {
   /* Erron on processing the logon redirection */
-  void OnLogonRedirectionError(in wstring pErrMsg);
+  void OnLogonRedirectionError(in wstring pErrMsg, in boolean badPassword);
   
   /* Logon Redirection Progress */
   void OnLogonRedirectionProgress(in nsMsgLogonRedirectionState pState);
@@ -30,6 +30,6 @@ interface nsIMsgLogonRedirectionRequester : nsISupports
 interface nsIMsgLogonRedirector : nsISupports 
 { 
  void Logon(in string userName, in string password, in nsIMsgLogonRedirectionRequester listener); 
- void Logoff(); /* might not need this one */ 
+ void Logoff(in string userName); /* might not need this one */ 
 }; 
 
