@@ -208,8 +208,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportSinkWrapper, nsIOutputStream)
 //////////////////////////////////////////////////////////////////////////////////
 
 nsFileTransport::nsFileTransport()
-    : mContentType(nsnull),
-      mBufferSegmentSize(NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE),
+    : mBufferSegmentSize(NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE),
       mBufferMaxSize(NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE),
       mXferState(CLOSED),
       mRunState(RUNNING),
@@ -292,11 +291,6 @@ nsFileTransport::~nsFileTransport()
         PR_DestroyLock(mLock);
         mLock = nsnull;
     }
-    if (mContentType) {
-        nsCRT::free(mContentType);
-        mContentType = nsnull;
-    }
-
     NS_IF_RELEASE(mService);
 }
 
@@ -652,7 +646,7 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
 
     switch (mXferState) {
       case OPEN_FOR_READ: { 
-        mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
+        mStatus = mStreamIO->Open(&mTotalAmount);
         LOG(("nsFileTransport: OPEN_FOR_READ [this=%x %s] status=%x\n", this, mStreamName.get(), mStatus));
         if (mListener) {
             nsresult rv = mListener->OnStartRequest(this, mContext);  // always send the start notification
@@ -842,7 +836,7 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
       case OPEN_FOR_WRITE: {
         LOG(("nsFileTransport: OPEN_FOR_WRITE [this=%x %s]\n",
             this, mStreamName.get()));
-        mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
+        mStatus = mStreamIO->Open(&mTotalAmount);
         
         if (mStatus == NS_ERROR_FILE_NOT_FOUND)
             mStatus = NS_OK;

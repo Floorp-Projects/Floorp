@@ -335,7 +335,7 @@ nsresult nsJSThunk::BringUpConsole()
 // nsIStreamIO implementation...
 //
 NS_IMETHODIMP
-nsJSThunk::Open(char* *contentType, PRInt32 *contentLength)
+nsJSThunk::Open(PRInt32 *contentLength)
 {
     //
     // At this point the script has already been evaluated...
@@ -343,8 +343,19 @@ nsJSThunk::Open(char* *contentType, PRInt32 *contentLength)
     //
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
-    *contentType = nsCRT::strdup("text/html");
     *contentLength = mLength;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsJSThunk::GetContentType(char * *aContentType)
+{
+    *aContentType = nsCRT::strdup("text/html");
+    
+    if (*aContentType == nsnull)
+        return  NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }

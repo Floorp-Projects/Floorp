@@ -122,7 +122,6 @@ protected:
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIInterfaceRequestor>     mNotificationCallbacks;
     nsCOMPtr<nsIStreamIO>               mStreamIO;
-    char                               *mContentType;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
 

@@ -108,6 +108,7 @@ protected:
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
+    PRBool                              mOpened;
     char*                               mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsIStreamIO>               mStreamIO;

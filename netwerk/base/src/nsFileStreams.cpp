@@ -169,7 +169,7 @@ nsFileIO::GetFile(nsIFile* *aFile)
 }
 
 NS_IMETHODIMP
-nsFileIO::Open(char **contentType, PRInt32 *contentLength)
+nsFileIO::Open(PRInt32 *contentLength)
 {
     NS_ASSERTION(mFile, "File must not be null");
     if (mFile == nsnull)
@@ -177,9 +177,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
 
     if (contentLength)
         *contentLength = 0;
-    if (contentType)
-        *contentType = nsnull;
-
+ 
     nsresult rv = NS_OK;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -193,13 +191,6 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         PRBool isDir;
         rv = localFile->IsDirectory(&isDir);
         if (NS_SUCCEEDED(rv) && isDir) {
-            // Directories turn into an HTTP-index stream, with
-            // unbounded (i.e., read 'til the stream says it's done)
-            // length.
-            if (contentType)
-                *contentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
-            if (contentLength) 
-                *contentLength = -1;
             return NS_OK;
         }
         return NS_ERROR_FILE_NOT_FOUND;
@@ -219,27 +210,42 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         else 
             *contentLength = -1;
     }
-    if (contentType) {
-        // must we really go though this? dougt
-        nsIMIMEService* mimeServ = nsnull;
-        nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
-        if (fileTransportService) {
-            mimeServ = fileTransportService->GetCachedMimeService();
-            if (mimeServ)
-                rv = mimeServ->GetTypeFromFile(mFile, contentType);
-        }
-        
-        if (!mimeServ || (NS_FAILED(rv))) {
-            // if all else fails treat it as text/html?
-            *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
-            if (*contentType == nsnull)
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            else
-                rv = NS_OK;
-        }
-    }
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: logically opening %s", mSpec));
+    return rv;
+}
+
+
+NS_IMETHODIMP 
+nsFileIO::GetContentType(char * *aContentType)
+{
+    if (!mContentType.IsEmpty()) {
+        *aContentType = ToNewCString(mContentType);
+        return NS_OK;
+    }
+
+    if (mFile == nsnull)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv = NS_OK;
+    nsIMIMEService* mimeServ = nsnull;
+    nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
+    if (fileTransportService) {
+        mimeServ = fileTransportService->GetCachedMimeService();
+        if (mimeServ)
+            rv = mimeServ->GetTypeFromFile(mFile, aContentType);
+    }
+        
+    if (!mimeServ || (NS_FAILED(rv))) {
+        // if all else fails treat it as text/html?
+        *aContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
+        if (*aContentType == nsnull)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        else
+            rv = NS_OK;
+    }
+
+    mContentType.Assign(*aContentType);
     return rv;
 }
 
@@ -266,7 +272,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     nsresult rv;
 
     if (!mFD) {
-        rv = Open(nsnull, nsnull);        
+        rv = Open(nsnull);        
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
     }
@@ -319,7 +325,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
     nsresult rv;
 
     if (!mFD) {
-        rv = Open(nsnull, nsnull);
+        rv = Open(nsnull);
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
     }
