@@ -32,13 +32,8 @@ SIMPLE_PROGRAMS	= TestInterfaceInfo$(BIN_SUFFIX)
 
 CPPSRCS		= TestInterfaceInfo.cpp
 
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
-endif
-
 LIBS		= \
 		$(XPCOM_LIBS) \
-		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
