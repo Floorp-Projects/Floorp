@@ -77,13 +77,6 @@
           <button class="dialog" value="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
                   oncommand="prefClearDiskCache();"/>
         </row>
-        <row>
-          <text class="label" value="&diskCacheFolder.label;" accesskey="&diskCacheFolder.accesskey;" for="browserCacheDirectory"/>
-          <textfield id="browserCacheDirectory" flex="1" pref="true" preftype="string"
-                     prefstring="browser.cache.directory" prefattribute="value"/>
-          <button class="dialog" value="&chooseFolder.label;" accesskey="&chooseFolder.accesskey;"
-                  oncommand="prefCacheSelectFolder();"/>
-        </row>                     
       </rows>
     </grid>
 
