@@ -185,3 +185,31 @@ function manualSelected()  {
 
 }
 
+function setColorWell(menu,otherId,setbackground)
+{
+    // Find the colorWell and colorPicker in the hierarchy.
+    var colorWell = menu.firstChild.nextSibling;
+    var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+
+    // Extract color from colorPicker and assign to colorWell.
+    var color = colorPicker.getAttribute('color');
+    setColorFromPicker(colorWell,color,otherId,setbackground);
+}
+
+function setColorFromPicker(colorWell,color,otherId,setbackground)
+{
+    if (colorWell) {
+      colorWell.style.backgroundColor = color;
+    }
+    if (otherId) {
+	    otherElement=document.getElementById(otherId);
+	    if (setbackground) {
+		    var basestyle = otherElement.getAttribute('basestyle');
+		    var newstyle = basestyle + "background-color:" + color + ";";
+		    otherElement.setAttribute('style',newstyle);
+	    }
+	    else {
+		    otherElement.style.color = color;
+	    }
+    }
+}
