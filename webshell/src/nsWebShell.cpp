@@ -1827,7 +1827,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 #ifdef NECKO
   if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer))
 #else
-  if ((aType == nsURLReload) && (nsnull != mContentViewer))
+  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && (nsnull != mContentViewer))
 #endif
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
@@ -1860,9 +1860,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       if (NS_FAILED(rv)) return rv;
 #endif // NECKO
 
-      if (EqualBaseURLs(docURL, url))
-      {
-      // See if there's a destination anchor
+      if (EqualBaseURLs(docURL, url)) {
+        // See if there's a destination anchor
 #ifdef NECKO
         char* ref = nsnull;
         nsCOMPtr<nsIURL> url2 = do_QueryInterface(url);
@@ -1879,23 +1878,22 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
         if (NS_SUCCEEDED(rv) && presShell) {
           if (nsnull != ref) {
             // Go to the anchor in the current document                    
-            presShell->GoToAnchor(nsAutoString(ref));          
+            rv = presShell->GoToAnchor(nsAutoString(ref));
+            return rv;
           }
-          else {
+          else if (aType == nsURLReloadFromHistory) {
             // Go to the top of the current document
             nsCOMPtr<nsIViewManager> viewMgr;            
             rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
             if (NS_SUCCEEDED(rv) && viewMgr) {
               nsIScrollableView* view;
               rv = viewMgr->GetRootScrollableView(&view);
-              if (NS_SUCCEEDED(rv) && view) {                
-                view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-              }
+              if (NS_SUCCEEDED(rv) && view)           
+                rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
             }
+            return rv;
           }
         }
-
-        return NS_OK;
       } // EqualBaseURLs(docURL, url)
     }
   }
