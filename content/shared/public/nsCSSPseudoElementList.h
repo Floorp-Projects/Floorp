@@ -39,30 +39,48 @@
 /*
  * This file contains the list of nsIAtoms and their values for CSS
  * pseudo-elements.  It is designed to be used as inline input to
- * nsCSSPseudoElements.cpp *only* through the magic of C preprocessing.
- * All entries must be enclosed in the macro CSS_PSEUDO_ELEMENT which
- * will have cruel and unusual things done to it.  The entries should be
- * kept in some sort of logical order.  The first argument to
- * CSS_PSEUDO_ELEMENT is the C++ identifier of the atom.  The second
- * argument is the string value of the atom.
+ * nsCSSPseudoElements.cpp *only* through the magic of C preprocessing.  All
+ * entries must be enclosed either in the macro CSS_PSEUDO_ELEMENT or in the
+ * macro CSS2_PSEUDO_ELEMENT; these macros will have cruel and unusual things
+ * done to them.  The difference between the two macros is that the
+ * pseudo-elements enclosed in CSS2_PSEUDO_ELEMENT are the pseudo-elements
+ * which are allowed to have only a single ':' in stylesheets.  The entries
+ * should be kept in some sort of logical order.  The first argument to all the
+ * macros is the C++ identifier of the atom.  The second argument is the string
+ * value of the atom.
+ *
+ * Code including this file MUST define CSS_PSEUDO_ELEMENT.  If desired, it can
+ * also define CSS2_PSEUDO_ELEMENT to perform special handling of the CSS2
+ * pseudo-elements.
  */
 
 // OUTPUT_CLASS=nsCSSPseudoElements
 // MACRO_NAME=CSS_PSEUDO_ELEMENT
 
-CSS_PSEUDO_ELEMENT(after, ":after")
-CSS_PSEUDO_ELEMENT(before, ":before")
+#ifndef CSS2_PSEUDO_ELEMENT
+#define DEFINED_CSS2_PSEUDO_ELEMENT
+#define CSS2_PSEUDO_ELEMENT(name_, value_) CSS_PSEUDO_ELEMENT(name_, value_)
+#endif // CSS2_PSEUDO_ELEMENT
 
-CSS_PSEUDO_ELEMENT(firstLetter, ":first-letter")
-CSS_PSEUDO_ELEMENT(firstLine, ":first-line")
+CSS2_PSEUDO_ELEMENT(after, ":after")
+CSS2_PSEUDO_ELEMENT(before, ":before")
 
-CSS_PSEUDO_ELEMENT(mozSelection, ":-moz-selection")
+CSS2_PSEUDO_ELEMENT(firstLetter, ":first-letter")
+CSS2_PSEUDO_ELEMENT(firstLine, ":first-line")
 
-CSS_PSEUDO_ELEMENT(mozFocusInner, ":-moz-focus-inner")
-CSS_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer")
+// XXXbz These should be converted to the CSS_PSEUDO_ELEMENT macro.  See bug
+// 211657
+CSS2_PSEUDO_ELEMENT(mozSelection, ":-moz-selection")
 
-CSS_PSEUDO_ELEMENT(mozListBullet, ":-moz-list-bullet")
-CSS_PSEUDO_ELEMENT(mozListNumber, ":-moz-list-number")
+CSS2_PSEUDO_ELEMENT(mozFocusInner, ":-moz-focus-inner")
+CSS2_PSEUDO_ELEMENT(mozFocusOuter, ":-moz-focus-outer")
 
-CSS_PSEUDO_ELEMENT(horizontalFramesetBorder, ":-moz-hframeset-border")
-CSS_PSEUDO_ELEMENT(verticalFramesetBorder, ":-moz-vframeset-border")
+CSS2_PSEUDO_ELEMENT(mozListBullet, ":-moz-list-bullet")
+CSS2_PSEUDO_ELEMENT(mozListNumber, ":-moz-list-number")
+
+CSS2_PSEUDO_ELEMENT(horizontalFramesetBorder, ":-moz-hframeset-border")
+CSS2_PSEUDO_ELEMENT(verticalFramesetBorder, ":-moz-vframeset-border")
+
+#ifdef DEFINED_CSS2_PSEUDO_ELEMENT
+#undef CSS2_PSEUDO_ELEMENT
+#endif

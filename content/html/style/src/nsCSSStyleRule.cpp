@@ -66,6 +66,7 @@
 #include "nsILookAndFeel.h"
 #include "nsRuleNode.h"
 #include "nsUnicharUtils.h"
+#include "nsCSSPseudoElements.h"
 
 #include "nsIStyleSet.h"
 
@@ -590,6 +591,9 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   } else {
     // Append the tag name, if there is one
     if (mTag) {
+      if (IsPseudoElement(mTag) && !nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
+        aString.Append(PRUnichar(':'));
+      }
       nsAutoString prefix;
       mTag->ToString(prefix);
       aString.Append(prefix);
