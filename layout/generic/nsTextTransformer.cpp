@@ -412,11 +412,6 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
   PRInt32 offset = mOffset;
 
   PRUnichar firstChar = frag->CharAt(offset++);
-  if (CH_NBSP == firstChar) {
-    firstChar = ' ';
-    *aWasTransformed = PR_TRUE;
-  }
-  mTransformBuf.mBuffer[mBufferPos++] = firstChar;
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
 
   // Only evaluate complex breaking logic if there are more characters
@@ -431,6 +426,15 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
     else {
       mWordBreaker->BreakInBetween(&firstChar, 1, cp, (fragLen-offset), &breakBetween);
     }
+
+    // don't transform the first character until after BreakInBetween is called
+    // Kipp originally did this at the top of the function, which was too early.
+    // see bug 14280
+    if (CH_NBSP == firstChar) {
+      firstChar = ' ';
+      *aWasTransformed = PR_TRUE;
+    }
+    mTransformBuf.mBuffer[mBufferPos++] = firstChar;
 
     if (!breakBetween) {
       // Find next position
@@ -474,6 +478,18 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
         mBufferPos++;
       }
     }
+  }
+  else 
+  { // transform the first character
+    // we do this here, rather than at the top of the function (like Kipp originally had it)
+    // because if we must call BreakInBetween, then we must do so before the transformation
+    // this is the case where BreakInBetween does not need to be called at all.
+    // see bug 14280
+    if (CH_NBSP == firstChar) {
+      firstChar = ' ';
+      *aWasTransformed = PR_TRUE;
+    }
+    mTransformBuf.mBuffer[mBufferPos++] = firstChar;
   }
 
   *aWordLen = numChars;

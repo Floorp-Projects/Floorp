@@ -278,6 +278,18 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   PRBool fixedContentWidth = PR_FALSE;
   PRBool fixedContentHeight = PR_FALSE;
 
+  if (mFlags.mInRecalcMode)
+  { // only true after an unconstrained reflow of a %-width image recieved after we've fetched our intrinsic width
+    // really!  This case is for bug 39901 and 38396.  The point is, we've already
+    // calculated everything we need and we want to just return it right away.
+    // This is somewhat fragile, since it makes an assumption about the way reflow works.
+    mFlags.mInRecalcMode=0; // clear the mode
+    // block code will lie to us, so use our already-computed values
+    aDesiredSize.width = mComputedImageSize.width;
+    aDesiredSize.height = mComputedImageSize.height;
+    return PR_TRUE;
+  }
+
   nscoord minWidth, maxWidth, minHeight, maxHeight;
 
   if (aReflowState) {
@@ -285,8 +297,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     widthConstraint = aReflowState->mComputedWidth;
     minWidth = aReflowState->mComputedMinWidth;
     maxWidth = aReflowState->mComputedMaxWidth;
-    if (NS_INTRINSICSIZE != widthConstraint &&
-        eStyleUnit_Coord==aReflowState->mStylePosition->mWidth.GetUnit()) {
+    if (NS_INTRINSICSIZE != widthConstraint) {
       fixedContentWidth = PR_TRUE;
     }
     else if (mFlags.mHaveIntrinsicImageSize) {
@@ -299,11 +310,26 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       // property, if it applies. Therefore, we will force the
       // fixedContentWidth flag to true in these cases.
       if ((0 != minWidth) ||
-          (NS_UNCONSTRAINEDSIZE != maxWidth)) {
-        // Use the intrinsic image height for the min-max comparisons,
+          (NS_UNCONSTRAINEDSIZE != maxWidth))
+      {
+        // Use the intrinsic image width for the min-max comparisons,
         // since the width property is "auto".
         widthConstraint = mIntrinsicImageSize.width;
         fixedContentWidth = PR_TRUE;
+      }
+      // Check the special case where we have the intrinsic width 
+      // (already tested to get into this block of code)
+      // and it's an unconstrained reflow, and we are %-width
+      // This special case is for bug 39901 and 38396
+      else if (aReflowState && 
+              (NS_UNCONSTRAINEDSIZE == aReflowState->availableWidth) &&
+              (eStyleUnit_Percent==aReflowState->mStylePosition->mWidth.GetUnit())) 
+      {
+        // Use the intrinsic image width 
+        // since the width property is percent (uncalcuable at this time).
+        widthConstraint = mIntrinsicImageSize.width;
+        fixedContentWidth = PR_TRUE;
+        mFlags.mInRecalcMode = PR_TRUE; // we set up this state for bug 39901 and 38396
       }
     }
 
@@ -440,7 +466,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
 #endif
 
     // Load the image at the desired size
-    if ((0 != newWidth) && (0 != newHeight)) {
+    if ((0 != newWidth) && (0 != newHeight))
+    {
       // Make sure we squelch a callback to the client of this image
       // loader during a start-load-image. Its possible the image we
       // want is ready to go and will therefore fire a notification

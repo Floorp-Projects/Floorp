@@ -4220,7 +4220,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
   aLine->SetHasPercentageChild(PR_FALSE); // To be set by ReflowInlineFrame below
-  for (i = 0; i < aLine->GetChildCount(); i++) {      
+  // need to repeatedly call GetChildCount here, because the child
+  // count can change during the loop!
+  for (i = 0; i < aLine->GetChildCount(); i++) { 
     rv = ReflowInlineFrame(aState, aLineLayout, aLine, frame,
                            &lineReflowStatus);
     if (NS_FAILED(rv)) {
