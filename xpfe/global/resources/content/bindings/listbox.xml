@@ -690,32 +690,20 @@
 
   <binding id="listrows"
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
-    <implementation>
-      <constructor>
-        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
-      </constructor>
-
-      <field name="_handleMouseScroll">
-      <![CDATA[
-        ({
-          subject: this,
-          handleEvent: function(aEvent)
-          {
-            var listBox = this.subject.parentNode.listBoxObject;
-            var rows = aEvent.detail;
-            if (rows == NSUIEvent.SCROLL_PAGE_UP)
-              rows = -1 * listBox.getNumberOfVisibleRows();
-            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
-              rows = listBox.getNumberOfVisibleRows();
-
-            listBox.scrollByLines(rows);
-          }
-        })
-      ]]>
-      </field>
-    </implementation>
-
     <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+      <![CDATA[
+        var listBox = this.parentNode.listBoxObject;
+        var rows = event.detail;
+        if (rows == NSUIEvent.SCROLL_PAGE_UP)
+          rows = -listBox.getNumberOfVisibleRows();
+        else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+          rows = listBox.getNumberOfVisibleRows();
+
+        listBox.scrollByLines(rows);
+      ]]>
+      </handler>
+
       <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
       <handler event="mousedown">

@@ -21,7 +21,6 @@
     
     <implementation implements="nsIAccessibleProvider">
       <constructor>
-        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
         if (navigator.platform.indexOf("Mac") != -1)
           this.pageUpOrDownMovesSelection = false;
       </constructor>
@@ -92,23 +91,6 @@
                 onset="this.setAttribute('_selectDelay', val);"
                 onget="return this.getAttribute('_selectDelay') || 50;"/>
       <field name="_columnsDirty">true</field>
-      <field name="_handleMouseScroll">
-      <![CDATA[
-        ({
-          subject: this,
-          handleEvent: function(aEvent)
-          {
-            var rows = aEvent.detail;
-            if (rows == NSUIEvent.SCROLL_PAGE_UP)
-              this.subject.treeBoxObject.scrollByPages(-1);
-            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
-              this.subject.treeBoxObject.scrollByPages(1);
-            else
-              this.subject.treeBoxObject.scrollByLines(aEvent.detail);
-          }
-        })
-      ]]>
-      </field>
       <field name="_lastKeyTime">0</field>
       <field name="_incrementalString">""</field>
 
@@ -211,6 +193,17 @@
     </implementation>
     
     <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+        <![CDATA[
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP)
+            this.treeBoxObject.scrollByPages(-1);
+          else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+            this.treeBoxObject.scrollByPages(1);
+          else
+            this.treeBoxObject.scrollByLines(rows);
+        ]]>
+      </handler>
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
   
