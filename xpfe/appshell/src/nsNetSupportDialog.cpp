@@ -39,7 +39,7 @@
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 const static PRInt32 kCancelButton = 0;
-const static PRInt32 kOKButton = 0;
+const static PRInt32 kOKButton = 1;
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
@@ -189,11 +189,13 @@ static nsresult findDOMNode( nsIWebShell *shell,
 
 nsNetSupportDialog::nsNetSupportDialog()
 {
+	NS_INIT_REFCNT();
 	Init();
 }
 
 void nsNetSupportDialog::Init()
 {
+	
 	mDefault = NULL;
 	mUser = NULL;
 	mPassword = NULL;
