@@ -208,6 +208,16 @@ public:
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
 
+  // This method paints the twisty inside a cell in the primary column of an outliner.
+  NS_IMETHOD PaintTwisty(int                  aRowIndex,
+                         nsOutlinerColumn*    aColumn,
+                         const nsRect&        aTwistyRect,
+                         nsIPresContext*      aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect,
+                         nsFramePaintLayer    aWhichLayer,
+                         nscoord&             aRemainingWidth);
+
   // This method paints the text string inside a particular cell of the outliner.
   NS_IMETHOD PaintText(int aRowIndex, 
                        nsOutlinerColumn*    aColumn,
@@ -234,6 +244,15 @@ protected:
 
   // Caches our box object.
   void SetBoxObject(nsIOutlinerBoxObject* aBoxObject) { mOutlinerBoxObject = aBoxObject; };
+
+#ifdef USE_IMG2
+  // Fetch an image from the image cache.
+  nsresult GetImage(nsIStyleContext* aContext, imgIContainer** aResult);
+#endif
+
+  // Returns the size of a given image.   This size *includes* border and
+  // padding.  It does not include margins.
+  nsRect GetImageSize(nsIStyleContext* aStyleContext);
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
@@ -280,6 +299,11 @@ protected: // Data Members
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
   // (the power set of all row properties).
   nsOutlinerStyleCache mStyleCache;
+
+  // A hashtable that maps from style contexts to image requests.  The style context represents
+  // a resolved :-moz-outliner-cell-image (or twisty) pseudo-element.  It maps directly to an
+  // imgIRequest.  This allows us to avoid even wasting time checking URLs.
+  nsSupportsHashtable* mImageCache;
 
   // Cached column information.
   nsOutlinerColumn* mColumns;
