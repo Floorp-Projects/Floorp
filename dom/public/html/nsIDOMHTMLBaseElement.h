@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLBaseElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLBASEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetHref(nsString& aHref)=0;
   NS_IMETHOD    SetHref(const nsString& aHref)=0;

@@ -32,6 +32,7 @@ class nsIDOMCSSStyleSheet;
 
 class nsIDOMCSSRule : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSRULE_IID; return iid; }
   enum {
     UNKNOWN_RULE = 0,
     STYLE_RULE = 1,

@@ -73,7 +73,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -84,7 +84,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       {
         nsAutoString prop;
         if (NS_OK == a->GetCh(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -95,7 +95,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       {
         nsAutoString prop;
         if (NS_OK == a->GetChOff(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -106,7 +106,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       {
         nsAutoString prop;
         if (NS_OK == a->GetVAlign(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -118,7 +118,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetRows(&prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -126,11 +126,11 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -155,7 +155,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_ALIGN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAlign(prop);
         
@@ -164,7 +164,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCh(prop);
         
@@ -173,7 +173,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CHOFF:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetChOff(prop);
         
@@ -182,18 +182,18 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_VALIGN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetVAlign(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -206,7 +206,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -216,7 +216,7 @@ FinalizeHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -226,7 +226,7 @@ EnumerateHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableSectionElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
@@ -259,7 +259,7 @@ HTMLTableSectionElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function insertRow requires 1 parameters");

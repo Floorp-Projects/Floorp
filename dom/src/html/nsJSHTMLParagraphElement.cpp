@@ -63,7 +63,7 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -71,11 +71,11 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -100,18 +100,18 @@ SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case HTMLPARAGRAPHELEMENT_ALIGN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAlign(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -124,7 +124,7 @@ SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLParagraphElement(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -134,7 +134,7 @@ FinalizeHTMLParagraphElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLParagraphElement(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -144,7 +144,7 @@ EnumerateHTMLParagraphElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLParagraphElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 

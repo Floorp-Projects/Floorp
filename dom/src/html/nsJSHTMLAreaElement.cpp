@@ -70,7 +70,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAccessKey(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -81,7 +81,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlt(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCoords(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -103,7 +103,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetHref(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -125,7 +125,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetShape(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -147,7 +147,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTarget(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -155,11 +155,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -184,7 +184,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ACCESSKEY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAccessKey(prop);
         
@@ -193,7 +193,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ALT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAlt(prop);
         
@@ -202,7 +202,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_COORDS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCoords(prop);
         
@@ -211,7 +211,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_HREF:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetHref(prop);
         
@@ -220,7 +220,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_NOHREF:
       {
         PRBool prop;
-        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -231,7 +231,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_SHAPE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetShape(prop);
         
@@ -256,18 +256,18 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TARGET:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTarget(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -280,7 +280,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLAreaElement(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -290,7 +290,7 @@ FinalizeHTMLAreaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLAreaElement(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -300,7 +300,7 @@ EnumerateHTMLAreaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLAreaElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 

@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLBRElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLBRELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetClear(nsString& aClear)=0;
   NS_IMETHOD    SetClear(const nsString& aClear)=0;

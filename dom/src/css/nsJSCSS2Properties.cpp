@@ -185,7 +185,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAzimuth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -196,7 +196,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackground(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -207,7 +207,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackgroundAttachment(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -218,7 +218,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackgroundColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -229,7 +229,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackgroundImage(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -240,7 +240,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackgroundPosition(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -251,7 +251,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBackgroundRepeat(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -262,7 +262,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorder(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -273,7 +273,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderCollapse(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -284,7 +284,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -295,7 +295,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderSpacing(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -306,7 +306,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -317,7 +317,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderTop(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -328,7 +328,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderRight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -339,7 +339,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderBottom(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -350,7 +350,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderLeft(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -361,7 +361,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderTopColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -372,7 +372,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderRightColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -383,7 +383,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderBottomColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -394,7 +394,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderLeftColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -405,7 +405,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderTopStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -416,7 +416,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderRightStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -427,7 +427,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderBottomStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -438,7 +438,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderLeftStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -449,7 +449,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderTopWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -460,7 +460,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderRightWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -471,7 +471,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderBottomWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -482,7 +482,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderLeftWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -493,7 +493,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorderWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -504,7 +504,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBottom(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -515,7 +515,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCaptionSide(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -526,7 +526,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetClear(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -537,7 +537,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetClip(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -548,7 +548,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -559,7 +559,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetContent(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -570,7 +570,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCounterIncrement(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -581,7 +581,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCounterReset(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -592,7 +592,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCue(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -603,7 +603,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCueAfter(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -614,7 +614,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCueBefore(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -625,7 +625,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCursor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -636,7 +636,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetDirection(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -647,7 +647,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetDisplay(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -658,7 +658,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetElevation(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -669,7 +669,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetEmptyCells(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -680,7 +680,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCssFloat(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -691,7 +691,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFont(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -702,7 +702,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontFamily(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -713,7 +713,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontSize(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -724,7 +724,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontSizeAdjust(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -735,7 +735,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontStretch(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -746,7 +746,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -757,7 +757,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontVariant(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -768,7 +768,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFontWeight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -779,7 +779,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetHeight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -790,7 +790,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetLeft(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -801,7 +801,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetLetterSpacing(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -812,7 +812,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetLineHeight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -823,7 +823,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetListStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -834,7 +834,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetListStyleImage(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -845,7 +845,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetListStylePosition(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -856,7 +856,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetListStyleType(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -867,7 +867,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMargin(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -878,7 +878,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarginTop(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -889,7 +889,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarginRight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -900,7 +900,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarginBottom(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -911,7 +911,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarginLeft(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -922,7 +922,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarkerOffset(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -933,7 +933,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMarks(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -944,7 +944,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMaxHeight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -955,7 +955,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMaxWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -966,7 +966,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMinHeight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -977,7 +977,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetMinWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -988,7 +988,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOrphans(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -999,7 +999,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOutline(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1010,7 +1010,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOutlineColor(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1021,7 +1021,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOutlineStyle(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1032,7 +1032,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOutlineWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1043,7 +1043,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOverflow(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1054,7 +1054,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPadding(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1065,7 +1065,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPaddingTop(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1076,7 +1076,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPaddingRight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1087,7 +1087,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPaddingBottom(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1098,7 +1098,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPaddingLeft(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1109,7 +1109,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPage(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1120,7 +1120,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPageBreakAfter(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1131,7 +1131,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPageBreakBefore(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1142,7 +1142,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPageBreakInside(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1153,7 +1153,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPause(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1164,7 +1164,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPauseAfter(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1175,7 +1175,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPauseBefore(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1186,7 +1186,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPitch(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1197,7 +1197,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPitchRange(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1208,7 +1208,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPlayDuring(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1219,7 +1219,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPosition(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1230,7 +1230,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetQuotes(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1241,7 +1241,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetRichness(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1252,7 +1252,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetRight(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1263,7 +1263,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSize(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1274,7 +1274,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSpeak(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1285,7 +1285,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSpeakHeader(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1296,7 +1296,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSpeakNumeral(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1307,7 +1307,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSpeakPunctuation(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1318,7 +1318,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSpeechRate(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1329,7 +1329,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetStress(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1340,7 +1340,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTableLayout(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1351,7 +1351,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTextAlign(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1362,7 +1362,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTextDecoration(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1373,7 +1373,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTextIndent(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1384,7 +1384,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTextShadow(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1395,7 +1395,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTextTransform(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1406,7 +1406,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTop(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1417,7 +1417,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetUnicodeBidi(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1428,7 +1428,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetVerticalAlign(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1439,7 +1439,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetVisibility(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1450,7 +1450,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetVoiceFamily(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1461,7 +1461,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetVolume(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1472,7 +1472,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWhiteSpace(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1483,7 +1483,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWidows(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1494,7 +1494,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWidth(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1505,7 +1505,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWordSpacing(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1516,7 +1516,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetZIndex(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1527,7 +1527,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetOpacity(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -1535,11 +1535,11 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -1564,7 +1564,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_AZIMUTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAzimuth(prop);
         
@@ -1573,7 +1573,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUND:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackground(prop);
         
@@ -1582,7 +1582,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUNDATTACHMENT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackgroundAttachment(prop);
         
@@ -1591,7 +1591,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUNDCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackgroundColor(prop);
         
@@ -1600,7 +1600,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUNDIMAGE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackgroundImage(prop);
         
@@ -1609,7 +1609,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUNDPOSITION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackgroundPosition(prop);
         
@@ -1618,7 +1618,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BACKGROUNDREPEAT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBackgroundRepeat(prop);
         
@@ -1627,7 +1627,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDER:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorder(prop);
         
@@ -1636,7 +1636,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERCOLLAPSE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderCollapse(prop);
         
@@ -1645,7 +1645,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderColor(prop);
         
@@ -1654,7 +1654,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERSPACING:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderSpacing(prop);
         
@@ -1663,7 +1663,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderStyle(prop);
         
@@ -1672,7 +1672,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERTOP:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderTop(prop);
         
@@ -1681,7 +1681,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERRIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderRight(prop);
         
@@ -1690,7 +1690,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERBOTTOM:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderBottom(prop);
         
@@ -1699,7 +1699,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERLEFT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderLeft(prop);
         
@@ -1708,7 +1708,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERTOPCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderTopColor(prop);
         
@@ -1717,7 +1717,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERRIGHTCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderRightColor(prop);
         
@@ -1726,7 +1726,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERBOTTOMCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderBottomColor(prop);
         
@@ -1735,7 +1735,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERLEFTCOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderLeftColor(prop);
         
@@ -1744,7 +1744,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERTOPSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderTopStyle(prop);
         
@@ -1753,7 +1753,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERRIGHTSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderRightStyle(prop);
         
@@ -1762,7 +1762,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERBOTTOMSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderBottomStyle(prop);
         
@@ -1771,7 +1771,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERLEFTSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderLeftStyle(prop);
         
@@ -1780,7 +1780,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERTOPWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderTopWidth(prop);
         
@@ -1789,7 +1789,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERRIGHTWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderRightWidth(prop);
         
@@ -1798,7 +1798,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERBOTTOMWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderBottomWidth(prop);
         
@@ -1807,7 +1807,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERLEFTWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderLeftWidth(prop);
         
@@ -1816,7 +1816,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BORDERWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorderWidth(prop);
         
@@ -1825,7 +1825,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_BOTTOM:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBottom(prop);
         
@@ -1834,7 +1834,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CAPTIONSIDE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCaptionSide(prop);
         
@@ -1843,7 +1843,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CLEAR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetClear(prop);
         
@@ -1852,7 +1852,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CLIP:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetClip(prop);
         
@@ -1861,7 +1861,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_COLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetColor(prop);
         
@@ -1870,7 +1870,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CONTENT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetContent(prop);
         
@@ -1879,7 +1879,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_COUNTERINCREMENT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCounterIncrement(prop);
         
@@ -1888,7 +1888,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_COUNTERRESET:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCounterReset(prop);
         
@@ -1897,7 +1897,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CUE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCue(prop);
         
@@ -1906,7 +1906,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CUEAFTER:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCueAfter(prop);
         
@@ -1915,7 +1915,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CUEBEFORE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCueBefore(prop);
         
@@ -1924,7 +1924,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CURSOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCursor(prop);
         
@@ -1933,7 +1933,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_DIRECTION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetDirection(prop);
         
@@ -1942,7 +1942,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_DISPLAY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetDisplay(prop);
         
@@ -1951,7 +1951,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_ELEVATION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetElevation(prop);
         
@@ -1960,7 +1960,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_EMPTYCELLS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetEmptyCells(prop);
         
@@ -1969,7 +1969,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_CSSFLOAT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCssFloat(prop);
         
@@ -1978,7 +1978,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFont(prop);
         
@@ -1987,7 +1987,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTFAMILY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontFamily(prop);
         
@@ -1996,7 +1996,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTSIZE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontSize(prop);
         
@@ -2005,7 +2005,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTSIZEADJUST:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontSizeAdjust(prop);
         
@@ -2014,7 +2014,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTSTRETCH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontStretch(prop);
         
@@ -2023,7 +2023,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontStyle(prop);
         
@@ -2032,7 +2032,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTVARIANT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontVariant(prop);
         
@@ -2041,7 +2041,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_FONTWEIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFontWeight(prop);
         
@@ -2050,7 +2050,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_HEIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetHeight(prop);
         
@@ -2059,7 +2059,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LEFT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetLeft(prop);
         
@@ -2068,7 +2068,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LETTERSPACING:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetLetterSpacing(prop);
         
@@ -2077,7 +2077,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LINEHEIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetLineHeight(prop);
         
@@ -2086,7 +2086,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LISTSTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetListStyle(prop);
         
@@ -2095,7 +2095,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LISTSTYLEIMAGE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetListStyleImage(prop);
         
@@ -2104,7 +2104,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LISTSTYLEPOSITION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetListStylePosition(prop);
         
@@ -2113,7 +2113,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_LISTSTYLETYPE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetListStyleType(prop);
         
@@ -2122,7 +2122,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARGIN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMargin(prop);
         
@@ -2131,7 +2131,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARGINTOP:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarginTop(prop);
         
@@ -2140,7 +2140,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARGINRIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarginRight(prop);
         
@@ -2149,7 +2149,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARGINBOTTOM:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarginBottom(prop);
         
@@ -2158,7 +2158,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARGINLEFT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarginLeft(prop);
         
@@ -2167,7 +2167,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARKEROFFSET:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarkerOffset(prop);
         
@@ -2176,7 +2176,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MARKS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMarks(prop);
         
@@ -2185,7 +2185,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MAXHEIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMaxHeight(prop);
         
@@ -2194,7 +2194,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MAXWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMaxWidth(prop);
         
@@ -2203,7 +2203,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MINHEIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMinHeight(prop);
         
@@ -2212,7 +2212,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_MINWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetMinWidth(prop);
         
@@ -2221,7 +2221,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_ORPHANS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOrphans(prop);
         
@@ -2230,7 +2230,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OUTLINE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOutline(prop);
         
@@ -2239,7 +2239,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OUTLINECOLOR:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOutlineColor(prop);
         
@@ -2248,7 +2248,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OUTLINESTYLE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOutlineStyle(prop);
         
@@ -2257,7 +2257,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OUTLINEWIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOutlineWidth(prop);
         
@@ -2266,7 +2266,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OVERFLOW:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOverflow(prop);
         
@@ -2275,7 +2275,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PADDING:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPadding(prop);
         
@@ -2284,7 +2284,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PADDINGTOP:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPaddingTop(prop);
         
@@ -2293,7 +2293,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PADDINGRIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPaddingRight(prop);
         
@@ -2302,7 +2302,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PADDINGBOTTOM:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPaddingBottom(prop);
         
@@ -2311,7 +2311,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PADDINGLEFT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPaddingLeft(prop);
         
@@ -2320,7 +2320,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAGE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPage(prop);
         
@@ -2329,7 +2329,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAGEBREAKAFTER:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPageBreakAfter(prop);
         
@@ -2338,7 +2338,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAGEBREAKBEFORE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPageBreakBefore(prop);
         
@@ -2347,7 +2347,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAGEBREAKINSIDE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPageBreakInside(prop);
         
@@ -2356,7 +2356,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAUSE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPause(prop);
         
@@ -2365,7 +2365,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAUSEAFTER:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPauseAfter(prop);
         
@@ -2374,7 +2374,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PAUSEBEFORE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPauseBefore(prop);
         
@@ -2383,7 +2383,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PITCH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPitch(prop);
         
@@ -2392,7 +2392,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PITCHRANGE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPitchRange(prop);
         
@@ -2401,7 +2401,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_PLAYDURING:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPlayDuring(prop);
         
@@ -2410,7 +2410,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_POSITION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetPosition(prop);
         
@@ -2419,7 +2419,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_QUOTES:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetQuotes(prop);
         
@@ -2428,7 +2428,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_RICHNESS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetRichness(prop);
         
@@ -2437,7 +2437,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_RIGHT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetRight(prop);
         
@@ -2446,7 +2446,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SIZE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSize(prop);
         
@@ -2455,7 +2455,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SPEAK:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSpeak(prop);
         
@@ -2464,7 +2464,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SPEAKHEADER:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSpeakHeader(prop);
         
@@ -2473,7 +2473,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SPEAKNUMERAL:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSpeakNumeral(prop);
         
@@ -2482,7 +2482,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SPEAKPUNCTUATION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSpeakPunctuation(prop);
         
@@ -2491,7 +2491,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_SPEECHRATE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSpeechRate(prop);
         
@@ -2500,7 +2500,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_STRESS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetStress(prop);
         
@@ -2509,7 +2509,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TABLELAYOUT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTableLayout(prop);
         
@@ -2518,7 +2518,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TEXTALIGN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTextAlign(prop);
         
@@ -2527,7 +2527,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TEXTDECORATION:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTextDecoration(prop);
         
@@ -2536,7 +2536,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TEXTINDENT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTextIndent(prop);
         
@@ -2545,7 +2545,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TEXTSHADOW:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTextShadow(prop);
         
@@ -2554,7 +2554,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TEXTTRANSFORM:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTextTransform(prop);
         
@@ -2563,7 +2563,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_TOP:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTop(prop);
         
@@ -2572,7 +2572,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_UNICODEBIDI:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetUnicodeBidi(prop);
         
@@ -2581,7 +2581,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_VERTICALALIGN:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetVerticalAlign(prop);
         
@@ -2590,7 +2590,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_VISIBILITY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetVisibility(prop);
         
@@ -2599,7 +2599,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_VOICEFAMILY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetVoiceFamily(prop);
         
@@ -2608,7 +2608,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_VOLUME:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetVolume(prop);
         
@@ -2617,7 +2617,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_WHITESPACE:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWhiteSpace(prop);
         
@@ -2626,7 +2626,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_WIDOWS:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWidows(prop);
         
@@ -2635,7 +2635,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_WIDTH:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWidth(prop);
         
@@ -2644,7 +2644,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_WORDSPACING:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWordSpacing(prop);
         
@@ -2653,7 +2653,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_ZINDEX:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetZIndex(prop);
         
@@ -2662,18 +2662,18 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSS2PROPERTIES_OPACITY:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetOpacity(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -2686,7 +2686,7 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeCSS2Properties(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -2696,7 +2696,7 @@ FinalizeCSS2Properties(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSS2Properties(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -2706,7 +2706,7 @@ EnumerateCSS2Properties(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSS2Properties(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 

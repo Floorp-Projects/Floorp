@@ -78,7 +78,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         if (NS_OK == a->Item(JSVAL_TO_INT(id), &prop)) {
           // get the js object
-          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -111,11 +111,11 @@ SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -128,7 +128,7 @@ SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeNamedNodeMap(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -138,7 +138,7 @@ FinalizeNamedNodeMap(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNamedNodeMap(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -148,7 +148,7 @@ EnumerateNamedNodeMap(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNamedNodeMap(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
@@ -172,13 +172,13 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetNamedItem(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getNamedItem requires 1 parameters");
@@ -209,7 +209,7 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   if (argc >= 1) {
 
-    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
                                            "Node",
                                            cx,
@@ -221,7 +221,7 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function setNamedItem requires 1 parameters");
@@ -252,13 +252,13 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->RemoveNamedItem(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function removeNamedItem requires 1 parameters");
@@ -298,7 +298,7 @@ NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       return JS_FALSE;
     }
 
-    nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function item requires 1 parameters");

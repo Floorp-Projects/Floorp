@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLPARAMELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;

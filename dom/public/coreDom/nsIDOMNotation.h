@@ -32,6 +32,7 @@
 
 class nsIDOMNotation : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNOTATION_IID; return iid; }
 
   NS_IMETHOD    GetPublicId(nsString& aPublicId)=0;
 

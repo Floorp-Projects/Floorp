@@ -32,6 +32,7 @@
 
 class nsIDOMProcessingInstruction : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMPROCESSINGINSTRUCTION_IID; return iid; }
 
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
 

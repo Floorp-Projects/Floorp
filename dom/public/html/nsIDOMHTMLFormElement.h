@@ -33,6 +33,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLFORMELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements)=0;
 

@@ -32,6 +32,7 @@ class nsIDOMWindow;
 
 class nsIDOMWindowCollection : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMWINDOWCOLLECTION_IID; return iid; }
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 

@@ -54,6 +54,7 @@ static const char *kClassDeclStr = "class nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
 static const char *kClassPrologStr = " {\npublic:\n";
+static const char *kStaticIIDStr = "  static const nsIID& IID() { static nsIID iid = %s; return iid; }\n";
 static const char *kEnumDeclBeginStr = "  enum {\n";
 static const char *kEnumEntryStr = "    %s = %d%s\n";
 static const char *kEnumDeclEndStr = "  };\n";
@@ -122,13 +123,13 @@ XPCOMGen::Generate(char *aFileName,
       
       GenerateGuid(*iface);
       GenerateClassDecl(*iface);
+      GenerateStatic(*iface);
       GenerateEnums(*iface);
       GenerateMethods(*iface);
       GenerateEndClassDecl();
       GenerateDeclMacro(*iface);
       GenerateForwardMacro(*iface);
       if (i == 0) {
-        GenerateFactory(*iface);
         GenerateEpilog(*iface, PR_TRUE);
       }
       else {
@@ -241,6 +242,18 @@ XPCOMGen::GenerateClassDecl(IdlInterface &aInterface)
   }
   
   *file << kClassPrologStr;
+}
+
+void     
+XPCOMGen::GenerateStatic(IdlInterface &aInterface)
+{
+  char buf[512];
+  char uuid_buf[256];
+  ofstream *file = GetFile();
+
+  GetInterfaceIID(uuid_buf, aInterface);
+  sprintf(buf, kStaticIIDStr, uuid_buf);
+  *file << buf;
 }
 
 void     

@@ -79,4 +79,6 @@ public:
                         nsIID& aCID) = 0;
 };
 
+extern "C" NS_DOM nsresult NS_NewScriptNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
+
 #endif /* nsIScriptNameSpaceManager_h__ */

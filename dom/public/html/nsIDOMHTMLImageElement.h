@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLImageElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLIMAGEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetLowSrc(nsString& aLowSrc)=0;
   NS_IMETHOD    SetLowSrc(const nsString& aLowSrc)=0;
@@ -132,16 +133,6 @@ public:
   NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
-
-#define NS_IDOMHTMLIMAGEELEMENTFACTORY_IID \
- { 0xa6cf90c8, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
-
-class nsIDOMHTMLImageElementFactory : public nsISupports {
-public:
-  NS_IMETHOD   CreateInstance(nsIDOMHTMLImageElement **aReturn)=0;
-
-};
 
 extern nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aPrototype);
 

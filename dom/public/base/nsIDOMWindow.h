@@ -36,6 +36,7 @@ class nsIDOMWindow;
 
 class nsIDOMWindow : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMWINDOW_IID; return iid; }
 
   NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow)=0;
 

@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLBlockquoteElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLBLOCKQUOTEELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetCite(nsString& aCite)=0;
   NS_IMETHOD    SetCite(const nsString& aCite)=0;

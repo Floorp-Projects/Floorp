@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLAreaElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLAREAELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
   NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;

@@ -32,6 +32,7 @@
 
 class nsIDOMEntityReference : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMENTITYREFERENCE_IID; return iid; }
 };
 
 

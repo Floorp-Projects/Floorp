@@ -32,6 +32,7 @@ class nsIDOMElement;
 
 class nsIDOMNSHTMLFormElement : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNSHTMLFORMELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetEncoding(nsString& aEncoding)=0;
 

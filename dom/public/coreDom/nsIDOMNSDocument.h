@@ -32,6 +32,7 @@ class nsIDOMStyleSheetCollection;
 
 class nsIDOMNSDocument : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNSDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)=0;
 };

@@ -33,6 +33,7 @@ class nsIDOMHTMLFormElement;
 
 class nsIDOMHTMLOptionElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLOPTIONELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 

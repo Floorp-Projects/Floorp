@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLFRAMESETELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetCols(nsString& aCols)=0;
   NS_IMETHOD    SetCols(const nsString& aCols)=0;

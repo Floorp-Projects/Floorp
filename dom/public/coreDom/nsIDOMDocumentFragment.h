@@ -32,6 +32,7 @@
 
 class nsIDOMDocumentFragment : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMDOCUMENTFRAGMENT_IID; return iid; }
 };
 
 

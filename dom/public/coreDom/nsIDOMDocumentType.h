@@ -33,6 +33,7 @@ class nsIDOMNamedNodeMap;
 
 class nsIDOMDocumentType : public nsIDOMNode {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMDOCUMENTTYPE_IID; return iid; }
 
   NS_IMETHOD    GetName(nsString& aName)=0;
 

@@ -64,7 +64,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetCssText(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -86,7 +86,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->Item(JSVAL_TO_INT(id), prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -95,7 +95,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     }
   }
   else {
-    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -120,18 +120,18 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case CSSSTYLEDECLARATION_CSSTEXT:
       {
         nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCssText(prop);
         
         break;
       }
       default:
-        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
+    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -144,7 +144,7 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(void)
 FinalizeCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 {
-  nsGenericFinalize(cx, obj);
+  nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
@@ -154,7 +154,7 @@ FinalizeCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 {
-  return nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
@@ -164,7 +164,7 @@ EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSStyleDeclaration(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
@@ -188,13 +188,13 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetPropertyValue(b0, nativeRet)) {
       return JS_FALSE;
     }
 
-    nsConvertStringToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getPropertyValue requires 1 parameters");
@@ -225,13 +225,13 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
 
   if (argc >= 1) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetPropertyPriority(b0, nativeRet)) {
       return JS_FALSE;
     }
 
-    nsConvertStringToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getPropertyPriority requires 1 parameters");
@@ -263,11 +263,11 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   if (argc >= 3) {
 
-    nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    nsConvertJSValToString(b1, cx, argv[1]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    nsConvertJSValToString(b2, cx, argv[2]);
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->SetProperty(b0, b1, b2)) {
       return JS_FALSE;
@@ -313,7 +313,7 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       return JS_FALSE;
     }
 
-    nsConvertStringToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function item requires 1 parameters");

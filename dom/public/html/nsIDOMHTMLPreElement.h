@@ -32,6 +32,7 @@
 
 class nsIDOMHTMLPreElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLPREELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
   NS_IMETHOD    SetWidth(PRInt32 aWidth)=0;

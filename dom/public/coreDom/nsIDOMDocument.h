@@ -43,7 +43,6 @@ class nsIDOMNodeList;
 
 class nsIDOMDocument : public nsIDOMNode {
 public:
-
   static const nsIID& IID() { static nsIID iid = NS_IDOMDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype)=0;

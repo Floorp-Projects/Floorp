@@ -31,6 +31,7 @@
 
 class nsIDOMImage : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMIMAGE_IID; return iid; }
 };
 
 

@@ -32,6 +32,7 @@ class nsIDOMRenderingContext;
 
 class nsIDOMNSEvent : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMNSEVENT_IID; return iid; }
   enum {
     EVENT_MOUSEDOWN = 1,
     EVENT_MOUSEUP = 2,

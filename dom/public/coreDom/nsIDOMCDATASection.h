@@ -32,6 +32,7 @@
 
 class nsIDOMCDATASection : public nsIDOMText {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCDATASECTION_IID; return iid; }
 };
 
 

@@ -35,6 +35,7 @@ class nsIDOMHTMLCollection;
 
 class nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLSELECTELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetType(nsString& aType)=0;
 

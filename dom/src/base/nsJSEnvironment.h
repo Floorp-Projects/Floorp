@@ -22,10 +22,12 @@
 #include "jsapi.h"
 
 class nsIScriptSecurityManager;
+class nsIScriptNameSpaceManager;
 
 class nsJSContext : public nsIScriptContext {
 private:
   JSContext *mContext;
+  nsIScriptNameSpaceManager* mNameSpaceManager;
 
 public:
   nsJSContext(JSRuntime *aRuntime);

@@ -33,6 +33,7 @@ class nsIDOMCSSStyleRuleCollection;
 
 class nsIDOMCSSMediaRule : public nsIDOMCSSRule {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSMEDIARULE_IID; return iid; }
 
   NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes)=0;
   NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes)=0;

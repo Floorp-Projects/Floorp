@@ -34,6 +34,7 @@ class nsIDOMRange;
 
 class nsIDOMRange : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMRANGE_IID; return iid; }
   enum {
     START_TO_START = 0,
     START_TO_END = 1,

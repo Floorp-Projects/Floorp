@@ -29,25 +29,23 @@
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsDOMCID.h"
-#include "nsIDOMNativeObjectRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsICollection.h"
 #include "nsIDOMRange.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsIScriptNameSetRegistry.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsIScriptExternalNameSet.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
-static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
-static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+static NS_DEFINE_IID(kCHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
@@ -61,47 +59,10 @@ nsresult NS_NewRangeList(nsICollection **);
 nsresult NS_NewRange(nsIDOMRange **);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
-class HTMLImageElementFactory : public nsIDOMHTMLImageElementFactory {
-public:
-  HTMLImageElementFactory();
-  ~HTMLImageElementFactory();
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD   CreateInstance(nsIDOMHTMLImageElement **aReturn);
-};
-
-HTMLImageElementFactory::HTMLImageElementFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-HTMLImageElementFactory::~HTMLImageElementFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS(HTMLImageElementFactory, kIDOMHTMLImageElementFactoryIID);
-
-NS_IMETHODIMP   
-HTMLImageElementFactory::CreateInstance(nsIDOMHTMLImageElement **aReturn)
-{
-  nsIHTMLContent *content;
-
-  nsresult rv = NS_NewHTMLImageElement(&content, nsHTMLAtoms::img);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  rv = content->QueryInterface(kIDOMHTMLImageElementIID, (void **)aReturn);
-  NS_RELEASE(content);
-  return rv;
-}
 
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kDOMNativeObjectRegistryCID, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
-static NS_DEFINE_IID(kIDOMNativeObjectRegistryIID, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -218,9 +179,12 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCHTMLImageElementFactoryCID)) {
-    inst = new HTMLImageElementFactory();
-    refCounted = PR_FALSE;
+  else if (mClassID.Equals(kCHTMLImageElementCID)) {
+    res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsHTMLAtoms::img);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kPresShellCID)) {
     res = NS_NewPresShell((nsIPresShell**) &inst);
@@ -307,22 +271,80 @@ nsresult nsLayoutFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }  
 
-class NativeObjectRegistryManager {
+////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////
+
+
+static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
+static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_IID(kIScriptNameSpaceManagerIID, NS_ISCRIPTNAMESPACEMANAGER_IID);
+static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
+
+class LayoutScriptNameSet : public nsIScriptExternalNameSet {
 public:
-  static nsIDOMNativeObjectRegistry *gRegistry;
+  LayoutScriptNameSet();
+  ~LayoutScriptNameSet();
+
+  NS_DECL_ISUPPORTS
   
-  NativeObjectRegistryManager() {};
-  ~NativeObjectRegistryManager() {
+  NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
+};
+
+LayoutScriptNameSet::LayoutScriptNameSet()
+{
+  NS_INIT_REFCNT();
+}
+
+LayoutScriptNameSet::~LayoutScriptNameSet()
+{
+}
+
+NS_IMPL_ISUPPORTS(LayoutScriptNameSet, kIScriptExternalNameSetIID);
+
+NS_IMETHODIMP
+LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
+{
+  nsresult result = NS_OK;
+  nsIScriptNameSpaceManager* manager;
+
+  result = aScriptContext->GetNameSpaceManager(&manager);
+  if (NS_OK == result) {
+    result = manager->RegisterGlobalName("HTMLImageElement", 
+                                         kCHTMLImageElementCID, 
+                                         PR_TRUE);
+    NS_RELEASE(manager);
+  }
+  
+  return result;
+}
+
+////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////
+
+// The goal of this class is to hold onto the specified service
+// until DLL unload time.
+class ScriptNameSetRegistryHolder {
+public:
+  static nsIScriptNameSetRegistry *gRegistry;
+  
+  ScriptNameSetRegistryHolder() {};
+  ~ScriptNameSetRegistryHolder() {
     if (gRegistry) {
-      nsServiceManager::ReleaseService(kDOMNativeObjectRegistryCID,
+      nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
                                        gRegistry);
       gRegistry = nsnull;
     }
   }
 };
 
-nsIDOMNativeObjectRegistry *NativeObjectRegistryManager::gRegistry = nsnull;
-static NativeObjectRegistryManager gManager;
+nsIScriptNameSetRegistry* ScriptNameSetRegistryHolder::gRegistry = nsnull;
+static ScriptNameSetRegistryHolder gManager;
+
+////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////
 
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
@@ -331,12 +353,13 @@ extern "C" NS_LAYOUT nsresult NSGetFactory_LAYOUT_DLL(const nsCID &aClass, nsIFa
 extern "C" NS_LAYOUT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 #endif
 {
-  if (nsnull == NativeObjectRegistryManager::gRegistry) {
-    nsresult result = nsServiceManager::GetService(kDOMNativeObjectRegistryCID,
-                                                   kIDOMNativeObjectRegistryIID,
-                                                   (nsISupports **)&NativeObjectRegistryManager::gRegistry);
+  if (nsnull == ScriptNameSetRegistryHolder::gRegistry) {
+    nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                                   kIScriptNameSetRegistryIID,
+                                                   (nsISupports **)&ScriptNameSetRegistryHolder::gRegistry);
     if (NS_OK == result) {
-      NativeObjectRegistryManager::gRegistry->RegisterFactory("HTMLImageElement", kCHTMLImageElementFactoryCID);
+      LayoutScriptNameSet* nameSet = new LayoutScriptNameSet();
+      ScriptNameSetRegistryHolder::gRegistry->AddExternalNameSet(nameSet);
     }
   }
 

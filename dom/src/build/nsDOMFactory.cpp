@@ -24,6 +24,7 @@
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMNativeObjectRegistry.h"
+#include "nsScriptNameSetRegistry.h"
 #include "nsIScriptEventListener.h"
 #include "jsurl.h"
 #include "nsIScriptContext.h"
@@ -541,6 +542,7 @@ nsDOMScriptObjectFactory::NewScriptProcessingInstruction(nsIScriptContext *aCont
 
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
+static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -635,8 +637,11 @@ nsresult nsDOMFactory::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kCDOMScriptObjectFactory)) {
     inst = (nsISupports *)new nsDOMScriptObjectFactory();
   }
-  if (mClassID.Equals(kCDOMNativeObjectRegistry)) {
+  else if (mClassID.Equals(kCDOMNativeObjectRegistry)) {
     inst = (nsISupports *)new nsDOMNativeObjectRegistry();
+  }
+  else if (mClassID.Equals(kCScriptNameSetRegistry)) {
+    inst = (nsISupports *)new nsScriptNameSetRegistry();
   }
 
   if (inst == NULL) {  
