@@ -31,6 +31,7 @@
 #include "nsFileStream.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIDNSService.h"
+#include "nsIMsgStatusFeedback.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -57,7 +58,12 @@ nsresult nsMsgProtocol::InitFromURI(nsIURI *aUrl)
 
 	nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 	if (mailUrl)
+  {
 		mailUrl->GetLoadGroup(getter_AddRefs(m_loadGroup));
+    nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
+    mailUrl->GetStatusFeedback(getter_AddRefs(statusFeedback));
+    mProgressEventSink = do_QueryInterface(statusFeedback);
+  }
   return NS_OK;
 }
 
@@ -542,14 +548,28 @@ NS_IMETHODIMP nsMsgProtocol::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsMsgProtocol::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-    NS_NOTREACHED("GetNotificationCallbacks");
-	return NS_ERROR_NOT_IMPLEMENTED;
+  *aNotificationCallbacks = mCallbacks.get();
+  NS_IF_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-	return NS_OK;       // don't fail when trying to set this
+  nsresult rv = NS_OK;
+  mCallbacks = aNotificationCallbacks;
+
+  // Verify that the event sink is http
+  if (mCallbacks) 
+  {
+      nsCOMPtr<nsIProgressEventSink> progressSink;
+     (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                   getter_AddRefs(progressSink));
+     // only replace our current progress event sink if we were given a new one..
+     if (progressSink) mProgressEventSink  = progressSink;
+  }
+  
+  return NS_OK;
 }
 
 

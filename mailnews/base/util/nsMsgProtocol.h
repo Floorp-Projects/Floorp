@@ -31,6 +31,8 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
 
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
@@ -69,7 +71,7 @@ protected:
 	// mscott -okay this is lame. I should break this up into a file protocol and a socket based
 	// protocool class instead of cheating and putting both methods here...
 	virtual nsresult OpenNetworkSocket(nsIURI * aURL, const char *connectionType); // open a connection on this url
-    virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort, const char *connectionType); // open a connection with a specific host and port
+  virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort, const char *connectionType); // open a connection with a specific host and port
 	virtual nsresult OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
 
 	// a Protocol typically overrides this method. They free any of their own connection state and then
@@ -90,7 +92,7 @@ protected:
 	// stream, etc). 
 	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
-    virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
+  virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
 
   virtual nsresult InitFromURI(nsIURI *aUrl);
 
@@ -113,6 +115,8 @@ protected:
 	nsCOMPtr<nsISupports>	    	m_channelContext;
 	nsCOMPtr<nsILoadGroup>		  m_loadGroup;
   nsLoadFlags                 mLoadAttributes;
+  nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 };
 
 #endif /* nsMsgProtocol_h__ */
