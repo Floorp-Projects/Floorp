@@ -363,7 +363,7 @@ InMemoryAssertionCursor::Advance(void)
     }
 
     // If we get here, the cursor is empty.
-    return NS_ERROR_RDF_CURSOR_EMPTY;
+    return NS_RDF_CURSOR_EMPTY;
 }
 
 NS_IMETHODIMP 
@@ -611,7 +611,7 @@ InMemoryArcsCursor::Advance(void)
     NS_IF_RELEASE(mCurrent);
 
     if (mNextIndex >= mElements.Count())
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
 
     // Cast is ok because this is a closed system. This code
     // effectively "transfers" the reference from the array to
@@ -764,7 +764,7 @@ NS_IMETHODIMP
 InMemoryResourceCursor::Advance(void)
 {
     if (mNext >= mResources.Count())
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
 
     if (mNext >= 0) {
         nsIRDFResource* resource = NS_STATIC_CAST(nsIRDFResource*, mResources[mNext]);
@@ -774,7 +774,7 @@ InMemoryResourceCursor::Advance(void)
     ++mNext;
 
     if (mNext >= mResources.Count())
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+        return NS_RDF_CURSOR_EMPTY;
 
     return NS_OK;
 }
@@ -1009,7 +1009,7 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
         return NS_OK;
     }
     *source = nsnull;
-    return NS_ERROR_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP
@@ -1052,7 +1052,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
     // If we get here, then there was no target with for the specified
     // property & truth value.
     *target = nsnull;
-    return NS_ERROR_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP

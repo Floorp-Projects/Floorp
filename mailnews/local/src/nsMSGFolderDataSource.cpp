@@ -281,11 +281,11 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
                                                PRBool tv,
                                                nsIRDFNode** target)
 {
-  nsresult rv = NS_ERROR_RDF_NO_VALUE;
+  nsresult rv = NS_RDF_NO_VALUE;
 
   // we only have positive assertions in the mail data source.
   if (! tv)
-    return NS_ERROR_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
 
 	//XXX these need to start being their own functions
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));

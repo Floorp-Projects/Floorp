@@ -213,8 +213,7 @@ FindDataSource::GetSource(nsIRDFResource* property,
                           PRBool tv,
                           nsIRDFResource** source /* out */)
 {
-	nsresult rv = NS_ERROR_RDF_NO_VALUE;
-	return rv;
+	return NS_RDF_NO_VALUE;
 }
 
 
@@ -237,7 +236,7 @@ FindDataSource::GetTarget(nsIRDFResource *source,
                           PRBool tv,
                           nsIRDFNode **target /* out */)
 {
-	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
+	nsresult		rv = NS_RDF_NO_VALUE;
 
 	// we only have positive assertions in the find data source.
 	if (! tv)
@@ -284,7 +283,7 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else
 		{
-			rv = NS_ERROR_RDF_NO_VALUE;
+			rv = NS_RDF_NO_VALUE;
 		}
 	}
 	return(rv);
@@ -408,8 +407,15 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 			nsIRDFResourceCursor	*cursor = nsnull;
 			if (NS_SUCCEEDED(rv = datasource->GetAllResources(&cursor)))
 			{
-				while (NS_SUCCEEDED(rv = cursor->Advance()))
+				while (1) 
 				{
+                                    rv = cursor->Advance();
+                                    if (NS_FAILED(rv))
+                                        break;
+
+                                    if (rv == NS_RDF_CURSOR_EMPTY)
+                                        break;
+
 					nsIRDFNode	*node = nsnull;
 					if (NS_SUCCEEDED(rv = cursor->GetValue(&node)))
 					{
@@ -444,7 +450,7 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 						}
 					}
 				}
-				if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
+				if (rv == NS_RDF_CURSOR_EMPTY)
 				{
 					rv = NS_OK;
 				}
@@ -612,7 +618,7 @@ NS_IMETHODIMP
 FindDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsIRDFArcsOutCursor **labels /* out */)
 {
-	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
+	nsresult		rv = NS_RDF_NO_VALUE;
 
 	*labels = nsnull;
 
@@ -770,7 +776,7 @@ FindCursor::Advance(void)
 	if (!mArray)
 		return NS_ERROR_NULL_POINTER;
 	if (mArray->Count() <= mCount)
-		return NS_ERROR_RDF_CURSOR_EMPTY;
+		return NS_RDF_CURSOR_EMPTY;
 	NS_IF_RELEASE(mValue);
 	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
 	NS_ADDREF(mValue);

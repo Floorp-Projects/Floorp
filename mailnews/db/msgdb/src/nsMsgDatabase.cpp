@@ -1404,8 +1404,10 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
         NS_IF_RELEASE(mResultHdr);
         mResultHdr = nsnull;
         rv = mRowCursor->NextRow(mDB->GetEnv(), &hdrRow, &rowPos);
-		if (!hdrRow)
-			rv = NS_ERROR_RDF_CURSOR_EMPTY;
+		if (!hdrRow) {
+            mDone = PR_TRUE;
+			return NS_RDF_CURSOR_EMPTY;
+        }
         if (NS_FAILED(rv)) {
             mDone = PR_TRUE;
             return rv;

@@ -377,7 +377,16 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
             nsIRDFAssertionCursor* cursor;
             rv = gCategoryDB->GetSources(kOPENDIR_link, urlRes, PR_TRUE, &cursor);
             if (NS_SUCCEEDED(rv)) {
-                while (NS_SUCCEEDED(cursor->Advance())) {
+                while (1) {
+                    rv = cursor->Advance();
+                    if (NS_FAILED(rv)) {
+                        done = PR_TRUE;
+                        break;
+                    }
+
+                    if (rv == NS_RDF_CURSOR_EMPTY)
+                        break;
+
                     nsIRDFResource* category;
                     rv = cursor->GetSource(&category);
                     if (NS_SUCCEEDED(rv)) {

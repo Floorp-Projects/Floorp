@@ -48,6 +48,10 @@
 #include "prlong.h"
 #include "rdf.h"
 
+#if defined(MOZ_BRPROF)
+#include "nsIBrowsingProfile.h"
+#endif
+
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -71,6 +75,9 @@ static NS_DEFINE_IID(kIRDFServiceIID,              NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
+#if defined(MOZ_BRPROF)
+static NS_DEFINE_CID(kBrowsingProfileCID,          NS_BROWSINGPROFILE_CID);
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // RDF property & resource declarations
@@ -140,6 +147,10 @@ protected:
     PLHashTable*       mLastVisitDateHash; 
     PRExplodedTime     mSessionTime;
 
+#if defined(MOZ_BRPROF)
+    nsIBrowsingProfile* mBrowsingProfile;
+#endif
+
 static	  PRInt32		gRefCnt;
 static    nsIRDFResource*    mResourcePage;
 static    nsIRDFResource*    mResourceDate;
@@ -197,7 +208,7 @@ public:
 			}
 			nsAutoString	url(uri);
 			if (url.Find("NC:") == 0)
-				return(NS_ERROR_FAILURE);
+				return(NS_RDF_NO_VALUE);
 			nsIRDFLiteral	*literal;
 			if (NS_FAILED(rv = gRDFService->GetLiteral(url, &literal)))
 			{
@@ -329,6 +340,9 @@ nsIRDFResource		*nsHistoryDataSource::mResourceHistoryByDate;
 nsHistoryDataSource::nsHistoryDataSource(void)
     : mInner(nsnull),
       mLastVisitDateHash(nsnull)
+#if defined(MOZ_BRPROF)
+      , mBrowsingProfile(nsnull)
+#endif
 {
 	NS_INIT_REFCNT();
 	if (gRefCnt++ == 0)
@@ -371,6 +385,11 @@ nsHistoryDataSource::~nsHistoryDataSource(void)
 		NS_IF_RELEASE(mResourceHistoryByDate);
 
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+
+#if defined(MOZ_BRPROF)
+        nsServiceManager::ReleaseService(kBrowsingProfileCID, mBrowsingProfile);
+#endif
+
 		gRDFService = nsnull;
 	}
     if (mLastVisitDateHash)
@@ -410,8 +429,6 @@ nsHistoryDataSource::QueryInterface(REFNSIID aIID, void** aResult)
     }
 }
 
-
-
 NS_IMETHODIMP
 nsHistoryDataSource::Init(const char* uri)
 {
@@ -426,6 +443,23 @@ nsHistoryDataSource::Init(const char* uri)
 	// register this as a named data source with the RDF service
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return rv;
+
+#if defined(MOZ_BRPROF)
+    {
+        // Force the browsing profile to be loaded and initialized
+        // here. Mostly we do this so that it's not on the netlib
+        // thread, which seems to be broken right now.
+        rv = nsServiceManager::GetService(kBrowsingProfileCID,
+                                          nsIBrowsingProfile::GetIID(),
+                                          (nsISupports**) &mBrowsingProfile);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get browsing profile");
+        if (NS_SUCCEEDED(rv)) {
+            rv = mBrowsingProfile->Init(nsnull);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to intialize browsing profile");
+        }
+    }
+#endif
 
     mLastVisitDateHash = PL_NewHashTable(400, rdf_HashPointer,
                                          PL_CompareValues,

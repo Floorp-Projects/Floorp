@@ -559,7 +559,14 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = children->Advance())) {
+    while (1) {
+        rv = children->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFNode> child;
         if (NS_FAILED(rv = children->GetTarget(getter_AddRefs(child)))) {
             NS_ERROR("error reading cursor");
@@ -571,9 +578,6 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
     }
-
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
 
     // Now that we've built the children, check to see if the includesrc attribute
     // exists on the node.
@@ -1538,7 +1542,14 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
     }
 
     // Advance that cursor 'til it runs outta steam
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
+    while (1) {
+        rv = properties->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
 
         if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property)))) {
@@ -1569,15 +1580,6 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         }
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
-        rv = NS_OK;
-    }
-    else if (NS_FAILED(rv)) {
-        // uh oh...
-        NS_ERROR("problem iterating properties");
-        return rv;
-    }
-   
     // Create the children NOW, because we can't do it lazily.
     if (NS_FAILED(rv = CreateHTMLContents(element, aResource))) {
         NS_ERROR("error creating child contents");
@@ -1674,7 +1676,14 @@ RDFXULBuilderImpl::CreateHTMLContents(nsIContent* aElement,
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = children->Advance())) {
+    while (1) {
+        rv = children->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFNode> child;
         if (NS_FAILED(rv = children->GetTarget(getter_AddRefs(child)))) {
             NS_ERROR("error reading cursor");
@@ -1687,10 +1696,7 @@ RDFXULBuilderImpl::CreateHTMLContents(nsIContent* aElement,
         }
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        rv = NS_OK;
-
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1723,7 +1729,14 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
     }
 
     // Advance that cursor 'til it runs outta steam
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
+    while (1) {
+        rv = properties->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFResource> property;
 
         if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property)))) {
@@ -1751,15 +1764,6 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
             NS_ERROR("unable to add attribute to element");
             return rv;
         }
-    }
-
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
-        rv = NS_OK;
-    }
-    else if (NS_FAILED(rv)) {
-        // uh oh...
-        NS_ERROR("problem iterating properties");
-        return rv;
     }
 
     // Make it a container so that its contents get recursively

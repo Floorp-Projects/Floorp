@@ -222,9 +222,6 @@ main(int argc, char** argv)
         goto done;
     }
 
-    extern void foobar();
-    foobar();
-
 done:
     NS_IF_RELEASE(out);
     NS_IF_RELEASE(ds);

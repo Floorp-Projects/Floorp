@@ -827,7 +827,14 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
         return rv;
     }
 
-    while (NS_SUCCEEDED(rv = elements->Advance())) {
+    while (1) {
+        rv = elements->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFNode> element;
         if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
             NS_ERROR("unable to read cursor");
@@ -866,7 +873,14 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
 
         // Now slide the rest of the collection backwards to fill in
         // the gap.
-        while (NS_SUCCEEDED(rv = elements->Advance())) {
+        while (1) {
+            rv = elements->Advance();
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (rv == NS_RDF_CURSOR_EMPTY)
+                break;
+
             if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
                 NS_ERROR("unable to get element from cursor");
                 return rv;
@@ -895,8 +909,6 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
             ++index;
         }
 
-        NS_ASSERTION(rv == NS_ERROR_RDF_CURSOR_EMPTY, "severe error advancing cursor");
-
         // Update the container's nextVal to reflect this mumbo jumbo
         if (NS_FAILED(rv = rdf_ContainerSetNextValue(aDataSource, aContainer, index))) {
             NS_ERROR("unable to update container's nextVal");
@@ -905,8 +917,6 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
 
         return NS_OK;
     }
-
-    NS_ASSERTION(rv == NS_ERROR_RDF_CURSOR_EMPTY, "severe error advancing cursor");
 
     NS_WARNING("attempt to remove non-existant element from container");
     return NS_OK;
@@ -951,7 +961,14 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
     PRInt32 index = 1;
 
     // Advance the cursor to the aIndex'th element.
-    while (NS_SUCCEEDED(rv = elements->Advance())) {
+    while (1) {
+        rv = elements->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
             NS_ERROR("unable to get element's ordinal index");
             return rv;
@@ -967,16 +984,9 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
             break;
     }
 
-    // Make sure Advance() didn't bomb...
-    NS_ASSERTION(NS_SUCCEEDED(rv) || rv == NS_ERROR_RDF_CURSOR_EMPTY,
-                 "severe error advancing cursor");
-
-    if (NS_FAILED(rv) && rv != NS_ERROR_RDF_CURSOR_EMPTY)
-        return rv;
-
     // Remember if we've exhausted the cursor: if so, this degenerates
     // into a simple "append" operation.
-    PRBool cursorExhausted = (rv == NS_ERROR_RDF_CURSOR_EMPTY);
+    PRBool cursorExhausted = (rv == NS_RDF_CURSOR_EMPTY);
 
     // XXX Be paranoid: there may have been a "hole"
     if (index > aIndex)
@@ -1036,9 +1046,15 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
                 NS_ERROR("unable to add element to container");
                 return rv;
             }
-        } while (NS_SUCCEEDED(rv = elements->Advance()));
 
-        NS_ASSERTION(rv == NS_ERROR_RDF_CURSOR_EMPTY, "severe error advancing cursor");
+            rv = elements->Advance();
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (rv == NS_RDF_CURSOR_EMPTY)
+                break;
+        }
+        while (1);
     }
 
     // Now update the container's nextVal
@@ -1085,7 +1101,14 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
 
 
     // Advance the cursor until we find the element we want
-    while (NS_SUCCEEDED(rv = elements->Advance())) {
+    while (1) {
+        rv = elements->Advance();
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (rv == NS_RDF_CURSOR_EMPTY)
+            break;
+
         nsCOMPtr<nsIRDFNode> element;
         if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
             NS_ERROR("unable to get element from cursor");
@@ -1111,8 +1134,6 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
         *aIndex = index;
         return NS_OK;
     }
-
-    NS_ASSERTION(rv == NS_ERROR_RDF_CURSOR_EMPTY, "severe error advancing cursor");
 
     NS_WARNING("element not found");
     *aIndex = -1;
