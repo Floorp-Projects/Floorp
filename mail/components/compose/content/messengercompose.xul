@@ -195,6 +195,7 @@
   <menuitem label="&cut.label;" accesskey="&cut.accesskey;" command="cmd_cut"/>
   <menuitem label="&copy.label;" accesskey="&copy.accesskey;" command="cmd_copy"/>
   <menuitem label="&paste.label;" accesskey="&paste.accesskey;" command="cmd_paste"/>
+  <menuitem command="cmd_pasteNoFormatting"/>
   <menuitem label="&pasteQuote.label;" accesskey="&pasteQuote.accesskey;" command="cmd_pasteQuote"/>
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuseparator/>
@@ -268,6 +269,7 @@
           <menuitem id="menu_cut" label="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
           <menuitem id="menu_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
           <menuitem id="menu_paste" label="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" command="cmd_paste"/>
+          <menuitem id="menu_pasteNoFormatting" command="cmd_pasteNoFormatting"/>
           <menuitem id="menu_pasteQuote"/>
           <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap"/>
           <menuitem id="menu_delete" label="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" command="cmd_delete"/>
