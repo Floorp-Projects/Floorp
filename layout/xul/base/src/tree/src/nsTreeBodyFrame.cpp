@@ -745,7 +745,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetPageCount(PRInt32 *_retval)
 NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 {
   if (!mRect.IsEmpty()) {
-    nsLeafBoxFrame::Invalidate(mPresContext, mRect, mDragSession ? PR_TRUE : PR_FALSE);
+    nsLeafBoxFrame::Invalidate(mPresContext, mRect, PR_FALSE);
   }
   return NS_OK;
 }
@@ -757,7 +757,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateColumn(const PRUnichar *aColID)
        currCol = currCol->GetNext()) {
     if (currCol->GetID().Equals(aColID)) {
       nsRect columnRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
-      nsLeafBoxFrame::Invalidate(mPresContext, columnRect, mDragSession ? PR_TRUE : PR_FALSE);
+      nsLeafBoxFrame::Invalidate(mPresContext, columnRect, PR_FALSE);
       break;
     }
     currX += currCol->GetWidth();
@@ -773,7 +773,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
 
   nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aIndex-mTopRowIndex), mInnerBox.width, mRowHeight);
   if (!rowRect.IsEmpty())
-    nsLeafBoxFrame::Invalidate(mPresContext, rowRect, mDragSession ? PR_TRUE : PR_FALSE);
+    nsLeafBoxFrame::Invalidate(mPresContext, rowRect, PR_FALSE);
   return NS_OK;
 }
 
@@ -792,7 +792,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnicha
 
     if (currCol->GetID().Equals(aColID)) {
       nsRect cellRect(currX, yPos, currCol->GetWidth(), mRowHeight);
-      nsLeafBoxFrame::Invalidate(mPresContext, cellRect, mDragSession ? PR_TRUE : PR_FALSE);
+      nsLeafBoxFrame::Invalidate(mPresContext, cellRect, PR_FALSE);
       break;
     }
     currX += currCol->GetWidth();
@@ -812,7 +812,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidatePrimaryCell(PRInt32 aIndex)
 
     if (currCol->IsPrimary()) {
       nsRect cellRect(currX, yPos, currCol->GetWidth(), mRowHeight);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      // Mac can't process the event loop during a drag, so if we're dragging,
+      // invalidate synchronously.
       nsLeafBoxFrame::Invalidate(mPresContext, cellRect, mDragSession ? PR_TRUE : PR_FALSE);
+#else
+      nsLeafBoxFrame::Invalidate(mPresContext, cellRect, PR_FALSE);
+#endif
       break;
     }
     currX += currCol->GetWidth();
@@ -837,7 +843,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
     aEnd = last;
 
   nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
-  nsLeafBoxFrame::Invalidate(mPresContext, rangeRect, mDragSession ? PR_TRUE : PR_FALSE);
+  nsLeafBoxFrame::Invalidate(mPresContext, rangeRect, PR_FALSE);
 
   return NS_OK;
 }
