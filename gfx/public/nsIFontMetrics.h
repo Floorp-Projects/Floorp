@@ -45,11 +45,23 @@ typedef void* nsFontHandle;
 
 /**
  * Font metrics interface
+ *
+ * This interface may be somewhat misnamed. A better name might be
+ * nsIFontList. The style system uses the nsFont struct for various font
+ * properties, one of which is font-family, which can contain a *list* of
+ * font names. The nsFont struct is "realized" by asking the device context
+ * to cough up an nsIFontMetrics object, which contains a list of real font
+ * handles, one for each font mentioned in font-family (and for each fallback
+ * when we fall off the end of that list).
+ *
+ * The style system needs to have access to certain metrics, such as the
+ * em height (for the CSS "em" unit), and we use the first Western font's
+ * metrics for that purpose. The platform-specific implementations are
+ * expected to select non-Western fonts that "fit" reasonably well with the
+ * Western font that is loaded at Init time.
  */
 class nsIFontMetrics : public nsISupports
 {
-  // XXX what about encoding, where do we put that? MMP
-
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONT_METRICS_IID)
 
@@ -114,6 +126,9 @@ public:
   /**
    * Returns the height (in app units) of the font. This is ascent plus descent
    * plus any internal leading
+   *
+   * This method will be removed once the callers have been moved over to the
+   * new GetEmHeight (and possibly GetMaxHeight).
    */
   NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
@@ -122,6 +137,35 @@ public:
    * is computed as the "height  - (ascent + descent)"
    */
   NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
+
+#if defined(XP_UNIX)
+#define NEW_FONT_HEIGHT_APIS 1
+#endif
+#ifdef NEW_FONT_HEIGHT_APIS
+
+  /**
+   * Returns the height (in app units) of the Western font's em square. This is
+   * em ascent plus em descent.
+   */
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight) = 0;
+
+  /**
+   * Returns, in app units, the ascent part of the Western font's em square.
+   */
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent) = 0;
+
+  /**
+   * Returns, in app units, the descent part of the Western font's em square.
+   */
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent) = 0;
+
+  /**
+   * Returns the height (in app units) of the Western font's bounding box.
+   * This is max ascent plus max descent.
+   */
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight) = 0;
+
+#endif /* NEW_FONT_HEIGHT_APIS */
 
   /**
    * Returns, in app units, the maximum distance characters in this font extend
