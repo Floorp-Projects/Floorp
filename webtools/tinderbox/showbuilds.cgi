@@ -256,10 +256,9 @@ sub print_table_row {
   #
   print '<td align=center>';
   for $who (sort keys %{$who_list->[$tt]} ){
-    $who =~ tr/%/@/;
     $qr = &who_menu($td1, $build_time_times->[$tt],
                     $build_time_times->[$tt-1],$who);
-    $who =~ s/@.*$//;
+    $who =~ s/%.*$//;
     print "  ${qr}$who</a>\n";
   }
   print '</td>';
@@ -469,7 +468,7 @@ sub who_menu {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $treeflag;
 
-  $qr = "${rel_path}../registry/who.cgi?email=$who"
+  $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
       . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
   return "<a href='$qr' onclick=\"return who(event);\">";
