@@ -40,6 +40,8 @@
 
 #include "glib.h"
 
+static PRBool sInitialized = PR_FALSE;
+
 struct OurGdkIOClosure {
   GdkInputFunction  function;
   gpointer          data;
@@ -186,6 +188,11 @@ HandleColormapPrefs( void )
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
+  if (sInitialized)
+    return NS_OK;
+
+  sInitialized = PR_TRUE;
+
   gchar *home=nsnull;
   gchar *path=nsnull;
 
@@ -194,8 +201,9 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   nsresult rv;
 
-  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
+  nsCOMPtr<nsICmdLineService> cmdLineArgs;
+  cmdLineArgs = do_GetService(kCmdLineServiceCID);
+  if (cmdLineArgs)
   {
     rv = cmdLineArgs->GetArgc(&argc);
     if(NS_FAILED(rv))

@@ -29,7 +29,7 @@ interface nsIDOMWindow;
 [scriptable, uuid(c47de916-1dd1-11b2-8141-82507fa02b21)]
 interface nsIFilePicker : nsISupports
 {
-  const short modeLoad        = 0;              // Load a file or directory
+  const short modeOpen        = 0;              // Load a file or directory
   const short modeSave        = 1;              // Save a file or directory
   const short modeGetFolder   = 2;              // Select a fodler/directory
 
@@ -73,7 +73,7 @@ interface nsIFilePicker : nsISupports
                     in wstring filter);
 
   /* what is this? */
-  attribute wstring defaultString;
+  attribute string defaultString;
 
  /**
   * Set the directory that the file open/save dialog initially displays

@@ -130,7 +130,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   
   // XXX Ignore the filter list for now....
   
-  if (mMode == modeLoad)
+  if (mMode == modeOpen)
     userClicksOK = GetLocalFile(title, &theFile);
   else if (mMode == modeSave)
     userClicksOK = PutLocalFile(title, defaultName, &theFile);
@@ -504,13 +504,13 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const char *aString)
 {
   mDefault = aString;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
+NS_IMETHODIMP nsFilePicker::GetDefaultString(char **aString)
 {
   return NS_ERROR_FAILURE;
 }
