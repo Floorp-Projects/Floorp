@@ -1472,6 +1472,29 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager::UpdateAllViews(PRUint32 aUpdateFlags)
+{
+	UpdateViews(mRootView, aUpdateFlags);
+	return NS_OK;
+}
+
+void nsViewManager::UpdateViews(nsIView *aView, PRUint32 aUpdateFlags)
+{
+	// update this view.
+	nsRect dirtyRect;
+	aView->GetBounds(dirtyRect);
+	dirtyRect.x = dirtyRect.y = 0;
+	UpdateView(aView, dirtyRect, aUpdateFlags);
+
+	// update all children as well.
+	nsIView* childView = nsnull;
+	aView->GetChild(0, childView);
+	while (nsnull != childView)	{
+		UpdateViews(childView, aUpdateFlags);
+		childView->GetNextSibling(childView);
+	}
+}
+
 NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
 {
   aStatus = nsEventStatus_eIgnore;

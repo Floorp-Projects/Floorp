@@ -136,6 +136,13 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags) = 0;
 
   /**
+   * Called to inform the view manager that it should redraw all views.
+   * @param aView view to paint. should be root view
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   */
+  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags) = 0;
+
+  /**
    * Called to dispatch an event to the appropriate view. Often called
    * as a result of receiving a mouse or keyboard event from the widget
    * event system.
