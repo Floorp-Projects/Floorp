@@ -92,7 +92,8 @@ protected:
    PRBool                  mContinueModalLoop;
    PRBool                  mDebuting;       // being made visible right now
    PRBool                  mChromeLoaded; // True when chrome has loaded
-   PRBool                  mShowAfterLoad;  
+   PRBool                  mShowAfterLoad;
+   PRBool                  mIntrinsicallySized; 
 };
 
 // nsContentShellInfo
