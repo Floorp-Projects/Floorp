@@ -21,6 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsIUnicharInputStream.h"
+#include "nsGUIEvent.h"
 class nsIArena;
 class nsIContent;
 class nsIDocumentContainer;
@@ -170,7 +171,13 @@ public:
     * Copies all text from the selection
    */
   virtual void GetSelectionText(nsString & aText) = 0;
+
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                                  nsGUIEvent* aEvent, 
+                                  nsEventStatus& aEventStatus) = 0;
+
 };
+
 
 // XXX Belongs somewhere else
 extern NS_LAYOUT nsresult

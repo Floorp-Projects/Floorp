@@ -37,6 +37,7 @@ EX_LIBS = \
 	$(DIST)/lib/libraptorlayout_s.a	\
 	$(DIST)/lib/libraptorgfx.a	\
 	$(DIST)/lib/libraptorbase.a	\
+	$(DIST)/lib/libraptorevents.a	\
 	$(DIST)/lib/libxpcom.a	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\

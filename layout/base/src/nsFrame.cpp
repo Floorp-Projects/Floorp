@@ -532,42 +532,47 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus)
 {
-#if DO_SELECTION 
+  aEventStatus = nsEventStatus_eIgnore;
+  
+  mContent->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
 
-  if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-  } else {
-    aEventStatus = nsEventStatus_eIgnore;
-    return NS_OK;
-  }
-  if (gSelectionDebug) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
+#if DO_SELECTION
 
-
-  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-    if (mDoingSelection) {
-      //mEndSelect = 0;
-      HandleRelease(aPresContext, aEvent, aEventStatus, this);
+  if(nsEventStatus_eIgnore == aEventStatus) {
+    if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
+        aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
+        aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    } else {
+      aEventStatus = nsEventStatus_eIgnore;
+      return NS_OK;
     }
-  } else if (aEvent->message == NS_MOUSE_MOVE) {
-    mDidDrag = PR_TRUE;
+    if (gSelectionDebug) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
 
-    //if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
-    HandleDrag(aPresContext, aEvent, aEventStatus, this);
-    if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
 
-  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    nsIContent * content;
-    GetContent(content);
-    BuildContentList(content);
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+      if (mDoingSelection) {
+        //mEndSelect = 0;
+        HandleRelease(aPresContext, aEvent, aEventStatus, this);
+      }
+    } else if (aEvent->message == NS_MOUSE_MOVE) {
+      mDidDrag = PR_TRUE;
 
-    NS_RELEASE(content);
+      //if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
+      HandleDrag(aPresContext, aEvent, aEventStatus, this);
+      if (gSelectionDebug) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
 
-    HandlePress(aPresContext, aEvent, aEventStatus, this);
+    } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+      nsIContent * content;
+      GetContent(content);
+      BuildContentList(content);
+
+      NS_RELEASE(content);
+
+      HandlePress(aPresContext, aEvent, aEventStatus, this);
+    }
   }
 #endif
 
-  aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
 

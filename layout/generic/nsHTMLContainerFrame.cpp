@@ -89,100 +89,11 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void nsHTMLContainerFrame::TriggerLink(nsIPresContext& aPresContext,
-                                       const nsString& aBase,
-                                       const nsString& aURLSpec,
-                                       const nsString& aTargetSpec,
-                                       PRBool aClick)
-{
-  nsILinkHandler* handler;
-  if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
-    // Resolve url to an absolute url
-    nsIURL* docURL = nsnull;
-    nsIDocument* doc = nsnull;
-    mContent->GetDocument(doc);
-    if (nsnull != doc) {
-      docURL = doc->GetDocumentURL();
-      NS_RELEASE(doc);
-    }
-
-    nsAutoString absURLSpec;
-    nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
-    if (nsnull != docURL) {
-      NS_RELEASE(docURL);
-    }
-
-    // Now pass on absolute url to the click handler
-    if (aClick) {
-      handler->OnLinkClick(this, absURLSpec, aTargetSpec);
-    }
-    else {
-      handler->OnOverLink(this, absURLSpec, aTargetSpec);
-    }
-  }
-}
-
 NS_METHOD nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
                                             nsGUIEvent* aEvent,
                                             nsEventStatus& aEventStatus)
 {
-  aEventStatus = nsEventStatus_eIgnore; 
-  switch (aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-    if (nsEventStatus_eIgnore ==
-        nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus)) { 
-      // If our child didn't take the click then since we are an
-      // anchor, we take the click.
-      nsIAtom* tag = mContent->GetTag();
-      if (tag == nsHTMLAtoms::a) {
-        nsAutoString base, href, target;
-        mContent->GetAttribute("href", href);
-        mContent->GetAttribute("target", target);
-        TriggerLink(aPresContext, base, href, target, PR_TRUE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
-      }
-      NS_IF_RELEASE(tag);
-    }
-    break;
-
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    // XXX Bring up a contextual menu provided by the application
-    break;
-
-  case NS_MOUSE_MOVE:
-    if (nsEventStatus_eIgnore ==
-        nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus)) { 
-      nsIAtom* tag = mContent->GetTag();
-      if (tag == nsHTMLAtoms::a) {
-        nsAutoString base, href, target;
-        mContent->GetAttribute("href", href);
-        mContent->GetAttribute("target", target);
-        TriggerLink(aPresContext, base, href, target, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
-      }
-      NS_IF_RELEASE(tag);
-    }
-    break;
-
-    // XXX this doesn't seem to do anything yet
-  case NS_MOUSE_EXIT:
-    if (nsEventStatus_eIgnore ==
-        nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus)) { 
-      nsIAtom* tag = mContent->GetTag();
-      if (tag == nsHTMLAtoms::a) {
-        nsAutoString empty;
-        TriggerLink(aPresContext, empty, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
-      }
-      NS_IF_RELEASE(tag);
-    }
-    break;
-
-  default:
-    nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-    break;
-  }
-  return NS_OK;
+  return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,

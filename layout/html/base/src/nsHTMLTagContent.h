@@ -114,6 +114,10 @@ public:
   NS_IMETHOD GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator);
   NS_IMETHOD Normalize();
 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                            nsGUIEvent* aEvent, 
+                            nsEventStatus& aEventStatus);
+
   // Utility routines for making attribute parsing easier
 
   struct EnumTable {
@@ -202,6 +206,12 @@ protected:
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
+
+  void TriggerLink(nsIPresContext& aPresContext,
+                 const nsString& aBase,
+                 const nsString& aURLSpec,
+                 const nsString& aTargetSpec,
+                 PRBool aClick);
 
   nsIAtom* mTag;
   nsIHTMLAttributes* mAttributes;

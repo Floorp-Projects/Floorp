@@ -82,6 +82,8 @@ public:
 
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const {;}
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const { return NS_OK; }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsEventStatus& aEventStatus) 
+    {return NS_OK;}
 
   NS_DECL_ISUPPORTS
 

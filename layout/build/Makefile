@@ -36,5 +36,6 @@ LOBJS = \
 	$(DIST)/lib/libraptorhtmlforms_s.a		\
 	$(DIST)/lib/libraptorhtmlstyle_s.a		\
 	$(DIST)/lib/libraptorhtmltable_s.a		\
+	$(DIST)/lib/libraptorevents_s.a		\
 
 include $(DEPTH)/config/rules.mk

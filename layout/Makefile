@@ -17,7 +17,7 @@
 
 DEPTH = ..
 
-DIRS = base html build
+DIRS = base html events build
 
 include $(DEPTH)/config/config.mk
 
