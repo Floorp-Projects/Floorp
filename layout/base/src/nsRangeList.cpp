@@ -165,6 +165,7 @@ private:
   
 
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into rangelist
+  NS_IMETHOD   selectFrames(nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, PRBool aFlags);
   NS_IMETHOD   selectFrames(nsIDOMRange *aRange, PRBool aSelect);
   
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
@@ -837,6 +838,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
        break;
     default :return NS_ERROR_FAILURE;
     }
+    pos.mPreferLeft = mHint;
     if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
       result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
     if (NS_SUCCEEDED(result))
@@ -1654,6 +1656,41 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   return NS_ERROR_FAILURE;
 }
 
+
+
+//select all content children of aContent
+NS_IMETHODIMP
+nsDOMSelection::selectFrames(nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, PRBool aFlags)
+{
+  nsresult result = aInnerIter->Init(aContent);
+  nsIFrame *frame;
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIContent> innercontent;
+    while (NS_COMFALSE == aInnerIter->IsDone())
+    {
+      result = aInnerIter->CurrentNode(getter_AddRefs(innercontent));
+      if (NS_FAILED(result) || !innercontent)
+        continue;
+      result = mRangeList->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
+      if (NS_SUCCEEDED(result) && frame)
+        frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+      result = aInnerIter->Next();
+      if (NS_FAILED(result))
+        return result;
+    }
+#if 0
+    result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
+    if (NS_SUCCEEDED(result) && frame)
+      frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+#endif
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
 NS_IMETHODIMP
 nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
@@ -1693,38 +1730,13 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     }
 //end start content
     result = iter->First();
-    if (NS_SUCCEEDED(result))
+    while (NS_SUCCEEDED(result) && NS_COMFALSE == iter->IsDone())
     {
-      while (NS_COMFALSE == iter->IsDone())
-      {
-        result = iter->CurrentNode(getter_AddRefs(content));
-        if (NS_FAILED(result) || !content)
-          return result;
-#if OLD_SELECTION
-        result = inneriter->Init(content);
-        if (NS_SUCCEEDED(result))
-        {
-          nsCOMPtr<nsIContent> innercontent;
-          while (NS_COMFALSE == inneriter->IsDone())
-          {
-            result = iter->CurrentNode(getter_AddRefs(innercontent));
-            if (NS_FAILED(result) || !innercontent)
-              continue;
-            result = mRangeList->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
-            if (NS_SUCCEEDED(result) && frame)
-              frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
-            result = inneriter->Next();
-            if (NS_FAILED(result))
-        	    return result;
-          }
-        }
-#else
-        result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
-        if (NS_SUCCEEDED(result) && frame)
-          frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
-#endif
-        result = iter->Next();
-      }
+      result = iter->CurrentNode(getter_AddRefs(content));
+      if (NS_FAILED(result) || !content)
+        return result;
+      selectFrames(inneriter, content, aRange, aFlags);
+      result = iter->Next();
     }
 //we must now do the last one  if it is not the same as the first
     if (FetchEndParent(aRange) != FetchStartParent(aRange))

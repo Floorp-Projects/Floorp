@@ -269,6 +269,7 @@ NS_IMETHODIMP
 nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   //traverse through children unselect tables
+#if 0
   if ((aSpread == eSpreadDown)){
     nsIFrame* kid;
     FirstChild(nsnull, &kid);
@@ -278,7 +279,9 @@ nsTableCellFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSp
       kid->GetNextSibling(&kid);
     }
   }
-  return NS_OK;//nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+  //return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+#endif
+  return NS_OK;
 }
 
 PRIntn

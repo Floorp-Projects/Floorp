@@ -1962,6 +1962,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
+#if 0
   //traverse through children unselect tables
   if ((aSpread == eSpreadDown)){
     nsIFrame* kid;
@@ -1972,7 +1973,9 @@ nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread
       rv = kid->GetNextSibling(&kid);
     }
   }
-  return NS_OK;//nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+#endif
+  return NS_OK;//return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+  
 }
 
 PRBool nsTableFrame::ParentDisablesSelection() const //override default behavior
