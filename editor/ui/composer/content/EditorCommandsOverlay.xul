@@ -1,0 +1,84 @@
+<?xml version="1.0"?> 
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 2000 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+  -->
+
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
+
+<overlay id="editorCommandsOverlay"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
+              accesskey="&formatremovelinks.accesskey;"
+              oncommand="EditorRemoveLinks()"/>
+
+  <menuitem id="menu_preview" value="&previewCmd.label;"
+              accesskey="&filepreview.accesskey;"
+              observes="cmd_preview"/>
+
+  <menuitem id="objectProperties" value="&properties.label;"
+            accesskey="&properties.accesskey;"
+            oncommand="EditorObjectProperties()"/>
+
+  <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
+    <menupopup  oncreate="InitTableMenu()">
+      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
+              accesskey="&tableselectmenu.accesskey;">
+        <menupopup>
+            <menuitem value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
+            <menuitem value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
+            <menuitem value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
+            <menuitem value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
+            <menuitem value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
+        </menupopup>
+      </menu>
+      <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
+        <menupopup>
+          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
+          <menuseparator />
+          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
+          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
+          <menuseparator />
+          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
+          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
+          <menuseparator />
+          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
+          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
+        </menupopup>
+      </menu>
+      <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
+        <menupopup>
+            <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorDeleteTable()"/>
+            <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow(1)"/>
+            <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn(1)"/>
+            <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell(1)"/>
+        </menupopup>
+      </menu>
+      <menuseparator />
+      <menuitem id="tableNormalizeTable" accesskey="&tablefixup.accesskey;"     oncommand="EditorNormalizeTable()" value="&tableFixup.label;"      />
+      <menuitem id="tableJoinCells"      accesskey="&tablejoincells.accesskey;" oncommand="EditorJoinTableCells()"/><!-- menu text set in InitTableMenu -->
+      <menuitem id="tableSlitCell"       accesskey="&tablesplitcell.accesskey;" oncommand="EditorSplitTableCell()" value="&tableSplitCell.label;"  />
+      <menuitem id="tableProperties"     accesskey="&properties.accesskey;"     observes="cmd_editTable"           value="&tableProperties.label;" />
+    </menupopup>
+  </menu>
+
+</overlay>
