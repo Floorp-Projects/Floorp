@@ -317,6 +317,7 @@ Description Short=$CompanyName$ Uninstaller
 Description Long=Uninstaller for $ProductName$
 Archive=$UninstallFile$
 $InstallSize$:$UninstallFile$
+$InstallSizeSystem$
 $InstallSizeArchive$:$UninstallFile$
 ;Dependency0=
 ; Attributes can be the following values:
