@@ -41,6 +41,7 @@ REQUIRES = \
     plugin \
     string \
     dom \
+    caps \
     content \
     widget \
     gfx \
