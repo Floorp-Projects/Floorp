@@ -658,22 +658,22 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 		const char *subject = line;  /* #### const evilness */
 		PRUint32 subjectLen = nsCRT::strlen(line);
 
+		PRUint32 flags;
+		rv = newMsgHdr->GetFlags(&flags);
+   		if (NS_FAILED(rv)) return rv;
 		/* strip "Re: " */
 		if (msg_StripRE(&subject, &subjectLen))
 		{
-			PRUint32 flags;
 			// todo:
 			// use OrFlags()?
 			// I don't think I need to get flags, since
 			// this is a new header.
-			rv = newMsgHdr->GetFlags(&flags);
-    			if (NS_FAILED(rv)) return rv;
 			rv = newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
     			if (NS_FAILED(rv)) return rv;
-			if (! (flags & MSG_FLAG_READ))
-				rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
 		}
 
+		if (! (flags & MSG_FLAG_READ))
+			rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
 #ifdef DEBUG_NEWS
 		printf("subject = %s\n",subject);
 #endif
