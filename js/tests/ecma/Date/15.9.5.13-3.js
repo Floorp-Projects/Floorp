@@ -29,7 +29,7 @@
     Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.13.js";
+    var SECTION = "15.9.5.13";
     var VERSION = "ECMA_1";
     startTest();
     var TITLE   = "Date.prototype.getUTCDay()";

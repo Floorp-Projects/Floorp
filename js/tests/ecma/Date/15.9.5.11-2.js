@@ -17,7 +17,7 @@
  * 
  */
 /**
-    File Name:          15.9.5.11.js
+    File Name:          15.9.5.11
     ECMA Section:       15.9.5.11
     Description:        Date.prototype.getUTCDate
 
@@ -29,7 +29,7 @@
     Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.11.js";
+    var SECTION = "15.9.5.11";
     var VERSION = "ECMA_1";
     startTest();
     var TITLE   = "Date.prototype.getUTCDate()";

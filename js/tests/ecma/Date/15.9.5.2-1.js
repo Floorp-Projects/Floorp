@@ -32,7 +32,7 @@
     Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.2.js";
+    var SECTION = "15.9.5.2";
     var VERSION = "ECMA_1";
     startTest();
     var TITLE   = "Date.prototype.toString";
