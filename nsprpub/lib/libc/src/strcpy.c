@@ -46,9 +46,20 @@ PL_strcpy(char *dest, const char *src)
 PR_IMPLEMENT(char *)
 PL_strncpy(char *dest, const char *src, PRUint32 max)
 {
-    if( ((char *)0 == dest) || ((const char *)0 == src) ) return (char *)0;
+    char *rv;
+    
+    if( (char *)0 == dest ) return (char *)0;
+    if( (const char *)0 == src ) return (char *)0;
 
-    return strncpy(dest, src, (size_t)max);
+    for( rv = dest; max && ((*dest = *src) != 0); dest++, src++, max-- )
+        ;
+
+#ifdef JLRU
+    while( --max )
+        *++dest = '\0';
+#endif /* JLRU */
+
+    return rv;
 }
 
 PR_IMPLEMENT(char *)
