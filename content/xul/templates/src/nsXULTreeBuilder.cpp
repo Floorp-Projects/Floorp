@@ -326,12 +326,23 @@ nsXULOutlinerBuilder::~nsXULOutlinerBuilder()
 //
 
 NS_IMETHODIMP
-nsXULOutlinerBuilder::GetResourceFor(PRInt32 aRowIndex, nsIRDFResource** aResult)
+nsXULOutlinerBuilder::GetResourceAtIndex(PRInt32 aRowIndex, nsIRDFResource** aResult)
 {
     if (aRowIndex < 0 || aRowIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
-    *aResult = GetResourceFor(aRowIndex);
+    NS_IF_ADDREF(*aResult = GetResourceFor(aRowIndex));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULOutlinerBuilder::GetIndexOfResource(nsIRDFResource* aResource, PRInt32* aResult)
+{
+    nsOutlinerRows::iterator iter = mRows.Find(mConflictSet, aResource);
+    if (iter == mRows.Last())
+        *aResult = -1;
+    else
+        *aResult = iter.GetRowIndex();
     return NS_OK;
 }
 
