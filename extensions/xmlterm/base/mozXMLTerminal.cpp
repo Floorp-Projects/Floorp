@@ -973,7 +973,7 @@ NS_IMETHODIMP mozXMLTerminal::MatchesCookie(const PRUnichar* aCookie,
     return NS_ERROR_NULL_POINTER;
 
   // Check if supplied cookie matches XMLTerm cookie
-  *_retval = mCookie.EqualsWithConversion(aCookie);
+  *_retval = mCookie.Equals(aCookie);
 
   if (!(*_retval)) {
     XMLT_ERROR("mozXMLTerminal::MatchesCookie: Error - Cookie mismatch\n");
