@@ -14,16 +14,18 @@
 #define HAVE_MEMORY_H 1
 
 /* Define if we have pthread. */
-#define HAVE_PTHREAD 
+/* #undef HAVE_PTHREAD */
 
 /* Define to 1 if you have the <pthread.h> header file. */
-#define HAVE_PTHREAD_H 1
+/* #undef HAVE_PTHREAD_H 1 */
 
 /* Define to 1 if you have the `snprintf' function. */
 #define HAVE_SNPRINTF 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
+#ifndef XP_WIN32
 #define HAVE_STDINT_H 1
+#endif
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -47,7 +49,11 @@
 #define HAVE_TIME_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
+#ifdef XP_WIN32
+#define NO_YY_UNISTD_H 1
+#else
 #define HAVE_UNISTD_H 1
+#endif
 
 /* Define to make icalerror_* calls abort instead of internally signalling an
    error */
