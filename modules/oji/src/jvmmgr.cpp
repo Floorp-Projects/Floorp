@@ -84,7 +84,7 @@ nsJVMMgr::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
     if (jvmmgr == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     jvmmgr->AddRef();
-    *aInstancePtr = jvmmgr->GetInner();
+    *aInstancePtr = (outer != NULL ? (void*) jvmmgr->GetInner() : (void*) jvmmgr);
     return NS_OK;
 }
 
