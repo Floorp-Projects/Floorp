@@ -145,6 +145,7 @@ CHROME_SKIN = \
 	.\check-check-disabled.gif \
 	.\check-radio.gif \
 	.\check-radio-disabled.gif \
+	.\loading.gif \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
