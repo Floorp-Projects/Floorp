@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/web-panels.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % webPanelsDTD SYSTEM "chrome://browser/locale/web-panels.dtd" >
@@ -9,17 +10,22 @@
 <page id="webpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="loadPlaceholderPage()"> 
+        onload="load()" onunload="unload()"> 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-  <hbox align="center">
-    <toolbarbutton label="&addPanel.label;" oncommand="addWebPanel()"/>
-    <spacer flex="1"/>
-    <toolbarbutton label="&viewPage.label;" oncommand="grabPage()"/>
-  </hbox>
+  <stack>
+    <hbox pack="center" align="center">
+      <image id="webpanels-throbber"/>
+    </hbox>
+    <hbox align="center">
+        <toolbarbutton label="&addPanel.label;" oncommand="addWebPanel()"/>
+        <spacer flex="1"/>
+        <toolbarbutton label="&viewPage.label;" oncommand="grabPage()"/>
+    </hbox>
+  </stack>
   <browser id="webpanels-browser" type="content" flex="1"
            onclick="return window.parent.contentAreaClick(event, true);"
            ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
