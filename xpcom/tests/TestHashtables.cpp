@@ -223,10 +223,10 @@ nsCEnum(const nsACString& aKey, nsAutoPtr<TestUniChar>& aData, void* userArg) {
 
 class IFoo : public nsISupports
   {
-		public:
-			NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+    public:
+      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
-		public:
+    public:
       IFoo();
 
       NS_IMETHOD_(nsrefcnt) AddRef();
@@ -307,27 +307,27 @@ IFoo::Release()
 
 nsresult
 IFoo::QueryInterface( const nsIID& aIID, void** aResult )
-	{
+  {
     printf("IFoo@%p::QueryInterface()\n", NS_STATIC_CAST(void*, this));
-		nsISupports* rawPtr = 0;
-		nsresult status = NS_OK;
+    nsISupports* rawPtr = 0;
+    nsresult status = NS_OK;
 
-		if ( aIID.Equals(GetIID()) )
-			rawPtr = this;
-		else
-			{
-				nsID iid_of_ISupports = NS_ISUPPORTS_IID;
-				if ( aIID.Equals(iid_of_ISupports) )
-					rawPtr = NS_STATIC_CAST(nsISupports*, this);
-				else
-					status = NS_ERROR_NO_INTERFACE;
-			}
+    if ( aIID.Equals(GetIID()) )
+      rawPtr = this;
+    else
+      {
+        nsID iid_of_ISupports = NS_ISUPPORTS_IID;
+        if ( aIID.Equals(iid_of_ISupports) )
+          rawPtr = NS_STATIC_CAST(nsISupports*, this);
+        else
+          status = NS_ERROR_NO_INTERFACE;
+      }
 
-		NS_IF_ADDREF(rawPtr);
-		*aResult = rawPtr;
+    NS_IF_ADDREF(rawPtr);
+    *aResult = rawPtr;
 
-		return status;
-	}
+    return status;
+  }
 
 nsresult
 IFoo::SetString(const nsACString& aString)

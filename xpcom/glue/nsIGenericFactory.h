@@ -437,7 +437,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
         return rv;                                                            \
     }                                                                         \
     NS_ADDREF(inst);                                                          \
-	rv = inst->_InitMethod();                                                 \
+    rv = inst->_InitMethod();                                                 \
     if(NS_SUCCEEDED(rv)) {                                                    \
         rv = inst->QueryInterface(aIID, aResult);                             \
     }                                                                         \

@@ -98,7 +98,7 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
 
   /* Whether or not an addon package can dynamically overlay another package. 
      You can use these APIs to effectively disable a chrome add-on without
-	 uninstalling it. */
+     uninstalling it. */
   void setAllowOverlaysForPackage(in wstring packageName, in boolean allowOverlays);
 
   /* Installation APIs */
