@@ -139,3 +139,9 @@ void PSFE_GetTextFrame(){}
 /* Webfonts */
 void TXFE_LoadFontResource(){}
 void PSFE_LoadFontResource(){}
+
+void TXFE_DisplayBuiltin() {}
+void PSFE_DisplayBuiltin() {}
+
+void TXFE_FreeBuiltinElement() {}
+void PSFE_FreeBuiltinElement() {}
