@@ -22,7 +22,15 @@
 
 #include "nsFileControlFrame.h"
 #include "nsFormFrame.h"
+
+//#define DEBUG_NEWFRAME 1
+
+#ifndef DEBUG_NEWFRAME
 #include "nsGfxTextControlFrame.h"
+#else
+#include "nsGfxTextControlFrame2.h"
+#endif
+
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -276,6 +284,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
+#ifndef DEBUG_NEWFRAME
   DO_GLOBAL_REFLOW_COUNT("nsFileControlFrame", aReflowState.reason);
 
   if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
@@ -333,6 +342,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
   return rv;
+#else
+  return NS_OK;
+#endif
 }
 
 /*
@@ -358,7 +370,7 @@ nsGfxTextControlFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
   nsGfxTextControlFrame* result = nsnull;
-
+#ifndef DEBUG_NEWFRAME
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(aPresContext, nsnull, &childFrame);
@@ -394,6 +406,9 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
   }
 
   return result;
+#else
+  return nsnull;
+#endif
 }
 
 PRIntn
@@ -554,6 +569,7 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
                                               const nsString& aValue)
 {
   nsresult rv = NS_OK;
+#ifndef DEBUG_NEWFRAME
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
       mTextFrame->SetTextControlFrameState(aValue);                                         
@@ -563,6 +579,7 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
       if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
+#endif
   return rv;
 }      
 
@@ -571,10 +588,11 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
 
+#ifndef DEBUG_NEWFRAME
   if (nsHTMLAtoms::value == aName) {
     mTextFrame->GetTextControlFrameState(aValue);
   }
- 
+#endif
   return NS_OK;
 }
 
