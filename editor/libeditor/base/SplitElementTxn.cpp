@@ -29,7 +29,7 @@ SplitElementTxn::SplitElementTxn()
 {
 }
 
-nsresult SplitElementTxn::Init(nsIEditor  *aEditor,
+NS_IMETHODIMP SplitElementTxn::Init(nsIEditor  *aEditor,
                                nsIDOMNode *aNode,
                                PRInt32     aOffset)
 {
@@ -43,7 +43,7 @@ SplitElementTxn::~SplitElementTxn()
 {
 }
 
-nsresult SplitElementTxn::Do(void)
+NS_IMETHODIMP SplitElementTxn::Do(void)
 {
   // create a new node
   nsresult result = mExistingRightNode->CloneNode(PR_FALSE, getter_AddRefs(mNewLeftNode));
@@ -69,7 +69,7 @@ nsresult SplitElementTxn::Do(void)
   return result;
 }
 
-nsresult SplitElementTxn::Undo(void)
+NS_IMETHODIMP SplitElementTxn::Undo(void)
 {
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result;
@@ -84,7 +84,7 @@ nsresult SplitElementTxn::Undo(void)
   return result;
 }
 
-nsresult SplitElementTxn::Redo(void)
+NS_IMETHODIMP SplitElementTxn::Redo(void)
 {
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
@@ -98,19 +98,19 @@ nsresult SplitElementTxn::Redo(void)
   return result;
 }
 
-nsresult SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult SplitElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP SplitElementTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult SplitElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP SplitElementTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -119,7 +119,7 @@ nsresult SplitElementTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult SplitElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP SplitElementTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -128,7 +128,7 @@ nsresult SplitElementTxn::GetRedoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
+NS_IMETHODIMP SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
 {
   if (!aNewNode)
     return NS_ERROR_NULL_POINTER;

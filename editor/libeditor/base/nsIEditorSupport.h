@@ -47,10 +47,10 @@ public:
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    * @param aParent              the parent of aExistingRightNode
    */
-  virtual nsresult SplitNodeImpl(nsIDOMNode * aExistingRightNode,
-                                 PRInt32      aOffset,
-                                 nsIDOMNode * aNewLeftNode,
-                                 nsIDOMNode * aParent)=0;
+  NS_IMETHOD SplitNodeImpl(nsIDOMNode * aExistingRightNode,
+                           PRInt32      aOffset,
+                           nsIDOMNode * aNewLeftNode,
+                           nsIDOMNode * aParent)=0;
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
@@ -61,10 +61,10 @@ public:
    * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
    *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
-  virtual nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
-                                 nsIDOMNode  *aNodeToJoin,
-                                 nsIDOMNode  *aParent,
-                                 PRBool       aNodeToKeepIsFirst)=0;
+  NS_IMETHOD JoinNodesImpl(nsIDOMNode *aNodeToKeep,
+                           nsIDOMNode  *aNodeToJoin,
+                           nsIDOMNode  *aParent,
+                           PRBool       aNodeToKeepIsFirst)=0;
 
   static nsresult GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset);
   

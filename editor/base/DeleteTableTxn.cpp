@@ -40,17 +40,17 @@ DeleteTableTxn::DeleteTableTxn()
 {
 }
 
-nsresult DeleteTableTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP DeleteTableTxn::Init(nsIDOMCharacterData *aElement,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mNodeToInsert = aNode;
   mPresShell = aPresShell;
   return NS_OK;
 }
 
-nsresult DeleteTableTxn::Do(void)
+NS_IMETHODIMP DeleteTableTxn::Do(void)
 {
   //nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
@@ -64,7 +64,7 @@ nsresult DeleteTableTxn::Do(void)
   return res;
 }
 
-nsresult DeleteTableTxn::Undo(void)
+NS_IMETHODIMP DeleteTableTxn::Undo(void)
 {
   nsresult result = NS_ERROR_FAILURE;
 #if 0
@@ -82,12 +82,12 @@ nsresult DeleteTableTxn::Undo(void)
   return result;
 }
 
-nsresult DeleteTableTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteTableTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult DeleteTableTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteTableTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -96,7 +96,7 @@ nsresult DeleteTableTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteTableTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteTableTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -107,7 +107,7 @@ nsresult DeleteTableTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 DeleteTableTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

@@ -19,7 +19,9 @@
 #ifndef nsIEditor_h__
 #define nsIEditor_h__
 #include "nsISupports.h"
+#include "nscore.h"
 
+class nsIAtom;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsITransaction;
@@ -42,6 +44,12 @@ Editor interface to outside world
 { /* {4a1f5ce0-c1f9-11d2-8f4c-006008159b0c}*/ \
 0x4a1f5ce0, 0xc1f9, 0x11d2, \
 { 0x8f, 0x4c, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc } }
+
+#define NS_IHTMLEDITORFACTORY_IID \
+{ /* BD62F312-CB8A-11d2-983A-00805F8AA8B8 */    \
+0xbd62f312, 0xcb8a, 0x11d2,  \
+{ 0x98, 0x3a, 0x0, 0x80, 0x5f, 0x8a, 0xa8, 0xb8 } }
+
 
 class nsIDOMDocument;
 class nsIDOMSelection;
@@ -70,7 +78,7 @@ public:
    *                        this will no longer be necessary and the editor will no longer be
    *                        linked to a single pres shell.
    */
-  virtual nsresult Init(nsIDOMDocument *aDomInterface,
+  NS_IMETHOD Init(nsIDOMDocument *aDomInterface,
                         nsIPresShell   *aPresShell) = 0;
 
   /**
@@ -78,14 +86,14 @@ public:
    *
    * @param aDoc [OUT] the dom interface being observed, refcounted
    */
-  virtual nsresult GetDocument(nsIDOMDocument **aDoc)=0;
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDoc)=0;
 
   /** 
    * return the DOM Selection for the presentation shell that has focus
    * (or most recently had focus.)
    * @param aSelection [OUT] the dom interface for the selection
    */
-  virtual nsresult GetSelection(nsIDOMSelection **aSelection)=0;
+  NS_IMETHOD GetSelection(nsIDOMSelection **aSelection)=0;
 
   /**
    * SetAttribute() sets the attribute of aElement.
@@ -96,7 +104,7 @@ public:
    * @param aAttribute  the string representation of the attribute to set
    * @param aValue      the value to set aAttribute to
    */
-  virtual nsresult SetAttribute(nsIDOMElement * aElement, 
+  NS_IMETHOD SetAttribute(nsIDOMElement * aElement, 
                                 const nsString& aAttribute, 
                                 const nsString& aValue)=0;
 
@@ -108,7 +116,7 @@ public:
    * @param aResultValue  the value of aAttribute.  only valid if aResultIsSet is PR_TRUE
    * @param aResultIsSet  PR_TRUE if aAttribute is set on the current node, PR_FALSE if it is not.
    */
-  virtual nsresult GetAttributeValue(nsIDOMElement * aElement, 
+  NS_IMETHOD GetAttributeValue(nsIDOMElement * aElement, 
                                      const nsString& aAttribute, 
                                      nsString&       aResultValue, 
                                      PRBool&         aResultIsSet)=0;
@@ -120,7 +128,7 @@ public:
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
-  virtual nsresult RemoveAttribute(nsIDOMElement * aElement, 
+  NS_IMETHOD RemoveAttribute(nsIDOMElement * aElement, 
                                    const nsString& aAttribute)=0;
 
   /** 
@@ -130,7 +138,7 @@ public:
    * @param aPosition The place in aParent to insert the new node
    * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
    */
-  virtual nsresult CreateNode(const nsString& aTag,
+  NS_IMETHOD CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,
                               PRInt32         aPosition,
                               nsIDOMNode **   aNewNode)=0;
@@ -143,7 +151,7 @@ public:
    * @param aParent   The node to insert the new object into
    * @param aPosition The place in aParent to insert the new node
    */
-  virtual nsresult InsertNode(nsIDOMNode * aNode,
+  NS_IMETHOD InsertNode(nsIDOMNode * aNode,
                               nsIDOMNode * aParent,
                               PRInt32      aPosition)=0;
 
@@ -157,21 +165,29 @@ public:
    *
    * @param aString   the string to be inserted
    */
-  virtual nsresult InsertText(const nsString& aStringToInsert)=0;
+  NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
 
   /** 
    * DeleteNode removes aChild from aParent.
    * If aChild is not a child of aParent, nothing is done and an error is returned.
    * @param aChild    The node to delete
    */
-  virtual nsresult DeleteNode(nsIDOMNode * aChild)=0;
+  NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eLTR, delete to the right (for example, the DEL key)
    *              if eRTL, delete to the left (for example, the BACKSPACE key)
    */
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir)=0;
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
+
+  /** 
+   * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode
+   * It deletes only if there is something selected (doesn't do DEL, BACKSPACE action)   
+   * @param aTag      The type of object to create
+   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
+   */
+  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
 
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
@@ -179,7 +195,7 @@ public:
    * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
-  virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
+  NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
                              PRInt32      aOffset,
                              nsIDOMNode ** aNewLeftNode)=0;
 
@@ -192,17 +208,17 @@ public:
    * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
    *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
-  virtual nsresult JoinNodes(nsIDOMNode *aNodeToKeep,
-                            nsIDOMNode  *aNodeToJoin,
-                            nsIDOMNode  *aParent,
-                            PRBool       aNodeToKeepIsFirst)=0;
+  NS_IMETHOD JoinNodes(nsIDOMNode *aNodeToKeep,
+                       nsIDOMNode  *aNodeToJoin,
+                       nsIDOMNode  *aParent,
+                       PRBool       aNodeToKeepIsFirst)=0;
   
   /**
    * The handler for RETURN keys and CTRL-RETURN keys.<br>
    * It may enter a character, split a node in the tree, etc.
    * @param aCtrlKey  was the CtrlKey down?
    */
-  virtual nsresult InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
@@ -210,7 +226,7 @@ public:
     * @return         if aEnable is PR_TRUE, returns NS_OK if the undo system could be initialized properly
     *                 if aEnable is PR_FALSE, returns NS_OK.
     */
-  virtual nsresult EnableUndo(PRBool aEnable)=0;
+  NS_IMETHOD EnableUndo(PRBool aEnable)=0;
 
   /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
     * If a transaction manager is present, it is used.  
@@ -218,7 +234,7 @@ public:
     *
     * @param aTxn the transaction to execute
     */
-  virtual nsresult Do(nsITransaction *aTxn)=0;
+  NS_IMETHOD Do(nsITransaction *aTxn)=0;
 
   /** Undo reverses the effects of the last Do operation, if Undo is enabled in the editor.
     * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
@@ -227,13 +243,13 @@ public:
     * Otherwise, the Undo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
-  virtual nsresult Undo(PRUint32 aCount)=0;
+  NS_IMETHOD Undo(PRUint32 aCount)=0;
 
   /** returns state information about the undo system.
     * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
     * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is currently ready to be undone.
     */
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
 
   /** Redo reverses the effects of the last Undo operation
     * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
@@ -243,13 +259,13 @@ public:
     * the Redo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
-  virtual nsresult Redo(PRUint32 aCount)=0;
+  NS_IMETHOD Redo(PRUint32 aCount)=0;
 
   /** returns state information about the redo system.
     * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
     * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is currently ready to be redone.
     */
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
 
   /** BeginTransaction is a signal from the caller to the editor that the caller will execute multiple updates
     * to the content tree that should be treated as a single logical operation,
@@ -259,21 +275,36 @@ public:
     * EndTransaction must be called after BeginTransaction.<br>
     * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginUpdate.
     */
-  virtual nsresult BeginTransaction()=0;
+  NS_IMETHOD BeginTransaction()=0;
 
   /** EndTransaction is a signal to the editor that the caller is finished updating the content model.<br>
     * BeginUpdate must be called before EndTransaction is called.<br>
     * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
     */
-  virtual nsresult EndTransaction()=0;
+  NS_IMETHOD EndTransaction()=0;
+
+  /** Get the layout's frame object associated with the node
+    * Needed when we must get geometric layout info, such as what column a table cell is in.
+    * @param aNode           The DOM node we need the frame for
+    * @param aLayoutObject   The pointer where the resulting object is placed
+    */
+  NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)=0;
 
   /** scroll the viewport so the selection is in view.
     * @param aScrollToBegin  PR_TRUE if the beginning of the selection is to be scrolled into view.
     *                        PR_FALSE if the end of the selection is to be scrolled into view
     */
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin)=0;
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
-
+  /** Create an aggregate transaction for deleting current selection
+   *  Used by all methods that need to delete current selection,
+   *    then insert something new to replace it
+   *  @param nsString& aTxnName is the name of the aggregated transaction
+   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
+   *    with the DeleteSelectionTxn as the first child ONLY
+   *    if there was a selection to delete.
+   */
+  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn)=0;
 };
 
 #endif //nsIEditor_h__

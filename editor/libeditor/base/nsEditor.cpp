@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsEditFactory.h"
 #include "nsTextEditFactory.h"
+#include "nsHTMLEditFactory.h"
 #include "nsEditorCID.h"
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
@@ -40,8 +41,7 @@
 #include "nsVoidArray.h"
 #include "nsICaret.h"
 
-#include "nsIContent.h"           // for temp method GetColIndexForCell, to be removed
-#include "nsITableCellLayout.h"   // for temp method GetColIndexForCell, to be removed
+#include "nsIContent.h"           // for method GetLayoutObject
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -71,6 +71,7 @@ static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
+static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
 // transaction manager
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
@@ -85,7 +86,6 @@ static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
 static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
 static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
-
 
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
@@ -102,8 +102,7 @@ static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
 /* ----- TEST METHODS DECLARATIONS ----- */
 // Methods defined here are TEMPORARY
-nsresult
-GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
+//NS_IMETHODIMP  GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
 /* ----- END TEST METHOD DECLARATIONS ----- */
 
 
@@ -148,6 +147,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServiceMgr,
   }
   else if (aClass.Equals(kTextEditorCID)) {
     return GetTextEditFactory(aFactory, aClass);
+  }
+  else if (aClass.Equals(kHTMLEditorCID)) {
+    return GetHTMLEditFactory(aFactory, aClass);
   }
   return NS_NOINTERFACE;
 }
@@ -208,7 +210,7 @@ NS_IMPL_RELEASE(nsEditor)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
@@ -236,7 +238,7 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
   *aDoc = nsnull; // init out param
@@ -246,7 +248,8 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
 }
 
-nsresult
+
+NS_IMETHODIMP
 nsEditor::GetSelection(nsIDOMSelection **aSelection)
 {
   if (!aSelection)
@@ -256,7 +259,7 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
@@ -279,11 +282,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   }
 
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
-  
+
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::EnableUndo(PRBool aEnable)
 {
   nsITransactionManager *txnMgr = 0;
@@ -318,7 +321,7 @@ nsEditor::EnableUndo(PRBool aEnable)
   return result;
 }
 
-nsresult nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
+NS_IMETHODIMP nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
   aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (aIsEnabled)
@@ -333,7 +336,7 @@ nsresult nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
   return NS_OK;
 }
 
-nsresult nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
+NS_IMETHODIMP nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
   aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (aIsEnabled)
@@ -348,7 +351,7 @@ nsresult nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::SetProperties(nsVoidArray *aPropList)
 {
   return NS_OK;
@@ -356,14 +359,14 @@ nsEditor::SetProperties(nsVoidArray *aPropList)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsEditor::GetProperties(nsVoidArray *aPropList)
 {
   return NS_OK;
 }
 
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
 {
   ChangeAttributeTxn *txn;
@@ -375,7 +378,7 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, cons
 }
 
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
                                    const nsString& aAttribute, 
                                    const nsString& aValue,
@@ -392,7 +395,7 @@ nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
                             const nsString& aAttribute, 
                             nsString& aResultValue, 
@@ -413,7 +416,7 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
 {
   ChangeAttributeTxn *txn;
@@ -424,7 +427,7 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
                                       const nsString& aAttribute,
                                       ChangeAttributeTxn ** aTxn)
@@ -442,7 +445,7 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::InsertBreak(PRBool aCtrlKey)
 {
   if (aCtrlKey)
@@ -462,7 +465,7 @@ nsEditor::InsertBreak(PRBool aCtrlKey)
 
 //BEGIN nsEditor Private methods
 
-nsresult
+NS_IMETHODIMP
 nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult)
 {
   nsresult result=NS_OK;
@@ -518,7 +521,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
 
 
 
-nsresult
+NS_IMETHODIMP
 nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 {
   if (!aNode || !aRetNode)
@@ -566,7 +569,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
 {
   nsresult result = NS_OK;
@@ -582,7 +585,7 @@ nsEditor::Do(nsITransaction *aTxn)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
@@ -599,7 +602,7 @@ nsEditor::Undo(PRUint32 aCount)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
@@ -616,7 +619,7 @@ nsEditor::Redo(PRUint32 aCount)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::BeginTransaction()
 {
   NS_PRECONDITION(mUpdateCount>=0, "bad state");
@@ -633,7 +636,7 @@ nsEditor::BeginTransaction()
   return NS_OK;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::EndTransaction()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
@@ -650,7 +653,7 @@ nsEditor::EndTransaction()
   return NS_OK;
 }
 
-nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
+NS_IMETHODIMP nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
   return NS_OK; //mjudge we should depricate this method
 /*  nsresult result;
@@ -690,7 +693,7 @@ nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 }
 
 
-nsresult nsEditor::CreateNode(const nsString& aTag,
+NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,
                               PRInt32         aPosition,
                               nsIDOMNode **   aNewNode)
@@ -709,7 +712,7 @@ nsresult nsEditor::CreateNode(const nsString& aTag,
   return result;
 }
 
-nsresult nsEditor::CreateTxnForCreateElement(const nsString& aTag,
+NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsString& aTag,
                                              nsIDOMNode     *aParent,
                                              PRInt32         aPosition,
                                              CreateElementTxn ** aTxn)
@@ -725,7 +728,7 @@ nsresult nsEditor::CreateTxnForCreateElement(const nsString& aTag,
   return result;
 }
 
-nsresult nsEditor::InsertNode(nsIDOMNode * aNode,
+NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
                               nsIDOMNode * aParent,
                               PRInt32      aPosition)
 {
@@ -737,7 +740,7 @@ nsresult nsEditor::InsertNode(nsIDOMNode * aNode,
   return result;
 }
 
-nsresult nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
+NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
                                              nsIDOMNode * aParent,
                                              PRInt32      aPosition,
                                              InsertElementTxn ** aTxn)
@@ -753,7 +756,7 @@ nsresult nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
   return result;
 }
 
-nsresult nsEditor::DeleteNode(nsIDOMNode * aElement)
+NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
 {
   DeleteElementTxn *txn;
   nsresult result = CreateTxnForDeleteElement(aElement, &txn);
@@ -763,7 +766,7 @@ nsresult nsEditor::DeleteNode(nsIDOMNode * aElement)
   return result;
 }
 
-nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
+NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                              DeleteElementTxn ** aTxn)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -777,31 +780,63 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   return result;
 }
 
-nsresult 
-nsEditor::InsertText(const nsString& aStringToInsert)
+NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn)
 {
-  nsresult result;
-  EditAggregateTxn *aggTxn;
-  result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)&aggTxn);
-  if ((NS_FAILED(result)) || (nsnull==aggTxn)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aggTxn->SetName(InsertTextTxn::gInsertTextTxnName);
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection)
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aAggTxn)
   {
-    PRBool collapsed;
-    result = selection->IsCollapsed(&collapsed);
-    if (NS_SUCCEEDED(result) && !collapsed) {
-      EditAggregateTxn *delSelTxn;
-      result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
-      if (NS_SUCCEEDED(result) && delSelTxn) {
-        aggTxn->AppendChild(delSelTxn);
+    *aAggTxn = nsnull;
+    EditAggregateTxn *aTxn = nsnull;
+
+    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn**)&aTxn);
+
+    if ((NS_FAILED(result)) || !aTxn) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Return transaction pointer
+    *aAggTxn = (nsISupports*)aTxn;
+
+#if 0
+    //Test to be sure the Return the transaction pointer as nsISupports*
+    result = aTxn->QueryInterface(kISupportsIID, (void**)aAggTxn);
+    if (!NS_SUCCEEDED(result))
+      return NS_ERROR_UNEXPECTED;      
+#endif    
+
+    // Set the name for the aggregate transaction  
+    aTxn->SetName(aTxnName);
+
+    // Get current selection and setup txn to delete it,
+    //  but only if selection exists (is not a collapsed "caret" state)
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection)
+    {
+      PRBool collapsed;
+      result = selection->IsCollapsed(&collapsed);
+      if (NS_SUCCEEDED(result) && !collapsed) {
+        EditAggregateTxn *delSelTxn;
+        result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+        if (NS_SUCCEEDED(result) && delSelTxn) {
+          aTxn->AppendChild(delSelTxn);
+        }
       }
     }
   }
+  return result;
+}
 
+
+NS_IMETHODIMP 
+nsEditor::InsertText(const nsString& aStringToInsert)
+{
+  EditAggregateTxn *aggTxn = nsnull;
+  // Create the "delete current selection" txn
+  nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, (nsISupports**)&aggTxn);
+  if ((NS_FAILED(result)) || (nsnull==aggTxn)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   InsertTextTxn *txn;
   result = CreateTxnForInsertText(aStringToInsert, &txn);
   if ((NS_SUCCEEDED(result)) && txn)  {
@@ -811,7 +846,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   return result;
 }
 
-nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
+NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
                                           InsertTextTxn ** aTxn)
 {
   nsresult result;
@@ -862,7 +897,7 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   return result;
 }
 
-nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
                               PRUint32             aLength)
 {
@@ -875,7 +910,7 @@ nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
 }
 
 
-nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
                                           PRUint32             aOffset,
                                           PRUint32             aLength,
                                           DeleteTextTxn      **aTxn)
@@ -902,7 +937,7 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
 */
 #if 0   // THIS CODE WILL BE REMOVED.  WE ARE GOING TO IMPLEMENT
         // A GENERIC HANDLER SYSTEM.
-nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
+NS_IMETHODIMP nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 {
   // allocate the out-param transaction
   nsresult result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
@@ -969,9 +1004,57 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 }
 #endif
 
+NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)
+{
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    PRBool collapsed;
+    result = selection->IsCollapsed(&collapsed);
+    if (NS_SUCCEEDED(result) && !collapsed) 
+    {
+      result = DeleteSelection(nsIEditor::eLTR);
+      // get the new selection
+      result = GetSelection(getter_AddRefs(selection));
+#ifdef NS_DEBUG
+      PRBool testCollapsed;
+      result = selection->IsCollapsed(&testCollapsed);
+      NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
+#endif
+    }
+    // split the text node
+    nsCOMPtr<nsIDOMNode> node;
+    PRInt32 offset;
+    result = selection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
+    if ((NS_SUCCEEDED(result)) && node)
+    {
+      nsCOMPtr<nsIDOMNode> parentNode;
+      result = node->GetParentNode(getter_AddRefs(parentNode));
+      if ((NS_SUCCEEDED(result)) && parentNode)
+      {
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = SplitNode(node, offset, getter_AddRefs(newNode));
+        if (NS_SUCCEEDED(result))
+        { // now get the node's offset in it's parent, and insert the new tag there
+          result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
+          if (NS_SUCCEEDED(result))
+          {
+            result = CreateNode(aTag, parentNode, offset, getter_AddRefs(newNode));
+            selection->Collapse(parentNode, offset);
+            *aNewNode = newNode;
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 #define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
   nsresult result;
@@ -993,7 +1076,7 @@ nsEditor::DeleteSelection(nsIEditor::Direction aDir)
   return result;
 }
 
-nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir, 
+NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir, 
                                                EditAggregateTxn  ** aTxn)
 {
   if (!aTxn)
@@ -1055,7 +1138,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
 
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior are not implemented
-nsresult
+NS_IMETHODIMP
 nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
                                            nsIEditor::Direction aDir, 
                                            EditAggregateTxn    *aTxn)
@@ -1083,7 +1166,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     PRUint32 count;
     nodeAsText->GetLength(&count);
     isFirst = PRBool(0==offset);
-    isLast  = PRBool(count==offset);
+    isLast  = PRBool(count==(PRUint32)offset);
   }
   else
   {
@@ -1195,7 +1278,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result;
@@ -1226,7 +1309,7 @@ nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result;
@@ -1256,7 +1339,7 @@ nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
@@ -1277,7 +1360,7 @@ nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
@@ -1298,7 +1381,7 @@ nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::SplitNode(nsIDOMNode * aNode,
                     PRInt32      aOffset,
                     nsIDOMNode **aNewLeftNode)
@@ -1317,7 +1400,7 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
   return result;
 }
 
-nsresult nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
+NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
                                          PRUint32    aOffset,
                                          SplitElementTxn **aTxn)
 {
@@ -1332,7 +1415,7 @@ nsresult nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
                     nsIDOMNode * aNodeToJoin,
                     nsIDOMNode * aParent,
@@ -1346,7 +1429,7 @@ nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
   return result;
 }
 
-nsresult nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
                                         nsIDOMNode  *aRightNode,
                                         JoinElementTxn **aTxn)
 {
@@ -1361,7 +1444,7 @@ nsresult nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         PRInt32      aOffset,
                         nsIDOMNode*  aNewLeftNode,
@@ -1428,7 +1511,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
                         nsIDOMNode * aNodeToJoin,
                         nsIDOMNode * aParent,
@@ -1545,18 +1628,37 @@ nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParen
   return result;
 }
 
+NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)
+{
+  nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
+  if( mPresShell != nsnull )
+  {
+    if ((nsnull!=aNode))
+    { // get the content interface
+      nsCOMPtr<nsIContent> nodeAsContent(aNode);
+      if (nodeAsContent)
+      { // get the frame from the content interface
+        nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
+        *aLayoutObject = nsnull;
+        return (NS_SUCCEEDED(mPresShell->GetLayoutObjectFor(nodeAsContent, &layoutObject)));
+      }
+    }
+    else {
+      result = NS_ERROR_NULL_POINTER;
+    }
+  }
+  return result;
+}
+
+
 
 //END nsEditor Private methods
 
-
-
-
-
-
 /* ----- TEST METHODS ----- */
 // Methods defined here are TEMPORARY
-nsresult
-GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
+
+/* ORIGINAL version by Steve - KEEP FOR REFERENCE
+NS_IMETHODIMP GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
 {
   aCellIndex=0; // initialize out param
   nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
@@ -1583,6 +1685,7 @@ GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCe
   }
   return result;
 }
+*/
 
 /* ----- END TEST METHODS ----- */
 

@@ -33,7 +33,7 @@ DeleteElementTxn::DeleteElementTxn()
 {
 }
 
-nsresult DeleteElementTxn::Init(nsIDOMNode *aElement)
+NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement)
 {
   if (nsnull!=aElement)  {
     mElement = do_QueryInterface(aElement);
@@ -48,7 +48,7 @@ DeleteElementTxn::~DeleteElementTxn()
 {
 }
 
-nsresult DeleteElementTxn::Do(void)
+NS_IMETHODIMP DeleteElementTxn::Do(void)
 {
   if (!mElement)
     return NS_ERROR_NULL_POINTER;
@@ -94,7 +94,7 @@ nsresult DeleteElementTxn::Do(void)
   return result;
 }
 
-nsresult DeleteElementTxn::Undo(void)
+NS_IMETHODIMP DeleteElementTxn::Undo(void)
 {
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
@@ -104,7 +104,7 @@ nsresult DeleteElementTxn::Undo(void)
   return result;
 }
 
-nsresult DeleteElementTxn::Redo(void)
+NS_IMETHODIMP DeleteElementTxn::Redo(void)
 {
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
@@ -114,19 +114,19 @@ nsresult DeleteElementTxn::Redo(void)
   return result;
 }
 
-nsresult DeleteElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult DeleteElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteElementTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult DeleteElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteElementTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -135,7 +135,7 @@ nsresult DeleteElementTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult DeleteElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteElementTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {

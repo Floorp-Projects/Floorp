@@ -36,7 +36,7 @@ nsEditGuiManager::~nsEditGuiManager()
 NS_IMPL_ADDREF(nsEditGuiManager)
 NS_IMPL_RELEASE(nsEditGuiManager)
 
-nsresult
+NS_IMETHODIMP
 nsEditGuiManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {

@@ -76,7 +76,7 @@ static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
 
 // Table Editing methods -- for testing, hooked up to Tool Menu items
 // Modeled after nsEditor::InsertText()
-nsresult nsHTMLEditor::InsertTable()
+NS_IMETHODIMP nsHTMLEditor::InsertTable()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
 #if 0
@@ -132,7 +132,7 @@ nsresult nsHTMLEditor::InsertTable()
 #endif
 }
 
-nsresult nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn)
+NS_IMETHODIMP nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn)
 {
   if (mEditor==nsnull)
   {
@@ -191,7 +191,7 @@ nsresult nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableNode, 
   return result;
 }
 
-nsresult nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -201,7 +201,7 @@ nsresult nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
   return result;
 }
 
-nsresult nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -211,7 +211,7 @@ nsresult nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   return result;
 }
 
-nsresult nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -221,7 +221,7 @@ nsresult nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   return result;
 }
 
-nsresult nsHTMLEditor::DeleteTable()
+NS_IMETHODIMP nsHTMLEditor::DeleteTable()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -231,7 +231,7 @@ nsresult nsHTMLEditor::DeleteTable()
   return result;
 }
 
-nsresult nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
+NS_IMETHODIMP nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -241,7 +241,7 @@ nsresult nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   return result;
 }
 
-nsresult nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
+NS_IMETHODIMP nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -251,7 +251,7 @@ nsresult nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
   return result;
 }
 
-nsresult nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
+NS_IMETHODIMP nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -261,7 +261,7 @@ nsresult nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
   return result;
 }
 
-nsresult nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
+NS_IMETHODIMP nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -271,7 +271,7 @@ nsresult nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
   return result;
 }
 
-nsresult nsHTMLEditor::GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
+NS_IMETHODIMP nsHTMLEditor::GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -295,7 +295,7 @@ nsresult nsHTMLEditor::GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellI
   return result;
 }
 
-nsresult nsHTMLEditor::GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
+NS_IMETHODIMP nsHTMLEditor::GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -306,7 +306,7 @@ nsresult nsHTMLEditor::GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellI
 }
 
 
-nsresult nsHTMLEditor::GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode)
+NS_IMETHODIMP nsHTMLEditor::GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -317,7 +317,7 @@ nsresult nsHTMLEditor::GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOM
 }
 
 
-nsresult nsHTMLEditor::GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
+NS_IMETHODIMP nsHTMLEditor::GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -328,7 +328,7 @@ nsresult nsHTMLEditor::GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMN
 }
 
 
-nsresult nsHTMLEditor::GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode)
+NS_IMETHODIMP nsHTMLEditor::GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -339,7 +339,7 @@ nsresult nsHTMLEditor::GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNod
 }
 
 
-nsresult nsHTMLEditor::GetNextCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
+NS_IMETHODIMP nsHTMLEditor::GetNextCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)

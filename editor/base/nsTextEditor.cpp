@@ -49,7 +49,6 @@ static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 
 
-
 nsTextEditor::nsTextEditor()
 {
   NS_INIT_REFCNT();
@@ -82,7 +81,7 @@ nsTextEditor::~nsTextEditor()
   }
 }
 
-nsresult nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc, 
+NS_IMETHODIMP nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc, 
                                       nsIPresShell   *aPresShell,
                                       nsIEditorCallback *aCallback)
 {
@@ -130,7 +129,7 @@ nsresult nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
 
 // this is a total hack for now.  We don't yet have a way of getting the style properties
 // of the current selection, so we can't do anything useful here except show off a little.
-nsresult nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
 {
   if (!aPropList)
     return NS_ERROR_NULL_POINTER;
@@ -234,7 +233,7 @@ nsresult nsTextEditor::SetTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsTextEditor::GetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsTextEditor::GetTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -244,7 +243,7 @@ nsresult nsTextEditor::GetTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsTextEditor::RemoveTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsTextEditor::RemoveTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -254,7 +253,7 @@ nsresult nsTextEditor::RemoveTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
+NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -264,7 +263,7 @@ nsresult nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
   return result;
 }
 
-nsresult nsTextEditor::InsertText(const nsString& aStringToInsert)
+NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -274,64 +273,28 @@ nsresult nsTextEditor::InsertText(const nsString& aStringToInsert)
   return result;
 }
 
-nsresult nsTextEditor::InsertBreak(PRBool aCtrlKey)
+NS_IMETHODIMP nsTextEditor::InsertBreak(PRBool aCtrlKey)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    PRBool beganTransaction = PR_FALSE;
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-    if ((NS_SUCCEEDED(result)) && selection)
-    {
-      beganTransaction = PR_TRUE;
-      result = mEditor->BeginTransaction();
-      PRBool collapsed;
-      result = selection->IsCollapsed(&collapsed);
-      if (NS_SUCCEEDED(result) && !collapsed) 
-      {
-        result = mEditor->DeleteSelection(nsIEditor::eLTR);
-        // get the new selection
-        result = mEditor->GetSelection(getter_AddRefs(selection));
-#ifdef NS_DEBUG
-        PRBool testCollapsed;
-        result = selection->IsCollapsed(&testCollapsed);
-        NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
-#endif
-      }
-      // split the text node
-      nsCOMPtr<nsIDOMNode> node;
-      PRInt32 offset;
-      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
-      if ((NS_SUCCEEDED(result)) && node)
-      {
-        nsCOMPtr<nsIDOMNode> parentNode;
-        nsCOMPtr<nsIDOMNode> newNode;
-        result = node->GetParentNode(getter_AddRefs(parentNode));
-        if ((NS_SUCCEEDED(result)) && parentNode)
-        {
-          result = mEditor->SplitNode(node, offset, getter_AddRefs(newNode));
-          if (NS_SUCCEEDED(result))
-          { // now get the node's offset in it's parent, and insert the new BR there
-            result = nsIEditorSupport::GetChildOffset(node, parentNode, offset);
-            if (NS_SUCCEEDED(result))
-            {
-              nsAutoString tag("BR");
-              result = mEditor->CreateNode(tag, parentNode, offset, getter_AddRefs(newNode));
-              selection->Collapse(parentNode, offset);
-            }
-          }
-        }
-      }
-    }
-    if (PR_TRUE==beganTransaction) {
-      result = mEditor->EndTransaction();
-    }
+    // Note: Code that does most of the deletion work was 
+    // moved to nsEditor::DeleteSelectionAndCreateNode
+    // Only difference is we now do BeginTransaction()/EndTransaction()
+    //  even if we fail to get a selection
+    result = mEditor->BeginTransaction();
+
+    nsCOMPtr<nsIDOMNode> newNode;
+    nsAutoString tag("BR");
+    mEditor->DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    // Are we supposed to release newNode?
+
+    result = mEditor->EndTransaction();
   }
   return result;
 }
 
-nsresult nsTextEditor::EnableUndo(PRBool aEnable)
+NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -341,7 +304,7 @@ nsresult nsTextEditor::EnableUndo(PRBool aEnable)
   return result;
 }
 
-nsresult nsTextEditor::Undo(PRUint32 aCount)
+NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor) {
@@ -350,7 +313,7 @@ nsresult nsTextEditor::Undo(PRUint32 aCount)
   return result;
 }
 
-nsresult nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
+NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -360,7 +323,7 @@ nsresult nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
   return result;
 }
 
-nsresult nsTextEditor::Redo(PRUint32 aCount)
+NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -370,7 +333,7 @@ nsresult nsTextEditor::Redo(PRUint32 aCount)
   return result;
 }
 
-nsresult nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
+NS_IMETHODIMP nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -380,7 +343,7 @@ nsresult nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
   return result;
 }
 
-nsresult nsTextEditor::BeginTransaction()
+NS_IMETHODIMP nsTextEditor::BeginTransaction()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -390,7 +353,7 @@ nsresult nsTextEditor::BeginTransaction()
   return result;
 }
 
-nsresult nsTextEditor::EndTransaction()
+NS_IMETHODIMP nsTextEditor::EndTransaction()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -400,7 +363,7 @@ nsresult nsTextEditor::EndTransaction()
   return result;
 }
 
-nsresult nsTextEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsTextEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -410,7 +373,7 @@ nsresult nsTextEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelect
   return result;
 }
 
-nsresult nsTextEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsTextEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -420,7 +383,7 @@ nsresult nsTextEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSele
   return result;
 }
 
-nsresult nsTextEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsTextEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -430,7 +393,7 @@ nsresult nsTextEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSele
   return result;
 }
 
-nsresult nsTextEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsTextEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -440,7 +403,7 @@ nsresult nsTextEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtend
   return result;
 }
 
-nsresult nsTextEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
+NS_IMETHODIMP nsTextEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -450,7 +413,7 @@ nsresult nsTextEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)
   return result;
 }
 
-nsresult nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -460,7 +423,7 @@ nsresult nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelecti
   return result;
 }
 
-nsresult nsTextEditor::ScrollUp(nsIAtom *aIncrement)
+NS_IMETHODIMP nsTextEditor::ScrollUp(nsIAtom *aIncrement)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -470,7 +433,7 @@ nsresult nsTextEditor::ScrollUp(nsIAtom *aIncrement)
   return result;
 }
 
-nsresult nsTextEditor::ScrollDown(nsIAtom *aIncrement)
+NS_IMETHODIMP nsTextEditor::ScrollDown(nsIAtom *aIncrement)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -480,7 +443,7 @@ nsresult nsTextEditor::ScrollDown(nsIAtom *aIncrement)
   return result;
 }
 
-nsresult nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
+NS_IMETHODIMP nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -490,7 +453,7 @@ nsresult nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
   return result;
 }
 
-nsresult nsTextEditor::Insert(nsIInputStream *aInputStream)
+NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -500,7 +463,7 @@ nsresult nsTextEditor::Insert(nsIInputStream *aInputStream)
   return result;
 }
 
-nsresult nsTextEditor::OutputText(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream *aOutputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -510,7 +473,7 @@ nsresult nsTextEditor::OutputText(nsIOutputStream *aOutputStream)
   return result;
 }
 
-nsresult nsTextEditor::OutputHTML(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream *aOutputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -525,7 +488,7 @@ NS_IMPL_ADDREF(nsTextEditor)
 
 NS_IMPL_RELEASE(nsTextEditor)
 
-nsresult
+NS_IMETHODIMP
 nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
@@ -541,11 +504,19 @@ nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIEditorIID) && (mEditor)) {
+    nsCOMPtr<nsIEditor> editor;
+    nsresult result = mEditor->QueryInterface(kIEditorIID, getter_AddRefs(editor));
+    if (NS_SUCCEEDED(result) && editor) {
+      *aInstancePtr = (void*)editor;
+      return NS_OK;
+    }
+  }
   return NS_NOINTERFACE;
 }
 
 
-nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
+NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
                                                 nsIDOMNode *aParent,
                                                 PRInt32 aStartOffset,
                                                 PRInt32 aEndOffset,
@@ -600,7 +571,7 @@ nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
                                                       PRInt32     aStartOffset,
                                                       nsIDOMNode *aEndNode,
@@ -695,7 +666,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   return result;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
                                                            PRInt32     aStartOffset,
                                                            nsIDOMNode *aEndNode,
@@ -709,7 +680,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNod
 
 
 
-nsresult 
+NS_IMETHODIMP 
 nsTextEditor::SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const
 {
   if (!aPropName) {

@@ -42,40 +42,40 @@ public:
 
   virtual ~EditAggregateTxn();
 
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  virtual nsresult Redo(void);
+  NS_IMETHOD Redo(void);
 
-  virtual nsresult GetIsTransient(PRBool *aIsTransient);
+  NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
   /** append a transaction to this aggregate */
-  virtual nsresult AppendChild(EditTxn *aTxn);
+  NS_IMETHOD AppendChild(EditTxn *aTxn);
 
   /** get the number of nested txns.  
     * This is the number of top-level txns, it does not do recursive decent.
     */
-  virtual nsresult GetCount(PRInt32 *aCount);
+  NS_IMETHOD GetCount(PRInt32 *aCount);
 
   /** get the txn at index aIndex.
     * returns NS_ERROR_UNEXPECTED if there is no txn at aIndex.
     */
-  virtual nsresult GetTxnAt(PRInt32 aIndex, EditTxn **aTxn);
+  NS_IMETHOD GetTxnAt(PRInt32 aIndex, EditTxn **aTxn);
 
   /** set the name assigned to this aggregate txn */
-  virtual nsresult SetName(nsIAtom *aName);
+  NS_IMETHOD SetName(nsIAtom *aName);
 
   /** get the name assigned to this aggregate txn */
-  virtual nsresult GetName(nsIAtom **aName);
+  NS_IMETHOD GetName(nsIAtom **aName);
 
 protected:
 

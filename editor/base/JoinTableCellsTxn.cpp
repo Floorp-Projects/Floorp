@@ -40,17 +40,17 @@ JoinTableCellsTxn::JoinTableCellsTxn()
 {
 }
 
-nsresult JoinTableCellsTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP JoinTableCellsTxn::Init(nsIDOMCharacterData *aElement,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mNodeToInsert = aNode;
   mPresShell = aPresShell;
   return NS_OK;
 }
 
-nsresult JoinTableCellsTxn::Do(void)
+NS_IMETHODIMP JoinTableCellsTxn::Do(void)
 {
   //nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
@@ -64,7 +64,7 @@ nsresult JoinTableCellsTxn::Do(void)
   return res;
 }
 
-nsresult JoinTableCellsTxn::Undo(void)
+NS_IMETHODIMP JoinTableCellsTxn::Undo(void)
 {
   nsresult result = NS_ERROR_FAILURE;
 #if 0
@@ -82,12 +82,12 @@ nsresult JoinTableCellsTxn::Undo(void)
   return result;
 }
 
-nsresult JoinTableCellsTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP JoinTableCellsTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult JoinTableCellsTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP JoinTableCellsTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -96,7 +96,7 @@ nsresult JoinTableCellsTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult JoinTableCellsTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP JoinTableCellsTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -107,7 +107,7 @@ nsresult JoinTableCellsTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 JoinTableCellsTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

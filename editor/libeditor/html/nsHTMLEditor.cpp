@@ -81,9 +81,9 @@ nsHTMLEditor::~nsHTMLEditor()
 #endif
 }
 
-nsresult nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc, 
-                                      nsIPresShell   *aPresShell,
-                                      nsIEditorCallback *aCallback)
+NS_IMETHODIMP nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc, 
+                            nsIPresShell   *aPresShell,
+                            nsIEditorCallback *aCallback)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   nsresult result=NS_ERROR_NULL_POINTER;
@@ -96,7 +96,7 @@ nsresult nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc,
     if (NS_FAILED(result) || !aTextEditor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mTextEditor = aTextEditor; // CreateInstance did our addRef
+    mTextEditor = do_QueryInterface(aTextEditor); // CreateInstance did our addRef
 
     // Initialize nsTextEditor -- this will create and initialize the base nsEditor
     // Note: nsTextEditor adds its own key, mouse, and DOM listners -- is that OK?
@@ -116,7 +116,7 @@ nsresult nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc,
   return result;
 }
 
-nsresult nsHTMLEditor::SetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::SetTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -126,7 +126,7 @@ nsresult nsHTMLEditor::SetTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsHTMLEditor::GetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::GetTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -136,7 +136,7 @@ nsresult nsHTMLEditor::GetTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsHTMLEditor::RemoveTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::RemoveTextProperties(nsISupportsArray *aPropList)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -146,7 +146,7 @@ nsresult nsHTMLEditor::RemoveTextProperties(nsISupportsArray *aPropList)
   return result;
 }
 
-nsresult nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
+NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -156,7 +156,7 @@ nsresult nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
   return result;
 }
 
-nsresult nsHTMLEditor::InsertText(const nsString& aStringToInsert)
+NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -166,7 +166,7 @@ nsresult nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   return result;
 }
 
-nsresult nsHTMLEditor::InsertBreak(PRBool aCtrlKey)
+NS_IMETHODIMP nsHTMLEditor::InsertBreak(PRBool aCtrlKey)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -178,7 +178,7 @@ nsresult nsHTMLEditor::InsertBreak(PRBool aCtrlKey)
 
 // Methods shared with the base editor.
 // Note: We could call each of these via nsTextEditor -- is that better?
-nsresult nsHTMLEditor::EnableUndo(PRBool aEnable)
+NS_IMETHODIMP nsHTMLEditor::EnableUndo(PRBool aEnable)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -188,7 +188,7 @@ nsresult nsHTMLEditor::EnableUndo(PRBool aEnable)
   return result;
 }
 
-nsresult nsHTMLEditor::Undo(PRUint32 aCount)
+NS_IMETHODIMP nsHTMLEditor::Undo(PRUint32 aCount)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -198,7 +198,7 @@ nsresult nsHTMLEditor::Undo(PRUint32 aCount)
   return result;
 }
 
-nsresult nsHTMLEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
+NS_IMETHODIMP nsHTMLEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -208,7 +208,7 @@ nsresult nsHTMLEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
   return result;
 }
 
-nsresult nsHTMLEditor::Redo(PRUint32 aCount)
+NS_IMETHODIMP nsHTMLEditor::Redo(PRUint32 aCount)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -218,7 +218,7 @@ nsresult nsHTMLEditor::Redo(PRUint32 aCount)
   return result;
 }
 
-nsresult nsHTMLEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
+NS_IMETHODIMP nsHTMLEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -228,7 +228,7 @@ nsresult nsHTMLEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
   return result;
 }
 
-nsresult nsHTMLEditor::BeginTransaction()
+NS_IMETHODIMP nsHTMLEditor::BeginTransaction()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -238,7 +238,7 @@ nsresult nsHTMLEditor::BeginTransaction()
   return result;
 }
 
-nsresult nsHTMLEditor::EndTransaction()
+NS_IMETHODIMP nsHTMLEditor::EndTransaction()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -248,7 +248,7 @@ nsresult nsHTMLEditor::EndTransaction()
   return result;
 }
 
-nsresult nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -258,7 +258,7 @@ nsresult nsHTMLEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelect
   return result;
 }
 
-nsresult nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -268,7 +268,7 @@ nsresult nsHTMLEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSele
   return result;
 }
 
-nsresult nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -278,7 +278,7 @@ nsresult nsHTMLEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSele
   return result;
 }
 
-nsresult nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -288,7 +288,7 @@ nsresult nsHTMLEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtend
   return result;
 }
 
-nsresult nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
+NS_IMETHODIMP nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -298,7 +298,7 @@ nsresult nsHTMLEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)
   return result;
 }
 
-nsresult nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
+NS_IMETHODIMP nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -308,7 +308,7 @@ nsresult nsHTMLEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelecti
   return result;
 }
 
-nsresult nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
+NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -318,7 +318,7 @@ nsresult nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
   return result;
 }
 
-nsresult nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
+NS_IMETHODIMP nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -328,7 +328,7 @@ nsresult nsHTMLEditor::ScrollDown(nsIAtom *aIncrement)
   return result;
 }
 
-nsresult nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
+NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -338,7 +338,7 @@ nsresult nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
   return result;
 }
 
-nsresult nsHTMLEditor::Insert(nsIInputStream *aInputStream)
+NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -348,7 +348,7 @@ nsresult nsHTMLEditor::Insert(nsIInputStream *aInputStream)
   return result;
 }
 
-nsresult nsHTMLEditor::OutputText(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream *aOutputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -358,7 +358,7 @@ nsresult nsHTMLEditor::OutputText(nsIOutputStream *aOutputStream)
   return result;
 }
 
-nsresult nsHTMLEditor::OutputHTML(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsIOutputStream *aOutputStream)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
@@ -373,7 +373,7 @@ NS_IMPL_ADDREF(nsHTMLEditor)
 
 NS_IMPL_RELEASE(nsHTMLEditor)
 
-nsresult
+NS_IMETHODIMP
 nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

@@ -50,10 +50,10 @@ public:
     * @param aNode    the new Table to insert
     * @param aPresShell used to get and set the selection
     */
-  virtual nsresult Init(nsIDOMCharacterData *aElement,
-                        PRUint32 aOffset,
-                        nsIDOMNode *aNode,
-                        nsIPresShell* aPresShell);
+  NS_IMETHOD Init(nsIDOMCharacterData *aElement,
+                  PRUint32 aOffset,
+                  nsIDOMNode *aNode,
+                  nsIPresShell* aPresShell);
 
 private:
 	
@@ -61,17 +61,17 @@ private:
 
 public:
 	
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  //virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  //NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
 // nsISupports declarations
 
@@ -82,7 +82,7 @@ public:
 
 
   /** return the string data associated with this transaction */
-//  virtual nsresult GetData(nsString& aResult);
+//  NS_IMETHOD GetData(nsString& aResult);
 
   /** must be called before any InsertTableCellTxn is instantiated */
   static nsresult ClassInit();

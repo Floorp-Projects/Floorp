@@ -30,10 +30,22 @@ CPPSRCS =                       \
     nsEditorEventListeners.cpp  \
     nsEditProperty.cpp          \
     nsEditFactory.cpp           \
+    nsHTMLEditFactory.cpp       \
+    nsHTMLEditor.cpp            \
     nsTextEditFactory.cpp       \
     ChangeAttributeTxn.cpp      \
     EditTxn.cpp                 \
     EditAggregateTxn.cpp        \
+    EditTable.cpp               \
+    InsertTableTxn.cpp          \
+    InsertTableCellTxn.cpp      \
+    InsertTableColumnTxn.cpp    \
+    InsertTableRowTxn.cpp       \
+    DeleteTableTxn.cpp          \
+    DeleteTableCellTxn.cpp      \
+    DeleteTableColumnTxn.cpp    \
+    DeleteTableRowTxn.cpp       \
+    JoinTableCellsTxn.cpp       \
     InsertTextTxn.cpp           \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \

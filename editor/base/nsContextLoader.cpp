@@ -32,16 +32,13 @@ struct nsCtxTupple
 class nsEditorDefaultLoader  : public nsIContextLoader{
 public:
 
-  virtual nsresult Lookup(PRUint32 aIndex1, PRUint32 aIndex2, PRUint32 **aResult)= 0;
+  NS_IMETHOD Lookup(PRUint32 aIndex1, PRUint32 aIndex2, PRUint32 **aResult)= 0;
 
 private:
   nsCtxTupple *mCtxArray;
 };
 
 
-
-
-nsresult NS_MakeEditorLoader(nsIContextLoader **aResult);
 nsresult NS_MakeEditorLoader(nsIContextLoader **aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

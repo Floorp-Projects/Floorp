@@ -28,6 +28,15 @@
 #include "ChangeAttributeTxn.h"
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
+#include "InsertTableTxn.h"
+#include "InsertTableCellTxn.h"
+#include "InsertTableColumnTxn.h"
+#include "InsertTableRowTxn.h"
+#include "DeleteTableTxn.h"
+#include "DeleteTableCellTxn.h"
+#include "DeleteTableColumnTxn.h"
+#include "DeleteTableRowTxn.h"
+#include "JoinTableCellsTxn.h"
 
 static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
@@ -39,6 +48,15 @@ static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
 static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
 static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kInsertTableTxnIID,       INSERT_TABLE_TXN_IID);
+static NS_DEFINE_IID(kInsertTableCellTxnIID,   INSERT_CELL_TXN_IID);
+static NS_DEFINE_IID(kInsertTableColumnTxnIID, INSERT_COLUMN_TXN_IID);
+static NS_DEFINE_IID(kInsertTableRowTxnIID,    INSERT_ROW_TXN_IID);
+static NS_DEFINE_IID(kDeleteTableTxnIID,       DELETE_TABLE_TXN_IID);
+static NS_DEFINE_IID(kDeleteTableCellTxnIID,   DELETE_CELL_TXN_IID);
+static NS_DEFINE_IID(kDeleteTableColumnTxnIID, DELETE_COLUMN_TXN_IID);
+static NS_DEFINE_IID(kDeleteTableRowTxnIID,    DELETE_ROW_TXN_IID);
+static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
 
 TransactionFactory::TransactionFactory()
 {

@@ -30,9 +30,9 @@ InsertElementTxn::InsertElementTxn()
 {
 }
 
-nsresult InsertElementTxn::Init(nsIDOMNode *aNode,
-                                nsIDOMNode *aParent,
-                                PRInt32     aOffset)
+NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
+                                     nsIDOMNode *aParent,
+                                     PRInt32     aOffset)
 {
   if (!aNode || !aParent)
     return NS_ERROR_NULL_POINTER;
@@ -48,7 +48,7 @@ InsertElementTxn::~InsertElementTxn()
 {
 }
 
-nsresult InsertElementTxn::Do(void)
+NS_IMETHODIMP InsertElementTxn::Do(void)
 {
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
@@ -78,7 +78,7 @@ nsresult InsertElementTxn::Do(void)
   return result;
 }
 
-nsresult InsertElementTxn::Undo(void)
+NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
@@ -88,19 +88,19 @@ nsresult InsertElementTxn::Undo(void)
   return result;
 }
 
-nsresult InsertElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-nsresult InsertElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertElementTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult InsertElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertElementTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -109,7 +109,7 @@ nsresult InsertElementTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult InsertElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertElementTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {

@@ -41,67 +41,67 @@ public:
 
 //Initialization
   nsTextEditor();
-  virtual nsresult InitTextEditor(nsIDOMDocument *aDoc, 
-                                  nsIPresShell   *aPresShell,
-                                  nsIEditorCallback *aCallback=nsnull);
+  NS_IMETHOD InitTextEditor(nsIDOMDocument *aDoc, 
+                            nsIPresShell   *aPresShell,
+                            nsIEditorCallback *aCallback=nsnull);
   virtual ~nsTextEditor();
 
 // Editing Operations
-  virtual nsresult SetTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult GetTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList);
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
-  virtual nsresult InsertText(const nsString& aStringToInsert);
-  virtual nsresult InsertBreak(PRBool aCtrlKey);
+  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList);
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
+  NS_IMETHOD InsertText(const nsString& aStringToInsert);
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey);
 
 // Transaction control
-  virtual nsresult EnableUndo(PRBool aEnable);
-  virtual nsresult Undo(PRUint32 aCount);
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
-  virtual nsresult Redo(PRUint32 aCount);
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
-  virtual nsresult BeginTransaction();
-  virtual nsresult EndTransaction();
+  NS_IMETHOD EnableUndo(PRBool aEnable);
+  NS_IMETHOD Undo(PRUint32 aCount);
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
+  NS_IMETHOD Redo(PRUint32 aCount);
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
+  NS_IMETHOD BeginTransaction();
+  NS_IMETHOD EndTransaction();
 
 // Selection and navigation -- exposed here for convenience
-  virtual nsresult MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
-  virtual nsresult SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
-  virtual nsresult ScrollUp(nsIAtom *aIncrement);
-  virtual nsresult ScrollDown(nsIAtom *aIncrement);
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin);
+  NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
+  NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD ScrollUp(nsIAtom *aIncrement);
+  NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 // Input/Output
-  virtual nsresult Insert(nsIInputStream *aInputStream);
-  virtual nsresult OutputText(nsIOutputStream *aOutputStream);
-  virtual nsresult OutputHTML(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Insert(nsIInputStream *aInputStream);
+  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream);
+  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream);
 
 protected:
 // Utility Methods
-  virtual nsresult SetTextPropertiesForNode(nsIDOMNode *aNode, 
-                                            nsIDOMNode *aParent,
-                                            PRInt32     aStartOffset,
-                                            PRInt32     aEndOffset,
-                                            nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode *aNode, 
+                                      nsIDOMNode *aParent,
+                                      PRInt32     aStartOffset,
+                                      PRInt32     aEndOffset,
+                                      nsIAtom    *aPropName);
 
-  virtual nsresult SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
-                                                           PRInt32     aStartOffset,
-                                                           nsIDOMNode *aEndNode,
-                                                           PRInt32     aEndOffset,
-                                                           nsIDOMNode *aParent,
-                                                           nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
+                                                     PRInt32     aStartOffset,
+                                                     nsIDOMNode *aEndNode,
+                                                     PRInt32     aEndOffset,
+                                                     nsIDOMNode *aParent,
+                                                     nsIAtom    *aPropName);
 
-  virtual nsresult SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
-                                                                PRInt32     aStartOffset,
-                                                                nsIDOMNode *aEndNode,
-                                                                PRInt32     aEndOffset,
-                                                                nsIDOMNode *aParent,
-                                                                nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNodeWithDifferentParents(nsIDOMNode *aStartNode,
+                                                          PRInt32     aStartOffset,
+                                                          nsIDOMNode *aEndNode,
+                                                          PRInt32     aEndOffset,
+                                                          nsIDOMNode *aParent,
+                                                          nsIAtom    *aPropName);
 
-  virtual nsresult SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
+  NS_IMETHOD SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
 
 // Data members
 protected:

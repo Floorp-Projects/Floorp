@@ -39,6 +39,18 @@ CPPSRCS =				\
       SplitElementTxn.cpp    \
       JoinElementTxn.cpp     \
       TransactionFactory.cpp \
+      nsHTMLEditor.cpp       \
+      nsHTMLEditFactory.cpp  \
+      EditTable.cpp          \
+      InsertTableTxn.cpp        \
+      InsertTableCellTxn.cpp    \
+      InsertTableColumnTxn.cpp  \
+      InsertTableRowTxn.cpp     \
+      DeleteTableTxn.cpp        \
+      DeleteTableCellTxn.cpp    \
+      DeleteTableColumnTxn.cpp  \
+      DeleteTableRowTxn.cpp     \
+      JoinTableCellsTxn.cpp     \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -60,6 +72,18 @@ CPP_OBJS =					\
   .\$(OBJDIR)\SplitElementTxn.obj     \
   .\$(OBJDIR)\JoinElementTxn.obj      \
   .\$(OBJDIR)\TransactionFactory.obj  \
+  .\$(OBJDIR)\nsHTMLEditor.obj        \
+  .\$(OBJDIR)\nsHTMLEditFactory.obj   \
+  .\$(OBJDIR)\EditTable.obj           \
+  .\$(OBJDIR)\InsertTableTxn.obj      \
+  .\$(OBJDIR)\InsertTableCellTxn.obj  \
+  .\$(OBJDIR)\InsertTableColumnTxn.obj  \
+  .\$(OBJDIR)\InsertTableRowTxn.obj     \
+  .\$(OBJDIR)\DeleteTableTxn.obj        \
+  .\$(OBJDIR)\DeleteTableCellTxn.obj    \
+  .\$(OBJDIR)\DeleteTableColumnTxn.obj  \
+  .\$(OBJDIR)\DeleteTableRowTxn.obj     \
+  .\$(OBJDIR)\JoinTableCellsTxn.obj     \
 	$(NULL)
 
 MODULE=editor 

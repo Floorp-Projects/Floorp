@@ -51,7 +51,7 @@ GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports 
 
-NS_METHOD
+nsresult
 nsTextEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
   if (nsnull == aInstancePtr) {
@@ -74,7 +74,7 @@ NS_IMPL_RELEASE(nsTextEditFactory)
 ////////////////////////////////////////////////////////////////////////////
 // from nsIFactory:
 
-NS_METHOD
+NS_IMETHODIMP
 nsTextEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   *aResult  = nsnull;
@@ -99,7 +99,7 @@ nsTextEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aRe
 
 
 
-NS_METHOD
+NS_IMETHODIMP
 nsTextEditFactory::LockFactory(PRBool aLock)
 {
   return NS_OK;

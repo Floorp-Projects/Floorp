@@ -40,19 +40,19 @@ InsertTableTxn::InsertTableTxn()
 {
 }
 
-nsresult InsertTableTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP InsertTableTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
+  mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mTableToInsert = aNode;
   mPresShell = aPresShell;
   return NS_OK;
 }
 
-nsresult InsertTableTxn::Do(void)
+NS_IMETHODIMP InsertTableTxn::Do(void)
 {
   //nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
@@ -66,7 +66,7 @@ nsresult InsertTableTxn::Do(void)
   return res;
 }
 
-nsresult InsertTableTxn::Undo(void)
+NS_IMETHODIMP InsertTableTxn::Undo(void)
 {
   nsresult result = NS_ERROR_FAILURE;
 #if 0
@@ -84,7 +84,7 @@ nsresult InsertTableTxn::Undo(void)
   return result;
 }
 
-nsresult InsertTableTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertTableTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
 #if 0
   // set out param default value
@@ -136,12 +136,12 @@ nsresult InsertTableTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   return NS_OK;
 }
 
-nsresult InsertTableTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertTableTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult InsertTableTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertTableTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -150,7 +150,7 @@ nsresult InsertTableTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult InsertTableTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertTableTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -161,7 +161,7 @@ nsresult InsertTableTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 InsertTableTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

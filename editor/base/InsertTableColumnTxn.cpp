@@ -40,19 +40,19 @@ InsertTableColumnTxn::InsertTableColumnTxn()
 {
 }
 
-nsresult InsertTableColumnTxn::Init(nsIDOMCharacterData *aElement,
+NS_IMETHODIMP InsertTableColumnTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)
 {
-  mElement = aElement;
-  mOffset = aOffset;
+    mElement = do_QueryInterface(aElement);
+mOffset = aOffset;
   mNodeToInsert = aNode;
   mPresShell = aPresShell;
   return NS_OK;
 }
 
-nsresult InsertTableColumnTxn::Do(void)
+NS_IMETHODIMP InsertTableColumnTxn::Do(void)
 {
   //nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
@@ -66,7 +66,7 @@ nsresult InsertTableColumnTxn::Do(void)
   return res;
 }
 
-nsresult InsertTableColumnTxn::Undo(void)
+NS_IMETHODIMP InsertTableColumnTxn::Undo(void)
 {
   nsresult result = NS_ERROR_FAILURE;
 #if 0
@@ -85,7 +85,7 @@ nsresult InsertTableColumnTxn::Undo(void)
 }
 
 #if 0
-nsresult InsertTableColumnTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP InsertTableColumnTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   // set out param default value
   if (nsnull!=aDidMerge)
@@ -136,12 +136,12 @@ nsresult InsertTableColumnTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransac
 }
 #endif
 
-nsresult InsertTableColumnTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP InsertTableColumnTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult InsertTableColumnTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertTableColumnTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -150,7 +150,7 @@ nsresult InsertTableColumnTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult InsertTableColumnTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertTableColumnTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -161,7 +161,7 @@ nsresult InsertTableColumnTxn::GetRedoString(nsString **aString)
 
 /* ============= nsISupports implementation ====================== */
 
-nsresult
+NS_IMETHODIMP
 InsertTableColumnTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {

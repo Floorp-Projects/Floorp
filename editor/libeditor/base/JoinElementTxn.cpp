@@ -28,7 +28,7 @@ JoinElementTxn::JoinElementTxn()
 {
 }
 
-nsresult JoinElementTxn::Init(nsIEditor  *aEditor,
+NS_IMETHODIMP JoinElementTxn::Init(nsIEditor  *aEditor,
                               nsIDOMNode *aLeftNode,
                               nsIDOMNode *aRightNode)
 {
@@ -43,7 +43,7 @@ JoinElementTxn::~JoinElementTxn()
 {
 }
 
-nsresult JoinElementTxn::Do(void)
+NS_IMETHODIMP JoinElementTxn::Do(void)
 {
   nsresult result;
 
@@ -82,7 +82,7 @@ nsresult JoinElementTxn::Do(void)
 }
 
 
-nsresult JoinElementTxn::Undo(void)
+NS_IMETHODIMP JoinElementTxn::Undo(void)
 {
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
@@ -96,13 +96,13 @@ nsresult JoinElementTxn::Undo(void)
   return result;
 }
 
-nsresult JoinElementTxn::Redo(void)
+NS_IMETHODIMP JoinElementTxn::Redo(void)
 {
   nsresult result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
   return result;
 }
 
-nsresult JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
+NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)
     *aIsTransient = PR_FALSE;
@@ -116,12 +116,12 @@ nsresult JoinElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   return NS_OK;
 }
 
-nsresult JoinElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP JoinElementTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult JoinElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP JoinElementTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
   {
@@ -130,7 +130,7 @@ nsresult JoinElementTxn::GetUndoString(nsString **aString)
   return NS_OK;
 }
 
-nsresult JoinElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP JoinElementTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
   {

@@ -46,42 +46,42 @@ public:
   /** Initialize the text editor 
     *
     */
-  virtual nsresult InitHTMLEditor(nsIDOMDocument *aDoc, 
-                                  nsIPresShell   *aPresShell,
-                                  nsIEditorCallback *aCallback=nsnull)=0;
+  NS_IMETHOD InitHTMLEditor(nsIDOMDocument *aDoc, 
+                            nsIPresShell   *aPresShell,
+                            nsIEditorCallback *aCallback=nsnull)=0;
 
 // Methods shared with nsITextEditor (see nsITextEditor.h for details)
-  virtual nsresult SetTextProperties(nsISupportsArray *aPropList)=0;
-  virtual nsresult GetTextProperties(nsISupportsArray *aPropList)=0;
-  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList)=0;
-  virtual nsresult DeleteSelection(nsIEditor::Direction aDir)=0;
-  virtual nsresult InsertText(const nsString& aStringToInsert)=0;
-  virtual nsresult InsertBreak(PRBool aCtrlKey)=0;
-  virtual nsresult EnableUndo(PRBool aEnable)=0;
-  virtual nsresult Undo(PRUint32 aCount)=0;
-  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
-  virtual nsresult Redo(PRUint32 aCount)=0;
-  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
-  virtual nsresult BeginTransaction()=0;
-  virtual nsresult EndTransaction()=0;
-  virtual nsresult MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
-  virtual nsresult MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
-  virtual nsresult MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
-  virtual nsresult MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
-  virtual nsresult SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
-  virtual nsresult SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
-  virtual nsresult ScrollUp(nsIAtom *aIncrement)=0;
-  virtual nsresult ScrollDown(nsIAtom *aIncrement)=0;
-  virtual nsresult ScrollIntoView(PRBool aScrollToBegin)=0;
+  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
+  NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
+  NS_IMETHOD InsertBreak(PRBool aCtrlKey)=0;
+  NS_IMETHOD EnableUndo(PRBool aEnable)=0;
+  NS_IMETHOD Undo(PRUint32 aCount)=0;
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
+  NS_IMETHOD Redo(PRUint32 aCount)=0;
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
+  NS_IMETHOD BeginTransaction()=0;
+  NS_IMETHOD EndTransaction()=0;
+  NS_IMETHOD MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection)=0; 
+  NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)=0;
+  NS_IMETHOD ScrollUp(nsIAtom *aIncrement)=0;
+  NS_IMETHOD ScrollDown(nsIAtom *aIncrement)=0;
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
-  virtual nsresult Insert(nsIInputStream *aInputStream)=0;
-  virtual nsresult OutputText(nsIOutputStream *aOutputStream)=0;
-  virtual nsresult OutputHTML(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
+  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream)=0;
 
 // Miscellaneous Methods
   /*
-  virtual nsresult CheckSpelling()=0;
-  virtual nsresult SpellingLanguage(nsIAtom *aLanguage)=0;
+  NS_IMETHOD CheckSpelling()=0;
+  NS_IMETHOD SpellingLanguage(nsIAtom *aLanguage)=0;
   */
   /* The editor doesn't know anything about specific services like SpellChecking.  
    * Services can be invoked on the content, and these services can use the editor if they choose
@@ -92,15 +92,15 @@ public:
 
 
 // Table editing Methods
-  virtual nsresult InsertTable()=0;
-  virtual nsresult InsertTableCell(PRInt32 aNumber, PRBool aAfter)=0;
-  virtual nsresult InsertTableColumn(PRInt32 aNumber, PRBool aAfter)=0;
-  virtual nsresult InsertTableRow(PRInt32 aNumber, PRBool aAfter)=0;
-  virtual nsresult DeleteTable()=0;
-  virtual nsresult DeleteTableCell(PRInt32 aNumber)=0;
-  virtual nsresult DeleteTableColumn(PRInt32 aNumber)=0;
-  virtual nsresult DeleteTableRow(PRInt32 aNumber)=0;
-  virtual nsresult JoinTableCells(PRBool aCellToRight)=0;
+  NS_IMETHOD InsertTable()=0;
+  NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter)=0;
+  NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter)=0;
+  NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter)=0;
+  NS_IMETHOD DeleteTable()=0;
+  NS_IMETHOD DeleteTableCell(PRInt32 aNumber)=0;
+  NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
+  NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
+  NS_IMETHOD JoinTableCells(PRBool aCellToRight)=0;
 };
 
 #endif //nsIEditor_h__

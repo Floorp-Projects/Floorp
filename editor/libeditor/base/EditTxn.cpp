@@ -33,53 +33,53 @@ EditTxn::EditTxn()
   NS_INIT_REFCNT();
 }
 
-nsresult EditTxn::Do(void)
+NS_IMETHODIMP EditTxn::Do(void)
 {
   return NS_OK;
 }
 
-nsresult EditTxn::Undo(void)
+NS_IMETHODIMP EditTxn::Undo(void)
 {
   return NS_OK;
 }
 
-nsresult EditTxn::Redo(void)
+NS_IMETHODIMP EditTxn::Redo(void)
 {
   return Do();
 }
 
-nsresult EditTxn::GetIsTransient(PRBool *aIsTransient)
+NS_IMETHODIMP EditTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)
     *aIsTransient = PR_FALSE;
   return NS_OK;
 }
 
-nsresult EditTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP EditTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   return NS_OK;
 }
 
-nsresult EditTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP EditTxn::Write(nsIOutputStream *aOutputStream)
 {
   return NS_OK;
 }
 
-nsresult EditTxn::GetUndoString(nsString **aString)
-{
-  if (nsnull!=aString)
-    *aString=nsnull;
-  return NS_OK;
-}
-
-nsresult EditTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP EditTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
     *aString=nsnull;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP EditTxn::GetRedoString(nsString **aString)
+{
+  if (nsnull!=aString)
+    *aString=nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {

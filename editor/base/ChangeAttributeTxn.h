@@ -44,30 +44,30 @@ public:
     * @param aValue     the new value for aAttribute, if aRemoveAttribute is false
     * @param aRemoveAttribute if PR_TRUE, remove aAttribute from aNode
     */
-  virtual nsresult Init(nsIEditor      *aEditor,
-                        nsIDOMElement  *aNode,
-                        const nsString& aAttribute,
-                        const nsString& aValue,
-                        PRBool aRemoveAttribute);
+  NS_IMETHOD Init(nsIEditor      *aEditor,
+                  nsIDOMElement  *aNode,
+                  const nsString& aAttribute,
+                  const nsString& aValue,
+                  PRBool aRemoveAttribute);
 
 private:
   ChangeAttributeTxn();
 
 public:
 
-  virtual nsresult Do(void);
+  NS_IMETHOD Do(void);
 
-  virtual nsresult Undo(void);
+  NS_IMETHOD Undo(void);
 
-  virtual nsresult Redo(void);
+  NS_IMETHOD Redo(void);
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  virtual nsresult GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString **aString);
 
-  virtual nsresult GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString **aString);
 
 protected:
 
