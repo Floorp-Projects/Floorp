@@ -13,14 +13,18 @@ calItemBase.prototype = {
 
     mImmutable: false,
     get isMutable() { return this. mImmutable; },
-    makeImmutable: function() {
+
+    makeItemBaseImmutable: function() {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
 
 
-        this.mCreationDate.makeImmutable();
-        this.mRecurrenceInfo.makeImmutable();
-        this.mAlarmTime.makeImmutable();
+        if (this.mCreationDate)
+            this.mCreationDate.makeImmutable();
+        if (this.mRecurrenceInfo)
+            this.mRecurrenceInfo.makeImmutable();
+        if (this.mAlarmTime)
+            this.mAlarmTime.makeImmutable();
 
         this.mImmutable = true;
     },
@@ -39,10 +43,13 @@ calItemBase.prototype = {
         m.mMethod = this.mMethod;
         m.mStatus = this.mStatus;
         m.mHasAlarm = this.mHasAlarm;
-        m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
 
-        m.mCreationDate = this.mCreationDate.clone();
-        m.mAlarmTime = this.mAlarmTime.clone();
+        if (this.mRecurrenceInfo)
+            m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+        if (this.mCreationDate)
+            m.mCreationDate = this.mCreationDate.clone();
+        if (this.mAlarmTime)
+            m.mAlarmTime = this.mAlarmTime.clone();
 
 
         m.mAttachments = this.mAttachments;
