@@ -140,7 +140,8 @@ sub show_graph {
 
   my $plot_cmd;
   if($POINTS) {
-	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype, \"$DATAFILE\" using 1:2 with points ps 1";
+	# lt <point-color>
+	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype, \"$DATAFILE\" using 1:2 with points ls 1";
   } else {
 	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype";
   }
@@ -148,14 +149,16 @@ sub show_graph {
   # interpolate params into gnuplot command
   # Removing set format x, let gnuplot figure this out.
   #
+  # ls 1 = small blue points
+  # ls 2 = larger blue points
   my $cmds = qq{
 				reset
 				set term png color
 				set output "$PNGFILE"
 				set title  "$TBOX $TESTNAME"
 				set key graph 0.1,0.95 reverse spacing .75 width -18
-				set linestyle 1 lt 1 lw 1 pt 7 ps 0
-				set linestyle 2 lt 1 lw 1 pt 7 ps 1
+				set linestyle 1 lt 3 lw 1 pt 7 ps .5
+				set linestyle 2 lt 3 lw 1 pt 7 ps 1
 				set data style points
 				set timefmt "%Y:%m:%d:%H:%M:%S"
 				set xdata time
