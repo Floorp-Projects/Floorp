@@ -432,7 +432,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     case eCSSUnit_Null:         break;
     case eCSSUnit_Auto:         aResult.AppendLiteral("auto");     break;
     case eCSSUnit_Inherit:      aResult.AppendLiteral("inherit");  break;
-    case eCSSUnit_Initial:      aResult.AppendLiteral("initial");  break;
+    case eCSSUnit_Initial:      aResult.AppendLiteral("-moz-initial"); break;
     case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
 

@@ -486,7 +486,7 @@ void nsCSSValue::AppendToString(nsAString& aBuffer,
     case eCSSUnit_Null:         break;
     case eCSSUnit_Auto:         aBuffer.AppendLiteral("auto");     break;
     case eCSSUnit_Inherit:      aBuffer.AppendLiteral("inherit");  break;
-    case eCSSUnit_Initial:      aBuffer.AppendLiteral("initial");  break;
+    case eCSSUnit_Initial:      aBuffer.AppendLiteral("-moz-initial"); break;
     case eCSSUnit_None:         aBuffer.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aBuffer.AppendLiteral("normal");   break;
     case eCSSUnit_String:       break;
