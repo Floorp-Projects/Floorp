@@ -30,6 +30,8 @@
       onload="parent.initPanel('chrome://browser/content/pref/pref-advanced.xul');"
       headertitle="&lHeader;">
 
+  <stringbundle id="stringBundle" src="chrome://browser/locale/pref/addPopup.properties"/>
+
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "useProgressDialogs",
@@ -54,9 +56,11 @@
 
     function toggleEnabling() {
       var enabled = policyButton.checked;
+      var add = document.getElementById("addPermission");
       var remove1 = document.getElementById("removePermission");
       var remove2 = document.getElementById("removeAllPermissions");
       var description = document.getElementById("popupDescription");
+      add.disabled = !enabled;
       remove1.disabled = !enabled;
       remove2.disabled = !enabled;
       description.disabled = !enabled;
@@ -242,6 +246,25 @@
     }
   }
   
+  function AddPermission() {
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+
+    var stringBundle = document.getElementById("stringBundle");
+    var message = stringBundle.getString("enterSiteName");
+    var title = stringBundle.getString("enterSiteTitle");
+  
+    var name = {};
+    if (!promptService.prompt(window, title, message, name, null, {}))
+        return;
+      
+    var nameToURI = name.value.replace(" ", "");    
+    var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
+    uri.spec = nameToURI;
+    popupmanager.add(uri, true);
+    loadPermissions();
+  }
+
   function DeletePermission() {
     DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
                                    permissions, deletedPermissions,
@@ -318,6 +341,9 @@
           <treechildren/>
         </tree>
         <hbox>
+          <button id="addPermission" disabled="true"
+                        label="&addpermission.label;"
+                        oncommand="AddPermission();"/>
           <button id="removePermission" disabled="true" 
                         label="&removepermission.label;" 
                         oncommand="DeletePermission();"/>
