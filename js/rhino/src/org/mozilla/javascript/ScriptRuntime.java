@@ -2193,35 +2193,15 @@ public class ScriptRuntime {
  * to see if a given property has already been enumerated.
  *
  */
-class IdEnumeration {
-    IdEnumeration(Scriptable m) {
-        used = new ObjToIntMap(27);
+class IdEnumeration
+{
+    IdEnumeration(Scriptable m)
+    {
         changeObject(m);
-        next = getNext();
     }
 
-    Object nextId() {
-        Object result = next;
-        if (result != null) {
-            // only key used; 0 as value for convenience
-            used.put(next, 0);
-
-            next = getNext();
-        }
-        return result;
-    }
-
-    private void changeObject(Scriptable m) {
-        obj = m;
-        if (obj != null) {
-            array = m.getIds();
-            if (array.length == 0)
-                changeObject(obj.getPrototype());
-        }
-        index = 0;
-    }
-
-    private Object getNext() {
+    Object nextId()
+    {
         if (obj == null)
             return null;
         Object result;
@@ -2239,14 +2219,36 @@ class IdEnumeration {
                 if (!obj.has(((Number) result).intValue(), obj))
                     continue;   // must have been deleted
             }
-            if (!used.has(result)) {
+            if (used == null || !used.has(result)) {
                 break;
             }
         }
         return ScriptRuntime.toString(result);
     }
 
-    private Object next;
+    private void changeObject(Scriptable m)
+    {
+        Object[] ids = null;
+        while (m != null) {
+            ids = m.getIds();
+            if (ids.length != 0) {
+                break;
+            }
+            m = m.getPrototype();
+        }
+        if (m != null && array != null) {
+            if (used == null) {
+                used = new ObjToIntMap(array.length + 5);
+            }
+            for (int i = 0; i != array.length; ++i) {
+                used.intern(array[i]);
+            }
+        }
+        obj = m;
+        array = ids;
+        index = 0;
+    }
+
     private Scriptable obj;
     private int index;
     private Object[] array;
