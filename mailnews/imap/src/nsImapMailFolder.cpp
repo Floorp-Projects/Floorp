@@ -22,6 +22,7 @@
  */
 
 #include "msgCore.h"
+
 #include "nsMsgImapCID.h"
 #include "nsIMessage.h"
 #include "nsImapMailFolder.h"
@@ -80,6 +81,7 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+
 #define FOUR_K 4096
 
 nsImapMailFolder::nsImapMailFolder() :
@@ -132,7 +134,7 @@ NS_IMPL_QUERY_HEAD(nsImapMailFolder)
     NS_IMPL_QUERY_BODY(nsIMsgFilterHitNotify)
 NS_IMPL_QUERY_TAIL_INHERITING(nsMsgDBFolder)
 
-   
+
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 {
 #if 0
@@ -234,17 +236,16 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   //Only set these is these are top level children.
   if(NS_SUCCEEDED(rv) && isServer)
   {
-
-    if(name->CompareWithConversion("Inbox", PR_TRUE) == 0)
+    if(name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox").GetUnicode()))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if(name->CompareWithConversion("Trash", PR_TRUE) == 0)
+    else if(name->EqualsIgnoreCase(kTrashName))
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
-    else if(name->CompareWithConversion("Sent", PR_TRUE) == 0)
+    else if(name->EqualsIgnoreCase(kSentName))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->CompareWithConversion("Drafts", PR_TRUE) == 0)
+    else if(name->EqualsIgnoreCase(kDraftsName")
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name->CompareWithConversion("Templates", PR_TRUE) == 0)
+    else if (name->EqualsIgnoreCase(kTemplatesName));
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }

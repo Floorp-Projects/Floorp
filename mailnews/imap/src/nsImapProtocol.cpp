@@ -28,6 +28,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIStringBundle.h"
 
 #include "nsMsgImapCID.h"
 #include "nsIEventQueueService.h"
@@ -74,7 +75,6 @@ PRLogModuleInfo *IMAP;
 #define FOUR_K ((PRUint32)4096)
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
-const char *kImapSentFolderName = "Sent";	// **** needs to be localized ****
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -82,7 +82,8 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -3808,8 +3809,9 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
                     m_hostSessionList->GetOnlineTrashFolderExistsForHost(
                         GetImapServerKey(), onlineTrashFolderExists);
 
-        if (GetDeleteIsMoveToTrash() && // don't set the Trash flag if not using the Trash model
-          !onlineTrashFolderExists && 
+        if (GetDeleteIsMoveToTrash() && // don't set the Trash flag
+                                        // if not using the Trash model
+            !onlineTrashFolderExists && 
                     PL_strstr(adoptedBoxSpec->allocatedPathName, 
                               kImapTrashFolderName))
         {
