@@ -32,6 +32,7 @@
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
@@ -151,7 +152,7 @@ END of Deprecated -->
     <button id="openButton"/>
     <button id="saveButton"/>
     <button id="previewButton"/>
-    <button id="printButton" />
+    <menubutton id="printButton" />
     <button id="findButton"/>
     <button id="spellingButton"/>
     <spring class="separator_small"/>
