@@ -3,3 +3,4 @@
 #
 
 nsMacMessageSink.h
+nsMacMessagePump.h
