@@ -234,8 +234,8 @@ var gComposeRecyclingListener = {
 
     InitializeGlobalVariables();
     window.editorShell.contentWindow.focus();
-    enableEditableFields();
     ComposeStartup(true, params);
+    enableEditableFields();
 
     var event = document.createEvent('Events');
     event.initEvent('compose-window-reopen', false, true);
