@@ -512,9 +512,9 @@ Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
 Description Long=Tool for reporting software crashes
 Archive=talkback.xpi
-$InstallSize$:talkback
-$InstallSizeSystem$
-$InstallSizeArchive$:talkback.xpi
+Install Size=787
+Install Size System=1
+Install Size Archive=248
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Components\fullsoft.dll
 
