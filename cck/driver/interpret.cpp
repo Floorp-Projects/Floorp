@@ -8,7 +8,7 @@
 #include "SumDlg.h"
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
-//SCM #include "PrefEditView.h"
+#include "PrefEditView.h"
 
 // The following is included to make 
 // the browse for a dir code compile
@@ -1246,7 +1246,6 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				// the ShowInSection attribute are left alone.
 				ShowSection(curWidget);					
 			}
-      /* //SCM
 			else if (strcmp(pcmd, "OpenPrefTreeItem") == 0)
       {
         WIDGET *w = findWidget(parms);
@@ -1279,8 +1278,6 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 
         ((CPrefEditView*)w->control)->SetFocus();
       }
-      */
-
 		}
 		// This is an extra free...
 		//free(pcmd);

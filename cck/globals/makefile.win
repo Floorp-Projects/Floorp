@@ -28,6 +28,7 @@ LIBRARY_NAME=globals
 MODULE=globals 
 REQUIRES=
 IS_COMPONENT = 1
+PREFS_EXPORTS = 1
 
 OBJS=					\
 	.\$(OBJDIR)\globals.obj		\

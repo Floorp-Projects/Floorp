@@ -1,16 +1,14 @@
 // PrefEditView.cpp : implementation of the CPrefEditView class
 //
-//   In this code, the "tree control" is the just that which lives in the view, 
-//    and the "prefs tree" is an XML DOM tree representing the preferences and 
-//    their layout.
+// Reads the prefs from an XML files and display them in a tree control.
+// Saves back to an XML file.
 //
-//   The key to go from a tree control item to it's corresponding object in the
-//    XML tree is the pref name, which is saved in the tree control item data
-//    area. The code assumes the pref names are unique. 
+// Uses Expat XML parser. 
 //
 
 #include "stdafx.h"
-#include "PrefElement.h"
+#include "xmlparse.h"
+#include "PrefsElement.h"
 #include "PrefEditView.h"
 #include "DlgEditPrefStr.h"
 #include "DlgFind.h"
@@ -47,16 +45,15 @@ END_MESSAGE_MAP()
 
 // Protected.
 CPrefEditView::CPrefEditView()
-: m_pPrefXMLTree(NULL), m_pPrefsList(NULL), m_iNextElement(-1)
+: m_hgroup(NULL), m_pParsingPrefElement(NULL), m_hNextFind(NULL)
 {
 
 }
 
 
 CPrefEditView::CPrefEditView(CString strXMLFile)
-: m_pPrefXMLTree(NULL), m_strXMLFile(strXMLFile), m_pPrefsList(NULL), m_iNextElement(-1)
+: m_strXMLFile(strXMLFile), m_hgroup(NULL), m_pParsingPrefElement(NULL), m_hNextFind(NULL)
 {
-  InitXMLTree();
 }
 
 CPrefEditView::~CPrefEditView()
@@ -66,15 +63,20 @@ CPrefEditView::~CPrefEditView()
 
 BOOL CPrefEditView::PreCreateWindow(CREATESTRUCT& cs)
 {
-
   cs.style |= TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS;
 	return CTreeView::PreCreateWindow(cs);
 }
 
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CPrefEditView public operations
+//
+// These are for controls outside this view to call, for example, buttons 
+// on the same wizard page as this view.
+//
 
-// expand the tree, or open the selected item for edit
+// Expand the tree, or open the selected item for edit.
 void CPrefEditView::DoOpenItem()    
 {
   CTreeCtrl &treeCtrl = GetTreeCtrl();
@@ -90,19 +92,19 @@ void CPrefEditView::DoOpenItem()
 
 }
 
-// open the Find Pref dialog
+// Open the Find Pref dialog.
 void CPrefEditView::DoFindFirst()   
 {
   OnFindPref();
 }
 
-// find next item
+// Find next item.
 void CPrefEditView::DoFindNext()
 {
   OnFindNextPref();
 }
 
-// open the Add Pref dialog
+// Open the Add Pref dialog.
 void CPrefEditView::DoAdd()
 {
   OnAddPref();
@@ -127,45 +129,7 @@ void CPrefEditView::Dump(CDumpContext& dc) const
 #endif //_DEBUG
 
 
-BOOL CPrefEditView::InitXMLTree()
-{
-  // Create XML DOM instance.
-  HRESULT hr = m_pPrefXMLTree.CreateInstance(__uuidof(DOMDocument));
-  if (FAILED(hr))
-  {
-    MessageBox("Error creating MS XML DOM.", "Error", MB_OK);
-    return FALSE;
-  }
-
-  // Load the prefs metadata. This is a representation of the prefs tree as
-  // it should appear in the tree control.
-  if (m_pPrefXMLTree)
-  {
-    CString strPrefsFileURL;
-    strPrefsFileURL.Format("FILE://%s", m_strXMLFile);
-
-    if (!m_pPrefXMLTree->load(strPrefsFileURL.GetBuffer(0)))
-    {
-      CString strError;
-      strError.Format("Error loading preferences metadata %s.", strPrefsFileURL);
-      MessageBox(strError, "Error", MB_OK);
-      m_pPrefXMLTree = NULL;
-      return FALSE;
-    }
-    if (m_pPrefXMLTree->parseError->errorCode != 0)
-    {
-      CString strError;
-      strError.Format("Bad XML in %s.", strPrefsFileURL);
-      MessageBox(strError, "Error", MB_OK);
-      m_pPrefXMLTree = NULL;
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-// ItemData in each tree control element was created with new, so we need to 
+// ItemData in some tree control element was created with new, so we need to 
 // delete it.
 void CPrefEditView::DeleteTreeCtrl(HTREEITEM hParent)
 {
@@ -173,9 +137,9 @@ void CPrefEditView::DeleteTreeCtrl(HTREEITEM hParent)
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
 
-  // Delete the CString ojbect we created with new.
-  CString* pstr = (CString*)treeCtrl.GetItemData(hParent);
-  delete pstr;
+  // Delete the prefelement ojbect we created with new.
+  CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hParent);
+  delete pe;
 
   // Now call recursively for all children.
   HTREEITEM hCurrent = treeCtrl.GetNextItem(hParent, TVGN_CHILD);
@@ -187,101 +151,11 @@ void CPrefEditView::DeleteTreeCtrl(HTREEITEM hParent)
 }
 
 
-// Given a pref node, add it to the tree ctrl. The pref name is
-// later used to search for the pref node when the name is selected
-// for edit.
-HTREEITEM CPrefEditView::AddNodeToTreeCtrl(IXMLDOMNodePtr prefsTreeNode, HTREEITEM hTreeCtrlParent)
-{
-  ASSERT(prefsTreeNode != NULL);
-
-  HTREEITEM hNewItem = NULL;
-
-  //MessageBox(prefsTreeNode->xml, "XML", MB_OK);
-  if (prefsTreeNode->nodeType == NODE_ELEMENT)
-  {
-    IXMLDOMElementPtr prefsTreeElement = (IXMLDOMElementPtr)prefsTreeNode;     
-    CElementNode elementNode(prefsTreeElement);
-    CString strNodeName = elementNode.GetNodeName();
-
-    if ((strNodeName.CompareNoCase("PREFSGROUP") == 0) || (strNodeName.CompareNoCase("PREF") == 0))
-    {
-      // Will contain the pref name for pref elements, saved in the tree ctrl.
-      CString* pstrPrefName = NULL;
-
-      // Put this element in the tree ctrl.
-      CString strLabel = elementNode.GetAttribute("uiname");
-     
-      int imageIndex = 0;     // tree ctrl images
-      int imageIndexSel = 0;  // 0 is a closed folder
-
-      // If this is a PREF element, create tree ctrl text, and save with a 
-      // different image.
-      if (strNodeName.CompareNoCase("PREF") == 0)
-      {
-        
-        CPrefElement prefElement(prefsTreeElement);
-        strLabel = prefElement.CreateTreeCtrlLabel();
-
-        if (prefElement.IsLocked())
-          imageIndexSel = imageIndex = 2;   // a locked padlock
-        else
-          imageIndexSel = imageIndex = 3;   // an unlocked padlock
-
-   
-        // This gets deleted in DeleteTreeCtrl(). This is how we get back to 
-        // pref node when a tree ctrl node is selected for editing.
-        pstrPrefName = new CString(prefElement.GetAttribute("prefname"));
-
-      }
-
-      CTreeCtrl &treeCtrl = GetTreeCtrl();
-      hNewItem = treeCtrl.InsertItem( strLabel, imageIndex, imageIndexSel, hTreeCtrlParent, TVI_LAST);
-
-      // Save a pointer to the prefname string so we can find the node in the
-      // pref tree from the tree ctrl when the item is selected for edit.
-      treeCtrl.SetItemData(hNewItem, (DWORD)pstrPrefName);
-
-    }
-  }
-
-  // Recursively call for children.
-  IXMLDOMNodeListPtr children = prefsTreeNode->GetchildNodes();
-  if (children)
-  {
-    int numChildren = children->Getlength();
-    for (int i = 0; i < numChildren; i++)
-    {
-      IXMLDOMNodePtr child = children->Getitem(i);
-      AddNodeToTreeCtrl(child, hNewItem);
-    }
-  }
-
-  return hNewItem;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // CPrefEditView message handlers
 
 
-// Given the pref name, for example browser.general.example, returns the 
-// prefs tree element for that pref.
-IXMLDOMElementPtr CPrefEditView::FindElementFromPrefname(CString& rstrPrefString)
-{
-  ASSERT(rstrPrefString.GetLength() > 0);
-  ASSERT(m_pPrefXMLTree != NULL);
-
-  IXMLDOMNodeListPtr prefsList = m_pPrefXMLTree->getElementsByTagName("PREF");
-  for(int i = 0; i < prefsList->length; i++)
-  {
-    IXMLDOMElementPtr element = prefsList->Getitem(i);
-    CPrefElement elementNode(element);
-    if (rstrPrefString.CompareNoCase(elementNode.GetPrefName()) == 0)
-      return element;
-  }
-  return NULL;
-}
-
-// Given a pref element node, returns the tree control item for it.
+// Given a pref name, returns the tree control item for it.
 HTREEITEM CPrefEditView::FindTreeItemFromPrefname(HTREEITEM hItem, CString& rstrPrefName)
 {
 
@@ -290,9 +164,9 @@ HTREEITEM CPrefEditView::FindTreeItemFromPrefname(HTREEITEM hItem, CString& rstr
 
   // Get the pref name associated with this tree ctrl item.
   CTreeCtrl &treeCtrl = GetTreeCtrl();
-  CString* pstrPrefName = (CString*)treeCtrl.GetItemData(hItem);
+  CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hItem);
 
-  if (pstrPrefName && pstrPrefName->CompareNoCase(rstrPrefName) == 0)
+  if (pe && pe->GetPrefName().CompareNoCase(rstrPrefName) == 0)
 		return hItem;
 
 	HTREEITEM hRet = NULL;
@@ -325,14 +199,182 @@ void CPrefEditView::OnDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 
 } 
 
+
+
+// Called by the XML parser when a new element is read. 
+// Turn around and call the prefView object.
+static void startElementC(void *userData, const char *name, const char **atts)
+{
+  ((CPrefEditView*)userData)->startElement(name, atts);
+}
+
+// Called by the XML parser when new data is read.
+// Turn around and call the prefView object.
+static void characterDataC(void *userData, const XML_Char *s, int len)
+{
+  ((CPrefEditView*)userData)->characterData(s, len);
+}
+
+// Called by the XML parser when an element close tag is read.
+// Turn around and call the prefView object.
+static void endElementC(void *userData, const char *name)
+{
+  ((CPrefEditView*)userData)->endElement(name);
+}
+
+// XML parser helper. Called when start of an element tag is encountered.
+void CPrefEditView::startElement(const char *name, const char **atts)
+{
+  // If new prefsgroup, add an item to the tree control to hold other items.
+  if (stricmp(name, "PREFSGROUP") == 0)
+  {
+    int imageIndex = 0;     // tree ctrl images
+    int imageIndexSel = 0;  // 0 is a closed folder
+
+    // Assumes this element has one tag and that it's the uiname for the group.
+    CString strLabel = atts[1];
+
+    // Open a new level in the tree control.
+    CTreeCtrl &treeCtrl = GetTreeCtrl();
+    m_hgroup = treeCtrl.InsertItem( strLabel, imageIndex, imageIndexSel, m_hgroup, TVI_LAST);
+
+  }
+
+  // If new pref element, create a new pref element, and let it handle its own 
+  // initialization from the atts.
+  else if (stricmp(name, "PREF") == 0)
+  {
+    // Can't have nested pref elements.
+    ASSERT(m_pParsingPrefElement == NULL);
+    m_pParsingPrefElement = new CPrefElement;
+  }
+
+  // Pass on all subelements to the pref element object to handle.
+  if (m_pParsingPrefElement)
+    m_pParsingPrefElement->startElement(name, atts);
+
+}
+
+// XML parser helper. Called when non-tag stuff is encountered.
+void CPrefEditView::characterData(const XML_Char *s, int len)
+{
+  // Let the prefs element handle it.
+  if (m_pParsingPrefElement)
+    m_pParsingPrefElement->characterData(s, len);
+}
+
+// XML parser helper. Called when closing tag is found.
+void CPrefEditView::endElement(const char *name)
+{
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+  if (stricmp(name, "PREFSGROUP") == 0)
+  {
+    // back up one level in the tree control
+    ASSERT(m_hgroup);
+    m_hgroup = treeCtrl.GetParentItem(m_hgroup);
+    
+  }
+  else if (stricmp(name, "PREF") == 0)
+  {
+    ASSERT(m_pParsingPrefElement);
+
+    if (m_pParsingPrefElement)
+      m_pParsingPrefElement->endElement(name);
+
+    // Pref tag is closed. Add this pref to current group in the tree control.
+    InsertPrefElement(m_pParsingPrefElement, m_hgroup);
+
+    m_pParsingPrefElement = NULL;
+
+  }
+    
+}
+
+// Insert pref element into the tree control in the specified group.
+HTREEITEM CPrefEditView::InsertPrefElement(CPrefElement* pe, HTREEITEM group)
+{
+  ASSERT(pe);
+  ASSERT(group);
+
+  int imageIndex = 0;     // tree ctrl images
+  int imageIndexSel = 0;  // 0 is a closed folder
+  if (pe->IsLocked())
+    imageIndexSel = imageIndex = 2;   // a locked padlock
+  else
+    imageIndexSel = imageIndex = 3;   // an unlocked padlock
+
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  HTREEITEM hNewItem = treeCtrl.InsertItem(pe->GetPrettyNameValueString(), imageIndex, imageIndexSel, group, TVI_LAST);
+
+  // Save pointer to this pref element in the tree.
+  treeCtrl.SetItemData(hNewItem, (DWORD)pe);
+
+  return hNewItem;
+
+}
+
+// Load the tree control with data from the XML file.
+BOOL CPrefEditView::LoadTreeControl()
+{
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  m_hgroup = treeCtrl.GetRootItem();
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+  XML_SetElementHandler(parser, startElementC, endElementC);
+  XML_SetCharacterDataHandler(parser, characterDataC);
+  XML_SetUserData(parser, this);
+
+  // Load the XML from the file.
+  CString strPrefsXML;
+  FILE* pFile = fopen(m_strXMLFile, "r");
+  if (!pFile)
+  {
+    CString strMsg;
+    strMsg.Format("Can't open the file %s.",  m_strXMLFile);
+    AfxMessageBox(strMsg, MB_OK);
+    return FALSE;
+  }
+
+  // obtain file size.
+  fseek(pFile , 0 , SEEK_END);
+  long lSize = ftell(pFile);
+  rewind(pFile);
+
+  // allocate memory to contain the whole file.
+  char* buffer = (char*) malloc (lSize + 1);
+  if (buffer == NULL)
+  {
+    AfxMessageBox("Memory allocation error.", MB_OK);
+    return FALSE;
+  }
+
+  buffer[lSize] = '\0';
+
+  // copy the file into the buffer.
+  size_t len = fread(buffer,1,lSize,pFile);
+  
+  // The whole file is loaded in the buffer.
+
+  int done = 0;
+  if (!XML_Parse(parser, buffer, len, done)) 
+  {
+    CString strMsg;
+    strMsg.Format("%s in file %s at line %d.",XML_ErrorString(XML_GetErrorCode(parser)), m_strXMLFile, XML_GetCurrentLineNumber(parser));
+    AfxMessageBox(strMsg, MB_OK);
+    free(buffer);
+    return FALSE;  
+  }
+
+  XML_ParserFree(parser);
+
+  free(buffer);
+  return TRUE;
+  
+}
+
 int CPrefEditView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 {
-  // InitXMLTree() has to complete successfully first.
-  ASSERT(m_pPrefXMLTree != NULL);
-
-  if (m_pPrefXMLTree == NULL)
-    return -1;
-
 	if (CTreeView::OnCreate(lpCreateStruct) == -1)
 		return -1;
 	
@@ -343,16 +385,12 @@ int CPrefEditView::OnCreate(LPCREATESTRUCT lpCreateStruct)
   m_imageList.Create(IDB_TREEIMAGES, 17, 1, RGB(0,255,255));
   treeCtrl.SetImageList (&m_imageList, TVSIL_NORMAL);
 
-
   HTREEITEM hRoot = treeCtrl.GetRootItem();
   if (hRoot)
     DeleteTreeCtrl(hRoot);
 
-  ASSERT(m_pPrefXMLTree != NULL);
-
-
-   // Load the tree control so it matches the XML tree.
-  AddNodeToTreeCtrl(m_pPrefXMLTree->documentElement, NULL);
+  // Load the tree control so it matches the XML.
+  LoadTreeControl();
 
   treeCtrl.Expand(treeCtrl.GetRootItem(), TVE_EXPAND);
 
@@ -375,72 +413,137 @@ void CPrefEditView::OnDestroy()
 // Find a pref containing a string in one of its fields.
 BOOL CPrefEditView::FindFirst(CString& rstrFind)
 {
-  ASSERT(m_pPrefXMLTree != NULL);
-
-  m_pPrefsList = m_pPrefXMLTree->getElementsByTagName("PREF");
-  m_iNextElement = 0;
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  m_hNextFind = treeCtrl.GetRootItem();
   m_strFind = rstrFind;
 
   return FindNext();
 }
 
+// Returns the next item in the tree control.
+HTREEITEM CPrefEditView::GetNextItem(HTREEITEM hItem)
+{
+  HTREEITEM hti;
 
-// Assumes FindFirst was called first.
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  if (treeCtrl.ItemHasChildren(hItem))
+  {
+    return treeCtrl.GetChildItem(hItem);           // return first child
+  }
+  else
+  {
+    // return next sibling item
+    // Go up the tree to find a parent's sibling if needed.
+    while((hti = treeCtrl.GetNextSiblingItem(hItem)) == NULL)
+    {
+      if((hItem = treeCtrl.GetParentItem(hItem)) == NULL)
+        return NULL;
+    }
+  }
+  return hti;
+}
+
+
+
+// Find next match. Assumes FindFirst was called first.
 BOOL CPrefEditView::FindNext()
 {
-  ASSERT(m_pPrefXMLTree != NULL);
 
-  if (m_pPrefsList == NULL || m_iNextElement == -1)
+  if ((m_hNextFind == NULL) || m_strFind.IsEmpty())
     return FALSE;
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
 
-  while (m_iNextElement < m_pPrefsList->length)
+  while (m_hNextFind)
   {
-    IXMLDOMElementPtr pElement = m_pPrefsList->Getitem(m_iNextElement);
+    CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(m_hNextFind);
 
-    CPrefElement elementNode(pElement);
-
-    // Find the string in any field (pref name, value, description, etc.)
-    if (elementNode.FindString(m_strFind))
+    if (pe && pe->FindString(m_strFind))
     {
-      // Select this item.
-      SelectPref(elementNode.GetPrefName()); 
-      m_iNextElement++;
+      treeCtrl.SelectItem(m_hNextFind);
+      m_hNextFind = GetNextItem(m_hNextFind);
       return TRUE;
     }
 
-    m_iNextElement++;
+    m_hNextFind = GetNextItem(m_hNextFind);
+
   }
 
-  m_iNextElement = -1;
-  
   AfxMessageBox("No more matches.", MB_OK);
-
   return FALSE;
 }
 
+// Save this item and all children to a file as XML. Recursive.
+void CPrefEditView::WriteXMLItem(FILE* fp, int iLevel, HTREEITEM hItem)
+{
+  ASSERT(fp);
+  ASSERT(iLevel >= 0);
+  ASSERT(hItem != NULL);
+
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+
+  const int iIndentSize = 2;
+  int iIndent = iLevel * iIndentSize;
+
+  // for this item and all siblings 
+  while (hItem)
+  {
+    // if has children, then it's a PREFSGROUP
+    if (treeCtrl.ItemHasChildren(hItem))
+    {
+      // write the opening group tag
+      CString strTag;
+      strTag.Format("%*s<PREFSGROUP uiname=\"%s\">\n\n", iIndent, " ", treeCtrl.GetItemText(hItem));
+      fwrite(strTag, strTag.GetLength(), 1, fp);
+
+      // call self on first child
+      WriteXMLItem(fp, iLevel+1, treeCtrl.GetChildItem(hItem));
+
+      // write the closing tag
+      strTag.Format("%*s</PREFSGROUP>\n\n", iIndent, " ");
+      fwrite(strTag, strTag.GetLength(), 1, fp);
+    }
+
+    // if no children, then it's a PREF
+    else
+    {
+      // write the opening pref tag
+      // write the info
+      // write the closing pref tag
+
+      CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hItem);
+      ASSERT(pe);
+      if (pe)
+      {
+        CString strElement = pe->XML(iIndentSize, iLevel);
+        strElement += "\n";
+        fwrite(strElement, strElement.GetLength(), 1, fp);
+      }
+    }
+
+    hItem = treeCtrl.GetNextSiblingItem(hItem);
+  }
+}
 
 
 // Save the XML to a file.
 BOOL CPrefEditView::DoSavePrefsTree(CString strFile)
 {
-  ASSERT(m_pPrefXMLTree != NULL);
-
-  CElementNode root(m_pPrefXMLTree->documentElement);
-  CString strXML = root.GetXML();
-
   FILE* fp = fopen(strFile, "w");
   if (!fp)
     return FALSE;
 
-  CString strPreamble("<?xml version=\"1.0\"?>");
+  CString strPreamble("<?xml version=\"1.0\"?>\n\n");
   if (!fwrite(strPreamble, strPreamble.GetLength(), 1, fp))
+  {
+    fclose(fp);
     return FALSE;
+  }
 
-  if (!fwrite(strXML, strXML.GetLength(), 1, fp))
-    return FALSE;
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  HTREEITEM hRoot = treeCtrl.GetRootItem();
+  WriteXMLItem(fp, 1, hRoot);
 
   fclose(fp);
-
   return TRUE;
 }
 
@@ -489,7 +592,7 @@ void CPrefEditView::OnFindPref()
 void CPrefEditView::OnFindNextPref()
 {
   // If FindFirst not done before FindNext, call FindFirst first.
-  if (m_iNextElement == -1)
+  if (m_hNextFind == NULL)
     OnFindPref();
   else
     FindNext();
@@ -499,43 +602,22 @@ void CPrefEditView::OnFindNextPref()
 // User added prefs go into the root group.
 HTREEITEM CPrefEditView::AddPref(CString& rstrPrefName, CString& rstrPrefDesc, CString& rstrPrefType)
 {
-  IXMLDOMNodePtr prefsTreeRootNode = m_pPrefXMLTree->documentElement;
-
-  // Make sure the node is the root node element.
-  if (prefsTreeRootNode->nodeType == NODE_ELEMENT)  
+  // Modify it.
+  CPrefElement* newPref = new CPrefElement(rstrPrefName, rstrPrefDesc, rstrPrefType);
+    
+  // Add it to the tree.
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  HTREEITEM hRoot = treeCtrl.GetRootItem();
+  ASSERT(hRoot);
+  if (hRoot)
   {
-    // and that it's a group.
-    CElementNode group(prefsTreeRootNode);
-    CString strNodeName = group.GetNodeName();
-    if (strNodeName.CompareNoCase("PREFSGROUP") == 0)
-    {
-      
-      // Create an XML element node.
-      IXMLDOMNodePtr newNode = group.AddNode("PREF");
+    HTREEITEM hNewItem = InsertPrefElement(newPref, hRoot);
+    treeCtrl.SelectItem(hNewItem);
 
-      // Modify it.
-      CPrefElement newPref(newNode);
-      newPref.Initialize(rstrPrefName, rstrPrefDesc, rstrPrefType);
-      
-      // Add it to the tree.
-      CTreeCtrl &treeCtrl = GetTreeCtrl();
-      HTREEITEM hRoot = treeCtrl.GetRootItem();
-      ASSERT(hRoot);
-      if (hRoot)
-      {
-        HTREEITEM hNewItem = AddNodeToTreeCtrl(newNode, hRoot);
-        treeCtrl.SelectItem(hNewItem);
-
-        EditSelectedPrefsItem();
-      }
-    }
+    EditSelectedPrefsItem();
   }
- 
-
 
   return NULL;
-
-
 }
 
 // Open dialog to add a new pref, then open another to edit it.
@@ -587,59 +669,39 @@ void CPrefEditView::EditSelectedPrefsItem()
   if (treeCtrl.ItemHasChildren(hTreeCtrlItem))
     return;
 
-  // Get the pref name associated with this tree ctrl item.
-  CString* pstrPrefName = (CString*)treeCtrl.GetItemData(hTreeCtrlItem);
+  CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hTreeCtrlItem);
 
-  // All prefs should specify the prefname attribute in the XML pref element.
-  // This assertion means that the pref's prefname attribute was not set, or
-  // that perhaps a prefgroup doesn't have any children (if should, otherwise
-  // it shouldn't be a group.)
-  ASSERT(pstrPrefName);
+  ASSERT(pe);
 
-  if (!pstrPrefName)
+  if (!pe)
     return;
 
-  // Get the pref tree node with that same pref name.
-  IXMLDOMElementPtr prefsTreeElement = FindElementFromPrefname(*pstrPrefName);
-  if (prefsTreeElement)
+  CDlgEditPrefStr dlg;
+  dlg.m_strType = pe->GetPrefType();
+  dlg.m_strTitle = pe->GetUIName();
+  dlg.m_strDescription = pe->GetPrefDescription();
+  dlg.m_strPrefName = pe->GetPrefName();
+  dlg.m_strValue = pe->GetPrefValue();
+  dlg.m_bLocked = pe->IsLocked();
+  dlg.m_pstrChoices = pe->GetChoiceStringArray();
+  dlg.m_strSelectedChoice = pe->GetSelectedChoiceString();
+  dlg.m_bChoose = pe->IsChoose();
+
+
+  if (dlg.DoModal() == IDOK)
   {
-    CPrefElement elementNode(prefsTreeElement);
-    CString* pstrChoices = elementNode.MakeChoiceStringArray();
-    
-  	CDlgEditPrefStr dlg;
-    dlg.m_strType = elementNode.GetPrefType();
-    dlg.m_strTitle = elementNode.GetUIName();
-    dlg.m_strDescription = elementNode.GetPrefDescription();
-    dlg.m_strPrefName = *pstrPrefName;
-    dlg.m_strValue = elementNode.GetPrefValue();
-    dlg.m_bLocked = elementNode.IsLocked();
-    dlg.m_pstrChoices = pstrChoices;
-    dlg.m_strSelectedChoice = elementNode.GetSelectedChoiceString();
-    dlg.m_strPrefFile = elementNode.GetPrefFile();
-    dlg.m_strInstallFile = elementNode.GetInstallFile();
-    dlg.m_bChoose = elementNode.IsChoose();
 
+    // Adjust the prefs tree to reflect the changes. The dialog always 
+    // sets m_strValue to a string which can go directly into the prefs
+    // tree element. For example, bools set 'true' or 'false' and choices
+    // set '0' or '1' or whatever the value for the selected choice.
+    pe->SetPrefValue(dlg.m_strValue);
+    pe->SetLocked(dlg.m_bLocked);
 
-    if (dlg.DoModal() == IDOK)
-    {
-
-      // Adjust the prefs tree to reflect the changes. The dialog always 
-      // sets m_strValue to a string which can go directly into the prefs
-      // tree element. For example, bools set 'true' or 'false' and choices
-      // set '0' or '1' or whatever the value for the selected choice.
-      elementNode.SetPrefValue(dlg.m_strValue);
-      elementNode.SetLocked(dlg.m_bLocked);
-      elementNode.SetPrefFile(dlg.m_strPrefFile);
-      elementNode.SetInstallFile(dlg.m_strInstallFile);
-
-      // Adjust the tree control to reflect the changes.
-      treeCtrl.SetItemText(hTreeCtrlItem, elementNode.CreateTreeCtrlLabel());
-      treeCtrl.SetItemImage(hTreeCtrlItem, dlg.m_bLocked? 2 : 3, dlg.m_bLocked? 2 : 3);
-      
-    }
-
-    delete [] pstrChoices;
-	  
+    // Adjust the tree control to reflect the changes.
+    treeCtrl.SetItemText(hTreeCtrlItem, pe->GetPrettyNameValueString());
+    treeCtrl.SetItemImage(hTreeCtrlItem, dlg.m_bLocked? 2 : 3, dlg.m_bLocked? 2 : 3);
+   
   }
 }
 
@@ -684,16 +746,6 @@ void CPrefEditView::OnRclick(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	
 	*pResult = 0;
-}
-
-// Given a pref name, select the tree control item with that pref name.
-void CPrefEditView::SelectPref(CString& rstrPrefName)
-{
-  CTreeCtrl &treeCtrl = GetTreeCtrl();
-  HTREEITEM hRoot = treeCtrl.GetRootItem();
-
-  HTREEITEM hTreeCtrlItem = FindTreeItemFromPrefname(hRoot, rstrPrefName);
-  treeCtrl.SelectItem(hTreeCtrlItem);
 }
 
 void CPrefEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 

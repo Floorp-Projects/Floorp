@@ -9,12 +9,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#import "msxml.dll"
-using namespace MSXML;
 
 #include <afxcview.h>
-#include "XMLDOMHelper.h"
+#include "xmlparse.h"
 
+class CPrefElement;
 
 class CPrefEditView : public CTreeView
 {
@@ -35,6 +34,11 @@ public:
   void DoFindFirst();   // open the Find Pref dialog
   void DoFindNext();    // find next item
   void DoAdd();         // open the Add Pref dialog
+
+  // These are only for the XML parser to call.
+  void startElement(const char *name, const char **atts);
+  void characterData(const XML_Char *s, int len);
+  void endElement(const char *name);
 
 
 // Overrides
@@ -72,28 +76,30 @@ protected:
 
 private:
   CImageList m_imageList;             // padlocks to show which prefs are locked
-	IXMLDOMDocumentPtr m_pPrefXMLTree;  // the actual XML tree which describes the tree control contents
   CString m_strXMLFile;               // the XML file used to load the m_pPrefXMLTree, and hence the tree control
 
   // Stuff for Find and FindNext.
-  IXMLDOMNodeListPtr m_pPrefsList;
-  int m_iNextElement;
+  HTREEITEM m_hNextFind;
   CString m_strFind;
   BOOL FindFirst(CString& rstrFind);
   BOOL FindNext();
+  HTREEITEM GetNextItem(HTREEITEM hItem);
 
-  
-  BOOL InitXMLTree();
-  HTREEITEM AddNodeToTreeCtrl(IXMLDOMNodePtr prefsTreeNode, HTREEITEM hTreeCtrlParent);
+  // Stuff for building the tree control from the XML file.
+  HTREEITEM m_hgroup;
+  CPrefElement* m_pParsingPrefElement;
+
   HTREEITEM FindTreeItemFromPrefname(HTREEITEM hItem, CString& rstrPrefName);
-  IXMLDOMElementPtr FindElementFromPrefname(CString& rstrPrefString);
-  void SelectPref(CString& rstrPrefName);
-  void DeleteTreeCtrl(HTREEITEM hParent);
-
+  HTREEITEM InsertPrefElement(CPrefElement* pe, HTREEITEM group);
   HTREEITEM AddPref(CString& rstrPrefName, CString& rstrPrefDesc, CString& rstrPrefType);
 
-  void ShowPopupMenu( CPoint& point, int submenu );
+  BOOL LoadTreeControl();
+  void WriteXMLItem(FILE* fp, int iLevel, HTREEITEM hItem);
+
+  void DeleteTreeCtrl(HTREEITEM hParent);
   void EditSelectedPrefsItem();
+
+  void ShowPopupMenu( CPoint& point, int submenu );
 
 };
 

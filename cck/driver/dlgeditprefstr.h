@@ -32,8 +32,6 @@ public:
 	CString	m_strDescription;
 	CString	m_strPrefName;
 	CString	m_strValue;
-  CString m_strInstallFile;
-  CString m_strPrefFile;
 	BOOL	m_bLocked;
 	BOOL	m_bValue;
 	//}}AFX_DATA

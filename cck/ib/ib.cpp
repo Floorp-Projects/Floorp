@@ -18,8 +18,8 @@
 #define BUF_SIZE 4096
 
 // for the xml parser used for PrefsTree
-//SCM #import "msxml.dll"
-//SCM using namespace MSXML;
+#include "xmlparse.h"
+#include "prefselement.h"
 
 // Required disk space for Win build
 #define WDISK_SPACE 27577549
@@ -53,6 +53,10 @@ CString nsinstallerDir;
 CString xpiDir;
 CString templinuxDir;
 CString tarfile;
+
+// For use with PrefsTree
+CString gstrPrefFile;
+CString gstrInstallFile;
 
 WIDGET *tempWidget;
 char buffer[50000];
@@ -696,46 +700,126 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	return TRUE;
 }
 
-// XML DOM helper. Returns the value of a specified child element.
-/* //SCM
-CString GetElementValue(IXMLDOMElementPtr element, CString strTag)
-{
-  _variant_t value;
-
-  IXMLDOMNodeListPtr prefValNodes = element->getElementsByTagName(strTag.GetBuffer(0));
-  if (prefValNodes)
-  {
-    IXMLDOMNodePtr prefValNode = prefValNodes->Getitem(0);  // should be only one
-    if (prefValNode)
-    { 
-      if (prefValNode->childNodes->Getlength() > 0)
-        value = prefValNode->childNodes->Getitem(0)->GetnodeValue();  // get the text node child, which contains the text we want.
-    }
-  }
-
-  return (char*)_bstr_t(value);
-}
-
-// XML DOM helper. Returns the value of the specified attribute.
-CString GetAttribute(IXMLDOMElementPtr element, CString strAttributeName)
-{
-  _variant_t attribValue = element->getAttribute(strAttributeName.GetBuffer(0));
-
-  if (attribValue.vt == VT_NULL)
-    return "";
-  else
-    return (char*)_bstr_t(attribValue);
-}
-*/
 
 // This processes a prefs tree XML file, adding preferences to install files
 // as specified in the prefs tree XML file. See PrefsTree.html for file
 // format details.
 //
+
+// Called by the XML parser when a new element is read.
+void startElement(void *userData, const char *name, const char **atts)
+{
+  ASSERT(userData);
+
+  ((CPrefElement*)userData)->startElement(name, atts);
+}
+
+void characterData(void *userData, const XML_Char *s, int len)
+{
+  ASSERT(userData);
+  ((CPrefElement*)userData)->characterData(s, len);
+}
+
+
+// Called by the XML parser when an element close tag is read.
+void endElement(void *userData, const char *name)
+{
+  ASSERT(userData);
+   
+  ((CPrefElement*)userData)->endElement(name);
+
+  if (stricmp(name, "PREF") == 0)
+  {
+    
+
+    // Write the pref element to prefs file.
+    ExtractXPIFile(gstrInstallFile, gstrPrefFile);
+
+    BOOL bLocked = ((CPrefElement*)userData)->IsLocked();
+
+    // Should go into a hashed file if prefs file is .cfg.
+    if (gstrPrefFile.Find(".cfg") > 0)
+    {
+      // hashed
+      ModifyHashedPref(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), ((CPrefElement*)userData)->GetPrefType(), bLocked); 
+
+    }
+    else
+    {
+      // not hashed
+      if ((((CPrefElement*)userData)->GetPrefType() == "int") || (((CPrefElement*)userData)->GetPrefType() == "bool"))
+        ModifyJS2(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), bLocked);
+
+      else  // string
+        ModifyJS(gstrPrefFile, ((CPrefElement*)userData)->GetPrefName(), ((CPrefElement*)userData)->GetPrefValue(), bLocked);
+
+    }
+  }
+
+}
+
+
+
 // This function can easily be rewriten to parse the XML file by hand if it 
 // needs to be ported to a non-MS OS. The XML is pretty simple.
-BOOL ProcessPrefsTree(CString strPrefsTreeFile)
+BOOL ProcessPrefsTree(CString strPrefsTreeFile, CString strPrefFile, CString strInstallFile)
 {
+
+  gstrPrefFile = strPrefFile;
+  gstrInstallFile = strInstallFile;
+
+  XML_Parser parser = XML_ParserCreate(NULL);
+
+  XML_SetElementHandler(parser, startElement, endElement);
+  XML_SetCharacterDataHandler(parser, characterData);
+
+  // Used by the XML parser. The data object passed to the handlers.
+  static CPrefElement element;
+  XML_SetUserData(parser, &element);
+
+  // Load the XML from the file.
+  CString strPrefsXML;
+  FILE* pFile = fopen(strPrefsTreeFile, "r");
+  if (!pFile)
+  {
+    fprintf(stderr, "Can't open the file %s.", strPrefsTreeFile);
+    return FALSE;
+  }
+
+  // obtain file size.
+  fseek(pFile , 0 , SEEK_END);
+  long lSize = ftell(pFile);
+  rewind(pFile);
+
+  // allocate memory to contain the whole file.
+  char* buffer = (char*) malloc (lSize + 1);
+  if (buffer == NULL)
+  {
+    fprintf(stderr, "Memory allocation error.");
+    return FALSE;
+  }
+
+  buffer[lSize] = '\0';
+
+  // copy the file into the buffer.
+  size_t len = fread(buffer,1,lSize,pFile);
+  
+  /*** the whole file is loaded in the buffer. ***/
+
+  int done = 0;
+  if (!XML_Parse(parser, buffer, len, done)) 
+  {
+    fprintf(stderr,
+	    "%s at line %d\n",
+	    XML_ErrorString(XML_GetErrorCode(parser)),
+	    XML_GetCurrentLineNumber(parser));
+
+    return FALSE;  
+  }
+
+  XML_ParserFree(parser);
+
+  return TRUE;
 
   /* //SCM
   // Create XML DOM instance.
@@ -1024,8 +1108,10 @@ int interpret(char *cmd)
   {
 
   	char *prefsTreeFile	= strtok(NULL, ",)");
+    char *installFile = strtok(NULL, ",)");
+    char *prefFile = strtok(NULL, ",)");
     CString fileWithPath = configPath + "\\" + prefsTreeFile;
-    ProcessPrefsTree(fileWithPath);
+    ProcessPrefsTree(fileWithPath, prefFile, installFile);
   }
 	else
 		return FALSE;//*** We have to handle this condition better.

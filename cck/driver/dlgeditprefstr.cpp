@@ -23,8 +23,6 @@ CDlgEditPrefStr::CDlgEditPrefStr(CWnd* pParent /*=NULL*/)
 	m_strValue = _T("");
 	m_bLocked = FALSE;
 	m_bValue = FALSE;
-	m_strInstallFile = _T("");
-	m_strPrefFile = _T("");
 	//}}AFX_DATA_INIT
 }
 
@@ -41,8 +39,6 @@ void CDlgEditPrefStr::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_VALUE, m_strValue);
 	DDX_Check(pDX, IDC_LOCKED, m_bLocked);
 	DDX_Check(pDX, IDC_VALCHECK, m_bValue);
-  DDX_Text(pDX, IDC_INSTALLFILE, m_strInstallFile);
-  DDX_Text(pDX, IDC_PREFFILE, m_strPrefFile);
 	//}}AFX_DATA_MAP
 }
 
