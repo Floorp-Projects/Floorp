@@ -1,0 +1,5 @@
+#filter substitution
+
+@AB_CD@.jar:
+* locale/@AB_CD@/necko/contents.rdf      (generic/contents.rdf)
+  locale/@AB_CD@/necko/necko.properties  (%necko.properties)
