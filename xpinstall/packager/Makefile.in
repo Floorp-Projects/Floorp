@@ -180,11 +180,13 @@ PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
 $(SDK):
+ifndef NO_GECKO_SDK
 ifdef MAKE_SDK
 	@rm -rf $(DIST)/$(SDK_PKG_APPNAME)-$(SDK_DIR) $@
 	@mkdir $(DIST)/$(SDK_PKG_APPNAME)-$(SDK_DIR)
 	@cd $(DIST)/$(SDK_DIR) && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(SDK_PKG_APPNAME)-$(SDK_DIR); tar -xf -)
 	cd $(DIST) && $(MAKE_SDK)
+endif
 endif
 
 $(PACKAGE): $(MOZILLA_BIN)

@@ -869,6 +869,8 @@ browser/components/sidebar/public/Makefile
 browser/components/sidebar/src/Makefile
 browser/components/shell/Makefile
 browser/components/shell/public/Makefile
+browser/installer/Makefile
+browser/installer/windows/Makefile
 "
 
 MAKEFILES_xulapp="
