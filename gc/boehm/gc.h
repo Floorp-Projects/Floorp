@@ -239,6 +239,11 @@ GC_API void GC_clear_roots GC_PROTO((void));
 GC_API void GC_add_roots GC_PROTO((char * low_address,
 				   char * high_address_plus_1));
 
+/* Remove a root segment.  Wizards only. */
+GC_API void GC_remove_roots GC_PROTO((char * low_address,
+				   char * high_address_plus_1));
+
+
 /* Add a displacement to the set of those considered valid by the	*/
 /* collector.  GC_register_displacement(n) means that if p was returned */
 /* by GC_malloc, then (char *)p + n will be considered to be a valid	*/
