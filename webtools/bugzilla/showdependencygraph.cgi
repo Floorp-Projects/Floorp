@@ -56,7 +56,7 @@ if (defined $id) {
     open(DOT, ">$filename") || die "Can't create $filename";
     print DOT "digraph G {";
     print DOT qq{
-graph [URL="${urlbase}query.cgi"]
+graph [URL="${urlbase}query.cgi", rankdir=$::FORM{'rankdir'}]
 node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 };
     my %baselist;
@@ -150,6 +150,7 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
     $::FORM{'id'} = "";
     $::FORM{'doall'} = 0;
     $::FORM{'showsummary'} = 0;
+    $::FORM{'rankdir'} = "LR";
 }    
 
 print "
@@ -165,6 +166,12 @@ dependencies</td>
 <tr><td colspan=3><input type=checkbox name=showsummary" .
 ($::FORM{'showsummary'} ? " checked" : "") . ">Show the summary of all bugs
 </tr>
+<tr><td colspan=3><select name=rankdir>
+<option value=\"TB\"" . ($::FORM{'rankdir'} eq 'TB' ? 'selected' : '') .
+">Orient top-to-bottom
+<option value=\"LR\"" . ($::FORM{'rankdir'} eq 'LR' ? 'selected' : '') .
+">Orient left-to-right
+</select></td></tr>
 </table>
 <input type=submit value=\"Submit\">
 </form>
