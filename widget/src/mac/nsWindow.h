@@ -138,7 +138,7 @@ public:
     void GetResizeRect(nsRect* aRect);
     PRBool GetResized();
     
-    nsIWidget* FindWidgetHit(Point);
+    nsWindow* FindWidgetHit(Point);
 
     char gInstanceClassName[256];
 protected:
@@ -249,8 +249,10 @@ protected:
 
 private:
 	// parent window -- this is only used for the main window widget
-	WindowRecord	mWindowRecord;
+	WindowRecord	*mWindowRecord;
 	WindowPtr			mWindowPtr;
+	PRBool				mWindowMadeHere;			// if main window and we created, true
+	PRBool				mIsMainWindow;				// top level Mac window
 	RgnHandle			mWindowRegion;				// the region defining this window			
 	
 	
