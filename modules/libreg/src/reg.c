@@ -50,15 +50,15 @@
   #include <Errors.h>
 #endif
 
-#if defined(SUNOS4)
-  #include <unistd.h>  /* for SEEK_SET */
-#endif /* SUNOS4 */
-
 #else
 
 #include "prerror.h"
 
 #endif /*STANDALONE_REGISTRY*/
+
+#if defined(SUNOS4)
+#include <unistd.h>  /* for SEEK_SET */
+#endif /* SUNOS4 */
 
 #include "reg.h"
 #include "NSReg.h"
