@@ -418,7 +418,11 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 						keyElement->GetAttribute(nsAutoString("keycode"), code);
                         if(code.IsEmpty()) {
                           // HACK for temporary compatibility
-                          theEvent->GetKeyCode(&theChar);
+                          if(aEventType == eKeyPress)
+                            theEvent->GetCharCode(&theChar);
+                          else
+                            theEvent->GetKeyCode(&theChar);
+                            
                         } else {
                           // We want a keycode
                           theEvent->GetKeyCode(&theChar);
@@ -455,89 +459,82 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 			          break;
 			        } 
 				
-				    
-				    PRBool modCommand = PR_FALSE;
-			        PRBool modControl = PR_FALSE;
+				    // Make these tri-state --
+                    //   true(1), false(0), and unspecified (3)
+				    int modCommand = 3;
+			        int modControl = 3;
 			        
-			        property = falseString;
+			        property = "";
 					keyElement->GetAttribute(nsAutoString("command"), property);
 					if(property == trueString)
-					  modCommand = PR_TRUE;
+					  modCommand = 1;
+					else if(property == falseString)
+					  modCommand = 0;
 					  
-					property = falseString;
+					property = "";
 					keyElement->GetAttribute(nsAutoString("control"), property);
 					if(property == trueString)
-					  modControl = PR_TRUE;
+					  modControl = 1;
+					else if(property == falseString)
+					  modControl = 0;
 					
-			    #ifdef XP_MAC
-					// Test Command attribute
-					PRBool isCommand = PR_FALSE;
-					theEvent->GetMetaKey(&isCommand);
-					if ((isCommand && (!modCommand)) ||
-					   (!isCommand && (modCommand)))
-					{ 
-					  break;
-					}
-					//printf("Passed command test \n"); // this leaks
-
-					PRBool isControl = PR_FALSE;
-					theEvent->GetCtrlKey(&isControl);
-					if ((isControl && (!modControl)) ||
-					   (!isControl && (modControl)))
-					{
-					  break;
-					}
-					//printf("Passed control test \n"); // this leaks 
-			    #else
 					// Test Command attribute
 					PRBool isCommand = PR_FALSE;
 					PRBool isControl = PR_FALSE;
 					theEvent->GetMetaKey(&isCommand);
 					theEvent->GetCtrlKey(&isControl);
-					if (((isCommand && (!modCommand)) ||
-					    (!isCommand && (modCommand))) || 
-					    ((isControl && (!modControl)) ||
-					    (!isControl && (modControl))))
+					if (((isCommand && (modCommand==0)) ||
+					    (!isCommand && (modCommand==1))) || 
+					    ((isControl && (modControl==0)) ||
+					    (!isControl && (modControl==1))))
 					{
 					  break;
 					}
 					//printf("Passed command/ctrl test \n"); // this leaks   
-				#endif
 
 					// Test Shift attribute
-					PRBool modShift = PR_FALSE;
-					property = falseString;
+					int modShift = 3;
+					property = "";
 					keyElement->GetAttribute(nsAutoString("shift"), property);
 					if(property == trueString)
-					  modShift = PR_TRUE;
+					  modShift = 1;
+					else if(property == falseString)
+					  modShift = 0;
 					  
 					PRBool isShift = PR_FALSE;
 					theEvent->GetShiftKey(&isShift);
-					if ((isShift && (!modShift)) || 
-					   (!isShift && (modShift)))
+					if ((isShift && (modShift==0)) || 
+					   (!isShift && (modShift==1)))
 					{
 					  break;
                     }
                     
 					// Test Alt attribute
-					PRBool modAlt = PR_FALSE;
-					property = falseString;
+					int modAlt = 3;
+					property = "";
 					keyElement->GetAttribute(nsAutoString("alt"),     property);
 					if(property == trueString)
-					  modAlt = PR_TRUE;
+					  modAlt = 1;
+					else if(property == falseString)
+					  modAlt = 0;
 					  
 					PRBool isAlt = PR_FALSE;
 					theEvent->GetAltKey(&isAlt);
-					if ((isAlt && (!modAlt)) || 
-					   (!isAlt && (modAlt))) 
+					if ((isAlt && (modAlt==0)) || 
+					   (!isAlt && (modAlt==1))) 
 					{
 					  break;
                     }
 					// Modifier tests passed so execute onclick command
 					nsAutoString cmdToExecute;
+					nsAutoString oncommand;
 					switch(aEventType) {
 						case eKeyPress:
 						  keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
+						  printf("onkeypress = %s\n", cmdToExecute.ToNewCString());
+						  
+						  keyElement->GetAttribute(nsAutoString("oncommand"), oncommand);
+						  printf("oncommand = %s\n", oncommand.ToNewCString());
 						break;
 						case eKeyDown:
 						  keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
@@ -546,6 +543,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 						  keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
 						break;
 					}   
+					
+					
 
 					// This code executes in every presentation context in which this
 					// document is appearing.
