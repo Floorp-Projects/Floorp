@@ -103,40 +103,32 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // file: URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsIURI* url = nsnull;
-    nsIURLParser* urlparser = nsnull;
+    nsCOMPtr<nsIURI> url;
+    nsCOMPtr<nsIURLParser> urlparser;
     if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
+        rv = aBaseURI->Clone(getter_AddRefs(url));
         if (NS_FAILED(rv)) return rv;
         rv = url->SetRelativePath(aSpec);
     }
     else {
         rv = nsComponentManager::CreateInstance(kNoAuthUrlParserCID, 
                                     nsnull, NS_GET_IID(nsIURLParser),
-                                    (void**)&urlparser);
+                                    getter_AddRefs(urlparser));
         if (NS_FAILED(rv)) return rv;
         rv = nsComponentManager::CreateInstance(kStandardURLCID, 
                                     nsnull, NS_GET_IID(nsIURI),
-                                    (void**)&url);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            return rv;
-        }
+                                    getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
+
         rv = url->SetURLParser(urlparser);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(urlparser);
-            NS_RELEASE(url);
-            return rv;
-        }
+        if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
     }
 
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
-    *result = url;
+    *result = url.get();
+    NS_ADDREF(*result);
     return rv;
 }
 
