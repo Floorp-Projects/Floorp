@@ -42,7 +42,7 @@
   class="dialog"
   persist="screenX screenY">
 
-<script src="chrome://global/content/strres.js"/>
+<stringbundle id="bundle_filepicker" src="chrome://global/locale/filepicker.properties"/>
 <script src="chrome://global/content/filepicker.js"/>
 <keyset id="keyset"/>
 

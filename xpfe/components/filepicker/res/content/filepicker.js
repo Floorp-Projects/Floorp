@@ -44,9 +44,11 @@ var directoryTree;
 var textInput;
 var okButton;
 
-var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");   
+var gFilePickerBundle;
 
 function onLoad() {
+  gFilePickerBundle = document.getElementById("bundle_filepicker");
+
   dirHistory = new Array();
 
   directoryTree = document.getElementById("directoryTree");
@@ -102,13 +104,13 @@ function onLoad() {
     var buttonLabel;
     switch (filePickerMode) {
       case nsIFilePicker.modeOpen:
-        buttonLabel = bundle.GetStringFromName("openButtonLabel");
+        buttonLabel = gFilePickerBundle.getString("openButtonLabel");
         break;
       case nsIFilePicker.modeSave:
-        buttonLabel = bundle.GetStringFromName("saveButtonLabel");
+        buttonLabel = gFilePickerBundle.getString("saveButtonLabel");
         break;
       case nsIFilePicker.modeGetFolder:
-        buttonLabel = bundle.GetStringFromName("selectFolderButtonLabel");
+        buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
         break;
     }
 
@@ -123,7 +125,8 @@ function onLoad() {
   doSetOKCancel(onOK, onCancel);
 
   // get the home dir
-  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID].getService().QueryInterface(nsIDirectoryServiceProvider);
+  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID]
+                                     .getService(nsIDirectoryServiceProvider);
   var persistent = new Object();
   homeDir = dirServiceProvider.getFile("Home", persistent);
 
@@ -255,7 +258,9 @@ function onOK()
   case nsIFilePicker.modeSave:
     if (isFile) { // can only be true if file.exists()
       // we need to pop up a dialog asking if you want to save
-      rv = window.confirm(file.unicodePath + " " + bundle.GetStringFromName("confirmFileReplacing"));
+      var message = gFilePickerBundle.getFormattedString("confirmFileReplacing",
+                                                         [file.unicodePath]);
+      var rv = window.confirm(message);
       if (rv) {
         ret = nsIFilePicker.returnReplace;
         retvals.directory = file.parent.unicodePath;
@@ -275,8 +280,24 @@ function onOK()
         ret = nsIFilePicker.returnOK;
         retvals.directory = parent.unicodePath;
       } else {
-        // See bug 55026, do nothing for now, leaves typed text as clue.
-        // window.alert("Directory "+parent.unicodePath+" doesn't seem to exist, can't save "+file.unicodePath);
+        var oldParent = parent;
+        while (!parent.exists()) {
+          oldParent = parent;
+          parent = parent.parent;
+        }
+        var errorTitle = gFilePickerBundle.getFormattedString("errorSavingFileTitle",
+                                                              [file.unicodePath]);
+        var errorMessage;
+        if (parent.isFile()) {
+          errorMessage = gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
+                                                              [parent.unicodePath, file.unicodePath]);
+        } else {
+          errorMessage = gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
+                                                              [oldParent.unicodePath, file.unicodePath]);
+        }
+        var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
+                                      .getService(Components.interfaces.nsICommonDialogs);
+        commonDialogs.Alert(window, errorTitle, errorMessage);
         ret = nsIFilePicker.returnCancel;
       }
     }
@@ -336,15 +357,7 @@ function doEnabling() {
   // file or directory in .modeOpen. Too costly I think.
   var enable = (textInput.value != "");
 
-  if (enable) {
-    if (okButton.getAttribute("disabled")) {
-      okButton.removeAttribute("disabled");
-    }
-  } else {
-    if (!okButton.getAttribute("disabled")) {
-      okButton.setAttribute("disabled","true");
-    }
-  }
+  okButton.disabled = !enable;
 }
 
 function onSelect(e) {
