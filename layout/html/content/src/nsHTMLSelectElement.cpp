@@ -634,7 +634,6 @@ nsOptionList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
         }
         NS_RELEASE(content);
       }
-      NS_RELEASE(option);
     }
   }
   
