@@ -1849,17 +1849,19 @@ SI_UnanonymizeSignons()
 	si_anonymous = FALSE;
     }
 }
-#include "mkgeturl.h"
+
 #include "htmldlgs.h"
-extern int XP_EMPTY_STRINGS;
-extern int SA_VIEW_BUTTON_LABEL;
+extern int XP_CERT_PAGE_STRINGS;
 extern int SA_REMOVE_BUTTON_LABEL;
+extern int MK_SIGNON_VIEW_SIGNONS;
+extern int MK_SIGNON_VIEW_REJECTS;
 
 #define BUFLEN 5000
 
 #define FLUSH_BUFFER			\
     if (buffer) {			\
 	StrAllocCat(buffer2, buffer);	\
+        buffer[0] = '\0';               \
 	g = 0;				\
     }
 
@@ -1879,105 +1881,43 @@ Bool si_InSequence(char* sequence, int number) {
     for (ptr = sequence ; ptr ; ptr = endptr) {
 
 	/* get to next comma */
-        endptr = XP_STRCHR(ptr, ',');
+        endptr = PL_strchr(ptr, ',');
 
-	/* if comma found, set it to null */
+	/* if comma found, process it */
 	if (endptr) {
 
 	    /* restore last comma-to-null back to comma */
 	    if (undo) {
                 *undo = ',';
 	    }
+
+	    /* set the comma to a null */
 	    undo = endptr;
             *endptr++ = '\0';
-	}
 
-        /* if there is a number before the comma, compare it with "number" */
-	if (*ptr) {
-	    i = atoi(ptr);
-	    if (i == number) {
+            /* compare the number before the comma with "number" */
+	    if (*ptr) {
+		i = atoi(ptr);
+		if (i == number) {
 
-                /* "number" was in the sequence so return TRUE */
-		retval = TRUE;
-		break;
+                    /* "number" was in the sequence so return TRUE */
+		    retval = TRUE;
+		    break;
+		}
 	    }
 	}
     }
 
+    /* restore last comma-to-null back to comma */
     if (undo) {
         *undo = ',';
     }
     return retval;
 }
 
-MODULE_PRIVATE void
-si_DisplayUserInfoAsHTML
-    (MWContext *context, si_SignonUserStruct* user, char* URLName)
-{
-    char *buffer = (char*)XP_ALLOC(BUFLEN);
-    char *buffer2 = 0;
-    int g = 0;
-    XP_List *data_ptr = user->signonData_list;
-    si_SignonDataStruct* data;
-    int dataNum;
-
-    static XPDialogInfo dialogInfo = {
-	XP_DIALOG_OK_BUTTON,
-	NULL,
-	250,
-	200
-    };
-
-    XPDialogStrings* strings;
-    StrAllocCopy(buffer2, "");
-
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"<FORM><TABLE>\n"
-"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname\" MULTIPLE SIZE=3>\n",
-	URLName);
-    FLUSH_BUFFER
-    dataNum = 0;
-
-    /* write out details of each data item for user */
-    while ( (data=(si_SignonDataStruct *) XP_ListNextObject(data_ptr)) ) {
-	g += PR_snprintf(buffer+g, BUFLEN-g,
-"<OPTION VALUE=%d>%s=%s</OPTION>",
-            dataNum, data->name, data->isPassword ? "***" : data->value);
-	FLUSH_BUFFER
-	dataNum++;
-    }
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"</SELECT></CENTER></TH></TABLE></FORM>\n"
-	);
-    FLUSH_BUFFER
-
-    /* free buffer since it is no longer needed */
-    if (buffer) {
-	XP_FREE(buffer);
-    }
-
-    /* do html dialog */
-    strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
-    if (!strings) {
-	if (buffer2) {
-	    XP_FREE(buffer2);
-	}
-	return;
-    }
-    if (buffer2) {
-	XP_CopyDialogString(strings, 0, buffer2);
-	XP_FREE(buffer2);
-	buffer2 = NULL;
-    }
-    XP_MakeHTMLDialog(context, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
-		strings, context, PR_FALSE);
-
-    return;
-}
-
 PR_STATIC_CALLBACK(PRBool)
-si_SignonInfoDialogDone
-    (XPDialogState* state, char** argv, int argc, unsigned int button)
+si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
+						unsigned int button)
 {
     XP_List *URL_ptr;
     XP_List *user_ptr;
@@ -1991,48 +1931,15 @@ si_SignonInfoDialogDone
     si_Reject* reject;
     si_Reject* rejectToDelete = 0;
 
-    char *buttonName, *userNumberAsString;
+    char *buttonName;
     int userNumber;
     int rejectNumber;
     char* gone;
 
-    /* test for cancel */
-    if (button == XP_DIALOG_CANCEL_BUTTON) {
-	/* CANCEL button was pressed */
-	return PR_FALSE;
-    }
-
-    /* get button name */
     buttonName = XP_FindValueInArgs("button", argv, argc);
-    if (buttonName &&
-	    !XP_STRCASECMP(buttonName, XP_GetString(SA_VIEW_BUTTON_LABEL))) {
-
-	/* view button was pressed */
-
-        /* get "selname" value in argv list */
-        if (!(userNumberAsString = XP_FindValueInArgs("selname", argv, argc))) {
-	    /* no selname in argv list */
-	    return(PR_TRUE);
-	}
-
-        /* convert "selname" value from string to an integer */
-	userNumber = atoi(userNumberAsString);
-
-	/* step to the user corresponding to that integer */
-	si_lock_signon_list();
-	URL_ptr = si_signon_list;
-	while ((URL = (si_SignonURLStruct *) XP_ListNextObject(URL_ptr))) {
-	    user_ptr = URL->signonUser_list;
-	    while ((user = (si_SignonUserStruct *)
-		    XP_ListNextObject(user_ptr))) {
-		if (--userNumber < 0) {
-		    si_DisplayUserInfoAsHTML
-			((MWContext *)(state->arg), user, URL->URLName);
-		    return(PR_TRUE);
-		}
-	    }
-	}
-	si_unlock_signon_list();
+    if (button != XP_DIALOG_OK_BUTTON) {
+	/* OK button not pressed (must be cancel button that was pressed) */
+	return PR_FALSE;
     }
 
     /* OK was pressed, do the deletions */
@@ -2044,7 +1951,8 @@ si_SignonInfoDialogDone
 	return PR_FALSE;
     }
 
-    /* step through all users and delete those that are in the sequence
+    /*
+     * step through all users and delete those that are in the sequence
      * Note: we can't delete user while "user_ptr" is pointing to it because
      * that would destroy "user_ptr". So we do a lazy deletion
      */
@@ -2080,7 +1988,7 @@ si_SignonInfoDialogDone
 	si_SaveSignonDataLocked(NULL);
     }
 
-    /* get the comma-separated sequence of rejects to be deleted */
+    /* get the comma-separated sequence of rejections to be deleted */
     gone = XP_FindValueInArgs("goneR", argv, argc);
     XP_ASSERT(gone);
     if (!gone) {
@@ -2109,16 +2017,24 @@ si_SignonInfoDialogDone
 	si_SaveSignonDataLocked(NULL);
     }
     si_unlock_signon_list();
-
     return PR_FALSE;
 }
+
+typedef struct _SignonViewerDialog SignonViewerDialog;
+
+struct _SignonViewerDialog {
+    void *window;
+    void *parent_window;
+    PRBool dialogUp;
+    XPDialogState *state;
+};
 
 PUBLIC void
 SI_DisplaySignonInfoAsHTML(MWContext *context)
 {
     char *buffer = (char*)XP_ALLOC(BUFLEN);
     char *buffer2 = 0;
-    int g = 0, userNumber;
+    int g = 0, signonNum, count;
     XP_List *URL_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
@@ -2126,67 +2042,180 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     si_SignonURLStruct *URL;
     si_SignonUserStruct * user;
     si_SignonDataStruct* data;
-    si_Reject* reject;
+    si_Reject *reject;
+    SignonViewerDialog *dlg;
+    int i;
 
     static XPDialogInfo dialogInfo = {
-	XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON,
+	0,
 	si_SignonInfoDialogDone,
-	600,
-	420
+	350,
+	400
     };
 
     XPDialogStrings* strings;
+    strings = XP_GetDialogStrings(XP_CERT_PAGE_STRINGS);
+    if (!strings) {
+	return;
+    }
     StrAllocCopy(buffer2, "");
 
-    /* Write out the javascript */
+    /* generate initial section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
-"<script>\n"
-"function DeleteSignonSelected() {\n"
-"  selname = document.theform.selname;\n"
-"  goneS = document.theform.goneS;\n"
-"  var i;\n"
-"  var j;\n"
-"  for (i=selname.options.length-1 ; i>=0 ; i--) {\n"
-"    if (selname.options[i].selected) {\n"
-"      selname.options[i].selected = 0;\n"
-"      goneS.value = goneS.value + \",\" + selname.options[i].value;\n"
-"      for (j=i ; j<selname.options.length ; j++) {\n"
-"        selname.options[j] = selname.options[j+1];\n"
-"      }\n"
-"    }\n"
-"  }\n"
-"}\n"
-"function DeleteRejectSelected() {\n"
-"  selname2 = document.theform.selname2;\n"
-"  goneR = document.theform.goneR;\n"
-"  var i;\n"
-"  var j;\n"
-"  for (i=selname2.options.length-1 ; i>=0 ; i--) {\n"
-"    if (selname2.options[i].selected) {\n"
-"      selname2.options[i].selected = 0;\n"
-"      goneR.value = goneR.value + \",\" + selname2.options[i].value;\n"
-"      for (j=i ; j<selname2.options.length ; j++) {\n"
-"        selname2.options[j] = selname2.options[j+1];\n"
-"      }\n"
-"    }\n"
-"  }\n"
-"}\n"
-"</script>\n"
+"<HTML>\n"
+"<HEAD>\n"
+"  <TITLE>Cookies</TITLE>\n"
+"  <SCRIPT>\n"
+"    index_frame = 0;\n"
+"    title_frame = 1;\n"
+"    spacer1_frame = 2;\n"
+"    list_frame = 3;\n"
+"    spacer2_frame = 4;\n"
+"    button_frame = 5;\n"
+"\n"
+"    var signon_mode;\n"
+"    var goneS;\n"
+"    var goneR;\n"
+"    deleted_signons = new Array (0"
 	);
     FLUSH_BUFFER
+
 
     /* force loading of the signons file */
     si_RegisterSignonPrefCallbacks();
     si_lock_signon_list();
 
-    /* Write out each URL */
+    /* fill in initial 0's for deleted_signons and deleted_rejects arrays */
     URL_ptr = si_signon_list;
+    i = 0;
+    while ( (URL=(si_SignonURLStruct *) XP_ListNextObject(URL_ptr)) ) {
+	user_ptr = URL->signonUser_list;
+	while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
+            /* this actually gives one 0 too many but that doesn't hurt */
+	    g += PR_snprintf(buffer+g, BUFLEN-g,
+",0"
+		);
+	    if (((++i)%50) == 0) {
+		g += PR_snprintf(buffer+g, BUFLEN-g,
+"\n      "
+		);
+	    }
+	}
+    }
+
     g += PR_snprintf(buffer+g, BUFLEN-g,
-"<FORM><TABLE COLS=2>\n"
-"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname\" MULTIPLE SIZE=15>\n",
-	XP_GetString(MK_SIGNON_YOUR_SIGNONS));
+");\n"
+"    deleted_rejects = new Array (0"
+	);
+    count = XP_ListCount(si_reject_list);
+    for (i=1; i<count; i++) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+",0"
+	    );
+	if ((i%50) == 0) {
+	    g += PR_snprintf(buffer+g, BUFLEN-g,
+"\n      "
+	    );
+	}
+    }
     FLUSH_BUFFER
-    userNumber = 0;
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+");\n"
+"\n"
+"    function DeleteItemSelected() {\n"
+"      if (signon_mode) {\n"
+"        DeleteSignonSelected();\n"
+"      } else {\n"
+"        DeleteRejectSelected();\n"
+"      }\n"
+"    }\n"
+"\n"
+"    function DeleteSignonSelected() {\n"
+"      selname = top.frames[list_frame].document.fSelectSignon.selname;\n"
+"      goneS = top.frames[button_frame].document.buttons.goneS;\n"
+"      var p;\n"
+"      var i;\n"
+"      for (i=selname.options.length; i>0; i--) {\n"
+"        if (selname.options[i-1].selected) {\n"
+"          selname.options[i-1].selected = 0;\n"
+"          goneS.value = goneS.value + \",\" + selname.options[i-1].value;\n"
+"          deleted_signons[selname.options[i-1].value] = 1;\n"
+"          for (j=i ; j<selname.options.length ; j++) {\n"
+"            selname.options[j-1] = selname.options[j];\n"
+"          }\n"
+"          selname.options[selname.options.length-1] = null;\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"\n"
+"    function DeleteRejectSelected() {\n"
+"      selname = top.frames[list_frame].document.fSelectReject.selname;\n"
+"      goneR = top.frames[button_frame].document.buttons.goneR;\n"
+"      var p;\n"
+"      var i;\n"
+"      for (i=selname.options.length; i>0; i--) {\n"
+"        if (selname.options[i-1].selected) {\n"
+"          selname.options[i-1].selected = 0;\n"
+"          goneR.value = goneR.value + \",\" + selname.options[i-1].value;\n"
+"          deleted_rejects[selname.options[i-1].value] = 1;\n"
+"          for (j=i; j < selname.options.length; j++) {\n"
+"            selname.options[j-1] = selname.options[j];\n"
+"          }\n"
+"          selname.options[selname.options.length-1] = null;\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"\n"
+"    function loadSignons(){\n"
+"      signon_mode = 1;\n"
+"      top.frames[index_frame].document.open();\n"
+"      top.frames[index_frame].document.write(\n"
+"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
+"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
+"            \"<TR>\" +\n"
+"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#E4E3EA>\" +\n"
+"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
+"                  \"<B>%s</B>\" +\n"
+"                \"</FONT>\" +\n"
+"              \"</TD>\" +\n"
+"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
+"                \"<A HREF=javascript:top.loadRejects();>\" +\n"
+"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
+"                \"</A>\" +\n"
+"              \"</TD>\" +\n"
+"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
+"            \"</TR>\" +\n"
+"          \"</TABLE>\" +\n"
+"        \"</BODY>\"\n"
+"      );\n"
+"      top.frames[index_frame].document.close();\n"
+"\n"
+"      top.frames[title_frame].document.open();\n"
+"      top.frames[title_frame].document.write\n"
+"        (\"&nbsp;%s\");\n"
+"      top.frames[title_frame].document.close();\n"
+"\n"
+"      top.frames[list_frame].document.open();\n"
+"      top.frames[list_frame].document.write(\n"
+"        \"<FORM name=fSelectSignon>\" +\n"
+"          \"<P>\" +\n"
+"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
+"            \"<TR>\" +\n"
+"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
+"                \"<CENTER>\" +\n"
+"                  \"<P>\" +\n"
+"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
+"      );\n",
+	    XP_GetString(MK_SIGNON_VIEW_SIGNONS),
+	    XP_GetString(MK_SIGNON_VIEW_REJECTS),
+	    XP_GetString(MK_SIGNON_YOUR_SIGNONS)
+	);
+    FLUSH_BUFFER
+
+    /* generate the html for the list of signons */
+    URL_ptr = si_signon_list;
+    signonNum = 0;
     while ( (URL=(si_SignonURLStruct *) XP_ListNextObject(URL_ptr)) ) {
 	user_ptr = URL->signonUser_list;
 	while ( (user=(si_SignonUserStruct *) XP_ListNextObject(user_ptr)) ) {
@@ -2194,79 +2223,239 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 	    data_ptr = user->signonData_list;
 	    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 	    g += PR_snprintf(buffer+g, BUFLEN-g,
-"<OPTION VALUE=%d>%s: %s</OPTION>",
-		userNumber, URL->URLName, data->value);
-	    FLUSH_BUFFER
-	    userNumber++;
+"      if (!deleted_signons[%d]) {\n"
+"        top.frames[list_frame].document.write(\n"
+"                    \"<OPTION value=%d>\" +\n"
+"                      \"%s:%s\" +\n"
+"                    \"</OPTION>\"\n"
+"        );\n"
+"      }\n",
+	    signonNum, signonNum,
+	    URL->URLName,
+	    data->value
+	    );
 	}
-    }
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"</SELECT></CENTER>\n"
-	);
-    FLUSH_BUFFER
-
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"<CENTER>\n"
-"<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteSignonSelected();\">\n"
-"<INPUT TYPE=\"BUTTON\" NAME=\"view\" VALUE=%s ONCLICK=\"parent.clicker(this,window.parent)\">\n"
-"<INPUT TYPE=\"HIDDEN\" NAME=\"goneS\" VALUE=\"\">\n"
-"</CENTER></TH>\n",
-	XP_GetString(SA_REMOVE_BUTTON_LABEL),
-	XP_GetString(SA_VIEW_BUTTON_LABEL) );
-    FLUSH_BUFFER
-
-    /* Write out each reject */
-    reject_ptr = si_reject_list;
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname2\" MULTIPLE SIZE=15>\n",
-	XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS));
-    FLUSH_BUFFER
-    userNumber = 0;
-    while ( (reject=(si_Reject *) XP_ListNextObject(reject_ptr)) ) {
-	g += PR_snprintf(buffer+g, BUFLEN-g,
-"<OPTION VALUE=%d>%s: %s</OPTION>",
-	    userNumber, reject->URLName, reject->userName);
 	FLUSH_BUFFER
-	userNumber++;
     }
+
+    /* generate next section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
-"</SELECT></CENTER>\n"
+"      top.frames[list_frame].document.write(\n"
+"                  \"</SELECT>\" +\n"
+"                \"</CENTER>\" +\n"
+"              \"</TD>\" +\n"
+"            \"</TR>\" +\n"
+"          \"</TABLE>\" +\n"
+"        \"</FORM>\"\n"
+"      );\n"
+"      top.frames[list_frame].document.close();\n"
+"    }\n"
+"\n"
+"    function loadRejects(){\n"
+"      signon_mode = 0;\n"
+"      top.frames[index_frame].document.open();\n"
+"      top.frames[index_frame].document.write(\n"
+"        \"<BODY BGCOLOR=#C0C0C0>\" +\n"
+"          \"<TABLE BORDER=0 WIDTH=100%>\" +\n"
+"            \"<TR>\" +\n"
+"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>\" +\n"
+"                \"<A HREF=javascript:top.loadSignons();>\" +\n"
+"                  \"<FONT SIZE=2>%s</FONT>\" +\n"
+"                \"</A>\" +\n"
+"              \"</TD>\" +\n"
+"              \"<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#E4E3EA>\" +\n"
+"                \"<FONT SIZE=2 COLOR=#666666>\" +\n"
+"                  \"<B>%s</B>\" +\n"
+"                \"</FONT>\" +\n"
+"              \"</TD>\" +\n"
+"              \"<TD>&nbsp;&nbsp;&nbsp;</TD>\" +\n"
+"            \"</TR>\" +\n"
+"          \"</TABLE>\" +\n"
+"        \"</BODY>\"\n"
+"      );\n"
+"      top.frames[index_frame].document.close();\n"
+"\n"
+"      top.frames[title_frame].document.open();\n"
+"      top.frames[title_frame].document.write\n"
+"        (\"&nbsp;%s\");\n"
+"      top.frames[title_frame].document.close();\n"
+"\n"
+"      top.frames[list_frame].document.open();\n"
+"      top.frames[list_frame].document.write(\n"
+"        \"<FORM name=fSelectReject>\" +\n"
+"          \"<P>\" +\n"
+"          \"<TABLE BORDER=0 WIDTH=100% HEIGHT=95%>\" +\n"
+"            \"<TR>\" +\n"
+"              \"<TD WIDTH=100% VALIGN=TOP>\" +\n"
+"                \"<CENTER>\" +\n"
+"                  \"<P>\" +\n"
+"                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
+"      );\n",
+	    XP_GetString(MK_SIGNON_VIEW_SIGNONS),
+	    XP_GetString(MK_SIGNON_VIEW_REJECTS),
+	    XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS)
 	);
     FLUSH_BUFFER
 
+    /* generate the html for the list of rejects */
+    signonNum = 0;
+    reject_ptr=si_reject_list;
+    while ( (reject=(si_Reject *)
+		      XP_ListNextObject(reject_ptr)) ) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+"      if (!deleted_rejects[%d]) {\n"
+"        top.frames[list_frame].document.write(\n"
+"                    \"<OPTION value=\" +\n"
+"                      \"%d>\" +\n"
+"                      \"%s: %s\" +\n"
+"                    \"</OPTION>\"\n"
+"        );\n"
+"      }\n",
+	    signonNum, signonNum,
+	    reject->URLName,
+	    reject->userName);
+	FLUSH_BUFFER
+	signonNum++;
+    }
+
+    /* generate next section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
-"<CENTER>\n"
-"<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteRejectSelected();\">\n"
-"<INPUT TYPE=\"HIDDEN\" NAME=\"goneR\" VALUE=\"\">\n"
-"</CENTER></TH>\n"
-"</TABLE></FORM>\n",
-	XP_GetString(SA_REMOVE_BUTTON_LABEL) );
+"      top.frames[list_frame].document.write(\n"
+"                  \"</SELECT>\" +\n"
+"                \"</CENTER>\" +\n"
+"              \"</TD>\" +\n"
+"            \"</TR>\" +\n"
+"          \"</TABLE>\" +\n"
+"        \"</FORM>\"\n"
+"      );\n"
+"      top.frames[list_frame].document.close();\n"
+"    }\n"
+"\n"
+"    function loadButtons(){\n"
+"      top.frames[button_frame].document.open();\n"
+"      top.frames[button_frame].document.write(\n"
+"        \"<FORM name=buttons action=internal-dialog-handler method=post>\" +\n"
+"          \"<BR>\" +\n"
+"          \"&nbsp;\" +\n"
+"          \"<INPUT type=BUTTON \" +\n"
+"                 \"value=Remove \" +\n"
+"                 \"onclick=top.DeleteItemSelected();\" +\n"
+"                 \"name=BUTTON>\" +\n"
+"          \"<DIV align=right>\" +\n"
+"            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
+"            \" &nbsp;&nbsp;\" +\n"
+"            \"<INPUT type=BUTTON value=Cancel width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
+"          \"</DIV>\" +\n"
+"          \"<INPUT type=HIDDEN name=xxxbuttonxxx>\" +\n"
+"          \"<INPUT type=HIDDEN name=handle value="
+	);
+    FLUSH_BUFFER
+
+    /* transfer what we have so far into strings->args[0] */
+    if (buffer2) {
+	XP_SetDialogString(strings, 0, buffer2);
+	buffer2 = NULL;
+    }
+
+    /* Note: strings->args[1] will later be filled in with value of handle */
+
+    /* generate remainder of html, it will go into strings->arg[2] */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+">\" +\n"
+"          \"<INPUT TYPE=HIDDEN NAME=goneS SIZE=-1>\" +\n"
+"          \"<INPUT TYPE=HIDDEN NAME=goneR SIZE=-1>\" +\n"
+"        \"</FORM>\"\n"
+"      );\n"
+"      top.frames[button_frame].document.close();\n"
+"    }\n"
+"\n"
+"    function loadFrames(){\n"
+"      loadSignons();\n"
+"      loadButtons();\n"
+"    }\n"
+"\n"
+"    function clicker(but,win){\n"
+"      top.frames[button_frame].document.buttons.xxxbuttonxxx.value = but.value;\n"
+"      top.frames[button_frame].document.buttons.xxxbuttonxxx.name = 'button';\n"
+"      top.frames[button_frame].document.buttons.submit();\n"
+"    }\n"
+"\n"
+"  </SCRIPT>\n"
+"</HEAD>\n"
+"<FRAMESET ROWS = 25,25,*,75\n"
+"         BORDER=0\n"
+"         FRAMESPACING=0\n"
+"         onLoad=loadFrames()>\n"
+"  <FRAME SRC=about:blank\n"
+"        NAME=index_frame\n"
+"        SCROLLING=NO\n"
+"        MARGINWIDTH=1\n"
+"        MARGINHEIGHT=1\n"
+"        NORESIZE>\n"
+"  <FRAME SRC=about:blank\n"
+"        NAME=title_frame\n"
+"        SCROLLING=NO\n"
+"        MARGINWIDTH=1\n"
+"        MARGINHEIGHT=1\n"
+"        NORESIZE>\n"
+"  <FRAMESET COLS=5,*,5\n"
+"           BORDER=0\n"
+"           FRAMESPACING=0>\n"
+"    <FRAME SRC=about:blank\n"
+"          NAME=spacer1_frame\n"
+"          SCROLLING=AUTO\n"
+"          MARGINWIDTH=0\n"
+"          MARGINHEIGHT=0\n"
+"          NORESIZE>\n"
+"    <FRAME SRC=about:blank\n"
+"          NAME=list_frame\n"
+"          SCROLLING=AUTO\n"
+"          MARGINWIDTH=0\n"
+"          MARGINHEIGHT=0\n"
+"          NORESIZE>\n"
+"    <FRAME SRC=about:blank\n"
+"          NAME=spacer2_frame\n"
+"          SCROLLING=AUTO\n"
+"          MARGINWIDTH=0\n"
+"          MARGINHEIGHT=0\n"
+"          NORESIZE>\n"
+"  </FRAMESET>\n"
+"  <FRAME SRC=about:blank\n"
+"        NAME=button_frame\n"
+"        SCROLLING=NO\n"
+"        MARGINWIDTH=1\n"
+"        MARGINHEIGHT=1\n"
+"        NORESIZE>\n"
+"</FRAMESET>\n"
+"\n"
+"<NOFRAMES>\n"
+"  <BODY> <P> </BODY>\n"
+"</NOFRAMES>\n"
+"</HTML>\n"
+	);
     FLUSH_BUFFER
 
     si_unlock_signon_list();
 
     /* free buffer since it is no longer needed */
     if (buffer) {
-	XP_FREE(buffer);
+	PR_Free(buffer);
     }
 
-    /* do html dialog */
-    strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
-    if (!strings) {
-	if (buffer2) {
-	    XP_FREE(buffer2);
-	}
+    /* put html just generated into strings->arg[2] and invoke HTML dialog */
+    if (buffer2) {
+      XP_SetDialogString(strings, 2, buffer2);
+      buffer2 = NULL;
+    }
+    dlg = PORT_ZAlloc(sizeof(SignonViewerDialog));
+    if ( dlg == NULL ) {
 	return;
     }
-    if (buffer2) {
-	XP_CopyDialogString(strings, 0, buffer2);
-	XP_FREE(buffer2);
-	buffer2 = NULL;
-    }
-    XP_MakeHTMLDialog(context, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
-		strings, context, PR_FALSE);
+    dlg->parent_window = (void *)context;
+    dlg->dialogUp = PR_TRUE;
+    dlg->state =XP_MakeRawHTMLDialog(context, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
+		strings, 1, (void *)dlg);
 
     return;
 }
-
 #endif
