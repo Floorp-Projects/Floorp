@@ -18,9 +18,15 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
+#include "plevent.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include <stdlib.h>
 
-extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
+
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -29,7 +35,6 @@ extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-  mPLEventQueue = nsnull;
   mRefCnt = 0;
   mDispatchListener = 0;
 }
@@ -94,15 +99,48 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
 NS_METHOD nsAppShell::Run()
 {
-  if ( mPLEventQueue == NULL )
-    mPLEventQueue = PL_CreateEventQueue("toolkit", nsnull);
 
-  gdk_input_add(PR_GetEventQueueSelectFD(mPLEventQueue),
+  nsresult   rv = NS_OK;
+  PLEventQueue * EQueue = nsnull;
+
+  // Get the event queue service 
+  rv = nsServiceManager::GetService(kEventQueueServiceCID, 
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **) &mEventQService);
+
+  if (NS_OK != rv) {
+    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
+    return rv;
+  }
+
+  printf("Got thew event queue from the service\n");
+  //Get the event queue for the thread.
+  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+
+  // If a queue already present use it.
+  if (nsnull != EQueue)
+     goto done;
+
+  // Create the event queue for the thread
+  rv = mEventQService->CreateThreadEventQueue();
+  if (NS_OK != rv) {
+    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
+    return rv;
+  }
+  //Get the event queue for the thread
+  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  if (NS_OK != rv) {
+      NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
+      return rv;
+  }    
+
+
+done:
+  printf("Calling gdk_input with event queue\n");
+  gdk_input_add(PR_GetEventQueueSelectFD(EQueue),
                 GDK_INPUT_READ,
                 event_processor_callback,
-                mPLEventQueue);
-
-  nsWebShell_SetUnixEventQueue(mPLEventQueue);
+                EQueue);
 
   gtk_main();
 

@@ -27,6 +27,8 @@
  * Native GTK+ Application shell wrapper
  */
 
+class nsIEventQueueService;
+
 class nsAppShell : public nsIAppShell
 {
   public:
@@ -46,7 +48,7 @@ class nsAppShell : public nsIAppShell
     nsDispatchListener	*mDispatchListener;
 
   protected:
-      PLEventQueue	*mPLEventQueue;
+      nsIEventQueueService * mEventQService;
 };
 
 #endif // nsAppShell_h__
