@@ -3425,7 +3425,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
     styleValue.Append("ch;");
   }
   else if (aWrapColumn == 0)
-    styleValue.Append("white-space: pre wrap"); // XXX does this work?
+    styleValue.Append("white-space: -moz-pre-wrap");
   else
     styleValue.Append("white-space: pre");
 
