@@ -52,16 +52,19 @@ Rights Reserved.
     <box orient="horizontal">
     </box>
     <box style="min-height:200px">
-    <searchterm id="searchTerm"
+    <searchterms id="searchterms">
+      <searchterm id="searchTerm"
                 searchattribute="searchAttr"
                 searchoperator="searchOp"
                 searchvalue="searchValue"/>
+    </searchterms>
     <tree class="inset" flex="1">
       <treecol id="a" />
       <treecol id="b"/>
       <treecol id="c"/>
         
-      <treechildren>
+      <treechildren id="filterTermList">
+<!--
         <treeitem id="filterListItem">
           <treerow>
             <treecell allowevents="true">
@@ -82,6 +85,7 @@ Rights Reserved.
             <treecell value="text here"/>
           </treerow>
         </treeitem>
+-->
        </treechildren>
       
     </tree>

@@ -32,12 +32,10 @@ function filterEditorOnLoad()
         if (args.filter) {
             gFilter = window.arguments[0].filter;
         
-            dump("Filter editor loading with filter " + gFilter.filterName + "\n");
             initializeDialog(gFilter);
         } else {
             if (args.filterList)
                 setScope(getScopeFromFilterList(args.filterList));
-            dump("New filter\n");
         }
     }
 }
@@ -83,14 +81,18 @@ function initializeDialog(filter)
 
     // now test by initializing the psuedo <searchterm>
     var searchTerm = document.getElementById("searchTerm");
-    dump("initializing " + searchTerm + "\n");
     
-    var filterRowContainer = document.getElementById("filterListItem");
+    var filterRowContainer = document.getElementById("filterTermList");
     var numTerms = filter.numTerms;
     for (var i=0; i<numTerms; i++) {
       var filterRow = createFilterRow(filter, i);
       filterRowContainer.appendChild(filterRow);
+
+      setScope(getScope(filter))
+      // now that it's been added to the document, we can initialize it.
+      initializeFilterRow(filter, i);
     }
+
 }
 
 function createFilterRow(filter, index)
@@ -115,19 +117,21 @@ function createFilterRow(filter, index)
     // probably straight JS but I don't know how that's done.
     var searchtermContainer = document.getElementById("searchterms");
     var searchTerm = document.createElement("searchterm");
-    try { 
-      dump("created searchTerm: " + searchTerm + "\n");
-      dump("searchTerm tagname = " + searchTerm.tagName + "\n");
-    } catch (ex) {
-      dump("searchTerm dump Error: " + ex + "\n");
-    }
-    searchTerm.id = "searchTerm" + index;
-    searchTerm.searchattribute = searchAttr;
-    searchTerm.searchattribute = searchOp;
-    searchTerm.searchvalue = searchVal;
-    searchTerm.initialize(filter, index);
 
+    // need to add it to the document before we can do anything about it
+    searchTerm.id = "searchTerm" + index;
     searchtermContainer.appendChild(searchTerm);
+    // now re-find the inserted element
+    searchTerm = document.getElementById(searchTerm.id);
+
+    
+    searchTerm.searchattribute = searchAttr;
+    searchTerm.searchoperator = searchOp;
+    searchTerm.searchvalue = searchVal;
+
+    // probably a noop?
+    //    searchTerm.initialize(filter, index);
+
 
     // now return the row
     return searchrow;
@@ -137,11 +141,41 @@ function createFilterRow(filter, index)
 // the children of each treecell
 function constructRow(treeCellChildren)
 {
+    var treeitem = document.createElement("treeitem");
     var row = document.createElement("treerow");
     for (var i = 0; i<treeCellChildren.length; i++) {
       var treecell = document.createElement("treecell");
+      treecell.setAttribute("allowevents", "true");
+      treeCellChildren[i].setAttribute("flex", "1");
       treecell.appendChild(treeCellChildren[i]);
       row.appendChild(treecell);
     }
-    return row;
+    treeitem.appendChild(row);
+    return treeitem;
+}
+
+function getFilterObject(filter, index)
+{
+    var attrib = new Object;
+    var operator = new Object;
+    var value = new Object;
+    var booleanAnd = new Object;
+    var header = new Object;
+
+    filter.GetTerm(index, attrib, operator, value, booleanAnd, header);
+
+    var result = { attribute: attrib.value,
+                   operator: operator.value,
+                   value: value.value,
+                   booleanAnd: booleanAnd.value,
+                   header: header.value };
+    
+    return result;
+}
+
+function initializeFilterRow(filter, index)
+{
+    var filterTermObject = document.getElementById("searchTerm" + index);
+
+    filterTermObject.initialize(filter, index);
 }
