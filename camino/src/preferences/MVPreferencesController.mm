@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <PreferencePanes/PreferencePanes.h>
+#import "PreferencePaneBase.h"
+
 #import "MVPreferencesController.h"
 #import "ToolbarAdditions.h"
 
@@ -56,19 +57,28 @@
 
 static MVPreferencesController *sharedInstance = nil;
 
-NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
+NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 @interface NSToolbar (NSToolbarPrivate)
+
 - (NSView *) _toolbarView;
+
 @end
 
+#pragma mark -
+
 @interface MVPreferencesController (MVPreferencesControllerPrivate)
-- (void) _doUnselect:(NSNotification *) notification;
-- (IBAction) _selectPreferencePane:(id) sender;
-- (void) _resizeWindowForContentView:(NSView *) view;
-- (NSImage *) _imageForPaneBundle:(NSBundle *) bundle;
-- (NSString *) _labelForPaneBundle:(NSBundle *) bundle;
+
+- (void) doUnselect:(NSNotification *) notification;
+- (IBAction)selectPreferencePane:(id) sender;
+- (void)resizeWindowForContentView:(NSView *) view;
+- (NSImage *)imageForPaneBundle:(NSBundle *) bundle;
+- (NSString *)labelForPaneBundle:(NSBundle *) bundle;
+- (id)currentPane;
+
 @end
+
+#pragma mark -
 
 @implementation MVPreferencesController
 
@@ -77,42 +87,39 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   return ( sharedInstance ? sharedInstance : [[[self alloc] init] autorelease] );
 }
 
-- (id) init
+- (id)init
 {
-  if ( ( self = [super init] ) ) {
-    unsigned i = 0;
-    NSBundle *bundle = nil;
-    NSString *bundlePath = [NSString stringWithFormat:@"%@/Contents/PreferencePanes",
-        [[NSBundle mainBundle] bundlePath]];
-    panes = [[[NSFileManager defaultManager] directoryContentsAtPath:bundlePath] mutableCopy];
-    for ( i = 0; i < [panes count]; i++ ) {
-      bundle = [NSBundle bundleWithPath:[NSString stringWithFormat:@"%@/%@", bundlePath, [panes objectAtIndex:i]]];
-      [bundle load];
-      if (bundle) {
-        [panes replaceObjectAtIndex:i withObject:bundle];
-      } else {
-        [panes removeObjectAtIndex:i];
-        i--;
-      }
+  if ((self = [super init]))
+  {
+    NSString* paneBundlesPath = [NSString stringWithFormat:@"%@/Contents/PreferencePanes", [[NSBundle mainBundle] bundlePath]];
+    NSArray* paneFiles = [[NSFileManager defaultManager] directoryContentsAtPath:paneBundlesPath];
+
+    mPanes = [[NSMutableArray alloc] initWithCapacity:[paneFiles count]];
+
+    NSEnumerator* panesEnum = [paneFiles objectEnumerator];
+    NSString* curPath;
+    while ((curPath = [panesEnum nextObject]))
+    {
+      NSBundle* curBundle = [NSBundle bundleWithPath:[paneBundlesPath stringByAppendingPathComponent:curPath]];
+      if ([curBundle load])
+        [mPanes addObject:curBundle];    // retains
     }
-    loadedPanes = [[NSMutableDictionary dictionary] retain];
-    paneInfo = [[NSMutableDictionary dictionary] retain];
+
+    mLoadedPanes = [[NSMutableDictionary dictionary] retain];
+    mPaneInfo = [[NSMutableDictionary dictionary] retain];
     [NSBundle loadNibNamed:@"MVPreferences" owner:self];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector( _doUnselect: ) name:NSPreferencePaneDoUnselectNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(doUnselect:) name:NSPreferencePaneDoUnselectNotification object:nil];
   }
   return self;
 }
 
 - (void) dealloc
 {
-  [loadedPanes autorelease];
-  [panes autorelease];
-  [paneInfo autorelease];
+  [mLoadedPanes autorelease];
+  [mPanes autorelease];
+  [mPaneInfo autorelease];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  loadedPanes = nil;
-  panes = nil;
-  paneInfo = nil;
   
   [super dealloc];
 }
@@ -135,7 +142,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 - (NSWindow *) window
 {
-  return [[window retain] autorelease];
+  return [[window retain] autorelease];   // XXX why??
 }
 
 - (IBAction) showPreferences:(id) sender
@@ -148,78 +155,87 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     CHBrowserService::InitEmbedding();
   }
   // If a pref pane is not showing, then show the general pane
-  if (!currentPaneIdentifier && (![[window contentView] isEqual:mainView]))
+  if (!mCurrentPaneIdentifier && (![[window contentView] isEqual:mainView]))
     [self selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.navigation"];
+    
   [window makeKeyAndOrderFront:nil];
 }
 
-- (void) selectPreferencePaneByIdentifier:(NSString *) identifier
+- (void)selectPreferencePaneByIdentifier:(NSString *)identifier
 {
   NSBundle *bundle = [NSBundle bundleWithIdentifier:identifier];
   
-  if ( bundle && ! [currentPaneIdentifier isEqualToString:identifier] ) {
-    NSPreferencePane *pane = nil;
-    NSView *prefView = nil;
-    if ( currentPaneIdentifier &&
-        [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow ) {
+  if (bundle && ![mCurrentPaneIdentifier isEqualToString:identifier])
+  {
+    if ( mCurrentPaneIdentifier &&
+        [[self currentPane] shouldUnselect] != NSUnselectNow ) {
       /* more to handle later */
 #if DEBUG
       NSLog( @"can't unselect current" );
 #endif
       closeWhenPaneIsReady = NO;
-      [pendingPane autorelease];
-      pendingPane = [identifier retain];
+      [mPendingPaneIdentifier autorelease];
+      mPendingPaneIdentifier = [identifier retain];
       return;
     }
     
-    [pendingPane autorelease];
-    pendingPane = nil;
-    [loadingImageView setImage:[self _imageForPaneBundle:bundle]];
+    [mPendingPaneIdentifier autorelease];
+    mPendingPaneIdentifier = nil;
+    [loadingImageView setImage:[self imageForPaneBundle:bundle]];
     [loadingTextFeld setStringValue:[NSString stringWithFormat:NSLocalizedString( @"Loading %@...", nil ),
-        [self _labelForPaneBundle:bundle]]];
+        [self labelForPaneBundle:bundle]]];
     
-    [window setTitle:[self _labelForPaneBundle:bundle]];
+    [window setTitle:[self labelForPaneBundle:bundle]];
     [window setContentView:loadingView];
     [window display];
     
-    if ( ! ( pane = [loadedPanes objectForKey:identifier] ) ) {
+    NSPreferencePane *pane = nil;
+    NSView *prefView = nil;
+
+    if (!(pane = [mLoadedPanes objectForKey:identifier]))
+    {
       pane = [[[[bundle principalClass] alloc] initWithBundle:bundle] autorelease];
-      if( pane ) [loadedPanes setObject:pane forKey:identifier];
+      if (pane)
+        [mLoadedPanes setObject:pane forKey:identifier];
     }
     
-    if ( [pane loadMainView] ) {
+    if ( [pane loadMainView] )
+    {
       [pane willSelect];
       prefView = [pane mainView];
 
-      [self _resizeWindowForContentView:prefView];
+      [self resizeWindowForContentView:prefView];
 
-      [[loadedPanes objectForKey:currentPaneIdentifier] willUnselect];
+      [[self currentPane] willUnselect];
       [window setContentView:prefView];
-      [[loadedPanes objectForKey:currentPaneIdentifier] didUnselect];
+      [[self currentPane] didUnselect];
+
       [pane didSelect];
       [[NSNotificationCenter defaultCenter]
         postNotificationName: MVPreferencesWindowNotification
         object: self
         userInfo: [NSDictionary dictionaryWithObjectsAndKeys:window, @"window", nil]];
-      [currentPaneIdentifier autorelease];
-      currentPaneIdentifier = [identifier copy];
+
+      [mCurrentPaneIdentifier autorelease];
+      mCurrentPaneIdentifier = [identifier copy];
 
       [window setInitialFirstResponder:[pane initialKeyView]];
       [window makeFirstResponder:[pane initialKeyView]];
       if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
-        [[window toolbar] setSelectedItemIdentifier:currentPaneIdentifier];
+        [[window toolbar] setSelectedItemIdentifier:mCurrentPaneIdentifier];
     }
-    else {
+    else
+    {
       NSRunCriticalAlertPanel( NSLocalizedString( @"Preferences Error", nil ),
         [NSString stringWithFormat:NSLocalizedString( @"Could not load %@", nil ),
-        [self _labelForPaneBundle:bundle]], nil, nil, nil );
+        [self labelForPaneBundle:bundle]], nil, nil, nil );
     }
   }
 }
 
 - (BOOL) windowShouldClose:(id) sender
 {
-  if ( currentPaneIdentifier && [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow )   	{
+  if ( mCurrentPaneIdentifier && [[self currentPane] shouldUnselect] != NSUnselectNow )   	{
 #if DEBUG
     NSLog( @"can't unselect current" );
 #endif
@@ -233,8 +249,8 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 {
   // we want to behave as if we're unselecting, but we're not really unselecting. We are leaving
   // the current pref pane selected per Apple's recommendation.
-  [[loadedPanes objectForKey:currentPaneIdentifier] willUnselect];
-  [[loadedPanes objectForKey:currentPaneIdentifier] didUnselect];
+  [[self currentPane] willUnselect];
+  [[self currentPane] didUnselect];
   
   // write out prefs and user defaults
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
@@ -247,6 +263,14 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   CHBrowserService::BrowserClosed();
 }
 
+- (void)windowDidBecomeKey:(NSNotification *)aNotification
+{
+  if ([[self currentPane] respondsToSelector:@selector(didActivate)])
+    [[self currentPane] didActivate];
+}
+
+#pragma mark -
+
 - (NSToolbarItem *) toolbar:(NSToolbar *) toolbar
     itemForItemIdentifier:(NSString *) itemIdentifier
     willBeInsertedIntoToolbar:(BOOL) flag
@@ -254,10 +278,10 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
   NSBundle *bundle = [NSBundle bundleWithIdentifier:itemIdentifier];
   if (bundle) {
-    [toolbarItem setLabel:[self _labelForPaneBundle:bundle]];
-    [toolbarItem setImage:[self _imageForPaneBundle:bundle]];
+    [toolbarItem setLabel:[self labelForPaneBundle:bundle]];
+    [toolbarItem setImage:[self imageForPaneBundle:bundle]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector( _selectPreferencePane: )];
+    [toolbarItem setAction:@selector( selectPreferencePane: )];
   } else toolbarItem = nil;
   return toolbarItem;
 }
@@ -270,7 +294,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 - (NSArray *) toolbarAllowedItemIdentifiers:(NSToolbar *) toolbar
 {
   NSMutableArray *items = [NSMutableArray array];
-  NSEnumerator *enumerator = [panes objectEnumerator];
+  NSEnumerator *enumerator = [mPanes objectEnumerator];
   id item = nil;
   while ( ( item = [enumerator nextObject] ) )
     [items addObject:[item bundleIdentifier]];
@@ -281,7 +305,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 - (NSArray *) toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
 {
   NSMutableArray* items = [NSMutableArray array];
-  NSEnumerator* enumerator = [panes objectEnumerator];
+  NSEnumerator* enumerator = [mPanes objectEnumerator];
   id item = nil;
   while ( ( item = [enumerator nextObject] ) )
     [items addObject:[item bundleIdentifier]];
@@ -290,20 +314,22 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 @end
 
+#pragma mark -
+
 @implementation MVPreferencesController (MVPreferencesControllerPrivate)
 
-- (IBAction) _selectPreferencePane:(id) sender
+- (IBAction)selectPreferencePane:(id) sender
 {
   [self selectPreferencePaneByIdentifier:[sender itemIdentifier]];
 }
 
-- (void) _doUnselect:(NSNotification *) notification
+- (void) doUnselect:(NSNotification *) notification
 {
   if( closeWhenPaneIsReady ) [window close];
-  [self selectPreferencePaneByIdentifier:pendingPane];
+  [self selectPreferencePaneByIdentifier:mPendingPaneIdentifier];
 }
 
-- (void) _resizeWindowForContentView:(NSView *) view
+- (void) resizeWindowForContentView:(NSView *) view
 {
   NSRect windowFrame = [NSWindow contentRectForFrameRect:[window frame] styleMask:[window styleMask]];
   float  newWindowHeight = NSHeight( [view frame] );
@@ -315,39 +341,75 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   [window setFrame:newWindowFrame display:YES animate:[window isVisible]];
 }
 
-- (NSImage *) _imageForPaneBundle:(NSBundle *) bundle
+- (NSImage *)imageForPaneBundle:(NSBundle *)bundle
 {
-  NSImage *image = nil;
-  NSMutableDictionary *cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-  image = [[[cache objectForKey:@"MVPreferencePaneImage"] retain] autorelease];
-  if ( ! image ) {
-    NSDictionary *info = [bundle infoDictionary];
-    image = [[[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:[info objectForKey:@"NSPrefPaneIconFile"]]] autorelease];
-    if ( ! image ) image = [[[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:[info objectForKey:@"CFBundleIconFile"]]] autorelease];
-    if ( ! cache ) [paneInfo setObject:[NSMutableDictionary dictionary] forKey:[bundle bundleIdentifier]];
-    cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-    if ( image ) [cache setObject:image forKey:@"MVPreferencePaneImage"];
+  NSString*             paneIdentifier = [bundle bundleIdentifier];
+  NSMutableDictionary*  cache = [mPaneInfo objectForKey:paneIdentifier];
+  // first, make sure we have a cache dict
+  if (!cache)
+  {
+    cache = [NSMutableDictionary dictionary];
+    [mPaneInfo setObject:cache forKey:paneIdentifier];
   }
-  return image;
+  
+  NSImage* paneImage = [cache objectForKey:@"MVPreferencePaneImage"];
+  if (!paneImage)
+  {
+    NSDictionary *info = [bundle infoDictionary];
+    // try to get the icon for the bundle
+    paneImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:[info objectForKey:@"NSPrefPaneIconFile"]]];
+    // if that failed, fall back on a generic icon
+    if (!paneImage )
+      paneImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:[info objectForKey:@"CFBundleIconFile"]]];
+
+    if (paneImage)
+    {
+      [cache setObject:paneImage forKey:@"MVPreferencePaneImage"];
+      [paneImage release];
+    }
+  }
+  return paneImage;
 }
 
-- (NSString *) _labelForPaneBundle:(NSBundle *) bundle
+- (NSString *)labelForPaneBundle:(NSBundle *)bundle
 {
-  NSString *label = nil;
-  NSMutableDictionary *cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-  label = [[[cache objectForKey:@"MVPreferencePaneLabel"] retain] autorelease];
-  if ( ! label ) {
-    NSDictionary *info = [bundle infoDictionary];
-    label = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
-    if ( [label isEqualToString:@"PreferencePanelLabel"] ) label = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
-    if ( [label isEqualToString:@"CFBundleName"] ) label = [info objectForKey:@"CFBundleName"];
-    if ( ! label ) label = [bundle bundleIdentifier];
-    if ( ! cache ) [paneInfo setObject:[NSMutableDictionary dictionary] forKey:[bundle bundleIdentifier]];
-    cache = [paneInfo objectForKey:[bundle bundleIdentifier]];
-    if ( label ) [cache setObject:label forKey:@"MVPreferencePaneLabel"];
+  NSString*             paneIdentifier = [bundle bundleIdentifier];
+  NSMutableDictionary*  cache = [mPaneInfo objectForKey:[bundle bundleIdentifier]];
+  // first, make sure we have a cache dict
+  if (!cache)
+  {
+    cache = [NSMutableDictionary dictionary];
+    [mPaneInfo setObject:cache forKey:paneIdentifier];
   }
-  return label;
+  
+  NSString* paneLabel = [cache objectForKey:@"MVPreferencePaneLabel"];
+  if (!paneLabel)
+  {
+    NSDictionary *info = [bundle infoDictionary];
+    paneLabel = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
+
+    // if we failed to get the string
+    if ([paneLabel isEqualToString:@"PreferencePanelLabel"])
+      paneLabel = NSLocalizedStringFromTableInBundle( @"CFBundleName", @"InfoPlist", bundle, nil );
+
+    // if we failed again...
+    if ([paneLabel isEqualToString:@"CFBundleName"])
+      paneLabel = [info objectForKey:@"CFBundleName"];
+
+    if (!paneLabel)
+      paneLabel = [bundle bundleIdentifier];
+
+    if (paneLabel)
+      [cache setObject:paneLabel forKey:@"MVPreferencePaneLabel"];
+  }
+  return paneLabel;
 }
+
+- (id)currentPane
+{
+  return [mLoadedPanes objectForKey:mCurrentPaneIdentifier];
+}
+
 @end
 
 // When using the Font Panel without an obvious target (like an editable text field), 
@@ -359,7 +421,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 - (void)changeFont:(id)sender
 {
-  [[loadedPanes objectForKey:currentPaneIdentifier] changeFont:sender];
+  [[self currentPane] changeFont:sender];
 }
 
 @end

@@ -36,21 +36,31 @@
 
 #import <Cocoa/Cocoa.h>
 
-extern NSString *MVPreferencesWindowNotification;
+extern NSString* const MVPreferencesWindowNotification;
 
-@interface MVPreferencesController : NSObject {
-	IBOutlet NSWindow *window;
-	IBOutlet NSView *loadingView;
-	IBOutlet NSImageView *loadingImageView;
-	IBOutlet NSTextField *loadingTextFeld;
-	NSView *mainView;
-	NSMutableArray *panes;
-	NSMutableDictionary *loadedPanes, *paneInfo;
-	NSString *currentPaneIdentifier, *pendingPane;
-	BOOL closeWhenDoneWithSheet, closeWhenPaneIsReady;
+@interface MVPreferencesController : NSObject
+{
+	IBOutlet NSWindow*      window;
+	IBOutlet NSView*        loadingView;
+	IBOutlet NSImageView*   loadingImageView;
+	IBOutlet NSTextField*   loadingTextFeld;
+
+	NSView*                 mainView;
+
+	NSMutableArray*         mPanes;         // array of PreferencePaneBase
+	NSMutableDictionary*    mLoadedPanes;   // panes indexed by identifier
+	NSMutableDictionary*    mPaneInfo;      // mutable dicts indexed by identifier
+
+	NSString*               mCurrentPaneIdentifier;
+	NSString*               mPendingPaneIdentifier;
+
+	BOOL                    closeWhenDoneWithSheet;
+	BOOL                    closeWhenPaneIsReady;
 }
+
 + (MVPreferencesController *) sharedInstance;
 - (NSWindow *) window;
 - (void) showPreferences:(id) sender;
 - (void) selectPreferencePaneByIdentifier:(NSString *) identifier;
+
 @end
