@@ -28,7 +28,10 @@ What's Remaining?
    -- Note: Olivier Gerardin is currently working on the number functions.
 
 -- XSLT extension functions
-   -- document(), etc.
+   -- I've implemented generate-id(), see examples/functions.html
+      for a list of currently implemented functions
+   -- document(), format-number(), system-propety(), etc need to
+      be implemented
 
 -- Add support for xsl:key
 
