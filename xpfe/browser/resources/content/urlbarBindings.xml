@@ -5,6 +5,48 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <binding id="urlbar" extends="chrome://global/content/autocomplete.xml#autocomplete">
+    <implementation>
+      <constructor><![CDATA[
+        this.mPrefs.addObserver("browser.urlbar", this.mPrefObserver);
+        
+        this.updatePref("browser.urlbar.showPopup");
+        this.updatePref("browser.urlbar.autoFill");
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this.mPrefs.removeObserver("browser.urlbar", this.mPrefObserver);
+      ]]></destructor>
+
+      <property name="mPrefs">
+        Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+      </property>
+
+      <property name="mPrefObserver"><![CDATA[
+        ({
+          urlbar: this,
+          
+          Observe: function(aObserver, aBlah, aPref) {
+            if (!aPref.indexOf("browser.urlbar"))
+              this.urlbar.updatePref(aPref);
+          }
+        });
+      ]]></property>
+
+      <method name="updatePref">
+        <parameter name="aPref"/>
+        <body><![CDATA[
+          if (!aPref.indexOf("browser.urlbar.showPopup")) {
+            this.showPopup = this.mPrefs.GetBoolPref("browser.urlbar.showPopup");
+          } else if (!aPref.indexOf("browser.urlbar.autoFill")) {
+            this.autoFill = this.mPrefs.GetBoolPref("browser.urlbar.autoFill");
+          } 
+        ]]></body>
+      </method>
+      
+    </implementation>
+  </binding>
+  
   <binding id="autocomplete-result-popup" extends="chrome://global/content/autocomplete.xml#autocomplete-result-popup">
     <content menugenerated="true" orient="vertical">
       <xul:box class="autocomplete-result-box" flex="1">
@@ -18,11 +60,13 @@
     <implementation>
       <constructor><![CDATA[
         // listen for changes to default search engine
-        this.mPrefs.addObserver("browser.search", this.mSearchPrefObserver);
+        this.mPrefs.addObserver("browser.search", this.mPrefObserver);
+        this.mPrefs.addObserver("browser.urlbar", this.mPrefObserver);
       ]]></constructor>
 
       <destructor><![CDATA[
-        this.mPrefs.removeObserver("browser.search", this.mSearchPrefObserver);
+        this.mPrefs.removeObserver("browser.search", this.mPrefObserver);
+        this.mPrefs.removeObserver("browser.urlbar", this.mPrefObserver);
       ]]></destructor>
 
       <property name="selectedIndex"
@@ -36,6 +80,19 @@
         </setter>
      </property>
 
+      <property name="showSearch" onget="return this.mShowSearch;">
+        <setter><![CDATA[
+          this.mShowSearch = val;
+          if (val) {
+            this.updateEngines();
+            this.mSearchBox.removeAttribute("hidden");
+          } else {
+            this.clearEngines();
+            this.mSearchBox.setAttribute("hidden", "true");
+          }
+        ]]></setter>
+      </property>
+      
       <property name="mSelectedIndex">
         <setter>
           this.textbox.view.selectedIndex = val;
@@ -55,21 +112,35 @@
         Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
       </property>
 
-      <property name="mSearchPrefObserver"><![CDATA[
+      <property name="mPrefObserver"><![CDATA[
         ({
           resultsPopup: this,
           
-          Observe: function() {
-            this.resultsPopup.updateEngines();
+          Observe: function(aObserver, aBlah, aPref) {
+            if (!aPref.indexOf("browser.search"))
+              this.resultsPopup.updateEngines();
+            else if (!aPref.indexOf("browser.urlbar"))
+              this.resultsPopup.updatePref(aPref);
           }
         });
       ]]></property>
 
       <property name="mInputListener"><![CDATA[
         (function(aEvent) {
-          // don't update when the user is using the up/down keys
-          if (!this.ignoreInputEvent)
-            this.resultsPopup.mSearchBox.searchValue = this.value;
+          this.resultsPopup.mSearchBox.searchValue = this.currentSearchString;
+          return;
+          
+          // "this" is the textbox, not the popup
+          if (this.mSearchInputTO)
+            window.clearTimeout(this.mSearchInputTO);
+          this.mSearchInputTO = window.setTimeout(this.resultsPopup.mInputTimeout, this.timeout, this);
+        });
+      ]]></property>
+
+      <property name="mInputTimeout"><![CDATA[
+        (function(me) {
+          me.resultsPopup.mSearchBox.searchValue = me.currentSearchString;
+          me.mSearchInputTO = 0;
         });
       ]]></property>
 
@@ -91,6 +162,14 @@
         ]]></body>
       </method>
 
+      <method name="updatePref">
+        <parameter name="aPref"/>
+        <body><![CDATA[
+          if (!aPref.indexOf("browser.urlbar.showSearch"))
+            this.showSearch = this.mPrefs.GetBoolPref("browser.urlbar.showSearch");
+        ]]></body>
+      </method>
+      
       <method name="addEngine">
         <parameter name="aEngineId"/>
         <parameter name="aName"/>
@@ -211,18 +290,22 @@
     </implementation>
 
     <handlers>
-      <handler event="create"><![CDATA[
+      <handler event="popupshowing"><![CDATA[
         if (!this.mEnginesReady && this.defaultSearchEngine)
-          this.updateEngines();
+          this.updatePref("browser.urlbar.showSearch");
+
+        if (this.mShowSearch) {
           this.textbox.addEventListener("input", this.mInputListener, false);
-        if ("searchValue" in this.mSearchBox)
-          this.mSearchBox.searchValue = this.textbox.value;
-        else
-          this.mSearchBox.setAttribute("searchvalue", this.textbox.value);
+          if ("searchValue" in this.mSearchBox)
+            this.mSearchBox.searchValue = this.textbox.currentSearchString;
+          else
+            this.mSearchBox.setAttribute("searchvalue", this.textbox.currentSearchString);
+        }
       ]]></handler>
       
-      <handler event="destroy"><![CDATA[
-        this.textbox.removeEventListener("input", this.mInputListener, false);
+      <handler event="popuphiding"><![CDATA[
+        if (this.mShowSearch)
+          this.textbox.removeEventListener("input", this.mInputListener, false);
       ]]></handler>      
     </handlers>
   </binding>
@@ -270,12 +353,12 @@
           if (val != null) {
             this.parentNode.mSelectedIndex = null;
             this.parentNode.addEventListener("mouseover", this.parentMouseoverListener, false);
-            this.parentNode.addEventListener("destroy", this.parentDestroyListener, false);
+            this.parentNode.addEventListener("popupHiding", this.parentDestroyListener, false);
             if (this.activeChild)
               this.activeChild.setAttribute("menuactive", "true");
           } else {
             this.parentNode.removeEventListener("mouseover", this.parentMouseoverListener, false);
-            this.parentNode.removeEventListener("destroy", this.parentDestroyListener, false);
+            this.parentNode.removeEventListener("popupHiding", this.parentDestroyListener, false);
           }
         ]]></setter>
       
