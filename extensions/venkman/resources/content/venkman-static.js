@@ -58,7 +58,8 @@ function display(message, msgtype)
     if (typeof message == "undefined")
         throw BadMojo(ERR_REQUIRED_PARAM, "message");
 
-    if (typeof message != "string" && !(message instanceof HTMLElement))
+    if (typeof message != "string" &&
+        !(message instanceof Components.interfaces.nsIDOMHTMLElement))
         throw BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
 
     if (typeof msgtype == "undefined")
