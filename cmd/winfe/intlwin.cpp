@@ -831,13 +831,6 @@ static BOOL intlUnicodeFlag(int16 wincsid)
 	{
 		return FALSE;
 	}
-        if((CS_VIET_VISCII == wincsid) ||
-           (CS_VIET_VPS == wincsid) ||
-           (CS_VIET_TCVN == wincsid) ||
-           (CS_VIET_VIQR == wincsid)
-          ){
-                return FALSE;
-        }
 	if( wincsid & MULTIBYTE)
 	{
 		if(CIntlWin::GetSystemLocaleCsid() == wincsid)
@@ -847,7 +840,12 @@ static BOOL intlUnicodeFlag(int16 wincsid)
 	}
 	else	// Other SingleByte csid
 	{
-		if(CS_TIS620 == wincsid)
+        if((CS_VIET_VISCII == wincsid)	||
+           (CS_VIET_VPS == wincsid)		||
+           (CS_VIET_TCVN == wincsid)	||
+           (CS_VIET_VIQR == wincsid)	||
+		   (CS_TIS620 == wincsid)
+          )
 			return FALSE;
 
 		if(sysInfo.m_bWinNT)
@@ -876,33 +874,16 @@ BOOL CIntlWin::GetTextExtentPoint(int wincsid, HDC hDC, LPCSTR pString, int iLen
 		return TRUE;
 	}
 	wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
-#ifdef XP_WIN32
 	int wlen;
 
     if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
-		// Handle UTF8 by using multifont
-		if((wincsid == CS_UTF8) && CIntlWin::UseVirtualFont())
-		{
-			return CIntlUnicodeVirtualFontStrategy::GetTextExtentPoint(hDC, pString, iLength, lpSize );
-		}
-
 		if(wlen = MultiByteToWideChar(wincsid, pString, iLength))
 		{
 			return  ::GetTextExtentPoint32W(hDC, m_wConvBuf, wlen, lpSize);
 		}
 	}
-#endif	// XP_WIN32
-	if(wincsid == CS_UTF8)
-	{
-		return CIntlUnicodeVirtualFontStrategy::GetTextExtentPoint(hDC, pString, iLength, lpSize );
-	} 
-
-#ifdef XP_WIN32	// The final fallback
 	return::GetTextExtentPoint32(hDC, pString, iLength, lpSize);
-#else
-	return::GetTextExtentPoint(hDC, pString, iLength, lpSize);
-#endif
 #endif /* MOZ_NGLAYOUT */
 }
 
@@ -920,34 +901,17 @@ BOOL CIntlWin::GetTextExtentPointWithCyaFont(CyaFont *theNSFont,int wincsid, HDC
 	}
 	// wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
 	XP_ASSERT(((wincsid & CS_AUTO) == 0) && (wincsid != CS_JIS) && (wincsid!=CS_EUCJP));
-#ifdef XP_WIN32
 	int wlen;
 
     if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
-		// Handle UTF8 by using multifont
-		if((wincsid == CS_UTF8) && CIntlWin::UseVirtualFont())
-		{
-			return CIntlUnicodeVirtualFontStrategy::GetTextExtentPointWithCyaFont(theNSFont,hDC, pString, iLength, lpSize );
-		}
-
 		if(wlen = MultiByteToWideChar(wincsid, pString, iLength))
 		{
 			return  theNSFont->MeasureTextSize(hDC,	(char *)m_wConvBuf, wlen*sizeof(*m_wConvBuf), NULL, 0, lpSize);
 		}
 	}
-#endif	// XP_WIN32
-	if(wincsid == CS_UTF8)
-	{
-		return CIntlUnicodeVirtualFontStrategy::GetTextExtentPointWithCyaFont(theNSFont,hDC, pString, iLength, lpSize );
-	} 
 
 	return( theNSFont->MeasureTextSize( hDC, (char *)pString, iLength, NULL, 0, lpSize) );
-// #ifdef XP_WIN32	// The final fallback
-//	return::GetTextExtentPoint32(hDC, pString, iLength, lpSize);
-// #else
-//	return::GetTextExtentPoint(hDC, pString, iLength, lpSize);
-// #endif
 #endif /* MOZ_NGLAYOUT */
 }
 
@@ -968,26 +932,14 @@ BOOL CIntlWin::TextOut(int16 wincsid, HDC hDC, int nXStart, int nYStart, LPCSTR 
 	if(0 == iLength)
 		return TRUE;
 	wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
-#ifdef XP_WIN32
 	int wlen;
     if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
-		// Handle UTF8 by using multifont
-		if((wincsid == CS_UTF8)  && CIntlWin::UseVirtualFont())
-		{
-			return CIntlUnicodeVirtualFontStrategy::TextOut(
-				hDC, nXStart, nYStart, lpString, iLength);
-		}
 		if(wlen = MultiByteToWideChar(wincsid, lpString, iLength))
 		{
 			return ::TextOutW(hDC, nXStart, nYStart, m_wConvBuf, wlen);
 		}
 	}
-#endif // XP_WIN32
-	if(wincsid == CS_UTF8)
-	{
-		return CIntlUnicodeVirtualFontStrategy::TextOut(hDC, nXStart, nYStart, lpString, iLength);
-	}    
 	return ::TextOut(hDC, nXStart, nYStart, lpString, iLength);		// The final fallback
 #endif /* MOZ_NGLAYOUT */
 }
@@ -1002,40 +954,19 @@ BOOL CIntlWin::TextOutWithCyaFont(CyaFont *theNSFont, int16 wincsid, HDC hDC,
 #else
 	if(0 == iLength)
 		return TRUE;
-#ifdef XP_WIN32
 	int wlen;
     if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
-		// Handle UTF8 by using multifont
-		if((wincsid == CS_UTF8)  && CIntlWin::UseVirtualFont())
-		{
-			return( CIntlUnicodeVirtualFontStrategy::TextOutWithCyaFont(theNSFont, hDC, nXStart, nYStart, lpString, iLength) );
-		}
 		if(wlen = MultiByteToWideChar(wincsid, lpString, iLength))
 		{
 			// the encording flag in theNSFont makes it call ::TextOutW()
-			if( theNSFont->drawText(hDC, nXStart, nYStart, (char *)m_wConvBuf, wlen * 2) == FONTERR_OK)
-				return(TRUE);
-			else
-				return(FALSE);
-			// return ::TextOutW(hDC, nXStart, nYStart, m_wConvBuf, wlen);
+			return ( theNSFont->drawText(hDC, nXStart, nYStart, (char *)m_wConvBuf, wlen * 2) == FONTERR_OK);
 		}
 	}
-#endif // XP_WIN32
-	if(wincsid == CS_UTF8)
-	{
-		// todo 
-		return CIntlUnicodeVirtualFontStrategy::TextOut(hDC, nXStart, nYStart, lpString, iLength);
-	}    
-	//return ::TextOut(hDC, nXStart, nYStart, lpString, iLength);		// The final fallback
-	if( theNSFont->drawText(hDC, nXStart, nYStart, (char *)lpString, iLength) == FONTERR_OK )
-		return(TRUE);
-	else
-		return(FALSE);
+	return( theNSFont->drawText(hDC, nXStart, nYStart, (char *)lpString, iLength) == FONTERR_OK ) ;
 #endif /* MOZ_NGLAYOUT */
 }
 
-//	*** Fix Me: Need to change to support UTF8
 BOOL CIntlWin::ExtTextOut(int16 wincsid, HDC pDC, int x, int y, UINT nOptions, LPCRECT lpRect, LPCSTR lpszString, UINT nCount, LPINT lpDxWidths)
 {
 #ifdef MOZ_NGLAYOUT
@@ -1045,30 +976,13 @@ BOOL CIntlWin::ExtTextOut(int16 wincsid, HDC pDC, int x, int y, UINT nOptions, L
 	if(0 == nCount)
 		return TRUE;
 	wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
-#ifdef XP_WIN32
 	int wlen;
     if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
-		// Handle UTF8 by using multifont
-		if((wincsid == CS_UTF8)  && CIntlWin::UseVirtualFont())
-		{
-			// Fix Me: For now, igore the option and rect. Just use TextOut
-			// Need to implement the CIntlUnicodeVirtualFontStrategy::ExTextOut() later
-			return CIntlUnicodeVirtualFontStrategy::TextOut(
-				pDC, x, y, lpszString, nCount);
-		}
 		if(wlen = MultiByteToWideChar(wincsid, lpszString, nCount))
 		{
             return ::ExtTextOutW(pDC, x, y, nOptions, lpRect, m_wConvBuf, wlen, lpDxWidths);
 		}
-	}
-#endif
-	if(wincsid == CS_UTF8)
-	{
-		// Fix Me: For now, igore the option and rect. Just use TextOut
-		// Need to implement the CIntlUnicodeVirtualFontStrategy::ExTextOut() later
-		return CIntlUnicodeVirtualFontStrategy::TextOut(
-			pDC, x, y, lpszString, nCount);
 	}
     return  ::ExtTextOut(pDC, x, y, nOptions, lpRect, lpszString, nCount, lpDxWidths);
 #endif /* MOZ_NGLAYOUT */
@@ -1092,10 +1006,7 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
 	{
 
 		// DrawTextExW and DrawTextW is not working on Win95 right now. See Note above
-		if( (!((wincsid == CS_UTF8)  && CIntlWin::UseVirtualFont()))
-			&& (sysInfo.m_bWinNT)
-			&& (wlen = MultiByteToWideChar(wincsid, lpchText, cchText))
-		  )
+		if( (sysInfo.m_bWinNT) && (wlen = MultiByteToWideChar(wincsid, lpchText, cchText)))
 		{
 			return ::DrawTextW(hdc, m_wConvBuf, wlen, lprc, dwDTFormat);
 		}
@@ -1142,42 +1053,7 @@ int CIntlWin::DrawText(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPREC
   XP_ASSERT(0);
   return 0;
 #else
-#ifdef _WIN32
 	return CIntlWin::DrawTextEx( wincsid,  hdc,  lpchText,  cchText, lprc, dwDTFormat, NULL);
-#else
-	wincsid = INTL_DocToWinCharSetID(wincsid) & ~ CS_AUTO;
-	if (cchText == -1)
-		cchText = strlen(lpchText);
-
-	if(wincsid == CS_UTF8)
-	{
-		int x, y;
-		SIZE sz;
-		CIntlUnicodeVirtualFontStrategy::GetTextExtentPoint(hdc, lpchText, cchText, &sz);
-
-		//	Caculate X 
-		x = lprc->left;
-		if(dwDTFormat & DT_CENTER)	
-			x = (lprc->right + lprc->right - sz.cx) / 2;
-		else if(dwDTFormat & DT_RIGHT)
-			x = lprc->right - sz.cx;
-
-		//	Caculate Y
-		y = lprc->top;
-		if(dwDTFormat & DT_VCENTER)
-			y = ( lprc->top + lprc->bottom - sz.cy ) / 2;
-		else if(dwDTFormat & DT_BOTTOM)
-			y = lprc->bottom - sz.cy;
-
-		if(dwDTFormat & DT_CALCRECT)
-		{
-			lprc->right = x + sz.cx;
-			return sz.cy;
-		}		
-		return  CIntlUnicodeVirtualFontStrategy::TextOut(hdc, x, y, lpchText, cchText);
-    }
-    return  ::DrawText(hdc, lpchText, cchText, lprc, dwDTFormat );
-#endif
 #endif /* MOZ_NGLAYOUT */
 }
 
