@@ -100,7 +100,7 @@ namespace JavaScript {
          * gc_allocator. This is all in flux.
          */
         class JSMap : public gc_base {
-            map<String, JSValue, less<String>, gc_map_allocator> properties;
+            std::map<String, JSValue, std::less<String>, gc_map_allocator> properties;
         public:
             JSValue& operator[](const String& name)
             {
