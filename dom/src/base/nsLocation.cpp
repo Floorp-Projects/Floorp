@@ -217,6 +217,13 @@ LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
   nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
   loadInfo->SetOwner(owner);
 
+  // now set the referrer on the loadinfo
+  nsCOMPtr<nsIURI> sourceURI;
+  GetSourceURL(cx, getter_AddRefs(sourceURI));
+  if (sourceURI) {
+    loadInfo->SetReferrer(sourceURI);
+  }
+  
   *aLoadInfo = loadInfo.get();
   NS_ADDREF(*aLoadInfo);
 
@@ -485,7 +492,7 @@ LocationImpl::SetHrefWithContext(JSContext* cx, const nsAReadableString& aHref,
   nsCOMPtr<nsIURI> base;
 
   // Get the source of the caller
-  nsresult result = GetSourceURL(cx, getter_AddRefs(base));
+  nsresult result = GetSourceBaseURL(cx, getter_AddRefs(base));
 
   if (NS_FAILED(result)) {
     return result;
@@ -912,7 +919,7 @@ LocationImpl::ToString(nsAWritableString& aReturn)
 }
 
 nsresult
-LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURI)
+LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
 {
   // XXX Code duplicated from nsHTMLDocument
   // XXX Tom said this reminded him of the "Six Degrees of
@@ -932,25 +939,48 @@ LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURI)
   nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
 
   if (nativeGlob) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob);
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob, &result);
 
     if (window) {
       nsCOMPtr<nsIDOMDocument> domDoc;
-
       result = window->GetDocument(getter_AddRefs(domDoc));
-      if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-
-        if (doc) {
-          result = doc->GetBaseURL(*sourceURI);
-
-          if (!*sourceURI) {
-            doc->GetDocumentURL(sourceURI);
-          }
-        }
+      if (domDoc) {
+        return CallQueryInterface(domDoc, aDocument);
       }
     }
+  } else {
+    *aDocument = nsnull;
+  }
+  return result;
+}
+
+nsresult
+LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
+{
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
+  if (doc) {
+    rv = doc->GetBaseURL(*sourceURL);
+
+    if (!*sourceURL) {
+      doc->GetDocumentURL(sourceURL);
+    }
+  } else {
+    *sourceURL = nsnull;
+  }
+  return rv;
+}
+
+nsresult
+LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
+{
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
+  if (doc) {
+    doc->GetDocumentURL(sourceURL);
+  } else {
+    *sourceURL = nsnull;
   }
 
-  return result;
+  return rv;
 }
