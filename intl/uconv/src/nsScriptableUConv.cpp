@@ -104,7 +104,7 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, PRUnichar **_re
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  PRInt32 inLength = nsCRT::strlen(aSrc);
+  PRInt32 inLength = strlen(aSrc);
   PRInt32 outLength;
   rv = mDecoder->GetMaxLength(aSrc, inLength, &outLength);
   if (NS_SUCCEEDED(rv))
