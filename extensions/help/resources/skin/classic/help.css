@@ -93,15 +93,16 @@
 }
 
 #helpHomeButton {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
+  list-style-image: url("chrome://communicator/skin/home.gif");
+  -moz-image-region: rect(0px 23px 20px 0px);
 }
     
 #helpHomeButton:hover {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-hover.gif");
+  -moz-image-region: rect(0px 46px 20px 23px);
 }
     
 #helpHomeButton:hover:active {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
+  -moz-image-region: rect(0px 69px 20px 46px);
 }
 
 #helpsidebar-box {
