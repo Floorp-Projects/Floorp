@@ -1,0 +1,12 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:libimg directory
+#
+
+dllcompat.h
+if_struct.h
+il.h
+il_utilp.h
+nsIImgDecoder.h
+nsImgDCallbk.h
+nsImgDecCID.h
+nsImgDecoder.h
