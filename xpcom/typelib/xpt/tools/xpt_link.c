@@ -49,7 +49,8 @@ static int get_new_index(const fixElement *fix, int num_elements,
 PRBool copy_IDE(XPTInterfaceDirectoryEntry *from, 
                 XPTInterfaceDirectoryEntry *to);
 PRBool copy_fixElement(fixElement *from, fixElement *to);
-static void xpt_dump_usage(char *argv[]); 
+static void print_IID(struct nsID *iid, FILE *file);
+static void xpt_dump_usage(char *argv[]);
 
 struct fixElement {
     nsID iid;
@@ -377,7 +378,21 @@ main(int argc, char **argv)
     if (trueNumberOfInterfaces>1) {
         for (i=1; i<trueNumberOfInterfaces; i++) {
             if (compare_IDEs_by_IID(&IDE_array[i-1], &IDE_array[i]) == 0) {
-                perror("Error: Whoa, Nellie! You've got duplicate IIDs.");
+                fprintf(stderr, "FATAL ERROR:\n"
+                        "Duplicate IID detected (");
+                print_IID(&IDE_array[i-1].iid, stderr);
+                fprintf(stderr, ") in\n"
+                        "interface %s::%s from %s\n"
+                        "and\n" 
+                        "interface %s::%s from %s\n",
+                        IDE_array[i-1].name_space ? 
+                        IDE_array[i-1].name_space : "", 
+                        IDE_array[i-1].name, 
+                        argv[fix_array[i-1].file_num+2],
+                        IDE_array[i].name_space ? 
+                        IDE_array[i].name_space : "", 
+                        IDE_array[i].name, 
+                        argv[fix_array[i].file_num+2]);
                 return 1;
             }
         }
@@ -423,9 +438,9 @@ main(int argc, char **argv)
     fwrite(data, len, 1, out);
  
     if (ferror(out) != 0 || fclose(out) != 0) {
-        fprintf(stderr, "\nError writing file: %s\n\n", argv[1]);
+        fprintf(stderr, "Error writing file: %s\n", argv[1]);
     } else {
-        fprintf(stderr, "\nFile written: %s\n\n", argv[1]);
+        fprintf(stderr, "File written: %s\n", argv[1]);
     }
  
     if (state)
@@ -624,6 +639,17 @@ copy_fixElement(fixElement *from, fixElement *to)
     to->maps_to_interface_num = from->maps_to_interface_num;
 
     return PR_TRUE;    
+}
+
+static void
+print_IID(struct nsID *iid, FILE *file)
+{
+    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
+            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
+            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
+            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
+            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]); 
 }
 
 static void
