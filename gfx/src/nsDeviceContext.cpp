@@ -441,6 +441,16 @@ nsHashKey* StringKey::Clone(void) const
   return new StringKey(mString);
 }
 
+static nsAutoString  gTimes("Times");
+static nsAutoString  gTimesNewRoman("Times New Roman");
+static nsAutoString  gTimesRoman("Times Roman");
+static nsAutoString  gArial("Arial");
+static nsAutoString  gHelvetica("Helvetica");
+static nsAutoString  gCourier("Courier");
+static nsAutoString  gCourierNew("Courier New");
+static nsAutoString  gUnicode("Unicode");
+static nsAutoString  gBitstreamCyberbit("Bitstream Cyberbit");
+static nsAutoString  gNullStr;
 
 nsresult DeviceContextImpl::CreateFontAliasTable()
 {
@@ -449,14 +459,14 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
   if (nsnull == mFontAliasTable) {
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable) {
-      AliasFont("Times", "Times New Roman", "Times Roman", PR_FALSE);
-      AliasFont("Times Roman", "Times New Roman", "Times", PR_FALSE);
-      AliasFont("Times New Roman", "Times Roman", "Times", PR_FALSE);
-      AliasFont("Arial", "Helvetica", "", PR_FALSE);
-      AliasFont("Helvetica", "Arial", "", PR_FALSE);
-      AliasFont("Courier", "Courier New", "", PR_TRUE);
-      AliasFont("Courier New", "Courier", "", PR_FALSE);
-      AliasFont("Unicode", "Bitstream Cyberbit", "", PR_FALSE); // XXX ????
+      AliasFont(gTimes, gTimesNewRoman, gTimesRoman, PR_FALSE);
+      AliasFont(gTimesRoman, gTimesNewRoman, gTimes, PR_FALSE);
+      AliasFont(gTimesNewRoman, gTimesRoman, gTimes, PR_FALSE);
+      AliasFont(gArial, gHelvetica, gNullStr, PR_FALSE);
+      AliasFont(gHelvetica, gArial, gNullStr, PR_FALSE);
+      AliasFont(gCourier, gCourierNew, gNullStr, PR_TRUE);
+      AliasFont(gCourierNew, gCourier, gNullStr, PR_FALSE);
+      AliasFont(gUnicode, gBitstreamCyberbit, gNullStr, PR_FALSE); // XXX ????
     }
     else {
       result = NS_ERROR_OUT_OF_MEMORY;
