@@ -735,19 +735,15 @@ if test "$GNU_CXX"; then
   AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
   [echo "int main() { return 0; }" | cat > conftest.C
 
-  dnl configure runs "rm -f conftest*" later so we know _tmp_output
-  dnl will get removed even if this test is interupted.
-  _tmp_output="conftest.out"
+  ${CXX-g++} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
 
-  ${CXX-g++} -fno-handle-exceptions conftest.C > $_tmp_output 2>&1
-
-  if egrep "warning.*renamed" $_tmp_output >/dev/null; then
+  if egrep "warning.*renamed" conftest.out >/dev/null; then
     ac_cv_cxx_exceptions_flags=-fno-exceptions
   else
     ac_cv_cxx_exceptions_flags=-fno-handle-exceptions
   fi
 
-  rm -f $_tmp_output ])
+  rm -f conftest*])
 
   AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
   _MOZ_EXCEPTIONS_FLAGS=$ac_cv_cxx_exceptions_flags
