@@ -31,10 +31,14 @@
  * GPL.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "blapi.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "prtime.h"
+#include "plstr.h"
 #include "nssb64.h"
 #include "secutil.h"
 #include "plgetopt.h"
@@ -117,6 +121,8 @@ static void Usage()
 	PRINTUSAGE("",      "-p", "do performance test.");
 	fprintf(stderr, "\n");
 	PRINTUSAGE(progName, "-F", "Run the FIPS self-test.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-T [mode1 mode2 ...]", "Run the BLAPI self-test.");
 	fprintf(stderr, "\n");
 	exit(1);
 }
@@ -368,6 +374,7 @@ typedef struct
 	PRBool  useseed;
 	PRBool  usesigseed;
 	PRBool  performance;
+	PRBool  multihash;
 	unsigned int rounds;    /* RC5 only */
 	unsigned int wordsize;  /* RC5 only */
 	unsigned int rsapubexp; /* RSA only */
@@ -833,9 +840,9 @@ rsa_test(blapitestInfo *info)
 	SECStatus rv;
 	PRIntervalTime time1, time2;
 	int i, j, numiter;
+	unsigned int modLen;
 	numiter = info->repetitions;
 	fillitem(&info->in, info->bufsize, "tmp.pt");
-	info->in.data[0] = 0x00;
 	if (info->key.len > 0) {
 		key = rsakey_from_filedata(&info->key);
 	} else {
@@ -847,6 +854,19 @@ rsa_test(blapitestInfo *info)
 		expitem.data[3] = (info->rsapubexp & 0xff);
 		key = RSA_NewKey(info->keysize*8, &expitem);
 		rsakey_to_file(key, "tmp.key");
+	}
+	if (key->modulus.data[0] == 0) {
+		/* integer value of input must be less than modulus */
+		if (info->in.data[0] >= key->modulus.data[1])
+			return SECFailure;
+	} else {
+		if (info->in.data[0] >= key->modulus.data[0])
+			return SECFailure;
+	}
+	modLen = key->modulus.len - !key->modulus.data[0];
+	if (info->in.len % modLen != 0) {
+		fprintf(stderr, "Input buffer must be a multiple of modulus length!\n");
+		return SECFailure;
 	}
 	info->out.len = info->in.len; 
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
@@ -948,26 +968,6 @@ dsa_test(blapitestInfo *info)
 }
 
 static SECStatus
-md5_test(blapitestInfo *info)
-{
-	SECStatus rv = SECSuccess;
-	PRIntervalTime time1, time2;
-	int i;
-	if (info->in.len == 0) {
-		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
-		CHECKERROR(rv, __LINE__);
-	}
-	info->out.len = MD5_LENGTH;
-	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	TIMESTART();
-	for (i=info->repetitions; i>0; i--) {
-		MD5_HashBuf(info->out.data, info->in.data, info->in.len);
-	}
-	TIMEFINISH("MD5 HASH", info->in.len);
-	return rv;
-}
-
-static SECStatus
 md5_multi_test(blapitestInfo *info)
 {
 	SECStatus rv = SECSuccess;
@@ -1009,28 +1009,24 @@ md5_multi_test(blapitestInfo *info)
 }
 
 static SECStatus
-md2_test(blapitestInfo *info)
+md5_test(blapitestInfo *info)
 {
-	unsigned int len;
-	MD2Context *cx = MD2_NewContext();
 	SECStatus rv = SECSuccess;
 	PRIntervalTime time1, time2;
 	int i;
+	if (!info->hash) return SECFailure;
+	if (info->multihash) return md5_multi_test(info);
 	if (info->in.len == 0) {
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = 16;
+	info->out.len = MD5_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	info->in.data[info->in.len] = '\0';
 	TIMESTART();
-	for (i=0; i<info->repetitions; i++) {
-		MD2_Begin(cx);
-		MD2_Update(cx, info->in.data, info->in.len);
-		MD2_End(cx, info->out.data, &len, 16);
+	for (i=info->repetitions; i>0; i--) {
+		MD5_HashBuf(info->out.data, info->in.data, info->in.len);
 	}
-	TIMEFINISH("MD2 HASH", info->in.len);
-	MD2_DestroyContext(cx, PR_TRUE);
+	TIMEFINISH("MD5 HASH", info->in.len);
 	return rv;
 }
 
@@ -1043,6 +1039,7 @@ md2_multi_test(blapitestInfo *info)
 	MD2Context *foomd2cx;
 	unsigned char *foomd2;
 	int i;
+	if (!info->hash) return SECFailure;
 	if (info->in.len == 0) {
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
@@ -1076,29 +1073,30 @@ md2_multi_test(blapitestInfo *info)
 }
 
 static SECStatus
-sha1_test(blapitestInfo *info)
+md2_test(blapitestInfo *info)
 {
 	unsigned int len;
-	SHA1Context *cx = SHA1_NewContext();
+	MD2Context *cx = MD2_NewContext();
 	SECStatus rv = SECSuccess;
 	PRIntervalTime time1, time2;
-	PRInt32 tdiff;
 	int i;
+	if (!info->hash) return SECFailure;
+	if (info->multihash) return md2_multi_test(info);
 	if (info->in.len == 0) {
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = SHA1_LENGTH;
+	info->out.len = 16;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	info->in.data[info->in.len] = '\0';
 	TIMESTART();
-	for (i=info->repetitions; i>0; i--) {
-		SHA1_Begin(cx);
-		SHA1_Update(cx, info->in.data, info->in.len);
-		SHA1_End(cx, info->out.data, &len, SHA1_LENGTH);
+	for (i=0; i<info->repetitions; i++) {
+		MD2_Begin(cx);
+		MD2_Update(cx, info->in.data, info->in.len);
+		MD2_End(cx, info->out.data, &len, 16);
 	}
-	TIMEFINISH("SHA1 HASH", info->in.len);
-	SHA1_DestroyContext(cx, PR_TRUE);
+	TIMEFINISH("MD2 HASH", info->in.len);
+	MD2_DestroyContext(cx, PR_TRUE);
 	return rv;
 }
 
@@ -1143,6 +1141,34 @@ sha1_multi_test(blapitestInfo *info)
 	return rv;
 }
 
+static SECStatus
+sha1_test(blapitestInfo *info)
+{
+	unsigned int len;
+	SHA1Context *cx = SHA1_NewContext();
+	SECStatus rv = SECSuccess;
+	PRIntervalTime time1, time2;
+	int i;
+	if (!info->hash) return SECFailure;
+	if (info->multihash) return sha1_multi_test(info);
+	if (info->in.len == 0) {
+		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
+		CHECKERROR(rv, __LINE__);
+	}
+	info->out.len = SHA1_LENGTH;
+	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
+	info->in.data[info->in.len] = '\0';
+	TIMESTART();
+	for (i=info->repetitions; i>0; i--) {
+		SHA1_Begin(cx);
+		SHA1_Update(cx, info->in.data, info->in.len);
+		SHA1_End(cx, info->out.data, &len, SHA1_LENGTH);
+	}
+	TIMEFINISH("SHA1 HASH", info->in.len);
+	SHA1_DestroyContext(cx, PR_TRUE);
+	return rv;
+}
+
 typedef SECStatus (* blapitestCryptoFn)(blapitestInfo *);
 
 static blapitestCryptoFn crypto_fns[] =
@@ -1161,11 +1187,8 @@ static blapitestCryptoFn crypto_fns[] =
 	dsa_test,
 	NULL,
 	md5_test,
-	md5_multi_test,
 	md2_test,
-	md2_multi_test,
 	sha1_test,
-	sha1_multi_test,
 	NULL
 };
 
@@ -1185,11 +1208,8 @@ static char *mode_strings[] =
 	"dsa",
 	"#endsign",
 	"md5",
-	"md5_multi",
 	"md2",
-	"md2_multi",
 	"sha1",
-	"sha1_multi",
 	"#endhash"
 };
 
@@ -1197,7 +1217,6 @@ static void
 printmodes(blapitestInfo *info)
 {
 	int i = 0;
-	int nummodes = sizeof(mode_strings) / sizeof(char *);
 	char *mode = mode_strings[0];
 	PR_fprintf(PR_STDERR, "Available modes: (specify with -m)\n", progName);
 	while (mode[0] != '#') {
@@ -1231,6 +1250,146 @@ get_test_mode(const char *modestring)
 	return NULL;
 }
 
+static void
+get_params(blapitestInfo *info, char *mode, int num)
+{
+	SECItem *item;
+	/* XXX
+	 * this should use NSPR, but the string functions (strchr and atoi)
+	 * barf when the commented code below is used.
+	PRFileDesc *file;
+	*/
+	FILE *file;
+	char filename[32];
+	char *mark, *param, *val;
+	int index = 0;
+	int len;
+	sprintf(filename, "tests/%s/params%d", mode, num);
+	/*
+	file = PR_Open(filename, PR_RDONLY, 00440);
+	if (file)
+		SECU_FileToItem(item, file);
+	else
+		return;
+	param = (char *)item->data;
+	*/
+	file = fopen(filename, "r");
+	if (!file) return;
+	param = malloc(100);
+	len = fread(param, 1, 100, file);
+	while (index < len) {
+		mark = PL_strchr(param, '=');
+		*mark = '\0';
+		val = mark + 1;
+		mark = PL_strchr(val, '\n');
+		*mark = '\0';
+		if (PL_strcmp(param, "rounds") == 0) {
+			info->rounds = atoi(val);
+		} else if (PL_strcmp(param, "wordsize") == 0) {
+			info->wordsize = atoi(val);
+		}
+		index += PL_strlen(param) + PL_strlen(val) + 2;
+		param = mark + 1;
+	}
+}
+
+static SECStatus
+get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
+{
+	char filename[32];
+	PRFileDesc *file;
+	SECStatus rv;
+	sprintf(filename, "tests/%s/%s%d", mode, type, num);
+	file = PR_Open(filename, PR_RDONLY, 00440);
+	if (file)
+		rv = SECU_FileToItem(item, file);
+	else
+		return SECFailure;
+	if ((PL_strcmp(mode, "rsa") == 0 || PL_strcmp(mode, "dsa") == 0) && 
+	    PL_strcmp(type, "key") == 0)
+		atob(SECITEM_DupItem(item), item);
+	/* remove a trailing newline, else byte count will be wrong */
+	if (item->data[item->len-1] == '\n')
+		item->len--;
+	PR_Close(file);
+	return rv;
+}
+
+static SECStatus
+blapi_selftest(char **modesToTest, int numModesToTest)
+{
+	blapitestCryptoFn cryptofn;
+	blapitestInfo info;
+	SECItem output, asciiOut, item, inpCopy;
+	SECStatus rv;
+	char filename[32];
+	PRFileDesc *file;
+	char *mode;
+	int i, j, nummodes;
+
+	PORT_Memset(&info, 0, sizeof(info));
+	info.repetitions = 1;
+	info.useseed = PR_TRUE;
+	info.usesigseed = PR_TRUE;
+	if (modesToTest) {
+		/* user gave a list of modes to test */
+		nummodes = numModesToTest;
+	} else {
+		/* test all modes */
+		nummodes = sizeof(mode_strings) / sizeof(char *);
+	}
+	for (i=0; i<nummodes; i++) {
+		if (modesToTest) {
+			mode = modesToTest[i];
+		} else {
+			mode = mode_strings[i];
+		}
+		cryptofn = get_test_mode(mode);
+		if (mode[0] == '#') continue;
+		/* get the number of tests in the directory */
+		sprintf(filename, "tests/%s/%s", mode, "numtests");
+		file = PR_Open(filename, PR_RDONLY, 00440);
+		rv = SECU_FileToItem(&item, file);
+		PR_Close(file);
+		/* loop over the tests in the directory */
+		for (j=0; j<(int)(item.data[0] - '0'); j++) {
+			rv = get_ascii_file_data(&info.key, mode, "key", j);
+			rv = get_ascii_file_data(&info.iv, mode, "iv", j);
+			rv = get_ascii_file_data(&info.in, mode, "plaintext", j);
+			rv = get_ascii_file_data(&info.seed, mode, "pqgseed", j);
+			rv = get_ascii_file_data(&info.sigseed, mode, "sigseed", j);
+			SECITEM_CopyItem(NULL, &inpCopy, &info.in);
+			get_params(&info, mode, j);
+			sprintf(filename, "tests/%s/%s%d", mode, "ciphertext", j);
+			file = PR_Open(filename, PR_RDONLY, 00440);
+			rv = SECU_FileToItem(&asciiOut, file);
+			PR_Close(file);
+			rv = atob(&asciiOut, &output);
+			info.encrypt = info.hash = info.sign = PR_TRUE;
+			(*cryptofn)(&info);
+			if (SECITEM_CompareItem(&output, &info.out) != 0) {
+				fprintf(stderr, "encrypt self-test for %s failed!\n", mode);
+			} else {
+				fprintf(stderr, "encrypt self-test for %s passed.\n", mode);
+			}
+			info.encrypt = info.hash = info.sign = PR_FALSE;
+			info.decrypt = info.verify = PR_TRUE;
+			SECITEM_ZfreeItem(&info.out, PR_FALSE);
+			SECITEM_ZfreeItem(&info.in, PR_FALSE);
+			SECITEM_CopyItem(NULL, &info.in, &output);
+			info.out.len = 0;
+			rv = (*cryptofn)(&info);
+			if (rv == SECSuccess) {
+				if (SECITEM_CompareItem(&inpCopy, &info.out) != 0) {
+					fprintf(stderr, "decrypt self-test for %s failed!\n", mode);
+				} else {
+					fprintf(stderr, "decrypt self-test for %s passed.\n", mode);
+				}
+			}
+		}
+	}
+}
+
 int main(int argc, char **argv) 
 {
 	PRFileDesc *infile, *outfile, *keyfile, *ivfile, *sigfile, *seedfile,
@@ -1240,9 +1399,12 @@ int main(int argc, char **argv)
 	blapitestCryptoFn cryptofn = NULL;
 	PLOptState *optstate;
 	PLOptStatus status;
-	int numiter = 1;
 	PRBool dofips = PR_FALSE;
+	PRBool doselftest = PR_FALSE;
 	PRBool zerobuffer = PR_FALSE;
+	char *mode = NULL;
+	char *modesToTest[20];
+	int numModesToTest = 0;
 	SECStatus rv;
 
 	PORT_Memset(&info, 0, sizeof(info));
@@ -1256,7 +1418,7 @@ int main(int argc, char **argv)
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 	optstate = 
-	  PL_CreateOptState(argc, argv, "DEFHSVab:e:g:i:o:p:k:m:t:qr:s:v:w:xyz:");
+	  PL_CreateOptState(argc, argv, "DEFHSTVab:ce:g:i:o:p:k:m:t:qr:s:v:w:xyz:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch (optstate->option) {
 		case 'D':  info.decrypt = PR_TRUE; break;
@@ -1264,14 +1426,18 @@ int main(int argc, char **argv)
 		case 'F':  dofips = PR_TRUE; break;
 		case 'H':  info.hash = PR_TRUE; break;
 		case 'S':  info.sign = PR_TRUE; break;
+		case 'T':  doselftest = PR_TRUE; break;
 		case 'V':  info.verify = PR_TRUE; break;
 		case 'a':  b64 = PR_FALSE; break;
 		case 'b':  info.bufsize = PORT_Atoi(optstate->value); break;
+		case 'c':  info.multihash = PR_TRUE; break;
 		case 'e':  info.rsapubexp = PORT_Atoi(optstate->value); break;
 		case 'g':  info.keysize = PORT_Atoi(optstate->value); break;
 		case 'i':  infile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
 		case 'k':  keyfile = PR_Open(optstate->value, PR_RDONLY, 00440); break;
-		case 'm':  cryptofn = get_test_mode(optstate->value); break;
+		case 'm':  cryptofn = get_test_mode(optstate->value);
+		           mode = PL_strdup(optstate->value); 
+		           break;
 		case 'o':  outfile = PR_Open(optstate->value, PR_WRONLY|PR_CREATE_FILE,
 		                             00660); break;
 		case 'p':  info.performance = PR_TRUE; 
@@ -1286,7 +1452,16 @@ int main(int argc, char **argv)
 		case 'x':  info.useseed = PR_TRUE; break;
 		case 'y':  info.usesigseed = PR_TRUE; break;
 		case 'z':  seedfile  = PR_Open(optstate->value, PR_RDONLY,00440); break;
+		case '\0': modesToTest[numModesToTest++] = PL_strdup(optstate->value);
 		default: break;
+		}
+	}
+
+	if (doselftest) {
+		if (numModesToTest > 0) {
+			return blapi_selftest(modesToTest, numModesToTest);
+		} else {
+			return blapi_selftest(NULL, 0);
 		}
 	}
 
@@ -1314,7 +1489,13 @@ int main(int argc, char **argv)
 		SECItem asciiKey;
 		rv = SECU_FileToItem(&asciiKey, keyfile);
 		CHECKERROR(rv, __LINE__);
-		rv = atob(&asciiKey, &info.key);
+		if (b64 || PL_strcmp(mode,"rsa")==0 || PL_strcmp(mode,"dsa")==0) {
+			rv = atob(&asciiKey, &info.key);
+		} else {
+			SECITEM_CopyItem(NULL, &info.key, &asciiKey);
+			if (info.key.data[info.key.len-1] == '\n')
+				info.key.len--;
+			}
 		CHECKERROR(rv, __LINE__);
 	}
 
@@ -1322,7 +1503,13 @@ int main(int argc, char **argv)
 		SECItem asciiIv;
 		rv = SECU_FileToItem(&asciiIv, ivfile);
 		CHECKERROR(rv, __LINE__);
-		rv = atob(&asciiIv, &info.iv);
+		if (b64) {
+			rv = atob(&asciiIv, &info.iv);
+		} else {
+			SECITEM_CopyItem(NULL, &info.iv, &asciiIv);
+			if (info.iv.data[info.iv.len-1] == '\n')
+				info.iv.len--;
+		}
 		CHECKERROR(rv, __LINE__);
 	}
 
@@ -1332,9 +1519,11 @@ int main(int argc, char **argv)
 		CHECKERROR(rv, __LINE__);
 		if (b64) {
 			rv = atob(&asciiFile, &info.in);
-		CHECKERROR(rv, __LINE__);
+			CHECKERROR(rv, __LINE__);
 		} else {
 			SECITEM_CopyItem(NULL, &info.in, &asciiFile);
+			if (info.in.data[info.in.len-1] == '\n')
+				info.in.len--;
 		}
 		info.bufsize = info.in.len;
 	}
