@@ -1680,11 +1680,11 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
-dnl = build/nsprenv.mk support
+dnl = build/unix/nsprenv.mk support
 dnl = 
 dnl = NSPR does not use autoconf.  However, it support reading
-dnl = environment from a file.  That is what build/nsprenv.mk
-dnl = does.  It is generated from builds/nsprenv.mk.in.
+dnl = environment from a file.  That is what build/unix/nsprenv.mk
+dnl = does.  It is generated from builds/unix/nsprenv.mk.in.
 dnl =
 dnl = This file is them copied to nsprpub/config/myconfig.mk
 dnl =
@@ -1815,7 +1815,7 @@ AC_OUTPUT($MAKEFILES)
 
 dnl ========================================================
 dnl = 
-dnl = If is not native, copy build/nsprenv.mk to 
+dnl = If is not native, copy build/unix/nsprenv.mk to 
 dnl = nsprpub/config/myconfig.mk, so that NSPR will be 
 dnl = built with the same options as mozilla.
 dnl = 
@@ -1827,5 +1827,5 @@ dnl
 dnl if test ! "$MOZ_NATIVE_NSPR"
 dnl then
 dnl   rm -f nsprpub/config/myconfig.mk
-dnl   cp build/nsprenv.mk nsprpub/config/myconfig.mk
+dnl   cp build/unix/nsprenv.mk nsprpub/config/myconfig.mk
 dnl fi
