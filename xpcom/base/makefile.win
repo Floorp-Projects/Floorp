@@ -45,12 +45,12 @@ EXPORTS =                  \
 	nsISupportsImpl.h  \
         nsISupportsObsolete.h  \
         nsISupportsUtils.h \
-        nsStackWalker.h    \
         nsTraceRefcnt.h    \
         nsWeakReference.h  \
         nsWeakPtr.h        \
         nscore.h           \
         pure.h             \
+        nslog.h            \
 !ifdef MOZ_TRACE_MALLOC
 		nsTraceMalloc.h    \
 !endif
@@ -60,6 +60,7 @@ EXPORTS =                  \
 XPIDL_MODULE = xpcom_base
 
 XPIDLSRCS =               \
+        .\nsILoggingService.idl   \
         .\nsrootidl.idl   \
         .\nsIErrorService.idl \
         .\nsIMemory.idl \
@@ -100,6 +101,7 @@ C_OBJS =                                    \
 !endif
 
 CPP_OBJS =                            \
+        .\$(OBJDIR)\nsLogging.obj       \
         .\$(OBJDIR)\nsErrorService.obj       \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
@@ -107,7 +109,6 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsIInterfaceRequestor.obj \
-        .\$(OBJDIR)\nsStackWalker.obj \
 #        .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsExceptionService.obj \
         .\$(OBJDIR)\nsTraceRefcnt.obj \

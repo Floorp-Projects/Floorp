@@ -40,7 +40,6 @@ CPPSRCS		= \
 		nsErrorService.cpp \
 		nsDebug.cpp \
 		nsIInterfaceRequestor.cpp \
-		nsStackWalker.cpp \
 		nsTraceRefcnt.cpp \
 		nsID.cpp \
 		nsCWeakReference.cpp \
@@ -49,7 +48,6 @@ CPPSRCS		= \
 		nsConsoleMessage.cpp \
 		nsExceptionService.cpp \
 		$(NULL)
-#		nsBloatLogging.cpp \
 
 ifdef GC_LEAK_DETECTOR
 CSRCS += nsGarbageCollector.c
@@ -59,28 +57,26 @@ endif
 
 EXPORTS		= \
 		nsAgg.h \
-		nsAutoPtr.h \
+		nsIAllocator.h \
+		nsMemory.h \
 		nsCom.h \
 		nsComObsolete.h \
-		nscore.h \
 		nsCWeakReference.h \
 		nsDebug.h \
 		nsError.h \
-		nsIAllocator.h \
 		nsID.h \
 		nsIID.h \
-		nsIInterfaceRequestorUtils.h \
 		nsIPtr.h \
 		nsISupportsBase.h \
 		nsISupportsImpl.h \
-		nsISupportsObsolete.h \
 		nsISupportsUtils.h \
-		nslog.h \
-		nsMemory.h \
-		nsStackWalker.h \
+		nsISupportsObsolete.h \
 		nsTraceRefcnt.h \
-		nsWeakPtr.h \
 		nsWeakReference.h \
+		nsWeakPtr.h \
+		nscore.h \
+		nslog.h \
+		nsIInterfaceRequestorUtils.h \
 		$(NULL)
 
 ifdef NS_TRACE_MALLOC
