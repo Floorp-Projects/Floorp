@@ -66,7 +66,7 @@ namespace MetaData {
     // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
     {
-        jsr(execPhase, targetbCon);
+        jsr(execPhase, targetbCon, sp, JS2VAL_VOID);
         ActivationFrame *f = activationStackTop;
         js2val result;
         try {
@@ -341,7 +341,7 @@ namespace MetaData {
     // Insert x before the top count stack entries
     void JS2Engine::insert(js2val x, int count)
     {
-        ASSERT(sp < (execStack + MAX_EXEC_STACK));
+        ASSERT(sp < execStackLimit);
         js2val *p = ++sp;
         for (int32 i = 0; i < count; i++) {
             *p = p[-1];
@@ -382,7 +382,8 @@ namespace MetaData {
         posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));
         negInfValue = DOUBLE_TO_JS2VAL(allocNumber(negativeInfinity));
 
-        sp = execStack = new js2val[MAX_EXEC_STACK];
+        sp = execStack = new js2val[INITIAL_EXEC_STACK];
+        execStackLimit = execStack + INITIAL_EXEC_STACK;
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
     }
 
@@ -506,7 +507,7 @@ namespace MetaData {
         case STR_PTR:
             {
                 uint16 index = BytecodeContainer::getShort(pc);
-                stdOut << "\"" << bCon->mStringList[index] << "\"";
+                stdOut << " \"" << bCon->mStringList[index] << "\"";
                 pc += sizeof(short);
             }
             break;
@@ -518,7 +519,9 @@ namespace MetaData {
             }
             break;
         case FRAME_INDEX:
+        case U16:
             {
+                printFormat(stdOut, " %d", BytecodeContainer::getShort(pc));
                 pc += sizeof(short);
             }
             break;
@@ -529,9 +532,9 @@ namespace MetaData {
                 int32 offset2 = BytecodeContainer::getOffset(pc);
                 pc += sizeof(int32);
                 if (offset1 == (int32)NotALabel)
-                    stdOut << "no finally; ";
+                    stdOut << " no finally; ";
                 else
-                    stdOut << "(finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
+                    stdOut << " (finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
                 if (offset2 == (int32)NotALabel)
                     stdOut << "no catch;";
                 else
@@ -740,16 +743,18 @@ namespace MetaData {
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, js2val *stackBase, js2val returnVal)
     {
         ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;
         activationStackTop->topFrame = meta->env.getTopFrame();
-        activationStackTop->execStackTop = sp;
+        activationStackTop->execStackBase = stackBase;
+        activationStackTop->retval = returnVal;
         activationStackTop++;
         bCon = new_bCon;
+        ASSERT(bCon->getMaxStack() <= (execStackLimit - sp));       // XXX realloc if insufficient
         pc = new_bCon->getCodeStart();
         phase = execPhase;
 
@@ -766,8 +771,9 @@ namespace MetaData {
         phase = activationStackTop->phase;
         while (meta->env.getTopFrame() != activationStackTop->topFrame)
             meta->env.removeTopFrame();
-        sp = activationStackTop->execStackTop;
-
+        sp = activationStackTop->execStackBase;
+        if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
+            retval = activationStackTop->retval;
     }
 
     // GC-mark any JS2Objects in the activation frame stack, the execution stack

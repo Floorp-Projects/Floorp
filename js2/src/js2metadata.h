@@ -308,9 +308,12 @@ public:
 
 class ConstructorMethod : public StaticMember {
 public:
-    ConstructorMethod() : StaticMember(Member::ConstructorMethod), code(NULL) { }
+    ConstructorMethod() : StaticMember(Member::ConstructorMethod), value(JS2VAL_VOID) { }
+    ConstructorMethod(js2val value) : StaticMember(Member::ConstructorMethod), value(value) { }
 
-    Invokable *code;        // This function itself (a callable object)
+    js2val value;           // This function itself (a callable object)
+
+    virtual void mark()                 { GCMARKVALUE(value); }
 };
 
 class Accessor : public StaticMember {

@@ -62,7 +62,7 @@
                     if (fWrap) {
                         // XXX - I made this stuff up - extract the 'prototype' property from
                         // the function being invoked (defaulting to Object.prototype). Then 
-                        // contruct a new prototypeInstance, setting the acquired prototype
+                        // construct a new prototypeInstance, setting the acquired prototype
                         // parent. Finally invoke the function, but insert the constructed
                         // object at the bottom of the stack to be the 'return' value. 
                         // XXX this won't last - if a non-primitive is returned from the function,
@@ -85,16 +85,13 @@
                         runtimeFrame->thisObject = baseVal;
     //                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                         if (!fWrap->code)
-                            jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                            jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
                         meta->env.addFrame(runtimeFrame);
                         if (fWrap->code) {  // native code, pass pointer to argument base
                             a = fWrap->code(meta, a, base(argCount), argCount);
                             meta->env.removeTopFrame();
                             pop(argCount + 1);
                             push(a);
-                        }
-                        else {
-                            insert(baseVal, argCount + 1);
                         }
                     }
                     else
@@ -139,7 +136,7 @@
                 // XXX
                 runtimeFrame->assignArguments(base(argCount), argCount);
                 if (!fWrap->code)
-                    jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {  // native code, pass pointer to argument base
                     a = fWrap->code(meta, a, base(argCount), argCount);
@@ -158,7 +155,7 @@
                 runtimeFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 if (!fWrap->code)
-                    jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(meta->objectType(mc->thisObject));
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
@@ -195,6 +192,7 @@
             rts();
             if (pc == NULL) 
                 return retval;
+            push(retval);
 	}
         break;
 

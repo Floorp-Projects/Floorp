@@ -233,6 +233,34 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
     return JS2VAL_UNDEFINED;
 }
 
+void printFrameBindings(Frame *f)
+{
+    stdOut << " Static Bindings:\n";                    
+    for (StaticBindingIterator rsb = f->staticReadBindings.begin(), rsend = f->staticReadBindings.end(); (rsb != rsend); rsb++) {
+        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << rsb->second->qname.id;
+        bool found = false;
+        for (StaticBindingIterator wsb = f->staticWriteBindings.begin(), wsend = f->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+            if (rsb->second->qname == wsb->second->qname) {
+                found = true;
+                break;
+            }
+        }
+        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
+    }
+    for (StaticBindingIterator wsb = f->staticWriteBindings.begin(), wsend = f->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+        bool found = false;
+        for (StaticBindingIterator rsb = f->staticReadBindings.begin(), rsend = f->staticReadBindings.end(); (rsb != rsend); rsb++) {
+            if (rsb->second->qname == wsb->second->qname) {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << wsb->second->qname.id << " [write-only]" << "\n";
+    }
+
+}
+
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     if (argc) {
@@ -260,29 +288,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
                     stdOut << " slotCount = " << c->slotCount << "\n";
 
-                    stdOut << " Static Bindings:\n";                    
-                    for (StaticBindingIterator rsb = c->staticReadBindings.begin(), rsend = c->staticReadBindings.end(); (rsb != rsend); rsb++) {
-                        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << rsb->second->qname.id;
-                        bool found = false;
-                        for (StaticBindingIterator wsb = c->staticWriteBindings.begin(), wsend = c->staticWriteBindings.end(); (wsb != wsend); wsb++) {
-                            if (rsb->second->qname == wsb->second->qname) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
-                    }
-                    for (StaticBindingIterator wsb = c->staticWriteBindings.begin(), wsend = c->staticWriteBindings.end(); (wsb != wsend); wsb++) {
-                        bool found = false;
-                        for (StaticBindingIterator rsb = c->staticReadBindings.begin(), rsend = c->staticReadBindings.end(); (rsb != rsend); rsb++) {
-                            if (rsb->second->qname == wsb->second->qname) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found)
-                            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << wsb->second->qname.id << " [write-only]" << "\n";
-                    }
+                    printFrameBindings(c);
 
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
@@ -360,8 +366,8 @@ int main(int argc, char **argv)
     metadata->addGlobalObjectFunction("load", load);
 #ifdef DEBUG
     metadata->addGlobalObjectFunction("dump", dump);
-    metadata->addGlobalObjectFunction("trees", dump);
-    metadata->addGlobalObjectFunction("trace", dump);
+    metadata->addGlobalObjectFunction("trees", trees);
+    metadata->addGlobalObjectFunction("trace", trace);
 #endif
 
     try {

@@ -458,7 +458,8 @@ namespace MetaData {
                             break;
                         case Attribute::Constructor:
                             {
-                                // XXX 
+                                ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
+                                defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                             }
                             break;
                         }
@@ -1382,6 +1383,12 @@ namespace MetaData {
                     ca = new CompoundAttribute();
                     ca->memberMod = Attribute::Static;
                     return ca;
+                case Token::identifier:
+                    if (name == world.identifiers["constructor"]) {
+                        ca = new CompoundAttribute();
+                        ca->memberMod = Attribute::Constructor;
+                        return ca;
+                    }
                 }
             }            
             // fall thru to execute a readReference on the identifier...
@@ -3113,7 +3120,12 @@ doUnary:
             *rval = (checked_cast<HoistedVar *>(m))->value;
             return true;
         case StaticMember::ConstructorMethod:
-            break;
+            {
+                if (phase == CompilePhase)
+                    reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+                *rval = (checked_cast<ConstructorMethod *>(m))->value;
+                return true;
+            }
         case StaticMember::Accessor:
             break;
         }

@@ -238,9 +238,10 @@ public:
         BytecodeContainer *bCon;
         Frame *topFrame;
         Phase phase;
-        js2val *execStackTop;
+        js2val retval;
+        js2val *execStackBase;
     };
-    void jsr(Phase execPhase, BytecodeContainer *bCon);
+    void jsr(Phase execPhase, BytecodeContainer *bCon, js2val *stackBase, js2val returnVal);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;
@@ -249,12 +250,13 @@ public:
     
     // The execution stack for expression evaluation, should be empty
     // between statements.
-#define MAX_EXEC_STACK (20)
+#define INITIAL_EXEC_STACK (20)
 
+    js2val *execStackLimit;
     js2val *execStack;
     js2val *sp;
     
-    void push(js2val x)         { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
+    void push(js2val x)         { ASSERT(sp < execStackLimit); *sp++ = x; }
     js2val pop()                { ASSERT(sp > execStack); return *--sp; }
 
     // return the value at the stack top
