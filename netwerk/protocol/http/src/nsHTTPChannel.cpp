@@ -110,25 +110,45 @@ NS_IMPL_RELEASE(nsHTTPChannel);
 NS_IMETHODIMP
 nsHTTPChannel::IsPending(PRBool *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pRequest) {
+    rv = m_pRequest->IsPending(result);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::Cancel(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pRequest) {
+    rv = m_pRequest->Cancel();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::Suspend(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pRequest) {
+    rv = m_pRequest->Suspend();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::Resume(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pRequest) {
+    rv = m_pRequest->Resume();
+  }
+  return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

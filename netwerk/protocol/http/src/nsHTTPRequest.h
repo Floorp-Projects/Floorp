@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamObserver.h"
 #include "nsIURL.h"
+#include "nsIRequest.h"
 #include "nsHTTPHeaderArray.h"
 #include "nsHTTPEnums.h"
 
@@ -53,7 +54,8 @@ class nsHTTPChannel;
 
     -Gagan Saksena 03/29/99
 */
-class nsHTTPRequest : public nsIStreamObserver
+class nsHTTPRequest : public nsIStreamObserver,
+                      public nsIRequest
 {
 
 public:
@@ -70,6 +72,12 @@ public:
     NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg);
+
+    // nsIRequest methods:
+    NS_IMETHOD IsPending(PRBool *result);
+    NS_IMETHOD Cancel();
+    NS_IMETHOD Suspend();
+    NS_IMETHOD Resume();
 
     // Finally our own methods...
     /*
